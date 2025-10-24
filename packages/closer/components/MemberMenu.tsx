@@ -53,7 +53,7 @@ const MemberMenu = () => {
         label: 'General',
         isOpen: true,
         items: [
-          ...(APP_NAME && APP_NAME?.toLowerCase() === 'earthbound'
+          ...(APP_NAME && APP_NAME?.toLowerCase().includes('earthbound')
             ? [
                 {
                   label: t('header_nav_home'),
@@ -77,19 +77,36 @@ const MemberMenu = () => {
                   enabled: true,
                   rbacPage: 'Community',
                 },
+                {
+                  label: t('header_nav_events'),
+                  url: '/pages/events',
+                  enabled: true,
+                  rbacPage: 'Events',
+                },
               ]
             : []),
           {
             label: 'Invest',
             url: '/dataroom',
-            enabled: true,
-            rbacPage: 'Dataroom',
+            enabled: APP_NAME?.toLowerCase() === 'tdf',
           },
           {
             label: 'Learn about the $TDF token',
             url: '/token',
             enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
-            rbacPage: 'Token',
+          },
+          {
+            label: 'Become a Citizen',
+            url: '/citizenship',
+            enabled:
+              process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' &&
+              APP_NAME?.toLowerCase() === 'tdf',
+          },
+          {
+            label: t('navigation_work_with_us'),
+            url: '/roles',
+            enabled: process.env.NEXT_PUBLIC_FEATURE_ROLES === 'true',
+            rbacPage: 'Roles',
           },
         ],
       },
@@ -279,6 +296,12 @@ const MemberMenu = () => {
             enabled: isBookingEnabled,
             rbacPage: 'MyBookings',
           },
+          {
+            label: t('navigation_book_friend'),
+            url: '/bookings/friends',
+            enabled: isBookingEnabled,
+            rbacPage: 'FriendsBooking',
+          },
         ],
       });
     }
@@ -328,8 +351,7 @@ const MemberMenu = () => {
               {
                 label: t('navigation_affiliate_dashboard'),
                 url: '/settings/affiliate',
-                enabled: true,
-                rbacPage: 'AffiliateSettings',
+                enabled: true
               },
             ]
           : []),

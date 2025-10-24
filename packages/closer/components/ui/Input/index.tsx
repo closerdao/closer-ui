@@ -42,13 +42,14 @@ interface InputProps extends VariantProps<typeof inputStyles> {
   className?: string;
   autoFocus?: boolean;
   dataTestId?: string;
-  validation?: 'email' | 'number' | 'phone' | 'url';
+  validation?: 'email' | 'number' | 'phone' | 'url' | 'invalid';
   isDisabled?: boolean;
   isInstantSave?: boolean;
   hasSaved?: boolean;
   setHasSaved?: Dispatch<SetStateAction<boolean>>;
   additionalInfo?: string;
   maxLength?: number;
+  customValidationError?: string;
 }
 
 const Input = React.memo(
@@ -72,6 +73,7 @@ const Input = React.memo(
     setHasSaved,
     additionalInfo,
     maxLength,
+    customValidationError,
   }: InputProps) => {
     const t = useTranslations();
 
@@ -93,6 +95,9 @@ const Input = React.memo(
     } as Record<string, RegExp>;
 
     const isValidValue = (value: string) => {
+      if (validation === 'invalid') {
+        return false;
+      }
       if (validation) {
         const pattern = validationPatterns[validation];
         if (pattern) {
@@ -107,13 +112,19 @@ const Input = React.memo(
       setLocalValue(newValue);
       setIsValid(isValidValue(newValue));
       if (onChange) {
-        onChange(newValue as any);
+        onChange(event);
       }
     };
 
     useEffect(() => {
       if (value) {
         setIsValid(isValidValue(value));
+      }
+    }, [value]);
+
+    useEffect(() => {
+      if (value !== undefined && value !== localValue) {
+        setLocalValue(value);
       }
     }, [value]);
 
@@ -149,7 +160,10 @@ const Input = React.memo(
 
     const handleSubmit = () => {
       if (onChangeRef.current && isValidValue(localValue)) {
-        onChangeRef.current(localValue as any);
+        const syntheticEvent = {
+          target: { value: localValue },
+        } as ChangeEvent<HTMLInputElement>;
+        onChangeRef.current(syntheticEvent);
         if (inputRef?.current) {
           (inputRef.current as HTMLInputElement).blur();
         }
@@ -157,9 +171,10 @@ const Input = React.memo(
     };
 
     const validationError =
-      !isValid && validation
+      customValidationError ||
+      (!isValid && validation && validation !== 'invalid'
         ? `${label} is not a valid ${validation} value.`
-        : null;
+        : null);
 
     return (
       <div className={'flex flex-col gap-2 relative '}>
@@ -194,11 +209,6 @@ const Input = React.memo(
             aria-invalid={!isValidValue(localValue)}
             ref={inputRef}
             onKeyDown={isInstantSave ? handleKeyDown : undefined}
-            pattern={
-              validation
-                ? validationPatterns[validation].toString().slice(1, -1)
-                : undefined
-            }
             disabled={isDisabled}
             aria-labelledby={label}
           />

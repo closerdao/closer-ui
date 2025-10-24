@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Card, Heading, Spinner } from '../../../../components/ui';
+import { Spinner } from '../../../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
@@ -8,9 +8,11 @@ import { usePlatform } from '../../../../contexts/platform';
 import { parseMessageFromError } from '../../../../utils/common';
 import {
   generateTokenSalesFilter,
+  generateTokenBasketFilter,
+  generateFinancedTokenStartedFilter,
+  generateFinancedTokenBasketFilter,
   getStartAndEndDate,
 } from '../../../../utils/performance.utils';
-import FunnelBar from './FunnelBar';
 
 interface TokenSaleStats {
   pageViewCount: number;
@@ -20,6 +22,9 @@ interface TokenSaleStats {
   approveCount: number;
   checkoutCount: number;
   successCount: number;
+  totalTokensSold: number;
+  financedTokenStartedCount: number;
+  totalFinancedTokensSold: number;
 }
 
 interface Platform {
@@ -99,6 +104,21 @@ const TokenSalesFunnel = ({
         },
         limit: 10000,
       },
+      tokenBasketFilter: generateTokenBasketFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+      }),
+      financedTokenStartedFilter: generateFinancedTokenStartedFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+      }),
+      financedTokenBasketFilter: generateFinancedTokenBasketFilter({
+        fromDate,
+        toDate,
+        timeFrame,
+      }),
     }),
     [fromDate, toDate, timeFrame],
   );
@@ -116,6 +136,20 @@ const TokenSalesFunnel = ({
     const checkoutCount =
       platform.metric.findCount(filters.checkoutFilter) || 0;
     const successCount = platform.metric.findCount(filters.successFilter) || 0;
+    
+    // Calculate total tokens sold from basket data
+    const tokenBasketData = platform.metric.find(filters.tokenBasketFilter);
+    const totalTokensSold = tokenBasketData?.toJS().reduce((sum: number, item: any) => {
+      return sum + (item.point || 0);
+    }, 0) || 0;
+    
+    // Calculate financed token metrics
+    const financedTokenStartedCount = platform.metric.findCount(filters.financedTokenStartedFilter) || 0;
+    const financedTokenBasketData = platform.metric.find(filters.financedTokenBasketFilter);
+    const totalFinancedTokensSold = financedTokenBasketData?.toJS().reduce((sum: number, item: any) => {
+      return sum + (item.point || 0);
+    }, 0) || 0;
+    
     return {
       pageViewCount,
       whitepaperDownloadCount,
@@ -124,8 +158,11 @@ const TokenSalesFunnel = ({
       approveCount,
       checkoutCount,
       successCount,
+      totalTokensSold,
+      financedTokenStartedCount,
+      totalFinancedTokensSold,
     };
-  }, [platform]);
+  }, [platform, filters]);
 
   const loadData = useCallback(async () => {
     try {
@@ -152,8 +189,7 @@ const TokenSalesFunnel = ({
   }, [loadData]);
 
   const funnelStats = useMemo(() => {
-    const total = Math.max(
-      tokenSaleStats.pageViewCount,
+    const maxFunnelCount = Math.max(
       tokenSaleStats.whitepaperDownloadCount,
       tokenSaleStats.openFlowCount,
       tokenSaleStats.useCalculatorCount,
@@ -164,11 +200,10 @@ const TokenSalesFunnel = ({
     ); // Prevent division by zero
     const calculateStats = (count: number) => ({
       count,
-      percentage: Math.round((count / total) * 100),
+      percentage: Math.round((count / maxFunnelCount) * 100),
     });
 
     return {
-      pageView: calculateStats(tokenSaleStats.pageViewCount),
       whitepaperDownload: calculateStats(
         tokenSaleStats.whitepaperDownloadCount,
       ),
@@ -178,11 +213,11 @@ const TokenSalesFunnel = ({
       checkout: calculateStats(tokenSaleStats.checkoutCount),
       success: calculateStats(tokenSaleStats.successCount),
       conversionRate: {
-        count: `${tokenSaleStats.successCount} / ${tokenSaleStats.pageViewCount}`,
-        percentage: tokenSaleStats.successCount
+        count: `${tokenSaleStats.successCount} / ${tokenSaleStats.openFlowCount}`,
+        percentage: tokenSaleStats.openFlowCount
           ? Number(
               (
-                (tokenSaleStats.successCount / tokenSaleStats.pageViewCount) *
+                (tokenSaleStats.successCount / tokenSaleStats.openFlowCount) *
                 100
               ).toFixed(2),
             )
@@ -191,64 +226,133 @@ const TokenSalesFunnel = ({
     };
   }, [tokenSaleStats]);
   return (
-    <section className="w-full md:w-1/3 min-h-fit md:min-h-[600px]">
-      <Card className="h-full flex flex-col justify-start">
-        <Heading level={2}>
-          {t('dashboard_performance_token_sales_funnel')}
-        </Heading>
+    <div className="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-xl font-bold text-gray-900">
+              {t('dashboard_performance_token_sales_funnel')}
+            </h3>
+            <p className="text-gray-600 text-sm">{t('dashboard_performance_token_purchase_journey')}</p>
+          </div>
+          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+            <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+            </svg>
+          </div>
+        </div>
+        
         {loading ? (
-          <Spinner />
+          <div className="flex items-center justify-center py-8">
+            <Spinner />
+          </div>
         ) : (
-          <div className="flex flex-col gap-4 flex-1 overflow-y-auto">
-            <div className="border-2 rounded-lg space-y-4 p-2 pb-4">
-              <Heading level={3}>
-                {t('dashboard_performance_conversion_rate')}
-              </Heading>
-              <FunnelBar
-                label="Success / page views"
-                stats={funnelStats.conversionRate}
-                color="bg-accent-alt"
-              />
+          <div className="space-y-4">
+            {/* Activity Indicators */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-700 text-xs font-medium">{t('dashboard_performance_page_views')}</span>
+                  <span className="text-lg font-bold text-gray-900">
+                    {tokenSaleStats.pageViewCount}
+                  </span>
+                </div>
+              </div>
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-700 text-xs font-medium">{t('dashboard_performance_whitepaper_downloads')}</span>
+                  <span className="text-lg font-bold text-gray-900">
+                    {funnelStats.whitepaperDownload.count}
+                  </span>
+                </div>
+              </div>
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-700 text-xs font-medium">{t('dashboard_performance_tokens_sold')}</span>
+                  <span className="text-lg font-bold text-gray-900">
+                    {tokenSaleStats.totalTokensSold}
+                  </span>
+                </div>
+              </div>
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-700 text-xs font-medium">{t('dashboard_performance_financed_started')}</span>
+                  <span className="text-lg font-bold text-gray-900">
+                    {tokenSaleStats.financedTokenStartedCount}
+                  </span>
+                </div>
+              </div>
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-700 text-xs font-medium">{t('dashboard_performance_financed_tokens')}</span>
+                  <span className="text-lg font-bold text-gray-900">
+                    {tokenSaleStats.totalFinancedTokensSold}
+                  </span>
+                </div>
+              </div>
             </div>
-            <FunnelBar
-              label="View Token Sale page"
-              stats={funnelStats.pageView}
-              color="bg-accent-alt"
-            />
-            <FunnelBar
-              label="Download Whitepaper"
-              stats={funnelStats.whitepaperDownload}
-              color="bg-accent-alt"
-            />
-            <FunnelBar
-              label="Open Flow"
-              stats={funnelStats.openFlow}
-              color="bg-accent-alt"
-            />
-            <FunnelBar
-              label="Use Calculator"
-              stats={funnelStats.useCalculator}
-              color="bg-accent-alt"
-            />
-            <FunnelBar
-              label="Checkout"
-              stats={funnelStats.checkout}
-              color="bg-accent-alt"
-            />
-            <FunnelBar
-              label="Approve"
-              stats={funnelStats.approve}
-              color="bg-accent-alt"
-            />
-            <FunnelBar
-              label="Success"
-              stats={funnelStats.success}
-              color="bg-accent-alt"
-            />
+
+            {/* Conversion Rate */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-700 text-sm font-medium">{t('dashboard_performance_conversion_rate_label')}</span>
+                <span className="text-2xl font-bold text-primary">
+                  {funnelStats.conversionRate.percentage}%
+                </span>
+              </div>
+              <div className="text-gray-600 text-xs mt-1">
+                {funnelStats.conversionRate.count} {t('dashboard_performance_successful_purchases')}
+              </div>
+            </div>
+
+            {/* Funnel Steps - Single Card Design */}
+            <div className="bg-white/90 rounded-lg p-4 border border-gray-200">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center text-gray-900">
+                  <span className="text-sm font-medium">{t('dashboard_performance_open_flow')}</span>
+                  <span className="font-bold">{funnelStats.openFlow.count}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="bg-primary h-3 rounded-full" style={{ width: '100%' }} />
+                </div>
+                
+                <div className="flex justify-between items-center text-gray-900">
+                  <span className="text-sm font-medium">{t('dashboard_performance_use_calculator')}</span>
+                  <span className="font-bold">{funnelStats.useCalculator.count}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.useCalculator.percentage}%` }} />
+                </div>
+                
+                <div className="flex justify-between items-center text-gray-900">
+                  <span className="text-sm font-medium">{t('dashboard_performance_checkout')}</span>
+                  <span className="font-bold">{funnelStats.checkout.count}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.checkout.percentage}%` }} />
+                </div>
+                
+                <div className="flex justify-between items-center text-gray-900">
+                  <span className="text-sm font-medium">{t('dashboard_performance_approve')}</span>
+                  <span className="font-bold">{funnelStats.approve.count}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.approve.percentage}%` }} />
+                </div>
+                
+                <div className="flex justify-between items-center text-gray-900">
+                  <span className="text-sm font-medium">{t('dashboard_performance_success')}</span>
+                  <span className="font-bold">{funnelStats.success.count}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="bg-primary h-3 rounded-full" style={{ width: `${funnelStats.success.percentage}%` }} />
+                </div>
+              </div>
+            </div>
           </div>
         )}
-      </Card>
-    </section>
+      </div>
+    </div>
   );
 };
 

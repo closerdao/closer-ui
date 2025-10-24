@@ -1,6 +1,6 @@
 import Head from 'next/head';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import TokenSalesDashboard from '../../../components/Dashboard/TokenSalesDashboard';
@@ -12,66 +12,90 @@ import process from 'process';
 
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
-import { User } from '../../../contexts/auth/types';
-import { BookingConfig, TokenSale } from '../../../types/api';
-import api, { formatSearch } from '../../../utils/api';
+import { usePlatform } from '../../../contexts/platform';
+import { BookingConfig } from '../../../types/api';
+import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 
+const SALES_PER_PAGE = 20;
+
 const TokenSalesDashboardPage = ({
-  sales: initialSales,
-  buyers: initialBuyers,
   bookingConfig,
 }: {
-  sales: TokenSale[] | null;
-  buyers: User[] | null;
   bookingConfig: BookingConfig;
 }) => {
   const t = useTranslations();
   const { user } = useAuth();
-  const [sales, setSales] = useState<TokenSale[] | null>(initialSales);
-  const [buyers, setBuyers] = useState<User[] | null>(initialBuyers);
+  const { platform }: any = usePlatform();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('paid');
 
-  const refetchSales = async () => {
+  // Platform data with filter - use useMemo to recalculate when page or filter changes
+  const filterParams = useMemo(
+    () => ({
+      page: currentPage,
+      limit: SALES_PER_PAGE,
+      where: statusFilter === 'all' ? {} : { status: statusFilter },
+    }),
+    [currentPage, statusFilter],
+  );
+
+  const sales = platform?.sale?.find(filterParams);
+  const totalSales = platform?.sale?.findCount(filterParams); // Use filtered count for pagination
+  const loading = platform?.sale?.areLoading(filterParams);
+
+  const loadData = async (
+    page: number = currentPage,
+    filter: string = statusFilter,
+  ) => {
+    if (!platform) {
+      return;
+    }
+
+    const params = {
+      page,
+      limit: SALES_PER_PAGE,
+      where: filter === 'all' ? {} : { status: filter },
+    };
+
+    setIsLoading(true);
     try {
-
-      const [saleRes, buyersRes] = await Promise.all([
-        api.get('/sale').catch(() => null),
-        api
-          .get(
-            '/user?where=' +
-              formatSearch({
-                _id: {
-                  $in: sales?.map((sale: TokenSale) => sale.createdBy) || [],
-                },
-              }),
-          )
-          .catch(() => null),
+      await Promise.all([
+        platform.sale?.get(params),
+        platform.sale?.getCount(params), // Use filtered count for pagination
       ]);
-
-      const newSales = saleRes?.data?.results;
-      const newBuyers = buyersRes?.data?.results;
-
-      setSales(newSales);
-      setBuyers(newBuyers);
+      setCurrentPage(page);
     } catch (error) {
-      console.error('Error refetching sales:', error);
+      console.error('Error loading sales data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const salesWithBuyer = sales?.map((sale: TokenSale) => {
-    const buyer = buyers?.find((buyer: User) => buyer._id === sale.createdBy);
+  const refetchSales = async (page: number = currentPage) => {
 
+    await loadData(page, statusFilter);
+    console.log('refetchSales completed');
+  };
+
+  const handleFilterChange = async (filter: string) => {
+    setStatusFilter(filter);
+    setCurrentPage(1); // Reset to page 1 when filter changes
+    await loadData(1, filter);
+  };
+
+  // Load data on mount and when filterParams change
+  useEffect(() => {
+    loadData();
+  }, [filterParams]);
+
+  const salesWithBuyer = sales?.map((sale: any) => {
+    const saleData = sale.toJS ? sale.toJS() : sale;
     return {
-      ...sale,
-      buyer: buyer
-        ? {
-            email: buyer.email || '',
-            screenname: buyer.screenname || '',
-            walletAddress: buyer.walletAddress || '',
-            _id: buyer._id || '',
-          }
-        : null,
+      ...saleData,
+      buyer: null, // Will be enriched in the TokenSalesDashboard component
     };
   });
 
@@ -98,7 +122,14 @@ const TokenSalesDashboardPage = ({
           <section>
             <TokenSalesDashboard
               sales={salesWithBuyer || []}
-              onSuccess={refetchSales}
+              onSuccess={() => refetchSales()}
+              currentPage={currentPage}
+              totalSales={totalSales}
+              salesPerPage={SALES_PER_PAGE}
+              onPageChange={refetchSales}
+              statusFilter={statusFilter}
+              onFilterChange={handleFilterChange}
+              onRefetch={() => refetchSales()}
             />
           </section>
         </div>
@@ -109,42 +140,23 @@ const TokenSalesDashboardPage = ({
 
 TokenSalesDashboardPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [saleRes, bookingConfigRes, messages] = await Promise.all([
-      api.get('/sale').catch(() => {
-        return null;
-      }),
+    const [bookingConfigRes, messages] = await Promise.all([
       api.get('/config/booking').catch(() => {
         return null;
       }),
-
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
-    const sales = saleRes?.data?.results;
 
-    const uniqueBuyerIds = [
-      ...new Set(sales?.map((sale: TokenSale) => sale.createdBy)),
-    ];
-    const buyersRes = await api.get(
-      `/user?where=${formatSearch({ _id: { $in: uniqueBuyerIds } })}`,
-    );
-
-    const buyers = buyersRes.data.results;
-
-    console.log('buyers=', buyers);
     const bookingConfig = bookingConfigRes?.data?.results?.value;
 
     return {
-      sales,
       bookingConfig,
-      buyers,
       messages,
     };
   } catch (error) {
     return {
       error: parseMessageFromError(error),
-      sales: null,
       bookingConfig: null,
-      buyers: null,
       messages: null,
     };
   }

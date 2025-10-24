@@ -2,25 +2,47 @@ import React, { useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { useAuth } from '../../contexts/auth';
 import { User } from '../../contexts/auth/types';
+import { BookingConfig } from '../../types/api';
 import Bookings from '../Bookings';
 import Tabs from '../Tabs';
 
 interface Props {
   user: User;
   isSpaceHostView?: boolean;
+  bookingConfig?: BookingConfig;
+  hideExportCsv?: boolean;
 }
 
-const UserBookingsComponent = ({ user, isSpaceHostView }: Props) => {
+const UserBookingsComponent = ({
+  user,
+  isSpaceHostView,
+  bookingConfig,
+  hideExportCsv = false,
+}: Props) => {
   const t = useTranslations();
   const bookingsToShowLimit = 50;
+
+  const { user: currentUser } = useAuth();
+  console.log('=== currentUser=', currentUser);
 
   const [page, setPage] = useState(1);
 
   const filters = {
     myBookings: user && {
       where: {
-        createdBy: user._id,
+        $or: [
+          { createdBy: user._id },
+          {
+            $and: [
+              { isFriendsBooking: { $eq: true } },
+              { friendEmails: { $exists: true } },
+              { friendEmails: { $ne: [] } },
+              { friendEmails: { $in: [user.email] } },
+            ],
+          },
+        ],
         status: [
           'pending',
           'confirmed',
@@ -38,7 +60,7 @@ const UserBookingsComponent = ({ user, isSpaceHostView }: Props) => {
     },
     pastBookings: user && {
       where: {
-        createdBy: user._id,
+        $or: [{ createdBy: user._id }, { friendEmails: { $in: [user.email] } }],
         end: { $lt: new Date() },
       },
       limit: bookingsToShowLimit,
@@ -59,6 +81,8 @@ const UserBookingsComponent = ({ user, isSpaceHostView }: Props) => {
                 page={page}
                 setPage={setPage}
                 filter={filters.myBookings}
+                bookingConfig={bookingConfig}
+                hideExportCsv={hideExportCsv}
               />
             ),
           },
@@ -70,6 +94,7 @@ const UserBookingsComponent = ({ user, isSpaceHostView }: Props) => {
                 page={page}
                 setPage={setPage}
                 filter={filters.pastBookings}
+                hideExportCsv={hideExportCsv}
               />
             ),
           },

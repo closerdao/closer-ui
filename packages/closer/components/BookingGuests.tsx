@@ -17,6 +17,8 @@ interface Props {
   setDoesNeedSeparateBeds?: (value: boolean) => void;
   shouldHideTitle?: boolean;
   isPrivate?: boolean;
+  friendsBookingMaxGuests?: number;
+  isFriendsBooking?: boolean;
 }
 
 const BookingGuests = ({
@@ -32,6 +34,8 @@ const BookingGuests = ({
   setDoesNeedSeparateBeds,
   shouldHideTitle,
   isPrivate = false,
+  friendsBookingMaxGuests,
+  isFriendsBooking,
 }: Props) => {
   const t = useTranslations();
   return (
@@ -44,9 +48,19 @@ const BookingGuests = ({
       )}
 
       <div className="mt-4 ">
+        {isFriendsBooking && (
+          <div className="bg-yellow-50 p-2 rounded-lg my-2">
+            Max guests for friends bookings: {friendsBookingMaxGuests}
+          </div>
+        )}
         <div className="flex space-between items-center">
           <p className="flex-1">{t('bookings_dates_step_guests_adults')}</p>
-          <Counter value={adults} setFn={setAdults} minValue={1} />
+          <Counter
+            value={adults}
+            setFn={setAdults}
+            minValue={1}
+            maxValue={isFriendsBooking ? friendsBookingMaxGuests : undefined}
+          />
         </div>
         <div className="flex space-between items-center mt-9">
           <p className="flex-1">{t('bookings_dates_step_guests_children')}</p>

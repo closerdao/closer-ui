@@ -158,6 +158,19 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
       if (userData && userData._id) {
         setHasSignedUp(true);
+        
+        if (process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true' && data.email && data.emailConsent !== false) {
+          try {
+            await api.post('/subscribe', {
+              email: data.email,
+              screenname: data.screenname || '',
+              tags: ['signup', window?.location?.pathname || '', `ref:${localStorage?.getItem('referrer') || ''}`],
+            });
+          } catch (subscribeErr) {
+            console.error('Failed to subscribe email during signup:', subscribeErr);
+          }
+        }
+        
         return { result: 'signup' };
       } else {
         console.log('Invalid response', userData);

@@ -8,6 +8,7 @@ import EventAttendees from '../../../components/EventAttendees';
 import EventDescription from '../../../components/EventDescription';
 import EventPhoto from '../../../components/EventPhoto';
 import Photo from '../../../components/Photo';
+import SignupModal from '../../../components/SignupModal';
 import UploadPhoto from '../../../components/UploadPhoto';
 import { Button, Card, ErrorMessage, LinkButton } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
@@ -54,7 +55,7 @@ const EventPage = ({
 }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, refetchUser } = useAuth();
   const { APP_NAME } = useConfig() || {};
 
   const [photo, setPhoto] = useState(event && event.photo);
@@ -62,6 +63,8 @@ const EventPage = ({
   const [attendees, setAttendees] = useState(event && (event.attendees || []));
   const [isShowingEvent, setIsShowingEvent] = useState(true);
   const [passwordError, setPasswordError] = useState<null | string>(null);
+  const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
+  const [apiError, setApiError] = useState(null);
 
   const canEditEvent = user
     ? user?._id === event?.createdBy || user?.roles.includes('admin')
@@ -143,18 +146,50 @@ const EventPage = ({
     }
   };
 
+  const refreshAttendeeStatus = async () => {
+    try {
+      // Wait a bit for the user context to be updated after signup
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Refresh the user context to ensure we have the latest user data
+      await refetchUser();
+
+      // Fetch the latest event data to get updated attendees
+      const {
+        data: { results: updatedEvent },
+      } = await api.get(`/event/${event.slug || event._id}`);
+
+      if (updatedEvent && updatedEvent.attendees) {
+        setAttendees(updatedEvent.attendees);
+      }
+    } catch (error) {
+      console.error('Error refreshing attendee status:', error);
+    }
+  };
+
   const attendEvent = async (_id: any, attend: any) => {
     try {
       const {
         data: { results: event },
       } = await api.post(`/attend/event/${_id}`, { attend });
+
+      const res = await api.post(`/events/${_id}/notifications`, {
+        userId: user?._id,
+      });
+
+      // Ensure current user data is available in platform cache for immediate display
+      if (attend && user) {
+        platform.user.set(user);
+      }
+
       setAttendees(
         attend
           ? event.attendees.concat(user?._id)
           : event.attendees.filter((a: string) => a !== user?._id),
       );
     } catch (err) {
-      alert(`Could not RSVP: ${err}`);
+      setApiError(parseMessageFromError(err));
+      console.log('err===', err);
     }
   };
 
@@ -167,12 +202,23 @@ const EventPage = ({
   };
 
   const showEvent = () => {
-    if (password !== event.password) {
-      setPasswordError(t('incorrect_event_password_error'));
-      return;
-    }
-    localStorage.setItem('eventPassword', password as string);
     setIsShowingEvent(true);
+  };
+
+  const handleRegisterClick = () => {
+    if (!isAuthenticated) {
+      setIsSignupModalOpen(true);
+    } else {
+      attendEvent(event?._id, !attendees?.includes(user?._id || 'notsignedin'));
+    }
+  };
+
+  const handleSignupSuccess = async () => {
+    setIsSignupModalOpen(false);
+    // The SignupModal already handles event registration and notification sending
+    // so we don't need to call attendEvent here
+    // Refresh the attendee status to show the updated UI
+    await refreshAttendeeStatus();
   };
 
   if (!event) {
@@ -206,8 +252,8 @@ const EventPage = ({
         />
       </Head>
 
-      {isShowingEvent === false ||
-      (event.password && event.password !== password) ? (
+      {(isShowingEvent === false ||
+      (event.password && event.password !== password)) ? (
         <div className="flex flex-col justify-center items-center my-20 ">
           <div className="w-34 flex flex-col gap-4">
             <Heading>This event is password protected</Heading>
@@ -290,74 +336,6 @@ const EventPage = ({
           </section>
 
           <section className=" w-full flex justify-center">
-            <div className="max-w-4xl w-full ">
-              <div className="w-full py-2">
-                <div className="w-full flex flex-col sm:flex-row gap-4 sm:gap-8">
-                  <div className="flex gap-1 items-center min-w-[140px]">
-                    <Image
-                      alt="calendar icon"
-                      src="/images/icons/calendar-icon.svg"
-                      width={20}
-                      height={20}
-                    />
-                    <label className="text-sm uppercase font-bold flex gap-1">
-                      {start && dayjs(start).format(dateFormat)}
-                      {end &&
-                        Number(duration) <= 24 &&
-                        ` ${dayjs(start).format('HH:mm')}`}{' '}
-                      {end &&
-                        Number(duration) <= 24 &&
-                        ` ${dayjs(start).format('HH:mm')}`}{' '}
-                      {end &&
-                        Number(duration) > 24 &&
-                        ` - ${dayjs(end).format(dateFormat)}`}
-                      {end &&
-                        Number(duration) <= 24 &&
-                        ` - ${dayjs(end).format('HH:mm')}`}{' '}
-                      {end && end.isBefore(dayjs()) && (
-                        <p className="text-disabled">
-                          {t('event_event_ended')}
-                        </p>
-                      )}
-                    </label>
-                  </div>
-                  {event.address && (
-                    <div className="flex gap-1 items-center">
-                      <Image
-                        alt="location icon"
-                        src="/images/icons/pin-icon.svg"
-                        width={20}
-                        height={20}
-                      />
-                      <p className="text-sm uppercase font-bold">
-                        {event.address}
-                      </p>
-                    </div>
-                  )}
-                  <div className="flex items-center text-sm uppercase font-bold gap-1">
-                    <p className="">{t('event_organiser')}</p>
-
-                    {eventCreator.photo ? (
-                      <Image
-                        src={`${cdn}${eventCreator?.photo}-profile-lg.jpg`}
-                        loading="lazy"
-                        alt={eventCreator?.screenname}
-                        className=" rounded-full"
-                        width={25}
-                        height={25}
-                      />
-                    ) : (
-                      <FaUser className="text-gray-300 w-[30px] h-[30px] rounded-full" />
-                    )}
-
-                    <p>{eventCreator?.screenname}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className=" w-full flex justify-center">
             <div className="max-w-4xl w-full">
               <div className="flex flex-col sm:flex-row">
                 <div className="flex items-start justify-between gap-6 w-full">
@@ -365,6 +343,27 @@ const EventPage = ({
                     <Heading className="md:text-4xl mt-4 font-bold">
                       {event.name}
                     </Heading>
+
+                    <div className="flex gap-2 my-4 items-center">
+                      <p className="text-sm font-medium">
+                        {t('event_organiser')}
+                      </p>
+                      {eventCreator.photo ? (
+                        <Image
+                          src={`${cdn}${eventCreator?.photo}-profile-lg.jpg`}
+                          loading="lazy"
+                          alt={eventCreator?.screenname}
+                          className="rounded-full"
+                          width={20}
+                          height={20}
+                        />
+                      ) : (
+                        <FaUser className="text-gray-300 w-[20px] h-[20px] rounded-full" />
+                      )}
+                      <p className="text-sm font-medium">
+                        {eventCreator?.screenname}
+                      </p>
+                    </div>
 
                     <div>
                       {event.description && <EventDescription event={event} />}
@@ -398,76 +397,168 @@ const EventPage = ({
                         </div>
                       </section>
                     )}
-
-                    {attendees && attendees.length > 0 && (
-                      <div>
-                        <EventAttendees
-                          event={event}
-                          start={start}
-                          attendees={attendees}
-                          ticketsCount={ticketsCount}
-                          platform={platform}
-                        />
-                      </div>
-                    )}
                   </div>
-                  <div className="h-auto fixed z-10 bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px]">
-                    {end && !end.isBefore(dayjs()) && (
-                      <Card className="bg-white border border-gray-100 gap-1 sm:gap-4">
-                        {event.paid &&
-                          event.ticketOptions.map((ticketOption: any) => {
-                            const availableTickets =
-                              soldTickets &&
-                              ticketOption.limit -
-                                soldTickets.filter(
-                                  (ticket: any) =>
-                                    ticket.option.name === ticketOption.name,
-                                ).length;
-                            const areTicketsAvailable =
-                              availableTickets > 9 || ticketOption.limit === 0;
-                            const areTicketsEnding =
-                              availableTickets > 1 &&
-                              availableTickets < 10 &&
-                              ticketOption.limit !== 0;
-                            const areTicketsSoldOut =
-                              availableTickets === 0 &&
-                              ticketOption.limit !== 0;
-                            return (
-                              <div
-                                key={ticketOption.name}
-                                className="flex flex-col gap-1"
-                              >
-                                <div className="gap-2 sm:gap-0 flex-row flex sm:flex-col bg-accent-light rounded-md px-2 p-0 sm:p-2 items-center ">
-                                  <p className="text-md text-center">
-                                    {ticketOption.name}
-                                  </p>
-                                  <p className="text-md font-bold">
-                                    {priceFormat(ticketOption.price)}
-                                  </p>
-                                  <div>
-                                    <div className="hidden sm:flex">
-                                      {areTicketsSoldOut && (
-                                        <span className="text-xs text-error">
-                                          {t('event_tickets_sold')}
-                                        </span>
-                                      )}
-                                      {areTicketsAvailable && (
-                                        <>
-                                          <span className="text-xs text-success">
-                                            {t('event_tickets_available')}{' '}
-                                            {getDaysTo(end)}{' '}
-                                            {t('event_tickets_available_days')}
-                                          </span>
-                                        </>
-                                      )}
-                                      {areTicketsEnding && (
-                                        <span className="text-xs text-pending">
-                                          {t('event_tickets_last')}
-                                        </span>
-                                      )}
-                                    </div>
+                  <div className="h-auto fixed z-10 bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px] space-y-4">
+                    <Card className="bg-white border border-gray-100 p-4">
+                      <div className="space-y-4">
+                        <div className="flex gap-2 items-center">
+                          <Image
+                            alt="calendar icon"
+                            src="/images/icons/calendar-icon.svg"
+                            width={16}
+                            height={16}
+                          />
+                          <div className="text-sm">
+                            <div className="font-semibold">
+                              {start && dayjs(start).format(dateFormat)}
+                              {end &&
+                                Number(duration) <= 24 &&
+                                ` ${dayjs(start).format('HH:mm')}`}
+                              {end &&
+                                Number(duration) > 24 &&
+                                ` - ${dayjs(end).format(dateFormat)}`}
+                              {end &&
+                                Number(duration) <= 24 &&
+                                ` - ${dayjs(end).format('HH:mm')}`}
+                            </div>
+                            {end && end.isBefore(dayjs()) && (
+                              <div className="text-red-500 text-xs">
+                                {t('event_event_ended')}
+                              </div>
+                            )}
+                          </div>
+                        </div>
 
-                                    {/* {availableTickets === 0 &&
+                        {event.address && (
+                          <div className="flex gap-2 items-center">
+                            <Image
+                              alt="location icon"
+                              src="/images/icons/pin-icon.svg"
+                              width={16}
+                              height={16}
+                            />
+                            {event.address.startsWith('http') ? (
+                              <a
+                                href={event.address}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm font-medium text-blue-600 hover:text-blue-800 underline truncate"
+                              >
+                                {event.address}
+                              </a>
+                            ) : (
+                              <p className="text-sm font-medium truncate">
+                                {event.address}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        {event.location && !event.address && (
+                          <div className="flex gap-2 items-center">
+                            <Image
+                              alt="location icon"
+                              src="/images/icons/pin-icon.svg"
+                              width={16}
+                              height={16}
+                            />
+                            {event.location.startsWith('http') ? (
+                              <a
+                                href={event.location}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm font-medium text-blue-600 hover:text-blue-800 underline truncate"
+                              >
+                                {event.location}
+                              </a>
+                            ) : (
+                              <p className="text-sm font-medium truncate">
+                                {event.location}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        {attendees && attendees.length > 0 && (
+                          <EventAttendees
+                            event={event}
+                            start={start}
+                            attendees={attendees}
+                            ticketsCount={ticketsCount}
+                            platform={platform}
+                          />
+                        )}
+                      </div>
+
+                        {end && !end.isBefore(dayjs()) && (
+                          <div className="space-y-3">
+                            {(() => {
+                              // Check if all tickets are sold out
+                              const allTicketsSoldOut = event.paid && event.ticketOptions.every((ticketOption: any) => {
+                                const availableTickets = soldTickets && ticketOption.limit - soldTickets.filter((ticket: any) => ticket.option.name === ticketOption.name).length;
+                                return availableTickets === 0 && ticketOption.limit !== 0;
+                              });
+                              
+                              return allTicketsSoldOut ? (
+                                <div className="text-center py-6 px-3">
+                                  <p className="font-bold text-lg">{t('events_no_tickets_available')}</p>
+                                  <p className="text-sm mt-1">{t('events_completely_sold_out')}</p>
+                                </div>
+                              ) : (
+                                event.paid &&
+                                event.ticketOptions.map((ticketOption: any) => {
+                                const availableTickets =
+                                  soldTickets &&
+                                  ticketOption.limit -
+                                  soldTickets.filter(
+                                    (ticket: any) =>
+                                      ticket.option.name === ticketOption.name,
+                                  ).length;
+                                const areTicketsAvailable =
+                                  availableTickets > 9 || ticketOption.limit === 0;
+                                const areTicketsEnding =
+                                  availableTickets > 1 &&
+                                  availableTickets < 10 &&
+                                  ticketOption.limit !== 0;
+                                const areTicketsSoldOut =
+                                  availableTickets === 0 &&
+                                  ticketOption.limit !== 0;
+                                return (
+                                  <div
+                                    key={ticketOption.name}
+                                    className="flex flex-col gap-1"
+                                  >
+                                    <div className="gap-2 sm:gap-0 flex-row flex sm:flex-col bg-accent-light rounded-md px-2 p-0 sm:p-2 items-center ">
+                                      <p className="text-md text-center">
+                                        {ticketOption.name}
+                                      </p>
+                                      <p className="text-md font-bold">
+                                        {priceFormat(ticketOption.price)}
+                                      </p>
+                                      <div>
+                                        <div className="hidden sm:flex">
+                                          {areTicketsSoldOut && (
+                                            <span className="text-xs text-error">
+                                              {t('event_tickets_sold')}
+                                            </span>
+                                          )}
+                                          {areTicketsAvailable && (
+                                            <>
+                                              <span className="text-xs text-success">
+                                                {t('event_tickets_available')}{' '}
+                                                {getDaysTo(end)}{' '}
+                                                {t('event_tickets_available_days')}
+                                              </span>
+                                            </>
+                                          )}
+                                          {areTicketsEnding && (
+                                            <span className="text-xs text-pending">
+                                              {t('event_tickets_last')}
+                                            </span>
+                                          )}
+                                        </div>
+
+                                        {/* {availableTickets === 0 &&
                                     ticket.limit !== 0 ? (
                                       <span className="text-xs text-error">
                                         {t('event_tickets_sold')}
@@ -481,161 +572,269 @@ const EventPage = ({
                                         {t('event_tickets_last')}
                                       </span>
                                     )} */}
+                                      </div>
+                                    </div>
                                   </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        {durationInDays > 0 &&
-                          APP_NAME &&
-                          APP_NAME !== 'lios' && (
-                            <>
-                              <div className="text-sm">
-                                {t('events_accommodation')}{' '}
-                                <strong>
-                                  {priceFormat(
-                                    minAccommodationPrice * discountRate,
-                                  )}{' '}
-                                  -{' '}
-                                  {priceFormat(
-                                    maxAccommodationPrice * discountRate,
+                                );
+                              })
+                              );
+                            })()}
+                            {durationInDays > 0 &&
+                              APP_NAME &&
+                              APP_NAME !== 'lios' &&
+                              !(event.paid && event.ticketOptions.every((ticketOption: any) => {
+                                const availableTickets = soldTickets && ticketOption.limit - soldTickets.filter((ticket: any) => ticket.option.name === ticketOption.name).length;
+                                return availableTickets === 0 && ticketOption.limit !== 0;
+                              })) && (
+                                <>
+                                  <div className="text-sm">
+                                    {t('events_accommodation')}{' '}
+                                    <strong>
+                                      {priceFormat(
+                                        minAccommodationPrice * discountRate,
+                                      )}{' '}
+                                      -{' '}
+                                      {priceFormat(
+                                        maxAccommodationPrice * discountRate,
+                                      )}
+                                    </strong>
+                                  </div>
+                                </>
+                              )}
+                            <div>
+                              {/* Event uses an external ticketing system */}
+                              {event.ticket && start && start.isAfter(dayjs()) ? (
+                                <Link
+                                  href={prependHttp(event.ticket)}
+                                  className="btn-primary mr-2"
+                                  target="_blank"
+                                  rel="noreferrer nofollow"
+                                >
+                                  {t('events_buy_ticket_button')}
+                                </Link>
+                              ) : event.paid || durationInDays > 0 ? (
+                                <>
+                                  {myTickets && (
+                                    <div>
+                                      <Heading level={4}>Tickets</Heading>
+                                      <ul className="space-y-2 divide-y mb-3">
+                                        {myTickets.map((ticket: any) => (
+                                          <li key={ticket.get('_id')}>
+                                            <Link
+                                              href={`/tickets/${ticket.get('_id')}`}
+                                              className="text-accent"
+                                            >
+                                              {ticket.get('name')} x{' '}
+                                              {ticket.get('quantity') || 1}
+                                            </Link>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
                                   )}
-                                </strong>
-                              </div>
-                            </>
-                          )}
-                        <div className="mt-4">
-                          {/* Event uses an external ticketing system */}
-                          {event.ticket && start && start.isAfter(dayjs()) ? (
-                            <Link
-                              href={prependHttp(event.ticket)}
-                              className="btn-primary mr-2"
-                              target="_blank"
-                              rel="noreferrer nofollow"
-                            >
-                              {t('events_buy_ticket_button')}
-                            </Link>
-                          ) : event.paid || durationInDays > 0 ? (
-                            <>
-                              {myTickets && (
-                                <div>
-                                  <Heading level={4}>Tickets</Heading>
-                                  <ul className="space-y-2 divide-y mb-3">
-                                    {myTickets.map((ticket: any) => (
-                                      <li key={ticket.get('_id')}>
-                                        <Link
-                                          href={`/tickets/${ticket.get('_id')}`}
-                                          className="text-accent"
+                                  {end &&
+                                    end.isAfter(dayjs()) &&
+                                    (event.stripePub ||
+                                      process.env
+                                        .NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) &&
+                                    !(event.paid && event.ticketOptions.every((ticketOption: any) => {
+                                      const availableTickets = soldTickets && ticketOption.limit - soldTickets.filter((ticket: any) => ticket.option.name === ticketOption.name).length;
+                                      return availableTickets === 0 && ticketOption.limit !== 0;
+                                    })) && (
+                                      <>
+                                        {event.requireApproval && (
+                                          <p className="text-sm text-gray-600 mb-2">
+                                            {t('bookings_event_requires_approval')}
+                                          </p>
+                                        )}
+                                        <LinkButton
+                                          href={`/bookings/create/dates/?eventId=${event._id
+                                            }&start=${start ? start.format('YYYY-MM-DD') : ''
+                                            }&end=${end ? end.format('YYYY-MM-DD') : ''
+                                            }`}
+                                          className=""
                                         >
-                                          {ticket.get('name')} x{' '}
-                                          {ticket.get('quantity') || 1}
-                                        </Link>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-                              {end &&
-                                end.isAfter(dayjs()) &&
-                                (event.stripePub ||
-                                  process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) && (
-                                  <LinkButton
-                                    href={`/bookings/create/dates/?eventId=${
-                                      event._id
-                                    }&start=${
-                                      start ? start.format('YYYY-MM-DD') : ''
-                                    }&end=${
-                                      end ? end.format('YYYY-MM-DD') : ''
-                                    }`}
-                                    className=""
-                                  >
-                                    {t('events_buy_ticket_button')}
-                                  </LinkButton>
-                                )}
-                            </>
-                          ) : (
-                            <>
-                              {start &&
-                              start.isBefore(dayjs().subtract(15, 'minutes')) &&
-                              end &&
-                              end.isAfter(dayjs()) &&
-                              event.virtual &&
-                              event.location ? (
-                                <a
-                                  className="btn-primary mr-2"
-                                  href={event.location}
-                                >
-                                  Join call
-                                </a>
-                              ) : start &&
-                                start.isBefore(dayjs()) &&
-                                end &&
-                                end.isAfter(dayjs()) ? (
-                                // <span className="p3 mr-2" href={event.location}>
-                                <span className="p3 mr-2">ONGOING</span>
-                              ) : !isAuthenticated && event.recording ? (
-                                <Link
-                                  as={`/signup?back=${encodeURIComponent(
-                                    `/events/${event.slug}`,
-                                  )}`}
-                                  href="/signup"
-                                  className="btn-primary mr-2"
-                                >
-                                  Signup to watch recording
-                                </Link>
-                              ) : !isAuthenticated &&
-                                start &&
-                                start.isAfter(dayjs()) ? (
-                                <Link
-                                  as={`/signup?back=${encodeURIComponent(
-                                    `/events/${event.slug}`,
-                                  )}`}
-                                  href="/signup"
-                                  className="btn-primary mr-2"
-                                >
-                                  Signup to RSVP
-                                </Link>
-                              ) : end &&
-                                end.isBefore(dayjs()) &&
-                                user &&
-                                attendees?.includes(user._id) ? (
-                                <a
-                                  href="#"
-                                  className="btn-primary mr-2"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    attendEvent(
-                                      event._id,
-                                      !attendees?.includes(user._id),
-                                    );
-                                  }}
-                                >
-                                  Cancel RSVP
-                                </a>
+                                          {t('events_buy_ticket_button')}
+                                        </LinkButton>
+                                      </>
+                                    )}
+                                </>
                               ) : (
-                                end &&
-                                user &&
-                                event.virtual &&
-                                end.isAfter(dayjs()) && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      attendEvent(
-                                        event._id,
-                                        !attendees?.includes(user._id),
-                                      );
-                                    }}
-                                    className="btn-primary mr-2"
-                                  >
-                                    Attend
-                                  </button>
-                                )
+                                <>
+                                  {!event.paid && 
+                                    start && 
+                                    end && 
+                                    start.isSame(end, 'day') && 
+                                    start.isAfter(dayjs()) ? (
+                                    <div className="text-center">
+                                      {user?._id && attendees?.includes(user._id) ? (
+                                        <>
+                                          <p className="text-sm text-gray-600 mb-2">
+                                            {event.virtual ? t('events_virtual_looking_forward') : 'We look forward to seeing you.'}
+                                          </p>
+                                          <a
+                                            href="#"
+                                            className="text-sm text-accent underline"
+                                            onClick={(e) => {
+                                              e.preventDefault();
+                                              if (user?._id) {
+                                                attendEvent(
+                                                  event._id,
+                                                  !attendees?.includes(user._id),
+                                                );
+                                              }
+                                            }}
+                                          >
+                                            {t('events_cancel_rsvp')}
+                                          </a>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <p className="text-sm text-gray-800 mb-2">
+                                            {t('events_virtual_welcome')}
+                                          </p>
+                                          {apiError && (
+                                            <ErrorMessage error={apiError} />
+                                          )}
+                                          <button
+                                            onClick={(e) => {
+                                              e.preventDefault();
+                                              if (user?._id) {
+                                                attendEvent(
+                                                  event._id,
+                                                  !attendees?.includes(user._id),
+                                                );
+                                              }
+                                            }}
+                                            className="btn-primary mr-2"
+                                          >
+                                            {t('events_register')}
+                                          </button>
+                                        </>
+                                      )}
+                                    </div>
+                                  ) : start &&
+                                    start.isBefore(dayjs().subtract(15, 'minutes')) &&
+                                    end &&
+                                    end.isAfter(dayjs()) &&
+                                    event.virtual &&
+                                    event.location ? (
+                                    <a
+                                      className="btn-primary mr-2"
+                                      href={event.location}
+                                    >
+                                      {t('events_join_call')}
+                                    </a>
+                                  ) : start &&
+                                    start.isBefore(dayjs()) &&
+                                    end &&
+                                    end.isAfter(dayjs()) ? (
+                                    // <span className="p3 mr-2" href={event.location}>
+                                    <span className="p3 mr-2">
+                                      {t('events_ongoing')}
+                                    </span>
+                                  ) : !isAuthenticated && event.recording ? (
+                                    <Link
+                                      as={`/signup?back=${encodeURIComponent(
+                                        `/events/${event.slug}`,
+                                      )}`}
+                                      href="/signup"
+                                      className="btn-primary mr-2"
+                                    >
+                                      {t('events_signup_watch_recording')}
+                                    </Link>
+                                  ) : !isAuthenticated &&
+                                    start &&
+                                    start.isAfter(dayjs()) ? (
+                                    <div>
+                                      <p className="text-sm text-gray-600 mb-2">
+                                        {t('events_virtual_welcome')}
+                                      </p>
+                                      <button
+                                        onClick={handleRegisterClick}
+                                        className="btn-primary mr-2"
+                                      >
+                                        {t('events_register')}
+                                      </button>
+                                    </div>
+                                  ) : end &&
+                                    end.isBefore(dayjs()) &&
+                                    user &&
+                                    attendees?.includes(user._id) ? (
+                                    <div className="text-center">
+                                      <p className="text-sm text-gray-600 mb-2">
+                                        {t('events_virtual_enjoyed')}
+                                      </p>
+                                      <a
+                                        href="#"
+                                        className="text-sm text-accent underline"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          attendEvent(
+                                            event._id,
+                                            !attendees?.includes(user._id),
+                                          );
+                                        }}
+                                      >
+                                        {t('events_cancel_rsvp')}
+                                      </a>
+                                    </div>
+                                  ) : (
+                                    end &&
+                                    user &&
+                                    event.virtual &&
+                                    end.isAfter(dayjs()) && (
+                                      <div className="text-center">
+                                        {attendees?.includes(user._id) ? (
+                                          <>
+                                            <p className="text-sm text-gray-600 mb-2">
+                                              {event.virtual ? t('events_virtual_looking_forward') : 'We look forward to seeing you.'}
+                                            </p>
+                                            <a
+                                              href="#"
+                                              className="text-sm text-accent underline"
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                attendEvent(
+                                                  event._id,
+                                                  !attendees?.includes(user._id),
+                                                );
+                                              }}
+                                            >
+                                              {t('events_cancel_rsvp')}
+                                            </a>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <p className="text-sm text-gray-800 mb-2">
+                                              {t('events_virtual_welcome')}
+                                            </p>
+                                            {apiError && (
+                                              <ErrorMessage error={apiError} />
+                                            )}
+                                            <button
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                attendEvent(
+                                                  event._id,
+                                                  !attendees?.includes(user._id),
+                                                );
+                                              }}
+                                              className="btn-primary mr-2"
+                                            >
+                                              {t('events_register')}
+                                            </button>
+                                          </>
+                                        )}
+                                      </div>
+                                    )
+                                  )}
+                                </>
                               )}
-                            </>
-                          )}
-                        </div>
-                      </Card>
-                    )}
+                            </div>
+                          </div>
+                        )}
+                    </Card>
                   </div>
                 </div>
               </div>
@@ -643,6 +842,12 @@ const EventPage = ({
           </section>
         </div>
       )}
+      <SignupModal
+        isOpen={isSignupModalOpen}
+        onClose={() => setIsSignupModalOpen(false)}
+        onSuccess={handleSignupSuccess}
+        eventId={event._id || ''}
+      />
     </>
   );
 };

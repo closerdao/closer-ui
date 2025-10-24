@@ -40,10 +40,10 @@ const getPage = ({
             title: 'House of Auset / Isis, Aswan | Egypt',
             body: 'A land regeneration and temple community NGO reviving local and ancient heritage.',
             imageUrl:
-              'https://cdn.oasa.co/custom-pages/per-auset/per-auset-hero.png',
+              'https://cdn.oasa.co/custom-pages/per-auset/per-auset-hero-3.jpg',
             cta: {
               text: 'VIEW OUR PROPOSAL',
-              url: '/',
+              url: 'https://www.canva.com/design/DAGJO90IHuU/dB1o257xAmKG6Ah74kOpTQ/view?utm_content=DAGJO90IHuU&utm_campaign=share_your_design&utm_medium=link&utm_source=shareyourdesignpanel#11',
             },
           },
         },

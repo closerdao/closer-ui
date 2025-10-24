@@ -31,6 +31,8 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
     generalConfig?.platformName || defaultConfig.platformName;
   const router = useRouter();
   const { user } = useAuth();
+
+  const { memoCode } = router.query;
   const {
     tokenSaleType,
     totalFiat,
@@ -51,7 +53,17 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
       category: 'sales',
       label: 'token',
     });
-  }, []);
+
+    // Track token basket size
+    if (amountOfTokensPurchased) {
+      api.post('/metric', {
+        event: 'token-sale-success',
+        value: 'token-sale',
+        point: Number(amountOfTokensPurchased),
+        category: 'engagement',
+      });
+    }
+  }, [amountOfTokensPurchased]);
 
   const handleNext = () => {
     router.push('/');
@@ -118,19 +130,47 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
                 {t('token_sale_bank_transfer_success_instructions_2')}{' '}
                 {ibanNumber?.slice(-4)}
               </p>
+
+              <div className="bg-yellow-100 font-bold p-4 rounded-lg space-y-2">
+                {t(
+                  'subscriptions_citizen_finance_tokens_payment_memo_important',
+                  { memoCode: memoCode as string },
+                )}
+              </div>
+              <div className="bg-gray-100 p-4 rounded-lg space-y-2">
+                <div>
+                  <span className="font-semibold">{t('oasa_beneficiary')}</span>
+                  <span className="ml-2">{t('oasa_beneficiary_name')}</span>
+                </div>
+                <div>
+                  <span className="font-semibold">{t('oasa_iban')}</span>
+                  <span className="ml-2">{t('oasa_iban_value')}</span>
+                </div>
+                <div>
+                  <span className="font-semibold">{t('oasa_bic')}</span>
+                  <span className="ml-2">{t('oasa_bic_value')}</span>
+                </div>
+                <div>
+                  <span className="font-semibold">{t('oasa_address')}</span>
+                  <div className="">{t('oasa_address_value')}</div>
+                </div>
+                <div>
+                  <span className="font-semibold">{t('oasa_memo')}</span>
+                  <div className="font-mono">{memoCode as string}</div>
+                </div>
+              </div>
+
               <p>{t('token_sale_bank_transfer_success_info')}</p>
 
               {!user?.walletAddress && (
                 <div className="flex  gap-4 bg-neutral p-6 pb-8 rounded-lg">
-                  <Info  className="flex-shrink-0 w-8 h-8  text-gray-400" />
+                  <Info className="flex-shrink-0 w-8 h-8  text-gray-400" />
                   <div className="flex flex-col gap-4 pt-0.5">
                     <p>{t('token_sale_bank_transfer_no_wallet_intro')}</p>
-
 
                     <p>
                       {' '}
                       {t.rich('token_sale_bank_transfer_no_wallet_step_1', {
-                      
                         link: (chunks) => (
                           <a
                             href="https://grimsnas.se"

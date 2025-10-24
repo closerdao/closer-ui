@@ -3,7 +3,11 @@ import { useRouter } from 'next/router';
 
 import { useState } from 'react';
 
+import { BookingConfig } from '../../types/api';
+
 import dayjs from 'dayjs';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import { MessageSquareMore } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { STATUS_COLOR } from '../../constants';
@@ -19,6 +23,8 @@ import BookingRequestButtons from '../BookingRequestButtons';
 import UserInfoButton from '../UserInfoButton';
 import { Button, Card, LinkButton, Spinner } from '../ui';
 
+dayjs.extend(isSameOrBefore);
+
 interface Props {
   booking: any;
   listingName: string;
@@ -29,6 +35,8 @@ interface Props {
   isAdmin?: boolean;
   isPrivate?: boolean;
   isHourly?: boolean;
+  eventChatLink?: string;
+  bookingConfig?: BookingConfig;
 }
 
 const BookingListPreview = ({
@@ -41,10 +49,15 @@ const BookingListPreview = ({
   isAdmin,
   isPrivate,
   isHourly,
+  eventChatLink,
+  bookingConfig,
 }: Props) => {
   const t = useTranslations();
 
   const { TIME_ZONE } = useConfig();
+
+  const chatLink = eventChatLink || bookingConfig?.chatLink || '';
+
   const {
     _id,
     start,
@@ -69,6 +82,8 @@ const BookingListPreview = ({
     foodFiat,
     volunteerInfo,
     volunteerId,
+    paidBy,
+    isFriendsBooking,
   } = bookingMapItem.toJS();
 
   const router = useRouter();
@@ -84,7 +99,8 @@ const BookingListPreview = ({
     status === 'tokens-staked';
 
   const isSpaceHost = user?.roles.includes('space-host');
-  const isOwnBooking = createdBy === user?._id;
+  const isOwnBooking =
+    createdBy === user?._id || bookingMapItem.get('paidBy') === user?._id;
 
   const flagPickup =
     doesNeedPickup && start > new Date(Date.now() - 12 * 60 * 60 * 1000);
@@ -189,9 +205,19 @@ const BookingListPreview = ({
             ? t('booking_status_confirmed_title')
             : status}
         </p>
+
+        {isFriendsBooking && (
+          <div className="bg-blue-500 rounded-md p-1 text-white text-center text-xs mt-1.5">
+            {t('friends_booking_title')}
+          </div>
+        )}
       </div>
 
-      <UserInfoButton size="md" userInfo={userInfo} createdBy={createdBy} />
+      <UserInfoButton
+        size="md"
+        userInfo={userInfo}
+        createdBy={paidBy || createdBy}
+      />
 
       {link ? (
         <Link
@@ -208,6 +234,25 @@ const BookingListPreview = ({
           {eventName && ` — ${eventName}`}
           {volunteerName && ` — ${volunteerName}`}
         </p>
+      )}
+
+      {chatLink && (
+        <LinkButton
+          size="small"
+          className="py-0.5"
+          href={chatLink}
+          variant="secondary"
+          isFullWidth={false}
+        >
+          <div className="flex items-center gap-2 ">
+            <MessageSquareMore className="w-4 h-4" />{' '}
+            {eventName ? (
+              <span>{t('booking_card_open_event_chat')}</span>
+            ) : (
+              <span>{t('booking_card_open_chat')}</span>
+            )}
+          </div>
+        </LinkButton>
       )}
 
       <div className="flex gap-4">
@@ -333,7 +378,7 @@ const BookingListPreview = ({
           {t('booking_card_email_user')}
         </LinkButton>
       )}
-      
+
       {isOwnBooking && status === 'confirmed' && (
         <Link href={`/bookings/${_id}/checkout`} passHref>
           <Button className="mt-6" variant="primary">
@@ -345,7 +390,7 @@ const BookingListPreview = ({
       {isPaidBooking &&
         isSpaceHost &&
         dayjs(bookingMapItem.get('end')).isAfter(dayjs()) &&
-        dayjs(bookingMapItem.get('start')).isBefore(dayjs()) &&
+        dayjs(bookingMapItem.get('start')).isSameOrBefore(dayjs(), 'day') &&
         status !== 'checked-in' && (
           <Button
             className="mt-6 flex gap-1"
@@ -371,6 +416,7 @@ const BookingListPreview = ({
         _id={_id}
         status={status}
         createdBy={createdBy}
+        paidBy={bookingMapItem.get('paidBy')}
         end={end}
         start={start}
         confirmBooking={confirmBooking}

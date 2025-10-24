@@ -132,7 +132,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
             {t('token_sale_public_sale_heading')}
           </Heading>
 
-          <Heading level={2}>Coming soon!</Heading>
+          <Heading level={2}>{t('generic_coming_soon')}!</Heading>
         </div>
       </>
     );
@@ -260,7 +260,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 <Button
                   isFullWidth={false}
                   variant="secondary"
-                  onClick={() => { router.push('/subscriptions/citizen/validation'); }}
+                  onClick={() => { router.push('/citizenship'); }}
                 >
                   {t('token_sale_become_member_button')}
                 </Button>
@@ -291,7 +291,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                   {t('token_sale_public_sale_price_per_night')}
                 </div>
                 {listings &&
-                  listings.map((listing: any) => {
+                  listings.filter((listing: any) => listing.tokenPrice.val > 0).map((listing: any) => {
                     return (
                       <div key={listing.name}>
                         <div className="grid grid-cols-[55px_auto_65px]">
@@ -341,7 +341,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                   <p className="pt-1">
                     {t('token_sale_public_sale_shared_suite')}
                     <span className="block text-xs text-accent">
-                      {t('token_sale_public_sale_coming_2023')}
+                      {t('token_sale_public_sale_coming_soon')}
                     </span>
                   </p>
                   <p className="text-right text-accent pt-2">
@@ -360,7 +360,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                   <p className=" pt-1">
                     {t('token_sale_public_sale_private_suite')}
                     <span className="block text-xs text-accent">
-                      {t('token_sale_public_sale_coming_2023')}
+                      {t('token_sale_public_sale_coming_soon')}
                     </span>
                   </p>
                   <p className=" text-right text-accent pt-2">
@@ -379,7 +379,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                   <p className=" pt-1">
                     {t('token_sale_public_sale_studio')}
                     <span className="block text-xs text-accent">
-                      {t('token_sale_public_sale_coming_2024')}
+                      {t('token_sale_public_sale_coming_soon')}
                     </span>
                   </p>
                   <p className=" text-right text-accent pt-2">
@@ -395,12 +395,6 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                       height={38}
                     />
                   </p>
-                  <p className=" pt-1">
-                    {t('token_sale_public_sale_house')}
-                    <span className="block text-xs text-accent">
-                      {t('token_sale_public_sale_coming_2024')}
-                    </span>
-                  </p>
                   <p className=" text-right text-accent pt-2">
                     {t('token_sale_public_sale_token_symbol')} 5
                   </p>
@@ -408,7 +402,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
               </Card>
 
               <Heading level={3} className="mb-6">
-                + utility fee
+                {t('token_sale_utility_fee')}
               </Heading>
 
               <div className="text-sm ">

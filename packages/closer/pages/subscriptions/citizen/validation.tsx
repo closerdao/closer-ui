@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useState } from 'react';
@@ -9,7 +10,9 @@ import Wallet from '../../../components/Wallet';
 import {
   BackButton,
   Button,
+  ErrorMessage,
   Heading,
+  LinkButton,
   ProgressBar,
 } from '../../../components/ui';
 
@@ -25,6 +28,7 @@ import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
+import { reportIssue } from '../../../utils/reporting.utils';
 import PageNotFound from '../../not-found';
 
 interface Props {
@@ -42,8 +46,7 @@ const ValidationCitizenPage: NextPage<Props> = ({
   const t = useTranslations();
   const { isLoading, user } = useAuth();
 
-  console.log('user=', user);
-  const { PLATFORM_NAME } = useConfig();
+  const { PLATFORM_NAME, DISCORD_URL } = useConfig();
 
   const router = useRouter();
 
@@ -60,21 +63,11 @@ const ValidationCitizenPage: NextPage<Props> = ({
 
   const [isVouched, setIsVouched] = useState(false);
   const [hasStayedForMinDuration, setHasStayedForMinDuration] = useState(false);
-  const [apiError, setApiError] = useState('');
-  const [eligibility, setEligibility] = useState<null | string>(null);
-  const [application, setApplication] = useState<any>({
-    owns30Tokens,
-    why: '',
-    intent: {
-      iWantToApply: Boolean(owns30Tokens) && !isMember,
-      iWantToBuyTokens: false,
-      iWantToFinanceTokens: true,
-    },
-  });
 
+  const [isEligible, setIsEligible] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
-  const isSpaceHostVouchRequired = citizenshipConfig?.isSpaceHostVouchRequired
-
+  const isSpaceHostVouchRequired = citizenshipConfig?.isSpaceHostVouchRequired;
 
   const minVouches = citizenshipConfig?.minVouches || 3;
 
@@ -82,45 +75,17 @@ const ValidationCitizenPage: NextPage<Props> = ({
     if (isMember) {
       return t('subscriptions_citizen_already_member');
     }
-    
-    switch (eligibility) {
-      case 'good_to_buy':
-        if (application?.intent?.iWantToBuyTokens) {
-          return t('subscription_citizen_apply');
-        } else {
-          return t('subscription_citizen_apply');
-        }
-      case 'buy_more':
-        if (application?.intent?.iWantToBuyTokens) {
-          return t('subscription_citizen_apply');
-        } else if (application?.intent?.iWantToApply) {
-          return t('subscriptions_citizen_apply');
-        } else {
-          return t('subscription_citizen_apply');
-        }
-      case 'not_eligible':
-        return t('subscriptions_citizen_see_other_ways');
-      default:
-        return t('booking_button_continue');
+
+    if (isEligible) {
+      return t('subscriptions_citizen_apply');
     }
+
+    return t('booking_button_continue');
   };
 
   useEffect(() => {
-    if (owns30Tokens) {
-      setApplication((prev: any) => ({
-        ...prev,
-        owns30Tokens,
-        intent: {
-          ...prev.intent,
-          iWantToApply: false,
-          iWantToFinanceTokens: true,
-          iWantToBuyTokens: false,
-        },
-      }));
-    }
     (async () => {
       try {
-        setApiError('');
         const hasStayedRes = await api.get(
           '/subscription/citizen/check-has-stayed-for-min-duration',
         );
@@ -133,24 +98,32 @@ const ValidationCitizenPage: NextPage<Props> = ({
           '/subscription/citizen/check-is-vouched',
         );
 
-        console.log('isVouchedRes=', isVouchedRes);
         const isVouchedLocal = isVouchedRes?.data?.isVouched;
 
         setIsVouched(isVouchedLocal);
 
-        if (isVouchedLocal && hasStayedForMinDurationLocal && owns30Tokens) {
-          setEligibility('buy_more');
-        } else if (
-          (isVouchedLocal && hasStayedForMinDurationLocal) ||
-          isMember
-        ) {
-          setEligibility('good_to_buy');
-        } else {
-          setEligibility('not_eligible');
-        }
-      } catch (error) {
-        setApiError(parseMessageFromError(error));
-      }
+        console.log(
+          '=====================hasStayedForMinDurationLocal=',
+          hasStayedForMinDurationLocal,
+        );
+        console.log('user?.reportedB=', user?.reportedBy);
+        console.log('user?.reports=', user?.reports);
+
+        console.log(
+          'eligible=',
+          isVouchedLocal &&
+          hasStayedForMinDurationLocal &&
+            (user?.reportedBy?.length === 0 || !user?.reportedBy) &&
+            (user?.reports?.length === 0 || !user?.reports),
+        );
+
+        setIsEligible(
+          // isVouchedLocal &&
+            hasStayedForMinDurationLocal &&
+            (user?.reportedBy?.length === 0 || !user?.reportedBy) &&
+            (user?.reports?.length === 0 || !user?.reports),
+        );
+      } catch (error) {}
     })();
   }, [owns30Tokens, isMember]);
 
@@ -161,7 +134,7 @@ const ValidationCitizenPage: NextPage<Props> = ({
   }, [user, isLoading]);
 
   const goBack = () => {
-    router.push('/subscriptions/');
+    router.push('/citizenship');
   };
 
   if (error) {
@@ -173,29 +146,49 @@ const ValidationCitizenPage: NextPage<Props> = ({
   }
 
   const handleNext = async () => {
-    switch (eligibility) {
-      case 'good_to_buy':
-        router.push(
-          '/subscriptions/citizen/select-flow?isCitizenApplication=true',
-        );
-        return;
+    setApiError(null);
 
-      case 'buy_more':
-        router.push(
-          '/subscriptions/citizen/select-flow?isCitizenApplication=true',
-        );
+    if (isMember) {
+      router.push('/token');
+      return;
+    }
+    try {
+      const res = await api.post('/subscription/citizen/apply', {
+        owns30Tokens,
+      });
+
+      if (res.data.status === 'success') {
+        router.push('/subscriptions/citizen/success?intent=apply');
         return;
-      case 'not_eligible':
-        router.push('/#how-to-play');
+      }
+
+      if (isEligible) {
+        router.push('/subscriptions/citizen/success?intent=apply');
         return;
+      }
+    } catch (err: any) {
+      if (err?.response?.status === 400 && err?.response?.data?.error) {
+        setApiError(err.response.data.error);
+      } else {
+        setApiError(parseMessageFromError(err));
+      }
     }
   };
 
   if (!user && !isLoading) {
+    reportIssue(
+      `Issue with authentication on subscriptions/citizen/validation: ${error}`,
+      'N/A',
+    ).catch((err) => console.error('Failed to report issue:', err));
     return <PageNotFound error="" />;
   }
 
   if (process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP !== 'true') {
+    reportIssue(
+      `NEXT_PUBLIC_FEATURE_CITIZENSHIP not true in prod on subscriptions/citizen/validation: ${error}`,
+      user?.email,
+    ).catch((err) => console.error('Failed to report issue:', err));
+
     return <PageNotFound error="" />;
   }
 
@@ -217,20 +210,22 @@ const ValidationCitizenPage: NextPage<Props> = ({
         <main className="pt-14 pb-24 space-y-6">
           <section className="mb-10 space-y-6">
             <Heading level={2} className="border-b pb-2 mb-6 text-xl">
-              {isMember 
+              {isMember
                 ? t('subscriptions_citizen_already_member')
-                : eligibility === 'not_eligible'
+                : isEligible === false
                 ? t('subscriptions_citizen_not_eligible')
                 : t('subscriptions_citizen_eligible')}
             </Heading>
             {isMember && (
               <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
-                <p className="font-bold text-green-700 mb-2">{t('subscriptions_citizen_already_member_title')}</p>
+                <p className="font-bold text-green-700 mb-2">
+                  {t('subscriptions_citizen_already_member_title')}
+                </p>
                 <p>{t('subscriptions_citizen_already_member_description')}</p>
               </div>
             )}
           </section>
-          {!isMember &&
+          {!isMember && (
             <section className="space-y-6">
               <CitizenEligibility
                 userReports={user?.reports || []}
@@ -242,10 +237,30 @@ const ValidationCitizenPage: NextPage<Props> = ({
                 isSpaceHostVouchRequired={isSpaceHostVouchRequired}
               />
             </section>
-          }
+          )}
 
-          {isWalletEnabled &&
-          (eligibility === 'buy_more' || eligibility === 'not_eligible') ? (
+          {!isVouched && DISCORD_URL && (
+            <div>
+              {t('subscriptions_citizen_introduce_yourself_in_discord')}
+              <Link
+                className="text-primary underline"
+                href={DISCORD_URL || ''}
+                target="_blank"
+              >
+                {' '}
+                {DISCORD_URL || ''}
+              </Link>
+            </div>
+          )}
+          {!hasStayedForMinDuration && (
+            <div>
+              <LinkButton variant="secondary" href="/stay" target="_blank">
+                {t('navigation_stay')}
+              </LinkButton>
+            </div>
+          )}
+
+          {isWalletEnabled && !isEligible ? (
             <div className="my-8 space-y-6">
               <p>
                 <strong>{t('subscriptions_citizen_connect_wallet')}</strong>
@@ -254,9 +269,12 @@ const ValidationCitizenPage: NextPage<Props> = ({
             </div>
           ) : null}
 
-          <div className="py-4">
-            <Button onClick={handleNext}>{getCtaButtonText()}</Button>
-          </div>
+          {isEligible && (
+            <div className="py-4">
+              {apiError && <ErrorMessage error={apiError} />}
+              <Button onClick={handleNext}>{getCtaButtonText()}</Button>
+            </div>
+          )}
         </main>
       </div>
     </>

@@ -30,11 +30,16 @@ export async function loadLocaleData(
               import('../locales/tdf/en.json'),
               import('../locales/base-en.json'),
             ]);
-            case 'pt':
-              return Promise.all([
-                import('../locales/tdf/pt.json'),
-                import('../locales/base-pt.json'),
-              ]);
+          case 'pt':
+            return Promise.all([
+              import('../locales/tdf/pt.json'),
+              import('../locales/base-pt.json'),
+            ]);
+          case 'pl':
+            return Promise.all([
+              import('../locales/tdf/pl.json'),
+              import('../locales/base-pl.json'),
+            ]);
           default:
             return Promise.all([
               import('../locales/tdf/en.json'),

@@ -8,6 +8,7 @@ import CustomRichText from './CustomRichText';
 import CustomTextCard from './CustomTextCard';
 import UpcomingEventsIntro from '../UpcomingEventsIntro';
 import CustomFaqs from './CustomFaqs';
+import CustomVideoEmbed from './CustomVideoEmbed';
 
 const componentRegistry: Record<string, React.FC<any>> = {
   promoCard: CustomPromoCard,
@@ -18,6 +19,7 @@ const componentRegistry: Record<string, React.FC<any>> = {
   events: UpcomingEventsIntro,
   faqs: CustomFaqs,
   richText: CustomRichText,
+  videoEmbed: CustomVideoEmbed,
 };
 
 const CustomSectionComponent: React.FC<{ type: string; data: any }> = ({

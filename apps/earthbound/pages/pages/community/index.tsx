@@ -7,6 +7,7 @@ import MembershipTimeline from '@/components/MembershipTimeline';
 import {
   CustomSections, // CustomSections,
   GeneralConfig,
+  Heading,
   Listing,
   api,
   useAuth,
@@ -18,6 +19,8 @@ import { Page } from 'closer/types/customPages';
 import { parseMessageFromError } from 'closer/utils/common';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
+import { useFaqs } from 'closer/hooks/useFaqs';
+import Faqs from 'closer/components/Faqs';
 
 const getPage = ({
   listings,
@@ -27,7 +30,9 @@ const getPage = ({
   listings: Listing[] | null;
   hosts: User[] | null;
   generalConfig: GeneralConfig | null;
-}) => {
+  }) => {
+  
+
   const localPage: Page = {
     isHomePage: false,
     sections: [
@@ -40,10 +45,11 @@ const getPage = ({
             imageSize: 'large',
           },
           content: {
-            title: 'JOIN EARTHBOUND AS PART OF THE LIVING COMMUNITY',
-            body: `<p>Are you interested in becoming part of the living community of Earthbound?</p>
+            title: 'Earthbound as a living community',
+            body: `<p>We are now around 10 people living long term at Earthbound. In the future we plan to be around 30 adults, but we want to grow slowly and organically. 
+</p>
 
-<p><b>We are now open for new members!</b> So if you want to explore what’s possible, read the information below and if you have any questions feel free to contact us on <a href="mailto:contact@earthbound.eco">contact@earthbound.eco</a>. </p>`,
+<b>Currently, we are not open for new applicants</b>, due to receiving a lot of interest and having a long waiting list. <b>Whenever that’s gonna change we’ll announce it here and on our social media!</b> But you’re still very welcome to get familiar with how we live together and how the joining process looks like. </p>`,
             imageUrl:
               'https://cdn.oasa.co/custom-pages/earthbound/AWP04555.jpg',
           },
@@ -85,6 +91,56 @@ const getPage = ({
   };
   return localPage;
 };
+const getPagePart2 = ({
+  listings,
+  hosts,
+  generalConfig,
+}: {
+  listings: Listing[] | null;
+  hosts: User[] | null;
+  generalConfig: GeneralConfig | null;
+  }) => {
+  
+  
+  const localPage: Page = {
+    isHomePage: false,
+    sections: [
+
+      {
+        type: 'richText',
+        data: {
+          settings: {
+            isColorful: true,
+          },
+          content: {
+            html: `
+         
+
+              <h2 class='ql-align-center'>Do you want to see more of our daily life?</h2>
+              <p>Follow us on social media, where we share our small and big moments!
+              </p>
+              
+              <ul>
+              <li><a href='https://www.facebook.com/people/Earthbound-Ecovillage/61562042564108/?rdid=I1G0ykSdIwXXoNJL&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F16tdbwosJk%2F'>Facebook</a></li>
+              <li><a href='https://www.instagram.com/earthboundecovillage'>Instagram</a></li>
+              <li><a href='https://t.me/earthboundecovillage'>Telegram</a></li>
+              
+              </ul>
+              
+              </p>
+             
+             
+
+                        `,
+          },
+        },
+      },
+
+   
+    ],
+  };
+  return localPage;
+};
 
 interface Props {
   generalConfig: GeneralConfig | null;
@@ -93,7 +149,16 @@ interface Props {
 }
 
 const CommunityPage = ({ generalConfig, listings, hosts }: Props) => {
+  const {  FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
+  const { faqs, error } = useFaqs(FAQS_GOOGLE_SHEET_ID);
+
   const page = getPage({
+    listings,
+    hosts,
+    generalConfig,
+  });
+
+  const pagePart2 = getPagePart2({
     listings,
     hosts,
     generalConfig,
@@ -142,6 +207,11 @@ const CommunityPage = ({ generalConfig, listings, hosts }: Props) => {
       <main className="py-12">
         <CustomSections page={page} />
         <MembershipTimeline />
+        <CustomSections page={pagePart2} />
+        <div id='faq' className='w-full sm:w-[400px] md:w-[640px] mx-auto flex flex-col gap-4'>
+          <Heading level={2} className='text-center'>FAQ</Heading>
+          <Faqs faqs={faqs} error={error} />
+        </div>
       </main>
     </div>
   );

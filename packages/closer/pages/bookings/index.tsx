@@ -37,7 +37,7 @@ const BookingsDirectory = ({ bookingConfig }: Props) => {
         <title>{t('bookings_title')}</title>
       </Head>
 
-      <UserBookings user={user} />
+      <UserBookings user={user} bookingConfig={bookingConfig} hideExportCsv={true} />
     </>
   );
 };

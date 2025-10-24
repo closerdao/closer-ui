@@ -16,6 +16,8 @@ export type Event = {
   virtual?: boolean;
   paid: boolean;
   blocksBookingCalendar: boolean;
+  canSelectDates?: boolean;
+  requireApproval?: boolean;
   location: string;
   address: string;
   attendees: string[];

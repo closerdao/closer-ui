@@ -84,8 +84,10 @@ const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
         <div className="mt-16 flex flex-col gap-16 flex-nowrap">
           <BookingResult booking={booking} eventName={event?.name || ''} />
           <Button onClick={() => viewBooking(_id)}>
-            {eventId
+            {eventId && booking?.status === 'confirmed'
               ? t('ticket_list_view_ticket')
+              : eventId && booking?.status === 'pending'
+              ? t('ticket_list_view_booking')
               : volunteerId
               ? t('bookings_confirmation_step_volunteer_application_button')
               : t('bookings_confirmation_step_success_button')}

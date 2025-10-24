@@ -11,6 +11,7 @@ interface Props {
   endDate: string;
   totalGuests: string;
   savedCurrency?: CloserCurrencies;
+  useTokens?: boolean;
   backToDates: () => void;
 }
 
@@ -19,9 +20,13 @@ const BookingStepsInfo: FC<Props> = ({
   endDate,
   totalGuests,
   savedCurrency,
+  useTokens = false,
   backToDates,
 }) => {
   const t = useTranslations();
+  
+  const displayCurrency = savedCurrency || (useTokens ? CloserCurrencies.TDF : CloserCurrencies.EUR);
+  
   return (
     <div className="mt-6 flex justify-between gap-2 flex-wrap md:justify-start">
       <div
@@ -46,7 +51,7 @@ const BookingStepsInfo: FC<Props> = ({
         className="flex basis-1/2 border border-solid border-neutral-400 rounded-3xl px-4 py-2 font-normal justify-between items-center md:flex-initial md:w-40 cursor-pointer"
       >
         <span className="mr-1">💰</span>
-        <span>{formatCurrency(savedCurrency)}</span>
+        <span>{formatCurrency(displayCurrency)}</span>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingStepsInfo from '../../../components/BookingStepsInfo';
+import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import ListingCard from '../../../components/ListingCard';
 import { ErrorMessage } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
@@ -24,6 +25,7 @@ import {
 } from '../../../types';
 import api from '../../../utils/api';
 import { getBookingType } from '../../../utils/booking.helpers';
+import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { getBookingRate, getDiscountRate } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
@@ -63,11 +65,16 @@ const AccomodationSelector = ({
   bookingType,
   projectId,
   volunteerId,
+  isFriendsBooking,
+  friendEmails,
 }: Props) => {
   const t = useTranslations();
 
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
+
+  const normalizedIsFriendsBooking =
+    normalizeIsFriendsBooking(isFriendsBooking);
   console.log('duration=', duration);
   const durationInDays = dayjs(end).diff(dayjs(start), 'day');
 
@@ -97,7 +104,7 @@ const AccomodationSelector = ({
   const filteredListings =
     listings &&
     listings?.filter((listing: Listing) => {
-      if (isTeamMember) {
+      if (isTeamMember && listing.availableFor?.includes('team')) {
         return listing.availableFor?.includes('team');
       } else if (bookingType) {
         return listing.availableFor?.includes('volunteer');
@@ -112,13 +119,13 @@ const AccomodationSelector = ({
 
   const bookListing = async (listingId: string) => {
     try {
-      const volunteerInfo =
-        (bookingType === 'volunteer' || bookingType === 'residence') && {
-          skills: parsedSkills,
-          diet: parsedDiet,
-          projectId: parsedProjectId,
-          suggestions: suggestions || '',
-          bookingType,
+      const volunteerInfo = (bookingType === 'volunteer' ||
+        bookingType === 'residence') && {
+        skills: parsedSkills,
+        diet: parsedDiet,
+        projectId: parsedProjectId,
+        suggestions: suggestions || '',
+        bookingType,
       };
       const {
         data: { results: newBooking },
@@ -137,6 +144,8 @@ const AccomodationSelector = ({
         doesNeedSeparateBeds,
         foodOption,
         ...(volunteerInfo && { volunteerInfo }),
+        ...(normalizedIsFriendsBooking && { isFriendsBooking: true }),
+        ...(friendEmails && { friendEmails }),
       });
       if (bookingConfig?.foodOptionEnabled) {
         router.push(
@@ -177,6 +186,8 @@ const AccomodationSelector = ({
       ...(skills && { skills }),
       ...(diet && { diet }),
       ...(suggestions && { suggestions }),
+      ...(normalizedIsFriendsBooking && { isFriendsBooking: 'true' }),
+      ...(friendEmails && { friendEmails }),
     };
     const urlParams = new URLSearchParams(params);
     router.push(`/bookings/create/dates?${urlParams}`);
@@ -186,6 +197,7 @@ const AccomodationSelector = ({
     <>
       <div className="max-w-screen-sm mx-auto md:first-letter:p-8">
         <BookingBackButton onClick={backToDates} name={t('buttons_back')} />
+        <FriendsBookingBlock isFriendsBooking={normalizedIsFriendsBooking} />
         <Heading className="pb-4 mt-8">
           <span className="mr-2">🏡</span>
           <span>{t('bookings_accomodation_step_title')}</span>
@@ -196,6 +208,7 @@ const AccomodationSelector = ({
           endDate={end}
           totalGuests={adults}
           savedCurrency={currency}
+          useTokens={Boolean(useTokens)}
           backToDates={backToDates}
         />
         {bookingError && (
@@ -252,6 +265,8 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       discountCode,
       doesNeedPickup,
       doesNeedSeparateBeds,
+      isFriendsBooking: normalizedIsFriendsBooking,
+      friendEmails,
       foodOption,
       skills,
       diet,
@@ -273,6 +288,7 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
           infants,
           pets,
           useTokens,
+          isFriendsBooking: normalizedIsFriendsBooking,
           discountCode,
           ...(eventId && { eventId, ticketOption }),
         })
@@ -308,6 +324,8 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       discountCode,
       doesNeedPickup,
       doesNeedSeparateBeds,
+      isFriendsBooking: normalizedIsFriendsBooking,
+      friendEmails,
       bookingConfig,
       bookingError,
       messages,
@@ -330,4 +348,3 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
 };
 
 export default AccomodationSelector;
-

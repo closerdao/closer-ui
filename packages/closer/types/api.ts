@@ -3,10 +3,12 @@ import { User } from 'closer/contexts/auth/types';
 import { CloserCurrencies, Price } from './currency';
 
 export type BookingConditions = {
+  minDuration: number | undefined;
+  maxDuration: number | undefined;
+  maxBookingHorizon: number | undefined;
+  memberMinDuration: number | undefined;
   memberMaxDuration: number | undefined;
   memberMaxBookingHorizon: number | undefined;
-  guestMaxDuration: number | undefined;
-  guestMaxBookingHorizon: number | undefined;
 };
 
 export type VolunteerOpportunity = {
@@ -17,6 +19,22 @@ export type VolunteerOpportunity = {
   description: string;
   start: string;
   end: string;
+  visibleBy: any[];
+  createdBy: string;
+  updated: string;
+  created: string;
+  attributes: any[];
+  managedBy: any[];
+  _id: string;
+};
+
+export type Role = {
+  title: string;
+  description: string;
+  compensation: string;
+  hoursPerWeek: number;
+  skillsRequired: string[];
+  responsibilities: string[];
   visibleBy: any[];
   createdBy: string;
   updated: string;
@@ -54,11 +72,11 @@ export type BookingSettings = {
   checkoutTime: number;
   maxDuration: number;
   minDuration: number;
+  maxBookingHorizon: number;
   volunteerCommitment: string;
+  memberMinDuration: number;
   memberMaxDuration: number;
   memberMaxBookingHorizon: number;
-  guestMaxDuration: number;
-  guestMaxBookingHorizon: number;
   discountsDaily: number;
   discountsWeekly: number;
   discountsMonthly: number;
@@ -109,6 +127,8 @@ export type GeneralConfig = {
   timeZone: string;
   minVouchingStayDuration?: number;
   expenseCategories?: string;
+  discordUrl: string;
+  telegramUrl: string;
 };
 export type CitizenshipConfig = {
   enabled: boolean;
@@ -129,15 +149,17 @@ export type AffiliateConfig = {
 };
 
 export type BookingConfig = {
-  guestMaxDuration: number;
   enabled: boolean;
   minDuration: number;
+  maxDuration: number;
+  maxBookingHorizon: number;
+  memberMinDuration: number;
+  memberMaxDuration: number;
+  memberMaxBookingHorizon: number;
   discountsDaily: number;
   seasonsHighModifier: number;
   seasonsHighEnd: string;
   cancellationPolicyDefault: number;
-  memberMaxBookingHorizon: number;
-  guestMaxBookingHorizon: number;
   seasonsHighStart: string;
   cancellationPolicyLastday: number;
   checkoutTime: number;
@@ -145,11 +167,9 @@ export type BookingConfig = {
   utilityTokenCur: string;
   utilityTokenVal: number;
   cancellationPolicyLastmonth: number;
-  maxDuration: number;
   checkinTime: number;
   discountsMonthly: number;
   utilityDayFiatVal: number;
-  memberMaxDuration: number;
   utilityFiatCur: string;
   volunteerCommitment: string;
   cancellationPolicyLastweek: number;
@@ -159,6 +179,8 @@ export type BookingConfig = {
   utilityOptionEnabled: boolean;
   foodPriceBasic: number;
   foodPriceChef: number;
+  chatLink: string;
+  friendsBookingMaxGuests: number;
 };
 
 export type PaymentConfig = {

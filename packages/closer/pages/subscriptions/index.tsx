@@ -87,7 +87,14 @@ const SubscriptionsPage: NextPage<Props> = ({
     slug: string,
   ) => {
     if (slug === 'citizen') {
-      router.push('/subscriptions/citizen/validation`');
+      // Track become citizen button click
+      api.post('/metric', {
+        event: 'become-citizen-button-click',
+        value: 'citizenship',
+        point: 0,
+        category: 'engagement',
+      });
+      router.push('/subscriptions/citizen/why');
       return;
     }
     if (priceId?.includes(',')) {
@@ -95,15 +102,36 @@ const SubscriptionsPage: NextPage<Props> = ({
     }
     if (!isAuthenticated) {
       // User has no account - must start with creating one.
+      // Track create account button click
+      api.post('/metric', {
+        event: 'create-account-button-click',
+        value: 'subscription',
+        point: 0,
+        category: 'engagement',
+      });
       router.push(
         `/signup?back=${encodeURIComponent(
           `/subscriptions/summary?priceId=${priceId}`,
         )}`,
       );
     } else if (!userActivePlan) {
+      // Track subscribe button click
+      api.post('/metric', {
+        event: 'subscribe-button-click',
+        value: 'subscription',
+        point: 0,
+        category: 'engagement',
+      });
       router.push(`/subscriptions/summary?priceId=${priceId}`);
     } else if (userActivePlan?.priceId !== 'free') {
       // User has a subscription - must be managed in Stripe.
+      // Track manage subscription button click
+      api.post('/metric', {
+        event: 'manage-subscription-button-click',
+        value: 'subscription',
+        point: 0,
+        category: 'engagement',
+      });
 
       const response = await api.get(
         '/stripe/create-customer-portal?email=' +
@@ -114,10 +142,24 @@ const SubscriptionsPage: NextPage<Props> = ({
       router.push(portalUrl);
     } else {
       if (hasVariants) {
-        // User does not yet have a subscription and subscription has avriants - redirect to variant selection page
+        // User does not yet have a subscription and subscription has variants - redirect to variant selection page
+        // Track subscribe button click (for variants)
+        api.post('/metric', {
+          event: 'subscribe-button-click',
+          value: 'subscription',
+          point: 0,
+          category: 'engagement',
+        });
         router.push(`/subscriptions/${slug}`);
       } else {
         // User does not yet have a subscription, we can show the checkout
+        // Track subscribe button click
+        api.post('/metric', {
+          event: 'subscribe-button-click',
+          value: 'subscription',
+          point: 0,
+          category: 'engagement',
+        });
         router.push(`/subscriptions/summary?priceId=${priceId}`);
       }
     }

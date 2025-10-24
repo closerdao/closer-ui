@@ -39,6 +39,7 @@ Project stack:
 - Anticipate possible typescript errors
 - IMPORTANT: we import reusable pages, components, and other logic from /packages/closer dir and use in each app dir
 - We add app specific logic and ui in respective app folders
+- When adding next-intl t-strings, add transaltions to all available dictionaries (EN, PT)
 </codingGuide>
 
 <projectStructure>

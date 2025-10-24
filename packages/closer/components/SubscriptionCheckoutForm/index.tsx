@@ -9,6 +9,8 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
+import { reportIssue } from '../../utils/reporting.utils';
 import SubscriptionConditions from '../SubscriptionConditions';
 import { Button, ErrorMessage } from '../ui/';
 
@@ -84,6 +86,12 @@ function SubscriptionCheckoutForm({
       });
 
       if (createdPaymentMethod?.error) {
+        await reportIssue(
+          `Error creating payment intent: ${parseMessageFromError(
+            createdPaymentMethod?.error,
+          )}`,
+          userEmail,
+        );
         setError(createdPaymentMethod.error || '');
         return;
       }
@@ -103,6 +111,13 @@ function SubscriptionCheckoutForm({
             response.data.results.clientSecret,
           );
           if (confirmationResult?.error) {
+            await reportIssue(
+              `Error with stripe?.confirmCardPayment: ${parseMessageFromError(
+                confirmationResult?.error,
+              )}`,
+              userEmail,
+            );
+
             setError(confirmationResult?.error);
           }
           if (confirmationResult?.paymentIntent?.status === 'succeeded') {
@@ -117,10 +132,25 @@ function SubscriptionCheckoutForm({
 
             if (validationResponse.data.results.status === 'succeeded') {
               await refetchUser();
+              
+              // Track subscription payment
+              try {
+                await api.post('/metric', {
+                  event: 'tier-1-first-payment',
+                  value: 'subscriptions',
+                  point: 0,
+                  category: 'engagement',
+                });
+              } catch (error) {
+                console.error('Error tracking subscription payment:', error);
+              }
+              
               redirect(subscriptionId);
             }
           }
         } catch (err) {
+          await reportIssue(`Error with /subscription/validation: ${parseMessageFromError(err)}`, userEmail);
+
           setError(err);
         }
       }
@@ -135,10 +165,27 @@ function SubscriptionCheckoutForm({
 
         if (validationResponse.data.results.status === 'succeeded') {
           await refetchUser();
+          
+          // Track subscription payment
+          try {
+            await api.post('/metric', {
+              event: 'tier-1-first-payment',
+              value: 'subscriptions',
+              point: 0,
+              category: 'engagement',
+            });
+          } catch (error) {
+            console.error('Error tracking subscription payment:', error);
+          }
+          
           redirect(subscriptionId);
+        } else {
+          await reportIssue(`Error with /subscription/validation without 3d secure: ${parseMessageFromError(validationResponse.data.results.error)}`, userEmail);
         }
       }
     } catch (err) {
+      await reportIssue(`Error with /subscription: ${parseMessageFromError(err)}`, userEmail);
+
       setError(err);
     } finally {
       setIsLoading(false);
@@ -162,7 +209,7 @@ function SubscriptionCheckoutForm({
       </div>
       <Button
         className="mt-3"
-        isEnabled={isSubmitEnabled && hasAcceptedConditions}
+        isEnabled={isSubmitEnabled && hasAcceptedConditions && !isLoading}
         isLoading={isLoading}
       >
         {t('subscriptions_checkout_pay_button')}

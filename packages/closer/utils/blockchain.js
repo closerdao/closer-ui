@@ -1,18 +1,26 @@
+import { getDataSuffix, submitReferral } from '@divvi/referral-sdk';
 import { BigNumber, Contract, utils } from 'ethers';
 import { formatUnits, isAddress } from 'ethers/lib/utils.js';
-import { getDataSuffix, submitReferral } from '@divvi/referral-sdk'
+
 import { blockchainConfig } from '../config_blockchain';
 
 const dataSuffix = getDataSuffix({
   consumer: '0x9B5f6dF2C7A331697Cf2616CA884594F6afDC07d',
-  providers: ['0x0423189886d7966f0dd7e7d256898daeee625dca','0xc95876688026be9d6fa7a7c33328bd013effa2bb','0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8'],
-})
+  providers: [
+    '0x0423189886d7966f0dd7e7d256898daeee625dca',
+    '0xc95876688026be9d6fa7a7c33328bd013effa2bb',
+    '0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8',
+  ],
+});
 
 const { BLOCKCHAIN_DAO_TOKEN, BLOCKCHAIN_DAO_TOKEN_ABI } = blockchainConfig;
 
 export const fetcher =
   (library, abi) =>
   (...args) => {
+    if (!library) {
+      throw new Error('Library not available');
+    }
     const [arg1, arg2, ...params] = args;
     //contract call
     if (isAddress(arg1)) {
@@ -28,6 +36,9 @@ export const fetcher =
   };
 
 export const multiFetcher = (library, abi) => (argsArray) => {
+  if (!library) {
+    throw new Error('Library not available');
+  }
   const f = fetcher(library, abi);
   return Promise.all(argsArray.map((args) => f(...args)));
 };
@@ -65,7 +76,7 @@ export async function sendDAOToken(library, toAddress, amount) {
   const tx = await DAOTokenContract.signer.sendTransaction({
     to: DAOTokenContract.address,
     data: txData + dataSuffix,
-  })
+  });
 
   const chainId = await DAOTokenContract.signer.getChainId();
   // do not send Divvi referral on alfajores testnet
@@ -74,7 +85,7 @@ export async function sendDAOToken(library, toAddress, amount) {
       await submitReferral({
         txHash: tx.hash,
         chainId,
-      })
+      });
     } catch (error) {
       console.error('submitReferral error:', error);
     }

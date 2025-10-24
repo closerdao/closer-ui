@@ -7,6 +7,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import CitizenSubscriptionProgress from '../../components/CitizenSubscriptionProgress';
 import ConnectedWallet from '../../components/ConnectedWallet';
 import EventsList from '../../components/EventsList';
+import FinancedTokenProgress from '../../components/FinancedTokenProgress';
 import Modal from '../../components/Modal';
 import UploadPhoto from '../../components/UploadPhoto';
 import UserBookings from '../../components/UserBookings';
@@ -23,6 +24,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import { User, UserLink } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
+import { FinanceApplication } from '../../types';
 import { GeneralConfig } from '../../types/api';
 import api, { cdn } from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
@@ -33,11 +35,22 @@ interface MemberPageProps {
   member: User;
   loadError: string;
   generalConfig: GeneralConfig;
+  financeTokenApplications: FinanceApplication[];
 }
 
-const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
+const MemberPage = ({
+  member,
+  loadError,
+  generalConfig,
+  financeTokenApplications,
+}: MemberPageProps) => {
   const t = useTranslations();
-  const { user: currentUser, isAuthenticated, refetchUser } = useAuth();
+  const {
+    user: currentUser,
+    isAuthenticated,
+    refetchUser,
+    isLoading,
+  } = useAuth();
 
   const { platform }: any = usePlatform();
   const isMember = currentUser?.roles.includes('member');
@@ -61,6 +74,9 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
   const [reportSuccess, setReportSuccess] = useState(false);
   const [hasReported, setHasReported] = useState(false);
   const [deleteReportSuccess, setDeleteReportSuccess] = useState(false);
+  const [activeApplications, setActiveApplications] = useState<
+    FinanceApplication[]
+  >([]);
 
   useEffect(() => {
     if (hasSaved) {
@@ -72,6 +88,33 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
     }
     refetchUser();
   }, [hasSaved]);
+  useEffect(() => {
+    if (currentUser && !isLoading) {
+      (async () => {
+        const financeApplicationRes = await api.get('/financeApplication', {
+          params: {
+            where: {
+              userId: currentUser?._id,
+            },
+          },
+        });
+        const financeApplications = financeApplicationRes?.data?.results;
+
+        console.log('financeApplications===', financeApplications);
+
+        const activeApplications = financeApplications.filter(
+          (application: FinanceApplication) =>
+            ['pending-payment', 'paid'].includes(application.status),
+        );
+
+        console.log('=== activeApplications ===', activeApplications);
+
+        if (financeApplications) {
+          setActiveApplications(activeApplications);
+        }
+      })();
+    }
+  }, [currentUser, isLoading]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -129,7 +172,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
       setErrors(null);
       await api.post(`/report/user/${member._id}`, {
         reason: reportReason,
-        unsafe: isUnsafe
+        unsafe: isUnsafe,
       });
       setReportSuccess(true);
       setHasReported(true);
@@ -195,7 +238,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                       {t('members_slug_contact')} {member.screenname}
                     </label>
                     <textarea
-                      placeholder="Type your message"
+                      placeholder={t('members_slug_message_placeholder')}
                       onChange={(e) => {
                         setMessage(e.target.value);
                       }}
@@ -237,7 +280,11 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                         onSave={() => {
                           router.push(router.asPath);
                         }}
-                        label={member.photo ? t('members_slug_change_photo') : t('members_slug_add_photo')}
+                        label={
+                          member.photo
+                            ? t('members_slug_change_photo')
+                            : t('members_slug_add_photo')
+                        }
                       />
                     ) : member?.photo ? (
                       <img
@@ -259,7 +306,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                   <h3 className="font-medium text-4xl md:text-5xl text-center md:text-left">
                     {member.screenname}
                   </h3>
-                  
+
                   {/* Roles Tags */}
                   <div className="mt-3 mb-4">
                     {member.roles && (
@@ -277,7 +324,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Action Buttons */}
                   {isAuthenticated && member?._id !== currentUser?._id && (
                     <div className="flex flex-wrap gap-3 justify-center md:justify-start mt-2">
@@ -324,11 +371,13 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                 {/* Connected Wallet Section */}
                 {isAuthenticated && member?._id === currentUser?._id && (
                   <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h4 className="font-medium text-xl mb-4">{t('members_slug_wallet')}</h4>
+                    <h4 className="font-medium text-xl mb-4">
+                      {t('members_slug_wallet')}
+                    </h4>
                     <ConnectedWallet />
                   </div>
                 )}
-                
+
                 {/* Social Links Section */}
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <div className="flex justify-between items-center mb-4">
@@ -336,7 +385,7 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                       {t('members_slug_stay_social')}
                     </h4>
                     {isAuthenticated && member?._id === currentUser?._id && (
-                      <button 
+                      <button
                         onClick={(e) => {
                           e.preventDefault();
                           toggleShowForm(!showForm);
@@ -347,39 +396,62 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                       </button>
                     )}
                   </div>
-                  
+
                   <ul className="flex flex-col w-full space-y-2">
                     {links && links.length > 0 ? (
                       links.map((link) => {
                         // Determine icon based on URL or name
                         let icon = null;
                         let networkName = link.name;
-                        
-                        if (link.url.includes('twitter.com') || link.url.includes('x.com') || link.name.toLowerCase().includes('twitter') || link.name.toLowerCase().includes('x')) {
+
+                        if (
+                          link.url.includes('twitter.com') ||
+                          link.url.includes('x.com') ||
+                          link.name.toLowerCase().includes('twitter') ||
+                          link.name.toLowerCase().includes('x')
+                        ) {
                           icon = '𝕏';
                           networkName = networkName || 'Twitter/X';
-                        } else if (link.url.includes('instagram.com') || link.name.toLowerCase().includes('instagram')) {
+                        } else if (
+                          link.url.includes('instagram.com') ||
+                          link.name.toLowerCase().includes('instagram')
+                        ) {
                           icon = '📸';
                           networkName = networkName || 'Instagram';
-                        } else if (link.url.includes('facebook.com') || link.name.toLowerCase().includes('facebook')) {
+                        } else if (
+                          link.url.includes('facebook.com') ||
+                          link.name.toLowerCase().includes('facebook')
+                        ) {
                           icon = 'ƒ';
                           networkName = networkName || 'Facebook';
-                        } else if (link.url.includes('linkedin.com') || link.name.toLowerCase().includes('linkedin')) {
+                        } else if (
+                          link.url.includes('linkedin.com') ||
+                          link.name.toLowerCase().includes('linkedin')
+                        ) {
                           icon = 'in';
                           networkName = networkName || 'LinkedIn';
-                        } else if (link.url.includes('github.com') || link.name.toLowerCase().includes('github')) {
+                        } else if (
+                          link.url.includes('github.com') ||
+                          link.name.toLowerCase().includes('github')
+                        ) {
                           icon = '🐙';
                           networkName = networkName || 'GitHub';
-                        } else if (link.url.includes('youtube.com') || link.name.toLowerCase().includes('youtube')) {
+                        } else if (
+                          link.url.includes('youtube.com') ||
+                          link.name.toLowerCase().includes('youtube')
+                        ) {
                           icon = '▶️';
                           networkName = networkName || 'YouTube';
-                        } else if (link.url.includes('tiktok.com') || link.name.toLowerCase().includes('tiktok')) {
+                        } else if (
+                          link.url.includes('tiktok.com') ||
+                          link.name.toLowerCase().includes('tiktok')
+                        ) {
                           icon = '🎵';
                           networkName = networkName || 'TikTok';
                         } else {
                           icon = '🔗';
                         }
-                        
+
                         return (
                           <li
                             key={link._id}
@@ -389,37 +461,47 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                               <span className="mr-2 text-lg w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full">
                                 {icon}
                               </span>
-                              <a href={link.url} className="hover:underline" target="_blank" rel="noopener noreferrer">
+                              <a
+                                href={link.url}
+                                className="hover:underline"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
                                 {networkName}
                               </a>
                             </div>
-                            {isAuthenticated && member?._id === currentUser?._id && (
-                              <a
-                                href="#"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  deleteLink(link);
-                                }}
-                              >
-                                <TiDelete className="text-gray-500 text-xl hover:text-red-500" />
-                              </a>
-                            )}
+                            {isAuthenticated &&
+                              member?._id === currentUser?._id && (
+                                <a
+                                  href="#"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    deleteLink(link);
+                                  }}
+                                >
+                                  <TiDelete className="text-gray-500 text-xl hover:text-red-500" />
+                                </a>
+                              )}
                           </li>
                         );
                       })
                     ) : (
-                      <li className="text-gray-500 italic">{t('members_slug_no_social_links')}</li>
+                      <li className="text-gray-500 italic">
+                        {t('members_slug_no_social_links')}
+                      </li>
                     )}
                   </ul>
                 </div>
               </div>
-              
+
               {/* Right Column - Main Content */}
               <div className="md:col-span-2">
                 {/* Vouching Section */}
                 {(isMember || isAdmin || isSpaceHost) && !isOwnProfile && (
                   <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h4 className="font-medium text-xl mb-4">{t('members_slug_vouching')}</h4>
+                    <h4 className="font-medium text-xl mb-4">
+                      {t('members_slug_vouching')}
+                    </h4>
                     <Vouching
                       vouchData={member?.vouched || []}
                       myId={currentUser?._id}
@@ -430,39 +512,59 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                     />
                   </div>
                 )}
-                
+
                 {/* Space Host View - User Data */}
                 {currentUser && currentUser.roles.includes('space-host') && (
                   <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h4 className="font-medium text-xl mb-4">{t('members_slug_user_information')}</h4>
+                    <h4 className="font-medium text-xl mb-4">
+                      {t('members_slug_user_information')}
+                    </h4>
                     <Card className="bg-accent-light">
                       {member?.email && (
                         <p className="mb-2">
-                          <span className="font-medium">{t('user_data_email')}</span>{' '}
+                          <span className="font-medium">
+                            {t('user_data_email')}
+                          </span>{' '}
                           <span>{member.email}</span>
+                        </p>
+                      )}
+                      {member?.walletAddress && (
+                        <p className="mb-2">
+                          <span className="font-medium">
+                            {t('user_data_walletAddress')}
+                          </span>{' '}
+                          <span>{member.walletAddress}</span>
                         </p>
                       )}
                       {member?.phone && (
                         <p className="mb-2">
-                          <span className="font-medium">{t('user_data_phone')}</span>{' '}
+                          <span className="font-medium">
+                            {t('user_data_phone')}
+                          </span>{' '}
                           <span>{member.phone}</span>
                         </p>
                       )}
                       {member?.preferences?.sharedAccomodation && (
                         <p className="mb-2">
-                          <span className="font-medium">{t('user_data_shared_accommodation')}</span>{' '}
+                          <span className="font-medium">
+                            {t('user_data_shared_accommodation')}
+                          </span>{' '}
                           <span>{member.preferences.sharedAccomodation}</span>
                         </p>
                       )}
                       {member?.preferences?.diet && (
                         <p className="mb-2">
-                          <span className="font-medium">{t('user_data_diet')}</span>{' '}
+                          <span className="font-medium">
+                            {t('user_data_diet')}
+                          </span>{' '}
                           <span>{member.preferences.diet}</span>
                         </p>
                       )}
                       {member?.preferences?.skills && (
                         <p className="mb-2">
-                          <span className="font-medium">{t('user_data_skills')}</span>{' '}
+                          <span className="font-medium">
+                            {t('user_data_skills')}
+                          </span>{' '}
                           <span>
                             {member.preferences?.skills &&
                               member.preferences?.skills?.map((skill, i) => {
@@ -479,59 +581,81 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                       )}
                       {member?.preferences?.superpower && (
                         <p className="mb-2">
-                          <span className="font-medium">{t('user_data_superpower')}</span>{' '}
+                          <span className="font-medium">
+                            {t('user_data_superpower')}
+                          </span>{' '}
                           <span>{member.preferences.superpower}</span>
                         </p>
                       )}
                       {member?.preferences?.needs && (
                         <p className="mb-2">
-                          <span className="font-medium">{t('user_data_needs')}</span>{' '}
+                          <span className="font-medium">
+                            {t('user_data_needs')}
+                          </span>{' '}
                           <span>{member.preferences.needs}</span>
                         </p>
                       )}
                       {member?.preferences?.dream && (
                         <p className="mb-2">
-                          <span className="font-medium">{t('user_data_dream')}</span>{' '}
+                          <span className="font-medium">
+                            {t('user_data_dream')}
+                          </span>{' '}
                           <span>{member.preferences.dream}</span>
                         </p>
                       )}
                       {member?.preferences?.moreInfo && (
                         <p className="mb-2">
-                          <span className="font-medium">{t('user_data_more_info')}</span>{' '}
+                          <span className="font-medium">
+                            {t('user_data_more_info')}
+                          </span>{' '}
                           <span>{member.preferences.moreInfo}</span>
                         </p>
                       )}
                       {member?.subscription?.plan && (
                         <p className="mb-2">
-                          <span className="font-medium">{t('user_data_subscription')}</span>{' '}
+                          <span className="font-medium">
+                            {t('user_data_subscription')}
+                          </span>{' '}
                           <span>{member.subscription.plan}</span>
                         </p>
                       )}
                     </Card>
                   </div>
                 )}
-                
+
                 {/* Citizenship Section */}
                 {member?.citizenship &&
                   (member._id === currentUser?._id ||
                     currentUser?.roles?.includes('admin') ||
                     currentUser?.roles?.includes('community-curator')) && (
-                  <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h4 className="font-medium text-xl mb-4">{t('members_slug_citizenship')}</h4>
-                    <CitizenSubscriptionProgress member={member} />
-                  </div>
-                )}
-                
+                    <div className="bg-white mb-6 space-y-6">
+                    
+                      <CitizenSubscriptionProgress member={member} />
+
+                      <div className="text-xs whitespace-pre-wrap">
+                        {JSON.stringify(financeTokenApplications, null, 2)}
+                      </div>
+                      {activeApplications?.length > 0 && (
+                        <FinancedTokenProgress
+                          member={member}
+                          activeApplications={activeApplications}
+                        />
+                      )}
+                    </div>
+                  )}
+
                 {/* User Bookings Section */}
                 {member &&
                   currentUser &&
                   currentUser.roles.includes('space-host') && (
-                  <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h4 className="font-medium text-xl mb-4">{t('members_slug_bookings')}</h4>
-                    <UserBookings user={member} isSpaceHostView={true} />
-                  </div>
-                )}
-                
+                    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                      <h4 className="font-medium text-xl mb-4">
+                        {t('members_slug_bookings')}
+                      </h4>
+                      <UserBookings user={member} isSpaceHostView={true} />
+                    </div>
+                  )}
+
                 {/* Events Section */}
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <h4 className="font-medium text-xl mb-4">
@@ -550,7 +674,11 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
             </div>
           </div>
 
-          {error && <p className="validation-error">Error: {error}</p>}
+          {error && (
+            <p className="validation-error">
+              {t('members_slug_error_prefix')} {error}
+            </p>
+          )}
         </div>
       </div>
 
@@ -575,91 +703,93 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                   className="flex flex-col space-y-7 w-full p-2"
                   onSubmit={(e) => {
                     e.preventDefault();
-                    
+
                     // Get all input values from the form
                     const formData = new FormData(e.currentTarget);
                     const newLinks = [];
-                    
+
                     // Process Twitter
                     const twitterUsername = formData.get('twitter-username');
                     if (twitterUsername) {
                       newLinks.push({
                         name: 'Twitter/X',
-                        url: `https://twitter.com/${twitterUsername}`
+                        url: `https://twitter.com/${twitterUsername}`,
                       });
                     }
-                    
+
                     // Process Instagram
-                    const instagramUsername = formData.get('instagram-username');
+                    const instagramUsername =
+                      formData.get('instagram-username');
                     if (instagramUsername) {
                       newLinks.push({
                         name: 'Instagram',
-                        url: `https://instagram.com/${instagramUsername}`
+                        url: `https://instagram.com/${instagramUsername}`,
                       });
                     }
-                    
+
                     // Process LinkedIn
                     const linkedinUsername = formData.get('linkedin-username');
                     if (linkedinUsername) {
                       newLinks.push({
                         name: 'LinkedIn',
-                        url: `https://linkedin.com/in/${linkedinUsername}`
+                        url: `https://linkedin.com/in/${linkedinUsername}`,
                       });
                     }
-                    
+
                     // Process Facebook
                     const facebookUsername = formData.get('facebook-username');
                     if (facebookUsername) {
                       newLinks.push({
                         name: 'Facebook',
-                        url: `https://facebook.com/${facebookUsername}`
+                        url: `https://facebook.com/${facebookUsername}`,
                       });
                     }
-                    
+
                     // Process GitHub
                     const githubUsername = formData.get('github-username');
                     if (githubUsername) {
                       newLinks.push({
                         name: 'GitHub',
-                        url: `https://github.com/${githubUsername}`
+                        url: `https://github.com/${githubUsername}`,
                       });
                     }
-                    
+
                     // Process YouTube
                     const youtubeUsername = formData.get('youtube-username');
                     if (youtubeUsername) {
                       newLinks.push({
                         name: 'YouTube',
-                        url: `https://youtube.com/c/${youtubeUsername}`
+                        url: `https://youtube.com/c/${youtubeUsername}`,
                       });
                     }
-                    
+
                     // Process Website
                     const website = formData.get('website');
                     if (website) {
-                      const websiteUrl = website.toString().startsWith('http') 
-                        ? website.toString() 
+                      const websiteUrl = website.toString().startsWith('http')
+                        ? website.toString()
                         : `https://${website}`;
                       newLinks.push({
                         name: 'Website',
-                        url: websiteUrl
+                        url: websiteUrl,
                       });
                     }
-                    
+
                     // Save all links
                     if (newLinks.length > 0) {
-                      platform.user.patch(currentUser?._id, {
-                        links: [...links, ...newLinks],
-                      })
-                      .then(({ data }: { data: any }) => {
-                        setLinks(data.links);
-                        toggleShowForm(false);
-                        setErrors(null);
-                      })
-                      .catch((err: unknown) => {
-                        const error = parseMessageFromError(err);
-                        setErrors(error);
-                      });
+                      platform.user
+                        .patch(currentUser?._id, {
+                          links: [...links, ...newLinks],
+                        })
+                        .then(({ data }: { data: any }) => {
+                          setLinks(data.links);
+                          toggleShowForm(false);
+                          setErrors(null);
+                        })
+                        .catch((err: unknown) => {
+                          const error = parseMessageFromError(err);
+                          setErrors(error);
+                        });
                     } else {
                       toggleShowForm(false);
                     }
@@ -672,133 +802,161 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                         <span className="mr-2 text-lg w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full">
                           𝕏
                         </span>
-                        <span className="font-medium">{t('members_slug_twitter')}</span>
+                        <span className="font-medium">
+                          {t('members_slug_twitter')}
+                        </span>
                       </div>
                       <div className="flex items-center">
-                        <span className="text-sm text-gray-500 mr-1">twitter.com/</span>
-                        <input 
-                          type="text" 
+                        <span className="text-sm text-gray-500 mr-1">
+                          twitter.com/
+                        </span>
+                        <input
+                          type="text"
                           name="twitter-username"
-                          placeholder="username" 
+                          placeholder={t('members_slug_username_placeholder')}
                           className="text-sm border-b border-gray-300 focus:border-blue-500 outline-none flex-grow"
                         />
                       </div>
                     </div>
-                    
+
                     {/* Instagram Card */}
                     <div className="bg-white p-4 rounded-lg border border-gray-200">
                       <div className="flex items-center mb-3">
                         <span className="mr-2 text-lg w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full">
                           📸
                         </span>
-                        <span className="font-medium">{t('members_slug_instagram')}</span>
+                        <span className="font-medium">
+                          {t('members_slug_instagram')}
+                        </span>
                       </div>
                       <div className="flex items-center">
-                        <span className="text-sm text-gray-500 mr-1">instagram.com/</span>
-                        <input 
-                          type="text" 
+                        <span className="text-sm text-gray-500 mr-1">
+                          instagram.com/
+                        </span>
+                        <input
+                          type="text"
                           name="instagram-username"
-                          placeholder="username" 
+                          placeholder={t('members_slug_username_placeholder')}
                           className="text-sm border-b border-gray-300 focus:border-blue-500 outline-none flex-grow"
                         />
                       </div>
                     </div>
-                    
+
                     {/* LinkedIn Card */}
                     <div className="bg-white p-4 rounded-lg border border-gray-200">
                       <div className="flex items-center mb-3">
                         <span className="mr-2 text-lg w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full">
                           in
                         </span>
-                        <span className="font-medium">{t('members_slug_linkedin')}</span>
+                        <span className="font-medium">
+                          {t('members_slug_linkedin')}
+                        </span>
                       </div>
                       <div className="flex items-center">
-                        <span className="text-sm text-gray-500 mr-1">linkedin.com/in/</span>
-                        <input 
-                          type="text" 
+                        <span className="text-sm text-gray-500 mr-1">
+                          linkedin.com/in/
+                        </span>
+                        <input
+                          type="text"
                           name="linkedin-username"
-                          placeholder="username" 
+                          placeholder={t('members_slug_username_placeholder')}
                           className="text-sm border-b border-gray-300 focus:border-blue-500 outline-none flex-grow"
                         />
                       </div>
                     </div>
-                    
+
                     {/* Facebook Card */}
                     <div className="bg-white p-4 rounded-lg border border-gray-200">
                       <div className="flex items-center mb-3">
                         <span className="mr-2 text-lg w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full">
                           ƒ
                         </span>
-                        <span className="font-medium">{t('members_slug_facebook')}</span>
+                        <span className="font-medium">
+                          {t('members_slug_facebook')}
+                        </span>
                       </div>
                       <div className="flex items-center">
-                        <span className="text-sm text-gray-500 mr-1">facebook.com/</span>
-                        <input 
-                          type="text" 
+                        <span className="text-sm text-gray-500 mr-1">
+                          facebook.com/
+                        </span>
+                        <input
+                          type="text"
                           name="facebook-username"
-                          placeholder="username" 
+                          placeholder={t('members_slug_username_placeholder')}
                           className="text-sm border-b border-gray-300 focus:border-blue-500 outline-none flex-grow"
                         />
                       </div>
                     </div>
-                    
+
                     {/* GitHub Card */}
                     <div className="bg-white p-4 rounded-lg border border-gray-200">
                       <div className="flex items-center mb-3">
                         <span className="mr-2 text-lg w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full">
                           🐙
                         </span>
-                        <span className="font-medium">{t('members_slug_github')}</span>
+                        <span className="font-medium">
+                          {t('members_slug_github')}
+                        </span>
                       </div>
                       <div className="flex items-center">
-                        <span className="text-sm text-gray-500 mr-1">github.com/</span>
-                        <input 
-                          type="text" 
+                        <span className="text-sm text-gray-500 mr-1">
+                          github.com/
+                        </span>
+                        <input
+                          type="text"
                           name="github-username"
-                          placeholder="username" 
+                          placeholder={t('members_slug_username_placeholder')}
                           className="text-sm border-b border-gray-300 focus:border-blue-500 outline-none flex-grow"
                         />
                       </div>
                     </div>
-                    
+
                     {/* YouTube Card */}
                     <div className="bg-white p-4 rounded-lg border border-gray-200">
                       <div className="flex items-center mb-3">
                         <span className="mr-2 text-lg w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full">
                           ▶️
                         </span>
-                        <span className="font-medium">{t('members_slug_youtube')}</span>
+                        <span className="font-medium">
+                          {t('members_slug_youtube')}
+                        </span>
                       </div>
                       <div className="flex items-center">
-                        <span className="text-sm text-gray-500 mr-1">youtube.com/c/</span>
-                        <input 
-                          type="text" 
+                        <span className="text-sm text-gray-500 mr-1">
+                          youtube.com/c/
+                        </span>
+                        <input
+                          type="text"
                           name="youtube-username"
-                          placeholder="channelname" 
+                          placeholder={t(
+                            'members_slug_channelname_placeholder',
+                          )}
                           className="text-sm border-b border-gray-300 focus:border-blue-500 outline-none flex-grow"
                         />
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Website */}
                   <div className="bg-white p-4 rounded-lg border border-gray-200 mt-4">
                     <div className="flex items-center mb-3">
                       <span className="mr-2 text-lg w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full">
                         🌐
                       </span>
-                      <span className="font-medium">{t('members_slug_website')}</span>
+                      <span className="font-medium">
+                        {t('members_slug_website')}
+                      </span>
                     </div>
                     <div className="flex items-center">
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         name="website"
-                        placeholder="https://yourwebsite.com" 
+                        placeholder={t('members_slug_website_placeholder')}
                         className="text-sm border-b border-gray-300 focus:border-blue-500 outline-none w-full"
                       />
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-row items-center justify-center mt-6 pt-4 border-t border-gray-200">
                     <button
                       type="submit"
@@ -852,8 +1010,8 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                     type="checkbox"
                     id="unsafe"
                     checked={isUnsafe}
-                      onChange={(e) => setIsUnsafe(e.target.checked)}
-                      className='w-fit'
+                    onChange={(e) => setIsUnsafe(e.target.checked)}
+                    className="w-fit"
                   />
                   <label htmlFor="unsafe">{t('report_user_unsafe')}</label>
                 </div>
@@ -886,6 +1044,7 @@ MemberPage.getInitialProps = async (context: NextPageContext) => {
             }
           : {},
       }),
+
       api.get('/config/general').catch(() => {
         return null;
       }),
@@ -896,6 +1055,7 @@ MemberPage.getInitialProps = async (context: NextPageContext) => {
     return {
       member: res.data.results,
       generalConfig,
+
       messages,
     };
   } catch (err: unknown) {
@@ -904,6 +1064,7 @@ MemberPage.getInitialProps = async (context: NextPageContext) => {
     return {
       loadError: parseMessageFromError(err),
       generalConfig: null,
+
       messages: null,
     };
   }

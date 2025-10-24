@@ -20,6 +20,7 @@ export const models = [
   'product',
   'post',
   'photo',
+  'proposal',
   'resource',
   'session',
   'stay',
@@ -29,6 +30,8 @@ export const models = [
   'food',
   'metric',
   'charge',
+  'sale',
+  'vote',
 ];
 
 const filterToKey = (filter) => JSON.stringify(filter) || '__';
@@ -80,15 +83,63 @@ const reducer = (state, action) => {
         .set([action.model, 'isPosting'], false)
         .set([action.model, 'postError'], action.error);
     case constants.POST_SUCCESS:
-      return state.set([action.model, 'isPosting'], false).mergeIn(
-        [action.model, 'byId', action.id],
-        Map({
-          data: action.results,
-          loading: false,
-          error: null,
-          receivedAt: Date.now(),
-        }),
-      );
+      return state.withMutations((map) => {
+        map.set([action.model, 'isPosting'], false).mergeIn(
+          [action.model, 'byId', action.id],
+          Map({
+            data: action.results,
+            loading: false,
+            error: null,
+            receivedAt: Date.now(),
+          }),
+        );
+
+        // Also update all filter caches that match the new item
+        const byFilterMap = map.getIn([action.model, 'byFilter']);
+        if (byFilterMap) {
+          byFilterMap.forEach((filterData, filterKey) => {
+            const data = filterData.get('data');
+            if (data) {
+              try {
+                const newItem = action.results;
+                const currentFilter = JSON.parse(filterKey);
+
+                // Check if the new item matches this filter
+                let matches = true;
+
+                // If filter has a where clause, check all conditions
+                if (currentFilter.where) {
+                  Object.keys(currentFilter.where).forEach((key) => {
+                    const filterValue = currentFilter.where[key];
+                    const itemValue = newItem.get(key);
+                    if (itemValue !== filterValue) {
+                      matches = false;
+                    }
+                  });
+                }
+                // If filter is empty (like {} for "all items"), it matches everything
+                else if (Object.keys(currentFilter).length === 0) {
+                  matches = true;
+                }
+                // If filter has other properties but no where clause, skip for now
+                else {
+                  matches = false;
+                }
+
+                // If the new item matches this filter, add it to the beginning (newest first)
+                if (matches) {
+                  map.setIn(
+                    [action.model, 'byFilter', filterKey, 'data'],
+                    data.unshift(newItem),
+                  );
+                }
+              } catch (e) {
+                // Ignore parsing errors for invalid filter keys
+              }
+            }
+          });
+        }
+      });
     case constants.PATCH_SUCCESS:
       return state.withMutations((map) => {
         if (action.filterKey && action.resultIndex) {
@@ -108,6 +159,7 @@ const reducer = (state, action) => {
             }),
           );
         }
+
         map.setIn(
           [action.model, 'byId', action._id],
           Map({
@@ -117,6 +169,23 @@ const reducer = (state, action) => {
             receivedAt: Date.now(),
           }),
         );
+
+        map
+          .getIn([action.model, 'byFilter'])
+          .forEach((filterData, filterKey) => {
+            const data = filterData.get('data');
+            if (data) {
+              const updatedIndex = data.findIndex(
+                (item) => item.get('_id') === action._id,
+              );
+              if (updatedIndex !== -1) {
+                map.setIn(
+                  [action.model, 'byFilter', filterKey, 'data', updatedIndex],
+                  action.results,
+                );
+              }
+            }
+          });
       });
     case constants.GET_INIT:
       return state.setIn(

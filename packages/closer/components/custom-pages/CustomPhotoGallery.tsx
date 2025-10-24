@@ -168,6 +168,7 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
           />
         </div>
       )}
+      
 
       {/* Gallery always takes full width */}
       <div className="max-w-6xl mx-auto">
@@ -197,6 +198,7 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
                   }}
                   onClick={() => openModal(absoluteIndex)}
                 >
+
                   <Image
                     src={image.src}
                     alt={image.alt || 'Gallery Image'}

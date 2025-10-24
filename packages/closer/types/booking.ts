@@ -27,6 +27,8 @@ export interface BaseBookingParams {
   projectId?: string | undefined;
   suggestions?: string | undefined;
   bookingType?: 'volunteer' | 'residence' | undefined;
+  isFriendsBooking?: boolean | string | undefined;
+  friendEmails?: string | undefined;
 }
 
 export type Listing = {
@@ -75,6 +77,7 @@ export type TokenSaleChargeMeta = {
 
 export type Charge = {
   id: string;
+  _id?: string;
   status:
     | 'paid'
     | 'refunded'
@@ -189,6 +192,10 @@ export type Booking = {
   roomOrBedNumbers?: number[];
   charges?: Charge[];
   volunteerInfo?: VolunteerInfo;
+  isFriendsBooking?: boolean;
+  friendEmails?: string;
+  paidByMember?: boolean;
+  paidBy?: string;
 };
 
 export interface StatusColor {

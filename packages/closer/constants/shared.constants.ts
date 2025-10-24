@@ -289,9 +289,8 @@ export const SUBSCRIPTION_STEPS = [
 ];
 
 export const SUBSCRIPTION_CITIZEN_STEPS = [
+  'why',
   'validation',
-  'select-flow',
-  'apply',
   'success',
 ];
 
@@ -341,6 +340,7 @@ export const USER_ROLE_OPTIONS = [
   { label: 'Space host', value: 'space-host' },
   { label: 'Steward', value: 'steward' },
   { label: 'Community-curator', value: 'community-curator' },
+  { label: 'Affiliate manager', value: 'affiliate-manager' },
   { label: 'Member', value: 'member' },
 ];
 

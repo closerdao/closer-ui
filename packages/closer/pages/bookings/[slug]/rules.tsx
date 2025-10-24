@@ -1,8 +1,10 @@
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+
+import { useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingRules from '../../../components/BookingRules';
+import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
 import { Button } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
@@ -49,13 +51,26 @@ const BookingRulesPage = ({
   const { isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
+  console.log('bookingRules=', bookingRules);
+
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
+  useEffect(() => {
+    if (
+      !bookingRules ||
+      !bookingRules?.elements ||
+      bookingRules?.elements?.length === 0 ||
+      !bookingRules?.elements?.[0]?.title
+    ) {
+      router.push(`/bookings/${booking?._id}/questions`);
+    }
+  }, [bookingRules, router, booking?._id]);
+
   const handleNext = async () => {
     setIsLoading(true);
-    
+
     router.push(`/bookings/${booking?._id}/questions`);
     // if (event?.fields) {
     //   router.push(`/bookings/${booking?._id}/questions`);
@@ -84,6 +99,7 @@ const BookingRulesPage = ({
   return (
     <div className="w-full max-w-screen-sm mx-auto p-8">
       <BookingBackButton onClick={goBack} name={t('buttons_back')} />
+      <FriendsBookingBlock isFriendsBooking={booking?.isFriendsBooking} />
       <Heading level={1} className="pb-4 mt-8">
         <span className="mr-4">📋</span>
         <span>{t('booking_rules_heading')}</span>
@@ -111,27 +127,28 @@ BookingRulesPage.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
 
   try {
-    const [bookingRes, bookingConfigRes, bookingRulesRes, messages] = await Promise.all([
-      api
-        .get(`/booking/${query.slug}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
-        })
-        .catch(() => {
+    const [bookingRes, bookingConfigRes, bookingRulesRes, messages] =
+      await Promise.all([
+        api
+          .get(`/booking/${query.slug}`, {
+            headers: (req as NextApiRequest)?.cookies?.access_token && {
+              Authorization: `Bearer ${
+                (req as NextApiRequest)?.cookies?.access_token
+              }`,
+            },
+          })
+          .catch(() => {
+            return null;
+          }),
+        api.get('/config/booking').catch(() => {
           return null;
         }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-      api.get('/config/booking-rules').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    
+        api.get('/config/booking-rules').catch(() => {
+          return null;
+        }),
+        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      ]);
+
     const booking = bookingRes?.data?.results || null;
     const bookingConfig = bookingConfigRes?.data?.results?.value || null;
     const bookingRules = bookingRulesRes?.data?.results?.value || null;

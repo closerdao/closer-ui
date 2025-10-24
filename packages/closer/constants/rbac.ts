@@ -1,6 +1,6 @@
 /**
  * Role Based Access Control (RBAC) Configuration
- * 
+ *
  * This file defines access permissions for different user roles across various pages.
  * Each role has a table with switches (true/false) for each page.
  */
@@ -18,6 +18,7 @@ const rbacDefaultConfig: RBACConfig = {
   default: {
     Dashboard: false,
     Performance: false,
+    Revenue: false,
     Bookings: false,
     Listings: false,
     Food: false,
@@ -36,6 +37,7 @@ const rbacDefaultConfig: RBACConfig = {
     Residence: true,
     Stay: true,
     MyBookings: true,
+    FriendsBooking: true,
     Referrals: true,
     Governance: true,
     EventCreation: false,
@@ -46,12 +48,15 @@ const rbacDefaultConfig: RBACConfig = {
     Blog: true,
     TokenSales: false,
     ExpenseTracking: false,
+    RoleCreation: false,
+    Roles: true,
   },
-  
+
   // Steward role permissions
   steward: {
     Dashboard: true,
     Performance: true,
+    Revenue: false,
     Bookings: true,
     Listings: true,
     Food: false,
@@ -70,6 +75,7 @@ const rbacDefaultConfig: RBACConfig = {
     Residence: true,
     Stay: true,
     MyBookings: true,
+    FriendsBooking: true,
     Referrals: true,
     Governance: true,
     EventCreation: true,
@@ -80,12 +86,15 @@ const rbacDefaultConfig: RBACConfig = {
     Blog: true,
     TokenSales: false,
     ExpenseTracking: false,
+    RoleCreation: true,
+    Roles: true,
   },
-  
+
   // Space host role permissions
   'space-host': {
     Dashboard: true,
     Performance: true,
+    Revenue: false,
     Bookings: true,
     Listings: true,
     Food: false,
@@ -104,6 +113,7 @@ const rbacDefaultConfig: RBACConfig = {
     Residence: true,
     Stay: true,
     MyBookings: true,
+    FriendsBooking: true,
     Referrals: true,
     Governance: true,
     EventCreation: false,
@@ -114,12 +124,15 @@ const rbacDefaultConfig: RBACConfig = {
     Blog: true,
     TokenSales: false,
     ExpenseTracking: false,
+    RoleCreation: true,
+    Roles: true,
   },
-  
+
   // Community curator role permissions
   'community-curator': {
     Dashboard: true,
     Performance: true,
+    Revenue: false,
     Bookings: true,
     Listings: false,
     Food: false,
@@ -138,6 +151,7 @@ const rbacDefaultConfig: RBACConfig = {
     Residence: true,
     Stay: true,
     MyBookings: true,
+    FriendsBooking: true,
     Referrals: true,
     Governance: true,
     EventCreation: false,
@@ -148,8 +162,10 @@ const rbacDefaultConfig: RBACConfig = {
     Blog: true,
     TokenSales: false,
     ExpenseTracking: false,
+    RoleCreation: false,
+    Roles: true,
   },
-  
+
   // Member role permissions
   member: {
     Dashboard: false,
@@ -172,6 +188,7 @@ const rbacDefaultConfig: RBACConfig = {
     Residence: true,
     Stay: true,
     MyBookings: true,
+    FriendsBooking: true,
     Referrals: true,
     Governance: true,
     EventCreation: false,
@@ -182,12 +199,15 @@ const rbacDefaultConfig: RBACConfig = {
     Blog: true,
     TokenSales: false,
     ExpenseTracking: false,
+    RoleCreation: false,
+    Roles: true,
   },
-  
+
   // Content creator role permissions
   'content-creator': {
     Dashboard: true,
     Performance: true,
+    Revenue: false,
     Bookings: false,
     Listings: false,
     Food: false,
@@ -205,6 +225,7 @@ const rbacDefaultConfig: RBACConfig = {
     Residence: true,
     Stay: true,
     MyBookings: true,
+    FriendsBooking: true,
     Referrals: true,
     Governance: true,
     EventCreation: false,
@@ -215,12 +236,15 @@ const rbacDefaultConfig: RBACConfig = {
     Blog: true,
     TokenSales: false,
     ExpenseTracking: false,
+    RoleCreation: false,
+    Roles: true,
   },
-  
+
   // Admin role permissions (has access to everything)
   admin: {
     Dashboard: true,
     Performance: true,
+    Revenue: true,
     Bookings: true,
     Listings: true,
     Food: true,
@@ -239,6 +263,7 @@ const rbacDefaultConfig: RBACConfig = {
     Residence: true,
     Stay: true,
     MyBookings: true,
+    FriendsBooking: true,
     Referrals: true,
     Governance: true,
     EventCreation: true,
@@ -249,6 +274,8 @@ const rbacDefaultConfig: RBACConfig = {
     Blog: true,
     TokenSales: true,
     ExpenseTracking: true,
+    RoleCreation: true,
+    Roles: true,
   },
 };
 

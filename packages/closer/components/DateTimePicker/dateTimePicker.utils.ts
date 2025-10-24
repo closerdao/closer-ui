@@ -1,17 +1,35 @@
 import { DateRange } from 'react-day-picker';
 
+import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 export const getDateTime = (
   date: string | Date,
   hours: number,
   minutes: number,
+  timeZone?: string,
 ) => {
-  return new Date(
-    new Date(date).getFullYear(),
-    new Date(date).getMonth(),
-    new Date(date).getDate(),
-    hours,
-    minutes,
-  );
+  if (timeZone) {
+    // Create datetime in the specified timezone
+    const baseDate = dayjs(date);
+    const dateTimeString = `${baseDate.format('YYYY-MM-DD')}T${hours
+      .toString()
+      .padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
+    return dayjs.tz(dateTimeString, timeZone).toDate();
+  } else {
+    // Fallback to original behavior (browser local timezone)
+    return new Date(
+      new Date(date).getFullYear(),
+      new Date(date).getMonth(),
+      new Date(date).getDate(),
+      hours,
+      minutes,
+    );
+  }
 };
 
 export const includesBlockedDateRange = (

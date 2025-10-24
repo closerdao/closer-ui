@@ -4,10 +4,10 @@ import { useContext, useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import Conditions from '../../../components/Conditions';
+import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
-import { ErrorMessage } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
@@ -76,7 +76,8 @@ const Summary = ({
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
-  const { STAY_BOOKING_ALLOWED_PLANS, APP_NAME, VISITORS_GUIDE } = useConfig();
+  const { STAY_BOOKING_ALLOWED_PLANS, VISITORS_GUIDE, PLATFORM_NAME } =
+    useConfig();
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
 
@@ -84,13 +85,14 @@ const Summary = ({
   const vatRateFromConfig = Number(paymentConfig?.vatRate);
   const vatRate = vatRateFromConfig || defaultVatRate;
 
-  const hasFilledProfile = Boolean(user?.about && user?.photo);
-
   const [handleNextError, setHandleNextError] = useState<string | null>(null);
   const [hasComplied, setCompliance] = useState(false);
   const [isMember, setIsMember] = useState(false);
   const [updatedBooking, setUpdatedBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(false);
+  const [emailSuccess, setEmailSuccess] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [apiLoading, setApiLoading] = useState(false);
 
   const onComply = (isComplete: boolean) => setCompliance(isComplete);
 
@@ -112,6 +114,7 @@ const Summary = ({
     eventFiat,
     total,
     dailyRentalToken,
+    isFriendsBooking,
     duration,
     volunteerInfo,
   } = updatedBooking || booking || {};
@@ -261,6 +264,32 @@ const Summary = ({
     }
   };
 
+  const handleSendToFriends = async () => {
+    setEmailError(null);
+    setApiLoading(true);
+
+    try {
+      const res = await api.post(`/bookings/${booking?._id}/send-to-friend`, {
+        friendEmails: booking?.friendEmails,
+      });
+
+      if (res.status === 200) {
+        setEmailSuccess(true);
+      } else {
+        setEmailSuccess(false);
+        setEmailError(res.data.error);
+      }
+    } catch (error) {
+      setEmailSuccess(false);
+      setEmailError(parseMessageFromError(error));
+    } finally {
+      setApiLoading(false);
+    }
+
+    console.log('booking?.friendEmails=', booking?.friendEmails);
+    console.log('booking?.isFriendsBooking=', booking?.isFriendsBooking);
+  };
+
   if (!isBookingEnabled) {
     return <PageNotFound />;
   }
@@ -292,6 +321,43 @@ const Summary = ({
         </Button>
       </section>
     );
+  } else if (eventId && event?.requireApproval) {
+    buttonContent = (
+      <div>
+        <Button className="booking-btn" onClick={handleNext}>
+          {t('buttons_booking_request')}
+        </Button>
+      </div>
+    );
+  } else if (booking?.isFriendsBooking) {
+    buttonContent = (
+      <div className="space-y-4">
+        <div className="flex flex-col gap-3">
+          <Button onClick={handleNext} isEnabled={!loading}>
+            💰 {t('friends_booking_pay_now_summary')}
+          </Button>
+
+          <Button
+            onClick={handleSendToFriends}
+            isEnabled={!loading && !apiLoading}
+          >
+            {apiLoading ? 'Sending...' : '📧 Send to friends for payment'}
+          </Button>
+
+          {emailSuccess && (
+            <div className="text-green-600 text-sm font-medium">
+              ✅ {t('friends_booking_checkout_sent')}
+            </div>
+          )}
+
+          {emailError && (
+            <div className="text-red-600 text-sm font-medium">
+              ❌ {emailError}
+            </div>
+          )}
+        </div>
+      </div>
+    );
   } else if (eventId || (user && isMember)) {
     buttonContent = (
       <Button className="booking-btn" onClick={handleNext}>
@@ -301,16 +367,9 @@ const Summary = ({
   } else {
     buttonContent = (
       <div>
-        <Button
-          isEnabled={APP_NAME === 'moos' ? hasFilledProfile : true}
-          className="booking-btn"
-          onClick={handleNext}
-        >
+        <Button className="booking-btn" onClick={handleNext}>
           {t('buttons_booking_request')}
         </Button>
-        {APP_NAME === 'moos' && !hasFilledProfile && (
-          <ErrorMessage error="Please add description and photo to your profile to book spaces" />
-        )}
       </div>
     );
   }
@@ -318,6 +377,7 @@ const Summary = ({
   return (
     <div className="w-full max-w-screen-sm mx-auto p-8">
       <BookingBackButton onClick={goBack} name={t('buttons_back')} />
+      <FriendsBookingBlock isFriendsBooking={booking?.isFriendsBooking} />
       <Heading level={1} className="pb-4 mt-8">
         <span className="mr-4">📑</span>
         <span>{t('bookings_summary_step_title')}</span>

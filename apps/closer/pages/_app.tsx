@@ -26,6 +26,7 @@ import {
 } from 'closer';
 import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
+import { NewsletterProvider } from 'closer/contexts/newsletter';
 import { prepareGeneralConfig } from 'closer/utils/app.helpers';
 import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
@@ -68,7 +69,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
   const { FACEBOOK_PIXEL_ID } = config || {};
 
   useEffect(() => {
-    if (referral) {
+    if (referral && typeof window !== 'undefined') {
       localStorage.setItem(REFERRAL_ID_LOCAL_STORAGE_KEY, referral as string);
     }
   }, [referral]);
@@ -96,11 +97,12 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         />
       </Head>
 
-      <Script
-        id="fb-pixel"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
+      {FACEBOOK_PIXEL_ID && (
+        <Script
+          id="fb-pixel"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
   !function(f,b,e,v,n,t,s)
   {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
   n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -112,8 +114,9 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
   fbq('init', '${FACEBOOK_PIXEL_ID}');
   fbq('track', 'PageView');
   `,
-        }}
-      />
+          }}
+        />
+      )}
 
       <ConfigProvider
         config={{
@@ -135,7 +138,9 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
                   <WalletProvider>
                     <Layout>
                       <GoogleAnalytics trackPageViews />
-                      <Component {...pageProps} config={config} />
+                      <NewsletterProvider>
+                        <Component {...pageProps} config={config} />
+                      </NewsletterProvider>
                     </Layout>
                     {/* TODO: create cookie consent page with property-specific parameters #357  */}
                     <AcceptCookies />

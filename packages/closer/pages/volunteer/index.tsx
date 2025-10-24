@@ -6,7 +6,7 @@ import Link from 'next/link';
 import PageError from 'closer/components/PageError';
 import { Heading, LinkButton } from 'closer/components/ui';
 
-import { GeneralConfig, api } from 'closer';
+import { GeneralConfig, PageNotFound, VolunteerConfig, api } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import useRBAC from 'closer/hooks/useRBAC';
 import { parseMessageFromError } from 'closer/utils/common';
@@ -16,11 +16,19 @@ import { useTranslations } from 'next-intl';
 
 interface Props {
   generalConfig: GeneralConfig | null;
+  volunteerConfig: VolunteerConfig | null;
   error: string | null;
 }
 
-const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
+const VolunteerOpportunitiesPage = ({
+  generalConfig,
+  error,
+  volunteerConfig,
+}: Props) => {
   const t = useTranslations();
+
+  const isVolunteerEnabled =
+    volunteerConfig && volunteerConfig?.enabled === true;
 
   const defaultConfig = useConfig();
   const { hasAccess } = useRBAC();
@@ -29,6 +37,10 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
 
   // Check if user has permission to create volunteers
   const canCreateVolunteer = hasAccess('VolunteerCreation');
+
+  if(!isVolunteerEnabled) {
+    return <PageNotFound />;
+  }
 
   if (error) {
     return <PageError error={error} />;
@@ -42,8 +54,8 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
       <main className=" pb-24">
         <section className="w-full flex justify-center max-w-4xl mx-auto mb-4 relative">
           <Image
-            alt="Traditional Dream Factory Volunteers open call"
-            src="/images/tdf-volunteers-open-call.png"
+            alt="Volunteer open call"
+            src="/images/tdf-volunteers-open-call.jpg"
             width={1344}
             height={600}
           />
@@ -95,6 +107,7 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
                   <div className="flex flex-col gap-6 max-w-2xl">
                     <p>{t('volunteers_intro_1')}</p>
                     <p>{t('volunteers_intro_2')}</p>
+                    <p>{t('volunteers_intro_3')}</p>
                     <p>
                       <strong className="uppercase">
                         {t('volunteers_requirements_label')}
@@ -103,10 +116,18 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
                     </p>
                     <p>
                       <strong className="uppercase">
+                        {t('volunteers_community_meals_label')}
+                      </strong>{' '}
+                      {t('volunteers_community_meals_value')}
+                    </p>
+                    <p>
+                      <strong className="uppercase">
                         {t('volunteers_community_culture_label')}
                       </strong>{' '}
                       {t('volunteers_community_culture_value')}
                     </p>
+
+                    <p>{t('volunteers_intro_4')}</p>
                     <Heading level={2}>
                       {t('volunteers_skills_and_qualifications_title')}
                     </Heading>
@@ -162,7 +183,6 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
                       </Link>
                       .
                     </p>
-                    <p>{t('volunteers_recommended_stay')}</p>
                   </div>
                 </div>
               </div>
@@ -178,19 +198,22 @@ VolunteerOpportunitiesPage.getInitialProps = async (
   context: NextPageContext,
 ) => {
   try {
-    const [messages, generalRes] = await Promise.all([
+    const [messages, generalRes, volunteerConfigRes] = await Promise.all([
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       api.get('/config/general').catch(() => null),
+      api.get('/config/volunteering').catch(() => null),
     ]);
 
     const generalConfig = generalRes?.data?.results?.value;
+    const volunteerConfig = volunteerConfigRes?.data?.results?.value;
 
-    return { messages, generalConfig };
+    return { messages, generalConfig, volunteerConfig };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
       messages: null,
+      volunteerConfig: null,
     };
   }
 };

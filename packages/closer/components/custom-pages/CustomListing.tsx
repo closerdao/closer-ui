@@ -61,7 +61,7 @@ const CustomListing: React.FC<{
         <div className="flex flex-col gap-4 text-center">
           <Heading
             level={2}
-            className={`${settings?.isColorful ? 'text-accent' : ''}  text-4xl`}
+            className={`${settings?.isColorful ? 'text-accent' : ''}  text-3xl`}
           >
             {content?.title}
           </Heading>
@@ -94,7 +94,7 @@ const CustomListing: React.FC<{
                       height={500}
                       className={`${
                         settings?.isSmallImage ? 'rounded-full' : ''
-                      } w-full h-auto object-contain`}
+                      }  w-full h-auto object-contain`}
                       sizes="(max-width: 768px) 100vw, 40vw"
                     />
                   </div>

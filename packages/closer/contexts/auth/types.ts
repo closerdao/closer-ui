@@ -18,6 +18,7 @@ export type Report = {
 export type User = {
   vouched?: Vouched[];
   reports?: Report[];
+  reportedBy?: string[];
   message?: string;
   tagline?: string;
   about?: string;
@@ -69,6 +70,7 @@ export type User = {
   _id: string;
   citizenship?: {
     createdAt?: Date;
+    appliedAt?: Date;
     status?: 'pending-payment' | 'cancelled' | 'paid' | 'completed';
     iban?: string;
     why?: string;
@@ -81,13 +83,13 @@ export type User = {
   subscription: {
     plan: string;
     tier: string;
+    createdAt?: Date;
     validUntil?: Date;
     cancelledAt?: Date;
     priceId: string;
     monthlyPrice: { val: number; cur: string };
     monthlyCredits: number;
     stripeCustomerEmail: string;
-   
   };
   presence?: number;
   tokensBought?: number;

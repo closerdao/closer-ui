@@ -39,7 +39,11 @@ const getPage = ({
           },
           content: {
             title: 'EARTHBOUND ECOVILLAGE',
-            body: 'A pilot project for regenerative <br/> & community living in Sweden',
+            videoEmbedId: 'W9AyIR3mSHk',
+            mobileVideoUrl:
+              // 'https://cdn.oasa.co/custom-pages/earthbound/Earthbound%20header%2003%20HQ.mp4',
+              'https://cdn.oasa.co/custom-pages/earthbound/earthbound-hero-trim.mp4',
+            body: 'A regenerative  & intentional community <br/> in Sweden',
             imageUrl:
               'https://cdn.oasa.co/custom-pages/earthbound/earthbound-hero.png',
             cta: {
@@ -74,6 +78,7 @@ const getPage = ({
             numColumns: 3,
             isSmallImage: true,
             isColorful: true,
+            id: 'values',
           },
           content: {
             title: 'OUR CORE VALUES',
@@ -191,18 +196,21 @@ const getPage = ({
             items: [
               {
                 title: 'LOW-IMPACT, AFFORDABLE AND NON-SPECULATIVE HOUSING',
-                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/_0004_low-impact.png',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/_0004_low-impact.png',
                 text: `
                   <ul style="text-align: left;">
                     <li>Natural and traditional building and restoration</li>
                     <li>Water catchment and greywater systems</li>
                     <li>Creating a renewable energy community</li>
+                    <li>Cooperatively-owned housing and land </li>
                   </ul>
                 `,
               },
               {
                 title: 'LOCAL AND BIOREGIONAL CHANGEMAKERS',
-                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/_0003_Local-and-Bioregional-Changemakers.png',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/_0003_Local-and-Bioregional-Changemakers.png',
                 text: `
                   Engaging with the local community by addressing regional needs, such as:
                   <ul style="text-align: left;">
@@ -214,7 +222,8 @@ const getPage = ({
               },
               {
                 title: 'COMMUNITY RESEARCH',
-                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/_0000_Community-Research.png',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/_0000_Community-Research.png',
                 text: `
                   <ul style="text-align: left;">
                     <li>Integrating peaceful co-existence through community practices</li>
@@ -225,7 +234,8 @@ const getPage = ({
               },
               {
                 title: 'PERMACULTURE AND REGENERATIVE AGRICULTURE',
-                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/_0002_Permaculture-and-Regenerative-Agriculture.png',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/_0002_Permaculture-and-Regenerative-Agriculture.png',
                 text: `
                   <ul style="text-align: left;">
                     <li>Serving as a test field for future regenerative farming techniques</li>
@@ -235,7 +245,8 @@ const getPage = ({
               },
               {
                 title: 'SUSTAINABLE MICRO-BUSINESS HUB',
-                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/sustainable.png',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/sustainable.png',
                 text: `
                   <ul style="text-align: left;">
                     <li>Renovating 600+ sqm of barn spaces to support sustainable micro-businesses</li>
@@ -245,7 +256,8 @@ const getPage = ({
               },
               {
                 title: 'LAND STEWARDSHIP',
-                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/_0001_Land-Stewardship.png',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/_0001_Land-Stewardship.png',
                 text: `
                   <ul style="text-align: left;">
                     <li>Stewarding 73 hectares of diverse landscapes, including biodiverse forest, wetlands, lakes, production forests, and fields</li>
@@ -255,16 +267,16 @@ const getPage = ({
               },
               {
                 title: 'THINK TANK & PILOT PROJECT',
-                imageUrl: 'https://cdn.oasa.co/custom-pages/earthbound/Think%20Thank%20&%20Pilot.png',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/Think%20Thank%20&%20Pilot.png',
                 text: `
                   <ul style="text-align: left;">
                     <li>Tracking and gathering the successes and failures</li>
                     <li>Communicating our results through publications, events and embodied experiences</li>
-                    <li>Collaborating with other actors in the field</li>
+                    <li>Staying curious and seeking diverse collaborations </li>
                   </ul>
                 `,
               },
-              
             ],
           },
         },
@@ -304,7 +316,7 @@ const getPage = ({
           content: {
             title: 'OUR MODEL ',
             description:
-              'We\'e introducing a new model for communities in Scandinavia to own and govern together. Our format shapes a strong, ethical financial and legal structure based on "community logic". Designed to be easy to replicate, it paves the way for future community-led initiatives. You can read about the key aspects of our model below.',
+              'We\'re introducing a new model for communities in Scandinavia to own and govern together. Our format shapes a strong, ethical financial and legal structure based on "community logic". Designed to be easy to replicate, it paves the way for future community-led initiatives. You can read about the key aspects of our model below.',
             items: [
               {
                 title: 'NON PROFIT, NON SPECULATIVE',
@@ -735,7 +747,10 @@ const HomePage = ({ generalConfig, listings, hosts }: Props) => {
     <div>
       <Head>
         <title>Earthbound Ecovillage & Community Sweden</title>
-        <meta name="description" content="Earthbound is an Ecovillage, Think-Tank & living Community, based on conscious relationships, earth-centered awareness and regenerative living." />
+        <meta
+          name="description"
+          content="Earthbound is an Ecovillage, Think-Tank & living Community, based on conscious relationships, earth-centered awareness and regenerative living."
+        />
       </Head>
       <CustomSections page={page} />
     </div>
