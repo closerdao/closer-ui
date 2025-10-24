@@ -56,7 +56,7 @@ const getPage = ({
               <blockquote>
                 You can put your money in Earthbound instead of the bank!
                 <br/>
-                We welcome impact investments from 120.000 SEK to 3.000.000 SEK.
+                We welcome impact investments from 200.000 SEK to 3.000.000 SEK.
               </blockquote>
            
 

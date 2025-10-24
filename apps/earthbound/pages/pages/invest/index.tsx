@@ -25,13 +25,11 @@ const getPage = ({
   listings: Listing[] | null;
   hosts: User[] | null;
   generalConfig: GeneralConfig | null;
-  }) => {
-  
-    // BECOME AN IMPACT INVESTOR
+}) => {
+  // BECOME AN IMPACT INVESTOR
   const localPage: Page = {
     isHomePage: false,
     sections: [
-  
       // {
       //   type: 'hero',
       //   data: {
@@ -79,50 +77,6 @@ const getPage = ({
         },
       },
 
-      // {
-      //   type: 'listing',
-      //   data: {
-      //     settings: {
-      //       numColumns: 2,
-      //       isSmallImage: true,
-      //       isColorful: true,
-      //     },
-      //     content: {
-      //       title: '',
-      //       description: '',
-      //       items: [
-      //         {
-      //           title: 'Impact investments enable us to:',
-      //           imageUrl:
-      //             'https://cdn.oasa.co/custom-pages/earthbound/_0001_Land-Stewardship.png',
-      //           text: `
-              
-      //            <ul style="text-align: left;">
-      //               <li>Take land out of the speculative, extractive market to - nature conservation and forest restoration</li>
-      //               <li>Create a blueprint of future regenerative living through bio-buildings and energy systems.</li>
-      //             </ul>
-      //           `,
-      //         },
-
-      //         {
-      //           title: 'By placing your savings with Earthbound they will be:',
-
-      //           imageUrl:
-      //             'https://cdn.oasa.co/custom-pages/earthbound/_0003_Local-and-Bioregional-Changemakers.png',
-      //           text: `
-              
-      //             <ul style="text-align: left;">
-      //               <li>Secured in real land and buildings</li>
-      //               <li>Regulated with inflation</li>
-      //               <li>Held by safe contracts developed in collaboration with WYZ Law Group</li>
-      //               <li>Safeguarded by a real on-site community with strong values</li>
-      //             </ul>
-      //           `,
-      //         },
-      //       ],
-      //     },
-      //   },
-      // },
       {
         type: 'richText',
         data: {
@@ -132,62 +86,127 @@ const getPage = ({
           content: {
             html: `
 
+              <p>Follow us on social media, where we share our small and big moments!
+              </p>
+              
+              <ul>
+              <li><a href='https://www.facebook.com/people/Earthbound-Ecovillage/61562042564108/?rdid=I1G0ykSdIwXXoNJL&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F16tdbwosJk%2F'>Facebook</a></li>
+              <li><a href='https://www.instagram.com/earthboundecovillage'>Instagram</a></li>
+              <li><a href='https://t.me/earthboundecovillage'>Telegram</a></li>
+              
+    
+
+                        `,
+          },
+        },
+      },
+
+      {
+        type: 'listing',
+        data: {
+          settings: {
+            numColumns: 3,
+            isSmallImage: true,
+            isColorful: true,
+          },
+          content: {
+            title: 'Impact investments enable us to:',
+            description: '',
+            items: [
+              {
+                title:
+                  'Take land out of the speculative, extractive market to - nature conservation and forest restoration',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/taking%20land%20out%20of%20speculative%20market%20-%20nature%20restoration2.png',
+                text: `
+              
+
+                `,
+              },
+              {
+                title:
+                  'Create a blueprint of future regenerative living through bio-buildings and energy systems',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/blueprint%20for%20bio-buildings%20&%20energy%20systems2.png',
+                text: `
+              
+              
+                `,
+              },
+            ],
+          },
+        },
+      },
+
+      {
+        type: 'listing',
+        data: {
+          settings: {
+            numColumns: 4,
+            isSmallImage: true,
+            isColorful: true,
+          },
+          content: {
+            title: 'By placing your savings with Earthbound they will be:',
+            description: '',
+            items: [
+              {
+                title: 'Secured in real land and buildings',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/secured%20in%20real%20land%20&%20buildings2.png',
+                text: `
+                `,
+              },
+              {
+                title: 'Regulated with inflation',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/regulated%20with%20inflation2.png',
+                text: `
+                `,
+              },
+              {
+                title:
+                  'Held by safe contracts developed in collaboration with WYZ Law Group',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/safe%20contracts%20by%20WYZ%20Law%20Group2.png',
+                text: `
+                  `,
+              },
+              {
+                title:
+                  'Safeguarded by a real on-site community with strong values',
+                imageUrl:
+                  'https://cdn.oasa.co/custom-pages/earthbound/safeguarded%20by%20real%20on%20site%20community2.png',
+                text: `
+                `,
+              },
+            ],
+          },
+        },
+      },
+      {
+        type: 'richText',
+        data: {
+          settings: {
+            isColorful: true,
+          },
+          content: {
+            html: `
+
+
+
             <p>If this sparks your interest, we would love to have a call with you to connect, get to know each other and share more details. </p>
 
             <h2 style="text-transform: uppercase;">
             You can put your money in Earthbound instead of the bank!
             <br/>
             </h2>
-            <p>We welcome impact investments from 120.000 SEK to 3.000.000 SEK.</p>
+            <p>We welcome impact investments from 200.000 SEK to 3.000.000 SEK.</p>
             
             <p>
 Support the creation of an ethical and regenerative project and create impact beyond your lifetime. We are calling in impact investors who want to make the vision of Earthbound a reality with us and who are committed to creating a life-centred and regenerative future . 
             </p>
 
-              <h2>HOW TO BECOME AN IMPACT INVESTOR?</h2>
-              
-              
-              <ol>
-              <li>Reach out to us via Email, Telegram or WhatsApp</li>
-              <li>Have a conversation with us about your needs and desires to invest into the project</li>
-              <li>Together we shape your individual Impact Investor Agreement based on our templates and agree on the size of your investment</li>
-              <li>You become a shareholder of Earthbound Housing Cooperative AB, can attend the yearly General Assembly, visit us and become an advisor of the project</li>
-              </ol>
-              
-              <h2>WHAT ELSE DO WE OFFER?</h2>
-
-              <ul><li>Be part of shaping the project by voting at the general assembly</li>
-              <li>A voucher for a free extended weekend stay with us every year</li>
-              <li>Discount on the yearly Earthbound Gathering</li>
-              </ul>
-
-                            <h2>HOW SAFE IS YOUR IMPACT INVESTMENT?</h2>
-
-            
-
-              <ul>
-              <li>It is a long-term investment with a real estate collateral</li>
-              <li>It is bound by clear contractual agreements with each investor</li>
-              <li>You have freedom to withdraw your money at any time, with respect to the sustainability of the project</li>
-              <li>Earthbound is safeguarding your money by making economic, ecological and social investments on a human scale</li>
-              </ul>
-
-          
-             
-                        <p>
-                          For more information please contact us:
-                          </p>
-                          
-                          <ul>
-                            <li><strong>Email:</strong> <a href="mailto:contact@earthbound.eco">contact@earthbound.eco</a></li>
-                            <li>
-                            <strong>Telegram (Dicte):</strong> <a href="https://t.me/Dicte_Frost">@Dicte_Frost</a>
-                            </li>
-                            <li><strong>WhatsApp (Dicte):</strong> <a href="http://wa.me/+4560661280">+4560661280</a></li>
-                            <li><strong>Phone:</strong> <a href="tel:+46722362135">+46 72 236 2135</a></li>
-                           </ul>
-
-                       
                         `,
           },
         },
@@ -245,7 +264,7 @@ Support the creation of an ethical and regenerative project and create impact be
               },
               {
                 title: 'LEANN ERIKSSON, Sweden/USA',
-                text: '“I\'m an impact investor at Earthbound because it is aligned with what humans need the most now: conscious, heart-centered connection with each other and the rest of the natural world. The founders have meticulously put together the best model I\'ve ever seen for a successful new community, where a new fusion of ancient and modern ways of humans being on Earth is midwifed in the next decade.\"',
+                text: '"I\'m an impact investor at Earthbound because it is aligned with what humans need the most now: conscious, heart-centered connection with each other and the rest of the natural world. The founders have meticulously put together the best model I\'ve ever seen for a successful new community, where a new fusion of ancient and modern ways of humans being on Earth is midwifed in the next decade."',
                 imageUrl:
                   'https://cdn.oasa.co/custom-pages/earthbound/leann.png',
               },

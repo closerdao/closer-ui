@@ -6,7 +6,7 @@ import Link from 'next/link';
 import PageError from 'closer/components/PageError';
 import { Heading, LinkButton } from 'closer/components/ui';
 
-import { GeneralConfig, api } from 'closer';
+import { GeneralConfig, PageNotFound, VolunteerConfig, api } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import useRBAC from 'closer/hooks/useRBAC';
 import { parseMessageFromError } from 'closer/utils/common';
@@ -16,11 +16,19 @@ import { useTranslations } from 'next-intl';
 
 interface Props {
   generalConfig: GeneralConfig | null;
+  volunteerConfig: VolunteerConfig | null;
   error: string | null;
 }
 
-const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
+const VolunteerOpportunitiesPage = ({
+  generalConfig,
+  error,
+  volunteerConfig,
+}: Props) => {
   const t = useTranslations();
+
+  const isVolunteerEnabled =
+    volunteerConfig && volunteerConfig?.enabled === true;
 
   const defaultConfig = useConfig();
   const { hasAccess } = useRBAC();
@@ -29,6 +37,10 @@ const VolunteerOpportunitiesPage = ({ generalConfig, error }: Props) => {
 
   // Check if user has permission to create volunteers
   const canCreateVolunteer = hasAccess('VolunteerCreation');
+
+  if(!isVolunteerEnabled) {
+    return <PageNotFound />;
+  }
 
   if (error) {
     return <PageError error={error} />;
@@ -186,19 +198,22 @@ VolunteerOpportunitiesPage.getInitialProps = async (
   context: NextPageContext,
 ) => {
   try {
-    const [messages, generalRes] = await Promise.all([
+    const [messages, generalRes, volunteerConfigRes] = await Promise.all([
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       api.get('/config/general').catch(() => null),
+      api.get('/config/volunteering').catch(() => null),
     ]);
 
     const generalConfig = generalRes?.data?.results?.value;
+    const volunteerConfig = volunteerConfigRes?.data?.results?.value;
 
-    return { messages, generalConfig };
+    return { messages, generalConfig, volunteerConfig };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
       messages: null,
+      volunteerConfig: null,
     };
   }
 };
