@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useContext } from 'react';
 
 import HeroCloser from '@/components/HeroCloser';
+import { CommunityMap } from '@/components';
 import CloserEmailCollector from 'closer/components/CloserEmailCollector';
 import { PromptGetInTouchContext } from 'closer/components/PromptGetInTouchContext';
 import Tag from 'closer/components/Tag';
@@ -54,6 +55,275 @@ const HomePage = ({ generalConfig }: Props) => {
       <CloserEmailCollector />
 
       <HeroCloser />
+
+      {/* Communities Map Section */}
+      <section id="communities" className="py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <p className="section-subtitle text-lg italic max-w-2xl mx-auto">
+              Explore regenerative communities around the world that are driving the conditions for life to flourish
+            </p>
+          </div>
+          
+          <div className="relative">
+            {/* Map Container with rounded corners and shadow */}
+            <div className="w-full h-[500px] rounded-2xl shadow-2xl overflow-hidden border-4 border-white">
+              <CommunityMap />
+            </div>
+            
+            {/* Decorative elements */}
+            <div className="absolute -top-4 -left-4 w-8 h-8 bg-blue-400 rounded-full opacity-20"></div>
+            <div className="absolute -bottom-4 -right-4 w-12 h-12 bg-green-400 rounded-full opacity-20"></div>
+            <div className="absolute top-1/2 -right-6 w-6 h-6 bg-yellow-400 rounded-full opacity-20"></div>
+          </div>
+          
+          {/* Additional info below map */}
+          <div className="mt-8 text-center">
+            <p className="text-sm text-gray-500">
+              Click on markers to learn more about each community
+            </p>
+          </div>
+          
+          {/* Project Previews */}
+          <div className="mt-16">
+            <Heading
+              level={3}
+              className="text-2xl font-bold text-center mb-8 text-gray-900"
+            >
+              Communities Using Closer
+            </Heading>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+              {/* Traditional Dream Factory */}
+              <Card className="group relative bg-white border-0 hover:border-blue-200 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 rounded-2xl overflow-hidden shadow-lg hover:shadow-blue-100/50">
+                <Link
+                  href="https://www.traditionaldreamfactory.com/"
+                  target="_blank"
+                  className="block h-full"
+                >
+                  <div className="aspect-square overflow-hidden relative">
+                    <Image
+                      src="/images/communities/tdf.jpg"
+                      alt="Traditional Dream Factory community"
+                      width={200}
+                      height={200}
+                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5">
+                        <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-gradient-to-b from-white to-gray-50">
+                    <Heading level={4} className="text-sm font-bold mb-2 text-gray-900 line-clamp-1 group-hover:text-blue-700 transition-colors duration-300">
+                      Traditional Dream Factory
+                    </Heading>
+                    <p className="text-xs text-gray-600 mb-3 line-clamp-2 leading-relaxed">
+                      Regenerative community in Portugal
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Tag color="neutral" size="small" className="bg-blue-50 text-blue-700 border-blue-200">Web3</Tag>
+                    </div>
+                  </div>
+                </Link>
+              </Card>
+
+              {/* Foz Da Cova */}
+              <Card className="group relative bg-white border-0 hover:border-green-200 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 rounded-2xl overflow-hidden shadow-lg hover:shadow-green-100/50">
+                <Link
+                  href="https://www.fozdacova.world"
+                  target="_blank"
+                  className="block h-full"
+                >
+                  <div className="aspect-square overflow-hidden relative">
+                    <Image
+                      src="/images/communities/foz.jpg"
+                      alt="Foz Da Cova community"
+                      width={200}
+                      height={200}
+                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5">
+                        <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-gradient-to-b from-white to-gray-50">
+                    <Heading level={4} className="text-sm font-bold mb-2 text-gray-900 line-clamp-1 group-hover:text-green-700 transition-colors duration-300">
+                      Foz Da Cova
+                    </Heading>
+                    <p className="text-xs text-gray-600 mb-3 line-clamp-2 leading-relaxed">
+                      Mountain hamlet restoration
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Tag color="neutral" size="small" className="bg-green-50 text-green-700 border-green-200">Land Stewardship</Tag>
+                    </div>
+                  </div>
+                </Link>
+              </Card>
+
+              {/* Earthbound */}
+              <Card className="group relative bg-white border-0 hover:border-purple-200 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 rounded-2xl overflow-hidden shadow-lg hover:shadow-purple-100/50">
+                <Link
+                  href="https://www.earthbound.eco"
+                  target="_blank"
+                  className="block h-full"
+                >
+                  <div className="aspect-square overflow-hidden relative">
+                    <Image
+                      src="/images/communities/earthbound.jpg"
+                      alt="Earthbound community"
+                      width={200}
+                      height={200}
+                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5">
+                        <svg className="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-gradient-to-b from-white to-gray-50">
+                    <Heading level={4} className="text-sm font-bold mb-2 text-gray-900 line-clamp-1 group-hover:text-purple-700 transition-colors duration-300">
+                      Earthbound
+                    </Heading>
+                    <p className="text-xs text-gray-600 mb-3 line-clamp-2 leading-relaxed">
+                      A regenerative & intentional community
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Tag color="neutral" size="small" className="bg-purple-50 text-purple-700 border-purple-200">Intentional</Tag>
+                    </div>
+                  </div>
+                </Link>
+              </Card>
+
+              {/* Moos */}
+              <Card className="group relative bg-white border-0 hover:border-yellow-200 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 rounded-2xl overflow-hidden shadow-lg hover:shadow-yellow-100/50">
+                <Link
+                  href="https://www.moos.eco"
+                  target="_blank"
+                  className="block h-full"
+                >
+                  <div className="aspect-square overflow-hidden relative">
+                    <Image
+                      src="/images/communities/moos.jpg"
+                      alt="Moos community"
+                      width={200}
+                      height={200}
+                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5">
+                        <svg className="w-3 h-3 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-gradient-to-b from-white to-gray-50">
+                    <Heading level={4} className="text-sm font-bold mb-2 text-gray-900 line-clamp-1 group-hover:text-yellow-700 transition-colors duration-300">
+                      Moos
+                    </Heading>
+                    <p className="text-xs text-gray-600 mb-3 line-clamp-2 leading-relaxed">
+                      Co-living and creative space
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Tag color="neutral" size="small" className="bg-yellow-50 text-yellow-700 border-yellow-200">Urban</Tag>
+                    </div>
+                  </div>
+                </Link>
+              </Card>
+
+              {/* Lios */}
+              <Card className="group relative bg-white border-0 hover:border-red-200 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 rounded-2xl overflow-hidden shadow-lg hover:shadow-red-100/50">
+                <Link
+                  href="https://www.lios.eco"
+                  target="_blank"
+                  className="block h-full"
+                >
+                  <div className="aspect-square overflow-hidden relative">
+                    <Image
+                      src="/images/communities/lios.jpg"
+                      alt="Lios community"
+                      width={200}
+                      height={200}
+                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5">
+                        <svg className="w-3 h-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-gradient-to-b from-white to-gray-50">
+                    <Heading level={4} className="text-sm font-bold mb-2 text-gray-900 line-clamp-1 group-hover:text-red-700 transition-colors duration-300">
+                      Lios
+                    </Heading>
+                    <p className="text-xs text-gray-600 mb-3 line-clamp-2 leading-relaxed">
+                      Educational gathering and regenerative community
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Tag color="neutral" size="small" className="bg-red-50 text-red-700 border-red-200">Desert lab</Tag>
+                    </div>
+                  </div>
+                </Link>
+              </Card>
+
+              {/* Per Auset */}
+              <Card className="group relative bg-white border-0 hover:border-indigo-200 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 rounded-2xl overflow-hidden shadow-lg hover:shadow-indigo-100/50">
+                <Link
+                  href="https://www.per-auset.com"
+                  target="_blank"
+                  className="block h-full"
+                >
+                  <div className="aspect-square overflow-hidden relative">
+                    <Image
+                      src="/images/communities/per-auset.jpg"
+                      alt="Per Auset community"
+                      width={200}
+                      height={200}
+                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5">
+                        <svg className="w-3 h-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-gradient-to-b from-white to-gray-50">
+                    <Heading level={4} className="text-sm font-bold mb-2 text-gray-900 line-clamp-1 group-hover:text-indigo-700 transition-colors duration-300">
+                      Per Auset
+                    </Heading>
+                    <p className="text-xs text-gray-600 mb-3 line-clamp-2 leading-relaxed">
+                      A restored village on the Nile
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Tag color="neutral" size="small" className="bg-indigo-50 text-indigo-700 border-indigo-200">Indigenous</Tag>
+                    </div>
+                  </div>
+                </Link>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Hero Section */}
       {/* <section className=" text-center py-[100px] ">
@@ -212,251 +482,6 @@ const HomePage = ({ generalConfig }: Props) => {
         </div>
       </section>
 
-      {/* Projects/Communities Section */}
-      <section id="communities" className="py-32">
-        <div className="max-w-6xl mx-auto">
-          <Heading
-            level={2}
-            className="section-title mb-4 text-3xl font-bold text-center"
-          >
-            Thriving Communities
-          </Heading>
-          <p className="section-subtitle text-center mb-8">
-            Explore how diverse communities are using Closer to create
-            meaningful connection and impact
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Project Cards - static for now, can be mapped from data */}
-            <Card className="border border-transparent flex flex-col gap-4 w-full   hover:border-gray-400 hover:border">
-              <Link
-                href="https://www.traditionaldreamfactory.com/"
-                target="_blank"
-                className="w-full flex flex-col gap-4 "
-              >
-                <div className="w-full">
-                  <Image
-                    src="/images/communities/tdf.jpg"
-                    alt="Traditional Dream Factory community"
-                    width={600}
-                    height={400}
-                    className="object-cover w-full h-full "
-                  />
-                </div>
-                <div className=" flex flex-col ">
-                  <Heading
-                    level={3}
-                    className="project-title mb-2 text-xl font-semibold"
-                  >
-                    Traditional Dream Factory
-                  </Heading>
-                  <p className="project-description mb-4">
-                    A regenerative community in Portugal pioneering innovations
-                    in governance and community living. Closer provides token
-                    based fundraising and governance systems, in addition to the
-                    management of guest stays, volunteer programs, and their
-                    vibrant events calendar.
-                  </p>
-                  <div className="project-tags flex flex-wrap gap-2 mb-4">
-                    <Tag color="neutral">Regenerative Living</Tag>
-                    <Tag color="neutral">Token Governance</Tag>
-                    <Tag color="neutral">Land Stewardship</Tag>
-                    <Tag color="neutral">Learning hub</Tag>
-                    <Tag color="neutral">Fundraising</Tag>
-                  </div>
-                </div>
-              </Link>
-            </Card>
-
-            <Card className="border border-transparent flex flex-col gap-4 w-full   hover:border-gray-400 hover:border">
-              <Link
-                href="https://www.fozdacova.world"
-                target="_blank"
-                className="w-full flex flex-col gap-4 "
-              >
-                <div className="w-full">
-                  <Image
-                    src="/images/communities/foz.jpg"
-                    alt="Foz Da Cova community"
-                    width={600}
-                    height={400}
-                    className="object-cover w-full h-full "
-                  />
-                </div>
-                <div className=" flex flex-col ">
-                  <Heading
-                    level={3}
-                    className="project-title mb-2 text-xl font-semibold"
-                  >
-                    Foz Da Cova
-                  </Heading>
-                  <p className="project-description mb-4">
-                    A once-abandoned mountain hamlet near Coimbra, Portugal, Foz
-                    da Cova is being re-awakened into a self-sustaining haven of
-                    fresh spring water, creative studios, and ancient Roman
-                    terraces. Closer streamlines their guest bookings, and an
-                    ever-growing calendar of regenerative projects and events.
-                  </p>
-                  <div className="project-tags flex flex-wrap gap-2 mb-4">
-                    <Tag color="neutral">Regenerative Living</Tag>
-                    <Tag color="neutral">Land Stewardship</Tag>
-                  </div>
-                </div>
-              </Link>
-            </Card>
-            <Card className="border border-transparent flex flex-col gap-4 w-full   hover:border-gray-400 hover:border">
-              <Link
-                href="https://www.earthbound.eco"
-                target="_blank"
-                className="w-full flex flex-col gap-4 "
-              >
-                <div className="w-full">
-                  <Image
-                    src="/images/communities/earthbound.jpg"
-                    alt="Earthbound community"
-                    width={600}
-                    height={400}
-                    className="object-cover w-full h-full "
-                  />
-                </div>
-                <div className=" flex flex-col ">
-                  <Heading
-                    level={3}
-                    className="project-title mb-2 text-xl font-semibold"
-                  >
-                    Earthbound
-                  </Heading>
-                  <p className="project-description mb-4">
-                    Earthbound is a 30-person ecovillage and rural think-tank in
-                    southern Sweden, stewarding 73 ha of lake, ancient forest,
-                    and heritage buildings. Their B&B and cultural hub advance a
-                    holistic, locally rooted transition toward regenerative
-                    living. Closer provides tools for their B&B management,
-                    events, memberships and fundraising.
-                  </p>
-                  <div className="project-tags flex flex-wrap gap-2 mb-4">
-                    <Tag color="neutral">Regenerative Living</Tag>
-                    <Tag color="neutral">Land Stewardship</Tag>
-                    <Tag color="neutral">Fundraising</Tag>
-                  </div>
-                </div>
-              </Link>
-            </Card>
-            <Card className="border border-transparent flex flex-col gap-4 w-full  justify-between hover:border-gray-400 hover:border">
-              <Link
-                href="https://perauset.com/"
-                target="_blank"
-                className="w-full flex flex-col gap-4 "
-              >
-                <div className="w-full">
-                  <Image
-                    src="/images/communities/per-auset.jpg"
-                    alt="Per Auset community"
-                    width={600}
-                    height={400}
-                    className="object-cover w-full h-full "
-                  />
-                </div>
-                <div className=" flex flex-col ">
-                  <Heading
-                    level={3}
-                    className="project-title mb-2 text-xl font-semibold"
-                  >
-                    Per Auset
-                  </Heading>
-                  <p className="project-description mb-4">
-                    Per Auset is a temple village and land regeneration project
-                    on a sacred Nile island in southern Egypt, near the ancient
-                    Temple of Isis. Blending heritage revival with daily
-                    rituals, art, and eco-conscious living, it offers a space
-                    for healing, creativity, and sacred remembrance. Closer
-                    provides a platform for their space management, events, and
-                    subscription plans.
-                  </p>
-                  <div className="project-tags flex flex-wrap gap-2 mb-4">
-                    <Tag color="neutral">Regenerative Living</Tag>
-                    <Tag color="neutral">Fundraising</Tag>
-                    <Tag color="neutral">Land Stewardship</Tag>
-                  </div>
-                </div>
-              </Link>
-            </Card>
-            <Card className="border border-transparent flex flex-col gap-4 w-full  justify-between hover:border-gray-400 hover:border">
-              <Link
-                href="#"
-                target="_blank"
-                className="w-full flex flex-col gap-4 "
-              >
-                <div className="w-full">
-                  <Image
-                    src="/images/communities/moos.jpg"
-                    alt="Moos Berlin community"
-                    width={600}
-                    height={400}
-                    className="object-cover w-full h-full "
-                  />
-                </div>
-                <div className=" flex flex-col ">
-                  <Heading
-                    level={3}
-                    className="project-title mb-2 text-xl font-semibold"
-                  >
-                    Moos
-                  </Heading>
-                  <p className="project-description mb-4">
-                    MOOS is a creative hub and community space across from
-                    Berlin&apos;s Treptower Park, where interdisciplinary ideas
-                    and people connect. With The Y Berlin as its design lab, it
-                    explores how technology and intentional community can shape
-                    more meaningful urban living. Closer helps them manage their
-                    space, events, and fundraising efforts.
-                  </p>
-                  <div className="project-tags flex flex-wrap gap-2 mb-4">
-                    <Tag color="neutral">Regenerative Living</Tag>
-                    <Tag color="neutral">Fundraising</Tag>
-                  </div>
-                </div>
-              </Link>
-            </Card>
-            <Card className="border border-transparent flex flex-col gap-4 w-full  justify-between hover:border-gray-400 hover:border">
-              <Link
-                href="https://experience.lios.io/"
-                target="_blank"
-                className="w-full flex flex-col gap-4 "
-              >
-                <div className="w-full">
-                  <Image
-                    src="/images/communities/lios.jpg"
-                    alt="Lios Labs community"
-                    width={600}
-                    height={400}
-                    className="object-cover w-full h-full "
-                  />
-                </div>
-                <div className=" flex flex-col ">
-                  <Heading
-                    level={3}
-                    className="project-title mb-2 text-xl font-semibold"
-                  >
-                    Lios Labs
-                  </Heading>
-                  <p className="project-description mb-4">
-                    Rooted in biomimicry, this non-profit lab prototypes new
-                    models for culture and ecological learning—blending art,
-                    ancestral wisdom, healing, science, and tech to spread
-                    regenerative practices. Closer is a platform for hosting
-                    their learning programs, events, and fundraising efforts.
-                  </p>
-                  <div className="project-tags flex flex-wrap gap-2 mb-4">
-                    <Tag color="neutral">Regenerative Living</Tag>
-                    <Tag color="neutral">Learning hub</Tag>
-                    <Tag color="neutral">Fundraising</Tag>
-                  </div>
-                </div>
-              </Link>
-            </Card>
-          </div>
-        </div>
-      </section>
 
       {/* Growth Path Section */}
       <section id="journey" className="py-32   bg-white">

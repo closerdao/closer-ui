@@ -15,10 +15,10 @@ import api from '../utils/api';
 import { getRedirectUrl } from '../utils/auth.helpers';
 import { parseMessageFromError, slugify } from '../utils/common';
 import { isInputValid, validatePassword } from '../utils/helpers';
+import { reportIssue } from '../utils/reporting.utils';
 import GoogleButton from './GoogleButton';
 import { Button, Card, Checkbox, ErrorMessage, Input } from './ui';
 import Heading from './ui/Heading';
-import { reportIssue } from '../utils/reporting.utils';
 
 interface Props {
   app: string | undefined;
@@ -164,7 +164,6 @@ const SignupForm = ({ app }: Props) => {
   };
 
   const updatePreferences = (update: any) => {
-
     setPreferences((prevState) => ({ ...prevState, ...update }));
   };
 
@@ -187,9 +186,18 @@ const SignupForm = ({ app }: Props) => {
 
       const referrer =
         typeof localStorage !== 'undefined' && localStorage.getItem('referrer');
-      
-      if (process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true' && isEmailConsent) {
-        
+
+      console.log('--------------------------------');
+      console.log(
+        'process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE=',
+        process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE,
+      );
+      console.log('process.env.isEmailConsent=', isEmailConsent);
+
+      if (
+        process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true' &&
+        isEmailConsent
+      ) {
         try {
           await api.post('/subscribe', {
             email,
@@ -201,6 +209,7 @@ const SignupForm = ({ app }: Props) => {
           await reportIssue(`error with subscription: ${error}`, user?.email);
         }
       }
+      console.log('--------------------------------');
 
       setNewsletterSuccess(true);
       setNewsletterError(null);
@@ -225,7 +234,6 @@ const SignupForm = ({ app }: Props) => {
       return;
     }
 
-
     // Validate password before submitting
     const passwordValidation = validatePassword(application.password);
     if (!passwordValidation.isValid) {
@@ -245,7 +253,6 @@ const SignupForm = ({ app }: Props) => {
         ...(referredBy && { referredBy }),
         emailConsent: isEmailConsent,
       });
-
 
       if (res && res.result === 'signup') {
         setStep(3);

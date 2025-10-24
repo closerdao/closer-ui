@@ -58,3 +58,40 @@ export interface Review {
   text: string;
   photo: string;
 }
+
+export interface FinanceApplication {
+  _id: string;
+  userId: string;
+  status:
+    | 'pending-payment'
+    | 'paid'
+    | 'cancelled'
+    | 'completed';
+  iban: string;
+  tokensToFinance: number;
+  totalToPayInFiat: number;
+  monthlyPaymentAmount: number;
+  downPaymentAmount: number;
+  charges: any[];
+  isCitizenApplication?: boolean;
+  visibility: 'public' | 'private';
+  visibleBy: string[];
+  createdBy: string;
+  updated: string;
+  created: string;
+  attributes: any[];
+  managedBy: string[];
+}
+
+export interface FinanceApplicationCreateRequest {
+  tokensToFinance: number;
+  totalToPayInFiat: number;
+  iban: string;
+  isCitizenApplication: boolean;
+  why?: string;
+}
+
+export interface FinanceApplicationResponse {
+  results: FinanceApplication[];
+  count?: number;
+}

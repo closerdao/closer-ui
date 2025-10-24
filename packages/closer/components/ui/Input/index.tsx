@@ -42,13 +42,14 @@ interface InputProps extends VariantProps<typeof inputStyles> {
   className?: string;
   autoFocus?: boolean;
   dataTestId?: string;
-  validation?: 'email' | 'number' | 'phone' | 'url';
+  validation?: 'email' | 'number' | 'phone' | 'url' | 'invalid';
   isDisabled?: boolean;
   isInstantSave?: boolean;
   hasSaved?: boolean;
   setHasSaved?: Dispatch<SetStateAction<boolean>>;
   additionalInfo?: string;
   maxLength?: number;
+  customValidationError?: string;
 }
 
 const Input = React.memo(
@@ -72,6 +73,7 @@ const Input = React.memo(
     setHasSaved,
     additionalInfo,
     maxLength,
+    customValidationError,
   }: InputProps) => {
     const t = useTranslations();
 
@@ -93,6 +95,9 @@ const Input = React.memo(
     } as Record<string, RegExp>;
 
     const isValidValue = (value: string) => {
+      if (validation === 'invalid') {
+        return false;
+      }
       if (validation) {
         const pattern = validationPatterns[validation];
         if (pattern) {
@@ -166,9 +171,10 @@ const Input = React.memo(
     };
 
     const validationError =
-      !isValid && validation
+      customValidationError ||
+      (!isValid && validation && validation !== 'invalid'
         ? `${label} is not a valid ${validation} value.`
-        : null;
+        : null);
 
     return (
       <div className={'flex flex-col gap-2 relative '}>

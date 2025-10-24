@@ -46,7 +46,6 @@ const SuccessCitizenPage: NextPage<Props> = ({
   const { isLoading, user, refetchUser } = useAuth();
   const isMember = user?.roles?.includes('member');
 
-
   const router = useRouter();
   const { intent } = router.query;
 
@@ -61,11 +60,10 @@ const SuccessCitizenPage: NextPage<Props> = ({
   }
 
   const downPayment =
-    (
-      (Number(user?.citizenship?.totalToPayInFiat) ?? 0) * 0.1
-    ).toFixed(2) || 0;
+    ((Number(user?.citizenship?.totalToPayInFiat) ?? 0) * 0.1).toFixed(2) || 0;
 
-  const userIbanLast4 = user?.citizenship?.iban?.replace(/\s/g, '').slice(-4) || '';
+  const userIbanLast4 =
+    user?.citizenship?.iban?.replace(/\s/g, '').slice(-4) || '';
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -110,7 +108,7 @@ const SuccessCitizenPage: NextPage<Props> = ({
   }, [user?.citizenship?.status, user?.roles]);
 
   const goBack = () => {
-    router.push(`/subscriptions/citizen/apply?intent=${intent}`);
+    router.push('/subscriptions/citizen/validation');
   };
 
   if (error) {
@@ -158,7 +156,11 @@ const SuccessCitizenPage: NextPage<Props> = ({
                 {t('subscriptions_citizen_welcome')}
               </Heading>
 
-              <p>{isMember ? t('subscriptions_citizen_you_are_on_your_way_finance') : t('subscriptions_citizen_you_are_on_your_way')}</p>
+              <p>
+                {isMember
+                  ? t('subscriptions_citizen_you_are_on_your_way_finance')
+                  : t('subscriptions_citizen_you_are_on_your_way')}
+              </p>
               <p>
                 {t('subscriptions_citizen_finance_tokens_payment_details', {
                   downPayment,
@@ -168,37 +170,37 @@ const SuccessCitizenPage: NextPage<Props> = ({
               </p>
 
               <p>
-                {isMember ? t.rich(
-                  'subscriptions_citizen_finance_tokens_after_application_finance',
-                  {
-                    link: (chunks) => (
-                      <a
-                        href="mailto:space@traditionaldreamfactory.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ textDecoration: 'underline' }}
-                      >
-                        {chunks}
-                      </a>
-                    ),
-                  },
-                ) : t.rich(
-                  'subscriptions_citizen_finance_tokens_after_application',
-                  {
-                    link: (chunks) => (
-                      <a
-                        href="mailto:space@traditionaldreamfactory.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ textDecoration: 'underline' }}
-                      >
-                        {chunks}
-                      </a>
-                    ),
-                  },
-                )
-                }
-
+                {isMember
+                  ? t.rich(
+                      'subscriptions_citizen_finance_tokens_after_application_finance',
+                      {
+                        link: (chunks) => (
+                          <a
+                            href="mailto:space@traditionaldreamfactory.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ textDecoration: 'underline' }}
+                          >
+                            {chunks}
+                          </a>
+                        ),
+                      },
+                    )
+                  : t.rich(
+                      'subscriptions_citizen_finance_tokens_after_application',
+                      {
+                        link: (chunks) => (
+                          <a
+                            href="mailto:space@traditionaldreamfactory.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ textDecoration: 'underline' }}
+                          >
+                            {chunks}
+                          </a>
+                        ),
+                      },
+                    )}
               </p>
             </section>
           )}

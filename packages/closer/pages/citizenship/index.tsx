@@ -2,20 +2,21 @@ import Link from 'next/link';
 
 import { useEffect, useState } from 'react';
 
-import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/shadcn-button';
+import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/shadcn-button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from '../components/ui/shadcn-card';
+} from '../../components/ui/shadcn-card';
 
 import {
   ArrowRight,
   Calendar,
   Check,
   ChevronRight,
+  CreditCard,
   Hammer,
   Handshake,
   HeartHandshake,
@@ -25,15 +26,16 @@ import {
   Trees,
   Users,
   Wallet,
-  CreditCard,
 } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { useBuyTokens } from '../hooks/useBuyTokens';
-import { usePlatform } from '../contexts/platform';
-import { CitizenshipConfig } from '../types/api';
-import api from '../utils/api';
+import { useAuth } from '../../contexts/auth';
+import { usePlatform } from '../../contexts/platform';
+import { useBuyTokens } from '../../hooks/useBuyTokens';
+import { CitizenshipConfig } from '../../types/api';
+import api from '../../utils/api';
+import { loadLocaleData } from '../../utils/locale.helpers';
 
 const CITIZEN_TARGET = 300;
 
@@ -58,10 +60,18 @@ const CitizenshipPage = ({
   customConfig = {} as { citizenTarget?: number; apiEndpoint?: string },
 }: CitizenshipPageProps) => {
   const t = useTranslations();
+
+  const { user } = useAuth();
   const [citizenCurrent, setCitizenCurrent] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [tokenPrice, setTokenPrice] = useState(0);
   const [isTokenPriceLoading, setIsTokenPriceLoading] = useState(false);
+  const [tokenPlans, setTokenPlans] = useState([
+    { tokens: 30, monthlyPayment: 0 },
+    { tokens: 60, monthlyPayment: 0 },
+    { tokens: 90, monthlyPayment: 0 },
+    { tokens: 120, monthlyPayment: 0 },
+  ]);
   const { getTotalCostWithoutWallet, isConfigReady } = useBuyTokens();
 
   // Track citizenship page view
@@ -82,7 +92,6 @@ const CitizenshipPage = ({
   const { platform }: any = usePlatform();
 
   const citizenTarget = customConfig?.citizenTarget || CITIZEN_TARGET;
-
 
   const fetchMemberCount = async () => {
     console.log('fetchMemberCount');
@@ -123,27 +132,71 @@ const CitizenshipPage = ({
     }
   }, [isConfigReady]);
 
+  useEffect(() => {
+    const calculateTokenPlans = async () => {
+      if (!isConfigReady || !citizenshipConfig) return;
+
+      try {
+        setIsTokenPriceLoading(true);
+        const plans = await Promise.all([
+          calculateFinancedPrice(30),
+          calculateFinancedPrice(60),
+          calculateFinancedPrice(90),
+          calculateFinancedPrice(120),
+        ]);
+
+        setTokenPlans([
+          { tokens: 30, monthlyPayment: plans[0] },
+          { tokens: 60, monthlyPayment: plans[1] },
+          { tokens: 90, monthlyPayment: plans[2] },
+          { tokens: 120, monthlyPayment: plans[3] },
+        ]);
+      } catch (error) {
+        console.error('Failed to calculate token plans:', error);
+      } finally {
+        setIsTokenPriceLoading(false);
+      }
+    };
+
+    calculateTokenPlans();
+  }, [isConfigReady, citizenshipConfig?.tokenPriceModifierPercent]);
+
   const progress = Math.min(
     100,
     Math.round((citizenCurrent / citizenTarget) * 100),
   );
 
   // Calculate financed token prices
-  const calculateFinancedPrice = (tokens: number) => {
-    if (!tokenPrice) return 0;
-    const priceModifier = citizenshipConfig?.tokenPriceModifierPercent || 1;
-    const totalCost = tokenPrice * priceModifier * tokens;
-    const downPayment = totalCost * 0.1;
-    const monthlyPayment = (totalCost - downPayment) / 36;
-    return Math.round(monthlyPayment * 100) / 100;
-  };
+  const calculateFinancedPrice = async (tokens: number) => {
+    console.log('=== citizenshipConfig ===', citizenshipConfig);
+    if (!isConfigReady) return 0;
+    try {
+      const totalCost = await getTotalCostWithoutWallet(tokens.toString());
+      const priceModifier = citizenshipConfig?.tokenPriceModifierPercent || 0;
+      const totalToPayInFiat = Number(
+        (totalCost * (1 + priceModifier / 100)).toFixed(2),
+      );
+      const downPayment = Number((totalToPayInFiat * 0.1).toFixed(2));
+      const monthlyPayment = Number(
+        ((totalToPayInFiat - downPayment) / 36).toFixed(2),
+      );
 
-  const tokenPlans = [
-    { tokens: 30, monthlyPayment: calculateFinancedPrice(30) },
-    { tokens: 60, monthlyPayment: calculateFinancedPrice(60) },
-    { tokens: 90, monthlyPayment: calculateFinancedPrice(90) },
-    { tokens: 120, monthlyPayment: calculateFinancedPrice(120) },
-  ];
+      console.log(`Citizenship calculation for ${tokens} tokens:`, {
+        totalCost,
+        priceModifier,
+        priceModifierPercent: citizenshipConfig?.tokenPriceModifierPercent,
+        totalToPayInFiat,
+        downPayment,
+        monthlyPayment,
+        citizenshipConfig: citizenshipConfig,
+      });
+
+      return monthlyPayment;
+    } catch (error) {
+      console.error('Failed to calculate financed price:', error);
+      return 0;
+    }
+  };
 
   const benefits = [
     {
@@ -232,8 +285,18 @@ const CitizenshipPage = ({
   return (
     <div className="min-h-screen bg-neutral-light text-foreground">
       {/* Hero */}
+
       <section className="relative isolate overflow-hidden">
-        <div className="mx-auto max-w-6xl px-6 pt-16 pb-10">
+        {user?.roles?.includes('member') && (
+          <div className="mt-4 mx-auto max-w-6xl bg-green-50 border border-green-200 rounded-md p-4 mb-4">
+            <p className="font-bold text-green-700 mb-2">
+              {t('subscriptions_citizen_already_member_title')}
+            </p>
+            <p>{t('subscriptions_citizen_already_member_description')}</p>
+          </div>
+        )}
+
+        <div className="mx-auto max-w-6xl px-6 pt-4 pb-10">
           <Badge className="mb-4 bg-accent-light text-accent hover:bg-accent-light">
             {t('citizenship_founding_cohort_badge')}
           </Badge>
@@ -246,22 +309,25 @@ const CitizenshipPage = ({
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Button asChild size="lg" className="rounded-2xl px-6">
-              <Link 
-                href="/subscriptions/citizen/why"
-                onClick={() => {
-                  api.post('/metric', {
-                    event: 'become-citizen-button-click',
-                    value: 'citizenship',
-                    point: 0,
-                    category: 'engagement',
-                  });
-                }}
-              >
-                {t('citizenship_become_citizen_button')}{' '}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+            {!user?.roles?.includes('member') && (
+              <Button asChild size="lg" className="rounded-2xl px-6">
+                <Link
+                  href="/subscriptions/citizen/why"
+                  onClick={() => {
+                    api.post('/metric', {
+                      event: 'become-citizen-button-click',
+                      value: 'citizenship',
+                      point: 0,
+                      category: 'engagement',
+                    });
+                  }}
+                >
+                  {t('citizenship_become_citizen_button')}{' '}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            )}
+
             <Button
               asChild
               variant="outline"
@@ -358,10 +424,10 @@ const CitizenshipPage = ({
                 <ChevronRight className="mt-1 h-5 w-5 text-accent" />
                 {t('citizenship_roadmap_3')}
               </p>
-                  <p className="flex items-start gap-2">
-                    <ChevronRight className="mt-1 h-5 w-5 text-accent" />
-                    {t('citizenship_roadmap_4')}
-                  </p>
+              <p className="flex items-start gap-2">
+                <ChevronRight className="mt-1 h-5 w-5 text-accent" />
+                {t('citizenship_roadmap_4')}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -423,16 +489,14 @@ const CitizenshipPage = ({
                   <h3 className="text-xl font-semibold text-foreground mb-2">
                     {s.title}
                   </h3>
-                  <p className="text-foreground leading-relaxed">
-                    {s.desc}
-                  </p>
+                  <p className="text-foreground leading-relaxed">{s.desc}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
       </section>
-
+      {/* tokenPriceModifierPercent={tokenPriceModifierPercent} */}
       {/* Financed tokens */}
       <section className="bg-background">
         <div className="mx-auto max-w-6xl px-6 py-14">
@@ -486,7 +550,7 @@ const CitizenshipPage = ({
                     size="lg"
                     className="rounded-2xl px-6 w-full sm:w-auto"
                   >
-                    <Link href="/subscriptions/citizen/why">
+                    <Link href={`${user?.roles?.includes('member') ? '/token/finance' : '/subscriptions/citizen/why'}`}>
                       {t('citizenship_start_financed_plan')}
                     </Link>
                   </Button>
@@ -500,8 +564,8 @@ const CitizenshipPage = ({
                   {t('citizenship_responsibilities_title')}
                 </CardTitle>
               </CardHeader>
-                <CardContent className="space-y-3 text-foreground">
-                  <ul className="space-y-2">
+              <CardContent className="space-y-3 text-foreground">
+                <ul className="space-y-2">
                   <li className="flex items-start gap-2">
                     <Check className="mt-1 h-5 w-5 text-accent" />
                     {t('citizenship_responsibilities_1')}
@@ -537,31 +601,34 @@ const CitizenshipPage = ({
       </section>
 
       {/* CTA strip */}
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <div className="rounded-3xl bg-accent p-8 text-background shadow-lg">
-          <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
-            <div>
-              <h3 className="text-2xl font-semibold">
-                {t('citizenship_cta_heading')}
-              </h3>
-              <p className="mt-1 text-accent-light">
-                {t('citizenship_cta_subtitle')}
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button
-                asChild
-                size="lg"
-                className="rounded-2xl bg-background text-accent hover:bg-background/90"
-              >
-                <Link href="/subscriptions/citizen/why">
-                  {t('citizenship_cta_become_citizen')}
-                </Link>
-              </Button>
+
+      {!user?.roles?.includes('member') && (
+        <section className="mx-auto max-w-6xl px-6 py-16">
+          <div className="rounded-3xl bg-accent p-8 text-background shadow-lg">
+            <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+              <div>
+                <h3 className="text-2xl font-semibold">
+                  {t('citizenship_cta_heading')}
+                </h3>
+                <p className="mt-1 text-accent-light">
+                  {t('citizenship_cta_subtitle')}
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  asChild
+                  size="lg"
+                  className="rounded-2xl bg-background text-accent hover:bg-background/90"
+                >
+                  <Link href="/subscriptions/citizen/why">
+                    {t('citizenship_cta_become_citizen')}
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* FAQ */}
       <section className="bg-background">
@@ -589,15 +656,18 @@ const CitizenshipPage = ({
 
 CitizenshipPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [citizenshipRes] = await Promise.all([
+    const [citizenshipRes, messages] = await Promise.all([
       api.get('/config/citizenship').catch(() => {
         return null;
       }),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const citizenshipConfig = citizenshipRes?.data?.results?.value;
+
     return {
       citizenshipConfig,
+      messages,
     };
   } catch (err: unknown) {
     return {

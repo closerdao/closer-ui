@@ -1,7 +1,7 @@
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
-import { Input } from '../ui';
+import { Textarea } from '../ui';
 
 interface Props {
   updateApplication: (key: string, value: any) => void;
@@ -15,14 +15,15 @@ const CitizenWhy = ({ updateApplication, application, buyMore }: Props) => {
   const isMember = user?.roles?.includes('member');
 
   return (
-    <>
-      <Input
-        label={t('subscriptions_citizen_good_why')}
+    <div className="space-y-2">
+      <label htmlFor="why">{t('subscriptions_citizen_good_why')}</label>
+      <Textarea
+        id="why"
         value={application?.why || ''}
         onChange={(e) => updateApplication('why', e.target.value)}
         placeholder={t('generic_input_placeholder')}
       />
-    </>
+    </div>
   );
 };
 

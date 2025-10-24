@@ -126,6 +126,8 @@ export type GeneralConfig = {
   faqsGoogleSheetId: string;
   timeZone: string;
   minVouchingStayDuration?: number;
+  discordUrl: string;
+  telegramUrl: string;
 };
 export type CitizenshipConfig = {
   enabled: boolean;
