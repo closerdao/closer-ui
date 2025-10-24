@@ -229,9 +229,18 @@ const MemberMenu = () => {
             roles: ['admin'],
             rbacPage: 'TokenSales',
           },
+          {
+            label: t('navigation_expense_tracking'),
+            url: '/dashboard/expense-tracking',
+            enabled: true,
+            roles: ['admin'],
+            rbacPage: 'ExpenseTracking',
+          },
         ],
       },
     ];
+
+
 
     // Bookings section (only if booking is enabled)
     if (isBookingEnabled) {

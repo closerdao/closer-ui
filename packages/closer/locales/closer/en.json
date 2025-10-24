@@ -81,5 +81,7 @@
   "your_email": "Your email",
   "invalid_email": "Invalid email",
   "email_submitted_success": "Email submitted successfully. We will get back to you soon.",
-  "get_in_touch_submit": "Submit"
+  "get_in_touch_submit": "Submit",
+  
+  "dashboard_performance_subscriptions_funnel": "Subscriptions funnel"
 }
