@@ -87,9 +87,6 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
         ...(editableData?.tax_exemption_reason_id && {
           tax_exemption_reason_id: editableData.tax_exemption_reason_id,
         }),
-        ...(description && { description }),
-        ...(category && { category }),
-        ...(comment && { comment }),
         ...(currency && { currency_iso_code: currency }),
         supplier_business_name: editableData.supplier_business_name,
         document_date: editableData.document_date,
@@ -198,9 +195,13 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
               const base64 = await image.getBase64('image/jpeg');
               const base64Data = base64.split(',')[1];
               const resizedBuffer = Buffer.from(base64Data, 'base64');
-              const resizedFile = new File([resizedBuffer], selectedFile.name, {
-                type: 'image/jpeg',
-              });
+              const resizedFile = new File(
+                [new Uint8Array(resizedBuffer)],
+                selectedFile.name,
+                {
+                  type: 'image/jpeg',
+                },
+              );
 
               setFile(resizedFile);
             } catch (error) {
@@ -513,13 +514,13 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
         description,
         category,
         comment,
+        uploadedDocumentUrl
       };
 
       console.log('updatedExpenseData=', updatedExpenseData);
 
       const res = await api.post('/toconline/expense', {
         expenseData: updatedExpenseData,
-        uploadedDocumentUrl,
       });
 
       if (res.status === 200) {

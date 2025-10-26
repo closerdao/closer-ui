@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 import { useTranslations } from 'next-intl';
+
 import { Button, Card } from '../ui';
 import Heading from '../ui/Heading';
 
@@ -15,9 +16,13 @@ interface ExpenseCharge {
       cur: string;
     };
   };
+  description?: string;
+  category?: string;
+  documentDate?: string;
   meta: {
+    comment?: string;
     uploadedDocumentUrl?: string | null;
-    expenseData?: {
+    toconlineData?: {
       description?: string;
       category?: string;
       comment?: string;
@@ -102,7 +107,9 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {charges.map((charge) => {
-                  const expenseData = charge.meta?.expenseData;
+                  const expenseData = charge.meta?.toconlineData;
+                  const description = charge?.description || 'N/A';
+                  const category = charge?.category || 'N/A';
                   const amount = charge.amount?.total?.val || 0;
                   const date = new Date(
                     charge.date || charge.created,
@@ -117,10 +124,10 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                         €{amount.toFixed(2)}
                       </td>
                       <td className="px-2 py-1 text-sm text-gray-900">
-                        {expenseData?.description || 'N/A'}
+                        {description || 'N/A'}
                       </td>
                       <td className="px-2 py-1 text-sm text-gray-900">
-                        {expenseData?.category || 'N/A'}
+                        {category || 'N/A'}
                       </td>
                       <td className="px-2 py-1 text-sm text-gray-900 text-center">
                         <Button
@@ -130,7 +137,7 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                           }}
                           variant="secondary"
                           size="small"
-                          className="text-xs py-1"
+                          className="text-xs py-0 min-h-[24px]"
                         >
                           {t('expense_tracking_view_details')}
                         </Button>
@@ -182,40 +189,41 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                 )}
 
                 {/* Extracted Data */}
-                {selectedCharge.meta?.expenseData && (
+                {selectedCharge?.meta?.toconlineData && (
                   <div>
                     <div className="space-y-2 text-sm">
                       <div>
                         <strong>{t('expense_tracking_document_date')}:</strong>{' '}
-                        {selectedCharge.meta.expenseData.document_date || 'N/A'}
+                        {selectedCharge.meta.toconlineData.document_date ||
+                          'N/A'}
                       </div>
                       <div>
                         <strong>{t('expense_tracking_description')}:</strong>{' '}
-                        {selectedCharge.meta.expenseData.description || 'N/A'}
+                        {selectedCharge.meta.toconlineData.description || 'N/A'}
                       </div>
-                      {selectedCharge.meta?.expenseData?.comment && (
+                      {selectedCharge.meta?.comment && (
                         <div>
                           <strong>{t('expense_tracking_comment')}:</strong>{' '}
-                          {selectedCharge.meta.expenseData.comment}
+                          {selectedCharge.meta.toconlineData.comment}
                         </div>
                       )}
                       <div>
                         <strong>{t('expense_tracking_supplier')}:</strong>{' '}
-                        {selectedCharge.meta.expenseData
+                        {selectedCharge.meta.toconlineData
                           .supplier_business_name || 'N/A'}
                       </div>
                       <div>
                         <strong>{t('expense_tracking_category')}:</strong>{' '}
-                        {selectedCharge.meta.expenseData.category || 'N/A'}
+                        {selectedCharge.meta.toconlineData.category || 'N/A'}
                       </div>
-                      {selectedCharge.meta.expenseData
+                      {selectedCharge.meta.toconlineData
                         .tax_exemption_reason_id && (
                         <div>
                           <strong>
                             {t('expense_tracking_tax_exemption_reason_id')}:
                           </strong>{' '}
                           {
-                            selectedCharge.meta.expenseData
+                            selectedCharge.meta.toconlineData
                               .tax_exemption_reason_id
                           }
                         </div>
@@ -230,8 +238,8 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                 )}
 
                 {/* VAT Summary */}
-                {selectedCharge.meta?.expenseData?.lines &&
-                  selectedCharge.meta.expenseData.lines.length > 0 && (
+                {selectedCharge.meta?.toconlineData?.lines &&
+                  selectedCharge.meta.toconlineData.lines.length > 0 && (
                     <div>
                       <div className="text-sm text-gray-500 mb-2">
                         {t('expense_tracking_vat_summary')}:
@@ -255,7 +263,7 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                             </tr>
                           </thead>
                           <tbody>
-                            {selectedCharge.meta.expenseData.lines.map(
+                            {selectedCharge.meta.toconlineData && selectedCharge.meta.toconlineData?.lines.map(
                               (line: any, index: number) => (
                                 <tr key={index} className="border-b">
                                   <td className="px-2 py-1">

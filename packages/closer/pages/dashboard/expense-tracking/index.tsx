@@ -2,22 +2,23 @@ import Head from 'next/head';
 
 import { useEffect, useState } from 'react';
 
-import { Plus } from 'lucide-react';
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import TimeFrameSelector from '../../../components/Dashboard/TimeFrameSelector';
+import Pagination from '../../../components/Pagination';
 import {
   ExpenseChargesListing,
   ExpenseDialog,
 } from '../../../components/expense-tracking';
-import Pagination from '../../../components/Pagination';
 import { Button } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
 import { GeneralConfig } from 'closer/types/api';
+import { Plus } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import process from 'process';
 
+import PageNotAllowed from '../../401';
 import { MAX_BOOKINGS_TO_FETCH } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
@@ -26,7 +27,6 @@ import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { getDateRange } from '../../../utils/dashboard.helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
-import PageNotAllowed from '../../401';
 
 const EXPENSES_PER_PAGE = 50;
 
@@ -43,6 +43,7 @@ const ExpenseTrackingDashboardPage = ({
   const { TIME_ZONE } = useConfig();
 
   const expenseCategories = generalConfig?.expenseCategories?.split(',');
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [fromDate, setFromDate] = useState<string>('');
@@ -60,8 +61,6 @@ const ExpenseTrackingDashboardPage = ({
 
   const chargesList = platform.charge.find(chargeFilter);
   const allCharges = chargesList ? chargesList.toJS() : [];
-
-  console.log('charges=', allCharges);
 
   const { start, end } = getDateRange({
     timeFrame,
@@ -170,6 +169,8 @@ ExpenseTrackingDashboardPage.getInitialProps = async (
     ]);
 
     const generalConfig = generalConfigRes?.data?.results?.value;
+
+    console.log('=====generalConfig=', generalConfig);
 
     return {
       generalConfig,
