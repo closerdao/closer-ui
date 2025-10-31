@@ -15,7 +15,6 @@ import { ErrorMessage, Spinner } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
 import dayjs from 'dayjs';
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -28,6 +27,7 @@ import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { useDebounce } from '../../hooks/useDebounce';
 import { BookingConfig, Listing } from '../../types';
+import api from '../../utils/api';
 import {
   formatListings,
   generateBookingItems,
@@ -37,11 +37,14 @@ import {
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
-import api from '../../utils/api';
 
 const loadTime = Date.now();
 
-const BookingsCalendarPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
+const BookingsCalendarPage = ({
+  bookingConfig,
+}: {
+  bookingConfig: BookingConfig;
+}) => {
   const t = useTranslations();
   const { enabledConfigs, TIME_ZONE } = useConfig();
   const { user } = useAuth();
@@ -247,6 +250,7 @@ const BookingsCalendarPage = ({ bookingConfig }: { bookingConfig: BookingConfig 
           </section>
 
           <div className="min-h-[600px] w-full">
+            {/* @ts-ignore - React 18 compatibility issue with react-calendar-timeline */}
             <Timeline
               sidebarWidth={220}
               groups={(lastNonEmptyUnits || defaultAccommodationUnits).map(
@@ -264,21 +268,26 @@ const BookingsCalendarPage = ({ bookingConfig }: { bookingConfig: BookingConfig 
               maxZoom={oneMonth}
               className="relative"
             >
+              {/* @ts-ignore - React 18 compatibility issue with react-calendar-timeline */}
               <TimelineHeaders className="sticky">
                 {loading && (
                   <div className="px-4 w-[200px] flex gap-2 items-center absolute h-[30px] bottom-[-30px] left-0   bg-white z-10">
                     <Spinner /> Updating...
                   </div>
                 )}
+                {/* @ts-ignore - React 18 compatibility issue with react-calendar-timeline */}
                 <SidebarHeader>
                   {({ getRootProps }) => {
                     return <div {...getRootProps()}>Listing/bed</div>;
                   }}
                 </SidebarHeader>
+                {/* @ts-ignore - React 18 compatibility issue with react-calendar-timeline */}
                 <DateHeader unit="primaryHeader" />
+                {/* @ts-ignore - React 18 compatibility issue with react-calendar-timeline */}
                 <DateHeader height={44} />
               </TimelineHeaders>
 
+              {/* @ts-ignore - React 18 compatibility issue with react-calendar-timeline */}
               <CustomMarker date={Math.floor(new Date().getTime() / 1000)}>
                 {({ styles }) => {
                   const customStyles = {
@@ -298,7 +307,7 @@ const BookingsCalendarPage = ({ bookingConfig }: { bookingConfig: BookingConfig 
   );
 };
 
-BookingsCalendarPage.getInitialProps = async (context: NextPageContext) => {
+BookingsCalendarPage.getInitialProps = async (context: any) => {
   try {
     const [bookingRes, messages] = await Promise.all([
       api.get('/config/booking').catch(() => null),

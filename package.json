@@ -29,10 +29,17 @@
     "turbo": "latest"
   },
   "dependencies": {
+    "@google/genai": "^1.12.0",
     "@types/react-calendar-timeline": "^0.28.6",
     "axios": "1.7.7",
     "deepmerge": "^4.3.1",
     "interactjs": "^1.10.26",
+    "jimp": "^1.6.0",
+    "next": "13.4.19",
+    "next-intl": "^3.14.1",
+    "nextjs-google-analytics": "^2.3.7",
+    "openai": "^5.11.0",
+    "posthog-js": "^1.258.5",
     "react-calendar-timeline": "^0.28.0"
   }
 }
