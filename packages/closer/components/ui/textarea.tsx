@@ -1,8 +1,9 @@
+'use client'
 import * as React from 'react';
 
 import { cn } from '../../utils/cn';
 
-('use client');
+
 
 const Textarea = React.forwardRef<
   HTMLTextAreaElement,
