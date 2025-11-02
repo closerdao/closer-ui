@@ -282,7 +282,6 @@ const BookingsCalendarPage = ({
                 <DateHeader height={44} />
               </TimelineHeaders>
 
-              {/* @ts-ignore - React 18 compatibility issue with react-calendar-timeline */}
               <CustomMarker date={Math.floor(new Date().getTime() / 1000)}>
                 {({ styles }) => {
                   const customStyles = {
