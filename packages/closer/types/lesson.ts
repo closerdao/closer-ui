@@ -30,10 +30,7 @@ export type Lesson = {
   | 'live-course'
   | 'prerecorded-lesson'
   | 'prerecorded-course';
-  access?:
-  | 'subscription-any'
-  | 'single-payment'
-  | 'free';
+  access?: Array<'subscription-any' | 'single-payment' | 'free'>;
   modules?: {
     title: string;
     description: string;
