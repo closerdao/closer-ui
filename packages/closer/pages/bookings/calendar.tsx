@@ -250,7 +250,6 @@ const BookingsCalendarPage = ({
           </section>
 
           <div className="min-h-[600px] w-full">
-            {/* @ts-ignore - React 18 compatibility issue with react-calendar-timeline */}
             <Timeline
               sidebarWidth={220}
               groups={(lastNonEmptyUnits || defaultAccommodationUnits).map(
@@ -268,22 +267,18 @@ const BookingsCalendarPage = ({
               maxZoom={oneMonth}
               className="relative"
             >
-              {/* @ts-ignore - React 18 compatibility issue with react-calendar-timeline */}
               <TimelineHeaders className="sticky">
                 {loading && (
                   <div className="px-4 w-[200px] flex gap-2 items-center absolute h-[30px] bottom-[-30px] left-0   bg-white z-10">
                     <Spinner /> Updating...
                   </div>
                 )}
-                {/* @ts-ignore - React 18 compatibility issue with react-calendar-timeline */}
                 <SidebarHeader>
                   {({ getRootProps }) => {
                     return <div {...getRootProps()}>Listing/bed</div>;
                   }}
                 </SidebarHeader>
-                {/* @ts-ignore - React 18 compatibility issue with react-calendar-timeline */}
                 <DateHeader unit="primaryHeader" />
-                {/* @ts-ignore - React 18 compatibility issue with react-calendar-timeline */}
                 <DateHeader height={44} />
               </TimelineHeaders>
 
