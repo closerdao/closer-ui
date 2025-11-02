@@ -1,5 +1,4 @@
 import { CloserCurrencies } from './currency';
-
 import { Price } from './currency';
 
 export type Lesson = {
@@ -26,10 +25,10 @@ export type Lesson = {
   liveSessionUrl?: string;
   price?: Price<CloserCurrencies>;
   variant?:
-  | 'live-lesson'
-  | 'live-course'
-  | 'prerecorded-lesson'
-  | 'prerecorded-course';
+    | 'live-lesson'
+    | 'live-course'
+    | 'prerecorded-lesson'
+    | 'prerecorded-course';
   access?: Array<'subscription-any' | 'single-payment' | 'free'>;
   modules?: {
     title: string;
