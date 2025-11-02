@@ -26,7 +26,7 @@
     "msw": "^1.2.1",
     "next-router-mock": "^0.9.3",
     "prettier": "latest",
-    "turbo": "1.8.6"
+    "turbo": "latest"
   },
   "dependencies": {
     "@google/genai": "^1.12.0",
