@@ -50,6 +50,7 @@ const ExpenseTrackingDashboardPage = ({
   const [toDate, setToDate] = useState<string>('');
   const [timeFrame, setTimeFrame] = useState<string>('month');
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [refreshKey, setRefreshKey] = useState<number>(0);
 
   const chargeFilter = {
     where: {
@@ -59,7 +60,10 @@ const ExpenseTrackingDashboardPage = ({
     limit: MAX_BOOKINGS_TO_FETCH,
   };
 
-  const chargesList = platform.charge.find(chargeFilter);
+  const displayFilter =
+    refreshKey > 0 ? { ...chargeFilter, _refresh: refreshKey } : chargeFilter;
+
+  const chargesList = platform.charge.find(displayFilter);
   const allCharges = chargesList ? chargesList.toJS() : [];
 
   const { start, end } = getDateRange({
@@ -79,10 +83,17 @@ const ExpenseTrackingDashboardPage = ({
   const endIndex = startIndex + EXPENSES_PER_PAGE;
   const paginatedCharges = filteredCharges.slice(startIndex, endIndex);
 
-  const loadData = async () => {
+  const loadData = async (forceRefresh = false) => {
     try {
       setIsLoading(true);
-      await platform.charge.get(chargeFilter);
+      if (forceRefresh) {
+        const refreshTimestamp = Date.now();
+        const refreshFilter = { ...chargeFilter, _refresh: refreshTimestamp };
+        await platform.charge.get(refreshFilter);
+        setRefreshKey(refreshTimestamp);
+      } else {
+        await platform.charge.get(chargeFilter);
+      }
     } catch (err) {
       console.error('Error loading expense charges:', err);
     } finally {
@@ -150,6 +161,7 @@ const ExpenseTrackingDashboardPage = ({
             isOpen={isDialogOpen}
             onClose={() => setIsDialogOpen(false)}
             expenseCategories={expenseCategories}
+            onSuccess={() => loadData(true)}
           />
         </div>
       </AdminLayout>

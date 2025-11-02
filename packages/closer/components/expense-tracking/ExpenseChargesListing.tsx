@@ -199,12 +199,12 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                       </div>
                       <div>
                         <strong>{t('expense_tracking_description')}:</strong>{' '}
-                        {selectedCharge.meta.toconlineData.description || 'N/A'}
+                        {selectedCharge.description || 'N/A'}
                       </div>
                       {selectedCharge.meta?.comment && (
                         <div>
                           <strong>{t('expense_tracking_comment')}:</strong>{' '}
-                          {selectedCharge.meta.toconlineData.comment}
+                          {selectedCharge.meta.comment}
                         </div>
                       )}
                       <div>
@@ -214,7 +214,7 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                       </div>
                       <div>
                         <strong>{t('expense_tracking_category')}:</strong>{' '}
-                        {selectedCharge.meta.toconlineData.category || 'N/A'}
+                        {selectedCharge.category || 'N/A'}
                       </div>
                       {selectedCharge.meta.toconlineData
                         .tax_exemption_reason_id && (
@@ -230,8 +230,12 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                       )}
                       <div>
                         <strong>{t('expense_tracking_receipt_total')}:</strong>{' '}
-                        €
                         {selectedCharge.amount?.total?.val?.toFixed(2) || 'N/A'}
+                      </div>
+                      <div>
+                        <strong>Currency:</strong>{' '}
+                        {selectedCharge.amount?.total?.cur.toUpperCase() ||
+                          'N/A'}
                       </div>
                     </div>
                   </div>
@@ -263,24 +267,25 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                             </tr>
                           </thead>
                           <tbody>
-                            {selectedCharge.meta.toconlineData && selectedCharge.meta.toconlineData?.lines.map(
-                              (line: any, index: number) => (
-                                <tr key={index} className="border-b">
-                                  <td className="px-2 py-1">
-                                    {line.description}
-                                  </td>
-                                  <td className="px-2 py-1 text-center">
-                                    {line.tax_percentage}%
-                                  </td>
-                                  <td className="px-2 py-1 text-center">
-                                    {line.tax_code}
-                                  </td>
-                                  <td className="px-2 py-1 text-right">
-                                    €{line.unit_price?.toFixed(2)}
-                                  </td>
-                                </tr>
-                              ),
-                            )}
+                            {selectedCharge.meta.toconlineData &&
+                              selectedCharge.meta.toconlineData?.lines.map(
+                                (line: any, index: number) => (
+                                  <tr key={index} className="border-b">
+                                    <td className="px-2 py-1">
+                                      {line.description}
+                                    </td>
+                                    <td className="px-2 py-1 text-center">
+                                      {line.tax_percentage}%
+                                    </td>
+                                    <td className="px-2 py-1 text-center">
+                                      {line.tax_code}
+                                    </td>
+                                    <td className="px-2 py-1 text-right">
+                                      €{line.unit_price?.toFixed(2)}
+                                    </td>
+                                  </tr>
+                                ),
+                              )}
                           </tbody>
                         </table>
                       </div>

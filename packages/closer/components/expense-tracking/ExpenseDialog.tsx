@@ -44,12 +44,14 @@ interface ExpenseDialogProps {
   isOpen: boolean;
   onClose: () => void;
   expenseCategories?: string[];
+  onSuccess?: () => void;
 }
 
 const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
   isOpen,
   onClose,
   expenseCategories,
+  onSuccess,
 }) => {
   const [file, setFile] = useState<File | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
@@ -514,7 +516,7 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
         description,
         category,
         comment,
-        uploadedDocumentUrl
+        uploadedDocumentUrl,
       };
 
       console.log('updatedExpenseData=', updatedExpenseData);
@@ -525,10 +527,14 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
 
       if (res.status === 200) {
         setHasLoggedExpense(true);
+
         setTimeout(() => {
-          onClose();
-          window.location.reload();
-        }, 2000);
+          handleClose();
+
+          if (onSuccess) {
+            onSuccess();
+          }
+        }, 1500);
       }
     } catch (error) {
       console.error('Upload error:', error);

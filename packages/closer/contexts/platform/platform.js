@@ -390,7 +390,11 @@ export const PlatformProvider = ({ children }) => {
         );
       },
       get: (filter) => {
-        const options = Object.assign({ sort_by: '-created' }, filter);
+        const defaultOptions = { sort_by: '-created' };
+        if (model === 'config' && !filter?.limit) {
+          defaultOptions.limit = 100;
+        }
+        const options = Object.assign(defaultOptions, filter);
         const filterKey = filterToKey(filter);
         if (
           state.getIn([model, 'byFilter', filterKey, 'receivedAt']) >

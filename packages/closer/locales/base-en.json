@@ -1381,6 +1381,9 @@
   "config_label_minVouches": "Minimum number of vouches",
   "config_label_minVouchingStayDuration": "Minimum stay duration to be eligible for vouching (days)",
   "config_label_friendsBookingMaxGuests": "Maximum number of guests for friends bookings",
+  "config_label_entityName": "Entity name",
+  "config_label_transactionType": "Transaction type",
+  "config_label_accountingDescription": "Product/service description for accounting",
 
   "config_features_heading": "Platform features",
   "generic_delete_button": "Delete",

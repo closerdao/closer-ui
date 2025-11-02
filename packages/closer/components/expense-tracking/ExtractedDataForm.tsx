@@ -361,7 +361,7 @@ const ExtractedDataForm: React.FC<ExtractedDataFormProps> = ({
       )}
 
       <div className="text-sm text-red-500 bg-red-100 p-2 rounded-md my-4">
-        WARNING: this action is not reversible. Please carefully review the
+        WARNING: a document will be created in Toconline with the data above. This action is not reversible. Please carefully review the
         extracted receipt data before proceeding.
       </div>
 
