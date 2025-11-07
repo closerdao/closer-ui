@@ -1859,6 +1859,13 @@
   "settings_weekly_newsletter": "Newsletter semanal",
   "settings_danger_zone": "Zona de Perigo",
   "settings_danger_zone_warning": "As ações nesta secção podem resultar em perda permanente de dados. Por favor, prossiga com cautela.",
+  "settings_billing_information": "Informações de Faturação",
+  "settings_legal_name": "Nome Legal (ou Nome Comercial)",
+  "settings_legal_name_placeholder": "Insira o nome legal ou comercial",
+  "settings_billing_address": "Endereço de Faturação",
+  "settings_billing_address_placeholder": "Insira o endereço de faturação",
+  "settings_tax_number": "Número de Identificação Fiscal",
+  "settings_tax_number_placeholder": "Insira o número de identificação fiscal",
 
   "token_sales_dashboard_title": "Vendas de tokens",
   "token_sales_dashboard_total_sales": "total",
