@@ -17,9 +17,10 @@ import { NewsletterProvider } from 'closer/contexts/newsletter';
 import messagesBase from 'closer/locales/base-en.json';
 import messagesLocal from 'closer/locales/tdf/en.json';
 import { NextIntlClientProvider } from 'next-intl';
-import { RouterContext } from 'next/dist/shared/lib/router-context';
 import Router from 'next-router-mock';
 import type { NextRouter } from 'next/router';
+
+const RouterContext = React.createContext<NextRouter>(Router as NextRouter);
 
 import { getLibrary } from '../pages/_app';
 
