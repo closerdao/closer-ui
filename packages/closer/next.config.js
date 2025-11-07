@@ -9,8 +9,14 @@ const withMDX = require('@next/mdx')({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
-  presets: ['next/babel'],
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
+  swcMinify: false,
+  experimental: {
+    forceSwcTransforms: false,
+  },
+  compiler: {
+    removeConsole: false,
+  },
   images: {
     remotePatterns: [
       {

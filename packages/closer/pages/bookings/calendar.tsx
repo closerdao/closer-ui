@@ -15,7 +15,6 @@ import { ErrorMessage, Spinner } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
 import dayjs from 'dayjs';
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -28,6 +27,7 @@ import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { useDebounce } from '../../hooks/useDebounce';
 import { BookingConfig, Listing } from '../../types';
+import api from '../../utils/api';
 import {
   formatListings,
   generateBookingItems,
@@ -37,11 +37,14 @@ import {
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
-import api from '../../utils/api';
 
 const loadTime = Date.now();
 
-const BookingsCalendarPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
+const BookingsCalendarPage = ({
+  bookingConfig,
+}: {
+  bookingConfig: BookingConfig;
+}) => {
   const t = useTranslations();
   const { enabledConfigs, TIME_ZONE } = useConfig();
   const { user } = useAuth();
@@ -298,7 +301,7 @@ const BookingsCalendarPage = ({ bookingConfig }: { bookingConfig: BookingConfig 
   );
 };
 
-BookingsCalendarPage.getInitialProps = async (context: NextPageContext) => {
+BookingsCalendarPage.getInitialProps = async (context: any) => {
   try {
     const [bookingRes, messages] = await Promise.all([
       api.get('/config/booking').catch(() => null),

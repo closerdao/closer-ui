@@ -111,6 +111,9 @@ export type Charge = {
   };
   referredBy?: string;
   affiliateRevenue?: { val: number; cur: CloserCurrencies };
+  description?: string;
+  category?: string;
+  documentDate?: string;
   meta: {
     stripePaymentIntentId?: string;
     stripeConnectFee?: number;
@@ -119,6 +122,10 @@ export type Charge = {
     isTokenRefund?: boolean;
     stripeConnectFeeRefunded?: number;
     fractionToRefund?: number;
+    uploadedDocumentUrl?: string | null;
+    toconlineData?: any;
+
+    comment?: string;
   } & Partial<SubscriptionChargeMeta> &
     Partial<TokenSaleChargeMeta>;
 };

@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 
 import { ChangeEvent, useEffect, useMemo, useState } from 'react';
 
@@ -44,8 +45,8 @@ interface Props {
 }
 
 const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
-  console.log('defaultEmailsConfig=', defaultEmailsConfig);
   const t = useTranslations();
+  const router = useRouter();
   const { platform }: any = usePlatform();
   const { platformAllowedConfigs } = useConfig() || {};
   const { user } = useAuth();
@@ -62,6 +63,29 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
   const allConfigCategories = mergedConfigDescription
     .map((config: any) => config?.slug)
     .filter((config: any) => platformAllowedConfigs?.includes(config));
+
+  const getSlugFromDisplayName = (displayName: string): string => {
+    return displayName.toLowerCase().replace(/\s+/g, '-');
+  };
+
+  const getDisplayNameFromSlug = (slug: string): string => {
+    return slug
+      .split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join('-');
+  };
+
+  const updateUrlWithSection = (slug: string) => {
+    const displayName = getDisplayNameFromSlug(slug);
+    router.push(
+      {
+        pathname: router.pathname,
+        query: { ...router.query, section: displayName },
+      },
+      undefined,
+      { shallow: true },
+    );
+  };
 
   const [selectedConfig, setSelectedConfig] = useState('general');
   const [updatedConfigs, setUpdatedConfigs] = useState<Config[]>([]);
@@ -90,6 +114,46 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
       }) || [];
 
   const configFormSchema = getValidationSchema(arrayConfigsSchema as any);
+
+  useEffect(() => {
+    const sectionParam = router.query.section as string | undefined;
+    if (
+      sectionParam &&
+      allConfigCategories.length > 0 &&
+      enabledConfigs.length > 0
+    ) {
+      const slugFromParam = getSlugFromDisplayName(sectionParam);
+      if (
+        allConfigCategories.includes(slugFromParam) &&
+        enabledConfigs.includes(slugFromParam) &&
+        slugFromParam !== selectedConfig
+      ) {
+        setSelectedConfig(slugFromParam);
+      }
+    }
+  }, [
+    router.query.section,
+    allConfigCategories,
+    enabledConfigs,
+    selectedConfig,
+  ]);
+
+  useEffect(() => {
+    if (
+      enabledConfigs.length > 0 &&
+      isGeneralConfigEnabled &&
+      !router.query.section &&
+      selectedConfig &&
+      enabledConfigs.includes(selectedConfig)
+    ) {
+      updateUrlWithSection(selectedConfig);
+    }
+  }, [
+    enabledConfigs,
+    isGeneralConfigEnabled,
+    selectedConfig,
+    router.query.section,
+  ]);
 
   useEffect(() => {
     loadData();
@@ -157,9 +221,11 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
         enabledConfigs?.filter((item: string) => item !== configCategory),
       );
       setSelectedConfig('general');
+      updateUrlWithSection('general');
       shouldEnable = false;
     } else {
       setSelectedConfig(configCategory);
+      updateUrlWithSection(configCategory);
       setEnabledConfigs([...enabledConfigs, configCategory]);
       shouldEnable = true;
     }
@@ -484,7 +550,11 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
               <Switcher
                 options={enabledConfigs}
                 selectedOption={selectedConfig}
-                setSelectedOption={setSelectedConfig}
+                setSelectedOption={(option) => {
+                  const slug = typeof option === 'string' ? option : 'general';
+                  setSelectedConfig(slug);
+                  updateUrlWithSection(slug);
+                }}
               />
 
               <Card className="flex flex-col gap-10">
@@ -514,103 +584,97 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
                       }
 
                       return (
-                        <>
-                          {key !== 'enabled' && (
-                            <div
-                              key={`${currentConfig.slug}-${key}`}
-                              className="flex flex-col gap-1"
-                            >
-                              {!isArray && (
-                                <label>{t(`config_label_${key}`)}:</label>
-                              )}
-                              {typeof value === 'boolean' ? (
-                                <div className="flex gap-3">
-                                  <label className="flex gap-1 items-center">
-                                    <input
-                                      type="radio"
-                                      name={key}
-                                      value="true"
-                                      checked={currentValue === true}
-                                      onChange={handleChange}
-                                    />
-                                    {t('config_true')}
-                                  </label>
-                                  <label className="flex gap-1 items-center">
-                                    <input
-                                      type="radio"
-                                      name={key}
-                                      value="false"
-                                      checked={currentValue === false}
-                                      onChange={handleChange}
-                                    />
-                                    {t('config_false')}
-                                  </label>
-                                </div>
-                              ) : (
+                        <div
+                          key={`${currentConfig.slug}-${key}`}
+                          className="flex flex-col gap-1"
+                        >
+                          {!isArray && (
+                            <label>{t(`config_label_${key}`)}:</label>
+                          )}
+                          {typeof value === 'boolean' ? (
+                            <div className="flex gap-3">
+                              <label className="flex gap-1 items-center">
+                                <input
+                                  type="radio"
+                                  name={key}
+                                  value="true"
+                                  checked={currentValue === true}
+                                  onChange={handleChange}
+                                />
+                                {t('config_true')}
+                              </label>
+                              <label className="flex gap-1 items-center">
+                                <input
+                                  type="radio"
+                                  name={key}
+                                  value="false"
+                                  checked={currentValue === false}
+                                  onChange={handleChange}
+                                />
+                                {t('config_false')}
+                              </label>
+                            </div>
+                          ) : (
+                            <div>
+                              {isArray && (
                                 <div>
-                                  {isArray && (
-                                    <div>
-                                      <ArrayConfig
-                                        currentValue={currentValue}
-                                        handleChange={handleChange}
-                                        handleAddElement={handleAddElement}
-                                        handleDeleteElement={
-                                          handleDeleteElement
-                                        }
-                                        elementsKey={key}
-                                        description={description}
-                                        slug={currentConfig.slug}
-                                        resetToDefault={resetToDefault}
-                                        errors={errors}
-                                      />
-                                    </div>
-                                  )}
-                                  {!isArray && !isSelect && !isTime && (
-                                    <input
-                                      className="bg-neutral rounded-md p-1"
-                                      name={key}
-                                      onChange={handleChange}
-                                      type="text"
-                                      value={String(currentValue)}
-                                    />
-                                  )}
-
-                                  {isTime && (
-                                    <input
-                                      className="bg-neutral rounded-md p-1"
-                                      name={key}
-                                      onChange={handleChange}
-                                      type="time"
-                                      value={String(currentValue)}
-                                    />
-                                  )}
-                                  {errors[key] && (
-                                    <ErrorMessage
-                                      error={errors[key].toString()}
-                                    ></ErrorMessage>
-                                  )}
-
-                                  {isSelect && (
-                                    <select
-                                      className="px-2 py-1"
-                                      value={String(currentValue)}
-                                      onChange={handleChange}
-                                      name={key}
-                                    >
-                                      {selectOptions.map((option: string) => {
-                                        return (
-                                          <option value={option} key={option}>
-                                            {option}
-                                          </option>
-                                        );
-                                      })}
-                                    </select>
-                                  )}
+                                  <ArrayConfig
+                                    currentValue={currentValue}
+                                    handleChange={handleChange}
+                                    handleAddElement={handleAddElement}
+                                    handleDeleteElement={handleDeleteElement}
+                                    elementsKey={key}
+                                    description={description}
+                                    slug={currentConfig.slug}
+                                    resetToDefault={resetToDefault}
+                                    errors={errors}
+                                  />
                                 </div>
+                              )}
+                              {!isArray && !isSelect && !isTime && (
+                                <input
+                                  className="bg-neutral rounded-md p-1"
+                                  name={key}
+                                  onChange={handleChange}
+                                  type="text"
+                                  value={String(currentValue)}
+                                />
+                              )}
+
+                              {isTime && (
+                                <input
+                                  className="bg-neutral rounded-md p-1"
+                                  name={key}
+                                  onChange={handleChange}
+                                  type="time"
+                                  value={String(currentValue)}
+                                />
+                              )}
+                              {errors[key] && (
+                                <ErrorMessage
+                                  error={errors[key].toString()}
+                                ></ErrorMessage>
+                              )}
+
+                              {isSelect && (
+                                <select
+                                  className="px-2 py-1"
+                                  value={String(currentValue)}
+                                  onChange={handleChange}
+                                  name={key}
+                                >
+                                  {selectOptions.map((option: string) => {
+                                    return (
+                                      <option value={option} key={option}>
+                                        {option}
+                                      </option>
+                                    );
+                                  })}
+                                </select>
                               )}
                             </div>
                           )}
-                        </>
+                        </div>
                       );
                     })}
                   </div>

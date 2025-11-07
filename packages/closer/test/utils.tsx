@@ -1,4 +1,3 @@
-// create a helper for rendering components with providers
 import React from 'react';
 
 import { render as rtlRender } from '@testing-library/react';
@@ -10,7 +9,7 @@ import { AuthProvider } from '../contexts/auth';
 import { ConfigProvider } from '../contexts/config';
 import { PlatformProvider } from '../contexts/platform';
 import { WalletProvider } from '../contexts/wallet';
-import getLibrary from '../pages/_app';
+import { getLibrary } from '../pages/_app';
 import { NextIntlClientProvider } from 'next-intl';
 import messagesLocal from '../locales/tdf/en.json';
 import messagesBase from '../locales/base-en.json';

@@ -111,7 +111,12 @@ const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
                 rbacPage: 'TokenSales',
               },
             ]
-          : []),
+        : []),
+        {
+          label: t('navigation_expense_tracking'),
+          url: '/dashboard/expense-tracking',
+          rbacPage: 'ExpenseTracking',
+        },
       ]
     : [
         {
@@ -151,7 +156,12 @@ const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
                 rbacPage: 'TokenSales',
               },
             ]
-          : []),
+        : []),
+        {
+          label: t('navigation_expense_tracking'),
+          url: '/dashboard/expense-tracking',
+          rbacPage: 'ExpenseTracking',
+        },
       ];
 
   // Filter links based on RBAC permissions

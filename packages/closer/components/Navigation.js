@@ -20,7 +20,6 @@ const Navigation = () => {
   const t = useTranslations();
   const { APP_NAME } = useConfig() || {};
 
-  console.log('APP_NAME', APP_NAME);
   const { isAuthenticated, user } = useAuth();
   const isMember = user?.roles?.includes('member');
 
@@ -118,7 +117,7 @@ const Navigation = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/pages/events" className='whitespace-nowrap'>
+                  <Link href="/pages/events" className="whitespace-nowrap">
                     {t('header_nav_events')}
                   </Link>
                 </li>
@@ -154,9 +153,7 @@ const Navigation = () => {
                   </li>
                   {process.env.NEXT_PUBLIC_FEATURE_ROLES === 'true' && (
                     <li>
-                      <Link href="/roles">
-                        {t('header_nav_work_with_us')}
-                      </Link>
+                      <Link href="/roles">{t('header_nav_work_with_us')}</Link>
                     </li>
                   )}
                   <li>

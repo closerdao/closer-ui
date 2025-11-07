@@ -17,6 +17,8 @@ const customJestConfig = {
   testMatch: ['**/*.test.ts', '**/*.test.tsx'],
   moduleNameMapper: {
     '@/(.*)': '<rootDir>/$1',
+    '^next/router$': 'next-router-mock',
+    '^next/dist/client/router$': 'next-router-mock',
   },
 };
 

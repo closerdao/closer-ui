@@ -17,6 +17,7 @@ const config = {
     'rbac',
     'webinar',
     'newsletter',
+    'accounting-entities',
   ],
   PORT: 14444,
   EXPOSE_STORE: true,
