@@ -1,6 +1,6 @@
 import { screen, waitFor } from '@testing-library/react';
 
-import TokenBuyWidget from '.';
+import TokenBuyWidget from './index';
 import { renderWithProviders } from '../../test/utils';
 
 describe('TokenBuyWidget', () => {

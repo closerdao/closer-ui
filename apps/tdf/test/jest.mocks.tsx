@@ -1,6 +1,5 @@
 import React from 'react';
 
-// setup env variables globally
 process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING = 'true';
 process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET = 'true';
 process.env.NEXT_PUBLIC_FEATURE_BOOKING = 'true';
@@ -24,5 +23,3 @@ jest.mock('next/image', () => ({
     return <img {...props} />;
   },
 }));
-
-jest.mock('next/router', () => require('next-router-mock'));

@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
 
-import RedeemCredits from '.';
+import RedeemCredits from './index';
 import { CloserCurrencies } from '../../types';
 import { renderWithNextIntl } from '../../test/utils';
 
