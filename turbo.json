@@ -36,8 +36,6 @@
         "NEXT_PUBLIC_APP_NAME",
         "NEXT_PUBLIC_FEATURE_VOLUNTEERING",
         "NEXT_PUBLIC_FEATURE_LOCALE_SWITCH",
-        "NEXT_PUBLIC_FEATURE_VOLUNTEERING",
-        "NEXT_PUBLIC_APP_NAME",
         "NEXT_PUBLIC_FEATURE_STABLECOIN_BOOKING",
         "TEST_USER_EMAIL",
         "TEST_USER_PASSWORD",
@@ -49,13 +47,23 @@
         "NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE",
         "NEXT_PUBLIC_POSTHOG_KEY",
         "NEXT_PUBLIC_POSTHOG_HOST",
+        "GEMINI_API_KEY",
         "NEXT_PUBLIC_TELEGRAM_BOT_TOKEN",
         "NEXT_PUBLIC_DEBUG_EMAIL",
         "NEXT_PUBLIC_BENEFICIARY"
       ]
     },
     "lint": {
-      "outputs": []
+      "outputs": [],
+      "env": [
+        "NEXT_PUBLIC_APP_NAME",
+        "NEXT_PUBLIC_API_URL",
+        "NEXT_PUBLIC_CDN_URL",
+        "NEXT_PUBLIC_PLATFORM_URL",
+        "NEXT_PUBLIC_FEATURE_TOKEN_SALE",
+        "NEXT_PUBLIC_FEATURE_SUPPORT_US",
+        "GEMINI_API_KEY"
+      ]
     },
     "dev": {
       "cache": false

@@ -1,0 +1,222 @@
+# Имя рабочего процесса, которое будет отображаться в GitHub Actions
+name: Deploy FastAPI to GCP VM
+
+# Триггер: запускать рабочий процесс при пуше в ветку main
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    # Запускать на последней версии Ubuntu, предоставляемой GitHub
+    runs-on: ubuntu-latest
+
+    # Установка разрешений для этого задания.
+    # Необходимо для безопасной аутентификации через Workload Identity Federation.
+    permissions:
+      contents: 'read'      # Разрешение на чтение содержимого репозитория
+      id-token: 'write'     # Разрешение на запись ID-токена для аутентификации в GCP
+
+    steps:
+    # Шаг 1: Клонирование репозитория
+    # Скачивает код из вашего репозитория в среду выполнения Actions
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # Шаг 2: Аутентификация в Google Cloud
+    # Использует Workload Identity Federation для безопасного входа без долгоживущих ключей
+    - name: Authenticate to Google Cloud
+      id: auth
+      uses: 'google-github-actions/auth@v1'
+      with:
+        workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+        service_account: ${{ secrets.GCP_SA_EMAIL }}
+
+    # Шаг 3: Настройка Google Cloud SDK
+    # Устанавливает и настраивает утилиту gcloud для использования в последующих шагах
+    - name: Set up Cloud SDK
+      uses: 'google-github-actions/setup-gcloud@v1'
+
+    # Шаг 4: Конфигурация Docker для работы с Artifact Registry
+    # Настраивает Docker для аутентификации в вашем репозитории артефактов Google
+    - name: Configure Docker for Artifact Registry
+      run: gcloud auth configure-docker europe-west3-docker.pkg.dev
+
+    # Шаг 5: Сборка и отправка Docker-образа
+    # Собирает Docker-образ из Dockerfile и отправляет его в Artifact Registry
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .  # Контекст сборки - корневая директория репозитория
+        push: true  # Отправлять (push) образ после сборки
+        tags: europe-west3-docker.pkg.dev/pwron-455318/pwron-repo/app:latest # Тег образа
+
+    # Шаг 6: Развертывание на ВМ в GCP
+    # Подключается к ВМ по SSH, передает секреты и выполняет скрипт деплоя
+    - name: Deploy to GCP VM
+      run: |
+        gcloud compute ssh ubuntu@${{ secrets.VM_INSTANCE_NAME }} \
+          --zone=${{ secrets.VM_ZONE }} \
+          --project=${{ secrets.GCP_PROJECT_ID }} \
+          --tunnel-through-iap \
+          --quiet \
+          --command="DB_URL='${{ secrets.DB_URL }}' \
+            GOOGLE_API_KEY='${{ secrets.GOOGLE_API_KEY }}' \
+            MAGIC_CODE='${{ secrets.MAGIC_CODE }}' \
+            PROXY_URL='${{ secrets.PROXY_URL }}' \
+            ROLLBAR_ACCESS_TOKEN='${{ secrets.ROLLBAR_ACCESS_TOKEN }}' \
+            ROLLBAR_ENVIRONMENT='${{ secrets.ROLLBAR_ENVIRONMENT }}' \
+            TWO_GIS_CATALOG_API_KEY='${{ secrets.TWO_GIS_CATALOG_API_KEY }}' \
+            TWO_GIS_REVIEWS_API_KEY='${{ secrets.TWO_GIS_REVIEWS_API_KEY }}' \
+            bash -s" <<'EOF'
+        #!/bin/bash
+        # Включить выход при первой ошибке для надежности
+        set -e
+        
+        echo "Начинаем деплой на ВМ..."
+        
+        # Создаем файл .env из переменных окружения
+        echo "Создаем файл .env..."
+        cat > /home/ubuntu/.env <<ENVEOF
+        DB_URL=${DB_URL}
+        GOOGLE_API_KEY=${GOOGLE_API_KEY}
+        MAGIC_CODE=${MAGIC_CODE}
+        PROXY_URL=${PROXY_URL}
+        ROLLBAR_ACCESS_TOKEN=${ROLLBAR_ACCESS_TOKEN}
+        ROLLBAR_ENVIRONMENT=${ROLLBAR_ENVIRONMENT}
+        TWO_GIS_CATALOG_API_KEY=${TWO_GIS_CATALOG_API_KEY}
+        TWO_GIS_REVIEWS_API_KEY=${TWO_GIS_REVIEWS_API_KEY}
+        CELERY_BROKER_URL=redis://redis:6379/0
+        CELERY_RESULT_BACKEND=redis://redis:6379/0
+        C_FORCE_ROOT=true
+        ENVEOF
+
+        echo "Файл .env успешно создан."
+        
+        # Переходим в домашнюю директорию
+        cd /home/ubuntu
+
+        # Копируем конфигурацию gcloud от пользователя 'ubuntu' к 'root', чтобы sudo могло использовать аутентификацию ВМ.
+        echo "Настройка аутентификации gcloud для пользователя root..."
+        sudo cp -r /home/ubuntu/.config/gcloud /root/.config/
+
+        # Настраиваем аутентификацию Docker для пользователя root
+        echo "Настраиваем Docker аутентификацию для sudo..."
+        sudo gcloud auth configure-docker europe-west3-docker.pkg.dev --quiet
+
+        # Скачиваем последнюю версию образа
+        echo "Скачиваем Docker образ..."
+        sudo docker pull europe-west3-docker.pkg.dev/pwron-455318/pwron-repo/app:latest
+
+        # Останавливаем старые контейнеры
+        echo "Останавливаем старые контейнеры..."
+        sudo docker-compose -f docker-compose-prod.yml down || true
+
+        # Создаем или перезаписываем docker-compose-prod.yml
+        echo "Создаем docker-compose-prod.yml..."
+        cat > /home/ubuntu/docker-compose-prod.yml <<'COMPOSEEOF'
+        services:
+
+          backend:
+            container_name: orm_parser_backend
+            image: europe-west3-docker.pkg.dev/pwron-455318/pwron-repo/app:latest
+            command: /boot.sh
+            volumes:
+              - .:/opt/services/app/src:Z
+            expose:
+              - 8000
+            env_file:
+              - .env
+            ports:
+              - "80:8000"
+            networks:
+              - redis_network
+              - database_network
+            depends_on:
+              - redis
+
+          redis:
+            image: redis:latest
+            container_name: orm_parser_redis
+            ports:
+              - "6379"
+            volumes:
+              - redis_volume:/data
+            networks:
+              - redis_network
+
+          celery-worker:
+            image: europe-west3-docker.pkg.dev/pwron-455318/pwron-repo/app:latest
+            container_name: orm_parser_worker
+            command: celery -A tasks worker -l info --concurrency=1
+            volumes:
+              - .:/opt/services/app/src:Z
+            environment:
+              - CELERY_BROKER_URL=redis://redis:6379/0
+              - CELERY_RESULT_BACKEND=redis://redis:6379/0
+              - C_FORCE_ROOT=true
+            depends_on:
+              - redis
+            env_file:
+              - .env
+            networks:
+              - redis_network
+              - database_network
+
+          celery-beat:
+            image: europe-west3-docker.pkg.dev/pwron-455318/pwron-repo/app:latest
+            container_name: orm_parser_celery_beat
+            command: celery -A tasks beat -l info
+            volumes:
+              - .:/opt/services/app/src:Z
+            environment:
+              - CELERY_BROKER_URL=redis://redis:6379/0
+              - CELERY_RESULT_BACKEND=redis://redis:6379/0
+              - C_FORCE_ROOT=true
+            depends_on:
+              - redis
+            env_file:
+              - .env
+            networks:
+              - redis_network
+              - database_network
+
+          flower:
+            container_name: orm_parser_flower
+            image: mher/flower
+            command: celery flower
+            environment:
+              CELERY_BROKER_URL: redis://redis
+              CELERY_RESULT_BACKEND: redis://redis
+            expose:
+              - 5555
+            depends_on:
+              - redis
+            ports:
+              - "5555:5555"
+            networks:
+              - redis_network
+
+        networks:
+          redis_network:
+            driver: bridge
+
+          database_network:
+            driver: bridge
+
+        volumes:
+          redis_volume:
+          mongo_data:
+        COMPOSEEOF
+
+        # Запускаем сервисы
+        echo "Запускаем контейнеры..."
+        sudo docker-compose -f docker-compose-prod.yml up -d
+
+        # Показываем статус
+        echo "Проверяем статус контейнеров..."
+        sudo docker-compose -f docker-compose-prod.yml ps
+        
+        echo "Деплой завершен успешно!"
+        EOF

@@ -26,6 +26,8 @@ Project stack:
 </technical>
 
 <codingGuide>
+- Instead of running "yarn build" to test updates, run "cd apps/tdf" then "yarn build". We don't need to build other apps to test.
+- Before making any git commits or pushing code, always stop and ask the user for explicit permission. Show them what changes will be committed and get their approval before proceeding.
 - When asked to remove something - remove it completely, do not comment it
 - Name component files with camel case
 - You can read but not write .env file

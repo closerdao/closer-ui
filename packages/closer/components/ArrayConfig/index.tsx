@@ -142,6 +142,8 @@ const ArrayConfig = ({
                             }
                             type="text"
                             value={String(currentValue[index][innerKey])}
+                            autoComplete="off"
+                            data-lpignore="true"
                           />
                         )}
                         {inputType === 'long-text' && (
@@ -153,16 +155,20 @@ const ArrayConfig = ({
                             }
                             rows={innerKey === 'body' ? 16 : 2}
                             value={String(currentValue[index][innerKey])}
+                            autoComplete="off"
+                            data-lpignore="true"
                           />
                         )}
                         {inputType?.type === 'select' && (
                           <select
                             className="px-2 py-1"
-                            value={String(currentValue[index][innerKey])}
+                            value={String(currentValue[index][innerKey] || '')}
                             onChange={(event) =>
                               handleChange(event, elementsKey, index)
                             }
-                            name={innerKey}
+                            name={`${innerKey}-${index}`}
+                            autoComplete="off"
+                            data-lpignore="true"
                           >
                             {inputType.enum.map((option: string) => {
                               return (
