@@ -7,12 +7,7 @@ import CitizenGoodToBuy from '../../../components/CitizenGoodToBuy';
 import CitizenWhy from '../../../components/CitizenWhy';
 import PageError from '../../../components/PageError';
 import Wallet from '../../../components/Wallet';
-import {
-  Button,
-  Card,
-  Heading,
-  ProgressBar,
-} from '../../../components/ui';
+import { Button, Card, Heading, ProgressBar } from '../../../components/ui';
 
 import { NextPage, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -138,33 +133,35 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
         },
       }));
     }
-    (async () => {
-      try {
-        const hasStayedRes = await api.get(
-          '/subscription/citizen/check-has-stayed-for-min-duration',
-        );
+    if (user) {
+      (async () => {
+        try {
+          const hasStayedRes = await api.get(
+            '/subscription/citizen/check-has-stayed-for-min-duration',
+          );
 
-        const hasStayedForMinDurationLocal =
-          hasStayedRes?.data?.hasStayedForMinDuration;
+          const hasStayedForMinDurationLocal =
+            hasStayedRes?.data?.hasStayedForMinDuration;
 
-        const isVouchedRes = await api.get(
-          '/subscription/citizen/check-is-vouched',
-        );
-        const isVouchedLocal = isVouchedRes?.data?.isVouched;
+          const isVouchedRes = await api.get(
+            '/subscription/citizen/check-is-vouched',
+          );
+          const isVouchedLocal = isVouchedRes?.data?.isVouched;
 
-        if (
-          (isVouchedLocal && hasStayedForMinDurationLocal && owns30Tokens) ||
-          isMember
-        ) {
-          setEligibility('buy_more');
-        } else if (isVouchedLocal && hasStayedForMinDurationLocal) {
-          setEligibility('good_to_buy');
-        } else {
-          setEligibility('not_eligible');
-        }
-      } catch (error) {}
-    })();
-  }, [owns30Tokens, isMember]);
+          if (
+            (isVouchedLocal && hasStayedForMinDurationLocal && owns30Tokens) ||
+            isMember
+          ) {
+            setEligibility('buy_more');
+          } else if (isVouchedLocal && hasStayedForMinDurationLocal) {
+            setEligibility('good_to_buy');
+          } else {
+            setEligibility('not_eligible');
+          }
+        } catch (error) {}
+      })();
+    }
+  }, [owns30Tokens, isMember, user]);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -282,7 +279,6 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
       </Head>
 
       <div className="w-full max-w-screen-sm mx-auto p-8">
-
         <Heading level={1} className="mb-4">
           {t('subscriptions_citizen_apply_title')}
         </Heading>
