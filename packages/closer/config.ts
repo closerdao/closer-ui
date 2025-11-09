@@ -597,7 +597,7 @@ export const configDescription: ConfigType[] = [
         ],
         default: [
           {
-            transactionType: 'Bookings',
+            transactionType: 'booking',
             entityName: '',
             accountingDescription: '',
           },
