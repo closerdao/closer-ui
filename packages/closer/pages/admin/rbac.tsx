@@ -65,6 +65,7 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
     'Blog',
     'TokenSales',
     'ExpenseTracking',
+    'IncomeTracking',
     'RoleCreation',
     'Roles',
     'Revenue',
