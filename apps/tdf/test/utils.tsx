@@ -1,5 +1,4 @@
 // create a helper for rendering components with providers
-import { RouterContext } from 'next/dist/shared/lib/router-context.shared-runtime';
 import type { NextRouter } from 'next/router';
 
 import React from 'react';
@@ -23,6 +22,8 @@ import { NextIntlClientProvider } from 'next-intl';
 import Router from 'next-router-mock';
 
 import { getLibrary } from '../pages/_app';
+
+const RouterContext = React.createContext<NextRouter>(Router as NextRouter);
 
 interface RenderWithRouterOptions extends RenderOptions {
   route?: string;
