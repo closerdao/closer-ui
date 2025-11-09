@@ -1,11 +1,14 @@
 // create a helper for rendering components with providers
+import { RouterContext } from 'next/dist/shared/lib/router-context.shared-runtime';
+import type { NextRouter } from 'next/router';
+
 import React from 'react';
 
 import config from '@/__tests__/mocks/config';
 
+import type { RenderOptions } from '@testing-library/react';
 import { render as rtlRender } from '@testing-library/react';
 import { Web3ReactProvider } from '@web3-react/core';
-import type { RenderOptions } from '@testing-library/react';
 import {
   AuthProvider,
   ConfigProvider,
@@ -17,9 +20,7 @@ import { NewsletterProvider } from 'closer/contexts/newsletter';
 import messagesBase from 'closer/locales/base-en.json';
 import messagesLocal from 'closer/locales/tdf/en.json';
 import { NextIntlClientProvider } from 'next-intl';
-import { RouterContext } from 'next/dist/shared/lib/router-context';
 import Router from 'next-router-mock';
-import type { NextRouter } from 'next/router';
 
 import { getLibrary } from '../pages/_app';
 
@@ -28,7 +29,10 @@ interface RenderWithRouterOptions extends RenderOptions {
   router?: Partial<NextRouter>;
 }
 
-const applyRouterState = (route?: string, routerOverrides?: Partial<NextRouter>) => {
+const applyRouterState = (
+  route?: string,
+  routerOverrides?: Partial<NextRouter>,
+) => {
   Router.setCurrentUrl(route ?? '/');
 
   if (routerOverrides) {
