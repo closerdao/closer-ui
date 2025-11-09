@@ -1,5 +1,4 @@
 import { GoogleGenAI } from '@google/genai';
-import { taxExemptionReasons } from 'closer/constants/shared.constants';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 const genai = new GoogleGenAI({
@@ -52,7 +51,7 @@ async function uploadToCDN(
       `${process.env.NEXT_PUBLIC_API_URL}/upload/photo`,
       {
         method: 'POST',
-        body: multipartData,
+        body: multipartData as BodyInit,
         headers,
       },
     );
@@ -273,11 +272,9 @@ export default async function handler(
       
       MANDATORY TAX EXEMPTION REASON ID EXTRACTION:
       - CRITICAL: If ANY item in the receipt has vat_percentage=0, you MUST add the "tax_exemption_reason_id" field to the output
-      - If the vendor is outside of Portugal, set the tax_exemption_reason_id "12"
+      - If the vendor is outside of Portugal, but in EU set the tax_exemption_reason_id "24"
+      - If the vendor is outside of Portugal, but outside EU set the tax_exemption_reason_id "25"
       - Search the receipt text for any tax exemption reason codes or descriptions that match the provided list
-      - Match the found exemption reason with the corresponding ID from this list: ${JSON.stringify(
-        taxExemptionReasons,
-      )}
       - If no specific exemption reason is found in the document, use ID "28" (Não sujeito ou não tributado) as default
       - The tax_exemption_reason_id field should be a string containing the ID number
       

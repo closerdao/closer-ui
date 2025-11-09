@@ -163,6 +163,7 @@ export { default as EditVolunteerOportunity } from './pages/volunteer/[slug]/edi
 export { default as VolunteerApplicationPage } from './pages/volunteer/apply';
 export { default as CreateVolunteerOportunity } from './pages/volunteer/create';
 export { default as ExpenseTrackingDashboardPage } from './pages/dashboard/expense-tracking';
+export { default as IncomeTrackingDashboardPage } from './pages/dashboard/income-tracking';
 
 export { default as RevenuePage } from './pages/dashboard/revenue';
 // Types

@@ -589,7 +589,7 @@ export const configDescription: ConfigType[] = [
           {
             transactionType: {
               type: 'select',
-              enum: ['booking', 'product', 'token', 'expense', 'subscription'],
+              enum: ['booking', 'product', 'token', 'expense', 'subscription', 'outside-of-platform-income'],
             },
             entityName: 'text',
             accountingDescription: 'text',
