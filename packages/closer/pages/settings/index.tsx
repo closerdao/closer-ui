@@ -237,6 +237,9 @@ const SettingsPage = ({
   const [showSaveSuccess, setShowSaveSuccess] = useState(false); // For non-auto-saving inputs
   const [activeTab, setActiveTab] = useState<TabId>('profile');
   const { platform } = usePlatform() as any;
+  const [countries, setCountries] = useState<
+    Array<{ label: string; value: string }>
+  >([]);
 
   const kycDataDebounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
 
@@ -304,6 +307,22 @@ const SettingsPage = ({
     }
   }, [router.asPath]);
 
+  useEffect(() => {
+    const getCountries = async () => {
+      const countryList: Array<{ label: string; value: string }> = [];
+      try {
+        const res = await api.get('/meta/countries');
+        res.data.results.forEach((country: { name: string; code: string }) => {
+          countryList.push({ label: country.name, value: country.code });
+        });
+        setCountries(countryList);
+      } catch (err) {
+        console.error('[SettingsPage] Error fetching countries:', err);
+      }
+    };
+    getCountries();
+  }, []);
+
   const saveUserData =
     (
       attribute:
@@ -334,7 +353,14 @@ const SettingsPage = ({
         'needs',
         'moreInfo',
       ];
-      const kycDataKeys = ['legalName', 'address1', 'taxId'];
+      const kycDataKeys = [
+        'legalName',
+        'address1',
+        'TIN',
+        'country',
+        'city',
+        'postalCode',
+      ];
       let payload: Partial<User> = {
         [attribute]: actualValue,
       };
@@ -377,7 +403,6 @@ const SettingsPage = ({
                 city: existingKycData?.city || '',
                 state: existingKycData?.state || '',
                 country: existingKycData?.country || '',
-                taxId: existingKycData?.taxId || '',
                 [attribute]: stringValue,
               } as User['kycData'],
             };
@@ -736,11 +761,42 @@ const SettingsPage = ({
                     className="mb-4"
                   />
 
+                  <Select
+                    label={t('settings_country')}
+                    value={user?.kycData?.country || ''}
+                    options={countries}
+                    className="mb-4"
+                    onChange={(value: string) => saveUserData('country')(value)}
+                    isRequired
+                  />
+
+                  <Input
+                    label={t('settings_city')}
+                    placeholder={t('settings_city_placeholder')}
+                    value={user?.kycData?.city || ''}
+                    onChange={saveUserData('city') as any}
+                    isInstantSave={true}
+                    hasSaved={hasSaved}
+                    setHasSaved={setHasSaved}
+                    className="mb-4"
+                  />
+
+                  <Input
+                    label={t('settings_postal_code')}
+                    placeholder={t('settings_postal_code_placeholder')}
+                    value={user?.kycData?.postalCode || ''}
+                    onChange={saveUserData('postalCode') as any}
+                    isInstantSave={true}
+                    hasSaved={hasSaved}
+                    setHasSaved={setHasSaved}
+                    className="mb-4"
+                  />
+
                   <Input
                     label={t('settings_tax_number')}
                     placeholder={t('settings_tax_number_placeholder')}
-                    value={user?.kycData?.taxId || ''}
-                    onChange={saveUserData('taxId') as any}
+                    value={user?.kycData?.TIN || ''}
+                    onChange={saveUserData('TIN') as any}
                     isInstantSave={true}
                     hasSaved={hasSaved}
                     setHasSaved={setHasSaved}

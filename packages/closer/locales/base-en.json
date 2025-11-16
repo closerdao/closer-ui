@@ -2041,6 +2041,11 @@
   "settings_legal_name_placeholder": "Enter legal or business name",
   "settings_billing_address": "Billing Address",
   "settings_billing_address_placeholder": "Enter billing address",
+  "settings_country": "Country",
+  "settings_city": "City",
+  "settings_city_placeholder": "Enter city",
+  "settings_postal_code": "Postal Code",
+  "settings_postal_code_placeholder": "Enter postal code",
   "settings_tax_number": "Tax Number",
   "settings_tax_number_placeholder": "Enter tax identification number",
 

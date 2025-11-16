@@ -1865,6 +1865,11 @@
   "settings_legal_name_placeholder": "Insira o nome legal ou comercial",
   "settings_billing_address": "Endereço de Faturação",
   "settings_billing_address_placeholder": "Insira o endereço de faturação",
+  "settings_country": "País",
+  "settings_city": "Cidade",
+  "settings_city_placeholder": "Insira a cidade",
+  "settings_postal_code": "Código Postal",
+  "settings_postal_code_placeholder": "Insira o código postal",
   "settings_tax_number": "Número de Identificação Fiscal",
   "settings_tax_number_placeholder": "Insira o número de identificação fiscal",
 
