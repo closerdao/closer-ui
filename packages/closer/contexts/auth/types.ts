@@ -1,4 +1,7 @@
+import login from '@/pages/login';
+
 import { Charge } from '../../types/booking';
+
 export interface UserLink {
   name: string;
   url: string;
@@ -98,7 +101,18 @@ export type User = {
   socialShare?: boolean;
   referrals?: number;
   actions?: any;
-  affiliate?: Date
+  affiliate?: Date;
+  kycData: {
+    IP: string;
+    dateRecorded: Date;
+    legalName: string;
+    TIN: string;
+    address1: string;
+    postalCode: string;
+    city: string;
+    state: string;
+    country: string;
+  };
 };
 
 export type AuthenticationContext = {

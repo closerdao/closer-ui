@@ -1,5 +1,4 @@
 import { GoogleGenAI } from '@google/genai';
-import { taxExemptionReasons } from 'closer/constants/shared.constants';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 const genai = new GoogleGenAI({
@@ -27,15 +26,11 @@ async function uploadToCDN(
 
     const headerBuffer = Buffer.from(header, 'utf8');
     const footerBuffer = Buffer.from(footer, 'utf8');
-    const multipartData = Buffer.alloc(
-      headerBuffer.length + processedBuffer.length + footerBuffer.length,
-    );
-    (headerBuffer as any).copy(multipartData, 0);
-    (processedBuffer as any).copy(multipartData, headerBuffer.length);
-    (footerBuffer as any).copy(
-      multipartData,
-      headerBuffer.length + processedBuffer.length,
-    );
+    const multipartData = Buffer.concat([
+      headerBuffer as unknown as Uint8Array,
+      processedBuffer as unknown as Uint8Array,
+      footerBuffer as unknown as Uint8Array,
+    ]);
 
     // Prepare headers with authentication
     const headers: Record<string, string> = {
@@ -52,7 +47,8 @@ async function uploadToCDN(
       `${process.env.NEXT_PUBLIC_API_URL}/upload/photo`,
       {
         method: 'POST',
-        body: multipartData,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        body: multipartData as any,
         headers,
       },
     );
@@ -134,7 +130,10 @@ export default async function handler(
     let start = 0;
 
     while (true) {
-      const boundaryIndex = buffer.indexOf(boundaryBuffer as any, start);
+      const boundaryIndex = buffer.indexOf(
+        boundaryBuffer as unknown as Uint8Array,
+        start,
+      );
       if (boundaryIndex === -1) break;
 
       if (start > 0) {
@@ -165,12 +164,16 @@ export default async function handler(
         }
 
         // Find the binary data start
-        const headerEndIndex = part.indexOf(Buffer.from('\r\n\r\n') as any);
+        const headerEndMarker = Buffer.from('\r\n\r\n');
+        const headerEndIndex = part.indexOf(
+          headerEndMarker as unknown as Uint8Array,
+        );
         if (headerEndIndex !== -1) {
           fileBuffer = part.slice(headerEndIndex + 4);
           // Remove any trailing boundary data
+          const trailingBoundaryMarker = Buffer.from('\r\n');
           const trailingBoundary = fileBuffer.lastIndexOf(
-            Buffer.from('\r\n') as any,
+            trailingBoundaryMarker as unknown as Uint8Array,
           );
           if (trailingBoundary !== -1) {
             fileBuffer = fileBuffer.slice(0, trailingBoundary);
@@ -273,11 +276,9 @@ export default async function handler(
       
       MANDATORY TAX EXEMPTION REASON ID EXTRACTION:
       - CRITICAL: If ANY item in the receipt has vat_percentage=0, you MUST add the "tax_exemption_reason_id" field to the output
-      - If the vendor is outside of Portugal, set the tax_exemption_reason_id "12"
+      - If the vendor is outside of Portugal, but in EU set the tax_exemption_reason_id "24"
+      - If the vendor is outside of Portugal, but outside EU set the tax_exemption_reason_id "25"
       - Search the receipt text for any tax exemption reason codes or descriptions that match the provided list
-      - Match the found exemption reason with the corresponding ID from this list: ${JSON.stringify(
-        taxExemptionReasons,
-      )}
       - If no specific exemption reason is found in the document, use ID "28" (Não sujeito ou não tributado) as default
       - The tax_exemption_reason_id field should be a string containing the ID number
       
@@ -449,35 +450,48 @@ export default async function handler(
       structuredData: parsedData,
       documentUrl: uploadedDocumentUrl,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Parse receipt error:', error);
-    console.error('Error details:', {
-      message: error.message,
-      code: error.code,
-      status: error.status,
-      stack: error.stack,
-    });
+    const errorDetails: Record<string, unknown> = {};
 
-    if (error.message?.includes('quota')) {
+    if (error instanceof Error) {
+      errorDetails.message = error.message;
+      errorDetails.stack = error.stack;
+    }
+
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      ('code' in error || 'status' in error)
+    ) {
+      if ('code' in error) errorDetails.code = error.code;
+      if ('status' in error) errorDetails.status = error.status;
+    }
+
+    console.error('Error details:', errorDetails);
+
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    if (errorMessage.includes('quota')) {
       return res.status(429).json({ error: 'Gemini API quota exceeded' });
     }
 
     if (
-      error.message?.includes('API key') ||
-      error.message?.includes('authentication')
+      errorMessage.includes('API key') ||
+      errorMessage.includes('authentication')
     ) {
       return res.status(401).json({ error: 'Invalid Gemini API key' });
     }
 
-    if (error.message?.includes('file')) {
+    if (errorMessage.includes('file')) {
       return res
         .status(400)
-        .json({ error: 'File upload failed: ' + error.message });
+        .json({ error: 'File upload failed: ' + errorMessage });
     }
 
     res.status(500).json({
       error: 'Failed to process image',
-      details: error.message || 'Unknown error',
+      details: errorMessage || 'Unknown error',
     });
   }
 }

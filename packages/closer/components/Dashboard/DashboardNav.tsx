@@ -111,7 +111,7 @@ const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
                 rbacPage: 'TokenSales',
               },
             ]
-        : []),
+          : []),
         {
           label: t('navigation_expense_tracking'),
           url: '/dashboard/expense-tracking',
@@ -156,7 +156,7 @@ const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
                 rbacPage: 'TokenSales',
               },
             ]
-        : []),
+          : []),
         {
           label: t('navigation_expense_tracking'),
           url: '/dashboard/expense-tracking',

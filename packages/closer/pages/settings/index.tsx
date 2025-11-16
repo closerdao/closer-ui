@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import UploadPhoto from '../../components/UploadPhoto';
 import { Button } from '../../components/ui';
@@ -10,12 +10,12 @@ import Heading from '../../components/ui/Heading';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select/Dropdown';
 import MultiSelect from '../../components/ui/Select/MultiSelect';
-import { SHARED_ACCOMMODATION_PREFERENCES } from '../../constants/shared.constants';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import process from 'process';
 
+import { SHARED_ACCOMMODATION_PREFERENCES } from '../../constants/shared.constants';
 import { useAuth } from '../../contexts/auth';
 import { type User } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
@@ -207,8 +207,6 @@ const DeleteAccountSection = ({ t }: DeleteAccountSectionProps) => {
   );
 };
 
-
-
 const SettingsPage = ({
   volunteerConfig,
 }: {
@@ -239,6 +237,11 @@ const SettingsPage = ({
   const [showSaveSuccess, setShowSaveSuccess] = useState(false); // For non-auto-saving inputs
   const [activeTab, setActiveTab] = useState<TabId>('profile');
   const { platform } = usePlatform() as any;
+  const [countries, setCountries] = useState<
+    Array<{ label: string; value: string }>
+  >([]);
+
+  const kycDataDebounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
 
   // Define tabs
   const tabs: Tab[] = [
@@ -259,8 +262,42 @@ const SettingsPage = ({
   }, [activeTab]);
 
   useEffect(() => {
-    setUser(initialUser);
+    if (initialUser) {
+      console.log('[SettingsPage] initialUser kycData:', initialUser.kycData);
+      setUser(initialUser);
+
+      if (!initialUser.kycData && initialUser._id) {
+        api
+          .get('/mine/user')
+          .then((response) => {
+            const fullUser = response?.data?.results as User | undefined;
+            console.log('[SettingsPage] fetched fullUser:', fullUser);
+            console.log(
+              '[SettingsPage] fetched fullUser.kycData:',
+              fullUser?.kycData,
+            );
+            if (fullUser) {
+              setUser(fullUser);
+            }
+          })
+          .catch((err) => {
+            console.error(
+              '[SettingsPage] Error fetching user with kycData:',
+              err,
+            );
+          });
+      }
+    }
   }, [initialUser]);
+
+  // Cleanup debounce timers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(kycDataDebounceTimers.current).forEach((timer) => {
+        clearTimeout(timer);
+      });
+    };
+  }, []);
 
   // Handle tab change from URL hash
   useEffect(() => {
@@ -270,14 +307,43 @@ const SettingsPage = ({
     }
   }, [router.asPath]);
 
+  useEffect(() => {
+    const getCountries = async () => {
+      const countryList: Array<{ label: string; value: string }> = [];
+      try {
+        const res = await api.get('/meta/countries');
+        res.data.results.forEach((country: { name: string; code: string }) => {
+          countryList.push({ label: country.name, value: country.code });
+        });
+        setCountries(countryList);
+      } catch (err) {
+        console.error('[SettingsPage] Error fetching countries:', err);
+      }
+    };
+    getCountries();
+  }, []);
+
   const saveUserData =
     (
       attribute:
         | keyof User['preferences']
         | keyof User
-        | keyof User['settings'],
+        | keyof User['settings']
+        | keyof User['kycData'],
     ): UpdateUserFunction =>
-    async (value: string | string[]) => {
+    async (value: string | string[] | React.ChangeEvent<HTMLInputElement>) => {
+      let actualValue: string | string[];
+
+      if (typeof value === 'object' && 'target' in value) {
+        actualValue = (value as React.ChangeEvent<HTMLInputElement>).target
+          .value;
+      } else {
+        actualValue = value as string | string[];
+      }
+
+      console.log('[saveUserData] received value:', value);
+      console.log('[saveUserData] actualValue:', actualValue);
+
       const prefKeys = [
         'diet',
         'sharedAccomodation',
@@ -287,22 +353,106 @@ const SettingsPage = ({
         'needs',
         'moreInfo',
       ];
+      const kycDataKeys = [
+        'legalName',
+        'address1',
+        'TIN',
+        'country',
+        'city',
+        'postalCode',
+      ];
       let payload: Partial<User> = {
-        [attribute]: value,
+        [attribute]: actualValue,
       };
       if (prefKeys.includes(attribute)) {
         payload = {
           preferences: {
             ...user?.preferences,
-            [attribute]: value,
+            [attribute]: actualValue,
           },
         };
+      } else if (kycDataKeys.includes(attribute)) {
+        const stringValue =
+          typeof actualValue === 'string'
+            ? actualValue
+            : Array.isArray(actualValue)
+            ? actualValue.join(',')
+            : '';
+
+        if (kycDataDebounceTimers.current[attribute]) {
+          clearTimeout(kycDataDebounceTimers.current[attribute]);
+        }
+
+        kycDataDebounceTimers.current[attribute] = setTimeout(async () => {
+          try {
+            const currentUserResponse = await api.get('/mine/user');
+            const currentUser = currentUserResponse?.data?.results as
+              | User
+              | undefined;
+            const existingKycData =
+              currentUser?.kycData || user?.kycData || initialUser?.kycData;
+
+            const debouncedPayload = {
+              kycData: {
+                IP: existingKycData?.IP || '',
+                dateRecorded: existingKycData?.dateRecorded || new Date(),
+                legalName: existingKycData?.legalName || '',
+                TIN: existingKycData?.TIN || '',
+                address1: existingKycData?.address1 || '',
+                postalCode: existingKycData?.postalCode || '',
+                city: existingKycData?.city || '',
+                state: existingKycData?.state || '',
+                country: existingKycData?.country || '',
+                [attribute]: stringValue,
+              } as User['kycData'],
+            };
+
+            setHasSaved(false);
+            console.log('[saveUserData] debounced payload:', debouncedPayload);
+            const result = await platform.user.patch(
+              user?._id,
+              debouncedPayload,
+            );
+            await refetchUser();
+            const updatedUserResponse = await api.get('/mine/user');
+            const updatedUser = updatedUserResponse?.data?.results as
+              | User
+              | undefined;
+            if (updatedUser) {
+              console.log(
+                '[saveUserData] updatedUser kycData:',
+                updatedUser.kycData,
+              );
+              setUser(updatedUser);
+            }
+            setError(null);
+            setHasSaved(true);
+          } catch (err) {
+            const errorMessage = parseMessageFromError(err);
+            setError(errorMessage);
+            console.error('[saveUserData] error:', errorMessage, err);
+          }
+        }, 500);
+
+        return;
       }
-     
+
       try {
         setHasSaved(false);
+        console.log('[saveUserData] payload:', payload);
         const result = await platform.user.patch(user?._id, payload);
         await refetchUser();
+        const updatedUserResponse = await api.get('/mine/user');
+        const updatedUser = updatedUserResponse?.data?.results as
+          | User
+          | undefined;
+        if (updatedUser) {
+          console.log(
+            '[saveUserData] updatedUser kycData:',
+            updatedUser.kycData,
+          );
+          setUser(updatedUser);
+        }
         setError(null);
         setHasSaved(true);
         // Don't show global success message for auto-saving inputs
@@ -582,6 +732,75 @@ const SettingsPage = ({
                       )}
                     </div>
                   </div>
+                </div>
+
+                <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                  <h3 className="text-lg font-medium mb-4">
+                    💳 {t('settings_billing_information')}
+                  </h3>
+
+                  <Input
+                    label={t('settings_legal_name')}
+                    placeholder={t('settings_legal_name_placeholder')}
+                    value={user?.kycData?.legalName || ''}
+                    onChange={saveUserData('legalName') as any}
+                    isInstantSave={true}
+                    hasSaved={hasSaved}
+                    setHasSaved={setHasSaved}
+                    className="mb-4"
+                  />
+
+                  <Input
+                    label={t('settings_billing_address')}
+                    placeholder={t('settings_billing_address_placeholder')}
+                    value={user?.kycData?.address1 || ''}
+                    onChange={saveUserData('address1') as any}
+                    isInstantSave={true}
+                    hasSaved={hasSaved}
+                    setHasSaved={setHasSaved}
+                    className="mb-4"
+                  />
+
+                  <Select
+                    label={t('settings_country')}
+                    value={user?.kycData?.country || ''}
+                    options={countries}
+                    className="mb-4"
+                    onChange={(value: string) => saveUserData('country')(value)}
+                    isRequired
+                  />
+
+                  <Input
+                    label={t('settings_city')}
+                    placeholder={t('settings_city_placeholder')}
+                    value={user?.kycData?.city || ''}
+                    onChange={saveUserData('city') as any}
+                    isInstantSave={true}
+                    hasSaved={hasSaved}
+                    setHasSaved={setHasSaved}
+                    className="mb-4"
+                  />
+
+                  <Input
+                    label={t('settings_postal_code')}
+                    placeholder={t('settings_postal_code_placeholder')}
+                    value={user?.kycData?.postalCode || ''}
+                    onChange={saveUserData('postalCode') as any}
+                    isInstantSave={true}
+                    hasSaved={hasSaved}
+                    setHasSaved={setHasSaved}
+                    className="mb-4"
+                  />
+
+                  <Input
+                    label={t('settings_tax_number')}
+                    placeholder={t('settings_tax_number_placeholder')}
+                    value={user?.kycData?.TIN || ''}
+                    onChange={saveUserData('TIN') as any}
+                    isInstantSave={true}
+                    hasSaved={hasSaved}
+                    setHasSaved={setHasSaved}
+                  />
                 </div>
               </div>
             )}
