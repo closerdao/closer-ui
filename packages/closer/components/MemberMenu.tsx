@@ -236,13 +236,6 @@ const MemberMenu = () => {
             roles: ['admin'],
             rbacPage: 'ExpenseTracking',
           },
-          {
-            label: t('navigation_income_tracking'),
-            url: '/dashboard/income-tracking',
-            enabled: true,
-            roles: ['admin'],
-            rbacPage: 'IncomeTracking',
-          },
         ],
       },
     ];

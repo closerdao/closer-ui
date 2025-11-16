@@ -117,11 +117,6 @@ const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
           url: '/dashboard/expense-tracking',
           rbacPage: 'ExpenseTracking',
         },
-        {
-          label: t('navigation_income_tracking'),
-          url: '/dashboard/income-tracking',
-          rbacPage: 'IncomeTracking',
-        },
       ]
     : [
         {
@@ -166,11 +161,6 @@ const DashboardNav = ({ isBookingEnabled }: { isBookingEnabled?: boolean }) => {
           label: t('navigation_expense_tracking'),
           url: '/dashboard/expense-tracking',
           rbacPage: 'ExpenseTracking',
-        },
-        {
-          label: t('navigation_income_tracking'),
-          url: '/dashboard/income-tracking',
-          rbacPage: 'IncomeTracking',
         },
       ];
 
