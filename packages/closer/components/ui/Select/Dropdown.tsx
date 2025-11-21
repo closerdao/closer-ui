@@ -42,6 +42,11 @@ const Dropdown: FC<DropdownProps> = React.memo(
           placeholder={placeholder}
           data-testid={dataTestId}
           aria-required={isRequired}
+          listProps={{
+            style: {
+              maxHeight: 400,
+            },
+          }}
           optionComponent={(props) => (
             <div
               role="option"

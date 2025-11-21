@@ -60,6 +60,7 @@ const statusOptions = [
   { label: 'Credits Paid', value: 'credits-paid' },
   { label: 'Tokens Staked', value: 'tokens-staked' },
   { label: 'Cancelled', value: 'cancelled' },
+  { label: 'Confirmed', value: 'confirmed' },
 ];
 
 interface Props {
