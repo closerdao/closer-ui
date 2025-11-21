@@ -869,6 +869,7 @@
   "wallet_booking_available_balance": "Saldo Disponível",
   "wallet_booking_after_payment": "Após Pagamento",
   "wallet_incorrect_network": "Rede Incorreta",
+  "wallet_connection_failed_no_account": "Falha ao conectar a carteira. Certifique-se de que o MetaMask está desbloqueado e tente novamente.",
   "wallet_switch_network": "Mudar de Rede",
   "countdown_days": "dias",
   "countdown_hours": "horas",

@@ -928,6 +928,7 @@
   "wallet_booking_available_balance": "Available Balance",
   "wallet_booking_after_payment": "After Payment",
   "wallet_incorrect_network": "Wrong Network",
+  "wallet_connection_failed_no_account": "Failed to connect wallet. Please make sure MetaMask is unlocked and try again.",
   "wallet_switch_network": "Switch Network",
   "countdown_days": "days",
   "countdown_hours": "hours",

@@ -264,7 +264,7 @@ export const WalletProvider = ({ children }) => {
         console.log(
           `[connectWallet] User ${user._id} authenticated, no wallet linked. Wallet ${connectedAccount} connected. Attempting to link.`,
         );
-        await linkWalletWithUser(connectedAccount, user); // Pass user explicitly
+        await linkWalletWithUser(connectedAccount, user);
       } else {
         // Log reasons why linking is not happening
         if (!user || !user._id) {
@@ -272,7 +272,6 @@ export const WalletProvider = ({ children }) => {
             '[connectWallet] No authenticated user (or user missing _id). Wallet may be connected, but not linking to a user profile at this stage.',
           );
         } else if (user && user.walletAddress) {
-          // Check user exists before accessing walletAddress
           console.log(
             `[connectWallet] User ${user._id} already has wallet ${user.walletAddress} linked.`,
           );
@@ -283,15 +282,13 @@ export const WalletProvider = ({ children }) => {
         }
       }
 
-    if (user && !user.walletAddress) {
-      const activated = await injected.activate();
-      await linkWalletWithUser(activated?.account);
+      console.log('[connectWallet] finished successfully, returning account:', connectedAccount);
+      return connectedAccount;
+    } catch (e) {
+      console.log('[connectWallet] Exception during connectWallet process:', e);
+      console.log('[connectWallet] finished with error, returning null');
+      return null;
     }
-  } catch (e) {
-    console.log('[connectWallet] Exception during connectWallet process:', e);
-    console.log('[connectWallet] finished with error, returning null');
-    return null;
-  }
   };
 
   const linkWalletWithUser = async (accountId, currentUser) => {
