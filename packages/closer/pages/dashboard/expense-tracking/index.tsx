@@ -32,15 +32,24 @@ const EXPENSES_PER_PAGE = 50;
 
 const ExpenseTrackingDashboardPage = ({
   generalConfig,
-  messages,
+  entitiesConfig,
 }: {
-  generalConfig: GeneralConfig | null;
-  messages: any;
+    generalConfig: GeneralConfig | null;
+  entitiesConfig: any;
 }) => {
   const t = useTranslations();
   const { user } = useAuth();
   const { platform }: any = usePlatform();
   const { TIME_ZONE } = useConfig();
+
+
+  
+  const allEntities = entitiesConfig?.elements?.map((entity: any) => entity.entityName) || [];
+  const uniqueEntities = [...new Set(allEntities)];
+
+  const defaultEntity = entitiesConfig?.elements?.filter((entity: any) => entity.transactionType === 'expense')[0]?.entityName || '';
+  console.log('=====uniqueEntities=', uniqueEntities);
+  console.log('=====defaultEntity=', defaultEntity);
 
   const expenseCategories = generalConfig?.expenseCategories?.split(',');
 
@@ -162,6 +171,8 @@ const ExpenseTrackingDashboardPage = ({
             onClose={() => setIsDialogOpen(false)}
             expenseCategories={expenseCategories}
             onSuccess={() => loadData(true)}
+            uniqueEntities={uniqueEntities as string[]}
+            defaultEntity={defaultEntity}
           />
         </div>
       </AdminLayout>
@@ -173,24 +184,28 @@ ExpenseTrackingDashboardPage.getInitialProps = async (
   context: NextPageContext,
 ) => {
   try {
-    const [generalConfigRes, messages] = await Promise.all([
+    const [generalConfigRes, entitiesConfigRes,messages] = await Promise.all([
       api.get('/config/general').catch(() => {
+        return null;
+      }),
+      api.get('/config/accounting-entities').catch(() => {
         return null;
       }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const generalConfig = generalConfigRes?.data?.results?.value;
-
-    console.log('=====generalConfig=', generalConfig);
+    const entitiesConfig = entitiesConfigRes?.data?.results?.value;
 
     return {
       generalConfig,
+      entitiesConfig,
       messages,
     };
   } catch (error) {
     return {
       error: parseMessageFromError(error),
+      entitiesConfig: null,
       generalConfig: null,
       messages: null,
     };

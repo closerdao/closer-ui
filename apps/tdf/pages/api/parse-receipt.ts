@@ -1,6 +1,36 @@
 import { GoogleGenAI } from '@google/genai';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
+const USE_MOCK = true;
+
+const mockOutput = {
+  supplier_business_name: 'HENAN JUNMU MEDICAL EQUIPMENT CO., LTD.',
+  document_date: '2025-08-04',
+  tax_exemption_reason_id: '25',
+  currency_iso_code: 'USD',
+  items: [
+    {
+      description: '150L Vertical Automatic pressure steam sterilizer',
+      item_total: 1500.0,
+      vat_percentage: 0.0,
+    },
+    {
+      description: 'DDP freight',
+      item_total: 500.0,
+      vat_percentage: 0.0,
+    },
+  ],
+  vat_summary: [
+    {
+      vat_percentage: 0.0,
+      description: 'Bens e serviços isentos de IVA',
+      total_with_vat: 2000.0,
+      tax_code: 'ISE',
+    },
+  ],
+  receipt_total: 2000.0,
+};
+
 const genai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY || '',
 });
@@ -101,6 +131,15 @@ export default async function handler(
 ) {
   if (req.method !== 'POST') {
     return res.status(405).end('Method Not Allowed');
+  }
+
+  if (USE_MOCK) {
+    console.log('Using mock output - skipping CDN upload and LLM calls');
+    return res.status(200).json({
+      text: JSON.stringify(mockOutput, null, 2),
+      structuredData: mockOutput,
+      documentUrl: null,
+    });
   }
 
   const startTime = Date.now();
@@ -380,10 +419,7 @@ export default async function handler(
     );
     console.log(`Text extraction cost: $${textCost.toFixed(6)}`);
     console.log('Extracted text length:', extractedText.length);
-    console.log(
-      'Extracted text preview:',
-      extractedText.substring(0, 200) + '...',
-    );
+    console.log('Extracted text preview:', extractedText);
 
     // Try to parse the JSON response from text extraction
     let parsedData;

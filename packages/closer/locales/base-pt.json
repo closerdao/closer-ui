@@ -1910,6 +1910,7 @@
   "expense_tracking_dashboard_title": "Controle de Despesas",
   "expense_tracking_add_new_expense": "Adicionar Nova Despesa",
   "expense_tracking_historic_expenses": "Despesas históricas",
+  "expense_tracking_choose_accounting_entity": "Escolher entidade contabilística:",
   "expense_tracking_no_expenses_found": "Nenhuma despesa encontrada",
   "expense_tracking_no_expenses_filter_criteria": "Nenhuma despesa corresponde aos critérios de filtro atuais.",
   "expense_tracking_view_details": "Ver Detalhes",

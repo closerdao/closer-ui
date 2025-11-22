@@ -8,6 +8,7 @@ import Heading from '../ui/Heading';
 // Extended Charge type for expense tracking
 interface ExpenseCharge {
   _id: string;
+  entity: string;
   date: string;
   created: string;
   amount: {
@@ -192,6 +193,11 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                 {selectedCharge?.meta?.toconlineData && (
                   <div>
                     <div className="space-y-2 text-sm">
+                      <div>
+                        <strong>Entity:</strong>{' '}
+                        {selectedCharge.entity ||
+                          'N/A'}
+                      </div>
                       <div>
                         <strong>{t('expense_tracking_document_date')}:</strong>{' '}
                         {selectedCharge.meta.toconlineData.document_date ||
