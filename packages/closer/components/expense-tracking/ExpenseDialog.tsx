@@ -1,11 +1,19 @@
 import React, { useState } from 'react';
 
 import Cookies from 'js-cookie';
+import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 
 import api from '../../utils/api';
 import { Button } from '../ui';
 import Heading from '../ui/Heading';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 import { ExtractedDataForm, UploadForm } from './';
 
 const expenseFormSchema = z.object({
@@ -41,6 +49,8 @@ interface ReceiptData {
 }
 
 interface ExpenseDialogProps {
+  uniqueEntities: string[];
+  defaultEntity: string;
   isOpen: boolean;
   onClose: () => void;
   expenseCategories?: string[];
@@ -48,11 +58,14 @@ interface ExpenseDialogProps {
 }
 
 const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
+  uniqueEntities,
+  defaultEntity,
   isOpen,
   onClose,
   expenseCategories,
   onSuccess,
 }) => {
+  const t = useTranslations();
   const [file, setFile] = useState<File | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -70,6 +83,7 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
   const [currency, setCurrency] = useState<string>('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+  const [selectedEntity, setSelectedEntity] = useState<string>(defaultEntity);
 
   React.useEffect(() => {
     if (parsedData) {
@@ -517,6 +531,8 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
         category,
         comment,
         uploadedDocumentUrl,
+        shouldUploadTOToconline: selectedEntity === defaultEntity,
+        entityName: selectedEntity,
       };
 
       console.log('updatedExpenseData=', updatedExpenseData);
@@ -578,6 +594,22 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
             </Button>
           </div>
 
+          <div className="flex items-center gap-2 mb-4">
+            {t('expense_tracking_choose_accounting_entity')}
+            <Select value={selectedEntity} onValueChange={setSelectedEntity}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Select an entity" />
+              </SelectTrigger>
+              <SelectContent>
+                {uniqueEntities.map((entity) => (
+                  <SelectItem key={entity} value={entity}>
+                    {entity}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="space-y-6">
             {!parsedData ? (
               <UploadForm
@@ -613,6 +645,7 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
                 onAddVatSummaryRow={handleAddVatSummaryRow}
                 onDeleteVatSummaryRow={handleDeleteVatSummaryRow}
                 onUploadToToconline={handleUploadToToconline}
+                shouldShowWarning={selectedEntity === defaultEntity}
               />
             )}
           </div>
