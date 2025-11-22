@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 const mockOutput = {
   supplier_business_name: 'HENAN JUNMU MEDICAL EQUIPMENT CO., LTD.',
