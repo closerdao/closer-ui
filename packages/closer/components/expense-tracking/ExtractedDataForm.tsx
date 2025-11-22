@@ -65,6 +65,7 @@ interface ExtractedDataFormProps {
   onAddVatSummaryRow: () => void;
   onDeleteVatSummaryRow: (index: number) => void;
   onUploadToToconline: () => void;
+  shouldShowWarning: boolean;
 }
 
 const ExtractedDataForm: React.FC<ExtractedDataFormProps> = ({
@@ -92,11 +93,13 @@ const ExtractedDataForm: React.FC<ExtractedDataFormProps> = ({
   onAddVatSummaryRow,
   onDeleteVatSummaryRow,
   onUploadToToconline,
+  shouldShowWarning,
 }) => {
   if (!editableData) return null;
 
   return (
     <Card className="bg-background p-0 sm:p-4 shadow-none sm:shadow-md gap-2">
+
       <div className="flex justify-between items-center mb-4">
         <Heading level={3}>Extracted document data</Heading>
       </div>
@@ -360,19 +363,21 @@ const ExtractedDataForm: React.FC<ExtractedDataFormProps> = ({
         </div>
       )}
 
-      <div className="text-sm text-red-500 bg-red-100 p-2 rounded-md my-4">
-        WARNING: a document will be created in Toconline with the data above. This action is not reversible. Please carefully review the
-        extracted receipt data before proceeding.
-      </div>
+      {shouldShowWarning && (
+        <div className="text-sm text-red-500 bg-red-100 p-2 rounded-md my-4">
+          WARNING: a document will be created in Toconline with the data above. This action is not reversible. Please carefully review the
+          extracted receipt data before proceeding.
+        </div>
+      )}
 
-      <Button onClick={onUploadToToconline} isEnabled={!loading}>
+      <Button onClick={onUploadToToconline} isEnabled={!loading} className='mt-2'>
         {loading ? (
           <div className="flex items-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin" />
             <span>Processing...</span>
           </div>
         ) : (
-          'Upload to Toconline'
+          shouldShowWarning ? 'Upload to Toconline' : 'Log expense'
         )}
       </Button>
 

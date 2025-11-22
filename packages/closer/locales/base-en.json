@@ -2086,6 +2086,7 @@
   "expense_tracking_dashboard_title": "Expense Tracking",
   "expense_tracking_add_new_expense": "Add New Expense",
   "expense_tracking_historic_expenses": "Historic expenses",
+  "expense_tracking_choose_accounting_entity": "Choose accounting entity:",
   "expense_tracking_no_expenses_found": "No expenses found",
   "expense_tracking_no_expenses_filter_criteria": "No expense charges match the current filter criteria.",
   "expense_tracking_view_details": "View Details",
