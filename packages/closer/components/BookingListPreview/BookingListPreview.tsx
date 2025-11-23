@@ -3,8 +3,6 @@ import { useRouter } from 'next/router';
 
 import { useState } from 'react';
 
-import { BookingConfig } from '../../types/api';
-
 import dayjs from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { MessageSquareMore } from 'lucide-react';
@@ -14,6 +12,7 @@ import { STATUS_COLOR } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
+import { BookingConfig } from '../../types/api';
 import {
   dateToPropertyTimeZone,
   getBookingType,
@@ -29,6 +28,7 @@ interface Props {
   booking: any;
   listingName: string;
   userInfo: any;
+  guestInfo: any;
   eventName: string;
   volunteerName: string;
   link: string | null;
@@ -43,6 +43,7 @@ const BookingListPreview = ({
   booking: bookingMapItem,
   listingName,
   userInfo,
+  guestInfo,
   eventName,
   volunteerName,
   link,
@@ -218,6 +219,11 @@ const BookingListPreview = ({
         userInfo={userInfo}
         createdBy={paidBy || createdBy}
       />
+
+      {guestInfo &&
+        guestInfo?.map((guest: any) => (
+          <UserInfoButton key={guest.id} size="sm" userInfo={guest} createdBy={guest.id} />
+        ))}
 
       {link ? (
         <Link

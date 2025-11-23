@@ -5,10 +5,10 @@ import { useTranslations } from 'next-intl';
 
 import { BOOKINGS_PER_PAGE, MAX_BOOKINGS_TO_FETCH } from '../constants';
 import { usePlatform } from '../contexts/platform';
+import { BookingConfig } from '../types/api';
 import BookingListPreview from './BookingListPreview/BookingListPreview';
 import Pagination from './Pagination';
 import { Button, Heading, Spinner } from './ui';
-import { BookingConfig } from '../types/api';
 
 interface Props {
   filter: any;
@@ -20,7 +20,13 @@ interface Props {
 
 const MAX_USERS_TO_FETCH = 2000;
 
-const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false }: Props) => {
+const Bookings = ({
+  filter,
+  page,
+  setPage,
+  bookingConfig,
+  hideExportCsv = false,
+}: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
 
@@ -191,6 +197,16 @@ const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false 
                         (user: any) => user._id === booking.get('createdBy'),
                       );
 
+                  const guests =
+                    allUsers &&
+                    allUsers
+                      .toJS()
+                      .filter((user: any) =>
+                        booking.get('managedBy').includes(user._id),
+                    );
+                  
+                  console.log('guests=', guests);
+
                   // Check if there's a paidBy field and fetch payer information
                   const paidBy = booking.get('paidBy');
                   const payer =
@@ -237,8 +253,15 @@ const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false 
                           email: userToShow.email,
                         }
                       }
+                      guestInfo={guests?.map((guest: any) => ({
+                        name: guest.screenname,
+                        photo: guest.photo,
+                        id: guest._id,
+                      }))}
                       eventName={currentEvent && currentEvent.get('name')}
-                      eventChatLink={currentEvent && currentEvent.get('chatLink')}
+                      eventChatLink={
+                        currentEvent && currentEvent.get('chatLink')
+                      }
                       volunteerName={
                         currentVolunteer && currentVolunteer.get('name')
                       }
