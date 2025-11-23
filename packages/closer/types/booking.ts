@@ -29,6 +29,7 @@ export interface BaseBookingParams {
   bookingType?: 'volunteer' | 'residence' | undefined;
   isFriendsBooking?: boolean | string | undefined;
   friendEmails?: string | undefined;
+  parentBookingId?: string | undefined;
 }
 
 export type Listing = {
