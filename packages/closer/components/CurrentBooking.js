@@ -89,6 +89,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
             const eventId = b.get('eventId');
             const volunteerId = b.get('volunteerId');
             const duration = b.get('duration') ?? 0;
+            const managedBy = b.get('managedBy');
 
             const listingId = b.get('listing');
             const listing = listings?.find(
@@ -156,6 +157,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
               totalAmount,
               totalCurrency,
               spaceHostNotes,
+              managedBy,
             };
           })
           .toJS()
@@ -184,6 +186,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
           const paidBy = booking.paidBy;
           if (createdBy) userIds.add(createdBy);
           if (paidBy) userIds.add(paidBy);
+          if (booking.managedBy) booking.managedBy.forEach((managedById) => userIds.add(managedById));
         });
       }
 
@@ -321,6 +324,32 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                   (user) => user._id.toString() === b.userId,
                 );
 
+                console.log('=== b.managedBy ===', b.managedBy);
+
+                console.log('users=',users);
+
+
+                const guests = b.managedBy.map((guestId) => {
+                  return users?.find(
+                    (user) => user._id.toString() === guestId,
+                  );
+                });
+
+                console.log('=== guests ===', guests);
+
+                const guestInfos = guests.filter((guest) => guest !== null).map((guest) => {
+                  return {
+                    name: guest?.screenname || t('current_booking_unknown_user'),
+                    email: guest?.email || '',
+                    photo: guest?.photo || '',
+                    id: guest?._id || '',
+                  };
+                });
+
+                console.log('=== guestInfos ===', guestInfos);
+
+
+
 
 
                 return (
@@ -345,6 +374,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                             className="w-6 h-6 rounded-full flex-shrink-0"
                           />
                         )}
+                       
                         <div className="min-w-0">
                           <div className="font-medium truncate">
                             <LinkButton
@@ -363,6 +393,15 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                           )}
                         </div>
                       </div>
+                        <div className='flex flex-col gap-1'>
+                          {guestInfos.map((guest) => (
+                            <LinkButton target="_blank"
+                            className="w-fit h-fit py-0 px-1 text-xs min-h-0"
+                            href={`/members/${guest?.id || ''}`} key={guest.id}>
+                              {guest.name}
+                            </LinkButton>
+                          ))}
+                        </div>
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       <div>

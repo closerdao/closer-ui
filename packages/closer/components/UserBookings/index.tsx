@@ -34,6 +34,7 @@ const UserBookingsComponent = ({
       where: {
         $or: [
           { createdBy: user._id },
+          { managedBy: { $in: [user._id] } },
           {
             $and: [
               { isFriendsBooking: { $eq: true } },

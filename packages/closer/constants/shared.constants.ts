@@ -244,6 +244,7 @@ export const BOOKING_STEPS = [
   'dates',
   'accomodation',
   'food',
+  'guests',
   'rules',
   'questions',
   'summary',

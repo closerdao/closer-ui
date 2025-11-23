@@ -102,10 +102,11 @@ const FoodSelectionPage = ({
         isDayTicket: booking?.isDayTicket,
       });
 
-      if (event?.fields) {
-        router.push(`/bookings/${booking?._id}/questions`);
+      if (booking?.adults && booking?.adults > 1) {
+        router.push(`/bookings/${booking?._id}/guests`);
         return;
       }
+
     } catch (err: any) {
       setApiError(err);
     } finally {

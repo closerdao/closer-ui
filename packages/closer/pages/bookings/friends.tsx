@@ -13,7 +13,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { BookingConfig } from '../../types';
-import api from '../../utils/api';
+import api, { formatSearch } from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
@@ -183,16 +183,29 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
 
     try {
       const validEmails = emails.filter((email) => email.trim() !== '');
-      const emailParam = validEmails.join(',');
 
-      // Redirect to booking flow with isFriendsBooking=true and friend emails
+      let friendUserIds: string[] = [];
+      if (validEmails.length > 0) {
+        const usersResponse = await api.get(
+          `/user?where=${formatSearch({ email: { $in: validEmails } })}`,
+        );
+        friendUserIds =
+          usersResponse.data?.results?.map(
+            (user: { _id: string }) => user._id,
+          ) || [];
+      }
+
+      const emailParam = validEmails.join(',');
+      const userIdsParam = friendUserIds.join(',');
+
+      // Redirect to booking flow with isFriendsBooking=true, friend emails, and friend user IDs
       router.push(
         `/bookings/create/dates?isFriendsBooking=true&friendEmails=${encodeURIComponent(
           emailParam,
-        )}`,
+        )}&friendUserIds=${encodeURIComponent(userIdsParam)}`,
       );
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Failed to process friend emails');
     } finally {
       setIsLoading(false);
     }
