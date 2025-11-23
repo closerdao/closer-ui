@@ -16,6 +16,8 @@ import HeadingRow from '../../../components/ui/HeadingRow';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import dayjs from 'dayjs';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -35,6 +37,9 @@ import { parseMessageFromError } from '../../../utils/common';
 import { getMaxBookingHorizon } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
+
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 interface Props {
   error?: string;
@@ -314,16 +319,18 @@ const DatesSelector = ({
   const isMinResidenceStayMatched =
     diffInDays >= (volunteerConfig?.residenceMinStay || 1);
 
-  const isMinDurationMatched = Boolean(
-    (bookingConfig &&
-      diffInDays >= bookingConfig?.minDuration &&
-      !isVolunteerApplication &&
-      !isResidenceApplication) ||
-      eventId ||
-      isMember ||
-      (isVolunteerApplication && isMinVolunteeringStayMatched) ||
-      (isResidenceApplication && isMinResidenceStayMatched),
-  );
+  const isMinDurationMatched = normalizedIsFriendsBooking
+    ? true
+    : Boolean(
+        (bookingConfig &&
+          diffInDays >= bookingConfig?.minDuration &&
+          !isVolunteerApplication &&
+          !isResidenceApplication) ||
+          eventId ||
+          isMember ||
+          (isVolunteerApplication && isMinVolunteeringStayMatched) ||
+          (isResidenceApplication && isMinResidenceStayMatched),
+      );
 
   console.log('isMinDurationMatched', isMinDurationMatched);
 
@@ -382,8 +389,66 @@ const DatesSelector = ({
     }
   }, [start, end]);
 
+  const findParentBookingId = (
+    selectedStart: string | null | Date | string[],
+    selectedEnd: string | null | Date | string[],
+  ): string | null => {
+    if (
+      !normalizedIsFriendsBooking ||
+      !userBookings ||
+      !selectedStart ||
+      !selectedEnd
+    ) {
+      return null;
+    }
+
+    const startValue = Array.isArray(selectedStart)
+      ? selectedStart[0]
+      : selectedStart;
+    const endValue = Array.isArray(selectedEnd) ? selectedEnd[0] : selectedEnd;
+
+    if (!startValue || !endValue) {
+      return null;
+    }
+
+    const startDate = dayjs(startValue).startOf('day');
+    const endDate = dayjs(endValue).startOf('day');
+
+    const matchingBookings: Array<{ id: string; duration: number }> = [];
+
+    for (const booking of userBookings) {
+      const bookingStart = dayjs(booking.get('start')).startOf('day');
+      const bookingEnd = dayjs(booking.get('end')).startOf('day');
+
+      if (
+        startDate.isSameOrAfter(bookingStart) &&
+        endDate.isSameOrBefore(bookingEnd)
+      ) {
+        const duration = bookingEnd.diff(bookingStart, 'day');
+        matchingBookings.push({
+          id: booking.get('_id'),
+          duration,
+        });
+      }
+    }
+
+    if (matchingBookings.length === 0) {
+      return null;
+    }
+
+    const bookingWithMaxDuration = matchingBookings.reduce((max, current) =>
+      current.duration > max.duration ? current : max,
+    );
+
+    return bookingWithMaxDuration.id;
+  };
+
   const getUrlParams = () => {
     const dateFormat = 'YYYY-MM-DD';
+    const selectedStart = savedStartDate || start;
+    const selectedEnd = savedEndDate || end;
+    const parentBookingId = findParentBookingId(selectedStart, selectedEnd);
+
     const params = {
       start: dayjs(savedStartDate as string).format(dateFormat),
       end: dayjs(savedEndDate as string).format(dateFormat),
@@ -404,6 +469,7 @@ const DatesSelector = ({
       }),
       ...(normalizedIsFriendsBooking && { isFriendsBooking: 'true' }),
       ...(friendEmails && { friendEmails: friendEmails as string }),
+      ...(parentBookingId && { parentBookingId }),
     };
     const urlParams = new URLSearchParams(params);
 
@@ -417,6 +483,8 @@ const DatesSelector = ({
   const handleNext = async () => {
     setHandleNextError(null);
     try {
+      const parentBookingId = findParentBookingId(start, end);
+
       const data = {
         start: String(dayjs(start as string).format('YYYY-MM-DD')) || '',
         end: String(dayjs(end as string).format('YYYY-MM-DD')) || '',
@@ -439,6 +507,7 @@ const DatesSelector = ({
           isFriendsBooking: 'true',
         }),
         ...(friendEmails && { friendEmails: friendEmails as string }),
+        ...(parentBookingId && { parentBookingId }),
       };
 
       if (selectedTicketOption?.isDayTicket) {
@@ -468,6 +537,7 @@ const DatesSelector = ({
           isVolunteerApplication,
           ...(normalizedIsFriendsBooking && { isFriendsBooking: true }),
           ...(friendEmails && { friendEmails }),
+          ...(parentBookingId && { parentBookingId }),
         });
 
         router.push(`/bookings/${newBooking._id}/food`);
