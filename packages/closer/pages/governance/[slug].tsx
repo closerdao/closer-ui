@@ -506,22 +506,9 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     );
   }
 
-  // Helper function to calculate vote counts from arrays
-  const getVoteCounts = (votes: any) => {
-    if (!votes || typeof votes !== 'object') {
-      return { yes: 0, no: 0, abstain: 0 };
-    }
-
-    return {
-      yes: Array.isArray(votes.yes) ? votes.yes.length : 0,
-      no: Array.isArray(votes.no) ? votes.no.length : 0,
-      abstain: Array.isArray(votes.abstain) ? votes.abstain.length : 0,
-    };
-  };
-
   // Get the most up-to-date proposal data for voting results
   const freshProposalData = getCurrentProposalData();
-  const voteCounts = getVoteCounts(freshProposalData?.votes);
+  const voteCounts = Object.assign({yes: 0, no: 0, abstain: 0}, freshProposalData?.results);
   const totalVotes = voteCounts.yes + voteCounts.no + voteCounts.abstain;
   const isActive =
     freshProposalData?.status === 'active' &&
