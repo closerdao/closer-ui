@@ -506,22 +506,9 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     );
   }
 
-  // Helper function to calculate vote counts from arrays
-  const getVoteCounts = (votes: any) => {
-    if (!votes || typeof votes !== 'object') {
-      return { yes: 0, no: 0, abstain: 0 };
-    }
-
-    return {
-      yes: Array.isArray(votes.yes) ? votes.yes.length : 0,
-      no: Array.isArray(votes.no) ? votes.no.length : 0,
-      abstain: Array.isArray(votes.abstain) ? votes.abstain.length : 0,
-    };
-  };
-
   // Get the most up-to-date proposal data for voting results
   const freshProposalData = getCurrentProposalData();
-  const voteCounts = getVoteCounts(freshProposalData?.votes);
+  const voteCounts = Object.assign({ yes: 0, no: 0, abstain: 0 }, freshProposalData?.results);
   const totalVotes = voteCounts.yes + voteCounts.no + voteCounts.abstain;
   const isActive =
     freshProposalData?.status === 'active' &&
@@ -881,7 +868,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-green-600 font-medium">Yes</span>
                       <span className="text-sm text-gray-600">
-                        {voteCounts.yes} (
+                        {Math.round(voteCounts.yes * 100) / 100} (
                         {getVotePercentage(voteCounts.yes, totalVotes)}
                         %)
                       </span>
@@ -903,7 +890,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-red-600 font-medium">No</span>
                       <span className="text-sm text-gray-600">
-                        {voteCounts.no} (
+                        {Math.round(voteCounts.no * 100) / 100} (
                         {getVotePercentage(voteCounts.no, totalVotes)}
                         %)
                       </span>
@@ -925,7 +912,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-gray-600 font-medium">Abstain</span>
                       <span className="text-sm text-gray-600">
-                        {voteCounts.abstain} (
+                        {Math.round(voteCounts.abstain * 100) / 100} (
                         {getVotePercentage(voteCounts.abstain, totalVotes)}
                         %)
                       </span>
