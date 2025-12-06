@@ -274,11 +274,17 @@ HomePage.getInitialProps = async (context: NextPageContext) => {
       messages,
     };
   } catch (err: unknown) {
+    let messages = null;
+    try {
+      messages = await loadLocaleData(context?.locale, 'moos');
+    } catch (localeErr) {
+      // If locale loading fails, gracefully degrade with null messages
+    }
     return {
       article: null,
       generalConfig: null,
       error: err,
-      messages: await loadLocaleData(context?.locale, 'moos'),
+      messages,
     };
   }
 };
