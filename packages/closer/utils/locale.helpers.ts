@@ -49,6 +49,15 @@ export async function loadLocaleData(
       case 'moos':
         switch (locale) {
           case 'en':
+            return Promise.all([
+              import('../locales/moos/en.json'),
+              import('../locales/base-en.json'),
+            ]);
+          case 'pt':
+            return Promise.all([
+              import('../locales/moos/pt.json'),
+              import('../locales/base-pt.json'),
+            ]);
           default:
             return Promise.all([
               import('../locales/moos/en.json'),

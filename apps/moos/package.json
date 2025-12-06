@@ -25,6 +25,9 @@
     "react-dom": "^18.2.0",
     "react-ga": "^3.3.1",
     "react-gtm-module": "^2.0.11",
+    "react-icons": "^5.4.0",
+    "sharp": "^0.34.3",
+    "remark-breaks": "^4.0.0",
     "ui": "*"
   },
   "devDependencies": {
