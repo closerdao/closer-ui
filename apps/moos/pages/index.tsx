@@ -107,8 +107,7 @@ const HomePage = ({ generalConfig }: Props) => {
                 className="h-full text-black uppercase text-3xl  sm:text-5xl font-extrabold w-full md:w-[700px] text-right flex items-center px-0 sm:px-6 pb-4"
                 level={1}
               >
-                On the border of Berlin’s historic Treptower Park, something
-                beautiful is growing...
+                {t('home_hero_heading')}
               </Heading>
               <div className="flex flex-col sm:flex-row justify-end gap-4 w-full px-0 sm:px-6">
                 {!isAuthenticated && (
@@ -117,7 +116,7 @@ const HomePage = ({ generalConfig }: Props) => {
                     type="submit"
                     className="bg-accent text-white text-center rounded-full py-2.5 px-8 text-md tracking-wide uppercase"
                   >
-                    JOIN THE DREAM
+                    {t('home_join_dream_button')}
                   </Link>
                 )}
                 <Link
@@ -125,7 +124,7 @@ const HomePage = ({ generalConfig }: Props) => {
                   type="submit"
                   className="bg-accent text-white text-center rounded-full py-2.5 px-8 text-md tracking-wide uppercase"
                 >
-                  Download Our Menu
+                  {t('home_download_menu_button')}
                 </Link>
               </div>
             </div>
@@ -140,25 +139,17 @@ const HomePage = ({ generalConfig }: Props) => {
               className="text-accent text-2xl font-normal text-center"
               level={2}
             >
-              MOOS is a community of communities
+              {t('home_community_heading')}
             </Heading>
 
             <div className="flex flex-col sm:flex-row gap-8">
               <div className="flex-1 flex flex-col gap-4">
-                <p>
-                  Right across from Treptower Park, MOOS — &rsquo;Moss&rsquo;
-                  in English—is a watering hole where the creativity and
-                  communal spirit of Berlin converge. A welcoming space for
-                  diverse paths to meet, that supports an innovative,
-                  interdisciplinary and interconnected community right in the
-                  city`s heart.
-                </p>
-                <p>
-                  <b>The Y Berlin</b> is a new community design lab within
-                  MOOS supporting the blend of technology and community. Our
-                  aim is to curate spaces that foster connections deeper than
-                  mere cohabitation.
-                </p>
+                <p>{t('home_community_intro_1')}</p>
+                <p
+                  dangerouslySetInnerHTML={{
+                    __html: t('home_community_intro_2'),
+                  }}
+                />
                 {/* <p>
                 The Y Berlin, a new community design lab embedded within MOOS,
                 tends to the blend of technology and community, reflecting
@@ -192,20 +183,19 @@ const HomePage = ({ generalConfig }: Props) => {
               </p> */}
               </div>
               <div className="flex-1 flex flex-col gap-4">
-                <p>
-                  Now, for the first time, we are opening the doors of our
-                  community playground for co-creation. We are offering
-                  limited <i>Vybe Vouchers</i> to individuals and
-                  organizations who are interested in partnering with us and
-                  benefiting from special early mover advantages.
-                </p>
-                <p>
-                  Become a <i>Vybe Creator</i> today and help mold the future
-                  of community tech in Berlin.
-                </p>
+                <p
+                  dangerouslySetInnerHTML={{
+                    __html: t('home_community_intro_3'),
+                  }}
+                />
+                <p
+                  dangerouslySetInnerHTML={{
+                    __html: t('home_community_intro_4'),
+                  }}
+                />
                 <p>
                   <Link href="/support-us" className="text-accent font-bold ">
-                    Join the Vybes
+                    {t('home_community_join_vybes')}
                   </Link>
                 </p>
 
@@ -231,10 +221,12 @@ const HomePage = ({ generalConfig }: Props) => {
             </div>
 
             <div className="flex  gap-4 bg-accent-light rounded-md p-4">
-              <p className="flex-1 text-lg font-bold">
-              We are starting a MOOS DAO collective. You can purchase tokens (giving voting power)  <a href='https://juicebox.money/v2/p/750?tablet=about'>here</a> or contribute to the GoFundMe <a href='https://www.gofundme.com/f/save-moos'>here</a>
-
-              </p>
+              <p
+                className="flex-1 text-lg font-bold"
+                dangerouslySetInnerHTML={{
+                  __html: t('home_dao_announcement'),
+                }}
+              />
             </div>
           </section>
 
