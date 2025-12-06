@@ -25,9 +25,10 @@ import { useTranslations } from 'next-intl';
 
 interface Props {
   generalConfig: GeneralConfig | null;
+  article?: any;
 }
 
-const HomePage = ({ generalConfig }: Props) => {
+const HomePage = ({ generalConfig, article }: Props) => {
   const t = useTranslations();
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
@@ -145,11 +146,7 @@ const HomePage = ({ generalConfig }: Props) => {
             <div className="flex flex-col sm:flex-row gap-8">
               <div className="flex-1 flex flex-col gap-4">
                 <p>{t('home_community_intro_1')}</p>
-                <p
-                  dangerouslySetInnerHTML={{
-                    __html: t('home_community_intro_2'),
-                  }}
-                />
+                <p>{t('home_community_intro_2')}</p>
                 {/* <p>
                 The Y Berlin, a new community design lab embedded within MOOS,
                 tends to the blend of technology and community, reflecting
@@ -188,16 +185,6 @@ const HomePage = ({ generalConfig }: Props) => {
                     __html: t('home_community_intro_3'),
                   }}
                 />
-                <p
-                  dangerouslySetInnerHTML={{
-                    __html: t('home_community_intro_4'),
-                  }}
-                />
-                <p>
-                  <Link href="/support-us" className="text-accent font-bold ">
-                    {t('home_community_join_vybes')}
-                  </Link>
-                </p>
 
                 {/* <p>With the introduction of <Link
                   href="/settings/credits"
@@ -276,7 +263,7 @@ HomePage.getInitialProps = async (context: NextPageContext) => {
       api.get('/config/general').catch(() => {
         return null;
       }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      loadLocaleData(context?.locale, 'moos'),
     ]);
 
     const article = articleRes?.data?.results[0];
@@ -291,7 +278,7 @@ HomePage.getInitialProps = async (context: NextPageContext) => {
       article: null,
       generalConfig: null,
       error: err,
-      messages: null,
+      messages: await loadLocaleData(context?.locale, 'moos'),
     };
   }
 };
