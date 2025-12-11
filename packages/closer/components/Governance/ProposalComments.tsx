@@ -278,10 +278,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
                   {formatDate(comment.created)}
                 </span>
               </div>
-              <div
-                className="markdown text-gray-700"
-                style={{ whiteSpace: 'pre' }}
-              >
+              <div className="markdown text-gray-700 break-words">
                 <ReactMarkdown>{comment.content}</ReactMarkdown>
               </div>
               {!isReply && (

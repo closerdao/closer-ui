@@ -1167,6 +1167,7 @@
   "manage_users_role_steward": "Steward",
   "manage_users_role_event_creator": "Event creator",
   "manage_users_role_affiliate_manager": "Affiliate manager",
+  "manage_users_role_team": "Team",
   "manage_users_subscription_explorer": "Explorer",
   "manage_users_subscription_wanderer": "Wanderer",
   "manage_users_subscription_pioneer": "Pioneer",

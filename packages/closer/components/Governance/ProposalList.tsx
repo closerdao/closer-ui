@@ -262,35 +262,91 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
                 </p>
 
                 <div className="flex justify-between items-center">
-                  {proposal.get('status') !== 'draft' &&
-                  proposal.get('votes') ? (
-                    <div className="flex space-x-4">
-                      <div className="text-sm">
-                        <span className="text-green-600 font-medium">
-                          {t('governance_yes')}: {proposal.get('votes').yes}
-                        </span>
+                  {(() => {
+                    const proposalStatus = proposal.get('status');
+                    if (proposalStatus === 'draft') {
+                      return (
+                        <div className="text-sm text-blue-600 font-medium">
+                          {t('governance_draft_proposal')}
+                        </div>
+                      );
+                    }
+
+                    const results = proposal.get('results');
+                    const votes = proposal.get('votes');
+
+                    let voteCounts = { yes: 0, no: 0, abstain: 0 };
+
+                    if (results !== undefined && results !== null) {
+                      const resultsObj = results.toJS ? results.toJS() : results;
+                      voteCounts = Object.assign(
+                        { yes: 0, no: 0, abstain: 0 },
+                        resultsObj,
+                      );
+                    } else if (votes) {
+                      const votesObj = votes.toJS ? votes.toJS() : votes;
+                      if (Array.isArray(votesObj.yes)) {
+                        voteCounts.yes = votesObj.yes.reduce(
+                          (sum: number, vote: any) => sum + (vote.weight || 0),
+                          0,
+                        );
+                      } else {
+                        voteCounts.yes = votesObj.yes || 0;
+                      }
+
+                      if (Array.isArray(votesObj.no)) {
+                        voteCounts.no = votesObj.no.reduce(
+                          (sum: number, vote: any) => sum + (vote.weight || 0),
+                          0,
+                        );
+                      } else {
+                        voteCounts.no = votesObj.no || 0;
+                      }
+
+                      if (Array.isArray(votesObj.abstain)) {
+                        voteCounts.abstain = votesObj.abstain.reduce(
+                          (sum: number, vote: any) => sum + (vote.weight || 0),
+                          0,
+                        );
+                      } else {
+                        voteCounts.abstain = votesObj.abstain || 0;
+                      }
+                    }
+
+                    const totalVotes =
+                      voteCounts.yes + voteCounts.no + voteCounts.abstain;
+
+                    if (totalVotes > 0) {
+                      return (
+                        <div className="flex space-x-4">
+                          <div className="text-sm">
+                            <span className="text-green-600 font-medium">
+                              {t('governance_yes')}:{' '}
+                              {Math.round(voteCounts.yes * 100) / 100}
+                            </span>
+                          </div>
+                          <div className="text-sm">
+                            <span className="text-red-600 font-medium">
+                              {t('governance_no')}:{' '}
+                              {Math.round(voteCounts.no * 100) / 100}
+                            </span>
+                          </div>
+                          <div className="text-sm">
+                            <span className="text-gray-600 font-medium">
+                              {t('governance_abstain')}:{' '}
+                              {Math.round(voteCounts.abstain * 100) / 100}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="text-sm text-gray-500">
+                        {t('governance_no_votes_yet')}
                       </div>
-                      <div className="text-sm">
-                        <span className="text-red-600 font-medium">
-                          {t('governance_no')}: {proposal.get('votes').no}
-                        </span>
-                      </div>
-                      <div className="text-sm">
-                        <span className="text-gray-600 font-medium">
-                          {t('governance_abstain')}:{' '}
-                          {proposal.get('votes').abstain}
-                        </span>
-                      </div>
-                    </div>
-                  ) : proposal.get('status') !== 'draft' ? (
-                    <div className="text-sm text-gray-500">
-                      {t('governance_no_votes_yet')}
-                    </div>
-                  ) : (
-                    <div className="text-sm text-blue-600 font-medium">
-                      {t('governance_draft_proposal')}
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {proposal.get('status') === 'active' && (
                     <span className="bg-blue-600 text-white text-sm py-1 px-3 rounded">

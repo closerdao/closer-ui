@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 
 import {
   getTemplateFields,
@@ -9,14 +9,19 @@ import {
 } from 'closer/constants/proposalTemplates';
 import { useAuth } from 'closer/contexts/auth';
 import { usePlatform } from 'closer/contexts/platform';
+import { WalletState } from 'closer/contexts/wallet';
+import { ProposalReward } from 'closer/types';
 import { slugify } from 'closer/utils/common';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPage, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+const TREASURY_ADDRESS = '0x5E810b93c51981eccA16e030Ea1cE8D8b1DEB83b';
+
 const CreateProposalPage: NextPage = () => {
   const router = useRouter();
   const { user } = useAuth();
+  const { account } = useContext(WalletState);
   const { platform } = usePlatform() as any;
   const t = useTranslations();
 
@@ -24,11 +29,16 @@ const CreateProposalPage: NextPage = () => {
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
+  const [rewards, setRewards] = useState<ProposalReward[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isCitizen = (): boolean => {
     return user?.roles?.includes('member') || false;
+  };
+
+  const isTeamMember = (): boolean => {
+    return user?.roles?.includes('team') || false;
   };
 
   // Load template when selected
@@ -61,6 +71,36 @@ const CreateProposalPage: NextPage = () => {
 
   const handleTemplateChange = (templateId: string) => {
     setSelectedTemplate(templateId);
+  };
+
+  const handleAddReward = () => {
+    const defaultSource = account || (isTeamMember() ? TREASURY_ADDRESS : '');
+    setRewards([
+      ...rewards,
+      {
+        name: '',
+        amount: 0,
+        contractAddress: '',
+        source: defaultSource,
+      },
+    ]);
+  };
+
+  const handleRemoveReward = (index: number) => {
+    setRewards(rewards.filter((_, i) => i !== index));
+  };
+
+  const handleRewardChange = (
+    index: number,
+    field: keyof ProposalReward,
+    value: string | number,
+  ) => {
+    const updatedRewards = [...rewards];
+    updatedRewards[index] = {
+      ...updatedRewards[index],
+      [field]: value,
+    };
+    setRewards(updatedRewards);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -98,6 +138,7 @@ const CreateProposalPage: NextPage = () => {
         attributes: [],
         managedBy: [],
         template: selectedTemplate,
+        rewards: rewards.length > 0 ? rewards : undefined,
       };
 
       // Submit proposal
@@ -245,6 +286,139 @@ const CreateProposalPage: NextPage = () => {
                   </p>
                 </div>
               </div>
+            </div>
+
+            {/* Rewards/Bounty Section */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">
+                  {t('governance_rewards')}
+                </h2>
+                <button
+                  type="button"
+                  onClick={handleAddReward}
+                  className="px-4 py-2 bg-accent hover:bg-accent-dark text-white text-sm rounded-md"
+                >
+                  {t('governance_add_reward')}
+                </button>
+              </div>
+
+              {rewards.length === 0 ? (
+                <p className="text-sm text-gray-500">
+                  {t('governance_no_rewards_added')}
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {rewards.map((reward, index) => (
+                    <div
+                      key={index}
+                      className="p-4 border border-gray-200 rounded-lg space-y-4"
+                    >
+                      <div className="flex justify-between items-center">
+                        <h3 className="text-sm font-medium text-gray-700">
+                          {t('governance_reward')} {index + 1}
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveReward(index)}
+                          className="text-red-600 hover:text-red-800 text-sm"
+                        >
+                          {t('governance_remove')}
+                        </button>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          {t('governance_reward_name')} *
+                        </label>
+                        <input
+                          type="text"
+                          value={reward.name}
+                          onChange={(e) =>
+                            handleRewardChange(index, 'name', e.target.value)
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
+                          placeholder={t('governance_reward_name_placeholder')}
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          {t('governance_reward_amount')} *
+                        </label>
+                        <input
+                          type="number"
+                          step="0.000000000000000001"
+                          value={reward.amount || ''}
+                          onChange={(e) =>
+                            handleRewardChange(
+                              index,
+                              'amount',
+                              parseFloat(e.target.value) || 0,
+                            )
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
+                          placeholder={t('governance_reward_amount_placeholder')}
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          {t('governance_reward_contract_address')} *
+                        </label>
+                        <input
+                          type="text"
+                          value={reward.contractAddress}
+                          onChange={(e) =>
+                            handleRewardChange(
+                              index,
+                              'contractAddress',
+                              e.target.value,
+                            )
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent font-mono text-sm"
+                          placeholder={t(
+                            'governance_reward_contract_address_placeholder',
+                          )}
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          {t('governance_reward_source')} *
+                        </label>
+                        <select
+                          value={reward.source}
+                          onChange={(e) =>
+                            handleRewardChange(index, 'source', e.target.value)
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
+                          required
+                        >
+                          {isTeamMember() && (
+                            <option value={TREASURY_ADDRESS}>
+                              {t('governance_treasury')} ({TREASURY_ADDRESS})
+                            </option>
+                          )}
+                          {account && (
+                            <option value={account}>
+                              {t('governance_my_wallet')} ({account})
+                            </option>
+                          )}
+                        </select>
+                        {!account && (
+                          <p className="mt-1 text-sm text-yellow-600">
+                            {t('governance_wallet_not_connected')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {error && (

@@ -11,7 +11,7 @@ import { useAuth } from 'closer/contexts/auth';
 import { usePlatform } from 'closer/contexts/platform';
 import { WalletDispatch, WalletState } from 'closer/contexts/wallet';
 import { useVotingWeight } from 'closer/hooks/useVotingWeight';
-import { Proposal } from 'closer/types';
+import { Proposal, ProposalReward } from 'closer/types';
 import { parseMessageFromError, slugify } from 'closer/utils/common';
 import {
   createProposalSignatureHash,
@@ -60,6 +60,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     title: '',
     slug: '',
     description: '',
+    rewards: [] as ProposalReward[],
   });
   const [promotionData, setPromotionData] = useState({
     dateStart: '',
@@ -79,6 +80,80 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     return isAuthor() && currentProposal?.status === 'draft';
   };
 
+  const getAuthorName = (): string => {
+    if (proposalCreator?.screenname) {
+      return proposalCreator.screenname;
+    }
+
+    if (!currentProposal?.createdBy) {
+      return currentProposal?.authorAddress || 'Anonymous';
+    }
+
+    const authorUser = platform.user.findOne(currentProposal.createdBy);
+    if (authorUser) {
+      const screenname = authorUser.get
+        ? authorUser.get('screenname')
+        : authorUser.screenname;
+      const email = authorUser.get ? authorUser.get('email') : authorUser.email;
+      return screenname || email || currentProposal.authorAddress || 'Anonymous';
+    }
+
+    return currentProposal.authorAddress || 'Anonymous';
+  };
+
+  useEffect(() => {
+    if (currentProposal?.createdBy && platform?.user) {
+      const authorUser = platform.user.findOne(currentProposal.createdBy);
+      if (!authorUser) {
+        platform.user.getOne(currentProposal.createdBy);
+      }
+    }
+  }, [currentProposal?.createdBy, platform?.user]);
+
+  const isTeamMember = (): boolean => {
+    return user?.roles?.includes('team') || false;
+  };
+
+  const handleAddReward = () => {
+    const TREASURY_ADDRESS = '0x5E810b93c51981eccA16e030Ea1cE8D8b1DEB83b';
+    const defaultSource = account || (isTeamMember() ? TREASURY_ADDRESS : '');
+    setEditData({
+      ...editData,
+      rewards: [
+        ...editData.rewards,
+        {
+          name: '',
+          amount: 0,
+          contractAddress: '',
+          source: defaultSource,
+        },
+      ],
+    });
+  };
+
+  const handleRemoveReward = (index: number) => {
+    setEditData({
+      ...editData,
+      rewards: editData.rewards.filter((_, i) => i !== index),
+    });
+  };
+
+  const handleRewardChange = (
+    index: number,
+    field: keyof ProposalReward,
+    value: string | number,
+  ) => {
+    const updatedRewards = [...editData.rewards];
+    updatedRewards[index] = {
+      ...updatedRewards[index],
+      [field]: value,
+    };
+    setEditData({
+      ...editData,
+      rewards: updatedRewards,
+    });
+  };
+
   // Initialize edit data when proposal loads
   useEffect(() => {
     if (currentProposal && !isEditing) {
@@ -86,6 +161,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
         title: currentProposal.title || '',
         slug: currentProposal.slug || '',
         description: currentProposal.description || '',
+        rewards: currentProposal.rewards || [],
       });
     }
   }, [currentProposal, isEditing]);
@@ -242,6 +318,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       title: currentProposal?.title || '',
       slug: currentProposal?.slug || '',
       description: currentProposal?.description || '',
+      rewards: currentProposal?.rewards || [],
     });
   };
 
@@ -254,7 +331,10 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     try {
       const updatedData = {
         ...currentProposal,
-        ...editData,
+        title: editData.title,
+        slug: editData.slug,
+        description: editData.description,
+        rewards: editData.rewards.length > 0 ? editData.rewards : undefined,
         updated: new Date().toISOString(),
       };
 
@@ -266,6 +346,12 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       // Update local proposal state with the response data
       if (response?.data?.results) {
         setCurrentProposal(response.data.results);
+        setEditData({
+          title: response.data.results.title || '',
+          slug: response.data.results.slug || '',
+          description: response.data.results.description || '',
+          rewards: response.data.results.rewards || [],
+        });
       } else {
         // Fallback: update local state with the data we sent
         setCurrentProposal(updatedData);
@@ -335,6 +421,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
           title: response.data.results.title || '',
           slug: response.data.results.slug || '',
           description: response.data.results.description || '',
+          rewards: response.data.results.rewards || [],
         });
       } else {
         // Fallback: update local state with the data we sent
@@ -435,13 +522,16 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   };
 
   const formatDate = (date: string) => {
+    if (!date) return 'N/A';
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) return 'N/A';
     return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    }).format(new Date(date));
+    }).format(dateObj);
   };
 
   const getTimeRemaining = (endDate: string) => {
@@ -542,11 +632,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
               </h1>
               <div className="flex items-center space-x-4 text-sm text-gray-600">
                 <span>
-                  by{' '}
-                  {proposalCreator?.screenname ||
-                    proposalCreator?.email ||
-                    currentProposal.authorAddress ||
-                    'Anonymous'}
+                  by {getAuthorName()}
                 </span>
                 <span>•</span>
                 <span>{formatDate(String(currentProposal.created))}</span>
@@ -796,6 +882,166 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Budget Section */}
+            {(() => {
+              const rewards = isEditing
+                ? editData.rewards
+                : freshProposalData?.rewards || currentProposal?.rewards || [];
+
+              if (rewards.length === 0) return null;
+
+              return (
+                <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {t('governance_rewards')}
+                    </h3>
+                    {canEdit() && isEditing && (
+                      <button
+                        type="button"
+                        onClick={handleAddReward}
+                        className="px-3 py-1.5 bg-accent hover:bg-accent-dark text-white text-xs rounded-md"
+                      >
+                        {t('governance_add_reward')}
+                      </button>
+                    )}
+                  </div>
+                  <div className="space-y-3">
+                    {rewards.map((reward: ProposalReward, index: number) => (
+                      <div
+                        key={index}
+                        className="bg-gray-50 rounded-lg p-3 border border-gray-200"
+                      >
+                        {isEditing && canEdit() ? (
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <h4 className="text-xs font-medium text-gray-700">
+                                {t('governance_reward')} {index + 1}
+                              </h4>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveReward(index)}
+                                className="text-red-600 hover:text-red-800 text-xs"
+                              >
+                                {t('governance_remove')}
+                              </button>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                {t('governance_reward_name')} *
+                              </label>
+                              <input
+                                type="text"
+                                value={reward.name}
+                                onChange={(e) =>
+                                  handleRewardChange(index, 'name', e.target.value)
+                                }
+                                className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
+                                placeholder={t('governance_reward_name_placeholder')}
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                {t('governance_reward_amount')} *
+                              </label>
+                              <input
+                                type="number"
+                                step="0.000000000000000001"
+                                value={reward.amount || ''}
+                                onChange={(e) =>
+                                  handleRewardChange(
+                                    index,
+                                    'amount',
+                                    parseFloat(e.target.value) || 0,
+                                  )
+                                }
+                                className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
+                                placeholder={t('governance_reward_amount_placeholder')}
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                {t('governance_reward_contract_address')} *
+                              </label>
+                              <input
+                                type="text"
+                                value={reward.contractAddress}
+                                onChange={(e) =>
+                                  handleRewardChange(
+                                    index,
+                                    'contractAddress',
+                                    e.target.value,
+                                  )
+                                }
+                                className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent font-mono"
+                                placeholder={t(
+                                  'governance_reward_contract_address_placeholder',
+                                )}
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                {t('governance_reward_source')} *
+                              </label>
+                              <select
+                                value={reward.source}
+                                onChange={(e) =>
+                                  handleRewardChange(index, 'source', e.target.value)
+                                }
+                                className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
+                              >
+                                {isTeamMember() && (
+                                  <option value="0x5E810b93c51981eccA16e030Ea1cE8D8b1DEB83b">
+                                    {t('governance_treasury')} (0x5E810b93c51981eccA16e030Ea1cE8D8b1DEB83b)
+                                  </option>
+                                )}
+                                {account && (
+                                  <option value={account}>
+                                    {t('governance_my_wallet')} ({account})
+                                  </option>
+                                )}
+                              </select>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="flex-1">
+                                <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                                  {reward.name}
+                                </h4>
+                                <p className="text-lg font-bold text-accent">
+                                  {reward.amount}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="space-y-1.5 text-xs">
+                              <div>
+                                <span className="text-gray-600 font-medium">
+                                  {t('governance_reward_contract_address')}:
+                                </span>
+                                <p className="text-gray-800 font-mono text-xs break-all mt-0.5">
+                                  {reward.contractAddress}
+                                </p>
+                              </div>
+                              <div>
+                                <span className="text-gray-600 font-medium">
+                                  {t('governance_reward_source')}:
+                                </span>
+                                <p className="text-gray-800 font-mono text-xs break-all mt-0.5">
+                                  {reward.source}
+                                </p>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Promotion Widget for Draft Proposals */}
             {currentProposal.status === 'draft' && isAuthor() && (
               <div className="bg-white rounded-lg shadow-sm p-6">
@@ -949,8 +1195,8 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
               <div className="space-y-3 text-sm">
                 <div>
                   <span className="text-gray-600 mr-2">Author:</span>
-                  <div className="mt-1 p-2 bg-gray-100 rounded text-xs font-mono break-all">
-                    {currentProposal.authorAddress || 'Anonymous'}
+                  <div className="mt-1 p-2 bg-gray-100 rounded text-xs break-all">
+                    {getAuthorName()}
                   </div>
                 </div>
 
@@ -1049,6 +1295,7 @@ ProposalDetailPage.getInitialProps = async (context: NextPageContext) => {
     let proposalCreator = null;
     if (proposal?.data?.results) {
       const proposalCreatorId = proposal.data.results.createdBy;
+      console.log('proposalCreatorId', proposalCreatorId);
       try {
         const {
           data: { results: proposalCreatorData },

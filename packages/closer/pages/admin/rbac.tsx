@@ -77,6 +77,7 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
     'community-curator',
     'member',
     'content-creator',
+    'team',
     'admin',
   ]);
   const [isLoading, setIsLoading] = useState(false);
