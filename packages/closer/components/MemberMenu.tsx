@@ -216,8 +216,7 @@ const MemberMenu = () => {
           },
           {
             label: t('navigation_governance'),
-            url: 'https://snapshot.org/#/traditionaldreamfactory.eth',
-            target: '_blank',
+            url: '/governance',
             enabled: true,
             roles: ['member'],
             rbacPage: 'Governance',

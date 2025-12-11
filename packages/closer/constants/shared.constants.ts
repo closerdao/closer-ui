@@ -341,6 +341,7 @@ export const USER_ROLE_OPTIONS = [
   { label: 'Steward', value: 'steward' },
   { label: 'Community-curator', value: 'community-curator' },
   { label: 'Affiliate manager', value: 'affiliate-manager' },
+  { label: 'Team', value: 'team' },
   { label: 'Member', value: 'member' },
 ];
 
