@@ -297,6 +297,7 @@ const HomePage = () => {
               </LinkButton>
               <LinkButton
                 className="w-fit"
+                variant="secondary"
                 onClick={(e) => {
                   e.preventDefault();
                   setSelectedReport({
@@ -306,6 +307,19 @@ const HomePage = () => {
                 } }
               >
                 {t('home_reports_2024')}
+              </LinkButton>
+              <LinkButton
+                className="w-fit"
+                variant="secondary"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setSelectedReport({
+                    year: '2025',
+                    url: '/pdf/2025-TDF-report.pdf',
+                  })
+                } }
+              >
+                {t('home_reports_2025')}
               </LinkButton>
             </div>
             <div className="w-full text-center mt-8">

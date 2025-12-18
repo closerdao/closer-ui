@@ -101,6 +101,7 @@
   "home_reports_2021": "2021 report",
   "home_reports_2022": "2022 report",
   "home_reports_2024": "2024 report",
+  "home_reports_2025": "2025 report",
   "home_coliving_title": "Co-living Development",
   "home_coliving_plans_approved": "Plans approved!",
   "home_coliving_building_14_suites": "Building 14 suites",
@@ -240,6 +241,7 @@
   "dataroom_report_2021": "2021 report",
   "dataroom_report_2022": "2022 report",
   "dataroom_report_2024": "2024 report",
+  "dataroom_report_2025": "2025 report",
   "dataroom_investment_highlights_title": "Investment Highlights",
   "dataroom_investment_highlights_subtitle": "Traditional Dream Factory seeks catalytic capital to accelerate our proven regenerative co-living model, offering philanthropic impact with sustainable returns.",
   "dataroom_private_debt_amount": "€400k",
@@ -292,6 +294,8 @@
   "dataroom_report_2022_description": "Operational co-living launch and environmental infrastructure",
   "dataroom_report_2024_title": "2024 Annual Report",
   "dataroom_report_2024_description": "Water infrastructure development and fundraising achievements",
+  "dataroom_report_2025_title": "2025 Annual Report",
+  "dataroom_report_2025_description": "Latest achievements and future vision",
   "dataroom_download_pdf": "Download PDF →",
   "dataroom_cta_title": "Ready to Catalyze Change?",
   "dataroom_cta_subtitle": "Join us in accelerating Portugal's regenerative future through catalytic capital that combines philanthropic impact with sustainable returns.",
@@ -844,5 +848,12 @@
   "citizenship_faq_responsibilities_q": "Where can I read the full responsibilities/rights?",
   "citizenship_faq_responsibilities_a": "See the Game Guide (Citizenship) for detailed roles, expectations, rituals, and governance processes.",
   "validation_invalid_iban": "Please enter a valid IBAN",
-  "validation_valid_iban": "Valid IBAN"
+  "validation_valid_iban": "Valid IBAN",
+
+  "report_download_modal_title": "Download TDF Report {year}",
+  "report_download_modal_authenticated_message": "You're authenticated! Click the button below to download the {year} report.",
+  "report_download_modal_download_button": "Download {year} Report",
+  "report_download_modal_subscription_message": "Subscribe to our newsletter to stay updated with our progress and get instant access to the {year} report.",
+  "report_download_modal_thanks_subscribing": "Thanks for subscribing!",
+  "report_download_modal_get_report": "Get the report"
 }
