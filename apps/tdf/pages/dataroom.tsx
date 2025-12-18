@@ -540,7 +540,7 @@ const HomePage = () => {
               </p>
             </div>
             
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card className="p-6 text-center hover:shadow-lg transition-shadow">
                 <Link
                   href="/pdf/2021-TDF-report.pdf"
@@ -573,6 +573,18 @@ const HomePage = () => {
                 >
                   <div className="text-4xl mb-4">💧</div>
                   <h3 className="text-xl font-bold mb-2">{t('dataroom_report_2024_title')}</h3>
+                  <span className="text-accent font-semibold">{t('dataroom_download_pdf')}</span>
+                </Link>
+              </Card>
+              
+              <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+                <Link
+                  href="/pdf/2025-TDF-report.pdf"
+                  target="_blank"
+                  className="block"
+                >
+                  <div className="text-4xl mb-4">🚀</div>
+                  <h3 className="text-xl font-bold mb-2">{t('dataroom_report_2025_title')}</h3>
                   <span className="text-accent font-semibold">{t('dataroom_download_pdf')}</span>
                 </Link>
               </Card>
