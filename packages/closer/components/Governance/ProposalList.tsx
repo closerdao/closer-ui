@@ -156,15 +156,15 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
 
     // If draft, always show draft
     if (currentStatus === 'draft') {
-      return { status: 'draft', displayText: 'DRAFT' };
+      return { status: 'draft', displayText: t('governance_status_draft') };
     }
 
     // If already passed or rejected, show that
     if (currentStatus === 'passed') {
-      return { status: 'passed', displayText: 'PASSED' };
+      return { status: 'passed', displayText: t('governance_status_passed') };
     }
     if (currentStatus === 'rejected') {
-      return { status: 'failed', displayText: 'FAILED' };
+      return { status: 'failed', displayText: t('governance_status_failed') };
     }
 
     // If active, check if voting has ended
@@ -174,7 +174,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
 
       // If no end date or voting hasn't ended, show active
       if (!end || end.getTime() > now.getTime()) {
-        return { status: 'active', displayText: 'ACTIVE' };
+        return { status: 'active', displayText: t('governance_status_active') };
       }
 
       // Voting has ended, determine if passed or failed
@@ -212,14 +212,14 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
 
       // Passed if yes > no, failed otherwise
       if (voteCounts.yes > voteCounts.no) {
-        return { status: 'passed', displayText: 'PASSED' };
+        return { status: 'passed', displayText: t('governance_status_passed') };
       } else {
-        return { status: 'failed', displayText: 'FAILED' };
+        return { status: 'failed', displayText: t('governance_status_failed') };
       }
     }
 
     // Default fallback
-    return { status: 'draft', displayText: currentStatus?.toUpperCase() || 'UNKNOWN' };
+    return { status: 'draft', displayText: currentStatus?.toUpperCase() || t('governance_status_unknown') };
   };
 
   // Get status color classes
