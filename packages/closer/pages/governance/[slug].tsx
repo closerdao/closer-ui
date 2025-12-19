@@ -548,21 +548,111 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     return `${hours} hours remaining`;
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'text-green-600 bg-green-100';
-      case 'passed':
-        return 'text-green-600 bg-green-100';
-      case 'rejected':
-        return 'text-red-600 bg-red-100';
-      case 'expired':
-        return 'text-gray-600 bg-gray-100';
-      case 'draft':
-        return 'text-blue-600 bg-blue-100';
-      default:
-        return 'text-gray-600 bg-gray-100';
+  // Get effective status for display (draft > active > passed/failed)
+  const getEffectiveStatus = (proposal: Proposal | null): {
+    status: 'draft' | 'active' | 'passed' | 'failed';
+    displayText: string;
+  } => {
+    if (!proposal) {
+      return { status: 'draft', displayText: 'UNKNOWN' };
     }
+
+    const currentStatus = proposal.status;
+    const endDate = proposal.endDate;
+
+    // If draft, always show draft
+    if (currentStatus === 'draft') {
+      return { status: 'draft', displayText: 'DRAFT' };
+    }
+
+    // If already passed or rejected, show that
+    if (currentStatus === 'passed') {
+      return { status: 'passed', displayText: 'PASSED' };
+    }
+    if (currentStatus === 'rejected') {
+      return { status: 'failed', displayText: 'FAILED' };
+    }
+
+    // If active, check if voting has ended
+    if (currentStatus === 'active') {
+      const now = new Date();
+      const end = endDate ? new Date(endDate) : null;
+
+      // If no end date or voting hasn't ended, show active
+      if (!end || end.getTime() > now.getTime()) {
+        return { status: 'active', displayText: 'ACTIVE' };
+      }
+
+      // Voting has ended, determine if passed or failed
+      const results = proposal.results;
+      const votes = proposal.votes;
+
+      let voteCounts = { yes: 0, no: 0, abstain: 0 };
+
+      if (results !== undefined && results !== null) {
+        voteCounts = Object.assign(
+          { yes: 0, no: 0, abstain: 0 },
+          results,
+        );
+      } else if (votes) {
+        if (Array.isArray(votes.yes)) {
+          voteCounts.yes = votes.yes.reduce(
+            (sum: number, vote: any) => sum + (vote.weight || 0),
+            0,
+          );
+        } else {
+          voteCounts.yes = votes.yes || 0;
+        }
+
+        if (Array.isArray(votes.no)) {
+          voteCounts.no = votes.no.reduce(
+            (sum: number, vote: any) => sum + (vote.weight || 0),
+            0,
+          );
+        } else {
+          voteCounts.no = votes.no || 0;
+        }
+
+        if (Array.isArray(votes.abstain)) {
+          voteCounts.abstain = votes.abstain.reduce(
+            (sum: number, vote: any) => sum + (vote.weight || 0),
+            0,
+          );
+        } else {
+          voteCounts.abstain = votes.abstain || 0;
+        }
+      }
+
+      // Passed if yes > no, failed otherwise
+      if (voteCounts.yes > voteCounts.no) {
+        return { status: 'passed', displayText: 'PASSED' };
+      } else {
+        return { status: 'failed', displayText: 'FAILED' };
+      }
+    }
+
+    // Default fallback
+    return { status: 'draft', displayText: currentStatus?.toUpperCase() || 'UNKNOWN' };
+  };
+
+  const getStatusColor = (status: 'draft' | 'active' | 'passed' | 'failed'): string => {
+    switch (status) {
+      case 'draft':
+        return 'bg-blue-100 text-blue-800';
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'passed':
+        return 'bg-emerald-100 text-emerald-800';
+      case 'failed':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Round to 2 decimal places
+  const roundToTwoDecimals = (value: number): number => {
+    return parseFloat(value.toFixed(2));
   };
 
   const getVotePercentage = (votes: number, total: number) => {
@@ -639,10 +729,10 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                 <span>•</span>
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                    currentProposal.status,
+                    getEffectiveStatus(freshProposalData || currentProposal).status,
                   )}`}
                 >
-                  {currentProposal.status.toUpperCase()}
+                  {getEffectiveStatus(freshProposalData || currentProposal).displayText}
                 </span>
               </div>
             </div>
@@ -1114,7 +1204,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-green-600 font-medium">Yes</span>
                       <span className="text-sm text-gray-600">
-                        {Math.round(voteCounts.yes * 100) / 100} (
+                        {roundToTwoDecimals(voteCounts.yes)} (
                         {getVotePercentage(voteCounts.yes, totalVotes)}
                         %)
                       </span>
@@ -1136,7 +1226,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-red-600 font-medium">No</span>
                       <span className="text-sm text-gray-600">
-                        {Math.round(voteCounts.no * 100) / 100} (
+                        {roundToTwoDecimals(voteCounts.no)} (
                         {getVotePercentage(voteCounts.no, totalVotes)}
                         %)
                       </span>
@@ -1158,7 +1248,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-gray-600 font-medium">Abstain</span>
                       <span className="text-sm text-gray-600">
-                        {Math.round(voteCounts.abstain * 100) / 100} (
+                        {roundToTwoDecimals(voteCounts.abstain)} (
                         {getVotePercentage(voteCounts.abstain, totalVotes)}
                         %)
                       </span>
@@ -1180,7 +1270,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Total Votes</span>
-                    <span className="font-medium">{totalVotes}</span>
+                    <span className="font-medium">{roundToTwoDecimals(totalVotes)}</span>
                   </div>
                 </div>
               </div>
@@ -1204,10 +1294,10 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                   <span className="text-gray-600">Status:</span>
                   <span
                     className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                      currentProposal.status,
+                      getEffectiveStatus(freshProposalData || currentProposal).status,
                     )}`}
                   >
-                    {currentProposal.status.toUpperCase()}
+                    {getEffectiveStatus(freshProposalData || currentProposal).displayText}
                   </span>
                 </div>
                 <div>

@@ -627,6 +627,8 @@
   "governance_untitled_proposal": "Untitled Proposal",
   "governance_closes_in": "Closes in",
   "governance_closed_status": "Closed",
+  "governance_passed_status": "Passed",
+  "governance_failed_status": "Failed",
   "governance_loading_comments": "Loading comments...",
   "governance_no_comments_yet": "No comments yet. Be the first to comment!",
   "governance_write_comment": "Write a comment...",

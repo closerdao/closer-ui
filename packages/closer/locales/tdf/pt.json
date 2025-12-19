@@ -743,6 +743,8 @@
   "governance_untitled_proposal": "Proposta Sem Título",
   "governance_closes_in": "Fecha em",
   "governance_closed_status": "Fechado",
+  "governance_passed_status": "Aprovado",
+  "governance_failed_status": "Rejeitado",
   "governance_loading_comments": "A carregar comentários...",
   "governance_no_comments_yet": "Ainda não há comentários. Seja o primeiro a comentar!",
   "governance_write_comment": "Escrever um comentário...",
