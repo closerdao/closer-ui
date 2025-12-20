@@ -1,8 +1,7 @@
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 
 import ReportDownloadModal from '../components/ReportDownloadModal';
 import DynamicPhotoGallery from 'closer/components/PhotoGallery/DynamicPhotoGallery';
@@ -15,7 +14,6 @@ import {
   useAuth,
 } from 'closer';
 import { useBuyTokens } from 'closer/hooks/useBuyTokens';
-import { withBoldStyle } from 'closer/utils/helpers';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -34,47 +32,78 @@ const HomePage = () => {
     url: string;
   } | null>(null);
   const [currentSupply, setCurrentSupply] = useState<number | null>(null);
-  const [tokenHolders, setTokenHolders] = useState<number | null>(280);
+  const [tokenHolders, setTokenHolders] = useState<number | null>(null);
   const [isLoadingChainData, setIsLoadingChainData] = useState(false);
+  const hasFetchedChainData = useRef(false);
 
   useEffect(() => {
+    const contractAddress = process.env.NEXT_PUBLIC_BLOCKCHAIN_DAO_TOKEN_ADDRESS;
+    
+    if (!contractAddress) {
+      setCurrentSupply(null);
+      setTokenHolders(null);
+      return;
+    }
+    
+    if (hasFetchedChainData.current) return;
+    
+    hasFetchedChainData.current = true;
     const fetchTokenData = async () => {
       setIsLoadingChainData(true);
       try {
         const supply = await getCurrentSupplyWithoutWallet();
-        setCurrentSupply(supply);
+        setCurrentSupply(supply || null);
         
-        const contractAddress = process.env.NEXT_PUBLIC_BLOCKCHAIN_DAO_TOKEN_ADDRESS;
-        if (contractAddress) {
-          try {
-            const holderListUrl = `https://api.celoscan.io/api?module=token&action=tokenholderlist&contractaddress=${contractAddress}&page=1&offset=10000`;
-            const response = await fetch(holderListUrl).catch(() => null);
-            if (response) {
-              const data = await response.json();
-              if (data.status === '1' && data.result && Array.isArray(data.result) && data.result.length > 0) {
+        try {
+          const holderListUrl = `https://api.celoscan.io/api?module=token&action=tokenholderlist&contractaddress=${contractAddress}&page=1&offset=10000`;
+          
+          const response = await fetch(holderListUrl).catch((err) => {
+            console.error('Fetch error:', err);
+            return null;
+          });
+          
+          if (response?.ok) {
+            const data = await response.json();
+            
+            if (data.status === '1' && data.result) {
+              if (Array.isArray(data.result) && data.result.length > 0) {
                 const holderAddresses = data.result.map((holder: any) => {
                   if (typeof holder === 'string') {
                     return holder.toLowerCase();
                   }
                   return (holder.TokenHolderAddress || holder.address || '').toLowerCase();
-                });
+                }).filter(Boolean);
+                
                 const uniqueHolders = new Set(holderAddresses).size;
                 setTokenHolders(uniqueHolders);
+              } else if (Array.isArray(data.result) && data.result.length === 0) {
+                setTokenHolders(0);
+              } else {
+                setTokenHolders(null);
               }
+            } else if (data.status === '0' && data.message) {
+              setTokenHolders(null);
+            } else {
+              setTokenHolders(null);
             }
-          } catch (err) {
-            console.log('Error fetching token holders:', err);
+          } else {
+            setTokenHolders(null);
           }
+        } catch (err) {
+          console.error('Error fetching token holders:', err);
+          setTokenHolders(null);
         }
       } catch (error) {
         console.error('Error fetching token data:', error);
+        setCurrentSupply(null);
+        setTokenHolders(null);
       } finally {
         setIsLoadingChainData(false);
       }
     };
 
     fetchTokenData();
-  }, [getCurrentSupplyWithoutWallet]);
+  }, []);
 
   return (
     <>
@@ -256,14 +285,6 @@ const HomePage = () => {
                     <p className="text-sm text-gray-700 leading-relaxed font-light mb-3">
                       {t('home_token_feature_unlock_desc')}
                     </p>
-                    <p className="flex justify-center align-center items-center">
-                      <LinkButton
-                        href="/press"
-                        variant="secondary"
-                      >
-                        {t('home_token_press_link')}
-                      </LinkButton>
-                    </p>
                   </div>
                 </div>
                 <div className="flex gap-4">
@@ -314,7 +335,7 @@ const HomePage = () => {
                     {t('home_token_stat_holders')}
                   </div>
                   <div className="text-2xl font-normal text-gray-900">
-                    {tokenHolders !== null ? tokenHolders.toLocaleString() : '—'}
+                    {isLoadingChainData ? '...' : (tokenHolders !== null ? tokenHolders.toLocaleString() : '—')}
                   </div>
                 </div>
                 <div className="bg-gray-50 rounded border border-gray-300 p-5">
@@ -322,7 +343,7 @@ const HomePage = () => {
                     {t('home_token_stat_supply')}
                   </div>
                   <div className="text-2xl font-normal text-gray-900">
-                    {isLoadingChainData ? '...' : (currentSupply !== null ? currentSupply.toLocaleString() : '6,300')}
+                    {isLoadingChainData ? '...' : (currentSupply !== null ? currentSupply.toLocaleString() : '—')}
                   </div>
                 </div>
                 <div className="bg-gray-50 rounded border border-gray-300 p-5">
@@ -722,14 +743,14 @@ const HomePage = () => {
 
           <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto mb-12">
             <div className="relative">
-              <div className="absolute -top-4 -left-4 text-8xl md:text-9xl text-gray-200 font-serif leading-none">"</div>
+              <div className="absolute -top-4 -left-4 text-8xl md:text-9xl text-gray-200 font-serif leading-none">&ldquo;</div>
               <blockquote className="text-2xl md:text-3xl font-light text-gray-900 leading-relaxed mb-6 relative z-10 italic">
                 {t('home_authority_quote_1')}
               </blockquote>
               <p className="text-sm text-gray-600 font-medium">{t('home_authority_quote_1_source')}</p>
             </div>
             <div className="relative">
-              <div className="absolute -top-4 -left-4 text-8xl md:text-9xl text-gray-200 font-serif leading-none">"</div>
+              <div className="absolute -top-4 -left-4 text-8xl md:text-9xl text-gray-200 font-serif leading-none">&ldquo;</div>
               <blockquote className="text-2xl md:text-3xl font-light text-gray-900 leading-relaxed mb-6 relative z-10 italic">
                 {t('home_authority_quote_2')}
               </blockquote>

@@ -1,5 +1,4 @@
 import Head from 'next/head';
-import Link from 'next/link';
 
 import { Heading, Card, LinkButton } from 'closer';
 import { loadLocaleData } from 'closer/utils/locale.helpers';

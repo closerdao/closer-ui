@@ -402,7 +402,7 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
     setUpdatedConfigs(newConfigs);
   };
 
-  const handleAddElement = (elementsKey: string = 'elements') => {
+  const handleAddElement = (elementsKey = 'elements') => {
     const defaultConfig = mergedConfigDescription as any;
     const configDesc = defaultConfig.find(
       (config: any) => config.slug === selectedConfig,

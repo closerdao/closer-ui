@@ -59,8 +59,8 @@ const MemberMenu = () => {
               enabled: true,
             },
             {
-              label: 'Team & Advisors',
-              url: '/pages/team-advisors',
+              label: 'Team',
+              url: '/team',
               enabled: true,
             },
             {

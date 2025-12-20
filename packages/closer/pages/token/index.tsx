@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import Ama from '../../components/Ama';
 import PeekIntoFuture from '../../components/PeekIntoFuture';
@@ -13,14 +13,12 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { MAX_LISTINGS_TO_FETCH } from '../../constants';
-import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig, Listing } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
-import { useAuth } from '../../contexts/auth';
 
 const ACCOMMODATION_ICONS = ['van.png', 'camping.png', 'hotel.png'];
 const DEFAULT_TOKENS = 10;
