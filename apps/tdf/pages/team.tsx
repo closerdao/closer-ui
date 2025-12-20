@@ -4,10 +4,8 @@ import Link from 'next/link';
 import { Heading } from 'closer';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
-import { useTranslations } from 'next-intl';
 
 const TeamPage = () => {
-  const t = useTranslations();
 
   return (
     <>
@@ -32,7 +30,7 @@ const TeamPage = () => {
               Our Team
             </Heading>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              A decentralized collective of builders, dreamers, and land stewards creating Europe's first regenerative village.
+              A decentralized collective of builders, dreamers, and land stewards creating Europe&apos;s first regenerative village.
             </p>
           </div>
         </section>
@@ -81,7 +79,7 @@ const TeamPage = () => {
                 <div>
                   <h3 className="text-xl font-semibold">Samuel Delesque</h3>
                   <p className="text-accent-dark font-medium">Executive Director</p>
-                  <p className="text-sm text-gray-600 mt-2">Franco-Danish entrepreneur and former software engineer. Founded TDF with a vision of moving "from ownership to stewardship."</p>
+                  <p className="text-sm text-gray-600 mt-2">Franco-Danish entrepreneur and former software engineer. Founded TDF with a vision of moving &ldquo;from ownership to stewardship.&rdquo;</p>
                   <div className="flex gap-3 mt-3">
                     <a href="https://twitter.com/samdelesque" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-600">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
@@ -462,7 +460,7 @@ const TeamPage = () => {
           <div className="max-w-2xl mx-auto text-center">
             <Heading level={2} className="font-serif text-3xl mb-4">Join the Team</Heading>
             <p className="text-gray-600 mb-8">
-              We're always looking for passionate people to join our regenerative community. Whether as a steward, volunteer, or contributor.
+              We&apos;re always looking for passionate people to join our regenerative community. Whether as a steward, volunteer, or contributor.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link href="/volunteer" className="bg-gray-900 text-white px-8 py-4 rounded-lg font-medium hover:bg-gray-800 transition-colors">

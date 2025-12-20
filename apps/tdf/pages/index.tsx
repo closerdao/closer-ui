@@ -1,19 +1,15 @@
 import Head from 'next/head';
-import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import ReportDownloadModal from '../components/ReportDownloadModal';
 import DynamicPhotoGallery from 'closer/components/PhotoGallery/DynamicPhotoGallery';
 import LinkButton from 'closer/components/ui/LinkButton';
 import UpcomingEventsIntro from 'closer/components/UpcomingEventsIntro';
 
-import {
-  Heading,
-  WalletState,
-  useAuth,
-} from 'closer';
+import { Heading } from 'closer';
 import { useBuyTokens } from 'closer/hooks/useBuyTokens';
+import { useConfig } from 'closer/hooks/useConfig';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -22,10 +18,8 @@ import { event } from 'nextjs-google-analytics';
 const HomePage = () => {
   const t = useTranslations();
 
-  const { isAuthenticated, user } = useAuth();
-  const { isWalletReady } = useContext(WalletState);
   const { getCurrentSupplyWithoutWallet } = useBuyTokens();
-  const router = useRouter();
+  const { BLOCKCHAIN_DAO_TOKEN } = useConfig() || {};
 
   const [selectedReport, setSelectedReport] = useState<{
     year: string;
@@ -37,9 +31,7 @@ const HomePage = () => {
   const hasFetchedChainData = useRef(false);
 
   useEffect(() => {
-    const contractAddress = process.env.NEXT_PUBLIC_BLOCKCHAIN_DAO_TOKEN_ADDRESS;
-    
-    if (!contractAddress) {
+    if (!BLOCKCHAIN_DAO_TOKEN?.address) {
       setCurrentSupply(null);
       setTokenHolders(null);
       return;
@@ -55,6 +47,7 @@ const HomePage = () => {
         setCurrentSupply(supply || null);
         
         try {
+          const contractAddress = BLOCKCHAIN_DAO_TOKEN.address.toLowerCase();
           const holderListUrl = `https://api.celoscan.io/api?module=token&action=tokenholderlist&contractaddress=${contractAddress}&page=1&offset=10000`;
           
           const response = await fetch(holderListUrl).catch((err) => {
@@ -103,7 +96,7 @@ const HomePage = () => {
     };
 
     fetchTokenData();
-  }, []);
+  }, [BLOCKCHAIN_DAO_TOKEN?.address]);
 
   return (
     <>
