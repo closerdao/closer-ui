@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../../hooks/useConfig';
+import { usePlatform } from '../../contexts/platform';
 import EventsList from '../EventsList';
 import { Heading } from '../ui';
 
@@ -13,6 +15,39 @@ const UpcomingEventsIntro = () => {
   const config = useConfig();
   const { APP_NAME } = config || {};
   const appName = (APP_NAME || '').toLowerCase();
+  const { platform } = usePlatform();
+  const [hasEvents, setHasEvents] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkEvents = async () => {
+      if (!platform?.event) {
+        setHasEvents(false);
+        return;
+      }
+      
+      try {
+        const filter = {
+          where: { end: { $gt: loadTime } },
+          limit: 1,
+          sort_by: 'start',
+        };
+        await platform.event.get(filter);
+        const events = platform.event.find(filter);
+        setHasEvents(events && events.count() > 0);
+      } catch (error) {
+        console.error('Error checking events:', error);
+        setHasEvents(false);
+      }
+    };
+    
+    if (platform) {
+      checkEvents();
+    }
+  }, [platform]);
+
+  if (hasEvents === false || hasEvents === null) {
+    return null;
+  }
 
   return (
     <section className="mb-20 max-w-5xl mx-auto md:pt-20 text-center md:text-left md:flex md:space-x-12">

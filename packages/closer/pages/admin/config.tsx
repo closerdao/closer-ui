@@ -6,6 +6,7 @@ import { ChangeEvent, useEffect, useMemo, useState } from 'react';
 import ArrayConfig from '../../components/ArrayConfig';
 import AdminLayout from '../../components/Dashboard/AdminLayout';
 import PlatformFeatureSelector from '../../components/PlatformConfig/PlatformFeatureSelector';
+import PhotosEditor from '../../components/PhotosEditor';
 import {
   Button,
   Card,
@@ -401,20 +402,26 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
     setUpdatedConfigs(newConfigs);
   };
 
-  const handleAddElement = () => {
+  const handleAddElement = (elementsKey: string = 'elements') => {
     const defaultConfig = mergedConfigDescription as any;
-    const defaultPlan = defaultConfig.find(
+    const configDesc = defaultConfig.find(
       (config: any) => config.slug === selectedConfig,
-    ).value.elements.default;
+    );
+    const defaultPlan = configDesc?.value?.[elementsKey]?.default;
+    
+    if (!defaultPlan || !Array.isArray(defaultPlan)) {
+      return;
+    }
 
     const newConfigs = [
       ...updatedConfigs.map((config) => {
         if (config.slug === selectedConfig) {
-          const elements: any = config.value.elements;
-          const newElements = [...elements, ...defaultPlan];
+          const currentArray: any = config.value[elementsKey] || [];
+          const newElement = defaultPlan[0] ? { ...defaultPlan[0] } : {};
+          const newArray = [...currentArray, newElement];
           return {
             ...config,
-            value: { ...config.value, elements: newElements },
+            value: { ...config.value, [elementsKey]: newArray },
           };
         }
         return config;
@@ -616,7 +623,23 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
                             </div>
                           ) : (
                             <div>
-                              {isArray && (
+                              {currentConfig.slug === 'photo-gallery' && key === 'photoIds' ? (
+                                <PhotosEditor
+                                  value={currentValue || []}
+                                  onChange={(value) => {
+                                    const newConfigs = updatedConfigs.map((config) => {
+                                      if (config.slug === selectedConfig) {
+                                        return {
+                                          ...config,
+                                          value: { ...config.value, [key]: value },
+                                        };
+                                      }
+                                      return config;
+                                    });
+                                    setUpdatedConfigs(newConfigs);
+                                  }}
+                                />
+                              ) : isArray ? (
                                 <div>
                                   <ArrayConfig
                                     currentValue={currentValue}
@@ -630,7 +653,7 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
                                     errors={errors}
                                   />
                                 </div>
-                              )}
+                              ) : null}
                               {!isArray && !isSelect && !isTime && (
                                 <input
                                   className="bg-neutral rounded-md p-1"

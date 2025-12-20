@@ -49,7 +49,30 @@ export const prepareConfigs = (
       const defaultConfigData = categoryDefaultConfig.value[key].type;
       const isArray = Array.isArray(defaultConfigData);
       if (isArray) {
-        let defaultNestedConfig = categoryDefaultConfig.value[key].default[0];
+        const defaultArray = categoryDefaultConfig.value[key].default;
+        const isPrimitiveArray = defaultConfigData.length === 1 && 
+          (defaultConfigData[0] === 'text' || defaultConfigData[0] === 'number' || defaultConfigData[0] === 'boolean');
+        
+        let defaultNestedConfig: any = null;
+        
+        if (Array.isArray(defaultArray) && defaultArray.length > 0) {
+          defaultNestedConfig = defaultArray[0];
+        } else if (Array.isArray(defaultConfigData) && defaultConfigData.length > 0 && !isPrimitiveArray) {
+          const typeDefinition = defaultConfigData[0];
+          if (typeDefinition && typeof typeDefinition === 'object') {
+            defaultNestedConfig = {};
+            Object.keys(typeDefinition).forEach((typeKey) => {
+              const typeValue = typeDefinition[typeKey];
+              if (typeValue === 'text') {
+                defaultNestedConfig[typeKey] = '';
+              } else if (typeValue === 'number') {
+                defaultNestedConfig[typeKey] = 0;
+              } else if (typeValue === 'boolean') {
+                defaultNestedConfig[typeKey] = false;
+              }
+            });
+          }
+        }
 
         const configArray = categoryMyConfig && categoryMyConfig[key];
         const output: any[] = [];
@@ -60,7 +83,7 @@ export const prepareConfigs = (
             categoryDefaultConfig.value[key].default;
 
           defaultNestedArrayConfig.forEach((element: any, index: number) => {
-            defaultNestedConfig =
+            const templateConfig =
               categoryDefaultConfig.value[key].default[index];
             const doesIncludeTemplate = configArray?.some(
               (config: any) => config.name === element.name,
@@ -75,22 +98,34 @@ export const prepareConfigs = (
         if (!configArray) {
           if (categoryName === 'emails') {
             output.push(...categoryDefaultConfig.value[key].default);
-          } else {
+          } else if (defaultNestedConfig) {
             output.push(defaultNestedConfig);
           }
         }
 
-        configArray?.forEach((myConfigElement: any) => {
-          const entry = { ...defaultNestedConfig };
-          Object.entries(defaultNestedConfig).forEach(([nestedKey]) => {
-            if (myConfigElement.hasOwnProperty(nestedKey)) {
-              entry[nestedKey] = myConfigElement[nestedKey];
-            } else {
-              entry[nestedKey] = defaultNestedConfig[nestedKey];
+        if (isPrimitiveArray) {
+          // For primitive arrays (like ['text']), just use the array as-is
+          output.push(...(configArray || []));
+        } else {
+          configArray?.forEach((myConfigElement: any) => {
+            if (!defaultNestedConfig) {
+              // If no default config, just use the element as-is
+              output.push(myConfigElement || {});
+              return;
             }
+            const entry = { ...defaultNestedConfig };
+            if (defaultNestedConfig && typeof defaultNestedConfig === 'object') {
+              Object.entries(defaultNestedConfig).forEach(([nestedKey]) => {
+                if (myConfigElement && myConfigElement.hasOwnProperty(nestedKey)) {
+                  entry[nestedKey] = myConfigElement[nestedKey];
+                } else {
+                  entry[nestedKey] = defaultNestedConfig[nestedKey];
+                }
+              });
+            }
+            output.push(entry);
           });
-          output.push(entry);
-        });
+        }
 
         configOutput = {
           ...configOutput,

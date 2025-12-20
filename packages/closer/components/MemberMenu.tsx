@@ -46,7 +46,179 @@ const MemberMenu = () => {
     areSubscriptionsEnabled: boolean,
     isVolunteeringEnabled: boolean,
   ): MenuSection[] => {
-    // Create all menu sections with their items
+    // TDF-specific navigation structure
+    if (APP_NAME?.toLowerCase() === 'tdf') {
+      return [
+        {
+          label: 'About',
+          isOpen: false,
+          items: [
+            {
+              label: 'Our Story',
+              url: '/pages/our-story',
+              enabled: true,
+            },
+            {
+              label: 'Team & Advisors',
+              url: '/pages/team-advisors',
+              enabled: true,
+            },
+            {
+              label: 'OASA Network Vision',
+              url: '/pages/oasa-network',
+              enabled: true,
+            },
+            {
+              label: 'Impact Reports',
+              url: '/dataroom#reports',
+              enabled: true,
+              rbacPage: 'Dataroom',
+            },
+          ],
+        },
+        {
+          label: 'The Village',
+          isOpen: false,
+          items: [
+            {
+              label: 'Master Plan',
+              url: '/dataroom#master-plan',
+              enabled: true,
+              rbacPage: 'Dataroom',
+            },
+            {
+              label: 'Regenerative Agriculture',
+              url: '/pages/regenerative-agriculture',
+              enabled: true,
+            },
+            {
+              label: 'Accommodations',
+              url: '/stay',
+              enabled: isBookingEnabled,
+              rbacPage: 'Stay',
+            },
+            {
+              label: 'Events & Programs',
+              url: '/events',
+              enabled: true,
+              rbacPage: 'Events',
+            },
+          ],
+        },
+        {
+          label: 'Investment',
+          isOpen: false,
+          items: [
+            {
+              label: 'Overview',
+              url: '/dataroom',
+              enabled: true,
+              rbacPage: 'Dataroom',
+            },
+            {
+              label: 'Token Economics',
+              url: '/token',
+              enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
+              rbacPage: 'Token',
+            },
+            {
+              label: 'Financial Performance',
+              url: '/dataroom#financial',
+              enabled: true,
+              rbacPage: 'Dataroom',
+            },
+            {
+              label: 'Investor Relations',
+              url: '/dataroom#investor-relations',
+              enabled: true,
+              rbacPage: 'Dataroom',
+            },
+          ],
+        },
+        {
+          label: 'Community',
+          isOpen: false,
+          items: [
+            {
+              label: 'Become a Citizen',
+              url: '/citizenship',
+              enabled: true,
+            },
+            {
+              label: 'Governance (DAO)',
+              url: '/governance',
+              enabled: true,
+            },
+            {
+              label: 'Member Stories',
+              url: '/members',
+              enabled: true,
+            },
+            {
+              label: 'FAQ',
+              url: '/resources',
+              enabled: true,
+              rbacPage: 'Resources',
+            },
+          ],
+        },
+        {
+          label: 'Visit',
+          isOpen: false,
+          items: [
+            {
+              label: 'Visit',
+              url: '/events',
+              enabled: true,
+              rbacPage: 'Events',
+            },
+          ],
+        },
+        {
+          label: t('menu_section_dashboard'),
+          isOpen: false,
+          items: [
+            {
+              label: t('navigation_dashboard'),
+              url: '/dashboard',
+              enabled: true,
+              roles: ['admin'],
+              rbacPage: 'Dashboard',
+            },
+            {
+              label: t('navigation_performance'),
+              url: '/dashboard/performance',
+              enabled: true,
+              roles: ['admin'],
+              rbacPage: 'Performance',
+            },
+            {
+              label: t('navigation_governance'),
+              url: '/governance',
+              enabled: true,
+              roles: ['member'],
+              rbacPage: 'Governance',
+            },
+            {
+              label: t('navigation_token_sales'),
+              url: '/dashboard/token-sales',
+              enabled: true,
+              roles: ['admin'],
+              rbacPage: 'TokenSales',
+            },
+            {
+              label: t('navigation_expense_tracking'),
+              url: '/dashboard/expense-tracking',
+              enabled: true,
+              roles: ['admin'],
+              rbacPage: 'ExpenseTracking',
+            },
+          ],
+        },
+      ];
+    }
+
+    // Create all menu sections with their items for other apps
     const sections: MenuSection[] = [
       // General section
       {

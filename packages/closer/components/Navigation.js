@@ -250,37 +250,45 @@ const Navigation = () => {
               </Button>
             )}
 
-          {isBookingEnabled &&
-            APP_NAME &&
-            APP_NAME?.toLowerCase() === 'tdf' && (
-              <>
-                {!isAuthenticated ? (
+          {APP_NAME && APP_NAME?.toLowerCase() === 'tdf' && (
+            <>
+              {!isAuthenticated ? (
+                <>
                   <Button
-                    onClick={() => router.push('/signup')}
+                    onClick={() => router.push('/token')}
                     size="small"
                     variant="primary"
+                    className="mr-2"
                   >
-                    {t('navigation_join_now')}
+                    {t('navigation_buy_tokens')}
                   </Button>
-                ) : !isMember ? (
                   <Button
                     onClick={() => router.push('/events')}
                     size="small"
-                    variant="primary"
+                    variant="secondary"
                   >
-                    {t('navigation_come_visit')}
+                    {t('navigation_join_program')}
                   </Button>
-                ) : (
-                  <Button
-                    onClick={() => router.push('/bookings/create/dates')}
-                    size="small"
-                    variant="primary"
-                  >
-                    {t('navigation_stay')}
-                  </Button>
-                )}
-              </>
-            )}
+                </>
+              ) : isMember ? (
+                <Button
+                  onClick={() => router.push('/bookings/create/dates')}
+                  size="small"
+                  variant="primary"
+                >
+                  {t('navigation_stay')}
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => router.push('/events')}
+                  size="small"
+                  variant="primary"
+                >
+                  {t('navigation_join_program')}
+                </Button>
+              )}
+            </>
+          )}
 
           {isAuthenticated && (
             <Link

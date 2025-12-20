@@ -3,17 +3,15 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useState } from 'react';
-import { isMobile } from 'react-device-detect';
 
 import ReportDownloadModal from '../components/ReportDownloadModal';
-import PhotoGallery from 'closer/components/PhotoGallery';
+import DynamicPhotoGallery from 'closer/components/PhotoGallery/DynamicPhotoGallery';
 import LinkButton from 'closer/components/ui/LinkButton';
 import UpcomingEventsIntro from 'closer/components/UpcomingEventsIntro';
 
 import {
   Heading,
   WalletState,
-  YoutubeEmbed,
   useAuth,
 } from 'closer';
 import { useBuyTokens } from 'closer/hooks/useBuyTokens';
@@ -28,72 +26,55 @@ const HomePage = () => {
 
   const { isAuthenticated, user } = useAuth();
   const { isWalletReady } = useContext(WalletState);
-  const { getTokensAvailableForPurchase } = useBuyTokens();
+  const { getCurrentSupplyWithoutWallet } = useBuyTokens();
   const router = useRouter();
-  const variant = router.query.variant as string;
-  const uiVariant = variant || '1';
 
-  const [tokensAvailable, setTokensAvailable] = useState<number | null>(null);
   const [selectedReport, setSelectedReport] = useState<{
     year: string;
     url: string;
   } | null>(null);
+  const [currentSupply, setCurrentSupply] = useState<number | null>(null);
+  const [tokenHolders, setTokenHolders] = useState<number | null>(280);
+  const [isLoadingChainData, setIsLoadingChainData] = useState(false);
 
   useEffect(() => {
-    if (isWalletReady) {
-      (async () => {
-        const remainingAmount = await getTokensAvailableForPurchase();
-        setTokensAvailable(remainingAmount);
-      })();
-    }
-  }, [isWalletReady]);
+    const fetchTokenData = async () => {
+      setIsLoadingChainData(true);
+      try {
+        const supply = await getCurrentSupplyWithoutWallet();
+        setCurrentSupply(supply);
+        
+        const contractAddress = process.env.NEXT_PUBLIC_BLOCKCHAIN_DAO_TOKEN_ADDRESS;
+        if (contractAddress) {
+          try {
+            const holderListUrl = `https://api.celoscan.io/api?module=token&action=tokenholderlist&contractaddress=${contractAddress}&page=1&offset=10000`;
+            const response = await fetch(holderListUrl).catch(() => null);
+            if (response) {
+              const data = await response.json();
+              if (data.status === '1' && data.result && Array.isArray(data.result) && data.result.length > 0) {
+                const holderAddresses = data.result.map((holder: any) => {
+                  if (typeof holder === 'string') {
+                    return holder.toLowerCase();
+                  }
+                  return (holder.TokenHolderAddress || holder.address || '').toLowerCase();
+                });
+                const uniqueHolders = new Set(holderAddresses).size;
+                setTokenHolders(uniqueHolders);
+              }
+            }
+          } catch (err) {
+            console.log('Error fetching token holders:', err);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching token data:', error);
+      } finally {
+        setIsLoadingChainData(false);
+      }
+    };
 
-  const isMember = user?.roles?.includes('member');
-
-  const CTA = (
-    <div className="flex flex-wrap gap-2">
-      {!isAuthenticated ? (
-        <LinkButton
-          href="/signup"
-          variant="primary"
-          onClick={() =>
-            event('click', {
-              category: 'HomePage',
-              label: 'join_now_button',
-            })
-          }
-        >
-          {t('home_cta_join_now')}
-        </LinkButton>
-      ) : !isMember ? (
-        <LinkButton
-          href="/events"
-          variant="primary"
-          onClick={() =>
-            event('click', {
-              category: 'HomePage',
-              label: 'come_visit_button',
-            })
-          }
-        >
-          {t('home_cta_come_visit')}
-        </LinkButton>
-      ) : (
-        <LinkButton
-          href="/stay"
-          variant="primary"
-          onClick={() =>
-            event('click', {
-              category: 'HomePage',
-              label: t('home_cta_book_a_stay_event'),
-            })
-          }
-        >
-          {t('home_cta_book_a_stay')}
-        </LinkButton>
-      )}
-    </div>
-  );
+    fetchTokenData();
+  }, [getCurrentSupplyWithoutWallet]);
 
   return (
     <>
@@ -107,193 +88,672 @@ const HomePage = () => {
         />
       </Head>
 
-      <section className="md:absolute -mt-4 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] mb-8 md:mb-[100vh] -mx-4 md:mx-0">
-        <div className="md:h-[100vh] md:opacity-40">
-          {isMobile ? (
-            <video
-              loop={true}
-              muted={true}
-              autoPlay={true}
-              playsInline={true}
-              className="w-full h-full object-cover"
+      <section className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-24 md:py-36">
+          <div className="max-w-4xl mx-auto text-center">
+            <Heading
+              className="mb-6 text-5xl md:text-6xl lg:text-7xl font-normal text-gray-900 tracking-tight leading-tight"
+              data-testid="page-title"
+              display
+              level={1}
             >
-              <source
-                src="https://cdn.oasa.co/video/tdf-360-mute.mp4"
-                type="video/mp4"
-              />
-            </video>
-          ) : (
-            <YoutubeEmbed isBackgroundVideo={true} embedId="VkoqvPcaRpk" />
-          )}
-        </div>
-        <div className="md:absolute md:left-0 md:top-0 mx-4 md:mx-0 md:w-full md:h-full flex justify-center ">
-          <div className="w-full flex justify-center flex-col items-center">
-            <div className=" max-w-4xl p-6 rounded-xl p-12">
-              <Heading
-                className="mb-4 md:text-5xl"
-                data-testid="page-title"
-                display
-                level={1}
-              >
-                {t('home_hero_title')}
-              </Heading>
-              <div className="my-4">
-                <p className="text-xl md:text-2xl max-w-3xl">
-                  {t('home_hero_subtitle')}
-                </p>
+              {t('home_hero_title')}
+            </Heading>
+            <p className="text-xl md:text-2xl text-gray-700 mb-16 leading-relaxed max-w-3xl mx-auto font-light">
+              {t('home_hero_subtitle')}
+            </p>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 max-w-4xl mx-auto">
+              <div className="bg-gray-50 rounded border border-gray-300 p-6 text-center">
+                <div className="text-3xl md:text-4xl font-normal text-gray-900 mb-2 font-serif">280</div>
+                <div className="text-xs text-gray-600 font-light">Token holders</div>
               </div>
-              {CTA}
+              <div className="bg-gray-50 rounded border border-gray-300 p-6 text-center">
+                <div className="text-3xl md:text-4xl font-normal text-gray-900 mb-2 font-serif">€1.25M+</div>
+                <div className="text-xs text-gray-600 font-light">Total capital raised</div>
+              </div>
+              <div className="bg-gray-50 rounded border border-gray-300 p-6 text-center">
+                <div className="text-3xl md:text-4xl font-normal text-gray-900 mb-2 font-serif">5ha</div>
+                <div className="text-xs text-gray-600 font-light">Land under stewardship</div>
+              </div>
+              <div className="bg-gray-50 rounded border border-gray-300 p-6 text-center col-span-2 md:col-span-1">
+                <div className="text-3xl md:text-4xl font-normal text-gray-900 mb-2 font-serif">€514k</div>
+                <div className="text-xs text-gray-600 font-light">2029 revenue target</div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-3 mt-8">
+              <LinkButton
+                href="/dataroom"
+                variant="primary"
+                onClick={() =>
+                  event('click', {
+                    category: 'HomePage',
+                    label: 'explore_investment_options',
+                  })
+                }
+              >
+                {t('home_hero_cta_explore')}
+              </LinkButton>
+              <LinkButton
+                variant="secondary"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setSelectedReport({
+                    year: '2025',
+                    url: '/pdf/2025-TDF-report.pdf',
+                  });
+                  event('click', {
+                    category: 'HomePage',
+                    label: 'download_2025_report',
+                  });
+                }}
+              >
+                {t('home_hero_cta_report')}
+              </LinkButton>
             </div>
           </div>
         </div>
       </section>
 
-      <div className="relative md:top-[105vh]">
-        <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2 items-center content-center space-x-8">
-          <div className="md:pl-4 mt-5 -mx-4 md:mx-0">
-            <img src="/images/maps/co-living.png" alt="TDF Orchard Map" />
-          </div>
-          <div className="max-w-prose">
-            <Heading display level={2} className="mb-4 mt-4 md:mt-0">
-              {t('home_coliving_title')}
-            </Heading>
-            <div className="md:flex md:flex-cols-2 md:space-x-2">
-              <ul className="space-y-6">
-                <li className="">
-                  <Heading className="uppercase bold" level={3}>
-                    {t('home_coliving_building_14_suites')}
-                  </Heading>
-                  <p>{t('home_coliving_building_14_suites_desc')}</p>
-                </li>
-                <li className="">
-                  <Heading className="uppercase bold" level={3}>
-                    {t('home_coliving_bioclimatic_buildings')}
-                  </Heading>
-                  <p>{t('home_coliving_bioclimatic_buildings_desc')}</p>
-                </li>
-                <li className="">
-                  <Heading className="uppercase bold" level={3}>
-                    {t('home_coliving_mixed_use')}
-                  </Heading>
-                  <p>{t('home_coliving_mixed_use_desc')}</p>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </section>
+      <section className="bg-white -mt-8 md:-mt-12 w-full overflow-hidden">
+        <DynamicPhotoGallery isSlider={true} className="w-full" />
+      </section>
 
-        <section
-          className="relative flex items-center justify-end md:h-screen my-4 md:my-20 bg-cover bg-center md:bg-[url('/images/landing/land-plan.png')]"
-        >
-          <div className="md:w-1/2 bg-white md:bg-opacity-80 p-4 md:p-20">
-            <div className="md:hidden mt-5 mb-2 -mx-8">
-              <img src="/images/landing/land-plan.png" alt="TDF Orchard Map" />
-            </div>
-            <Heading display level={2} className="mb-4 mt-4 md:mt-0">
-              {t('home_land_development_title')}
-            </Heading>
-            <p>{withBoldStyle(t('home_land_development_body'), t('home_land_development_body_bold'))}</p>
-          </div>
-        </section>
-
-        <section className='max-w-4xl mx-auto py-8 md:py-16'>
-          <div className="bg-accent-light/20 rounded-2xl p-8 md:p-12 flex flex-col items-center text-center shadow-lg">
-            <Heading
-              level={1}
-              className="text-2xl md:text-4xl font-extrabold uppercase px-4 mb-8 md:mb-10 md:bg-[url('/images/token-sale/token-illy.png')] bg-no-repeat pt-[20px] md:pt-[130px] bg-top"
-            >
-              {t('home_token_access_title')}
-            </Heading>
-            
-            <p className="text-xl md:text-2xl text-center max-w-2xl mb-10">
-              <span className="font-semibold">{t('home_token_access_tagline')}</span> <br />
-              <span className="text-gray-700 mt-2 block">{t('home_token_access_desc')}</span>
+      <section className="bg-white py-24 md:py-32 border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="mb-12">
+            <p className="text-xs uppercase tracking-wider text-gray-600 mb-4 font-medium text-center">
+              {t('home_press_label')}
             </p>
-            
-            <ul className="space-y-4 mb-10 max-w-2xl">
-              <li className="flex items-start">
-                <div className="bg-accent text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0 mt-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <span className="text-left text-lg">{t('home_token_bullet_1')}</span>
-              </li>
-              <li className="flex items-start">
-                <div className="bg-accent text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0 mt-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <span className="text-left text-lg">{t('home_token_bullet_2')}</span>
-              </li>
-              <li className="flex items-start">
-                <div className="bg-accent text-white rounded-full w-8 h-8 flex items-center justify-center mr-3 flex-shrink-0 mt-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <span className="text-left text-lg">{t('home_token_bullet_3')}</span>
-              </li>
-            </ul>
-            
-            <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <Heading level={2} className="text-3xl md:text-4xl font-normal text-gray-900 tracking-tight text-center mb-4">
+              {t('home_token_press_title')}
+            </Heading>
+            <div className="text-center flex items-center justify-center">
               <LinkButton
-                className="!w-64 font-bold text-xl py-4 relative transition-all duration-300 hover:scale-105 hover:shadow-xl"
-                href="/token"
-                size="small"
+                href="/press"
+                variant="secondary"
               >
-                {t('home_token_cta')}
+                {t('home_token_press_cta')}
               </LinkButton>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 max-w-5xl mx-auto">
+            <a 
+              href="https://www.context.news/rethinking-the-economy/digital-nomads-seek-sun-sea-sustainability-as-remote-work-booms" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="bg-gray-50 rounded-lg p-6 border border-gray-200 hover:border-gray-300 transition-all text-center"
+            >
+              <p className="text-sm font-serif font-bold text-gray-900 mb-1">Thomson Reuters</p>
+              <p className="text-xs text-gray-600 font-light">Context</p>
+            </a>
+            <a 
+              href="https://tynmagazine.com/traditional-dream-factory-surpasses-1-2-million-and-leads-the-regenerative-economy-in-europe"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-gray-50 rounded-lg p-6 border border-gray-200 hover:border-gray-300 transition-all text-center"
+            >
+              <p className="text-sm font-serif font-bold text-gray-900 mb-1">TyN Magazine</p>
+              <p className="text-xs text-gray-600 font-light">Nov 2025</p>
+            </a>
+            <a 
+              href="https://jornaleconomico.sapo.pt/noticias/traditional-dream-factory-lanca-nova-ronda-de-investimento-de-800-mil-euros-para-expandir-a-sua-ecovila/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-gray-50 rounded-lg p-6 border border-gray-200 hover:border-gray-300 transition-all text-center"
+            >
+              <p className="text-sm font-serif font-bold text-gray-900 mb-1">Jornal Económico</p>
+              <p className="text-xs text-gray-600 font-light">Portugal</p>
+            </a>
+            <a 
+              href="https://www.theportugalnews.com/news/2025-08-30/traditional-dream-factory-regenerative-village/85048"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-gray-50 rounded-lg p-6 border border-gray-200 hover:border-gray-300 transition-all text-center"
+            >
+              <p className="text-sm font-serif font-bold text-gray-900 mb-1">The Portugal News</p>
+              <p className="text-xs text-gray-600 font-light">Aug 2025</p>
+            </a>
+            <a 
+              href="https://expresso.pt/economia/economia_imobiliario/2025-06-26-nomadas-digitais-criam-aldeia-tecnologica-no-alentejo-354f740a"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-gray-50 rounded-lg p-6 border border-gray-200 hover:border-gray-300 transition-all text-center"
+            >
+              <p className="text-sm font-serif font-bold text-gray-900 mb-1">Expresso</p>
+              <p className="text-xs text-gray-600 font-light">Portugal</p>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-gray-50 py-24 md:py-32 border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-gray-600 mb-4 font-medium">
+                {t('home_token_section_label')}
+              </p>
+              <Heading display level={2} className="mb-6 text-2xl md:text-3xl font-normal text-gray-900 tracking-tight">
+                {t('home_token_section_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 mb-10 leading-relaxed font-light">
+                {t('home_token_section_subtitle')}
+              </p>
+              
+              <div className="space-y-6">
+                <div className="flex gap-4">
+                  <div className="w-11 h-11 bg-gray-900 rounded flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M13.8 12H3" />
+                    </svg>
+                  </div>
+                  <div>
+                    <Heading level={4} className="text-base font-semibold text-gray-900 mb-2">
+                      {t('home_token_feature_unlock_title')}
+                    </Heading>
+                    <p className="text-sm text-gray-700 leading-relaxed font-light mb-3">
+                      {t('home_token_feature_unlock_desc')}
+                    </p>
+                    <p className="flex justify-center align-center items-center">
+                      <LinkButton
+                        href="/press"
+                        variant="secondary"
+                      >
+                        {t('home_token_press_link')}
+                      </LinkButton>
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-11 h-11 bg-gray-900 rounded flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 20V10M18 20V4M6 20v-4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <Heading level={4} className="text-base font-semibold text-gray-900 mb-2">
+                      {t('home_token_feature_voice_title')}
+                    </Heading>
+                    <p className="text-sm text-gray-700 leading-relaxed font-light">
+                      {t('home_token_feature_voice_desc')}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-11 h-11 bg-gray-900 rounded flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 6v6l4 2" />
+                    </svg>
+                  </div>
+                  <div>
+                    <Heading level={4} className="text-base font-semibold text-gray-900 mb-2">
+                      {t('home_token_feature_upside_title')}
+                    </Heading>
+                    <p className="text-sm text-gray-700 leading-relaxed font-light">
+                      {t('home_token_feature_upside_desc')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg p-8 shadow-sm border border-gray-300">
+              <div className="flex items-center gap-4 mb-8 pb-6 border-b border-gray-300">
+                <div className="w-14 h-14 bg-gray-900 rounded-lg flex items-center justify-center text-white font-semibold text-base">
+                  $TDF
+                </div>
+                <Heading level={3} className="text-xl font-normal text-gray-900">
+                  TDF Token
+                </Heading>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 rounded border border-gray-300 p-5">
+                  <div className="text-xs uppercase tracking-wider text-gray-600 mb-2 font-medium">
+                    {t('home_token_stat_holders')}
+                  </div>
+                  <div className="text-2xl font-normal text-gray-900">
+                    {tokenHolders !== null ? tokenHolders.toLocaleString() : '—'}
+                  </div>
+                </div>
+                <div className="bg-gray-50 rounded border border-gray-300 p-5">
+                  <div className="text-xs uppercase tracking-wider text-gray-600 mb-2 font-medium">
+                    {t('home_token_stat_supply')}
+                  </div>
+                  <div className="text-2xl font-normal text-gray-900">
+                    {isLoadingChainData ? '...' : (currentSupply !== null ? currentSupply.toLocaleString() : '6,300')}
+                  </div>
+                </div>
+                <div className="bg-gray-50 rounded border border-gray-300 p-5">
+                  <div className="text-xs uppercase tracking-wider text-gray-600 mb-2 font-medium">
+                    {t('home_token_stat_price')}
+                  </div>
+                  <div className="text-2xl font-normal text-gray-900">€256</div>
+                  <div className="text-xs text-gray-600 mt-1 font-light">{t('home_token_stat_price_note')}</div>
+                </div>
+                <div className="bg-gray-50 rounded border border-gray-300 p-5">
+                  <div className="text-xs uppercase tracking-wider text-gray-600 mb-2 font-medium">
+                    {t('home_token_stat_raised')}
+                  </div>
+                  <div className="text-2xl font-normal text-gray-900">€384k</div>
+                  <div className="text-xs text-gray-600 mt-1 font-light">{t('home_token_stat_raised_note')}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-16 pt-16 border-t border-gray-300">
+            <div className="max-w-3xl mx-auto">
+              <Heading level={3} className="mb-4 text-xl md:text-2xl font-normal text-gray-900 tracking-tight">
+                {t('home_token_citizenship_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 mb-6 leading-relaxed font-light">
+                {t('home_token_citizenship_desc')}
+              </p>
               <LinkButton
-                className="!w-64 font-bold text-xl py-4 relative transition-all duration-300 hover:scale-105 hover:shadow-xl"
                 href="/citizenship"
                 variant="secondary"
-                size="small"
               >
-                {t('citizenship_become_citizen_button')}
+                {t('home_token_citizenship_cta')}
               </LinkButton>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="py-12 text-white -mx-4">
-          <div className="text-center">
-            <PhotoGallery className="mt-8" />
+
+      <section className="bg-white py-24 md:py-32 border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-16 items-start">
+            {/* Left: Completing the village */}
+            <div>
+              <p className="text-xs uppercase tracking-wider text-gray-600 mb-4 font-medium">
+                {t('home_build_section_label')}
+              </p>
+              <Heading display level={2} className="mb-6 text-2xl md:text-3xl font-normal text-gray-900 tracking-tight">
+                {t('home_build_section_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 mb-10 max-w-3xl leading-relaxed font-light">
+                {t('home_build_section_subtitle')}
+              </p>
+
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-7 h-7 bg-gray-900 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <Heading level={4} className="text-base font-semibold text-gray-900 mb-2">
+                      {t('home_build_item_suites')}
+                    </Heading>
+                    <p className="text-sm text-gray-700 leading-relaxed font-light">
+                      {t('home_build_item_suites_desc')}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-7 h-7 bg-gray-900 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <Heading level={4} className="text-base font-semibold text-gray-900 mb-2">
+                      {t('home_build_item_studios')}
+                    </Heading>
+                    <p className="text-sm text-gray-700 leading-relaxed font-light">
+                      {t('home_build_item_studios_desc')}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-7 h-7 bg-gray-900 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <Heading level={4} className="text-base font-semibold text-gray-900 mb-2">
+                      {t('home_build_item_restaurant')}
+                    </Heading>
+                    <p className="text-sm text-gray-700 leading-relaxed font-light">
+                      {t('home_build_item_restaurant_desc')}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-7 h-7 bg-gray-900 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <Heading level={4} className="text-base font-semibold text-gray-900 mb-2">
+                      {t('home_build_item_mushroom')}
+                    </Heading>
+                    <p className="text-sm text-gray-700 leading-relaxed font-light">
+                      {t('home_build_item_mushroom_desc')}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-7 h-7 bg-gray-900 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <Heading level={4} className="text-base font-semibold text-gray-900 mb-2">
+                      {t('home_build_item_wellness')}
+                    </Heading>
+                    <p className="text-sm text-gray-700 leading-relaxed font-light">
+                      {t('home_build_item_wellness_desc')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Participation Structures */}
+            <div>
+              <Heading display level={2} className="mb-6 text-2xl md:text-3xl font-normal text-gray-900 tracking-tight">
+                {t('home_investment_opportunities_title')}
+              </Heading>
+
+              <div className="space-y-8">
+                <div className="border-t border-gray-300 pt-8">
+                  <Heading level={3} className="mb-4 text-base font-semibold text-gray-900">
+                    {t('home_invest_cohousing_title')}
+                  </Heading>
+                  <p className="text-sm text-gray-700 mb-6 leading-relaxed font-light">
+                    {t('home_invest_cohousing_desc')}
+                  </p>
+                  <LinkButton
+                    href="/dataroom"
+                    variant="secondary"
+                    className="w-full"
+                  >
+                    {t('home_invest_cohousing_cta')}
+                  </LinkButton>
+                </div>
+
+                <div className="border-t border-gray-300 pt-8">
+                  <Heading level={3} className="mb-4 text-base font-semibold text-gray-900">
+                    {t('home_invest_tokens_title')}
+                  </Heading>
+                  <p className="text-sm text-gray-700 mb-6 leading-relaxed font-light">
+                    {t('home_invest_tokens_desc')}
+                  </p>
+                  <LinkButton
+                    href="/token"
+                    variant="secondary"
+                    className="w-full"
+                  >
+                    {t('home_invest_tokens_cta')}
+                  </LinkButton>
+                </div>
+
+                <div className="border-t border-gray-300 pt-8">
+                  <Heading level={3} className="mb-4 text-base font-semibold text-gray-900">
+                    {t('home_invest_lending_title')}
+                  </Heading>
+                  <p className="text-sm text-gray-700 mb-6 leading-relaxed font-light">
+                    {t('home_invest_lending_desc')}
+                  </p>
+                  <LinkButton
+                    href="/dataroom"
+                    variant="secondary"
+                    className="w-full"
+                  >
+                    {t('home_invest_lending_cta')}
+                  </LinkButton>
+                </div>
+              </div>
+            </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section>
-          <div className="w-full flex justify-center flex-wrap mb-24">
-            <p className="font-bold uppercase text-center mb-6">
-              {t('home_reports_title')}
+      <section className="bg-white py-24 md:py-32 border-t border-gray-200">
+        <div className="max-w-4xl mx-auto px-6">
+          <Heading display level={2} className="mb-6 text-2xl md:text-3xl font-normal text-gray-900 tracking-tight">
+            {t('home_built_title')}
+          </Heading>
+          <p className="text-sm text-gray-700 mb-14 max-w-3xl leading-relaxed font-light">
+            {t('home_built_subtitle')}
+          </p>
+          
+          <div className="space-y-12 mb-12">
+            {/* 2023 */}
+            <div className="flex gap-6">
+              <div className="flex flex-col items-center">
+                <div className="w-7 h-7 bg-accent rounded-full flex-shrink-0"></div>
+                <div className="bg-accent w-[2px] h-full mt-2"></div>
+              </div>
+              <div className="flex-1 pb-8">
+                <div className="flex items-center gap-3 mb-3">
+                  <Heading level={4} className="text-accent uppercase font-normal text-sm">
+                    2023
+                  </Heading>
+                  <p className="uppercase font-bold text-sm text-gray-900">
+                    {t('roadmap_2023_title')}
+                  </p>
+                </div>
+                <ul className="space-y-2 list-none pl-0">
+                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
+                    <span className="text-accent mr-3 mt-1">•</span>
+                    <span>{t('roadmap_2023_bullet_1')}</span>
+                  </li>
+                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
+                    <span className="text-accent mr-3 mt-1">•</span>
+                    <span>{t('roadmap_2023_bullet_2')}</span>
+                  </li>
+                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
+                    <span className="text-accent mr-3 mt-1">•</span>
+                    <span>{t('roadmap_2023_bullet_5')}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* 2024 */}
+            <div className="flex gap-6">
+              <div className="flex flex-col items-center">
+                <div className="w-7 h-7 bg-accent rounded-full flex-shrink-0"></div>
+                <div className="bg-accent w-[2px] h-full mt-2"></div>
+              </div>
+              <div className="flex-1 pb-8">
+                <div className="flex items-center gap-3 mb-3">
+                  <Heading level={4} className="text-accent uppercase font-normal text-sm">
+                    2024
+                  </Heading>
+                  <p className="uppercase font-bold text-sm text-gray-900">
+                    {t('roadmap_2024_fundraising')}
+                  </p>
+                </div>
+                <ul className="space-y-2 list-none pl-0">
+                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
+                    <span className="text-accent mr-3 mt-1">•</span>
+                    <span>{t('roadmap_2024_bullet_1')}</span>
+                  </li>
+                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
+                    <span className="text-accent mr-3 mt-1">•</span>
+                    <span>{t('roadmap_2024_bullet_2')}</span>
+                  </li>
+                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
+                    <span className="text-accent mr-3 mt-1">•</span>
+                    <span>{t('roadmap_2024_bullet_3')}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* 2025 */}
+            <div className="flex gap-6">
+              <div className="flex flex-col items-center">
+                <div className="w-7 h-7 bg-accent-light border-4 border-accent rounded-full flex-shrink-0"></div>
+                <div className="bg-accent-light w-[2px] h-full mt-2"></div>
+              </div>
+              <div className="flex-1 pb-8">
+                <div className="flex items-center gap-3 mb-3">
+                  <Heading level={4} className="text-accent uppercase font-normal text-sm">
+                    2025
+                  </Heading>
+                  <p className="uppercase font-bold text-sm text-gray-900">
+                    {t('roadmap_2025_title')}
+                  </p>
+                </div>
+                <ul className="space-y-2 list-none pl-0">
+                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
+                    <span className="text-accent mr-3 mt-1">•</span>
+                    <span>{t('roadmap_2025_bullet_1')}</span>
+                  </li>
+                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
+                    <span className="text-accent mr-3 mt-1">•</span>
+                    <span>{t('roadmap_2025_bullet_4')}</span>
+                  </li>
+                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
+                    <span className="text-accent mr-3 mt-1">•</span>
+                    <span>{t('roadmap_2025_bullet_6')}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* 2026 */}
+            <div className="flex gap-6">
+              <div className="flex flex-col items-center">
+                <div className="w-7 h-7 bg-accent-light rounded-full flex-shrink-0"></div>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <Heading level={4} className="text-accent uppercase font-normal text-sm">
+                    2026
+                  </Heading>
+                  <p className="uppercase font-bold text-sm text-gray-900">
+                    {t('roadmap_2026_title')}
+                  </p>
+                </div>
+                <ul className="space-y-2 list-none pl-0">
+                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
+                    <span className="text-accent mr-3 mt-1">•</span>
+                    <span>{t('roadmap_2026_bullet_1')}</span>
+                  </li>
+                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
+                    <span className="text-accent mr-3 mt-1">•</span>
+                    <span>{t('roadmap_2026_bullet_2')}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center pt-6 border-t border-gray-200">
+            <LinkButton
+              href="/roadmap"
+              variant="secondary"
+            >
+              {t('home_built_roadmap_cta')}
+            </LinkButton>
+          </div>
+        </div>
+      </section>
+
+
+      <section className="bg-white py-24 md:py-32 border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <p className="text-xs uppercase tracking-wider text-accent mb-4 font-semibold">
+              {t('home_authority_section_label')}
             </p>
-            <div className="flex flex-wrap w-full justify-center gap-2">
+            <Heading display level={2} className="mb-6 text-3xl md:text-4xl font-normal text-gray-900 tracking-tight">
+              {t('home_authority_section_title')}
+            </Heading>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            <div className="bg-gray-50 rounded-xl p-8 text-center border-2 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="w-16 h-16 bg-accent rounded-xl flex items-center justify-center mx-auto mb-6 shadow-md">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+              </div>
+              <Heading level={4} className="text-lg font-semibold text-gray-900 mb-3">
+                {t('home_authority_swiss_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 leading-relaxed font-light">
+                {t('home_authority_swiss_desc')}
+              </p>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-8 text-center border-2 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="w-16 h-16 bg-accent rounded-xl flex items-center justify-center mx-auto mb-6 shadow-md">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <path d="M3 9h18M9 21V9" />
+                </svg>
+              </div>
+              <Heading level={4} className="text-lg font-semibold text-gray-900 mb-3">
+                {t('home_authority_academic_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 leading-relaxed font-light">
+                {t('home_authority_academic_desc')}
+              </p>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-8 text-center border-2 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="w-16 h-16 bg-accent rounded-xl flex items-center justify-center mx-auto mb-6 shadow-md">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+              </div>
+              <Heading level={4} className="text-lg font-semibold text-gray-900 mb-3">
+                {t('home_authority_transparency_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 leading-relaxed font-light">
+                {t('home_authority_transparency_desc')}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto mb-12">
+            <div className="relative">
+              <div className="absolute -top-4 -left-4 text-8xl md:text-9xl text-gray-200 font-serif leading-none">"</div>
+              <blockquote className="text-2xl md:text-3xl font-light text-gray-900 leading-relaxed mb-6 relative z-10 italic">
+                {t('home_authority_quote_1')}
+              </blockquote>
+              <p className="text-sm text-gray-600 font-medium">{t('home_authority_quote_1_source')}</p>
+            </div>
+            <div className="relative">
+              <div className="absolute -top-4 -left-4 text-8xl md:text-9xl text-gray-200 font-serif leading-none">"</div>
+              <blockquote className="text-2xl md:text-3xl font-light text-gray-900 leading-relaxed mb-6 relative z-10 italic">
+                {t('home_authority_quote_2')}
+              </blockquote>
+              <p className="text-sm text-gray-600 font-medium">{t('home_authority_quote_2_source')}</p>
+            </div>
+          </div>
+
+          <div className="pt-12 border-t border-gray-200 max-w-5xl mx-auto">
+            <p className="text-sm text-gray-600 mb-6 text-center font-light">
+              {t('home_authority_reports_intro')}
+            </p>
+            <div className="flex flex-wrap justify-center gap-3">
               <LinkButton
                 className="w-fit"
                 variant="secondary"
                 onClick={(e) => {
                   e.preventDefault();
                   setSelectedReport({
-                    year: '2021',
-                    url: '/pdf/2021-TDF-report.pdf',
+                    year: '2025',
+                    url: '/pdf/2025-TDF-report.pdf',
                   })
                 } }
               >
-                {t('home_reports_2021')}
-              </LinkButton>
-              <LinkButton
-                className="w-fit"
-                variant="secondary"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setSelectedReport({
-                    year: '2022',
-                    url: '/pdf/2022-TDF-report.pdf',
-                  })
-                } }
-              >
-                {t('home_reports_2022')}
+                {t('home_reports_2025')}
               </LinkButton>
               <LinkButton
                 className="w-fit"
@@ -314,174 +774,113 @@ const HomePage = () => {
                 onClick={(e) => {
                   e.preventDefault();
                   setSelectedReport({
-                    year: '2025',
-                    url: '/pdf/2025-TDF-report.pdf',
+                    year: '2022',
+                    url: '/pdf/2022-TDF-report.pdf',
                   })
                 } }
               >
-                {t('home_reports_2025')}
+                {t('home_reports_2022')}
+              </LinkButton>
+              <LinkButton
+                className="w-fit"
+                variant="secondary"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setSelectedReport({
+                    year: '2021',
+                    url: '/pdf/2021-TDF-report.pdf',
+                  })
+                } }
+              >
+                {t('home_reports_2021')}
               </LinkButton>
             </div>
-            <div className="w-full text-center mt-8">
-              <p className="text-lg mb-4">
-                See our complete journey and future plans in our{' '}
-                <Link href="/roadmap" className="text-accent underline hover:text-accent-dark">
-                  detailed roadmap
-                </Link>
-              </p>
-            </div>
           </div>
-        </section>
+        </div>
+      </section>
 
+      <section className="bg-gray-50 py-20 md:py-28 border-t border-gray-100">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <Heading level={2} className="mb-4 text-2xl md:text-3xl font-light text-gray-900 tracking-tight">
+            {t('home_dataroom_teaser_title')}
+          </Heading>
+          <p className="text-sm text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto">
+            {t('home_dataroom_teaser_desc')}
+          </p>
+          <LinkButton
+            href="/dataroom"
+            variant="primary"
+            onClick={() =>
+              event('click', {
+                category: 'HomePage',
+                label: 'view_dataroom',
+              })
+            }
+          >
+            {t('home_dataroom_teaser_cta')}
+          </LinkButton>
+        </div>
+      </section>
 
-        {/* <section className="mb-12" id="how-to-play">
-          <div>
-            <div className="max-w-prose mb-12 mx-auto">
-              <Heading
-                level={2}
-                className="text-center md:text-left mb-4 uppercase text-2xl font-black"
-              >
-                {t(`home_how_to_play_title`)}
-              </Heading>
-              <p>{t(`home_how_to_play_desc_1`)}</p>
-              <p>{t(`home_how_to_play_desc_2`)}</p>
-            </div>
-            <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-center align-center">
-              <div className="p-4 border-2 border-primary rounded-xl md:w-[30%]">
-                <div className="flex justify-between flex-col h-full">
-                  <div>
-                    <Heading level={4} className="text-center">
-                      {t(`home_how_to_play_guest_title`)}
-                    </Heading>
-                    <p className="my-2 italic">
-                      {t(`home_how_to_play_guest_desc`)}
-                    </p>
-                    <ul>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t(`home_how_to_play_guest_bullet_1`)}
-                      </li>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t(`home_how_to_play_guest_bullet_2`)}
-                      </li>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t(`home_how_to_play_guest_bullet_3`)}
-                      </li>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t(`home_how_to_play_guest_bullet_4`)}
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="mt-4 mb-4 flex justify-center align-center">
-                    <Link href="/stay" className="uppercase btn-primary">
-                      {t(`home_how_to_play_guest_cta`)}
-                    </Link>
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 border-2 border-primary rounded-xl md:w-[30%]">
-                <div className="flex justify-between flex-col h-full">
-                  <div>
-                    <Heading level={4} className="text-center">
-                      {t(`home_how_to_play_volunteer_title`)}
-                    </Heading>
-                    <p className="my-2 italic">
-                      {t(`home_how_to_play_volunteer_desc`)}
-                    </p>
-                    <ul>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t(`home_how_to_play_volunteer_bullet_1`)}
-                      </li>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t(`home_how_to_play_volunteer_bullet_2`)}
-                      </li>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t(`home_how_to_play_volunteer_bullet_3`)}
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="mt-4 mb-4 flex justify-center align-center">
-                    <Link href="/volunteer" className="uppercase btn-primary">
-                      {t(`home_how_to_play_volunteer_cta`)}
-                    </Link>
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 border-2 border-primary rounded-xl md:w-[30%]">
-                <div className="flex justify-between flex-col h-full">
-                  <div>
-                    <Heading level={4} className="text-center">
-                      {t(`home_how_to_play_resident_title`)}
-                    </Heading>
-                    <p className="my-2 italic">
-                      {t(`home_how_to_play_resident_desc`)}
-                    </p>
-                    <ul>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t(`home_how_to_play_resident_bullet_1`)}
-                      </li>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t(`home_how_to_play_resident_bullet_2`)}
-                      </li>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t(`home_how_to_play_resident_bullet_3`)}
-                      </li>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t(`home_how_to_play_resident_bullet_4`)}
-                      </li>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        {t(`home_how_to_play_resident_bullet_5`)}
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="mt-4 mb-4 flex justify-center align-center">
-                    <Link href="/projects" className="uppercase btn-primary">
-                      {t(`home_how_to_play_resident_cta`)}
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section> */}
-
-        {/* <section className="flex justify-center my-20 -mx-4 p-4 py-12 bg-black text-white">
-          <div className="max-w-prose flex flex-wrap">
-            <Heading className="text-center md:text-left mb-6 uppercase text-2xl font-black">
-              {t(`home_movement_title`)}
-            </Heading>
-            <p className="mb-8">
-              {t(`home_movement_desc_1`)}{' '}
-              <Link
-                href="https://docs.google.com/document/d/1Ocv9rtRkDxsJmeRxrL6mV07EyWcHc2YqfN8mHoylO2E/edit"
-                className="underline"
-              >
-                {t(`home_movement_link`)}
-              </Link>{' '}
-              {t(`home_movement_desc_2`)}
-            </p>
-            <Link
-              href="https://oasa.earth/"
-              target="_blank"
-              className="underline"
+      <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-24 md:py-32 border-t border-gray-200">
+        <div className="max-w-3xl mx-auto px-6 text-center">
+          <p className="text-xs uppercase tracking-wider text-gray-400 mb-4 font-medium">
+            {t('home_webinar_section_label')}
+          </p>
+          <Heading display level={2} className="mb-6 text-3xl md:text-4xl font-normal text-white tracking-tight">
+            {t('home_webinar_section_title')}
+          </Heading>
+          <p className="text-base text-gray-300 mb-10 leading-relaxed max-w-2xl mx-auto font-light">
+            {t('home_webinar_section_desc')}
+          </p>
+          <div className="bg-white rounded-xl p-8 md:p-10 shadow-xl border border-gray-200 max-w-2xl mx-auto">
+            <form 
+              className="flex flex-col sm:flex-row gap-3 mb-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const name = formData.get('name');
+                const email = formData.get('email');
+                window.open(`https://calendly.com/samueldelesque?name=${encodeURIComponent(name as string)}&email=${encodeURIComponent(email as string)}`, '_blank');
+              }}
             >
-              {t(`home_movement_learn_more`)}
-            </Link>
+              <input
+                type="text"
+                name="name"
+                placeholder={t('home_webinar_form_name')}
+                required
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent"
+              />
+              <input
+                type="email"
+                name="email"
+                placeholder={t('home_webinar_form_email')}
+                required
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent"
+              />
+              <button
+                type="submit"
+                className="px-8 py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors whitespace-nowrap"
+              >
+                {t('home_webinar_form_submit')}
+              </button>
+            </form>
+            <p className="text-xs text-gray-500 text-center">
+              {t('home_webinar_form_note')}
+            </p>
           </div>
-        </section> */}
+        </div>
+      </section>
 
-        <UpcomingEventsIntro />
+      <UpcomingEventsIntro />
 
-        {/* this is needed because video embed in the header causes layout to be cut off at the bottom of the page */}
-        <section className="md:mb-[120vh]"></section>
-
-        {selectedReport && (
-          <ReportDownloadModal
-            closeModal={() => setSelectedReport(null)}
-            reportYear={selectedReport.year}
-            reportUrl={selectedReport.url}
-          />
-        )}
-      </div>
+      {selectedReport && (
+        <ReportDownloadModal
+          closeModal={() => setSelectedReport(null)}
+          reportYear={selectedReport.year}
+          reportUrl={selectedReport.url}
+        />
+      )}
     </>
   );
 };
