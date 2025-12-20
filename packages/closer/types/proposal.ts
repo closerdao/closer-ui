@@ -43,6 +43,7 @@ export type Proposal = {
     no: number;
     abstain: number;
   };
+  quorum?: number;
   // Base fields from _model
   visibleBy: string[];
   createdBy: string;
