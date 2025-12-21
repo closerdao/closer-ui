@@ -3,7 +3,7 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { PromptGetInTouchContext } from 'closer/components/PromptGetInTouchContext';
 
 import { Spinner } from 'closer';
-import { X } from 'lucide-react';
+import { X, MessageCircle, Send } from 'lucide-react';
 
 const SHOW_CHATBOT = true;
 
@@ -120,16 +120,6 @@ export default function HeroCloser() {
     }
   }, [conversation, isLoading]);
 
-  useEffect(() => {
-    if (isExpanded) {
-      document.body.classList.add('overflow-hidden');
-    } else {
-      document.body.classList.remove('overflow-hidden');
-    }
-    return () => {
-      document.body.classList.remove('overflow-hidden');
-    };
-  }, [isExpanded]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -205,8 +195,6 @@ export default function HeroCloser() {
     } finally {
       setIsLoading(false);
     }
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const toggleExpanded = () => {
@@ -223,195 +211,130 @@ export default function HeroCloser() {
   };
 
   return (
-    <div className="bg-white text-black font-sans">
+    <div className="bg-black text-white font-sans -mx-4 md:-mx-0">
       {/* Hero Section */}
       <section
         ref={heroRef}
-        className="mt-[-32px] relative pt-20 flex flex-col items-center justify-center text-center"
+        className="min-h-screen relative pt-20 flex flex-col items-center justify-center text-center px-6 md:px-[5vw]"
       >
         {isClient && (
           <canvas
             ref={canvasRef}
-            className='absolute top-0 left-0 w-full h-full z-0'
+            className='absolute top-0 left-0 w-full h-full z-0 opacity-20'
           />
         )}
 
-        <div className="relative z-10 px-6">
-          <h1 className="font-bold text-4xl md:text-6xl mb-8  max-w-5xl mx-auto">
-            {heroText}
+        <div className="relative z-10 px-6 py-32">
+          <p className="text-lg text-[#86868b] mb-4">The operating system for regenerative communities</p>
+          <h1 className="font-serif text-6xl md:text-8xl lg:text-[8rem] font-normal leading-[0.95] tracking-[-0.03em] mb-8 max-w-5xl mx-auto">
+            Decentralized<br />Autonomous <em className="italic">Villages</em>
           </h1>
-          <p className="text-lg max-w-2xl mx-auto mb-8 text-black">
-            {heroSubtext}
+          <p className="text-xl text-[#86868b] max-w-[500px] mx-auto mb-12">
+            Manage guests, spaces, events and resources. Token-powered governance when you&apos;re ready.
           </p>
-          {SHOW_CHATBOT && (
-            <div
-              className={`${
-                isExpanded
-                  ? 'fixed inset-0 z-50 bg-white flex flex-col transition-opacity duration-300 opacity-100'
-                  : 'flex justify-center z-50 mx-auto w-[260px] sm:w-[360px] mt-20'
-              }`}
-              style={
-                isExpanded
-                  ? {
-                      borderRadius: 0,
-                      width: '100vw',
-                      height: '100vh',
-                      position: 'fixed',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      overflow: 'hidden',
-                    }
-                  : {}
-              }
-            >
-              {/* Conversation History - only show when expanded */}
-              {isExpanded && (
+          <a
+            href="#features"
+            className="inline-block px-7 py-3.5 bg-white text-black rounded-full text-base hover:bg-gray-100 transition-colors"
+          >
+            Explore
+          </a>
+        </div>
+        
+        {SHOW_CHATBOT && (
+          <>
+            {!isExpanded && (
+              <button
+                onClick={toggleExpanded}
+                className="fixed bottom-6 right-6 z-[60] w-14 h-14 bg-black text-white rounded-full shadow-2xl hover:shadow-3xl hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center"
+                aria-label="Open chat"
+              >
+                <MessageCircle className="w-6 h-6" />
+              </button>
+            )}
+
+            {isExpanded && (
+              <div className="fixed bottom-6 right-6 z-[60] w-[calc(100vw-3rem)] md:w-full md:max-w-md h-[600px] md:h-[600px] bg-white border border-gray-200 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                  <h3 className="text-lg font-semibold text-gray-900">Closer AI</h3>
+                  <button
+                    onClick={toggleExpanded}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    aria-label="Close chat"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
                 <div
                   ref={conversationRef}
-                  className="flex-1 overflow-y-auto px-8 py-6 space-y-8 bg-white"
-                  style={{ minHeight: 0 }}
+                  className="flex-1 overflow-y-auto px-5 py-4 space-y-6"
                 >
                   {conversation.length === 0 && !isLoading && (
-                    <div className="text-left text-zinc-500 text-lg py-4">
-                      Ask me anything about Closer!
+                    <div className="text-center text-gray-500 py-8">
+                      <MessageCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                      <p className="text-sm">Ask me anything about Closer</p>
                     </div>
                   )}
 
-                  <div className="max-w-2xl mx-auto flex justify-end z-100 pt-20">
-                    <button
-                      onClick={toggleExpanded}
-                      className="ml-2 text-zinc-500 hover:text-zinc-700 p-1 border-zinc-300"
-                      title="Close chat"
-                    >
-                      <X className="w-6 h-6" />
-                    </button>
-                  </div>
-
                   {conversation.map((item, index) => (
-                    <div key={index} className="space-y-4 max-w-2xl mx-auto">
-                      {/* User question in large, left-aligned text */}
-                      <div className="w-full flex">
-                        <div className="pt-8 text-left text-3xl font-medium text-zinc-900 w-full break-words">
-                          {item.question}
+                    <div key={index} className="space-y-3">
+                      <div className="flex justify-end">
+                        <div className="bg-black text-white rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[80%]">
+                          <p className="text-sm leading-relaxed">{item.question}</p>
                         </div>
                       </div>
-                      {/* Closer answer */}
-                      <div className=" text-lg py-6">
-                        <div className="whitespace-pre-wrap text-left">
-                          {/* <span className="font-medium text-accent">
-                            Closer:
-                          </span>{' '} */}
-                          {item.answer}
+                      {item.answer && (
+                        <div className="flex justify-start">
+                          <div className="bg-gray-50 text-gray-900 rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-[80%]">
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                              {item.answer}
+                            </p>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   ))}
 
                   {isLoading && (
-                    <div className="rounded-lg text-lg max-w-2xl mx-auto">
-                      <div className="flex items-center space-x-2">
-                        <Spinner />
-                        <span>Thinking...</span>
+                    <div className="flex justify-start">
+                      <div className="bg-gray-50 rounded-2xl rounded-tl-sm px-4 py-2.5">
+                        <div className="flex items-center space-x-2">
+                          <Spinner />
+                          <span className="text-sm text-gray-500">Thinking...</span>
+                        </div>
                       </div>
                     </div>
                   )}
-
-                  {/* Input Form - always at the bottom in expanded view */}
-                  <form
-                    onSubmit={handleSubmit}
-                    className={`flex items-center space-x-4 max-w-2xl mx-auto ${
-                      isExpanded
-                        ? ' border-b border-zinc-200 bg-white'
-                        : 'px-4 py-2'
-                    }`}
-                    style={isExpanded ? {} : {}}
-                  >
-                    <input
-                      type="text"
-                      placeholder="Ask a follow-up..."
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      className={`text-2xl border-none flex-1 bg-transparent text-black placeholder-zinc-400 focus:outline-none ${
-                        isExpanded ? 'py-2 px-0' : ''
-                      }`}
-                      disabled={isLoading}
-                    />
-                    {/* {!isExpanded && conversation.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={toggleExpanded}
-                        className="text-sm text-zinc-600 hover:text-black px-1"
-                        title="Expand chat"
-                      >
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                        >
-                          <path d="M6 15l6-6 6 6" />
-                        </svg>
-                      </button>
-                    )} */}
-                    <button
-                      type="submit"
-                      className="text-lg text-zinc-600 hover:text-black font-bold px-3 py-2 rounded"
-                      disabled={isLoading}
-                    >
-                      ↵
-                    </button>
-                  </form>
                 </div>
-              )}
-              {/* Collapsed view: revert to original */}
-              {!isExpanded && (
+
                 <form
                   onSubmit={handleSubmit}
-                  className="flex items-center space-x-2 px-4 py-2 w-[260px] sm:w-[360px] border bg-white border-accent rounded-full shadow-lg"
+                  className="border-t border-gray-100 p-4 bg-white"
                 >
-                  <input
-                    type="text"
-                    placeholder="Ask Closer anything..."
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    className="border-none flex-1 bg-transparent text-sm text-black placeholder-zinc-400 focus:outline-none"
-                    disabled={isLoading}
-                  />
-                  {/* {conversation.length > 0 && (
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      placeholder="Type a message..."
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      className="flex-1 border border-gray-200 rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-0 focus:border-gray-300"
+                      disabled={isLoading}
+                      autoFocus
+                    />
                     <button
-                      type="button"
-                      onClick={toggleExpanded}
-                      className="text-sm text-zinc-600 hover:text-black px-1"
-                      title="Expand chat"
+                      type="submit"
+                      disabled={isLoading || !input.trim()}
+                      className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      aria-label="Send message"
                     >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M6 15l6-6 6 6" />
-                      </svg>
+                      <Send className="w-4 h-4" />
                     </button>
-                  )} */}
-                  <button
-                    type="submit"
-                    className="text-sm text-zinc-600 hover:text-black"
-                    disabled={isLoading}
-                  >
-                    ↵
-                  </button>
+                  </div>
                 </form>
-              )}
-            </div>
-          )}
-        </div>
+              </div>
+            )}
+          </>
+        )}
       </section>
     </div>
   );
