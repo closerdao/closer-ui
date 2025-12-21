@@ -105,6 +105,12 @@ const MemberMenu = () => {
           isOpen: false,
           items: [
             {
+              label: t('menu_data_room'),
+              url: '/dataroom',
+              enabled: APP_NAME?.toLowerCase() === 'tdf',
+              rbacPage: 'Dataroom',
+            },
+            {
               label: t('menu_overview'),
               url: '/dataroom',
               enabled: true,
@@ -155,6 +161,12 @@ const MemberMenu = () => {
               label: t('menu_governance_dao'),
               url: '/governance',
               enabled: true,
+            },
+            {
+              label: t('navigation_volunteer'),
+              url: '/volunteer',
+              enabled: true,
+              rbacPage: 'Volunteer',
             },
             {
               label: t('menu_member_stories'),

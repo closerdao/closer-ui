@@ -151,6 +151,10 @@ const VolunteerOpportunitiesPage = ({
                         {t('volunteers_skill_building_value')}
                       </li>
                       <li>
+                        <strong>{t('volunteers_skill_mushroom_farm_label')}</strong>{' '}
+                        {t('volunteers_skill_mushroom_farm_value')}
+                      </li>
+                      <li>
                         <strong>{t('volunteers_skill_others_label')}</strong>{' '}
                         {t('volunteers_skill_others_value')}
                       </li>

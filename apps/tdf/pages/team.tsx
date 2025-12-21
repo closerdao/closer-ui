@@ -465,7 +465,7 @@ const TeamPage = () => {
               {t('team_join_desc')}
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Link href="/volunteer" className="bg-gray-900 text-white px-8 py-4 rounded-lg font-medium hover:bg-gray-800 transition-colors">
+              <Link href="/roles" className="bg-gray-900 text-white px-8 py-4 rounded-lg font-medium hover:bg-gray-800 transition-colors">
                 {t('team_join_view_positions')}
               </Link>
               <Link href="/volunteer" className="bg-white text-gray-900 px-8 py-4 rounded-lg font-medium border border-gray-200 hover:border-gray-400 transition-colors">

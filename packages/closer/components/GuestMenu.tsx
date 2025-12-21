@@ -132,6 +132,12 @@ const GuestMenu = () => {
               enabled: APP_NAME?.toLowerCase() === 'tdf',
             },
             {
+              label: t('navigation_volunteer'),
+              url: '/volunteer',
+              enabled: true,
+              rbacPage: 'Volunteer',
+            },
+            {
               label: t('menu_member_stories'),
               url: '/members',
               enabled: true,
