@@ -26,7 +26,7 @@ const HomePage = () => {
           <div className="max-w-7xl mx-auto px-6 py-16 md:py-20">
             <div className="max-w-4xl mx-auto text-center">
               <p className="text-xs uppercase tracking-wider text-gray-400 mb-4 font-medium">
-                Data Room
+                {t('dataroom_hero_label')}
               </p>
               <Heading
                 className="text-3xl md:text-4xl mb-6 text-white font-normal leading-tight"
@@ -37,25 +37,25 @@ const HomePage = () => {
                 {t('dataroom_hero_subtitle')}
               </Heading>
               <p className="text-base text-gray-300 mb-12 leading-relaxed font-light max-w-2xl mx-auto">
-                Comprehensive financial data, investment structures, and operational metrics for informed decision-making.
+                {t('dataroom_hero_description')}
               </p>
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 max-w-3xl mx-auto">
                 <div className="bg-white/10 backdrop-blur-sm rounded border border-white/20 p-5 text-center">
                   <div className="text-2xl md:text-3xl font-normal text-white mb-2 font-serif">€2.49M</div>
-                  <div className="text-xs text-gray-300 font-light">Total Funding Target</div>
+                  <div className="text-xs text-gray-300 font-light">{t('dataroom_stat_total_funding')}</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded border border-white/20 p-5 text-center">
                   <div className="text-2xl md:text-3xl font-normal text-white mb-2 font-serif">€1.24M</div>
-                  <div className="text-xs text-gray-300 font-light">Construction Budget</div>
+                  <div className="text-xs text-gray-300 font-light">{t('dataroom_stat_construction_budget')}</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded border border-white/20 p-5 text-center">
                   <div className="text-2xl md:text-3xl font-normal text-white mb-2 font-serif">€521k</div>
-                  <div className="text-xs text-gray-300 font-light">2029 Revenue Target</div>
+                  <div className="text-xs text-gray-300 font-light">{t('dataroom_stat_revenue_target')}</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded border border-white/20 p-5 text-center">
                   <div className="text-2xl md:text-3xl font-normal text-white mb-2 font-serif">5ha</div>
-                  <div className="text-xs text-gray-300 font-light">Land Under Stewardship</div>
+                  <div className="text-xs text-gray-300 font-light">{t('dataroom_stat_land_stewardship')}</div>
                 </div>
               </div>
 
@@ -78,13 +78,13 @@ const HomePage = () => {
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
               <p className="text-xs uppercase tracking-wider text-gray-500 mb-4 font-medium">
-                Investment Overview
+                {t('dataroom_investment_overview_label')}
               </p>
               <Heading level={2} className="text-3xl md:text-4xl mb-6 text-gray-900 font-normal">
                 {t('dataroom_investment_highlights_title')}
               </Heading>
               <p className="text-base text-gray-700 max-w-3xl mx-auto leading-relaxed font-light">
-                Traditional Dream Factory offers impact investors a unique opportunity to support regenerative community development while earning competitive returns.
+                {t('dataroom_investment_highlights_description')}
               </p>
             </div>
             
@@ -152,7 +152,7 @@ const HomePage = () => {
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
               <p className="text-xs uppercase tracking-wider text-gray-500 mb-4 font-medium">
-                Track Record
+                {t('dataroom_track_record_label')}
               </p>
               <Heading level={2} className="text-3xl md:text-4xl mb-6 text-gray-900 font-normal">
                 {t('dataroom_track_record_title')}
@@ -261,7 +261,7 @@ const HomePage = () => {
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
               <p className="text-xs uppercase tracking-wider text-gray-500 mb-4 font-medium">
-                Development Timeline
+                {t('dataroom_timeline_label')}
               </p>
               <Heading level={2} className="text-3xl md:text-4xl mb-6 text-gray-900 font-normal">
                 {t('dataroom_timeline_title')}
@@ -318,7 +318,7 @@ const HomePage = () => {
 
                 <div className="flex items-start space-x-4 p-6 border-l-4 border-gray-400 bg-gray-50 rounded-r-lg">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">Full Hospitality Operation</h4>
+                    <h4 className="font-semibold text-gray-900 mb-2">{t('dataroom_full_hospitality_operation')}</h4>
                     <p className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_coliving_completion')}</p>
                   </div>
                 </div>
@@ -348,7 +348,7 @@ const HomePage = () => {
 
                 <div className="flex items-start space-x-4 p-6 border-l-4 border-gray-400 bg-gray-50 rounded-r-lg">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">Land Closing</h4>
+                    <h4 className="font-semibold text-gray-900 mb-2">{t('dataroom_land_closing_title')}</h4>
                     <p className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_cohousing_closing')}</p>
                   </div>
                 </div>
@@ -377,7 +377,7 @@ const HomePage = () => {
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
               <p className="text-xs uppercase tracking-wider text-gray-500 mb-4 font-medium">
-                Environmental Impact
+                {t('dataroom_environmental_impact_label')}
               </p>
               <Heading level={2} className="text-3xl md:text-4xl mb-6 text-gray-900 font-normal">
                 {t('dataroom_environmental_credits_title')}
@@ -492,7 +492,7 @@ const HomePage = () => {
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
               <p className="text-xs uppercase tracking-wider text-gray-500 mb-4 font-medium">
-                Financial Plan
+                {t('dataroom_financial_plan_label')}
               </p>
               <Heading level={2} className="text-3xl md:text-4xl mb-6 text-gray-900 font-normal">
                 {t('dataroom_use_of_funds_title')}
@@ -651,7 +651,7 @@ const HomePage = () => {
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
               <p className="text-xs uppercase tracking-wider text-gray-500 mb-4 font-medium">
-                Investment Breakdown
+                {t('dataroom_investment_breakdown_label')}
               </p>
               <Heading level={2} className="text-3xl md:text-4xl mb-6 text-gray-900 font-normal">
                 {t('dataroom_investment_map_title')}
@@ -769,7 +769,7 @@ const HomePage = () => {
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
               <p className="text-xs uppercase tracking-wider text-gray-500 mb-4 font-medium">
-                Documentation
+                {t('dataroom_documentation_label')}
               </p>
               <Heading level={2} className="text-3xl md:text-4xl mb-6 text-gray-900 font-normal">
                 {t('dataroom_documents_title')}

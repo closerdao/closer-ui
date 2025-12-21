@@ -177,9 +177,19 @@ const RegenerativeAgriculturePage = () => {
 };
 
 RegenerativeAgriculturePage.getInitialProps = async (context: NextPageContext) => {
-  return {
-    ...(await loadLocaleData(context)),
-  };
+  try {
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    return {
+      messages,
+    };
+  } catch (err: unknown) {
+    return {
+      messages: null,
+    };
+  }
 };
 
 export default RegenerativeAgriculturePage;

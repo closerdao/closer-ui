@@ -1,13 +1,19 @@
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 
 import ReportDownloadModal from '../components/ReportDownloadModal';
 import DynamicPhotoGallery from 'closer/components/PhotoGallery/DynamicPhotoGallery';
 import LinkButton from 'closer/components/ui/LinkButton';
 import UpcomingEventsIntro from 'closer/components/UpcomingEventsIntro';
 
-import { Heading } from 'closer';
+import {
+  Heading,
+  WalletState,
+  useAuth,
+  api,
+} from 'closer';
 import { useBuyTokens } from 'closer/hooks/useBuyTokens';
 import { useConfig } from 'closer/hooks/useConfig';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
@@ -18,8 +24,11 @@ import { event } from 'nextjs-google-analytics';
 const HomePage = () => {
   const t = useTranslations();
 
+  const { isAuthenticated, user } = useAuth();
+  const { isWalletReady } = useContext(WalletState);
   const { getCurrentSupplyWithoutWallet } = useBuyTokens();
   const { BLOCKCHAIN_DAO_TOKEN } = useConfig() || {};
+  const router = useRouter();
 
   const [selectedReport, setSelectedReport] = useState<{
     year: string;
@@ -29,6 +38,11 @@ const HomePage = () => {
   const [tokenHolders, setTokenHolders] = useState<number | null>(null);
   const [isLoadingChainData, setIsLoadingChainData] = useState(false);
   const hasFetchedChainData = useRef(false);
+  const [webinarEmail, setWebinarEmail] = useState('');
+  const [webinarName, setWebinarName] = useState('');
+  const [webinarLoading, setWebinarLoading] = useState(false);
+  const [webinarSuccess, setWebinarSuccess] = useState(false);
+  const [webinarError, setWebinarError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!BLOCKCHAIN_DAO_TOKEN?.address) {
@@ -96,7 +110,14 @@ const HomePage = () => {
     };
 
     fetchTokenData();
-  }, [BLOCKCHAIN_DAO_TOKEN?.address]);
+  }, []);
+
+  useEffect(() => {
+    const localEmail = typeof localStorage !== 'undefined' ? localStorage.getItem('email') : null;
+    if (localEmail) {
+      setWebinarEmail(localEmail);
+    }
+  }, []);
 
   return (
     <>
@@ -128,19 +149,19 @@ const HomePage = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 max-w-4xl mx-auto">
               <div className="bg-gray-50 rounded border border-gray-300 p-6 text-center">
                 <div className="text-3xl md:text-4xl font-normal text-gray-900 mb-2 font-serif">280</div>
-                <div className="text-xs text-gray-600 font-light">Token holders</div>
+                <div className="text-xs text-gray-600 font-light">{t('home_stats_token_holders')}</div>
               </div>
               <div className="bg-gray-50 rounded border border-gray-300 p-6 text-center">
                 <div className="text-3xl md:text-4xl font-normal text-gray-900 mb-2 font-serif">€1.25M+</div>
-                <div className="text-xs text-gray-600 font-light">Total capital raised</div>
+                <div className="text-xs text-gray-600 font-light">{t('home_stats_total_capital')}</div>
               </div>
               <div className="bg-gray-50 rounded border border-gray-300 p-6 text-center">
                 <div className="text-3xl md:text-4xl font-normal text-gray-900 mb-2 font-serif">5ha</div>
-                <div className="text-xs text-gray-600 font-light">Land under stewardship</div>
+                <div className="text-xs text-gray-600 font-light">{t('home_stats_land_stewardship')}</div>
               </div>
               <div className="bg-gray-50 rounded border border-gray-300 p-6 text-center col-span-2 md:col-span-1">
                 <div className="text-3xl md:text-4xl font-normal text-gray-900 mb-2 font-serif">€514k</div>
-                <div className="text-xs text-gray-600 font-light">2029 revenue target</div>
+                <div className="text-xs text-gray-600 font-light">{t('home_stats_revenue_target')}</div>
               </div>
             </div>
 
@@ -184,23 +205,12 @@ const HomePage = () => {
 
       <section className="bg-white py-24 md:py-32 border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="mb-12">
+          <div>
             <p className="text-xs uppercase tracking-wider text-gray-600 mb-4 font-medium text-center">
               {t('home_press_label')}
             </p>
-            <Heading level={2} className="text-3xl md:text-4xl font-normal text-gray-900 tracking-tight text-center mb-4">
-              {t('home_token_press_title')}
-            </Heading>
-            <div className="text-center flex items-center justify-center">
-              <LinkButton
-                href="/press"
-                variant="secondary"
-              >
-                {t('home_token_press_cta')}
-              </LinkButton>
-            </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 max-w-5xl mx-auto my-6">
             <a 
               href="https://www.context.news/rethinking-the-economy/digital-nomads-seek-sun-sea-sustainability-as-remote-work-booms" 
               target="_blank" 
@@ -246,6 +256,14 @@ const HomePage = () => {
               <p className="text-sm font-serif font-bold text-gray-900 mb-1">Expresso</p>
               <p className="text-xs text-gray-600 font-light">Portugal</p>
             </a>
+          </div>
+          <div className="text-center flex items-center justify-center">
+            <LinkButton
+              href="/press"
+              variant="secondary"
+            >
+              {t('home_token_press_cta')}
+            </LinkButton>
           </div>
         </div>
       </section>
@@ -319,7 +337,7 @@ const HomePage = () => {
                   $TDF
                 </div>
                 <Heading level={3} className="text-xl font-normal text-gray-900">
-                  TDF Token
+                  {t('home_token_name')}
                 </Heading>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -848,37 +866,105 @@ const HomePage = () => {
             {t('home_webinar_section_desc')}
           </p>
           <div className="bg-white rounded-xl p-8 md:p-10 shadow-xl border border-gray-200 max-w-2xl mx-auto">
-            <form 
-              className="flex flex-col sm:flex-row gap-3 mb-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const formData = new FormData(e.currentTarget);
-                const name = formData.get('name');
-                const email = formData.get('email');
-                window.open(`https://calendly.com/samueldelesque?name=${encodeURIComponent(name as string)}&email=${encodeURIComponent(email as string)}`, '_blank');
-              }}
-            >
-              <input
-                type="text"
-                name="name"
-                placeholder={t('home_webinar_form_name')}
-                required
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent"
-              />
-              <input
-                type="email"
-                name="email"
-                placeholder={t('home_webinar_form_email')}
-                required
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent"
-              />
-              <button
-                type="submit"
-                className="px-8 py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors whitespace-nowrap"
+            {webinarSuccess ? (
+              <div className="text-center py-4">
+                <p className="text-green-600 text-sm font-medium mb-2">
+                  {t('home_webinar_success')}
+                </p>
+              </div>
+            ) : (
+              <form 
+                className="flex flex-col sm:flex-row gap-3 mb-4"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!webinarEmail || !webinarName) {
+                    setWebinarError(t('home_webinar_error_fill_fields'));
+                    return;
+                  }
+
+                  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                  if (!emailRegex.test(webinarEmail)) {
+                    setWebinarError(t('home_webinar_error_invalid_email'));
+                    return;
+                  }
+
+                  try {
+                    setWebinarLoading(true);
+                    setWebinarError(null);
+                    
+                    await api.post('/webinar', {
+                      email: webinarEmail,
+                    });
+
+                    if (process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true') {
+                      try {
+                        const referrer = typeof localStorage !== 'undefined' ? localStorage.getItem('referrer') : null;
+                        await api.post('/subscribe', {
+                          email: webinarEmail,
+                          screenname: webinarName,
+                          tags: ['investor-webinar', router.asPath, referrer ? `ref:${referrer}` : ''],
+                        });
+                      } catch (subscribeError) {
+                        console.error('Error subscribing to newsletter:', subscribeError);
+                      }
+                    }
+
+                    setWebinarSuccess(true);
+                    localStorage.setItem('email', webinarEmail);
+                    event('click', {
+                      category: 'HomePage',
+                      label: 'investor_webinar_signup',
+                    });
+                  } catch (error: any) {
+                    console.error('Error sending webinar invite:', error);
+                    setWebinarError(
+                      error?.response?.data?.error || 
+                      error?.message || 
+                      t('home_webinar_error_generic')
+                    );
+                  } finally {
+                    setWebinarLoading(false);
+                  }
+                }}
               >
-                {t('home_webinar_form_submit')}
-              </button>
-            </form>
+                <input
+                  type="text"
+                  value={webinarName}
+                  onChange={(e) => {
+                    setWebinarName(e.target.value);
+                    if (webinarError) setWebinarError(null);
+                  }}
+                  placeholder={t('home_webinar_form_name')}
+                  required
+                  disabled={webinarLoading}
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <input
+                  type="email"
+                  value={webinarEmail}
+                  onChange={(e) => {
+                    setWebinarEmail(e.target.value);
+                    if (webinarError) setWebinarError(null);
+                  }}
+                  placeholder={t('home_webinar_form_email')}
+                  required
+                  disabled={webinarLoading}
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <button
+                  type="submit"
+                  disabled={webinarLoading}
+                  className="px-8 py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {webinarLoading ? t('home_webinar_form_loading') : t('home_webinar_form_submit')}
+                </button>
+              </form>
+            )}
+            {webinarError && (
+              <p className="text-red-600 text-xs text-center mb-2">
+                {webinarError}
+              </p>
+            )}
             <p className="text-xs text-gray-500 text-center">
               {t('home_webinar_form_note')}
             </p>

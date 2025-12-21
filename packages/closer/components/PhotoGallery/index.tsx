@@ -4,6 +4,7 @@ import Lightbox from 'react-image-lightbox';
 import 'react-image-lightbox/style.css';
 
 import { CustomImage, images } from './images';
+import DynamicPhotoGallery from './DynamicPhotoGallery';
 
 interface Props {
   className?: string;
@@ -49,3 +50,4 @@ const PhotoGallery = ({ className }: Props) => {
 };
 
 export default PhotoGallery;
+export { DynamicPhotoGallery };

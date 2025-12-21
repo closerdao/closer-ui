@@ -15,7 +15,7 @@ const UpcomingEventsIntro = () => {
   const config = useConfig();
   const { APP_NAME } = config || {};
   const appName = (APP_NAME || '').toLowerCase();
-  const { platform } = usePlatform();
+  const { platform } = usePlatform() as { platform?: any };
   const [hasEvents, setHasEvents] = useState<boolean | null>(null);
 
   useEffect(() => {

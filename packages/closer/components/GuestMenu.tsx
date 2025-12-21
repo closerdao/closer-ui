@@ -50,61 +50,50 @@ const GuestMenu = () => {
     if (APP_NAME?.toLowerCase() === 'tdf') {
       return [
         {
-          label: 'About',
+          label: t('menu_about'),
           isOpen: false,
           items: [
             {
-              label: 'Our Story',
-              url: '/pages/our-story',
-              enabled: true,
-            },
-            {
-              label: 'Team',
+              label: t('menu_team'),
               url: '/team',
               enabled: true,
             },
             {
-              label: 'OASA Network Vision',
+              label: t('menu_oasa_network_vision'),
               url: 'https://oasa.earth',
               target: '_blank',
               enabled: true,
             },
             {
-              label: 'Impact Reports',
-              url: '/dataroom#reports',
-              enabled: true,
-              rbacPage: 'Dataroom',
-            },
-            {
-              label: 'Press',
+              label: t('menu_press'),
               url: '/press',
               enabled: true,
             },
           ],
         },
         {
-          label: 'The Village',
+          label: t('menu_the_village'),
           isOpen: false,
           items: [
             {
-              label: 'Master Plan',
+              label: t('menu_master_plan'),
               url: '/dataroom#master-plan',
               enabled: true,
               rbacPage: 'Dataroom',
             },
             {
-              label: 'Regenerative Agriculture',
+              label: t('menu_regenerative_agriculture'),
               url: '/pages/regenerative-agriculture',
               enabled: true,
             },
             {
-              label: 'Accommodations',
+              label: t('menu_accommodations'),
               url: '/stay',
               enabled: isBookingEnabled,
               rbacPage: 'Stay',
             },
             {
-              label: 'Events & Programs',
+              label: t('menu_events_programs'),
               url: '/events',
               enabled: true,
               rbacPage: 'Events',
@@ -112,77 +101,46 @@ const GuestMenu = () => {
           ],
         },
         {
-          label: 'Investment',
+          label: t('menu_investors'),
           isOpen: false,
           items: [
             {
-              label: 'Data Room',
-              url: '/dataroom',
-              enabled: true,
-              rbacPage: 'Dataroom',
-            },
-            {
-              label: 'Overview',
-              url: '/dataroom',
-              enabled: true,
-              rbacPage: 'Dataroom',
-            },
-            {
-              label: 'Token Economics',
+              label: t('menu_token_economics'),
               url: '/token',
-              enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
+              enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && APP_NAME?.toLowerCase() === 'tdf',
               rbacPage: 'Token',
             },
             {
-              label: 'Financial Performance',
-              url: '/dataroom#financial',
-              enabled: true,
-              rbacPage: 'Dataroom',
-            },
-            {
-              label: 'Investor Relations',
-              url: '/dataroom#investor-relations',
-              enabled: true,
-              rbacPage: 'Dataroom',
+              label: t('menu_data_room'),
+              url: '/dataroom',
+              enabled: APP_NAME?.toLowerCase() === 'tdf',
             },
           ],
         },
         {
-          label: 'Community',
+          label: t('menu_community'),
           isOpen: false,
           items: [
             {
-              label: 'Become a Citizen',
+              label: t('menu_become_citizen'),
               url: '/citizenship',
-              enabled: true,
+              enabled: APP_NAME?.toLowerCase() === 'tdf',
             },
             {
-              label: 'Governance (DAO)',
+              label: t('menu_governance_dao'),
               url: '/governance',
-              enabled: true,
+              enabled: APP_NAME?.toLowerCase() === 'tdf',
             },
             {
-              label: 'Member Stories',
+              label: t('menu_member_stories'),
               url: '/members',
               enabled: true,
             },
             {
-              label: 'FAQ',
+              label: t('menu_faq'),
               url: '/resources',
               enabled: true,
               rbacPage: 'Resources',
-            },
-          ],
-        },
-        {
-          label: 'Visit',
-          isOpen: false,
-          items: [
-            {
-              label: 'Visit',
-              url: '/events',
-              enabled: true,
-              rbacPage: 'Events',
             },
           ],
         },

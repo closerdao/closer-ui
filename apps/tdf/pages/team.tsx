@@ -4,14 +4,16 @@ import Link from 'next/link';
 import { Heading } from 'closer';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 const TeamPage = () => {
+  const t = useTranslations();
 
   return (
     <>
       <Head>
-        <title>Team — Traditional Dream Factory</title>
-        <meta name="description" content="Meet the team building Europe's first regenerative village" />
+        <title>{t('team_page_title')}</title>
+        <meta name="description" content={t('team_page_description')} />
         <link
           rel="canonical"
           href="https://www.traditionaldreamfactory.com/team"
@@ -27,10 +29,10 @@ const TeamPage = () => {
               display
               level={1}
             >
-              Our Team
+              {t('team_hero_title')}
             </Heading>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              A decentralized collective of builders, dreamers, and land stewards creating Europe&apos;s first regenerative village.
+              {t('team_hero_subtitle')}
             </p>
           </div>
         </section>
@@ -42,22 +44,22 @@ const TeamPage = () => {
                 <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">🏛️</span>
                 </div>
-                <h3 className="font-semibold mb-2">OASA Association</h3>
-                <p className="text-sm text-gray-600">Swiss non-profit overseeing land conservation and governance across the network</p>
+                <h3 className="font-semibold mb-2">{t('team_oasa_association_title')}</h3>
+                <p className="text-sm text-gray-600">{t('team_oasa_association_desc')}</p>
               </div>
               <div className="p-6">
                 <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">🗳️</span>
                 </div>
-                <h3 className="font-semibold mb-2">TDF DAO</h3>
-                <p className="text-sm text-gray-600">Community governance through token holders, citizens, and the citizen assembly</p>
+                <h3 className="font-semibold mb-2">{t('team_tdf_dao_title')}</h3>
+                <p className="text-sm text-gray-600">{t('team_tdf_dao_desc')}</p>
               </div>
               <div className="p-6">
                 <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">⚡</span>
                 </div>
-                <h3 className="font-semibold mb-2">Executive Team</h3>
-                <p className="text-sm text-gray-600">Day-to-day operations, development, and strategic direction</p>
+                <h3 className="font-semibold mb-2">{t('team_executive_team_title')}</h3>
+                <p className="text-sm text-gray-600">{t('team_executive_team_desc')}</p>
               </div>
             </div>
           </div>
@@ -66,9 +68,9 @@ const TeamPage = () => {
         <section className="py-16 px-6 bg-white">
           <div className="max-w-5xl mx-auto">
             <div className="mb-12">
-              <span className="bg-accent text-gray-800 text-sm px-4 py-1 rounded-full font-medium">Executive Team</span>
-              <Heading level={2} className="font-serif text-3xl mt-4 mb-2">Leadership</Heading>
-              <p className="text-gray-600">Strategic real estate development and operational direction given by the DAO.</p>
+              <span className="bg-accent text-gray-800 text-sm px-4 py-1 rounded-full font-medium">{t('team_executive_team_label')}</span>
+              <Heading level={2} className="font-serif text-3xl mt-4 mb-2">{t('team_leadership_title')}</Heading>
+              <p className="text-gray-600">{t('team_leadership_desc')}</p>
             </div>
             
             <div className="grid md:grid-cols-2 gap-8">
@@ -78,8 +80,8 @@ const TeamPage = () => {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold">Samuel Delesque</h3>
-                  <p className="text-accent-dark font-medium">Executive Director</p>
-                  <p className="text-sm text-gray-600 mt-2">Franco-Danish entrepreneur and former software engineer. Founded TDF with a vision of moving &ldquo;from ownership to stewardship.&rdquo;</p>
+                  <p className="text-accent-dark font-medium">{t('team_samuel_role')}</p>
+                  <p className="text-sm text-gray-600 mt-2">{t('team_samuel_desc')}</p>
                   <div className="flex gap-3 mt-3">
                     <a href="https://twitter.com/samdelesque" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-600">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
@@ -97,8 +99,8 @@ const TeamPage = () => {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold">Peter Koll</h3>
-                  <p className="text-blue-600 font-medium">Finance Ops</p>
-                  <p className="text-sm text-gray-600 mt-2">Day-to-day financial operations, budgeting, and treasury management for TDF.</p>
+                  <p className="text-blue-600 font-medium">{t('team_peter_role')}</p>
+                  <p className="text-sm text-gray-600 mt-2">{t('team_peter_desc')}</p>
                 </div>
               </div>
             </div>
@@ -108,9 +110,9 @@ const TeamPage = () => {
         <section className="py-16 px-6 bg-accent/20">
           <div className="max-w-5xl mx-auto">
             <div className="mb-12">
-              <span className="bg-white text-gray-800 text-sm px-4 py-1 rounded-full font-medium">Operations</span>
-              <Heading level={2} className="font-serif text-3xl mt-4 mb-2">On-the-Ground Teams</Heading>
-              <p className="text-gray-600">The people making magic happen every day at TDF.</p>
+              <span className="bg-white text-gray-800 text-sm px-4 py-1 rounded-full font-medium">{t('team_operations_label')}</span>
+              <Heading level={2} className="font-serif text-3xl mt-4 mb-2">{t('team_ground_teams_title')}</Heading>
+              <p className="text-gray-600">{t('team_ground_teams_desc')}</p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
@@ -118,46 +120,46 @@ const TeamPage = () => {
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center text-xl">🏨</div>
                   <div>
-                    <h3 className="text-xl font-semibold">Hospitality Team</h3>
-                    <p className="text-sm text-gray-500">Assembled over 2026</p>
+                    <h3 className="text-xl font-semibold">{t('team_hospitality_team_title')}</h3>
+                    <p className="text-sm text-gray-500">{t('team_hospitality_team_when')}</p>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 mb-6">Run a profitable rural tourism operation with high guest satisfaction.</p>
+                <p className="text-sm text-gray-600 mb-6">{t('team_hospitality_team_desc')}</p>
                 
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full flex items-center justify-center text-lg">🌟</div>
                     <div>
-                      <p className="font-medium">Luna Mangan</p>
-                      <p className="text-sm text-gray-500">Hospitality Manager</p>
+                      <p className="font-medium">{t('team_luna_name')}</p>
+                      <p className="text-sm text-gray-500">{t('team_luna_role')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-sm">👨‍🍳</div>
                     <div>
-                      <p className="font-medium text-gray-700">Kitchen Lead</p>
-                      <p className="text-sm text-gray-400">Position open</p>
+                      <p className="font-medium text-gray-700">{t('team_kitchen_lead')}</p>
+                      <p className="text-sm text-gray-400">{t('team_position_open')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-sm">🍳</div>
                     <div>
-                      <p className="font-medium text-gray-700">Kitchen Support</p>
-                      <p className="text-sm text-gray-400">Position open</p>
+                      <p className="font-medium text-gray-700">{t('team_kitchen_support')}</p>
+                      <p className="text-sm text-gray-400">{t('team_position_open')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-sm">🧹</div>
                     <div>
-                      <p className="font-medium text-gray-700">Housekeeping</p>
-                      <p className="text-sm text-gray-400">2 positions</p>
+                      <p className="font-medium text-gray-700">{t('team_housekeeping')}</p>
+                      <p className="text-sm text-gray-400">{t('team_housekeeping_positions')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-sm">🔧</div>
                     <div>
-                      <p className="font-medium text-gray-700">Maintenance</p>
-                      <p className="text-sm text-gray-400">0.5x position</p>
+                      <p className="font-medium text-gray-700">{t('team_maintenance')}</p>
+                      <p className="text-sm text-gray-400">{t('team_maintenance_position')}</p>
                     </div>
                   </div>
                 </div>
@@ -167,38 +169,38 @@ const TeamPage = () => {
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center text-xl">🌱</div>
                   <div>
-                    <h3 className="text-xl font-semibold">Ecology & Food Production</h3>
+                    <h3 className="text-xl font-semibold">{t('team_ecology_food_title')}</h3>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 mb-6">Produce food for 50+ people, increase soil fertility, and retain water (OASA metrics).</p>
+                <p className="text-sm text-gray-600 mb-6">{t('team_ecology_food_desc')}</p>
                 
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center text-lg">🌿</div>
                     <div>
-                      <p className="font-medium">Ofer Carmon</p>
-                      <p className="text-sm text-gray-500">Land Steward</p>
+                      <p className="font-medium">{t('team_ofer_name')}</p>
+                      <p className="text-sm text-gray-500">{t('team_land_steward')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center text-lg">🌿</div>
                     <div>
-                      <p className="font-medium">Joao Baranov</p>
-                      <p className="text-sm text-gray-500">Land Steward</p>
+                      <p className="font-medium">{t('team_joao_name')}</p>
+                      <p className="text-sm text-gray-500">{t('team_land_steward')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-sm">🌿</div>
                     <div>
-                      <p className="font-medium text-gray-700">Land Steward</p>
-                      <p className="text-sm text-gray-400">1 additional position</p>
+                      <p className="font-medium text-gray-700">{t('team_land_steward')}</p>
+                      <p className="text-sm text-gray-400">{t('team_land_steward_additional')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-sm">🤝</div>
                     <div>
-                      <p className="font-medium text-gray-700">Volunteers</p>
-                      <p className="text-sm text-gray-400">2 rotating positions</p>
+                      <p className="font-medium text-gray-700">{t('team_volunteers')}</p>
+                      <p className="text-sm text-gray-400">{t('team_volunteers_positions')}</p>
                     </div>
                   </div>
                 </div>
@@ -208,24 +210,24 @@ const TeamPage = () => {
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center text-xl">🔨</div>
                   <div>
-                    <h3 className="text-xl font-semibold">Internal Build Team</h3>
+                    <h3 className="text-xl font-semibold">{t('team_build_team_title')}</h3>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 mb-6">Create unique accommodations and beautify the land for human use.</p>
+                <p className="text-sm text-gray-600 mb-6">{t('team_build_team_desc')}</p>
                 
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-yellow-100 rounded-full flex items-center justify-center text-lg">🪚</div>
                     <div>
-                      <p className="font-medium">Matthias Siino</p>
-                      <p className="text-sm text-gray-500">Carpentry</p>
+                      <p className="font-medium">{t('team_matthias_name')}</p>
+                      <p className="text-sm text-gray-500">{t('team_carpentry')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-yellow-100 rounded-full flex items-center justify-center text-lg">🪚</div>
                     <div>
-                      <p className="font-medium">Julia Aust</p>
-                      <p className="text-sm text-gray-500">Carpentry</p>
+                      <p className="font-medium">{t('team_julia_name')}</p>
+                      <p className="text-sm text-gray-500">{t('team_carpentry')}</p>
                     </div>
                   </div>
                 </div>
@@ -235,31 +237,31 @@ const TeamPage = () => {
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center text-xl">🍄</div>
                   <div>
-                    <h3 className="text-xl font-semibold">Mushroom Farm</h3>
+                    <h3 className="text-xl font-semibold">{t('team_mushroom_farm_title')}</h3>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 mb-6">Produce edible mushrooms for 3 restaurants and medicinal products.</p>
+                <p className="text-sm text-gray-600 mb-6">{t('team_mushroom_farm_desc')}</p>
                 
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center text-lg">🔬</div>
                     <div>
-                      <p className="font-medium">Richard Olson</p>
-                      <p className="text-sm text-gray-500">Mycology Lead (0.25x)</p>
+                      <p className="font-medium">{t('team_richard_name')}</p>
+                      <p className="text-sm text-gray-500">{t('team_richard_role')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center text-lg">🍄</div>
                     <div>
-                      <p className="font-medium">Tonya Gorman</p>
-                      <p className="text-sm text-gray-500">Mycology Ops (1x)</p>
+                      <p className="font-medium">{t('team_tonya_name')}</p>
+                      <p className="text-sm text-gray-500">{t('team_tonya_role')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-sm">🍄</div>
                     <div>
-                      <p className="font-medium text-gray-700">Mycology Assistants</p>
-                      <p className="text-sm text-gray-400">2 positions</p>
+                      <p className="font-medium text-gray-700">{t('team_mycology_assistants')}</p>
+                      <p className="text-sm text-gray-400">{t('team_mycology_assistants_positions')}</p>
                     </div>
                   </div>
                 </div>
@@ -271,9 +273,9 @@ const TeamPage = () => {
         <section className="py-16 px-6 bg-white">
           <div className="max-w-5xl mx-auto">
             <div className="mb-12">
-              <span className="bg-gray-100 text-gray-800 text-sm px-4 py-1 rounded-full font-medium">Partners & Contractors</span>
-              <Heading level={2} className="font-serif text-3xl mt-4 mb-2">External Partners</Heading>
-              <p className="text-gray-600">Professional partners and service providers supporting TDF and OASA.</p>
+              <span className="bg-gray-100 text-gray-800 text-sm px-4 py-1 rounded-full font-medium">{t('team_partners_label')}</span>
+              <Heading level={2} className="font-serif text-3xl mt-4 mb-2">{t('team_partners_title')}</Heading>
+              <p className="text-gray-600">{t('team_partners_desc')}</p>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -290,7 +292,7 @@ const TeamPage = () => {
                 <p className="text-xs text-gray-500 mt-1">Architecture</p>
               </div>
               <div className="p-4 bg-gray-50 rounded-xl text-center">
-                <p className="font-medium text-sm">SCARD Engineering</p>
+                <p className="font-medium text-sm">SCARD</p>
                 <p className="text-xs text-gray-500 mt-1">Engineering</p>
               </div>
               <div className="p-4 bg-gray-50 rounded-xl text-center">
@@ -299,7 +301,7 @@ const TeamPage = () => {
               </div>
               <div className="p-4 bg-gray-50 rounded-xl text-center">
                 <p className="font-medium text-sm">Kinterra</p>
-                <p className="text-xs text-gray-500 mt-1">Land Planning</p>
+                <p className="text-xs text-gray-500 mt-1">Regenerative systems sourcing</p>
               </div>
               <div className="p-4 bg-gray-50 rounded-xl text-center">
                 <p className="font-medium text-sm">TBD Construction</p>
@@ -310,7 +312,7 @@ const TeamPage = () => {
                 <p className="text-xs text-gray-500 mt-1">Accounting</p>
               </div>
               <div className="p-4 bg-gray-50 rounded-xl text-center">
-                <p className="font-medium text-sm">Start PME Grant</p>
+                <p className="font-medium text-sm">Start PME</p>
                 <p className="text-xs text-gray-500 mt-1">Grant Support</p>
               </div>
               <div className="p-4 bg-gray-50 rounded-xl text-center">
@@ -328,9 +330,9 @@ const TeamPage = () => {
         <section className="py-16 px-6 bg-gray-900 text-white">
           <div className="max-w-5xl mx-auto">
             <div className="mb-12">
-              <span className="bg-accent text-gray-900 text-sm px-4 py-1 rounded-full font-medium">Governance</span>
-              <Heading level={2} className="font-serif text-3xl mt-4 mb-2 text-white">TDF DAO</Heading>
-              <p className="text-gray-400">Decentralized governance through our token holder community.</p>
+              <span className="bg-accent text-gray-900 text-sm px-4 py-1 rounded-full font-medium">{t('team_governance_label')}</span>
+              <Heading level={2} className="font-serif text-3xl mt-4 mb-2 text-white">{t('team_tdf_dao_title')}</Heading>
+              <p className="text-gray-400">{t('team_dao_desc')}</p>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -338,60 +340,60 @@ const TeamPage = () => {
                 <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center mb-4">
                   <span className="text-accent text-xl">👥</span>
                 </div>
-                <h3 className="font-semibold mb-2">Citizens</h3>
-                <p className="text-sm text-gray-400">Members who have completed the onboarding process and embody TDF values.</p>
+                <h3 className="font-semibold mb-2">{t('team_citizens_title')}</h3>
+                <p className="text-sm text-gray-400">{t('team_citizens_desc')}</p>
               </div>
               <div className="bg-gray-800 rounded-xl p-6">
                 <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center mb-4">
                   <span className="text-accent text-xl">🏛️</span>
                 </div>
-                <h3 className="font-semibold mb-2">Citizen Assembly</h3>
-                <p className="text-sm text-gray-400">Regular gatherings to discuss proposals and shape the community direction.</p>
+                <h3 className="font-semibold mb-2">{t('team_citizen_assembly_title')}</h3>
+                <p className="text-sm text-gray-400">{t('team_citizen_assembly_desc')}</p>
               </div>
               <div className="bg-gray-800 rounded-xl p-6">
                 <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center mb-4">
                   <span className="text-accent text-xl">💰</span>
                 </div>
-                <h3 className="font-semibold mb-2">Treasury</h3>
-                <p className="text-sm text-gray-400">Community-controlled funds for development and operations.</p>
+                <h3 className="font-semibold mb-2">{t('team_treasury_title')}</h3>
+                <p className="text-sm text-gray-400">{t('team_treasury_desc')}</p>
               </div>
               <div className="bg-gray-800 rounded-xl p-6">
                 <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center mb-4">
                   <span className="text-accent text-xl">🪙</span>
                 </div>
-                <h3 className="font-semibold mb-2">$TDF Token Holders</h3>
-                <p className="text-sm text-gray-400">280+ holders with governance rights and accommodation access.</p>
+                <h3 className="font-semibold mb-2">{t('team_token_holders_title')}</h3>
+                <p className="text-sm text-gray-400">{t('team_token_holders_desc')}</p>
               </div>
               <div className="bg-gray-800 rounded-xl p-6">
                 <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center mb-4">
                   <span className="text-accent text-xl">💪</span>
                 </div>
-                <h3 className="font-semibold mb-2">$SWEAT Holders</h3>
-                <p className="text-sm text-gray-400">Contributors rewarded with tokens for work on the project.</p>
+                <h3 className="font-semibold mb-2">{t('team_sweat_holders_title')}</h3>
+                <p className="text-sm text-gray-400">{t('team_sweat_holders_desc')}</p>
               </div>
               <div className="bg-gray-800 rounded-xl p-6">
                 <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center mb-4">
                   <span className="text-accent text-xl">📍</span>
                 </div>
-                <h3 className="font-semibold mb-2">$PRESENCE Holders</h3>
-                <p className="text-sm text-gray-400">Proof of presence tokens earned through time spent at TDF.</p>
+                <h3 className="font-semibold mb-2">{t('team_presence_holders_title')}</h3>
+                <p className="text-sm text-gray-400">{t('team_presence_holders_desc')}</p>
               </div>
             </div>
 
             <div className="mt-12 p-6 bg-gray-800 rounded-xl">
-              <h3 className="font-semibold mb-4">What TDF DAO Governs</h3>
+              <h3 className="font-semibold mb-4">{t('team_dao_governs_title')}</h3>
               <div className="grid md:grid-cols-3 gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <span className="text-accent">✓</span>
-                  <span className="text-gray-300">Game Guide (living agreement)</span>
+                  <span className="text-gray-300">{t('team_dao_governs_game_guide')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-accent">✓</span>
-                  <span className="text-gray-300">Land Plan (build master plan)</span>
+                  <span className="text-gray-300">{t('team_dao_governs_land_plan')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-accent">✓</span>
-                  <span className="text-gray-300">Executive team elections</span>
+                  <span className="text-gray-300">{t('team_dao_governs_elections')}</span>
                 </div>
               </div>
             </div>
@@ -401,54 +403,54 @@ const TeamPage = () => {
         <section className="py-16 px-6 bg-white">
           <div className="max-w-5xl mx-auto">
             <div className="mb-12">
-              <span className="bg-accent text-gray-800 text-sm px-4 py-1 rounded-full font-medium">Network</span>
-              <Heading level={2} className="font-serif text-3xl mt-4 mb-2">OASA Association</Heading>
-              <p className="text-gray-600">The non-profit umbrella organization protecting land in perpetuity.</p>
+              <span className="bg-accent text-gray-800 text-sm px-4 py-1 rounded-full font-medium">{t('team_network_label')}</span>
+              <Heading level={2} className="font-serif text-3xl mt-4 mb-2">{t('team_oasa_association_title')}</Heading>
+              <p className="text-gray-600">{t('team_oasa_association_overview')}</p>
             </div>
 
             <div className="bg-accent/30 rounded-2xl p-8">
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
-                  <h3 className="font-semibold text-lg mb-4">Mission</h3>
-                  <p className="text-gray-700">Acquire & conserve 100k hectares worldwide, monitoring and increasing soil quality, water cycles, and biodiversity through regenerative practices.</p>
+                  <h3 className="font-semibold text-lg mb-4">{t('team_oasa_mission_title')}</h3>
+                  <p className="text-gray-700">{t('team_oasa_mission_desc')}</p>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-4">Key Principles</h3>
+                  <h3 className="font-semibold text-lg mb-4">{t('team_oasa_principles_title')}</h3>
                   <ul className="space-y-2 text-gray-700">
                     <li className="flex items-start gap-2">
                       <span className="text-accent-dark mt-1">●</span>
-                      <span>Promote biodiversity & rewilding</span>
+                      <span>{t('team_oasa_principle_1')}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-accent-dark mt-1">●</span>
-                      <span>Promote local governance and equity</span>
+                      <span>{t('team_oasa_principle_2')}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-accent-dark mt-1">●</span>
-                      <span>Promote renewable resources</span>
+                      <span>{t('team_oasa_principle_3')}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-accent-dark mt-1">●</span>
-                      <span>Avoid waste & pollution</span>
+                      <span>{t('team_oasa_principle_4')}</span>
                     </li>
                   </ul>
                 </div>
               </div>
 
               <div className="mt-8 pt-8 border-t border-accent-dark/30">
-                <h3 className="font-semibold text-lg mb-4">Governance Bodies</h3>
+                <h3 className="font-semibold text-lg mb-4">{t('team_oasa_governance_title')}</h3>
                 <div className="grid md:grid-cols-3 gap-4">
                   <div className="bg-white/50 rounded-xl p-4">
-                    <p className="font-medium">Board of Directors</p>
-                    <p className="text-sm text-gray-600 mt-1">Strategic oversight and fiduciary responsibility</p>
+                    <p className="font-medium">{t('team_oasa_board_title')}</p>
+                    <p className="text-sm text-gray-600 mt-1">{t('team_oasa_board_desc')}</p>
                   </div>
                   <div className="bg-white/50 rounded-xl p-4">
-                    <p className="font-medium">General Assembly</p>
-                    <p className="text-sm text-gray-600 mt-1">All OASA members with voting rights</p>
+                    <p className="font-medium">{t('team_oasa_assembly_title')}</p>
+                    <p className="text-sm text-gray-600 mt-1">{t('team_oasa_assembly_desc')}</p>
                   </div>
                   <div className="bg-white/50 rounded-xl p-4">
-                    <p className="font-medium">Guardians</p>
-                    <p className="text-sm text-gray-600 mt-1">Land stewards protecting each project</p>
+                    <p className="font-medium">{t('team_oasa_guardians_title')}</p>
+                    <p className="text-sm text-gray-600 mt-1">{t('team_oasa_guardians_desc')}</p>
                   </div>
                 </div>
               </div>
@@ -458,16 +460,16 @@ const TeamPage = () => {
 
         <section className="py-20 px-6 bg-gray-50">
           <div className="max-w-2xl mx-auto text-center">
-            <Heading level={2} className="font-serif text-3xl mb-4">Join the Team</Heading>
+            <Heading level={2} className="font-serif text-3xl mb-4">{t('team_join_title')}</Heading>
             <p className="text-gray-600 mb-8">
-              We&apos;re always looking for passionate people to join our regenerative community. Whether as a steward, volunteer, or contributor.
+              {t('team_join_desc')}
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link href="/volunteer" className="bg-gray-900 text-white px-8 py-4 rounded-lg font-medium hover:bg-gray-800 transition-colors">
-                View Open Positions
+                {t('team_join_view_positions')}
               </Link>
               <Link href="/volunteer" className="bg-white text-gray-900 px-8 py-4 rounded-lg font-medium border border-gray-200 hover:border-gray-400 transition-colors">
-                Volunteer Program
+                {t('team_join_volunteer_program')}
               </Link>
             </div>
           </div>
