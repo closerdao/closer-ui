@@ -626,7 +626,7 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
                               {currentConfig.slug === 'photo-gallery' && key === 'photoIds' ? (
                                 <PhotosEditor
                                   value={currentValue || []}
-                                  onChange={(value) => {
+                                  onChange={(value: string[]) => {
                                     const newConfigs = updatedConfigs.map((config) => {
                                       if (config.slug === selectedConfig) {
                                         return {
