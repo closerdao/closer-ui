@@ -437,23 +437,22 @@ const HomePage = ({ generalConfig }: Props) => {
       {/* CTA Section */}
       <section className="py-40 md:py-48 bg-black text-center -mx-4 md:-mx-0">
         <div className="max-w-4xl mx-auto px-6 md:px-[5vw]">
-          <h2 className="font-serif text-5xl md:text-7xl mb-8">
+          <h2 className="font-serif text-5xl md:text-7xl mb-12">
             Build your <em className="italic">village</em>
           </h2>
-          <div className="flex gap-4 justify-center flex-wrap">
-            <Button
-              size="large"
-              className="px-7 py-3.5 text-base bg-white text-black hover:bg-gray-100 rounded-full"
+          <div className="flex gap-4 justify-center items-center flex-wrap">
+            <button
               onClick={() => {
                 setIsOpen(true);
               }}
+              className="px-7 py-3.5 text-base bg-white text-black hover:bg-gray-100 rounded-full transition-colors font-medium"
             >
               Get in touch
-            </Button>
+            </button>
             <Link
               href="https://closer.gitbook.io/documentation"
               target="_blank"
-              className="px-7 py-3.5 text-base border border-[#6e6e73] text-white hover:border-white rounded-full transition-colors inline-block"
+              className="px-7 py-3.5 text-base border border-white/30 text-white hover:border-white rounded-full transition-colors font-medium"
             >
               Documentation
             </Link>
