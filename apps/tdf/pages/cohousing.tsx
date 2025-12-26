@@ -1,11 +1,10 @@
 import Head from 'next/head';
-import { useRouter } from 'next/router';
 
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import LinkButton from 'closer/components/ui/LinkButton';
 
-import { Heading, api, Card, usePlatform } from 'closer';
+import { Heading, Card, usePlatform, Newsletter } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import {
@@ -25,7 +24,6 @@ import {
 } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
-import { event } from 'nextjs-google-analytics';
 
 interface PlatformContext {
   platform: {
@@ -42,15 +40,8 @@ interface TokenHolder {
 
 const CohousingPage = () => {
   const t = useTranslations();
-  const router = useRouter();
   const { platform } = usePlatform() as PlatformContext;
   const { BLOCKCHAIN_DAO_TOKEN } = useConfig() || {};
-
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const [citizenCount, setCitizenCount] = useState<number | null>(null);
   const [tokenHolders, setTokenHolders] = useState<number | null>(null);
@@ -102,94 +93,6 @@ const CohousingPage = () => {
     fetchStats();
   }, [platform, BLOCKCHAIN_DAO_TOKEN]);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!email || !name) {
-      setError(t('cohousing_form_error_fill_fields'));
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError(t('cohousing_form_error_invalid_email'));
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      if (process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true') {
-        const referrer = typeof localStorage !== 'undefined' ? localStorage.getItem('referrer') : null;
-        await api.post('/subscribe', {
-          email,
-          screenname: name,
-          tags: ['cohousing-waitlist', router.asPath, referrer ? `ref:${referrer}` : ''],
-        });
-      }
-
-      setIsSubmitted(true);
-      localStorage.setItem('email', email);
-      event('click', {
-        category: 'CohousingPage',
-        label: 'waitlist_signup',
-      });
-    } catch (err: any) {
-      console.error('Error submitting waitlist:', err);
-      setError(err?.response?.data?.error || err?.message || t('cohousing_form_error_generic'));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const WaitlistForm = () => {
-    if (isSubmitted) {
-      return (
-        <div className="bg-white/90 border border-accent/20 rounded-lg p-6 text-center">
-          <p className="text-accent-dark font-medium">
-            {t('cohousing_form_success')}
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => {
-            setName(e.target.value);
-            if (error) setError(null);
-          }}
-          placeholder={t('cohousing_form_name')}
-          required
-          disabled={isLoading}
-          className="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent disabled:opacity-50"
-        />
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            if (error) setError(null);
-          }}
-          placeholder={t('cohousing_form_email')}
-          required
-          disabled={isLoading}
-          className="flex-1 px-4 py-3 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent disabled:opacity-50"
-        />
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="px-8 py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors whitespace-nowrap disabled:opacity-50"
-        >
-          {isLoading ? t('cohousing_form_loading') : t('cohousing_form_submit')}
-        </button>
-      </form>
-    );
-  };
-
   const displayCitizenCount = citizenCount !== null ? citizenCount : 45;
   const displayTokenHolders = tokenHolders !== null ? tokenHolders : 280;
 
@@ -225,10 +128,7 @@ const CohousingPage = () => {
             </p>
 
             <div className="max-w-xl mx-auto mb-6">
-              <WaitlistForm />
-              {error && (
-                <p className="text-red-600 text-sm mt-2">{error}</p>
-              )}
+              <Newsletter placement="cohousing" showTitle={false} className="w-full pt-0 pb-0 sm:w-full" />
             </div>
             <p className="text-sm text-gray-600">
               {isLoadingStats ? '...' : t('cohousing_hero_members_note', { citizens: displayCitizenCount, holders: displayTokenHolders })}
@@ -560,10 +460,7 @@ const CohousingPage = () => {
           </p>
 
           <div className="max-w-xl mx-auto">
-            <WaitlistForm />
-            {error && (
-              <p className="text-red-600 text-sm mt-2">{error}</p>
-            )}
+            <Newsletter placement="cohousing" showTitle={false} className="w-full pt-0 pb-0 sm:w-full" />
           </div>
         </div>
       </section>
