@@ -76,6 +76,11 @@ const GuestMenu = () => {
           isOpen: false,
           items: [
             {
+              label: t('menu_cohousing'),
+              url: '/cohousing',
+              enabled: true,
+            },
+            {
               label: t('menu_master_plan'),
               url: '/dataroom#master-plan',
               enabled: true,

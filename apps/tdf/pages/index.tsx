@@ -17,6 +17,7 @@ import {
 import { useBuyTokens } from 'closer/hooks/useBuyTokens';
 import { useConfig } from 'closer/hooks/useConfig';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { Check, Circle } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { event } from 'nextjs-google-analytics';
@@ -135,7 +136,7 @@ const HomePage = () => {
         <div className="max-w-7xl mx-auto px-6 py-24 md:py-36">
           <div className="max-w-4xl mx-auto text-center">
             <Heading
-              className="mb-6 text-5xl md:text-6xl lg:text-7xl font-normal text-gray-900 tracking-tight leading-tight"
+              className="mb-4 text-4xl md:text-6xl"
               data-testid="page-title"
               display
               level={1}
@@ -156,7 +157,7 @@ const HomePage = () => {
                 <div className="text-xs text-gray-600 font-light">{t('home_stats_total_capital')}</div>
               </div>
               <div className="bg-gray-50 rounded border border-gray-300 p-6 text-center">
-                <div className="text-3xl md:text-4xl font-normal text-gray-900 mb-2 font-serif">5ha</div>
+                <div className="text-3xl md:text-4xl font-normal text-gray-900 mb-2 font-serif">25ha</div>
                 <div className="text-xs text-gray-600 font-light">{t('home_stats_land_stewardship')}</div>
               </div>
               <div className="bg-gray-50 rounded border border-gray-300 p-6 text-center col-span-2 md:col-span-1">
@@ -167,7 +168,7 @@ const HomePage = () => {
 
             <div className="flex flex-wrap justify-center gap-3 mt-8">
               <LinkButton
-                href="/dataroom"
+                href="/#participation-structures"
                 variant="primary"
                 onClick={() =>
                   event('click', {
@@ -346,7 +347,7 @@ const HomePage = () => {
                     {t('home_token_stat_holders')}
                   </div>
                   <div className="text-2xl font-normal text-gray-900">
-                    {isLoadingChainData ? '...' : (tokenHolders !== null ? tokenHolders.toLocaleString() : '—')}
+                    {isLoadingChainData ? '...' : (tokenHolders !== null ? tokenHolders.toLocaleString() : '280')}
                   </div>
                 </div>
                 <div className="bg-gray-50 rounded border border-gray-300 p-5">
@@ -371,6 +372,15 @@ const HomePage = () => {
                   <div className="text-2xl font-normal text-gray-900">€384k</div>
                   <div className="text-xs text-gray-600 mt-1 font-light">{t('home_token_stat_raised_note')}</div>
                 </div>
+              </div>
+              <div className="mt-6">
+                <LinkButton
+                  href="/token"
+                  variant="primary"
+                  className="w-full"
+                >
+                  {t('home_token_buy_cta')}
+                </LinkButton>
               </div>
             </div>
           </div>
@@ -490,7 +500,7 @@ const HomePage = () => {
             </div>
 
             {/* Right: Participation Structures */}
-            <div>
+            <div id="participation-structures">
               <Heading display level={2} className="mb-6 text-2xl md:text-3xl font-normal text-gray-900 tracking-tight">
                 {t('home_investment_opportunities_title')}
               </Heading>
@@ -504,7 +514,7 @@ const HomePage = () => {
                     {t('home_invest_cohousing_desc')}
                   </p>
                   <LinkButton
-                    href="/dataroom"
+                    href="/cohousing"
                     variant="secondary"
                     className="w-full"
                   >
@@ -549,141 +559,58 @@ const HomePage = () => {
         </div>
       </section>
 
-      <section className="bg-white py-24 md:py-32 border-t border-gray-200">
-        <div className="max-w-4xl mx-auto px-6">
-          <Heading display level={2} className="mb-6 text-2xl md:text-3xl font-normal text-gray-900 tracking-tight">
-            {t('home_built_title')}
-          </Heading>
-          <p className="text-sm text-gray-700 mb-14 max-w-3xl leading-relaxed font-light">
-            {t('home_built_subtitle')}
-          </p>
+      <section className="bg-gray-50 py-24 md:py-32 border-t border-gray-200">
+        <div className="max-w-3xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <Heading display level={2} className="mb-4 text-3xl md:text-4xl font-normal text-gray-900 tracking-tight">
+              {t('home_built_title')}
+            </Heading>
+            <p className="text-base text-gray-700 max-w-2xl mx-auto leading-relaxed font-light">
+              {t('home_built_subtitle')}
+            </p>
+          </div>
           
-          <div className="space-y-12 mb-12">
-            {/* 2023 */}
-            <div className="flex gap-6">
-              <div className="flex flex-col items-center">
-                <div className="w-7 h-7 bg-accent rounded-full flex-shrink-0"></div>
-                <div className="bg-accent w-[2px] h-full mt-2"></div>
-              </div>
-              <div className="flex-1 pb-8">
-                <div className="flex items-center gap-3 mb-3">
-                  <Heading level={4} className="text-accent uppercase font-normal text-sm">
-                    2023
-                  </Heading>
-                  <p className="uppercase font-bold text-sm text-gray-900">
-                    {t('roadmap_2023_title')}
-                  </p>
-                </div>
-                <ul className="space-y-2 list-none pl-0">
-                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
-                    <span className="text-accent mr-3 mt-1">•</span>
-                    <span>{t('roadmap_2023_bullet_1')}</span>
-                  </li>
-                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
-                    <span className="text-accent mr-3 mt-1">•</span>
-                    <span>{t('roadmap_2023_bullet_2')}</span>
-                  </li>
-                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
-                    <span className="text-accent mr-3 mt-1">•</span>
-                    <span>{t('roadmap_2023_bullet_5')}</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
+          <div className="relative">
+            <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-accent to-accent-light"></div>
 
-            {/* 2024 */}
-            <div className="flex gap-6">
-              <div className="flex flex-col items-center">
-                <div className="w-7 h-7 bg-accent rounded-full flex-shrink-0"></div>
-                <div className="bg-accent w-[2px] h-full mt-2"></div>
-              </div>
-              <div className="flex-1 pb-8">
-                <div className="flex items-center gap-3 mb-3">
-                  <Heading level={4} className="text-accent uppercase font-normal text-sm">
-                    2024
-                  </Heading>
-                  <p className="uppercase font-bold text-sm text-gray-900">
-                    {t('roadmap_2024_fundraising')}
-                  </p>
+            <div className="space-y-8">
+              {[
+                { date: '2023', titleKey: 'roadmap_2023_title', bullets: ['roadmap_2023_bullet_1', 'roadmap_2023_bullet_2', 'roadmap_2023_bullet_5'], status: 'complete' },
+                { date: '2024', titleKey: 'roadmap_2024_fundraising', bullets: ['roadmap_2024_bullet_1', 'roadmap_2024_bullet_2', 'roadmap_2024_bullet_3'], status: 'complete' },
+                { date: '2025', titleKey: 'roadmap_2025_title', bullets: ['roadmap_2025_bullet_1', 'roadmap_2025_bullet_4', 'roadmap_2025_bullet_6'], status: 'current' },
+                { date: '2026', titleKey: 'roadmap_2026_title', bullets: ['roadmap_2026_bullet_1', 'roadmap_2026_bullet_2'], status: 'upcoming' },
+              ].map((item, i) => (
+                <div key={i} className="flex gap-8 relative">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-4 border-gray-50 ${
+                    item.status === 'complete' ? 'bg-accent text-white' : 
+                    item.status === 'current' ? 'bg-accent-light border-accent text-accent' : 
+                    'bg-gray-200 text-gray-500'
+                  }`}>
+                    {item.status === 'complete' ? <Check className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
+                  </div>
+                  <div className="pt-1 flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-xs text-accent font-medium tracking-wider uppercase">
+                        {item.date}
+                      </span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {t(item.titleKey)}
+                      </span>
+                    </div>
+                    <ul className="space-y-2">
+                      {item.bullets.map((bullet, j) => (
+                        <li key={j} className="text-sm text-gray-700 leading-relaxed font-light">
+                          {t(bullet)}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-                <ul className="space-y-2 list-none pl-0">
-                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
-                    <span className="text-accent mr-3 mt-1">•</span>
-                    <span>{t('roadmap_2024_bullet_1')}</span>
-                  </li>
-                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
-                    <span className="text-accent mr-3 mt-1">•</span>
-                    <span>{t('roadmap_2024_bullet_2')}</span>
-                  </li>
-                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
-                    <span className="text-accent mr-3 mt-1">•</span>
-                    <span>{t('roadmap_2024_bullet_3')}</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            {/* 2025 */}
-            <div className="flex gap-6">
-              <div className="flex flex-col items-center">
-                <div className="w-7 h-7 bg-accent-light border-4 border-accent rounded-full flex-shrink-0"></div>
-                <div className="bg-accent-light w-[2px] h-full mt-2"></div>
-              </div>
-              <div className="flex-1 pb-8">
-                <div className="flex items-center gap-3 mb-3">
-                  <Heading level={4} className="text-accent uppercase font-normal text-sm">
-                    2025
-                  </Heading>
-                  <p className="uppercase font-bold text-sm text-gray-900">
-                    {t('roadmap_2025_title')}
-                  </p>
-                </div>
-                <ul className="space-y-2 list-none pl-0">
-                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
-                    <span className="text-accent mr-3 mt-1">•</span>
-                    <span>{t('roadmap_2025_bullet_1')}</span>
-                  </li>
-                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
-                    <span className="text-accent mr-3 mt-1">•</span>
-                    <span>{t('roadmap_2025_bullet_4')}</span>
-                  </li>
-                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
-                    <span className="text-accent mr-3 mt-1">•</span>
-                    <span>{t('roadmap_2025_bullet_6')}</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            {/* 2026 */}
-            <div className="flex gap-6">
-              <div className="flex flex-col items-center">
-                <div className="w-7 h-7 bg-accent-light rounded-full flex-shrink-0"></div>
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
-                  <Heading level={4} className="text-accent uppercase font-normal text-sm">
-                    2026
-                  </Heading>
-                  <p className="uppercase font-bold text-sm text-gray-900">
-                    {t('roadmap_2026_title')}
-                  </p>
-                </div>
-                <ul className="space-y-2 list-none pl-0">
-                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
-                    <span className="text-accent mr-3 mt-1">•</span>
-                    <span>{t('roadmap_2026_bullet_1')}</span>
-                  </li>
-                  <li className="text-sm text-gray-700 leading-relaxed font-light flex items-start">
-                    <span className="text-accent mr-3 mt-1">•</span>
-                    <span>{t('roadmap_2026_bullet_2')}</span>
-                  </li>
-                </ul>
-              </div>
+              ))}
             </div>
           </div>
 
-          <div className="text-center pt-6 border-t border-gray-200">
+          <div className="text-center pt-12">
             <LinkButton
               href="/roadmap"
               variant="secondary"

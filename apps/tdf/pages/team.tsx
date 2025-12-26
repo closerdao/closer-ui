@@ -3,6 +3,30 @@ import Link from 'next/link';
 
 import { Heading } from 'closer';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
+import {
+  BarChart3,
+  Building2,
+  Check,
+  ChefHat,
+  Coins,
+  Dumbbell,
+  Hammer,
+  Handshake,
+  Landmark,
+  Leaf,
+  MapPin,
+  Microscope,
+  Sparkles,
+  Sprout,
+  Star,
+  User,
+  Users,
+  UtensilsCrossed,
+  Vote,
+  Wallet,
+  Wrench,
+  Zap,
+} from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -42,21 +66,21 @@ const TeamPage = () => {
             <div className="grid md:grid-cols-3 gap-8 text-center">
               <div className="p-6">
                 <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">🏛️</span>
+                  <Landmark className="w-7 h-7 text-gray-800" />
                 </div>
                 <h3 className="font-semibold mb-2">{t('team_oasa_association_title')}</h3>
                 <p className="text-sm text-gray-600">{t('team_oasa_association_desc')}</p>
               </div>
               <div className="p-6">
                 <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">🗳️</span>
+                  <Vote className="w-7 h-7 text-gray-800" />
                 </div>
                 <h3 className="font-semibold mb-2">{t('team_tdf_dao_title')}</h3>
                 <p className="text-sm text-gray-600">{t('team_tdf_dao_desc')}</p>
               </div>
               <div className="p-6">
                 <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">⚡</span>
+                  <Zap className="w-7 h-7 text-gray-800" />
                 </div>
                 <h3 className="font-semibold mb-2">{t('team_executive_team_title')}</h3>
                 <p className="text-sm text-gray-600">{t('team_executive_team_desc')}</p>
@@ -75,8 +99,8 @@ const TeamPage = () => {
             
             <div className="grid md:grid-cols-2 gap-8">
               <div className="flex gap-6 p-6 bg-gray-50 rounded-2xl">
-                <div className="w-24 h-24 bg-gradient-to-br from-accent to-accent-alt rounded-full flex-shrink-0 flex items-center justify-center text-3xl">
-                  👨‍💼
+                <div className="w-24 h-24 bg-gradient-to-br from-accent to-accent-alt rounded-full flex-shrink-0 flex items-center justify-center">
+                  <User className="w-10 h-10 text-gray-800" />
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold">Samuel Delesque</h3>
@@ -94,8 +118,8 @@ const TeamPage = () => {
               </div>
 
               <div className="flex gap-6 p-6 bg-gray-50 rounded-2xl">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex-shrink-0 flex items-center justify-center text-3xl">
-                  📊
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex-shrink-0 flex items-center justify-center">
+                  <BarChart3 className="w-10 h-10 text-blue-600" />
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold">Peter Koll</h3>
@@ -118,7 +142,9 @@ const TeamPage = () => {
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-white rounded-2xl p-8 shadow-sm">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center text-xl">🏨</div>
+                  <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-gray-800" />
+                  </div>
                   <div>
                     <h3 className="text-xl font-semibold">{t('team_hospitality_team_title')}</h3>
                     <p className="text-sm text-gray-500">{t('team_hospitality_team_when')}</p>
@@ -128,35 +154,45 @@ const TeamPage = () => {
                 
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full flex items-center justify-center text-lg">🌟</div>
+                    <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full flex items-center justify-center">
+                      <Star className="w-5 h-5 text-amber-600" />
+                    </div>
                     <div>
                       <p className="font-medium">{t('team_luna_name')}</p>
                       <p className="text-sm text-gray-500">{t('team_luna_role')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-sm">👨‍🍳</div>
+                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                      <ChefHat className="w-5 h-5 text-gray-500" />
+                    </div>
                     <div>
                       <p className="font-medium text-gray-700">{t('team_kitchen_lead')}</p>
                       <p className="text-sm text-gray-400">{t('team_position_open')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-sm">🍳</div>
+                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                      <UtensilsCrossed className="w-5 h-5 text-gray-500" />
+                    </div>
                     <div>
                       <p className="font-medium text-gray-700">{t('team_kitchen_support')}</p>
                       <p className="text-sm text-gray-400">{t('team_position_open')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-sm">🧹</div>
+                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                      <Sparkles className="w-5 h-5 text-gray-500" />
+                    </div>
                     <div>
                       <p className="font-medium text-gray-700">{t('team_housekeeping')}</p>
                       <p className="text-sm text-gray-400">{t('team_housekeeping_positions')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-sm">🔧</div>
+                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                      <Wrench className="w-5 h-5 text-gray-500" />
+                    </div>
                     <div>
                       <p className="font-medium text-gray-700">{t('team_maintenance')}</p>
                       <p className="text-sm text-gray-400">{t('team_maintenance_position')}</p>
@@ -167,7 +203,9 @@ const TeamPage = () => {
 
               <div className="bg-white rounded-2xl p-8 shadow-sm">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center text-xl">🌱</div>
+                  <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
+                    <Sprout className="w-6 h-6 text-gray-800" />
+                  </div>
                   <div>
                     <h3 className="text-xl font-semibold">{t('team_ecology_food_title')}</h3>
                   </div>
@@ -176,28 +214,36 @@ const TeamPage = () => {
                 
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center text-lg">🌿</div>
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center">
+                      <Leaf className="w-5 h-5 text-green-600" />
+                    </div>
                     <div>
                       <p className="font-medium">{t('team_ofer_name')}</p>
                       <p className="text-sm text-gray-500">{t('team_land_steward')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center text-lg">🌿</div>
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center">
+                      <Leaf className="w-5 h-5 text-green-600" />
+                    </div>
                     <div>
                       <p className="font-medium">{t('team_joao_name')}</p>
                       <p className="text-sm text-gray-500">{t('team_land_steward')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-sm">🌿</div>
+                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                      <Leaf className="w-5 h-5 text-gray-500" />
+                    </div>
                     <div>
                       <p className="font-medium text-gray-700">{t('team_land_steward')}</p>
                       <p className="text-sm text-gray-400">{t('team_land_steward_additional')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-sm">🤝</div>
+                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                      <Handshake className="w-5 h-5 text-gray-500" />
+                    </div>
                     <div>
                       <p className="font-medium text-gray-700">{t('team_volunteers')}</p>
                       <p className="text-sm text-gray-400">{t('team_volunteers_positions')}</p>
@@ -208,7 +254,9 @@ const TeamPage = () => {
 
               <div className="bg-white rounded-2xl p-8 shadow-sm">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center text-xl">🔨</div>
+                  <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
+                    <Hammer className="w-6 h-6 text-gray-800" />
+                  </div>
                   <div>
                     <h3 className="text-xl font-semibold">{t('team_build_team_title')}</h3>
                   </div>
@@ -217,14 +265,18 @@ const TeamPage = () => {
                 
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-yellow-100 rounded-full flex items-center justify-center text-lg">🪚</div>
+                    <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-yellow-100 rounded-full flex items-center justify-center">
+                      <Hammer className="w-5 h-5 text-amber-600" />
+                    </div>
                     <div>
                       <p className="font-medium">{t('team_matthias_name')}</p>
                       <p className="text-sm text-gray-500">{t('team_carpentry')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-yellow-100 rounded-full flex items-center justify-center text-lg">🪚</div>
+                    <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-yellow-100 rounded-full flex items-center justify-center">
+                      <Hammer className="w-5 h-5 text-amber-600" />
+                    </div>
                     <div>
                       <p className="font-medium">{t('team_julia_name')}</p>
                       <p className="text-sm text-gray-500">{t('team_carpentry')}</p>
@@ -235,7 +287,9 @@ const TeamPage = () => {
 
               <div className="bg-white rounded-2xl p-8 shadow-sm">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center text-xl">🍄</div>
+                  <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
+                    <Microscope className="w-6 h-6 text-gray-800" />
+                  </div>
                   <div>
                     <h3 className="text-xl font-semibold">{t('team_mushroom_farm_title')}</h3>
                   </div>
@@ -244,21 +298,27 @@ const TeamPage = () => {
                 
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center text-lg">🔬</div>
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center">
+                      <Microscope className="w-5 h-5 text-purple-600" />
+                    </div>
                     <div>
                       <p className="font-medium">{t('team_richard_name')}</p>
                       <p className="text-sm text-gray-500">{t('team_richard_role')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center text-lg">🍄</div>
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center">
+                      <Sprout className="w-5 h-5 text-purple-600" />
+                    </div>
                     <div>
                       <p className="font-medium">{t('team_tonya_name')}</p>
                       <p className="text-sm text-gray-500">{t('team_tonya_role')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-sm">🍄</div>
+                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                      <Sprout className="w-5 h-5 text-gray-500" />
+                    </div>
                     <div>
                       <p className="font-medium text-gray-700">{t('team_mycology_assistants')}</p>
                       <p className="text-sm text-gray-400">{t('team_mycology_assistants_positions')}</p>
@@ -338,42 +398,42 @@ const TeamPage = () => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="bg-gray-800 rounded-xl p-6">
                 <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center mb-4">
-                  <span className="text-accent text-xl">👥</span>
+                  <Users className="w-5 h-5 text-accent" />
                 </div>
                 <h3 className="font-semibold mb-2">{t('team_citizens_title')}</h3>
                 <p className="text-sm text-gray-400">{t('team_citizens_desc')}</p>
               </div>
               <div className="bg-gray-800 rounded-xl p-6">
                 <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center mb-4">
-                  <span className="text-accent text-xl">🏛️</span>
+                  <Landmark className="w-5 h-5 text-accent" />
                 </div>
                 <h3 className="font-semibold mb-2">{t('team_citizen_assembly_title')}</h3>
                 <p className="text-sm text-gray-400">{t('team_citizen_assembly_desc')}</p>
               </div>
               <div className="bg-gray-800 rounded-xl p-6">
                 <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center mb-4">
-                  <span className="text-accent text-xl">💰</span>
+                  <Wallet className="w-5 h-5 text-accent" />
                 </div>
                 <h3 className="font-semibold mb-2">{t('team_treasury_title')}</h3>
                 <p className="text-sm text-gray-400">{t('team_treasury_desc')}</p>
               </div>
               <div className="bg-gray-800 rounded-xl p-6">
                 <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center mb-4">
-                  <span className="text-accent text-xl">🪙</span>
+                  <Coins className="w-5 h-5 text-accent" />
                 </div>
                 <h3 className="font-semibold mb-2">{t('team_token_holders_title')}</h3>
                 <p className="text-sm text-gray-400">{t('team_token_holders_desc')}</p>
               </div>
               <div className="bg-gray-800 rounded-xl p-6">
                 <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center mb-4">
-                  <span className="text-accent text-xl">💪</span>
+                  <Dumbbell className="w-5 h-5 text-accent" />
                 </div>
                 <h3 className="font-semibold mb-2">{t('team_sweat_holders_title')}</h3>
                 <p className="text-sm text-gray-400">{t('team_sweat_holders_desc')}</p>
               </div>
               <div className="bg-gray-800 rounded-xl p-6">
                 <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center mb-4">
-                  <span className="text-accent text-xl">📍</span>
+                  <MapPin className="w-5 h-5 text-accent" />
                 </div>
                 <h3 className="font-semibold mb-2">{t('team_presence_holders_title')}</h3>
                 <p className="text-sm text-gray-400">{t('team_presence_holders_desc')}</p>
@@ -384,15 +444,15 @@ const TeamPage = () => {
               <h3 className="font-semibold mb-4">{t('team_dao_governs_title')}</h3>
               <div className="grid md:grid-cols-3 gap-4 text-sm">
                 <div className="flex items-center gap-2">
-                  <span className="text-accent">✓</span>
+                  <Check className="w-4 h-4 text-accent" />
                   <span className="text-gray-300">{t('team_dao_governs_game_guide')}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-accent">✓</span>
+                  <Check className="w-4 h-4 text-accent" />
                   <span className="text-gray-300">{t('team_dao_governs_land_plan')}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-accent">✓</span>
+                  <Check className="w-4 h-4 text-accent" />
                   <span className="text-gray-300">{t('team_dao_governs_elections')}</span>
                 </div>
               </div>

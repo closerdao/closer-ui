@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import {  Heading, Card, LinkButton } from 'closer';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { BarChart3, Droplets, Rocket, Sprout } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -22,40 +23,40 @@ const HomePage = () => {
       </Head>
       <section className="bg-white">
         {/* Hero Section */}
-        <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border-b border-gray-200">
+        <div className="bg-gradient-to-br from-accent-light to-accent-alt-light border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-6 py-16 md:py-20">
             <div className="max-w-4xl mx-auto text-center">
-              <p className="text-xs uppercase tracking-wider text-gray-400 mb-4 font-medium">
+              <p className="text-xs uppercase tracking-wider text-gray-600 mb-4 font-medium">
                 {t('dataroom_hero_label')}
               </p>
               <Heading
-                className="text-3xl md:text-4xl mb-6 text-white font-normal leading-tight"
+                className="mb-4 text-4xl md:text-6xl"
                 data-testid="page-title"
                 display
                 level={1}
               >
                 {t('dataroom_hero_subtitle')}
               </Heading>
-              <p className="text-base text-gray-300 mb-12 leading-relaxed font-light max-w-2xl mx-auto">
+              <p className="text-base text-gray-700 mb-12 leading-relaxed font-light max-w-2xl mx-auto">
                 {t('dataroom_hero_description')}
               </p>
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 max-w-3xl mx-auto">
-                <div className="bg-white/10 backdrop-blur-sm rounded border border-white/20 p-5 text-center">
-                  <div className="text-2xl md:text-3xl font-normal text-white mb-2 font-serif">€2.49M</div>
-                  <div className="text-xs text-gray-300 font-light">{t('dataroom_stat_total_funding')}</div>
+                <div className="bg-white/90 rounded border border-gray-200 p-5 text-center">
+                  <div className="text-2xl md:text-3xl font-normal text-gray-900 mb-2 font-serif">€2.49M</div>
+                  <div className="text-xs text-gray-600 font-light">{t('dataroom_stat_total_funding')}</div>
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded border border-white/20 p-5 text-center">
-                  <div className="text-2xl md:text-3xl font-normal text-white mb-2 font-serif">€1.24M</div>
-                  <div className="text-xs text-gray-300 font-light">{t('dataroom_stat_construction_budget')}</div>
+                <div className="bg-white/90 rounded border border-gray-200 p-5 text-center">
+                  <div className="text-2xl md:text-3xl font-normal text-gray-900 mb-2 font-serif">€1.24M</div>
+                  <div className="text-xs text-gray-600 font-light">{t('dataroom_stat_construction_budget')}</div>
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded border border-white/20 p-5 text-center">
-                  <div className="text-2xl md:text-3xl font-normal text-white mb-2 font-serif">€521k</div>
-                  <div className="text-xs text-gray-300 font-light">{t('dataroom_stat_revenue_target')}</div>
+                <div className="bg-white/90 rounded border border-gray-200 p-5 text-center">
+                  <div className="text-2xl md:text-3xl font-normal text-gray-900 mb-2 font-serif">€521k</div>
+                  <div className="text-xs text-gray-600 font-light">{t('dataroom_stat_revenue_target')}</div>
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded border border-white/20 p-5 text-center">
-                  <div className="text-2xl md:text-3xl font-normal text-white mb-2 font-serif">5ha</div>
-                  <div className="text-xs text-gray-300 font-light">{t('dataroom_stat_land_stewardship')}</div>
+                <div className="bg-white/90 rounded border border-gray-200 p-5 text-center">
+                  <div className="text-2xl md:text-3xl font-normal text-gray-900 mb-2 font-serif">25ha</div>
+                  <div className="text-xs text-gray-600 font-light">{t('dataroom_stat_land_stewardship')}</div>
                 </div>
               </div>
 
@@ -64,7 +65,7 @@ const HomePage = () => {
                   href="https://calendly.com/samueldelesque"
                   target="_blank"
                   variant="primary"
-                  className="bg-white text-gray-900 hover:bg-gray-100 border-0"
+                  className="bg-gray-900 text-white hover:bg-gray-800 border-0"
                 >
                   {t('dataroom_executive_cta_secondary_1')}
                 </LinkButton>
@@ -271,100 +272,100 @@ const HomePage = () => {
               </p>
             </div>
             
-            <div className="grid lg:grid-cols-2 gap-12">
+            <div className="grid lg:grid-cols-2 gap-8">
               {/* Co-living Track */}
-              <div className="space-y-4">
-                <div className="text-center mb-10">
-                  <h3 className="text-2xl font-semibold text-gray-900 mb-3">{t('dataroom_coliving_track_title')}</h3>
-                  <div className="w-16 h-0.5 bg-gray-300 mx-auto"></div>
+              <div className="space-y-2">
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('dataroom_coliving_track_title')}</h3>
+                  <div className="w-12 h-0.5 bg-gray-300 mx-auto"></div>
                 </div>
                 
-                <div className="flex items-start space-x-4 p-6 border-l-4 border-gray-900 bg-gray-50 rounded-r-lg">
+                <div className="flex items-start space-x-3 p-4 border-l-4 border-gray-900 bg-gray-50 rounded-r-lg">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">{t('dataroom_coliving_planning_title')}</h4>
-                    <p className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_coliving_planning_desc')}</p>
+                    <h4 className="font-semibold text-gray-900 text-sm mb-1">{t('dataroom_coliving_planning_title')}</h4>
+                    <p className="text-xs text-gray-700 leading-relaxed font-light">{t('dataroom_coliving_planning_desc')}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4 p-6 border-l-4 border-gray-900 bg-gray-50 rounded-r-lg">
+                <div className="flex items-start space-x-3 p-4 border-l-4 border-gray-900 bg-gray-50 rounded-r-lg">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">{t('dataroom_coliving_existing_title')}</h4>
-                    <p className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_coliving_existing_desc')}</p>
+                    <h4 className="font-semibold text-gray-900 text-sm mb-1">{t('dataroom_coliving_existing_title')}</h4>
+                    <p className="text-xs text-gray-700 leading-relaxed font-light">{t('dataroom_coliving_existing_desc')}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4 p-6 border-l-4 border-gray-400 bg-gray-50 rounded-r-lg">
+                <div className="flex items-start space-x-3 p-4 border-l-4 border-gray-400 bg-gray-50 rounded-r-lg">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">{t('dataroom_coliving_current_title')}</h4>
-                    <p className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_coliving_current_desc')}</p>
+                    <h4 className="font-semibold text-gray-900 text-sm mb-1">{t('dataroom_coliving_current_title')}</h4>
+                    <p className="text-xs text-gray-700 leading-relaxed font-light">{t('dataroom_coliving_current_desc')}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4 p-6 border-l-4 border-gray-400 bg-gray-50 rounded-r-lg">
+                <div className="flex items-start space-x-3 p-4 border-l-4 border-gray-400 bg-gray-50 rounded-r-lg">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">{t('dataroom_coliving_next_title')}</h4>
-                    <p className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_coliving_next_desc')}</p>
-                    <p className="text-sm font-medium text-gray-900 mt-2">{t('dataroom_coliving_next_funding')}</p>
+                    <h4 className="font-semibold text-gray-900 text-sm mb-1">{t('dataroom_coliving_next_title')}</h4>
+                    <p className="text-xs text-gray-700 leading-relaxed font-light">{t('dataroom_coliving_next_desc')}</p>
+                    <p className="text-xs font-medium text-gray-900 mt-1">{t('dataroom_coliving_next_funding')}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4 p-6 border-l-4 border-gray-400 bg-gray-50 rounded-r-lg">
+                <div className="flex items-start space-x-3 p-4 border-l-4 border-gray-400 bg-gray-50 rounded-r-lg">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">{t('dataroom_coliving_major_title')}</h4>
-                    <p className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_coliving_major_desc')}</p>
-                    <p className="text-sm font-medium text-gray-900 mt-2">{t('dataroom_coliving_major_funding')}</p>
+                    <h4 className="font-semibold text-gray-900 text-sm mb-1">{t('dataroom_coliving_major_title')}</h4>
+                    <p className="text-xs text-gray-700 leading-relaxed font-light">{t('dataroom_coliving_major_desc')}</p>
+                    <p className="text-xs font-medium text-gray-900 mt-1">{t('dataroom_coliving_major_funding')}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4 p-6 border-l-4 border-gray-400 bg-gray-50 rounded-r-lg">
+                <div className="flex items-start space-x-3 p-4 border-l-4 border-gray-400 bg-gray-50 rounded-r-lg">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">{t('dataroom_full_hospitality_operation')}</h4>
-                    <p className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_coliving_completion')}</p>
+                    <h4 className="font-semibold text-gray-900 text-sm mb-1">{t('dataroom_full_hospitality_operation')}</h4>
+                    <p className="text-xs text-gray-700 leading-relaxed font-light">{t('dataroom_coliving_completion')}</p>
                   </div>
                 </div>
               </div>
 
               {/* Co-housing Track */}
-              <div className="space-y-4">
-                <div className="text-center mb-10">
-                  <h3 className="text-2xl font-semibold text-gray-900 mb-3">{t('dataroom_cohousing_track_title')}</h3>
-                  <div className="w-16 h-0.5 bg-gray-300 mx-auto"></div>
+              <div className="space-y-2">
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('dataroom_cohousing_track_title')}</h3>
+                  <div className="w-12 h-0.5 bg-gray-300 mx-auto"></div>
                 </div>
                 
-                <div className="flex items-start space-x-4 p-6 border-l-4 border-gray-900 bg-gray-50 rounded-r-lg">
+                <div className="flex items-start space-x-3 p-4 border-l-4 border-gray-900 bg-gray-50 rounded-r-lg">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">{t('dataroom_cohousing_land_title')}</h4>
-                    <p className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_cohousing_land_desc')}</p>
+                    <h4 className="font-semibold text-gray-900 text-sm mb-1">{t('dataroom_cohousing_land_title')}</h4>
+                    <p className="text-xs text-gray-700 leading-relaxed font-light">{t('dataroom_cohousing_land_desc')}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4 p-6 border-l-4 border-gray-400 bg-gray-50 rounded-r-lg">
+                <div className="flex items-start space-x-3 p-4 border-l-4 border-gray-400 bg-gray-50 rounded-r-lg">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">{t('dataroom_cohousing_pip_title')}</h4>
-                    <p className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_cohousing_pip_desc')}</p>
-                    <p className="text-sm font-medium text-gray-900 mt-2">{t('dataroom_cohousing_response')}</p>
+                    <h4 className="font-semibold text-gray-900 text-sm mb-1">{t('dataroom_cohousing_pip_title')}</h4>
+                    <p className="text-xs text-gray-700 leading-relaxed font-light">{t('dataroom_cohousing_pip_desc')}</p>
+                    <p className="text-xs font-medium text-gray-900 mt-1">{t('dataroom_cohousing_response')}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4 p-6 border-l-4 border-gray-400 bg-gray-50 rounded-r-lg">
+                <div className="flex items-start space-x-3 p-4 border-l-4 border-gray-400 bg-gray-50 rounded-r-lg">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">{t('dataroom_land_closing_title')}</h4>
-                    <p className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_cohousing_closing')}</p>
+                    <h4 className="font-semibold text-gray-900 text-sm mb-1">{t('dataroom_land_closing_title')}</h4>
+                    <p className="text-xs text-gray-700 leading-relaxed font-light">{t('dataroom_cohousing_closing')}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4 p-6 border-l-4 border-gray-400 bg-gray-50 rounded-r-lg">
+                <div className="flex items-start space-x-3 p-4 border-l-4 border-gray-400 bg-gray-50 rounded-r-lg">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">{t('dataroom_cohousing_infrastructure_title')}</h4>
-                    <p className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_cohousing_infrastructure_desc')}</p>
+                    <h4 className="font-semibold text-gray-900 text-sm mb-1">{t('dataroom_cohousing_infrastructure_title')}</h4>
+                    <p className="text-xs text-gray-700 leading-relaxed font-light">{t('dataroom_cohousing_infrastructure_desc')}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4 p-6 border-l-4 border-gray-400 bg-gray-50 rounded-r-lg">
+                <div className="flex items-start space-x-3 p-4 border-l-4 border-gray-400 bg-gray-50 rounded-r-lg">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">{t('dataroom_cohousing_construction_title')}</h4>
-                    <p className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_cohousing_construction_desc')}</p>
-                    <p className="text-sm font-medium text-gray-900 mt-2">{t('dataroom_cohousing_first_houses')}</p>
+                    <h4 className="font-semibold text-gray-900 text-sm mb-1">{t('dataroom_cohousing_construction_title')}</h4>
+                    <p className="text-xs text-gray-700 leading-relaxed font-light">{t('dataroom_cohousing_construction_desc')}</p>
+                    <p className="text-xs font-medium text-gray-900 mt-1">{t('dataroom_cohousing_first_houses')}</p>
                   </div>
                 </div>
               </div>
@@ -452,34 +453,46 @@ const HomePage = () => {
                 <Heading level={3} className="mb-8 text-lg font-semibold text-gray-900">
                   {t('home_financial_trajectory_title')}
                 </Heading>
-                <div className="flex items-end gap-3 h-48 mb-6">
-                  <div className="flex-1 flex flex-col items-center gap-2">
+                <div className="flex items-end gap-4 h-44 mb-4">
+                  <div className="flex-1 h-full flex items-end">
                     <div className="w-full bg-gray-900 rounded-t" style={{ height: '15%' }}></div>
-                    <span className="text-xs font-semibold text-gray-900">€78k</span>
-                    <span className="text-xs text-gray-600 font-light">{t('home_financial_trajectory_2025')}</span>
                   </div>
-                  <div className="flex-1 flex flex-col items-center gap-2">
+                  <div className="flex-1 h-full flex items-end">
                     <div className="w-full bg-gray-900 rounded-t" style={{ height: '39%' }}></div>
-                    <span className="text-xs font-semibold text-gray-900">€200k</span>
-                    <span className="text-xs text-gray-600 font-light">{t('home_financial_trajectory_2026')}</span>
                   </div>
-                  <div className="flex-1 flex flex-col items-center gap-2">
+                  <div className="flex-1 h-full flex items-end">
                     <div className="w-full bg-gray-900 rounded-t" style={{ height: '58%' }}></div>
-                    <span className="text-xs font-semibold text-gray-900">€300k</span>
-                    <span className="text-xs text-gray-600 font-light">{t('home_financial_trajectory_2027')}</span>
                   </div>
-                  <div className="flex-1 flex flex-col items-center gap-2">
+                  <div className="flex-1 h-full flex items-end">
                     <div className="w-full bg-gray-900 rounded-t" style={{ height: '78%' }}></div>
-                    <span className="text-xs font-semibold text-gray-900">€400k</span>
-                    <span className="text-xs text-gray-600 font-light">{t('home_financial_trajectory_2028')}</span>
                   </div>
-                  <div className="flex-1 flex flex-col items-center gap-2">
+                  <div className="flex-1 h-full flex items-end">
                     <div className="w-full bg-gray-900 rounded-t" style={{ height: '100%' }}></div>
-                    <span className="text-xs font-semibold text-gray-900">€514k</span>
-                    <span className="text-xs text-gray-600 font-light">{t('home_financial_trajectory_2029')}</span>
                   </div>
                 </div>
-                <p className="text-sm text-center text-gray-700 font-light">
+                <div className="flex gap-4">
+                  <div className="flex-1 text-center">
+                    <div className="text-xs font-semibold text-gray-900">€78k</div>
+                    <div className="text-xs text-gray-600 font-light">{t('home_financial_trajectory_2025')}</div>
+                  </div>
+                  <div className="flex-1 text-center">
+                    <div className="text-xs font-semibold text-gray-900">€200k</div>
+                    <div className="text-xs text-gray-600 font-light">{t('home_financial_trajectory_2026')}</div>
+                  </div>
+                  <div className="flex-1 text-center">
+                    <div className="text-xs font-semibold text-gray-900">€300k</div>
+                    <div className="text-xs text-gray-600 font-light">{t('home_financial_trajectory_2027')}</div>
+                  </div>
+                  <div className="flex-1 text-center">
+                    <div className="text-xs font-semibold text-gray-900">€400k</div>
+                    <div className="text-xs text-gray-600 font-light">{t('home_financial_trajectory_2028')}</div>
+                  </div>
+                  <div className="flex-1 text-center">
+                    <div className="text-xs font-semibold text-gray-900">€514k</div>
+                    <div className="text-xs text-gray-600 font-light">{t('home_financial_trajectory_2029')}</div>
+                  </div>
+                </div>
+                <p className="text-sm text-center text-gray-700 font-light mt-6">
                   <strong className="text-gray-900 font-semibold">{t('home_financial_trajectory_profit')}</strong>
                 </p>
               </div>
@@ -786,7 +799,9 @@ const HomePage = () => {
                   target="_blank"
                   className="block"
                 >
-                  <div className="text-4xl mb-4">📊</div>
+                  <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center mb-4 mx-auto">
+                    <BarChart3 className="w-7 h-7 text-blue-600" />
+                  </div>
                   <h3 className="text-lg font-semibold mb-3 text-gray-900">{t('dataroom_report_2021_title')}</h3>
                   <span className="text-gray-900 font-medium text-sm underline">{t('dataroom_download_pdf')}</span>
                 </Link>
@@ -798,7 +813,9 @@ const HomePage = () => {
                   target="_blank"
                   className="block"
                 >
-                  <div className="text-4xl mb-4">🌱</div>
+                  <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mb-4 mx-auto">
+                    <Sprout className="w-7 h-7 text-green-600" />
+                  </div>
                   <h3 className="text-lg font-semibold mb-3 text-gray-900">{t('dataroom_report_2022_title')}</h3>
                   <span className="text-gray-900 font-medium text-sm underline">{t('dataroom_download_pdf')}</span>
                 </Link>
@@ -810,7 +827,9 @@ const HomePage = () => {
                   target="_blank"
                   className="block"
                 >
-                  <div className="text-4xl mb-4">💧</div>
+                  <div className="w-14 h-14 rounded-full bg-cyan-100 flex items-center justify-center mb-4 mx-auto">
+                    <Droplets className="w-7 h-7 text-cyan-600" />
+                  </div>
                   <h3 className="text-lg font-semibold mb-3 text-gray-900">{t('dataroom_report_2024_title')}</h3>
                   <span className="text-gray-900 font-medium text-sm underline">{t('dataroom_download_pdf')}</span>
                 </Link>
@@ -822,7 +841,9 @@ const HomePage = () => {
                   target="_blank"
                   className="block"
                 >
-                  <div className="text-4xl mb-4">🚀</div>
+                  <div className="w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center mb-4 mx-auto">
+                    <Rocket className="w-7 h-7 text-orange-600" />
+                  </div>
                   <h3 className="text-lg font-semibold mb-3 text-gray-900">{t('dataroom_report_2025_title')}</h3>
                   <span className="text-gray-900 font-medium text-sm underline">{t('dataroom_download_pdf')}</span>
                 </Link>

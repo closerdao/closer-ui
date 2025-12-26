@@ -505,7 +505,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                     <div className="flex justify-between pt-2 border-t">
                       <span className="text-gray-700">{t('token_holders_count')}</span>
                       <span className="font-semibold">
-                        {isLoadingChainData ? t('token_supply_loading') : (tokenHolders !== null ? tokenHolders.toLocaleString() : '—')}
+                        {isLoadingChainData ? t('token_supply_loading') : (tokenHolders !== null ? tokenHolders.toLocaleString() : '280+')}
                       </span>
                     </div>
                   </div>
