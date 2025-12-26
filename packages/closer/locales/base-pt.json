@@ -1294,6 +1294,7 @@
   "config_label_entityName": "Nome da entidade",
   "config_label_transactionType": "Tipo de transação",
   "config_label_accountingDescription": "Descrição de produto/serviço para contabilidade",
+  "config_label_quorumPercent": "Percentagem de quórum",
   "config_features_heading": "Recursos da plataforma",
   "generic_delete_button": "Apagar",
   "generic_export_csv": "Exportar CSV",

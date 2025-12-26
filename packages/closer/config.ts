@@ -618,4 +618,17 @@ export const configDescription: ConfigType[] = [
       },
     },
   },
+  {
+    slug: 'governance',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      quorumPercent: {
+        type: 'number',
+        default: 10,
+      },
+    },
+  },
 ];
