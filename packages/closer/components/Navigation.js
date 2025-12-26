@@ -144,12 +144,12 @@ const Navigation = () => {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/#journey" className="whitespace-nowrap">
-                      {t('header_nav_the_journey')}
+                    <Link href="/#governance" className="whitespace-nowrap">
+                      {t('header_nav_governance')}
                     </Link>
                   </li>
                   <li>
-                    <Link href="/#pricing">{t('header_nav_pricing')}</Link>
+                    <Link href="/pricing">{t('header_nav_pricing')}</Link>
                   </li>
                   {process.env.NEXT_PUBLIC_FEATURE_ROLES === 'true' && (
                     <li>

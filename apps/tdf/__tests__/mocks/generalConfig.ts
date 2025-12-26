@@ -13,6 +13,6 @@ export const generalConfig = {
   facebookPixelId: '761004479106346',
   twitterUrl: 'https://twitter.com/traditionaldreamfactory',
   instagramUrl: 'https://instagram.com/traditionaldreamfactory',
-  platformName: 'Traditional Dream Factory ',
+  platformName: 'Traditional Dream Factory',
   teamEmail: 'traditionaldreamfactory@gmail.com',
 };

@@ -8,7 +8,6 @@ import HeroCloser from '@/components/HeroCloser';
 import { CommunityMap } from '@/components';
 import CloserEmailCollector from 'closer/components/CloserEmailCollector';
 import { PromptGetInTouchContext } from 'closer/components/PromptGetInTouchContext';
-import { Button } from 'closer/components/ui';
 
 import { GeneralConfig, api, useConfig } from 'closer';
 import { parseMessageFromError } from 'closer/utils/common';
@@ -31,11 +30,13 @@ const HomePage = ({ generalConfig }: Props) => {
     generalConfig?.platformName || defaultConfig.platformName;
 
   const visionRef = useRef<HTMLElement>(null);
+  const featuresRef = useRef<HTMLElement>(null);
   const communitiesRef = useRef<HTMLElement>(null);
   const benefitsRef = useRef<HTMLElement>(null);
   const pricingRef = useRef<HTMLElement>(null);
   const [isVisible, setIsVisible] = useState({
     vision: false,
+    features: false,
     communities: false,
     benefits: false,
     pricing: false,
@@ -64,6 +65,7 @@ const HomePage = ({ generalConfig }: Props) => {
     };
 
     createObserver(visionRef, 'vision');
+    createObserver(featuresRef, 'features');
     createObserver(communitiesRef, 'communities');
     createObserver(benefitsRef, 'benefits');
     createObserver(pricingRef, 'pricing');
@@ -105,15 +107,15 @@ const HomePage = ({ generalConfig }: Props) => {
 
       {/* Features Section */}
       <section
-        ref={communitiesRef}
+        ref={featuresRef}
         id="features"
         className={`py-32 md:py-48 bg-black transition-opacity duration-1000 -mx-4 md:-mx-0 ${
-          isVisible.communities ? 'opacity-100' : 'opacity-0'
+          isVisible.features ? 'opacity-100' : 'opacity-0'
         }`}
       >
-        <div className="max-w-4xl mx-auto px-6 md:px-[5vw]">
+        <div className="max-w-5xl mx-auto px-6 md:px-[5vw]">
           <p className="text-xs uppercase tracking-wider text-[#6e6e73] mb-12">Platform</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-white/10">
             <div className="bg-black p-12">
               <h3 className="font-serif text-2xl mb-4">Booking System</h3>
               <p className="text-[#86868b] text-sm leading-relaxed">
@@ -155,35 +157,35 @@ const HomePage = ({ generalConfig }: Props) => {
       </section>
 
       {/* Showcase Section */}
-      <section className="py-32 md:py-48 bg-[#f5f5f7] text-black -mx-4 md:-mx-0">
+      <section className="py-32 md:py-48 bg-[#1d1d1f] text-white -mx-4 md:-mx-0">
         <div className="max-w-4xl mx-auto px-6 md:px-[5vw]">
-          <p className="text-xs uppercase tracking-wider text-[#6e6e73] mb-4">Case Study</p>
+          <p className="text-xs uppercase tracking-wider text-[#86868b] mb-4">Case Study</p>
           <h2 className="font-serif text-4xl md:text-5xl mb-6">Traditional Dream Factory</h2>
-          <p className="text-lg text-[#6e6e73] max-w-2xl mb-12">
+          <p className="text-lg text-[#86868b] max-w-2xl mb-12">
             Europe&apos;s first tokenized regenerative ecovillage. DAO-governed on Celo blockchain. Built entirely on Closer.
           </p>
           <div className="flex gap-16 flex-wrap mb-12">
             <div>
               <span className="block font-serif text-4xl">€1.2M+</span>
-              <span className="block text-xs uppercase tracking-wider text-[#6e6e73] mt-1">Raised</span>
+              <span className="block text-xs uppercase tracking-wider text-[#86868b] mt-1">Raised</span>
             </div>
             <div>
               <span className="block font-serif text-4xl">279+</span>
-              <span className="block text-xs uppercase tracking-wider text-[#6e6e73] mt-1">Token Holders</span>
+              <span className="block text-xs uppercase tracking-wider text-[#86868b] mt-1">Token Holders</span>
             </div>
             <div>
               <span className="block font-serif text-4xl">25ha</span>
-              <span className="block text-xs uppercase tracking-wider text-[#6e6e73] mt-1">Land</span>
+              <span className="block text-xs uppercase tracking-wider text-[#86868b] mt-1">Land</span>
             </div>
             <div>
               <span className="block font-serif text-4xl">4,000+</span>
-              <span className="block text-xs uppercase tracking-wider text-[#6e6e73] mt-1">Trees</span>
+              <span className="block text-xs uppercase tracking-wider text-[#86868b] mt-1">Trees</span>
             </div>
           </div>
           <Link
             href="https://traditionaldreamfactory.com"
             target="_blank"
-            className="text-[#2d5a27] text-base hover:underline"
+            className="text-[#79FAC1] text-base hover:underline"
           >
             Visit traditionaldreamfactory.com →
           </Link>
@@ -192,6 +194,7 @@ const HomePage = ({ generalConfig }: Props) => {
 
       {/* Communities Map Section */}
       <section
+        id="communities"
         ref={communitiesRef}
         className={`py-32 md:py-48 bg-black transition-opacity duration-1000 -mx-4 md:-mx-0 ${
           isVisible.communities ? 'opacity-100' : 'opacity-0'
@@ -351,7 +354,7 @@ const HomePage = ({ generalConfig }: Props) => {
       </section>
 
       {/* Token Section */}
-      <section className="py-32 md:py-48 bg-black text-center -mx-4 md:-mx-0">
+      <section id="governance" className="py-32 md:py-48 bg-black text-center -mx-4 md:-mx-0">
         <div className="max-w-4xl mx-auto px-6 md:px-[5vw]">
           <h2 className="font-serif text-4xl md:text-6xl mb-8">
             Governance that <em className="italic">scales</em>
@@ -383,15 +386,15 @@ const HomePage = ({ generalConfig }: Props) => {
       </section>
 
       {/* API Section */}
-      <section className="py-32 md:py-48 bg-[#f5f5f7] text-black -mx-4 md:-mx-0">
+      <section className="py-32 md:py-48 bg-[#1d1d1f] text-white -mx-4 md:-mx-0">
         <div className="max-w-4xl mx-auto px-6 md:px-[5vw]">
           <h2 className="font-serif text-3xl md:text-4xl mb-4">RESTful API</h2>
-          <p className="text-[#6e6e73] mb-8">Full programmatic access to your community data.</p>
+          <p className="text-[#86868b] mb-8">Full programmatic access to your community data.</p>
           <div className="flex flex-wrap gap-3">
             {['Bookings', 'Events', 'Tickets', 'Users', 'Stays', 'Volunteers', 'Listings', 'Subscriptions', 'Lessons', 'Resources', 'Messages', 'Metrics', 'Products', 'Charges', 'Projects'].map((endpoint) => (
               <span
                 key={endpoint}
-                className="px-4 py-2 bg-white rounded-md font-mono text-xs text-[#6e6e73]"
+                className="px-4 py-2 bg-white/10 rounded-md font-mono text-xs text-[#a1a1a6]"
               >
                 {endpoint}
               </span>
