@@ -399,6 +399,12 @@ const HomePage = () => {
                 <p className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_ecological_monitoring_content')}</p>
               </Card>
             </div>
+
+            <div className="text-center mt-10">
+              <Link href="/pages/ecology" className="text-sm text-gray-900 font-medium underline hover:text-gray-700">
+                {t('dataroom_ecology_link')} →
+              </Link>
+            </div>
           </div>
         </div>
 
