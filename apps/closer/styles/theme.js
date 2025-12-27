@@ -42,6 +42,7 @@ const tdfTheme = {
     },
     fontFamily: {
       sans: ['var(--font-inter)'],
+      serif: ['var(--font-instrument-serif)', 'Georgia', 'serif'],
     },
   },
   plugins: [],
