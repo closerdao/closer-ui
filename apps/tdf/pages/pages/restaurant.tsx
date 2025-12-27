@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 
 import { Heading, LinkButton } from 'closer';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
@@ -197,16 +198,31 @@ const RestaurantPage = () => {
             <Heading level={2} className="mb-6 text-3xl text-center">
               {t('restaurant_philosophy_title')}
             </Heading>
-            <p className="text-lg text-gray-700 leading-relaxed mb-6">
-              {t('restaurant_philosophy_desc')}
+            <p className="text-lg text-gray-700 leading-relaxed mb-8">
+              {t('restaurant_philosophy_desc_1')}{' '}
+              <Link
+                href="/pages/ecology"
+                className="text-accent hover:text-accent-dark underline"
+              >
+                {t('restaurant_philosophy_desc_ecology_link')}
+              </Link>
+              {' '}{t('restaurant_philosophy_desc_2')}
             </p>
-            <div className="bg-gray-50 rounded-xl p-6 border-l-4 border-accent">
-              <p className="text-gray-700 italic mb-4">
-                {t('restaurant_philosophy_quote')}
-              </p>
-              <p className="text-sm text-gray-600">
-                {t('restaurant_philosophy_inspiration')}
-              </p>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <p className="text-sm text-gray-600 mb-2">{t('restaurant_inspired_by')}</p>
+                <Heading level={3} className="text-lg font-semibold text-gray-900 mb-1">
+                  {t('restaurant_processo_name')}
+                </Heading>
+                <p className="text-sm text-gray-600">{t('restaurant_processo_location')}</p>
+              </div>
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <p className="text-sm text-gray-600 mb-2">{t('restaurant_inspired_by')}</p>
+                <Heading level={3} className="text-lg font-semibold text-gray-900 mb-1">
+                  {t('restaurant_espaco_name')}
+                </Heading>
+                <p className="text-sm text-gray-600">{t('restaurant_espaco_location')}</p>
+              </div>
             </div>
           </div>
         </div>
