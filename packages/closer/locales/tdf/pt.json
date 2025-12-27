@@ -33,6 +33,8 @@
   "navigation_events": "Eventos",
   "navigation_join_program": "Junte-se a um programa",
   "navigation_buy_tokens": "Comprar Tokens $TDF",
+  "menu_token_promo_title": "Possua uma Parte da TDF",
+  "menu_token_promo_desc": "Obtenha tokens $TDF para aceder a estadias, governança e benefícios exclusivos",
   "navigation_invest": "Investir",
   "navigation_resources": "Recursos",
   "navigation_volunteer": "Voluntário",
@@ -433,6 +435,7 @@
   "menu_investors": "Investidores",
   "menu_token_economics": "Economia de Tokens",
   "menu_data_room": "Sala de Dados",
+  "menu_ecology": "Ecologia",
   "menu_about": "Sobre",
   "menu_team": "Equipa",
   "menu_oasa_network_vision": "Visão da Rede OASA",
@@ -497,6 +500,7 @@
   "regen_ag_land_plan_alt": "Plano do terreno da Traditional Dream Factory mostrando zonas de agricultura regenerativa",
 
   "regen_ag_mushroom_title": "Produção de Cogumelos",
+  "regen_ag_mushroom_status": "Em expansão",
   "regen_ag_mushroom_intro": "A nossa produção de cogumelos em contentores produz variedades gourmet e medicinais, criando um sistema de circuito fechado que transforma resíduos agrícolas em produtos de alto valor.",
   "regen_ag_mushroom_current_title": "Produção Atual",
   "regen_ag_mushroom_current_desc": "Cultivamos várias variedades de cogumelos usando métodos de baixo consumo energético como pasteurização com cal em água fria.",
@@ -517,6 +521,7 @@
   "regen_ag_mushroom_distribution_summary": "Objetivos 2026: Restaurante local, 2-3 restaurantes parceiros, loja da aldeia e subscrições de membros.",
 
   "regen_ag_orchard_title": "Pomar Comercial",
+  "regen_ag_orchard_status": "Planeado",
   "regen_ag_orchard_intro": "Em 4 zonas de pomar, plantamos árvores resistentes à seca para produtos de alto valor processados no local.",
   "regen_ag_orchard_total_trees": "árvores planeadas",
   "regen_ag_orchard_zones": "zonas de pomar",
@@ -537,6 +542,7 @@
   "regen_ag_orchard_self_sufficiency_note": "Mais maçã, citrinos, romã e pêssego para autossuficiência da comunidade.",
 
   "regen_ag_veggie_title": "Horta Comercial",
+  "regen_ag_veggie_status": "Em plena produção",
   "regen_ag_veggie_intro": "A nossa horta de rotação sem lavoura é projetada para alimentar a nossa comunidade durante todo o ano com vegetais frescos e orgânicos.",
   "regen_ag_veggie_beds": "canteiros de cultivo",
   "regen_ag_veggie_beds_detail": "4 blocos × 10 canteiros × 15m cada",

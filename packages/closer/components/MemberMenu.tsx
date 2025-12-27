@@ -146,6 +146,11 @@ const MemberMenu = () => {
               enabled: APP_NAME?.toLowerCase() === 'tdf',
               rbacPage: 'Dataroom',
             },
+            {
+              label: t('menu_ecology'),
+              url: '/pages/ecology',
+              enabled: APP_NAME?.toLowerCase() === 'tdf',
+            },
           ],
         },
         {

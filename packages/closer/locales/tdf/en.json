@@ -32,6 +32,8 @@
   "navigation_events": "Events",
   "navigation_join_program": "Join a program",
   "navigation_buy_tokens": "Buy $TDF Tokens",
+  "menu_token_promo_title": "Own a Piece of TDF",
+  "menu_token_promo_desc": "Get $TDF tokens to access stays, governance, and exclusive perks",
   "navigation_invest": "Invest",
   "navigation_resources": "Resources",
   "navigation_volunteer": "Volunteer",
@@ -431,6 +433,7 @@
   "menu_investors": "Investors",
   "menu_token_economics": "Token Economics",
   "menu_data_room": "Data Room",
+  "menu_ecology": "Ecology",
   "menu_about": "About",
   "menu_team": "Team",
   "menu_oasa_network_vision": "OASA Network Vision",
@@ -495,6 +498,7 @@
   "regen_ag_land_plan_alt": "Traditional Dream Factory land plan showing regenerative agriculture zones",
 
   "regen_ag_mushroom_title": "Mushroom Farm",
+  "regen_ag_mushroom_status": "Being scaled up",
   "regen_ag_mushroom_intro": "Our container-based mushroom farm produces gourmet and medicinal varieties, creating a closed-loop system that transforms agricultural waste into high-value products.",
   "regen_ag_mushroom_current_title": "Currently Growing",
   "regen_ag_mushroom_current_desc": "We cultivate several mushroom varieties using low-energy methods like cold water lime pasteurization.",
@@ -515,6 +519,7 @@
   "regen_ag_mushroom_distribution_summary": "2026 targets: On-site restaurant, 2-3 local partner restaurants, village shop, and member subscriptions.",
 
   "regen_ag_orchard_title": "Commercial Orchard",
+  "regen_ag_orchard_status": "Planned",
   "regen_ag_orchard_intro": "Across 4 orchard zones, we're planting drought-resistant trees for high-value products processed on-site.",
   "regen_ag_orchard_total_trees": "trees planned",
   "regen_ag_orchard_zones": "orchard zones",
@@ -535,6 +540,7 @@
   "regen_ag_orchard_self_sufficiency_note": "Plus apple, citrus, pomegranate, and peach for community self-sufficiency.",
 
   "regen_ag_veggie_title": "Market Garden",
+  "regen_ag_veggie_status": "In full production",
   "regen_ag_veggie_intro": "Our no-till rotation market garden is designed to feed our community year-round with fresh, organic vegetables.",
   "regen_ag_veggie_beds": "growing beds",
   "regen_ag_veggie_beds_detail": "4 blocks × 10 beds × 15m each",

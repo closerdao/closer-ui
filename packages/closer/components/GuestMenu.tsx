@@ -7,7 +7,9 @@ import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../hooks/useConfig';
 import useRBAC from '../hooks/useRBAC';
+import { useBuyTokens } from '../hooks/useBuyTokens';
 import api from '../utils/api';
+import { getCurrentUnitPrice } from '../utils/bondingCurve';
 import ReportABug from './ReportABug';
 import NavLink from './ui/NavLink';
 
@@ -25,11 +27,15 @@ interface MenuSection {
 
 const GuestMenu = () => {
   const t = useTranslations();
-  const { APP_NAME } = useConfig();
+  const { APP_NAME, SOURCE_TOKEN } = useConfig() || {};
   const { hasAccess } = useRBAC();
   const router = useRouter();
+  const { getCurrentSupplyWithoutWallet } = useBuyTokens();
 
   const [menuSections, setMenuSections] = useState<MenuSection[]>([]);
+  const [currentSupply, setCurrentSupply] = useState<number | null>(null);
+  const [tokenPrice, setTokenPrice] = useState<number | null>(null);
+  const [isLoadingTokenData, setIsLoadingTokenData] = useState(false);
 
   // Toggle a section's open/closed state
   const toggleSection = (sectionIndex: number) => {
@@ -118,6 +124,11 @@ const GuestMenu = () => {
             {
               label: t('menu_data_room'),
               url: '/dataroom',
+              enabled: APP_NAME?.toLowerCase() === 'tdf',
+            },
+            {
+              label: t('menu_ecology'),
+              url: '/pages/ecology',
               enabled: APP_NAME?.toLowerCase() === 'tdf',
             },
           ],
@@ -385,6 +396,29 @@ const GuestMenu = () => {
     })();
   }, [router.locale]);
 
+  useEffect(() => {
+    if (
+      APP_NAME?.toLowerCase() === 'tdf' &&
+      process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true'
+    ) {
+      setIsLoadingTokenData(true);
+      (async () => {
+        try {
+          const supply = await getCurrentSupplyWithoutWallet();
+          if (supply && supply > 0) {
+            setCurrentSupply(supply);
+            const price = getCurrentUnitPrice(supply);
+            setTokenPrice(price);
+          }
+        } catch (error) {
+          console.error('Error fetching token data:', error);
+        } finally {
+          setIsLoadingTokenData(false);
+        }
+      })();
+    }
+  }, [APP_NAME, getCurrentSupplyWithoutWallet]);
+
   return (
     <nav>
       {/* Login/Signup buttons - keep as pink buttons */}
@@ -443,6 +477,46 @@ const GuestMenu = () => {
             )}
           </div>
         ))}
+
+        {/* TDF Token Sale Widget */}
+        {APP_NAME?.toLowerCase() === 'tdf' &&
+          process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && (
+            <div className="mt-3 mb-2 rounded-lg border border-gray-200 bg-white overflow-hidden">
+              <div className="p-3 bg-gradient-to-br from-accent/5 to-accent-light/5">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center text-xs font-bold text-accent">
+                      TDF
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900">
+                      $TDF
+                    </span>
+                  </div>
+                  {isLoadingTokenData ? (
+                    <div className="text-xs text-gray-400">...</div>
+                  ) : tokenPrice ? (
+                    <div className="text-right">
+                      <div className="text-sm font-semibold text-gray-900">
+                        {tokenPrice.toFixed(2)} {SOURCE_TOKEN || 'cEUR'}
+                      </div>
+                      <div className="text-xs text-gray-500">per token</div>
+                    </div>
+                  ) : null}
+                </div>
+                {currentSupply && (
+                  <div className="text-xs text-gray-500 mb-2">
+                    Supply: {currentSupply.toLocaleString()} $TDF
+                  </div>
+                )}
+                <Link
+                  href="/token"
+                  className="block w-full py-2 px-3 bg-accent hover:bg-accent-dark text-white text-center text-sm font-medium rounded-md transition-colors"
+                >
+                  {t('navigation_buy_tokens')}
+                </Link>
+              </div>
+            </div>
+          )}
 
         <ReportABug />
       </div>

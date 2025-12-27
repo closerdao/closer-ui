@@ -135,9 +135,14 @@ const RegenerativeAgriculturePage = () => {
 
       <section className="py-16 bg-white">
         <div className="max-w-6xl mx-auto px-6">
-          <Heading level={2} className="mb-4 text-3xl text-center">
-            {t('regen_ag_mushroom_title')}
-          </Heading>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Heading level={2} className="text-3xl text-center">
+              {t('regen_ag_mushroom_title')}
+            </Heading>
+            <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
+              {t('regen_ag_mushroom_status')}
+            </span>
+          </div>
           <p className="text-gray-700 text-center max-w-2xl mx-auto mb-10">
             {t('regen_ag_mushroom_intro')}
           </p>
@@ -189,11 +194,55 @@ const RegenerativeAgriculturePage = () => {
         </div>
       </section>
 
+      <section className="py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Heading level={2} className="text-3xl text-center">
+              {t('regen_ag_veggie_title')}
+            </Heading>
+            <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+              {t('regen_ag_veggie_status')}
+            </span>
+          </div>
+          <p className="text-gray-700 text-center max-w-2xl mx-auto mb-10">
+            {t('regen_ag_veggie_intro')}
+          </p>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-xl mx-auto mb-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-gray-900">40</div>
+              <div className="text-xs text-gray-500">{t('regen_ag_veggie_beds')}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-gray-900">~30</div>
+              <div className="text-xs text-gray-500">{t('regen_ag_veggie_people')}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-gray-900">~20%</div>
+              <div className="text-xs text-gray-500">{t('regen_ag_veggie_self_sufficiency')}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-accent">80%</div>
+              <div className="text-xs text-gray-500">{t('regen_ag_veggie_target_2027')}</div>
+            </div>
+          </div>
+
+          <p className="text-gray-500 text-xs text-center max-w-xl mx-auto">
+            {t('regen_ag_veggie_method')}
+          </p>
+        </div>
+      </section>
+
       <section className="py-16 bg-gray-50">
         <div className="max-w-6xl mx-auto px-6">
-          <Heading level={2} className="mb-4 text-3xl text-center">
-            {t('regen_ag_orchard_title')}
-          </Heading>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Heading level={2} className="text-3xl text-center">
+              {t('regen_ag_orchard_title')}
+            </Heading>
+            <span className="px-3 py-1 bg-gray-200 text-gray-600 text-xs font-medium rounded-full">
+              {t('regen_ag_orchard_status')}
+            </span>
+          </div>
           <p className="text-gray-700 text-center max-w-2xl mx-auto mb-10">
             {t('regen_ag_orchard_intro')}
           </p>
@@ -254,39 +303,6 @@ const RegenerativeAgriculturePage = () => {
         </div>
       </section>
 
-      <section className="py-16 bg-white">
-        <div className="max-w-6xl mx-auto px-6">
-          <Heading level={2} className="mb-4 text-3xl text-center">
-            {t('regen_ag_veggie_title')}
-          </Heading>
-          <p className="text-gray-700 text-center max-w-2xl mx-auto mb-10">
-            {t('regen_ag_veggie_intro')}
-          </p>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-xl mx-auto mb-6">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-gray-900">40</div>
-              <div className="text-xs text-gray-500">{t('regen_ag_veggie_beds')}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-gray-900">~30</div>
-              <div className="text-xs text-gray-500">{t('regen_ag_veggie_people')}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-gray-900">~20%</div>
-              <div className="text-xs text-gray-500">{t('regen_ag_veggie_self_sufficiency')}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-accent">80%</div>
-              <div className="text-xs text-gray-500">{t('regen_ag_veggie_target_2027')}</div>
-            </div>
-          </div>
-
-          <p className="text-gray-500 text-xs text-center max-w-xl mx-auto">
-            {t('regen_ag_veggie_method')}
-          </p>
-        </div>
-      </section>
 
       <section className="py-16 bg-gray-50">
         <div className="max-w-6xl mx-auto px-6">
