@@ -578,6 +578,19 @@ export const configDescription: ConfigType[] = [
     },
   },
   {
+    slug: 'photo-gallery',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      photoIds: {
+        type: ['text'],
+        default: [],
+      },
+    },
+  },
+  {
     slug: 'accounting-entities',
     value: {
       enabled: {

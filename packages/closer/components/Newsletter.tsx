@@ -17,10 +17,11 @@ interface Props {
   ctaText?: string;
   className?: string;
   onSuccess?: (email: string) => void;
+  showTitle?: boolean;
 }
 
 const Newsletter = forwardRef<HTMLDivElement, Props>(
-  ({ placement, ctaText, className, onSuccess }, ref) => {
+  ({ placement, ctaText, className, onSuccess, showTitle = true }, ref) => {
     const t = useTranslations();
     const { isAuthenticated } = useAuth();
     const { APP_NAME } = useConfig() || {};
@@ -103,7 +104,7 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
           >
               <div className="flex flex-col justify-start md:mt-0 gap-y-2">
                 
-                {placement !== 'HomePagePrompt' && (
+                {showTitle && placement !== 'HomePagePrompt' && (
                   <Heading display level={4}>
                     {t('newsletter_title')}
                   </Heading>

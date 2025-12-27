@@ -46,7 +46,196 @@ const MemberMenu = () => {
     areSubscriptionsEnabled: boolean,
     isVolunteeringEnabled: boolean,
   ): MenuSection[] => {
-    // Create all menu sections with their items
+    // TDF-specific navigation structure
+    if (APP_NAME?.toLowerCase() === 'tdf') {
+      return [
+        {
+          label: t('menu_about'),
+          isOpen: false,
+          items: [
+            {
+              label: t('menu_team'),
+              url: '/team',
+              enabled: true,
+            },
+            {
+              label: t('menu_oasa_network_vision'),
+              url: '/pages/oasa-network',
+              enabled: true,
+            },
+            {
+              label: t('menu_impact_reports'),
+              url: '/dataroom#reports',
+              enabled: true,
+              rbacPage: 'Dataroom',
+            },
+          ],
+        },
+        {
+          label: t('menu_the_village'),
+          isOpen: false,
+          items: [
+            {
+              label: t('menu_master_plan'),
+              url: '/dataroom#master-plan',
+              enabled: true,
+              rbacPage: 'Dataroom',
+            },
+            {
+              label: t('menu_regenerative_agriculture'),
+              url: '/pages/regenerative-agriculture',
+              enabled: true,
+            },
+            {
+              label: t('menu_accommodations'),
+              url: '/stay',
+              enabled: isBookingEnabled,
+              rbacPage: 'Stay',
+            },
+            {
+              label: t('menu_restaurant'),
+              url: '/pages/restaurant',
+              enabled: APP_NAME?.toLowerCase() === 'tdf',
+            },
+            {
+              label: t('menu_events_programs'),
+              url: '/events',
+              enabled: true,
+              rbacPage: 'Events',
+            },
+          ],
+        },
+        {
+          label: t('menu_investment'),
+          isOpen: false,
+          items: [
+            {
+              label: t('menu_data_room'),
+              url: '/dataroom',
+              enabled: APP_NAME?.toLowerCase() === 'tdf',
+              rbacPage: 'Dataroom',
+            },
+            {
+              label: t('menu_overview'),
+              url: '/dataroom',
+              enabled: true,
+              rbacPage: 'Dataroom',
+            },
+            {
+              label: t('menu_financial_performance'),
+              url: '/dataroom#financial',
+              enabled: true,
+              rbacPage: 'Dataroom',
+            },
+            {
+              label: t('menu_investor_relations'),
+              url: '/dataroom#investor-relations',
+              enabled: true,
+              rbacPage: 'Dataroom',
+            },
+          ],
+        },
+        {
+          label: t('menu_investors'),
+          isOpen: false,
+          items: [
+            {
+              label: t('menu_token_economics'),
+              url: '/token',
+              enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && APP_NAME?.toLowerCase() === 'tdf',
+              rbacPage: 'Token',
+            },
+            {
+              label: t('menu_data_room'),
+              url: '/dataroom',
+              enabled: APP_NAME?.toLowerCase() === 'tdf',
+              rbacPage: 'Dataroom',
+            },
+            {
+              label: t('menu_ecology'),
+              url: '/pages/ecology',
+              enabled: APP_NAME?.toLowerCase() === 'tdf',
+            },
+          ],
+        },
+        {
+          label: t('menu_community'),
+          isOpen: false,
+          items: [
+            {
+              label: t('menu_become_citizen'),
+              url: '/citizenship',
+              enabled: true,
+            },
+            {
+              label: t('menu_governance_dao'),
+              url: '/governance',
+              enabled: true,
+            },
+            {
+              label: t('navigation_volunteer'),
+              url: '/volunteer',
+              enabled: true,
+              rbacPage: 'Volunteer',
+            },
+            {
+              label: t('menu_member_stories'),
+              url: '/members',
+              enabled: true,
+            },
+            {
+              label: t('menu_faq'),
+              url: '/resources',
+              enabled: true,
+              rbacPage: 'Resources',
+            },
+          ],
+        },
+        {
+          label: t('menu_section_dashboard'),
+          isOpen: false,
+          items: [
+            {
+              label: t('navigation_dashboard'),
+              url: '/dashboard',
+              enabled: true,
+              roles: ['admin'],
+              rbacPage: 'Dashboard',
+            },
+            {
+              label: t('navigation_performance'),
+              url: '/dashboard/performance',
+              enabled: true,
+              roles: ['admin'],
+              rbacPage: 'Performance',
+            },
+            {
+              label: t('navigation_governance'),
+              url: '/governance',
+              enabled: true,
+              roles: ['member'],
+              rbacPage: 'Governance',
+            },
+            {
+              label: t('navigation_token_sales'),
+              url: '/dashboard/token-sales',
+              enabled: true,
+              roles: ['admin'],
+              rbacPage: 'TokenSales',
+            },
+            {
+              label: t('navigation_expense_tracking'),
+              url: '/dashboard/expense-tracking',
+              enabled: true,
+              roles: ['admin'],
+              rbacPage: 'ExpenseTracking',
+            },
+          ],
+        },
+      ];
+    }
+
+    // Create all menu sections with their items for other apps
     const sections: MenuSection[] = [
       // General section
       {

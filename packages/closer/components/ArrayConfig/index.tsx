@@ -13,7 +13,7 @@ interface Props {
     key?: string,
     index?: null | number,
   ) => void;
-  handleAddElement: () => void;
+  handleAddElement: (elementsKey?: string) => void;
   handleDeleteElement: (index: number) => void;
   elementsKey: string;
   description: any;
@@ -50,6 +50,13 @@ const ArrayConfig = ({
     <div className="flex flex-col gap-4">
       {Array.isArray(currentValue) &&
         currentValue.map((element: any, index: number) => {
+          if (!element || typeof element !== 'object') {
+            return null;
+          }
+          const elementType = description?.[elementsKey]?.type?.[0] || description?.elements?.type?.[0];
+          if (!elementType) {
+            return null;
+          }
           return (
             <Card
               key={index}
@@ -62,7 +69,7 @@ const ArrayConfig = ({
               }`}
             >
               {Object.entries(element).map(([innerKey]) => {
-                const inputType = description.elements.type[0][innerKey];
+                const inputType = elementType[innerKey];
 
                 return (
                   <div
@@ -224,7 +231,7 @@ const ArrayConfig = ({
         })}
 
       {slug !== 'emails' && (
-        <Button onClick={handleAddElement} variant="secondary">
+        <Button onClick={() => handleAddElement(elementsKey)} variant="secondary">
           {t('config_add_entry_button')}
         </Button>
       )}
