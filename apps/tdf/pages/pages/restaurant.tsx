@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import { Heading, LinkButton } from 'closer';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
-import { ChefHat, UtensilsCrossed, Leaf, Users, Coffee, Sprout, Circle, Droplet, Apple } from 'lucide-react';
+import { ChefHat, Leaf, Users, Coffee, Sprout, Circle, Droplet, Apple } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
