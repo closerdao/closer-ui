@@ -219,9 +219,9 @@ const EcologyPage = () => {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            <Card className="p-6" style={{ borderTop: '4px solid rgb(77, 219, 159)' }}>
-              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: 'rgba(77, 219, 159, 0.15)' }}>
-                <Trees className="w-6 h-6" style={{ color: 'rgb(50, 160, 120)' }} />
+            <div className="p-6 bg-white rounded-lg border border-gray-200 border-t-4 border-t-[#4DDB9F]">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4 bg-[#4DDB9F]/15">
+                <Trees className="w-6 h-6 text-[#32A078]" />
               </div>
               <Heading level={3} className="mb-3 text-lg">
                 {t('ecology_practice_rewilding_title')}
@@ -229,7 +229,7 @@ const EcologyPage = () => {
               <p className="text-sm text-gray-600">
                 {t('ecology_practice_rewilding_desc')}
               </p>
-            </Card>
+            </div>
 
             <Card className="p-6 border-t-4 border-blue-500">
               <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
@@ -255,9 +255,9 @@ const EcologyPage = () => {
               </p>
             </Card>
 
-            <Card className="p-6" style={{ borderTop: '4px solid rgb(60, 180, 130)' }}>
-              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: 'rgba(77, 219, 159, 0.15)' }}>
-                <TreePine className="w-6 h-6" style={{ color: 'rgb(50, 160, 120)' }} />
+            <div className="p-6 bg-white rounded-lg border border-gray-200 border-t-4 border-t-[#3CB482]">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4 bg-[#4DDB9F]/15">
+                <TreePine className="w-6 h-6 text-[#32A078]" />
               </div>
               <Heading level={3} className="mb-3 text-lg">
                 {t('ecology_practice_agroforestry_title')}
@@ -265,7 +265,7 @@ const EcologyPage = () => {
               <p className="text-sm text-gray-600">
                 {t('ecology_practice_agroforestry_desc')}
               </p>
-            </Card>
+            </div>
 
             <Card className="p-6 border-t-4 border-cyan-500">
               <div className="w-12 h-12 rounded-full bg-cyan-100 flex items-center justify-center mb-4">
@@ -279,9 +279,9 @@ const EcologyPage = () => {
               </p>
             </Card>
 
-            <Card className="p-6" style={{ borderTop: '4px solid rgb(77, 219, 159)' }}>
-              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: 'rgba(77, 219, 159, 0.15)' }}>
-                <Leaf className="w-6 h-6" style={{ color: 'rgb(50, 160, 120)' }} />
+            <div className="p-6 bg-white rounded-lg border border-gray-200 border-t-4 border-t-[#4DDB9F]">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4 bg-[#4DDB9F]/15">
+                <Leaf className="w-6 h-6 text-[#32A078]" />
               </div>
               <Heading level={3} className="mb-3 text-lg">
                 {t('ecology_practice_biodiversity_title')}
@@ -289,12 +289,12 @@ const EcologyPage = () => {
               <p className="text-sm text-gray-600">
                 {t('ecology_practice_biodiversity_desc')}
               </p>
-            </Card>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="py-20" style={{ background: 'linear-gradient(135deg, #4DDB9F 0%, #3BC78A 100%)' }}>
+      <section className="py-20 bg-gradient-to-br from-[#4DDB9F] to-[#3BC78A]">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
             <Heading level={2} className="mb-4 text-3xl text-gray-900">
