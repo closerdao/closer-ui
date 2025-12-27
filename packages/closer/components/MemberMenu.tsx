@@ -93,6 +93,11 @@ const MemberMenu = () => {
               rbacPage: 'Stay',
             },
             {
+              label: t('menu_restaurant'),
+              url: '/pages/restaurant',
+              enabled: APP_NAME?.toLowerCase() === 'tdf',
+            },
+            {
               label: t('menu_events_programs'),
               url: '/events',
               enabled: true,
