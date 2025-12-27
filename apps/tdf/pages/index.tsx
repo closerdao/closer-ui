@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useRef, useState } from 'react';
@@ -204,68 +205,56 @@ const HomePage = () => {
         <DynamicPhotoGallery isSlider={true} className="w-full" />
       </section>
 
-      <section className="bg-white py-24 md:py-32 border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-6">
-          <div>
-            <p className="text-xs uppercase tracking-wider text-gray-600 mb-4 font-medium text-center">
-              {t('home_press_label')}
-            </p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 max-w-5xl mx-auto my-6">
+      <section className="bg-white py-14 md:py-16 border-t border-gray-100">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <p className="text-[11px] uppercase tracking-widest text-gray-400 mb-6">
+            {t('home_press_label')}
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 mb-5">
             <a 
               href="https://www.context.news/rethinking-the-economy/digital-nomads-seek-sun-sea-sustainability-as-remote-work-booms" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="bg-gray-50 rounded-lg p-6 border border-gray-200 hover:border-gray-300 transition-all text-center"
+              className="text-base font-semibold text-gray-800 hover:text-gray-900 transition-colors"
             >
-              <p className="text-sm font-serif font-bold text-gray-900 mb-1">Thomson Reuters</p>
-              <p className="text-xs text-gray-600 font-light">Context</p>
+              Thomson Reuters
             </a>
             <a 
               href="https://tynmagazine.com/traditional-dream-factory-surpasses-1-2-million-and-leads-the-regenerative-economy-in-europe"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-gray-50 rounded-lg p-6 border border-gray-200 hover:border-gray-300 transition-all text-center"
+              className="text-base font-semibold text-gray-800 hover:text-gray-900 transition-colors"
             >
-              <p className="text-sm font-serif font-bold text-gray-900 mb-1">TyN Magazine</p>
-              <p className="text-xs text-gray-600 font-light">Nov 2025</p>
+              TyN Magazine
             </a>
             <a 
               href="https://jornaleconomico.sapo.pt/noticias/traditional-dream-factory-lanca-nova-ronda-de-investimento-de-800-mil-euros-para-expandir-a-sua-ecovila/"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-gray-50 rounded-lg p-6 border border-gray-200 hover:border-gray-300 transition-all text-center"
+              className="text-base font-semibold text-gray-800 hover:text-gray-900 transition-colors"
             >
-              <p className="text-sm font-serif font-bold text-gray-900 mb-1">Jornal Económico</p>
-              <p className="text-xs text-gray-600 font-light">Portugal</p>
+              Jornal Económico
             </a>
             <a 
               href="https://www.theportugalnews.com/news/2025-08-30/traditional-dream-factory-regenerative-village/85048"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-gray-50 rounded-lg p-6 border border-gray-200 hover:border-gray-300 transition-all text-center"
+              className="text-base font-semibold text-gray-800 hover:text-gray-900 transition-colors"
             >
-              <p className="text-sm font-serif font-bold text-gray-900 mb-1">The Portugal News</p>
-              <p className="text-xs text-gray-600 font-light">Aug 2025</p>
+              The Portugal News
             </a>
             <a 
               href="https://expresso.pt/economia/economia_imobiliario/2025-06-26-nomadas-digitais-criam-aldeia-tecnologica-no-alentejo-354f740a"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-gray-50 rounded-lg p-6 border border-gray-200 hover:border-gray-300 transition-all text-center"
+              className="text-base font-semibold text-gray-800 hover:text-gray-900 transition-colors"
             >
-              <p className="text-sm font-serif font-bold text-gray-900 mb-1">Expresso</p>
-              <p className="text-xs text-gray-600 font-light">Portugal</p>
+              Expresso
             </a>
           </div>
-          <div className="text-center flex items-center justify-center">
-            <LinkButton
-              href="/press"
-              variant="secondary"
-            >
-              {t('home_token_press_cta')}
-            </LinkButton>
-          </div>
+          <Link href="/press" className="text-xs text-gray-400 hover:text-gray-600 transition-colors underline underline-offset-2">
+            {t('home_token_press_cta')}
+          </Link>
         </div>
       </section>
 
@@ -317,16 +306,15 @@ const HomePage = () => {
                 <div className="flex gap-4">
                   <div className="w-11 h-11 bg-gray-900 rounded flex items-center justify-center flex-shrink-0">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M12 6v6l4 2" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div>
                     <Heading level={4} className="text-base font-semibold text-gray-900 mb-2">
-                      {t('home_token_feature_upside_title')}
+                      {t('home_token_feature_longterm_title')}
                     </Heading>
                     <p className="text-sm text-gray-700 leading-relaxed font-light">
-                      {t('home_token_feature_upside_desc')}
+                      {t('home_token_feature_longterm_desc')}
                     </p>
                   </div>
                 </div>
@@ -377,7 +365,6 @@ const HomePage = () => {
                 <LinkButton
                   href="/token"
                   variant="primary"
-                  className="w-full"
                 >
                   {t('home_token_buy_cta')}
                 </LinkButton>
@@ -404,6 +391,41 @@ const HomePage = () => {
         </div>
       </section>
 
+
+      <section className="bg-white border-t border-gray-200">
+        <div className="max-w-6xl mx-auto px-6 py-16 md:py-24">
+          <img 
+            src="/images/landing/land-plan.png" 
+            alt={t('home_land_plan_alt')} 
+            className="w-full h-auto rounded-xl shadow-lg"
+          />
+          
+          <div className="grid md:grid-cols-2 gap-8 mt-12">
+            <div className="bg-gray-50 rounded-xl p-8 border border-gray-200">
+              <Heading level={3} className="text-xl font-semibold text-gray-900 mb-4">
+                {t('home_land_food_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 leading-relaxed mb-6">
+                {t('home_land_food_desc')}
+              </p>
+              <Link href="/pages/regenerative-agriculture" className="text-sm font-medium text-accent hover:text-accent-dark transition-colors inline-flex items-center gap-1">
+                {t('home_land_food_cta')} →
+              </Link>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-8 border border-gray-200">
+              <Heading level={3} className="text-xl font-semibold text-gray-900 mb-4">
+                {t('home_land_ecology_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 leading-relaxed mb-6">
+                {t('home_land_ecology_desc')}
+              </p>
+              <Link href="/pages/ecology" className="text-sm font-medium text-accent hover:text-accent-dark transition-colors inline-flex items-center gap-1">
+                {t('home_land_ecology_cta')} →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section className="bg-white py-24 md:py-32 border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-6">
@@ -516,7 +538,6 @@ const HomePage = () => {
                   <LinkButton
                     href="/cohousing"
                     variant="secondary"
-                    className="w-full"
                   >
                     {t('home_invest_cohousing_cta')}
                   </LinkButton>
@@ -532,7 +553,6 @@ const HomePage = () => {
                   <LinkButton
                     href="/token"
                     variant="secondary"
-                    className="w-full"
                   >
                     {t('home_invest_tokens_cta')}
                   </LinkButton>
@@ -548,7 +568,6 @@ const HomePage = () => {
                   <LinkButton
                     href="/dataroom"
                     variant="secondary"
-                    className="w-full"
                   >
                     {t('home_invest_lending_cta')}
                   </LinkButton>
@@ -680,20 +699,20 @@ const HomePage = () => {
           </div>
 
           <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto mb-12">
-            <div className="relative">
+            <a href="https://expresso.pt/economia/economia_imobiliario/2025-06-26-nomadas-digitais-criam-aldeia-tecnologica-no-alentejo-354f740a" target="_blank" rel="noopener noreferrer" className="relative block hover:opacity-80 transition-opacity">
               <div className="absolute -top-4 -left-4 text-8xl md:text-9xl text-gray-200 font-serif leading-none">&ldquo;</div>
               <blockquote className="text-2xl md:text-3xl font-light text-gray-900 leading-relaxed mb-6 relative z-10 italic">
                 {t('home_authority_quote_1')}
               </blockquote>
               <p className="text-sm text-gray-600 font-medium">{t('home_authority_quote_1_source')}</p>
-            </div>
-            <div className="relative">
+            </a>
+            <a href="https://jornaleconomico.sapo.pt/noticias/48-dos-portugueses-sonham-trocar-a-cidade-pelo-campo/" target="_blank" rel="noopener noreferrer" className="relative block hover:opacity-80 transition-opacity">
               <div className="absolute -top-4 -left-4 text-8xl md:text-9xl text-gray-200 font-serif leading-none">&ldquo;</div>
               <blockquote className="text-2xl md:text-3xl font-light text-gray-900 leading-relaxed mb-6 relative z-10 italic">
                 {t('home_authority_quote_2')}
               </blockquote>
               <p className="text-sm text-gray-600 font-medium">{t('home_authority_quote_2_source')}</p>
-            </div>
+            </a>
           </div>
 
           <div className="pt-12 border-t border-gray-200 max-w-5xl mx-auto">
