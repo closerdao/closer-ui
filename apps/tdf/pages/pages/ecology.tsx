@@ -306,19 +306,19 @@ const EcologyPage = () => {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
-            <div className="backdrop-blur rounded-xl p-6 text-center" style={{ backgroundColor: 'rgba(255,255,255,0.5)' }}>
+            <div className="backdrop-blur rounded-xl p-6 text-center">
               <div className="text-3xl md:text-4xl font-bold text-gray-900">65+</div>
               <div className="text-sm mt-1 text-gray-700">{t('ecology_ofp_stat_species')}</div>
             </div>
-            <div className="backdrop-blur rounded-xl p-6 text-center" style={{ backgroundColor: 'rgba(255,255,255,0.5)' }}>
+            <div className="backdrop-blur rounded-xl p-6 text-center">
               <div className="text-3xl md:text-4xl font-bold text-gray-900">4,000+</div>
               <div className="text-sm mt-1 text-gray-700">{t('ecology_ofp_stat_trees')}</div>
             </div>
-            <div className="backdrop-blur rounded-xl p-6 text-center" style={{ backgroundColor: 'rgba(255,255,255,0.5)' }}>
+            <div className="backdrop-blur rounded-xl p-6 text-center">
               <div className="text-3xl md:text-4xl font-bold text-gray-900">0.85<span className="text-xl">ha</span></div>
               <div className="text-sm mt-1 text-gray-700">{t('ecology_ofp_stat_monitored')}</div>
             </div>
-            <div className="backdrop-blur rounded-xl p-6 text-center" style={{ backgroundColor: 'rgba(255,255,255,0.5)' }}>
+            <div className="backdrop-blur rounded-xl p-6 text-center">
               <div className="text-3xl md:text-4xl font-bold flex items-center justify-center text-gray-900">
                 <Check className="w-8 h-8" />
               </div>
@@ -327,7 +327,7 @@ const EcologyPage = () => {
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
-            <Card className="p-6 backdrop-blur border-0" style={{ backgroundColor: 'rgba(255,255,255,0.5)' }}>
+            <Card className="p-6 backdrop-blur border-0">
               <div className="flex items-center gap-3 mb-4">
                 <TreeDeciduous className="w-6 h-6 text-gray-700" />
                 <Heading level={3} className="text-lg text-gray-900">{t('ecology_ofp_zone1_title')}</Heading>
@@ -355,7 +355,7 @@ const EcologyPage = () => {
               </a>
             </Card>
 
-            <Card className="p-6 backdrop-blur border-0" style={{ backgroundColor: 'rgba(255,255,255,0.5)' }}>
+            <Card className="p-6 backdrop-blur border-0">
               <div className="flex items-center gap-3 mb-4">
                 <Shrub className="w-6 h-6 text-amber-600" />
                 <Heading level={3} className="text-lg text-gray-900">{t('ecology_ofp_zone2_title')}</Heading>
@@ -444,7 +444,7 @@ const EcologyPage = () => {
               <div className="text-3xl font-bold text-blue-900 mb-1">2</div>
               <div className="text-sm text-blue-700">{t('ecology_birds_owls')}</div>
             </div>
-            <div className="rounded-xl p-6 text-center border" style={{ backgroundColor: 'rgba(77, 219, 159, 0.1)', borderColor: 'rgba(77, 219, 159, 0.3)' }}>
+            <div className="rounded-xl p-6 text-center border">
               <div className="text-3xl font-bold mb-1" style={{ color: 'rgb(30, 100, 70)' }}>15+</div>
               <div className="text-sm" style={{ color: 'rgb(50, 140, 100)' }}>{t('ecology_birds_songbirds')}</div>
             </div>
