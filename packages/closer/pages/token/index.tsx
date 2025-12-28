@@ -21,7 +21,6 @@ import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 
 const ACCOMMODATION_ICONS = ['van.png', 'camping.png', 'hotel.png'];
-const DEFAULT_TOKENS = 10;
 
 interface Props {
   listings: Listing[];

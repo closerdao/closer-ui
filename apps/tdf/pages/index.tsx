@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { useContext, useEffect, useRef, useState } from 'react';
 
 import ReportDownloadModal from '../components/ReportDownloadModal';
-import DynamicPhotoGallery from 'closer/components/PhotoGallery/DynamicPhotoGallery';
+import LandingPagePhotoMosaic from '../components/LandingPagePhotoMosaic';
 import LinkButton from 'closer/components/ui/LinkButton';
 import UpcomingEventsIntro from 'closer/components/UpcomingEventsIntro';
 
@@ -202,7 +202,7 @@ const HomePage = () => {
       </section>
 
       <section className="bg-white -mt-8 md:-mt-12 w-full overflow-hidden">
-        <DynamicPhotoGallery isSlider={true} className="w-full" />
+        <LandingPagePhotoMosaic className="w-full" />
       </section>
 
       <section className="bg-white py-14 md:py-16 border-t border-gray-100">
