@@ -48,8 +48,8 @@ const RestaurantPage = () => {
                 <div className="text-xs text-gray-600">{t('restaurant_metric_meals')}</div>
               </div>
               <div className="bg-white/80 backdrop-blur rounded-lg p-4 col-span-2 md:col-span-1">
-                <div className="text-2xl md:text-3xl font-semibold text-gray-900">50km</div>
-                <div className="text-xs text-gray-600">{t('restaurant_metric_radius')}</div>
+                <div className="text-2xl md:text-3xl font-semibold text-gray-900">90%</div>
+                <div className="text-xs text-gray-600">{t('restaurant_metric_local')}</div>
               </div>
             </div>
           </div>

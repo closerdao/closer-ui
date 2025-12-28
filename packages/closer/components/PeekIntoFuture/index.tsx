@@ -41,21 +41,9 @@ const PeekIntoFuture = () => {
 
       <div className="w-full flex flex-col  gap-2">
         <div className="flex gap-2 justify-center items-center flex-col md:flex-row">
-          <div className="flex flex-col justify-center items-center w-full md:w-1/3 min-h-[240px]">
-            <Image
-              className="w-full md:w-1/3 max-w-[127px]"
-              src="/images/token-sale/crystal-ball.png"
-              width={127}
-              height={127}
-              alt={t('token_sale_peek_into_future')}
-            />
-            <Heading level={2} className="">
-              {t('token_sale_peek_into_future')}
-            </Heading>
-          </div>
           <div
             onClick={() => handleShowPhoto(0)}
-            className=" cursor-pointer w-full md:w-2/3  min-h-[280px] overflow-hidden rounded-md "
+            className=" cursor-pointer w-full  min-h-[280px] overflow-hidden rounded-md "
           >
             <div className=" p-6 hover:scale-[103%]  duration-300 h-[280px]  bg-bottom bg-[url(/images/token-sale/co-living.jpg)] bg-cover">
               <Heading level={3} className="text-white text-2xl">
