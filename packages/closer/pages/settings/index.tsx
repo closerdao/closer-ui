@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { User, Key, Star, Bell, AlertTriangle, Settings as SettingsIcon, CreditCard, Info } from 'lucide-react';
+import { User as UserIcon, Key, Star, Bell, AlertTriangle, Settings as SettingsIcon, CreditCard, Info } from 'lucide-react';
 
 import UploadPhoto from '../../components/UploadPhoto';
 import { Button } from '../../components/ui';
@@ -247,7 +247,7 @@ const SettingsPage = ({
 
   // Define tabs
   const tabs: Tab[] = [
-    { id: 'profile', label: t('settings_tab_profile'), icon: <User className="w-4 h-4" /> },
+    { id: 'profile', label: t('settings_tab_profile'), icon: <UserIcon className="w-4 h-4" /> },
     { id: 'account', label: t('settings_tab_account'), icon: <Key className="w-4 h-4" /> },
     { id: 'preferences', label: t('settings_tab_preferences'), icon: <Star className="w-4 h-4" /> },
     { id: 'notifications', label: t('settings_tab_notifications'), icon: <Bell className="w-4 h-4" /> },
@@ -566,7 +566,7 @@ const SettingsPage = ({
               <div className="space-y-6">
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
                   <div className="flex items-center gap-2 mb-4">
-                    <User className="w-5 h-5 text-gray-700" />
+                    <UserIcon className="w-5 h-5 text-gray-700" />
                     <h3 className="text-lg font-medium text-gray-900">
                       {t('settings_profile_information')}
                     </h3>
