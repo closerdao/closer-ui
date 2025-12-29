@@ -12,7 +12,13 @@ import { cdn } from '../utils/api';
 import CreditsBalance from './CreditsBalance';
 import { Button, Heading } from './ui';
 
-const Profile = ({ isMenu = false, isDemo, onLogout = undefined }) => {
+interface ProfileProps {
+  isMenu?: boolean;
+  isDemo?: boolean;
+  onLogout?: () => void;
+}
+
+const Profile = ({ isMenu = false, isDemo, onLogout }: ProfileProps) => {
   const t = useTranslations();
 
   const { user, isAuthenticated } = useAuth();
@@ -123,3 +129,4 @@ const Profile = ({ isMenu = false, isDemo, onLogout = undefined }) => {
 };
 
 export default Profile;
+
