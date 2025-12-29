@@ -181,6 +181,19 @@ const SubscriptionsPage: NextPage<Props> = ({
     <div className="max-w-screen-lg mx-auto">
       <Head>
         <title>{`${t('subscriptions_title')} - ${PLATFORM_NAME}`}</title>
+        <meta
+          name="description"
+          content={`Join ${PLATFORM_NAME} with a subscription plan. Support our community and get access to exclusive benefits and features.`}
+        />
+        <meta name="keywords" content={`${PLATFORM_NAME}, subscriptions, membership, community membership, regenerative communities`} />
+        <meta property="og:title" content={`${t('subscriptions_title')} - ${PLATFORM_NAME}`} />
+        <meta property="og:description" content={`Join ${PLATFORM_NAME} with a subscription plan. Support our community and get access to exclusive benefits.`} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://closer.earth/subscriptions" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={`${t('subscriptions_title')} - ${PLATFORM_NAME}`} />
+        <meta name="twitter:description" content={`Join ${PLATFORM_NAME} with a subscription plan.`} />
+        <link rel="canonical" href="https://closer.earth/subscriptions" />
       </Head>
       <main className="pt-16 pb-24 md:flex-row flex-wrap">
         <div className="flex justify-center">

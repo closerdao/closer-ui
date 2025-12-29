@@ -181,9 +181,21 @@ const Events = ({ generalConfig }: Props) => {
     <>
       <Head>
         <title>{`${t('events_title')} - ${PLATFORM_NAME}`}</title>
+        <meta
+          name="description"
+          content={`Discover upcoming events, workshops, and gatherings at ${PLATFORM_NAME}. Join our community for regenerative living experiences.`}
+        />
+        <meta name="keywords" content={`${PLATFORM_NAME}, events, workshops, gatherings, regenerative communities, community events, ecovillage events`} />
+        <meta property="og:title" content={`${t('events_title')} - ${PLATFORM_NAME}`} />
+        <meta property="og:description" content={`Discover upcoming events, workshops, and gatherings at ${PLATFORM_NAME}. Join our community for regenerative living experiences.`} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://closer.earth/events" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={`${t('events_title')} - ${PLATFORM_NAME}`} />
+        <meta name="twitter:description" content={`Discover upcoming events, workshops, and gatherings at ${PLATFORM_NAME}.`} />
         <link
           rel="canonical"
-          href="https://www.traditionaldreamfactory.com/events"
+          href="https://closer.earth/events"
           key="canonical"
         />
       </Head>
