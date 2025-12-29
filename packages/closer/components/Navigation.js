@@ -250,37 +250,19 @@ const Navigation = () => {
               </Button>
             )}
 
-          {isBookingEnabled &&
-            APP_NAME &&
-            APP_NAME?.toLowerCase() === 'tdf' && (
-              <>
-                {!isAuthenticated ? (
-                  <Button
-                    onClick={() => router.push('/signup')}
-                    size="small"
-                    variant="primary"
-                  >
-                    {t('navigation_join_now')}
-                  </Button>
-                ) : !isMember ? (
-                  <Button
-                    onClick={() => router.push('/events')}
-                    size="small"
-                    variant="primary"
-                  >
-                    {t('navigation_come_visit')}
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={() => router.push('/bookings/create/dates')}
-                    size="small"
-                    variant="primary"
-                  >
-                    {t('navigation_stay')}
-                  </Button>
-                )}
-              </>
-            )}
+          {APP_NAME && APP_NAME?.toLowerCase() === 'tdf' && (
+            <>
+              {isAuthenticated && isMember ? (
+                <Button
+                  onClick={() => router.push('/bookings/create/dates')}
+                  size="small"
+                  variant="primary"
+                >
+                  {t('navigation_stay')}
+                </Button>
+              ) : null}
+            </>
+          )}
 
           {isAuthenticated && (
             <Link

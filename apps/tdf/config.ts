@@ -18,6 +18,7 @@ const config = {
     'webinar',
     'newsletter',
     'accounting-entities',
+    'photo-gallery',
   ],
   PORT: 14444,
   EXPOSE_STORE: true,
