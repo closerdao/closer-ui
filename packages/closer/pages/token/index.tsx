@@ -45,11 +45,18 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
   const [isLoadingChainData, setIsLoadingChainData] = useState(false);
   const hasFetchedChainData = useRef(false);
   const hasFetchedTokensAvailable = useRef(false);
+  const tokenAddressRef = useRef<string | null>(null);
+  const isFetchingChainData = useRef(false);
+  const isFetchingTokensAvailable = useRef(false);
+
+  const tokenAddress = BLOCKCHAIN_DAO_TOKEN?.address || null;
 
   useEffect(() => {
-    if (hasFetchedTokensAvailable.current) return;
+    if (hasFetchedTokensAvailable.current || isFetchingTokensAvailable.current) return;
     
     hasFetchedTokensAvailable.current = true;
+    isFetchingTokensAvailable.current = true;
+    
     (async () => {
       try {
         const remainingAmount = await getTokensAvailableForPurchase();
@@ -57,20 +64,33 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
       } catch (error) {
         console.error('Error fetching tokens available:', error);
         setTokensAvailable(0);
+      } finally {
+        isFetchingTokensAvailable.current = false;
       }
     })();
-  }, []);
+  }, [getTokensAvailableForPurchase]);
 
   useEffect(() => {
-    if (!BLOCKCHAIN_DAO_TOKEN?.address) {
-      setCurrentSupply(0);
-      setTokenHolders(0);
+    if (!tokenAddress) {
+      if (!hasFetchedChainData.current) {
+        setCurrentSupply(0);
+        setTokenHolders(0);
+      }
       return;
     }
     
-    if (hasFetchedChainData.current) return;
+    if (tokenAddressRef.current === tokenAddress && hasFetchedChainData.current) {
+      return;
+    }
     
+    if (isFetchingChainData.current) {
+      return;
+    }
+    
+    tokenAddressRef.current = tokenAddress;
     hasFetchedChainData.current = true;
+    isFetchingChainData.current = true;
+    
     const fetchChainData = async () => {
       setIsLoadingChainData(true);
       try {
@@ -78,7 +98,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
         setCurrentSupply(supply || 0);
 
         try {
-          const contractAddress = BLOCKCHAIN_DAO_TOKEN.address.toLowerCase();
+          const contractAddress = tokenAddress.toLowerCase();
           const holderListUrl = `https://api.celoscan.io/api?module=token&action=tokenholderlist&contractaddress=${contractAddress}&page=1&offset=10000`;
           
           const response = await fetch(holderListUrl).catch((err) => {
@@ -135,11 +155,12 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
         setTokenHolders(0);
       } finally {
         setIsLoadingChainData(false);
+        isFetchingChainData.current = false;
       }
     };
 
     fetchChainData();
-  }, [BLOCKCHAIN_DAO_TOKEN?.address]);
+  }, [tokenAddress, getCurrentSupplyWithoutWallet]);
 
   useEffect(() => {
     if (!hasComponentRendered.current) {
