@@ -16,8 +16,6 @@ const LANDING_PAGE_IMAGES = [
   'side-view.jpg',
   'spreading-seed.jpg',
   'workshop-2.jpg'
-//   'workshop-3.jpg',
-//   'workshop.jpg',
 ];
 
 const LandingPagePhotoMosaic = ({ className }: LandingPagePhotoMosaicProps) => {
