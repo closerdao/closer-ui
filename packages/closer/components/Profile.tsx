@@ -81,7 +81,7 @@ const Profile = ({ isMenu = false, isDemo, onLogout }: ProfileProps) => {
                 router.push('/settings');
               }}
               variant="secondary"
-              size="sm"
+              size="small"
               className="text-xs normal-case !w-fit !bg-black !text-white hover:!bg-gray-800 ml-auto py-0 !h-6 !px-2 !border-0 flex items-center gap-1"
             >
               <Settings className="h-3 w-3" />
@@ -91,7 +91,7 @@ const Profile = ({ isMenu = false, isDemo, onLogout }: ProfileProps) => {
               <Button
                 onClick={onLogout}
                 variant="secondary"
-                size="sm"
+                size="small"
                 className="text-xs normal-case !w-fit !bg-black !text-white hover:!bg-gray-800 ml-auto py-0 !h-6 !px-2 !border-0 flex items-center gap-1"
               >
                 <LogOut className="h-3 w-3" />
