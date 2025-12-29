@@ -85,8 +85,17 @@ const PricingPage = ({ generalConfig }: Props) => {
         <title>Pricing — Closer</title>
         <meta
           name="description"
-          content="Simple, transparent pricing for regenerative communities. Start free, scale as you grow."
+          content="Simple, transparent pricing for regenerative communities. One-time setup fees with transaction-based pricing. Minimum €50/month transaction fee."
         />
+        <meta name="keywords" content="Closer pricing, community management pricing, regenerative community software cost, DAO platform pricing" />
+        <meta property="og:title" content="Pricing — Closer" />
+        <meta property="og:description" content="Simple, transparent pricing for regenerative communities. One-time setup fees with transaction-based pricing. Minimum €50/month transaction fee." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/pricing`} />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Pricing — Closer" />
+        <meta name="twitter:description" content="Simple, transparent pricing for regenerative communities. One-time setup fees with transaction-based pricing." />
+        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/pricing`} />
       </Head>
 
       {/* Hero */}
@@ -97,7 +106,7 @@ const PricingPage = ({ generalConfig }: Props) => {
             Simple, <em className="italic">transparent</em> pricing
           </h1>
           <p className="text-xl text-[#86868b] max-w-2xl mx-auto">
-            One-time setup. Transaction fees that fund the commons. No monthly subscriptions.
+            One-time setup. Transaction fees that fund the commons.
           </p>
         </div>
       </section>
@@ -131,6 +140,9 @@ const PricingPage = ({ generalConfig }: Props) => {
                   {plan.period && <span>{plan.period} setup fee</span>}
                   {plan.period && plan.feeNote && <span className="mx-1">·</span>}
                   <span>{plan.feeNote}</span>
+                  <div className="mt-2 text-xs">
+                    Minimum €50/month transaction fee
+                  </div>
                 </div>
                 <ul className="space-y-3 mb-8 flex-grow">
                   {plan.features.map((feature) => (
@@ -218,6 +230,8 @@ const PricingPage = ({ generalConfig }: Props) => {
               <p className="text-[#86868b]">
                 We charge 5% on bookings and purchases processed through Closer. This covers payment processing, 
                 ongoing platform maintenance, and contributes to the commons infrastructure that benefits all communities.
+                There is a minimum transaction fee of €50 per month to justify infrastructure costs, ensuring 
+                sustainable operation of the platform.
               </p>
             </div>
             <div>

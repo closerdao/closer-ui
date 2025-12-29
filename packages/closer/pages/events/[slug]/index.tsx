@@ -229,8 +229,12 @@ const EventPage = ({
     <>
       <Head>
         <title>{event.name}</title>
-        <meta name="description" content={descriptionText} />
+        <meta name="description" content={descriptionText || `${event.name} - Join us for this event.`} />
+        <meta name="keywords" content={`${event.name}, event, regenerative communities`} />
+        <meta property="og:title" content={event.name} />
         <meta property="og:type" content="event" />
+        <meta property="og:description" content={descriptionText || `${event.name} - Join us for this event.`} />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/events/${event.slug}`} />
         {photo && (
           <meta
             key="og:image"
@@ -238,6 +242,9 @@ const EventPage = ({
             content={`${cdn}${photo}-place-lg.jpg`}
           />
         )}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={event.name} />
+        <meta name="twitter:description" content={descriptionText || `${event.name} - Join us for this event.`} />
         {photo && (
           <meta
             key="twitter:image"
@@ -245,9 +252,15 @@ const EventPage = ({
             content={`${cdn}${photo}-place-lg.jpg`}
           />
         )}
+        {event.start && (
+          <meta property="event:start_time" content={new Date(event.start).toISOString()} />
+        )}
+        {event.end && (
+          <meta property="event:end_time" content={new Date(event.end).toISOString()} />
+        )}
         <link
           rel="canonical"
-          href={`https://www.traditionaldreamfactory.com/events/${event.slug}`}
+          href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/events/${event.slug}`}
           key="canonical"
         />
       </Head>

@@ -28,6 +28,19 @@ const ResourcesPage = ({ generalConfig }: Props) => {
     <div>
       <Head>
         <title>{`${t('resources_heading')} - ${PLATFORM_NAME}`}</title>
+        <meta
+          name="description"
+          content={`Resources and frequently asked questions about ${PLATFORM_NAME}. Find answers about our community, platform, and regenerative living.`}
+        />
+        <meta name="keywords" content={`${PLATFORM_NAME}, resources, FAQ, frequently asked questions, community resources, regenerative communities`} />
+        <meta property="og:title" content={`${t('resources_heading')} - ${PLATFORM_NAME}`} />
+        <meta property="og:description" content={`Resources and frequently asked questions about ${PLATFORM_NAME}. Find answers about our community, platform, and regenerative living.`} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/resources`} />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={`${t('resources_heading')} - ${PLATFORM_NAME}`} />
+        <meta name="twitter:description" content={`Resources and frequently asked questions about ${PLATFORM_NAME}.`} />
+        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/resources`} />
       </Head>
       <section className="h-[900px] overflow-scroll w-[100vw] -mx-4 px-4  pt-12 pb-20 flex justify-center  bg-cover bg-center">
         <div className="flex flex-col gap-8 items-center w-full sm:w-[600px] ">

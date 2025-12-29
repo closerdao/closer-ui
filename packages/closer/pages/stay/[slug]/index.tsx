@@ -469,9 +469,12 @@ const ListingPage: NextPage<Props> = ({
     <>
       <Head>
         <title>{listing.name}</title>
-        <meta name="description" content={descriptionText || ''} />
-        <meta name="description" content={descriptionText || ''} />
-        <meta property="og:type" content="listing" />
+        <meta name="description" content={descriptionText || `${listing.name} - Book your stay.`} />
+        <meta name="keywords" content={`${listing.name}, accommodation, booking, ${listing.category || ''}, regenerative communities`} />
+        <meta property="og:title" content={listing.name} />
+        <meta property="og:type" content="website" />
+        <meta property="og:description" content={descriptionText || `${listing.name} - Book your stay.`} />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/stay/${listing.slug}`} />
         {photo && (
           <meta
             key="og:image"
@@ -479,6 +482,9 @@ const ListingPage: NextPage<Props> = ({
             content={`${cdn}${photo}-max-lg.jpg`}
           />
         )}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={listing.name} />
+        <meta name="twitter:description" content={descriptionText || `${listing.name} - Book your stay.`} />
         {photo && (
           <meta
             key="twitter:image"
@@ -486,6 +492,7 @@ const ListingPage: NextPage<Props> = ({
             content={`${cdn}${photo}-max-lg.jpg`}
           />
         )}
+        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/stay/${listing.slug}`} />
       </Head>
       <main className="flex justify-center flex-wrap my-4 ">
         <div className="flex flex-col gap-8  max-w-4xl">

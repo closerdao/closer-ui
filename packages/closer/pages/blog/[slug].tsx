@@ -65,16 +65,27 @@ const ArticlePage = ({ article, author, error, relatedArticles }: Props) => {
     <>
       <Head>
         <title>{article.title}</title>
-        {article.summary && (
+        {article.summary ? (
           <meta name="description" content={article.summary} />
+        ) : (
+          <meta name="description" content={`Read ${article.title} on ${process.env.NEXT_PUBLIC_PLATFORM_URL || 'Closer'}.`} />
         )}
+        <meta name="keywords" content={`${article.category || ''}, ${article.tags?.join(', ') || ''}, regenerative communities`} />
         <meta property="og:title" content={article.title} />
         <meta property="og:type" content="article" />
-        {article.summary && (
+        {article.summary ? (
           <meta property="og:description" content={article.summary} />
+        ) : (
+          <meta property="og:description" content={`Read ${article.title} on ${process.env.NEXT_PUBLIC_PLATFORM_URL || 'Closer'}.`} />
         )}
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/blog/${article.slug}`} />
         {fullImageUrl && (
           <meta key="og:image" property="og:image" content={fullImageUrl} />
+        )}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={article.title} />
+        {article.summary && (
+          <meta name="twitter:description" content={article.summary} />
         )}
         {fullImageUrl && (
           <meta
@@ -82,6 +93,15 @@ const ArticlePage = ({ article, author, error, relatedArticles }: Props) => {
             name="twitter:image"
             content={fullImageUrl}
           />
+        )}
+        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/blog/${article.slug}`} />
+        {article.category && (
+          <meta property="article:section" content={article.category} />
+        )}
+        {article.tags && article.tags.length > 0 && (
+          article.tags.map((tag: string) => (
+            <meta key={tag} property="article:tag" content={tag} />
+          ))
         )}
       </Head>
       <main className="w-full flex flex-col items-center gap-12">
