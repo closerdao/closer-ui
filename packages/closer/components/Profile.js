@@ -12,7 +12,7 @@ import { cdn } from '../utils/api';
 import CreditsBalance from './CreditsBalance';
 import { Button, Heading } from './ui';
 
-const Profile = ({ isMenu = false, isDemo, onLogout }) => {
+const Profile = ({ isMenu = false, isDemo, onLogout = undefined }) => {
   const t = useTranslations();
 
   const { user, isAuthenticated } = useAuth();
