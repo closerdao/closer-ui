@@ -83,6 +83,15 @@ const HomePage = ({ generalConfig }: Props) => {
           name="description"
           content="The operating system for regenerative communities. Manage guests, spaces, events and resources. Token-powered governance when you're ready."
         />
+        <meta name="keywords" content="regenerative communities, DAO, decentralized autonomous villages, community management, booking system, event management, ecovillage, intentional community, web3 governance" />
+        <meta property="og:title" content="Closer — Decentralized Autonomous Villages" />
+        <meta property="og:description" content="The operating system for regenerative communities. Manage guests, spaces, events and resources. Token-powered governance when you're ready." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://closer.earth" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Closer — Decentralized Autonomous Villages" />
+        <meta name="twitter:description" content="The operating system for regenerative communities. Manage guests, spaces, events and resources. Token-powered governance when you're ready." />
+        <link rel="canonical" href="https://closer.earth" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </Head>
