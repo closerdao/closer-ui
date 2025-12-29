@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { FormEvent, useEffect, useState } from 'react';
+import React, { FormEvent, useEffect, useState } from 'react';
 
 import CitizenSubscriptionProgress from '../../components/CitizenSubscriptionProgress';
 import ConnectedWallet from '../../components/ConnectedWallet';
@@ -18,6 +18,7 @@ import Heading from '../../components/ui/Heading';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 import { TiDelete } from '@react-icons/all-files/ti/TiDelete';
+import { Twitter, Instagram, Facebook, Linkedin, Github, Youtube, Music, Link as LinkIcon, Settings } from 'lucide-react';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -67,6 +68,15 @@ const MemberPage = ({
   const [linkUrl, setLinkUrl] = useState('');
   const [links, setLinks] = useState<UserLink[]>(member?.links || []);
   const [showForm, toggleShowForm] = useState(false);
+  const [formValues, setFormValues] = useState({
+    twitter: '',
+    instagram: '',
+    linkedin: '',
+    facebook: '',
+    github: '',
+    youtube: '',
+    website: '',
+  });
   const [hasSaved, setHasSaved] = useState(false);
   const [openReportForm, setOpenReportForm] = useState(false);
   const [reportReason, setReportReason] = useState('');
@@ -378,6 +388,19 @@ const MemberPage = ({
                   </div>
                 )}
 
+                {/* Edit Profile Link - Only show when viewing own profile */}
+                {isAuthenticated && member?._id === currentUser?._id && (
+                  <div className="mb-6">
+                    <Link
+                      href="/settings"
+                      className="flex items-center gap-2 px-4 py-2 bg-black text-white text-sm rounded hover:bg-gray-800 transition-colors w-full justify-center"
+                    >
+                      <Settings className="w-4 h-4" />
+                      {t('buttons_edit_profile')}
+                    </Link>
+                  </div>
+                )}
+
                 {/* Social Links Section */}
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <div className="flex justify-between items-center mb-4">
@@ -388,6 +411,72 @@ const MemberPage = ({
                       <button
                         onClick={(e) => {
                           e.preventDefault();
+                          // Extract usernames from existing links
+                          const extractUsername = (url: string, pattern: RegExp) => {
+                            const match = url.match(pattern);
+                            return match ? match[1] : '';
+                          };
+
+                          const newFormValues = {
+                            twitter: '',
+                            instagram: '',
+                            linkedin: '',
+                            facebook: '',
+                            github: '',
+                            youtube: '',
+                            website: '',
+                          };
+
+                          links.forEach((link) => {
+                            const url = link.url.toLowerCase();
+                            if (url.includes('twitter.com/') || url.includes('x.com/')) {
+                              newFormValues.twitter = extractUsername(
+                                url,
+                                /(?:twitter\.com\/|x\.com\/)([^/?]+)/,
+                              );
+                            } else if (url.includes('instagram.com/')) {
+                              newFormValues.instagram = extractUsername(
+                                url,
+                                /instagram\.com\/([^/?]+)/,
+                              );
+                            } else if (url.includes('linkedin.com/in/')) {
+                              newFormValues.linkedin = extractUsername(
+                                url,
+                                /linkedin\.com\/in\/([^/?]+)/,
+                              );
+                            } else if (url.includes('facebook.com/')) {
+                              newFormValues.facebook = extractUsername(
+                                url,
+                                /facebook\.com\/([^/?]+)/,
+                              );
+                            } else if (url.includes('github.com/')) {
+                              newFormValues.github = extractUsername(
+                                url,
+                                /github\.com\/([^/?]+)/,
+                              );
+                            } else if (url.includes('youtube.com/c/') || url.includes('youtube.com/@')) {
+                              newFormValues.youtube = extractUsername(
+                                url,
+                                /youtube\.com\/(?:c\/|@)([^/?]+)/,
+                              );
+                            } else if (
+                              !url.includes('twitter.com') &&
+                              !url.includes('x.com') &&
+                              !url.includes('instagram.com') &&
+                              !url.includes('linkedin.com') &&
+                              !url.includes('facebook.com') &&
+                              !url.includes('github.com') &&
+                              !url.includes('youtube.com') &&
+                              !url.includes('tiktok.com')
+                            ) {
+                              // Only set website if it's not already set (to avoid overwriting)
+                              if (!newFormValues.website) {
+                                newFormValues.website = link.url;
+                              }
+                            }
+                          });
+
+                          setFormValues(newFormValues);
                           toggleShowForm(!showForm);
                         }}
                         className="btn-small"
@@ -401,7 +490,7 @@ const MemberPage = ({
                     {links && links.length > 0 ? (
                       links.map((link) => {
                         // Determine icon based on URL or name
-                        let icon = null;
+                        let IconComponent: React.ComponentType<{ className?: string }> = LinkIcon;
                         let networkName = link.name;
 
                         if (
@@ -410,56 +499,54 @@ const MemberPage = ({
                           link.name.toLowerCase().includes('twitter') ||
                           link.name.toLowerCase().includes('x')
                         ) {
-                          icon = '𝕏';
+                          IconComponent = Twitter;
                           networkName = networkName || 'Twitter/X';
                         } else if (
                           link.url.includes('instagram.com') ||
                           link.name.toLowerCase().includes('instagram')
                         ) {
-                          icon = '📸';
+                          IconComponent = Instagram;
                           networkName = networkName || 'Instagram';
                         } else if (
                           link.url.includes('facebook.com') ||
                           link.name.toLowerCase().includes('facebook')
                         ) {
-                          icon = 'ƒ';
+                          IconComponent = Facebook;
                           networkName = networkName || 'Facebook';
                         } else if (
                           link.url.includes('linkedin.com') ||
                           link.name.toLowerCase().includes('linkedin')
                         ) {
-                          icon = 'in';
+                          IconComponent = Linkedin;
                           networkName = networkName || 'LinkedIn';
                         } else if (
                           link.url.includes('github.com') ||
                           link.name.toLowerCase().includes('github')
                         ) {
-                          icon = '🐙';
+                          IconComponent = Github;
                           networkName = networkName || 'GitHub';
                         } else if (
                           link.url.includes('youtube.com') ||
                           link.name.toLowerCase().includes('youtube')
                         ) {
-                          icon = '▶️';
+                          IconComponent = Youtube;
                           networkName = networkName || 'YouTube';
                         } else if (
                           link.url.includes('tiktok.com') ||
                           link.name.toLowerCase().includes('tiktok')
                         ) {
-                          icon = '🎵';
+                          IconComponent = Music;
                           networkName = networkName || 'TikTok';
-                        } else {
-                          icon = '🔗';
                         }
 
                         return (
                           <li
                             key={link._id}
-                            className="group flex flex-row items-center justify-between py-2 border-b border-gray-100"
+                            className="group flex flex-row items-center justify-between py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors"
                           >
                             <div className="flex items-center">
-                              <span className="mr-2 text-lg w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full">
-                                {icon}
+                              <span className="mr-2 w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full">
+                                <IconComponent className="w-4 h-4 text-gray-700" />
                               </span>
                               <a
                                 href={link.url}
@@ -478,6 +565,7 @@ const MemberPage = ({
                                     e.preventDefault();
                                     deleteLink(link);
                                   }}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
                                   <TiDelete className="text-gray-500 text-xl hover:text-red-500" />
                                 </a>
@@ -775,24 +863,47 @@ const MemberPage = ({
                       });
                     }
 
-                    // Save all links
-                    if (newLinks.length > 0) {
-                      platform.user
-                        .patch(currentUser?._id, {
-                          links: [...links, ...newLinks],
-                        })
-                        .then(({ data }: { data: any }) => {
-                          setLinks(data.links);
-                          toggleShowForm(false);
-                          setErrors(null);
-                        })
-                        .catch((err: unknown) => {
-                          const error = parseMessageFromError(err);
-                          setErrors(error);
+                    // Filter out existing social links and keep only non-social links
+                    const existingNonSocialLinks = links.filter((link) => {
+                      const url = link.url.toLowerCase();
+                      return (
+                        !url.includes('twitter.com') &&
+                        !url.includes('x.com') &&
+                        !url.includes('instagram.com') &&
+                        !url.includes('linkedin.com') &&
+                        !url.includes('facebook.com') &&
+                        !url.includes('github.com') &&
+                        !url.includes('youtube.com') &&
+                        !url.includes('tiktok.com')
+                      );
+                    });
+
+                    // Combine new social links with existing non-social links
+                    const allLinks = [...newLinks, ...existingNonSocialLinks];
+
+                    // Save all links (replacing existing social links)
+                    platform.user
+                      .patch(currentUser?._id, {
+                        links: allLinks,
+                      })
+                      .then(({ data }: { data: any }) => {
+                        setLinks(data.links);
+                        toggleShowForm(false);
+                        setErrors(null);
+                        setFormValues({
+                          twitter: '',
+                          instagram: '',
+                          linkedin: '',
+                          facebook: '',
+                          github: '',
+                          youtube: '',
+                          website: '',
                         });
-                    } else {
-                      toggleShowForm(false);
-                    }
+                      })
+                      .catch((err: unknown) => {
+                        const error = parseMessageFromError(err);
+                        setErrors(error);
+                      });
                   }}
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -815,6 +926,7 @@ const MemberPage = ({
                           name="twitter-username"
                           placeholder={t('members_slug_username_placeholder')}
                           className="text-sm border-b border-gray-300 focus:border-blue-500 outline-none flex-grow"
+                          defaultValue={formValues.twitter}
                         />
                       </div>
                     </div>
@@ -838,6 +950,7 @@ const MemberPage = ({
                           name="instagram-username"
                           placeholder={t('members_slug_username_placeholder')}
                           className="text-sm border-b border-gray-300 focus:border-blue-500 outline-none flex-grow"
+                          defaultValue={formValues.instagram}
                         />
                       </div>
                     </div>
@@ -861,6 +974,7 @@ const MemberPage = ({
                           name="linkedin-username"
                           placeholder={t('members_slug_username_placeholder')}
                           className="text-sm border-b border-gray-300 focus:border-blue-500 outline-none flex-grow"
+                          defaultValue={formValues.linkedin}
                         />
                       </div>
                     </div>
@@ -884,6 +998,7 @@ const MemberPage = ({
                           name="facebook-username"
                           placeholder={t('members_slug_username_placeholder')}
                           className="text-sm border-b border-gray-300 focus:border-blue-500 outline-none flex-grow"
+                          defaultValue={formValues.facebook}
                         />
                       </div>
                     </div>
@@ -907,6 +1022,7 @@ const MemberPage = ({
                           name="github-username"
                           placeholder={t('members_slug_username_placeholder')}
                           className="text-sm border-b border-gray-300 focus:border-blue-500 outline-none flex-grow"
+                          defaultValue={formValues.github}
                         />
                       </div>
                     </div>
@@ -932,6 +1048,7 @@ const MemberPage = ({
                             'members_slug_channelname_placeholder',
                           )}
                           className="text-sm border-b border-gray-300 focus:border-blue-500 outline-none flex-grow"
+                          defaultValue={formValues.youtube}
                         />
                       </div>
                     </div>
@@ -953,6 +1070,7 @@ const MemberPage = ({
                         name="website"
                         placeholder={t('members_slug_website_placeholder')}
                         className="text-sm border-b border-gray-300 focus:border-blue-500 outline-none w-full"
+                        defaultValue={formValues.website}
                       />
                     </div>
                   </div>
@@ -970,6 +1088,15 @@ const MemberPage = ({
                       onClick={(e) => {
                         e.preventDefault();
                         toggleShowForm(false);
+                        setFormValues({
+                          twitter: '',
+                          instagram: '',
+                          linkedin: '',
+                          facebook: '',
+                          github: '',
+                          youtube: '',
+                          website: '',
+                        });
                       }}
                     >
                       {t('members_slug_cancel')}

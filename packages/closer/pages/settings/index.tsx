@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 
 import React, { useEffect, useRef, useState } from 'react';
 
+import { User, Key, Star, Bell, AlertTriangle, Settings as SettingsIcon, CreditCard, Info } from 'lucide-react';
+
 import UploadPhoto from '../../components/UploadPhoto';
 import { Button } from '../../components/ui';
 import Checkbox from '../../components/ui/Checkbox';
@@ -34,7 +36,7 @@ type TabId = 'profile' | 'account' | 'preferences' | 'notifications' | 'danger';
 interface Tab {
   id: TabId;
   label: string;
-  icon: string;
+  icon: React.ReactNode;
 }
 
 // Navigation sidebar component
@@ -57,11 +59,11 @@ const SettingsSidebar = ({
                 onClick={() => setActiveTab(tab.id)}
                 className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
                   activeTab === tab.id
-                    ? 'bg-primary-50 text-primary-700 font-medium'
-                    : 'hover:bg-gray-100'
+                    ? 'bg-gray-100 text-gray-900 font-medium'
+                    : 'hover:bg-gray-50 text-gray-700'
                 }`}
               >
-                <span>{tab.icon}</span>
+                <span className="w-4 h-4">{tab.icon}</span>
                 <span>{tab.label}</span>
               </button>
             </li>
@@ -91,7 +93,7 @@ const MobileTabSelector = ({
       >
         {tabs.map((tab) => (
           <option key={tab.id} value={tab.id}>
-            {tab.icon} {tab.label}
+            {tab.label}
           </option>
         ))}
       </select>
@@ -139,7 +141,7 @@ const DeleteAccountSection = ({ t }: DeleteAccountSectionProps) => {
   };
 
   return (
-    <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+    <div className="bg-white border border-gray-200 rounded-lg p-6">
       {!showConfirmation ? (
         <div>
           <p className="mb-4 text-gray-600">
@@ -245,11 +247,11 @@ const SettingsPage = ({
 
   // Define tabs
   const tabs: Tab[] = [
-    { id: 'profile', label: t('settings_tab_profile'), icon: '👤' },
-    { id: 'account', label: t('settings_tab_account'), icon: '🔑' },
-    { id: 'preferences', label: t('settings_tab_preferences'), icon: '⭐' },
-    { id: 'notifications', label: t('settings_tab_notifications'), icon: '🔔' },
-    { id: 'danger', label: t('settings_tab_danger'), icon: '⚠️' },
+    { id: 'profile', label: t('settings_tab_profile'), icon: <User className="w-4 h-4" /> },
+    { id: 'account', label: t('settings_tab_account'), icon: <Key className="w-4 h-4" /> },
+    { id: 'preferences', label: t('settings_tab_preferences'), icon: <Star className="w-4 h-4" /> },
+    { id: 'notifications', label: t('settings_tab_notifications'), icon: <Bell className="w-4 h-4" /> },
+    { id: 'danger', label: t('settings_tab_danger'), icon: <AlertTriangle className="w-4 h-4" /> },
   ];
 
   // Scroll to top when changing tabs
@@ -525,7 +527,10 @@ const SettingsPage = ({
         <title>{user.screenname} | Settings</title>
       </Head>
       <div className="max-w-screen-xl mx-auto px-4 md:px-8 py-6">
-        <Heading className="mb-6">⚙️ Settings</Heading>
+        <div className="flex items-center gap-2 mb-6">
+          <SettingsIcon className="w-5 h-5 text-gray-700" />
+          <Heading>Settings</Heading>
+        </div>
 
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md mb-6">
@@ -559,10 +564,13 @@ const SettingsPage = ({
             {/* Profile Tab */}
             {activeTab === 'profile' && (
               <div className="space-y-6">
-                <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                  <h3 className="text-lg font-medium mb-4">
-                    👤 {t('settings_profile_information')}
-                  </h3>
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <User className="w-5 h-5 text-gray-700" />
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {t('settings_profile_information')}
+                    </h3>
+                  </div>
 
                   <Input
                     label={t('settings_about_you')}
@@ -607,10 +615,13 @@ const SettingsPage = ({
             {/* Account Tab */}
             {activeTab === 'account' && (
               <div className="space-y-6">
-                <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                  <h3 className="text-lg font-medium mb-4">
-                    🔑 Account Information
-                  </h3>
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Key className="w-5 h-5 text-gray-700" />
+                    <h3 className="text-lg font-medium text-gray-900">
+                      Account Information
+                    </h3>
+                  </div>
 
                   <Input
                     label={t('settings_name')}
@@ -734,10 +745,13 @@ const SettingsPage = ({
                   </div>
                 </div>
 
-                <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                  <h3 className="text-lg font-medium mb-4">
-                    💳 {t('settings_billing_information')}
-                  </h3>
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <CreditCard className="w-5 h-5 text-gray-700" />
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {t('settings_billing_information')}
+                    </h3>
+                  </div>
 
                   <Input
                     label={t('settings_legal_name')}
@@ -808,10 +822,13 @@ const SettingsPage = ({
             {/* Preferences Tab */}
             {activeTab === 'preferences' && (
               <div className="space-y-6">
-                <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                  <h3 className="text-lg font-medium mb-4">
-                    ⭐ Recommended Preferences
-                  </h3>
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Star className="w-5 h-5 text-gray-700" />
+                    <h3 className="text-lg font-medium text-gray-900">
+                      Recommended Preferences
+                    </h3>
+                  </div>
 
                   <MultiSelect
                     label={t('settings_dietary_preferences')}
@@ -854,10 +871,13 @@ const SettingsPage = ({
                   />
                 </div>
 
-                <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                  <h3 className="text-lg font-medium mb-4">
-                    🔰 Optional Information
-                  </h3>
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Info className="w-5 h-5 text-gray-700" />
+                    <h3 className="text-lg font-medium text-gray-900">
+                      Optional Information
+                    </h3>
+                  </div>
 
                   <Input
                     label={t('settings_dream')}
@@ -897,10 +917,13 @@ const SettingsPage = ({
             {/* Notifications Tab */}
             {activeTab === 'notifications' && (
               <div className="space-y-6">
-                <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                  <h3 className="text-lg font-medium mb-4">
-                    🔔 Notification Preferences
-                  </h3>
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Bell className="w-5 h-5 text-gray-700" />
+                    <h3 className="text-lg font-medium text-gray-900">
+                      Notification Preferences
+                    </h3>
+                  </div>
 
                   <div className="flex items-center justify-start gap-2 p-3 hover:bg-gray-50 rounded-md">
                     <Checkbox
@@ -918,11 +941,13 @@ const SettingsPage = ({
             {/* Danger Zone Tab */}
             {activeTab === 'danger' && (
               <div className="space-y-6">
-                <div className="card bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                  <h3 className="text-lg font-medium mb-4 text-red-600">
-                    ⚠️
-                    {t('settings_danger_zone')}
-                  </h3>
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                    <h3 className="text-lg font-medium text-red-600">
+                      {t('settings_danger_zone')}
+                    </h3>
+                  </div>
                   <p className="text-gray-600 mb-6">
                     {t('settings_danger_zone_warning')}
                   </p>

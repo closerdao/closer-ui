@@ -15,13 +15,18 @@ const ConnectedWallet = () => {
 
   return (
     <div className="flex flex-col gap-2">
-      <h3>Connected wallet</h3>
-      <p className="text-xs">{user?.walletAddress}</p>
-      {isAdmin && (
-        <button className="btn-primary w-fit mt-2" onClick={disconnect}>
-          Disconnect Wallet
-        </button>
-      )}
+      <div className="flex items-center justify-between">
+        <h3 className="font-medium text-sm text-gray-700">Connected wallet</h3>
+        {isAdmin && (
+          <button
+            className="text-xs text-gray-500 hover:text-gray-700 underline"
+            onClick={disconnect}
+          >
+            Disconnect
+          </button>
+        )}
+      </div>
+      <p className="text-xs text-gray-600 font-mono break-all">{user?.walletAddress}</p>
     </div>
   );
 };

@@ -2,7 +2,8 @@ import Head from 'next/head';
 
 import { Heading, LinkButton } from 'closer';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
-import { Check, Droplets, Flame, Sprout, TreeDeciduous } from 'lucide-react';
+import { Check, Droplets, ExternalLink, Flame, Sprout, TreeDeciduous } from 'lucide-react';
+import Link from 'next/link';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -77,7 +78,16 @@ const RegenerativeAgriculturePage = () => {
                 {t('regen_ag_agroforestry_title')}
               </Heading>
               <p className="text-gray-600 text-sm">
-                {t('regen_ag_agroforestry_desc')}
+                {t('regen_ag_agroforestry_desc')}{' '}
+                <Link
+                  href="https://oasa.earth/glossary/agroforestry/index.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent hover:underline inline-flex items-center gap-1"
+                >
+                  {t('regen_ag_agroforestry_link')}
+                  <ExternalLink className="w-3 h-3" />
+                </Link>
               </p>
             </div>
             <div className="p-6 border border-gray-200 rounded-xl">
@@ -86,7 +96,16 @@ const RegenerativeAgriculturePage = () => {
                 {t('regen_ag_water_title')}
               </Heading>
               <p className="text-gray-600 text-sm">
-                {t('regen_ag_water_desc')}
+                {t('regen_ag_water_desc')}{' '}
+                <Link
+                  href="https://oasa.earth/glossary/water-retention-landscapes/index.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent hover:underline inline-flex items-center gap-1"
+                >
+                  {t('regen_ag_water_link')}
+                  <ExternalLink className="w-3 h-3" />
+                </Link>
               </p>
             </div>
             <div className="p-6 border border-gray-200 rounded-xl">
@@ -117,7 +136,6 @@ const RegenerativeAgriculturePage = () => {
             {[
               { label: 'regen_ag_practice_tree_label', desc: 'regen_ag_practice_tree_desc' },
               { label: 'regen_ag_practice_water_label', desc: 'regen_ag_practice_water_desc' },
-              { label: 'regen_ag_practice_biochar_label', desc: 'regen_ag_practice_biochar_desc' },
               { label: 'regen_ag_practice_notill_label', desc: 'regen_ag_practice_notill_desc' },
               { label: 'regen_ag_practice_cover_label', desc: 'regen_ag_practice_cover_desc' },
               { label: 'regen_ag_practice_compost_label', desc: 'regen_ag_practice_compost_desc' },
@@ -324,7 +342,7 @@ const RegenerativeAgriculturePage = () => {
                   <span className="text-xs text-gray-500 ml-1">{t('regen_ag_eggs_daily')}</span>
                 </div>
               </div>
-              <p className="text-xs text-accent">{t('regen_ag_eggs_target')}</p>
+              <p className="text-xs text-gray-900">{t('regen_ag_eggs_target')}</p>
             </div>
 
             <div className="border border-gray-200 rounded-xl p-6 bg-white">

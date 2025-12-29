@@ -4,12 +4,15 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
+import { ChevronDown } from 'lucide-react';
 
 import { useAuth } from '../contexts/auth';
 import { useConfig } from '../hooks/useConfig';
 import useRBAC from '../hooks/useRBAC';
+import { useBuyTokens } from '../hooks/useBuyTokens';
 import { NavigationLink } from '../types/nav';
 import api from '../utils/api';
+import { getCurrentUnitPrice } from '../utils/bondingCurve';
 import Profile from './Profile';
 import ReportABug from './ReportABug';
 import Wallet from './Wallet';
@@ -23,12 +26,16 @@ interface MenuSection {
 
 const MemberMenu = () => {
   const t = useTranslations();
-  const { APP_NAME } = useConfig();
+  const { APP_NAME, SOURCE_TOKEN } = useConfig();
   const { hasAccess } = useRBAC();
   const router = useRouter();
+  const { getCurrentSupplyWithoutWallet } = useBuyTokens();
 
   const { user, logout } = useAuth();
   const [menuSections, setMenuSections] = useState<MenuSection[]>([]);
+  const [currentSupply, setCurrentSupply] = useState<number | null>(null);
+  const [tokenPrice, setTokenPrice] = useState<number | null>(null);
+  const [isLoadingTokenData, setIsLoadingTokenData] = useState(false);
 
   // Toggle a section's open/closed state
   const toggleSection = (sectionIndex: number) => {
@@ -63,24 +70,12 @@ const MemberMenu = () => {
               url: '/pages/oasa-network',
               enabled: true,
             },
-            {
-              label: t('menu_impact_reports'),
-              url: '/dataroom#reports',
-              enabled: true,
-              rbacPage: 'Dataroom',
-            },
           ],
         },
         {
           label: t('menu_the_village'),
           isOpen: false,
           items: [
-            {
-              label: t('menu_master_plan'),
-              url: '/dataroom#master-plan',
-              enabled: true,
-              rbacPage: 'Dataroom',
-            },
             {
               label: t('menu_regenerative_agriculture'),
               url: '/pages/regenerative-agriculture',
@@ -106,55 +101,23 @@ const MemberMenu = () => {
           ],
         },
         {
-          label: t('menu_investment'),
-          isOpen: false,
-          items: [
-            {
-              label: t('menu_data_room'),
-              url: '/dataroom',
-              enabled: APP_NAME?.toLowerCase() === 'tdf',
-              rbacPage: 'Dataroom',
-            },
-            {
-              label: t('menu_overview'),
-              url: '/dataroom',
-              enabled: true,
-              rbacPage: 'Dataroom',
-            },
-            {
-              label: t('menu_financial_performance'),
-              url: '/dataroom#financial',
-              enabled: true,
-              rbacPage: 'Dataroom',
-            },
-            {
-              label: t('menu_investor_relations'),
-              url: '/dataroom#investor-relations',
-              enabled: true,
-              rbacPage: 'Dataroom',
-            },
-          ],
-        },
-        {
           label: t('menu_investors'),
           isOpen: false,
           items: [
             {
-              label: t('menu_token_economics'),
-              url: '/token',
-              enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && APP_NAME?.toLowerCase() === 'tdf',
-              rbacPage: 'Token',
-            },
-            {
               label: t('menu_data_room'),
               url: '/dataroom',
               enabled: APP_NAME?.toLowerCase() === 'tdf',
-              rbacPage: 'Dataroom',
             },
             {
               label: t('menu_ecology'),
               url: '/pages/ecology',
               enabled: APP_NAME?.toLowerCase() === 'tdf',
+            },
+            {
+              label: t('menu_token_economics'),
+              url: '/token',
+              enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
             },
           ],
         },
@@ -274,11 +237,6 @@ const MemberMenu = () => {
                 },
               ]
             : []),
-          {
-            label: 'Invest',
-            url: '/dataroom',
-            enabled: APP_NAME?.toLowerCase() === 'tdf',
-          },
           {
             label: 'Learn about the $TDF token',
             url: '/token',
@@ -651,13 +609,36 @@ const MemberMenu = () => {
     })();
   }, [user, router.locale]);
 
+  useEffect(() => {
+    if (
+      APP_NAME?.toLowerCase() === 'tdf' &&
+      process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true'
+    ) {
+      setIsLoadingTokenData(true);
+      (async () => {
+        try {
+          const supply = await getCurrentSupplyWithoutWallet();
+          if (supply && supply > 0) {
+            setCurrentSupply(supply);
+            const price = getCurrentUnitPrice(supply);
+            setTokenPrice(price);
+          }
+        } catch (error) {
+          console.error('Error fetching token data:', error);
+        } finally {
+          setIsLoadingTokenData(false);
+        }
+      })();
+    }
+  }, [APP_NAME, getCurrentSupplyWithoutWallet]);
+
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
   const isTokenSaleEnabled =
     process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true';
   return (
     <nav className="flex flex-col gap-4">
-      <Profile isMenu={true} isDemo={false} />
+      <Profile isMenu={true} isDemo={false} onLogout={logout} />
       {isWalletEnabled && <Wallet />}
       {isTokenSaleEnabled && (
         <Button
@@ -684,16 +665,20 @@ const MemberMenu = () => {
             <>
               {/* Section header (clickable to toggle) */}
               <div
-                className="flex items-center justify-between py-1 px-2 cursor-pointer font-medium"
+                className="flex items-center justify-between py-1 px-2 cursor-pointer font-medium select-none"
                 onClick={() => toggleSection(index)}
               >
                 <span>{section.label}</span>
-                <span>{section.isOpen ? '▼' : '►'}</span>
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform duration-200 ${
+                    section.isOpen ? 'rotate-180' : ''
+                  }`}
+                />
               </div>
 
               {/* Section items (only shown if section is open) */}
               {section.isOpen && (
-                <div className="pl-2 border-l border-gray-200 ml-2">
+                <div className="pl-2 border-l border-gray-200 ml-2 overflow-hidden transition-all duration-200 ease-out animate-in slide-in-from-top-2">
                   {section.items.map((item: NavigationLink) => (
                     <Link
                       key={item.url}
@@ -711,14 +696,45 @@ const MemberMenu = () => {
         </div>
       ))}
 
-      <div className="block mt-2">
-        <button
-          onClick={logout}
-          className="block py-1 hover:bg-accent-light px-2 rounded text-black w-full text-left"
-        >
-          {t('navigation_sign_out')}
-        </button>
-      </div>
+      {APP_NAME?.toLowerCase() === 'tdf' &&
+        process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && (
+          <div className="mt-3 mb-2 rounded-lg border border-gray-200 bg-white overflow-hidden">
+            <div className="p-3 bg-gradient-to-br from-accent/5 to-accent-light/5">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center text-xs font-bold text-accent">
+                    TDF
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900">
+                    $TDF
+                  </span>
+                </div>
+                {isLoadingTokenData ? (
+                  <div className="text-xs text-gray-400">...</div>
+                ) : tokenPrice ? (
+                  <div className="text-right">
+                    <div className="text-sm font-semibold text-gray-900">
+                      {tokenPrice.toFixed(2)} {SOURCE_TOKEN || 'cEUR'}
+                    </div>
+                    <div className="text-xs text-gray-500">per token</div>
+                  </div>
+                ) : null}
+              </div>
+              {currentSupply && (
+                <div className="text-xs text-gray-500 mb-2">
+                  Supply: {currentSupply.toLocaleString()} $TDF
+                </div>
+              )}
+              <Link
+                href="/token"
+                className="block w-full py-2 px-3 bg-accent hover:bg-accent-dark text-white text-center text-sm font-medium rounded-md transition-colors"
+              >
+                {t('navigation_buy_tokens')}
+              </Link>
+            </div>
+          </div>
+        )}
+
       <ReportABug />
     </nav>
   );

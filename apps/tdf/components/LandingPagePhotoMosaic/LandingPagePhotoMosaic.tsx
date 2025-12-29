@@ -80,7 +80,7 @@ const LandingPagePhotoMosaic = ({ className }: LandingPagePhotoMosaicProps) => {
     }
   };
 
-  const getImagePath = (imageName: string) => `/images/landing-page/${imageName}`;
+  const getImagePath = (imageName: string) => `/images/landing-page/compressed/${imageName}`;
 
   if (isMobile) {
     const currentImage = LANDING_PAGE_IMAGES[currentIndex];
