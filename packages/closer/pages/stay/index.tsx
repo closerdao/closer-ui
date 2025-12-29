@@ -127,11 +127,11 @@ const StayPage = ({
         <meta property="og:title" content={`${t('stay_title')} ${PLATFORM_NAME}`} />
         <meta property="og:description" content={t('stay_meta_description') || `Book your stay at ${PLATFORM_NAME}. Discover unique accommodations in regenerative communities.`} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://closer.earth/stay" />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/stay`} />
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content={`${t('stay_title')} ${PLATFORM_NAME}`} />
         <meta name="twitter:description" content={t('stay_meta_description') || `Book your stay at ${PLATFORM_NAME}.`} />
-        <link rel="canonical" href="https://closer.earth/stay" />
+        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/stay`} />
       </Head>
       {listings && listings.get('error') && (
         <div className="validation-error">{listings.get('error')}</div>

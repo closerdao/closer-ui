@@ -230,11 +230,11 @@ const EventPage = ({
       <Head>
         <title>{event.name}</title>
         <meta name="description" content={descriptionText || `${event.name} - Join us for this event.`} />
-        <meta name="keywords" content={`${event.name}, event, ${event.category || ''}, ${process.env.NEXT_PUBLIC_PLATFORM_NAME || 'Closer'}, regenerative communities`} />
+        <meta name="keywords" content={`${event.name}, event, regenerative communities`} />
         <meta property="og:title" content={event.name} />
         <meta property="og:type" content="event" />
         <meta property="og:description" content={descriptionText || `${event.name} - Join us for this event.`} />
-        <meta property="og:url" content={`https://closer.earth/events/${event.slug}`} />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/events/${event.slug}`} />
         {photo && (
           <meta
             key="og:image"
@@ -260,7 +260,7 @@ const EventPage = ({
         )}
         <link
           rel="canonical"
-          href={`https://closer.earth/events/${event.slug}`}
+          href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/events/${event.slug}`}
           key="canonical"
         />
       </Head>

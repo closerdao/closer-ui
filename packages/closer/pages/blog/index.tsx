@@ -101,7 +101,7 @@ const Search = ({
         <meta property="og:title" content={`${PLATFORM_NAME} ${t('blog_title')}`} />
         <meta property="og:description" content={`Read articles and stories from ${PLATFORM_NAME}. Community insights, regenerative living, and updates from our network.`} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={`https://closer.earth/blog`} />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/blog`} />
         {latestArticleImageUrl && (
           <meta property="og:image" content={latestArticleImageUrl} />
         )}
@@ -111,7 +111,7 @@ const Search = ({
         {latestArticleImageUrl && (
           <meta name="twitter:image" content={latestArticleImageUrl} />
         )}
-        <link rel="canonical" href="https://closer.earth/blog" />
+        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/blog`} />
       </Head>
       <main className="w-full flex flex-col items-center">
         <section className="flex justify-center  mb-6 max-w-[700px]">

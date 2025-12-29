@@ -91,11 +91,11 @@ const PricingPage = ({ generalConfig }: Props) => {
         <meta property="og:title" content="Pricing — Closer" />
         <meta property="og:description" content="Simple, transparent pricing for regenerative communities. One-time setup fees with transaction-based pricing. Minimum €50/month transaction fee." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={`https://closer.earth/pricing`} />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/pricing`} />
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content="Pricing — Closer" />
         <meta name="twitter:description" content="Simple, transparent pricing for regenerative communities. One-time setup fees with transaction-based pricing." />
-        <link rel="canonical" href="https://closer.earth/pricing" />
+        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/pricing`} />
       </Head>
 
       {/* Hero */}

@@ -70,7 +70,7 @@ const ArticlePage = ({ article, author, error, relatedArticles }: Props) => {
         ) : (
           <meta name="description" content={`Read ${article.title} on ${process.env.NEXT_PUBLIC_PLATFORM_URL || 'Closer'}.`} />
         )}
-        <meta name="keywords" content={`${article.category || ''}, ${article.tags?.join(', ') || ''}, regenerative communities, ${process.env.NEXT_PUBLIC_PLATFORM_NAME || 'Closer'}`} />
+        <meta name="keywords" content={`${article.category || ''}, ${article.tags?.join(', ') || ''}, regenerative communities`} />
         <meta property="og:title" content={article.title} />
         <meta property="og:type" content="article" />
         {article.summary ? (

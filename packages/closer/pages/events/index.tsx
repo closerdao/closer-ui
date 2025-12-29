@@ -189,13 +189,13 @@ const Events = ({ generalConfig }: Props) => {
         <meta property="og:title" content={`${t('events_title')} - ${PLATFORM_NAME}`} />
         <meta property="og:description" content={`Discover upcoming events, workshops, and gatherings at ${PLATFORM_NAME}. Join our community for regenerative living experiences.`} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://closer.earth/events" />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/events`} />
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content={`${t('events_title')} - ${PLATFORM_NAME}`} />
         <meta name="twitter:description" content={`Discover upcoming events, workshops, and gatherings at ${PLATFORM_NAME}.`} />
         <link
           rel="canonical"
-          href="https://closer.earth/events"
+          href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/events`}
           key="canonical"
         />
       </Head>

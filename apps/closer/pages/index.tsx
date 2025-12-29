@@ -87,11 +87,11 @@ const HomePage = ({ generalConfig }: Props) => {
         <meta property="og:title" content="Closer — Decentralized Autonomous Villages" />
         <meta property="og:description" content="The operating system for regenerative communities. Manage guests, spaces, events and resources. Token-powered governance when you're ready." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://closer.earth" />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}`} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Closer — Decentralized Autonomous Villages" />
         <meta name="twitter:description" content="The operating system for regenerative communities. Manage guests, spaces, events and resources. Token-powered governance when you're ready." />
-        <link rel="canonical" href="https://closer.earth" />
+        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}`} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </Head>

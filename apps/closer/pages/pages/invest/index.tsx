@@ -189,11 +189,11 @@ const InvestPage = ({ generalConfig, listings, hosts }: Props) => {
         <meta property="og:title" content={`Impact Investment - ${PLATFORM_NAME}`} />
         <meta property="og:description" content={`Become an impact investor in ${PLATFORM_NAME}. Support regenerative community development and create lasting positive change.`} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://closer.earth/pages/invest" />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/pages/invest`} />
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content={`Impact Investment - ${PLATFORM_NAME}`} />
         <meta name="twitter:description" content={`Become an impact investor in ${PLATFORM_NAME}. Support regenerative community development.`} />
-        <link rel="canonical" href="https://closer.earth/pages/invest" />
+        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/pages/invest`} />
       </Head>
 
       <CustomSections page={page} />
