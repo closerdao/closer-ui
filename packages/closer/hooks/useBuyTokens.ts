@@ -21,24 +21,63 @@ const RPC_ENDPOINTS = {
   ],
 };
 
+const contractInstanceCache = new Map<string, Contract>();
+const contractInstancePromises = new Map<string, Promise<Contract>>();
+const providerCache = new Map<string, providers.JsonRpcProvider>();
+const getCurrentSupplyWithoutWalletCallInProgress = new Map<string, Promise<number>>();
+const getCurrentSupplyWithoutWalletResultCache = new Map<string, { result: number; timestamp: number }>();
+const getTokensAvailableForPurchaseCallInProgress = new Map<string, Promise<number>>();
+const getTokensAvailableForPurchaseResultCache = new Map<string, { result: number; timestamp: number }>();
+
+const CACHE_TTL = 30000;
+
 const getReadOnlyContractInstance = async (address: string, abi: any) => {
   const network = process.env.NEXT_PUBLIC_NETWORK || 'alfajores';
-  const endpoints = RPC_ENDPOINTS[network as keyof typeof RPC_ENDPOINTS];
-
-  console.debug('Using network:', network);
-
-  for (const rpcUrl of endpoints) {
-    try {
-      const provider = new providers.JsonRpcProvider(rpcUrl);
-      // Test the connection
-      await provider.getNetwork();
-      return new Contract(address, abi, provider);
-    } catch (error) {
-      console.warn(`Failed to connect to ${rpcUrl}:`, error);
-      continue;
-    }
+  const abiKey = Array.isArray(abi) ? abi.map((item: any) => item.name || JSON.stringify(item)).join(',') : String(abi);
+  const cacheKey = `${network}-${address.toLowerCase()}-${abiKey}`;
+  
+  if (contractInstanceCache.has(cacheKey)) {
+    return contractInstanceCache.get(cacheKey)!;
   }
-  throw new Error(`Unable to connect to any ${network} RPC endpoint`);
+
+  if (contractInstancePromises.has(cacheKey)) {
+    return contractInstancePromises.get(cacheKey)!;
+  }
+
+  const promise = (async () => {
+    const endpoints = RPC_ENDPOINTS[network as keyof typeof RPC_ENDPOINTS];
+    let workingProvider: providers.JsonRpcProvider | null = null;
+
+    if (providerCache.has(network)) {
+      workingProvider = providerCache.get(network)!;
+    } else {
+      for (const rpcUrl of endpoints) {
+        try {
+          const provider = new providers.JsonRpcProvider(rpcUrl);
+          await provider.getNetwork();
+          workingProvider = provider;
+          providerCache.set(network, provider);
+          break;
+        } catch (error) {
+          console.warn(`Failed to connect to ${rpcUrl}:`, error);
+          continue;
+        }
+      }
+    }
+
+    if (!workingProvider) {
+      contractInstancePromises.delete(cacheKey);
+      throw new Error(`Unable to connect to any ${network} RPC endpoint`);
+    }
+
+    const contract = new Contract(address, abi, workingProvider);
+    contractInstanceCache.set(cacheKey, contract);
+    contractInstancePromises.delete(cacheKey);
+    return contract;
+  })();
+
+  contractInstancePromises.set(cacheKey, promise);
+  return promise;
 };
 
 export const useBuyTokens = () => {
@@ -91,68 +130,67 @@ export const useBuyTokens = () => {
   };
 
   const getCurrentSupplyWithoutWallet = async () => {
-    try {
-      setPending(true);
-
-      if (!BLOCKCHAIN_DAO_TOKEN?.address || !BLOCKCHAIN_DAO_TOKEN_ABI) {
-        console.debug('Config not yet initialized, retrying in 1s...');
-
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-
-        if (!BLOCKCHAIN_DAO_TOKEN?.address || !BLOCKCHAIN_DAO_TOKEN_ABI) {
-          console.error('Config initialization timeout');
-          return 0;
-        }
-      }
-
-      const readOnlyTdfToken = await getReadOnlyContractInstance(
-        BLOCKCHAIN_DAO_TOKEN.address,
-        BLOCKCHAIN_DAO_TOKEN_ABI,
-      );
-
-      // Debug contract details
-      console.debug('Contract details:', {
-        network: process.env.NEXT_PUBLIC_NETWORK,
-        address: BLOCKCHAIN_DAO_TOKEN.address,
-        provider: (readOnlyTdfToken.provider as providers.JsonRpcProvider)
-          .connection.url,
-      });
-
-      const code = await readOnlyTdfToken.provider.getCode(
-        BLOCKCHAIN_DAO_TOKEN.address,
-      );
-      if (code === '0x') {
-        console.warn('Token contract not found at specified address');
-        return 0;
-      }
-
-      try {
-        const name = await readOnlyTdfToken.name().catch(() => null);
-        const symbol = await readOnlyTdfToken.symbol().catch(() => null);
-        console.debug('Token details:', { name, symbol });
-
-        const supplyInWei = await readOnlyTdfToken.totalSupply();
-        const supply = parseInt(utils.formatEther(supplyInWei));
-        return supply;
-      } catch (contractError: any) {
-        console.error('Contract call failed:', contractError);
-        if (contractError?.error?.body) {
-          try {
-            const errorBody = JSON.parse(contractError.error.body);
-            console.debug('Detailed error:', errorBody);
-          } catch (e) {
-            console.debug('Raw error body:', contractError.error.body);
-          }
-        }
-        return 0;
-      }
-    } catch (error) {
-      console.error('Error in getCurrentSupplyWithoutWallet:', error);
+    if (!BLOCKCHAIN_DAO_TOKEN?.address || !BLOCKCHAIN_DAO_TOKEN_ABI) {
+      console.debug('Config not yet initialized');
       return 0;
-    } finally {
-      setPending(false);
     }
+
+    const cacheKey = BLOCKCHAIN_DAO_TOKEN.address.toLowerCase();
+    const cached = getCurrentSupplyWithoutWalletResultCache.get(cacheKey);
+    
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      console.debug('getCurrentSupplyWithoutWallet: returning cached result');
+      return cached.result;
+    }
+    
+    if (getCurrentSupplyWithoutWalletCallInProgress.has(cacheKey)) {
+      console.debug('getCurrentSupplyWithoutWallet already in progress, returning existing promise');
+      return getCurrentSupplyWithoutWalletCallInProgress.get(cacheKey)!;
+    }
+
+    const promise = (async () => {
+      try {
+        setPending(true);
+
+        const readOnlyTdfToken = await getReadOnlyContractInstance(
+          BLOCKCHAIN_DAO_TOKEN.address,
+          BLOCKCHAIN_DAO_TOKEN_ABI,
+        );
+
+        const code = await readOnlyTdfToken.provider.getCode(
+          BLOCKCHAIN_DAO_TOKEN.address,
+        );
+        if (code === '0x') {
+          console.warn('Token contract not found at specified address');
+          const result = 0;
+          getCurrentSupplyWithoutWalletResultCache.set(cacheKey, { result, timestamp: Date.now() });
+          return result;
+        }
+
+        try {
+          const supplyInWei = await readOnlyTdfToken.totalSupply();
+          const supply = parseInt(utils.formatEther(supplyInWei));
+          getCurrentSupplyWithoutWalletResultCache.set(cacheKey, { result: supply, timestamp: Date.now() });
+          return supply;
+        } catch (contractError: any) {
+          console.error('Contract call failed:', contractError);
+          const result = 0;
+          getCurrentSupplyWithoutWalletResultCache.set(cacheKey, { result, timestamp: Date.now() });
+          return result;
+        }
+      } catch (error) {
+        console.error('Error in getCurrentSupplyWithoutWallet:', error);
+        const result = 0;
+        getCurrentSupplyWithoutWalletResultCache.set(cacheKey, { result, timestamp: Date.now() });
+        return result;
+      } finally {
+        setPending(false);
+        getCurrentSupplyWithoutWalletCallInProgress.delete(cacheKey);
+      }
+    })();
+
+    getCurrentSupplyWithoutWalletCallInProgress.set(cacheKey, promise);
+    return promise;
   };
 
   const getUserTdfBalance = async () => {
@@ -169,18 +207,52 @@ export const useBuyTokens = () => {
   };
 
   const getTokensAvailableForPurchase = async () => {
-    const { TdfToken, DynamicSale } = getContractInstances();
-
-    try {
-      const supply = await TdfToken.totalSupply();
-      const saleCap = await DynamicSale.saleHardCap();
-
-      const remainingTokens = saleCap.sub(supply);
-      return parseInt(utils.formatEther(remainingTokens));
-    } catch (error) {
-      console.log(error);
+    if (!BLOCKCHAIN_DAO_TOKEN?.address || !BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS) {
       return 0;
     }
+
+    const cacheKey = `${BLOCKCHAIN_DAO_TOKEN.address.toLowerCase()}-${BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS.toLowerCase()}`;
+    const cached = getTokensAvailableForPurchaseResultCache.get(cacheKey);
+    
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      console.debug('getTokensAvailableForPurchase: returning cached result');
+      return cached.result;
+    }
+
+    if (getTokensAvailableForPurchaseCallInProgress.has(cacheKey)) {
+      console.debug('getTokensAvailableForPurchase already in progress, returning existing promise');
+      return getTokensAvailableForPurchaseCallInProgress.get(cacheKey)!;
+    }
+
+    const promise = (async () => {
+      try {
+        if (!library) {
+          const result = 0;
+          getTokensAvailableForPurchaseResultCache.set(cacheKey, { result, timestamp: Date.now() });
+          return result;
+        }
+
+        const { TdfToken, DynamicSale } = getContractInstances();
+
+        const supply = await TdfToken.totalSupply();
+        const saleCap = await DynamicSale.saleHardCap();
+
+        const remainingTokens = saleCap.sub(supply);
+        const result = parseInt(utils.formatEther(remainingTokens));
+        getTokensAvailableForPurchaseResultCache.set(cacheKey, { result, timestamp: Date.now() });
+        return result;
+      } catch (error) {
+        console.log(error);
+        const result = 0;
+        getTokensAvailableForPurchaseResultCache.set(cacheKey, { result, timestamp: Date.now() });
+        return result;
+      } finally {
+        getTokensAvailableForPurchaseCallInProgress.delete(cacheKey);
+      }
+    })();
+
+    getTokensAvailableForPurchaseCallInProgress.set(cacheKey, promise);
+    return promise;
   };
 
   const buyTokens = async (amount: string) => {

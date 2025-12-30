@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
+import { ChevronDown } from 'lucide-react';
 
 import { useConfig } from '../hooks/useConfig';
 import useRBAC from '../hooks/useRBAC';
@@ -87,12 +88,6 @@ const GuestMenu = () => {
               enabled: true,
             },
             {
-              label: t('menu_master_plan'),
-              url: '/dataroom#master-plan',
-              enabled: true,
-              rbacPage: 'Dataroom',
-            },
-            {
               label: t('menu_regenerative_agriculture'),
               url: '/pages/regenerative-agriculture',
               enabled: true,
@@ -121,12 +116,6 @@ const GuestMenu = () => {
           isOpen: false,
           items: [
             {
-              label: t('menu_token_economics'),
-              url: '/token',
-              enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && APP_NAME?.toLowerCase() === 'tdf',
-              rbacPage: 'Token',
-            },
-            {
               label: t('menu_data_room'),
               url: '/dataroom',
               enabled: APP_NAME?.toLowerCase() === 'tdf',
@@ -135,6 +124,11 @@ const GuestMenu = () => {
               label: t('menu_ecology'),
               url: '/pages/ecology',
               enabled: APP_NAME?.toLowerCase() === 'tdf',
+            },
+            {
+              label: t('menu_token_economics'),
+              url: '/token',
+              enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
             },
           ],
         },
@@ -300,12 +294,6 @@ const GuestMenu = () => {
               ]
             : []),
           {
-            label: t('navigation_invest'),
-            url: '/dataroom',
-            enabled: true,
-            rbacPage: 'Dataroom',
-          },
-          {
             label: t('navigation_buy_tokens'),
             url: '/token',
             enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
@@ -456,16 +444,20 @@ const GuestMenu = () => {
               <>
                 {/* Section header (clickable to toggle) */}
                 <div
-                  className="flex items-center justify-between py-1 px-2 cursor-pointer font-medium"
+                  className="flex items-center justify-between py-1 px-2 cursor-pointer font-medium select-none"
                   onClick={() => toggleSection(index)}
                 >
                   <span>{section.label}</span>
-                  <span>{section.isOpen ? '▼' : '►'}</span>
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform duration-200 ${
+                      section.isOpen ? 'rotate-180' : ''
+                    }`}
+                  />
                 </div>
 
                 {/* Section items (only shown if section is open) */}
                 {section.isOpen && (
-                  <div className="pl-2 border-l border-gray-200 ml-2">
+                  <div className="pl-2 border-l border-gray-200 ml-2 overflow-hidden transition-all duration-200 ease-out animate-in slide-in-from-top-2">
                     {section.items.map((item) => (
                       <Link
                         key={item.url}

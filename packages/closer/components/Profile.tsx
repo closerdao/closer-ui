@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import { Settings, LogOut } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
@@ -11,7 +12,13 @@ import { cdn } from '../utils/api';
 import CreditsBalance from './CreditsBalance';
 import { Button, Heading } from './ui';
 
-const Profile = ({ isMenu = false, isDemo }) => {
+interface ProfileProps {
+  isMenu?: boolean;
+  isDemo?: boolean;
+  onLogout?: () => void;
+}
+
+const Profile = ({ isMenu = false, isDemo, onLogout }: ProfileProps) => {
   const t = useTranslations();
 
   const { user, isAuthenticated } = useAuth();
@@ -68,17 +75,29 @@ const Profile = ({ isMenu = false, isDemo }) => {
             </div>
           </div>
 
-          <div className=" absolute right-0">
+          <div className=" absolute right-0 flex flex-col gap-1">
             <Button
               onClick={() => {
                 router.push('/settings');
               }}
               variant="secondary"
-              size="sm"
-              className="text-sm normal-case !w-fit !text-accent ml-auto py-0 !h-8"
+              size="small"
+              className="text-xs normal-case !w-fit !bg-black !text-white hover:!bg-gray-800 ml-auto py-0 !h-6 !px-2 !border-0 flex items-center gap-1"
             >
+              <Settings className="h-3 w-3" />
               {t('buttons_edit_profile')}
             </Button>
+            {isMenu && onLogout && (
+              <Button
+                onClick={onLogout}
+                variant="secondary"
+                size="small"
+                className="text-xs normal-case !w-fit !bg-black !text-white hover:!bg-gray-800 ml-auto py-0 !h-6 !px-2 !border-0 flex items-center gap-1"
+              >
+                <LogOut className="h-3 w-3" />
+                {t('navigation_sign_out')}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -110,3 +129,4 @@ const Profile = ({ isMenu = false, isDemo }) => {
 };
 
 export default Profile;
+
