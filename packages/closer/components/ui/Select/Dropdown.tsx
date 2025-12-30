@@ -30,6 +30,9 @@ const Dropdown: FC<DropdownProps> = React.memo(
         {label && (
           <label className="font-medium text-complimentary-light">
             {label}
+            {isRequired && (
+              <span className="text-red-500">*</span>
+            )}
           </label>
         )}
         <DropdownList

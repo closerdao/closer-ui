@@ -477,7 +477,9 @@ const EcologyPage = () => {
               </p>
               <blockquote className="text-sm italic text-gray-600 border-l-4 border-purple-300 pl-4 mb-6">
                 {t('ecology_edna_quote')}
-                <cite className="block mt-2 not-italic text-purple-600">— SimplexDNA</cite>
+                <cite className="block mt-2 not-italic text-purple-600">
+                  — <a href="https://www.simplexdna.com/" target="_blank" rel="noopener noreferrer" className="underline hover:text-purple-700">SimplexDNA</a>
+                </cite>
               </blockquote>
 
               <div className="bg-white rounded-xl p-6 border border-purple-200">

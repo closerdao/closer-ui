@@ -40,11 +40,11 @@ const NationalityPage = ({ generalConfig }: Props) => {
   const [formData, setFormData] = useState({
     required: {
       name: '',
-      phone: '',
       address: '',
       postalCode: '',
       city: '',
       nationality: '',
+      birthDate: '',
     },
     optional: {
       taxNo: '',
@@ -98,6 +98,7 @@ const NationalityPage = ({ generalConfig }: Props) => {
         city: formData.required.city,
         state: '',
         country: formData.required.nationality,
+        birthDate: formData.required.birthDate,
       });
       await refetchUser();
 
@@ -118,7 +119,6 @@ const NationalityPage = ({ generalConfig }: Props) => {
   const isFormValid = () => {
     if (
       Object.values(formData.required).every((value) => value) &&
-      isInputValid(formData.required.phone, 'phone') &&
       isInputValid(formData.optional.taxNo, 'taxNo') &&
       !doesAddressMatchPattern(formData.required.address, 'usAddress') &&
       !doesAddressMatchPattern(formData.required.address, 'swissAddress')
@@ -196,38 +196,11 @@ const NationalityPage = ({ generalConfig }: Props) => {
         <main className="pt-14 pb-24">
           <div>
             <fieldset className="flex flex-col gap-6 mb-16">
-              <Select
-                label={t('token_sale_label_nationality')}
-                value={formData.required.nationality}
-                options={countries || []}
-                className="h-10"
-                onChange={(value: string) =>
-                  setFormData({
-                    ...formData,
-                    required: { ...formData.required, nationality: value },
-                  })
-                }
-                isRequired
-              />
-              {isRestrictedNationality && (
-                <ErrorMessage
-                  error={t('token_sale_restricted_nationality_warning')}
-                />
-              )}
-
               <Input
                 label={t('token_sale_label_name')}
                 onChange={handleChange}
                 value={formData.required.name}
                 id="name"
-                isRequired={true}
-               
-              />
-              <Input
-                label={t('token_sale_label_phone')}
-                onChange={handleChange}
-                value={formData.required.phone}
-                id="phone"
                 isRequired={true}
                
               />
@@ -272,6 +245,33 @@ const NationalityPage = ({ generalConfig }: Props) => {
                 onChange={handleChange}
                 value={formData.required.city}
                 id="city"
+                isRequired={true}
+                
+              />
+              <Select
+                label={t('token_sale_label_nationality')}
+                value={formData.required.nationality}
+                options={countries || []}
+                className="h-10"
+                onChange={(value: string) =>
+                  setFormData({
+                    ...formData,
+                    required: { ...formData.required, nationality: value },
+                  })
+                }
+                isRequired
+              />
+              {isRestrictedNationality && (
+                <ErrorMessage
+                  error={t('token_sale_restricted_nationality_warning')}
+                />
+              )}
+              <Input
+                label={t('token_sale_label_birth_date')}
+                onChange={handleChange}
+                value={formData.required.birthDate}
+                id="birthDate"
+                type="date"
                 isRequired={true}
                 
               />

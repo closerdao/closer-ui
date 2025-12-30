@@ -112,6 +112,7 @@ export type User = {
     city: string;
     state: string;
     country: string;
+    birthDate: string;
   };
 };
 

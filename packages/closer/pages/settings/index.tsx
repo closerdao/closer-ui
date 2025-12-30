@@ -362,6 +362,7 @@ const SettingsPage = ({
         'country',
         'city',
         'postalCode',
+        'birthDate',
       ];
       let payload: Partial<User> = {
         [attribute]: actualValue,
@@ -405,6 +406,7 @@ const SettingsPage = ({
                 city: existingKycData?.city || '',
                 state: existingKycData?.state || '',
                 country: existingKycData?.country || '',
+                birthDate: existingKycData?.birthDate || '',
                 [attribute]: stringValue,
               } as User['kycData'],
             };
@@ -811,6 +813,18 @@ const SettingsPage = ({
                     placeholder={t('settings_tax_number_placeholder')}
                     value={user?.kycData?.TIN || ''}
                     onChange={saveUserData('TIN') as any}
+                    isInstantSave={true}
+                    hasSaved={hasSaved}
+                    setHasSaved={setHasSaved}
+                    className="mb-4"
+                  />
+
+                  <Input
+                    label={t('settings_birth_date')}
+                    placeholder={t('settings_birth_date_placeholder')}
+                    value={user?.kycData?.birthDate || ''}
+                    onChange={saveUserData('birthDate') as any}
+                    type="date"
                     isInstantSave={true}
                     hasSaved={hasSaved}
                     setHasSaved={setHasSaved}

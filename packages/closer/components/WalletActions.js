@@ -24,7 +24,6 @@ const WalletActions = () => {
   }
 
   if (!isWalletConnected) {
-    console.log('[WalletActions] Rendering connect wallet button');
     return (
       <>
         <p className="my-4 text-xs">{t('wallet_not_connected_cta')}</p>

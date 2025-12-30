@@ -906,6 +906,7 @@
   "token_sale_label_address": "Endereço fiscal",
   "token_sale_label_postal_code": "Código postal",
   "token_sale_label_city": "Cidade",
+  "token_sale_label_birth_date": "Data de Nascimento",
   "token_sale_button_continue": "Continuar",
   "token_sale_button_calculating": "A calcular...",
   "token_sale_restricted_nationality_warning": "Infelizmente, não podemos processar cidadãos americanos/suíços neste momento. Desculpe!",
@@ -1878,6 +1879,8 @@
   "settings_postal_code_placeholder": "Insira o código postal",
   "settings_tax_number": "Número de Identificação Fiscal",
   "settings_tax_number_placeholder": "Insira o número de identificação fiscal",
+  "settings_birth_date": "Data de Nascimento",
+  "settings_birth_date_placeholder": "Insira a data de nascimento",
 
   "token_sales_dashboard_title": "Vendas de tokens",
   "token_sales_dashboard_total_sales": "total",
