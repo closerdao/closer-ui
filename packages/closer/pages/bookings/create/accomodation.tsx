@@ -67,6 +67,7 @@ const AccomodationSelector = ({
   volunteerId,
   isFriendsBooking,
   friendEmails,
+  parentBookingId,
 }: Props) => {
   const t = useTranslations();
 
@@ -146,6 +147,7 @@ const AccomodationSelector = ({
         ...(volunteerInfo && { volunteerInfo }),
         ...(normalizedIsFriendsBooking && { isFriendsBooking: true }),
         ...(friendEmails && { friendEmails }),
+        ...(parentBookingId && { parentBookingId }),
       });
       if (bookingConfig?.foodOptionEnabled) {
         router.push(
@@ -188,6 +190,7 @@ const AccomodationSelector = ({
       ...(suggestions && { suggestions }),
       ...(normalizedIsFriendsBooking && { isFriendsBooking: 'true' }),
       ...(friendEmails && { friendEmails }),
+      ...(parentBookingId && { parentBookingId }),
     };
     const urlParams = new URLSearchParams(params);
     router.push(`/bookings/create/dates?${urlParams}`);
@@ -274,6 +277,7 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       suggestions,
       bookingType,
       volunteerId,
+      parentBookingId,
     }: BaseBookingParams = query || {};
     const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
     const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
@@ -336,6 +340,7 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       suggestions,
       bookingType,
       volunteerId,
+      parentBookingId,
     };
   } catch (err: any) {
     console.log(err);
