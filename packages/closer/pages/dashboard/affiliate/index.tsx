@@ -38,6 +38,7 @@ const AffiliateDashboardPage = ({
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   const [data, setData] = useState<any>(null);
+  const [allAffiliateUsers, setAllAffiliateUsers] = useState<any[]>([]);
   const [payoutAmount, setPayoutAmount] = useState(0);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -99,19 +100,25 @@ const AffiliateDashboardPage = ({
   };
 
   useEffect(() => {
-    if (user) {
+    if (user && platform) {
       (async () => {
         try {
-          const affiliateDataRes = await api.get('/charges/affiliate');
+          const [affiliateDataRes, affiliateUsersRes] = await Promise.all([
+            api.get('/charges/affiliate'),
+            platform.user.get({ ...affiliateFilter, limit: 1000 }),
+          ]);
           const { affiliateData, payoutData } = affiliateDataRes.data.results;
-
+          
+          const usersResult = affiliateUsersRes?.results;
+          const users = usersResult?.toJS ? usersResult.toJS() : (usersResult || []);
+          setAllAffiliateUsers(users);
           setData({ affiliateData, payoutData });
         } catch (error) {
           setError(parseMessageFromError(error));
         }
       })();
     }
-  }, [user]);
+  }, [user, platform]);
 
   useEffect(() => {
     if (platform) {
@@ -120,6 +127,38 @@ const AffiliateDashboardPage = ({
       platform.metric.getCount(affiliateLinkGeneratedFilter);
     }
   }, [platform, affiliateFilter, affiliatePageViewFilter, affiliateLinkGeneratedFilter]);
+
+  const getAllAffiliateUsersWithRevenue = () => {
+    if (!allAffiliateUsers.length) return [];
+
+    const revenueMap = new Map();
+    if (data?.affiliateData) {
+      data.affiliateData.forEach((affiliate: any) => {
+        revenueMap.set(affiliate.user._id, affiliate);
+      });
+    }
+
+    const usersWithRevenue = allAffiliateUsers
+      .filter((user: any) => revenueMap.has(user._id))
+      .map((user: any) => ({
+        user,
+        affiliateData: revenueMap.get(user._id),
+        totalRevenue: revenueMap.get(user._id)?.totalRevenue || 0,
+      }))
+      .sort((a, b) => b.totalRevenue - a.totalRevenue);
+
+    const usersWithoutRevenue = allAffiliateUsers
+      .filter((user: any) => !revenueMap.has(user._id))
+      .map((user: any) => ({
+        user,
+        affiliateData: null,
+        totalRevenue: 0,
+      }));
+
+    return [...usersWithRevenue, ...usersWithoutRevenue];
+  };
+
+  const allAffiliatesList = getAllAffiliateUsersWithRevenue();
 
   if (!user?.roles.includes('admin') && !user?.roles.includes('affiliate-manager')) {
     return <PageNotAllowed />;
@@ -184,195 +223,198 @@ const AffiliateDashboardPage = ({
                 </tr>
               </thead>
 
-              {/* {JSON.stringify(data?.affiliateData)} */}
+              {allAffiliatesList.map((item: any) => {
+                const affiliate = item.affiliateData;
+                const user = item.user;
+                const totalRevenue = item.totalRevenue;
+                const unpaidBalance = affiliate
+                  ? totalRevenue -
+                    (data?.payoutData?.find((p: any) => {
+                      return p?.user?._id === user?._id;
+                    })?.totalPaid || 0)
+                  : 0;
+                const lastPaid = data?.payoutData
+                  ?.find((p: any) => {
+                    return p?.user?._id === user?._id;
+                  })
+                  ?.payouts.at(-1)?.created.slice(0, 10);
 
-              {data?.affiliateData?.map((affiliate: any) => (
-                <tbody key={affiliate._id}>
-                  <tr className="bg-white border-b">
-                    <td className="px-3 py-2 font-medium">
-                      {affiliate?.user?.screenname}
-                    </td>
-                    <td className="px-3 py-2">{affiliate?.user?.email}</td>
-                    <td className="px-3 py-2 text-right">
-                      €{affiliate?.totalRevenue.toLocaleString()}
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      €
-                      {(
-                        affiliate?.totalRevenue -
-                        data?.payoutData?.find((user: any) => {
-                          return user?.user?._id === affiliate?.user?._id;
-                        })?.totalPaid
-                      ).toLocaleString() || 0}
-                    </td>
-                    <td className="px-3 py-2">
-                      {data?.payoutData
-                        ?.find((user: any) => {
-                          return user?.user?._id === affiliate?.user?._id;
-                        })
-                        ?.payouts.at(-1)
-                        ?.created.slice(0, 10)}
-                    </td>
-                    <td className="px-3 py-2 flex justify-end gap-2">
-                      <Button
-                        size="small"
-                        className="flex gap-2 h-[24px] w-fit"
-                        isEnabled={!isLoading}
-                        onClick={() => {
-                          setSelectedAffiliate(affiliate);
-                          setIsInfoModalOpened(true);
-                        }}
-                      >
-                        {t('affiliate_dashboard_record_payout')}
-                      </Button>
-                      <Button
-                        size="small"
-                        className="flex gap-2 h-[24px] w-fit"
-                        isEnabled={!isLoading}
-                        onClick={() => {
-                          setSelectedAffiliate(affiliate);
-                          setIsExpanded(true);
-                        }}
-                      >
-                        expand
-                      </Button>
-                      {isInfoModalOpened && selectedAffiliate && (
-                        <Modal closeModal={closeModal}>
-                          <div className="flex flex-col gap-6 py-4 text-left">
-                            <div>
-                              <Heading level={3}>
-                                {selectedAffiliate?.user?.screenname}
-                              </Heading>
-                              <p>{selectedAffiliate?.user?.email}</p>
+                return (
+                  <tbody key={user._id}>
+                    <tr className="bg-white border-b">
+                      <td className="px-3 py-2 font-medium">
+                        {user?.screenname}
+                      </td>
+                      <td className="px-3 py-2">{user?.email}</td>
+                      <td className="px-3 py-2 text-right">
+                        €{totalRevenue.toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        €{unpaidBalance.toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2">{lastPaid || '—'}</td>
+                      <td className="px-3 py-2 flex justify-end gap-2">
+                        <Button
+                          size="small"
+                          className="flex gap-2 h-[24px] w-fit"
+                          isEnabled={!isLoading}
+                          onClick={() => {
+                            setSelectedAffiliate({ user, affiliateData: affiliate });
+                            setIsInfoModalOpened(true);
+                          }}
+                        >
+                          {t('affiliate_dashboard_record_payout')}
+                        </Button>
+                        {affiliate && (
+                          <Button
+                            size="small"
+                            className="flex gap-2 h-[24px] w-fit"
+                            isEnabled={!isLoading}
+                            onClick={() => {
+                              setSelectedAffiliate({ user, affiliateData: affiliate });
+                              setIsExpanded(true);
+                            }}
+                          >
+                            expand
+                          </Button>
+                        )}
+                        {isInfoModalOpened && selectedAffiliate && selectedAffiliate.user?._id === user._id && (
+                          <Modal closeModal={closeModal}>
+                            <div className="flex flex-col gap-6 py-4 text-left">
+                              <div>
+                                <Heading level={3}>
+                                  {selectedAffiliate?.user?.screenname}
+                                </Heading>
+                                <p>{selectedAffiliate?.user?.email}</p>
+                              </div>
+                              <Input
+                                type="number"
+                                label={t('affiliate_dashboard_payout_amount')}
+                                value={payoutAmount.toString()}
+                                onChange={(e) =>
+                                  setPayoutAmount(Number(e.target.value))
+                                }
+                              />
+                              <Button
+                                size="small"
+                                className="flex gap-2"
+                                isEnabled={!isLoading}
+                                onClick={() =>
+                                  recordPayout(selectedAffiliate?.user?._id)
+                                }
+                              >
+                                {isLoading && <Spinner />}{' '}
+                                {t('affiliate_dashboard_record_payout')}
+                              </Button>
+                              {isSuccess && (
+                                <Information>
+                                  {t('affiliate_dashboard_payout_success')}
+                                </Information>
+                              )}
                             </div>
-                            <Input
-                              type="number"
-                              label={t('affiliate_dashboard_payout_amount')}
-                              value={payoutAmount.toString()}
-                              onChange={(e) =>
-                                setPayoutAmount(Number(e.target.value))
-                              }
-                            />
-                            <Button
-                              size="small"
-                              className="flex gap-2"
-                              isEnabled={!isLoading}
-                              onClick={() =>
-                                recordPayout(selectedAffiliate?.user?._id)
-                              }
-                            >
-                              {isLoading && <Spinner />}{' '}
-                              {t('affiliate_dashboard_record_payout')}
-                            </Button>
-                            {isSuccess && (
-                              <Information>
-                                {t('affiliate_dashboard_payout_success')}
-                              </Information>
-                            )}
-                          </div>
-                        </Modal>
+                          </Modal>
+                        )}
+                      </td>
+                    </tr>
+                    {isExpanded &&
+                      selectedAffiliate?.user?._id === user._id &&
+                      affiliate && (
+                        <tr>
+                          <td colSpan={6} className="bg-white border p-3 py-5">
+                            <div className="flex gap-10">
+                              <div className="flex flex-col gap-2 w-1/2">
+                                <Heading level={3} className="text-md uppercase">
+                                  {t('affiliate_dashboard_transactions')}
+                                </Heading>
+                                <div>
+                                  <div className="grid grid-cols-4 gap-2 border-b py-1">
+                                    <p>{t('affiliate_dashboard_type')}</p>
+                                    <p className="text-right">
+                                      {t('affiliate_dashboard_amount')}
+                                    </p>
+                                    <p className="text-right">
+                                      {t('affiliate_dashboard_affiliate_revenue')}
+                                    </p>
+                                    <p className="text-right">
+                                      {t('affiliate_dashboard_date')}
+                                    </p>
+                                  </div>
+                                  {affiliate.data
+                                    .slice()
+                                    .reverse()
+                                    .map((charge: any) => (
+                                      <div
+                                        key={charge._id}
+                                        className="grid grid-cols-4 gap-2 pt-1"
+                                      >
+                                        <p>
+                                          {charge.type === 'booking' ? (
+                                            <Link
+                                              href={`/bookings/${charge?.bookingId}`}
+                                            >
+                                              {charge.type}
+                                            </Link>
+                                          ) : (
+                                            charge.type
+                                          )}
+                                        </p>
+                                        <p className="text-right">
+                                          €
+                                          {charge?.amount?.total?.val?.toLocaleString()}
+                                        </p>
+                                        <p className="text-right">
+                                          €
+                                          {charge?.affiliateRevenue?.val?.toLocaleString()}
+                                        </p>
+                                        <p className="text-right">
+                                          {charge?.created?.slice(0, 10)}
+                                        </p>
+                                      </div>
+                                    ))}
+                                </div>
+                              </div>
+                              <div className="flex flex-col gap-2 w-1/2">
+                                <Heading level={3} className="text-md uppercase">
+                                  {t('affiliate_dashboard_payouts')}
+                                </Heading>
+                                <div>
+                                  <div className="grid grid-cols-2 gap-2 border-b py-1">
+                                    <p className="text-right">
+                                      {t('affiliate_dashboard_amount')}
+                                    </p>
+                                    <p className="text-right">
+                                      {t('affiliate_dashboard_date')}
+                                    </p>
+                                  </div>
+                                  {data?.payoutData
+                                    ?.find((p: any) => {
+                                      return p?.user?._id === user?._id;
+                                    })
+                                    ?.payouts.slice()
+                                    .reverse()
+                                    .map((payout: any) => (
+                                      <div
+                                        key={payout._id}
+                                        className="grid grid-cols-2 gap-2 pt-1"
+                                      >
+                                        <p className="text-right">
+                                          €
+                                          {payout.amount.total.val.toLocaleString()}
+                                        </p>
+                                        <p className="text-right">
+                                          {payout.created.slice(0, 10)}
+                                        </p>
+                                      </div>
+                                    ))}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
                       )}
-                    </td>
-                  </tr>
-                  {isExpanded &&
-                    selectedAffiliate?._id === affiliate?.user?._id && (
-                      <tr>
-                        <td colSpan={6} className="bg-white border p-3 py-5">
-                          <div className="flex gap-10">
-                            <div className="flex flex-col gap-2 w-1/2">
-                              <Heading level={3} className="text-md uppercase">
-                                {t('affiliate_dashboard_transactions')}
-                              </Heading>
-                              <div>
-                                <div className="grid grid-cols-4 gap-2 border-b py-1">
-                                  <p>{t('affiliate_dashboard_type')}</p>
-                                  <p className="text-right">
-                                    {t('affiliate_dashboard_amount')}
-                                  </p>
-                                  <p className="text-right">
-                                    {t('affiliate_dashboard_affiliate_revenue')}
-                                  </p>
-                                  <p className="text-right">
-                                    {t('affiliate_dashboard_date')}
-                                  </p>
-                                </div>
-                                {affiliate.data
-                                  .slice()
-                                  .reverse()
-                                  .map((charge: any) => (
-                                    <div
-                                      key={charge._id}
-                                      className="grid grid-cols-4 gap-2 pt-1"
-                                    >
-                                      <p>
-                                        {charge.type === 'booking' ? (
-                                          <Link
-                                            href={`/bookings/${charge?.bookingId}`}
-                                          >
-                                            {charge.type}
-                                          </Link>
-                                        ) : (
-                                          charge.type
-                                        )}
-                                      </p>
-                                      <p className="text-right">
-                                        €
-                                        {charge?.amount?.total?.val?.toLocaleString()}
-                                      </p>
-                                      <p className="text-right">
-                                        €
-                                        {charge?.affiliateRevenue?.val?.toLocaleString()}
-                                      </p>
-                                      <p className="text-right">
-                                        {charge?.created?.slice(0, 10)}
-                                      </p>
-                                    </div>
-                                  ))}
-                              </div>
-                            </div>
-                            <div className="flex flex-col gap-2 w-1/2">
-                              <Heading level={3} className="text-md uppercase">
-                                {t('affiliate_dashboard_payouts')}
-                              </Heading>
-                              <div>
-                                <div className="grid grid-cols-2 gap-2 border-b py-1">
-                                  <p className="text-right">
-                                    {t('affiliate_dashboard_amount')}
-                                  </p>
-                                  <p className="text-right">
-                                    {t('affiliate_dashboard_date')}
-                                  </p>
-                                </div>
-                                {data?.payoutData
-                                  ?.find((user: any) => {
-                                    return (
-                                      user?.user?._id === affiliate?.user?._id
-                                    );
-                                  })
-                                  ?.payouts.slice()
-                                  .reverse()
-                                  .map((payout: any) => (
-                                    <div
-                                      key={payout._id}
-                                      className="grid grid-cols-2 gap-2 pt-1"
-                                    >
-                                      <p className="text-right">
-                                        €
-                                        {payout.amount.total.val.toLocaleString()}
-                                      </p>
-                                      <p className="text-right">
-                                        {payout.created.slice(0, 10)}
-                                      </p>
-                                    </div>
-                                  ))}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                </tbody>
-              ))}
+                  </tbody>
+                );
+              })}
             </table>
           </section>
         </div>
