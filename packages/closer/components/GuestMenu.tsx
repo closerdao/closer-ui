@@ -4,10 +4,13 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
+import { ChevronDown } from 'lucide-react';
 
 import { useConfig } from '../hooks/useConfig';
 import useRBAC from '../hooks/useRBAC';
+import { useBuyTokens } from '../hooks/useBuyTokens';
 import api from '../utils/api';
+import { getCurrentUnitPrice } from '../utils/bondingCurve';
 import ReportABug from './ReportABug';
 import NavLink from './ui/NavLink';
 
@@ -25,11 +28,15 @@ interface MenuSection {
 
 const GuestMenu = () => {
   const t = useTranslations();
-  const { APP_NAME } = useConfig();
+  const { APP_NAME, SOURCE_TOKEN } = useConfig() || {};
   const { hasAccess } = useRBAC();
   const router = useRouter();
+  const { getCurrentSupplyWithoutWallet } = useBuyTokens();
 
   const [menuSections, setMenuSections] = useState<MenuSection[]>([]);
+  const [currentSupply, setCurrentSupply] = useState<number | null>(null);
+  const [tokenPrice, setTokenPrice] = useState<number | null>(null);
+  const [isLoadingTokenData, setIsLoadingTokenData] = useState(false);
 
   // Toggle a section's open/closed state
   const toggleSection = (sectionIndex: number) => {
@@ -46,7 +53,122 @@ const GuestMenu = () => {
     isBookingEnabled: boolean,
     isVolunteeringEnabled: boolean,
   ): MenuSection[] => {
-    // Create all menu sections with their items
+    // TDF-specific navigation structure
+    if (APP_NAME?.toLowerCase() === 'tdf') {
+      return [
+        {
+          label: t('menu_about'),
+          isOpen: false,
+          items: [
+            {
+              label: t('menu_team'),
+              url: '/team',
+              enabled: true,
+            },
+            {
+              label: t('menu_oasa_network_vision'),
+              url: 'https://oasa.earth',
+              target: '_blank',
+              enabled: true,
+            },
+            {
+              label: t('menu_press'),
+              url: '/press',
+              enabled: true,
+            },
+          ],
+        },
+        {
+          label: t('menu_the_village'),
+          isOpen: false,
+          items: [
+            {
+              label: t('menu_cohousing'),
+              url: '/cohousing',
+              enabled: true,
+            },
+            {
+              label: t('menu_regenerative_agriculture'),
+              url: '/pages/regenerative-agriculture',
+              enabled: true,
+            },
+            {
+              label: t('menu_accommodations'),
+              url: '/stay',
+              enabled: isBookingEnabled,
+              rbacPage: 'Stay',
+            },
+            {
+              label: t('menu_restaurant'),
+              url: '/pages/restaurant',
+              enabled: APP_NAME?.toLowerCase() === 'tdf',
+            },
+            {
+              label: t('menu_events_programs'),
+              url: '/events',
+              enabled: true,
+              rbacPage: 'Events',
+            },
+          ],
+        },
+        {
+          label: t('menu_investors'),
+          isOpen: false,
+          items: [
+            {
+              label: t('menu_data_room'),
+              url: '/dataroom',
+              enabled: APP_NAME?.toLowerCase() === 'tdf',
+            },
+            {
+              label: t('menu_ecology'),
+              url: '/pages/ecology',
+              enabled: APP_NAME?.toLowerCase() === 'tdf',
+            },
+            {
+              label: t('menu_token_economics'),
+              url: '/token',
+              enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
+            },
+          ],
+        },
+        {
+          label: t('menu_community'),
+          isOpen: false,
+          items: [
+            {
+              label: t('menu_become_citizen'),
+              url: '/citizenship',
+              enabled: APP_NAME?.toLowerCase() === 'tdf',
+            },
+            {
+              label: t('menu_governance_dao'),
+              url: '/governance',
+              enabled: APP_NAME?.toLowerCase() === 'tdf',
+            },
+            {
+              label: t('navigation_volunteer'),
+              url: '/volunteer',
+              enabled: true,
+              rbacPage: 'Volunteer',
+            },
+            {
+              label: t('menu_member_stories'),
+              url: '/members',
+              enabled: true,
+            },
+            {
+              label: t('menu_faq'),
+              url: '/resources',
+              enabled: true,
+              rbacPage: 'Resources',
+            },
+          ],
+        },
+      ];
+    }
+
+    // Create all menu sections with their items for other apps
     const sections: MenuSection[] = [
       // Stay section (open by default)
       {
@@ -56,7 +178,7 @@ const GuestMenu = () => {
           {
             label: t('navigation_stay'),
             url: '/stay',
-            enabled: isBookingEnabled,
+            enabled: isBookingEnabled && APP_NAME?.toLowerCase() !== 'tdf',
             rbacPage: 'Stay',
           },
           {
@@ -94,7 +216,7 @@ const GuestMenu = () => {
         isOpen: false,
         items: [
           {
-            label: t('navigation_events'),
+            label: t('navigation_join_program'),
             url: '/events',
             enabled:
               APP_NAME?.toLowerCase() !== 'lios' &&
@@ -172,13 +294,7 @@ const GuestMenu = () => {
               ]
             : []),
           {
-            label: 'Invest',
-            url: '/dataroom',
-            enabled: true,
-            rbacPage: 'Dataroom',
-          },
-          {
-            label: 'Learn about the $TDF token',
+            label: t('navigation_buy_tokens'),
             url: '/token',
             enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
             rbacPage: 'Token',
@@ -273,6 +389,29 @@ const GuestMenu = () => {
     })();
   }, [router.locale]);
 
+  useEffect(() => {
+    if (
+      APP_NAME?.toLowerCase() === 'tdf' &&
+      process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true'
+    ) {
+      setIsLoadingTokenData(true);
+      (async () => {
+        try {
+          const supply = await getCurrentSupplyWithoutWallet();
+          if (supply && supply > 0) {
+            setCurrentSupply(supply);
+            const price = getCurrentUnitPrice(supply);
+            setTokenPrice(price);
+          }
+        } catch (error) {
+          console.error('Error fetching token data:', error);
+        } finally {
+          setIsLoadingTokenData(false);
+        }
+      })();
+    }
+  }, [APP_NAME, getCurrentSupplyWithoutWallet]);
+
   return (
     <nav>
       {/* Login/Signup buttons - keep as pink buttons */}
@@ -305,16 +444,20 @@ const GuestMenu = () => {
               <>
                 {/* Section header (clickable to toggle) */}
                 <div
-                  className="flex items-center justify-between py-1 px-2 cursor-pointer font-medium"
+                  className="flex items-center justify-between py-1 px-2 cursor-pointer font-medium select-none"
                   onClick={() => toggleSection(index)}
                 >
                   <span>{section.label}</span>
-                  <span>{section.isOpen ? '▼' : '►'}</span>
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform duration-200 ${
+                      section.isOpen ? 'rotate-180' : ''
+                    }`}
+                  />
                 </div>
 
                 {/* Section items (only shown if section is open) */}
                 {section.isOpen && (
-                  <div className="pl-2 border-l border-gray-200 ml-2">
+                  <div className="pl-2 border-l border-gray-200 ml-2 overflow-hidden transition-all duration-200 ease-out animate-in slide-in-from-top-2">
                     {section.items.map((item) => (
                       <Link
                         key={item.url}
@@ -331,6 +474,46 @@ const GuestMenu = () => {
             )}
           </div>
         ))}
+
+        {/* TDF Token Sale Widget */}
+        {APP_NAME?.toLowerCase() === 'tdf' &&
+          process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && (
+            <div className="mt-3 mb-2 rounded-lg border border-gray-200 bg-white overflow-hidden">
+              <div className="p-3 bg-gradient-to-br from-accent/5 to-accent-light/5">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center text-xs font-bold text-accent">
+                      TDF
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900">
+                      $TDF
+                    </span>
+                  </div>
+                  {isLoadingTokenData ? (
+                    <div className="text-xs text-gray-400">...</div>
+                  ) : tokenPrice ? (
+                    <div className="text-right">
+                      <div className="text-sm font-semibold text-gray-900">
+                        {tokenPrice.toFixed(2)} {SOURCE_TOKEN || 'cEUR'}
+                      </div>
+                      <div className="text-xs text-gray-500">per token</div>
+                    </div>
+                  ) : null}
+                </div>
+                {currentSupply && (
+                  <div className="text-xs text-gray-500 mb-2">
+                    Supply: {currentSupply.toLocaleString()} $TDF
+                  </div>
+                )}
+                <Link
+                  href="/token"
+                  className="block w-full py-2 px-3 bg-accent hover:bg-accent-dark text-white text-center text-sm font-medium rounded-md transition-colors"
+                >
+                  {t('navigation_buy_tokens')}
+                </Link>
+              </div>
+            </div>
+          )}
 
         <ReportABug />
       </div>

@@ -146,6 +146,103 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
     return `${hours}h`;
   };
 
+  // Get effective status for display (draft > active > passed/failed)
+  const getEffectiveStatus = (proposal: any): {
+    status: 'draft' | 'active' | 'passed' | 'failed';
+    displayText: string;
+  } => {
+    const currentStatus = proposal.get('status');
+    const endDate = proposal.get('endDate');
+
+    // If draft, always show draft
+    if (currentStatus === 'draft') {
+      return { status: 'draft', displayText: t('governance_status_draft') };
+    }
+
+    // If already passed or rejected, show that
+    if (currentStatus === 'passed') {
+      return { status: 'passed', displayText: t('governance_status_passed') };
+    }
+    if (currentStatus === 'rejected') {
+      return { status: 'failed', displayText: t('governance_status_failed') };
+    }
+
+    // If active, check if voting has ended
+    if (currentStatus === 'active') {
+      const now = new Date();
+      const end = endDate ? new Date(endDate) : null;
+
+      // If no end date or voting hasn't ended, show active
+      if (!end || end.getTime() > now.getTime()) {
+        return { status: 'active', displayText: t('governance_status_active') };
+      }
+
+      // Voting has ended, determine if passed or failed
+      const results = proposal.get('results');
+      const votes = proposal.get('votes');
+
+      let voteCounts = { yes: 0, no: 0, abstain: 0 };
+
+      if (results !== undefined && results !== null) {
+        const resultsObj = results.toJS ? results.toJS() : results;
+        voteCounts = Object.assign(
+          { yes: 0, no: 0, abstain: 0 },
+          resultsObj,
+        );
+      } else if (votes) {
+        const votesObj = votes.toJS ? votes.toJS() : votes;
+        if (Array.isArray(votesObj.yes)) {
+          voteCounts.yes = votesObj.yes.reduce(
+            (sum: number, vote: any) => sum + (vote.weight || 0),
+            0,
+          );
+        } else {
+          voteCounts.yes = votesObj.yes || 0;
+        }
+
+        if (Array.isArray(votesObj.no)) {
+          voteCounts.no = votesObj.no.reduce(
+            (sum: number, vote: any) => sum + (vote.weight || 0),
+            0,
+          );
+        } else {
+          voteCounts.no = votesObj.no || 0;
+        }
+      }
+
+      // Passed if yes > no, failed otherwise
+      if (voteCounts.yes > voteCounts.no) {
+        return { status: 'passed', displayText: t('governance_status_passed') };
+      } else {
+        return { status: 'failed', displayText: t('governance_status_failed') };
+      }
+    }
+
+    // Default fallback
+    return { status: 'draft', displayText: currentStatus?.toUpperCase() || t('governance_status_unknown') };
+  };
+
+  // Get status color classes
+  const getStatusColor = (status: 'draft' | 'active' | 'passed' | 'failed'): string => {
+    switch (status) {
+      case 'draft':
+        return 'bg-blue-100 text-blue-800';
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'passed':
+        return 'bg-emerald-100 text-emerald-800';
+      case 'failed':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Round to 2 decimal places
+  const roundToTwoDecimals = (value: number): number => {
+    return parseFloat(value.toFixed(2));
+  };
+
   // Check if platform context is available
   if (!platform?.proposal || !platform?.user) {
     return (
@@ -217,6 +314,10 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
               return null;
             }
 
+            const effectiveStatus = getEffectiveStatus(proposal);
+            const endDate = proposal.get('endDate');
+            const isVotingEnded = endDate && new Date(endDate).getTime() <= new Date().getTime();
+
             return (
               <Link
                 key={proposal.get('_id')}
@@ -232,67 +333,113 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
                     {proposal.get('title') || t('governance_untitled_proposal')}
                   </h3>
                   <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      proposal.get('status') === 'active'
-                        ? 'bg-green-100 text-green-800'
-                        : proposal.get('status') === 'closed'
-                        ? 'bg-gray-100 text-gray-800'
-                        : proposal.get('status') === 'draft'
-                        ? 'bg-blue-100 text-blue-800'
-                        : proposal.get('status') === 'ready'
-                        ? 'bg-purple-100 text-purple-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                      effectiveStatus.status,
+                    )}`}
                   >
-                    {proposal.get('status')?.toUpperCase() ||
-                      t('governance_unknown_status')}
+                    {effectiveStatus.displayText}
                   </span>
                 </div>
                 <p className="text-sm text-gray-500 mb-3">
                   {t('governance_submitted_by')} @
                   {getUserScreenname(proposal.get('createdBy'))} •
-                  {proposal.get('status') === 'active' &&
-                  proposal.get('endDate')
-                    ? ` ${t('governance_closes_in')} ${getTimeLeft(
-                        proposal.get('endDate'),
-                      )}`
-                    : proposal.get('status') === 'closed'
-                    ? ` ${t('governance_closed_status')}`
+                  {effectiveStatus.status === 'active' && endDate && !isVotingEnded
+                    ? ` ${t('governance_closes_in')} ${getTimeLeft(endDate)}`
+                    : effectiveStatus.status === 'passed'
+                    ? ` ${t('governance_passed_status')}`
+                    : effectiveStatus.status === 'failed'
+                    ? ` ${t('governance_failed_status')}`
                     : ''}
                 </p>
 
                 <div className="flex justify-between items-center">
-                  {proposal.get('status') !== 'draft' &&
-                  proposal.get('votes') ? (
-                    <div className="flex space-x-4">
-                      <div className="text-sm">
-                        <span className="text-green-600 font-medium">
-                          {t('governance_yes')}: {proposal.get('votes').yes}
-                        </span>
-                      </div>
-                      <div className="text-sm">
-                        <span className="text-red-600 font-medium">
-                          {t('governance_no')}: {proposal.get('votes').no}
-                        </span>
-                      </div>
-                      <div className="text-sm">
-                        <span className="text-gray-600 font-medium">
-                          {t('governance_abstain')}:{' '}
-                          {proposal.get('votes').abstain}
-                        </span>
-                      </div>
-                    </div>
-                  ) : proposal.get('status') !== 'draft' ? (
-                    <div className="text-sm text-gray-500">
-                      {t('governance_no_votes_yet')}
-                    </div>
-                  ) : (
-                    <div className="text-sm text-blue-600 font-medium">
-                      {t('governance_draft_proposal')}
-                    </div>
-                  )}
+                  {(() => {
+                    const proposalStatus = proposal.get('status');
+                    if (proposalStatus === 'draft') {
+                      return (
+                        <div className="text-sm text-blue-600 font-medium">
+                          {t('governance_draft_proposal')}
+                        </div>
+                      );
+                    }
 
-                  {proposal.get('status') === 'active' && (
+                    const results = proposal.get('results');
+                    const votes = proposal.get('votes');
+
+                    let voteCounts = { yes: 0, no: 0, abstain: 0 };
+
+                    if (results !== undefined && results !== null) {
+                      const resultsObj = results.toJS ? results.toJS() : results;
+                      voteCounts = Object.assign(
+                        { yes: 0, no: 0, abstain: 0 },
+                        resultsObj,
+                      );
+                    } else if (votes) {
+                      const votesObj = votes.toJS ? votes.toJS() : votes;
+                      if (Array.isArray(votesObj.yes)) {
+                        voteCounts.yes = votesObj.yes.reduce(
+                          (sum: number, vote: any) => sum + (vote.weight || 0),
+                          0,
+                        );
+                      } else {
+                        voteCounts.yes = votesObj.yes || 0;
+                      }
+
+                      if (Array.isArray(votesObj.no)) {
+                        voteCounts.no = votesObj.no.reduce(
+                          (sum: number, vote: any) => sum + (vote.weight || 0),
+                          0,
+                        );
+                      } else {
+                        voteCounts.no = votesObj.no || 0;
+                      }
+
+                      if (Array.isArray(votesObj.abstain)) {
+                        voteCounts.abstain = votesObj.abstain.reduce(
+                          (sum: number, vote: any) => sum + (vote.weight || 0),
+                          0,
+                        );
+                      } else {
+                        voteCounts.abstain = votesObj.abstain || 0;
+                      }
+                    }
+
+                    const totalVotes =
+                      voteCounts.yes + voteCounts.no + voteCounts.abstain;
+
+                    if (totalVotes > 0) {
+                      return (
+                        <div className="flex space-x-4">
+                          <div className="text-sm">
+                            <span className="text-green-600 font-medium">
+                              {t('governance_yes')}:{' '}
+                              {roundToTwoDecimals(voteCounts.yes)}
+                            </span>
+                          </div>
+                          <div className="text-sm">
+                            <span className="text-red-600 font-medium">
+                              {t('governance_no')}:{' '}
+                              {roundToTwoDecimals(voteCounts.no)}
+                            </span>
+                          </div>
+                          <div className="text-sm">
+                            <span className="text-gray-600 font-medium">
+                              {t('governance_abstain')}:{' '}
+                              {roundToTwoDecimals(voteCounts.abstain)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="text-sm text-gray-500">
+                        {t('governance_no_votes_yet')}
+                      </div>
+                    );
+                  })()}
+
+                  {effectiveStatus.status === 'active' && (
                     <span className="bg-blue-600 text-white text-sm py-1 px-3 rounded">
                       {t('governance_vote')}
                     </span>

@@ -95,6 +95,8 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
         />
+        <link rel="icon" type="image/png" href="/images/closer-logo-icon.png" />
+        <link rel="apple-touch-icon" href="/images/closer-logo-icon.png" />
       </Head>
 
       {FACEBOOK_PIXEL_ID && (

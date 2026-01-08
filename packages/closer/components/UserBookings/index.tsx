@@ -82,7 +82,7 @@ const UserBookingsComponent = ({
                 setPage={setPage}
                 filter={filters.myBookings}
                 bookingConfig={bookingConfig}
-                hideExportCsv={hideExportCsv}
+                hideExportCsv={true}
               />
             ),
           },
@@ -94,7 +94,7 @@ const UserBookingsComponent = ({
                 page={page}
                 setPage={setPage}
                 filter={filters.pastBookings}
-                hideExportCsv={hideExportCsv}
+                hideExportCsv={true}
               />
             ),
           },

@@ -122,88 +122,167 @@ const StayPage = ({
     <>
       <Head>
         <title>{`${t('stay_title')} ${PLATFORM_NAME}`}</title>
-        <meta name="description" content={t('stay_meta_description')} />
+        <meta name="description" content={t('stay_meta_description') || `Book your stay at ${PLATFORM_NAME}. Discover unique accommodations in regenerative communities.`} />
+        <meta name="keywords" content={`${PLATFORM_NAME}, accommodations, booking, stay, regenerative communities, ecovillage, intentional community, sustainable travel`} />
+        <meta property="og:title" content={`${t('stay_title')} ${PLATFORM_NAME}`} />
+        <meta property="og:description" content={t('stay_meta_description') || `Book your stay at ${PLATFORM_NAME}. Discover unique accommodations in regenerative communities.`} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/stay`} />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={`${t('stay_title')} ${PLATFORM_NAME}`} />
+        <meta name="twitter:description" content={t('stay_meta_description') || `Book your stay at ${PLATFORM_NAME}.`} />
+        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/stay`} />
       </Head>
       {listings && listings.get('error') && (
         <div className="validation-error">{listings.get('error')}</div>
       )}
 
-      <section
-        className={`max-w-6xl mx-auto mb-16  ${
-          PLATFORM_NAME.toLowerCase().includes('earthbound')
-            ? 'flex justify-center'
-            : ''
-        }`}
-      >
-        <div className="mb-6 max-w-prose ">
-          <Heading
-            level={1}
-            className={`${
-              APP_NAME === 'lios' ? 'text-xl sm:text-2xl' : 'text-4xl'
-            }  pb-2 mt-8`}
-          >
-            <p
-              className="font-accent"
-              dangerouslySetInnerHTML={{ __html: t.raw('stay_title') }}
-            />
-          </Heading>
-
-          {PLATFORM_NAME.toLowerCase().includes('earthbound') && (
-            <LinkButton
-              href="https://us2.cloudbeds.com/en/reservation/C3o5ZJ?currency=sek"
-              target="_blank"
-              size="small"
-              variant="primary"
-              className={' bg-accent-alt border-accent-alt w-fit my-4'}
-            >
-              BOOK A STAY
-            </LinkButton>
-          )}
-
-          <div className="rich-text font-accent">
-            {t.rich('stay_description', {
-              p: (chunks) => (
-                <p className="mb-4 text-base leading-relaxed">{chunks}</p>
-              ),
-              link: (chunks) => (
-                <a
-                  href="https://grimsnas.se/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-accent underline"
+      {APP_NAME?.toLowerCase() === 'tdf' ? (
+        <>
+          <section className="bg-gradient-to-br from-accent-light to-accent-alt-light min-h-[50vh] flex items-center">
+            <div className="max-w-6xl mx-auto px-6 py-16">
+              <div className="text-center">
+                <Heading
+                  className="text-4xl md:text-6xl mb-6"
+                  display
+                  level={1}
                 >
-                  {chunks}
-                </a>
-              ),
-              strong: (chunks) => <strong>{chunks}</strong>, // <-- Add this line
-            })}
-          </div>
-        </div>
-      </section>
+                  {t('stay_hero_title')}
+                </Heading>
+                <p className="text-xl text-gray-800 max-w-3xl mx-auto leading-relaxed mb-12">
+                  {t('stay_hero_subtitle')}
+                </p>
+                {isBookingEnabled && (
+                  <Link
+                    href="/bookings/create/dates"
+                    className="btn btn-primary text-xl px-8 py-3 inline-block"
+                  >
+                    {user?.roles.includes('member')
+                      ? t('buttons_book_now')
+                      : t('buttons_apply_to_stay')}
+                  </Link>
+                )}
+              </div>
+            </div>
+          </section>
 
-      <section className="max-w-6xl mx-auto mb-16 flex align-center">
-        {isBookingEnabled && (
-          <Link
-            href="/bookings/create/dates"
-            className="btn btn-primary text-xl px-8 py-3"
-          >
-            {user?.roles.includes('member')
-              ? t('buttons_book_now')
-              : t('buttons_apply_to_stay')}
-          </Link>
-        )}
-        {process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING &&
-          opportunities &&
-          opportunities?.length > 0 &&
-          volunteerConfig.enabled === true && (
-            <Link
-              href="/volunteer"
-              className="text-xl px-8 py-3 text-accent italic underline"
+          <section className="py-16 bg-white">
+            <div className="max-w-6xl mx-auto px-6">
+              <div className="max-w-3xl mx-auto text-center mb-12">
+                <Heading level={2} className="mb-6 text-3xl">
+                  {t('stay_story_title')}
+                </Heading>
+                <p className="text-lg text-gray-700 leading-relaxed mb-8">
+                  {t('stay_story_desc')}
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-6 mb-12">
+                <div className="p-6 border border-gray-200 rounded-xl">
+                  <div className="text-4xl font-semibold text-gray-900 mb-2">14</div>
+                  <div className="text-sm text-gray-600 mb-4">{t('stay_feature_suites_label')}</div>
+                  <p className="text-gray-700 text-sm">
+                    {t('stay_feature_suites_desc')}
+                  </p>
+                </div>
+                <div className="p-6 border border-gray-200 rounded-xl">
+                  <div className="text-4xl font-semibold text-gray-900 mb-2">{t('stay_feature_building_status')}</div>
+                  <div className="text-sm text-gray-600 mb-4">{t('stay_feature_building_label')}</div>
+                  <p className="text-gray-700 text-sm">
+                    {t('stay_feature_building_desc')}
+                  </p>
+                </div>
+                <div className="p-6 border border-gray-200 rounded-xl">
+                  <div className="text-4xl font-semibold text-gray-900 mb-2">{t('stay_feature_community_status')}</div>
+                  <div className="text-sm text-gray-600 mb-4">{t('stay_feature_community_label')}</div>
+                  <p className="text-gray-700 text-sm">
+                    {t('stay_feature_community_desc')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </>
+      ) : (
+        <section
+          className={`max-w-6xl mx-auto mb-16  ${
+            PLATFORM_NAME.toLowerCase().includes('earthbound')
+              ? 'flex justify-center'
+              : ''
+          }`}
+        >
+          <div className="mb-6 max-w-prose ">
+            <Heading
+              level={1}
+              className={`${
+                APP_NAME === 'lios' ? 'text-xl sm:text-2xl' : 'text-4xl'
+              }  pb-2 mt-8`}
             >
-              {t('buttons_volunteer')}
+              <p
+                className="font-accent"
+                dangerouslySetInnerHTML={{ __html: t.raw('stay_title') }}
+              />
+            </Heading>
+
+            {PLATFORM_NAME.toLowerCase().includes('earthbound') && (
+              <LinkButton
+                href="https://us2.cloudbeds.com/en/reservation/C3o5ZJ?currency=sek"
+                target="_blank"
+                size="small"
+                variant="primary"
+                className={' bg-accent-alt border-accent-alt w-fit my-4'}
+              >
+                BOOK A STAY
+              </LinkButton>
+            )}
+
+            <div className="rich-text font-accent">
+              {t.rich('stay_description', {
+                p: (chunks) => (
+                  <p className="mb-4 text-base leading-relaxed">{chunks}</p>
+                ),
+                link: (chunks) => (
+                  <a
+                    href="https://grimsnas.se/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-accent underline"
+                  >
+                    {chunks}
+                  </a>
+                ),
+                strong: (chunks) => <strong>{chunks}</strong>,
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {APP_NAME?.toLowerCase() !== 'tdf' && (
+        <section className="max-w-6xl mx-auto mb-16 flex align-center">
+          {isBookingEnabled && (
+            <Link
+              href="/bookings/create/dates"
+              className="btn btn-primary text-xl px-8 py-3"
+            >
+              {user?.roles.includes('member')
+                ? t('buttons_book_now')
+                : t('buttons_apply_to_stay')}
             </Link>
           )}
-      </section>
+          {process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING &&
+            opportunities &&
+            opportunities?.length > 0 &&
+            volunteerConfig.enabled === true && (
+              <Link
+                href="/volunteer"
+                className="text-xl px-8 py-3 text-accent italic underline"
+              >
+                {t('buttons_volunteer')}
+              </Link>
+            )}
+        </section>
+      )}
 
       <section className="max-w-6xl mx-auto mb-16">
         <div className={` w-full ${PLATFORM_NAME.toLowerCase().includes('earthbound') ? 'flex justify-center' : ''}`}>

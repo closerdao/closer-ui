@@ -928,6 +928,7 @@
   "wallet_booking_available_balance": "Available Balance",
   "wallet_booking_after_payment": "After Payment",
   "wallet_incorrect_network": "Wrong Network",
+  "wallet_connection_failed_no_account": "Failed to connect wallet. Please make sure MetaMask is unlocked and try again.",
   "wallet_switch_network": "Switch Network",
   "countdown_days": "days",
   "countdown_hours": "hours",
@@ -1166,6 +1167,7 @@
   "manage_users_role_steward": "Steward",
   "manage_users_role_event_creator": "Event creator",
   "manage_users_role_affiliate_manager": "Affiliate manager",
+  "manage_users_role_team": "Team",
   "manage_users_subscription_explorer": "Explorer",
   "manage_users_subscription_wanderer": "Wanderer",
   "manage_users_subscription_pioneer": "Pioneer",
@@ -1384,6 +1386,7 @@
   "config_label_entityName": "Entity name",
   "config_label_transactionType": "Transaction type",
   "config_label_accountingDescription": "Product/service description for accounting",
+  "config_label_quorumPercent": "Quorum percent",
 
   "config_features_heading": "Platform features",
   "generic_delete_button": "Delete",
@@ -1505,6 +1508,8 @@
   "token_sale_public_sale_button_book": "Book now",
   "token_sale_public_sale_heading_utility": "$TDF Provides IRL utility",
   "token_sale_public_sale_subheading_utility": "To raise the €3.5m+ needed to finish building our regenerative village, we are selling 18600 tokens that will give the owners of those tokens a lifetime's access to TDF.",
+  "token_sale_renders_title": "Architectural Renders",
+  "token_sale_renders_desc": "Explore our architectural renders showcasing the planned co-living spaces, coworking areas, and village infrastructure.",
   "token_sale_public_sale_heading_accommodation_cost": "Accommodation Fees In $TDF",
   "token_sale_public_sale_van_parking": "Van Parking",
   "token_sale_public_sale_outdoor_camping": "Outdoor Camping",
@@ -1973,6 +1978,8 @@
   "volunteers_skill_kitchen_value": "Help prepare delicious and nutritious meals using fresh produce from our garden.",
   "volunteers_skill_building_label": "Building Projects:",
   "volunteers_skill_building_value": "Use and develop your skills to contribute to various building projects around the property, from furniture to social areas, outdoor showers, or building smart systems like helophyte filters or biopools.",
+  "volunteers_skill_mushroom_farm_label": "Mushroom Farm:",
+  "volunteers_skill_mushroom_farm_value": "Support our mycology operations by helping with mushroom cultivation, harvesting, processing, and learning about sustainable fungal production systems.",
   "volunteers_skill_others_label": "Others:",
   "volunteers_skill_others_value": "As part of a dynamic community, there will be many other opportunities to learn, contribute, and grow.",
   "volunteers_commitment": "We ask for a minimum commitment of two weeks and recommend you to come and stay for a month if possible. In return, you'll be immersed in our community, gaining invaluable experience and insights, and contributing to a meaningful project.",
@@ -2193,5 +2200,6 @@
   "home_reports_title": "Annual Reports",
   "home_reports_2021": "2021 Report",
   "home_reports_2022": "2022 Report",
-  "home_reports_2024": "2024 Report"
+  "home_reports_2024": "2024 Report",
+  "home_reports_2025": "2025 Report"
 }

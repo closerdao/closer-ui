@@ -41,21 +41,9 @@ const PeekIntoFuture = () => {
 
       <div className="w-full flex flex-col  gap-2">
         <div className="flex gap-2 justify-center items-center flex-col md:flex-row">
-          <div className="flex flex-col justify-center items-center w-full md:w-1/3 min-h-[240px]">
-            <Image
-              className="w-full md:w-1/3 max-w-[127px]"
-              src="/images/token-sale/crystal-ball.png"
-              width={127}
-              height={127}
-              alt={t('token_sale_peek_into_future')}
-            />
-            <Heading level={2} className="">
-              {t('token_sale_peek_into_future')}
-            </Heading>
-          </div>
           <div
             onClick={() => handleShowPhoto(0)}
-            className=" cursor-pointer w-full md:w-2/3  min-h-[280px] overflow-hidden rounded-md "
+            className=" cursor-pointer w-full  min-h-[280px] overflow-hidden rounded-md "
           >
             <div className=" p-6 hover:scale-[103%]  duration-300 h-[280px]  bg-bottom bg-[url(/images/token-sale/co-living.jpg)] bg-cover">
               <Heading level={3} className="text-white text-2xl">
@@ -91,7 +79,7 @@ const PeekIntoFuture = () => {
         <div className="flex gap-2 justify-center items-center flex-col md:flex-row">
           <div
             onClick={() => handleShowPhoto(3)}
-            className="hover:bg-[length:103%] cursor-pointer w-full md:w-2/3 text-right  min-h-[280px] rounded-md overflow-hidden"
+            className="hover:bg-[length:103%] cursor-pointer w-full text-right  min-h-[280px] rounded-md overflow-hidden"
           >
             <div className=" p-6 hover:scale-[103%]  duration-300 h-[280px]  bg-bottom bg-[url(/images/token-sale/suites.jpg)] bg-cover">
               <Heading level={3} className="text-white text-2xl">
@@ -100,12 +88,6 @@ const PeekIntoFuture = () => {
                 {t('token_sale_peek_suites_3')}
               </Heading>
             </div>
-          </div>
-          <div className="w-full md:w-1/3 bg-bottom flex flex-col gap-4 justify-center items-center  min-h-[280px] rounded-md bg-cover p-6">
-            <p className="text-center">{t('token_sale_peek_design_1')}</p>
-            <p className="text-center text-sm">
-              {t('token_sale_peek_design_2')}
-            </p>
           </div>
         </div>
 

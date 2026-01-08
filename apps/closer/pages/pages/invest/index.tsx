@@ -180,8 +180,20 @@ const InvestPage = ({ generalConfig, listings, hosts }: Props) => {
   return (
     <div>
       <Head>
-        <title>{`Welcome to ${PLATFORM_NAME}!`}</title>
-        <meta name="description" content="School of Ecological Imagination" />
+        <title>{`Impact Investment - ${PLATFORM_NAME}`}</title>
+        <meta
+          name="description"
+          content={`Become an impact investor in ${PLATFORM_NAME}. Support regenerative community development and create lasting positive change.`}
+        />
+        <meta name="keywords" content={`${PLATFORM_NAME}, impact investment, regenerative investment, community investment, social impact, sustainable investment`} />
+        <meta property="og:title" content={`Impact Investment - ${PLATFORM_NAME}`} />
+        <meta property="og:description" content={`Become an impact investor in ${PLATFORM_NAME}. Support regenerative community development and create lasting positive change.`} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/pages/invest`} />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={`Impact Investment - ${PLATFORM_NAME}`} />
+        <meta name="twitter:description" content={`Become an impact investor in ${PLATFORM_NAME}. Support regenerative community development.`} />
+        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/pages/invest`} />
       </Head>
 
       <CustomSections page={page} />

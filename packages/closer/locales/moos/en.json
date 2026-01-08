@@ -87,5 +87,16 @@
 
   "learn_course_purchase_confirmation_message": "<p>Thank you for your purchase! 🌱</p><p>We will contact you soon with the course details.</p>",
 
-  "support_us_heading": "SUPPORT THE MOOS"
+  "support_us_heading": "SUPPORT THE MOOS",
+
+  "home_hero_heading": "On the border of Berlin's historic Treptower Park, something beautiful is growing...",
+  "home_join_dream_button": "JOIN THE DREAM",
+  "home_download_menu_button": "Download Our Menu",
+  "home_community_heading": "MOOS is a community of communities",
+  "home_community_intro_1": "Right across from Treptower Park, MOOS — 'Moss' in English—serves as a watering hole where the creativity and communal spirit of Berlin converge. It's a welcoming space for diverse paths to meet, encouraging an innovative, interdisciplinary and interconnected community right in the city's core.",
+  "home_community_intro_2": "The Y Berlin, a new community design lab embedded within MOOS, tends to the blend of technology and community, reflecting MOOS' aim to cultivate spaces that foster connections deeper than mere cohabitation.",
+  "home_community_intro_3": "Now, for the first time, we are opening the doors of our community playground for co-creation. We are offering limited <i>Vybe Vouchers</i> to individuals and organizations who are interested in partnering with us and benefiting from special early mover advantages. Become a <i>Vybe Creator</i> today and help mold the future of community tech in Berlin. With the introduction of <a href=\"/settings/credits\" class=\"text-accent font-bold\">Vybes</a>, seeded by the Y Berlin, we aim to fertilize community engagement with experiences and connections valued over transactions. Vybes encourages every member, new or old, to contribute their unique super power. Forget about normal transactions; at MOOS, it's all about what you feel called to bring to the table—ideas, workshops, you name it. Vybes let you dive into everything MOOS has to offer and really be an active part of a resilient and growing community space.",
+  "home_community_intro_4": "",
+  "home_community_join_vybes": "Join the Vybes",
+  "home_dao_announcement": "We are starting a MOOS DAO collective. You can purchase tokens (giving voting power) <a href='https://juicebox.money/v2/p/750?tablet=about' class='text-accent font-bold underline'>here</a> or contribute to the GoFundMe <a href='https://www.gofundme.com/f/save-moos' class='text-accent font-bold underline'>here</a>"
 }

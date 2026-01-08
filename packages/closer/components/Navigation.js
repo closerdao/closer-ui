@@ -144,12 +144,12 @@ const Navigation = () => {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/#journey" className="whitespace-nowrap">
-                      {t('header_nav_the_journey')}
+                    <Link href="/#governance" className="whitespace-nowrap">
+                      {t('header_nav_governance')}
                     </Link>
                   </li>
                   <li>
-                    <Link href="/#pricing">{t('header_nav_pricing')}</Link>
+                    <Link href="/pricing">{t('header_nav_pricing')}</Link>
                   </li>
                   {process.env.NEXT_PUBLIC_FEATURE_ROLES === 'true' && (
                     <li>
@@ -250,37 +250,19 @@ const Navigation = () => {
               </Button>
             )}
 
-          {isBookingEnabled &&
-            APP_NAME &&
-            APP_NAME?.toLowerCase() === 'tdf' && (
-              <>
-                {!isAuthenticated ? (
-                  <Button
-                    onClick={() => router.push('/signup')}
-                    size="small"
-                    variant="primary"
-                  >
-                    {t('navigation_join_now')}
-                  </Button>
-                ) : !isMember ? (
-                  <Button
-                    onClick={() => router.push('/events')}
-                    size="small"
-                    variant="primary"
-                  >
-                    {t('navigation_come_visit')}
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={() => router.push('/bookings/create/dates')}
-                    size="small"
-                    variant="primary"
-                  >
-                    {t('navigation_stay')}
-                  </Button>
-                )}
-              </>
-            )}
+          {APP_NAME && APP_NAME?.toLowerCase() === 'tdf' && (
+            <>
+              {isAuthenticated && isMember ? (
+                <Button
+                  onClick={() => router.push('/bookings/create/dates')}
+                  size="small"
+                  variant="primary"
+                >
+                  {t('navigation_stay')}
+                </Button>
+              ) : null}
+            </>
+          )}
 
           {isAuthenticated && (
             <Link

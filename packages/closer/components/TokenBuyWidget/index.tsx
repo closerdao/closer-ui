@@ -142,9 +142,11 @@ const TokenBuyWidget: FC<Props> = ({
         },
       );
 
-      const prices = res?.data?.results?.map((option: any) => {
-        return option.tokenPrice.val;
-      });
+      const prices = res?.data?.results
+        ?.filter((option: any) => option.tokenPrice?.val)
+        ?.map((option: any) => {
+          return option.tokenPrice?.val || 0;
+        }) || [];
 
       const pricesFuture = FUTURE_ACCOMMODATION_TYPES.map(
         (accommodatinType: any) => {
@@ -158,13 +160,14 @@ const TokenBuyWidget: FC<Props> = ({
       // const price = res?.data?.results[0].tokenPrice.val || 1;
       const price = await getTotalCostWithoutWallet('1');
 
-      const nightlyPrice = res?.data?.results[0].tokenPrice.val;
+      const firstListing = res?.data?.results?.find((option: any) => option.tokenPrice?.val) || res?.data?.results?.[0];
+      const nightlyPrice = firstListing?.tokenPrice?.val || 1;
 
       setNightsPerYear(tokensToBuy / nightlyPrice);
       setAccommodationOptions({ labels, prices });
       setSelectedAccommodation({
-        name: res?.data?.results[0].name,
-        price: res?.data?.results[0].tokenPrice.val,
+        name: firstListing?.name || '',
+        price: nightlyPrice,
       });
 
       // Calculate initial total cost

@@ -5,6 +5,13 @@ export type ProposalVote = {
   votedAt: Date | string;
 };
 
+export type ProposalReward = {
+  name: string;
+  amount: number;
+  contractAddress: string;
+  source: string;
+};
+
 export type Proposal = {
   _id: string;
   title: string;
@@ -20,6 +27,7 @@ export type Proposal = {
     no: ProposalVote[];
     abstain: ProposalVote[];
   };
+  rewards?: ProposalReward[];
   metadata: {
     budget?: number;
     category?: string;
@@ -30,6 +38,12 @@ export type Proposal = {
       type: string;
     }[];
   };
+  results?: {
+    yes: number;
+    no: number;
+    abstain: number;
+  };
+  quorum?: number;
   // Base fields from _model
   visibleBy: string[];
   createdBy: string;
