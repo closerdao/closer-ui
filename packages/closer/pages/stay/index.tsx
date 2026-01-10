@@ -367,7 +367,6 @@ StayPage.getInitialProps = async (context: NextPageContext) => {
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const generalConfig = generalRes?.data?.results?.value;
-
     const bookingSettings = bookingResponse?.data?.results?.value;
     const bookingRules = bookingRulesResponse?.data?.results?.value;
     const opportunities = volunteerRes?.data?.results;
