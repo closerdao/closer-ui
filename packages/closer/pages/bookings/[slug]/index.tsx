@@ -2,6 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 
 import React, { useEffect, useState } from 'react';
+import { FaPlus, FaTrash } from 'react-icons/fa';
 
 import BookingRequestButtons from '../../../components/BookingRequestButtons';
 import Charges from '../../../components/Charges';
@@ -9,7 +10,12 @@ import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
 import UserInfoButton from '../../../components/UserInfoButton';
-import { Button, Card, Information } from '../../../components/ui';
+import {
+  Button,
+  Card,
+  ErrorMessage,
+  Information,
+} from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select/Dropdown';
@@ -38,7 +44,7 @@ import {
   VolunteerOpportunity,
 } from '../../../types';
 import { FoodOption } from '../../../types/food';
-import api from '../../../utils/api';
+import api, { formatSearch } from '../../../utils/api';
 import {
   convertToDateString,
   dateToPropertyTimeZone,
@@ -76,6 +82,7 @@ interface Props {
   paymentConfig: PaymentConfig | null;
   foodOptions: FoodOption[];
   projects: Project[];
+  guests: User[];
 }
 
 const BookingPage = ({
@@ -90,6 +97,7 @@ const BookingPage = ({
   generalConfig,
   paymentConfig,
   projects,
+  guests,
 }: Props) => {
   const t = useTranslations();
 
@@ -131,8 +139,11 @@ const BookingPage = ({
     volunteerInfo,
   } = booking || {};
 
-  const isFriendBookingForCurrentUser = user?.email && booking?.friendEmails?.includes(user?.email);
+  const isBookingCreator = user?._id === createdBy;
+  const canEditGuests = isSpaceHost || isBookingCreator;
 
+  const isFriendBookingForCurrentUser =
+    user?.email && booking?.friendEmails?.includes(user?.email);
 
   const userInfo = bookingCreatedBy && {
     name: bookingCreatedBy.screenname,
@@ -143,6 +154,19 @@ const BookingPage = ({
     name: string;
     photo: string;
   } | null>(null);
+
+  const [isEditingGuests, setIsEditingGuests] = useState(false);
+  const [guestEmails, setGuestEmails] = useState<string[]>([]);
+  const [guestEditError, setGuestEditError] = useState<string | null>(null);
+  const [isLoadingGuests, setIsLoadingGuests] = useState(false);
+  const [localGuests, setLocalGuests] = useState<User[]>(
+    guests.filter((guest) => guest._id !== createdBy),
+  );
+
+  useEffect(() => {
+    const filteredGuests = guests.filter((guest) => guest._id !== createdBy);
+    setLocalGuests(filteredGuests);
+  }, [guests, createdBy]);
 
   const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
   const vatRateFromConfig = Number(paymentConfig?.vatRate);
@@ -294,6 +318,151 @@ const BookingPage = ({
     fetchPayerInfo();
   }, [booking?.paidBy]);
 
+  useEffect(() => {
+    if (isEditingGuests) {
+      setGuestEmails(['']);
+    }
+  }, [isEditingGuests]);
+
+  const addGuestEmail = () => {
+    const maxGuests = Math.max(0, adults - 1);
+    const remainingSlots = maxGuests - localGuests.length;
+    if (guestEmails.length < remainingSlots) {
+      setGuestEmails([...guestEmails, '']);
+    }
+  };
+
+  const removeGuestEmail = (index: number) => {
+    const newEmails = guestEmails.filter((_, i) => i !== index);
+    if (newEmails.length === 0) {
+      setGuestEmails(['']);
+    } else {
+      setGuestEmails(newEmails);
+    }
+  };
+
+  const updateGuestEmail = (index: number, value: string) => {
+    const newEmails = [...guestEmails];
+    newEmails[index] = value;
+    setGuestEmails(newEmails);
+  };
+
+  const validateGuestEmails = () => {
+    const validEmails = guestEmails.filter((email) => email.trim() !== '');
+    const maxGuests = Math.max(0, adults - 1);
+    const remainingSlots = maxGuests - localGuests.length;
+
+    if (validEmails.length > remainingSlots) {
+      setGuestEditError(
+        `Maximum ${maxGuests} additional guest${
+          maxGuests !== 1 ? 's' : ''
+        } allowed. You can add ${remainingSlots} more guest${
+          remainingSlots !== 1 ? 's' : ''
+        }.`,
+      );
+      return false;
+    }
+
+    if (validEmails.length === 0) {
+      setGuestEditError(null);
+      return true;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    for (const email of validEmails) {
+      if (!emailRegex.test(email)) {
+        setGuestEditError('Please enter valid email addresses');
+        return false;
+      }
+    }
+
+    setGuestEditError(null);
+    return true;
+  };
+
+  const handleSaveGuests = async () => {
+    if (!validateGuestEmails()) {
+      return;
+    }
+
+    try {
+      setIsLoadingGuests(true);
+      setGuestEditError(null);
+
+      const validEmails = guestEmails.filter((email) => email.trim() !== '');
+      let guestUserIds: string[] = [];
+
+      if (validEmails.length > 0) {
+        const usersResponse = await api.get(
+          `/user?where=${formatSearch({ email: { $in: validEmails } })}`,
+        );
+        guestUserIds =
+          usersResponse.data?.results?.map(
+            (user: { _id: string }) => user._id,
+          ) || [];
+      }
+
+      const currentManagedBy = booking?.managedBy || [];
+      const createdById = booking?.createdBy;
+      const managedByWithoutCreatedBy = currentManagedBy.filter(
+        (id) => id !== createdById,
+      );
+      const newManagedBy = createdById
+        ? [createdById, ...managedByWithoutCreatedBy, ...guestUserIds]
+        : [...managedByWithoutCreatedBy, ...guestUserIds];
+
+      await api.patch(`/booking/${booking?._id}`, {
+        managedBy: newManagedBy,
+      });
+
+      const updatedGuestsResponse = await api.get(
+        `/user?where=${formatSearch({ _id: { $in: newManagedBy } })}`,
+      );
+      const updatedGuests = updatedGuestsResponse.data?.results || [];
+      const filteredGuests = updatedGuests.filter(
+        (guest: User) => guest._id !== createdById,
+      );
+      setLocalGuests(filteredGuests);
+
+      setIsEditingGuests(false);
+    } catch (err: any) {
+      setGuestEditError(
+        err?.response?.data?.message || 'Failed to update guests',
+      );
+    } finally {
+      setIsLoadingGuests(false);
+    }
+  };
+
+  const handleRemoveGuest = async (guestId: string) => {
+    try {
+      setIsLoadingGuests(true);
+      setGuestEditError(null);
+
+      const currentManagedBy = booking?.managedBy || [];
+      const newManagedBy = currentManagedBy.filter((id) => id !== guestId);
+
+      await api.patch(`/booking/${booking?._id}`, {
+        managedBy: newManagedBy,
+      });
+
+      const updatedGuestsResponse = await api.get(
+        `/user?where=${formatSearch({ _id: { $in: newManagedBy } })}`,
+      );
+      const updatedGuests = updatedGuestsResponse.data?.results || [];
+      const filteredGuests = updatedGuests.filter(
+        (guest: User) => guest._id !== booking?.createdBy,
+      );
+      setLocalGuests(filteredGuests);
+    } catch (err: any) {
+      setGuestEditError(
+        err?.response?.data?.message || 'Failed to remove guest',
+      );
+    } finally {
+      setIsLoadingGuests(false);
+    }
+  };
+
   const updatedAccomodationTotal =
     useTokens || useCredits
       ? updatedPrices?.rentalToken?.val || 0
@@ -305,8 +474,6 @@ const BookingPage = ({
   const updatedFoodTotal = updatedPrices?.foodFiat?.val || 0;
   const updatedEventTotal = updatedPrices?.eventFiat?.val || 0;
   const updatedFiatTotal = updatedPrices?.total?.val || 0;
-
-
 
   // TODO:update paymentDelta, dailyrentaltoken, total, rentalfiat !!!!!!!!! don't update rentalfiat
   // when the price of token booking updated, but payment delta is not zero, rentalFiAt should match paymentdelta
@@ -448,12 +615,13 @@ const BookingPage = ({
   };
 
   if (
-   ( !booking ||
-    !isBookingEnabled ||
-    (user?._id !== booking.createdBy &&
-      user?._id !== booking.paidBy &&
-        !isSpaceHost) )
-      &&
+    (!booking ||
+      !isBookingEnabled ||
+      (user?._id &&
+        !booking.managedBy.includes(user?._id) &&
+        user?._id !== booking.createdBy &&
+        user?._id !== booking.paidBy &&
+        !isSpaceHost)) &&
     !isFriendBookingForCurrentUser
   ) {
     return <PageNotFound />;
@@ -631,7 +799,29 @@ const BookingPage = ({
           />
 
           <div className="flex flex-col gap-4">
-            <Heading level={3}>{t('bookings_dates_step_guests_title')}</Heading>
+            <div className="flex items-center justify-between">
+              <Heading level={3}>
+                {t('bookings_dates_step_guests_title')}
+              </Heading>
+              {canEditGuests && (
+                <Button
+                  onClick={() => {
+                    if (isEditingGuests) {
+                      setIsEditingGuests(false);
+                      setGuestEditError(null);
+                      setGuestEmails(['']);
+                    } else {
+                      setIsEditingGuests(true);
+                      setGuestEmails(['']);
+                    }
+                  }}
+                  className="text-sm w-fit"
+                  variant="secondary"
+                >
+                  {isEditingGuests ? 'Cancel' : 'Edit Guests'}
+                </Button>
+              )}
+            </div>
             {(payerInfo || userInfo) && (
               <UserInfoButton
                 userInfo={{
@@ -643,6 +833,104 @@ const BookingPage = ({
                 createdBy={payerInfo ? booking?.paidBy || '' : createdBy}
                 size="md"
               />
+            )}
+
+            {localGuests.map((guest) => (
+              <div key={guest._id} className="flex items-center gap-2">
+                <div className="flex-1">
+                  <UserInfoButton
+                    size="sm"
+                    userInfo={{
+                      name: guest.screenname,
+                      photo: guest.photo,
+                    }}
+                    createdBy={guest._id}
+                  />
+                </div>
+                {canEditGuests && isEditingGuests && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveGuest(guest._id)}
+                    className="p-2 text-red-500 hover:text-red-700"
+                    title="Remove guest"
+                    disabled={isLoadingGuests}
+                  >
+                    <FaTrash className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+
+            {canEditGuests && isEditingGuests && (
+              <Card className="p-4 bg-accent-light">
+                <div className="flex flex-col gap-3">
+                  {localGuests.length < Math.max(0, adults - 1) ? (
+                    <>
+                      <p className="text-sm font-medium">
+                        Add or edit guest emails (excluding the main guest)
+                      </p>
+                      {guestEmails.map((email, index) => (
+                        <div key={index} className="flex gap-2 items-start">
+                          <div className="flex-1">
+                            <Input
+                              placeholder="guest's email"
+                              value={email}
+                              onChange={(e) =>
+                                updateGuestEmail(index, e.target.value)
+                              }
+                              validation="email"
+                              className="bg-white"
+                            />
+                          </div>
+                          {guestEmails.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => removeGuestEmail(index)}
+                              className="mt-1 p-2 text-red-500 hover:text-red-700"
+                              title="Remove email"
+                              disabled={isLoadingGuests}
+                            >
+                              <FaTrash className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+
+                      {guestEmails.length <
+                        Math.max(0, adults - 1) - localGuests.length && (
+                        <Button
+                          onClick={addGuestEmail}
+                          isEnabled={
+                            guestEmails.length <
+                            Math.max(0, adults - 1) - localGuests.length
+                          }
+                          className="text-accent border border-accent bg-transparent hover:bg-accent  disabled:opacity-50 disabled:cursor-not-allowed"
+                          variant="secondary"
+                        >
+                          <FaPlus className="w-4 h-4 mr-2" />
+                          Add Another Guest
+                        </Button>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm font-medium">
+                      Maximum number of guests reached ({adults - 1} additional
+                      guest{adults - 1 !== 1 ? 's' : ''})
+                    </p>
+                  )}
+
+                  {guestEditError && <ErrorMessage error={guestEditError} />}
+
+                  <Button
+                    onClick={handleSaveGuests}
+                    isLoading={isLoadingGuests}
+                    isEnabled={!isLoadingGuests}
+                    className="w-full"
+                  >
+                    Save Guests
+                  </Button>
+                </div>
+              </Card>
             )}
           </div>
 
@@ -908,6 +1196,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
     const volunteer = optionalVolunteer?.data?.results;
 
     let bookingCreatedBy = null;
+    let guests = [];
     try {
       const optionalCreatedBy =
         booking.createdBy &&
@@ -919,6 +1208,12 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
           },
         }));
       bookingCreatedBy = optionalCreatedBy?.data?.results;
+
+      const guestsResponse = await api.get(
+        `/user?where=${formatSearch({ _id: { $in: booking.managedBy } })}`,
+      );
+      guests = guestsResponse.data?.results;
+      console.log('guests=', guests);
     } catch (error) {}
 
     return {
@@ -928,6 +1223,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       volunteer,
       error: null,
       bookingCreatedBy,
+      guests,
       bookingConfig,
       generalConfig,
       listings,
