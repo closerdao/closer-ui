@@ -149,6 +149,9 @@ const Navigation = () => {
                     </Link>
                   </li>
                   <li>
+                    <Link href="/agent">{t('header_nav_agent')}</Link>
+                  </li>
+                  <li>
                     <Link href="/pricing">{t('header_nav_pricing')}</Link>
                   </li>
                   {process.env.NEXT_PUBLIC_FEATURE_ROLES === 'true' && (

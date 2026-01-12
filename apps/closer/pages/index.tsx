@@ -161,6 +161,13 @@ const HomePage = ({ generalConfig }: Props) => {
                 Native Tokens, Proof of Presence, Proof of Sweat. Reward participation, distribute decision-making, create sustainable economic models.
               </p>
             </div>
+            <div className="bg-black p-12">
+              <h3 className="font-serif text-2xl mb-4">Closer Agent</h3>
+              <p className="text-[#86868b] text-sm leading-relaxed">
+                Turn community knowledge into living intelligence. Sovereign AI that runs on your infrastructure, understands your domain, and serves your mission.
+                <span className="block mt-2 text-xs text-[#79FAC1]">Currently in alpha</span>
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -408,6 +415,33 @@ const HomePage = ({ generalConfig }: Props) => {
                 {endpoint}
               </span>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Agent Section */}
+      <section className="py-32 md:py-48 bg-black text-white -mx-4 md:-mx-0">
+        <div className="max-w-4xl mx-auto px-6 md:px-[5vw]">
+          <div className="inline-flex items-center gap-2 text-xs uppercase tracking-wider text-[#86868b] mb-4">
+            <span className="w-1.5 h-1.5 bg-[#79FAC1] rounded-full"></span>
+            <span>Coming Soon</span>
+          </div>
+          <h2 className="font-serif text-4xl md:text-5xl mb-6">
+            Closer <em className="italic">Agent</em>
+          </h2>
+          <p className="text-lg text-[#86868b] mb-8 max-w-2xl">
+            Turn your community&apos;s knowledge into living intelligence. A sovereign AI that runs on your infrastructure, understands your domain, and serves your mission—not a corporation&apos;s.
+          </p>
+          <div className="flex gap-4 flex-wrap">
+            <Link
+              href="/agent"
+              className="px-7 py-3.5 bg-white text-black rounded-full text-base hover:bg-gray-100 transition-colors font-medium"
+            >
+              Learn more
+            </Link>
+            <span className="px-7 py-3.5 border border-white/30 text-white/50 rounded-full text-base font-medium">
+              In alpha
+            </span>
           </div>
         </div>
       </section>

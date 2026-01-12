@@ -71,7 +71,7 @@ const PricingPage = ({ generalConfig }: Props) => {
         'Multi-site operations',
         'Cross-site token integration',
         'Network-wide analytics',
-        'Custom AI agent',
+        'Closer Agent (in alpha)',
         'Dedicated support',
       ],
       cta: 'Contact Us',
@@ -261,6 +261,14 @@ const PricingPage = ({ generalConfig }: Props) => {
                 Transaction fees flow back into development, benefiting all communities in the network. 
                 As more villages join, the shared infrastructure becomes more robust — a true network effect 
                 in service of regeneration rather than extraction.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-medium text-lg mb-2">What is Closer Agent?</h4>
+              <p className="text-[#86868b]">
+                Closer Agent is a sovereign AI system that transforms your community&apos;s knowledge into living intelligence. 
+                It runs entirely on your infrastructure, understands your domain, and serves your mission. 
+                <span className="block mt-2 text-sm text-[#79FAC1]">Currently in alpha — not yet commercially available. Available for Forest tier communities on a case-by-case basis.</span>
               </p>
             </div>
           </div>
