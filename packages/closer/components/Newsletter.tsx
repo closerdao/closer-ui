@@ -28,8 +28,7 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
 
     const [email, setEmail] = useState('');
     const [signupError, setSignupError] = useState(null);
-    const referrer =
-      typeof localStorage !== 'undefined' && localStorage.getItem('referrer');
+    const [referrer, setReferrer] = useState<string | undefined>(undefined);
     const [signupCompleted, setSignupCompleted] = useState(false);
 
     const [shouldShowForm, setShouldShowForm] = useState(true);
@@ -56,6 +55,10 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
         const completed = localStorage.getItem('signupCompleted') === 'true';
         if (completed) {
           setShouldShowForm(false);
+        }
+        const storedReferrer = localStorage.getItem('referrer');
+        if (storedReferrer) {
+          setReferrer(storedReferrer);
         }
       }
     }, []);

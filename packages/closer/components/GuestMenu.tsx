@@ -255,6 +255,79 @@ const GuestMenu = () => {
         ],
       },
 
+      // Closer app navigation items (top-level buttons)
+      ...(APP_NAME && APP_NAME?.toLowerCase() === 'closer'
+        ? [
+            {
+              label: t('header_nav_features'),
+              isOpen: false,
+              items: [
+                {
+                  label: t('header_nav_features'),
+                  url: '/#features',
+                  enabled: true,
+                },
+              ],
+            },
+            {
+              label: t('header_nav_communities'),
+              isOpen: false,
+              items: [
+                {
+                  label: t('header_nav_communities'),
+                  url: '/#communities',
+                  enabled: true,
+                },
+              ],
+            },
+            {
+              label: t('header_nav_governance'),
+              isOpen: false,
+              items: [
+                {
+                  label: t('header_nav_governance'),
+                  url: '/#governance',
+                  enabled: true,
+                },
+              ],
+            },
+            {
+              label: t('header_nav_agent'),
+              isOpen: false,
+              items: [
+                {
+                  label: t('header_nav_agent'),
+                  url: '/agent',
+                  enabled: true,
+                },
+              ],
+            },
+            {
+              label: t('header_nav_pricing'),
+              isOpen: false,
+              items: [
+                {
+                  label: t('header_nav_pricing'),
+                  url: '/pricing',
+                  enabled: true,
+                },
+              ],
+            },
+            {
+              label: t('header_nav_docs'),
+              isOpen: false,
+              items: [
+                {
+                  label: t('header_nav_docs'),
+                  url: 'https://closer.gitbook.io/documentation',
+                  target: '_blank',
+                  enabled: true,
+                },
+              ],
+            },
+          ]
+        : []),
+
       // Learn more section
       {
         label: 'General',
