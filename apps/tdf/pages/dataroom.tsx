@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 
 import { Heading, Card, LinkButton, Newsletter, useAuth } from 'closer';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
-import { BarChart3, Building2, Check, ChevronDown, Droplets, FileSpreadsheet, Landmark, Map, MapPin, Rocket, Sprout, Users, Wallet } from 'lucide-react';
+import { BarChart3, Building2, Check, Droplets, FileSpreadsheet, Landmark, Map, MapPin, Rocket, Sprout, Users, Wallet } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
