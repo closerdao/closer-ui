@@ -30,6 +30,7 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
     const [signupError, setSignupError] = useState(null);
     const [referrer, setReferrer] = useState<string | undefined>(undefined);
     const [signupCompleted, setSignupCompleted] = useState(false);
+    const [mounted, setMounted] = useState(false);
 
     const [shouldShowForm, setShouldShowForm] = useState(true);
     const router = useRouter();
@@ -51,6 +52,7 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
     };
 
     useEffect(() => {
+      setMounted(true);
       if (typeof window !== 'undefined') {
         const completed = localStorage.getItem('signupCompleted') === 'true';
         if (completed) {
@@ -63,6 +65,7 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
       }
     }, []);
 
+    if (!mounted) return null;
     if (isAuthenticated || APP_NAME !== 'tdf' || !shouldShowForm) return null;
 
     return (
