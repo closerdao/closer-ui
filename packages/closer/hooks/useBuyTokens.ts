@@ -1,5 +1,5 @@
 import { getDataSuffix, submitReferral } from '@divvi/referral-sdk'
-import { useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { Contract, providers, utils } from 'ethers';
 import { WalletState } from '../contexts/wallet';
 import { useConfig } from './useConfig';
@@ -89,14 +89,15 @@ export const useBuyTokens = () => {
     BLOCKCHAIN_DAO_TOKEN_ABI,
     CEUR_TOKEN_ADDRESS,
   } = useConfig() || {};
+  const tokenAddress = BLOCKCHAIN_DAO_TOKEN?.address;
   const [isPending, setPending] = useState(false);
   const [isConfigReady, setIsConfigReady] = useState(false);
 
   useEffect(() => {
-    if (BLOCKCHAIN_DAO_TOKEN?.address && BLOCKCHAIN_DAO_TOKEN_ABI) {
+    if (tokenAddress && BLOCKCHAIN_DAO_TOKEN_ABI) {
       setIsConfigReady(true);
     }
-  }, [BLOCKCHAIN_DAO_TOKEN?.address, BLOCKCHAIN_DAO_TOKEN_ABI]);
+  }, [tokenAddress, BLOCKCHAIN_DAO_TOKEN_ABI]);
 
   const getContractInstances = () => ({
     DynamicSale: new Contract(
@@ -129,13 +130,13 @@ export const useBuyTokens = () => {
     }
   };
 
-  const getCurrentSupplyWithoutWallet = async () => {
-    if (!BLOCKCHAIN_DAO_TOKEN?.address || !BLOCKCHAIN_DAO_TOKEN_ABI) {
+  const getCurrentSupplyWithoutWallet = useCallback(async () => {
+    if (!tokenAddress || !BLOCKCHAIN_DAO_TOKEN_ABI) {
       console.debug('Config not yet initialized');
       return 0;
     }
 
-    const cacheKey = BLOCKCHAIN_DAO_TOKEN.address.toLowerCase();
+    const cacheKey = tokenAddress.toLowerCase();
     const cached = getCurrentSupplyWithoutWalletResultCache.get(cacheKey);
     
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
@@ -153,12 +154,12 @@ export const useBuyTokens = () => {
         setPending(true);
 
         const readOnlyTdfToken = await getReadOnlyContractInstance(
-          BLOCKCHAIN_DAO_TOKEN.address,
+          tokenAddress,
           BLOCKCHAIN_DAO_TOKEN_ABI,
         );
 
         const code = await readOnlyTdfToken.provider.getCode(
-          BLOCKCHAIN_DAO_TOKEN.address,
+          tokenAddress,
         );
         if (code === '0x') {
           console.warn('Token contract not found at specified address');
@@ -191,7 +192,7 @@ export const useBuyTokens = () => {
 
     getCurrentSupplyWithoutWalletCallInProgress.set(cacheKey, promise);
     return promise;
-  };
+  }, [tokenAddress, BLOCKCHAIN_DAO_TOKEN_ABI]);
 
   const getUserTdfBalance = async () => {
     const { TdfToken } = getContractInstances();

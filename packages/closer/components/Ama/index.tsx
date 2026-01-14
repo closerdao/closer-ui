@@ -22,7 +22,12 @@ const Ama = ({ id }: Props) => {
 
   return (
     <section id={id} className="flex items-center flex-col py-24 ">
-      {isPromptOpen && <JoinWebinarPrompt setIsPromptOpen={setIsPromptOpen} />}
+      {isPromptOpen && (
+        <JoinWebinarPrompt
+          setIsPromptOpen={setIsPromptOpen}
+          tags={['token-sale-page']}
+        />
+      )}
       <div className="max-w-6xl ">
         <div className="text-center mb-8">
           <Heading level={2} className="mb-4 text-5xl font-bold">

@@ -840,15 +840,22 @@ const HomePage = () => {
                     
                     await api.post('/webinar', {
                       email: webinarEmail,
+                      tags: ['landing-page', 'investor-webinar'],
                     });
 
                     if (process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true') {
                       try {
                         const referrer = typeof localStorage !== 'undefined' ? localStorage.getItem('referrer') : null;
+                        const tags = [
+                          'landing-page',
+                          'investor-webinar',
+                          router.asPath,
+                          referrer ? `ref:${referrer}` : null,
+                        ].filter(Boolean);
                         await api.post('/subscribe', {
                           email: webinarEmail,
                           screenname: webinarName,
-                          tags: ['investor-webinar', router.asPath, referrer ? `ref:${referrer}` : ''],
+                          tags,
                         });
                       } catch (subscribeError) {
                         console.error('Error subscribing to newsletter:', subscribeError);

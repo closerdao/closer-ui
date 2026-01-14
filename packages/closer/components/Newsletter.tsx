@@ -39,7 +39,7 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
       request: {
         email: string;
         screenname: string;
-        tags: [string | undefined, string, string];
+        tags: string[];
       },
     ) => {
       try {
@@ -71,7 +71,7 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
         className={`${twMerge(
           'Newsletter pt-8 pb-5 w-auto sm:w-[280px]',
           className,
-        )}`}
+        )}`}  
       >
         {signupCompleted ? (
           <h3>{t('newsletter_success')}</h3>
@@ -82,7 +82,11 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
               attemptSignup(e, {
                 email,
                 screenname: '',
-                tags: [placement, router.asPath, `ref:${referrer}`],
+                tags: [
+                  placement || null,
+                  router.asPath,
+                  referrer ? `ref:${referrer}` : null,
+                ].filter(Boolean) as string[],
               })
                 .then(() => {
                   trackEvent(placement, 'Lead');

@@ -1,7 +1,9 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import {  Heading, Card, LinkButton } from 'closer';
+import { useState } from 'react';
+
+import { Heading, Card, LinkButton, Newsletter, useAuth } from 'closer';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { BarChart3, Droplets, Rocket, Sprout } from 'lucide-react';
 import { NextPageContext } from 'next';
@@ -9,6 +11,13 @@ import { useTranslations } from 'next-intl';
 
 const HomePage = () => {
   const t = useTranslations();
+  const { isAuthenticated } = useAuth();
+  const [isEmailUnlocked, setIsEmailUnlocked] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('4signupCompleted') === 'true';
+  });
+
+  const isContentLocked = !isAuthenticated && !isEmailUnlocked;
 
   return (
     <>
@@ -74,111 +83,135 @@ const HomePage = () => {
           </div>
         </div>
 
-        {/* Investment Highlights */}
-        <div className="py-24 bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-16">
-              <p className="text-xs uppercase tracking-wider text-gray-500 mb-4 font-medium">
-                {t('dataroom_investment_overview_label')}
-              </p>
-              <Heading level={2} className="text-3xl md:text-4xl mb-6 text-gray-900 font-normal">
-                {t('dataroom_investment_highlights_title')}
-              </Heading>
-              <p className="text-base text-gray-700 max-w-3xl mx-auto leading-relaxed font-light">
-                {t('dataroom_investment_highlights_description')}
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-6 mb-12">
-              <Card className="p-8 text-center border border-gray-300 rounded-lg bg-white hover:shadow-lg transition-shadow">
-                <div className="text-4xl mb-4 font-normal text-gray-900">{t('dataroom_private_debt_amount')}</div>
-                <h3 className="text-lg font-semibold mb-3 text-gray-900">{t('dataroom_private_debt_title')}</h3>
-                <p className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_private_debt_description')}</p>
-              </Card>
-              <Card className="p-8 text-center border border-gray-300 rounded-lg bg-white hover:shadow-lg transition-shadow">
-                <div className="text-4xl mb-4 font-normal text-gray-900">{t('dataroom_token_sales_amount')}</div>
-                <h3 className="text-lg font-semibold mb-3 text-gray-900">{t('dataroom_token_sales_title')}</h3>
-                <p className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_token_sales_description')}</p>
-              </Card>
-              <Card className="p-8 text-center border border-gray-300 rounded-lg bg-white hover:shadow-lg transition-shadow">
-                <div className="text-4xl mb-4 font-normal text-gray-900">{t('dataroom_land_portfolio_amount')}</div>
-                <h3 className="text-lg font-semibold mb-3 text-gray-900">{t('dataroom_land_portfolio_title')}</h3>
-                <p className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_land_portfolio_description')}</p>
-              </Card>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-8">
-              <Card className="p-8 border border-gray-300 rounded-lg bg-white">
-                <h3 className="text-xl font-semibold mb-6 text-gray-900">{t('dataroom_asset_purchase_title')}</h3>
-                <div className="space-y-6">
-                  <div className="border-l-4 border-gray-900 pl-5">
-                    <div className="font-semibold text-sm text-gray-600 mb-2">{t('dataroom_buildings_portfolio_title')}</div>
-                    <div className="text-3xl font-normal text-gray-900 mb-2">{t('dataroom_buildings_portfolio_amount')}</div>
-                    <div className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_buildings_portfolio_description')}</div>
-                  </div>
-                  <div className="border-l-4 border-gray-900 pl-5">
-                    <div className="font-semibold text-sm text-gray-600 mb-2">{t('dataroom_land_acquisition_title')}</div>
-                    <div className="text-3xl font-normal text-gray-900 mb-2">{t('dataroom_land_acquisition_amount_550k')}</div>
-                    <div className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_land_acquisition_description')}</div>
-                  </div>
+        {isContentLocked ? (
+          <div className="py-16 bg-white border-b border-gray-200">
+            <div className="max-w-7xl mx-auto px-6">
+              <div className="max-w-3xl mx-auto text-center">
+                <Heading level={2} className="text-2xl md:text-3xl mb-4 text-gray-900 font-normal">
+                  {t('dataroom_gate_title')}
+                </Heading>
+                <p className="text-base text-gray-700 mb-8 leading-relaxed font-light">
+                  {t('dataroom_gate_description')}
+                </p>
+                <div className="flex justify-center">
+                  <Newsletter
+                    placement="dataroom"
+                    className="sm:w-[420px] bg-white border border-gray-200 rounded-lg px-6"
+                    ctaText={t('dataroom_gate_cta')}
+                    showTitle={false}
+                    onSuccess={() => setIsEmailUnlocked(true)}
+                  />
                 </div>
-              </Card>
-              <Card className="p-8 border border-gray-300 rounded-lg bg-white">
-                <h3 className="text-xl font-semibold mb-6 text-gray-900">{t('dataroom_impact_investment_benefits_title')}</h3>
-                <ul className="space-y-4">
-                  <li className="flex items-start">
-                    <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2.5 mr-4 flex-shrink-0"></div>
-                    <span className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_impact_benefit_1')}</span>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2.5 mr-4 flex-shrink-0"></div>
-                    <span className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_impact_benefit_3')}</span>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2.5 mr-4 flex-shrink-0"></div>
-                    <span className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_impact_benefit_4')}</span>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2.5 mr-4 flex-shrink-0"></div>
-                    <span className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_impact_benefit_2')}</span>
-                  </li>
-                </ul>
-              </Card>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <>
+            {/* Investment Highlights */}
+            <div className="py-24 bg-white border-b border-gray-200">
+              <div className="max-w-7xl mx-auto px-6">
+                <div className="text-center mb-16">
+                  <p className="text-xs uppercase tracking-wider text-gray-500 mb-4 font-medium">
+                    {t('dataroom_investment_overview_label')}
+                  </p>
+                  <Heading level={2} className="text-3xl md:text-4xl mb-6 text-gray-900 font-normal">
+                    {t('dataroom_investment_highlights_title')}
+                  </Heading>
+                  <p className="text-base text-gray-700 max-w-3xl mx-auto leading-relaxed font-light">
+                    {t('dataroom_investment_highlights_description')}
+                  </p>
+                </div>
+                
+                <div className="grid md:grid-cols-3 gap-6 mb-12">
+                  <Card className="p-8 text-center border border-gray-300 rounded-lg bg-white hover:shadow-lg transition-shadow">
+                    <div className="text-4xl mb-4 font-normal text-gray-900">{t('dataroom_private_debt_amount')}</div>
+                    <h3 className="text-lg font-semibold mb-3 text-gray-900">{t('dataroom_private_debt_title')}</h3>
+                    <p className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_private_debt_description')}</p>
+                  </Card>
+                  <Card className="p-8 text-center border border-gray-300 rounded-lg bg-white hover:shadow-lg transition-shadow">
+                    <div className="text-4xl mb-4 font-normal text-gray-900">{t('dataroom_token_sales_amount')}</div>
+                    <h3 className="text-lg font-semibold mb-3 text-gray-900">{t('dataroom_token_sales_title')}</h3>
+                    <p className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_token_sales_description')}</p>
+                  </Card>
+                  <Card className="p-8 text-center border border-gray-300 rounded-lg bg-white hover:shadow-lg transition-shadow">
+                    <div className="text-4xl mb-4 font-normal text-gray-900">{t('dataroom_land_portfolio_amount')}</div>
+                    <h3 className="text-lg font-semibold mb-3 text-gray-900">{t('dataroom_land_portfolio_title')}</h3>
+                    <p className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_land_portfolio_description')}</p>
+                  </Card>
+                </div>
 
-        {/* Track Record & Development Status */}
-        <div className="py-24 bg-gray-50 border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-16">
-              <p className="text-xs uppercase tracking-wider text-gray-500 mb-4 font-medium">
-                {t('dataroom_track_record_label')}
-              </p>
-              <Heading level={2} className="text-3xl md:text-4xl mb-6 text-gray-900 font-normal">
-                {t('dataroom_track_record_title')}
-              </Heading>
-              <p className="text-base text-gray-700 mb-8 leading-relaxed font-light">
-                {t('dataroom_track_record_subtitle')}{' '}
-                <Link href="/roadmap" className="text-gray-900 underline hover:text-gray-700 font-medium">
-                  {t('dataroom_detailed_roadmap')}
-                </Link>
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-2 gap-16 mb-12">
-              <div>
-                <Heading level={3} className="text-xl mb-8 text-gray-900 font-semibold">
-                  {t('dataroom_completed_milestones_title')}
-                </Heading>
-                <ul className="space-y-5">
-                  <li className="flex items-start">
-                    <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2.5 mr-4 flex-shrink-0"></div>
-                    <div>
-                      <strong className="font-semibold text-gray-900">{t('dataroom_milestone_1_title')}</strong>{' '}
-                      <span className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_milestone_1_content')}</span>
+                <div className="grid md:grid-cols-2 gap-8">
+                  <Card className="p-8 border border-gray-300 rounded-lg bg-white">
+                    <h3 className="text-xl font-semibold mb-6 text-gray-900">{t('dataroom_asset_purchase_title')}</h3>
+                    <div className="space-y-6">
+                      <div className="border-l-4 border-gray-900 pl-5">
+                        <div className="font-semibold text-sm text-gray-600 mb-2">{t('dataroom_buildings_portfolio_title')}</div>
+                        <div className="text-3xl font-normal text-gray-900 mb-2">{t('dataroom_buildings_portfolio_amount')}</div>
+                        <div className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_buildings_portfolio_description')}</div>
+                      </div>
+                      <div className="border-l-4 border-gray-900 pl-5">
+                        <div className="font-semibold text-sm text-gray-600 mb-2">{t('dataroom_land_acquisition_title')}</div>
+                        <div className="text-3xl font-normal text-gray-900 mb-2">{t('dataroom_land_acquisition_amount_550k')}</div>
+                        <div className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_land_acquisition_description')}</div>
+                      </div>
                     </div>
-                  </li>
+                  </Card>
+                  <Card className="p-8 border border-gray-300 rounded-lg bg-white">
+                    <h3 className="text-xl font-semibold mb-6 text-gray-900">{t('dataroom_impact_investment_benefits_title')}</h3>
+                    <ul className="space-y-4">
+                      <li className="flex items-start">
+                        <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2.5 mr-4 flex-shrink-0"></div>
+                        <span className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_impact_benefit_1')}</span>
+                      </li>
+                      <li className="flex items-start">
+                        <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2.5 mr-4 flex-shrink-0"></div>
+                        <span className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_impact_benefit_3')}</span>
+                      </li>
+                      <li className="flex items-start">
+                        <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2.5 mr-4 flex-shrink-0"></div>
+                        <span className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_impact_benefit_4')}</span>
+                      </li>
+                      <li className="flex items-start">
+                        <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2.5 mr-4 flex-shrink-0"></div>
+                        <span className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_impact_benefit_2')}</span>
+                      </li>
+                    </ul>
+                  </Card>
+                </div>
+              </div>
+            </div>
+
+            {/* Track Record & Development Status */}
+            <div className="py-24 bg-gray-50 border-b border-gray-200">
+              <div className="max-w-7xl mx-auto px-6">
+                <div className="text-center mb-16">
+                  <p className="text-xs uppercase tracking-wider text-gray-500 mb-4 font-medium">
+                    {t('dataroom_track_record_label')}
+                  </p>
+                  <Heading level={2} className="text-3xl md:text-4xl mb-6 text-gray-900 font-normal">
+                    {t('dataroom_track_record_title')}
+                  </Heading>
+                  <p className="text-base text-gray-700 mb-8 leading-relaxed font-light">
+                    {t('dataroom_track_record_subtitle')}{' '}
+                    <Link href="/roadmap" className="text-gray-900 underline hover:text-gray-700 font-medium">
+                      {t('dataroom_detailed_roadmap')}
+                    </Link>
+                  </p>
+                </div>
+                
+                <div className="grid md:grid-cols-2 gap-16 mb-12">
+                  <div>
+                    <Heading level={3} className="text-xl mb-8 text-gray-900 font-semibold">
+                      {t('dataroom_completed_milestones_title')}
+                    </Heading>
+                    <ul className="space-y-5">
+                      <li className="flex items-start">
+                        <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2.5 mr-4 flex-shrink-0"></div>
+                        <div>
+                          <strong className="font-semibold text-gray-900">{t('dataroom_milestone_1_title')}</strong>{' '}
+                          <span className="text-sm text-gray-700 leading-relaxed font-light">{t('dataroom_milestone_1_content')}</span>
+                        </div>
+                      </li>
                   <li className="flex items-start">
                     <div className="w-1.5 h-1.5 bg-gray-900 rounded-full mt-2.5 mr-4 flex-shrink-0"></div>
                     <div>
@@ -882,6 +915,8 @@ const HomePage = () => {
             </div>
           </div>
         </div>
+          </>
+        )}
       </section>
     </>
   );
