@@ -61,10 +61,14 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
       }
 
       if (process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true' && isEmailConsent) {
+        const tags = [
+          'signup-modal',
+          eventId ? `event:${eventId}` : null,
+        ].filter(Boolean);
         await api.post('/subscribe', {
           email,
           screenname: '',
-          tags: ['signup', 'modal', eventId ? `event:${eventId}` : ''],
+          tags,
         });
       }
 

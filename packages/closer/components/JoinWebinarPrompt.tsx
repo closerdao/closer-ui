@@ -11,8 +11,10 @@ const emailSchema = z
 
 const JoinWebinarPrompt = ({
   setIsPromptOpen,
+  tags,
 }: {
   setIsPromptOpen: (isOpen: boolean) => void;
+  tags?: string[];
 }) => {
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState<string | null>(null);
@@ -36,6 +38,7 @@ const JoinWebinarPrompt = ({
       console.log('send invite');
       await api.post('/webinar', {
         email,
+        tags: (tags?.length ? tags : ['webinar']),
       });
       setIsSuccess(true);
     } catch (error) {

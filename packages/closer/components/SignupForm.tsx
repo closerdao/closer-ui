@@ -187,13 +187,6 @@ const SignupForm = ({ app }: Props) => {
       const referrer =
         typeof localStorage !== 'undefined' && localStorage.getItem('referrer');
 
-      console.log('--------------------------------');
-      console.log(
-        'process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE=',
-        process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE,
-      );
-      console.log('process.env.isEmailConsent=', isEmailConsent);
-
       if (
         process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true' &&
         isEmailConsent
@@ -202,20 +195,19 @@ const SignupForm = ({ app }: Props) => {
           await api.post('/subscribe', {
             email,
             screenname: '',
-            tags: ['signup', router.asPath, `ref:${referrer}`],
+            tags: ['signup'],
           });
         } catch (error) {
           console.error('error with subscribe:', error);
           await reportIssue(`error with subscription: ${error}`, user?.email);
         }
       }
-      console.log('--------------------------------');
 
       setNewsletterSuccess(true);
       setNewsletterError(null);
       setApplication({ ...application, email });
       localStorage.setItem('email', email);
-
+      localStorage.setItem('signupCompleted', 'true');
       setTimeout(() => {
         setStep(2);
         sessionStorage.setItem('signup_step', '2');

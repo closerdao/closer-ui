@@ -161,10 +161,19 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         
         if (process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true' && data.email && data.emailConsent !== false) {
           try {
+            const referrer =
+              typeof window !== 'undefined'
+                ? window.localStorage?.getItem('referrer')
+                : null;
+            const tags = [
+              'signup',
+              typeof window !== 'undefined' ? window.location?.pathname : null,
+              referrer ? `ref:${referrer}` : null,
+            ].filter(Boolean);
             await api.post('/subscribe', {
               email: data.email,
               screenname: data.screenname || '',
-              tags: ['signup', window?.location?.pathname || '', `ref:${localStorage?.getItem('referrer') || ''}`],
+              tags,
             });
           } catch (subscribeErr) {
             console.error('Failed to subscribe email during signup:', subscribeErr);

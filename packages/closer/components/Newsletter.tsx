@@ -30,6 +30,7 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
     const [signupError, setSignupError] = useState(null);
     const [referrer, setReferrer] = useState<string | undefined>(undefined);
     const [signupCompleted, setSignupCompleted] = useState(false);
+    const [mounted, setMounted] = useState(false);
 
     const [shouldShowForm, setShouldShowForm] = useState(true);
     const router = useRouter();
@@ -39,7 +40,7 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
       request: {
         email: string;
         screenname: string;
-        tags: [string | undefined, string, string];
+        tags: string[];
       },
     ) => {
       try {
@@ -51,6 +52,7 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
     };
 
     useEffect(() => {
+      setMounted(true);
       if (typeof window !== 'undefined') {
         const completed = localStorage.getItem('signupCompleted') === 'true';
         if (completed) {
@@ -63,6 +65,7 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
       }
     }, []);
 
+    if (!mounted) return null;
     if (isAuthenticated || APP_NAME !== 'tdf' || !shouldShowForm) return null;
 
     return (
@@ -71,7 +74,7 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
         className={`${twMerge(
           'Newsletter pt-8 pb-5 w-auto sm:w-[280px]',
           className,
-        )}`}
+        )}`}  
       >
         {signupCompleted ? (
           <h3>{t('newsletter_success')}</h3>
@@ -82,7 +85,11 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
               attemptSignup(e, {
                 email,
                 screenname: '',
-                tags: [placement, router.asPath, `ref:${referrer}`],
+                tags: [
+                  placement || null,
+                  router.asPath,
+                  referrer ? `ref:${referrer}` : null,
+                ].filter(Boolean) as string[],
               })
                 .then(() => {
                   trackEvent(placement, 'Lead');
