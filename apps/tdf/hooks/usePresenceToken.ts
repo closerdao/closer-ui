@@ -1,23 +1,24 @@
 import { useEffect, useState, useContext } from 'react';
-import { Contract } from 'ethers';
+import { usePublicClient } from 'wagmi';
+import { formatUnits } from 'viem';
 import { WalletState } from 'closer/contexts/wallet';
 import { getContract, getCurrentNetwork } from '../utils/abiLoader';
 
 export const usePresenceToken = () => {
-  const { isWalletReady, account, library } = useContext(WalletState);
+  const { isWalletReady, account } = useContext(WalletState);
+  const publicClient = usePublicClient();
   const [presenceBalance, setPresenceBalance] = useState<string>('0');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [contractAddress, setContractAddress] = useState<string | null>(null);
   const [contractAbi, setContractAbi] = useState<any[] | null>(null);
 
-  // Load contract data
   useEffect(() => {
     const loadContractData = async () => {
       try {
         const network = getCurrentNetwork();
         const { address, abi } = await getContract('PresenceToken', network);
-        
+
         if (address && abi) {
           setContractAddress(address);
           setContractAbi(abi);
@@ -34,10 +35,9 @@ export const usePresenceToken = () => {
     loadContractData();
   }, []);
 
-  // Fetch balance when contract data is loaded and wallet is ready
   useEffect(() => {
     const fetchPresenceBalance = async () => {
-      if (!isWalletReady || !account || !library || !contractAddress || !contractAbi) {
+      if (!isWalletReady || !account || !publicClient || !contractAddress || !contractAbi) {
         return;
       }
 
@@ -45,14 +45,14 @@ export const usePresenceToken = () => {
       setError(null);
 
       try {
-        const presenceTokenContract = new Contract(
-          contractAddress,
-          contractAbi,
-          library.getSigner()
-        );
+        const balance = await publicClient.readContract({
+          address: contractAddress as `0x${string}`,
+          abi: contractAbi,
+          functionName: 'balanceOf',
+          args: [account as `0x${string}`],
+        }) as bigint;
 
-        const balance = await presenceTokenContract.balanceOf(account);
-        setPresenceBalance(balance.toString());
+        setPresenceBalance(formatUnits(balance, 18));
       } catch (err) {
         console.error('Error fetching Presence token balance:', err);
         setError('Failed to fetch Presence token balance');
@@ -63,7 +63,7 @@ export const usePresenceToken = () => {
     };
 
     fetchPresenceBalance();
-  }, [isWalletReady, account, library, contractAddress, contractAbi]);
+  }, [isWalletReady, account, publicClient, contractAddress, contractAbi]);
 
   return {
     presenceBalance,

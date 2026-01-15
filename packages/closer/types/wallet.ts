@@ -13,25 +13,25 @@ export interface WalletStateContext {
   isCorrectNetwork: boolean;
   hasSameConnectedAccount: boolean;
   proofOfPresence: number;
-  balanceAvailable: string;
-  balanceTotal: string;
-  balanceCeurAvailable: string;
-  balanceCeloAvailable: string;
+  balanceAvailable: number;
+  balanceTotal: number;
+  balanceCeurAvailable: number;
+  balanceCeloAvailable: number;
   account?: string | null;
   library: any;
   chainId?: number;
-  error?: any;
+  error?: Error | null;
   bookedDates: any;
 }
 
 export interface WalletActionsContext {
-  connectWallet: () => void;
+  connectWallet: () => Promise<string | null>;
   updateWalletBalance: () => void;
   updateCeurBalance: () => void;
   updateCeloBalance: () => void;
   refetchBookingDates: () => void;
-  signMessage: (msg: string, accountId: string) => Promise<string>;
-  switchNetwork: () => void;
+  signMessage: (msg: string, accountId: string) => Promise<string | null>;
+  switchNetwork: () => Promise<void>;
 }
 
 interface ABIInputItem {

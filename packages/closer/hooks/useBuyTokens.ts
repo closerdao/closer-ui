@@ -1,13 +1,20 @@
-import { getDataSuffix, submitReferral } from '@divvi/referral-sdk'
+import { getDataSuffix, submitReferral } from '@divvi/referral-sdk';
 import { useCallback, useContext, useEffect, useState } from 'react';
-import { Contract, providers, utils } from 'ethers';
+import { useAccount, usePublicClient, useWalletClient, useChainId } from 'wagmi';
+import { parseEther, formatEther, createPublicClient, http, encodeFunctionData } from 'viem';
+import { celo, celoAlfajores } from 'viem/chains';
+
 import { WalletState } from '../contexts/wallet';
 import { useConfig } from './useConfig';
 
 const dataSuffix = getDataSuffix({
   consumer: '0x9B5f6dF2C7A331697Cf2616CA884594F6afDC07d',
-  providers: ['0x0423189886d7966f0dd7e7d256898daeee625dca','0xc95876688026be9d6fa7a7c33328bd013effa2bb','0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8'],
-})
+  providers: [
+    '0x0423189886d7966f0dd7e7d256898daeee625dca',
+    '0xc95876688026be9d6fa7a7c33328bd013effa2bb',
+    '0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8',
+  ],
+});
 
 const RPC_ENDPOINTS = {
   celo: [
@@ -21,67 +28,37 @@ const RPC_ENDPOINTS = {
   ],
 };
 
-const contractInstanceCache = new Map<string, Contract>();
-const contractInstancePromises = new Map<string, Promise<Contract>>();
-const providerCache = new Map<string, providers.JsonRpcProvider>();
+const CACHE_TTL = 30000;
+
+const publicClientCache = new Map<string, ReturnType<typeof createPublicClient>>();
 const getCurrentSupplyWithoutWalletCallInProgress = new Map<string, Promise<number>>();
 const getCurrentSupplyWithoutWalletResultCache = new Map<string, { result: number; timestamp: number }>();
 const getTokensAvailableForPurchaseCallInProgress = new Map<string, Promise<number>>();
 const getTokensAvailableForPurchaseResultCache = new Map<string, { result: number; timestamp: number }>();
 
-const CACHE_TTL = 30000;
-
-const getReadOnlyContractInstance = async (address: string, abi: any) => {
-  const network = process.env.NEXT_PUBLIC_NETWORK || 'alfajores';
-  const abiKey = Array.isArray(abi) ? abi.map((item: any) => item.name || JSON.stringify(item)).join(',') : String(abi);
-  const cacheKey = `${network}-${address.toLowerCase()}-${abiKey}`;
-  
-  if (contractInstanceCache.has(cacheKey)) {
-    return contractInstanceCache.get(cacheKey)!;
+const getReadOnlyPublicClient = (network: string) => {
+  if (publicClientCache.has(network)) {
+    return publicClientCache.get(network)!;
   }
 
-  if (contractInstancePromises.has(cacheKey)) {
-    return contractInstancePromises.get(cacheKey)!;
-  }
+  const chain = network === 'celo' ? celo : celoAlfajores;
+  const endpoints = RPC_ENDPOINTS[network as keyof typeof RPC_ENDPOINTS];
 
-  const promise = (async () => {
-    const endpoints = RPC_ENDPOINTS[network as keyof typeof RPC_ENDPOINTS];
-    let workingProvider: providers.JsonRpcProvider | null = null;
+  const client = createPublicClient({
+    chain,
+    transport: http(endpoints[0]),
+  });
 
-    if (providerCache.has(network)) {
-      workingProvider = providerCache.get(network)!;
-    } else {
-      for (const rpcUrl of endpoints) {
-        try {
-          const provider = new providers.JsonRpcProvider(rpcUrl);
-          await provider.getNetwork();
-          workingProvider = provider;
-          providerCache.set(network, provider);
-          break;
-        } catch (error) {
-          console.warn(`Failed to connect to ${rpcUrl}:`, error);
-          continue;
-        }
-      }
-    }
-
-    if (!workingProvider) {
-      contractInstancePromises.delete(cacheKey);
-      throw new Error(`Unable to connect to any ${network} RPC endpoint`);
-    }
-
-    const contract = new Contract(address, abi, workingProvider);
-    contractInstanceCache.set(cacheKey, contract);
-    contractInstancePromises.delete(cacheKey);
-    return contract;
-  })();
-
-  contractInstancePromises.set(cacheKey, promise);
-  return promise;
+  publicClientCache.set(network, client);
+  return client;
 };
 
 export const useBuyTokens = () => {
-  const { library, account } = useContext(WalletState);
+  const { account } = useContext(WalletState);
+  const publicClient = usePublicClient();
+  const { data: walletClient } = useWalletClient();
+  const chainId = useChainId();
+
   const {
     BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS,
     BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
@@ -89,6 +66,7 @@ export const useBuyTokens = () => {
     BLOCKCHAIN_DAO_TOKEN_ABI,
     CEUR_TOKEN_ADDRESS,
   } = useConfig() || {};
+
   const tokenAddress = BLOCKCHAIN_DAO_TOKEN?.address;
   const [isPending, setPending] = useState(false);
   const [isConfigReady, setIsConfigReady] = useState(false);
@@ -99,38 +77,24 @@ export const useBuyTokens = () => {
     }
   }, [tokenAddress, BLOCKCHAIN_DAO_TOKEN_ABI]);
 
-  const getContractInstances = () => ({
-    DynamicSale: new Contract(
-      BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS,
-      BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
-      library && library.getUncheckedSigner(),
-    ),
-    TdfToken: new Contract(
-      BLOCKCHAIN_DAO_TOKEN.address,
-      BLOCKCHAIN_DAO_TOKEN_ABI,
-      library && library.getUncheckedSigner(),
-    ),
-    Ceur: new Contract(
-      CEUR_TOKEN_ADDRESS,
-      BLOCKCHAIN_DAO_TOKEN_ABI,
-      library && library.getUncheckedSigner(),
-    ),
-  });
-
-  const getCurrentSupply = async () => {
-    const { TdfToken } = getContractInstances();
+  const getCurrentSupply = async (): Promise<number> => {
+    if (!publicClient || !tokenAddress) return 0;
 
     try {
-      const supplyInWei = await TdfToken.totalSupply();
-      const supply = parseInt(utils.formatEther(supplyInWei));
-      return supply;
+      const supplyInWei = await publicClient.readContract({
+        address: tokenAddress as `0x${string}`,
+        abi: BLOCKCHAIN_DAO_TOKEN_ABI,
+        functionName: 'totalSupply',
+      }) as bigint;
+
+      return parseInt(formatEther(supplyInWei));
     } catch (error) {
       console.log(error);
       return 0;
     }
   };
 
-  const getCurrentSupplyWithoutWallet = useCallback(async () => {
+  const getCurrentSupplyWithoutWallet = useCallback(async (): Promise<number> => {
     if (!tokenAddress || !BLOCKCHAIN_DAO_TOKEN_ABI) {
       console.debug('Config not yet initialized');
       return 0;
@@ -138,12 +102,12 @@ export const useBuyTokens = () => {
 
     const cacheKey = tokenAddress.toLowerCase();
     const cached = getCurrentSupplyWithoutWalletResultCache.get(cacheKey);
-    
+
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
       console.debug('getCurrentSupplyWithoutWallet: returning cached result');
       return cached.result;
     }
-    
+
     if (getCurrentSupplyWithoutWalletCallInProgress.has(cacheKey)) {
       console.debug('getCurrentSupplyWithoutWallet already in progress, returning existing promise');
       return getCurrentSupplyWithoutWalletCallInProgress.get(cacheKey)!;
@@ -153,15 +117,14 @@ export const useBuyTokens = () => {
       try {
         setPending(true);
 
-        const readOnlyTdfToken = await getReadOnlyContractInstance(
-          tokenAddress,
-          BLOCKCHAIN_DAO_TOKEN_ABI,
-        );
+        const network = process.env.NEXT_PUBLIC_NETWORK || 'alfajores';
+        const readOnlyClient = getReadOnlyPublicClient(network);
 
-        const code = await readOnlyTdfToken.provider.getCode(
-          tokenAddress,
-        );
-        if (code === '0x') {
+        const code = await readOnlyClient.getCode({
+          address: tokenAddress as `0x${string}`,
+        });
+
+        if (!code || code === '0x') {
           console.warn('Token contract not found at specified address');
           const result = 0;
           getCurrentSupplyWithoutWalletResultCache.set(cacheKey, { result, timestamp: Date.now() });
@@ -169,11 +132,16 @@ export const useBuyTokens = () => {
         }
 
         try {
-          const supplyInWei = await readOnlyTdfToken.totalSupply();
-          const supply = parseInt(utils.formatEther(supplyInWei));
+          const supplyInWei = await readOnlyClient.readContract({
+            address: tokenAddress as `0x${string}`,
+            abi: BLOCKCHAIN_DAO_TOKEN_ABI,
+            functionName: 'totalSupply',
+          }) as bigint;
+
+          const supply = parseInt(formatEther(supplyInWei));
           getCurrentSupplyWithoutWalletResultCache.set(cacheKey, { result: supply, timestamp: Date.now() });
           return supply;
-        } catch (contractError: any) {
+        } catch (contractError) {
           console.error('Contract call failed:', contractError);
           const result = 0;
           getCurrentSupplyWithoutWalletResultCache.set(cacheKey, { result, timestamp: Date.now() });
@@ -194,27 +162,32 @@ export const useBuyTokens = () => {
     return promise;
   }, [tokenAddress, BLOCKCHAIN_DAO_TOKEN_ABI]);
 
-  const getUserTdfBalance = async () => {
-    const { TdfToken } = getContractInstances();
+  const getUserTdfBalance = async (): Promise<number> => {
+    if (!publicClient || !tokenAddress || !account) return 0;
 
     try {
-      const balanceInWei = await TdfToken.balanceOf(account);
-      const balance = parseInt(utils.formatEther(balanceInWei));
-      return balance;
+      const balanceInWei = await publicClient.readContract({
+        address: tokenAddress as `0x${string}`,
+        abi: BLOCKCHAIN_DAO_TOKEN_ABI,
+        functionName: 'balanceOf',
+        args: [account as `0x${string}`],
+      }) as bigint;
+
+      return parseInt(formatEther(balanceInWei));
     } catch (error) {
       console.log(error);
       return 0;
     }
   };
 
-  const getTokensAvailableForPurchase = async () => {
+  const getTokensAvailableForPurchase = async (): Promise<number> => {
     if (!BLOCKCHAIN_DAO_TOKEN?.address || !BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS) {
       return 0;
     }
 
     const cacheKey = `${BLOCKCHAIN_DAO_TOKEN.address.toLowerCase()}-${BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS.toLowerCase()}`;
     const cached = getTokensAvailableForPurchaseResultCache.get(cacheKey);
-    
+
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
       console.debug('getTokensAvailableForPurchase: returning cached result');
       return cached.result;
@@ -227,19 +200,26 @@ export const useBuyTokens = () => {
 
     const promise = (async () => {
       try {
-        if (!library) {
+        if (!publicClient) {
           const result = 0;
           getTokensAvailableForPurchaseResultCache.set(cacheKey, { result, timestamp: Date.now() });
           return result;
         }
 
-        const { TdfToken, DynamicSale } = getContractInstances();
+        const supply = await publicClient.readContract({
+          address: tokenAddress as `0x${string}`,
+          abi: BLOCKCHAIN_DAO_TOKEN_ABI,
+          functionName: 'totalSupply',
+        }) as bigint;
 
-        const supply = await TdfToken.totalSupply();
-        const saleCap = await DynamicSale.saleHardCap();
+        const saleCap = await publicClient.readContract({
+          address: BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS as `0x${string}`,
+          abi: BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
+          functionName: 'saleHardCap',
+        }) as bigint;
 
-        const remainingTokens = saleCap.sub(supply);
-        const result = parseInt(utils.formatEther(remainingTokens));
+        const remainingTokens = saleCap - supply;
+        const result = parseInt(formatEther(remainingTokens));
         getTokensAvailableForPurchaseResultCache.set(cacheKey, { result, timestamp: Date.now() });
         return result;
       } catch (error) {
@@ -257,46 +237,51 @@ export const useBuyTokens = () => {
   };
 
   const buyTokens = async (amount: string) => {
-    const { DynamicSale } = getContractInstances();
-    const amountInWei = utils.parseEther(amount);
+    if (!walletClient || !publicClient || !BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS) {
+      return { error: new Error('Wallet not connected'), success: false, txHash: null };
+    }
+
+    const amountInWei = parseEther(amount);
 
     try {
-      const txData = DynamicSale.interface.encodeFunctionData('buy', [amountInWei]);
-      const tx = await DynamicSale.signer.sendTransaction({
-        to: DynamicSale.address,
-        data: txData + dataSuffix,
-      })
       setPending(true);
-      const receipt = await tx.wait();
-      const success = receipt.status === 1;
 
-      const chainId = await DynamicSale.signer.getChainId();
-      // do not send Divvi referral on alfajores testnet
+      const txData = encodeFunctionData({
+        abi: BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
+        functionName: 'buy',
+        args: [amountInWei],
+      });
+
+      const fullData = `${txData}${dataSuffix.slice(2)}` as `0x${string}`;
+
+      const hash = await walletClient.sendTransaction({
+        to: BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS as `0x${string}`,
+        data: fullData,
+        account: walletClient.account!,
+        chain: walletClient.chain,
+      });
+
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      const success = receipt.status === 'success';
+
       if (chainId !== 44787) {
         try {
           await submitReferral({
-            txHash: tx.hash as `0x${string}`,
+            txHash: hash,
             chainId,
-          })
+          });
         } catch (error) {
           console.error('submitReferral error:', error);
         }
       }
 
-      console.log(receipt);
-      console.log({
-        error: success ? null : new Error('reverted'),
-        success,
-        txHash: receipt.transactionHash,
-      });
       return {
         error: success ? null : new Error('reverted'),
         success,
-        txHash: receipt.transactionHash,
+        txHash: hash,
       };
     } catch (error) {
-      //User rejected transaction
-      console.error('stakeTokens', error);
+      console.error('buyTokens', error);
       return {
         error,
         success: false,
@@ -307,29 +292,61 @@ export const useBuyTokens = () => {
     }
   };
 
-  const getTotalCost = async (amount: string) => {
-    const amountInWei = utils.parseEther(amount);
-    const { DynamicSale } = getContractInstances();
-    const { totalCost } = await DynamicSale.calculateTotalCost(amountInWei);
-    return parseFloat(utils.formatEther(totalCost));
+  const getTotalCost = async (amount: string): Promise<number> => {
+    if (!publicClient || !BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS) return 0;
+
+    const amountInWei = parseEther(amount);
+
+    const result = await publicClient.readContract({
+      address: BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS as `0x${string}`,
+      abi: BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
+      functionName: 'calculateTotalCost',
+      args: [amountInWei],
+    });
+
+    if (typeof result === 'bigint') {
+      return parseFloat(formatEther(result));
+    }
+    
+    const resultObj = result as { totalCost?: bigint };
+    if (resultObj.totalCost !== undefined) {
+      return parseFloat(formatEther(resultObj.totalCost));
+    }
+
+    return 0;
   };
 
-  const getTotalCostWithoutWallet = async (amount: string) => {
+  const getTotalCostWithoutWallet = async (amount: string): Promise<number> => {
     try {
       setPending(true);
+
       if (!BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS || !BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI) {
         console.debug('Config not yet initialized for dynamic sale contract');
         return 0;
       }
 
-      const readOnlyDynamicSale = await getReadOnlyContractInstance(
-        BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS,
-        BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI
-      );
+      const network = process.env.NEXT_PUBLIC_NETWORK || 'alfajores';
+      const readOnlyClient = getReadOnlyPublicClient(network);
 
-      const amountInWei = utils.parseEther(amount);
-      const { totalCost } = await readOnlyDynamicSale.calculateTotalCost(amountInWei);
-      return parseFloat(utils.formatEther(totalCost));
+      const amountInWei = parseEther(amount);
+
+      const result = await readOnlyClient.readContract({
+        address: BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS as `0x${string}`,
+        abi: BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
+        functionName: 'calculateTotalCost',
+        args: [amountInWei],
+      });
+
+      if (typeof result === 'bigint') {
+        return parseFloat(formatEther(result));
+      }
+      
+      const resultObj = result as { totalCost?: bigint };
+      if (resultObj.totalCost !== undefined) {
+        return parseFloat(formatEther(resultObj.totalCost));
+      }
+
+      return 0;
     } catch (error) {
       console.error('Error in getTotalCostWithoutWallet:', error);
       return 0;
@@ -338,50 +355,79 @@ export const useBuyTokens = () => {
     }
   };
 
-  const isCeurApproved = async (tdfAmount: string) => {
-    const amountInWei = utils.parseEther(tdfAmount);
-    const { DynamicSale, Ceur } = getContractInstances();
-    const { totalCost } = await DynamicSale.calculateTotalCost(amountInWei);
-    const allowance = await Ceur.allowance(account, DynamicSale.address);
-    return allowance.gte(totalCost);
+  const isCeurApproved = async (tdfAmount: string): Promise<boolean> => {
+    if (!publicClient || !account || !BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS || !CEUR_TOKEN_ADDRESS) {
+      return false;
+    }
+
+    const amountInWei = parseEther(tdfAmount);
+
+    const result = await publicClient.readContract({
+      address: BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS as `0x${string}`,
+      abi: BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
+      functionName: 'calculateTotalCost',
+      args: [amountInWei],
+    });
+
+    let totalCost: bigint;
+    if (typeof result === 'bigint') {
+      totalCost = result;
+    } else {
+      const resultObj = result as { totalCost?: bigint };
+      totalCost = resultObj.totalCost ?? BigInt(0);
+    }
+
+    const allowance = await publicClient.readContract({
+      address: CEUR_TOKEN_ADDRESS as `0x${string}`,
+      abi: BLOCKCHAIN_DAO_TOKEN_ABI,
+      functionName: 'allowance',
+      args: [account as `0x${string}`, BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS as `0x${string}`],
+    }) as bigint;
+
+    return allowance >= totalCost;
   };
 
   const approveCeur = async (amount: number) => {
-    const { Ceur, DynamicSale } = getContractInstances();
-    // we add a small buffer to the approval amount to make up for price increases
-    // that might occur after approval
+    if (!walletClient || !publicClient || !CEUR_TOKEN_ADDRESS || !BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS) {
+      return { error: new Error('Wallet not connected'), success: false, txHash: null };
+    }
+
     const bufferFactor = 1.05;
-    const approvalAmount = utils.parseEther((bufferFactor * amount).toString());
+    const approvalAmount = parseEther((bufferFactor * amount).toString());
 
     try {
-      const txData = Ceur.interface.encodeFunctionData('approve', [DynamicSale.address, approvalAmount]);
-      const tx = await Ceur.signer.sendTransaction({
-        to: Ceur.address,
-        data: txData + dataSuffix,
-      })
       setPending(true);
-      const receipt = await tx.wait();
-      const chainId = await Ceur.signer.getChainId();
-      // do not send Divvi referral on alfajores testnet
+
+      const hash = await walletClient.writeContract({
+        address: CEUR_TOKEN_ADDRESS as `0x${string}`,
+        abi: BLOCKCHAIN_DAO_TOKEN_ABI,
+        functionName: 'approve',
+        args: [BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS as `0x${string}`, approvalAmount],
+        account: walletClient.account!,
+        chain: walletClient.chain,
+      });
+
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
       if (chainId !== 44787) {
         try {
-        await submitReferral({
-          txHash: tx.hash as `0x${string}`,
+          await submitReferral({
+            txHash: hash,
             chainId,
-          })
+          });
         } catch (error) {
           console.error('submitReferral error:', error);
         }
       }
-      const success = receipt.status === 1;
+
+      const success = receipt.status === 'success';
       return {
         error: success ? null : new Error('reverted'),
         success,
-        txHash: receipt.transactionHash,
+        txHash: hash,
       };
     } catch (error) {
-      //User rejected transaction
-      console.error('stakeTokens', error);
+      console.error('approveCeur', error);
       return {
         error,
         success: false,

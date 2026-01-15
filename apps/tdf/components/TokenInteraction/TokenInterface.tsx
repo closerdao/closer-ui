@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { Contract } from 'ethers';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
+import { useSwitchChain, useChainId } from 'wagmi';
+import { createPublicClient, http, defineChain } from 'viem';
 import { WalletState } from 'closer/contexts/wallet';
 import { getContract, getCurrentNetwork, getContractNames } from '../../utils/abiLoader';
 
@@ -15,12 +16,15 @@ interface ContractMethod {
 }
 
 const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
-  const { isWalletReady, library } = useContext(WalletState);
+  const { isWalletReady } = useContext(WalletState);
+  const { switchChain } = useSwitchChain();
+  const currentChainId = useChainId();
   const network = getCurrentNetwork();
+
   const [contractNames, setContractNames] = useState<string[]>([]);
   const [selectedContract, setSelectedContract] = useState<string>('');
   const [contractAddress, setContractAddress] = useState<string>('');
-  const [contractAbi, setContractAbi] = useState<any[]>([]);
+  const [contractAbi, setContractAbi] = useState<readonly unknown[]>([]);
   const [methods, setMethods] = useState<ContractMethod[]>([]);
   const [selectedMethod, setSelectedMethod] = useState<string>('');
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
@@ -28,10 +32,26 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
   const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Load contract names
+  const getPublicClient = useCallback(() => {
+    const rpcUrl = network === 'celo' 
+      ? 'https://forno.celo.org' 
+      : 'https://alfajores-forno.celo-testnet.org';
+    const chainId = network === 'celo' ? CELO_CHAIN_ID : ALFAJORES_CHAIN_ID;
+    const chain = defineChain({
+      id: chainId,
+      name: network === 'celo' ? 'Celo' : 'Alfajores',
+      nativeCurrency: { name: 'CELO', symbol: 'CELO', decimals: 18 },
+      rpcUrls: { default: { http: [rpcUrl] } },
+    });
+    return createPublicClient({
+      chain,
+      transport: http(rpcUrl),
+    });
+  }, [network]);
+
   useEffect(() => {
     try {
-      const names = getContractNames(network as any);
+      const names = getContractNames(network as 'celo' | 'alfajores');
       setContractNames(names);
     } catch (err) {
       console.error('Error loading contract names:', err);
@@ -39,7 +59,6 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
     }
   }, [network]);
 
-  // Load contract ABI when a contract is selected
   useEffect(() => {
     const loadContractAbi = async () => {
       if (!selectedContract) return;
@@ -48,18 +67,17 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
       setError('');
 
       try {
-        const { address, abi } = await getContract(selectedContract, network as any);
-        
+        const { address, abi } = await getContract(selectedContract, network as 'celo' | 'alfajores');
+
         if (address && abi) {
           setContractAddress(address);
           setContractAbi(abi);
-          
-          // Extract methods from ABI
-          const contractMethods = abi.filter((item: any) => 
-            item.type === 'function' && 
+
+          const contractMethods = abi.filter((item: { type?: string; stateMutability?: string }) =>
+            item.type === 'function' &&
             (item.stateMutability === 'view' || item.stateMutability === 'pure')
-          );
-          
+          ) as ContractMethod[];
+
           setMethods(contractMethods);
         } else {
           setError(`Failed to load ABI for ${selectedContract}`);
@@ -75,7 +93,6 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
     loadContractAbi();
   }, [selectedContract, network]);
 
-  // Reset input values when selected method changes
   useEffect(() => {
     setInputValues({});
     setResult('');
@@ -98,61 +115,26 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
     setInputValues(prev => ({ ...prev, [name]: value }));
   };
 
+  const CELO_CHAIN_ID = 42220;
+  const ALFAJORES_CHAIN_ID = 44787;
+
   const switchToCorrectNetwork = async () => {
-    // Get the expected network from the app configuration
-    const expectedNetwork = network === 'celo' ? {
-      chainId: 42220,
-      hexChainId: '0xa4ec',
-      name: 'Celo',
-      rpcUrl: 'https://forno.celo.org',
-      explorerUrl: 'https://celoscan.io'
-    } : {
-      chainId: 44787,
-      hexChainId: '0xaef3',
-      name: 'Alfajores',
-      rpcUrl: 'https://alfajores-forno.celo-testnet.org',
-      explorerUrl: 'https://alfajores.celoscan.io'
-    };
+    const expectedChainId = network === 'celo' ? CELO_CHAIN_ID : ALFAJORES_CHAIN_ID;
 
     try {
-      await library.provider.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: expectedNetwork.hexChainId }],
-      });
-    } catch (switchError: any) {
-      if (switchError.code === 4902) {
-        // Network not added to wallet, add it
-        try {
-          await library.provider.request({
-            method: 'wallet_addEthereumChain',
-            params: [
-              {
-                chainId: expectedNetwork.hexChainId,
-                rpcUrls: [expectedNetwork.rpcUrl],
-                chainName: expectedNetwork.name,
-                nativeCurrency: {
-                  name: 'CELO',
-                  symbol: 'CELO',
-                  decimals: 18,
-                },
-                blockExplorerUrls: [expectedNetwork.explorerUrl],
-              },
-            ],
-          });
-        } catch (addError) {
-          console.error(`Failed to add ${expectedNetwork.name} network:`, addError);
-          throw addError;
-        }
-      } else {
-        throw switchError;
+      if (switchChain) {
+        switchChain({ chainId: expectedChainId });
       }
+    } catch (switchError) {
+      console.error('Failed to switch network:', switchError);
+      throw switchError;
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!isWalletReady || !library || !contractAddress || !contractAbi || !selectedMethod) {
+
+    if (!isWalletReady || !contractAddress || !contractAbi.length || !selectedMethod) {
       setError('Cannot execute method: wallet not connected or contract not loaded');
       return;
     }
@@ -161,129 +143,60 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
     setError('');
     setResult('');
 
-    try {
-      console.log('Contract details:', {
-        address: contractAddress,
-        abiLength: contractAbi?.length,
-        selectedMethod,
-        network
-      });
-      
-      // Check wallet network
-      const walletNetwork = await library.getNetwork();
-      console.log('Wallet network:', {
-        chainId: walletNetwork.chainId,
-        name: walletNetwork.name
-      });
-      
-      // Get the expected network from the user's selection
-      const expectedNetwork = network === 'celo' ? {
-        chainId: 42220,
-        name: 'Celo'
-      } : {
-        chainId: 44787,
-        name: 'Alfajores'
-      };
+    const expectedChainId = network === 'celo' ? CELO_CHAIN_ID : ALFAJORES_CHAIN_ID;
 
-      // Check expected network configuration
-      console.log('Expected network config:', {
-        expectedChainId: expectedNetwork.chainId,
-        expectedName: expectedNetwork.name,
-        userSelectedNetwork: network,
-        rpcUrl: library.connection?.url || 'unknown'
-      });
-      
-      // Check if wallet is connected to the correct network
-      if (walletNetwork.chainId !== expectedNetwork.chainId) {
-        console.warn(`Wallet is not connected to ${expectedNetwork.name}!`, {
-          walletChainId: walletNetwork.chainId,
-          expectedChainId: expectedNetwork.chainId,
-          walletName: walletNetwork.name
-        });
-      }
-      
-      // Check network configuration
-      console.log('Network configuration check:', {
-        isCorrectNetwork: walletNetwork.chainId === expectedNetwork.chainId,
-        needsNetworkSwitch: walletNetwork.chainId !== expectedNetwork.chainId
-      });
-      
-      // If not on the correct network, try to switch
-      if (walletNetwork.chainId !== expectedNetwork.chainId) {
-        console.log(`Attempting to switch to ${expectedNetwork.name}...`);
-        try {
-          await switchToCorrectNetwork();
-          console.log(`Successfully switched to ${expectedNetwork.name}`);
-          
-          // Wait a moment for the network change to propagate
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          // Re-check the network after switching
-          const newWalletNetwork = await library.getNetwork();
-          console.log('Network after switch:', {
-            chainId: newWalletNetwork.chainId,
-            name: newWalletNetwork.name
-          });
-          
-          if (newWalletNetwork.chainId !== expectedNetwork.chainId) {
-            console.warn('Network switch did not work as expected');
-            setError(`Please manually switch to ${expectedNetwork.name} (Chain ID: ${expectedNetwork.chainId}) in your wallet to use this contract.`);
-            return;
-          }
-        } catch (switchErr: any) {
-          console.error(`Failed to switch to ${expectedNetwork.name}:`, switchErr);
-          setError(`Please switch to ${expectedNetwork.name} (Chain ID: ${expectedNetwork.chainId}) to use this contract. Error: ${switchErr.message}`);
+    if (currentChainId !== expectedChainId) {
+      console.log('Attempting to switch network...');
+      try {
+        await switchToCorrectNetwork();
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        if (currentChainId !== expectedChainId) {
+          setError('Please manually switch to the correct network in your wallet.');
+          setIsLoading(false);
           return;
         }
+      } catch (switchErr) {
+        console.error('Failed to switch network:', switchErr);
+        setError('Please switch to the correct network.');
+        setIsLoading(false);
+        return;
       }
-      
-      const contract = new Contract(
-        contractAddress,
-        contractAbi,
-        library.getSigner()
-      );
+    }
 
-      const method = methods.find(m => m.name === selectedMethod);
-      if (!method) {
-        throw new Error(`Method ${selectedMethod} not found in ABI`);
-      }
+    const method = methods.find(m => m.name === selectedMethod);
+    if (!method) {
+      setError(`Method ${selectedMethod} not found in ABI`);
+      setIsLoading(false);
+      return;
+    }
 
-      // Prepare arguments in the correct order
-      const args = method.inputs.map(input => inputValues[input.name] || '');
-      
-      console.log('Calling method with args:', { method: selectedMethod, args });
-      
-      // First, let's check if the contract exists by getting its code
-      try {
-        const code = await library.getCode(contractAddress);
-        console.log('Contract code length:', code?.length || 0);
-        if (!code || code === '0x') {
-          console.warn(`No contract found at address ${contractAddress}, but continuing anyway since contract exists on CeloScan`);
-          // Don't throw error, continue with the call
-        }
-      } catch (codeErr: any) {
-        console.error('Error checking contract code:', codeErr);
-        console.warn('Contract verification failed, but continuing anyway since contract exists on CeloScan');
-        // Don't throw error, continue with the call
-      }
-      
-      // Call the method
-      const response = await contract[selectedMethod](...args);
-      
-      // Format the result
+    const args = method.inputs.map(input => inputValues[input.name] || '');
+    console.log('Calling method with args:', { method: selectedMethod, args });
+
+    try {
+      const publicClient = getPublicClient();
+      const response = await publicClient.readContract({
+        address: contractAddress as `0x${string}`,
+        abi: contractAbi,
+        functionName: selectedMethod,
+        args,
+      });
+
       let formattedResult;
       if (Array.isArray(response)) {
-        formattedResult = JSON.stringify(response, null, 2);
-      } else if (typeof response === 'object' && response._isBigNumber) {
+        formattedResult = JSON.stringify(response, (key, value) =>
+          typeof value === 'bigint' ? value.toString() : value, 2);
+      } else if (typeof response === 'bigint') {
         formattedResult = response.toString();
       } else {
         formattedResult = String(response);
       }
-      
+
       setResult(formattedResult);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error calling contract method:', err);
-      setError(err.message || 'Error calling contract method');
+      setError(err instanceof Error ? err.message : 'Error calling contract method');
     } finally {
       setIsLoading(false);
     }
@@ -292,14 +205,13 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
   return (
     <div className={`p-6 border rounded-lg shadow-sm ${className}`}>
       <h2 className="text-xl font-bold mb-4">Token Interaction Interface</h2>
-      
+
       {!isWalletReady ? (
         <div className="p-4 bg-yellow-100 text-yellow-800 rounded-md">
           <p>Please connect your wallet to interact with tokens.</p>
         </div>
       ) : (
         <div>
-          
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Contract
@@ -317,7 +229,7 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
               ))}
             </select>
           </div>
-          
+
           {selectedContract && (
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -328,7 +240,7 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
               </div>
             </div>
           )}
-          
+
           {selectedContract && methods.length > 0 && (
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -348,7 +260,7 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
               </select>
             </div>
           )}
-          
+
           {selectedMethod && (
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
@@ -370,7 +282,7 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
                     </div>
                   ))}
               </div>
-              
+
               <div className="mb-4">
                 <button
                   type="submit"
@@ -386,13 +298,13 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
               </div>
             </form>
           )}
-          
+
           {error && (
             <div className="p-3 bg-red-100 text-red-800 rounded-md mb-4">
               <p className="text-sm">{error}</p>
             </div>
           )}
-          
+
           {result && (
             <div className="mb-4">
               <h3 className="text-lg font-medium mb-2">Result</h3>

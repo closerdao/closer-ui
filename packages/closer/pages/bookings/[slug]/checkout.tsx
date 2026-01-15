@@ -19,7 +19,10 @@ import ProgressBar from '../../../components/ui/ProgressBar';
 import Row from '../../../components/ui/Row';
 
 import dayjs from 'dayjs';
+import dayOfYear from 'dayjs/plugin/dayOfYear';
 import { NextApiRequest, NextPageContext } from 'next';
+
+dayjs.extend(dayOfYear);
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';

@@ -1,23 +1,24 @@
 import { useEffect, useState, useContext } from 'react';
-import { Contract } from 'ethers';
+import { usePublicClient } from 'wagmi';
+import { formatUnits } from 'viem';
 import { WalletState } from 'closer/contexts/wallet';
 import { getContract, getCurrentNetwork } from '../utils/abiLoader';
 
 export const useSweatToken = () => {
-  const { isWalletReady, account, library } = useContext(WalletState);
+  const { isWalletReady, account } = useContext(WalletState);
+  const publicClient = usePublicClient();
   const [sweatBalance, setSweatBalance] = useState<string>('0');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [contractAddress, setContractAddress] = useState<string | null>(null);
   const [contractAbi, setContractAbi] = useState<any[] | null>(null);
 
-  // Load contract data
   useEffect(() => {
     const loadContractData = async () => {
       try {
         const network = getCurrentNetwork();
         const { address, abi } = await getContract('SweatToken', network);
-        
+
         if (address && abi) {
           setContractAddress(address);
           setContractAbi(abi);
@@ -34,10 +35,9 @@ export const useSweatToken = () => {
     loadContractData();
   }, []);
 
-  // Fetch balance when contract data is loaded and wallet is ready
   useEffect(() => {
     const fetchSweatBalance = async () => {
-      if (!isWalletReady || !account || !library || !contractAddress || !contractAbi) {
+      if (!isWalletReady || !account || !publicClient || !contractAddress || !contractAbi) {
         return;
       }
 
@@ -45,14 +45,14 @@ export const useSweatToken = () => {
       setError(null);
 
       try {
-        const sweatTokenContract = new Contract(
-          contractAddress,
-          contractAbi,
-          library.getSigner()
-        );
+        const balance = await publicClient.readContract({
+          address: contractAddress as `0x${string}`,
+          abi: contractAbi,
+          functionName: 'balanceOf',
+          args: [account as `0x${string}`],
+        }) as bigint;
 
-        const balance = await sweatTokenContract.balanceOf(account);
-        setSweatBalance(balance.toString());
+        setSweatBalance(formatUnits(balance, 18));
       } catch (err) {
         console.error('Error fetching Sweat token balance:', err);
         setError('Failed to fetch Sweat token balance');
@@ -63,7 +63,7 @@ export const useSweatToken = () => {
     };
 
     fetchSweatBalance();
-  }, [isWalletReady, account, library, contractAddress, contractAbi]);
+  }, [isWalletReady, account, publicClient, contractAddress, contractAbi]);
 
   return {
     sweatBalance,

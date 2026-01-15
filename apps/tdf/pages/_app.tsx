@@ -2,6 +2,7 @@ import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Script from 'next/script';
+import dynamic from 'next/dynamic';
 
 import { useEffect, useRef, useState } from 'react';
 
@@ -10,19 +11,17 @@ import { ErrorBoundary, Layout } from '@/components';
 import AcceptCookies from 'closer/components/AcceptCookies';
 
 import {
-  ExternalProvider,
-  JsonRpcFetchFunc,
-  Web3Provider,
-} from '@ethersproject/providers';
-import { Web3ReactProvider } from '@web3-react/core';
-import {
   AuthProvider,
   ConfigProvider,
   PlatformProvider,
-  WalletProvider,
   api,
   blockchainConfig,
 } from 'closer';
+
+const Web3Provider = dynamic(
+  () => import('closer/components/Web3Provider'),
+  { ssr: false }
+);
 import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import { NewsletterProvider } from 'closer/contexts/newsletter';
@@ -36,11 +35,6 @@ import '../styles/index.css';
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
-}
-
-export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
-  const library = new Web3Provider(provider);
-  return library;
 }
 
 const prepareDefaultConfig = () => {
@@ -173,18 +167,15 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
           >
             <AuthProvider>
               <PlatformProvider>
-                <Web3ReactProvider getLibrary={getLibrary}>
-                  <WalletProvider>
-                    <NewsletterProvider>
-                      <Layout>
-                        <GoogleAnalytics trackPageViews />
-                        <Component {...pageProps} config={config} />
-                      </Layout>
-                    </NewsletterProvider>
-                    {/* TODO: create cookie consent page with property-specific parameters #357  */}
-                    <AcceptCookies />
-                  </WalletProvider>
-                </Web3ReactProvider>
+                <Web3Provider>
+                  <NewsletterProvider>
+                    <Layout>
+                      <GoogleAnalytics trackPageViews />
+                      <Component {...pageProps} config={config} />
+                    </Layout>
+                  </NewsletterProvider>
+                  <AcceptCookies />
+                </Web3Provider>
               </PlatformProvider>
             </AuthProvider>
           </NextIntlClientProvider>

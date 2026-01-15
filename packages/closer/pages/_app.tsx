@@ -2,22 +2,16 @@ import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Script from 'next/script';
+import dynamic from 'next/dynamic';
 
 import { useEffect, useState } from 'react';
 
 import { PromptGetInTouchProvider } from '../components/PromptGetInTouchContext';
 
 import {
-  ExternalProvider,
-  JsonRpcFetchFunc,
-  Web3Provider,
-} from '@ethersproject/providers';
-import { Web3ReactProvider } from '@web3-react/core';
-import {
   AuthProvider,
   ConfigProvider,
   PlatformProvider,
-  WalletProvider,
   api,
   blockchainConfig,
 } from 'closer';
@@ -28,13 +22,13 @@ import { prepareGeneralConfig } from 'closer/utils/app.helpers';
 import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
+const Web3Provider = dynamic(
+  () => import('../components/Web3Provider'),
+  { ssr: false }
+);
+
 interface AppOwnProps extends AppProps {
   configGeneral: any;
-}
-
-export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
-  const library = new Web3Provider(provider);
-  return library;
 }
 
 const prepareDefaultConfig = () => {
@@ -147,17 +141,14 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         >
           <AuthProvider>
             <PlatformProvider>
-              <Web3ReactProvider getLibrary={getLibrary}>
-                <WalletProvider>
-                  <GoogleAnalytics trackPageViews />
-                  <PromptGetInTouchProvider>
-                    <NewsletterProvider>
-                      <Component {...pageProps} config={config} />
-                    </NewsletterProvider>
-                  </PromptGetInTouchProvider>
-                  {/* TODO: create cookie consent page with property-specific parameters #357  */}
-                </WalletProvider>
-              </Web3ReactProvider>
+              <Web3Provider>
+                <GoogleAnalytics trackPageViews />
+                <PromptGetInTouchProvider>
+                  <NewsletterProvider>
+                    <Component {...pageProps} config={config} />
+                  </NewsletterProvider>
+                </PromptGetInTouchProvider>
+              </Web3Provider>
             </PlatformProvider>
           </AuthProvider>
         </NextIntlClientProvider>
