@@ -1,17 +1,21 @@
 import { useContext } from 'react';
+import { useTranslations } from 'next-intl';
 
 import { WalletState } from '../contexts/wallet';
 import { useConfig } from '../hooks/useConfig';
 import { priceFormat } from '../utils/helpers';
 import WalletActions from './WalletActions';
 import WalletHeader from './WalletHeader';
-import { useTranslations } from 'next-intl';
 import { ErrorMessage } from './ui';
 
+interface BookingWalletProps {
+  toPay: number;
+  switchToFiat: () => void;
+}
 
-const BookingWallet = ({ toPay, switchToFiat }) => {
+const BookingWallet = ({ toPay, switchToFiat }: BookingWalletProps) => {
   const t = useTranslations();
-  
+
   const { BLOCKCHAIN_DAO_TOKEN } = useConfig();
   const { balanceAvailable, isWalletReady } = useContext(WalletState);
   const balanceAfterPayment = balanceAvailable - toPay;
@@ -40,7 +44,7 @@ const BookingWallet = ({ toPay, switchToFiat }) => {
               <button className="btn mt-4 w-full uppercase" onClick={switchToFiat}>
                 {t('booking_pay_in_euro')}
               </button>
-              <ErrorMessage error={t('error_insufficient_token_balance')}/>
+              <ErrorMessage error={t('error_insufficient_token_balance')} />
             </div>
           )}
         </div>

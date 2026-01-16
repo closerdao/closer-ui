@@ -3,6 +3,7 @@
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "pages/index.tsx"],
   "exclude": ["node_modules"],
   "compilerOptions": {
+    "target": "es2020",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]

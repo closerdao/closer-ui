@@ -9,6 +9,7 @@
   ],
   "exclude": ["node_modules"],
   "compilerOptions": {
+    "target": "es2020",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]

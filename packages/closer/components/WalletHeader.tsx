@@ -1,10 +1,13 @@
 import { useContext } from 'react';
-
 import { useTranslations } from 'next-intl';
 
 import { WalletState } from '../contexts/wallet';
 
-const WalletHeader = ({ isInsufficientBalance }) => {
+interface WalletHeaderProps {
+  isInsufficientBalance?: boolean;
+}
+
+const WalletHeader = ({ isInsufficientBalance }: WalletHeaderProps) => {
   const t = useTranslations();
 
   const {

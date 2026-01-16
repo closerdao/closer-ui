@@ -44,6 +44,8 @@ export * from './contexts/config';
 export { ConfigProvider } from './contexts/config';
 export * from './contexts/platform';
 export * from './contexts/wallet/';
+export { wagmiConfig, targetChainId, targetChain } from './contexts/wallet/wagmiConfig';
+export { default as Web3Provider } from './components/Web3Provider';
 // Hooks
 export * from './hooks/useConfig';
 export * from './hooks/useHasMounted';

@@ -10,6 +10,9 @@ const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/utils/test/jest.setup.js'],
   setupFiles: ['<rootDir>/test/jest.mocks.tsx'],
   testEnvironment: 'jest-environment-jsdom',
+  transformIgnorePatterns: [
+    '/node_modules/(?!(wagmi|@wagmi|viem|@rainbow-me|@tanstack|@walletconnect|@noble|ox)/)',
+  ],
   moduleNameMapper: {
     '^next/router$': 'next-router-mock',
     '^next/dist/client/router$': 'next-router-mock',

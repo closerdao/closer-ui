@@ -7,7 +7,6 @@ import config from '@/__tests__/mocks/config';
 
 import type { RenderOptions } from '@testing-library/react';
 import { render as rtlRender } from '@testing-library/react';
-import { Web3ReactProvider } from '@web3-react/core';
 import {
   AuthProvider,
   ConfigProvider,
@@ -20,8 +19,6 @@ import messagesBase from 'closer/locales/base-en.json';
 import messagesLocal from 'closer/locales/tdf/en.json';
 import { NextIntlClientProvider } from 'next-intl';
 import Router from 'next-router-mock';
-
-import { getLibrary } from '../pages/_app';
 
 const RouterContext = React.createContext<NextRouter>(Router as NextRouter);
 
@@ -59,9 +56,7 @@ export const renderWithProviders = (
           >
             <AuthProvider>
               <PlatformProvider>
-                <Web3ReactProvider getLibrary={getLibrary}>
-                  <WalletProvider>{children}</WalletProvider>
-                </Web3ReactProvider>
+                <WalletProvider>{children}</WalletProvider>
               </PlatformProvider>
             </AuthProvider>
           </NextIntlClientProvider>

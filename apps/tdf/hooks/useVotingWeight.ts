@@ -33,22 +33,12 @@ export const useVotingWeight = () => {
       return;
     }
 
-    // Parse TDF balance
-    const tdfValue = parseFloat(tdfBalance || '0');
-    
-    // Parse Presence balance
-    // In a real implementation, this would convert from wei to ether if needed
+    const tdfValue = typeof tdfBalance === 'number' ? tdfBalance : parseFloat(String(tdfBalance) || '0');
     const presenceValue = parseFloat(presenceBalance || '0');
-    
-    // Parse Sweat balance
     const sweatValue = parseFloat(sweatBalance || '0');
-    
-    // Calculate weighted Sweat value (Sweat * 5)
     const sweatWeighted = sweatValue * 5;
-    
-    // Calculate total voting weight
     const totalWeight = tdfValue + presenceValue + sweatWeighted;
-    
+
     setVotingWeight(totalWeight);
     setComponents({
       tdf: tdfValue,

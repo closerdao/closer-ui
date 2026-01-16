@@ -23,7 +23,7 @@ const nextConfig = {
     defaultLocale: 'en',
   },
   reactStrictMode: false,
-  transpilePackages: ['closer'],
+  transpilePackages: ['closer', 'viem', '@wagmi/core', 'wagmi', '@rainbow-me/rainbowkit'],
   presets: ['next/babel'],
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   images: {

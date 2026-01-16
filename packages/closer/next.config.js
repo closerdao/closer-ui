@@ -11,6 +11,7 @@ const nextConfig = {
   reactStrictMode: false,
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   swcMinify: false,
+  transpilePackages: ['viem', '@wagmi/core', 'wagmi', '@rainbow-me/rainbowkit'],
   experimental: {
     forceSwcTransforms: false,
   },

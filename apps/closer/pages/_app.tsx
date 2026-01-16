@@ -2,6 +2,7 @@ import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Script from 'next/script';
+import dynamic from 'next/dynamic';
 
 import { useEffect, useState } from 'react';
 
@@ -11,19 +12,17 @@ import AcceptCookies from 'closer/components/AcceptCookies';
 import { PromptGetInTouchProvider } from 'closer/components/PromptGetInTouchContext';
 
 import {
-  ExternalProvider,
-  JsonRpcFetchFunc,
-  Web3Provider,
-} from '@ethersproject/providers';
-import { Web3ReactProvider } from '@web3-react/core';
-import {
   AuthProvider,
   ConfigProvider,
   PlatformProvider,
-  WalletProvider,
   api,
   blockchainConfig,
 } from 'closer';
+
+const Web3Provider = dynamic(
+  () => import('closer/components/Web3Provider'),
+  { ssr: false }
+);
 import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import { NewsletterProvider } from 'closer/contexts/newsletter';
@@ -36,11 +35,6 @@ import '../styles/index.css';
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
-}
-
-export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
-  const library = new Web3Provider(provider);
-  return library;
 }
 
 const prepareDefaultConfig = () => {
@@ -134,21 +128,18 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
             timeZone={config?.timeZone || appConfig.DEFAULT_TIMEZONE}
           >
             <AuthProvider>
-            <PromptGetInTouchProvider>
-              <PlatformProvider>
-                <Web3ReactProvider getLibrary={getLibrary}>
-                  <WalletProvider>
+              <PromptGetInTouchProvider>
+                <PlatformProvider>
+                  <Web3Provider>
                     <Layout>
                       <GoogleAnalytics trackPageViews />
                       <NewsletterProvider>
                         <Component {...pageProps} config={config} />
                       </NewsletterProvider>
                     </Layout>
-                    {/* TODO: create cookie consent page with property-specific parameters #357  */}
                     <AcceptCookies />
-                  </WalletProvider>
-                </Web3ReactProvider>
-              </PlatformProvider>
+                  </Web3Provider>
+                </PlatformProvider>
               </PromptGetInTouchProvider>
             </AuthProvider>
           </NextIntlClientProvider>
