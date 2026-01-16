@@ -1,0 +1,65 @@
+{
+  "testWallet": {
+    "address": "0x1234567890123456789012345678901234567890",
+    "chainId": 44787,
+    "network": "alfajores",
+    "balances": {
+      "celo": "1000000000000000000",
+      "ceur": "1000000000000000000000"
+    }
+  },
+  "contracts": {
+    "presenceToken": {
+      "address": "0xPresenceTokenAddress123456789012345678901",
+      "name": "PresenceToken",
+      "symbol": "PRSNT",
+      "decimals": 18,
+      "totalSupply": "10000000000000000000000"
+    },
+    "sweatToken": {
+      "address": "0xSweatTokenAddress1234567890123456789012",
+      "name": "SweatToken", 
+      "symbol": "SWEAT",
+      "decimals": 18,
+      "totalSupply": "5000000000000000000000"
+    },
+    "ceur": {
+      "address": "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1",
+      "name": "Celo Euro",
+      "symbol": "cEUR",
+      "decimals": 18
+    }
+  },
+  "tokenSale": {
+    "unitPrice": 7.5,
+    "minPurchase": 10,
+    "maxPurchase": 10000,
+    "tokensAvailable": 15000,
+    "tokensSold": 5000
+  },
+  "transactions": {
+    "approval": {
+      "hash": "0xapproval123456789abcdef0123456789abcdef0",
+      "status": "success",
+      "blockNumber": 12345678
+    },
+    "purchase": {
+      "hash": "0xpurchase123456789abcdef0123456789abcdef0",
+      "status": "success",
+      "blockNumber": 12345679,
+      "tokenAmount": 100
+    }
+  },
+  "users": {
+    "regularUser": {
+      "email": "test@example.com",
+      "kycPassed": false,
+      "canInstantBook": false
+    },
+    "kycVerifiedUser": {
+      "email": "verified@example.com",
+      "kycPassed": true,
+      "canInstantBook": true
+    }
+  }
+}
