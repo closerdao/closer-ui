@@ -1,7 +1,6 @@
 import React from 'react';
 
 import { render as rtlRender } from '@testing-library/react';
-import { Web3ReactProvider } from '@web3-react/core';
 
 import { closerConfig } from '../config';
 import { blockchainConfig } from '../config_blockchain';
@@ -9,7 +8,6 @@ import { AuthProvider } from '../contexts/auth';
 import { ConfigProvider } from '../contexts/config';
 import { PlatformProvider } from '../contexts/platform';
 import { WalletProvider } from '../contexts/wallet';
-import { getLibrary } from '../pages/_app';
 import { NextIntlClientProvider } from 'next-intl';
 import messagesLocal from '../locales/tdf/en.json';
 import messagesBase from '../locales/base-en.json';
@@ -25,9 +23,7 @@ export const renderWithProviders = (ui: React.ReactElement, options = {}) => {
         >
           <AuthProvider>
             <PlatformProvider>
-              <Web3ReactProvider getLibrary={getLibrary}>
-                <WalletProvider>{children}</WalletProvider>
-              </Web3ReactProvider>
+              <WalletProvider>{children}</WalletProvider>
             </PlatformProvider>
           </AuthProvider>
         </NextIntlClientProvider>
