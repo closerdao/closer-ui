@@ -19,7 +19,7 @@ describe('Complete Token Purchase Flow', () => {
     cy.window().then(() => {
       if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
         cy.log('Token sale feature disabled, skipping test');
-        // @ts-ignore
+        // Skip test if feature disabled
         cy.state('runnable').skip();
       }
     });

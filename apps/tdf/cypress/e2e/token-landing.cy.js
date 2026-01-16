@@ -21,7 +21,7 @@ describe('Token Sale Landing Page', () => {
     cy.window().then((win) => {
       if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
         cy.log('Token sale feature is disabled, skipping test');
-        // @ts-ignore
+        // Skip test if feature disabled
         cy.state('runnable').skip();
       }
     });

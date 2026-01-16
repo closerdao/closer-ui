@@ -21,7 +21,7 @@ describe('Checklist Crypto Page', () => {
       if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true' ||
           process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET !== 'true') {
         cy.log('Required features disabled, skipping test');
-        // @ts-ignore
+        // Skip test if feature disabled
         cy.state('runnable').skip();
       }
     });

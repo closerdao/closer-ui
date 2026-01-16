@@ -19,7 +19,7 @@ describe('Wallet Connection Flow', () => {
     cy.window().then((win) => {
       if (process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET !== 'true') {
         cy.log('Web3 wallet feature is disabled, skipping test');
-        // @ts-ignore
+        // Skip test if feature disabled
         cy.state('runnable').skip();
       }
     });

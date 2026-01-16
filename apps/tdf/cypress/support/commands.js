@@ -145,7 +145,7 @@ Cypress.Commands.add('skipIfFeatureDisabled', (featureName) => {
                      process.env[featureName] === 'true';
     if (!isEnabled) {
       cy.log(`Feature ${featureName} is disabled, skipping test`);
-      // @ts-ignore
+      // Skip test dynamically
       cy.state('runnable').skip();
     }
   });
