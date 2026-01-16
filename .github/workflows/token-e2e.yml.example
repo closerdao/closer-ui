@@ -1,0 +1,162 @@
+name: Token E2E Tests
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - '2026-web3-wall3t'
+    paths:
+      - 'apps/tdf/**'
+      - 'packages/closer/**'
+      - '.github/workflows/token-e2e.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+      - '2026-web3-wall3t'
+    paths:
+      - 'apps/tdf/**'
+      - 'packages/closer/**'
+
+jobs:
+  cypress-run:
+    name: Run Token E2E Tests
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Create .env file
+        working-directory: apps/tdf
+        run: |
+          cat > .env << EOF
+          # API Configuration
+          NEXT_PUBLIC_CDN_URL=https://cdn.tdf.example.com/photo/
+          NEXT_PUBLIC_API_URL=http://localhost:8080
+          NEXT_PUBLIC_PLATFORM=tdf
+          NEXT_PUBLIC_PLATFORM_URL=http://localhost:3000
+          NEXT_PUBLIC_LOG_REQUESTS=false
+          
+          # Feature Flags
+          NEXT_PUBLIC_FEATURE_WEB3_BOOKING=true
+          NEXT_PUBLIC_FEATURE_WEB3_WALLET=true
+          NEXT_PUBLIC_FEATURE_BOOKING=true
+          NEXT_PUBLIC_FEATURE_TOKEN_SALE=true
+          NEXT_PUBLIC_FEATURE_CITIZENSHIP=true
+          NEXT_PUBLIC_FEATURE_REFERRAL=true
+          
+          # Web3 Configuration
+          NEXT_PUBLIC_NETWORK=alfajores
+          NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=b1ce5f2e6d2e35b3e1a50f8d97bdb060
+          
+          # Test Accounts
+          TEST_ADMIN_EMAIL=${{ secrets.TEST_ADMIN_EMAIL || 'admin@example.com' }}
+          TEST_USER_EMAIL=${{ secrets.TEST_USER_EMAIL || 'user@example.com' }}
+          TEST_USER_PASSWORD=${{ secrets.TEST_USER_PASSWORD || 'testpassword123' }}
+          
+          # Stripe (test keys)
+          NEXT_PUBLIC_STRIPE_PUB_KEY=pk_test_placeholder
+          STRIPE_SECRET_KEY=sk_test_placeholder
+          EOF
+
+      - name: Build TDF app
+        working-directory: apps/tdf
+        run: yarn build
+        env:
+          NODE_ENV: production
+
+      - name: Run Cypress tests
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: apps/tdf
+          start: yarn start
+          wait-on: 'http://localhost:3000'
+          wait-on-timeout: 120
+          browser: chrome
+          spec: cypress/e2e/token-*.cy.js
+          config-file: cypress.config.ts
+        env:
+          NEXT_PUBLIC_FEATURE_TOKEN_SALE: true
+          NEXT_PUBLIC_FEATURE_WEB3_WALLET: true
+          NEXT_PUBLIC_NETWORK: alfajores
+          TEST_ADMIN_EMAIL: ${{ secrets.TEST_ADMIN_EMAIL || 'admin@example.com' }}
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL || 'user@example.com' }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD || 'testpassword123' }}
+
+      - name: Upload Cypress screenshots on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: apps/tdf/cypress/screenshots
+          retention-days: 7
+
+      - name: Upload Cypress videos
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-videos
+          path: apps/tdf/cypress/videos
+          retention-days: 7
+
+  # Optional: Run tests in parallel
+  cypress-parallel:
+    name: Run Token E2E Tests (Parallel)
+    runs-on: ubuntu-22.04
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        containers: [1, 2, 3]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Create .env file
+        working-directory: apps/tdf
+        run: |
+          cat > .env << EOF
+          NEXT_PUBLIC_FEATURE_TOKEN_SALE=true
+          NEXT_PUBLIC_FEATURE_WEB3_WALLET=true
+          NEXT_PUBLIC_NETWORK=alfajores
+          TEST_ADMIN_EMAIL=${{ secrets.TEST_ADMIN_EMAIL || 'admin@example.com' }}
+          TEST_USER_EMAIL=${{ secrets.TEST_USER_EMAIL || 'user@example.com' }}
+          TEST_USER_PASSWORD=${{ secrets.TEST_USER_PASSWORD || 'testpassword123' }}
+          EOF
+
+      - name: Run Cypress tests in parallel
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: apps/tdf
+          start: yarn start
+          wait-on: 'http://localhost:3000'
+          browser: chrome
+          spec: cypress/e2e/token-*.cy.js
+          record: true
+          parallel: true
+          group: 'Token E2E Tests'
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
