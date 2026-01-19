@@ -8,7 +8,12 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "cypress:run:token": "cypress run --spec 'cypress/e2e/token-*.cy.js'",
+    "test:e2e": "start-server-and-test dev http://localhost:3000 cypress:run:token",
+    "test:e2e:open": "start-server-and-test dev http://localhost:3000 cypress:open"
   },
   "dependencies": {
     "@mdx-js/loader": "^2.3.0",
