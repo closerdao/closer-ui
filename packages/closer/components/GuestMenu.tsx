@@ -325,6 +325,17 @@ const GuestMenu = () => {
                 },
               ],
             },
+            {
+              label: t('philosophy_title'),
+              isOpen: false,
+              items: [
+                {
+                  label: t('philosophy_title'),
+                  url: '/philosophy',
+                  enabled: true,
+                },
+              ],
+            },
           ]
         : []),
 

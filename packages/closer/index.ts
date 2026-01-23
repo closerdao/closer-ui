@@ -165,6 +165,14 @@ export { default as CreateVolunteerOportunity } from './pages/volunteer/create';
 export { default as ExpenseTrackingDashboardPage } from './pages/dashboard/expense-tracking';
 
 export { default as RevenuePage } from './pages/dashboard/revenue';
+export { default as PhilosophyPage } from './pages/philosophy/index';
+export { default as CommonsGovernancePage } from './pages/philosophy/commons-governance';
+export { default as TragedyMythPage } from './pages/philosophy/tragedy-myth';
+export { default as CommonsExclosurePage } from './pages/philosophy/commons-exclosure';
+export { default as DigitalCommonsPage } from './pages/philosophy/digital-commons';
+export { default as SharedAbundancePage } from './pages/philosophy/shared-abundance';
+export { default as RoadmapPage } from './pages/roadmap';
+export { default as PrivacyPolicyPage } from './pages/privacy-policy';
 // Types
 export * from './types/';
 // Utils

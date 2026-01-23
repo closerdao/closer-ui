@@ -1312,51 +1312,59 @@ const CommunityMap = () => {
             const style = document.createElement('style');
             style.textContent = `
         .leaflet-container {
-          z-index: 0 !important;
-        }
-        
-        .leaflet-control-container {
           z-index: 1 !important;
         }
         
+        .leaflet-control-container {
+          z-index: 800 !important;
+        }
+        
         .leaflet-popup-pane {
-          z-index: 2 !important;
+          z-index: 700 !important;
+        }
+        
+        .leaflet-marker-pane {
+          z-index: 600 !important;
+        }
+        
+        .leaflet-popup {
+          z-index: 700 !important;
         }
         
         .leaflet-tile {
-          filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.9);
+          filter: saturate(0.8) brightness(1.05);
         }
         
         .custom-marker {
           width: 12px;
           height: 12px;
           border-radius: 50%;
-          background: white;
-          border: 2px solid rgba(255, 255, 255, 0.8);
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+          background: #5290DB;
+          border: 2px solid white;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
           transition: all 0.2s ease;
           cursor: pointer;
         }
         
         .custom-marker:hover {
           transform: scale(1.3);
-          box-shadow: 0 3px 8px rgba(255, 255, 255, 0.4);
+          box-shadow: 0 3px 10px rgba(82, 144, 219, 0.4);
         }
         
         .closer-marker {
           width: 20px;
           height: 20px;
           border-radius: 50%;
-          background: white;
-          border: 3px solid rgba(255, 255, 255, 0.9);
-          box-shadow: 0 3px 10px rgba(255, 255, 255, 0.3);
+          background: #5290DB;
+          border: 3px solid white;
+          box-shadow: 0 3px 10px rgba(82, 144, 219, 0.3);
           position: relative;
           animation: pulse 2s infinite;
         }
         
         .closer-marker:hover {
           transform: scale(1.2);
-          box-shadow: 0 4px 12px rgba(255, 255, 255, 0.4);
+          box-shadow: 0 4px 14px rgba(82, 144, 219, 0.5);
         }
         
         .closer-marker::before {
@@ -1367,16 +1375,16 @@ const CommunityMap = () => {
           transform: translate(-50%, -50%);
           width: 8px;
           height: 8px;
-          background: black;
+          background: white;
           border-radius: 50%;
         }
         
         @keyframes pulse {
           0%, 100% {
-            box-shadow: 0 3px 10px rgba(255, 255, 255, 0.3), 0 0 0 0 rgba(255, 255, 255, 0.2);
+            box-shadow: 0 3px 10px rgba(82, 144, 219, 0.3), 0 0 0 0 rgba(82, 144, 219, 0.2);
           }
           50% {
-            box-shadow: 0 3px 10px rgba(255, 255, 255, 0.3), 0 0 0 10px rgba(255, 255, 255, 0);
+            box-shadow: 0 3px 10px rgba(82, 144, 219, 0.3), 0 0 0 10px rgba(82, 144, 219, 0);
           }
         }
         
@@ -1489,13 +1497,13 @@ const CommunityMap = () => {
         }
         
         .leaflet-control-zoom a {
-          background: rgba(255, 255, 255, 0.9);
+          background: white;
           color: black;
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          border: 1px solid #e5e5e7;
         }
         
         .leaflet-control-zoom a:hover {
-          background: white;
+          background: #f5f5f7;
         }
       `;
             document.head.appendChild(style);
@@ -1549,8 +1557,8 @@ const CommunityMap = () => {
     }, []);
 
     return (
-        <div className="flex flex-col h-full bg-black relative z-0">
-            <div ref={mapRef} className="flex-1 w-full relative z-0" />
+        <div className="flex flex-col h-full bg-[#f5f5f7] relative">
+            <div ref={mapRef} className="flex-1 w-full relative" style={{ zIndex: 1 }} />
         </div>
     );
 };

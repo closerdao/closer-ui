@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { FC } from 'react';
 
 import { FaTelegram } from '@react-icons/all-files/fa/FaTelegram';
@@ -14,22 +15,63 @@ import Newsletter from './Newsletter';
 const Footer: FC = () => {
   const t = useTranslations();
 
-  // Use newsletter context at top level - hooks must be called unconditionally
   const newsletterContext = useNewsletter();
   const hideFooterNewsletter = newsletterContext?.hideFooterNewsletter || false;
 
-  // TODO: switch to per-page config fetching if we ever need this page
   const config = useConfig();
   const {
+    APP_NAME,
     DISCORD_URL,
     FACEBOOK_URL,
     INSTAGRAM_URL,
     TELEGRAM_URL,
     TWITTER_URL,
   } = config || {};
+
+  const isCloserApp = APP_NAME?.toLowerCase() === 'closer';
+
   return (
     <div>
       <footer className="flex flex-col items-center p-4 main-content text-center">
+        {isCloserApp && (
+          <div className="w-full border-t border-divider pt-8 mb-8">
+            <div className="max-w-4xl mx-auto">
+              <p className="text-sm text-foreground/60 mb-6 italic">
+                {t('footer_philosophy_tagline')}
+              </p>
+              <div className="flex flex-wrap justify-center gap-4 text-sm">
+                <Link
+                  href="/philosophy"
+                  className="text-accent hover:underline"
+                >
+                  {t('philosophy_title')}
+                </Link>
+                <span className="text-foreground/30">·</span>
+                <Link
+                  href="/philosophy/commons-governance"
+                  className="text-foreground/70 hover:text-accent"
+                >
+                  {t('philosophy_commons_governance_title')}
+                </Link>
+                <span className="text-foreground/30">·</span>
+                <Link
+                  href="/philosophy/commons-exclosure"
+                  className="text-foreground/70 hover:text-accent"
+                >
+                  {t('philosophy_commons_exclosure_title')}
+                </Link>
+                <span className="text-foreground/30">·</span>
+                <Link
+                  href="/philosophy/digital-commons"
+                  className="text-foreground/70 hover:text-accent"
+                >
+                  {t('philosophy_digital_commons_title')}
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col md:flex-row py-2 items-center w-full justify-between">
           <div className="flex flex-col items-center md:items-start">
             <div className="flex flex-row mb-8 md:mb-1">
@@ -89,10 +131,13 @@ const Footer: FC = () => {
                 </a>
               )}
             </div>
-            <div className="flex flex-col items-start mt-8 text-gray-500">
+            <div className="flex flex-col items-center md:items-start mt-8 text-gray-500 gap-2">
+              <p className="text-sm font-medium text-foreground/70">
+                {t('footer_mission')}
+              </p>
               <p className="text-xs">
                 {t('footer_phrase')}{' '}
-                <a href="https://closer.earth" className="underline">
+                <a href="https://closer.earth" className="underline hover:text-accent">
                   {t('footer_platform')}
                 </a>
               </p>

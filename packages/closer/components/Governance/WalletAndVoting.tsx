@@ -37,7 +37,8 @@ const WalletAndVoting: React.FC<WalletAndVotingProps> = ({ className }) => {
     )}`;
   };
 
-  const formatBalance = (balance: string | undefined): string => {
+  const formatBalance = (balance: string | number | undefined): string => {
+    if (typeof balance === 'number') return balance.toFixed(2);
     return parseFloat(balance || '0').toFixed(2);
   };
 
