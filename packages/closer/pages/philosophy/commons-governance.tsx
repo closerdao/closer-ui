@@ -15,7 +15,7 @@ const CommonsGovernancePage = () => {
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Article',
-    headline: "Ostrom's Eight Principles for Commons Governance",
+    headline: 'Ostrom\'s Eight Principles for Commons Governance',
     description: 'Nobel Prize-winning research documented 800+ cases of successful commons governance spanning centuries. Learn the eight design principles that make commons work.',
     author: {
       '@type': 'Organization',

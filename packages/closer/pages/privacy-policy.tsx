@@ -1,5 +1,4 @@
 import Head from 'next/head';
-import Link from 'next/link';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
