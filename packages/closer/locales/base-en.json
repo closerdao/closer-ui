@@ -2201,5 +2201,50 @@
   "home_reports_2021": "2021 Report",
   "home_reports_2022": "2022 Report",
   "home_reports_2024": "2024 Report",
-  "home_reports_2025": "2025 Report"
+  "home_reports_2025": "2025 Report",
+
+  "philosophy_title": "Philosophy",
+  "philosophy_meta": "Explore the philosophical foundations behind Closer's approach to regenerative communities and commons governance.",
+  "philosophy_intro": "Understanding the principles and evidence behind commons-based governance—from historical successes spanning millennia to digital commons generating trillions in value today.",
+  "philosophy_back": "Philosophy",
+  "philosophy_explore_more": "Explore More",
+  "philosophy_cta_title": "Join the Commons",
+  "philosophy_cta_description": "Become part of a community building regenerative villages that unite technology, community, and nature.",
+  "philosophy_cta_button": "Get Involved",
+
+  "philosophy_commons_governance_title": "Commons Governance",
+  "philosophy_commons_governance_subtitle": "Elinor Ostrom's eight design principles for successful commons—proven across 800+ cases worldwide.",
+  "philosophy_commons_governance_meta": "Learn about Elinor Ostrom's Nobel Prize-winning research on commons governance and the eight design principles for successful collective resource management.",
+  "philosophy_commons_governance_description": "Discover the eight design principles that have enabled communities to successfully govern shared resources for centuries.",
+
+  "philosophy_tragedy_myth_title": "The Myth of the Tragedy",
+  "philosophy_tragedy_myth_subtitle": "Why the 'Tragedy of the Commons' narrative gets history backwards.",
+  "philosophy_tragedy_myth_meta": "Understanding how the 'Tragedy of the Commons' misrepresents historical commons governance and what the evidence actually shows.",
+  "philosophy_tragedy_myth_description": "Hardin's famous essay conflated unmanaged open-access with governed commons. Here's what the evidence actually shows.",
+
+  "philosophy_commons_exclosure_title": "Commons Exclosure",
+  "philosophy_commons_exclosure_subtitle": "Protecting communities from extractive forces, not excluding commoners.",
+  "philosophy_commons_exclosure_meta": "Commons exclosure inverts the logic of historical enclosure—creating protected spaces where communities can steward resources for collective benefit.",
+  "philosophy_commons_exclosure_description": "Inverting historical enclosure: creating boundaries that keep extractive forces out while enabling community stewardship.",
+
+  "philosophy_digital_commons_title": "Digital Commons",
+  "philosophy_digital_commons_subtitle": "From open-source software to blockchain governance—commons at trillion-dollar scale.",
+  "philosophy_digital_commons_meta": "How digital commons from open-source software to blockchain protocols demonstrate that collective governance works at unprecedented scale.",
+  "philosophy_digital_commons_description": "Open source creates $8.8 trillion in value. Wikipedia. Blockchain governance. Digital commons are proving the model at scale.",
+
+  "philosophy_shared_abundance_title": "Shared Abundance",
+  "philosophy_shared_abundance_subtitle": "Building the governance infrastructure for collective prosperity.",
+  "philosophy_shared_abundance_meta": "The path to shared abundance through commons governance—encoding proven principles with modern tools for regenerative communities.",
+  "philosophy_shared_abundance_description": "The question isn't whether commons can work at scale. The question is whether we will build the exclosures that protect them.",
+
+  "footer_philosophy_tagline": "Building the governance infrastructure for shared abundance—encoding principles proven across millennia with tools built for tomorrow.",
+  "footer_mission": "Pioneering regenerative villages that unite technology, community & nature.",
+
+  "privacy_policy_title": "Privacy Policy",
+  "privacy_policy_meta": "Learn how Closer collects, uses, and protects your personal information across our platform for regenerative communities.",
+
+  "philosophy_roadmap_title": "Roadmap: The Federation Protocol",
+  "philosophy_roadmap_description": "Where Closer is heading—passports, federation, and the coordination layer for post-scarcity villages.",
+  "philosophy_roadmap_meta": "Discover Closer v4: portable passports, federated communities, and the governance infrastructure for shared abundance.",
+  "philosophy_roadmap_subtitle": "Building the coordination infrastructure for regenerative communities—where your reputation travels with you."
 }

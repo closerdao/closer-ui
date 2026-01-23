@@ -1994,5 +1994,50 @@
   "subscriptions_citizen_finance_tokens_title": "💰 Financie seus Tokens",
   "subscriptions_citizen_payment_history": "Histórico de Pagamentos",
   "subscriptions_citizen_payment_date": "Data",
-  "subscriptions_citizen_payment_amount": "Valor"
+  "subscriptions_citizen_payment_amount": "Valor",
+
+  "philosophy_title": "Filosofia",
+  "philosophy_meta": "Explore os fundamentos filosóficos por trás da abordagem da Closer para comunidades regenerativas e governança dos commons.",
+  "philosophy_intro": "Compreendendo os princípios e evidências por trás da governança baseada em commons—desde sucessos históricos que abrangem milénios até commons digitais que geram triliões em valor hoje.",
+  "philosophy_back": "Filosofia",
+  "philosophy_explore_more": "Explorar Mais",
+  "philosophy_cta_title": "Junte-se aos Commons",
+  "philosophy_cta_description": "Faça parte de uma comunidade que constrói aldeias regenerativas que unem tecnologia, comunidade e natureza.",
+  "philosophy_cta_button": "Participar",
+
+  "philosophy_commons_governance_title": "Governança dos Commons",
+  "philosophy_commons_governance_subtitle": "Os oito princípios de design de Elinor Ostrom para commons bem-sucedidos—comprovados em mais de 800 casos em todo o mundo.",
+  "philosophy_commons_governance_meta": "Aprenda sobre a pesquisa premiada com o Nobel de Elinor Ostrom sobre governança dos commons e os oito princípios de design para gestão coletiva bem-sucedida de recursos.",
+  "philosophy_commons_governance_description": "Descubra os oito princípios de design que permitiram às comunidades governar recursos partilhados com sucesso durante séculos.",
+
+  "philosophy_tragedy_myth_title": "O Mito da Tragédia",
+  "philosophy_tragedy_myth_subtitle": "Por que a narrativa da 'Tragédia dos Commons' inverte a história.",
+  "philosophy_tragedy_myth_meta": "Compreendendo como a 'Tragédia dos Commons' deturpa a governança histórica dos commons e o que as evidências realmente mostram.",
+  "philosophy_tragedy_myth_description": "O famoso ensaio de Hardin confundiu acesso aberto não gerido com commons governados. Eis o que as evidências realmente mostram.",
+
+  "philosophy_commons_exclosure_title": "Exclosura dos Commons",
+  "philosophy_commons_exclosure_subtitle": "Protegendo comunidades de forças extrativas, não excluindo os commoners.",
+  "philosophy_commons_exclosure_meta": "A exclosura dos commons inverte a lógica do cercamento histórico—criando espaços protegidos onde as comunidades podem gerir recursos para benefício coletivo.",
+  "philosophy_commons_exclosure_description": "Invertendo o cercamento histórico: criando fronteiras que mantêm as forças extrativas fora enquanto permitem a gestão comunitária.",
+
+  "philosophy_digital_commons_title": "Commons Digitais",
+  "philosophy_digital_commons_subtitle": "Do software de código aberto à governança blockchain—commons à escala de triliões.",
+  "philosophy_digital_commons_meta": "Como os commons digitais, do software de código aberto aos protocolos blockchain, demonstram que a governança coletiva funciona em escala sem precedentes.",
+  "philosophy_digital_commons_description": "O código aberto cria 8,8 triliões de dólares em valor. Wikipedia. Governança blockchain. Os commons digitais estão a provar o modelo em escala.",
+
+  "philosophy_shared_abundance_title": "Abundância Partilhada",
+  "philosophy_shared_abundance_subtitle": "Construindo a infraestrutura de governança para prosperidade coletiva.",
+  "philosophy_shared_abundance_meta": "O caminho para a abundância partilhada através da governança dos commons—codificando princípios comprovados com ferramentas modernas para comunidades regenerativas.",
+  "philosophy_shared_abundance_description": "A questão não é se os commons podem funcionar em escala. A questão é se construiremos as exclosuras que os protegem.",
+
+  "footer_philosophy_tagline": "Construindo a infraestrutura de governança para abundância partilhada—codificando princípios comprovados ao longo de milénios com ferramentas construídas para o amanhã.",
+  "footer_mission": "Aldeias regenerativas pioneiras que unem tecnologia, comunidade e natureza.",
+
+  "privacy_policy_title": "Política de Privacidade",
+  "privacy_policy_meta": "Saiba como a Closer recolhe, utiliza e protege as suas informações pessoais na nossa plataforma para comunidades regenerativas.",
+
+  "philosophy_roadmap_title": "Roteiro: O Protocolo de Federação",
+  "philosophy_roadmap_description": "Para onde a Closer está a ir—passaportes, federação e a camada de coordenação para vilas pós-escassez.",
+  "philosophy_roadmap_meta": "Descubra Closer v4: passaportes portáteis, comunidades federadas e a infraestrutura de governança para abundância partilhada.",
+  "philosophy_roadmap_subtitle": "Construindo a infraestrutura de coordenação para comunidades regenerativas—onde a sua reputação viaja consigo."
 }

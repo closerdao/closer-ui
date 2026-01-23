@@ -2,95 +2,106 @@ import Link from 'next/link';
 
 import { FC } from 'react';
 
+import { FaTelegram } from '@react-icons/all-files/fa/FaTelegram';
 import { RiFacebookFill } from '@react-icons/all-files/ri/RiFacebookFill';
+import { SiInstagram } from '@react-icons/all-files/si/SiInstagram';
 import { useConfig } from 'closer';
 
 export const Footer: FC = () => {
   const { INSTAGRAM_URL, FACEBOOK_URL, TEAM_EMAIL } = useConfig() || {};
-  
 
   return (
-    <footer className="w-full mt-8 mx-auto text-center max-w-prose pb-20">
-      <div className="p-6  italic">
-        <p>
-          For any visits, bookings or enquiries you can contact us by email: 
-          <a href={`mailto:${TEAM_EMAIL}`}>
-            {TEAM_EMAIL}
-          </a>
-        </p>
-  
+    <footer className="w-full mt-16 bg-[#1d1d1f] text-white -mx-4 px-4 py-16">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <p className="text-[#79FAC1] text-sm font-medium mb-3">
+            Building the governance infrastructure for shared abundance
+          </p>
+          <p className="text-[#a1a1a6] text-sm max-w-xl mx-auto">
+            Encoding principles proven across millennia with tools built for tomorrow. 
+            Pioneering regenerative villages that unite technology, community & nature.
+          </p>
+        </div>
 
-        <div className="social mt-4 flex flex-row justify-center">
+        <div className="flex flex-wrap justify-center gap-6 mb-12 text-sm">
+          <Link href="/philosophy" className="text-white hover:text-[#79FAC1] transition-colors">
+            Philosophy
+          </Link>
+          <span className="text-[#3d3d3d]">·</span>
+          <Link href="/philosophy/commons-governance" className="text-[#a1a1a6] hover:text-white transition-colors">
+            Commons Governance
+          </Link>
+          <span className="text-[#3d3d3d]">·</span>
+          <Link href="/philosophy/commons-exclosure" className="text-[#a1a1a6] hover:text-white transition-colors">
+            Commons Exclosure
+          </Link>
+          <span className="text-[#3d3d3d]">·</span>
+          <Link href="/philosophy/digital-commons" className="text-[#a1a1a6] hover:text-white transition-colors">
+            Digital Commons
+          </Link>
+          <span className="text-[#3d3d3d]">·</span>
+          <Link href="/philosophy/shared-abundance" className="text-[#a1a1a6] hover:text-white transition-colors">
+            Shared Abundance
+          </Link>
+        </div>
+
+        <div className="flex justify-center gap-4 mb-12">
           <a
             href="https://t.me/+rdZvSdohTzs0Njlh"
             target="_blank"
-            className="mr-2 p-2 transition ease-linear duration-1200 hover:scale-125"
             rel="noreferrer"
+            className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-[#a1a1a6] hover:bg-[#79FAC1] hover:text-black transition-all"
           >
-            <svg
-              className="h-8 w-8 text-accent"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              strokeWidth="2"
-              stroke="currentColor"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              {' '}
-              <path stroke="none" d="M0 0h24v24H0z" />{' '}
-              <path d="M15 10l-4 4l6 6l4 -16l-18 7l4 2l2 6l3 -4" />
-            </svg>
+            <FaTelegram className="w-5 h-5" />
           </a>
-
           {INSTAGRAM_URL && (
             <a
               href={INSTAGRAM_URL}
               target="_blank"
-              className="mr-2 p-2 transition ease-linear duration-1200 hover:scale-125"
               rel="noreferrer"
-          >
-            <svg
-              className="h-8 w-8 text-accent"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              strokeWidth="2"
-              stroke="currentColor"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-[#a1a1a6] hover:bg-[#79FAC1] hover:text-black transition-all"
             >
-              {' '}
-              <path stroke="none" d="M0 0h24v24H0z" />{' '}
-              <rect x="4" y="4" width="16" height="16" rx="4" />{' '}
-              <circle cx="12" cy="12" r="3" />{' '}
-              <line x1="16.5" y1="7.5" x2="16.5" y2="7.501" />
-            </svg>
-          </a>
+              <SiInstagram className="w-5 h-5" />
+            </a>
           )}
           {FACEBOOK_URL && (
             <a
               href={FACEBOOK_URL}
               target="_blank"
               rel="noreferrer nofollow"
-              title="Follow us on Facebook"
-              className="text-2xl mr-2 rounded-full p-2 text-accent bg-transparent duration-300 hover:scale-110"
+              className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-[#a1a1a6] hover:bg-[#79FAC1] hover:text-black transition-all"
             >
-              <RiFacebookFill />
+              <RiFacebookFill className="w-5 h-5" />
             </a>
           )}
         </div>
-        <div className='mt-12'>
-          <p>
-            Platform developed by <a href="https://closer.earth">Closer</a>.
+
+        {TEAM_EMAIL && (
+          <p className="text-center text-[#6e6e73] text-sm mb-8">
+            Questions? Reach out at{' '}
+            <a href={`mailto:${TEAM_EMAIL}`} className="text-[#a1a1a6] hover:text-white transition-colors">
+              {TEAM_EMAIL}
+            </a>
           </p>
+        )}
+
+        <div className="border-t border-white/10 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-[#6e6e73]">
           <p>
-            <Link href="/pdf/Closer-PP.pdf">
-              Privacy policy
+            © {new Date().getFullYear()} Closer. The operating system for regenerative communities.
+          </p>
+          <div className="flex gap-4">
+            <Link href="/privacy-policy" className="hover:text-white transition-colors">
+              Privacy Policy
             </Link>
-          </p>
+            <a 
+              href="https://closer.gitbook.io/documentation" 
+              target="_blank" 
+              rel="noreferrer"
+              className="hover:text-white transition-colors"
+            >
+              Documentation
+            </a>
+          </div>
         </div>
       </div>
     </footer>

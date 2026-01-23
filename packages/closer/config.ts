@@ -5,7 +5,7 @@ export const closerConfig = {
   APP_NAME: 'closer',
   GA_ANALYTICS: false,
   FB_DOMAIN_VERIFICATION: false,
-  PLATFORM_LEGAL_ADDRESS: 'TBD, Portugal',
+  PLATFORM_LEGAL_ADDRESS: 'OASA Verein, Industriestrasse 47, c/o Juris Services AG, 6300 Zug, Switzerland',
   DEFAULT_TITLE: 'The operating system for regenerative communities',
   SEMANTIC_URL: 'https://dev.closer.earth',
   TEAM_EMAIL: 'team@closer.earth',
