@@ -190,7 +190,7 @@ const MemberMenu = () => {
               label: t('navigation_expense_tracking'),
               url: '/dashboard/expense-tracking',
               enabled: true,
-              roles: ['admin'],
+              roles: ['admin', 'team'],
               rbacPage: 'ExpenseTracking',
             },
           ],

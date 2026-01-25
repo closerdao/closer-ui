@@ -13,6 +13,7 @@ import { Button } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
 import { GeneralConfig } from 'closer/types/api';
+import Cookies from 'js-cookie';
 import { Plus } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -48,8 +49,6 @@ const ExpenseTrackingDashboardPage = ({
   const uniqueEntities = [...new Set(allEntities)];
 
   const defaultEntity = entitiesConfig?.elements?.filter((entity: any) => entity.transactionType === 'expense')[0]?.entityName || '';
-  console.log('=====uniqueEntities=', uniqueEntities);
-  console.log('=====defaultEntity=', defaultEntity);
 
   const expenseCategories = generalConfig?.expenseCategories?.split(',');
 
@@ -114,6 +113,137 @@ const ExpenseTrackingDashboardPage = ({
     setCurrentPage(page);
   };
 
+  const handleDownloadCSV = (charges: any[]) => {
+    const headers = [
+      t('expense_tracking_entity'),
+      t('expense_tracking_document_date'),
+      t('expense_tracking_description'),
+      t('expense_tracking_supplier'),
+      t('expense_tracking_category'),
+      t('expense_tracking_tax_exemption_reason_id'),
+      t('expense_tracking_receipt_total'),
+      t('expense_tracking_currency'),
+      t('expense_tracking_comment'),
+      t('expense_tracking_vat_summary'),
+    ];
+
+    const rows = charges.map((charge) => {
+      const entity = charge.entity || '';
+      const documentDate =
+        charge.meta?.toconlineData?.document_date || '';
+      const description = charge?.description || '';
+      const supplier =
+        charge.meta?.toconlineData?.supplier_business_name || '';
+      const category = charge?.category || '';
+      const taxExemptionReasonId =
+        charge.meta?.toconlineData?.tax_exemption_reason_id || '';
+      const receiptTotal = charge.amount?.total?.val || 0;
+      const currency = charge.amount?.total?.cur?.toUpperCase() || '';
+      const comment = charge.meta?.comment || '';
+
+      const vatSummaryLines = charge.meta?.toconlineData?.lines || [];
+      const vatSummary = vatSummaryLines
+        .map(
+          (line: any) =>
+            `${line.description || ''}|${line.tax_percentage || 0}%|${line.tax_code || ''}|€${(line.unit_price || 0).toFixed(2)}`,
+        )
+        .join('; ');
+
+      return [
+        entity,
+        documentDate,
+        description,
+        supplier,
+        category,
+        taxExemptionReasonId,
+        receiptTotal.toFixed(2),
+        currency,
+        comment,
+        vatSummary,
+      ];
+    });
+
+    const escapeCsvCell = (cell: string | number): string => {
+      const cellStr = String(cell);
+      if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+        return `"${cellStr.replace(/"/g, '""')}"`;
+      }
+      return cellStr;
+    };
+
+    const csvContent = [
+      headers.map(escapeCsvCell).join(','),
+      ...rows.map((row) => row.map(escapeCsvCell).join(',')),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], {
+      type: 'text/csv;charset=utf-8;',
+    });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `expenses_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
+  const handleDownloadAllDocuments = async (charges: any[]) => {
+    try {
+      setIsLoading(true);
+      const chargesWithDocuments = charges.filter(
+        (charge) => charge.meta?.uploadedDocumentUrl,
+      );
+
+      if (chargesWithDocuments.length === 0) {
+        alert(t('expense_tracking_no_documents_to_download'));
+        return;
+      }
+
+      const documentUrls = chargesWithDocuments.map((charge, index) => {
+        const url = charge.meta.uploadedDocumentUrl;
+        const extension = url.includes('.pdf') ? 'pdf' : 'jpg';
+        const fileName = `expense_${charge._id || index}.${extension}`;
+        return { url, fileName };
+      });
+
+      const token = Cookies.get('access_token');
+      const response = await fetch('/api/download-expense-documents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({ documentUrls }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || `HTTP error! status: ${response.status}`,
+        );
+      }
+
+      const blob = await response.blob();
+      if (blob.size === 0) {
+        throw new Error(t('expense_tracking_download_error'));
+      }
+
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `expense_documents_${new Date().toISOString().split('T')[0]}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+    } catch (error: any) {
+      console.error('Error downloading documents:', error);
+      const errorMessage =
+        error.message || t('expense_tracking_download_error');
+      alert(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadData();
   }, []);
@@ -122,7 +252,7 @@ const ExpenseTrackingDashboardPage = ({
     setCurrentPage(1);
   }, [timeFrame, fromDate, toDate]);
 
-  if (!user?.roles.includes('admin')) {
+  if (!user?.roles.includes('admin') && !user?.roles.includes('team')) {
     return <PageNotAllowed />;
   }
 
@@ -145,14 +275,35 @@ const ExpenseTrackingDashboardPage = ({
             />
           </div>
 
-          <div className="">
+          <div className="flex justify-between items-center">
             <Button
               onClick={() => setIsDialogOpen(true)}
               className="flex items-center gap-2 w-fit"
+              size="small"
             >
               <Plus className="w-4 h-4" />
               {t('expense_tracking_add_new_expense')}
             </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => handleDownloadAllDocuments(filteredCharges)}
+                variant="secondary"
+                size="small"
+                className="flex items-center gap-2"
+                isEnabled={!isLoading && filteredCharges.length > 0}
+              >
+                {t('expense_tracking_download_all_documents')}
+              </Button>
+              <Button
+                onClick={() => handleDownloadCSV(filteredCharges)}
+                variant="secondary"
+                size="small"
+                className="flex items-center gap-2"
+                isEnabled={!isLoading && filteredCharges.length > 0}
+              >
+                {t('expense_tracking_download_csv')}
+              </Button>
+            </div>
           </div>
 
           <ExpenseChargesListing charges={paginatedCharges} />

@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { Button, Card } from '../ui';
 import Heading from '../ui/Heading';
@@ -95,6 +96,7 @@ const ExtractedDataForm: React.FC<ExtractedDataFormProps> = ({
   onUploadToToconline,
   shouldShowWarning,
 }) => {
+  const t = useTranslations();
   if (!editableData) return null;
 
   return (
@@ -365,8 +367,7 @@ const ExtractedDataForm: React.FC<ExtractedDataFormProps> = ({
 
       {shouldShowWarning && (
         <div className="text-sm text-red-500 bg-red-100 p-2 rounded-md my-4">
-          WARNING: a document will be created in Toconline with the data above. This action is not reversible. Please carefully review the
-          extracted receipt data before proceeding.
+          {t('expense_tracking_warning_toconline')}
         </div>
       )}
 
@@ -374,23 +375,23 @@ const ExtractedDataForm: React.FC<ExtractedDataFormProps> = ({
         {loading ? (
           <div className="flex items-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Processing...</span>
+            <span>{t('expense_tracking_processing')}</span>
           </div>
         ) : (
-          shouldShowWarning ? 'Upload to Toconline' : 'Log expense'
+          shouldShowWarning ? t('expense_tracking_upload_to_toconline') : t('expense_tracking_log_expense')
         )}
       </Button>
 
       {hasLoggedExpense && (
         <div className="text-sm text-green-500 bg-green-100 p-2 rounded-md">
-          Purchase logged successfully to Toconline API
+          {t('expense_tracking_purchase_logged_successfully')}
         </div>
       )}
 
       {uploadedDocumentUrl && (
         <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
           <h4 className="text-sm font-medium text-blue-800 mb-2">
-            Uploaded Document:
+            {t('expense_tracking_uploaded_document')}:
           </h4>
           <div className="flex items-center gap-2">
             <a
@@ -399,9 +400,9 @@ const ExtractedDataForm: React.FC<ExtractedDataFormProps> = ({
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-800 text-sm underline"
             >
-              View uploaded document
+              {t('expense_tracking_view_uploaded_document')}
             </a>
-            <span className="text-xs text-gray-500">(opens in new tab)</span>
+            <span className="text-xs text-gray-500">{t('expense_tracking_opens_in_new_tab')}</span>
           </div>
         </div>
       )}

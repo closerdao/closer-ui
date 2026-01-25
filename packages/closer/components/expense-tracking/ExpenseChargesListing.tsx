@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { Button, Card } from '../ui';
+import { Button, Card, LinkButton } from '../ui';
 import Heading from '../ui/Heading';
+import Link from 'next/link';
 
 // Extended Charge type for expense tracking
 interface ExpenseCharge {
@@ -101,7 +102,10 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                   <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('expense_tracking_category')}
                   </th>
-                  <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                    {t('expense_tracking_document')}
+                  </th>
+                  <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t('expense_tracking_actions')}
                   </th>
                 </tr>
@@ -109,8 +113,8 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
               <tbody className="bg-white divide-y divide-gray-200">
                 {charges.map((charge) => {
                   const expenseData = charge.meta?.toconlineData;
-                  const description = charge?.description || 'N/A';
-                  const category = charge?.category || 'N/A';
+                  const description = charge?.description || t('expense_tracking_not_available');
+                  const category = charge?.category || t('expense_tracking_not_available');
                   const amount = charge.amount?.total?.val || 0;
                   const date = new Date(
                     charge.date || charge.created,
@@ -125,12 +129,29 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                         €{amount.toFixed(2)}
                       </td>
                       <td className="px-2 py-1 text-sm text-gray-900">
-                        {description || 'N/A'}
+                        {description || t('expense_tracking_not_available')}
                       </td>
                       <td className="px-2 py-1 text-sm text-gray-900">
-                        {category || 'N/A'}
+                        {category || t('expense_tracking_not_available')}
                       </td>
-                      <td className="px-2 py-1 text-sm text-gray-900 text-center">
+                      <td className="px-2 py-1 text-sm text-gray-900 text-center w-16">
+                        {charge.meta?.uploadedDocumentUrl ? (
+                          <LinkButton
+                          variant="secondary"
+                          size="small"
+                          className="text-xs py-0 min-h-[24px]"
+                            href={charge.meta.uploadedDocumentUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+
+                          >
+                            {t('expense_tracking_view')}
+                          </LinkButton>
+                        ) : (
+                          <span className="text-gray-400 text-xs">{t('expense_tracking_no_document')}</span>
+                        )}
+                      </td>
+                      <td className="px-2 py-1  text-sm text-gray-900 ">
                         <Button
                           onClick={() => {
                             setSelectedCharge(charge);
@@ -138,7 +159,7 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                           }}
                           variant="secondary"
                           size="small"
-                          className="text-xs py-0 min-h-[24px]"
+                          className="text-xs py-0 min-h-[24px] w-fit"
                         >
                           {t('expense_tracking_view_details')}
                         </Button>
@@ -168,6 +189,7 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                   }}
                   variant="secondary"
                   className=" w-12 h-12"
+                  aria-label={t('expense_tracking_close')}
                 >
                   ✕
                 </Button>
@@ -177,14 +199,14 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                 {/* Document URL */}
                 {selectedCharge.meta?.uploadedDocumentUrl && (
                   <div className="flex  gap-2">
-                    <div className="text-sm font-bold">Document:</div>
+                    <div className="text-sm font-bold">{t('expense_tracking_document')}:</div>
                     <a
                       href={selectedCharge.meta.uploadedDocumentUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:text-blue-800 text-sm underline"
                     >
-                      View uploaded document
+                      {t('expense_tracking_view_uploaded_document')}
                     </a>
                   </div>
                 )}
@@ -194,18 +216,18 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                   <div>
                     <div className="space-y-2 text-sm">
                       <div>
-                        <strong>Entity:</strong>{' '}
+                        <strong>{t('expense_tracking_entity')}:</strong>{' '}
                         {selectedCharge.entity ||
-                          'N/A'}
+                          t('expense_tracking_not_available')}
                       </div>
                       <div>
                         <strong>{t('expense_tracking_document_date')}:</strong>{' '}
                         {selectedCharge.meta.toconlineData.document_date ||
-                          'N/A'}
+                          t('expense_tracking_not_available')}
                       </div>
                       <div>
                         <strong>{t('expense_tracking_description')}:</strong>{' '}
-                        {selectedCharge.description || 'N/A'}
+                        {selectedCharge.description || t('expense_tracking_not_available')}
                       </div>
                       {selectedCharge.meta?.comment && (
                         <div>
@@ -216,11 +238,11 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                       <div>
                         <strong>{t('expense_tracking_supplier')}:</strong>{' '}
                         {selectedCharge.meta.toconlineData
-                          .supplier_business_name || 'N/A'}
+                          .supplier_business_name || t('expense_tracking_not_available')}
                       </div>
                       <div>
                         <strong>{t('expense_tracking_category')}:</strong>{' '}
-                        {selectedCharge.category || 'N/A'}
+                        {selectedCharge.category || t('expense_tracking_not_available')}
                       </div>
                       {selectedCharge.meta.toconlineData
                         .tax_exemption_reason_id && (
@@ -236,12 +258,12 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                       )}
                       <div>
                         <strong>{t('expense_tracking_receipt_total')}:</strong>{' '}
-                        {selectedCharge.amount?.total?.val?.toFixed(2) || 'N/A'}
+                        {selectedCharge.amount?.total?.val?.toFixed(2) || t('expense_tracking_not_available')}
                       </div>
                       <div>
-                        <strong>Currency:</strong>{' '}
+                        <strong>{t('expense_tracking_currency')}:</strong>{' '}
                         {selectedCharge.amount?.total?.cur.toUpperCase() ||
-                          'N/A'}
+                          t('expense_tracking_not_available')}
                       </div>
                     </div>
                   </div>

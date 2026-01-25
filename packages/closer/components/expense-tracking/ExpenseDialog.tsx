@@ -584,11 +584,12 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
-            <Heading level={3}>Add New Expense</Heading>
+            <Heading level={3}>{t('expense_tracking_add_new_expense')}</Heading>
             <Button
               onClick={handleClose}
               variant="secondary"
               className=" w-12 h-12"
+              aria-label={t('expense_tracking_close')}
             >
               ✕
             </Button>
@@ -598,7 +599,7 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
             {t('expense_tracking_choose_accounting_entity')}
             <Select value={selectedEntity} onValueChange={setSelectedEntity}>
               <SelectTrigger className="w-48">
-                <SelectValue placeholder="Select an entity" />
+                <SelectValue placeholder={t('expense_tracking_select_entity')} />
               </SelectTrigger>
               <SelectContent>
                 {uniqueEntities.map((entity) => (

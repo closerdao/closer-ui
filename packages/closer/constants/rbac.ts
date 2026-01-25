@@ -273,7 +273,7 @@ const rbacDefaultConfig: RBACConfig = {
     Token: true,
     Blog: true,
     TokenSales: false,
-    ExpenseTracking: false,
+    ExpenseTracking: true,
     RoleCreation: false,
     Roles: true,
   },
