@@ -101,7 +101,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
           api.get('config/rbac')
         ]).catch(() => []);
         setConfig(prepareGeneralConfig(generalConfigRes?.data.results.value));
-        setRBACConfig(rbacConfigRes?.data.results.value);
+        setRBACConfig(rbacConfigRes?.data?.results?.value);
       } catch (err) {
         console.error(err);
         return;

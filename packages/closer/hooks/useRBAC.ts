@@ -3,14 +3,43 @@ import { useAuth } from '../contexts/auth';
 import { useConfig } from '../hooks/useConfig';
 
 /**
+ * Deep merge helper function to merge default config with backend config
+ */
+const deepMerge = (target: any, source: any): any => {
+  const output = { ...target };
+  if (isObject(target) && isObject(source)) {
+    Object.keys(source).forEach((key) => {
+      if (isObject(source[key]) && !Array.isArray(source[key])) {
+        if (!(key in target)) {
+          Object.assign(output, { [key]: source[key] });
+        } else {
+          output[key] = deepMerge(target[key], source[key]);
+        }
+      } else {
+        Object.assign(output, { [key]: source[key] });
+      }
+    });
+  }
+  return output;
+};
+
+const isObject = (item: any): boolean => {
+  return item && typeof item === 'object' && !Array.isArray(item);
+};
+
+/**
  * Hook to check if a user has access to a specific page based on their roles
  */
 export const useRBAC = () => {
   const { user } = useAuth();
   const { rbacConfig } = useConfig();
 
-  // Use the provided rbacConfig or fall back to the default config
-  const config = rbacConfig || rbacDefaultConfig;
+  // Merge the backend config with the default config
+  // This ensures that defaults are preserved and backend overrides are applied
+  // Same logic as used in the RBAC admin page
+  const config = rbacConfig
+    ? deepMerge(rbacDefaultConfig, rbacConfig)
+    : rbacDefaultConfig;
 
   /**
    * Check if the user has access to a specific page
