@@ -1,6 +1,7 @@
 import { Dispatch, SetStateAction, useState } from 'react';
 
 import dayjs from 'dayjs';
+import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useOutsideClick } from '../../hooks/useOutsideClick';
@@ -8,12 +9,11 @@ import DateTimePicker from '../DateTimePicker';
 import { Button } from '../ui';
 
 const TIME_FRAMES = [
-  'currentMonth',
-  'previousMonth',
-  'last7Days',
-  'last4Weeks',
-  'currentYear',
-  'allTime',
+  { key: 'allTime', label: 'All time' },
+  { key: 'currentYear', label: 'Year' },
+  { key: 'currentMonth', label: 'Month' },
+  { key: 'last7Days', label: 'Week' },
+  { key: 'today', label: 'Today' },
 ];
 
 interface Props {
@@ -62,96 +62,98 @@ const RevenueTimeFrameSelector = ({
     setTimeFrame(frame);
   };
 
-  const getTimeFrameLabel = (frame: string) => {
-    switch (frame) {
-      case 'currentMonth':
-        return 'Current Month';
-      case 'previousMonth':
-        return 'Previous Month';
-      case 'last7Days':
-        return 'Last 7 Days';
-      case 'last4Weeks':
-        return 'Last 4 Weeks';
-      case 'currentYear':
-        return 'Current Year';
-      case 'allTime':
-        return 'All Time';
-      case 'custom':
-        return 'Custom Range';
-      default:
-        return frame;
-    }
-  };
+  const isCustomActive = timeFrame === 'custom' || (fromDate && toDate);
 
   return (
-    <div>
-      <div className="flex gap-x-1 gap-y-4 flex-wrap sm:flex-nowrap">
-        {TIME_FRAMES.map((frame) => (
-          <button
-            key={frame}
-            onClick={() => handleTimeFrameClick(frame)}
-            className={`${
-              timeFrame === frame
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            } rounded-full px-3 py-1 text-sm transition-colors`}
-          >
-            {getTimeFrameLabel(frame)}
-          </button>
-        ))}
-
-        <div
-          ref={dateRangeDropdownRef}
-          className="relative flex-1 min-w-[170px] ml-2"
+    <div className="flex flex-wrap gap-2">
+      {TIME_FRAMES.map((frame) => (
+        <button
+          key={frame.key}
+          onClick={() => handleTimeFrameClick(frame.key)}
+          className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors whitespace-nowrap ${
+            timeFrame === frame.key
+              ? 'bg-accent text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
         >
-          <Button
-            onClick={() => {
-              setTimeFrame('custom');
-              setShowDropdown((prev) => !prev);
-            }}
-            className={`${
-              timeFrame === 'custom' || (fromDate && toDate)
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'text-black border-black'
-            } normal-case text-md py-1 text-sm`}
-            size="small"
-            variant="secondary"
-          >
-            {!fromDate && !toDate && t('bookings_select_dates_button')}
-            {fromDate && <>{dayjs(fromDate).format('DD/MM/YY')} - </>}
-            {toDate && dayjs(toDate).format('DD/MM/YY')}
-          </Button>
-          {showDropdown && (
-            <div className="absolute z-10 right-0 bg-white shadow-md rounded-md p-4">
-              <DateTimePicker
-                setStartDate={(date) =>
-                  handleDateChange(
-                    date ? dayjs(date).format('YYYY-MM-DD') : '',
-                    toDate,
-                  )
-                }
-                setEndDate={(date) =>
-                  handleDateChange(
-                    fromDate,
-                    date ? dayjs(date).format('YYYY-MM-DD') : '',
-                  )
-                }
-                savedStartDate={fromDate}
-                savedEndDate={toDate}
-                defaultMonth={new Date()}
-                isDashboard={true}
-              />
-              <Button
-                isEnabled={Boolean(toDate && fromDate)}
-                variant="secondary"
-                size="small"
-                onClick={handleClearDates}
-              >
-                {t('booking_requests_clear_dates_button')}
-              </Button>
+          {frame.label}
+        </button>
+      ))}
+
+      <div ref={dateRangeDropdownRef} className="relative">
+        <button
+          onClick={() => {
+            setTimeFrame('custom');
+            setShowDropdown((prev) => !prev);
+          }}
+          className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors whitespace-nowrap ${
+            isCustomActive
+              ? 'bg-accent text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          {fromDate && toDate
+            ? `${dayjs(fromDate).format('DD/MM')} - ${dayjs(toDate).format('DD/MM')}`
+            : t('bookings_select_dates_button')}
+        </button>
+        {showDropdown && (
+          <>
+            <div
+              className="md:hidden fixed inset-0 bg-black/50 z-40"
+              onClick={() => setShowDropdown(false)}
+            />
+            <div className="fixed inset-4 z-50 bg-white rounded-lg shadow-xl flex flex-col md:absolute md:inset-auto md:z-10 md:right-0 md:top-full md:mt-2 md:shadow-lg md:border md:border-gray-200">
+              <div className="flex items-center justify-between p-4 border-b md:hidden">
+                <span className="font-medium">{t('bookings_select_dates_button')}</span>
+                <button
+                  onClick={() => setShowDropdown(false)}
+                  className="p-1 hover:bg-gray-100 rounded"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-auto p-4 flex flex-col items-center justify-center">
+                <DateTimePicker
+                  setStartDate={(date) =>
+                    handleDateChange(
+                      date ? dayjs(date).format('YYYY-MM-DD') : '',
+                      toDate,
+                    )
+                  }
+                  setEndDate={(date) =>
+                    handleDateChange(
+                      fromDate,
+                      date ? dayjs(date).format('YYYY-MM-DD') : '',
+                    )
+                  }
+                  savedStartDate={fromDate}
+                  savedEndDate={toDate}
+                  defaultMonth={new Date()}
+                  isDashboard={true}
+                />
+              </div>
+              <div className="p-4 border-t flex gap-2">
+                <Button
+                  isEnabled={Boolean(toDate && fromDate)}
+                  variant="secondary"
+                  size="small"
+                  onClick={handleClearDates}
+                  className="flex-1"
+                >
+                  {t('booking_requests_clear_dates_button')}
+                </Button>
+                <Button
+                  variant="primary"
+                  size="small"
+                  onClick={() => setShowDropdown(false)}
+                  className="flex-1 md:hidden"
+                >
+                  {t('generic_done')}
+                </Button>
+              </div>
             </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -11,14 +11,16 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
+import useRBAC from '../../hooks/useRBAC';
+import { BookingConfig } from '../../types/api';
+import api from '../../utils/api';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
-import api from '../../utils/api';
-import { BookingConfig } from '../../types/api';
 
 const ManageUsersPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
   const t = useTranslations();
   const { user } = useAuth();
+  const { hasAccess } = useRBAC();
   const [where, setWhere] = useState({});
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState('-created');
@@ -27,42 +29,40 @@ const ManageUsersPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) =>
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
-  if (!user || !user.roles.includes('admin')) {
+  const hasUserManagementAccess = hasAccess('UserManagement');
+
+  if (!user || !hasUserManagementAccess) {
     return <PageNotFound error="User may not access" />;
   }
 
   return (
-    <div>
+    <>
       <Head>
         <title>{t('manage_users_heading')}</title>
       </Head>
 
       <AdminLayout isBookingEnabled={isBookingEnabled}>
-        <div className="max-w-screen-lg flex flex-col gap-6">
-          <Heading level={1}>{t('manage_users_heading')}</Heading>
-          
-          {/* Filters Section */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <UsersFilter
-              page={page}
-              setPage={setPage}
-              setWhere={setWhere}
-              sortBy={sortBy}
-              setSortBy={setSortBy}
-            />
-          </div>
-
-          {/* Users List Section */}
-          <UsersList
-            where={where}
+        <Heading level={2}>{t('manage_users_heading')}</Heading>
+        
+        <div className="bg-white border border-gray-200 rounded-lg p-3">
+          <UsersFilter
             page={page}
             setPage={setPage}
+            setWhere={setWhere}
             sortBy={sortBy}
             setSortBy={setSortBy}
           />
         </div>
+
+        <UsersList
+          where={where}
+          page={page}
+          setPage={setPage}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+        />
       </AdminLayout>
-    </div>
+    </>
   );
 };
 

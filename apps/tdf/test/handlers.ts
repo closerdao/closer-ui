@@ -14,4 +14,16 @@ export const handlers = [
   rest.get('*/config/booking', (req, res, ctx) =>
     res(ctx.status(200), ctx.json({ results: bookingSettings })),
   ),
+  rest.get('*/meta/countries', (req, res, ctx) =>
+    res(
+      ctx.status(200),
+      ctx.json({
+        results: [
+          { name: 'Portugal', code: 'PT' },
+          { name: 'United States', code: 'US' },
+          { name: 'Germany', code: 'DE' },
+        ],
+      }),
+    ),
+  ),
 ];

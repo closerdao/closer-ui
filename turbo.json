@@ -50,7 +50,8 @@
         "GEMINI_API_KEY",
         "NEXT_PUBLIC_TELEGRAM_BOT_TOKEN",
         "NEXT_PUBLIC_DEBUG_EMAIL",
-        "NEXT_PUBLIC_BENEFICIARY"
+        "NEXT_PUBLIC_BENEFICIARY",
+        "NEXT_PUBLIC_CLOUDFLARE_KEY"
       ]
     },
     "lint": {

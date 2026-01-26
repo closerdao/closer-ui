@@ -12,6 +12,7 @@ import process from 'process';
 
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
+import useRBAC from '../../../hooks/useRBAC';
 import { usePlatform } from '../../../contexts/platform';
 import { BookingConfig } from '../../../types/api';
 import api from '../../../utils/api';
@@ -27,6 +28,7 @@ const TokenSalesDashboardPage = ({
 }) => {
   const t = useTranslations();
   const { user } = useAuth();
+  const { hasAccess } = useRBAC();
   const { platform }: any = usePlatform();
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -103,7 +105,7 @@ const TokenSalesDashboardPage = ({
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
-  if (!user?.roles.includes('admin')) {
+  if (!user || !hasAccess('TokenSales')) {
     return <PageNotAllowed />;
   }
 

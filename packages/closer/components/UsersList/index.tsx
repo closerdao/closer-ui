@@ -7,6 +7,10 @@ import { FaUser } from '@react-icons/all-files/fa/FaUser';
 import { FaCheckCircle } from '@react-icons/all-files/fa/FaCheckCircle';
 import { FaClock } from '@react-icons/all-files/fa/FaClock';
 import { FaUserCheck } from '@react-icons/all-files/fa/FaUserCheck';
+import { FaChevronDown } from '@react-icons/all-files/fa/FaChevronDown';
+import { FaChevronUp } from '@react-icons/all-files/fa/FaChevronUp';
+import { FaHome } from '@react-icons/all-files/fa/FaHome';
+import { FaStar } from '@react-icons/all-files/fa/FaStar';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useTranslations } from 'next-intl';
@@ -62,6 +66,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
+  const [expandedUsers, setExpandedUsers] = useState<string[]>([]);
   const [action, setAction] = useState<string | null>(null);
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -70,7 +75,15 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
   const [error, setError] = useState<any>();
   const [success, setSuccess] = useState(false);
   const [usersEmails, setUsersEmails] = useState<any[]>([]);
-  const [csvData, setCsvData] = useState<any>(null);
+  const [csvData, _setCsvData] = useState<any>(null);
+
+  const toggleUserExpanded = (userId: string) => {
+    setExpandedUsers((prev) =>
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId],
+    );
+  };
 
   const loadData = async () => {
     try {
@@ -204,7 +217,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
         // No CSV export in the new version
         break;
       case 'Export all':
-        const data = await getAllUserData();
+        const _data = await getAllUserData();
         // No CSV export in the new version
         break;
       case 'Unlink wallet':
@@ -530,9 +543,15 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
           {filteredUsers &&
             filteredUsers.map((row: any) => {
               const user = platform.user.findOne(row.get('_id'));
+              const isExpanded = expandedUsers.includes(user.get('_id'));
+              const citizenDate = user.getIn(['citizenship', 'date']);
+              const presence = user.getIn(['stats', 'presence']);
+              const vouches = user.get('vouched');
+              const tokenBalance = user.getIn(['stats', 'wallet', 'tdf']);
+
               return (
                 <Card
-                  className={`py-3 sm:py-1 text-sm ${
+                  className={`py-2 text-sm ${
                     selectedUsers.some(
                       (selectedUser) =>
                         selectedUser.get('_id') === user.get('_id'),
@@ -540,223 +559,253 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                   }`}
                   key={user.get('email')}
                 >
-                  <div className="flex items-center gap-4 sm:gap-2 justify-between flex-col sm:flex-row">
-                    <div className="w-full sm:w-[50%] flex gap-3 items-start flex-wrap">
-                      {/* User Info Section */}
-                      <div className="flex items-center gap-2">
-                        <div>
-                          <Checkbox
-                            isChecked={selectedUsers.some(
-                              (selectedUser) =>
-                                selectedUser.get('_id') === user.get('_id'),
-                            )}
-                            onChange={() => handleUserSelect(user)}
-                          />
-                        </div>
-                        <div>
+                  <div className="flex flex-col">
+                    <div className="flex items-start gap-2 flex-wrap">
+                      <div className="flex gap-2 items-center min-w-0 flex-shrink-0">
+                        <Checkbox
+                          isChecked={selectedUsers.some(
+                            (selectedUser) =>
+                              selectedUser.get('_id') === user.get('_id'),
+                          )}
+                          onChange={() => handleUserSelect(user)}
+                        />
+                        <div className="flex-shrink-0">
                           {user.get('photo') ? (
                             <Image
                               src={`${cdn}${user.get('photo')}-profile-sm.jpg`}
                               alt={user.get('screenname')}
-                              width={30}
-                              height={30}
+                              width={32}
+                              height={32}
                               className="rounded-full"
                             />
                           ) : (
-                            <FaUser className="text-success w-[30px] h-[30px] rounded-full" />
+                            <FaUser className="text-gray-400 w-8 h-8 p-1 bg-gray-100 rounded-full" />
                           )}
                         </div>
-                        <div className="flex flex-col">
-                          <div>
-                            <Link
-                              className="hover:bg-accent rounded-md px-1 hover:text-white"
-                              href={`/members/${user.get('slug')}`}
-                            >
-                              {user.get('screenname')}
-                            </Link>
-                          </div>
-                          <div className="text-xs px-1 text-gray-500">
-                            {dayjs(new Date()).from(user.get('created'), true)}
-                          </div>
+                        <div className="flex flex-col min-w-0">
+                          <Link
+                            className="hover:text-accent font-medium truncate"
+                            href={`/members/${user.get('slug')}`}
+                          >
+                            {user.get('screenname')}
+                          </Link>
+                          <span className="text-xs text-gray-500">
+                            {dayjs(new Date()).from(user.get('created'), true)} ago
+                          </span>
                         </div>
                       </div>
 
-                      {/* Status & Verification Badges */}
-                      <div className="flex flex-wrap gap-2">
-                        {user.get('vouched') && user.get('vouched').length > 0 && (
-                          <div className="bg-green-100 flex border px-2 py-1 gap-1 border-green-500 rounded-md items-center">
-                            <FaUserCheck className="text-green-600 w-3 h-3" />
-                            <span className="text-xs text-green-700">
-                              {t('manage_users_vouched_by')} {user.get('vouched').length}
-                            </span>
-                            <div className="ml-1 text-xs text-green-600 cursor-help" title={
-                              user.get('vouched').map((vouch: any) => 
-                                `${vouch.vouchedBy} (${dayjs(vouch.vouchedAt).format('MMM YYYY')})`
-                              ).join(', ')
-                            }>
-                              ℹ️
-                            </div>
-                          </div>
-                        )}
-                        
+                      <div className="flex flex-wrap gap-1.5 items-center justify-start">
                         {user.get('kycPassed') && (
-                          <div className="bg-blue-100 flex border px-2 py-1 gap-1 border-blue-500 rounded-md items-center" title={t('manage_users_kyc_passed')}>
+                          <div className="bg-blue-100 flex border px-1.5 py-0.5 gap-1 border-blue-400 rounded items-center" title={t('manage_users_kyc_passed')}>
                             <FaCheckCircle className="text-blue-600 w-3 h-3" />
                             <span className="text-xs text-blue-700">KYC</span>
                           </div>
                         )}
 
-                        {user.getIn(['stats', 'wallet', 'tdf']) && (
-                          <div className="bg-purple-100 flex border px-2 py-1 gap-1 border-purple-500 rounded-md items-center">
+                        {vouches && vouches.length > 0 && (
+                          <div className="bg-green-100 flex border px-1.5 py-0.5 gap-1 border-green-400 rounded items-center">
+                            <FaUserCheck className="text-green-600 w-3 h-3" />
+                            <span className="text-xs text-green-700">{vouches.length}</span>
+                          </div>
+                        )}
+
+                        {tokenBalance > 0 && (
+                          <div className="bg-purple-100 flex border px-1.5 py-0.5 gap-1 border-purple-400 rounded items-center">
                             <span className="text-xs text-purple-700 font-medium">
-                              {parseFloat(user.getIn(['stats', 'wallet', 'tdf']) || 0).toFixed(2)} $TDF
+                              {parseFloat(tokenBalance || 0).toFixed(0)} $TDF
                             </span>
                           </div>
                         )}
 
-                        {user.get('lastactive') && (
-                          <div className="bg-orange-100 flex border px-2 py-1 gap-1 border-orange-500 rounded-md items-center">
-                            <FaClock className="text-orange-600 w-3 h-3" />
-                            <span className="text-xs text-orange-700">
-                              {dayjs(user.get('lastactive')).fromNow()}
-                            </span>
+                        {presence && presence.get('totalNights') > 0 && (
+                          <div className="bg-orange-100 flex border px-1.5 py-0.5 gap-1 border-orange-400 rounded items-center">
+                            <FaHome className="text-orange-600 w-3 h-3" />
+                            <span className="text-xs text-orange-700">{presence.get('totalNights')}n</span>
                           </div>
                         )}
-                      </div>
 
-                      {/* Subscription Badge */}
-                      <div className="flex">
-                        {user.get('subscription').get('plan') ? (
-                          <div className="bg-white flex border px-2 py-1 border-gray-500 rounded-md gap-1 items-center">
+                        {citizenDate && (
+                          <div className="bg-yellow-100 flex border px-1.5 py-0.5 gap-1 border-yellow-500 rounded items-center">
+                            <FaStar className="text-yellow-600 w-3 h-3" />
+                            <span className="text-xs text-yellow-700">{t('manage_users_citizen')}</span>
+                          </div>
+                        )}
+
+                        {user.get('subscription')?.get('plan') && (
+                          <div className="bg-white flex border px-1.5 py-0.5 border-gray-300 rounded gap-1 items-center">
                             <Image
-                              src={`/images/admin/icon-${user
-                                .get('subscription')
-                                .get('plan')}.png`}
+                              src={`/images/admin/icon-${user.get('subscription').get('plan')}.png`}
                               alt={user.get('subscription').get('plan')}
-                              width={16}
-                              height={16}
+                              width={14}
+                              height={14}
                             />
                             <span className="text-xs text-gray-700">
-                              {user
-                                .get('subscription')
-                                .get('plan')
-                                .slice(0, 1)
-                                .toUpperCase() +
+                              {user.get('subscription').get('plan').slice(0, 1).toUpperCase() +
                                 user.get('subscription').get('plan').slice(1)}
                             </span>
                           </div>
-                        ) : (
-                          <div className="bg-white flex border px-2 py-1 border-gray-500 rounded-md gap-1 items-center">
-                            <Image
-                              src={'/images/admin/icon-explorer.png'}
-                              alt={'member'}
-                              width={16}
-                              height={16}
-                            />
-                            <span className="text-xs text-gray-700">
-                              {t('manage_users_subscription_explorer')}
-                            </span>
-                          </div>
+                        )}
+
+                        {user.get('roles').includes('member') && (
+                          <span className="px-1.5 py-0.5 text-xs bg-accent text-white rounded">
+                            {t('manage_users_role_member')}
+                          </span>
                         )}
                       </div>
 
-                      {/* Member Role Badge */}
-                      {user.get('roles').includes('member') && (
-                        <div className="bg-accent flex border px-2 py-1 gap-1 border-accent rounded-md items-center">
-                          <span className="text-xs text-white">🐑</span>
-                          <span className="text-xs text-white">
-                            {t('manage_users_role_member')}
-                          </span>
-                          <Button
-                            onClick={() => handleRemoveRole('member', user)}
-                            className="p-0 min-h-min bg-transparent border-none text-white hover:bg-white hover:bg-opacity-20 rounded"
-                          >
-                            <svg
-                              viewBox="0 0 12 12"
-                              version="1.1"
-                              className="w-2.5 h-2.5 fill-current"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <line
-                                x1="1"
-                                y1="11"
-                                x2="11"
-                                y2="1"
-                                stroke="white"
-                                strokeWidth="2"
-                              />
-                              <line
-                                x1="1"
-                                y1="1"
-                                x2="11"
-                                y2="11"
-                                strokeWidth="2"
-                                stroke="white"
-                              />
-                            </svg>
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                    <div className="w-full sm:w-[50%] flex-col sm:flex-row flex gap-1 justify-end flex-wrap">
-                      <div className="flex gap-1 flex-wrap justify-start sm:justify-end">
-                        {user.get('roles').map((role: string) => {
-                          if (role !== 'member') {
-                            return (
-                              <div
-                                key={role}
-                                className="px-2 py-1 text-xs bg-gray-500 text-white rounded-full flex items-center gap-1"
-                              >
-                                <span className="whitespace-nowrap">
-                                  {role}
-                                </span>
-                                <Button
-                                  onClick={() => handleRemoveRole(role, user)}
-                                  className="p-0 min-h-min hover:bg-white hover:bg-opacity-20 rounded"
-                                >
-                                  <svg
-                                    viewBox="0 0 12 12"
-                                    version="1.1"
-                                    className="w-2 h-2 fill-current"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                  >
-                                    <line
-                                      x1="1"
-                                      y1="11"
-                                      x2="11"
-                                      y2="1"
-                                      stroke="white"
-                                      strokeWidth="2"
-                                    />
-                                    <line
-                                      x1="1"
-                                      y1="1"
-                                      x2="11"
-                                      y2="11"
-                                      strokeWidth="2"
-                                      stroke="white"
-                                    />
-                                  </svg>
-                                </Button>
-                              </div>
-                            );
-                          }
-                        })}
-                      </div>
-
-                      <div>
+                      <div className="flex items-center gap-1 flex-shrink-0 ml-auto">
                         <Select
-                          className="rounded-full text-accent border-accent text-xs py-0.5 px-1.5"
-                          value={t('manage_users_add_role_button')}
+                          className="rounded text-xs border-gray-300 min-w-[90px]"
+                          value=""
                           options={USER_ROLE_OPTIONS.slice(1)}
-                          onChange={(value: string) =>
-                            handleAddRole(value, user)
-                          }
+                          onChange={(value: string) => handleAddRole(value, user)}
                           isRequired
-                          placeholder={t('manage_users_add_role_button')}
+                          placeholder="+ Role"
                         />
+
+                        <button
+                          onClick={() => toggleUserExpanded(user.get('_id'))}
+                          className="p-1.5 hover:bg-gray-100 rounded"
+                        >
+                          {isExpanded ? (
+                            <FaChevronUp className="w-3 h-3 text-gray-500" />
+                          ) : (
+                            <FaChevronDown className="w-3 h-3 text-gray-500" />
+                          )}
+                        </button>
                       </div>
                     </div>
+
+                    {isExpanded && (
+                      <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-gray-500 font-medium">{t('manage_users_account_info')}</span>
+                          <div className="flex items-center gap-1 text-gray-700">
+                            <FaClock className="w-3 h-3 text-gray-400" />
+                            {t('manage_users_joined')}: {dayjs(user.get('created')).format('MMM D, YYYY')}
+                          </div>
+                          {user.get('lastactive') && (
+                            <div className="flex items-center gap-1 text-gray-700">
+                              <FaClock className="w-3 h-3 text-gray-400" />
+                              {t('manage_users_last_active')}: {dayjs(user.get('lastactive')).fromNow()}
+                            </div>
+                          )}
+                          {citizenDate && (
+                            <div className="flex items-center gap-1 text-green-700">
+                              <FaStar className="w-3 h-3 text-green-500" />
+                              {t('manage_users_citizen_since')}: {dayjs(citizenDate).format('MMM D, YYYY')}
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1 text-gray-600">
+                            {user.get('email')}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-gray-500 font-medium">{t('manage_users_presence_stats')}</span>
+                          {presence ? (
+                            <>
+                              <div className="flex items-center gap-1 text-gray-700">
+                                <FaHome className="w-3 h-3 text-gray-400" />
+                                {t('manage_users_total_nights')}: {presence.get('totalNights') || 0}
+                              </div>
+                              <div className="flex items-center gap-1 text-gray-700">
+                                <FaCheckCircle className="w-3 h-3 text-gray-400" />
+                                {t('manage_users_total_bookings')}: {presence.get('totalBookings') || 0}
+                              </div>
+                            </>
+                          ) : (
+                            <span className="text-gray-400">{t('manage_users_no_presence_data')}</span>
+                          )}
+                          {tokenBalance > 0 && (
+                            <div className="flex items-center gap-1 text-purple-700">
+                              <span className="font-medium">
+                                {parseFloat(tokenBalance || 0).toFixed(2)} $TDF
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-gray-500 font-medium">{t('manage_users_vouches')}</span>
+                          {vouches && vouches.length > 0 ? (
+                            <div className="flex flex-col gap-1">
+                              {vouches.map((vouch: any, idx: number) => (
+                                <div key={idx} className="flex items-center gap-1 text-green-700">
+                                  <FaUserCheck className="w-3 h-3 text-green-500" />
+                                  {vouch.vouchedBy} ({dayjs(vouch.vouchedAt).format('MMM YYYY')})
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">{t('manage_users_no_vouches')}</span>
+                          )}
+                        </div>
+
+                        {user.get('citizenship') && (
+                          <div className="sm:col-span-3 flex flex-col gap-1.5 pt-2 border-t border-gray-100">
+                            <span className="text-gray-500 font-medium">{t('manage_users_citizenship')}</span>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                              {user.getIn(['citizenship', 'status']) && (
+                                <div className="flex flex-col">
+                                  <span className="text-gray-400 text-[10px]">{t('manage_users_citizenship_status')}</span>
+                                  <span className={`font-medium ${
+                                    user.getIn(['citizenship', 'status']) === 'completed' ? 'text-green-600' :
+                                    user.getIn(['citizenship', 'status']) === 'pending-payment' ? 'text-yellow-600' :
+                                    user.getIn(['citizenship', 'status']) === 'cancelled' ? 'text-red-600' : 'text-gray-700'
+                                  }`}>
+                                    {user.getIn(['citizenship', 'status'])}
+                                  </span>
+                                </div>
+                              )}
+                              {user.getIn(['citizenship', 'appliedAt']) && (
+                                <div className="flex flex-col">
+                                  <span className="text-gray-400 text-[10px]">{t('manage_users_citizenship_applied')}</span>
+                                  <span className="text-gray-700">{dayjs(user.getIn(['citizenship', 'appliedAt'])).format('MMM D, YYYY')}</span>
+                                </div>
+                              )}
+                              {user.getIn(['citizenship', 'tokensToFinance']) && (
+                                <div className="flex flex-col">
+                                  <span className="text-gray-400 text-[10px]">{t('manage_users_citizenship_tokens_financed')}</span>
+                                  <span className="text-gray-700">{user.getIn(['citizenship', 'tokensToFinance'])} TDF</span>
+                                </div>
+                              )}
+                              {user.getIn(['citizenship', 'totalToPayInFiat']) && (
+                                <div className="flex flex-col">
+                                  <span className="text-gray-400 text-[10px]">{t('manage_users_citizenship_total_to_pay')}</span>
+                                  <span className="text-gray-700">€{user.getIn(['citizenship', 'totalToPayInFiat'])}</span>
+                                </div>
+                              )}
+                            </div>
+                            {user.getIn(['citizenship', 'why']) && (
+                              <div className="flex flex-col mt-1">
+                                <span className="text-gray-400 text-[10px]">{t('manage_users_citizenship_why')}</span>
+                                <span className="text-gray-700 italic">&ldquo;{user.getIn(['citizenship', 'why'])}&rdquo;</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="sm:col-span-3 flex flex-wrap gap-1 pt-2 border-t border-gray-100">
+                          <span className="text-gray-500 font-medium mr-2">{t('manage_users_all_roles')}:</span>
+                          {user.get('roles').map((role: string) => (
+                            <div
+                              key={role}
+                              className="px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded flex items-center gap-1"
+                            >
+                              {role}
+                              <button
+                                onClick={() => handleRemoveRole(role, user)}
+                                className="hover:text-red-500"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </Card>
               );

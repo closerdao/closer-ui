@@ -14,6 +14,7 @@ import { useTranslations } from 'next-intl';
 import process from 'process';
 
 import { useAuth } from '../../../contexts/auth';
+import useRBAC from '../../../hooks/useRBAC';
 import PageNotAllowed from '../../../pages/401';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
@@ -25,6 +26,7 @@ import { BookingConfig } from '../../../types/api';
 const PerformancePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
   const t = useTranslations();
   const { user } = useAuth();
+  const { hasAccess } = useRBAC();
   const router = useRouter();
   const { time_frame } = router.query;
 
@@ -68,7 +70,7 @@ const PerformancePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) =>
     );
   };
 
-  if (!user?.roles.includes('admin')) {
+  if (!user || !hasAccess('Performance')) {
     return <PageNotAllowed />;
   }
 
@@ -81,8 +83,8 @@ const PerformancePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) =>
         <div className="min-h-screen bg-gray-50">
           {/* Header Section */}
           <div className="bg-white border-b border-gray-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                 <div>
                   <Heading level={1} className="text-2xl font-bold text-gray-900">
                     {t('dashboard_performance_title')}
@@ -91,16 +93,14 @@ const PerformancePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) =>
                     Track user engagement and conversion metrics across all platforms
                   </p>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <TimeFrameSelector
-                    timeFrame={timeFrame}
-                    setTimeFrame={handleTimeFrameChange}
-                    fromDate={fromDate}
-                    setFromDate={setFromDate}
-                    toDate={toDate}
-                    setToDate={setToDate}
-                  />
-                </div>
+                <TimeFrameSelector
+                  timeFrame={timeFrame}
+                  setTimeFrame={handleTimeFrameChange}
+                  fromDate={fromDate}
+                  setFromDate={setFromDate}
+                  toDate={toDate}
+                  setToDate={setToDate}
+                />
               </div>
             </div>
           </div>

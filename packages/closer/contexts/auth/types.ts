@@ -123,17 +123,19 @@ export type AuthenticationContext = {
     password,
     isGoogle,
     idToken,
+    turnstileToken,
   }: {
     email: string;
     password?: string;
     isGoogle?: boolean;
     idToken?: string | undefined;
+    turnstileToken?: string | null;
   }) => Promise<void>;
   setAuthentification: (user: User, token: string) => void;
   isLoading: boolean;
   logout: () => void;
   error: string | null;
-  signup: (data: unknown) => Promise<{ result: string | null }>;
+  signup: (data: unknown, options?: { turnstileToken?: string | null }) => Promise<{ result: string | null }>;
   completeRegistration: (
     signup_token: string,
     data: unknown,

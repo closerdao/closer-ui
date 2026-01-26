@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 import { FormEvent, useState } from 'react';
 
@@ -6,6 +7,7 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import api from '../utils/api';
+import TurnstileWidget from './TurnstileWidget';
 import { parseMessageFromError, slugify } from '../utils/common';
 import { isInputValid, validatePassword } from '../utils/helpers';
 import { Button, Checkbox, ErrorMessage, Input } from './ui';
@@ -22,7 +24,9 @@ interface Props {
 
 const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
   const t = useTranslations();
+  const router = useRouter();
   const { signup, error, isLoading, user, refetchUser } = useAuth();
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
@@ -52,6 +56,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
     try {
       const res = await api.post('/check-user-exists', {
         email,
+        turnstileToken,
       });
       const doesUserExist = res?.data?.doesUserExist;
 
@@ -104,12 +109,15 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
     setLocalError(null);
 
     try {
-      const res = await signup({
-        ...application,
-        slug: slugify(application.screenname),
-        preferences: {},
-        emailConsent: isEmailConsent,
-      });
+      const res = await signup(
+        {
+          ...application,
+          slug: slugify(application.screenname),
+          preferences: {},
+          emailConsent: isEmailConsent,
+        },
+        { turnstileToken },
+      );
 
       if (res && res.result === 'signup') {
         setRegistrationSuccess(true);
@@ -229,12 +237,18 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
                 {t('signup_form_email_consent')}
               </Checkbox>
 
+              <TurnstileWidget
+                action="signup_email"
+                onVerify={setTurnstileToken}
+              />
+
               <Button
                 isEnabled={
                   !!email &&
                   isInputValid(email, 'email') &&
                   !newsletterSuccess &&
-                  isEmailConsent
+                  isEmailConsent &&
+                  !!turnstileToken
                 }
                 isLoading={false}
                 type="submit"
@@ -247,7 +261,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
                 <Link
                   className="text-accent underline font-bold"
                   href={`/login?back=${encodeURIComponent(
-                    window.location.pathname,
+                    router.asPath,
                   )}`}
                 >
                   {t('login_title')}
@@ -293,11 +307,17 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
                 <ErrorMessage error={localError || error} />
               )}
 
+              <TurnstileWidget
+                action="signup"
+                onVerify={setTurnstileToken}
+              />
+
               <Button
                 isEnabled={
                   !!application.screenname &&
                   !!application.password &&
-                  !isSignupLoading
+                  !isSignupLoading &&
+                  !!turnstileToken
                 }
                 isLoading={isSignupLoading}
               >
@@ -311,7 +331,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
                 <Link
                   className="text-accent underline font-bold"
                   href={`/login?back=${encodeURIComponent(
-                    window.location.pathname,
+                    router.asPath,
                   )}`}
                 >
                   {t('login_title')}

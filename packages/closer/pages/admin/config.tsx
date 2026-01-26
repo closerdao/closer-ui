@@ -1,11 +1,9 @@
 import Head from 'next/head';
-import { useRouter } from 'next/router';
 
 import { ChangeEvent, useEffect, useMemo, useState } from 'react';
 
 import ArrayConfig from '../../components/ArrayConfig';
 import AdminLayout from '../../components/Dashboard/AdminLayout';
-import PlatformFeatureSelector from '../../components/PlatformConfig/PlatformFeatureSelector';
 import PhotosEditor from '../../components/PhotosEditor';
 import {
   Button,
@@ -14,8 +12,8 @@ import {
   Heading,
   Information,
 } from '../../components/ui';
-import Switcher from '../../components/ui/Switcher';
 
+import { ChevronDown, Lock, Settings } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -47,7 +45,6 @@ interface Props {
 
 const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
   const t = useTranslations();
-  const router = useRouter();
   const { platform }: any = usePlatform();
   const { platformAllowedConfigs } = useConfig() || {};
   const { user } = useAuth();
@@ -61,34 +58,23 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
   const filter = {};
   const mergedConfigDescription = configDescription.concat(defaultEmailsConfig);
 
-  const allConfigCategories = mergedConfigDescription
+  const allPossibleFeatures = mergedConfigDescription
     .map((config: any) => config?.slug)
-    .filter((config: any) => platformAllowedConfigs?.includes(config));
+    .filter(Boolean);
 
-  const getSlugFromDisplayName = (displayName: string): string => {
-    return displayName.toLowerCase().replace(/\s+/g, '-');
-  };
+  const allConfigCategories = allPossibleFeatures
+    .filter((config: any) => platformAllowedConfigs?.includes(config))
+    .sort((a: string, b: string) => {
+      if (a === 'general') return -1;
+      if (b === 'general') return 1;
+      return a.localeCompare(b);
+    });
 
-  const getDisplayNameFromSlug = (slug: string): string => {
-    return slug
-      .split('-')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join('-');
-  };
+  const disabledByEnvironment = allPossibleFeatures.filter(
+    (config: any) => !platformAllowedConfigs?.includes(config),
+  );
 
-  const updateUrlWithSection = (slug: string) => {
-    const displayName = getDisplayNameFromSlug(slug);
-    router.push(
-      {
-        pathname: router.pathname,
-        query: { ...router.query, section: displayName },
-      },
-      undefined,
-      { shallow: true },
-    );
-  };
-
-  const [selectedConfig, setSelectedConfig] = useState('general');
+  const [selectedConfig, setSelectedConfig] = useState('');
   const [updatedConfigs, setUpdatedConfigs] = useState<Config[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasConfigUpdated, setHasConfigUpdated] = useState(false);
@@ -116,45 +102,6 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
 
   const configFormSchema = getValidationSchema(arrayConfigsSchema as any);
 
-  useEffect(() => {
-    const sectionParam = router.query.section as string | undefined;
-    if (
-      sectionParam &&
-      allConfigCategories.length > 0 &&
-      enabledConfigs.length > 0
-    ) {
-      const slugFromParam = getSlugFromDisplayName(sectionParam);
-      if (
-        allConfigCategories.includes(slugFromParam) &&
-        enabledConfigs.includes(slugFromParam) &&
-        slugFromParam !== selectedConfig
-      ) {
-        setSelectedConfig(slugFromParam);
-      }
-    }
-  }, [
-    router.query.section,
-    allConfigCategories,
-    enabledConfigs,
-    selectedConfig,
-  ]);
-
-  useEffect(() => {
-    if (
-      enabledConfigs.length > 0 &&
-      isGeneralConfigEnabled &&
-      !router.query.section &&
-      selectedConfig &&
-      enabledConfigs.includes(selectedConfig)
-    ) {
-      updateUrlWithSection(selectedConfig);
-    }
-  }, [
-    enabledConfigs,
-    isGeneralConfigEnabled,
-    selectedConfig,
-    router.query.section,
-  ]);
 
   useEffect(() => {
     loadData();
@@ -221,12 +168,10 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
       setEnabledConfigs(
         enabledConfigs?.filter((item: string) => item !== configCategory),
       );
-      setSelectedConfig('general');
-      updateUrlWithSection('general');
+      setSelectedConfig('');
       shouldEnable = false;
     } else {
       setSelectedConfig(configCategory);
-      updateUrlWithSection(configCategory);
       setEnabledConfigs([...enabledConfigs, configCategory]);
       shouldEnable = true;
     }
@@ -454,22 +399,19 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
   }
 
   return (
-    <div>
+    <>
       <Head>
         <title>{t('platform_configs')}</title>
       </Head>
 
       <AdminLayout isBookingEnabled={isBookingEnabled}>
-        <div className="max-w-3xl mx-auto flex flex-col gap-10">
-          <Heading level={1}>{t('platform_configs')}</Heading>
-
-          {allConfigCategories.length > 1 && isGeneralConfigEnabled && (
-            <PlatformFeatureSelector
-              enabledConfigs={enabledConfigs}
-              allConfigCategories={allConfigCategories}
-              handleToggleConfig={handleToggleConfig}
-            />
-          )}
+        <div className="max-w-3xl mx-auto flex flex-col gap-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-accent/10 rounded-lg">
+              <Settings className="w-5 h-5 text-accent" />
+            </div>
+            <Heading level={2}>{t('platform_configs')}</Heading>
+          </div>
 
           {!isGeneralConfigEnabled && (
             <Card className="flex flex-col gap-4">
@@ -499,11 +441,11 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
                   if (key === 'enabled') return null;
                   return (
                     <div key={key} className="flex flex-col gap-1">
-                      <label>{t(`config_label_${key}`)}:</label>
+                      <label className="text-sm font-medium text-gray-700">{t(`config_label_${key}`)}</label>
 
-                      {!isSelect && (
+                      {!isSelect && !isTime && (
                         <input
-                          className="bg-neutral rounded-md p-1"
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                           name={key}
                           onChange={handleChange}
                           type="text"
@@ -512,7 +454,7 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
                       )}
                       {isTime && (
                         <input
-                          className="bg-neutral rounded-md p-1"
+                          className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                           name={key}
                           onChange={handleChange}
                           type="time"
@@ -521,7 +463,7 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
                       )}
                       {isSelect && (
                         <select
-                          className="px-2 py-1"
+                          className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                           value={String(currentValue)}
                           onChange={handleChange}
                           name={key}
@@ -552,177 +494,284 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
             </Card>
           )}
 
-          {enabledConfigs.length > 0 && isGeneralConfigEnabled && (
-            <div className="flex flex-col gap-10">
-              <Switcher
-                options={enabledConfigs}
-                selectedOption={selectedConfig}
-                setSelectedOption={(option) => {
-                  const slug = typeof option === 'string' ? option : 'general';
-                  setSelectedConfig(slug);
-                  updateUrlWithSection(slug);
-                }}
-              />
+          {isGeneralConfigEnabled && (
+            <div className="flex flex-col gap-3">
+              {allConfigCategories.map((configSlug) => {
+                const isGeneral = configSlug === 'general';
+                const isEnabled = isGeneral || enabledConfigs?.includes(configSlug);
+                const configData = updatedConfigs.find(
+                  (c) => c.slug === configSlug,
+                );
 
-              <Card className="flex flex-col gap-10">
-                {currentConfig && (
+                if (!configData) return null;
+
+                const description = mergedConfigDescription?.find(
+                  (c) => c.slug === configSlug,
+                )?.value as Record<string, any>;
+
+                return (
                   <div
-                    key={`${currentConfig.slug}`}
-                    className="flex flex-col gap-4"
+                    key={configSlug}
+                    className={`rounded-lg border overflow-hidden ${
+                      isEnabled
+                        ? 'border-gray-200 bg-white'
+                        : 'border-gray-100 bg-gray-50'
+                    }`}
                   >
-                    <Heading level={2}>
-                      {capitalizeFirstLetter(currentConfig.slug)}
-                    </Heading>
-
-                    {Object.entries(currentConfig.value).map(([key, value]) => {
-                      const currentValue = currentConfig.value[key];
-
-                      const description = mergedConfigDescription?.find(
-                        (c) => c.slug === currentConfig.slug,
-                      )?.value as Record<string, any>;
-                      const inputType = description?.[key]?.type;
-                      const isArray = Array.isArray(inputType);
-                      const isSelect = inputType === 'select';
-                      const isTime = inputType === 'time';
-                      const selectOptions = description?.[key]?.enum;
-
-                      if (key === 'enabled') {
-                        return null;
-                      }
-
-                      return (
-                        <div
-                          key={`${currentConfig.slug}-${key}`}
-                          className="flex flex-col gap-1"
+                    <div
+                      className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50"
+                      onClick={() => {
+                        setSelectedConfig(
+                          selectedConfig === configSlug ? '' : configSlug,
+                        );
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        {!isGeneral && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleConfig(configSlug);
+                            }}
+                            className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${
+                              isEnabled ? 'bg-accent' : 'bg-gray-300'
+                            }`}
+                          >
+                            <span
+                              className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                                isEnabled ? 'left-4' : 'left-0.5'
+                              }`}
+                            />
+                          </button>
+                        )}
+                        <span
+                          className={`text-sm font-medium ${
+                            isEnabled ? 'text-gray-900' : 'text-gray-400'
+                          }`}
                         >
-                          {!isArray && (
-                            <label>{t(`config_label_${key}`)}:</label>
-                          )}
-                          {typeof value === 'boolean' ? (
-                            <div className="flex gap-3">
-                              <label className="flex gap-1 items-center">
-                                <input
-                                  type="radio"
-                                  name={key}
-                                  value="true"
-                                  checked={currentValue === true}
-                                  onChange={handleChange}
-                                />
-                                {t('config_true')}
-                              </label>
-                              <label className="flex gap-1 items-center">
-                                <input
-                                  type="radio"
-                                  name={key}
-                                  value="false"
-                                  checked={currentValue === false}
-                                  onChange={handleChange}
-                                />
-                                {t('config_false')}
-                              </label>
-                            </div>
-                          ) : (
-                            <div>
-                              {currentConfig.slug === 'photo-gallery' && key === 'photoIds' ? (
-                                <PhotosEditor
-                                  value={currentValue || []}
-                                  onChange={(value: string[]) => {
-                                    const newConfigs = updatedConfigs.map((config) => {
-                                      if (config.slug === selectedConfig) {
-                                        return {
-                                          ...config,
-                                          value: { ...config.value, [key]: value },
-                                        };
-                                      }
-                                      return config;
-                                    });
-                                    setUpdatedConfigs(newConfigs);
-                                  }}
-                                />
-                              ) : isArray ? (
-                                <div>
-                                  <ArrayConfig
-                                    currentValue={currentValue}
-                                    handleChange={handleChange}
-                                    handleAddElement={handleAddElement}
-                                    handleDeleteElement={handleDeleteElement}
-                                    elementsKey={key}
-                                    description={description}
-                                    slug={currentConfig.slug}
-                                    resetToDefault={resetToDefault}
-                                    errors={errors}
-                                  />
-                                </div>
-                              ) : null}
-                              {!isArray && !isSelect && !isTime && (
-                                <input
-                                  className="bg-neutral rounded-md p-1"
-                                  name={key}
-                                  onChange={handleChange}
-                                  type="text"
-                                  value={String(currentValue)}
-                                />
-                              )}
+                          {capitalizeFirstLetter(configSlug)}
+                        </span>
+                      </div>
+                      {isEnabled && (
+                        <ChevronDown
+                          className={`w-4 h-4 text-gray-400 transition-transform ${
+                            selectedConfig === configSlug ? 'rotate-180' : ''
+                          }`}
+                        />
+                      )}
+                    </div>
 
-                              {isTime && (
-                                <input
-                                  className="bg-neutral rounded-md p-1"
-                                  name={key}
-                                  onChange={handleChange}
-                                  type="time"
-                                  value={String(currentValue)}
-                                />
-                              )}
-                              {errors[key] && (
-                                <ErrorMessage
-                                  error={errors[key].toString()}
-                                ></ErrorMessage>
-                              )}
+                    {isEnabled && selectedConfig === configSlug && (
+                        <div className="border-t border-gray-100 p-4 flex flex-col gap-4">
+                          {Object.entries(configData.value).map(
+                            ([key, value]) => {
+                              const currentValue = configData.value[key];
+                              const inputType = description?.[key]?.type;
+                              const isArray = Array.isArray(inputType);
+                              const isSelect = inputType === 'select';
+                              const isTime = inputType === 'time';
+                              const selectOptions = description?.[key]?.enum;
 
-                              {isSelect && (
-                                <select
-                                  className="px-2 py-1"
-                                  value={String(currentValue)}
-                                  onChange={handleChange}
-                                  name={key}
+                              if (key === 'enabled') return null;
+
+                              return (
+                                <div
+                                  key={`${configSlug}-${key}`}
+                                  className="flex flex-col gap-1"
                                 >
-                                  {selectOptions.map((option: string) => {
-                                    return (
-                                      <option value={option} key={option}>
-                                        {option}
-                                      </option>
-                                    );
-                                  })}
-                                </select>
-                              )}
-                            </div>
+                                  {!isArray && (
+                                    <label className="text-sm font-medium text-gray-700">
+                                      {t(`config_label_${key}`)}
+                                    </label>
+                                  )}
+                                  {typeof value === 'boolean' ? (
+                                    <div className="flex gap-4">
+                                      <label className="flex gap-2 items-center text-sm cursor-pointer">
+                                        <input
+                                          type="radio"
+                                          name={`${configSlug}-${key}`}
+                                          value="true"
+                                          checked={currentValue === true}
+                                          onChange={(e) => {
+                                            setSelectedConfig(configSlug);
+                                            handleChange(e, '', null);
+                                          }}
+                                          className="w-4 h-4 text-accent"
+                                        />
+                                        {t('config_true')}
+                                      </label>
+                                      <label className="flex gap-2 items-center text-sm cursor-pointer">
+                                        <input
+                                          type="radio"
+                                          name={`${configSlug}-${key}`}
+                                          value="false"
+                                          checked={currentValue === false}
+                                          onChange={(e) => {
+                                            setSelectedConfig(configSlug);
+                                            handleChange(e, '', null);
+                                          }}
+                                          className="w-4 h-4 text-accent"
+                                        />
+                                        {t('config_false')}
+                                      </label>
+                                    </div>
+                                  ) : (
+                                    <div>
+                                      {configSlug === 'photo-gallery' &&
+                                      key === 'photoIds' ? (
+                                        <PhotosEditor
+                                          value={currentValue || []}
+                                          onChange={(value: string[]) => {
+                                            const newConfigs =
+                                              updatedConfigs.map((config) => {
+                                                if (
+                                                  config.slug === configSlug
+                                                ) {
+                                                  return {
+                                                    ...config,
+                                                    value: {
+                                                      ...config.value,
+                                                      [key]: value,
+                                                    },
+                                                  };
+                                                }
+                                                return config;
+                                              });
+                                            setUpdatedConfigs(newConfigs);
+                                          }}
+                                        />
+                                      ) : isArray ? (
+                                        <ArrayConfig
+                                          currentValue={currentValue}
+                                          handleChange={(e, k, i) => {
+                                            setSelectedConfig(configSlug);
+                                            handleChange(e, k, i);
+                                          }}
+                                          handleAddElement={handleAddElement}
+                                          handleDeleteElement={
+                                            handleDeleteElement
+                                          }
+                                          elementsKey={key}
+                                          description={description}
+                                          slug={configSlug}
+                                          resetToDefault={resetToDefault}
+                                          errors={errors}
+                                        />
+                                      ) : null}
+                                      {!isArray && !isSelect && !isTime && (
+                                        <input
+                                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                                          name={key}
+                                          onChange={(e) => {
+                                            setSelectedConfig(configSlug);
+                                            handleChange(e);
+                                          }}
+                                          type="text"
+                                          value={String(currentValue)}
+                                        />
+                                      )}
+                                      {isTime && (
+                                        <input
+                                          className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                                          name={key}
+                                          onChange={(e) => {
+                                            setSelectedConfig(configSlug);
+                                            handleChange(e);
+                                          }}
+                                          type="time"
+                                          value={String(currentValue)}
+                                        />
+                                      )}
+                                      {errors[key] && (
+                                        <ErrorMessage
+                                          error={errors[key].toString()}
+                                        />
+                                      )}
+                                      {isSelect && (
+                                        <select
+                                          className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                                          value={String(currentValue)}
+                                          onChange={(e) => {
+                                            setSelectedConfig(configSlug);
+                                            handleChange(e);
+                                          }}
+                                          name={key}
+                                        >
+                                          {selectOptions?.map(
+                                            (option: string) => (
+                                              <option
+                                                value={option}
+                                                key={option}
+                                              >
+                                                {option}
+                                              </option>
+                                            ),
+                                          )}
+                                        </select>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            },
                           )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
 
-                <Button
-                  onClick={handleSaveConfig}
-                  isLoading={isLoading}
-                  isEnabled={
-                    !isLoading &&
-                    errors &&
-                    Object.values(errors).every((value) => value === null)
-                  }
-                >
-                  {t('generic_save_button')}
-                </Button>
-                {hasConfigUpdated && (
-                  <Information>{t('config_updated')}</Information>
-                )}
-              </Card>
+                          <Button
+                            onClick={() => handleSaveConfig([], configSlug)}
+                            isLoading={isLoading}
+                            isEnabled={
+                              !isLoading &&
+                              errors &&
+                              Object.values(errors).every(
+                                (value) => value === null,
+                              )
+                            }
+                            size="small"
+                          >
+                            {t('generic_save_button')}
+                          </Button>
+                          {hasConfigUpdated &&
+                            selectedConfig === configSlug && (
+                              <Information>{t('config_updated')}</Information>
+                            )}
+                        </div>
+                      )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {disabledByEnvironment.length > 0 && (
+            <div className="mt-6 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4">
+              <div className="flex items-start gap-3">
+                <div className="p-1.5 bg-gray-200 rounded">
+                  <Lock className="w-4 h-4 text-gray-500" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-700 mb-1">
+                    {t('config_disabled_features_title')}
+                  </p>
+                  <p className="text-xs text-gray-500 mb-3">
+                    {t('config_disabled_features_description')}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {disabledByEnvironment.map((feature) => (
+                      <span
+                        key={feature}
+                        className="px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded"
+                      >
+                        {capitalizeFirstLetter(feature)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
       </AdminLayout>
-    </div>
+    </>
   );
 };
 

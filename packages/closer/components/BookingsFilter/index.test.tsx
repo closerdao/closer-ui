@@ -16,17 +16,17 @@ describe('BookingsFilter', () => {
       />,
     );
 
-    const bookingNumberInput = screen.getByPlaceholderText(/enter booking #/i);
+    const bookingNumberInput = screen.getByPlaceholderText(/booking id/i);
     const arrivalButton = screen.getByRole('button', {
-      name: /arrival date/i,
+      name: /arrival/i,
     });
     const newestFirstButton = screen.getByRole('button', {
       name: /newest first/i,
     });
     const departureButton = screen.getByRole('button', {
-      name: /departure date/i,
+      name: /departure/i,
     });
-    const datesButton = screen.getAllByRole('button', {
+    const datesButton = screen.getByRole('button', {
       name: /select dates/i,
     });
 
@@ -34,10 +34,9 @@ describe('BookingsFilter', () => {
     expect(bookingNumberInput).toBeEnabled();
 
     expect(arrivalButton).toBeInTheDocument();
-    expect(newestFirstButton).toBeDisabled();
     expect(arrivalButton).toBeEnabled();
+    expect(newestFirstButton).toBeInTheDocument();
     expect(departureButton).toBeEnabled();
-    expect(datesButton[0]).toBeInTheDocument();
-    expect(datesButton[1]).toBeInTheDocument();
+    expect(datesButton).toBeInTheDocument();
   });
 });

@@ -2,6 +2,7 @@ import Head from 'next/head';
 
 import { FormEvent, useState } from 'react';
 
+import TurnstileWidget from '../../components/TurnstileWidget';
 import { Button, ErrorMessage, Input } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
@@ -16,11 +17,12 @@ const ForgotPasswordScreen = () => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [isResetCompleted, setIsResetCompleted] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const requestPasswordReset = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/reset-password', { email });
+      await api.post('/reset-password', { email, turnstileToken });
       setIsResetCompleted(true);
     } catch (err: any) {
       setError(err.response?.data?.error || err.message);
@@ -56,7 +58,12 @@ const ForgotPasswordScreen = () => {
 
               {error && <ErrorMessage error={error} />}
 
-              <Button>{t('login_forgot_password_submit')}</Button>
+              <TurnstileWidget
+                action="forgot_password"
+                onVerify={setTurnstileToken}
+              />
+
+              <Button isEnabled={!!turnstileToken}>{t('login_forgot_password_submit')}</Button>
             </form>
           )}
         </section>

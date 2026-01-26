@@ -36,6 +36,7 @@ import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { CitizenshipConfig } from '../../types/api';
 import api from '../../utils/api';
 import { loadLocaleData } from '../../utils/locale.helpers';
+import PageNotFound from '../not-found';
 
 const CITIZEN_TARGET = 300;
 
@@ -281,6 +282,10 @@ const CitizenshipPage = ({
       a: t('citizenship_faq_responsibilities_a'),
     },
   ];
+
+  if (process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP !== 'true') {
+    return <PageNotFound error="" />;
+  }
 
   return (
     <div className="min-h-screen bg-neutral-light text-foreground">

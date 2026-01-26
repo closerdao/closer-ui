@@ -13,6 +13,7 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
+import TurnstileWidget from '../../components/TurnstileWidget';
 import { useAuth } from '../../contexts/auth';
 import { useNewsletter } from '../../contexts/newsletter';
 import { WalletDispatch, WalletState } from '../../contexts/wallet';
@@ -30,6 +31,7 @@ const Login = () => {
   const t = useTranslations();
   const { account } = useContext(WalletState);
   const { signMessage, connectWallet } = useContext(WalletDispatch);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   
   // Safely use newsletter context
   let setHideFooterNewsletter: ((hide: boolean) => void) | undefined;
@@ -196,7 +198,7 @@ const Login = () => {
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    await login({ email, password });
+    await login({ email, password, turnstileToken });
   };
 
   const authUserWithGoogle = async () => {
@@ -265,10 +267,15 @@ const Login = () => {
 
                   {error && <ErrorMessage error={error} />}
 
+                  <TurnstileWidget
+                    action="login"
+                    onVerify={setTurnstileToken}
+                  />
+
                   <div className="flex flex-col justify-between items-center gap-4 sm:flex-row">
                     <div className="flex flex-col gap-4 w-full sm:flex-row py-6">
                       <Button
-                        isEnabled={!isWeb3Loading && !isLoading}
+                        isEnabled={!isWeb3Loading && !isLoading && !!turnstileToken}
                         isLoading={isLoading}
                       >
                         {t('login_submit')}

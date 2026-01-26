@@ -1,13 +1,14 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 
 import dayjs from 'dayjs';
+import { ChevronDown, Download } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { BOOKINGS_PER_PAGE, MAX_BOOKINGS_TO_FETCH } from '../constants';
 import { usePlatform } from '../contexts/platform';
 import BookingListPreview from './BookingListPreview/BookingListPreview';
 import Pagination from './Pagination';
-import { Button, Heading, Spinner } from './ui';
+import { Heading, Spinner } from './ui';
 import { BookingConfig } from '../types/api';
 
 interface Props {
@@ -23,6 +24,18 @@ const MAX_USERS_TO_FETCH = 2000;
 const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
+  const [isActionsOpen, setIsActionsOpen] = useState(false);
+  const actionsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (actionsRef.current && !actionsRef.current.contains(event.target as Node)) {
+        setIsActionsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const bookings = platform.booking.find(filter);
   const allUsers = platform.user.find({ limit: MAX_USERS_TO_FETCH });
@@ -108,67 +121,82 @@ const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false 
               </Heading>
 
               {bookings && !hideExportCsv && (
-                <Button
-                  className=" text-background"
-                  onClick={() => {
-                    const headers = [
-                      { label: 'ID', key: 'id' },
-                      { label: 'Name', key: 'name' },
-                      { label: 'Listing', key: 'listing' },
-                      { label: 'Event', key: 'event' },
-                      { label: 'Guests', key: 'guests' },
-                      { label: 'Volunteer', key: 'volunteer' },
-                      { label: 'Arrival', key: 'arrival' },
-                      { label: 'Pickup', key: 'pickup' },
-                      { label: 'Total', key: 'total' },
-                    ];
-                    const data = bookings
-                      .map((booking: any) => {
-                        const user = platform.user.findOne(
-                          booking.get('createdBy'),
-                        );
-                        const listing = platform.listing.findOne(
-                          booking.get('listing'),
-                        );
-                        const bookingEvent = platform.event.findOne(
-                          booking.get('eventId'),
-                        );
+                <div ref={actionsRef} className="relative ml-auto">
+                  <button
+                    onClick={() => setIsActionsOpen(!isActionsOpen)}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                  >
+                    {t('generic_actions')}
+                    <ChevronDown className={`w-4 h-4 transition-transform ${isActionsOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isActionsOpen && (
+                    <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10 min-w-[160px]">
+                      <button
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left"
+                        onClick={() => {
+                          const headers = [
+                            { label: 'ID', key: 'id' },
+                            { label: 'Name', key: 'name' },
+                            { label: 'Listing', key: 'listing' },
+                            { label: 'Event', key: 'event' },
+                            { label: 'Guests', key: 'guests' },
+                            { label: 'Volunteer', key: 'volunteer' },
+                            { label: 'Arrival', key: 'arrival' },
+                            { label: 'Pickup', key: 'pickup' },
+                            { label: 'Total', key: 'total' },
+                          ];
+                          const data = bookings
+                            .map((booking: any) => {
+                              const user = platform.user.findOne(
+                                booking.get('createdBy'),
+                              );
+                              const listing = platform.listing.findOne(
+                                booking.get('listing'),
+                              );
+                              const bookingEvent = platform.event.findOne(
+                                booking.get('eventId'),
+                              );
 
-                        return {
-                          id: booking.get('_id'),
-                          name: user?.get('screenname'),
-                          listing: listing?.get('name'),
-                          event: bookingEvent?.get('name'),
-                          guests: booking.get('adults'),
-                          volunteer: booking.get('volunteerId'),
-                          arrival: booking.get('start'),
-                          pickup: booking.get('doesNeedPickup'),
-                          total: booking.getIn(['total', 'val']),
-                        };
-                      })
-                      .toJS();
+                              return {
+                                id: booking.get('_id'),
+                                name: user?.get('screenname'),
+                                listing: listing?.get('name'),
+                                event: bookingEvent?.get('name'),
+                                guests: booking.get('adults'),
+                                volunteer: booking.get('volunteerId'),
+                                arrival: booking.get('start'),
+                                pickup: booking.get('doesNeedPickup'),
+                                total: booking.getIn(['total', 'val']),
+                              };
+                            })
+                            .toJS();
 
-                    const csvContent = [
-                      headers.map((h) => h.label).join(','),
-                      ...data.map((row: Record<string, string | number>) =>
-                        Object.values(row).join(','),
-                      ),
-                    ].join('\n');
+                          const csvContent = [
+                            headers.map((h) => h.label).join(','),
+                            ...data.map((row: Record<string, string | number>) =>
+                              Object.values(row).join(','),
+                            ),
+                          ].join('\n');
 
-                    const blob = new Blob([csvContent], {
-                      type: 'text/csv;charset=utf-8;',
-                    });
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = `bookings-${dayjs().format(
-                      'YYYY-MM-DD.HH:mm',
-                    )}.csv`;
-                    link.click();
-                    URL.revokeObjectURL(link.href);
-                  }}
-                >
-                  {t('generic_export_csv')}
-                </Button>
+                          const blob = new Blob([csvContent], {
+                            type: 'text/csv;charset=utf-8;',
+                          });
+                          const link = document.createElement('a');
+                          link.href = URL.createObjectURL(blob);
+                          link.download = `bookings-${dayjs().format(
+                            'YYYY-MM-DD.HH:mm',
+                          )}.csv`;
+                          link.click();
+                          URL.revokeObjectURL(link.href);
+                          setIsActionsOpen(false);
+                        }}
+                      >
+                        <Download className="w-4 h-4" />
+                        {t('generic_export_csv')}
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
             <div className="bookings-list mt-8 flex flex-wrap gap-4">
