@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 import { FormEvent, useState } from 'react';
 
@@ -23,6 +24,7 @@ interface Props {
 
 const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
   const t = useTranslations();
+  const router = useRouter();
   const { signup, error, isLoading, user, refetchUser } = useAuth();
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
@@ -54,7 +56,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
     try {
       const res = await api.post('/check-user-exists', {
         email,
-        recaptchaToken: turnstileToken,
+        turnstileToken,
       });
       const doesUserExist = res?.data?.doesUserExist;
 
@@ -107,12 +109,15 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
     setLocalError(null);
 
     try {
-      const res = await signup({
-        ...application,
-        slug: slugify(application.screenname),
-        preferences: {},
-        emailConsent: isEmailConsent,
-      }, turnstileToken);
+      const res = await signup(
+        {
+          ...application,
+          slug: slugify(application.screenname),
+          preferences: {},
+          emailConsent: isEmailConsent,
+        },
+        { turnstileToken },
+      );
 
       if (res && res.result === 'signup') {
         setRegistrationSuccess(true);
@@ -256,7 +261,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
                 <Link
                   className="text-accent underline font-bold"
                   href={`/login?back=${encodeURIComponent(
-                    window.location.pathname,
+                    router.asPath,
                   )}`}
                 >
                   {t('login_title')}
@@ -326,7 +331,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
                 <Link
                   className="text-accent underline font-bold"
                   href={`/login?back=${encodeURIComponent(
-                    window.location.pathname,
+                    router.asPath,
                   )}`}
                 >
                   {t('login_title')}

@@ -45,13 +45,7 @@ const SignupForm = ({ app }: Props) => {
     refetchUser,
   } = useAuth();
 
-  const [step, setStep] = useState<number | null>(() => {
-    if (typeof window !== 'undefined') {
-      const savedStep = sessionStorage.getItem('signup_step');
-      return savedStep ? parseInt(savedStep, 10) : 1;
-    }
-    return 1;
-  });
+  const [step, setStep] = useState<number | null>(1);
   const [email, setEmail] = useState('');
   const [newsletterError, setNewsletterError] = useState<string | null>(null);
   const [newsletterSuccess, setNewsletterSuccess] = useState(false);
@@ -61,8 +55,16 @@ const SignupForm = ({ app }: Props) => {
     email: '',
     password: '',
     fields: {},
-    source: typeof window !== 'undefined' && window.location.href,
+    source: '',
   });
+
+  useEffect(() => {
+    const savedStep = sessionStorage.getItem('signup_step');
+    if (savedStep) {
+      setStep(parseInt(savedStep, 10));
+    }
+    setApplication((prev) => ({ ...prev, source: window.location.href }));
+  }, []);
   const [preferences, setPreferences] = useState({
     about: '',
     superpower: '',
@@ -178,7 +180,7 @@ const SignupForm = ({ app }: Props) => {
     try {
       const res = await api.post('/check-user-exists', {
         email,
-        recaptchaToken: turnstileToken,
+        turnstileToken,
       });
       const doesUserExist = res?.data?.doesUserExist;
 
@@ -242,12 +244,15 @@ const SignupForm = ({ app }: Props) => {
     try {
       const referredBy = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
 
-      const res = await signup({
-        ...application,
-        slug: slugify(application.screenname),
-        ...(referredBy && { referredBy }),
-        emailConsent: isEmailConsent,
-      }, turnstileToken);
+      const res = await signup(
+        {
+          ...application,
+          slug: slugify(application.screenname),
+          ...(referredBy && { referredBy }),
+          emailConsent: isEmailConsent,
+        },
+        { turnstileToken },
+      );
 
       if (res && res.result === 'signup') {
         setStep(3);

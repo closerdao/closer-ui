@@ -198,7 +198,7 @@ const Login = () => {
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    await login({ email, password, recaptchaToken: turnstileToken });
+    await login({ email, password, turnstileToken });
   };
 
   const authUserWithGoogle = async () => {

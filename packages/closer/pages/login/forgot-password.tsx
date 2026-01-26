@@ -22,7 +22,7 @@ const ForgotPasswordScreen = () => {
   const requestPasswordReset = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/reset-password', { email, recaptchaToken: turnstileToken });
+      await api.post('/reset-password', { email, turnstileToken });
       setIsResetCompleted(true);
     } catch (err: any) {
       setError(err.response?.data?.error || err.message);
