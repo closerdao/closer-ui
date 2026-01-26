@@ -52,17 +52,14 @@ const AllBookingsRequestsPage = ({ bookingConfig }: Props) => {
       </Head>
 
       <AdminLayout isBookingEnabled={isBookingEnabled}>
-        <div className="max-w-screen-xl flex flex-col gap-10">
-          <Heading level={1}>{t('booking_requests_title_all')}</Heading>
-          <BookingsFilter
-            setFilter={setFilter}
-            page={page}
-            setPage={setPage}
-            defaultWhere={defaultWhere}
-          />
-
-          <Bookings filter={filter} setPage={setPage} page={page} />
-        </div>
+        <Heading level={2}>{t('booking_requests_title_all')}</Heading>
+        <BookingsFilter
+          setFilter={setFilter}
+          page={page}
+          setPage={setPage}
+          defaultWhere={defaultWhere}
+        />
+        <Bookings filter={filter} setPage={setPage} page={page} />
       </AdminLayout>
     </>
   );

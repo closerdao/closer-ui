@@ -3,14 +3,15 @@ import {
   Dispatch,
   SetStateAction,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 
 import DateTimePicker from '../../components/DateTimePicker';
-import { Button, ErrorMessage, Input } from '../../components/ui';
-import Select from '../../components/ui/Select/Dropdown';
+import { Button, ErrorMessage } from '../../components/ui';
 
 import dayjs from 'dayjs';
+import { Calendar, ChevronDown, Filter, Search, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -19,7 +20,6 @@ import {
   BOOKING_TYPE_OPTIONS,
 } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
-import { useOutsideClick } from '../../hooks/useOutsideClick';
 
 const loadTime = new Date();
 
@@ -33,12 +33,11 @@ interface Props {
 const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
-  const arrivalDropdownRef = useOutsideClick(handleClickOutsideArrivalDropdown);
-  const departureDropdownRef = useOutsideClick(
-    handleClickOutsideDepartureDropdown,
-  );
-  const [showArrivalDropdown, setShowArrivalDropdown] = useState(false);
-  const [showDepartureDropdown, setShowDepartureDropdown] = useState(false);
+  
+  const [showFilters, setShowFilters] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const datePickerRef = useRef<HTMLDivElement>(null);
+  const filtersRef = useRef<HTMLDivElement>(null);
 
   const [bookingType, setBookingType] = useState('any');
   const [bookingStatus, setBookingStatus] = useState('any');
@@ -48,28 +47,19 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
     value: 'any',
   });
 
-  const [arrivalFromDate, setArrivalFromDate] = useState<string | undefined>(
-    '',
-  );
-  const [arrivalToDate, setArrivalToDate] = useState<string | undefined>('');
-  const [departureToDate, setDepartureToDate] = useState<string | undefined>(
-    '',
-  );
-  const [departureFromDate, setDepartureFromDate] = useState<
-    string | undefined
-  >('');
+  const [dateFrom, setDateFrom] = useState<string | undefined>('');
+  const [dateTo, setDateTo] = useState<string | undefined>('');
 
   const [filterValues, setFilterValues] = useState({
     type: 'any',
     status: 'any',
     bookingId: '',
     selectedEvent: { label: 'any', value: '' },
-    arrivalFromDate: '',
-    arrivalToDate: '',
-    departureFromDate: '',
-    departureToDate: '',
+    dateFrom: '',
+    dateTo: '',
     sortBy: '-created',
   });
+
   const eventsFilter = {
     where: {
       end: { $gt: loadTime },
@@ -77,23 +67,20 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
   };
 
   const events = platform?.event?.find(eventsFilter);
-
   const [error, setError] = useState(false);
 
-  const eventsData =
-    events &&
-    events
-      .map((event: any) => {
-        return { label: event.toJSON().name, value: event.toJSON()._id };
-      })
-      .toJSON();
-
-  function handleClickOutsideArrivalDropdown() {
-    setShowArrivalDropdown(false);
-  }
-  function handleClickOutsideDepartureDropdown() {
-    setShowDepartureDropdown(false);
-  }
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (datePickerRef.current && !datePickerRef.current.contains(event.target as Node)) {
+        setShowDatePicker(false);
+      }
+      if (filtersRef.current && !filtersRef.current.contains(event.target as Node)) {
+        setShowFilters(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const loadData = async () => {
     try {
@@ -112,15 +99,12 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
   }, [filterValues]);
 
   useEffect(() => {
-    const arrivalFrom = new Date(filterValues.arrivalFromDate);
-    arrivalFrom.setDate(arrivalFrom.getDate() - 1);
-
-    const departureFrom = new Date(filterValues.departureFromDate);
-    departureFrom.setDate(departureFrom.getDate() - 1);
+    const dateFromObj = new Date(filterValues.dateFrom);
+    dateFromObj.setDate(dateFromObj.getDate() - 1);
 
     const isDefaultFilter =
-      !filterValues.departureToDate &&
-      !filterValues.departureFromDate &&
+      !filterValues.dateTo &&
+      !filterValues.dateFrom &&
       filterValues.status === 'any';
 
     const getFilter = {
@@ -144,19 +128,11 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
         ...(filterValues.selectedEvent.label !== 'any' && {
           eventId: filterValues.selectedEvent.value,
         }),
-
-        ...(filterValues.arrivalToDate &&
-          filterValues.arrivalFromDate && {
+        ...(filterValues.dateTo &&
+          filterValues.dateFrom && {
             start: {
-              $lte: new Date(filterValues.arrivalToDate),
-              $gte: arrivalFrom,
-            },
-          }),
-        ...(filterValues.departureToDate &&
-          filterValues.departureFromDate && {
-            end: {
-              $lte: new Date(filterValues.departureToDate),
-              $gte: departureFrom,
+              $lte: new Date(filterValues.dateTo),
+              $gte: dateFromObj,
             },
           }),
         ...(isDefaultFilter && defaultWhere),
@@ -170,53 +146,22 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
   }, [filterValues, page]);
 
   useEffect(() => {
-    if (arrivalFromDate && arrivalToDate) {
+    if (dateFrom && dateTo) {
       setFilterValues({
         ...filterValues,
-        arrivalFromDate: arrivalFromDate as string,
-        arrivalToDate: arrivalToDate as string,
+        dateFrom: dateFrom as string,
+        dateTo: dateTo as string,
       });
     }
-    if (!arrivalFromDate && !arrivalToDate) {
+    if (!dateFrom && !dateTo) {
       setFilterValues({
         ...filterValues,
-        arrivalFromDate: '',
-        arrivalToDate: '',
+        dateFrom: '',
+        dateTo: '',
       });
     }
-  }, [arrivalFromDate, arrivalToDate]);
+  }, [dateFrom, dateTo]);
 
-  useEffect(() => {
-    if (departureFromDate && departureToDate) {
-      setFilterValues({
-        ...filterValues,
-        departureFromDate: departureFromDate as string,
-        departureToDate: departureToDate as string,
-      });
-    }
-    if (!departureFromDate && !departureToDate) {
-      setFilterValues({
-        ...filterValues,
-        departureFromDate: '',
-        departureToDate: '',
-      });
-    }
-  }, [departureFromDate, departureToDate]);
-
-  const handleBookingType = (value: string) => {
-    setBookingType(value);
-    setFilterValues({
-      ...filterValues,
-      type: value,
-    });
-  };
-  const handleBookingStatus = (value: string) => {
-    setBookingStatus(value);
-    setFilterValues({
-      ...filterValues,
-      status: value,
-    });
-  };
   const handleBookingId = (e: ChangeEvent<HTMLInputElement>) => {
     setBookingId(e.target.value);
     setFilterValues({
@@ -224,204 +169,238 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
       bookingId: e.target.value,
     });
   };
-  const handleEventName = (value: string) => {
-    const selected = eventsData.find((event: any) => {
-      if (event.value === value) {
-        return event;
-      }
-    });
 
-    setSelectedEvent({
-      label: selected?.label || 'any',
-      value: value,
-    });
-    setFilterValues({
-      ...filterValues,
-      selectedEvent: { label: selected?.label || 'any', value },
-    });
+  const handleClearDates = () => {
+    setDateFrom('');
+    setDateTo('');
   };
 
-  const handleClearArrivalDates = () => {
-    setArrivalFromDate('');
-    setArrivalToDate('');
-  };
-  const handleClearDepartureDates = () => {
-    setDepartureFromDate('');
-    setDepartureToDate('');
-  };
+  const activeFiltersCount = [
+    filterValues.status !== 'any',
+    filterValues.type !== 'any',
+    filterValues.selectedEvent.label !== 'any',
+  ].filter(Boolean).length;
+
+  const sortOptions = [
+    { key: '-created', label: t('booking_requests_newest_first') },
+    { key: 'start', label: t('booking_requests_arrival_date') },
+    { key: 'end', label: t('booking_requests_departure_date') },
+  ];
+
   return (
-    <section className="flex gap-2 flex-wrap">
-      <div className="md:flex-1 flex-wrap md:flex-nowrap flex gap-2 flex-col md:flex-row w-full md:w-auto mb-4">
-        <div className="flex-1 min-w-full md:min-w-[160px]">
-          <label className="block my-2">{t('booking_card_status')}</label>
-          <Select
-            className="rounded-full border-black "
-            value={bookingStatus}
-            options={BOOKING_STATUS_OPTIONS}
-            onChange={handleBookingStatus}
-            isRequired
-          />
-        </div>
-        <div className="flex-1 min-w-full sm:min-w-[160px]">
-          <label className="block my-2">{t('booking_requests_type')}</label>
-          <Select
-            label=""
-            value={bookingType}
-            options={BOOKING_TYPE_OPTIONS}
-            className="rounded-full border-black"
-            onChange={handleBookingType}
-            isRequired
-          />
-        </div>
-        <div className="rounded-full flex-1 min-w-full sm:min-w-[160px]">
-          <label className="block my-2">
-            {t('booking_requests_event_name')}
-          </label>
-          <Select
-            isDisabled={!Boolean(events && filterValues.type === 'event')}
-            className={`rounded-full ${
-              Boolean(events && filterValues.type === 'event') && 'border-black'
-            }`}
-            value={selectedEvent.label}
-            options={
-              events && [
-                { label: 'any', value: 'any' },
-                ...events.map((event: any) => {
-                  return {
-                    label: event.toJSON().name,
-                    value: event.toJSON()._id,
-                  };
-                }),
-              ]
-            }
-            onChange={handleEventName}
-            isRequired
-          />
-          {error && <ErrorMessage error={error} />}
-        </div>
-      </div>
-      <div className="md:flex-1 flex-wrap md:flex-nowrap flex gap-2 flex-col md:flex-row w-full md:w-auto mb-4">
-        <div className="flex-1 min-w-[160px]">
-          <label className="block my-2">
-            {t('booking_requests_booking_number')}
-          </label>
-          <Input
+    <section className="bg-white rounded-lg border border-gray-200 p-2">
+      <div className="flex flex-wrap gap-1.5 items-center">
+        <div className="flex-1 min-w-[200px] relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
             value={bookingId}
-            onChange={handleBookingId as any}
+            onChange={handleBookingId}
             type="text"
             placeholder={t('booking_id_placeholder')}
-            className="m-0 border-black border-2 rounded-full py-1.5 bg-white"
+            className="w-full pl-10 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
           />
         </div>
-        <div ref={arrivalDropdownRef} className="relative flex-1 min-w-[160px]">
-          <label className="block my-2">
-            {t('booking_requests_arrival_date_range')}
-          </label>
-          <Button
-            onClick={() => setShowArrivalDropdown(!showArrivalDropdown)}
-            className="text-black border-black normal-case text-md py-2 text-sm"
-            size="small"
-            variant="secondary"
+
+        <div ref={datePickerRef} className="relative">
+          <button
+            onClick={() => setShowDatePicker(!showDatePicker)}
+            className={`flex items-center gap-2 px-3 py-2 text-sm border rounded-lg transition-colors ${
+              dateFrom && dateTo
+                ? 'border-accent bg-accent/5 text-accent'
+                : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+            }`}
           >
-            {!arrivalFromDate &&
-              !arrivalToDate &&
-              t('bookings_select_dates_button')}
-            {arrivalFromDate && (
-              <>{dayjs(arrivalFromDate).format('DD/MM/YY')} - </>
-            )}
-            {arrivalToDate && dayjs(arrivalToDate).format('DD/MM/YY')}
-          </Button>
-          {showArrivalDropdown && (
-            <div className="absolute z-10 right-0 bg-white shadow-md rounded-md p-4">
-              <DateTimePicker
-                setStartDate={setArrivalFromDate as any}
-                setEndDate={setArrivalToDate as any}
-                savedStartDate={arrivalFromDate}
-                savedEndDate={arrivalToDate}
-                defaultMonth={new Date()}
+            <Calendar className="w-4 h-4" />
+            {dateFrom && dateTo
+              ? `${dayjs(dateFrom).format('DD/MM')} - ${dayjs(dateTo).format('DD/MM')}`
+              : t('bookings_select_dates_button')}
+            {dateFrom && dateTo && (
+              <X
+                className="w-3 h-3 ml-1 hover:text-red-500"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClearDates();
+                }}
               />
-              <Button
-                isEnabled={Boolean(arrivalToDate && arrivalFromDate)}
-                variant="secondary"
-                size="small"
-                onClick={handleClearArrivalDates}
-              >
-                {t('booking_requests_clear_dates_button')}
-              </Button>
+            )}
+          </button>
+          {showDatePicker && (
+            <>
+              <div
+                className="md:hidden fixed inset-0 bg-black/50 z-40"
+                onClick={() => setShowDatePicker(false)}
+              />
+              <div className="fixed inset-4 z-50 bg-white rounded-lg shadow-xl flex flex-col md:absolute md:inset-auto md:z-20 md:right-0 md:top-full md:mt-1 md:shadow-lg md:border md:border-gray-200">
+                <div className="flex items-center justify-between p-4 border-b md:hidden">
+                  <span className="font-medium">{t('bookings_select_dates_button')}</span>
+                  <button
+                    onClick={() => setShowDatePicker(false)}
+                    className="p-1 hover:bg-gray-100 rounded"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-auto p-4 flex flex-col items-center justify-center">
+                  <DateTimePicker
+                    setStartDate={setDateFrom as any}
+                    setEndDate={setDateTo as any}
+                    savedStartDate={dateFrom}
+                    savedEndDate={dateTo}
+                    defaultMonth={new Date()}
+                  />
+                </div>
+                <div className="p-4 border-t flex gap-2">
+                  <Button
+                    isEnabled={Boolean(dateTo && dateFrom)}
+                    variant="secondary"
+                    size="small"
+                    onClick={handleClearDates}
+                    className="flex-1"
+                  >
+                    {t('booking_requests_clear_dates_button')}
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="small"
+                    onClick={() => setShowDatePicker(false)}
+                    className="flex-1 md:hidden"
+                  >
+                    {t('generic_done')}
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div ref={filtersRef} className="relative">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-2 px-3 py-2 text-sm border rounded-lg transition-colors ${
+              activeFiltersCount > 0
+                ? 'border-accent bg-accent/5 text-accent'
+                : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            <Filter className="w-4 h-4" />
+            {t('booking_requests_filters')}
+            {activeFiltersCount > 0 && (
+              <span className="bg-accent text-white text-xs px-1.5 py-0.5 rounded-full">
+                {activeFiltersCount}
+              </span>
+            )}
+            <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+          </button>
+          {showFilters && (
+            <div className="absolute z-20 right-0 top-full mt-1 bg-white shadow-lg rounded-lg border border-gray-200 p-4 min-w-[280px]">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {t('booking_card_status')}
+                  </label>
+                  <select
+                    value={bookingStatus}
+                    onChange={(e) => {
+                      setBookingStatus(e.target.value);
+                      setFilterValues({ ...filterValues, status: e.target.value });
+                    }}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
+                  >
+                    {BOOKING_STATUS_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {t('booking_requests_type')}
+                  </label>
+                  <select
+                    value={bookingType}
+                    onChange={(e) => {
+                      setBookingType(e.target.value);
+                      setFilterValues({ ...filterValues, type: e.target.value });
+                    }}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
+                  >
+                    {BOOKING_TYPE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {events && filterValues.type === 'event' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {t('booking_requests_event_name')}
+                    </label>
+                    <select
+                      value={selectedEvent.value}
+                      onChange={(e) => {
+                        const selected = events.find((ev: any) => ev.get('_id') === e.target.value);
+                        setSelectedEvent({
+                          label: selected?.get('name') || 'any',
+                          value: e.target.value,
+                        });
+                        setFilterValues({
+                          ...filterValues,
+                          selectedEvent: { label: selected?.get('name') || 'any', value: e.target.value },
+                        });
+                      }}
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
+                    >
+                      <option value="any">Any</option>
+                      {events.map((event: any) => (
+                        <option key={event.get('_id')} value={event.get('_id')}>
+                          {event.get('name')}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {activeFiltersCount > 0 && (
+                  <button
+                    onClick={() => {
+                      setBookingStatus('any');
+                      setBookingType('any');
+                      setSelectedEvent({ label: 'any', value: 'any' });
+                      setFilterValues({
+                        ...filterValues,
+                        status: 'any',
+                        type: 'any',
+                        selectedEvent: { label: 'any', value: 'any' },
+                      });
+                    }}
+                    className="w-full text-sm text-gray-500 hover:text-gray-700 py-1"
+                  >
+                    {t('booking_requests_clear_filters')}
+                  </button>
+                )}
+              </div>
+              {error && <ErrorMessage error={error} />}
             </div>
           )}
         </div>
-        <div
-          ref={departureDropdownRef}
-          className="relative flex-1 min-w-[160px]"
-        >
-          <label className="block my-2">
-            {t('booking_requests_departure_date_range')}
-          </label>
-          <Button
-            onClick={() => setShowDepartureDropdown(!showDepartureDropdown)}
-            className="text-black border-black normal-case py-2 text-sm"
-            size="small"
-            variant="secondary"
-          >
-            {!departureFromDate &&
-              !departureToDate &&
-              t('bookings_select_dates_button')}
-            {departureFromDate && (
-              <>{dayjs(departureFromDate).format('DD/MM/YY')} - </>
-            )}
-            {departureToDate && dayjs(departureToDate).format('DD/MM/YY')}
-          </Button>
-          {showDepartureDropdown && (
-            <div className="absolute z-10 right-0 bg-white shadow-md rounded-md p-4">
-              <DateTimePicker
-                setStartDate={setDepartureFromDate as any}
-                setEndDate={setDepartureToDate as any}
-                savedStartDate={departureFromDate}
-                savedEndDate={departureToDate}
-                defaultMonth={new Date()}
-              />
-              <Button
-                isEnabled={Boolean(departureToDate && departureFromDate)}
-                variant="secondary"
-                size="small"
-                onClick={handleClearDepartureDates}
-              >
-                {t('booking_requests_clear_dates_button')}
-              </Button>
-            </div>
-          )}
+
+        <div className="flex items-center gap-1 ml-auto">
+          <span className="text-xs text-gray-500 mr-1">{t('booking_requests_sort_by')}:</span>
+          {sortOptions.map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => setFilterValues({ ...filterValues, sortBy: opt.key })}
+              className={`px-2 py-1 text-xs rounded transition-colors ${
+                filterValues.sortBy === opt.key
+                  ? 'bg-accent text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
       </div>
-      <div className="w-full"> {t('booking_requests_sort_by')}</div>
-
-      <Button
-        isEnabled={filterValues.sortBy !== 'start'}
-        onClick={() => setFilterValues({ ...filterValues, sortBy: 'start' })}
-        variant="secondary"
-        isFullWidth={false}
-        size="small"
-      >
-        {t('booking_requests_arrival_date')}
-      </Button>
-      <Button
-        isEnabled={filterValues.sortBy !== 'end'}
-        onClick={() => setFilterValues({ ...filterValues, sortBy: 'end' })}
-        variant="secondary"
-        isFullWidth={false}
-        size="small"
-      >
-        {t('booking_requests_departure_date')}
-      </Button>
-      <Button
-        isEnabled={filterValues.sortBy !== '-created'}
-        onClick={() => setFilterValues({ ...filterValues, sortBy: '-created' })}
-        variant="secondary"
-        isFullWidth={false}
-        size="small"
-      >
-        {t('booking_requests_newest_first')}
-      </Button>
     </section>
   );
 };

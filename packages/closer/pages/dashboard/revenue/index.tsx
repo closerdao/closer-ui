@@ -366,36 +366,19 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
         <title>Revenue</title>
       </Head>
       <AdminLayout isBookingEnabled={isBookingEnabled}>
-        <div className="min-h-screen bg-gray-50">
-          {/* Header Section */}
-          <div className="bg-white ">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center py-6">
-                <div>
-                  <Heading
-                    level={1}
-                    className="text-2xl font-bold text-gray-900"
-                  >
-                    Revenue
-                  </Heading>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <RevenueTimeFrameSelector
-                    timeFrame={timeFrame}
-                    setTimeFrame={handleTimeFrameChange}
-                    fromDate={fromDate}
-                    setFromDate={setFromDate}
-                    toDate={toDate}
-                    setToDate={setToDate}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+          <Heading level={2}>{t('dashboard_revenue_title')}</Heading>
+          <RevenueTimeFrameSelector
+            timeFrame={timeFrame}
+            setTimeFrame={handleTimeFrameChange}
+            fromDate={fromDate}
+            setFromDate={setFromDate}
+            toDate={toDate}
+            setToDate={setToDate}
+          />
+        </div>
 
-          {/* Main Content */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="space-y-6">
+        <div className="space-y-6">
               {/* Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div className="bg-white overflow-hidden shadow rounded-lg">
@@ -721,8 +704,6 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                   cryptoTokenChargesLoading
                 }
               />
-            </div>
-          </div>
         </div>
       </AdminLayout>
     </>

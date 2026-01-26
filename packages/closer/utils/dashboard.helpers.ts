@@ -54,24 +54,37 @@ export const getDateRange = ({
         end: toEndOfDay(new Date(), timeZone),
       };
     case 'week':
+    case 'last7Days':
       return {
         start: toStartOfDay(dayjs().subtract(6, 'day').toDate(), timeZone),
         end: toEndOfDay(new Date(), timeZone),
       };
     case 'month':
+    case 'currentMonth':
+      return {
+        start: toStartOfDay(dayjs().startOf('month').toDate(), timeZone),
+        end: toEndOfDay(new Date(), timeZone),
+      };
+    case 'previousMonth':
       return {
         start: toStartOfDay(
-          dayjs().subtract(1, 'month').subtract(1, 'day').toDate(),
+          dayjs().subtract(1, 'month').startOf('month').toDate(),
           timeZone,
         ),
+        end: toEndOfDay(
+          dayjs().subtract(1, 'month').endOf('month').toDate(),
+          timeZone,
+        ),
+      };
+    case 'last4Weeks':
+      return {
+        start: toStartOfDay(dayjs().subtract(4, 'week').toDate(), timeZone),
         end: toEndOfDay(new Date(), timeZone),
       };
     case 'year':
+    case 'currentYear':
       return {
-        start: toStartOfDay(
-          dayjs().subtract(1, 'year').subtract(1, 'day').toDate(),
-          timeZone,
-        ),
+        start: toStartOfDay(dayjs().startOf('year').toDate(), timeZone),
         end: toEndOfDay(new Date(), timeZone),
       };
     case 'allTime':

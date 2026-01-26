@@ -4,9 +4,9 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import AdminLayout from '../../components/Dashboard/AdminLayout';
+import DashboardActions from '../../components/Dashboard/DashboardActions';
 import DashboardBookings from '../../components/Dashboard/DashboardBookings';
 import DashboardIntro from '../../components/Dashboard/DashboardIntro';
-import DashboardMetrics from '../../components/Dashboard/DashboardMetrics';
 import DashboardRevenue from '../../components/Dashboard/DashboardRevenue';
 import DashboardSubscriptions from '../../components/Dashboard/DashboardSubscriptions';
 import RevenueTimeFrameSelector from '../../components/Dashboard/RevenueTimeFrameSelector';
@@ -136,21 +136,15 @@ const DashboardPage = ({ generalConfig, bookingConfig }: Props) => {
           fromDate={fromDate}
           toDate={toDate}
         />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <DashboardMetrics
+        {areSubscriptionsEnabled && (
+          <DashboardSubscriptions
             timeFrame={timeFrame}
             fromDate={fromDate}
             toDate={toDate}
           />
+        )}
 
-          {areSubscriptionsEnabled && (
-            <DashboardSubscriptions
-              timeFrame={timeFrame}
-              fromDate={fromDate}
-              toDate={toDate}
-            />
-          )}
-        </div>
+        <DashboardActions />
       </AdminLayout>
     </>
   );
