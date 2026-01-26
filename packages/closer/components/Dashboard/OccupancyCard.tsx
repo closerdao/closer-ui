@@ -42,19 +42,29 @@ const OccupancyCard = ({
     (listings && getTotalNumNights(nightlyListings) * duration) || 0;
 
   const totalNumSpaceSlots =
-    listings &&
-    spaceListings &&
-    getTotalNumSpaceSlots(spaceListings) * duration;
+    (listings && spaceListings && getTotalNumSpaceSlots(spaceListings) * duration) || 0;
 
-  const hospitalityOccupancy = (
-    ((numBookedNights || 0) / totalNumNights) *
-    100
-  ).toFixed(1) || 0;
+  const calculateOccupancy = (booked: number, total: number): string => {
+    if (total === 0 || !total || !Number.isFinite(total)) {
+      return '0';
+    }
+    const percentage = (booked / total) * 100;
+    if (!Number.isFinite(percentage)) {
+      return '0';
+    }
+    return percentage.toFixed(1);
+  };
 
-  const spaceOccupancy = (
-    ((numBookedSpaceSlots || 0) / totalNumSpaceSlots) *
-    100 || 0
-  ).toFixed(1) || 0;
+  const hospitalityOccupancy = calculateOccupancy(numBookedNights || 0, totalNumNights);
+  const spaceOccupancy = calculateOccupancy(numBookedSpaceSlots || 0, totalNumSpaceSlots);
+
+  const hasNoBookings = isNightly 
+    ? (numBookedNights === 0 || !numBookedNights) 
+    : (numBookedSpaceSlots === 0 || !numBookedSpaceSlots);
+
+  const hasNoListings = isNightly 
+    ? totalNumNights === 0 
+    : totalNumSpaceSlots === 0;
 
   return (
     <Card className="p-2 flex flex-col h-[160px] ">
@@ -78,31 +88,45 @@ const OccupancyCard = ({
         </div>
       </div>
 
-      <div className="flex gap-3 justify-between items-end text-sm">
-        <div>
-          <p className="text-2xl font-bold">
-            {isNightly ? hospitalityOccupancy || 0 : spaceOccupancy || 0}%
-          </p>
-          <p> {t('dashboard_booked')}</p>
+      {hasNoListings ? (
+        <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
+          {t('dashboard_no_listings_available')}
         </div>
-
-        <div className="flex flex-col gap-1 ">
-          <div >
-            <span className="text-xl">
-             {formatThousands(numBookedNights || 0)} / {isNightly ? formatThousands(totalNumNights || 0) : formatThousands(totalNumSpaceSlots || 0)}
-            </span>{' '}
-            {isNightly ? t('dashboard_nights') : t('dashboard_booking_slots')}
+      ) : hasNoBookings ? (
+        <div className="flex-1 flex flex-col justify-center">
+          <p className="text-gray-500 text-sm">{t('dashboard_no_bookings_yet')}</p>
+          <div className="text-xs text-gray-400 mt-1">
+            {isNightly ? formatThousands(totalNumNights) : formatThousands(totalNumSpaceSlots)}{' '}
+            {isNightly ? t('dashboard_nights') : t('dashboard_booking_slots')} {t('dashboard_available')}
           </div>
-          {(timeFrame === 'today' || duration === 1) && nightlyListingsIds && (
-            <ArrivingAndDeparting
-              arrivingBookings={arrivingBookings}
-              departingBookings={departingBookings}
-              nightlyListings={nightlyListings}
-              nightlyListingsIds={nightlyListingsIds}
-            />
-          )}
         </div>
-      </div>
+      ) : (
+        <div className="flex gap-3 justify-between items-end text-sm">
+          <div>
+            <p className="text-2xl font-bold">
+              {isNightly ? hospitalityOccupancy : spaceOccupancy}%
+            </p>
+            <p> {t('dashboard_booked')}</p>
+          </div>
+
+          <div className="flex flex-col gap-1 ">
+            <div>
+              <span className="text-xl">
+                {formatThousands(isNightly ? numBookedNights || 0 : numBookedSpaceSlots || 0)} / {isNightly ? formatThousands(totalNumNights) : formatThousands(totalNumSpaceSlots)}
+              </span>{' '}
+              {isNightly ? t('dashboard_nights') : t('dashboard_booking_slots')}
+            </div>
+            {(timeFrame === 'today' || duration === 1) && nightlyListingsIds && (
+              <ArrivingAndDeparting
+                arrivingBookings={arrivingBookings}
+                departingBookings={departingBookings}
+                nightlyListings={nightlyListings}
+                nightlyListingsIds={nightlyListingsIds}
+              />
+            )}
+          </div>
+        </div>
+      )}
     </Card>
   );
 };

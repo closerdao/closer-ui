@@ -12,6 +12,7 @@ import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
 import api from '../utils/api';
+import TurnstileWidget from './TurnstileWidget';
 import { getRedirectUrl } from '../utils/auth.helpers';
 import { parseMessageFromError, slugify } from '../utils/common';
 import { isInputValid, validatePassword } from '../utils/helpers';
@@ -28,6 +29,7 @@ const SignupForm = ({ app }: Props) => {
   const t = useTranslations();
   const router = useRouter();
   const { platform } = usePlatform() as any;
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const { back, source, start, end, adults, useTokens, eventId, volunteerId } =
     router.query || {};
 
@@ -176,6 +178,7 @@ const SignupForm = ({ app }: Props) => {
     try {
       const res = await api.post('/check-user-exists', {
         email,
+        recaptchaToken: turnstileToken,
       });
       const doesUserExist = res?.data?.doesUserExist;
 
@@ -244,7 +247,7 @@ const SignupForm = ({ app }: Props) => {
         slug: slugify(application.screenname),
         ...(referredBy && { referredBy }),
         emailConsent: isEmailConsent,
-      });
+      }, turnstileToken);
 
       if (res && res.result === 'signup') {
         setStep(3);
@@ -375,13 +378,19 @@ const SignupForm = ({ app }: Props) => {
             {t('signup_form_email_consent')}
           </Checkbox>
 
+          <TurnstileWidget
+            action="signup_email"
+            onVerify={setTurnstileToken}
+          />
+
           <div className="w-full flex flex-col gap-4">
             <Button
               isEnabled={
                 !!email &&
                 isInputValid(email, 'email') &&
                 !newsletterSuccess &&
-                isEmailConsent
+                isEmailConsent &&
+                !!turnstileToken
               }
               isLoading={false}
               type="submit"
@@ -450,12 +459,19 @@ const SignupForm = ({ app }: Props) => {
           {(localError || authError) && (
             <ErrorMessage error={localError || authError} />
           )}
+
+          <TurnstileWidget
+            action="signup"
+            onVerify={setTurnstileToken}
+          />
+
           <div className="w-full my-4 flex flex-col gap-6">
             <Button
               isEnabled={
                 !!application.screenname &&
                 !!application.password &&
-                !isSignupLoading
+                !isSignupLoading &&
+                !!turnstileToken
               }
               isLoading={isSignupLoading}
             >

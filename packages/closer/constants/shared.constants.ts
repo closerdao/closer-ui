@@ -342,6 +342,7 @@ export const USER_ROLE_OPTIONS = [
   { label: 'Community-curator', value: 'community-curator' },
   { label: 'Affiliate manager', value: 'affiliate-manager' },
   { label: 'Team', value: 'team' },
+  { label: 'Accounting', value: 'accounting' },
   { label: 'Member', value: 'member' },
 ];
 

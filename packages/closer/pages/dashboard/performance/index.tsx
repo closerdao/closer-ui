@@ -14,6 +14,7 @@ import { useTranslations } from 'next-intl';
 import process from 'process';
 
 import { useAuth } from '../../../contexts/auth';
+import useRBAC from '../../../hooks/useRBAC';
 import PageNotAllowed from '../../../pages/401';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
@@ -25,6 +26,7 @@ import { BookingConfig } from '../../../types/api';
 const PerformancePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
   const t = useTranslations();
   const { user } = useAuth();
+  const { hasAccess } = useRBAC();
   const router = useRouter();
   const { time_frame } = router.query;
 
@@ -68,7 +70,7 @@ const PerformancePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) =>
     );
   };
 
-  if (!user?.roles.includes('admin')) {
+  if (!user || !hasAccess('Performance')) {
     return <PageNotAllowed />;
   }
 

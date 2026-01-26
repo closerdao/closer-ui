@@ -80,11 +80,13 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     password,
     isGoogle,
     idToken,
+    recaptchaToken,
   }: {
     email: string;
     password?: string;
     isGoogle?: boolean;
     idToken?: string | undefined;
+    recaptchaToken?: string | null;
   }) => {
     try {
       setIsLoading(true);
@@ -98,6 +100,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
           email,
           isGoogle,
           idToken,
+          recaptchaToken,
         }));
       }
       if (!isGoogle) {
@@ -106,6 +109,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         } = await api.post('/login', {
           email,
           password,
+          recaptchaToken,
         }));
       }
 
@@ -144,12 +148,12 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     }
   };
 
-  const signup = async (data: any) => {
+  const signup = async (data: any, recaptchaToken?: string | null) => {
     try {
       setHasSignedUp(false);
       const {
         data: { access_token: token, results: userData },
-      } = await api.post('/signup', data);
+      } = await api.post('/signup', { ...data, recaptchaToken });
       if (token && userData) {
         setAuthentification(userData, token);
         setUser(userData);

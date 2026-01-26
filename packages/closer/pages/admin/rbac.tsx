@@ -71,13 +71,14 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
 
   ]);
   const [roles] = useState([
-    'default', // Add default as a "role" for the UI
+    'default',
     'steward',
     'space-host',
     'community-curator',
     'member',
     'content-creator',
     'team',
+    'accounting',
     'admin',
   ]);
   const [isLoading, setIsLoading] = useState(false);

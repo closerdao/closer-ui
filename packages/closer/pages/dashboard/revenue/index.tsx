@@ -14,6 +14,7 @@ import process from 'process';
 
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
+import useRBAC from '../../../hooks/useRBAC';
 import { BookingConfig } from '../../../types/api';
 import { Charge } from '../../../types/booking';
 import api from '../../../utils/api';
@@ -24,6 +25,7 @@ import { getStartAndEndDate } from '../../../utils/performance.utils';
 const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
   const t = useTranslations();
   const { user } = useAuth();
+  const { hasAccess } = useRBAC();
   const router = useRouter();
   const { time_frame } = router.query;
 
@@ -354,7 +356,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
     return Math.max((amount / maxExpense) * 100, 5);
   };
 
-  if (!user?.roles.includes('admin')) {
+  if (!user || !hasAccess('Revenue')) {
     return <PageNotAllowed />;
   }
 

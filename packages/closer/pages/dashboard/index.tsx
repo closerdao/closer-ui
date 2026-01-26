@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 
 import AdminLayout from '../../components/Dashboard/AdminLayout';
 import DashboardBookings from '../../components/Dashboard/DashboardBookings';
+import DashboardIntro from '../../components/Dashboard/DashboardIntro';
 import DashboardMetrics from '../../components/Dashboard/DashboardMetrics';
 import DashboardRevenue from '../../components/Dashboard/DashboardRevenue';
 import DashboardSubscriptions from '../../components/Dashboard/DashboardSubscriptions';
@@ -118,6 +119,12 @@ const DashboardPage = ({ generalConfig, bookingConfig }: Props) => {
             setToDate={setToDate}
           />
         </div>
+
+        <DashboardIntro
+          timeFrame={timeFrame}
+          fromDate={fromDate}
+          toDate={toDate}
+        />
 
         <DashboardBookings
           timeFrame={timeFrame}
