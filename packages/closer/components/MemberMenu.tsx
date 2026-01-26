@@ -128,7 +128,7 @@ const MemberMenu = () => {
             {
               label: t('menu_become_citizen'),
               url: '/citizenship',
-              enabled: true,
+              enabled: process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true',
             },
             {
               label: t('menu_governance_dao'),
@@ -288,7 +288,7 @@ const MemberMenu = () => {
             label: 'Become a Citizen',
             url: '/citizenship',
             enabled:
-              process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' &&
+              process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true' &&
               APP_NAME?.toLowerCase() === 'tdf',
           },
           {

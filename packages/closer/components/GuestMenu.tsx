@@ -139,7 +139,7 @@ const GuestMenu = () => {
             {
               label: t('menu_become_citizen'),
               url: '/citizenship',
-              enabled: APP_NAME?.toLowerCase() === 'tdf',
+              enabled: process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true' && APP_NAME?.toLowerCase() === 'tdf',
             },
             {
               label: t('menu_governance_dao'),
@@ -386,7 +386,7 @@ const GuestMenu = () => {
           {
             label: 'Become a Citizen',
             url: '/citizenship',
-            enabled: APP_NAME?.toLowerCase() === 'tdf',
+            enabled: process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true' && APP_NAME?.toLowerCase() === 'tdf',
           },
         ],
       },

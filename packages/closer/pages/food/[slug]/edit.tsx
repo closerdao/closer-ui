@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
+import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import EditModel from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
 
@@ -11,15 +12,20 @@ import models from '../../../models';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
-import AdminLayout from '../../../components/Dashboard/AdminLayout';
 
 interface Props {
   food: any;
+  bookingConfig: any;
 }
 
-const EditFood = ({ food }: Props) => {
+const EditFood = ({ food, bookingConfig }: Props) => {
   const t = useTranslations();
   const router = useRouter();
+
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+
   const onUpdate = async (
     name: any,
     value: any,
@@ -30,34 +36,32 @@ const EditFood = ({ food }: Props) => {
       await api.post(`/moderator/food/${food._id}/add`, option);
     }
   };
+
   if (!food) {
     return <Heading>{t('foods_slug_edit_error')}</Heading>;
   }
+
   return (
     <>
       <Head>
         <title>{`${food.name} - ${t('listings_slug_edit_title')}`}</title>
       </Head>
-      <AdminLayout>
-        <div className=" flex">
-          <section className="max-w-4xl w-full">
-            <Heading level={2} className="mb-2">
-              Edit option <i>{food.name}</i>
-            </Heading>
-            <EditModel
-              id={food._id}
-              endpoint={'/food'}
-              fields={models.food}
-              onSave={() => router.push('/food')}
-              onUpdate={(name, value, option, actionType) =>
-                onUpdate(name, value, option, actionType)
-              }
-              allowDelete
-              deleteButton="Delete food option"
-              onDelete={() => router.push('/food')}
-            />
-          </section>
-        </div>
+      <AdminLayout isBookingEnabled={isBookingEnabled}>
+        <Heading level={2}>
+          {t('food_edit_option')} <i>{food.name}</i>
+        </Heading>
+        <EditModel
+          id={food._id}
+          endpoint={'/food'}
+          fields={models.food}
+          onSave={() => router.push('/food')}
+          onUpdate={(name, value, option, actionType) =>
+            onUpdate(name, value, option, actionType)
+          }
+          allowDelete
+          deleteButton={t('food_delete_option')}
+          onDelete={() => router.push('/food')}
+        />
       </AdminLayout>
     </>
   );
@@ -70,17 +74,20 @@ EditFood.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No food slug provided');
     }
 
-    const [foodRes, messages] = await Promise.all([
+    const [foodRes, bookingRes, messages] = await Promise.all([
       api.get(`/food/${query.slug}`).catch(() => null),
+      api.get('/config/booking').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const food = foodRes?.data?.results;
+    const bookingConfig = bookingRes?.data?.results?.value;
 
-    return { food, messages };
+    return { food, bookingConfig, messages };
   } catch (err: unknown) {
     return {
       error: parseMessageFromError(err),
+      bookingConfig: null,
     };
   }
 };

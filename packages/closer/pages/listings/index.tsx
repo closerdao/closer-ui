@@ -75,24 +75,22 @@ const Listings = ({ bookingConfig }: Props) => {
           <div className="validation-error">{listings.get('error')}</div>
         )}
 
-        <section className="text-center flex flex-wrap mb-12 ">
-          <div className="md:max-w-5xl">
-            <div className="mb-6 flex justify-between flex-col sm:flex-row gap-4">
-              <Heading>{t('listings_edit_title')}</Heading>
+        <section className="flex flex-wrap">
+          <div className="w-full">
+            <div className="mb-4 flex justify-between items-center flex-col sm:flex-row gap-4">
+              <Heading level={2}>{t('listings_edit_title')}</Heading>
               {(user?.roles.includes('admin') ||
                 user?.roles.includes('space-host')) && (
-                <div className="user-actions">
-                  <Link
-                    as="/listings/create"
-                    href="/listings/create"
-                    className="btn-primary"
-                  >
-                    {t('listings_create')}
-                  </Link>
-                </div>
+                <Link
+                  as="/listings/create"
+                  href="/listings/create"
+                  className="px-3 py-1.5 text-sm bg-accent text-white rounded-md hover:bg-accent/90 transition-colors"
+                >
+                  {t('listings_create_new')}
+                </Link>
               )}
             </div>
-            <div className="grid md:grid-cols-4 gap-x-12 md:gap-x-5 gap-y-16">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
               {listings &&
                 listings.count() > 0 &&
                 isTeamMember &&

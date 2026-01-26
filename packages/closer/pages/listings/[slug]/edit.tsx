@@ -16,11 +16,17 @@ import { loadLocaleData } from '../../../utils/locale.helpers';
 
 interface Props {
   listing: Listing;
+  bookingConfig: any;
 }
 
-const EditListing = ({ listing }: Props) => {
+const EditListing = ({ listing, bookingConfig }: Props) => {
   const t = useTranslations();
   const router = useRouter();
+
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+
   const onUpdate = async (
     name: any,
     value: any,
@@ -31,34 +37,32 @@ const EditListing = ({ listing }: Props) => {
       await api.post(`/moderator/listing/${listing._id}/add`, option);
     }
   };
+
   if (!listing) {
     return <Heading>{t('listings_slug_edit_error')}</Heading>;
   }
+
   return (
     <>
       <Head>
         <title>{`${listing.name} - ${t('listings_slug_edit_title')}`}</title>
       </Head>
-      <AdminLayout>
-        <div className="">
-          <section className="max-w-4xl w-full">
-            <Heading level={2} className="mb-2">
-              Edit Listing <i>{listing.name}</i>
-            </Heading>
-            <EditModel
-              id={listing._id}
-              endpoint={'/listing'}
-              fields={models.listing}
-              onSave={(listing) => router.push(`/stay/${listing.slug}`)}
-              onUpdate={(name, value, option, actionType) =>
-                onUpdate(name, value, option, actionType)
-              }
-              allowDelete
-              deleteButton="Delete Listing"
-              onDelete={() => router.push('/')}
-            />
-          </section>
-        </div>
+      <AdminLayout isBookingEnabled={isBookingEnabled}>
+        <Heading level={2}>
+          {t('listings_edit_listing')} <i>{listing.name}</i>
+        </Heading>
+        <EditModel
+          id={listing._id}
+          endpoint={'/listing'}
+          fields={models.listing}
+          onSave={(listing) => router.push(`/stay/${listing.slug}`)}
+          onUpdate={(name, value, option, actionType) =>
+            onUpdate(name, value, option, actionType)
+          }
+          allowDelete
+          deleteButton={t('listings_delete_listing')}
+          onDelete={() => router.push('/listings')}
+        />
       </AdminLayout>
     </>
   );
@@ -71,17 +75,20 @@ EditListing.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No listing');
     }
 
-    const [listingRes, messages] = await Promise.all([
+    const [listingRes, bookingRes, messages] = await Promise.all([
       api.get(`/listing/${query.slug}`).catch(() => null),
+      api.get('/config/booking').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const listing = listingRes?.data?.results;
+    const bookingConfig = bookingRes?.data?.results?.value;
 
-    return { listing, messages };
+    return { listing, bookingConfig, messages };
   } catch (err: unknown) {
     return {
       error: parseMessageFromError(err),
+      bookingConfig: null,
     };
   }
 };
