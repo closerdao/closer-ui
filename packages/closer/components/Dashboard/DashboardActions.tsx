@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import api from '../../utils/api';
-import { Button } from '../ui';
 import {
   Select,
   SelectContent,

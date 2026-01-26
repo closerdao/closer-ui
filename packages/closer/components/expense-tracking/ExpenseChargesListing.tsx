@@ -4,7 +4,6 @@ import { useTranslations } from 'next-intl';
 
 import { Button, Card, LinkButton } from '../ui';
 import Heading from '../ui/Heading';
-import Link from 'next/link';
 
 // Extended Charge type for expense tracking
 interface ExpenseCharge {

@@ -75,7 +75,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
   const [error, setError] = useState<any>();
   const [success, setSuccess] = useState(false);
   const [usersEmails, setUsersEmails] = useState<any[]>([]);
-  const [csvData, setCsvData] = useState<any>(null);
+  const [csvData, _setCsvData] = useState<any>(null);
 
   const toggleUserExpanded = (userId: string) => {
     setExpandedUsers((prev) =>
@@ -217,7 +217,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
         // No CSV export in the new version
         break;
       case 'Export all':
-        const data = await getAllUserData();
+        const _data = await getAllUserData();
         // No CSV export in the new version
         break;
       case 'Unlink wallet':
@@ -781,7 +781,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                             {user.getIn(['citizenship', 'why']) && (
                               <div className="flex flex-col mt-1">
                                 <span className="text-gray-400 text-[10px]">{t('manage_users_citizenship_why')}</span>
-                                <span className="text-gray-700 italic">"{user.getIn(['citizenship', 'why'])}"</span>
+                                <span className="text-gray-700 italic">&ldquo;{user.getIn(['citizenship', 'why'])}&rdquo;</span>
                               </div>
                             )}
                           </div>
