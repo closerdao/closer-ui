@@ -103,61 +103,63 @@ const ExtractedDataForm: React.FC<ExtractedDataFormProps> = ({
     <Card className="bg-background p-0 sm:p-4 shadow-none sm:shadow-md gap-2">
 
       <div className="flex justify-between items-center mb-4">
-        <Heading level={3}>Extracted document data</Heading>
+        <Heading level={3} className="text-base sm:text-lg">Extracted document data</Heading>
       </div>
 
-      <div className="mb-4">
-        <div className="text-sm text-gray-500 mb-1">Supplier: *</div>
-        <Input
-          type="text"
-          value={editableData?.supplier_business_name || ''}
-          onChange={(e: any) => onSupplierChange(e.target.value)}
-          className={`py-2 px-2 ${
-            hasAttemptedSubmit && fieldErrors.supplier_business_name
-              ? 'border-red-500'
-              : ''
-          }`}
-        />
-        {hasAttemptedSubmit && fieldErrors.supplier_business_name && (
-          <div className="text-sm text-red-500 mt-1">
-            {fieldErrors.supplier_business_name}
-          </div>
-        )}
-      </div>
-
-      <div className="mb-4">
-        <div className="text-sm text-gray-500 mb-1">
-          Document date (YYYY-MM-DD): *
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        <div>
+          <div className="text-sm text-gray-500 mb-1">Supplier: *</div>
+          <Input
+            type="text"
+            value={editableData?.supplier_business_name || ''}
+            onChange={(e: any) => onSupplierChange(e.target.value)}
+            className={`py-2 px-2 ${
+              hasAttemptedSubmit && fieldErrors.supplier_business_name
+                ? 'border-red-500'
+                : ''
+            }`}
+          />
+          {hasAttemptedSubmit && fieldErrors.supplier_business_name && (
+            <div className="text-sm text-red-500 mt-1">
+              {fieldErrors.supplier_business_name}
+            </div>
+          )}
         </div>
-        <Input
-          type="text"
-          value={editableData?.document_date || ''}
-          onChange={(e: any) => onDocumentDateChange(e.target.value)}
-          className={`py-2 px-2 ${
-            hasAttemptedSubmit && fieldErrors.document_date
-              ? 'border-red-500'
-              : ''
-          }`}
-        />
-        {hasAttemptedSubmit && fieldErrors.document_date && (
-          <div className="text-sm text-red-500 mt-1">
-            {fieldErrors.document_date}
+
+        <div>
+          <div className="text-sm text-gray-500 mb-1">
+            Document date (YYYY-MM-DD): *
           </div>
-        )}
+          <Input
+            type="text"
+            value={editableData?.document_date || ''}
+            onChange={(e: any) => onDocumentDateChange(e.target.value)}
+            className={`py-2 px-2 ${
+              hasAttemptedSubmit && fieldErrors.document_date
+                ? 'border-red-500'
+                : ''
+            }`}
+          />
+          {hasAttemptedSubmit && fieldErrors.document_date && (
+            <div className="text-sm text-red-500 mt-1">
+              {fieldErrors.document_date}
+            </div>
+          )}
+        </div>
+
+        <div className="sm:col-span-2 sm:max-w-xs">
+          <div className="text-sm text-gray-500 mb-1">Currency (ISO Code):</div>
+          <Input
+            type="text"
+            value={currency || editableData?.currency_iso_code || ''}
+            onChange={(e: any) => onCurrencyChange(e.target.value)}
+            className="py-2 px-2"
+            placeholder="e.g., EUR, USD, GBP"
+          />
+        </div>
       </div>
 
-      <div className="mb-4">
-        <div className="text-sm text-gray-500 mb-1">Currency (ISO Code):</div>
-        <Input
-          type="text"
-          value={currency || editableData?.currency_iso_code || ''}
-          onChange={(e: any) => onCurrencyChange(e.target.value)}
-          className="py-2 px-2"
-          placeholder="e.g., EUR, USD, GBP"
-        />
-      </div>
-
-      <div className="overflow-x-auto">
+      <div className="hidden sm:block overflow-x-auto">
         <table className="w-full">
           <thead className="border-b">
             <tr>
@@ -272,6 +274,102 @@ const ExtractedDataForm: React.FC<ExtractedDataFormProps> = ({
             </tr>
           </tfoot>
         </table>
+      </div>
+
+      <div className="sm:hidden flex flex-col gap-3">
+        <div className="text-sm font-medium text-gray-600">VAT Summary</div>
+        {editableData?.vat_summary?.map((summary: any, index: number) => (
+          <div key={index} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+            <div className="flex justify-between items-start mb-2">
+              <span className="text-xs text-gray-500 uppercase">VAT Group {index + 1}</span>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => onDeleteVatSummaryRow(index)}
+                  disabled={editableData?.vat_summary.length === 1}
+                  className="text-red-600 hover:text-red-800 disabled:text-gray-400 p-1"
+                  title="Delete row"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => onAddVatSummaryRow()}
+                  className="text-blue-600 hover:text-blue-800 p-1"
+                  title="Add row"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div>
+                <label className="text-xs text-gray-500">Description</label>
+                <Input
+                  type="text"
+                  value={summary.description || ''}
+                  onChange={(e) =>
+                    onVatSummaryChange(index, 'description', e.target.value)
+                  }
+                  className="py-2 px-2 text-sm"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs text-gray-500">VAT %</label>
+                  <Input
+                    type="number"
+                    value={String(summary.vat_percentage || 0)}
+                    onChange={(e) =>
+                      onVatSummaryChange(
+                        index,
+                        'vat_percentage',
+                        parseFloat(e.target.value) || 0,
+                      )
+                    }
+                    className="py-2 px-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500">Tax Code</label>
+                  <Input
+                    type="text"
+                    value={summary.tax_code || ''}
+                    onChange={(e) =>
+                      onVatSummaryChange(index, 'tax_code', e.target.value)
+                    }
+                    className="py-2 px-2 text-sm"
+                    placeholder="NOR/INT/RED/ISE"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">Total with VAT</label>
+                <Input
+                  type="text"
+                  value={(summary.total_with_vat || 0).toFixed(2)}
+                  onChange={(e) =>
+                    onVatSummaryChange(
+                      index,
+                      'total_with_vat',
+                      parseFloat(e.target.value) || 0,
+                    )
+                  }
+                  className="py-2 px-2 text-sm font-semibold"
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+        <div className="flex justify-between items-center border-t pt-3 mt-2">
+          <span className="text-sm font-bold">Document Total:</span>
+          <Input
+            type="text"
+            value={(editableData?.receipt_total || 0).toFixed(2)}
+            onChange={(e) =>
+              onReceiptTotalChange(parseFloat(e.target.value) || 0)
+            }
+            className="w-32 p-2 text-sm font-bold text-right"
+          />
+        </div>
       </div>
 
       {/* Tax Exemption Reason ID */}

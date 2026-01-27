@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 
 import { useTranslations } from 'next-intl';
 
+import { getDashboardLinks } from './dashboardLinks';
 import useRBAC from '../../hooks/useRBAC';
 
 const DashboardMobileNav = ({
@@ -15,60 +16,9 @@ const DashboardMobileNav = ({
   const path = router.pathname;
   const { hasAccess } = useRBAC();
 
-  const isTokenEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
-
-  const allLinks = [
-    {
-      label: t('navigation_dashboard'),
-      url: '/dashboard',
-      rbacPage: 'Dashboard',
-    },
-    {
-      label: t('navigation_performance'),
-      url: '/dashboard/performance',
-      rbacPage: 'Performance',
-    },
-    {
-      label: t('navigation_revenue'),
-      url: '/dashboard/revenue',
-      rbacPage: 'Revenue',
-    },
-    ...(isBookingEnabled
-      ? [
-          {
-            label: t('navigation_bookings'),
-            url: '/bookings/all',
-            rbacPage: 'Bookings',
-          },
-          {
-            label: t('navigation_edit_listings'),
-            url: '/listings',
-            rbacPage: 'Listings',
-          },
-        ]
-      : []),
-    {
-      label: t('navigation_user_list'),
-      url: '/admin/manage-users',
-      rbacPage: 'UserManagement',
-    },
-    ...(isTokenEnabled
-      ? [
-          {
-            label: t('navigation_token_sales'),
-            url: '/dashboard/token-sales',
-            rbacPage: 'TokenSales',
-          },
-        ]
-      : []),
-    {
-      label: t('navigation_platform_settings'),
-      url: '/admin/config',
-      rbacPage: 'PlatformSettings',
-    },
-  ];
-
-  const links = allLinks.filter((link) => hasAccess(link.rbacPage));
+  const links = getDashboardLinks(t, isBookingEnabled).filter((link) =>
+    hasAccess(link.rbacPage),
+  );
 
   if (links.length === 0) {
     return null;

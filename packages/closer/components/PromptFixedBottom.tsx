@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
 
 import { FaTimes } from '@react-icons/all-files/fa/FaTimes';
-import { Button, Heading, Newsletter, useAuth } from 'closer';
+import { Newsletter, useAuth } from 'closer';
 import { useTranslations } from 'next-intl';
 
 import { useNewsletter } from '../contexts/newsletter';
@@ -135,30 +135,29 @@ const PromptFixedBottom = () => {
   };
 
   return (
-    <div>
+    <div className="fixed inset-x-0 bottom-0 z-50 sm:bottom-4 sm:left-1/2 sm:-translate-x-1/2 sm:inset-auto pointer-events-none">
       <section
-        className={`fixed inset-x-0 bottom-0 z-50 mt-24 flex h-[150px] flex-col shadow-[0_0_5px_-1px_rgba(0,0,0,0.1),0_0_4px_-2px_rgba(0,0,0,0.1)] bg-white transition-transform duration-300 ease-out ${
-          isVisible ? 'translate-y-0' : 'translate-y-full'
+        className={`pointer-events-auto bg-white/90 backdrop-blur-md border-t border-gray-200 sm:border sm:rounded-full shadow-lg transition-all duration-300 ease-out ${
+          isVisible ? 'translate-y-0 opacity-100' : 'translate-y-full sm:translate-y-4 opacity-0'
         }`}
       >
-        <div className="mx-auto max-w-sm p-4">
-          <Heading level={3} className="mb-4">
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5 sm:gap-4 sm:px-5 sm:py-2.5">
+          <p className="text-sm font-medium text-gray-700 hidden sm:block whitespace-nowrap">
             {t('stay_in_touch')}
-          </Heading>
+          </p>
           <Newsletter
             placement="HomePagePrompt"
-            ctaText={hasSubscribed ? 'Thanks for subscribing!' : 'Subscribe'}
+            ctaText={hasSubscribed ? 'Thanks!' : 'Subscribe'}
             onSuccess={handleSubscriptionSuccess}
-            className="px-0 pt-0 pb-4 sm:w-full"
+            className="!p-0 !w-full sm:!w-auto flex-1 sm:flex-none"
           />
-          <Button
+          <button
             onClick={() => handleDrawerClose(false)}
-            variant="secondary"
-            size="small"
-            className="my-4 absolute right-4 top-0 w-10 h-10 p-0"
+            className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors shrink-0"
+            aria-label="Close"
           >
-            <FaTimes className="w-4 h-4" />
-          </Button>
+            <FaTimes className="w-3.5 h-3.5" />
+          </button>
         </div>
       </section>
     </div>

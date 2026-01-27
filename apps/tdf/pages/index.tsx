@@ -149,21 +149,21 @@ const HomePage = () => {
             </p>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 max-w-4xl mx-auto">
-              <div className="bg-gray-50 rounded border border-gray-300 p-6 text-center">
-                <div className="text-3xl md:text-4xl font-normal text-gray-900 mb-2 font-serif">280</div>
-                <div className="text-xs text-gray-600 font-light">{t('home_stats_token_holders')}</div>
+              <div className="bg-accent-light/50 rounded-lg p-6 text-center border border-accent/10">
+                <div className="text-3xl md:text-4xl font-bold text-accent mb-2">280</div>
+                <div className="text-xs text-gray-700 font-medium">{t('home_stats_token_holders')}</div>
               </div>
-              <div className="bg-gray-50 rounded border border-gray-300 p-6 text-center">
-                <div className="text-3xl md:text-4xl font-normal text-gray-900 mb-2 font-serif">€1.25M+</div>
-                <div className="text-xs text-gray-600 font-light">{t('home_stats_total_capital')}</div>
+              <div className="bg-accent-light/50 rounded-lg p-6 text-center border border-accent/10">
+                <div className="text-3xl md:text-4xl font-bold text-accent mb-2">€1.25M+</div>
+                <div className="text-xs text-gray-700 font-medium">{t('home_stats_total_capital')}</div>
               </div>
-              <div className="bg-gray-50 rounded border border-gray-300 p-6 text-center">
-                <div className="text-3xl md:text-4xl font-normal text-gray-900 mb-2 font-serif">25ha</div>
-                <div className="text-xs text-gray-600 font-light">{t('home_stats_land_stewardship')}</div>
+              <div className="bg-accent-light/50 rounded-lg p-6 text-center border border-accent/10">
+                <div className="text-3xl md:text-4xl font-bold text-accent mb-2">25ha</div>
+                <div className="text-xs text-gray-700 font-medium">{t('home_stats_land_stewardship')}</div>
               </div>
-              <div className="bg-gray-50 rounded border border-gray-300 p-6 text-center col-span-2 md:col-span-1">
-                <div className="text-3xl md:text-4xl font-normal text-gray-900 mb-2 font-serif">€514k</div>
-                <div className="text-xs text-gray-600 font-light">{t('home_stats_revenue_target')}</div>
+              <div className="bg-accent-light/50 rounded-lg p-6 text-center border border-accent/10 col-span-2 md:col-span-1">
+                <div className="text-3xl md:text-4xl font-bold text-accent mb-2">€514k</div>
+                <div className="text-xs text-gray-700 font-medium">{t('home_stats_revenue_target')}</div>
               </div>
             </div>
 

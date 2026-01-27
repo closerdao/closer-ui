@@ -580,25 +580,25 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <Heading level={3}>{t('expense_tracking_add_new_expense')}</Heading>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white rounded-lg w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+        <div className="p-4 sm:p-6">
+          <div className="flex justify-between items-start gap-2 mb-4">
+            <Heading level={3} className="text-lg sm:text-xl">{t('expense_tracking_add_new_expense')}</Heading>
             <Button
               onClick={handleClose}
               variant="secondary"
-              className=" w-12 h-12"
+              className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0"
               aria-label={t('expense_tracking_close')}
             >
               ✕
             </Button>
           </div>
 
-          <div className="flex items-center gap-2 mb-4">
-            {t('expense_tracking_choose_accounting_entity')}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
+            <span className="text-sm sm:text-base">{t('expense_tracking_choose_accounting_entity')}</span>
             <Select value={selectedEntity} onValueChange={setSelectedEntity}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder={t('expense_tracking_select_entity')} />
               </SelectTrigger>
               <SelectContent>
@@ -611,7 +611,7 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
             </Select>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {!parsedData ? (
               <UploadForm
                 onFileSelect={handleFileSelect}

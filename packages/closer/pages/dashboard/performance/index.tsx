@@ -80,63 +80,45 @@ const PerformancePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) =>
         <title>{t('dashboard_performance_title')}</title>
       </Head>
       <AdminLayout isBookingEnabled={isBookingEnabled}>
-        <div className="min-h-screen bg-gray-50">
-          {/* Header Section */}
-          <div className="bg-white border-b border-gray-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-                <div>
-                  <Heading level={1} className="text-2xl font-bold text-gray-900">
-                    {t('dashboard_performance_title')}
-                  </Heading>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Track user engagement and conversion metrics across all platforms
-                  </p>
-                </div>
-                <TimeFrameSelector
-                  timeFrame={timeFrame}
-                  setTimeFrame={handleTimeFrameChange}
-                  fromDate={fromDate}
-                  setFromDate={setFromDate}
-                  toDate={toDate}
-                  setToDate={setToDate}
-                />
-              </div>
-            </div>
-          </div>
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+          <Heading level={2}>{t('dashboard_performance_title')}</Heading>
+          <TimeFrameSelector
+            timeFrame={timeFrame}
+            setTimeFrame={handleTimeFrameChange}
+            fromDate={fromDate}
+            setFromDate={setFromDate}
+            toDate={toDate}
+            setToDate={setToDate}
+          />
+        </div>
 
-          {/* Main Content */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
-            <StaysFunnel
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 mt-6">
+          <StaysFunnel
+            timeFrame={timeFrame}
+            fromDate={fromDate}
+            toDate={toDate}
+          />
+          {isTokenEnabled && (
+            <TokenSalesFunnel
               timeFrame={timeFrame}
               fromDate={fromDate}
               toDate={toDate}
             />
-            {isTokenEnabled && (
-            <TokenSalesFunnel
-              timeFrame={timeFrame}
-                fromDate={fromDate}
-                toDate={toDate}
-              />
-            )}
-            {areSubscriptionsEnabled && (
+          )}
+          {areSubscriptionsEnabled && (
             <SubscriptionsFunnel
               timeFrame={timeFrame}
-                fromDate={fromDate}
-                toDate={toDate}
-              />
-            )}
-            {isCitizenshipEnabled && (
+              fromDate={fromDate}
+              toDate={toDate}
+            />
+          )}
+          {isCitizenshipEnabled && (
             <CitizenshipFunnel
               timeFrame={timeFrame}
-                fromDate={fromDate}
-                toDate={toDate}
-              />
-            )}
-            </div>
-          </div>
+              fromDate={fromDate}
+              toDate={toDate}
+            />
+          )}
         </div>
       </AdminLayout>
     </>

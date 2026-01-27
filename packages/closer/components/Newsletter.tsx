@@ -68,16 +68,21 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
     if (!mounted) return null;
     if (isAuthenticated || APP_NAME !== 'tdf' || !shouldShowForm) return null;
 
+    const isInlinePrompt = placement === 'HomePagePrompt';
+
     return (
       <div
         ref={ref}
-        className={`${twMerge(
-          'Newsletter pt-8 pb-5 w-auto sm:w-[280px]',
+        className={twMerge(
+          'Newsletter',
+          isInlinePrompt ? '' : 'pt-8 pb-5 w-auto sm:w-[280px]',
           className,
-        )}`}  
+        )}
       >
         {signupCompleted ? (
-          <h3>{t('newsletter_success')}</h3>
+          <p className={isInlinePrompt ? 'text-sm text-green-600 font-medium' : ''}>
+            {t('newsletter_success')}
+          </p>
         ) : (
           <form
             action="#"
@@ -110,29 +115,37 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
                   );
                 })
             }
-            className="flex flex-col justify-center"
+            className={isInlinePrompt ? 'flex items-center gap-2' : 'flex flex-col justify-center'}
           >
+            {!isInlinePrompt && showTitle && (
               <div className="flex flex-col justify-start md:mt-0 gap-y-2">
-                
-                {showTitle && placement !== 'HomePagePrompt' && (
-                  <Heading display level={4}>
-                    {t('newsletter_title')}
-                  </Heading>
-                )}
-              <div className="flex gap-4">
-                <Input
-                  type="text"
-                  className="bg-white border !border-gray-400 rounded-md p-2 w-[140px] sm:w-[180px]"
-                  value={email}
-                  placeholder="Your email"
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-                <Button size="small" type="submit" variant="secondary">
-                  {ctaText || t('newsletter_signup')}
-                </Button>
+                <Heading display level={4}>
+                  {t('newsletter_title')}
+                </Heading>
               </div>
+            )}
+            <div className={isInlinePrompt ? 'flex items-center gap-2 flex-1' : 'flex gap-2 sm:gap-4'}>
+              <Input
+                type="text"
+                className={twMerge(
+                  'bg-white border !border-gray-300 rounded-md flex-1 min-w-0',
+                  isInlinePrompt ? 'h-9 text-sm px-3' : 'p-2'
+                )}
+                value={email}
+                placeholder={t('newsletter_email_placeholder') || 'Your email'}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <Button
+                size="small"
+                type="submit"
+                variant="primary"
+                isFullWidth={false}
+                className={twMerge('shrink-0', isInlinePrompt && 'h-9 text-xs px-4')}
+              >
+                {ctaText || t('newsletter_signup')}
+              </Button>
             </div>
-            <div>{signupError && <ErrorMessage error={signupError} />}</div>
+            {signupError && <ErrorMessage error={signupError} />}
           </form>
         )}
       </div>

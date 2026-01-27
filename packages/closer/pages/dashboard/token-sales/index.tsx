@@ -115,14 +115,12 @@ const TokenSalesDashboardPage = ({
         <title>{t('token_sales_dashboard_title')}</title>
       </Head>
       <AdminLayout isBookingEnabled={isBookingEnabled}>
-        <div className="max-w-screen-lg flex flex-col gap-6">
-          <Heading level={1}>
-            {t('token_sales_dashboard_title')}
-            {/* {t('dashboard_affiliate_title')} */}
-          </Heading>
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+          <Heading level={2}>{t('token_sales_dashboard_title')}</Heading>
+        </div>
 
-          <section>
-            <TokenSalesDashboard
+        <section className="mt-6">
+          <TokenSalesDashboard
               sales={salesWithBuyer || []}
               onSuccess={() => refetchSales()}
               currentPage={currentPage}
@@ -133,8 +131,7 @@ const TokenSalesDashboardPage = ({
               onFilterChange={handleFilterChange}
               onRefetch={() => refetchSales()}
             />
-          </section>
-        </div>
+        </section>
       </AdminLayout>
     </>
   );
