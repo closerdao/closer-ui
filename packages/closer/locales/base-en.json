@@ -1147,9 +1147,9 @@
   "token_sale_bank_transfer_success_bank_transfer": "Bank Transfer",
   "token_sale_bank_transfer_success_back_to_homepage": "Back to homepage",
 
-  "cookie_consent_text": "We use cookies to improve your experience and analyse the use of our web site.",
-  "cookie_consent_text_link": "Read cookie policy",
-  "cookie_consent_button": "Accept and close",
+  "cookie_consent_text": "We use cookies -",
+  "cookie_consent_text_link": "read our privacy policy",
+  "cookie_consent_button": "OK",
   "user_data_email": "Email:",
   "user_data_walletAddress": "Wallet Address:",
   "user_data_phone": "Phone:",

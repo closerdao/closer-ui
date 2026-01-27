@@ -1,37 +1,49 @@
 import Link from 'next/link';
 
-import React from 'react';
-import CookieConsent from 'react-cookie-consent';
+import { useEffect, useState } from 'react';
 
+import Cookies from 'js-cookie';
 import { useTranslations } from 'next-intl';
+
+const COOKIE_CONSENT_KEY = 'CookieConsent';
 
 const AcceptCookies = () => {
   const t = useTranslations();
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const consent = Cookies.get(COOKIE_CONSENT_KEY);
+    if (!consent) {
+      setIsVisible(true);
+    }
+  }, []);
+
+  const handleAccept = () => {
+    Cookies.set(COOKIE_CONSENT_KEY, 'true', { expires: 365 });
+    setIsVisible(false);
+  };
+
+  if (!isVisible) {
+    return null;
+  }
 
   return (
-    <CookieConsent
-      buttonText={t('cookie_consent_button')}
-      expires={365}
-      style={{ background: '#ffffff', borderTop: '1px solid #F3F4F6', padding: '0' }}
-      containerClasses="custom-cookie-banner"
-      buttonStyle={{
-        borderRadius: '20px',
-        padding: '3px 10px 3px 10px',
-        color: '#000',
-        background: '#ffffff',
-        fontSize: '13px',
-        border: '1px solid #000',
-        fontFamily: 'sans-serif',
-      }}
-
-    >
-      <div className="text-black text-xs font-sans" style={{ fontFamily: 'sans-serif' }}>
-        {t('cookie_consent_text')}{' '}
-        <Link className="underline" href="/pdf/TDF-Cookies.pdf">
-          {t('cookie_consent_text_link')}
-        </Link>
+    <div className="fixed top-20 left-0 right-0 z-40 bg-white border-b border-gray-200">
+      <div className="flex items-center justify-center gap-3 px-4 py-2">
+        <p className="text-sm text-gray-600">
+          {t('cookie_consent_text')}{' '}
+          <Link href="/privacy-policy" className="underline hover:text-gray-900">
+            {t('cookie_consent_text_link')}
+          </Link>
+        </p>
+        <button
+          onClick={handleAccept}
+          className="shrink-0 px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-full hover:bg-gray-200 transition-colors"
+        >
+          {t('cookie_consent_button')}
+        </button>
       </div>
-    </CookieConsent>
+    </div>
   );
 };
 
