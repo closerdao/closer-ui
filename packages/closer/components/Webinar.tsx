@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
@@ -142,7 +142,7 @@ const Webinar = ({ id, tags = ['webinar'], analyticsCategory = 'Webinar' }: Prop
     return candidateDate;
   }, [webinarConfig, generalTimezone]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!email) {
