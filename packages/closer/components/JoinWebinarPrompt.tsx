@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 
 import { FaTimes } from '@react-icons/all-files/fa/FaTimes';
-import { Button, Heading, Input, api } from 'closer';
 import { z } from 'zod';
+
+import api from '../utils/api';
+import TurnstileWidget from './TurnstileWidget';
+import { Button, Heading, Input } from './ui';
 
 // Email validation schema
 const emailSchema = z
@@ -20,6 +23,7 @@ const JoinWebinarPrompt = ({
   const [emailError, setEmailError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   useEffect(() => {
     const localEmail = localStorage.getItem('email');
@@ -35,10 +39,10 @@ const JoinWebinarPrompt = ({
       emailSchema.parse(email);
       setEmailError(null);
 
-      console.log('send invite');
       await api.post('/webinar', {
         email,
         tags: (tags?.length ? tags : ['webinar']),
+        turnstileToken,
       });
       setIsSuccess(true);
     } catch (error) {
@@ -72,7 +76,7 @@ const JoinWebinarPrompt = ({
   return (
     <div>
       {
-        <section className="fixed inset-x-0 bottom-0 z-50 mt-24 flex h-[250px] sm:h-[190px] flex-col  shadow-[0_0_5px_-1px_rgba(0,0,0,0.1),0_0_4px_-2px_rgba(0,0,0,0.1)] bg-white">
+        <section className="fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col shadow-[0_0_5px_-1px_rgba(0,0,0,0.1),0_0_4px_-2px_rgba(0,0,0,0.1)] bg-white">
           <div className="mx-auto max-w-sm p-4 flex flex-col gap-4">
             <div>
               <Heading level={3} className="">
@@ -91,13 +95,17 @@ const JoinWebinarPrompt = ({
                   className="w-[200px]"
                 />
                 <Button
-                  isEnabled={!isLoading}
+                  isEnabled={!isLoading && !!turnstileToken}
                   onClick={sendInvite}
                   className="w-fit"
                 >
                   Join webinar
                 </Button>
               </div>
+              <TurnstileWidget
+                action="webinar_signup"
+                onVerify={setTurnstileToken}
+              />
               {isSuccess && (
                 <p className="text-green-500 text-sm">
                   Webinar invite sent! Please check your inbox.

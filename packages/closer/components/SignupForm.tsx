@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
@@ -329,22 +328,7 @@ const SignupForm = ({ app }: Props) => {
   };
 
   return (
-    <Card
-      className={`${
-        app && app.toLowerCase() === 'tdf' ? 'mt-[200px]' : 'mt-0'
-      } pb-8 relative  md:mt-0`}
-    >
-      {app && app.toLowerCase() === 'tdf' && (
-        <div className="absolute top-[-202px] h-[200px] overflow-hidden w-[90%]">
-          <Image
-            className="mx-auto"
-            alt="e"
-            src="/images/subscriptions/explorer.png"
-            width={200}
-            height={354}
-          />
-        </div>
-      )}
+    <Card className="pb-8 p-3 sm:p-4">
       {hasSignedUp && !authError && step !== 3 ? (
         <>
           <Heading level={2} className="my-4">
@@ -354,10 +338,14 @@ const SignupForm = ({ app }: Props) => {
         </>
       ) : step === 1 ? (
         <form className="flex flex-col gap-4" onSubmit={handleEmailSubmit}>
-          <Heading level={2} className="mb-4">
-            {t('signup_step1_title')}
+          <Heading level={2} className="mb-2">
+            {t('signup_hero_title')}
           </Heading>
-          <p className="text-gray-600 mb-4">{t('signup_step1_description')}</p>
+          <p className="text-gray-600 mb-4">
+            {app?.toLowerCase() === 'tdf'
+              ? t('signup_hero_subtitle_tdf')
+              : t('signup_hero_subtitle_generic')}
+          </p>
 
           <Input
             label={t('signup_form_email')}
@@ -383,10 +371,14 @@ const SignupForm = ({ app }: Props) => {
             {t('signup_form_email_consent')}
           </Checkbox>
 
-          <TurnstileWidget
-            action="signup_email"
-            onVerify={setTurnstileToken}
-          />
+          {email.length > 0 && (
+            <div className="animate-[fadeIn_0.3s_ease-in-out]">
+              <TurnstileWidget
+                action="signup_email"
+                onVerify={setTurnstileToken}
+              />
+            </div>
+          )}
 
           <div className="w-full flex flex-col gap-4">
             <Button
@@ -465,10 +457,14 @@ const SignupForm = ({ app }: Props) => {
             <ErrorMessage error={localError || authError} />
           )}
 
-          <TurnstileWidget
-            action="signup"
-            onVerify={setTurnstileToken}
-          />
+          {application.screenname.length > 0 && (
+            <div className="animate-[fadeIn_0.3s_ease-in-out]">
+              <TurnstileWidget
+                action="signup"
+                onVerify={setTurnstileToken}
+              />
+            </div>
+          )}
 
           <div className="w-full my-4 flex flex-col gap-6">
             <Button

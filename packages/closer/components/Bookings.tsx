@@ -1,11 +1,13 @@
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import dayjs from 'dayjs';
-import { ChevronDown, Download } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { BOOKINGS_PER_PAGE, MAX_BOOKINGS_TO_FETCH } from '../constants';
+import { BOOKINGS_PER_PAGE, MAX_BOOKINGS_TO_FETCH, MAX_LISTINGS_TO_FETCH } from '../constants';
 import { usePlatform } from '../contexts/platform';
+import { useAuth } from '../contexts/auth';
+import { Listing } from '../types';
+import BookingActionsDropdown from './BookingActionsDropdown';
 import BookingListPreview from './BookingListPreview/BookingListPreview';
 import Pagination from './Pagination';
 import { Heading, Spinner } from './ui';
@@ -24,21 +26,24 @@ const MAX_USERS_TO_FETCH = 2000;
 const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
-  const [isActionsOpen, setIsActionsOpen] = useState(false);
-  const actionsRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (actionsRef.current && !actionsRef.current.contains(event.target as Node)) {
-        setIsActionsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const isSpaceHost = user?.roles?.includes('space-host');
 
   const bookings = platform.booking.find(filter);
   const allUsers = platform.user.find({ limit: MAX_USERS_TO_FETCH });
+  const listingsData = platform.listing.find({
+    where: {},
+    limit: MAX_LISTINGS_TO_FETCH,
+  });
+
+  const listingOptions = useMemo(() => {
+    if (!listingsData) return [];
+    return listingsData.toJS().map((listing: Listing) => ({
+      value: listing._id,
+      label: listing.name,
+    }));
+  }, [listingsData]);
 
   const eventsFilter = bookings && {
     where: {
@@ -84,6 +89,7 @@ const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false 
           platform.event.get(eventsFilter),
           platform.volunteer.get(volunteerFilter),
           platform.listing.get(listingFilter),
+          platform.listing.get({ where: {}, limit: MAX_LISTINGS_TO_FETCH }),
           platform.user.get({ limit: MAX_USERS_TO_FETCH }),
         ]);
       }
@@ -98,6 +104,57 @@ const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false 
       loadData();
     }
   }, [filter, page, bookings]);
+
+  const handleExportCsv = useCallback(() => {
+    if (!bookings) return;
+
+    const headers = [
+      { label: 'ID', key: 'id' },
+      { label: 'Name', key: 'name' },
+      { label: 'Listing', key: 'listing' },
+      { label: 'Event', key: 'event' },
+      { label: 'Guests', key: 'guests' },
+      { label: 'Volunteer', key: 'volunteer' },
+      { label: 'Arrival', key: 'arrival' },
+      { label: 'Pickup', key: 'pickup' },
+      { label: 'Total', key: 'total' },
+    ];
+    const data = bookings
+      .map((booking: any) => {
+        const user = platform.user.findOne(booking.get('createdBy'));
+        const listing = platform.listing.findOne(booking.get('listing'));
+        const bookingEvent = platform.event.findOne(booking.get('eventId'));
+
+        return {
+          id: booking.get('_id'),
+          name: user?.get('screenname'),
+          listing: listing?.get('name'),
+          event: bookingEvent?.get('name'),
+          guests: booking.get('adults'),
+          volunteer: booking.get('volunteerId'),
+          arrival: booking.get('start'),
+          pickup: booking.get('doesNeedPickup'),
+          total: booking.getIn(['total', 'val']),
+        };
+      })
+      .toJS();
+
+    const csvContent = [
+      headers.map((h) => h.label).join(','),
+      ...data.map((row: Record<string, string | number>) =>
+        Object.values(row).join(','),
+      ),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], {
+      type: 'text/csv;charset=utf-8;',
+    });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `bookings-${dayjs().format('YYYY-MM-DD.HH:mm')}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }, [bookings, platform]);
 
   if (error) {
     return <div className="validation-error">{JSON.stringify(error)}</div>;
@@ -120,82 +177,14 @@ const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false 
                   : t('booking_requests_results')}
               </Heading>
 
-              {bookings && !hideExportCsv && (
-                <div ref={actionsRef} className="relative ml-auto">
-                  <button
-                    onClick={() => setIsActionsOpen(!isActionsOpen)}
-                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-                  >
-                    {t('generic_actions')}
-                    <ChevronDown className={`w-4 h-4 transition-transform ${isActionsOpen ? 'rotate-180' : ''}`} />
-                  </button>
-                  {isActionsOpen && (
-                    <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10 min-w-[160px]">
-                      <button
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left"
-                        onClick={() => {
-                          const headers = [
-                            { label: 'ID', key: 'id' },
-                            { label: 'Name', key: 'name' },
-                            { label: 'Listing', key: 'listing' },
-                            { label: 'Event', key: 'event' },
-                            { label: 'Guests', key: 'guests' },
-                            { label: 'Volunteer', key: 'volunteer' },
-                            { label: 'Arrival', key: 'arrival' },
-                            { label: 'Pickup', key: 'pickup' },
-                            { label: 'Total', key: 'total' },
-                          ];
-                          const data = bookings
-                            .map((booking: any) => {
-                              const user = platform.user.findOne(
-                                booking.get('createdBy'),
-                              );
-                              const listing = platform.listing.findOne(
-                                booking.get('listing'),
-                              );
-                              const bookingEvent = platform.event.findOne(
-                                booking.get('eventId'),
-                              );
-
-                              return {
-                                id: booking.get('_id'),
-                                name: user?.get('screenname'),
-                                listing: listing?.get('name'),
-                                event: bookingEvent?.get('name'),
-                                guests: booking.get('adults'),
-                                volunteer: booking.get('volunteerId'),
-                                arrival: booking.get('start'),
-                                pickup: booking.get('doesNeedPickup'),
-                                total: booking.getIn(['total', 'val']),
-                              };
-                            })
-                            .toJS();
-
-                          const csvContent = [
-                            headers.map((h) => h.label).join(','),
-                            ...data.map((row: Record<string, string | number>) =>
-                              Object.values(row).join(','),
-                            ),
-                          ].join('\n');
-
-                          const blob = new Blob([csvContent], {
-                            type: 'text/csv;charset=utf-8;',
-                          });
-                          const link = document.createElement('a');
-                          link.href = URL.createObjectURL(blob);
-                          link.download = `bookings-${dayjs().format(
-                            'YYYY-MM-DD.HH:mm',
-                          )}.csv`;
-                          link.click();
-                          URL.revokeObjectURL(link.href);
-                          setIsActionsOpen(false);
-                        }}
-                      >
-                        <Download className="w-4 h-4" />
-                        {t('generic_export_csv')}
-                      </button>
-                    </div>
-                  )}
+              {bookings && (!hideExportCsv || isSpaceHost) && (
+                <div className="ml-auto">
+                  <BookingActionsDropdown
+                    listingOptions={listingOptions}
+                    onExportCsv={handleExportCsv}
+                    showExportCsv={!hideExportCsv}
+                    showCreateBooking={isSpaceHost}
+                  />
                 </div>
               )}
             </div>
@@ -219,7 +208,6 @@ const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false 
                         (user: any) => user._id === booking.get('createdBy'),
                       );
 
-                  // Check if there's a paidBy field and fetch payer information
                   const paidBy = booking.get('paidBy');
                   const payer =
                     paidBy &&
@@ -244,7 +232,6 @@ const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false 
                       `/volunteer/${currentVolunteer.get('slug')}`;
                   }
 
-                  // Use payer information if available, otherwise fall back to creator
                   const userToShow = payer || user;
 
                   return (

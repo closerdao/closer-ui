@@ -29,6 +29,14 @@ export const getPreparedInputValue = (value: string) => {
   if (value === 'false') {
     return false;
   }
+  // Handle JSON arrays (for multiselect values)
+  if (value.startsWith('[') && value.endsWith(']')) {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return String(value);
+    }
+  }
   return String(value);
 };
 

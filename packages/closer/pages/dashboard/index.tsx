@@ -108,7 +108,7 @@ const DashboardPage = ({ generalConfig, bookingConfig }: Props) => {
         <title>{`${t('dashboard_title')} - ${PLATFORM_NAME}`}</title>
       </Head>
       <AdminLayout isBookingEnabled={isBookingEnabled}>
-        <div className="flex justify-between flex-col md:flex-row gap-4">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           <Heading level={2}>{t('dashboard_title')}</Heading>
           <RevenueTimeFrameSelector
             timeFrame={timeFrame}

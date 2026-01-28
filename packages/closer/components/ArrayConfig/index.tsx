@@ -186,6 +186,47 @@ const ArrayConfig = ({
                             })}
                           </select>
                         )}
+                        {inputType?.type === 'multiselect' && (
+                          <div className="flex flex-wrap gap-2">
+                            {inputType.enum.map((option: string) => {
+                              const currentValues = Array.isArray(currentValue[index][innerKey]) 
+                                ? currentValue[index][innerKey] 
+                                : [];
+                              const isChecked = currentValues.includes(option);
+                              return (
+                                <label
+                                  key={option}
+                                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm cursor-pointer transition-colors ${
+                                    isChecked
+                                      ? 'bg-accent text-white'
+                                      : 'bg-neutral hover:bg-neutral-dark'
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    name={`${innerKey}-${index}`}
+                                    value={option}
+                                    checked={isChecked}
+                                    onChange={(event) => {
+                                      const newValues = isChecked
+                                        ? currentValues.filter((v: string) => v !== option)
+                                        : [...currentValues, option];
+                                      const syntheticEvent = {
+                                        target: {
+                                          name: `${innerKey}-${index}`,
+                                          value: JSON.stringify(newValues),
+                                        },
+                                      } as ChangeEvent<HTMLInputElement>;
+                                      handleChange(syntheticEvent, elementsKey, index);
+                                    }}
+                                    className="sr-only"
+                                  />
+                                  {t(`config_product_${option}`)}
+                                </label>
+                              );
+                            })}
+                          </div>
+                        )}
                         {Object.keys(errors).length > 0 &&
                           errors[
                             `${innerKey}-${index}` as keyof typeof errors

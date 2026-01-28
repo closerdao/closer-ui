@@ -13,7 +13,7 @@ import {
   Heading,
   WalletState,
   useAuth,
-  api,
+  Webinar,
 } from 'closer';
 import { useBuyTokens } from 'closer/hooks/useBuyTokens';
 import { useConfig } from 'closer/hooks/useConfig';
@@ -40,11 +40,6 @@ const HomePage = () => {
   const [tokenHolders, setTokenHolders] = useState<number | null>(null);
   const [isLoadingChainData, setIsLoadingChainData] = useState(false);
   const hasFetchedChainData = useRef(false);
-  const [webinarEmail, setWebinarEmail] = useState('');
-  const [webinarName, setWebinarName] = useState('');
-  const [webinarLoading, setWebinarLoading] = useState(false);
-  const [webinarSuccess, setWebinarSuccess] = useState(false);
-  const [webinarError, setWebinarError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!BLOCKCHAIN_DAO_TOKEN?.address) {
@@ -114,13 +109,6 @@ const HomePage = () => {
     fetchTokenData();
   }, []);
 
-  useEffect(() => {
-    const localEmail = typeof localStorage !== 'undefined' ? localStorage.getItem('email') : null;
-    if (localEmail) {
-      setWebinarEmail(localEmail);
-    }
-  }, []);
-
   return (
     <>
       <Head>
@@ -149,21 +137,21 @@ const HomePage = () => {
             </p>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 max-w-4xl mx-auto">
-              <div className="bg-gray-50 rounded border border-gray-300 p-6 text-center">
-                <div className="text-3xl md:text-4xl font-normal text-gray-900 mb-2 font-serif">280</div>
-                <div className="text-xs text-gray-600 font-light">{t('home_stats_token_holders')}</div>
+              <div className="bg-accent-light/50 rounded-lg p-6 text-center border border-accent/10">
+                <div className="text-3xl md:text-4xl font-bold text-accent mb-2">280</div>
+                <div className="text-xs text-gray-700 font-medium">{t('home_stats_token_holders')}</div>
               </div>
-              <div className="bg-gray-50 rounded border border-gray-300 p-6 text-center">
-                <div className="text-3xl md:text-4xl font-normal text-gray-900 mb-2 font-serif">€1.25M+</div>
-                <div className="text-xs text-gray-600 font-light">{t('home_stats_total_capital')}</div>
+              <div className="bg-accent-light/50 rounded-lg p-6 text-center border border-accent/10">
+                <div className="text-3xl md:text-4xl font-bold text-accent mb-2">€1.25M+</div>
+                <div className="text-xs text-gray-700 font-medium">{t('home_stats_total_capital')}</div>
               </div>
-              <div className="bg-gray-50 rounded border border-gray-300 p-6 text-center">
-                <div className="text-3xl md:text-4xl font-normal text-gray-900 mb-2 font-serif">25ha</div>
-                <div className="text-xs text-gray-600 font-light">{t('home_stats_land_stewardship')}</div>
+              <div className="bg-accent-light/50 rounded-lg p-6 text-center border border-accent/10">
+                <div className="text-3xl md:text-4xl font-bold text-accent mb-2">25ha</div>
+                <div className="text-xs text-gray-700 font-medium">{t('home_stats_land_stewardship')}</div>
               </div>
-              <div className="bg-gray-50 rounded border border-gray-300 p-6 text-center col-span-2 md:col-span-1">
-                <div className="text-3xl md:text-4xl font-normal text-gray-900 mb-2 font-serif">€514k</div>
-                <div className="text-xs text-gray-600 font-light">{t('home_stats_revenue_target')}</div>
+              <div className="bg-accent-light/50 rounded-lg p-6 text-center border border-accent/10 col-span-2 md:col-span-1">
+                <div className="text-3xl md:text-4xl font-bold text-accent mb-2">€514k</div>
+                <div className="text-xs text-gray-700 font-medium">{t('home_stats_revenue_target')}</div>
               </div>
             </div>
 
@@ -800,130 +788,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      <section className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-24 md:py-32 border-t border-gray-200">
-        <div className="max-w-3xl mx-auto px-6 text-center">
-          <p className="text-xs uppercase tracking-wider text-gray-400 mb-4 font-medium">
-            {t('home_webinar_section_label')}
-          </p>
-          <Heading display level={2} className="mb-6 text-3xl md:text-4xl font-normal text-white tracking-tight">
-            {t('home_webinar_section_title')}
-          </Heading>
-          <p className="text-base text-gray-300 mb-10 leading-relaxed max-w-2xl mx-auto font-light">
-            {t('home_webinar_section_desc')}
-          </p>
-          <div className="bg-white rounded-xl p-8 md:p-10 shadow-xl border border-gray-200 max-w-2xl mx-auto">
-            {webinarSuccess ? (
-              <div className="text-center py-4">
-                <p className="text-green-600 text-sm font-medium mb-2">
-                  {t('home_webinar_success')}
-                </p>
-              </div>
-            ) : (
-              <form 
-                className="flex flex-col sm:flex-row gap-3 mb-4"
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  if (!webinarEmail || !webinarName) {
-                    setWebinarError(t('home_webinar_error_fill_fields'));
-                    return;
-                  }
-
-                  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                  if (!emailRegex.test(webinarEmail)) {
-                    setWebinarError(t('home_webinar_error_invalid_email'));
-                    return;
-                  }
-
-                  try {
-                    setWebinarLoading(true);
-                    setWebinarError(null);
-                    
-                    await api.post('/webinar', {
-                      email: webinarEmail,
-                      tags: ['landing-page', 'investor-webinar'],
-                    });
-
-                    if (process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true') {
-                      try {
-                        const referrer = typeof localStorage !== 'undefined' ? localStorage.getItem('referrer') : null;
-                        const tags = [
-                          'landing-page',
-                          'investor-webinar',
-                          router.asPath,
-                          referrer ? `ref:${referrer}` : null,
-                        ].filter(Boolean);
-                        await api.post('/subscribe', {
-                          email: webinarEmail,
-                          screenname: webinarName,
-                          tags,
-                        });
-                      } catch (subscribeError) {
-                        console.error('Error subscribing to newsletter:', subscribeError);
-                      }
-                    }
-
-                    setWebinarSuccess(true);
-                    localStorage.setItem('email', webinarEmail);
-                    event('click', {
-                      category: 'HomePage',
-                      label: 'investor_webinar_signup',
-                    });
-                  } catch (error: any) {
-                    console.error('Error sending webinar invite:', error);
-                    setWebinarError(
-                      error?.response?.data?.error || 
-                      error?.message || 
-                      t('home_webinar_error_generic')
-                    );
-                  } finally {
-                    setWebinarLoading(false);
-                  }
-                }}
-              >
-                <input
-                  type="text"
-                  value={webinarName}
-                  onChange={(e) => {
-                    setWebinarName(e.target.value);
-                    if (webinarError) setWebinarError(null);
-                  }}
-                  placeholder={t('home_webinar_form_name')}
-                  required
-                  disabled={webinarLoading}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-                <input
-                  type="email"
-                  value={webinarEmail}
-                  onChange={(e) => {
-                    setWebinarEmail(e.target.value);
-                    if (webinarError) setWebinarError(null);
-                  }}
-                  placeholder={t('home_webinar_form_email')}
-                  required
-                  disabled={webinarLoading}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-                <button
-                  type="submit"
-                  disabled={webinarLoading}
-                  className="px-8 py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {webinarLoading ? t('home_webinar_form_loading') : t('home_webinar_form_submit')}
-                </button>
-              </form>
-            )}
-            {webinarError && (
-              <p className="text-red-600 text-xs text-center mb-2">
-                {webinarError}
-              </p>
-            )}
-            <p className="text-xs text-gray-500 text-center">
-              {t('home_webinar_form_note')}
-            </p>
-          </div>
-        </div>
-      </section>
+      <Webinar tags={['landing-page', 'investor-webinar']} analyticsCategory="HomePage" />
 
       <UpcomingEventsIntro />
 

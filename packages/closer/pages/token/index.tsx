@@ -5,8 +5,8 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useRef, useState } from 'react';
 
-import Ama from '../../components/Ama';
 import PeekIntoFuture from '../../components/PeekIntoFuture';
+import Webinar from '../../components/Webinar';
 import { Button, Card, Heading } from '../../components/ui';
 
 import { NextPageContext } from 'next';
@@ -681,7 +681,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
           </div>
         </section>
 
-        <Ama />
+        <Webinar tags={['token-sale-page']} analyticsCategory="TokenSale" />
       </main>
     </div>
   );

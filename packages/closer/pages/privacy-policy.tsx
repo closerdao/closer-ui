@@ -3,43 +3,99 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import Heading from '../components/ui/Heading';
+import { useConfig } from '../hooks/useConfig';
+import api from '../utils/api';
 
 import { loadLocaleData } from '../utils/locale.helpers';
 
 const SITE_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth';
 
-const PrivacyPolicyPage = () => {
+interface AccountingEntity {
+  legalName: string;
+  taxNumber: string;
+  address: string;
+  products: string[];
+}
+
+interface PrivacyPolicyPageProps {
+  accountingEntities?: AccountingEntity[];
+}
+
+const PRODUCT_TYPE_KEYS: Record<string, string> = {
+  accommodations: 'privacy_policy_product_accommodations',
+  events: 'privacy_policy_product_events',
+  subscriptions: 'privacy_policy_product_subscriptions',
+  tokens: 'privacy_policy_product_tokens',
+  food: 'privacy_policy_product_food',
+  products: 'privacy_policy_product_products',
+};
+
+const PrivacyPolicyPage = ({ accountingEntities }: PrivacyPolicyPageProps) => {
   const t = useTranslations();
+  const config = useConfig();
+
+  const {
+    PLATFORM_NAME,
+    LEGAL_ENTITY_NAME,
+    LEGAL_STREET_ADDRESS,
+    LEGAL_ADDRESS_LINE2,
+    LEGAL_POSTAL_CODE,
+    LEGAL_CITY,
+    LEGAL_COUNTRY,
+    TEAM_EMAIL,
+    SEMANTIC_URL,
+  } = config || {};
+
+  const platformName = PLATFORM_NAME || 'Closer';
+  const legalEntityName = LEGAL_ENTITY_NAME || '';
+  const legalStreetAddress = LEGAL_STREET_ADDRESS || '';
+  const legalAddressLine2 = LEGAL_ADDRESS_LINE2 || '';
+  const legalPostalCode = LEGAL_POSTAL_CODE || '';
+  const legalCity = LEGAL_CITY || '';
+  const legalCountry = LEGAL_COUNTRY || '';
+  const teamEmail = TEAM_EMAIL || '';
+  const websiteUrl = SEMANTIC_URL || '';
+  const websiteDisplay = websiteUrl.replace(/^https?:\/\//, '');
+  const hasLegalAddress = legalEntityName && legalStreetAddress && legalCity && legalCountry;
+  const hasAccountingEntities = accountingEntities && accountingEntities.length > 0 && accountingEntities.some(e => e.legalName);
 
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: 'Privacy Policy — Closer',
-    description: 'Learn how Closer collects, uses, and protects your personal information across our platform for regenerative communities.',
+    name: `${t('privacy_policy_title')} — ${platformName}`,
+    description: t('privacy_policy_meta', { platformName }),
     url: `${SITE_URL}/privacy-policy`,
     publisher: {
       '@type': 'Organization',
-      name: 'OASA Verein',
+      name: legalEntityName,
       address: {
         '@type': 'PostalAddress',
-        streetAddress: 'Industriestrasse 47, c/o Juris Services AG',
-        addressLocality: 'Zug',
-        postalCode: '6300',
-        addressCountry: 'CH',
+        streetAddress: legalAddressLine2 ? `${legalStreetAddress}, ${legalAddressLine2}` : legalStreetAddress,
+        addressLocality: legalCity,
+        postalCode: legalPostalCode,
+        addressCountry: legalCountry,
       },
     },
     dateModified: '2026-01-23',
   };
 
+  const getProductsDescription = (products: string[]) => {
+    if (!products || products.length === 0) return '';
+    const translatedProducts = products.map(p => t(PRODUCT_TYPE_KEYS[p] || p));
+    if (translatedProducts.length === 1) return translatedProducts[0];
+    const last = translatedProducts.pop();
+    return `${translatedProducts.join(', ')} ${t('privacy_policy_and')} ${last}`;
+  };
+
   return (
     <>
       <Head>
-        <title>Privacy Policy — Closer</title>
-        <meta name="description" content="Learn how Closer collects, uses, and protects your personal information across our platform for regenerative communities." />
+        <title>{t('privacy_policy_title')} — {platformName}</title>
+        <meta name="description" content={t('privacy_policy_meta', { platformName })} />
         <meta name="robots" content="noindex, follow" />
         
-        <meta property="og:title" content="Privacy Policy — Closer" />
-        <meta property="og:description" content="Learn how Closer collects, uses, and protects your personal information." />
+        <meta property="og:title" content={`${t('privacy_policy_title')} — ${platformName}`} />
+        <meta property="og:description" content={t('privacy_policy_meta', { platformName })} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={`${SITE_URL}/privacy-policy`} />
         
@@ -56,275 +112,317 @@ const PrivacyPolicyPage = () => {
             {t('privacy_policy_title')}
           </Heading>
           <p className="text-foreground/60 mb-12">
-            Last updated: January 2026
+            {t('privacy_policy_last_updated', { date: 'January 2026' })}
           </p>
 
           <div className="prose prose-lg max-w-none">
             <section className="mb-10">
               <Heading level={2} className="text-2xl mb-4">
-                1. Introduction
+                {t('privacy_policy_section_1_title')}
               </Heading>
               <p className="text-foreground/80 leading-relaxed mb-4">
-                Closer is operated by OASA Verein, a registered association in Zug, Switzerland (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;). We operate a platform that enables regenerative communities to manage accommodations, bookings, events, subscriptions, governance, and community resources. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform and services.
+                {t('privacy_policy_section_1_intro', { platformName, legalEntityName, legalCity, legalCountry })}
               </p>
               <p className="text-foreground/80 leading-relaxed">
-                By accessing or using Closer, you agree to this Privacy Policy. If you do not agree with the terms of this policy, please do not access the platform.
+                {t('privacy_policy_section_1_agreement', { platformName })}
               </p>
             </section>
 
             <section className="mb-10">
               <Heading level={2} className="text-2xl mb-4">
-                2. Information We Collect
+                {t('privacy_policy_section_2_title')}
               </Heading>
               
               <Heading level={3} className="text-xl mb-3 mt-6">
-                2.1 Personal Information
+                {t('privacy_policy_section_2_1_title')}
               </Heading>
               <p className="text-foreground/80 leading-relaxed mb-4">
-                We may collect personal information that you voluntarily provide when using our services, including:
+                {t('privacy_policy_section_2_1_intro')}
               </p>
               <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-4">
-                <li>Name, email address, phone number, and postal address</li>
-                <li>Date of birth and nationality (for booking and compliance purposes)</li>
-                <li>Payment information (processed securely through third-party providers)</li>
-                <li>Profile information, photos, and biographical details</li>
-                <li>Government-issued identification (when required for accommodation bookings)</li>
-                <li>Dietary preferences and accessibility requirements</li>
-                <li>Emergency contact information</li>
+                <li>{t('privacy_policy_section_2_1_item_1')}</li>
+                <li>{t('privacy_policy_section_2_1_item_2')}</li>
+                <li>{t('privacy_policy_section_2_1_item_3')}</li>
+                <li>{t('privacy_policy_section_2_1_item_4')}</li>
+                <li>{t('privacy_policy_section_2_1_item_5')}</li>
+                <li>{t('privacy_policy_section_2_1_item_6')}</li>
+                <li>{t('privacy_policy_section_2_1_item_7')}</li>
               </ul>
 
               <Heading level={3} className="text-xl mb-3 mt-6">
-                2.2 Community & Governance Data
+                {t('privacy_policy_section_2_2_title')}
               </Heading>
               <p className="text-foreground/80 leading-relaxed mb-4">
-                When participating in community features, we may collect:
+                {t('privacy_policy_section_2_2_intro')}
               </p>
               <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-4">
-                <li>Blockchain wallet addresses (for token-based governance)</li>
-                <li>Voting records and governance participation data</li>
-                <li>Subscription and membership status</li>
-                <li>Volunteer hours and contribution records</li>
-                <li>Event attendance and participation history</li>
-                <li>Communications within community channels</li>
+                <li>{t('privacy_policy_section_2_2_item_1')}</li>
+                <li>{t('privacy_policy_section_2_2_item_2')}</li>
+                <li>{t('privacy_policy_section_2_2_item_3')}</li>
+                <li>{t('privacy_policy_section_2_2_item_4')}</li>
+                <li>{t('privacy_policy_section_2_2_item_5')}</li>
+                <li>{t('privacy_policy_section_2_2_item_6')}</li>
               </ul>
 
               <Heading level={3} className="text-xl mb-3 mt-6">
-                2.3 Automatically Collected Information
+                {t('privacy_policy_section_2_3_title')}
               </Heading>
               <p className="text-foreground/80 leading-relaxed mb-4">
-                When you access our platform, we automatically collect:
+                {t('privacy_policy_section_2_3_intro')}
               </p>
               <ul className="list-disc pl-6 space-y-2 text-foreground/80">
-                <li>Device information (browser type, operating system, device identifiers)</li>
-                <li>IP address and approximate location</li>
-                <li>Usage data (pages visited, features used, time spent)</li>
-                <li>Cookies and similar tracking technologies</li>
+                <li>{t('privacy_policy_section_2_3_item_1')}</li>
+                <li>{t('privacy_policy_section_2_3_item_2')}</li>
+                <li>{t('privacy_policy_section_2_3_item_3')}</li>
+                <li>{t('privacy_policy_section_2_3_item_4')}</li>
               </ul>
             </section>
 
             <section className="mb-10">
               <Heading level={2} className="text-2xl mb-4">
-                3. How We Use Your Information
+                {t('privacy_policy_section_3_title')}
               </Heading>
               <p className="text-foreground/80 leading-relaxed mb-4">
-                We use collected information for the following purposes:
+                {t('privacy_policy_section_3_intro')}
               </p>
               
               <Heading level={3} className="text-xl mb-3 mt-6">
-                3.1 Core Platform Services
+                {t('privacy_policy_section_3_1_title')}
               </Heading>
               <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-4">
-                <li>Processing bookings, reservations, and payments</li>
-                <li>Managing event registrations and ticketing</li>
-                <li>Administering subscriptions and membership benefits</li>
-                <li>Facilitating volunteer coordination and task management</li>
-                <li>Operating community communication channels</li>
+                <li>{t('privacy_policy_section_3_1_item_1')}</li>
+                <li>{t('privacy_policy_section_3_1_item_2')}</li>
+                <li>{t('privacy_policy_section_3_1_item_3')}</li>
+                <li>{t('privacy_policy_section_3_1_item_4')}</li>
+                <li>{t('privacy_policy_section_3_1_item_5')}</li>
               </ul>
 
               <Heading level={3} className="text-xl mb-3 mt-6">
-                3.2 Governance & Token Features
+                {t('privacy_policy_section_3_2_title')}
               </Heading>
               <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-4">
-                <li>Recording and verifying governance votes</li>
-                <li>Distributing tokens and tracking ownership</li>
-                <li>Implementing proof-of-presence and proof-of-sweat mechanisms</li>
-                <li>Maintaining transparent community decision records</li>
+                <li>{t('privacy_policy_section_3_2_item_1')}</li>
+                <li>{t('privacy_policy_section_3_2_item_2')}</li>
+                <li>{t('privacy_policy_section_3_2_item_3')}</li>
+                <li>{t('privacy_policy_section_3_2_item_4')}</li>
               </ul>
 
               <Heading level={3} className="text-xl mb-3 mt-6">
-                3.3 Platform Improvement
+                {t('privacy_policy_section_3_3_title')}
               </Heading>
               <ul className="list-disc pl-6 space-y-2 text-foreground/80">
-                <li>Analyzing usage patterns to improve services</li>
-                <li>Developing new features and functionality</li>
-                <li>Preventing fraud and ensuring platform security</li>
-                <li>Complying with legal obligations</li>
+                <li>{t('privacy_policy_section_3_3_item_1')}</li>
+                <li>{t('privacy_policy_section_3_3_item_2')}</li>
+                <li>{t('privacy_policy_section_3_3_item_3')}</li>
+                <li>{t('privacy_policy_section_3_3_item_4')}</li>
               </ul>
             </section>
 
             <section className="mb-10">
               <Heading level={2} className="text-2xl mb-4">
-                4. Information Sharing & Disclosure
+                {t('privacy_policy_section_4_title')}
               </Heading>
               <p className="text-foreground/80 leading-relaxed mb-4">
-                We may share your information in the following circumstances:
+                {t('privacy_policy_section_4_intro')}
               </p>
 
               <Heading level={3} className="text-xl mb-3 mt-6">
-                4.1 With Community Operators
+                {t('privacy_policy_section_4_1_title')}
               </Heading>
               <p className="text-foreground/80 leading-relaxed mb-4">
-                Communities using Closer receive access to member data necessary for operating their services. Each community may have additional privacy practices, and we encourage you to review their specific policies.
+                {t('privacy_policy_section_4_1_text', { platformName })}
               </p>
 
               <Heading level={3} className="text-xl mb-3 mt-6">
-                4.2 Service Providers
+                {t('privacy_policy_section_4_2_title')}
               </Heading>
               <p className="text-foreground/80 leading-relaxed mb-4">
-                We share information with third-party service providers who assist in:
+                {t('privacy_policy_section_4_2_intro')}
               </p>
               <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-4">
-                <li>Payment processing (Stripe and other payment providers)</li>
-                <li>Email communications and newsletters</li>
-                <li>Cloud hosting and data storage</li>
-                <li>Analytics and performance monitoring</li>
-                <li>Authentication services (including Google login)</li>
+                <li>{t('privacy_policy_section_4_2_item_1')}</li>
+                <li>{t('privacy_policy_section_4_2_item_2')}</li>
+                <li>{t('privacy_policy_section_4_2_item_3')}</li>
+                <li>{t('privacy_policy_section_4_2_item_4')}</li>
+                <li>{t('privacy_policy_section_4_2_item_5')}</li>
               </ul>
 
               <Heading level={3} className="text-xl mb-3 mt-6">
-                4.3 Blockchain Networks
+                {t('privacy_policy_section_4_3_title')}
               </Heading>
               <p className="text-foreground/80 leading-relaxed mb-4">
-                When using token-based features, certain information is recorded on public blockchain networks (such as Celo). This includes wallet addresses and transaction records, which are publicly visible and immutable by design. We do not control blockchain networks and cannot delete on-chain data.
+                {t('privacy_policy_section_4_3_text')}
               </p>
 
               <Heading level={3} className="text-xl mb-3 mt-6">
-                4.4 Legal Requirements
+                {t('privacy_policy_section_4_4_title')}
               </Heading>
               <p className="text-foreground/80 leading-relaxed">
-                We may disclose information when required by law, regulation, legal process, or governmental request, or when we believe disclosure is necessary to protect our rights, your safety, or the safety of others.
+                {t('privacy_policy_section_4_4_text')}
               </p>
             </section>
 
             <section className="mb-10">
               <Heading level={2} className="text-2xl mb-4">
-                5. Data Retention
+                {t('privacy_policy_section_5_title')}
               </Heading>
               <p className="text-foreground/80 leading-relaxed mb-4">
-                We retain personal information for as long as necessary to:
+                {t('privacy_policy_section_5_intro')}
               </p>
               <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-4">
-                <li>Provide our services and maintain your account</li>
-                <li>Comply with legal obligations (including tax and financial reporting)</li>
-                <li>Resolve disputes and enforce agreements</li>
-                <li>Maintain governance and community records</li>
+                <li>{t('privacy_policy_section_5_item_1')}</li>
+                <li>{t('privacy_policy_section_5_item_2')}</li>
+                <li>{t('privacy_policy_section_5_item_3')}</li>
+                <li>{t('privacy_policy_section_5_item_4')}</li>
               </ul>
               <p className="text-foreground/80 leading-relaxed">
-                Your data is retained in perpetuity unless you choose to delete it. You can delete your account and all associated data at any time through your account settings in the platform UI, or via our API. Governance and voting records recorded on-chain cannot be deleted due to the immutable nature of blockchain technology.
+                {t('privacy_policy_section_5_text')}
               </p>
             </section>
 
             <section className="mb-10">
               <Heading level={2} className="text-2xl mb-4">
-                6. Your Rights & Choices
+                {t('privacy_policy_section_6_title')}
               </Heading>
               <p className="text-foreground/80 leading-relaxed mb-4">
-                Depending on your location, you may have the following rights:
+                {t('privacy_policy_section_6_intro')}
               </p>
               <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-4">
-                <li><strong>Access:</strong> Request a copy of personal information we hold about you</li>
-                <li><strong>Correction:</strong> Request correction of inaccurate or incomplete data</li>
-                <li><strong>Deletion:</strong> Request deletion of your personal information (subject to legal retention requirements)</li>
-                <li><strong>Portability:</strong> Request your data in a portable format</li>
-                <li><strong>Objection:</strong> Object to certain processing of your data</li>
-                <li><strong>Withdraw Consent:</strong> Withdraw consent where processing is based on consent</li>
+                <li><strong>{t('privacy_policy_section_6_access')}</strong> {t('privacy_policy_section_6_access_text')}</li>
+                <li><strong>{t('privacy_policy_section_6_correction')}</strong> {t('privacy_policy_section_6_correction_text')}</li>
+                <li><strong>{t('privacy_policy_section_6_deletion')}</strong> {t('privacy_policy_section_6_deletion_text')}</li>
+                <li><strong>{t('privacy_policy_section_6_portability')}</strong> {t('privacy_policy_section_6_portability_text')}</li>
+                <li><strong>{t('privacy_policy_section_6_objection')}</strong> {t('privacy_policy_section_6_objection_text')}</li>
+                <li><strong>{t('privacy_policy_section_6_withdraw')}</strong> {t('privacy_policy_section_6_withdraw_text')}</li>
               </ul>
               <p className="text-foreground/80 leading-relaxed">
-                You can exercise most of these rights directly through your account settings, including deleting all your data. For additional requests, contact us at team@closer.earth. Note that on-chain blockchain data cannot be modified or deleted.
+                {t('privacy_policy_section_6_text', { teamEmail })}
               </p>
             </section>
 
             <section className="mb-10">
               <Heading level={2} className="text-2xl mb-4">
-                7. Cookies & Tracking
+                {t('privacy_policy_section_7_title')}
               </Heading>
               <p className="text-foreground/80 leading-relaxed mb-4">
-                We use cookies and similar technologies to:
+                {t('privacy_policy_section_7_intro')}
               </p>
               <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-4">
-                <li>Maintain your session and preferences</li>
-                <li>Analyze platform usage and performance</li>
-                <li>Provide personalized experiences</li>
-                <li>Enable social media features</li>
+                <li>{t('privacy_policy_section_7_item_1')}</li>
+                <li>{t('privacy_policy_section_7_item_2')}</li>
+                <li>{t('privacy_policy_section_7_item_3')}</li>
+                <li>{t('privacy_policy_section_7_item_4')}</li>
               </ul>
               <p className="text-foreground/80 leading-relaxed">
-                You can manage cookie preferences through your browser settings. Disabling certain cookies may affect platform functionality.
+                {t('privacy_policy_section_7_text')}
               </p>
             </section>
 
             <section className="mb-10">
               <Heading level={2} className="text-2xl mb-4">
-                8. Data Security
+                {t('privacy_policy_section_8_title')}
               </Heading>
               <p className="text-foreground/80 leading-relaxed">
-                We implement appropriate technical and organizational measures to protect your information, including encryption, access controls, and regular security assessments. However, no method of transmission or storage is completely secure, and we cannot guarantee absolute security.
+                {t('privacy_policy_section_8_text')}
               </p>
             </section>
 
             <section className="mb-10">
               <Heading level={2} className="text-2xl mb-4">
-                9. Data Storage & International Transfers
+                {t('privacy_policy_section_9_title')}
               </Heading>
               <p className="text-foreground/80 leading-relaxed mb-4">
-                Our servers are currently located in Germany within the European Union. Your information may also be processed by third-party service providers in other jurisdictions, including the United States. We ensure appropriate safeguards are in place for such transfers in compliance with applicable data protection laws.
+                {t('privacy_policy_section_9_text_1')}
               </p>
               <p className="text-foreground/80 leading-relaxed">
-                In the future, Closer intends to deploy its own cloud infrastructure hosted by the regenerative communities themselves, further decentralizing data storage and aligning with our values of community sovereignty.
+                {t('privacy_policy_section_9_text_2', { platformName })}
               </p>
             </section>
 
             <section className="mb-10">
               <Heading level={2} className="text-2xl mb-4">
-                10. Children&apos;s Privacy
+                {t('privacy_policy_section_10_title')}
               </Heading>
               <p className="text-foreground/80 leading-relaxed">
-                Our services are not directed to individuals under 16 years of age. We do not knowingly collect personal information from children. If we become aware that we have collected data from a child, we will take steps to delete such information.
+                {t('privacy_policy_section_10_text')}
               </p>
             </section>
 
             <section className="mb-10">
               <Heading level={2} className="text-2xl mb-4">
-                11. Changes to This Policy
+                {t('privacy_policy_section_11_title')}
               </Heading>
               <p className="text-foreground/80 leading-relaxed">
-                We may update this Privacy Policy from time to time. We will notify you of material changes by posting the updated policy on our platform and updating the &ldquo;Last updated&rdquo; date. Your continued use of our services after changes constitutes acceptance of the updated policy.
+                {t('privacy_policy_section_11_text')}
               </p>
             </section>
 
             <section className="mb-10">
               <Heading level={2} className="text-2xl mb-4">
-                12. Contact Us
+                {t('privacy_policy_section_12_title')}
               </Heading>
               <p className="text-foreground/80 leading-relaxed mb-4">
-                For questions about this Privacy Policy or our data practices, contact us at:
+                {t('privacy_policy_section_12_intro')}
               </p>
+
+              {hasLegalAddress && (
+                <div className="bg-foreground/5 rounded-lg p-6 mb-6">
+                  <p className="text-foreground/80 mb-4">
+                    <strong>{legalEntityName}</strong><br />
+                    {legalStreetAddress}<br />
+                    {legalAddressLine2 && <>{legalAddressLine2}<br /></>}
+                    {legalPostalCode} {legalCity}, {legalCountry}
+                  </p>
+                  {teamEmail && (
+                    <p className="text-foreground/80 mb-2">
+                      <strong>{t('privacy_policy_section_12_email')}</strong>{' '}
+                      <a href={`mailto:${teamEmail}`} className="text-accent hover:underline">
+                        {teamEmail}
+                      </a>
+                    </p>
+                  )}
+                  {websiteUrl && (
+                    <p className="text-foreground/80">
+                      <strong>{t('privacy_policy_section_12_website')}</strong>{' '}
+                      <a href={websiteUrl} className="text-accent hover:underline">
+                        {websiteDisplay}
+                      </a>
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {hasAccountingEntities && (
+                <div className="bg-foreground/5 rounded-lg p-6 mb-6">
+                  <p className="text-foreground/80 mb-4">
+                    {t('privacy_policy_accounting_entities_intro', { platformName })}
+                  </p>
+                  <ul className="space-y-4">
+                    {accountingEntities?.filter(e => e.legalName).map((entity, index) => (
+                      <li key={index} className="text-foreground/80">
+                        <strong>{entity.legalName}</strong>
+                        {entity.taxNumber && <> ({t('privacy_policy_tax_number')}: {entity.taxNumber})</>}
+                        {entity.address && <><br />{entity.address}</>}
+                        {entity.products && entity.products.length > 0 && (
+                          <><br /><span className="text-foreground/60">{t('privacy_policy_handles')}: {getProductsDescription(entity.products)}</span></>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               <div className="bg-foreground/5 rounded-lg p-6">
                 <p className="text-foreground/80 mb-4">
-                  <strong>OASA Verein</strong><br />
-                  Industriestrasse 47<br />
-                  c/o Juris Services AG<br />
-                  6300 Zug, Switzerland
-                </p>
-                <p className="text-foreground/80 mb-2">
-                  <strong>Email:</strong>{' '}
-                  <a href="mailto:team@closer.earth" className="text-accent hover:underline">
-                    team@closer.earth
-                  </a>
+                  {t('privacy_policy_section_12_platform_info')}{' '}
+                  <a href="https://oasa.earth" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+                    OASA
+                  </a>.
                 </p>
                 <p className="text-foreground/80">
-                  <strong>Website:</strong>{' '}
-                  <a href="https://closer.earth" className="text-accent hover:underline">
-                    closer.earth
+                  <strong>{t('privacy_policy_section_12_technical_support')}</strong>{' '}
+                  <a href="mailto:team@closer.earth" className="text-accent hover:underline">
+                    team@closer.earth
                   </a>
                 </p>
               </div>
@@ -332,7 +430,7 @@ const PrivacyPolicyPage = () => {
 
             <section className="border-t border-divider pt-8 mt-12">
               <p className="text-foreground/60 text-sm">
-                This privacy policy applies to the Closer platform and all communities operating on it. Individual communities may have additional privacy practices and policies that supplement this document.
+                {t('privacy_policy_footer', { platformName })}
               </p>
             </section>
           </div>
@@ -346,12 +444,18 @@ export default PrivacyPolicyPage;
 
 PrivacyPolicyPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
-    return { messages };
+    const [messages, accountingEntitiesRes] = await Promise.all([
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      api.get('/config/accounting-entities').catch(() => null),
+    ]);
+
+    const accountingEntities = accountingEntitiesRes?.data?.results?.value?.elements || [];
+
+    return { 
+      messages,
+      accountingEntities,
+    };
   } catch (err) {
-    return { error: err, messages: null };
+    return { error: err, messages: null, accountingEntities: [] };
   }
 };

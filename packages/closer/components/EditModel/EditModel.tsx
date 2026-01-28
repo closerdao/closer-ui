@@ -10,6 +10,7 @@ import { getSample } from '../../utils/helpers';
 import { trackEvent } from '../Analytics';
 import DateTimePicker from '../DateTimePicker';
 import FormField from '../FormField';
+import Modal from '../Modal';
 import Tabs from '../Tabs';
 import { Button, Spinner } from '../ui';
 
@@ -84,6 +85,7 @@ const EditModel: FC<Props> = ({
     );
   const [data, setData] = useState(initialModel);
   const [error, setErrors] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const [startDate, setStartDate] = useState<string | null | Date>(data.start);
   const [endDate, setEndDate] = useState<string | null | Date>(data.end);
@@ -353,7 +355,7 @@ const EditModel: FC<Props> = ({
           </div>
         )}
 
-        <div className="py-6 flex items-center gap-4">
+        <div className="py-6 flex items-center justify-between">
           <button type="submit" className="btn-primary">
             <div className="flex gap-2 items-center">
               {isLoading && <Spinner />}
@@ -361,18 +363,52 @@ const EditModel: FC<Props> = ({
             </div>
           </button>
           {allowDelete && (
-            <Button
-              className="bg-red-600 text-white w-fit border-red-600"
+            <button
+              type="button"
+              className="text-sm text-red-600 hover:text-red-800 hover:underline"
               onClick={(e) => {
                 e.preventDefault();
-                deleteObject();
+                setShowDeleteConfirm(true);
               }}
             >
               {deleteButton}
-            </Button>
+            </button>
           )}
         </div>
       </form>
+
+      {showDeleteConfirm && (
+        <Modal
+          closeModal={() => setShowDeleteConfirm(false)}
+          className="md:w-[400px] md:h-auto"
+        >
+          <div className="flex flex-col gap-6">
+            <h3 className="text-xl font-bold">
+              {t('edit_model_delete_confirm_title')}
+            </h3>
+            <p className="text-gray-600">
+              {t('edit_model_delete_confirm_message')}
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+              >
+                {t('generic_cancel')}
+              </Button>
+              <Button
+                className="bg-red-600 text-white border-red-600 hover:bg-red-700"
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  deleteObject();
+                }}
+              >
+                {deleteButton}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };

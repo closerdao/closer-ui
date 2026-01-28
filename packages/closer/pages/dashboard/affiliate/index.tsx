@@ -131,10 +131,11 @@ const AffiliateDashboardPage = ({
         <title>{t('dashboard_affiliate_title')}</title>
       </Head>
       <AdminLayout isBookingEnabled={isBookingEnabled}>
-        <div className="max-w-screen-lg flex flex-col gap-6">
-          <Heading level={1}>🤝 {t('dashboard_affiliate_title')}</Heading>
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+          <Heading level={2}>{t('dashboard_affiliate_title')}</Heading>
+        </div>
 
-          <section>
+        <section className="mt-6">
             {error && <ErrorMessage error={error} />}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
               <StatsCard
@@ -374,8 +375,7 @@ const AffiliateDashboardPage = ({
                 </tbody>
               ))}
             </table>
-          </section>
-        </div>
+        </section>
       </AdminLayout>
     </>
   );

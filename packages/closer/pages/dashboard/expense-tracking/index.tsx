@@ -262,70 +262,68 @@ const ExpenseTrackingDashboardPage = ({
         <title>{t('expense_tracking_dashboard_title')}</title>
       </Head>
       <AdminLayout isBookingEnabled={true}>
-        <div className="max-w-screen-lg flex flex-col gap-6">
-          <div className="flex justify-between flex-col md:flex-row gap-4">
-            <Heading level={1}>{t('expense_tracking_dashboard_title')}</Heading>
-            <TimeFrameSelector
-              timeFrame={timeFrame}
-              setTimeFrame={setTimeFrame}
-              fromDate={fromDate}
-              setFromDate={setFromDate}
-              toDate={toDate}
-              setToDate={setToDate}
-            />
-          </div>
-
-          <div className="flex justify-between items-center">
-            <Button
-              onClick={() => setIsDialogOpen(true)}
-              className="flex items-center gap-2 w-fit"
-              size="small"
-            >
-              <Plus className="w-4 h-4" />
-              {t('expense_tracking_add_new_expense')}
-            </Button>
-            <div className="flex gap-2">
-              <Button
-                onClick={() => handleDownloadAllDocuments(filteredCharges)}
-                variant="secondary"
-                size="small"
-                className="flex items-center gap-2"
-                isEnabled={!isLoading && filteredCharges.length > 0}
-              >
-                {t('expense_tracking_download_all_documents')}
-              </Button>
-              <Button
-                onClick={() => handleDownloadCSV(filteredCharges)}
-                variant="secondary"
-                size="small"
-                className="flex items-center gap-2"
-                isEnabled={!isLoading && filteredCharges.length > 0}
-              >
-                {t('expense_tracking_download_csv')}
-              </Button>
-            </div>
-          </div>
-
-          <ExpenseChargesListing charges={paginatedCharges} />
-
-          {totalExpenses > EXPENSES_PER_PAGE && (
-            <Pagination
-              loadPage={handlePageChange}
-              page={currentPage}
-              limit={EXPENSES_PER_PAGE}
-              total={totalExpenses}
-            />
-          )}
-
-          <ExpenseDialog
-            isOpen={isDialogOpen}
-            onClose={() => setIsDialogOpen(false)}
-            expenseCategories={expenseCategories}
-            onSuccess={() => loadData(true)}
-            uniqueEntities={uniqueEntities as string[]}
-            defaultEntity={defaultEntity}
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+          <Heading level={2}>{t('expense_tracking_dashboard_title')}</Heading>
+          <TimeFrameSelector
+            timeFrame={timeFrame}
+            setTimeFrame={setTimeFrame}
+            fromDate={fromDate}
+            setFromDate={setFromDate}
+            toDate={toDate}
+            setToDate={setToDate}
           />
         </div>
+
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mt-6">
+          <Button
+            onClick={() => setIsDialogOpen(true)}
+            className="flex items-center gap-2 w-full sm:w-fit"
+            size="small"
+          >
+            <Plus className="w-4 h-4" />
+            {t('expense_tracking_add_new_expense')}
+          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              onClick={() => handleDownloadAllDocuments(filteredCharges)}
+              variant="secondary"
+              size="small"
+              className="flex items-center justify-center gap-2 w-full sm:w-auto"
+              isEnabled={!isLoading && filteredCharges.length > 0}
+            >
+              {t('expense_tracking_download_all_documents')}
+            </Button>
+            <Button
+              onClick={() => handleDownloadCSV(filteredCharges)}
+              variant="secondary"
+              size="small"
+              className="flex items-center justify-center gap-2 w-full sm:w-auto"
+              isEnabled={!isLoading && filteredCharges.length > 0}
+            >
+              {t('expense_tracking_download_csv')}
+            </Button>
+          </div>
+        </div>
+
+        <ExpenseChargesListing charges={paginatedCharges} />
+
+        {totalExpenses > EXPENSES_PER_PAGE && (
+          <Pagination
+            loadPage={handlePageChange}
+            page={currentPage}
+            limit={EXPENSES_PER_PAGE}
+            total={totalExpenses}
+          />
+        )}
+
+        <ExpenseDialog
+          isOpen={isDialogOpen}
+          onClose={() => setIsDialogOpen(false)}
+          expenseCategories={expenseCategories}
+          onSuccess={() => loadData(true)}
+          uniqueEntities={uniqueEntities as string[]}
+          defaultEntity={defaultEntity}
+        />
       </AdminLayout>
     </>
   );

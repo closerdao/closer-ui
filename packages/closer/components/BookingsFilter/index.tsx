@@ -191,13 +191,13 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
     <section className="bg-white rounded-lg border border-gray-200 p-2">
       <div className="flex flex-wrap gap-1.5 items-center">
         <div className="flex-1 min-w-[200px] relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             value={bookingId}
             onChange={handleBookingId}
             type="text"
             placeholder={t('booking_id_placeholder')}
-            className="w-full pl-10 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+            className="w-full pl-3 pr-10 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
           />
         </div>
 
