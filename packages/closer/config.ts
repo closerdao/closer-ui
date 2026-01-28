@@ -400,6 +400,30 @@ export const configDescription: ConfigType[] = [
         default:
           'Fábrica de Sonhos Tradicional, 7540-011, Abela, Santiago do Cacém, Portugal',
       },
+      legalEntityName: {
+        type: 'text',
+        default: 'Traditional Dream Factory',
+      },
+      legalStreetAddress: {
+        type: 'text',
+        default: 'Fábrica de Sonhos Tradicional',
+      },
+      legalAddressLine2: {
+        type: 'text',
+        default: '',
+      },
+      legalPostalCode: {
+        type: 'text',
+        default: '7540-011',
+      },
+      legalCity: {
+        type: 'text',
+        default: 'Abela, Santiago do Cacém',
+      },
+      legalCountry: {
+        type: 'text',
+        default: 'Portugal',
+      },
       teamEmail: {
         type: 'text',
         default: 'traditionaldreamfactory@gmail.com',
@@ -600,19 +624,21 @@ export const configDescription: ConfigType[] = [
       elements: {
         type: [
           {
-            transactionType: {
-              type: 'select',
-              enum: ['booking', 'product', 'token', 'expense', 'subscription', 'outside-of-platform-income'],
+            legalName: 'text',
+            taxNumber: 'text',
+            address: 'text',
+            products: {
+              type: 'multiselect',
+              enum: ['accommodations', 'events', 'subscriptions', 'tokens', 'food', 'products'],
             },
-            entityName: 'text',
-            accountingDescription: 'text',
           },
         ],
         default: [
           {
-            transactionType: 'booking',
-            entityName: '',
-            accountingDescription: '',
+            legalName: '',
+            taxNumber: '',
+            address: '',
+            products: [],
           },
         ],
       },
