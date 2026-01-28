@@ -75,7 +75,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
   const [error, setError] = useState<any>();
   const [success, setSuccess] = useState(false);
   const [usersEmails, setUsersEmails] = useState<any[]>([]);
-  const [csvData, _setCsvData] = useState<any>(null);
+  const [csvData, setCsvData] = useState<any>(null);
 
   const toggleUserExpanded = (userId: string) => {
     setExpandedUsers((prev) =>
@@ -102,16 +102,65 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
   const getAllUserData = async () => {
     try {
       setIsLoading(true);
-      const allUserData = await platform.user.get({
+      const allUsersFilter = {
         limit: MAX_USERS_TO_FETCH,
         sort_by: 'screenname',
-      });
-      return allUserData;
+      };
+      await platform.user.get(allUsersFilter);
+      return platform.user.find(allUsersFilter);
     } catch (err) {
       setError(err);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const formatUsersForCsv = (users: any[]) => {
+    const escapeCsvCell = (cell: string | number | undefined | null): string => {
+      if (cell === undefined || cell === null) return '';
+      const str = String(cell);
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const headers = [
+      { key: 'screenname', label: 'Name' },
+      { key: 'email', label: 'Email' },
+      { key: 'created', label: 'Joined' },
+      { key: 'lastactive', label: 'Last Active' },
+      { key: 'roles', label: 'Roles' },
+      { key: 'kycPassed', label: 'KYC Passed' },
+      { key: 'tokenBalance', label: 'Token Balance' },
+      { key: 'totalNights', label: 'Total Nights' },
+      { key: 'totalBookings', label: 'Total Bookings' },
+      { key: 'citizenshipStatus', label: 'Citizenship Status' },
+      { key: 'citizenDate', label: 'Citizen Since' },
+      { key: 'subscriptionPlan', label: 'Subscription Plan' },
+      { key: 'vouchCount', label: 'Vouch Count' },
+    ];
+
+    const data = users.map((user: any) => {
+      const userData = user.toJS ? user.toJS() : user;
+      return {
+        screenname: escapeCsvCell(userData.screenname),
+        email: escapeCsvCell(userData.email),
+        created: escapeCsvCell(userData.created ? dayjs(userData.created).format('YYYY-MM-DD') : ''),
+        lastactive: escapeCsvCell(userData.lastactive ? dayjs(userData.lastactive).format('YYYY-MM-DD') : ''),
+        roles: escapeCsvCell(userData.roles?.join('; ') || ''),
+        kycPassed: escapeCsvCell(userData.kycPassed ? 'Yes' : 'No'),
+        tokenBalance: escapeCsvCell(userData.stats?.wallet?.tdf || 0),
+        totalNights: escapeCsvCell(userData.stats?.presence?.totalNights || 0),
+        totalBookings: escapeCsvCell(userData.stats?.presence?.totalBookings || 0),
+        citizenshipStatus: escapeCsvCell(userData.citizenship?.status || ''),
+        citizenDate: escapeCsvCell(userData.citizenship?.date ? dayjs(userData.citizenship.date).format('YYYY-MM-DD') : ''),
+        subscriptionPlan: escapeCsvCell(userData.subscription?.plan || ''),
+        vouchCount: escapeCsvCell(userData.vouched?.length || 0),
+      };
+    });
+
+    return { headers, data };
   };
 
   useEffect(() => {
@@ -205,6 +254,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
     setAction(action);
     setSuccess(false);
     setError(null);
+    setCsvData(null);
 
     switch (action) {
       case 'Copy emails':
@@ -214,11 +264,13 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
         }
         break;
       case 'Export selected (CSV)':
-        // No CSV export in the new version
+        setCsvData(formatUsersForCsv(selectedUsers));
         break;
       case 'Export all':
-        const _data = await getAllUserData();
-        // No CSV export in the new version
+        const allData = await getAllUserData();
+        if (allData) {
+          setCsvData(formatUsersForCsv(allData.toArray()));
+        }
         break;
       case 'Unlink wallet':
         {
