@@ -142,7 +142,7 @@ const PromptFixedBottom = () => {
         }`}
       >
         <div className="flex items-center justify-between gap-3 px-4 py-2.5 sm:gap-4 sm:px-5 sm:py-2.5">
-          <p className="text-sm font-medium text-gray-700 hidden sm:block whitespace-nowrap">
+          <p className="text-sm font-medium text-gray-700 hidden min-[1100px]:block whitespace-nowrap">
             {t('stay_in_touch')}
           </p>
           <Newsletter

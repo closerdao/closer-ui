@@ -7,7 +7,7 @@ describe('Signup', () => {
   it('should have proper heading', () => {
     renderWithAuth(<Signup />);
 
-    const title = screen.getByRole('heading', { level: 1 });
+    const title = screen.getByRole('heading', { level: 2 });
     expect(title).toHaveTextContent(/join our regenerative village/i);
   });
 

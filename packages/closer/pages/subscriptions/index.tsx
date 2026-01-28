@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import PageError from '../../components/PageError';
 import SubscriptionCards from '../../components/SubscriptionCards';
+import Webinar from '../../components/Webinar';
 import { Heading } from '../../components/ui/';
 
 import { NextPage, NextPageContext } from 'next';
@@ -219,6 +220,7 @@ const SubscriptionsPage: NextPage<Props> = ({
           currency={DEFAULT_CURRENCY}
         />
       </main>
+      <Webinar tags={['subscriptions-page']} analyticsCategory="Subscriptions" />
     </div>
   );
 };

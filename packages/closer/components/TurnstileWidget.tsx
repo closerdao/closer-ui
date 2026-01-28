@@ -29,6 +29,7 @@ interface TurnstileWidgetProps {
   onVerify: (token: string) => void;
   onError?: () => void;
   onExpire?: () => void;
+  size?: 'normal' | 'compact' | 'flexible';
 }
 
 const TurnstileWidget = ({
@@ -36,6 +37,7 @@ const TurnstileWidget = ({
   onVerify,
   onError,
   onExpire,
+  size = 'flexible',
 }: TurnstileWidgetProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
@@ -90,7 +92,7 @@ const TurnstileWidget = ({
     widgetIdRef.current = window.turnstile.render(containerRef.current, {
       sitekey: TURNSTILE_SITE_KEY,
       action,
-      size: 'flexible',
+      size,
       theme: 'auto',
       callback: onVerify,
       'error-callback': () => {
@@ -110,7 +112,7 @@ const TurnstileWidget = ({
         }
       }
     };
-  }, [isLoaded, action, onVerify, onError, onExpire]);
+  }, [isLoaded, action, onVerify, onError, onExpire, size]);
 
   if (!TURNSTILE_SITE_KEY) {
     return null;
@@ -119,7 +121,7 @@ const TurnstileWidget = ({
   return (
     <div
       ref={containerRef}
-      className="w-full rounded-lg overflow-hidden [&_iframe]:w-full [&_iframe]:!rounded-lg"
+      className="w-full"
     />
   );
 };

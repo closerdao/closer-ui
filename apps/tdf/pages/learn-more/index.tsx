@@ -5,7 +5,7 @@ import router from 'next/router';
 
 import { isMobile } from 'react-device-detect';
 
-import Ama from 'closer/components/Ama';
+import Webinar from 'closer/components/Webinar';
 import EventsList from 'closer/components/EventsList';
 import Newsletter from 'closer/components/Newsletter';
 import Resources from 'closer/components/Resources';
@@ -977,7 +977,7 @@ const LearnMorePage = ({ subscriptionsConfig }: Props) => {
           </div>
         </section>
 
-        <Ama id="ama" />
+        <Webinar id="ama" tags={['learn-more-page']} analyticsCategory="LearnMore" />
 
         <section className=" mb-[120vh] max-w-6xl mx-auto md:pt-20 text-center flex justify-center">
           <div className="md:max-w-lg" id="subscribe">

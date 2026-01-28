@@ -371,10 +371,14 @@ const SignupForm = ({ app }: Props) => {
             {t('signup_form_email_consent')}
           </Checkbox>
 
-          <TurnstileWidget
-            action="signup_email"
-            onVerify={setTurnstileToken}
-          />
+          {email.length > 0 && (
+            <div className="animate-[fadeIn_0.3s_ease-in-out]">
+              <TurnstileWidget
+                action="signup_email"
+                onVerify={setTurnstileToken}
+              />
+            </div>
+          )}
 
           <div className="w-full flex flex-col gap-4">
             <Button
@@ -453,10 +457,14 @@ const SignupForm = ({ app }: Props) => {
             <ErrorMessage error={localError || authError} />
           )}
 
-          <TurnstileWidget
-            action="signup"
-            onVerify={setTurnstileToken}
-          />
+          {application.screenname.length > 0 && (
+            <div className="animate-[fadeIn_0.3s_ease-in-out]">
+              <TurnstileWidget
+                action="signup"
+                onVerify={setTurnstileToken}
+              />
+            </div>
+          )}
 
           <div className="w-full my-4 flex flex-col gap-6">
             <Button

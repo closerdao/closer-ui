@@ -8,7 +8,8 @@ import { twMerge } from 'tailwind-merge';
 import { useAuth, useConfig } from '..';
 import api from '../utils/api';
 import { trackEvent } from './Analytics';
-import { Button, ErrorMessage, Heading, Input } from './ui';
+import TurnstileWidget from './TurnstileWidget';
+import { Button, ErrorMessage, Input } from './ui';
 
 
 
@@ -31,6 +32,7 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
     const [referrer, setReferrer] = useState<string | undefined>(undefined);
     const [signupCompleted, setSignupCompleted] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
     const [shouldShowForm, setShouldShowForm] = useState(true);
     const router = useRouter();
@@ -41,6 +43,7 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
         email: string;
         screenname: string;
         tags: string[];
+        turnstileToken: string | null;
       },
     ) => {
       try {
@@ -79,6 +82,18 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
           className,
         )}
       >
+
+        {email.length > 0 && (
+          <div
+            className="fixed bottom-20 z-51 left-0 right-0 mx-auto animate-[fadeIn_0.3s_ease-in-out]"
+          >
+            <TurnstileWidget
+              action="newsletter_signup"
+              onVerify={setTurnstileToken}
+              size="flexible"
+            />
+          </div>
+        )}
         {signupCompleted ? (
           <p className={isInlinePrompt ? 'text-sm text-green-600 font-medium' : ''}>
             {t('newsletter_success')}
@@ -95,6 +110,7 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
                   router.asPath,
                   referrer ? `ref:${referrer}` : null,
                 ].filter(Boolean) as string[],
+                turnstileToken,
               })
                 .then(() => {
                   trackEvent(placement, 'Lead');
@@ -118,10 +134,8 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
             className={isInlinePrompt ? 'flex items-center gap-2' : 'flex flex-col justify-center'}
           >
             {!isInlinePrompt && showTitle && (
-              <div className="flex flex-col justify-start md:mt-0 gap-y-2">
-                <Heading display level={4}>
-                  {t('newsletter_title')}
-                </Heading>
+              <div className="hidden min-[1100px]:flex flex-col justify-start md:mt-0 gap-y-2">
+                {t('newsletter_title')}
               </div>
             )}
             <div className={isInlinePrompt ? 'flex items-center gap-2 flex-1' : 'flex gap-2 sm:gap-4'}>
@@ -140,6 +154,7 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
                 type="submit"
                 variant="primary"
                 isFullWidth={false}
+                isEnabled={!!turnstileToken}
                 className={twMerge('shrink-0', isInlinePrompt && 'h-9 text-xs px-4')}
               >
                 {ctaText || t('newsletter_signup')}

@@ -11,6 +11,7 @@ export { default as Metatags } from './components/Metatags/';
 export { default as Modal } from './components/Modal';
 export { default as Navigation } from './components/Navigation';
 export { default as Newsletter } from './components/Newsletter';
+export { default as Webinar } from './components/Webinar';
 export { default as PhotoEditor } from './components/PhotoEditor';
 export { default as Prompts } from './components/Prompts';
 export { default as Resources } from './components/Resources';
