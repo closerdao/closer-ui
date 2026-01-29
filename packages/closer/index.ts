@@ -118,6 +118,7 @@ export { default as SetPasswordPage } from './pages/login/set-password';
 export { default as MemberPage } from './pages/members/[slug]';
 export { default as MembersPage } from './pages/members/index';
 export { default as PageNotFound } from './pages/not-found';
+export { default as FeatureNotEnabled } from './components/FeatureNotEnabled';
 export { default as ProjectPage } from './pages/projects/[slug]/';
 export { default as EditProject } from './pages/projects/[slug]/edit';
 export { default as ProjectApplicationPage } from './pages/projects/apply';

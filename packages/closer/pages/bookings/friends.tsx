@@ -16,6 +16,7 @@ import { BookingConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
+import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import PageNotFound from '../not-found';
 
 interface Props {
@@ -75,7 +76,7 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
   const isMember = user?.roles.includes('member');
 
   if (!isBookingEnabled) {
-    return <PageNotFound />;
+    return <FeatureNotEnabled feature="booking" />;
   }
 
   if (!isAuthenticated || !isMember) {

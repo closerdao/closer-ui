@@ -25,6 +25,7 @@ import {
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
+import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import PageNotFound from '../not-found';
 import {  LinkButton } from '../../components/ui';
 
@@ -60,7 +61,9 @@ const StayPage = ({
   const { platform }: any = usePlatform();
   const { user } = useAuth();
 
-  const isBookingEnabled = bookingSettings?.enabled;
+  const isBookingEnabled =
+    bookingSettings?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   const isTeamMember = user?.roles.some((roles) =>
     ['space-host', 'steward', 'land-manager', 'team'].includes(roles),
@@ -113,6 +116,10 @@ const StayPage = ({
       listing.get('availableFor') !== 'volunteer'
     );
   });
+
+  if (!isBookingEnabled) {
+    return <FeatureNotEnabled feature="booking" />;
+  }
 
   if (!bookingSettings || error) {
     return <PageNotFound error="Network error" />;

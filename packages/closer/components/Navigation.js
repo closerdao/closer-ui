@@ -255,7 +255,7 @@ const Navigation = () => {
 
           {APP_NAME && APP_NAME?.toLowerCase() === 'tdf' && (
             <>
-              {isAuthenticated && isMember ? (
+              {isAuthenticated && isMember && isBookingEnabled ? (
                 <Button
                   onClick={() => router.push('/bookings/create/dates')}
                   size="small"

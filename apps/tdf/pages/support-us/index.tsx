@@ -44,7 +44,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
     where: { 'subscription.validUntil': { $exists: true } },
   };
 
-  const subscriberCount = platform.user.findCount(subscriberFilter) || 0;
+  const subscriberCount = platform?.user?.findCount?.(subscriberFilter) || 0;
 
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
 

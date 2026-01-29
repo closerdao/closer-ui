@@ -657,4 +657,13 @@ export const configDescription: ConfigType[] = [
       },
     },
   },
+  {
+    slug: 'events',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: true,
+      },
+    },
+  },
 ];

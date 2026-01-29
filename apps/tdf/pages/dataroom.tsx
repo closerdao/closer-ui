@@ -849,70 +849,58 @@ const HomePage = () => {
                   <thead className="bg-gray-900 text-white">
                     <tr>
                       <th className="px-6 py-4 text-left text-sm font-semibold">{t('dataroom_investment_map_description')}</th>
-                      <th className="px-6 py-4 text-center text-sm font-semibold">{t('dataroom_investment_map_phase')}</th>
                       <th className="px-6 py-4 text-right text-sm font-semibold">{t('dataroom_investment_map_total')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     <tr className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-sm text-gray-700">{t('dataroom_map_fiscal')}</td>
-                      <td className="px-6 py-4 text-sm text-center text-gray-600">1+2+3</td>
                       <td className="px-6 py-4 text-sm text-right font-semibold text-gray-900">€19,600</td>
                     </tr>
                     <tr className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-sm text-gray-700">{t('dataroom_map_architecture')}</td>
-                      <td className="px-6 py-4 text-sm text-center text-gray-600">1+2+3</td>
                       <td className="px-6 py-4 text-sm text-right font-semibold text-gray-900">€25,000</td>
                     </tr>
                     <tr className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-sm text-gray-700">{t('dataroom_map_engineering')}</td>
-                      <td className="px-6 py-4 text-sm text-center text-gray-600">1+2+3</td>
                       <td className="px-6 py-4 text-sm text-right font-semibold text-gray-900">€10,000</td>
                     </tr>
                     <tr className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-sm text-gray-700">{t('dataroom_map_construction_rooms')}</td>
-                      <td className="px-6 py-4 text-sm text-center text-gray-600">1+2</td>
                       <td className="px-6 py-4 text-sm text-right font-semibold text-gray-900">€767,242</td>
                     </tr>
                     <tr className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-sm text-gray-700">{t('dataroom_map_kitchen')}</td>
-                      <td className="px-6 py-4 text-sm text-center text-gray-600">2</td>
                       <td className="px-6 py-4 text-sm text-right font-semibold text-gray-900">€81,239</td>
                     </tr>
                     <tr className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-sm text-gray-700">{t('dataroom_map_solar')}</td>
-                      <td className="px-6 py-4 text-sm text-center text-gray-600">1+2</td>
                       <td className="px-6 py-4 text-sm text-right font-semibold text-gray-900">€52,065</td>
                     </tr>
                     <tr className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-sm text-gray-700">{t('dataroom_map_smart_locks')}</td>
-                      <td className="px-6 py-4 text-sm text-center text-gray-600">1+2</td>
                       <td className="px-6 py-4 text-sm text-right font-semibold text-gray-900">€22,902</td>
                     </tr>
                     <tr className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-sm text-gray-700">{t('dataroom_map_heating')}</td>
-                      <td className="px-6 py-4 text-sm text-center text-gray-600">1+2</td>
                       <td className="px-6 py-4 text-sm text-right font-semibold text-gray-900">€65,700</td>
                     </tr>
                     <tr className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-sm text-gray-700">{t('dataroom_map_windows')}</td>
-                      <td className="px-6 py-4 text-sm text-center text-gray-600">—</td>
                       <td className="px-6 py-4 text-sm text-right font-semibold text-gray-900">€22,200</td>
                     </tr>
                     <tr className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-sm text-gray-700">{t('dataroom_map_greenhouse')}</td>
-                      <td className="px-6 py-4 text-sm text-center text-gray-600">3</td>
                       <td className="px-6 py-4 text-sm text-right font-semibold text-gray-900">€17,680</td>
                     </tr>
                     <tr className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-sm text-gray-700">{t('dataroom_map_studios')}</td>
-                      <td className="px-6 py-4 text-sm text-center text-gray-600">3</td>
                       <td className="px-6 py-4 text-sm text-right font-semibold text-gray-900">€85,000</td>
                     </tr>
                   </tbody>
                   <tfoot className="bg-gray-100 border-t-2 border-gray-900">
                     <tr>
-                      <td colSpan={2} className="px-6 py-5 font-bold text-gray-900 text-right">
+                      <td className="px-6 py-5 font-bold text-gray-900 text-right">
                         {t('dataroom_investment_map_total')}:
                       </td>
                       <td className="px-6 py-5 text-right font-bold text-xl text-gray-900">
