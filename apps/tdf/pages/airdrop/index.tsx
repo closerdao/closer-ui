@@ -77,7 +77,7 @@ const AirdropPage = ({ airdropConfig }: Props) => {
             ) : (
               <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full">
                 <Check className="w-4 h-4" />
-                <span className="font-medium">Wallet connected — you're eligible!</span>
+                <span className="font-medium">Wallet connected — you&apos;re eligible!</span>
               </div>
             )}
           </div>
@@ -91,7 +91,7 @@ const AirdropPage = ({ airdropConfig }: Props) => {
                 How to qualify for future airdrops
               </Heading>
               <p className="text-gray-600 max-w-xl mx-auto">
-                The more you engage with TDF, the more rewards you can earn. Here's how to increase your eligibility.
+                The more you engage with TDF, the more rewards you can earn. Here&apos;s how to increase your eligibility.
               </p>
             </div>
 
@@ -193,7 +193,7 @@ const AirdropPage = ({ airdropConfig }: Props) => {
               Future airdrops coming
             </Heading>
             <p className="text-gray-600 mb-6 leading-relaxed">
-              We're planning more community rewards. Start building your eligibility now by 
+              We&apos;re planning more community rewards. Start building your eligibility now by 
               engaging with TDF — every visit, vote, and contribution counts toward future drops.
             </p>
             <LinkButton href="/stay" variant="primary">
