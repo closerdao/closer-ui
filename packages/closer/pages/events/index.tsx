@@ -18,11 +18,17 @@ import Heading from '../../components/ui/Heading';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
+import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 
 const now = new Date();
 
+interface EventsConfig {
+  enabled: boolean;
+}
+
 interface Props {
   generalConfig: GeneralConfig | null;
+  eventsConfig: EventsConfig | null;
 }
 
 interface MonthGroup {
@@ -31,7 +37,7 @@ interface MonthGroup {
   events: Event[];
 }
 
-const Events = ({ generalConfig }: Props) => {
+const Events = ({ generalConfig, eventsConfig }: Props) => {
   const t = useTranslations();
   const { PERMISSIONS } = useConfig() || {};
   const defaultConfig = useConfig();
@@ -39,6 +45,8 @@ const Events = ({ generalConfig }: Props) => {
     generalConfig?.platformName || defaultConfig.platformName;
   const { platform }: any = usePlatform();
   const { user } = useAuth();
+
+  const isEventsEnabled = eventsConfig?.enabled !== false;
 
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [pastEvents, setPastEvents] = useState<Event[]>([]);
@@ -156,6 +164,10 @@ const Events = ({ generalConfig }: Props) => {
       return startDate.format('HH:mm');
     }
   };
+
+  if (!isEventsEnabled) {
+    return <FeatureNotEnabled feature="events" />;
+  }
 
   if (loading) {
     return (
@@ -396,20 +408,24 @@ const Events = ({ generalConfig }: Props) => {
 
 Events.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalRes, messages] = await Promise.all([
+    const [generalRes, eventsRes, messages] = await Promise.all([
       api.get('/config/general').catch(() => null),
+      api.get('/config/events').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const generalConfig = generalRes?.data?.results?.value;
+    const eventsConfig = eventsRes?.data?.results?.value;
 
     return {
       generalConfig,
+      eventsConfig,
       messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
+      eventsConfig: null,
       error: parseMessageFromError(err),
       messages: null,
     };

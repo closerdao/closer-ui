@@ -2,23 +2,37 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import EditModel from '../../../components/EditModel';
-import { Heading } from '../../../components/ui';
+import BlogEditor from '../../../components/BlogEditor';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../../contexts/auth';
-import models from '../../../models';
+import api from '../../../utils/api';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
-const Create = () => {
+interface BlogConfig {
+  enabled: boolean;
+}
+
+interface Props {
+  blogConfig: BlogConfig | null;
+}
+
+const Create = ({ blogConfig }: Props) => {
   const t = useTranslations();
   const router = useRouter();
   const { user } = useAuth();
   const isAdmin = user?.roles.includes('admin');
   const isContentCreator = user?.roles.includes('content-creator');
+
+  const isBlogEnabled = blogConfig?.enabled !== false;
+
+  if (!isBlogEnabled) {
+    return <FeatureNotEnabled feature="blog" />;
+  }
 
   if (!isAdmin && !isContentCreator) {
     return <PageNotFound error="User may not access" />;
@@ -28,35 +42,23 @@ const Create = () => {
     <>
       <Head>
         <title>{t('blog_write_article')}</title>
-
         <meta property="og:type" content="article" />
       </Head>
 
-      <main className="main-content w-full max-w-4xl flex flex-col gap-8">
-        <section>
-          <div>
-            <Link href="/blog" className="uppercase text-accent font-bold">
-              ◀️ {t('blog_title')}
-            </Link>
-          </div>
-          <Heading>{t('blog_write_article')}</Heading>
-        </section>
-        <section className=" w-full flex justify-center ">
-          <div
-            className={
-              '"w-full relative bg-accent-light rounded-md w-full  min-h-[400px]" '
-            }
+      <main className="main-content w-full max-w-5xl px-4 md:px-8">
+        <div className="mb-6">
+          <Link
+            href="/blog"
+            className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors"
           >
-            <EditModel
-              endpoint="/article"
-              fields={models.article}
-              onSave={(article) => router.push(`/blog/${article.slug}`)}
-              allowDelete
-              deleteButton="Delete article"
-              onDelete={() => router.push('/blog')}
-            />
-          </div>
-        </section>
+            <span>←</span>
+            <span>{t('blog_title')}</span>
+          </Link>
+        </div>
+
+        <BlogEditor
+          onSave={(article) => router.push(`/blog/${article.slug}`)}
+        />
       </main>
     </>
   );
@@ -64,15 +66,18 @@ const Create = () => {
 
 Create.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
+    const [blogRes, messages] = await Promise.all([
+      api.get('/config/blog').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
+    const blogConfig = blogRes?.data?.results?.value;
     return {
+      blogConfig,
       messages,
     };
   } catch (err: unknown) {
     return {
+      blogConfig: null,
       messages: null,
     };
   }

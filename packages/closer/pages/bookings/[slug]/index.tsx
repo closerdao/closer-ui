@@ -48,6 +48,7 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageNotFound from '../../not-found';
 
 dayjs.extend(LocalizedFormat);
@@ -447,9 +448,12 @@ const BookingPage = ({
     }
   };
 
+  if (!isBookingEnabled) {
+    return <FeatureNotEnabled feature="booking" />;
+  }
+
   if (
    ( !booking ||
-    !isBookingEnabled ||
     (user?._id !== booking.createdBy &&
       user?._id !== booking.paidBy &&
         !isSpaceHost) )

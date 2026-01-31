@@ -52,6 +52,7 @@ const MemberMenu = () => {
     isBookingEnabled: boolean,
     areSubscriptionsEnabled: boolean,
     isVolunteeringEnabled: boolean,
+    isEventsEnabled: boolean,
   ): MenuSection[] => {
     // TDF-specific navigation structure
     if (APP_NAME?.toLowerCase() === 'tdf') {
@@ -95,7 +96,7 @@ const MemberMenu = () => {
             {
               label: t('menu_events_programs'),
               url: '/events',
-              enabled: true,
+              enabled: isEventsEnabled,
               rbacPage: 'Events',
             },
           ],
@@ -274,7 +275,7 @@ const MemberMenu = () => {
                 {
                   label: t('header_nav_events'),
                   url: '/pages/events',
-                  enabled: true,
+                  enabled: isEventsEnabled,
                   rbacPage: 'Events',
                 },
               ]
@@ -348,6 +349,7 @@ const MemberMenu = () => {
             label: t('navigation_events'),
             url: '/events',
             enabled:
+              isEventsEnabled &&
               APP_NAME?.toLowerCase() !== 'lios' &&
               APP_NAME?.toLowerCase() !== 'earthbound' &&
               APP_NAME?.toLowerCase() !== 'closer',
@@ -718,7 +720,7 @@ const MemberMenu = () => {
   useEffect(() => {
     (async () => {
       try {
-        const [bookingRes, subscriptionsRes, volunteerRes] = await Promise.all([
+        const [bookingRes, subscriptionsRes, volunteerRes, eventsRes] = await Promise.all([
           api.get('config/booking').catch((err) => {
             console.error('Error fetching booking config:', err);
             return null;
@@ -728,7 +730,11 @@ const MemberMenu = () => {
             return null;
           }),
           api.get('config/volunteering').catch((err) => {
-            console.error('Error fetching booking config:', err);
+            console.error('Error fetching volunteering config:', err);
+            return null;
+          }),
+          api.get('config/events').catch((err) => {
+            console.error('Error fetching events config:', err);
             return null;
           }),
         ]);
@@ -746,11 +752,15 @@ const MemberMenu = () => {
           volunteerRes?.data.results.value.enabled === true &&
           process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
 
+        const isEventsEnabled =
+          eventsRes?.data?.results?.value?.enabled !== false;
+
         // Get menu sections with all items
         const sections = getMenuSections(
           isBookingEnabled,
           areSubscriptionsEnabled,
           isVolunteeringEnabled,
+          isEventsEnabled,
         );
 
         // Filter sections based on user roles and permissions

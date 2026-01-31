@@ -15,19 +15,27 @@ import { Event } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageNotFound from '../../not-found';
+
+interface EventsConfig {
+  enabled: boolean;
+}
 
 interface Props {
   event: Event;
+  eventsConfig: EventsConfig | null;
 }
 
-const EventTickets = ({ event }: Props) => {
+const EventTickets = ({ event, eventsConfig }: Props) => {
   const t = useTranslations();
 
   const { user } = useAuth();
   const { platform }: any = usePlatform();
   const ticketsFilter = { where: { event: event && event._id } };
   const tickets = platform.ticket.find(ticketsFilter);
+
+  const isEventsEnabled = eventsConfig?.enabled !== false;
 
   const loadData = async () => {
     await Promise.all([platform.ticket.get(ticketsFilter)]);
@@ -38,6 +46,10 @@ const EventTickets = ({ event }: Props) => {
       loadData();
     }
   }, [user]);
+
+  if (!isEventsEnabled) {
+    return <FeatureNotEnabled feature="events" />;
+  }
 
   if (
     !user ||
@@ -85,7 +97,7 @@ const EventTickets = ({ event }: Props) => {
 EventTickets.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
   try {
-    const [eventRes, messages] = await Promise.all([
+    const [eventRes, eventsRes, messages] = await Promise.all([
       api
         .get(`/event/${query.slug}`, {
           headers: (req as NextApiRequest)?.cookies?.access_token && {
@@ -98,15 +110,18 @@ EventTickets.getInitialProps = async (context: NextPageContext) => {
           console.error('Error fetching event:', err);
           return null;
         }),
+      api.get('/config/events').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const event = eventRes?.data?.results;
+    const eventsConfig = eventsRes?.data?.results?.value;
 
-    return { event, messages };
+    return { event, eventsConfig, messages };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
+      eventsConfig: null,
     };
   }
 };

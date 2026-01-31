@@ -2,7 +2,8 @@ import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 
-// import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { MessageCircle } from 'lucide-react';
+
 import PageError from 'closer/components/PageError';
 import { Heading, LinkButton } from 'closer/components/ui';
 
@@ -187,6 +188,31 @@ const VolunteerOpportunitiesPage = ({
                       </Link>
                       .
                     </p>
+
+                    <div className="mt-8 bg-gray-50 border border-gray-200 rounded-xl p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="w-10 h-10 bg-[#0088cc] rounded-lg flex items-center justify-center flex-shrink-0">
+                          <MessageCircle className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900 mb-1">
+                            {t('join_community_title')}
+                          </p>
+                          <p className="text-sm text-gray-600 mb-4">
+                            {t('join_community_description')}
+                          </p>
+                          <a
+                            href="https://t.me/traditionaldreamfactor"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-[#0088cc] hover:bg-[#006699] text-white rounded-lg transition-colors text-sm font-medium"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            {t('join_community_telegram_button')}
+                          </a>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

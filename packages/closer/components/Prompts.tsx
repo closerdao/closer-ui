@@ -114,7 +114,7 @@ const FundraiserPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
       <div className=" flex gap-3 justify-between w-full">
         <div className="flex justify-start sm:items-center gap-2">
           <Link
-            href="/support-us"
+            href="/invest"
             className="bg-white min-w-[40px] h-6 flex items-center justify-center rounded-md"
           >
             <IconPlay className="w-4 h-4" />
@@ -125,7 +125,7 @@ const FundraiserPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
           <LinkButton
             size="small"
             className="max-h-[34px] p-0 px-4"
-            href="/support-us"
+            href="/invest"
           >
             Support TDF
           </LinkButton>

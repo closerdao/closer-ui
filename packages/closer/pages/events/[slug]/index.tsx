@@ -34,7 +34,12 @@ import {
   priceFormat,
 } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageNotFound from '../../not-found';
+
+interface EventsConfig {
+  enabled: boolean;
+}
 
 interface Props {
   event: Event;
@@ -43,6 +48,7 @@ interface Props {
   descriptionText?: string;
   settings: any;
   listings: Listing[];
+  eventsConfig: EventsConfig | null;
 }
 
 const EventPage = ({
@@ -52,11 +58,14 @@ const EventPage = ({
   descriptionText,
   listings,
   settings,
+  eventsConfig,
 }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
   const { user, isAuthenticated, refetchUser } = useAuth();
   const { APP_NAME } = useConfig() || {};
+
+  const isEventsEnabled = eventsConfig?.enabled !== false;
 
   const [photo, setPhoto] = useState(event && event.photo);
   const [password, setPassword] = useState('');
@@ -220,6 +229,10 @@ const EventPage = ({
     // Refresh the attendee status to show the updated UI
     await refreshAttendeeStatus();
   };
+
+  if (!isEventsEnabled) {
+    return <FeatureNotEnabled feature="events" />;
+  }
 
   if (!event) {
     return <PageNotFound error={error} />;
@@ -869,7 +882,7 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
   const { convert } = require('html-to-text');
   try {
-    const [event, listings, settings, messages] = await Promise.all([
+    const [event, listings, settings, eventsRes, messages] = await Promise.all([
       api
         .get(`/event/${query.slug}`, {
           headers: (req as NextApiRequest)?.cookies?.access_token && {
@@ -894,8 +907,13 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
       api.get('/config/booking').catch(() => {
         return null;
       }),
+      api.get('/config/events').catch(() => {
+        return null;
+      }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
+
+    const eventsConfig = eventsRes?.data?.results?.value;
 
     const options = {
       baseElements: { selectors: ['p', 'h2', 'span'] },
@@ -931,12 +949,14 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
       descriptionText,
       listings: listings?.data?.results,
       settings: settings?.data?.results?.value,
+      eventsConfig,
       messages,
     };
   } catch (err: unknown) {
     console.log('Error', err);
     return {
       error: parseMessageFromError(err),
+      eventsConfig: null,
       messages: null,
     };
   }

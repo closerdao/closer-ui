@@ -159,28 +159,22 @@ const RoadmapPage = () => {
                   </ul>
                 </div>
               </div>
-              {/* 2025 - CURRENT */}
+              {/* 2025 - COMPLETE */}
               <div className="grid grid-cols-[37px_240px] sm:grid-cols-[37px_370px]">
                 <div className="w-7 flex justify-center">
                   <div className="bg-accent w-[4px] h-[40px]"></div>
                 </div>
                 <div className="text-accent"></div>
-                <div className="w-7 h-7 bg-accent-light border-4 border-accent rounded-full"></div>
-                <Heading
-                  level={4}
-                  className="font-normal uppercase text-accent"
-                >
-                  2025
+                <div className="w-7 h-7 bg-accent rounded-full"></div>
+                <Heading level={4} className="uppercase text-accent">
+                  <span className="font-normal">2025</span>
                 </Heading>
                 <div className="w-7 flex justify-center">
-                  <div className="bg-accent-light w-[4px] h-auto"></div>
+                  <div className="bg-accent w-[4px] h-auto"></div>
                 </div>
                 <div className="pb-12">
                   <p className="uppercase font-bold">
                     {t('roadmap_2025_title')}
-                  </p>
-                  <p className="uppercase font-bold mt-6">
-                    {t('roadmap_2024_here')}
                   </p>
                   <ul className=" my-4 list-none">
                     <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
@@ -210,13 +204,13 @@ const RoadmapPage = () => {
                   </ul>
                 </div>
               </div>
-              {/* 2026 */}
+              {/* 2026 - CURRENT */}
               <div className="grid grid-cols-[37px_270px]">
                 <div className="w-7 flex justify-center">
-                  <div className="bg-accent-light w-[4px] h-[40px]"></div>
+                  <div className="bg-accent w-[4px] h-[40px]"></div>
                 </div>
                 <div className="text-accent"></div>
-                <div className="w-7 h-7 bg-accent-light rounded-full"></div>
+                <div className="w-7 h-7 bg-accent-light border-4 border-accent rounded-full"></div>
                 <Heading
                   level={4}
                   className="font-normal uppercase text-accent"
@@ -239,6 +233,36 @@ const RoadmapPage = () => {
                     </li>
                     <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
                       {t('roadmap_2026_bullet_3')}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              {/* 2027 */}
+              <div className="grid grid-cols-[37px_270px]">
+                <div className="w-7 flex justify-center">
+                  <div className="bg-accent-light w-[4px] h-[40px]"></div>
+                </div>
+                <div className="text-accent"></div>
+                <div className="w-7 h-7 bg-accent-light rounded-full"></div>
+                <Heading
+                  level={4}
+                  className="font-normal uppercase text-accent"
+                >
+                  2027
+                </Heading>
+                <div className="w-7 flex justify-center">
+                  <div className="bg-accent-light w-[4px] h-auto"></div>
+                </div>
+                <div className="pb-12">
+                  <p className="uppercase font-bold">
+                    {t('roadmap_2027_title')}
+                  </p>
+                  <ul className=" my-4 list-none">
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      {t('roadmap_2027_bullet_1')}
+                    </li>
+                    <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
+                      {t('roadmap_2027_bullet_2')}
                     </li>
                   </ul>
                 </div>

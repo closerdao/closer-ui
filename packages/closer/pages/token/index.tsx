@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useRef, useState } from 'react';
 
+import JoinCommunityCTA from '../../components/JoinCommunityCTA';
 import PeekIntoFuture from '../../components/PeekIntoFuture';
 import Webinar from '../../components/Webinar';
 import { Button, Card, Heading } from '../../components/ui';
@@ -678,6 +679,8 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                 </div>
               </div>
             </Card>
+
+            <JoinCommunityCTA variant="banner" className="mb-12" />
           </div>
         </section>
 

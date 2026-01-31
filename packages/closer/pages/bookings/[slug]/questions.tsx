@@ -33,7 +33,7 @@ import {
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
-import PageNotFound from '../../not-found';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 const prepareQuestions = (eventQuestions: any) => {
   const preparedQuestions = eventQuestions?.map((question: any) => {
@@ -212,7 +212,7 @@ const Questionnaire = ({
   };
 
   if (!isBookingEnabled) {
-    return <PageNotFound />;
+    return <FeatureNotEnabled feature="booking" />;
   }
 
   if (!isAuthenticated) {

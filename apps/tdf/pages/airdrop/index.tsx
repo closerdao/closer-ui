@@ -1,595 +1,307 @@
 import Head from 'next/head';
 import Image from 'next/image';
-import Link from 'next/link';
 
-import BulletChecked from 'closer/components/icons/BulletChecked';
-import BulletUnChecked from 'closer/components/icons/BulletUnChecked';
 import { Heading, LinkButton } from 'closer/components/ui';
 
-import { useAuth } from 'closer';
+import { PageNotFound, useAuth } from 'closer';
+import api from 'closer/utils/api';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { Check, ChevronDown, Gift, Wallet, Calendar, Users, Sparkles } from 'lucide-react';
 import { NextPageContext } from 'next';
+import { useState } from 'react';
 
-const AirdropPage = () => {
+interface AirdropConfig {
+  enabled: boolean;
+  description?: string;
+}
+
+interface Props {
+  airdropConfig: AirdropConfig | null;
+}
+
+const DEFAULT_AIRDROP_CONFIG: AirdropConfig = {
+  enabled: true,
+  description: 'Reward community members with token airdrops for participation.',
+};
+
+const AirdropPage = ({ airdropConfig }: Props) => {
   const { user } = useAuth();
-  const qualifiers = user && user.stats && user.stats.all_time;
+  const [showHistoricDetails, setShowHistoricDetails] = useState(false);
+  
+  const config = airdropConfig || DEFAULT_AIRDROP_CONFIG;
+  const isWeb3Enabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
+  const isAirdropEnabled = isWeb3Enabled && config.enabled;
 
-  console.log('qualifiers', qualifiers);
+  if (!isAirdropEnabled) {
+    return <PageNotFound />;
+  }
 
   return (
     <>
       <Head>
-        <title>$TDF AIRDROP</title>
-        <meta name="description" content="" />
-        <meta property="og:type" content="event" />
+        <title>$TDF Airdrops | Traditional Dream Factory</title>
+        <meta name="description" content="Join the TDF community and qualify for future token airdrops. Connect your wallet, visit, volunteer, and participate to earn rewards." />
+        <meta property="og:type" content="website" />
       </Head>
 
-      <main className="pt-4 pb-24 md:flex-row flex-wrap max-w-6xl mx-auto">
-        <section className="mb-10">
-          <div className='rounded-lg min-h-[300px] h-[calc(100vh-190px)]  flex justify-center items-center flex-col bg-center bg-accent bg-cover bg-no-repeat text-white bg-[url("/images/airdrop-hero.jpg")]'>
-            <div className="flex flex-col items-center">
-              <Heading
-                level={1}
-                className=" font-extrabold normal-case sm:uppercase text-4xl md:text-7xl px-4 drop-shadow-lg mb-2 md:mb-4 md:text-center max-w-[700px]"
-              >
-                $TDF Airdrop
-              </Heading>
-
-              {user && !user.walletAddress && (
-                <LinkButton
-                  className=" font-bold mt-8 sm:px-8 px-3 text-md sm:text-lg"
-                  variant="primary"
-                  isFullWidth={false}
-                  href={`/members/${user.slug}`}
-                >
-                  Connect wallet to qualify
-                </LinkButton>
-              )}
+      <main className="min-h-screen bg-white">
+        {/* Hero Section */}
+        <section className="bg-gradient-to-br from-accent/5 via-purple-50 to-pink-50 border-b border-gray-200">
+          <div className="max-w-4xl mx-auto px-6 py-16 md:py-24 text-center">
+            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur px-4 py-2 rounded-full border border-accent/20 mb-6">
+              <Gift className="w-4 h-4 text-accent" />
+              <span className="text-sm font-medium text-gray-700">Community Rewards Program</span>
             </div>
-          </div>
-        </section>
+            
+            <Heading
+              level={1}
+              className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6"
+            >
+              $TDF Airdrops
+            </Heading>
+            
+            <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-8 leading-relaxed">
+              We reward our community with token airdrops. Connect your wallet, visit TDF, 
+              and participate in governance to qualify for future drops.
+            </p>
 
-        <section className="flex items-center flex-col mt-20 mb-12 sm:mb-32">
-          <div className="w-full flex flex-col  gap-20">
-            <div className="w-full flex items-center flex-col">
-              <Heading
-                level={2}
-                className="font-bold sm:font-extrabold  normal-case text-center mt-12 max-w-[620px] mb-10 text-lg  sm:text-xl"
-              >
-                In the spirit of gifting and Web3 at TDF
-                <p className="text-accent text-2xl sm:text-5xl">
-                  We’re doing an Airdrop!
-                </p>
-              </Heading>
-              <div className="max-w-[550px] text-sm flex flex-col gap-4 mb-20">
-                <p>🌱 Help Power TDF’s 12-Month Build Sprint</p>
-
-                <p>We’re heading into the final year of construction on TDF’s coliving hub, and the next phase is big:</p>
-                <ul>
-                  <li>14 eco-suites and a shared natural pool</li>
-                  <li>Rain-harvesting lake & expanded water-retention earthworks</li>
-                  <li>Two new agroforestry terraces 🌳</li>
-                  <li>Farm-to-table restaurant 🍽️</li>
-                  <li>Circular mushroom-production unit 🍄</li>
-                </ul>
-                <p>Support the build, accelerate regeneration, and own a piece of TDF’s future.</p>
-                <p>Grab your $TDF tokens, spread the word, and let’s cross the finish line together! 💚</p>
-              </div>
-              <LinkButton
-                href="/token"
-                variant="secondary"
-                className="w-[200px]"
-              >
-                buy $tdf tokens
+            {!user ? (
+              <LinkButton href="/signup" variant="primary" className="px-8">
+                Create account to get started
               </LinkButton>
-            </div>
-          </div>
-        </section>
-
-        <section className="flex items-center flex-col mb-12 sm:mb-32">
-          <div className="w-full flex flex-col  gap-20">
-            <div className="w-full flex items-center flex-col">
-              <Heading
-                level={2}
-                className="font-bold text-2xl uppercase text-center mt-12 max-w-[620px] mb-10 sm:text-5xl sm:font-extrabold md:normal-case"
-              >
-                WHAT IS AN AIRDROP?
-              </Heading>
-              <div className="max-w-[550px] text-sm flex flex-col gap-4 mb-20">
-                <p>
-                  Airdrops are a popular way to reward participation in the
-                  crypto space.
-                </p>
-                <p>
-                  At TDF we’re using this as a way to  send gifts for past
-                  visits, volunteering, governance participation, and wallets
-                  interacting with the TDF token.
-                </p>
+            ) : !user.walletAddress ? (
+              <LinkButton href={`/members/${user.slug}`} variant="primary" className="px-8">
+                <Wallet className="w-4 h-4 mr-2" />
+                Connect wallet to qualify
+              </LinkButton>
+            ) : (
+              <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full">
+                <Check className="w-4 h-4" />
+                <span className="font-medium">Wallet connected — you&apos;re eligible!</span>
               </div>
-            </div>
+            )}
           </div>
         </section>
 
-        <section className="flex items-center flex-col mb-12 sm:mb-32">
-          <div className="w-full flex flex-col  gap-20">
-            <div className="w-full flex items-center flex-col">
-              <Heading
-                level={2}
-                className="font-bold text-2xl uppercase text-center mt-12 max-w-[620px] mb-10 sm:text-5xl sm:font-extrabold md:normal-case"
-              >
-                WHY AN AIRDROP NOW?
+        {/* How to Qualify Section */}
+        <section className="py-16 md:py-24">
+          <div className="max-w-5xl mx-auto px-6">
+            <div className="text-center mb-12">
+              <Heading level={2} className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+                How to qualify for future airdrops
               </Heading>
-              <div className="max-w-[550px] text-sm flex flex-col gap-4 mb-20">
-                <p>
-                  We want to provide a playful way for people to to learn and
-                  experiment with how to use this new, decentralised tech for
-                  regeneration. 🌱
-                </p>
-                <p>
-                  Being rewarded in an airdrop of gifts ($CELO, $TDF, Carrots
-                  🥕) for being part of our community is a fun way to do so.
-                </p>
-              </div>
+              <p className="text-gray-600 max-w-xl mx-auto">
+                The more you engage with TDF, the more rewards you can earn. Here&apos;s how to increase your eligibility.
+              </p>
             </div>
-          </div>
-        </section>
 
-        <section className="flex items-center flex-col mb-12 sm:mb-32">
-          <div className="w-full flex flex-col  gap-20">
-            <div className="w-full flex items-center flex-col">
-              <Heading
-                level={2}
-                className="font-bold text-2xl uppercase text-center mt-12 max-w-[620px] mb-10 sm:text-5xl sm:font-extrabold md:normal-case"
-              >
-                QUALIFIERS{' '}
-              </Heading>
-              <div className="max-w-[550px] text-sm flex flex-col gap-4 mb-20">
-                <ul className="flex flex-col gap-6">
-                  <li>
-                    <div className="flex gap-4">
-                      <div className="min-w-10">
-                        {user && user.walletAddress ? (
-                          <BulletChecked />
-                        ) : (
-                          <BulletUnChecked />
-                        )}
-                      </div>
-
-                      <div>
-                        <Heading
-                          level={3}
-                          className="text-md uppercase font-bold -mt-0.5"
-                        >
-                          have your wallet connected
-                        </Heading>
-                        {user && !user.walletAddress && (
-                          <LinkButton
-                            className=" font-bold mt-8 px-8"
-                            variant="secondary"
-                            isFullWidth={false}
-                            href={`/members/${user?.slug}`}
-                          >
-                            Connect wallet
-                          </LinkButton>
-                        )}
-                      </div>
-                    </div>
-                  </li>
-
-                  <li>
-                    <div className="flex gap-4">
-                      <div className="min-w-10">
-                        {qualifiers && qualifiers.presence > 0 ? (
-                          <BulletChecked />
-                        ) : (
-                          <BulletUnChecked />
-                        )}
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        <Heading
-                          level={3}
-                          className=" text-md uppercase font-bold -mt-0.5"
-                        >
-                          Presence, <span className="text-accent">30%</span>
-                        </Heading>
-
-                        <p className="text-sm">
-                          Number of nights spent - as in confirmed bookings
-                          through the platform
-                        </p>
-                        {qualifiers && !qualifiers.presence && (
-                          <LinkButton
-                            className=" font-bold mt-8 px-8"
-                            variant="secondary"
-                            isFullWidth={false}
-                            href="/stay"
-                          >
-                            Book a stay
-                          </LinkButton>
-                        )}
-                      </div>
-                    </div>
-                  </li>
-                  <li>
-                    <div className="flex gap-4">
-                      {qualifiers && qualifiers.tokensBought ? (
-                        <BulletChecked />
-                      ) : (
-                        <BulletUnChecked />
-                      )}
-
-                      <div className="flex flex-col gap-2">
-                        <Heading
-                          level={3}
-                          className=" text-md uppercase font-bold -mt-0.5"
-                        >
-                          $TDF purchased,{' '}
-                          <span className="text-accent">10%</span>
-                        </Heading>
-                        <p className="text-sm">Through the sale contract</p>
-
-                        {qualifiers && !qualifiers.tokensBought && (
-                          <LinkButton
-                            className=" font-bold mt-8 px-8"
-                            variant="secondary"
-                            isFullWidth={false}
-                            href="/token"
-                          >
-                            Buy 1 or more $TDF
-                          </LinkButton>
-                        )}
-                      </div>
-                    </div>
-                  </li>
-                  <li>
-                    <div className="flex gap-4">
-                      {qualifiers && qualifiers.isVoter ? (
-                        <BulletChecked />
-                      ) : (
-                        <BulletUnChecked />
-                      )}
-
-                      <div className="flex flex-col gap-2">
-                        <Heading
-                          level={3}
-                          className=" text-md uppercase font-bold -mt-0.5"
-                        >
-                          Participated in governance on Snapshot,{' '}
-                          <span className="text-accent">10%</span>
-                        </Heading>
-                      </div>
-                    </div>
-                  </li>
-
-                  <li>
-                    <div className="flex gap-4">
-                      <div className="min-w-10">
-                        {qualifiers && qualifiers.volunteeringPresence ? (
-                          <BulletChecked />
-                        ) : (
-                          <BulletUnChecked />
-                        )}
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        <Heading
-                          level={3}
-                          className=" text-md uppercase font-bold -mt-0.5"
-                        >
-                          Volunteering, <span className="text-accent">10%</span>
-                        </Heading>
-                        <p className="text-sm">
-                          Staying at TDF and contributing work (min 2 weeks).
-                        </p>
-
-                        {qualifiers && !qualifiers.volunteeringPresence && (
-                          <LinkButton
-                            className=" font-bold mt-8 px-8"
-                            variant="secondary"
-                            isFullWidth={false}
-                            href="/volunteer"
-                          >
-                            Apply to volunteer
-                          </LinkButton>
-                        )}
-                      </div>
-                    </div>
-                  </li>
-
-                  <li>
-                    <div className="flex gap-4">
-                      <div className="min-w-10">
-                        {qualifiers && qualifiers.socialShare ? (
-                          <BulletChecked />
-                        ) : (
-                          <BulletUnChecked />
-                        )}
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        <Heading
-                          level={3}
-                          className=" text-md uppercase font-bold -mt-0.5"
-                        >
-                          Social mentions,{' '}
-                          <span className="text-accent">10%</span>
-                        </Heading>
-                        <p className="text-sm">
-                          Must submit a proof through{' '}
-                          <Link
-                            href="https://forms.gle/kLKKZw9km7a5oKHj8"
-                            target="_blank"
-                          >
-                            this form
-                          </Link>
-                          .
-                        </p>
-                      </div>
-                    </div>
-                  </li>
-
-                  <li>
-                    <div className="flex gap-4">
-                      <div className="min-w-10">
-                        {qualifiers && qualifiers.referrals ? (
-                          <BulletChecked />
-                        ) : (
-                          <BulletUnChecked />
-                        )}
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        <Heading
-                          level={3}
-                          className=" text-md uppercase font-bold -mt-0.5"
-                        >
-                          Number of successful referrals to the platform,{' '}
-                          <span className="text-accent">10%</span>
-                        </Heading>
-                        <p className="text-sm">Invite friends functionality</p>
-                      </div>
-                    </div>
-                  </li>
-                  <li>
-                    <div className="flex gap-4">
-                      <div className="min-w-10">
-                        {qualifiers && qualifiers.tickets ? (
-                          <BulletChecked />
-                        ) : (
-                          <BulletUnChecked />
-                        )}
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        <Heading
-                          level={3}
-                          className=" text-md uppercase font-bold -mt-0.5"
-                        >
-                          Event participation,{' '}
-                          <span className="text-accent">10%</span>
-                        </Heading>
-                      </div>
-                    </div>
-                  </li>
-                  <li>
-                    <div className="flex gap-4">
-                      <div className="min-w-10">
-                        {qualifiers && qualifiers.nominations ? (
-                          <BulletChecked />
-                        ) : (
-                          <BulletUnChecked />
-                        )}
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        <Heading
-                          level={3}
-                          className=" text-md uppercase font-bold -mt-0.5"
-                        >
-                          Nominations, <span className="text-accent">10%</span>
-                        </Heading>
-                        <p className="text-sm">
-                          Nominate folks you think contributed to TDF{' '}
-                          <Link
-                            href="https://forms.gle/EKTwgYgULnNcF6DH7"
-                            target="_blank"
-                          >
-                            here
-                          </Link>
-                        </p>
-                      </div>
-                    </div>
-                  </li>
-                </ul>
-                <p className="text-sm">
-                  * Participants must have a Web3 wallet connected to the
-                  platform to qualify for the airdrop.
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
+                  <Wallet className="w-6 h-6 text-accent" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Connect your wallet</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Link a Web3 wallet to your TDF account. This is required to receive any airdrop.
                 </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="flex items-center flex-col mb-12 sm:mb-32">
-          <div className="w-full flex flex-col  gap-20">
-            <div className="w-full flex items-center flex-col">
-              <Heading
-                level={2}
-                className="font-bold text-2xl uppercase text-center mt-12 max-w-[620px] mb-10 sm:text-5xl sm:font-extrabold md:normal-case"
-              >
-                REWARDS{' '}
-              </Heading>
-              <div className="max-w-[550px] text-sm flex flex-col gap-4 mb-20 font-bold">
-                <p className="flex items-center gap-4">
-                  <Image
-                    src="/images/tdf-logo-small.png"
-                    alt=""
-                    width={40}
-                    height={40}
-                  />
-                  111 $TDF TOKENS
-                </p>
-                <p className="flex items-center gap-4">
-                  <Image
-                    src="/images/celo-logo-small.png"
-                    alt=""
-                    width={40}
-                    height={40}
-                  />
-                  555 $CELO TOKENS
-                </p>
-                <p className="flex items-center gap-4">
-                  <Image
-                    src="/images/carrot.png"
-                    alt=""
-                    width={40}
-                    height={40}
-                  />
-                  <span>
-                    555 Carrots{' '}
-                    <span className="font-normal">(expire after 1 year)</span>
+                {user && !user.walletAddress && (
+                  <LinkButton href={`/members/${user?.slug}`} variant="secondary" size="small">
+                    Connect now
+                  </LinkButton>
+                )}
+                {user?.walletAddress && (
+                  <span className="inline-flex items-center gap-1 text-green-600 text-sm font-medium">
+                    <Check className="w-4 h-4" /> Connected
                   </span>
+                )}
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
+                  <Calendar className="w-6 h-6 text-accent" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Visit TDF</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Book a stay at TDF. Nights spent on-site significantly boost your airdrop allocation.
                 </p>
+                <LinkButton href="/stay" variant="secondary" size="small">
+                  Book a stay
+                </LinkButton>
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
+                  <Users className="w-6 h-6 text-accent" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Volunteer</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Contribute your skills for at least 2 weeks. Volunteers receive bonus allocations.
+                </p>
+                <LinkButton href="/volunteer" variant="secondary" size="small">
+                  Apply to volunteer
+                </LinkButton>
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
+                  <Sparkles className="w-6 h-6 text-accent" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Buy $TDF tokens</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Token holders who purchase through our sale contract are automatically eligible.
+                </p>
+                <LinkButton href="/token" variant="secondary" size="small">
+                  Get $TDF
+                </LinkButton>
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
+                  <svg className="w-6 h-6 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Participate in governance</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Vote on proposals through Snapshot. Active governance participants are rewarded.
+                </p>
+                <LinkButton href="https://snapshot.org/#/tdf.eth" target="_blank" variant="secondary" size="small">
+                  View proposals
+                </LinkButton>
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
+                  <Gift className="w-6 h-6 text-accent" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Attend events</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Join TDF events and gatherings. Event participation counts toward your eligibility.
+                </p>
+                <LinkButton href="/events" variant="secondary" size="small">
+                  View events
+                </LinkButton>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="flex items-center flex-col mb-12 sm:mb-32">
-          <div className="w-full flex flex-col  gap-20">
-            <div className="w-full flex items-center flex-col">
-              <Heading
-                level={2}
-                className="font-bold text-2xl uppercase text-center mt-12 max-w-[620px] mb-10 sm:text-5xl sm:font-extrabold md:normal-case"
-              >
-                Schedule
-              </Heading>
-              <div className="max-w-[550px] text-sm flex flex-col gap-4 mb-20">
-                <ul className="flex flex-col gap-6">
-                  <li>
-                    <div className="flex gap-4">
-                      <div className="min-w-10">
-                        <BulletChecked />
-                      </div>
-
-                      <Heading
-                        level={3}
-                        className="text-md uppercase font-bold -mt-0.5"
-                      >
-                        Summer Solstice{' '}
-                        <span className="font-normal">
-                          (for the 4 previous seasons), 2024
-                        </span>
-                        , <span className="text-accent">50%</span>
-                      </Heading>
-                    </div>
-                  </li>
-                  <li>
-                    <div className="flex gap-4">
-                      <div className="min-w-10">
-                        <BulletChecked />
-                      </div>
-
-                      <Heading
-                        level={3}
-                        className="text-md uppercase font-bold -mt-0.5"
-                      >
-                        Fall Equinox, <span className="font-normal">2024</span>,{' '}
-                        <span className="text-accent">12.5%</span>
-                      </Heading>
-                    </div>
-                  </li>
-                  <li>
-                    <div className="flex gap-4">
-                      <div className="min-w-10">
-                        <BulletChecked />
-                      </div>
-
-                      <Heading
-                        level={3}
-                        className="text-md uppercase font-bold -mt-0.5"
-                      >
-                        Winter Solstice,{' '}
-                        <span className="font-normal">2024</span>,{' '}
-                        <span className="text-accent">12.5%</span>
-                      </Heading>
-                    </div>
-                  </li>
-                  <li>
-                    <div className="flex gap-4">
-                      <div className="min-w-10">
-                        <BulletChecked />
-                      </div>
-
-                      <Heading
-                        level={3}
-                        className="text-md uppercase font-bold -mt-0.5"
-                      >
-                        Spring equinox,{' '}
-                        <span className="font-normal">2025</span>,{' '}
-                        <span className="text-accent">12.5%</span>
-                      </Heading>
-                    </div>
-                  </li>
-                  <li>
-                    <div className="flex gap-4">
-                      <div className="min-w-10">
-                        <BulletChecked />
-                      </div>
-
-                      <Heading
-                        level={3}
-                        className="text-md uppercase font-bold -mt-0.5"
-                      >
-                        Summer Solstice,{' '}
-                        <span className="font-normal">2025</span>,{' '}
-                        <span className="text-accent">12.5%</span>
-                      </Heading>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-            </div>
+        {/* Future Airdrops Notice */}
+        <section className="py-16 bg-accent/5 border-y border-accent/10">
+          <div className="max-w-3xl mx-auto px-6 text-center">
+            <Heading level={2} className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+              Future airdrops coming
+            </Heading>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              We&apos;re planning more community rewards. Start building your eligibility now by 
+              engaging with TDF — every visit, vote, and contribution counts toward future drops.
+            </p>
+            <LinkButton href="/stay" variant="primary">
+              Plan your visit
+            </LinkButton>
           </div>
         </section>
 
-        <section className="flex items-center flex-col mb-12 sm:mb-32">
-          <div className="w-full flex flex-col  gap-20">
-            <div className="w-full flex items-center flex-col">
-              <Heading
-                level={2}
-                className="font-bold sm:font-extrabold normal-case text-center mt-12 max-w-[620px] mb-10 text-lg  sm:text-xl"
-              >
-                <p className="text-accent text-2xl sm:text-5xl">
-                  Making the Airdrop accessible 
-                </p>
-                for Web3 Newbies:
-              </Heading>
-              <div className="max-w-[550px] text-sm flex flex-col gap-4 mb-20">
-                <p>
-                  Follow this{' '}
-                  <Link
-                    className="text-accent"
-                    href="https://drive.google.com/file/d/1LMl8pvDqpxFFz6RtvVgyMBlTO_zWWOFZ/view"
-                  >
-                    step-by-step guide
-                  </Link>
-                  , or hop into our{' '}
-                  <Link
-                    className="text-accent"
-                    href="https://t.me/+bW0K8E7ZGVE4ZjBh"
-                  >
-                    Web3 support group
-                  </Link>{' '}
-                  to set up a Web3 wallet and connect to the TDF platform.
-                </p>
-                <p>
-                  Thank you for being with us on this journey towards
-                  regeneration!
-                </p>
-                <p>Sending love and baaahhhs from Alentejo.</p>
+        {/* Historic Airdrop Section */}
+        <section className="py-16 md:py-24">
+          <div className="max-w-3xl mx-auto px-6">
+            <button
+              onClick={() => setShowHistoricDetails(!showHistoricDetails)}
+              className="w-full flex items-center justify-between p-6 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <Check className="w-6 h-6 text-green-600" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-semibold text-gray-900">2024-2025 Airdrop</h3>
+                  <p className="text-sm text-gray-500">Completed — View details</p>
+                </div>
               </div>
+              <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${showHistoricDetails ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showHistoricDetails && (
+              <div className="mt-4 p-6 bg-gray-50 rounded-xl border border-gray-200 space-y-8">
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-4">Rewards distributed</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 text-sm">
+                      <Image src="/images/tdf-logo-small.png" alt="TDF" width={24} height={24} />
+                      <span className="font-medium">111 $TDF tokens</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <Image src="/images/celo-logo-small.png" alt="CELO" width={24} height={24} />
+                      <span className="font-medium">555 $CELO tokens</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <Image src="/images/carrot.png" alt="Carrots" width={24} height={24} />
+                      <span className="font-medium">555 Carrots</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-4">Distribution schedule</h4>
+                  <ul className="space-y-2 text-sm text-gray-600">
+                    <li className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-green-500" />
+                      Summer Solstice 2024 — 50%
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-green-500" />
+                      Fall Equinox 2024 — 12.5%
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-green-500" />
+                      Winter Solstice 2024 — 12.5%
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-green-500" />
+                      Spring Equinox 2025 — 12.5%
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-green-500" />
+                      Summer Solstice 2025 — 12.5%
+                    </li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-4">Qualification criteria</h4>
+                  <ul className="space-y-2 text-sm text-gray-600">
+                    <li>• Presence (nights stayed) — 30%</li>
+                    <li>• $TDF purchased — 10%</li>
+                    <li>• Governance participation — 10%</li>
+                    <li>• Volunteering — 10%</li>
+                    <li>• Social mentions — 10%</li>
+                    <li>• Referrals — 10%</li>
+                    <li>• Event participation — 10%</li>
+                    <li>• Nominations — 10%</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-16 border-t border-gray-200">
+          <div className="max-w-3xl mx-auto px-6 text-center">
+            <Heading level={2} className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+              Ready to join the community?
+            </Heading>
+            <p className="text-gray-600 mb-8 leading-relaxed">
+              The best way to qualify for future airdrops is to become an active part of TDF. 
+              Visit us, contribute, and help build the regenerative village.
+            </p>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <LinkButton href="/stay" variant="primary">
+                Book a stay
+              </LinkButton>
+              <LinkButton href="/token" variant="secondary">
+                Get $TDF tokens
+              </LinkButton>
             </div>
           </div>
         </section>
@@ -600,15 +312,18 @@ const AirdropPage = () => {
 
 AirdropPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
+    const [airdropRes, messages] = await Promise.all([
+      api.get('/config/airdrop').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
+
     return {
+      airdropConfig: airdropRes?.data?.results?.value || null,
       messages,
     };
   } catch (err: unknown) {
     return {
+      airdropConfig: null,
       messages: null,
     };
   }
