@@ -58,7 +58,6 @@ const Create = ({ blogConfig }: Props) => {
 
         <BlogEditor
           onSave={(article) => router.push(`/blog/${article.slug}`)}
-          allowDelete={false}
         />
       </main>
     </>
