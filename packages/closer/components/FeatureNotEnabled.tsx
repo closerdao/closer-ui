@@ -11,6 +11,7 @@ type FeatureType =
   | 'subscriptions'
   | 'volunteering'
   | 'learn'
+  | 'blog'
   | 'generic';
 
 interface Props {
@@ -32,6 +33,8 @@ const FeatureNotEnabled = ({ feature = 'generic' }: Props) => {
         return t('feature_not_enabled_volunteering');
       case 'learn':
         return t('feature_not_enabled_learn');
+      case 'blog':
+        return t('feature_not_enabled_blog');
       default:
         return t('feature_not_enabled_description');
     }

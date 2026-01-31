@@ -2,6 +2,7 @@ import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import { LinkButton } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
@@ -18,16 +19,27 @@ import { parseMessageFromError } from '../../../utils/common';
 import { capitalizeFirstLetter } from '../../../utils/learn.helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 
+interface BlogConfig {
+  enabled: boolean;
+}
+
 interface Props {
   articles: any[];
   error?: string;
   keyword: string;
   tags: string[];
   authors: Author[];
+  blogConfig: BlogConfig | null;
 }
 
-const Search = ({ articles, error, keyword, tags, authors }: Props) => {
+const Search = ({ articles, error, keyword, tags, authors, blogConfig }: Props) => {
   const t = useTranslations();
+
+  const isBlogEnabled = blogConfig?.enabled !== false;
+
+  if (!isBlogEnabled) {
+    return <FeatureNotEnabled feature="blog" />;
+  }
 
   const articlesWithAuthorInfo = articles.map((article) => {
     const author = authors.find((author) => author._id === article.createdBy);
@@ -209,9 +221,10 @@ Search.getInitialProps = async (context: NextPageContext) => {
         ? decodeURIComponent(rawKeyword as string)
         : rawKeyword;
     const search = formatSearch({ tags: { $elemMatch: { $eq: keyword } } });
-    const [tags, articles, messages] = await Promise.all([
+    const [tags, articles, blogRes, messages] = await Promise.all([
       api.get(`/distinct/article/tags?where=${search}`),
       api.get(`/article?where=${search}&limit=50`),
+      api.get('/config/blog').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
@@ -224,17 +237,20 @@ Search.getInitialProps = async (context: NextPageContext) => {
     );
 
     const authors = authorsRes.data?.results;
+    const blogConfig = blogRes?.data?.results?.value;
 
     return {
       keyword,
       tags: tags?.data?.results,
       articles: articles?.data?.results,
       authors,
+      blogConfig,
       messages,
     };
   } catch (error) {
     return {
       error: parseMessageFromError(error),
+      blogConfig: null,
       messages: null,
     };
   }

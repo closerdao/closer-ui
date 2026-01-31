@@ -751,4 +751,31 @@ export const configDescription: ConfigType[] = [
       },
     },
   },
+  {
+    slug: 'blog',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: true,
+      },
+    },
+  },
+  {
+    slug: 'courses',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: true,
+      },
+    },
+  },
+  {
+    slug: 'referral',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+    },
+  },
 ];

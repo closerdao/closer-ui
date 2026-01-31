@@ -124,7 +124,7 @@ const Footer: FC = () => {
                   href={TELEGRAM_URL}
                   target="_blank"
                   rel="noreferrer nofollow"
-                  title="Join Telegram Group"
+                  title="Follow on Telegram"
                   className="text-2xl mr-2 rounded-full hover:text-gray-100 hover:bg-accent p-2 text-accent dark:text-background bg-transparent duration-300 hover:scale-110"
                 >
                   <FaTelegram />

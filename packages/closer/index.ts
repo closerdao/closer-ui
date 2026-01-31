@@ -15,6 +15,7 @@ export { default as Webinar } from './components/Webinar';
 export { default as PhotoEditor } from './components/PhotoEditor';
 export { default as Prompts } from './components/Prompts';
 export { default as Resources } from './components/Resources';
+export { default as JoinCommunityCTA } from './components/JoinCommunityCTA';
 export { default as SubscriptionCards } from './components/SubscriptionCards';
 export { default as SubscriptionCheckoutForm } from './components/SubscriptionCheckoutForm';
 export { default as SubscriptionConditions } from './components/SubscriptionConditions';

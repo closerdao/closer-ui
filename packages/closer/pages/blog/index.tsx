@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import ArticleList from '../../components/ArticleList';
+import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import { LinkButton } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
@@ -24,11 +25,16 @@ import { estimateReadingTime, getFirstSentence } from '../../utils/blog.utils';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 
+interface BlogConfig {
+  enabled: boolean;
+}
+
 interface Props {
   articles: Article[];
   numArticles: number;
   authors: User[];
   generalConfig: GeneralConfig;
+  blogConfig: BlogConfig | null;
   page?: number;
   error?: string;
 }
@@ -39,6 +45,7 @@ const Search = ({
   numArticles,
   authors,
   generalConfig,
+  blogConfig,
 }: Props) => {
   const t = useTranslations();
   const router = useRouter();
@@ -88,6 +95,12 @@ const Search = ({
   const loadPage = (pageNumber: number) => {
     router.push(`/blog?page=${pageNumber}`);
   };
+
+  const isBlogEnabled = blogConfig?.enabled !== false;
+
+  if (!isBlogEnabled) {
+    return <FeatureNotEnabled feature="blog" />;
+  }
 
   return (
     <>
@@ -242,7 +255,7 @@ Search.getInitialProps = async (context: NextPageContext) => {
   const search = formatSearch({ category: { $ne: HOME_PAGE_CATEGORY } });
 
   try {
-    const [articles, numArticles, generalRes, messages] = await Promise.all([
+    const [articles, numArticles, generalRes, blogRes, messages] = await Promise.all([
       api
         .get(
           `/article?limit=${
@@ -260,6 +273,9 @@ Search.getInitialProps = async (context: NextPageContext) => {
       api.get('/config/general').catch(() => {
         return null;
       }),
+      api.get('/config/blog').catch(() => {
+        return null;
+      }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
@@ -273,12 +289,14 @@ Search.getInitialProps = async (context: NextPageContext) => {
 
     const authors = authorsRes.data?.results;
     const generalConfig = generalRes?.data?.results?.value;
+    const blogConfig = blogRes?.data?.results?.value;
 
     return {
       articles: articles?.data?.results,
       numArticles: numArticles?.data?.results,
       authors,
       generalConfig,
+      blogConfig,
       page,
       messages,
     };
@@ -286,6 +304,7 @@ Search.getInitialProps = async (context: NextPageContext) => {
     return {
       error: parseMessageFromError(error),
       generalConfig: null,
+      blogConfig: null,
       messages: null,
       authors: [],
       articles: [],

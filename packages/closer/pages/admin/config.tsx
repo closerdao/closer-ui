@@ -54,11 +54,35 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   const isWeb3Enabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
+  const isBlogEnabled = process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true';
+  const isCoursesEnabled = process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true';
+  const isReferralEnabled = process.env.NEXT_PUBLIC_FEATURE_REFERRAL === 'true';
+  const isSubscriptionsEnabled = process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
 
-  const effectiveAllowedConfigs = [
+  const featureEnvFlags: Record<string, boolean> = {
+    booking: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
+    subscriptions: isSubscriptionsEnabled,
+    blog: isBlogEnabled,
+    courses: isCoursesEnabled,
+    referral: isReferralEnabled,
+    airdrop: isWeb3Enabled,
+    governance: isWeb3Enabled,
+  };
+
+  const baseAllowedConfigs = [
     ...(platformAllowedConfigs || []),
     ...(isWeb3Enabled && !platformAllowedConfigs?.includes('airdrop') ? ['airdrop'] : []),
+    ...(isWeb3Enabled && !platformAllowedConfigs?.includes('governance') ? ['governance'] : []),
+    ...(!platformAllowedConfigs?.includes('events') ? ['events'] : []),
+    ...(isBlogEnabled && !platformAllowedConfigs?.includes('blog') ? ['blog'] : []),
+    ...(isCoursesEnabled && !platformAllowedConfigs?.includes('courses') ? ['courses'] : []),
+    ...(isReferralEnabled && !platformAllowedConfigs?.includes('referral') ? ['referral'] : []),
   ];
+
+  const effectiveAllowedConfigs = baseAllowedConfigs.filter((config) => {
+    if (featureEnvFlags[config] === undefined) return true;
+    return featureEnvFlags[config];
+  });
 
   const myConfigs = platform.config.find();
 
@@ -412,7 +436,7 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
       </Head>
 
       <AdminLayout isBookingEnabled={isBookingEnabled}>
-        <div className="max-w-3xl mx-auto flex flex-col gap-6">
+        <div className="w-full max-w-5xl flex flex-col gap-6">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-accent/10 rounded-lg">
               <Settings className="w-5 h-5 text-accent" />
@@ -502,7 +526,7 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
           )}
 
           {isGeneralConfigEnabled && (
-            <div className="flex flex-col gap-3">
+            <div className="w-full flex flex-col gap-3">
               {allConfigCategories.map((configSlug) => {
                 const isGeneral = configSlug === 'general';
                 const isEnabled = isGeneral || enabledConfigs?.includes(configSlug);
@@ -519,7 +543,7 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
                 return (
                   <div
                     key={configSlug}
-                    className={`rounded-lg border overflow-hidden ${
+                    className={`w-full rounded-lg border overflow-hidden ${
                       isEnabled
                         ? 'border-gray-200 bg-white'
                         : 'border-gray-100 bg-gray-50'

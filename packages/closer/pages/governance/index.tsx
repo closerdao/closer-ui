@@ -3,6 +3,7 @@ import { NextPage, NextPageContext } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { MessageCircle } from 'lucide-react';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { ProposalList } from 'closer/components/Governance';
 import WalletAndVoting from 'closer/components/Governance/WalletAndVoting';
@@ -37,6 +38,31 @@ const GovernancePage: NextPage = () => {
           
           <div className="space-y-6">
             <WalletAndVoting />
+            
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 bg-[#0088cc] rounded-lg flex items-center justify-center flex-shrink-0">
+                  <MessageCircle className="w-4 h-4 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-gray-900 text-sm mb-1">
+                    {t('join_community_title')}
+                  </p>
+                  <p className="text-xs text-gray-600 mb-3">
+                    {t('join_community_description')}
+                  </p>
+                  <a
+                    href="https://t.me/traditionaldreamfactor"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0088cc] hover:bg-[#006699] text-white rounded-lg transition-colors text-xs font-medium"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    {t('join_community_telegram_button')}
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
