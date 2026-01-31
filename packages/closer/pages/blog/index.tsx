@@ -5,8 +5,6 @@ import { useRouter } from 'next/router';
 
 import ArticleList from '../../components/ArticleList';
 import FeatureNotEnabled from '../../components/FeatureNotEnabled';
-import { LinkButton } from '../../components/ui';
-import Heading from '../../components/ui/Heading';
 
 import { FaUser } from '@react-icons/all-files/fa/FaUser';
 import { User } from 'closer/contexts/auth/types';
@@ -126,118 +124,92 @@ const Search = ({
         )}
         <link rel="canonical" href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/blog`} />
       </Head>
-      <main className="w-full flex flex-col items-center">
-        <section className="flex justify-center  mb-6 max-w-[700px]">
-          <Heading level={1} className="text-lg">
-            {PLATFORM_NAME} {t('blog_title')}
-          </Heading>
+      <main className="w-full flex flex-col items-center px-4 md:px-8">
+        <section className="w-full max-w-5xl pt-12 pb-8">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                {t('blog_page_title')}
+              </h1>
+              <p className="text-gray-600 max-w-xl">
+                {t('blog_page_description')}
+              </p>
+            </div>
+            {(isAdmin || isContentCreator) && (
+              <Link
+                href="/blog/create"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-colors flex-shrink-0"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                {t('blog_write_article')}
+              </Link>
+            )}
+          </div>
         </section>
 
-        {(Number(page) === 1 || !page) && (
-          <section className="flex items-center max-w-[700px] flex-col gap-[50px] mb-20">
-            {latestArticleImageUrl ? (
-              <div className="h-[280px] sm:h-[400px] md:h-[450px] w-full">
-                <Image
-                  className="object-cover h-full w-full "
-                  src={latestArticleImageUrl || ''}
-                  alt={latestArticle?.title || ''}
-                  width={400}
-                  height={300}
-                />
-              </div>
-            ) : (
-              <div className="h-4"></div>
-            )}
-
-            <div className="max-w-[700px] items-center text-center text-sm font-bold flex flex-col gap-8">
-              <Heading className="text-center text-4xl" level={2}>
-                <Link
-                  className=" no-underline hover:text-accent"
-                  href={`/blog/${latestArticle?.slug}`}
-                >
-                  {latestArticle?.title}
-                </Link>
-              </Heading>
-
-              <div className="max-w-[500px] flex flex-col gap-10 uppercase">
-                {latestArticle?.summary
-                  ? latestArticle.summary
-                  : getFirstSentence(latestArticle?.html)}
-
-                <div className="flex-col sm:flex-row flex gap-y-6 gap-4 justify-between items-center">
-                  <div className="flex gap-4 items-center">
-                    <Link
-                      href={
-                        latestArticle?.authorInfo?._id
-                          ? `/members/${latestArticle?.authorInfo?._id}`
-                          : '#'
-                      }
-                    >
-                      {latestArticle?.authorInfo?.photo ? (
-                        <Image
-                          className="rounded-full"
-                          src={`${cdn}${latestArticle.authorInfo.photo}-profile-sm.jpg`}
-                          alt={latestArticle?.authorInfo?.screenname || ''}
-                          width={50}
-                          height={50}
-                        />
-                      ) : (
-                        <div className="rounded-full overflow-hidden">
-                          <FaUser className="text-neutral w-[50px] h-[50px] " />
-                        </div>
-                      )}
-                    </Link>
-
-                    <div className="flex flex-col text-left">
-                      <p>
-                        <Link
-                          className="text-accent font-normal text-lg no-underline normal-case"
-                          href={
-                            latestArticle?.authorInfo?._id
-                              ? `/members/${latestArticle?.authorInfo?._id}`
-                              : '#'
-                          }
-                        >
-                          {latestArticle?.authorInfo?.screenname}
-                        </Link>
-                      </p>
-                      <p className="font-normal normal-case">
-                        {dayjs(latestArticle?.updated).format('MMMM DD, YYYY')}{' '}
-                        &middot; {estimateReadingTime(latestArticle?.html)}{' '}
-                        {t('blog_min_read')}
-                      </p>
+        {(Number(page) === 1 || !page) && latestArticle && (
+          <section className="w-full max-w-5xl mb-8">
+            <Link href={`/blog/${latestArticle?.slug}`} className="group block">
+              <article className="flex flex-col sm:flex-row gap-6 bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow p-4">
+                <div className="w-full sm:w-48 md:w-56 flex-shrink-0 aspect-[16/10] sm:aspect-square overflow-hidden rounded-lg bg-gray-100">
+                  {latestArticleImageUrl ? (
+                    <Image
+                      className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                      src={latestArticleImageUrl || ''}
+                      alt={latestArticle?.title || ''}
+                      width={224}
+                      height={224}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200" />
+                  )}
+                </div>
+                <div className="flex flex-col justify-center py-1">
+                  <span className="text-xs font-medium text-accent uppercase tracking-wider mb-2">
+                    {t('blog_featured')}
+                  </span>
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-900 group-hover:text-accent transition-colors mb-2">
+                    {latestArticle?.title}
+                  </h2>
+                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                    {latestArticle?.summary
+                      ? latestArticle.summary
+                      : getFirstSentence(latestArticle?.html)}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    {latestArticle?.authorInfo?.photo ? (
+                      <Image
+                        className="rounded-full"
+                        src={`${cdn}${latestArticle.authorInfo.photo}-profile-sm.jpg`}
+                        alt={latestArticle?.authorInfo?.screenname || ''}
+                        width={28}
+                        height={28}
+                      />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
+                        <FaUser className="text-gray-400 w-3.5 h-3.5" />
+                      </div>
+                    )}
+                    <div className="text-xs text-gray-500">
+                      <span className="font-medium text-gray-700">{latestArticle?.authorInfo?.screenname}</span>
+                      <span className="mx-1">·</span>
+                      {dayjs(latestArticle?.updated).format('MMM D, YYYY')}
+                      <span className="mx-1">·</span>
+                      {estimateReadingTime(latestArticle?.html)} {t('blog_min_read')}
                     </div>
                   </div>
-                  <LinkButton
-                    isFullWidth={false}
-                    href={`/blog/${latestArticle?.slug}`}
-                    className="font-normal px-10 max-h-[30px]"
-                  >
-                    {t('blog_read_more')}
-                  </LinkButton>
                 </div>
-              </div>
-            </div>
+              </article>
+            </Link>
           </section>
         )}
 
-        <section className="pl-8 pr-4 flex flex-col items-center gap-10 bg-complimentary-light -ml-4 w-[calc(100vw+16px)] pb-12">
-          <div className="flex flex-col gap-8 items-center pt-20">
-            {(isAdmin || isContentCreator) && (
-              <div className="mb-4">
-                <LinkButton
-                  size="small"
-                  href="/blog/create"
-                  className="bg-white text-black border-0 w-[200px]"
-                >
-                  {t('blog_write_article')}
-                </LinkButton>
-              </div>
-            )}
-            <Heading level={3} className="text-white text-3xl">
-              {t('blog_latest_articles')}
-            </Heading>
-          </div>
+        <section className="w-full max-w-5xl py-12 border-t border-gray-100">
+          <h2 className="text-xl font-semibold text-gray-900 mb-8">
+            {t('blog_latest_articles')}
+          </h2>
           <ArticleList
             articlesWithAuthorInfo={articlesWithAuthorInfo}
             page={Number(page) || 1}
