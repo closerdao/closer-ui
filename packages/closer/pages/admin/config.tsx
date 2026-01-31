@@ -53,6 +53,13 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
+  const isWeb3Enabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
+
+  const effectiveAllowedConfigs = [
+    ...(platformAllowedConfigs || []),
+    ...(isWeb3Enabled && !platformAllowedConfigs?.includes('airdrop') ? ['airdrop'] : []),
+  ];
+
   const myConfigs = platform.config.find();
 
   const filter = {};
@@ -63,7 +70,7 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
     .filter(Boolean);
 
   const allConfigCategories = allPossibleFeatures
-    .filter((config: any) => platformAllowedConfigs?.includes(config))
+    .filter((config: any) => effectiveAllowedConfigs?.includes(config))
     .sort((a: string, b: string) => {
       if (a === 'general') return -1;
       if (b === 'general') return 1;
@@ -71,7 +78,7 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
     });
 
   const disabledByEnvironment = allPossibleFeatures.filter(
-    (config: any) => !platformAllowedConfigs?.includes(config),
+    (config: any) => !effectiveAllowedConfigs?.includes(config),
   );
 
   const [selectedConfig, setSelectedConfig] = useState('');

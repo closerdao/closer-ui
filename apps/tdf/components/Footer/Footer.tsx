@@ -11,7 +11,7 @@ export const Footer: FC = () => {
   return (
     <footer className="w-full mt-16 border-t border-gray-200 bg-gray-50">
       <div className="max-w-6xl mx-auto px-6 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
           <div>
             <h3 className="font-semibold text-gray-900 mb-4">{t('footer_visit')}</h3>
             <ul className="space-y-2 text-sm text-gray-600">
@@ -26,8 +26,21 @@ export const Footer: FC = () => {
             <ul className="space-y-2 text-sm text-gray-600">
               <li><Link href="/members" className="hover:text-gray-900">{t('footer_members')}</Link></li>
               <li><Link href="/token" className="hover:text-gray-900">{t('footer_token')}</Link></li>
+              <li><Link href="/airdrop" className="hover:text-gray-900">{t('footer_airdrop')}</Link></li>
               <li><Link href="/governance" className="hover:text-gray-900">{t('footer_governance')}</Link></li>
+              <li><Link href="/citizenship" className="hover:text-gray-900">{t('footer_citizenship')}</Link></li>
               <li><Link href="/artists" className="hover:text-gray-900">{t('footer_artists')}</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-4">{t('footer_land_project')}</h3>
+            <ul className="space-y-2 text-sm text-gray-600">
+              <li><Link href="/pages/ecology" className="hover:text-gray-900">{t('footer_ecology')}</Link></li>
+              <li><Link href="/cohousing" className="hover:text-gray-900">{t('footer_cohousing')}</Link></li>
+              <li><Link href="/pages/regenerative-agriculture" className="hover:text-gray-900">{t('footer_regenerative_agriculture')}</Link></li>
+              <li><Link href="/pages/restaurant" className="hover:text-gray-900">{t('footer_restaurant')}</Link></li>
+              <li><Link href="/invest" className="hover:text-gray-900">{t('footer_invest')}</Link></li>
+              <li><Link href="/impact-map" className="hover:text-gray-900">{t('footer_impact_map')}</Link></li>
             </ul>
           </div>
           <div>
@@ -38,6 +51,7 @@ export const Footer: FC = () => {
               <li><Link href="/blog" className="hover:text-gray-900">{t('footer_blog')}</Link></li>
               <li><Link href="/press" className="hover:text-gray-900">{t('footer_press')}</Link></li>
               <li><Link href="/resources" className="hover:text-gray-900">{t('footer_resources')}</Link></li>
+              <li><Link href="/learn-more" className="hover:text-gray-900">{t('footer_learn_more')}</Link></li>
             </ul>
           </div>
           <div>

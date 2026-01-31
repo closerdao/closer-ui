@@ -13,7 +13,6 @@ import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
-import PageNotFound from '../../not-found';
 
 interface Props {
   event: Event;

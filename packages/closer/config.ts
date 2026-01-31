@@ -738,4 +738,17 @@ export const configDescription: ConfigType[] = [
       },
     },
   },
+  {
+    slug: 'airdrop',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      description: {
+        type: 'text',
+        default: 'Reward community members with token airdrops for participation.',
+      },
+    },
+  },
 ];
