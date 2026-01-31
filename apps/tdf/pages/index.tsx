@@ -21,7 +21,7 @@ import { useConfig } from 'closer/hooks/useConfig';
 import { FundraisingConfig } from 'closer/types';
 import api from 'closer/utils/api';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
-import { ArrowRight, Check, Circle, Home, Users } from 'lucide-react';
+import { ArrowRight, Check, Circle, Home, Users, Sprout, Heart, Palette, RefreshCw, TreePine, Users2, Laptop, Sparkles } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { event } from 'nextjs-google-analytics';
@@ -157,22 +157,18 @@ const HomePage = () => {
               {t('home_hero_subtitle')}
             </p>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 max-w-4xl mx-auto">
+            <div className="grid grid-cols-3 gap-4 mb-8 max-w-2xl mx-auto">
               <div className="bg-accent-light/50 rounded-lg p-6 text-center border border-accent/10">
-                <div className="text-3xl md:text-4xl font-bold text-accent mb-2">280</div>
+                <div className="text-3xl md:text-4xl font-bold text-accent mb-2">280+</div>
                 <div className="text-xs text-gray-700 font-medium">{t('home_stats_token_holders')}</div>
+              </div>
+              <div className="bg-accent-light/50 rounded-lg p-6 text-center border border-accent/10">
+                <div className="text-3xl md:text-4xl font-bold text-accent mb-2">25</div>
+                <div className="text-xs text-gray-700 font-medium">{t('home_stats_hectares')}</div>
               </div>
               <div className="bg-accent-light/50 rounded-lg p-6 text-center border border-accent/10">
                 <div className="text-3xl md:text-4xl font-bold text-accent mb-2">€1.25M+</div>
                 <div className="text-xs text-gray-700 font-medium">{t('home_stats_total_capital')}</div>
-              </div>
-              <div className="bg-accent-light/50 rounded-lg p-6 text-center border border-accent/10">
-                <div className="text-3xl md:text-4xl font-bold text-accent mb-2">25ha</div>
-                <div className="text-xs text-gray-700 font-medium">{t('home_stats_land_stewardship')}</div>
-              </div>
-              <div className="bg-accent-light/50 rounded-lg p-6 text-center border border-accent/10 col-span-2 md:col-span-1">
-                <div className="text-3xl md:text-4xl font-bold text-accent mb-2">€514k</div>
-                <div className="text-xs text-gray-700 font-medium">{t('home_stats_revenue_target')}</div>
               </div>
             </div>
 
@@ -264,6 +260,65 @@ const HomePage = () => {
           <Link href="/press" className="text-xs text-gray-400 hover:text-gray-600 transition-colors underline underline-offset-2">
             {t('home_token_press_cta')}
           </Link>
+        </div>
+      </section>
+
+      <section className="bg-white py-24 md:py-32 border-t border-gray-200">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="mb-16">
+            <p className="text-xs uppercase tracking-wider text-gray-500 mb-6 font-medium">
+              {t('home_community_section_label')}
+            </p>
+            <Heading display level={2} className="mb-8 text-2xl md:text-3xl font-normal text-gray-900 tracking-tight leading-snug">
+              {t('home_community_section_title')}
+            </Heading>
+            <div className="space-y-5 text-base text-gray-700 leading-relaxed font-light">
+              <p>{t('home_community_section_intro_1')}</p>
+              <p>{t('home_community_section_intro_2')}</p>
+              <p>{t('home_community_section_intro_3')}</p>
+              <p className="font-medium text-gray-900">{t('home_community_section_intro_4')}</p>
+            </div>
+          </div>
+          
+          <p className="text-sm text-gray-500 mb-6 font-medium">
+            {t('home_community_section_subtitle')}
+          </p>
+          
+          <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-9 gap-3">
+            {[
+              { Icon: Sprout, titleKey: 'home_community_land_stewards_title' },
+              { Icon: Home, titleKey: 'home_community_nest_builders_title' },
+              { Icon: Heart, titleKey: 'home_community_healers_title' },
+              { Icon: Palette, titleKey: 'home_community_creatives_title' },
+              { Icon: RefreshCw, titleKey: 'home_community_systems_thinkers_title' },
+              { Icon: TreePine, titleKey: 'home_community_nature_lovers_title' },
+              { Icon: Users2, titleKey: 'home_community_families_title' },
+              { Icon: Laptop, titleKey: 'home_community_remote_workers_title' },
+              { Icon: Sparkles, titleKey: 'home_community_curious_souls_title' },
+            ].map((item, i) => (
+              <div 
+                key={i} 
+                className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-center hover:bg-gray-100 transition-colors"
+              >
+                <item.Icon className="w-5 h-5 text-gray-500 mx-auto mb-2" />
+                <p className="text-xs text-gray-700 font-medium leading-tight">
+                  {t(item.titleKey)}
+                </p>
+              </div>
+            ))}
+          </div>
+          
+          <div className="mt-10 pt-8 border-t border-gray-200">
+            <p className="text-sm text-gray-600 mb-3">
+              {t('home_community_cta_volunteer_intro')}
+            </p>
+            <Link 
+              href="/volunteer" 
+              className="text-sm text-accent hover:text-accent-dark transition-colors inline-flex items-center gap-1 font-medium"
+            >
+              {t('home_community_cta_volunteer')} →
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -725,63 +780,33 @@ const HomePage = () => {
             </a>
           </div>
 
-          <div className="pt-12 border-t border-gray-200 max-w-5xl mx-auto">
-            <p className="text-sm text-gray-600 mb-6 text-center font-light">
+          <div className="mt-20 pt-16 border-t border-gray-200 max-w-3xl mx-auto">
+            <Heading level={3} className="text-2xl md:text-3xl font-normal text-gray-900 mb-6">
+              {t('home_authority_reports_title')}
+            </Heading>
+            <p className="text-base text-gray-600 leading-relaxed mb-8">
               {t('home_authority_reports_intro')}
             </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              <LinkButton
-                className="w-fit"
-                variant="secondary"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setSelectedReport({
-                    year: '2025',
-                    url: '/pdf/2025-TDF-report.pdf',
-                  })
-                } }
-              >
-                {t('home_reports_2025')}
-              </LinkButton>
-              <LinkButton
-                className="w-fit"
-                variant="secondary"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setSelectedReport({
-                    year: '2024',
-                    url: '/pdf/2024-TDF-report.pdf',
-                  })
-                } }
-              >
-                {t('home_reports_2024')}
-              </LinkButton>
-              <LinkButton
-                className="w-fit"
-                variant="secondary"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setSelectedReport({
-                    year: '2022',
-                    url: '/pdf/2022-TDF-report.pdf',
-                  })
-                } }
-              >
-                {t('home_reports_2022')}
-              </LinkButton>
-              <LinkButton
-                className="w-fit"
-                variant="secondary"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setSelectedReport({
-                    year: '2021',
-                    url: '/pdf/2021-TDF-report.pdf',
-                  })
-                } }
-              >
-                {t('home_reports_2021')}
-              </LinkButton>
+            <div className="flex flex-wrap gap-x-6 gap-y-3">
+              {[
+                { year: '2025', url: '/pdf/2025-TDF-report.pdf', labelKey: 'home_reports_2025' },
+                { year: '2024', url: '/pdf/2024-TDF-report.pdf', labelKey: 'home_reports_2024' },
+                { year: '2022', url: '/pdf/2022-TDF-report.pdf', labelKey: 'home_reports_2022' },
+                { year: '2021', url: '/pdf/2021-TDF-report.pdf', labelKey: 'home_reports_2021' },
+              ].map((report) => (
+                <button
+                  key={report.year}
+                  className="text-sm font-medium text-accent hover:text-accent-dark transition-colors underline underline-offset-4"
+                  onClick={() => {
+                    setSelectedReport({
+                      year: report.year,
+                      url: report.url,
+                    });
+                  }}
+                >
+                  {t(report.labelKey)}
+                </button>
+              ))}
             </div>
           </div>
         </div>
