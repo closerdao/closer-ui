@@ -165,7 +165,7 @@ const Article = ({ article, error, blogConfig }: Props) => {
                 <Button
                   className="bg-red-600 text-white border-red-600 hover:bg-red-700"
                   onClick={handleDelete}
-                  disabled={isDeleting}
+                  isEnabled={!isDeleting}
                 >
                   {isDeleting ? t('generic_deleting') : t('blog_editor_delete')}
                 </Button>
