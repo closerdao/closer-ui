@@ -201,6 +201,38 @@ export type VolunteerConfig = {
   diet?: string;
 };
 
+export type MilestoneStatus = 'pending' | 'active' | 'completed';
+
+export type FundraisingMilestone = {
+  id: string;
+  name: string;
+  description?: string;
+  targetAmount: number;
+  currency: string;
+  startDate: string | null;
+  endDate: string | null;
+};
+
+export type FundraisingLoan = {
+  id: string;
+  description: string;
+  amount: number;
+  currency: string;
+  date: string;
+  lender: string;
+  terms: string;
+  countsTowardMilestone: string;
+};
+
+export type FundraisingManualAdjustment = {
+  id: string;
+  description: string;
+  amount: number;
+  currency: string;
+  date: string;
+  countsTowardMilestone: string;
+};
+
 export type FundraisingConfig = {
   videoId: string;
   wandererUrl: string;
@@ -214,6 +246,9 @@ export type FundraisingConfig = {
   creditPrice30Credits: number;
   creditPrice90Credits: number;
   creditPrice180Credits: number;
+  milestones?: FundraisingMilestone[];
+  loans?: FundraisingLoan[];
+  manualAdjustments?: FundraisingManualAdjustment[];
 };
 
 export type TokenSale = {

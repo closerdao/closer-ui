@@ -6,6 +6,7 @@ import { useContext, useEffect, useRef, useState } from 'react';
 
 import ReportDownloadModal from '../components/ReportDownloadModal';
 import LandingPagePhotoMosaic from '../components/LandingPagePhotoMosaic';
+import FundraisingWidget from 'closer/components/FundraisingWidget';
 import LinkButton from 'closer/components/ui/LinkButton';
 import UpcomingEventsIntro from 'closer/components/UpcomingEventsIntro';
 
@@ -17,8 +18,10 @@ import {
 } from 'closer';
 import { useBuyTokens } from 'closer/hooks/useBuyTokens';
 import { useConfig } from 'closer/hooks/useConfig';
+import { FundraisingConfig } from 'closer/types';
+import api from 'closer/utils/api';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
-import { Check, Circle } from 'lucide-react';
+import { ArrowRight, Check, Circle, Home, Users } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { event } from 'nextjs-google-analytics';
@@ -39,7 +42,25 @@ const HomePage = () => {
   const [currentSupply, setCurrentSupply] = useState<number | null>(null);
   const [tokenHolders, setTokenHolders] = useState<number | null>(null);
   const [isLoadingChainData, setIsLoadingChainData] = useState(false);
+  const [fundraisingConfig, setFundraisingConfig] = useState<FundraisingConfig | null>(null);
   const hasFetchedChainData = useRef(false);
+
+  const isFundraiserEnabled = process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true';
+
+  useEffect(() => {
+    if (!isFundraiserEnabled) return;
+    
+    const fetchFundraisingConfig = async () => {
+      try {
+        const res = await api.get('/config/fundraiser');
+        setFundraisingConfig(res?.data?.results?.value);
+      } catch (error) {
+        console.error('Error fetching fundraising config:', error);
+      }
+    };
+    
+    fetchFundraisingConfig();
+  }, [isFundraiserEnabled]);
 
   useEffect(() => {
     if (!BLOCKCHAIN_DAO_TOKEN?.address) {
@@ -415,160 +436,12 @@ const HomePage = () => {
         </div>
       </section>
 
-      <section className="bg-white py-24 md:py-32 border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-16 items-start">
-            {/* Left: Completing the village */}
-            <div>
-              <p className="text-xs uppercase tracking-wider text-gray-600 mb-4 font-medium">
-                {t('home_build_section_label')}
-              </p>
-              <Heading display level={2} className="mb-6 text-2xl md:text-3xl font-normal text-gray-900 tracking-tight">
-                {t('home_build_section_title')}
-              </Heading>
-              <p className="text-sm text-gray-700 mb-10 max-w-3xl leading-relaxed font-light">
-                {t('home_build_section_subtitle')}
-              </p>
-
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-7 h-7 bg-gray-900 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <Heading level={4} className="text-base font-semibold text-gray-900 mb-2">
-                      {t('home_build_item_suites')}
-                    </Heading>
-                    <p className="text-sm text-gray-700 leading-relaxed font-light">
-                      {t('home_build_item_suites_desc')}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-7 h-7 bg-gray-900 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <Heading level={4} className="text-base font-semibold text-gray-900 mb-2">
-                      {t('home_build_item_studios')}
-                    </Heading>
-                    <p className="text-sm text-gray-700 leading-relaxed font-light">
-                      {t('home_build_item_studios_desc')}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-7 h-7 bg-gray-900 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <Heading level={4} className="text-base font-semibold text-gray-900 mb-2">
-                      {t('home_build_item_restaurant')}
-                    </Heading>
-                    <p className="text-sm text-gray-700 leading-relaxed font-light">
-                      {t('home_build_item_restaurant_desc')}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-7 h-7 bg-gray-900 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <Heading level={4} className="text-base font-semibold text-gray-900 mb-2">
-                      {t('home_build_item_mushroom')}
-                    </Heading>
-                    <p className="text-sm text-gray-700 leading-relaxed font-light">
-                      {t('home_build_item_mushroom_desc')}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-7 h-7 bg-gray-900 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <Heading level={4} className="text-base font-semibold text-gray-900 mb-2">
-                      {t('home_build_item_wellness')}
-                    </Heading>
-                    <p className="text-sm text-gray-700 leading-relaxed font-light">
-                      {t('home_build_item_wellness_desc')}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Participation Structures */}
-            <div id="participation-structures">
-              <Heading display level={2} className="mb-6 text-2xl md:text-3xl font-normal text-gray-900 tracking-tight">
-                {t('home_investment_opportunities_title')}
-              </Heading>
-
-              <div className="space-y-8">
-                <div className="border-t border-gray-300 pt-8">
-                  <Heading level={3} className="mb-4 text-base font-semibold text-gray-900">
-                    {t('home_invest_cohousing_title')}
-                  </Heading>
-                  <p className="text-sm text-gray-700 mb-6 leading-relaxed font-light">
-                    {t('home_invest_cohousing_desc')}
-                  </p>
-                  <LinkButton
-                    href="/cohousing"
-                    variant="secondary"
-                  >
-                    {t('home_invest_cohousing_cta')}
-                  </LinkButton>
-                </div>
-
-                <div className="border-t border-gray-300 pt-8">
-                  <Heading level={3} className="mb-4 text-base font-semibold text-gray-900">
-                    {t('home_invest_tokens_title')}
-                  </Heading>
-                  <p className="text-sm text-gray-700 mb-6 leading-relaxed font-light">
-                    {t('home_invest_tokens_desc')}
-                  </p>
-                  <LinkButton
-                    href="/token"
-                    variant="secondary"
-                  >
-                    {t('home_invest_tokens_cta')}
-                  </LinkButton>
-                </div>
-
-                <div className="border-t border-gray-300 pt-8">
-                  <Heading level={3} className="mb-4 text-base font-semibold text-gray-900">
-                    {t('home_invest_lending_title')}
-                  </Heading>
-                  <p className="text-sm text-gray-700 mb-6 leading-relaxed font-light">
-                    {t('home_invest_lending_desc')}
-                  </p>
-                  <LinkButton
-                    href="/dataroom"
-                    variant="secondary"
-                  >
-                    {t('home_invest_lending_cta')}
-                  </LinkButton>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section className="bg-gray-50 py-24 md:py-32 border-t border-gray-200">
-        <div className="max-w-3xl mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
+            <p className="text-xs uppercase tracking-wider text-gray-600 mb-4 font-medium">
+              {t('home_build_section_label')}
+            </p>
             <Heading display level={2} className="mb-4 text-3xl md:text-4xl font-normal text-gray-900 tracking-tight">
               {t('home_built_title')}
             </Heading>
@@ -576,54 +449,203 @@ const HomePage = () => {
               {t('home_built_subtitle')}
             </p>
           </div>
-          
-          <div className="relative">
-            <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-accent to-accent-light"></div>
 
-            <div className="space-y-8">
-              {[
-                { date: '2023', titleKey: 'roadmap_2023_title', bullets: ['roadmap_2023_bullet_1', 'roadmap_2023_bullet_2', 'roadmap_2023_bullet_5'], status: 'complete' },
-                { date: '2024', titleKey: 'roadmap_2024_fundraising', bullets: ['roadmap_2024_bullet_1', 'roadmap_2024_bullet_2', 'roadmap_2024_bullet_3'], status: 'complete' },
-                { date: '2025', titleKey: 'roadmap_2025_title', bullets: ['roadmap_2025_bullet_1', 'roadmap_2025_bullet_4', 'roadmap_2025_bullet_6'], status: 'current' },
-                { date: '2026', titleKey: 'roadmap_2026_title', bullets: ['roadmap_2026_bullet_1', 'roadmap_2026_bullet_2'], status: 'upcoming' },
-              ].map((item, i) => (
-                <div key={i} className="flex gap-8 relative">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-4 border-gray-50 ${
-                    item.status === 'complete' ? 'bg-accent text-white' : 
-                    item.status === 'current' ? 'bg-accent-light border-accent text-accent' : 
-                    'bg-gray-200 text-gray-500'
-                  }`}>
-                    {item.status === 'complete' ? <Check className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
-                  </div>
-                  <div className="pt-1 flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className="text-xs text-accent font-medium tracking-wider uppercase">
-                        {item.date}
-                      </span>
-                      <span className="text-sm font-semibold text-gray-900">
-                        {t(item.titleKey)}
-                      </span>
+          <div className="grid lg:grid-cols-2 gap-12 mb-16">
+            <div>
+              <Heading level={3} className="text-xl font-semibold text-gray-900 mb-6">
+                {t('home_build_section_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 mb-8 leading-relaxed font-light">
+                {t('home_build_section_subtitle')}
+              </p>
+              <div className="space-y-5">
+                {[
+                  { titleKey: 'home_build_item_suites', descKey: 'home_build_item_suites_desc' },
+                  { titleKey: 'home_build_item_flex', descKey: 'home_build_item_flex_desc' },
+                  { titleKey: 'home_build_item_studios', descKey: 'home_build_item_studios_desc' },
+                  { titleKey: 'home_build_item_restaurant', descKey: 'home_build_item_restaurant_desc' },
+                  { titleKey: 'home_build_item_mushroom', descKey: 'home_build_item_mushroom_desc' },
+                  { titleKey: 'home_build_item_wellness', descKey: 'home_build_item_wellness_desc' },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="w-6 h-6 bg-accent rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-4 h-4 text-white" />
                     </div>
-                    <ul className="space-y-2">
-                      {item.bullets.map((bullet, j) => (
-                        <li key={j} className="text-sm text-gray-700 leading-relaxed font-light">
-                          {t(bullet)}
-                        </li>
-                      ))}
-                    </ul>
+                    <div>
+                      <span className="text-sm font-medium text-gray-900">{t(item.titleKey)}</span>
+                      <span className="text-sm text-gray-600"> — {t(item.descKey)}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-accent to-accent-light"></div>
+              <div className="space-y-6">
+                {[
+                  { date: '2023', titleKey: 'roadmap_2023_title', bullets: ['roadmap_2023_bullet_1', 'roadmap_2023_bullet_2'], status: 'complete' },
+                  { date: '2024', titleKey: 'roadmap_2024_fundraising', bullets: ['roadmap_2024_bullet_1', 'roadmap_2024_bullet_2'], status: 'complete' },
+                  { date: '2025', titleKey: 'roadmap_2025_title', bullets: ['roadmap_2025_bullet_4', 'roadmap_2025_bullet_6'], status: 'complete' },
+                  { date: '2026', titleKey: 'roadmap_2026_title', bullets: ['roadmap_2026_bullet_1'], status: 'current' },
+                  { date: '2027', titleKey: 'roadmap_2027_title', bullets: ['roadmap_2027_bullet_1'], status: 'upcoming' },
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-6 relative">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-4 border-gray-50 ${
+                      item.status === 'complete' ? 'bg-accent text-white' : 
+                      item.status === 'current' ? 'bg-accent-light border-accent text-accent' : 
+                      'bg-gray-200 text-gray-500'
+                    }`}>
+                      {item.status === 'complete' ? <Check className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
+                    </div>
+                    <div className="pt-1 flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs text-accent font-medium tracking-wider uppercase">
+                          {item.date}
+                        </span>
+                        <span className="text-sm font-semibold text-gray-900">
+                          {t(item.titleKey)}
+                        </span>
+                      </div>
+                      <ul className="space-y-1">
+                        {item.bullets.map((bullet, j) => (
+                          <li key={j} className="text-sm text-gray-600 leading-relaxed font-light">
+                            {t(bullet)}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="pt-8 pl-[72px]">
+                <LinkButton href="/roadmap" variant="secondary">
+                  {t('home_built_roadmap_cta')}
+                </LinkButton>
+              </div>
             </div>
           </div>
 
-          <div className="text-center pt-12">
-            <LinkButton
-              href="/roadmap"
-              variant="secondary"
-            >
-              {t('home_built_roadmap_cta')}
-            </LinkButton>
+          {isFundraiserEnabled && fundraisingConfig?.enabled && (
+            <div className="max-w-2xl mx-auto">
+              <div className="bg-white rounded-2xl border-2 border-accent/20 p-6 shadow-lg">
+                <div className="flex flex-col sm:flex-row gap-6 items-start">
+                  <div className="flex-1">
+                    <p className="text-xs uppercase tracking-wider text-accent mb-2 font-semibold">
+                      {t('home_fundraising_preview_label')}
+                    </p>
+                    <Heading level={3} className="text-lg font-semibold text-gray-900 mb-2">
+                      {t('home_fundraising_preview_title')}
+                    </Heading>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      {t('home_fundraising_preview_desc')}
+                    </p>
+                  </div>
+                  <div className="w-full sm:w-auto flex-shrink-0">
+                    <FundraisingWidget 
+                      variant="hero" 
+                      fundraisingConfig={fundraisingConfig} 
+                      className="mb-4"
+                    />
+                    <Link 
+                      href="/invest"
+                      className="group flex items-center justify-center gap-2 w-full bg-accent hover:bg-accent-dark text-white font-medium py-2.5 px-4 rounded-lg transition-colors text-sm"
+                      onClick={() =>
+                        event('click', {
+                          category: 'HomePage',
+                          label: 'invest_from_roadmap_section',
+                        })
+                      }
+                    >
+                      {t('home_fundraising_preview_cta')}
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Co-housing Section */}
+      <section className="bg-white py-24 md:py-32 border-t border-gray-200">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-accent mb-4 font-semibold">
+                {t('home_cohousing_section_label')}
+              </p>
+              <Heading display level={2} className="mb-6 text-2xl md:text-3xl font-normal text-gray-900 tracking-tight">
+                {t('home_cohousing_section_title')}
+              </Heading>
+              <p className="text-base text-gray-700 mb-6 leading-relaxed font-light">
+                {t('home_cohousing_section_desc')}
+              </p>
+              <div className="space-y-4 mb-8">
+                <div className="flex items-start gap-3">
+                  <Home className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-gray-700">
+                    {t('home_cohousing_feature_houses')}
+                  </p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Users className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-gray-700">
+                    {t('home_cohousing_feature_neighbors')}
+                  </p>
+                </div>
+              </div>
+              <LinkButton href="/cohousing" variant="primary">
+                {t('home_cohousing_cta')}
+              </LinkButton>
+            </div>
+            <div className="bg-gradient-to-br from-accent/5 to-accent/10 rounded-2xl p-8 border border-accent/20">
+              <div className="text-center">
+                <div className="text-6xl font-bold text-accent mb-2">23</div>
+                <p className="text-lg font-medium text-gray-900 mb-4">{t('home_cohousing_stat_title')}</p>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {t('home_cohousing_stat_desc')}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Participation Structures */}
+      <section id="participation-structures" className="bg-gray-50 py-24 md:py-32 border-t border-gray-200">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <Heading display level={2} className="mb-4 text-2xl md:text-3xl font-normal text-gray-900 tracking-tight">
+              {t('home_investment_opportunities_title')}
+            </Heading>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-xl p-6 border border-gray-200">
+              <Heading level={3} className="mb-3 text-lg font-semibold text-gray-900">
+                {t('home_invest_tokens_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 mb-5 leading-relaxed font-light">
+                {t('home_invest_tokens_desc')}
+              </p>
+              <LinkButton href="/token" variant="secondary">
+                {t('home_invest_tokens_cta')}
+              </LinkButton>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-gray-200">
+              <Heading level={3} className="mb-3 text-lg font-semibold text-gray-900">
+                {t('home_invest_lending_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 mb-5 leading-relaxed font-light">
+                {t('home_invest_lending_desc')}
+              </p>
+              <LinkButton href="/dataroom" variant="secondary">
+                {t('home_invest_lending_cta')}
+              </LinkButton>
+            </div>
           </div>
         </div>
       </section>
@@ -762,29 +784,6 @@ const HomePage = () => {
               </LinkButton>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className="bg-gray-50 py-20 md:py-28 border-t border-gray-100">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <Heading level={2} className="mb-4 text-2xl md:text-3xl font-light text-gray-900 tracking-tight">
-            {t('home_dataroom_teaser_title')}
-          </Heading>
-          <p className="text-sm text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto">
-            {t('home_dataroom_teaser_desc')}
-          </p>
-          <LinkButton
-            href="/dataroom"
-            variant="primary"
-            onClick={() =>
-              event('click', {
-                category: 'HomePage',
-                label: 'view_dataroom',
-              })
-            }
-          >
-            {t('home_dataroom_teaser_cta')}
-          </LinkButton>
         </div>
       </section>
 

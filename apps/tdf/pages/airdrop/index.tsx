@@ -66,7 +66,7 @@ const AirdropPage = () => {
 
                 <p>We’re heading into the final year of construction on TDF’s coliving hub, and the next phase is big:</p>
                 <ul>
-                  <li>14 eco-suites and a shared natural pool</li>
+                  <li>12 eco-suites, a dorm, a 3-bedroom house, and a shared natural pool</li>
                   <li>Rain-harvesting lake & expanded water-retention earthworks</li>
                   <li>Two new agroforestry terraces 🌳</li>
                   <li>Farm-to-table restaurant 🍽️</li>

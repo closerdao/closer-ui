@@ -283,9 +283,9 @@ const LearnMorePage = ({ subscriptionsConfig }: Props) => {
               Traditional Dream Factory
             </Heading>
             <p className="text-center md:text-left mb-6">
-              Our co-living quarters will be home to 14 large suites with a
-              living room & kitchen, 3 loft studios with a music production
-              live-in studio, and a private house for families or friends.
+              Our co-living quarters will be home to 12 en-suite rooms, a dorm,
+              a 3-bedroom house for families, and 3 loft studios with a music
+              production live-in studio.
             </p>
             <p className="text-center md:text-left mb-6 uppercase font-bold">
               The TDF village is made up of:

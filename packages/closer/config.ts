@@ -312,7 +312,6 @@ export const configDescription: ConfigType[] = [
         type: 'number',
         default: '20',
       },
-
       videoId: {
         type: 'text',
         default: 'btBqOboLdOg',
@@ -346,6 +345,79 @@ export const configDescription: ConfigType[] = [
       hostEventUrl: {
         type: 'text',
         default: 'mailto: space@traditionaldreamfactory.com',
+      },
+      milestones: {
+        type: [
+          {
+            id: 'text',
+            name: 'text',
+            targetAmount: 'number',
+            currency: 'text',
+            startDate: 'text',
+            endDate: 'text',
+            status: {
+              type: 'select',
+              enum: ['pending', 'active', 'completed'],
+            },
+          },
+        ],
+        default: [
+          {
+            id: 'milestone-1',
+            name: 'Phase 1 - Land Purchase',
+            targetAmount: 295000,
+            currency: 'EUR',
+            startDate: '2025-12-01T00:00:00.000Z',
+            endDate: '2026-05-31T23:59:59.999Z',
+            status: 'active',
+          },
+          {
+            id: 'milestone-2',
+            name: 'Phase 2 - Infrastructure',
+            targetAmount: 150000,
+            currency: 'EUR',
+            startDate: '2026-06-01T00:00:00.000Z',
+            endDate: '',
+            status: 'pending',
+          },
+          {
+            id: 'milestone-3',
+            name: 'Phase 3 - Major Development',
+            targetAmount: 700000,
+            currency: 'EUR',
+            startDate: '',
+            endDate: '',
+            status: 'pending',
+          },
+        ],
+      },
+      loans: {
+        type: [
+          {
+            id: 'text',
+            description: 'text',
+            amount: 'number',
+            currency: 'text',
+            date: 'text',
+            lender: 'text',
+            terms: 'text',
+            countsTowardMilestone: 'text',
+          },
+        ],
+        default: [],
+      },
+      manualAdjustments: {
+        type: [
+          {
+            id: 'text',
+            description: 'text',
+            amount: 'number',
+            currency: 'text',
+            date: 'text',
+            countsTowardMilestone: 'text',
+          },
+        ],
+        default: [],
       },
     },
   },
