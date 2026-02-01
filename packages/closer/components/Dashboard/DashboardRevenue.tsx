@@ -404,8 +404,8 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
           toDate.toString(),
         );
         dateFilter = {
-          $gte: startDate,
-          $lte: endDate,
+          $gte: startDate.toISOString(),
+          $lte: endDate.toISOString(),
         };
       }
 

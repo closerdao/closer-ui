@@ -19,6 +19,7 @@ const config = {
     'newsletter',
     'accounting-entities',
     'photo-gallery',
+    'community',
   ],
   PORT: 14444,
   EXPOSE_STORE: true,

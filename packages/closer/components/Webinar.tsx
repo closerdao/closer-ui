@@ -217,30 +217,29 @@ const Webinar = ({ id, tags = ['webinar'], analyticsCategory = 'Webinar' }: Prop
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.2),transparent_50%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.15),transparent_50%)]" />
       
-      {nextWebinarDate && (
-        <div className="absolute top-4 left-4 md:top-6 md:left-6 z-10">
-          <div className="bg-white rounded-lg shadow-xl overflow-hidden w-20 md:w-24">
-            <div className="bg-pink-500 text-white text-center py-1 text-[10px] md:text-xs font-bold uppercase tracking-wide">
-              {nextWebinarDate.local().format('MMM')}
-            </div>
-            <div className="bg-white text-center py-1.5 md:py-2">
-              <p className="text-2xl md:text-3xl font-bold text-gray-900 leading-none">
-                {nextWebinarDate.local().format('D')}
-              </p>
-              <p className="text-[10px] md:text-xs text-gray-500 mt-0.5 font-medium">
-                {nextWebinarDate.local().format('ddd')}
-              </p>
-            </div>
-            <div className="bg-gray-50 text-center py-1.5 border-t border-gray-100">
-              <p className="text-[10px] md:text-xs font-semibold text-gray-700">
-                {nextWebinarDate.local().format('h:mm A')}
-              </p>
+      <div className="relative max-w-2xl mx-auto px-6 text-center">
+        {nextWebinarDate && (
+          <div className="flex justify-center mb-4">
+            <div className="bg-white rounded-lg shadow-xl overflow-hidden w-20 md:w-24">
+              <div className="bg-pink-500 text-white text-center py-1 text-[10px] md:text-xs font-bold uppercase tracking-wide">
+                {nextWebinarDate.local().format('MMM')}
+              </div>
+              <div className="bg-white text-center py-1.5 md:py-2">
+                <p className="text-2xl md:text-3xl font-bold text-gray-900 leading-none">
+                  {nextWebinarDate.local().format('D')}
+                </p>
+                <p className="text-[10px] md:text-xs text-gray-500 mt-0.5 font-medium">
+                  {nextWebinarDate.local().format('ddd')}
+                </p>
+              </div>
+              <div className="bg-gray-50 text-center py-1.5 border-t border-gray-100">
+                <p className="text-[10px] md:text-xs font-semibold text-gray-700">
+                  {nextWebinarDate.local().format('h:mm A')}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
-      <div className="relative max-w-2xl mx-auto px-6 text-center">
+        )}
         <p className="text-[10px] uppercase tracking-wider text-white/80 mb-2 font-medium">
           {t('webinar_section_label')}
         </p>

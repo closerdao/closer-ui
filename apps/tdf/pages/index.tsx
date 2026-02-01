@@ -157,18 +157,18 @@ const HomePage = () => {
               {t('home_hero_subtitle')}
             </p>
             
-            <div className="grid grid-cols-3 gap-4 mb-8 max-w-2xl mx-auto">
-              <div className="bg-accent-light/50 rounded-lg p-6 text-center border border-accent/10">
-                <div className="text-3xl md:text-4xl font-bold text-accent mb-2">280+</div>
-                <div className="text-xs text-gray-700 font-medium">{t('home_stats_token_holders')}</div>
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-8 max-w-2xl mx-auto">
+              <div className="bg-accent-light/50 rounded-lg p-3 sm:p-6 text-center border border-accent/10">
+                <div className="text-lg sm:text-2xl font-semibold text-accent mb-1">280+</div>
+                <div className="text-[10px] sm:text-xs text-gray-600">{t('home_stats_token_holders')}</div>
               </div>
-              <div className="bg-accent-light/50 rounded-lg p-6 text-center border border-accent/10">
-                <div className="text-3xl md:text-4xl font-bold text-accent mb-2">25</div>
-                <div className="text-xs text-gray-700 font-medium">{t('home_stats_hectares')}</div>
+              <div className="bg-accent-light/50 rounded-lg p-3 sm:p-6 text-center border border-accent/10">
+                <div className="text-lg sm:text-2xl font-semibold text-accent mb-1">25</div>
+                <div className="text-[10px] sm:text-xs text-gray-600">{t('home_stats_hectares')}</div>
               </div>
-              <div className="bg-accent-light/50 rounded-lg p-6 text-center border border-accent/10">
-                <div className="text-3xl md:text-4xl font-bold text-accent mb-2">€1.25M+</div>
-                <div className="text-xs text-gray-700 font-medium">{t('home_stats_total_capital')}</div>
+              <div className="bg-accent-light/50 rounded-lg p-3 sm:p-6 text-center border border-accent/10">
+                <div className="text-lg sm:text-2xl font-semibold text-accent mb-1">€1.25M+</div>
+                <div className="text-[10px] sm:text-xs text-gray-600">{t('home_stats_total_capital')}</div>
               </div>
             </div>
 
@@ -407,36 +407,36 @@ const HomePage = () => {
                   {t('home_token_name')}
                 </Heading>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded border border-gray-300 p-5">
-                  <div className="text-xs uppercase tracking-wider text-gray-600 mb-2 font-medium">
+              <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                <div className="bg-gray-50 rounded border border-gray-300 p-3 sm:p-5">
+                  <div className="text-[10px] sm:text-xs uppercase tracking-wider text-gray-600 mb-2">
                     {t('home_token_stat_holders')}
                   </div>
-                  <div className="text-2xl font-normal text-gray-900">
+                  <div className="text-lg sm:text-2xl font-semibold text-gray-900">
                     {isLoadingChainData ? '...' : (tokenHolders !== null ? tokenHolders.toLocaleString() : '280')}
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded border border-gray-300 p-5">
-                  <div className="text-xs uppercase tracking-wider text-gray-600 mb-2 font-medium">
+                <div className="bg-gray-50 rounded border border-gray-300 p-3 sm:p-5">
+                  <div className="text-[10px] sm:text-xs uppercase tracking-wider text-gray-600 mb-2">
                     {t('home_token_stat_supply')}
                   </div>
-                  <div className="text-2xl font-normal text-gray-900">
+                  <div className="text-lg sm:text-2xl font-semibold text-gray-900">
                     {isLoadingChainData ? '...' : (currentSupply !== null ? currentSupply.toLocaleString() : '—')}
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded border border-gray-300 p-5">
-                  <div className="text-xs uppercase tracking-wider text-gray-600 mb-2 font-medium">
+                <div className="bg-gray-50 rounded border border-gray-300 p-3 sm:p-5">
+                  <div className="text-[10px] sm:text-xs uppercase tracking-wider text-gray-600 mb-2">
                     {t('home_token_stat_price')}
                   </div>
-                  <div className="text-2xl font-normal text-gray-900">€256</div>
-                  <div className="text-xs text-gray-600 mt-1 font-light">{t('home_token_stat_price_note')}</div>
+                  <div className="text-lg sm:text-2xl font-semibold text-gray-900">€256</div>
+                  <div className="text-[10px] sm:text-xs text-gray-600 mt-1">{t('home_token_stat_price_note')}</div>
                 </div>
-                <div className="bg-gray-50 rounded border border-gray-300 p-5">
-                  <div className="text-xs uppercase tracking-wider text-gray-600 mb-2 font-medium">
+                <div className="bg-gray-50 rounded border border-gray-300 p-3 sm:p-5">
+                  <div className="text-[10px] sm:text-xs uppercase tracking-wider text-gray-600 mb-2">
                     {t('home_token_stat_raised')}
                   </div>
-                  <div className="text-2xl font-normal text-gray-900">€384k</div>
-                  <div className="text-xs text-gray-600 mt-1 font-light">{t('home_token_stat_raised_note')}</div>
+                  <div className="text-lg sm:text-2xl font-semibold text-gray-900">€384k</div>
+                  <div className="text-[10px] sm:text-xs text-gray-600 mt-1">{t('home_token_stat_raised_note')}</div>
                 </div>
               </div>
               <div className="mt-6">
@@ -671,8 +671,8 @@ const HomePage = () => {
             </div>
             <div className="bg-gradient-to-br from-accent/5 to-accent/10 rounded-2xl p-8 border border-accent/20">
               <div className="text-center">
-                <div className="text-6xl font-bold text-accent mb-2">23</div>
-                <p className="text-lg font-medium text-gray-900 mb-4">{t('home_cohousing_stat_title')}</p>
+                <div className="text-3xl sm:text-4xl font-semibold text-accent mb-2">23</div>
+                <p className="text-base font-medium text-gray-900 mb-4">{t('home_cohousing_stat_title')}</p>
                 <p className="text-sm text-gray-600 leading-relaxed">
                   {t('home_cohousing_stat_desc')}
                 </p>

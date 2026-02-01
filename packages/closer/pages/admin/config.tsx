@@ -37,6 +37,8 @@ import { capitalizeFirstLetter } from '../../utils/learn.helpers';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
+const BETA_FEATURES = ['community', 'governance'];
+
 interface Props {
   defaultEmailsConfig: ConfigType;
   error: null | string;
@@ -581,6 +583,11 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
                           }`}
                         >
                           {capitalizeFirstLetter(configSlug)}
+                          {BETA_FEATURES.includes(configSlug) && (
+                            <span className="ml-2 px-1.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded">
+                              Beta
+                            </span>
+                          )}
                         </span>
                       </div>
                       {isEnabled && (
@@ -747,24 +754,27 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
                             },
                           )}
 
-                          <Button
-                            onClick={() => handleSaveConfig([], configSlug)}
-                            isLoading={isLoading}
-                            isEnabled={
-                              !isLoading &&
-                              errors &&
-                              Object.values(errors).every(
-                                (value) => value === null,
-                              )
-                            }
-                            size="small"
-                          >
-                            {t('generic_save_button')}
-                          </Button>
-                          {hasConfigUpdated &&
-                            selectedConfig === configSlug && (
-                              <Information>{t('config_updated')}</Information>
-                            )}
+                          <div className="flex items-center gap-3">
+                            <Button
+                              onClick={() => handleSaveConfig([], configSlug)}
+                              isLoading={isLoading}
+                              isEnabled={
+                                !isLoading &&
+                                errors &&
+                                Object.values(errors).every(
+                                  (value) => value === null,
+                                )
+                              }
+                              variant="inline"
+                              size="small"
+                            >
+                              {t('generic_save_button')}
+                            </Button>
+                            {hasConfigUpdated &&
+                              selectedConfig === configSlug && (
+                                <Information>{t('config_updated')}</Information>
+                              )}
+                          </div>
                         </div>
                       )}
                   </div>

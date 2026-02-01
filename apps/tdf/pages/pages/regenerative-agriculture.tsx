@@ -38,22 +38,22 @@ const RegenerativeAgriculturePage = () => {
             <p className="text-xl text-gray-800 max-w-3xl mx-auto leading-relaxed mb-12">
               {t('regen_ag_hero_subtitle')}
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-              <div className="bg-white/80 backdrop-blur rounded-lg p-4">
-                <div className="text-2xl md:text-3xl font-semibold text-gray-900">1.2M L</div>
-                <div className="text-xs text-gray-600">{t('regen_ag_metric_rainwater')}</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 max-w-4xl mx-auto">
+              <div className="bg-white/80 backdrop-blur rounded-lg p-3 sm:p-4">
+                <div className="text-lg sm:text-2xl font-semibold text-gray-900">1.2M L</div>
+                <div className="text-[10px] sm:text-xs text-gray-600">{t('regen_ag_metric_rainwater')}</div>
               </div>
-              <div className="bg-white/80 backdrop-blur rounded-lg p-4">
-                <div className="text-2xl md:text-3xl font-semibold text-gray-900">1<span className="text-lg text-gray-500">/5</span></div>
-                <div className="text-xs text-gray-600">{t('regen_ag_metric_lakes')}</div>
+              <div className="bg-white/80 backdrop-blur rounded-lg p-3 sm:p-4">
+                <div className="text-lg sm:text-2xl font-semibold text-gray-900">1<span className="text-sm sm:text-base text-gray-500">/5</span></div>
+                <div className="text-[10px] sm:text-xs text-gray-600">{t('regen_ag_metric_lakes')}</div>
               </div>
-              <div className="bg-white/80 backdrop-blur rounded-lg p-4">
-                <div className="text-2xl md:text-3xl font-semibold text-gray-900">4,000+</div>
-                <div className="text-xs text-gray-600">{t('regen_ag_metric_trees')}</div>
+              <div className="bg-white/80 backdrop-blur rounded-lg p-3 sm:p-4">
+                <div className="text-lg sm:text-2xl font-semibold text-gray-900">4,000+</div>
+                <div className="text-[10px] sm:text-xs text-gray-600">{t('regen_ag_metric_trees')}</div>
               </div>
-              <div className="bg-white/80 backdrop-blur rounded-lg p-4">
-                <div className="text-2xl md:text-3xl font-semibold text-gray-900">150+</div>
-                <div className="text-xs text-gray-600">{t('regen_ag_metric_flora')}</div>
+              <div className="bg-white/80 backdrop-blur rounded-lg p-3 sm:p-4">
+                <div className="text-lg sm:text-2xl font-semibold text-gray-900">150+</div>
+                <div className="text-[10px] sm:text-xs text-gray-600">{t('regen_ag_metric_flora')}</div>
               </div>
             </div>
           </div>
@@ -186,26 +186,26 @@ const RegenerativeAgriculturePage = () => {
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-xl p-6">
-            <div className="grid md:grid-cols-4 gap-6 text-center mb-6">
+          <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 text-center mb-6">
               <div>
-                <div className="text-2xl font-bold text-gray-900">300</div>
-                <div className="text-xs text-gray-500">{t('regen_ag_mushroom_bucket_capacity')}</div>
+                <div className="text-lg sm:text-2xl font-semibold text-gray-900">300</div>
+                <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_mushroom_bucket_capacity')}</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900">~250kg</div>
-                <div className="text-xs text-gray-500">{t('regen_ag_mushroom_monthly_oyster')}</div>
+                <div className="text-lg sm:text-2xl font-semibold text-gray-900">~250kg</div>
+                <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_mushroom_monthly_oyster')}</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900">~60kg</div>
-                <div className="text-xs text-gray-500">{t('regen_ag_mushroom_monthly_reishi')}</div>
+                <div className="text-lg sm:text-2xl font-semibold text-gray-900">~60kg</div>
+                <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_mushroom_monthly_reishi')}</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900">4</div>
-                <div className="text-xs text-gray-500">{t('regen_ag_mushroom_channels')}</div>
+                <div className="text-lg sm:text-2xl font-semibold text-gray-900">4</div>
+                <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_mushroom_channels')}</div>
               </div>
             </div>
-            <p className="text-gray-500 text-xs text-center">
+            <p className="text-gray-500 text-[10px] sm:text-xs text-center">
               {t('regen_ag_mushroom_distribution_summary')}
             </p>
           </div>
@@ -226,22 +226,22 @@ const RegenerativeAgriculturePage = () => {
             {t('regen_ag_veggie_intro')}
           </p>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-xl mx-auto mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-xl mx-auto mb-6">
             <div className="text-center">
-              <div className="text-3xl font-bold text-gray-900">40</div>
-              <div className="text-xs text-gray-500">{t('regen_ag_veggie_beds')}</div>
+              <div className="text-lg sm:text-2xl font-semibold text-gray-900">40</div>
+              <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_veggie_beds')}</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-gray-900">~30</div>
-              <div className="text-xs text-gray-500">{t('regen_ag_veggie_people')}</div>
+              <div className="text-lg sm:text-2xl font-semibold text-gray-900">~30</div>
+              <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_veggie_people')}</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-gray-900">~20%</div>
-              <div className="text-xs text-gray-500">{t('regen_ag_veggie_self_sufficiency')}</div>
+              <div className="text-lg sm:text-2xl font-semibold text-gray-900">~20%</div>
+              <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_veggie_self_sufficiency')}</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-accent">80%</div>
-              <div className="text-xs text-gray-500">{t('regen_ag_veggie_target_2027')}</div>
+              <div className="text-lg sm:text-2xl font-semibold text-accent">80%</div>
+              <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_veggie_target_2027')}</div>
             </div>
           </div>
 
@@ -265,18 +265,18 @@ const RegenerativeAgriculturePage = () => {
             {t('regen_ag_orchard_intro')}
           </p>
 
-          <div className="grid grid-cols-3 gap-4 mb-8 max-w-md mx-auto">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-8 max-w-md mx-auto">
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">~2,400</div>
-              <div className="text-xs text-gray-500">{t('regen_ag_orchard_total_trees')}</div>
+              <div className="text-lg sm:text-2xl font-semibold text-gray-900">~2,400</div>
+              <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_orchard_total_trees')}</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">4</div>
-              <div className="text-xs text-gray-500">{t('regen_ag_orchard_zones')}</div>
+              <div className="text-lg sm:text-2xl font-semibold text-gray-900">4</div>
+              <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_orchard_zones')}</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">5-10</div>
-              <div className="text-xs text-gray-500">{t('regen_ag_orchard_years')}</div>
+              <div className="text-lg sm:text-2xl font-semibold text-gray-900">5-10</div>
+              <div className="text-[10px] sm:text-xs text-gray-500">{t('regen_ag_orchard_years')}</div>
             </div>
           </div>
 
@@ -334,11 +334,11 @@ const RegenerativeAgriculturePage = () => {
               <p className="text-gray-600 text-sm mb-4">{t('regen_ag_chicken_desc')}</p>
               <div className="flex gap-4 mb-3">
                 <div>
-                  <span className="text-xl font-bold text-gray-900">12</span>
+                  <span className="text-xl font-semibold text-gray-900">12</span>
                   <span className="text-xs text-gray-500 ml-1">{t('regen_ag_chicken_count')}</span>
                 </div>
                 <div>
-                  <span className="text-xl font-bold text-gray-900">~10</span>
+                  <span className="text-xl font-semibold text-gray-900">~10</span>
                   <span className="text-xs text-gray-500 ml-1">{t('regen_ag_eggs_daily')}</span>
                 </div>
               </div>
@@ -359,11 +359,11 @@ const RegenerativeAgriculturePage = () => {
               <p className="text-gray-600 text-sm mb-4">{t('regen_ag_biochar_desc')}</p>
               <div className="flex gap-4">
                 <div>
-                  <span className="text-xl font-bold text-gray-900">50kW</span>
+                  <span className="text-xl font-semibold text-gray-900">50kW</span>
                   <span className="text-xs text-gray-500 ml-1">{t('regen_ag_biochar_heat')}</span>
                 </div>
                 <div>
-                  <span className="text-xl font-bold text-gray-900">~30m³</span>
+                  <span className="text-xl font-semibold text-gray-900">~30m³</span>
                   <span className="text-xs text-gray-500 ml-1">{t('regen_ag_biochar_annual')}</span>
                 </div>
               </div>

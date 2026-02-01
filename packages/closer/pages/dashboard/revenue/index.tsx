@@ -430,7 +430,8 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
   return (
     <>
       <Head>
-        <title>Revenue</title>
+        <title>{t('dashboard_revenue_title')}</title>
+        <meta name="robots" content="noindex, nofollow" />
       </Head>
       <AdminLayout isBookingEnabled={isBookingEnabled}>
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
@@ -445,14 +446,14 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
           />
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
               {/* Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="p-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
+                  <div className="p-3">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Total Revenue
+                        {t('dashboard_revenue_total')}
                       </dt>
                       <dd className="text-lg font-semibold text-gray-900">
                         {chargesLoading ||
@@ -479,11 +480,11 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                   </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="p-4">
+                <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
+                  <div className="p-3">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Hospitality
+                        {t('dashboard_revenue_hospitality')}
                       </dt>
                       <dd className="text-lg font-semibold text-gray-900">
                         {chargesLoading || sumsLoading ? (
@@ -504,11 +505,11 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                   </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="p-4">
+                <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
+                  <div className="p-3">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Subscriptions
+                        {t('dashboard_revenue_subscriptions')}
                       </dt>
                       <dd className="text-lg font-semibold text-gray-900">
                         {chargesLoading || sumsLoading ? (
@@ -524,11 +525,11 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                   </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="p-4">
+                <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
+                  <div className="p-3">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Fiat Token Sales
+                        {t('dashboard_revenue_fiat_token_sales')}
                       </dt>
                       <dd className="text-lg font-semibold text-gray-900">
                         {moneriumChargesLoading || sumsLoading ? (
@@ -544,11 +545,11 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                   </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="p-4">
+                <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
+                  <div className="p-3">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Crypto Token Sales
+                        {t('dashboard_revenue_crypto_token_sales')}
                       </dt>
                       <dd className="text-lg font-semibold text-gray-900">
                         {cryptoTokenChargesLoading || sumsLoading ? (
@@ -564,11 +565,11 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                   </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="p-4">
+                <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
+                  <div className="p-3">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Refunded
+                        {t('dashboard_revenue_refunded')}
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
                         {chargesLoading || moneriumChargesLoading || sumsLoading ? (
@@ -590,11 +591,11 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                 {/* Revenue by Category */}
                 <div className="bg-white shadow rounded-lg lg:col-span-2 space-y-6">
                   <div className="px-4 py-5 sm:p-4 space-y-6">
-                    <Heading level={3}>Revenue by Category</Heading>
+                    <Heading level={3}>{t('dashboard_revenue_by_category')}</Heading>
                     <div className="flex items-end justify-between gap-2 h-64">
                       {[
                         {
-                          name: 'Fiat Token Sales',
+                          name: t('dashboard_revenue_fiat_token_sales'),
                           amount: categoryTotals.tokenSales,
                           bgColor: 'bg-blue-200',
                           textColor: 'text-blue-800',
@@ -602,7 +603,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                           loading: moneriumChargesLoading || sumsLoading,
                         },
                         {
-                          name: 'Crypto Token Sales',
+                          name: t('dashboard_revenue_crypto_token_sales'),
                           amount: categoryTotals.cryptoTokenSales,
                           bgColor: 'bg-red-200',
                           textColor: 'text-red-800',
@@ -610,7 +611,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                           loading: cryptoTokenChargesLoading || sumsLoading,
                         },
                         {
-                          name: 'Events',
+                          name: t('dashboard_charges_event'),
                           amount: categoryTotals.events,
                           bgColor: 'bg-purple-200',
                           textColor: 'text-purple-800',
@@ -618,7 +619,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                           loading: chargesLoading || sumsLoading,
                         },
                         {
-                          name: 'Rental',
+                          name: t('dashboard_charges_rental'),
                           amount: categoryTotals.rental,
                           bgColor: 'bg-green-200',
                           textColor: 'text-green-800',
@@ -626,7 +627,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                           loading: chargesLoading || sumsLoading,
                         },
                         {
-                          name: 'Food',
+                          name: t('dashboard_charges_food'),
                           amount: categoryTotals.food,
                           bgColor: 'bg-orange-200',
                           textColor: 'text-orange-800',
@@ -634,7 +635,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                           loading: chargesLoading || sumsLoading,
                         },
                         {
-                          name: 'Utilities',
+                          name: t('dashboard_charges_utilities'),
                           amount: categoryTotals.utilities,
                           bgColor: 'bg-cyan-200',
                           textColor: 'text-cyan-800',
@@ -642,7 +643,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                           loading: chargesLoading || sumsLoading,
                         },
                         {
-                          name: 'Subscriptions',
+                          name: t('dashboard_revenue_subscriptions'),
                           amount: categoryTotals.subscriptions,
                           bgColor: 'bg-pink-200',
                           textColor: 'text-pink-800',
@@ -676,7 +677,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                               )}
                             </div>
                           </div>
-                          <div className="text-xs font-medium text-gray-600 mt-2 text-center">
+                          <div className="text-xs font-medium text-gray-600 mt-2 text-center truncate max-w-full">
                             {category.name}
                           </div>
                         </div>
@@ -688,11 +689,11 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                 {/* Expenses by Category */}
                 <div className="bg-white shadow rounded-lg space-y-6">
                   <div className="px-4 py-5 sm:p-4 space-y-6">
-                    <Heading level={3}>Expenses by Category</Heading>
+                    <Heading level={3}>{t('dashboard_revenue_expenses_by_category')}</Heading>
                     <div className="flex items-end justify-between gap-2 h-64">
                       {[
                         {
-                          name: 'Refunds',
+                          name: t('dashboard_revenue_refunds'),
                           amount: categoryTotals.refunds,
                           bgColor: 'bg-red-200',
                           textColor: 'text-red-800',
@@ -700,7 +701,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                           loading: chargesLoading || moneriumChargesLoading || sumsLoading,
                         },
                         {
-                          name: 'Stripe Fee',
+                          name: t('dashboard_revenue_stripe_fee'),
                           amount: categoryTotals.stripeFee,
                           bgColor: 'bg-amber-200',
                           textColor: 'text-amber-800',
@@ -708,7 +709,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                           loading: chargesLoading,
                         },
                         {
-                          name: 'Connect Fee',
+                          name: t('dashboard_revenue_connect_fee'),
                           amount: categoryTotals.connectFee,
                           bgColor: 'bg-yellow-200',
                           textColor: 'text-yellow-800',
@@ -744,7 +745,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                               )}
                             </div>
                           </div>
-                          <div className="text-xs font-medium text-gray-600 mt-2 text-center">
+                          <div className="text-xs font-medium text-gray-600 mt-2 text-center truncate max-w-full">
                             {category.name}
                           </div>
                         </div>

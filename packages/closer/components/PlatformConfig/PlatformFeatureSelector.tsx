@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { capitalizeFirstLetter } from '../../utils/learn.helpers';
 
 const NON_EDITABLE_FEATURES = ['general'];
+const BETA_FEATURES = ['community', 'governance'];
 
 interface Props {
   enabledConfigs: string[];
@@ -75,6 +76,11 @@ const PlatformFeatureSelector = ({
               >
                 <span className="text-sm font-medium">
                   {capitalizeFirstLetter(feature)}
+                  {BETA_FEATURES.includes(feature) && (
+                    <span className="ml-2 px-1.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded">
+                      Beta
+                    </span>
+                  )}
                 </span>
                 {isEnabled && (
                   <span className="text-gray-400">

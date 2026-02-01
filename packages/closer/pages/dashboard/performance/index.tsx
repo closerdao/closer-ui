@@ -78,6 +78,7 @@ const PerformancePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) =>
     <>
       <Head>
         <title>{t('dashboard_performance_title')}</title>
+        <meta name="robots" content="noindex, nofollow" />
       </Head>
       <AdminLayout isBookingEnabled={isBookingEnabled}>
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">

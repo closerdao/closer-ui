@@ -13,6 +13,10 @@ const MembersPage = () => {
     <>
       <Head>
         <title>{t('members_title')}</title>
+        <meta name="description" content={t('members_meta_description')} />
+        <meta property="og:title" content={t('members_title')} />
+        <meta property="og:description" content={t('members_meta_description')} />
+        <meta property="og:type" content="website" />
       </Head>
       <div className="main-content fullheight">
         <MemberList filter={{ roles: 'member' }} />

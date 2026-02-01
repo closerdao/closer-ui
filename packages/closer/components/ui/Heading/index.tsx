@@ -41,7 +41,7 @@ const Heading = ({
         className,
       )}
     >
-      {display ? 'YES' : 'NO'} {children}
+      {children}
     </HeadingTag>
   );
 };

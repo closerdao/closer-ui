@@ -177,26 +177,26 @@ const EcologyPage = () => {
             <p className="text-xl max-w-3xl mx-auto leading-relaxed mb-12 text-gray-700">
               {t('ecology_hero_subtitle')}
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 max-w-5xl mx-auto">
-              <div className="bg-white/60 backdrop-blur rounded-lg p-4 border border-accent/20">
-                <div className="text-2xl md:text-3xl font-semibold text-accent-dark">25<span className="text-lg">ha</span></div>
-                <div className="text-xs text-gray-600">{t('ecology_metric_land')}</div>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 sm:gap-4 max-w-5xl mx-auto">
+              <div className="bg-white/60 backdrop-blur rounded-lg p-3 sm:p-4 border border-accent/20">
+                <div className="text-lg sm:text-2xl font-semibold text-accent-dark">25<span className="text-sm sm:text-base">ha</span></div>
+                <div className="text-[10px] sm:text-xs text-gray-600">{t('ecology_metric_land')}</div>
               </div>
-              <div className="bg-white/60 backdrop-blur rounded-lg p-4 border border-accent/20">
-                <div className="text-2xl md:text-3xl font-semibold text-accent-dark">50%</div>
-                <div className="text-xs text-gray-600">{t('ecology_metric_wild')}</div>
+              <div className="bg-white/60 backdrop-blur rounded-lg p-3 sm:p-4 border border-accent/20">
+                <div className="text-lg sm:text-2xl font-semibold text-accent-dark">50%</div>
+                <div className="text-[10px] sm:text-xs text-gray-600">{t('ecology_metric_wild')}</div>
               </div>
-              <div className="bg-white/60 backdrop-blur rounded-lg p-4 border border-accent/20">
-                <div className="text-2xl md:text-3xl font-semibold text-accent-dark">40+</div>
-                <div className="text-xs text-gray-600">{t('ecology_metric_birds')}</div>
+              <div className="bg-white/60 backdrop-blur rounded-lg p-3 sm:p-4 border border-accent/20">
+                <div className="text-lg sm:text-2xl font-semibold text-accent-dark">40+</div>
+                <div className="text-[10px] sm:text-xs text-gray-600">{t('ecology_metric_birds')}</div>
               </div>
-              <div className="bg-white/60 backdrop-blur rounded-lg p-4 border border-accent/20">
-                <div className="text-2xl md:text-3xl font-semibold text-accent-dark">65+</div>
-                <div className="text-xs text-gray-600">{t('ecology_metric_tree_species')}</div>
+              <div className="bg-white/60 backdrop-blur rounded-lg p-3 sm:p-4 border border-accent/20">
+                <div className="text-lg sm:text-2xl font-semibold text-accent-dark">65+</div>
+                <div className="text-[10px] sm:text-xs text-gray-600">{t('ecology_metric_tree_species')}</div>
               </div>
-              <div className="bg-white/60 backdrop-blur rounded-lg p-4 col-span-2 md:col-span-1 border border-accent/20">
-                <div className="text-2xl md:text-3xl font-semibold text-accent-dark">1.2M<span className="text-lg">L</span></div>
-                <div className="text-xs text-gray-600">{t('ecology_metric_water')}</div>
+              <div className="bg-white/60 backdrop-blur rounded-lg p-3 sm:p-4 col-span-2 md:col-span-1 border border-accent/20">
+                <div className="text-lg sm:text-2xl font-semibold text-accent-dark">1.2M<span className="text-sm sm:text-base">L</span></div>
+                <div className="text-[10px] sm:text-xs text-gray-600">{t('ecology_metric_water')}</div>
               </div>
             </div>
           </div>
@@ -305,20 +305,20 @@ const EcologyPage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-12">
-            <div className="backdrop-blur rounded-xl p-6 text-center">
-              <div className="text-3xl md:text-4xl font-bold text-gray-900">65+</div>
-              <div className="text-sm mt-1 text-gray-700">{t('ecology_ofp_stat_species')}</div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6 mb-12">
+            <div className="backdrop-blur rounded-xl p-4 sm:p-6 text-center">
+              <div className="text-lg sm:text-2xl font-semibold text-gray-900">65+</div>
+              <div className="text-[10px] sm:text-xs mt-1 text-gray-700">{t('ecology_ofp_stat_species')}</div>
             </div>
-            <div className="backdrop-blur rounded-xl p-6 text-center">
-              <div className="text-3xl md:text-4xl font-bold text-gray-900">0.85<span className="text-xl">ha</span></div>
-              <div className="text-sm mt-1 text-gray-700">{t('ecology_ofp_stat_monitored')}</div>
+            <div className="backdrop-blur rounded-xl p-4 sm:p-6 text-center">
+              <div className="text-lg sm:text-2xl font-semibold text-gray-900">0.85<span className="text-sm sm:text-base">ha</span></div>
+              <div className="text-[10px] sm:text-xs mt-1 text-gray-700">{t('ecology_ofp_stat_monitored')}</div>
             </div>
-            <div className="backdrop-blur rounded-xl p-6 text-center">
-              <div className="text-3xl md:text-4xl font-bold flex items-center justify-center text-gray-900">
-                <Check className="w-8 h-8" />
+            <div className="backdrop-blur rounded-xl p-4 sm:p-6 text-center col-span-2 md:col-span-1">
+              <div className="text-lg sm:text-2xl font-semibold flex items-center justify-center text-gray-900">
+                <Check className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <div className="text-sm mt-1 text-gray-700">{t('ecology_ofp_stat_validated')}</div>
+              <div className="text-[10px] sm:text-xs mt-1 text-gray-700">{t('ecology_ofp_stat_validated')}</div>
             </div>
           </div>
 
@@ -431,18 +431,18 @@ const EcologyPage = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4 mb-8">
-            <div className="bg-orange-50 rounded-xl p-6 text-center border border-orange-100">
-              <div className="text-3xl font-bold text-orange-900 mb-1">5+</div>
-              <div className="text-sm text-orange-700">{t('ecology_birds_raptors')}</div>
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-8">
+            <div className="bg-orange-50 rounded-xl p-3 sm:p-6 text-center border border-orange-100">
+              <div className="text-lg sm:text-2xl font-semibold text-orange-900 mb-1">5+</div>
+              <div className="text-[10px] sm:text-xs text-orange-700">{t('ecology_birds_raptors')}</div>
             </div>
-            <div className="bg-blue-50 rounded-xl p-6 text-center border border-blue-100">
-              <div className="text-3xl font-bold text-blue-900 mb-1">2</div>
-              <div className="text-sm text-blue-700">{t('ecology_birds_owls')}</div>
+            <div className="bg-blue-50 rounded-xl p-3 sm:p-6 text-center border border-blue-100">
+              <div className="text-lg sm:text-2xl font-semibold text-blue-900 mb-1">2</div>
+              <div className="text-[10px] sm:text-xs text-blue-700">{t('ecology_birds_owls')}</div>
             </div>
-            <div className="rounded-xl p-6 text-center border">
-              <div className="text-3xl font-bold mb-1" style={{ color: 'rgb(30, 100, 70)' }}>15+</div>
-              <div className="text-sm" style={{ color: 'rgb(50, 140, 100)' }}>{t('ecology_birds_songbirds')}</div>
+            <div className="rounded-xl p-3 sm:p-6 text-center border">
+              <div className="text-lg sm:text-2xl font-semibold mb-1" style={{ color: 'rgb(30, 100, 70)' }}>15+</div>
+              <div className="text-[10px] sm:text-xs" style={{ color: 'rgb(50, 140, 100)' }}>{t('ecology_birds_songbirds')}</div>
             </div>
           </div>
 
@@ -480,26 +480,26 @@ const EcologyPage = () => {
                 <cite className="block mt-2 not-italic text-purple-600">— SimplexDNA</cite>
               </blockquote>
 
-              <div className="bg-white rounded-xl p-6 border border-purple-200">
-                <Heading level={3} className="mb-4 text-lg text-purple-900">
+              <div className="bg-white rounded-xl p-4 sm:p-6 border border-purple-200">
+                <Heading level={3} className="mb-4 text-base sm:text-lg text-purple-900">
                   {t('ecology_edna_results_title')}
                 </Heading>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="text-center p-3 bg-purple-50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-900">13</div>
-                    <div className="text-xs text-purple-600">{t('ecology_edna_phyla')}</div>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="text-center p-2 sm:p-3 bg-purple-50 rounded-lg">
+                    <div className="text-lg sm:text-2xl font-semibold text-purple-900">13</div>
+                    <div className="text-[10px] sm:text-xs text-purple-600">{t('ecology_edna_phyla')}</div>
                   </div>
-                  <div className="text-center p-3 bg-purple-50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-900">14</div>
-                    <div className="text-xs text-purple-600">{t('ecology_edna_classes')}</div>
+                  <div className="text-center p-2 sm:p-3 bg-purple-50 rounded-lg">
+                    <div className="text-lg sm:text-2xl font-semibold text-purple-900">14</div>
+                    <div className="text-[10px] sm:text-xs text-purple-600">{t('ecology_edna_classes')}</div>
                   </div>
-                  <div className="text-center p-3 bg-purple-50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-900">16</div>
-                    <div className="text-xs text-purple-600">{t('ecology_edna_families')}</div>
+                  <div className="text-center p-2 sm:p-3 bg-purple-50 rounded-lg">
+                    <div className="text-lg sm:text-2xl font-semibold text-purple-900">16</div>
+                    <div className="text-[10px] sm:text-xs text-purple-600">{t('ecology_edna_families')}</div>
                   </div>
-                  <div className="text-center p-3 bg-purple-50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-900">80</div>
-                    <div className="text-xs text-purple-600">{t('ecology_edna_sequences')}</div>
+                  <div className="text-center p-2 sm:p-3 bg-purple-50 rounded-lg">
+                    <div className="text-lg sm:text-2xl font-semibold text-purple-900">80</div>
+                    <div className="text-[10px] sm:text-xs text-purple-600">{t('ecology_edna_sequences')}</div>
                   </div>
                 </div>
               </div>
@@ -562,28 +562,28 @@ const EcologyPage = () => {
               </div>
             </div>
             <div className="space-y-4">
-              <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl p-8 text-center text-white">
-                <div className="text-5xl md:text-6xl font-bold mb-2">1.2M</div>
-                <div className="text-lg mb-2">{t('ecology_water_liters')}</div>
-                <p className="text-sm text-blue-100">{t('ecology_water_impact')}</p>
+              <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl p-6 sm:p-8 text-center text-white">
+                <div className="text-2xl sm:text-3xl font-semibold mb-2">1.2M</div>
+                <div className="text-sm sm:text-base mb-2">{t('ecology_water_liters')}</div>
+                <p className="text-xs sm:text-sm text-blue-100">{t('ecology_water_impact')}</p>
               </div>
-              <div className="bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl p-6 text-white">
+              <div className="bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl p-4 sm:p-6 text-white">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-cyan-100">{t('ecology_water_table_title')}</span>
-                  <span className="text-xs bg-white/20 px-2 py-1 rounded">2024 → 2025</span>
+                  <span className="text-xs sm:text-sm font-medium text-cyan-100">{t('ecology_water_table_title')}</span>
+                  <span className="text-[10px] sm:text-xs bg-white/20 px-2 py-1 rounded">2024 → 2025</span>
                 </div>
-                <div className="flex items-end justify-center gap-6">
+                <div className="flex items-end justify-center gap-4 sm:gap-6">
                   <div className="text-center">
-                    <div className="text-3xl font-bold">20m</div>
-                    <div className="text-xs text-cyan-200">{t('ecology_water_table_before')}</div>
+                    <div className="text-lg sm:text-2xl font-semibold">20m</div>
+                    <div className="text-[10px] sm:text-xs text-cyan-200">{t('ecology_water_table_before')}</div>
                   </div>
-                  <div className="text-2xl mb-1">→</div>
+                  <div className="text-base sm:text-xl mb-1">→</div>
                   <div className="text-center">
-                    <div className="text-4xl font-bold text-cyan-100">3m</div>
-                    <div className="text-xs text-cyan-200">{t('ecology_water_table_after')}</div>
+                    <div className="text-lg sm:text-2xl font-semibold text-cyan-100">3m</div>
+                    <div className="text-[10px] sm:text-xs text-cyan-200">{t('ecology_water_table_after')}</div>
                   </div>
                 </div>
-                <p className="text-xs text-cyan-100 mt-3 text-center">{t('ecology_water_table_desc')}</p>
+                <p className="text-[10px] sm:text-xs text-cyan-100 mt-3 text-center">{t('ecology_water_table_desc')}</p>
               </div>
             </div>
           </div>

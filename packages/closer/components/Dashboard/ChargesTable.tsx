@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import { Charge } from '../../types/booking';
 import { Heading } from '../ui';
 import MultiSelect from '../ui/Select/MultiSelect';
@@ -13,6 +15,7 @@ const ChargesTable: React.FC<ChargesTableProps> = ({
   charges,
   loading = false,
 }) => {
+  const t = useTranslations();
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
 
   // Get unique charge types from the charges array
@@ -140,21 +143,20 @@ const ChargesTable: React.FC<ChargesTableProps> = ({
 
   return (
     <div className="bg-white shadow rounded-lg">
-      <div className="px-4 py-5 sm:p-6 space-y-6">
+      <div className="p-3 sm:p-4 space-y-4">
         <div className="sm:flex sm:items-center">
           <div className="sm:flex-auto">
-            <Heading level={3}>Charges</Heading>
+            <Heading level={3}>{t('dashboard_charges_title')}</Heading>
           </div>
         </div>
 
         {availableTypes.length > 0 && (
           <div className="mb-4">
             <MultiSelect
-              // label="Filter by Type"
               values={selectedTypes}
               options={availableTypes}
               onChange={setSelectedTypes}
-              placeholder="Select charge types to filter"
+              placeholder={t('dashboard_charges_select_types')}
               className="max-w-md"
             />
           </div>
@@ -164,8 +166,8 @@ const ChargesTable: React.FC<ChargesTableProps> = ({
           <div className="text-center py-12">
             <div className="text-gray-500">
               {selectedTypes.length === 0
-                ? 'No charges found'
-                : 'No charges match the selected types'}
+                ? t('dashboard_charges_no_charges')
+                : t('dashboard_charges_no_match')}
             </div>
           </div>
         ) : (
@@ -176,40 +178,40 @@ const ChargesTable: React.FC<ChargesTableProps> = ({
                   <thead>
                     <tr>
                       <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Date
+                        {t('dashboard_charges_date')}
                       </th>
                       <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        ID
+                        {t('dashboard_charges_id')}
                       </th>
                       <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Type
+                        {t('dashboard_charges_type')}
                       </th>
                       <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Status
+                        {t('dashboard_charges_status')}
                       </th>
                       <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Method
+                        {t('dashboard_charges_method')}
                       </th>
                       <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Total
+                        {t('dashboard_charges_total')}
                       </th>
                       <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Rental
+                        {t('dashboard_charges_rental')}
                       </th>
                       <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Food
+                        {t('dashboard_charges_food')}
                       </th>
                       <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Utilities
+                        {t('dashboard_charges_utilities')}
                       </th>
                       <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Event
+                        {t('dashboard_charges_event')}
                       </th>
                       <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Connect Fee
+                        {t('dashboard_charges_connect_fee')}
                       </th>
                       <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Stripe Fee
+                        {t('dashboard_charges_stripe_fee')}
                       </th>
                     </tr>
                   </thead>

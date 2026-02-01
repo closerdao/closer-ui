@@ -8,13 +8,22 @@ import ProfilePhoto from './ProfilePhoto';
 import { useTranslations } from 'next-intl';
 
 
+/**
+ * @param {Object} props
+ * @param {boolean} [props.list]
+ * @param {boolean} [props.preview]
+ * @param {string} [props.channel]
+ * @param {Object} [props.filter]
+ * @param {string} [props.title]
+ * @param {number} [props.limit]
+ */
 const MemberList = ({
-  list = undefined,
-  preview = undefined,
-  channel = undefined,
+  list = false,
+  preview = false,
+  channel,
   filter,
-  title = undefined,
-  limit = undefined,
+  title,
+  limit = 50,
 }) => {
   const t = useTranslations();
 
@@ -54,7 +63,7 @@ const MemberList = ({
   return (
     <section className="member-page">
       <h3 className="mt-9 mb-8 text-4xl font-light">
-        {title || 'Community members'}
+        {title || t('members_community_members')}
       </h3>
       {error && <div className="validation-error">{error}</div>}
       <div
@@ -116,8 +125,4 @@ const MemberList = ({
     </section>
   );
 };
-MemberList.defaultProps = {
-  limit: 50,
-};
-
 export default MemberList;
