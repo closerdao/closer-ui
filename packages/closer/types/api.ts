@@ -234,7 +234,7 @@ export type TokenSale = {
   attributes: any[];
   managedBy: string[];
   _id: string;
-  status: 'pending-payment' | 'completed' | 'paid' | 'cancelled';
+  status: 'pending-payment' | 'completed' | 'paid' | 'cancelled' | 'matched';
   buyer?: {
     email: string;
     screenname: string;

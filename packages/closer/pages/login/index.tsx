@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { FormEvent, useContext, useEffect, useState } from 'react';
 
 import GoogleButton from '../../components/GoogleButton';
+import TurnstileWidget from '../../components/TurnstileWidget';
 import { Card, ErrorMessage, Heading, Input } from '../../components/ui';
 import Button from '../../components/ui/Button';
 import Switcher from '../../components/ui/Switcher';
@@ -13,7 +14,6 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
-import TurnstileWidget from '../../components/TurnstileWidget';
 import { useAuth } from '../../contexts/auth';
 import { useNewsletter } from '../../contexts/newsletter';
 import { WalletDispatch, WalletState } from '../../contexts/wallet';
@@ -32,7 +32,7 @@ const Login = () => {
   const { account } = useContext(WalletState);
   const { signMessage, connectWallet } = useContext(WalletDispatch);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  
+
   // Safely use newsletter context
   let setHideFooterNewsletter: ((hide: boolean) => void) | undefined;
   try {
@@ -67,7 +67,7 @@ const Login = () => {
   const [isWeb3Loading, setWeb3Loading] = useState(false);
   const [isLoginWithWallet, setisLoginWithWallet] = useState(false);
   const [selectedSwitcherOption, setSelectedSwitcherOption] = useState('Email');
-  const [web3Error, setWeb3Error] = useState<string | null>(null); 
+  const [web3Error, setWeb3Error] = useState<string | null>(null);
 
   if (isAuthenticated && !hasSignedUp) {
     const redirectUrl = getRedirectUrl({
@@ -181,13 +181,13 @@ const Login = () => {
           connectedAccount,
         );
         // The account from WalletState might not be updated yet, so use connectedAccount
-        await signInWithWallet(connectedAccount); 
+        await signInWithWallet(connectedAccount);
       } else {
         console.log(
           '[walletConnectAndSignInFlow] No account returned from connectWallet or account is not available.',
         );
         // Optionally, set an error message for the user if no account was connected
-        setWeb3Error(t('wallet_connection_failed_no_account')); 
+        setWeb3Error(t('wallet_connection_failed_no_account'));
       }
     } catch (error) {
       console.log('[walletConnectAndSignInFlow] error during flow:', error);
@@ -275,7 +275,9 @@ const Login = () => {
                   <div className="flex flex-col justify-between items-center gap-4 sm:flex-row">
                     <div className="flex flex-col gap-4 w-full sm:flex-row py-6">
                       <Button
-                        isEnabled={!isWeb3Loading && !isLoading && !!turnstileToken}
+                        isEnabled={
+                          !isWeb3Loading && !isLoading && !!turnstileToken
+                        }
                         isLoading={isLoading}
                       >
                         {t('login_submit')}

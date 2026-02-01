@@ -33,19 +33,20 @@ const TokenSalesDashboardPage = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('paid');
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Platform data with filter - use useMemo to recalculate when page or filter changes
   const filterParams = useMemo(
     () => ({
       page: currentPage,
       limit: SALES_PER_PAGE,
       where: statusFilter === 'all' ? {} : { status: statusFilter },
+      ...(refreshKey > 0 ? { _refresh: refreshKey } : {}),
     }),
-    [currentPage, statusFilter],
+    [currentPage, statusFilter, refreshKey],
   );
 
   const sales = platform?.sale?.find(filterParams);
-  const totalSales = platform?.sale?.findCount(filterParams); // Use filtered count for pagination
+  const totalSales = platform?.sale?.findCount(filterParams);
   const loading = platform?.sale?.areLoading(filterParams);
 
   const loadData = async (
@@ -66,7 +67,7 @@ const TokenSalesDashboardPage = ({
     try {
       await Promise.all([
         platform.sale?.get(params),
-        platform.sale?.getCount(params), // Use filtered count for pagination
+        platform.sale?.getCount(params),
       ]);
       setCurrentPage(page);
     } catch (error) {
@@ -77,14 +78,40 @@ const TokenSalesDashboardPage = ({
   };
 
   const refetchSales = async (page: number = currentPage) => {
+    if (!platform) {
+      return;
+    }
+    if (page !== currentPage) {
+      setCurrentPage(page);
+      setRefreshKey(0);
+      return;
+    }
 
-    await loadData(page, statusFilter);
-    console.log('refetchSales completed');
+    const refreshTimestamp = Date.now();
+    const params = {
+      page: currentPage,
+      limit: SALES_PER_PAGE,
+      where: statusFilter === 'all' ? {} : { status: statusFilter },
+      _refresh: refreshTimestamp,
+    };
+    setIsLoading(true);
+    try {
+      await Promise.all([
+        platform.sale?.get(params),
+        platform.sale?.getCount(params),
+      ]);
+      setRefreshKey(refreshTimestamp);
+    } catch (error) {
+      console.error('Error loading sales data:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleFilterChange = async (filter: string) => {
     setStatusFilter(filter);
-    setCurrentPage(1); // Reset to page 1 when filter changes
+    setCurrentPage(1);
+    setRefreshKey(0);
     await loadData(1, filter);
   };
 
