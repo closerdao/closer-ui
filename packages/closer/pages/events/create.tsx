@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 
 import EditModel from '../../components/EditModel';
 import Heading from '../../components/ui/Heading';
+import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -12,13 +13,20 @@ import { loadLocaleData } from '../../utils/locale.helpers';
 import { FoodOption } from '../../types/food';
 import api from '../../utils/api';
 
-interface Props {
-  foodOptions: FoodOption[];
+interface EventsConfig {
+  enabled: boolean;
 }
 
-const CreateEvent = ({ foodOptions }: Props) => {
+interface Props {
+  foodOptions: FoodOption[];
+  eventsConfig: EventsConfig | null;
+}
+
+const CreateEvent = ({ foodOptions, eventsConfig }: Props) => {
   const t = useTranslations();
   const router = useRouter();
+
+  const isEventsEnabled = eventsConfig?.enabled !== false;
 
   const foodOptionsWithDefault = [
     {
@@ -34,6 +42,10 @@ const CreateEvent = ({ foodOptions }: Props) => {
       value: option._id,
     })),
   ];
+
+  if (!isEventsEnabled) {
+    return <FeatureNotEnabled feature="events" />;
+  }
 
   return (
     <>
@@ -60,24 +72,28 @@ const CreateEvent = ({ foodOptions }: Props) => {
 
 CreateEvent.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [foodRes, messages] = await Promise.all([
-
+    const [foodRes, eventsRes, messages] = await Promise.all([
       api.get('/food').catch((err) => {
         console.error('Error fetching food:', err);
         return null;
       }),
+      api.get('/config/events').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const foodOptions = foodRes?.data?.results;
+    const eventsConfig = eventsRes?.data?.results?.value;
+
     return {
       messages,
       foodOptions,
+      eventsConfig,
     };
   } catch (err: unknown) {
     return {
       messages: null,
       foodOptions: null,
+      eventsConfig: null,
     };
   }
 };

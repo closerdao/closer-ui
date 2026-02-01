@@ -19,7 +19,7 @@ import {
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
-import PageNotFound from '../../not-found';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 interface Props extends BaseBookingParams {
   booking: Booking | null;
@@ -71,7 +71,7 @@ const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
   }
 
   if (!isBookingEnabled) {
-    return <PageNotFound />;
+    return <FeatureNotEnabled feature="booking" />;
   }
 
   if (!_id) {

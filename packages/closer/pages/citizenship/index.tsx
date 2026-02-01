@@ -20,6 +20,7 @@ import {
   Hammer,
   Handshake,
   HeartHandshake,
+  MessageCircle,
   ShieldCheck,
   Sprout,
   Star,
@@ -652,6 +653,33 @@ const CitizenshipPage = ({
                 </CardContent>
               </Card>
             ))}
+          </div>
+
+          <div className="mt-12 bg-gradient-to-r from-[#0088cc] to-[#00aced] rounded-2xl p-6 text-white">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <MessageCircle className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="font-semibold text-lg">
+                    {t('join_community_banner_title')}
+                  </p>
+                  <p className="text-white/80 text-sm">
+                    {t('join_community_banner_subtitle')}
+                  </p>
+                </div>
+              </div>
+              <a
+                href="https://t.me/traditionaldreamfactor"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-[#0088cc] hover:bg-gray-100 rounded-xl transition-colors font-semibold whitespace-nowrap"
+              >
+                <MessageCircle className="w-5 h-5" />
+                {t('join_community_telegram_button')}
+              </a>
+            </div>
           </div>
         </div>
       </section>

@@ -10,7 +10,6 @@ import { ArticleWithAuthorInfo } from '../../types/blog';
 import { cdn } from '../../utils/api';
 import { estimateReadingTime, getCleanString } from '../../utils/blog.utils';
 import Pagination from '../Pagination';
-import { Heading, LinkButton } from '../ui';
 
 interface Props {
   articlesWithAuthorInfo: ArticleWithAuthorInfo[];
@@ -27,9 +26,9 @@ const ArticleList = ({
 }: Props) => {
   const t = useTranslations();
   return (
-    <div className="pb-12 flex flex-col">
-      <div className="max-w-[900px] pb-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-14 gap-y-[100px] pt-20 pb-0">
+    <div className="w-full flex flex-col items-center">
+      <div className="w-full max-w-5xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {articlesWithAuthorInfo
             .slice(page === 1 || !page ? 1 : 0)
             .map((article) => {
@@ -38,115 +37,96 @@ const ArticleList = ({
                   ? `${cdn}${article?.photo}-post-md.jpg`
                   : article.photo;
               return (
-                <div key={article.slug} className="flex flex-col gap-4">
+                <article key={article.slug} className="group flex flex-col bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                   <Link
-                    className="text-white uppercase no-underline tracking-wide hover:text-accent"
                     href={`/blog/${article.slug}`}
+                    className="block"
                   >
-                    <div className="h-[140px] w-full rounded-md overflow-hidden shadow-md">
+                    <div className="aspect-[16/10] w-full overflow-hidden bg-gray-100">
                       {imageUrl ? (
                         <Image
-                          className="object-cover h-full w-full "
+                          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                           src={imageUrl || ''}
                           alt={article?.title}
-                          width={200}
-                          height={140}
+                          width={400}
+                          height={250}
                         />
                       ) : (
-                        <div className="bg-accent-alt w-full h-full">
-                          <Image
-                            className="object-cover h-full w-full "
-                            src={`${cdn}${DEFAULT_BLOG_IMAGE_ID}-max-lg.jpg`}
-                            alt={article?.title}
-                            width={400}
-                            height={300}
-                          />
-                        </div>
+                        <Image
+                          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                          src={`${cdn}${DEFAULT_BLOG_IMAGE_ID}-max-lg.jpg`}
+                          alt={article?.title}
+                          width={400}
+                          height={250}
+                        />
                       )}
                     </div>
                   </Link>
-                  <div className="flex flex-col gap-6 justify-between h-full ">
-                    <Heading level={3} className=" text-md">
-                      <Link
-                        className="text-white uppercase no-underline tracking-wide hover:text-accent"
-                        href={`/blog/${article.slug}`}
-                      >
-                        {article?.title}
-                      </Link>
-                    </Heading>
-
-                    <p
-                      className="text-transparent bg-clip-text"
-                      style={{
-                        backgroundImage:
-                          'linear-gradient(0deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 1))',
-                      }}
+                  <div className="flex flex-col flex-1 p-5">
+                    <Link
+                      href={`/blog/${article.slug}`}
+                      className="block mb-3"
                     >
+                      <h3 className="font-semibold text-gray-900 group-hover:text-accent transition-colors line-clamp-2">
+                        {article?.title}
+                      </h3>
+                    </Link>
+
+                    <p className="text-sm text-gray-600 line-clamp-3 mb-4 flex-1">
                       {article?.summary
-                        ? article.summary.substring(0, 160)
-                        : getCleanString(article?.html).substring(0, 160)}
+                        ? article.summary.substring(0, 120)
+                        : getCleanString(article?.html).substring(0, 120)}
                       ...
                     </p>
 
-                    <div className="flex gap-2 items-center pt-6">
-                      <div className="flex-grow flex gap-2">
-                        <Link
-                          className="text-accent font-normal text-lg no-underline normal-case"
-                          href={
-                            article?.authorInfo?._id
-                              ? `/members/${article?.authorInfo?._id}`
-                              : '#'
-                          }
-                        >
-                          {article?.authorInfo?.photo ? (
-                            <Image
-                              className="rounded-full"
-                              src={`${cdn}${article.authorInfo.photo}-profile-sm.jpg`}
-                              alt={article?.authorInfo?.screenname || ''}
-                              width={35}
-                              height={35}
-                            />
-                          ) : (
-                            <div className="rounded-full overflow-hidden">
-                              <FaUser className="text-neutral w-[35px] h-[35px] " />
-                            </div>
-                          )}
-                        </Link>
-                        <div className="flex flex-col text-left text-white text-sm">
-                          <p className="font-normal">
-                            {dayjs(article?.updated).format('MMM DD, YYYY')}
-                          </p>
-                          <p>
-                            {estimateReadingTime(article?.html)}{' '}
-                            {t('blog_min_read')}
-                          </p>
-                        </div>
-                      </div>
-                      <LinkButton
-                        size="small"
-                        isFullWidth={false}
-                        href={`/blog/${article.slug}`}
-                        className="bg-white "
-                        variant="secondary"
+                    <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
+                      <Link
+                        href={
+                          article?.authorInfo?._id
+                            ? `/members/${article?.authorInfo?._id}`
+                            : '#'
+                        }
                       >
-                        {t('blog_read_more')}
-                      </LinkButton>
+                        {article?.authorInfo?.photo ? (
+                          <Image
+                            className="rounded-full"
+                            src={`${cdn}${article.authorInfo.photo}-profile-sm.jpg`}
+                            alt={article?.authorInfo?.screenname || ''}
+                            width={32}
+                            height={32}
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                            <FaUser className="text-gray-400 w-4 h-4" />
+                          </div>
+                        )}
+                      </Link>
+                      <div className="flex-1 text-xs text-gray-500">
+                        <p className="font-medium text-gray-700">
+                          {article?.authorInfo?.screenname}
+                        </p>
+                        <p>
+                          {dayjs(article?.updated).format('MMM D, YYYY')} · {estimateReadingTime(article?.html)} {t('blog_min_read')}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </article>
               );
             })}
         </div>
       </div>
-      <Pagination
-        loadPage={(page: number) => {
-          loadPage(page);
-        }}
-        page={page || 1}
-        limit={BLOG_POSTS_PER_PAGE}
-        total={numArticles}
-        isInverted={true}
-      />
+      <div className="mt-12">
+        <Pagination
+          loadPage={(page: number) => {
+            loadPage(page);
+          }}
+          page={page || 1}
+          limit={BLOG_POSTS_PER_PAGE}
+          total={numArticles}
+          isInverted={false}
+        />
+      </div>
     </div>
   );
 };

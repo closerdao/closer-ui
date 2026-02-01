@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../contexts/auth';
 import { useConfig } from '../hooks/useConfig';
 import api from '../utils/api';
+import FundraisingWidget from './FundraisingWidget';
 import GuestMenu from './GuestMenu';
 import Logo from './Logo';
 import MemberMenu from './MemberMenu';
@@ -25,6 +26,8 @@ const Navigation = () => {
 
   const [navOpen, setNavOpen] = useState(false);
   const [isBookingEnabled, setIsBookingEnabled] = useState(false);
+  const [isFundraiserEnabled, setIsFundraiserEnabled] = useState(false);
+  const [fundraisingConfig, setFundraisingConfig] = useState(null);
 
   const { setIsOpen: setPromptGetInTouchOpen } = useContext(
     PromptGetInTouchContext,
@@ -44,6 +47,29 @@ const Navigation = () => {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (
+      APP_NAME?.toLowerCase() !== 'tdf' ||
+      process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US !== 'true'
+    ) {
+      return;
+    }
+    (async () => {
+      try {
+        const fundraiserRes = await api
+          .get('/config/fundraiser')
+          .catch(() => null);
+        const config = fundraiserRes?.data?.results?.value;
+        if (config?.enabled) {
+          setIsFundraiserEnabled(true);
+          setFundraisingConfig(config);
+        }
+      } catch (err) {
+        return;
+      }
+    })();
+  }, [APP_NAME]);
 
   const toggleNav = () => {
     setNavOpen((isOpen) => !isOpen);
@@ -255,7 +281,8 @@ const Navigation = () => {
 
           {APP_NAME && APP_NAME?.toLowerCase() === 'tdf' && (
             <>
-              {isAuthenticated && isMember ? (
+              {isFundraiserEnabled && <FundraisingWidget variant="nav" fundraisingConfig={fundraisingConfig} />}
+              {isAuthenticated && isMember && isBookingEnabled ? (
                 <Button
                   onClick={() => router.push('/bookings/create/dates')}
                   size="small"

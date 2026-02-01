@@ -449,6 +449,18 @@ const CohousingPage = () => {
         </div>
       </section>
 
+      {/* Honesty Note */}
+      <section className="bg-white py-16 md:py-20 border-t border-gray-200">
+        <div className="max-w-2xl mx-auto px-6 text-center">
+          <Heading level={3} className="mb-4 text-xl md:text-2xl font-normal text-gray-700 tracking-tight">
+            {t('cohousing_honesty_title')}
+          </Heading>
+          <p className="text-base text-gray-600 leading-relaxed font-light">
+            {t('cohousing_honesty_text')}
+          </p>
+        </div>
+      </section>
+
       {/* Final CTA */}
       <section className="bg-gray-50 py-24 md:py-32 border-t border-gray-200">
         <div className="max-w-2xl mx-auto px-6 text-center">

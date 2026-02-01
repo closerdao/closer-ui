@@ -18,6 +18,7 @@ import { FoodOption } from '../../../types/food';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -46,15 +47,22 @@ const convertFromUTC = (
   return utcDate.tz(timeZone).format('YYYY-MM-DDTHH:mm:ss');
 };
 
+interface EventsConfig {
+  enabled: boolean;
+}
+
 interface Props {
   event: Event;
   foodOptions: FoodOption[];
   error?: string;
   generalConfig: GeneralConfig;
+  eventsConfig: EventsConfig | null;
 }
 
-const EditEvent = ({ event, error, foodOptions, generalConfig }: Props) => {
+const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig }: Props) => {
   const t = useTranslations();
+
+  const isEventsEnabled = eventsConfig?.enabled !== false;
 
   console.log('generalConfig=', generalConfig);
 
@@ -108,6 +116,10 @@ const EditEvent = ({ event, error, foodOptions, generalConfig }: Props) => {
       end: data.end ? dayjs(data.end).utc().toISOString() : data.end,
     };
   };
+  if (!isEventsEnabled) {
+    return <FeatureNotEnabled feature="events" />;
+  }
+
   if (!event) {
     return <Heading>{t('events_slug_edit_error')}</Heading>;
   }
@@ -162,7 +174,7 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No event');
     }
 
-    const [generalConfigRes, eventRes, foodRes, messages] = await Promise.all([
+    const [generalConfigRes, eventRes, foodRes, eventsRes, messages] = await Promise.all([
       api.get('/config/general').catch((err) => {
         console.error('Error fetching general config:', err);
         return null;
@@ -178,14 +190,16 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
         console.error('Error fetching food:', err);
         return null;
       }),
+      api.get('/config/events').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const generalConfig = generalConfigRes?.data?.results?.value;
     const event = eventRes?.data?.results;
     const foodOptions = foodRes?.data?.results;
+    const eventsConfig = eventsRes?.data?.results?.value;
 
-    return { event, foodOptions, messages, generalConfig };
+    return { event, foodOptions, messages, generalConfig, eventsConfig };
   } catch (err) {
     console.log(err);
     return {
@@ -193,6 +207,7 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
       generalConfig: null,
       messages: null,
       foodOptions: null,
+      eventsConfig: null,
     };
   }
 };
