@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import ReportDownloadModal from '../components/ReportDownloadModal';
 import LandingPagePhotoMosaic from '../components/LandingPagePhotoMosaic';
@@ -12,13 +12,10 @@ import UpcomingEventsIntro from 'closer/components/UpcomingEventsIntro';
 
 import {
   Heading,
-  WalletState,
   useAuth,
   Webinar,
 } from 'closer';
-import { useBuyTokens } from 'closer/hooks/useBuyTokens';
-import { useConfig } from 'closer/hooks/useConfig';
-import { FundraisingConfig } from 'closer/types';
+import { DEFAULT_TOKEN_STATS, FundraisingConfig, TokenStats } from 'closer/types';
 import api from 'closer/utils/api';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { ArrowRight, Check, Circle, Home, Users, Sprout, Heart, Palette, RefreshCw, TreePine, Users2, Laptop, Sparkles } from 'lucide-react';
@@ -30,20 +27,16 @@ const HomePage = () => {
   const t = useTranslations();
 
   const { isAuthenticated, user } = useAuth();
-  const { isWalletReady } = useContext(WalletState);
-  const { getCurrentSupplyWithoutWallet } = useBuyTokens();
-  const { BLOCKCHAIN_DAO_TOKEN } = useConfig() || {};
   const router = useRouter();
 
   const [selectedReport, setSelectedReport] = useState<{
     year: string;
     url: string;
   } | null>(null);
-  const [currentSupply, setCurrentSupply] = useState<number | null>(null);
-  const [tokenHolders, setTokenHolders] = useState<number | null>(null);
-  const [isLoadingChainData, setIsLoadingChainData] = useState(false);
+  const [tokenStats, setTokenStats] = useState<TokenStats>(DEFAULT_TOKEN_STATS);
+  const [isLoadingTokenStats, setIsLoadingTokenStats] = useState(true);
   const [fundraisingConfig, setFundraisingConfig] = useState<FundraisingConfig | null>(null);
-  const hasFetchedChainData = useRef(false);
+  const hasFetchedTokenStats = useRef(false);
 
   const isFundraiserEnabled = process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true';
 
@@ -63,71 +56,24 @@ const HomePage = () => {
   }, [isFundraiserEnabled]);
 
   useEffect(() => {
-    if (!BLOCKCHAIN_DAO_TOKEN?.address) {
-      setCurrentSupply(null);
-      setTokenHolders(null);
-      return;
-    }
-    
-    if (hasFetchedChainData.current) return;
-    
-    hasFetchedChainData.current = true;
-    const fetchTokenData = async () => {
-      setIsLoadingChainData(true);
+    if (hasFetchedTokenStats.current) return;
+    hasFetchedTokenStats.current = true;
+
+    const fetchTokenStats = async () => {
+      setIsLoadingTokenStats(true);
       try {
-        const supply = await getCurrentSupplyWithoutWallet();
-        setCurrentSupply(supply || null);
-        
-        try {
-          const contractAddress = BLOCKCHAIN_DAO_TOKEN.address.toLowerCase();
-          const holderListUrl = `https://api.celoscan.io/api?module=token&action=tokenholderlist&contractaddress=${contractAddress}&page=1&offset=10000`;
-          
-          const response = await fetch(holderListUrl).catch((err) => {
-            console.error('Fetch error:', err);
-            return null;
-          });
-          
-          if (response?.ok) {
-            const data = await response.json();
-            
-            if (data.status === '1' && data.result) {
-              if (Array.isArray(data.result) && data.result.length > 0) {
-                const holderAddresses = data.result.map((holder: any) => {
-                  if (typeof holder === 'string') {
-                    return holder.toLowerCase();
-                  }
-                  return (holder.TokenHolderAddress || holder.address || '').toLowerCase();
-                }).filter(Boolean);
-                
-                const uniqueHolders = new Set(holderAddresses).size;
-                setTokenHolders(uniqueHolders);
-              } else if (Array.isArray(data.result) && data.result.length === 0) {
-                setTokenHolders(0);
-              } else {
-                setTokenHolders(null);
-              }
-            } else if (data.status === '0' && data.message) {
-              setTokenHolders(null);
-            } else {
-              setTokenHolders(null);
-            }
-          } else {
-            setTokenHolders(null);
-          }
-        } catch (err) {
-          console.error('Error fetching token holders:', err);
-          setTokenHolders(null);
+        const res = await api.get('/token/stats');
+        if (res?.data) {
+          setTokenStats(res.data);
         }
       } catch (error) {
-        console.error('Error fetching token data:', error);
-        setCurrentSupply(null);
-        setTokenHolders(null);
+        console.error('Error fetching token stats:', error);
       } finally {
-        setIsLoadingChainData(false);
+        setIsLoadingTokenStats(false);
       }
     };
 
-    fetchTokenData();
+    fetchTokenStats();
   }, []);
 
   return (
@@ -413,7 +359,7 @@ const HomePage = () => {
                     {t('home_token_stat_holders')}
                   </div>
                   <div className="text-lg sm:text-2xl font-semibold text-gray-900">
-                    {isLoadingChainData ? '...' : (tokenHolders !== null ? tokenHolders.toLocaleString() : '280')}
+                    {isLoadingTokenStats ? '...' : tokenStats.tokenHolders.toLocaleString()}
                   </div>
                 </div>
                 <div className="bg-gray-50 rounded border border-gray-300 p-3 sm:p-5">
@@ -421,14 +367,14 @@ const HomePage = () => {
                     {t('home_token_stat_supply')}
                   </div>
                   <div className="text-lg sm:text-2xl font-semibold text-gray-900">
-                    {isLoadingChainData ? '...' : (currentSupply !== null ? currentSupply.toLocaleString() : '—')}
+                    {isLoadingTokenStats ? '...' : tokenStats.currentSupply.toLocaleString()}
                   </div>
                 </div>
                 <div className="bg-gray-50 rounded border border-gray-300 p-3 sm:p-5">
                   <div className="text-[10px] sm:text-xs uppercase tracking-wider text-gray-600 mb-2">
                     {t('home_token_stat_price')}
                   </div>
-                  <div className="text-lg sm:text-2xl font-semibold text-gray-900">€256</div>
+                  <div className="text-lg sm:text-2xl font-semibold text-gray-900">€{isLoadingTokenStats ? '...' : tokenStats.tokenPrice}</div>
                   <div className="text-[10px] sm:text-xs text-gray-600 mt-1">{t('home_token_stat_price_note')}</div>
                 </div>
                 <div className="bg-gray-50 rounded border border-gray-300 p-3 sm:p-5">

@@ -14,9 +14,8 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { MAX_LISTINGS_TO_FETCH } from '../../constants';
-import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
-import { GeneralConfig, Listing } from '../../types';
+import { DEFAULT_TOKEN_STATS, GeneralConfig, Listing, TokenStats } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
@@ -35,133 +34,33 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
-  const { getTokensAvailableForPurchase, getCurrentSupplyWithoutWallet } = useBuyTokens();
-  const { BLOCKCHAIN_DAO_TOKEN } = defaultConfig || {};
 
   const router = useRouter();
 
-  const [tokensAvailable, setTokensAvailable] = useState<number | null>(null);
-  const [currentSupply, setCurrentSupply] = useState<number | null>(null);
-  const [tokenHolders, setTokenHolders] = useState<number | null>(null);
-  const [isLoadingChainData, setIsLoadingChainData] = useState(false);
-  const hasFetchedChainData = useRef(false);
-  const hasFetchedTokensAvailable = useRef(false);
-  const tokenAddressRef = useRef<string | null>(null);
-  const isFetchingChainData = useRef(false);
-  const isFetchingTokensAvailable = useRef(false);
-
-  const tokenAddress = BLOCKCHAIN_DAO_TOKEN?.address || null;
+  const [tokenStats, setTokenStats] = useState<TokenStats>(DEFAULT_TOKEN_STATS);
+  const [isLoadingTokenStats, setIsLoadingTokenStats] = useState(true);
+  const hasFetchedTokenStats = useRef(false);
 
   useEffect(() => {
-    if (hasFetchedTokensAvailable.current || isFetchingTokensAvailable.current) return;
-    
-    hasFetchedTokensAvailable.current = true;
-    isFetchingTokensAvailable.current = true;
-    
-    (async () => {
-      try {
-        const remainingAmount = await getTokensAvailableForPurchase();
-        setTokensAvailable(remainingAmount);
-      } catch (error) {
-        console.error('Error fetching tokens available:', error);
-        setTokensAvailable(0);
-      } finally {
-        isFetchingTokensAvailable.current = false;
-      }
-    })();
-  }, [getTokensAvailableForPurchase]);
+    if (hasFetchedTokenStats.current) return;
+    hasFetchedTokenStats.current = true;
 
-  useEffect(() => {
-    if (!tokenAddress) {
-      if (!hasFetchedChainData.current) {
-        setCurrentSupply(0);
-        setTokenHolders(0);
-      }
-      return;
-    }
-    
-    if (tokenAddressRef.current === tokenAddress && hasFetchedChainData.current) {
-      return;
-    }
-    
-    if (isFetchingChainData.current) {
-      return;
-    }
-    
-    tokenAddressRef.current = tokenAddress;
-    hasFetchedChainData.current = true;
-    isFetchingChainData.current = true;
-    
-    const fetchChainData = async () => {
-      setIsLoadingChainData(true);
+    const fetchTokenStats = async () => {
+      setIsLoadingTokenStats(true);
       try {
-        const supply = await getCurrentSupplyWithoutWallet();
-        setCurrentSupply(supply || 0);
-
-        try {
-          const contractAddress = tokenAddress.toLowerCase();
-          const holderListUrl = `https://api.celoscan.io/api?module=token&action=tokenholderlist&contractaddress=${contractAddress}&page=1&offset=10000`;
-          
-          const response = await fetch(holderListUrl).catch((err) => {
-            console.error('Fetch error:', err);
-            return null;
-          });
-          
-          if (response?.ok) {
-            const data = await response.json();
-            console.log('Celoscan tokenholderlist response:', data);
-            
-            if (data.status === '1' && data.result) {
-              if (Array.isArray(data.result) && data.result.length > 0) {
-                const holderAddresses = data.result.map((holder: any) => {
-                  if (typeof holder === 'string') {
-                    return holder.toLowerCase();
-                  }
-                  return (holder.TokenHolderAddress || holder.address || '').toLowerCase();
-                }).filter(Boolean);
-                
-                const uniqueHolders = new Set(holderAddresses).size;
-                console.log('Token holders found:', uniqueHolders, 'from', data.result.length, 'results');
-                setTokenHolders(uniqueHolders);
-              } else if (Array.isArray(data.result) && data.result.length === 0) {
-                console.log('Empty holder list returned');
-                setTokenHolders(0);
-              } else {
-                console.warn('Unexpected result format:', typeof data.result, data.result);
-                setTokenHolders(null);
-              }
-            } else if (data.status === '0' && data.message) {
-              console.warn('API error:', data.message);
-              if (data.message.includes('rate limit') || data.message.includes('Invalid API Key')) {
-                setTokenHolders(null);
-              } else {
-                setTokenHolders(null);
-              }
-            } else {
-              console.warn('Unexpected API response format:', data);
-              setTokenHolders(null);
-            }
-          } else {
-            const errorText = await response?.text().catch(() => 'Unknown error');
-            console.error('API response not OK:', response?.status, response?.statusText, errorText);
-            setTokenHolders(null);
-          }
-        } catch (error) {
-          console.error('Error fetching token holders:', error);
-          setTokenHolders(null);
+        const res = await api.get('/token/stats');
+        if (res?.data) {
+          setTokenStats(res.data);
         }
       } catch (error) {
-        console.error('Error fetching chain data:', error);
-        setCurrentSupply(0);
-        setTokenHolders(0);
+        console.error('Error fetching token stats:', error);
       } finally {
-        setIsLoadingChainData(false);
-        isFetchingChainData.current = false;
+        setIsLoadingTokenStats(false);
       }
     };
 
-    fetchChainData();
-  }, [tokenAddress, getCurrentSupplyWithoutWallet]);
+    fetchTokenStats();
+  }, []);
 
   useEffect(() => {
     if (!hasComponentRendered.current) {
@@ -258,7 +157,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
                 <Card className="p-4 text-center bg-white/90">
                   <div className="text-2xl md:text-3xl font-bold text-accent mb-1">
-                    {isLoadingChainData ? '...' : (currentSupply !== null ? currentSupply.toLocaleString() : '—')}
+                    {isLoadingTokenStats ? '...' : tokenStats.currentSupply.toLocaleString()}
                   </div>
                   <div className="text-xs md:text-sm text-gray-600">
                     {t('token_supply_current')}
@@ -267,9 +166,9 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
                 <Card className="p-4 text-center bg-white/90">
                   <div className="text-2xl md:text-3xl font-bold text-accent mb-1">
-                    {currentSupply !== null 
-                      ? Math.max(0, Math.round(currentSupply - (18600 * 0.2))).toLocaleString()
-                      : '—'}
+                    {isLoadingTokenStats 
+                      ? '...'
+                      : Math.max(0, Math.round(tokenStats.currentSupply - (18600 * 0.2))).toLocaleString()}
                   </div>
                   <div className="text-xs md:text-sm text-gray-600">
                     {t('token_supply_sold')}
@@ -278,9 +177,9 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
                 <Card className="p-4 text-center bg-white/90">
                   <div className="text-2xl md:text-3xl font-bold text-accent mb-1">
-                    {currentSupply !== null 
-                      ? Math.max(0, 18600 - currentSupply).toLocaleString()
-                      : (isLoadingChainData ? '...' : '—')}
+                    {isLoadingTokenStats 
+                      ? '...'
+                      : Math.max(0, 18600 - tokenStats.currentSupply).toLocaleString()}
                   </div>
                   <div className="text-xs md:text-sm text-gray-600">
                     {t('token_supply_remaining')}
@@ -504,29 +403,29 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                     <div className="flex justify-between">
                       <span className="text-gray-700">{t('token_supply_current')}</span>
                       <span className="font-semibold">
-                        {isLoadingChainData ? t('token_supply_loading') : (currentSupply !== null ? currentSupply.toLocaleString() : '—')}
+                        {isLoadingTokenStats ? t('token_supply_loading') : tokenStats.currentSupply.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-700">{t('token_supply_sold')}</span>
                       <span className="font-semibold">
-                        {currentSupply !== null 
-                          ? Math.max(0, Math.round(currentSupply - (18600 * 0.2))).toLocaleString()
-                          : t('token_supply_sold_amount')}
+                        {isLoadingTokenStats 
+                          ? t('token_supply_loading')
+                          : Math.max(0, Math.round(tokenStats.currentSupply - (18600 * 0.2))).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-700">{t('token_supply_remaining')}</span>
                       <span className="font-semibold">
-                        {currentSupply !== null 
-                          ? Math.max(0, 18600 - currentSupply).toLocaleString()
-                          : (isLoadingChainData ? t('token_supply_loading') : '—')}
+                        {isLoadingTokenStats 
+                          ? t('token_supply_loading')
+                          : Math.max(0, 18600 - tokenStats.currentSupply).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between pt-2 border-t">
                       <span className="text-gray-700">{t('token_holders_count')}</span>
                       <span className="font-semibold">
-                        {isLoadingChainData ? t('token_supply_loading') : (tokenHolders !== null ? tokenHolders.toLocaleString() : '280+')}
+                        {isLoadingTokenStats ? t('token_supply_loading') : tokenStats.tokenHolders.toLocaleString()}
                       </span>
                     </div>
                   </div>
