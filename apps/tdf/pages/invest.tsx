@@ -16,7 +16,7 @@ import { Heading, LinkButton } from 'closer/components/ui';
 
 import { PageNotFound } from 'closer';
 import { useBuyTokens } from 'closer/hooks/useBuyTokens';
-import { FundraisingConfig, MilestoneStatus } from 'closer/types';
+import { FundraisingConfig, FundraisingMilestone, MilestoneStatus } from 'closer/types';
 import api, { formatSearch } from 'closer/utils/api';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import {
@@ -34,6 +34,52 @@ import {
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
+
+const DEFAULT_END_DATE = '2026-05-31T23:59:59.999Z';
+
+const findActiveMilestone = (milestones: FundraisingMilestone[] | undefined): FundraisingMilestone | null => {
+  if (!milestones || milestones.length === 0) return null;
+  
+  const now = new Date();
+  const FAR_FUTURE = new Date('2100-01-01T00:00:00.000Z');
+  
+  const sortedByStartDesc = [...milestones].sort((a, b) => {
+    const startA = a.startDate ? new Date(a.startDate).getTime() : 0;
+    const startB = b.startDate ? new Date(b.startDate).getTime() : 0;
+    return startB - startA;
+  });
+  
+  const activeMilestone = sortedByStartDesc.find(m => {
+    if (!m.startDate) return false;
+    
+    const start = new Date(m.startDate);
+    start.setHours(0, 0, 0, 0);
+    
+    const end = m.endDate ? new Date(m.endDate) : FAR_FUTURE;
+    if (m.endDate) end.setHours(23, 59, 59, 999);
+    
+    return now >= start && now <= end;
+  });
+  
+  if (activeMilestone) return activeMilestone;
+  
+  const sortedByStartAsc = [...milestones].sort((a, b) => {
+    const startA = a.startDate ? new Date(a.startDate).getTime() : Infinity;
+    const startB = b.startDate ? new Date(b.startDate).getTime() : Infinity;
+    return startA - startB;
+  });
+  
+  const futureMilestones = sortedByStartAsc.filter(m => {
+    if (!m.startDate) return false;
+    const start = new Date(m.startDate);
+    start.setHours(0, 0, 0, 0);
+    return start > now;
+  });
+  
+  if (futureMilestones.length > 0) return futureMilestones[0];
+  
+  return sortedByStartDesc[0] || null;
+};
 
 interface Props {
   fundraisingConfig: FundraisingConfig;
@@ -125,35 +171,56 @@ const InvestPage = ({ fundraisingConfig }: Props) => {
   const [totalRaised, setTotalRaised] = useState<number>(0);
   const [isLoadingFunds, setIsLoadingFunds] = useState(true);
 
+  const activeMilestone = useMemo(() => {
+    return findActiveMilestone(fundraisingConfig?.milestones);
+  }, [fundraisingConfig?.milestones]);
+
   useEffect(() => {
     const fetchTotalRaised = async () => {
       try {
-        const cryptoWhere = { type: 'tokenSale', status: 'paid' };
-        const fiatWhere = { type: 'fiatTokenSale', status: 'paid' };
+        const startDate = activeMilestone?.startDate || null;
+        const endDate = activeMilestone?.endDate || DEFAULT_END_DATE;
+
+        const dateFilter: Record<string, string> = {};
+        if (startDate) {
+          dateFilter.$gte = startDate;
+        }
+        if (endDate) {
+          dateFilter.$lte = endDate;
+        }
+
+        const cryptoWhere: Record<string, unknown> = {
+          type: 'tokenSale',
+          status: 'paid',
+        };
+        const fiatWhere: Record<string, unknown> = {
+          type: 'fiatTokenSale',
+          status: 'paid',
+        };
+
+        if (Object.keys(dateFilter).length > 0) {
+          cryptoWhere.created = dateFilter;
+          fiatWhere.created = dateFilter;
+        }
 
         const [cryptoRes, fiatRes] = await Promise.all([
-          api.get('/charge', {
-            params: { where: formatSearch(cryptoWhere), limit: 5000 },
+          api.get('/sum/charge/amount.total.val', {
+            params: { where: formatSearch(cryptoWhere) },
           }).catch(() => null),
-          api.get('/charge', {
-            params: { where: formatSearch(fiatWhere), limit: 5000 },
+          api.get('/sum/charge/amount.total.val', {
+            params: { where: formatSearch(fiatWhere) },
           }).catch(() => null),
         ]);
 
-        const cryptoTotal = cryptoRes?.data?.results?.reduce((sum: number, charge: any) => {
-          const val = charge.amount?.total?.val;
-          return sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0);
-        }, 0) || 0;
-
-        const fiatTotal = fiatRes?.data?.results?.reduce((sum: number, charge: any) => {
-          const val = charge.amount?.total?.val;
-          return sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0);
-        }, 0) || 0;
+        const cryptoTotal = cryptoRes?.data?.sum || 0;
+        const fiatTotal = fiatRes?.data?.sum || 0;
 
         const loansTotal = (fundraisingConfig?.loans || [])
+          .filter(loan => !activeMilestone || loan.countsTowardMilestone === activeMilestone.id)
           .reduce((sum, loan) => sum + (Number(loan.amount) || 0), 0);
 
         const adjustmentsTotal = (fundraisingConfig?.manualAdjustments || [])
+          .filter(adj => !activeMilestone || adj.countsTowardMilestone === activeMilestone.id)
           .reduce((sum, adj) => sum + (Number(adj.amount) || 0), 0);
 
         setTotalRaised(cryptoTotal + fiatTotal + loansTotal + adjustmentsTotal);
@@ -165,7 +232,7 @@ const InvestPage = ({ fundraisingConfig }: Props) => {
     };
 
     fetchTotalRaised();
-  }, [fundraisingConfig]);
+  }, [fundraisingConfig, activeMilestone]);
 
   const phaseStates = useMemo(() => {
     return computePhaseStates(totalRaised);

@@ -9,7 +9,7 @@ import { TokenSale } from '../../types/api';
 import api, { formatSearch } from '../../utils/api';
 import Modal from '../Modal';
 import Pagination from '../Pagination';
-import { Input, LinkButton, Spinner } from '../ui/';
+import { Input, Spinner } from '../ui/';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import { Badge } from '../ui/badge';
@@ -354,10 +354,6 @@ const SalesDashboard = ({
     }).format(price);
   };
 
-  const isFiatTokenSale = (sale: TokenSale): boolean => {
-    return sale.product_type === 'token' && !!sale.meta?.normalizedSenderIban;
-  };
-
   return (
     <div className="container mx-auto p-6 space-y-6">
       <Card className="bg-background">
@@ -447,14 +443,7 @@ const SalesDashboard = ({
                   } border-b border-border hover:bg-muted/50`}
                 >
                   <td className="p-4 font-medium align-top">
-                    <div className="flex flex-col gap-1">
-                      <div>{sale.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {isFiatTokenSale(sale)
-                          ? t('token_sales_dashboard_fiat')
-                          : t('token_sales_dashboard_crypto')}
-                      </div>
-                    </div>
+                    <div>{sale.name}</div>
                   </td>
                   <td className="p-4 align-top">
                     {sale.buyer ? (
@@ -477,37 +466,10 @@ const SalesDashboard = ({
                             ? sale.buyer.walletAddress
                             : t('token_sales_dashboard_no_wallet_address')}
                         </div>
-                        {isAdmin && sale.buyer.email && (
-                          <LinkButton
-                            size="small"
-                            variant="secondary"
-                            className="w-fit text-xs h-fit px-2 py-0.5 rounded-full"
-                            href={`mailto:${sale.buyer.email}`}
-                          >
-                            {t('token_sales_dashboard_send_email_to_user')}
-                          </LinkButton>
-                        )}
                       </div>
                     ) : (
-                      <div>
-                        <div className="text-muted-foreground font-bold">
-                          Untrackable order
-                        </div>
-                        <div className="text-sm">
-                          IBAN sender name:{' '}
-                          {sale.meta?.senderName || 'Unknown sender'}
-                        </div>
-                        <div className="text-sm">
-                          Sender IBAN:{' '}
-                          {sale.meta?.normalizedSenderIban || 'N/A'}
-                        </div>
-                        <div className="text-sm">
-                          Sender memo: {sale.meta?.memoCode || 'N/A'}
-                        </div>
-                        <div className="text-sm">
-                          Monerium order ID:{' '}
-                          {sale.meta?.moneriumOrderId || 'N/A'}
-                        </div>
+                      <div className="text-muted-foreground">
+                        {t('token_sales_dashboard_unknown_buyer')}
                       </div>
                     )}
                   </td>

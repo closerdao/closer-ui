@@ -54,6 +54,26 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
     useState<boolean>(false);
   const [cryptoTokenChargesLoading, setCryptoTokenChargesLoading] =
     useState<boolean>(false);
+  const [categorySums, setCategorySums] = useState<{
+    tokenSales: number;
+    cryptoTokenSales: number;
+    events: number;
+    rental: number;
+    food: number;
+    utilities: number;
+    subscriptions: number;
+    refunds: number;
+  }>({
+    tokenSales: 0,
+    cryptoTokenSales: 0,
+    events: 0,
+    rental: 0,
+    food: 0,
+    utilities: 0,
+    subscriptions: 0,
+    refunds: 0,
+  });
+  const [sumsLoading, setSumsLoading] = useState<boolean>(false);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchCharges = useCallback(async () => {
@@ -203,6 +223,89 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
     }
   }, [timeFrame, fromDate, toDate]);
 
+  const fetchCategorySums = useCallback(async () => {
+    setSumsLoading(true);
+    try {
+      const { startDate, endDate } = getStartAndEndDate(
+        timeFrame,
+        fromDate,
+        toDate,
+      );
+
+      const dateFilter = {
+        $gte: startDate,
+        $lte: endDate,
+      };
+
+      const [
+        tokenSalesRes,
+        cryptoTokenSalesRes,
+        eventsRes,
+        rentalRes,
+        foodRes,
+        utilitiesRes,
+        subscriptionsRes,
+        refundsRes,
+      ] = await Promise.all([
+        api.get('/sum/charge/amount.total.val', {
+          params: {
+            where: { date: dateFilter, method: 'monerium', status: 'paid' },
+          },
+        }).catch(() => ({ data: { sum: 0 } })),
+        api.get('/sum/charge/amount.total.val', {
+          params: {
+            where: { date: dateFilter, method: 'crypto', status: 'paid' },
+          },
+        }).catch(() => ({ data: { sum: 0 } })),
+        api.get('/sum/charge/amount.event.val', {
+          params: {
+            where: { date: dateFilter, method: 'stripe', status: { $ne: 'refunded' } },
+          },
+        }).catch(() => ({ data: { sum: 0 } })),
+        api.get('/sum/charge/amount.rental.val', {
+          params: {
+            where: { date: dateFilter, method: 'stripe', status: { $ne: 'refunded' } },
+          },
+        }).catch(() => ({ data: { sum: 0 } })),
+        api.get('/sum/charge/amount.food.val', {
+          params: {
+            where: { date: dateFilter, method: 'stripe', status: { $ne: 'refunded' } },
+          },
+        }).catch(() => ({ data: { sum: 0 } })),
+        api.get('/sum/charge/amount.utilities.val', {
+          params: {
+            where: { date: dateFilter, method: 'stripe', status: { $ne: 'refunded' } },
+          },
+        }).catch(() => ({ data: { sum: 0 } })),
+        api.get('/sum/charge/amount.total.val', {
+          params: {
+            where: { date: dateFilter, method: 'stripe', type: 'subscription', status: { $ne: 'refunded' } },
+          },
+        }).catch(() => ({ data: { sum: 0 } })),
+        api.get('/sum/charge/amount.total.val', {
+          params: {
+            where: { date: dateFilter, status: 'refunded' },
+          },
+        }).catch(() => ({ data: { sum: 0 } })),
+      ]);
+
+      setCategorySums({
+        tokenSales: tokenSalesRes.data?.sum || 0,
+        cryptoTokenSales: cryptoTokenSalesRes.data?.sum || 0,
+        events: eventsRes.data?.sum || 0,
+        rental: rentalRes.data?.sum || 0,
+        food: foodRes.data?.sum || 0,
+        utilities: utilitiesRes.data?.sum || 0,
+        subscriptions: subscriptionsRes.data?.sum || 0,
+        refunds: refundsRes.data?.sum || 0,
+      });
+    } catch (error) {
+      console.error('Error fetching category sums:', error);
+    } finally {
+      setSumsLoading(false);
+    }
+  }, [timeFrame, fromDate, toDate]);
+
   // Single effect for all time frames
   useEffect(() => {
     if (!router.isReady) return;
@@ -219,6 +322,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
           fetchCharges();
           fetchMoneriumCharges();
           fetchCryptoTokenCharges();
+          fetchCategorySums();
         }, 500); // 500ms debounce
         debounceTimeoutRef.current = timeout;
       }
@@ -227,6 +331,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
       fetchCharges();
       fetchMoneriumCharges();
       fetchCryptoTokenCharges();
+      fetchCategorySums();
     }
 
     // Cleanup timeout
@@ -243,6 +348,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
     fetchCharges,
     fetchMoneriumCharges,
     fetchCryptoTokenCharges,
+    fetchCategorySums,
   ]);
 
   // Cleanup timeout on unmount
@@ -270,49 +376,10 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
     );
   };
 
-  // Calculate all revenue totals
   const getCategoryTotals = () => {
-    const tokenSales = moneriumCharges.reduce(
-      (sum, charge) => sum + (charge.amount?.total?.val || 0),
-      0,
-    );
-
-    const cryptoTokenSales = cryptoTokenCharges.reduce(
-      (sum, charge) => sum + (charge.amount?.total?.val || 0),
-      0,
-    );
-
-    const events = charges
-      .filter((charge) => charge.status !== 'refunded')
-      .reduce((sum, charge) => sum + (charge.amount?.event?.val || 0), 0);
-
-    const rental = charges
-      .filter((charge) => charge.status !== 'refunded')
-      .reduce((sum, charge) => sum + (charge.amount?.rental?.val || 0), 0);
-
-    const food = charges
-      .filter((charge) => charge.status !== 'refunded')
-      .reduce((sum, charge) => sum + (charge.amount?.food?.val || 0), 0);
-
-    const utilities = charges
-      .filter((charge) => charge.status !== 'refunded')
-      .reduce((sum, charge) => sum + (charge.amount?.utilities?.val || 0), 0);
-
     const connectFee = charges
       .filter((charge) => charge.status !== 'refunded')
       .reduce((sum, charge) => sum + (charge.meta?.stripeConnectFee || 0), 0);
-
-    const subscriptions = charges
-      .filter(
-        (charge) =>
-          charge.status !== 'refunded' && charge.type === 'subscription',
-      )
-      .reduce((sum, charge) => sum + (charge.amount?.total?.val || 0), 0);
-
-    const refunds = [
-      ...charges.filter((charge) => charge.status === 'refunded'),
-      ...moneriumCharges.filter((charge) => charge.status === 'refunded'),
-    ].reduce((sum, charge) => sum + (charge.amount?.total?.val || 0), 0);
 
     const stripeFee = charges
       .filter((charge) => charge.status !== 'refunded')
@@ -325,15 +392,15 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
       );
 
     return {
-      tokenSales,
-      cryptoTokenSales,
-      events,
-      rental,
-      food,
-      utilities,
+      tokenSales: categorySums.tokenSales,
+      cryptoTokenSales: categorySums.cryptoTokenSales,
+      events: categorySums.events,
+      rental: categorySums.rental,
+      food: categorySums.food,
+      utilities: categorySums.utilities,
       connectFee,
-      subscriptions,
-      refunds,
+      subscriptions: categorySums.subscriptions,
+      refunds: categorySums.refunds,
       stripeFee,
     };
   };
@@ -390,22 +457,21 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                       <dd className="text-lg font-semibold text-gray-900">
                         {chargesLoading ||
                         moneriumChargesLoading ||
-                        cryptoTokenChargesLoading ? (
+                        cryptoTokenChargesLoading ||
+                        sumsLoading ? (
                           <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
                         ) : (
                           new Intl.NumberFormat('en-US', {
                             style: 'currency',
                             currency: 'EUR',
                           }).format(
-                            [
-                              ...charges.filter(
-                                (charge) => charge.status !== 'refunded',
-                              ),
-                              ...moneriumCharges,
-                              ...cryptoTokenCharges,
-                            ].reduce((sum, charge) => {
-                              return sum + (charge.amount?.total?.val || 0);
-                            }, 0),
+                            categoryTotals.events +
+                            categoryTotals.rental +
+                            categoryTotals.food +
+                            categoryTotals.utilities +
+                            categoryTotals.subscriptions +
+                            categoryTotals.tokenSales +
+                            categoryTotals.cryptoTokenSales,
                           )
                         )}
                       </dd>
@@ -420,7 +486,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                         Hospitality
                       </dt>
                       <dd className="text-lg font-semibold text-gray-900">
-                        {chargesLoading ? (
+                        {chargesLoading || sumsLoading ? (
                           <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
                         ) : (
                           new Intl.NumberFormat('en-US', {
@@ -445,7 +511,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                         Subscriptions
                       </dt>
                       <dd className="text-lg font-semibold text-gray-900">
-                        {chargesLoading ? (
+                        {chargesLoading || sumsLoading ? (
                           <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
                         ) : (
                           new Intl.NumberFormat('en-US', {
@@ -465,7 +531,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                         Fiat Token Sales
                       </dt>
                       <dd className="text-lg font-semibold text-gray-900">
-                        {moneriumChargesLoading ? (
+                        {moneriumChargesLoading || sumsLoading ? (
                           <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
                         ) : (
                           new Intl.NumberFormat('en-US', {
@@ -485,7 +551,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                         Crypto Token Sales
                       </dt>
                       <dd className="text-lg font-semibold text-gray-900">
-                        {cryptoTokenChargesLoading ? (
+                        {cryptoTokenChargesLoading || sumsLoading ? (
                           <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
                         ) : (
                           new Intl.NumberFormat('en-US', {
@@ -505,7 +571,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                         Refunded
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {chargesLoading || moneriumChargesLoading ? (
+                        {chargesLoading || moneriumChargesLoading || sumsLoading ? (
                           <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
                         ) : (
                           new Intl.NumberFormat('en-US', {
@@ -533,7 +599,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                           bgColor: 'bg-blue-200',
                           textColor: 'text-blue-800',
                           animateColor: 'bg-blue-300',
-                          loading: moneriumChargesLoading,
+                          loading: moneriumChargesLoading || sumsLoading,
                         },
                         {
                           name: 'Crypto Token Sales',
@@ -541,7 +607,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                           bgColor: 'bg-red-200',
                           textColor: 'text-red-800',
                           animateColor: 'bg-red-300',
-                          loading: cryptoTokenChargesLoading,
+                          loading: cryptoTokenChargesLoading || sumsLoading,
                         },
                         {
                           name: 'Events',
@@ -549,7 +615,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                           bgColor: 'bg-purple-200',
                           textColor: 'text-purple-800',
                           animateColor: 'bg-purple-300',
-                          loading: chargesLoading,
+                          loading: chargesLoading || sumsLoading,
                         },
                         {
                           name: 'Rental',
@@ -557,7 +623,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                           bgColor: 'bg-green-200',
                           textColor: 'text-green-800',
                           animateColor: 'bg-green-300',
-                          loading: chargesLoading,
+                          loading: chargesLoading || sumsLoading,
                         },
                         {
                           name: 'Food',
@@ -565,7 +631,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                           bgColor: 'bg-orange-200',
                           textColor: 'text-orange-800',
                           animateColor: 'bg-orange-300',
-                          loading: chargesLoading,
+                          loading: chargesLoading || sumsLoading,
                         },
                         {
                           name: 'Utilities',
@@ -573,7 +639,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                           bgColor: 'bg-cyan-200',
                           textColor: 'text-cyan-800',
                           animateColor: 'bg-cyan-300',
-                          loading: chargesLoading,
+                          loading: chargesLoading || sumsLoading,
                         },
                         {
                           name: 'Subscriptions',
@@ -581,7 +647,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                           bgColor: 'bg-pink-200',
                           textColor: 'text-pink-800',
                           animateColor: 'bg-pink-300',
-                          loading: chargesLoading,
+                          loading: chargesLoading || sumsLoading,
                         },
                       ].map((category) => (
                         <div
@@ -631,7 +697,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                           bgColor: 'bg-red-200',
                           textColor: 'text-red-800',
                           animateColor: 'bg-red-300',
-                          loading: chargesLoading || moneriumChargesLoading,
+                          loading: chargesLoading || moneriumChargesLoading || sumsLoading,
                         },
                         {
                           name: 'Stripe Fee',
