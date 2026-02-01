@@ -32,6 +32,12 @@ interface TurnstileWidgetProps {
   size?: 'normal' | 'compact' | 'flexible';
 }
 
+const isLocalhost = () => {
+  if (typeof window === 'undefined') return false;
+  const host = window.location.hostname;
+  return host === 'localhost' || host === '127.0.0.1';
+};
+
 const TurnstileWidget = ({
   action = 'submit',
   onVerify,
@@ -42,9 +48,22 @@ const TurnstileWidget = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [skipTurnstile, setSkipTurnstile] = useState(false);
+  const localhostBypassCalled = useRef(false);
 
   useEffect(() => {
-    if (!TURNSTILE_SITE_KEY) {
+    setSkipTurnstile(isLocalhost());
+  }, []);
+
+  useEffect(() => {
+    if (!skipTurnstile) return;
+    if (localhostBypassCalled.current) return;
+    localhostBypassCalled.current = true;
+    onVerify('localhost-bypass');
+  }, [skipTurnstile, onVerify]);
+
+  useEffect(() => {
+    if (!TURNSTILE_SITE_KEY || skipTurnstile) {
       return;
     }
 
@@ -77,7 +96,7 @@ const TurnstileWidget = ({
   }, []);
 
   useEffect(() => {
-    if (!isLoaded || !containerRef.current || !TURNSTILE_SITE_KEY) {
+    if (!isLoaded || !containerRef.current || !TURNSTILE_SITE_KEY || skipTurnstile) {
       return;
     }
 
@@ -112,9 +131,9 @@ const TurnstileWidget = ({
         }
       }
     };
-  }, [isLoaded, action, onVerify, onError, onExpire, size]);
+  }, [isLoaded, action, onVerify, onError, onExpire, size, skipTurnstile]);
 
-  if (!TURNSTILE_SITE_KEY) {
+  if (skipTurnstile || !TURNSTILE_SITE_KEY) {
     return null;
   }
 

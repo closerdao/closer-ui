@@ -6,10 +6,10 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { TokenSale } from '../../types/api';
-import api from '../../utils/api';
+import api, { formatSearch } from '../../utils/api';
 import Modal from '../Modal';
 import Pagination from '../Pagination';
-import { Input, LinkButton } from '../ui/';
+import { Input, LinkButton, Spinner } from '../ui/';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import { Badge } from '../ui/badge';
@@ -23,6 +23,33 @@ import {
 
 const SALES_PER_PAGE = 20;
 const DEFAULT_STATUS_TO_SHOW = 'paid';
+
+type BuyerRecord = {
+  _id: string;
+  email?: string;
+  screenname?: string;
+  walletAddress?: string;
+};
+
+function enrichSalesWithBuyers<T extends { createdBy?: string }>(
+  salesArray: T[],
+  buyers: BuyerRecord[],
+): (T & { buyer: TokenSale['buyer'] })[] {
+  return salesArray.map((sale) => {
+    const buyer = buyers.find((b) => b._id === sale.createdBy);
+    return {
+      ...sale,
+      buyer: buyer
+        ? {
+            email: buyer.email || '',
+            screenname: buyer.screenname || '',
+            walletAddress: buyer.walletAddress || '',
+            _id: buyer._id || '',
+          }
+        : null,
+    };
+  });
+}
 
 const SalesDashboard = ({
   sales,
@@ -59,7 +86,9 @@ const SalesDashboard = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const [isMatchBuyerModalOpen, setIsMatchBuyerModalOpen] = useState(false);
-  const [buyerEmail, setBuyerEmail] = useState('');
+  const [matchableSales, setMatchableSales] = useState<TokenSale[]>([]);
+  const [selectedMatchedSaleId, setSelectedMatchedSaleId] = useState<string>('');
+  const [isLoadingMatchableSales, setIsLoadingMatchableSales] = useState(false);
   const [isMatchBuyerSuccess, setIsMatchBuyerSuccess] = useState(false);
   const isAdmin = currentUser?.roles.includes('admin');
 
@@ -72,21 +101,11 @@ const SalesDashboard = ({
       }
 
       try {
-        // Convert platform data to plain objects if needed
         const salesArray = Array.isArray(sales)
           ? sales
           : (sales as any).toJS
           ? (sales as any).toJS()
           : sales;
-
-        // Check if we already have enriched data for this length
-        const currentLength = salesArray.length;
-        if (
-          enrichedSales.length === currentLength &&
-          enrichedSales.length > 0
-        ) {
-          return;
-        }
 
         // Get unique buyer IDs (createdBy represents the buyer in token sales)
         const uniqueBuyerIds = [
@@ -99,28 +118,8 @@ const SalesDashboard = ({
             JSON.stringify({ _id: { $in: uniqueBuyerIds } }),
           )}&includePrivate=true`,
         );
-        const buyers = buyersRes.data.results;
-
-        // Enrich sales with complete buyer data
-        const enriched = salesArray.map((sale: any) => {
-          const buyer = buyers.find(
-            (buyer: any) => buyer._id === sale.createdBy,
-          );
-
-          return {
-            ...sale,
-            buyer: buyer
-              ? {
-                  email: buyer.email || '',
-                  screenname: buyer.screenname || '',
-                  walletAddress: buyer.walletAddress || '',
-                  _id: buyer._id || '',
-                }
-              : null,
-          };
-        });
-
-        setEnrichedSales(enriched);
+        const buyers = buyersRes.data.results as BuyerRecord[];
+        setEnrichedSales(enrichSalesWithBuyers(salesArray, buyers));
       } catch (error) {
         console.error('Error fetching enriched sales data:', error);
         setEnrichedSales(sales);
@@ -185,6 +184,7 @@ const SalesDashboard = ({
       completed: { variant: 'default', label: 'Completed' },
       paid: { variant: 'secondary', label: 'Paid' },
       cancelled: { variant: 'destructive', label: 'Cancelled' },
+      matched: { variant: 'warning', label: 'Matched' },
     };
 
     const config = statusConfig[status] || {
@@ -200,15 +200,58 @@ const SalesDashboard = ({
     setIsModalOpen(true);
   };
 
+  const fetchMatchableSales = async () => {
+    setIsLoadingMatchableSales(true);
+    try {
+      const where = { status: { $in: ['pending-payment', 'cancelled'] as const } };
+      const res = await api.get('/sale', {
+        params: { where: formatSearch(where), limit: 500 },
+      });
+      const rawSales = res.data?.results ?? [];
+      const salesArray = Array.isArray(rawSales)
+        ? rawSales
+        : (rawSales as { toJS?: () => TokenSale[] }).toJS
+        ? (rawSales as { toJS: () => TokenSale[] }).toJS()
+        : rawSales;
+      const uniqueBuyerIds = [
+        ...new Set(
+          (salesArray as TokenSale[]).map((s) => s.createdBy).filter(Boolean),
+        ),
+      ] as string[];
+      if (uniqueBuyerIds.length === 0) {
+        setMatchableSales(salesArray as TokenSale[]);
+        setIsLoadingMatchableSales(false);
+        return;
+      }
+      const buyersRes = await api.get(
+        `/user?where=${encodeURIComponent(JSON.stringify({ _id: { $in: uniqueBuyerIds } }))}&includePrivate=true`,
+      );
+      const buyers = (buyersRes.data?.results ?? []) as BuyerRecord[];
+      setMatchableSales(
+        enrichSalesWithBuyers(salesArray as TokenSale[], buyers) as TokenSale[],
+      );
+    } catch (err) {
+      console.error('Error fetching matchable sales:', err);
+      setMatchableSales([]);
+    } finally {
+      setIsLoadingMatchableSales(false);
+    }
+  };
+
   const handleShowMatchBuyerModal = (saleId: string) => {
     setSelectedSaleId(saleId);
+    setSelectedMatchedSaleId('');
+    setMatchableSales([]);
     setIsMatchBuyerModalOpen(true);
+    setIsMatchBuyerSuccess(false);
+    fetchMatchableSales();
   };
 
   const handleCloseMatchBuyerModal = () => {
     setIsMatchBuyerModalOpen(false);
     setSelectedSaleId('');
-    setBuyerEmail('');
+    setSelectedMatchedSaleId('');
+    setMatchableSales([]);
     setIsMatchBuyerSuccess(false);
     setIsLoading(false);
   };
@@ -268,22 +311,27 @@ const SalesDashboard = ({
     }
   };
 
+  const handleSelectMatchedSale = (saleId: string) => {
+    setSelectedMatchedSaleId(saleId);
+  };
+
   const handleMatchBuyer = async () => {
+    if (!selectedMatchedSaleId) return;
     setIsLoading(true);
     try {
-      const res = await api.post('/sale/buyer-match', {
+      await api.post('/sale/buyer-match', {
         saleId: selectedSaleId,
-        buyerEmail: buyerEmail,
+        matchedSaleId: selectedMatchedSaleId,
       });
-      console.log('Buyer match response:', res);
+      const matchedSale = matchableSales.find((s) => s._id === selectedMatchedSaleId);
+      const buyerToApply = matchedSale?.buyer ?? null;
+      setEnrichedSales((prev) =>
+        prev.map((sale) =>
+          sale._id === selectedSaleId ? { ...sale, buyer: buyerToApply } : sale,
+        ),
+      );
       setIsMatchBuyerSuccess(true);
-      // Trigger refetch to update the sales list
-      if (onRefetch) {
-        console.log('Calling onRefetch...');
-        onRefetch();
-      } else {
-        console.log('onRefetch is not defined');
-      }
+      if (onRefetch) await onRefetch();
     } catch (error) {
       console.error('Error matching buyer:', error);
     } finally {
@@ -352,6 +400,9 @@ const SalesDashboard = ({
                 </SelectItem>
                 <SelectItem value="paid">
                   {t('token_sales_dashboard_paid')}
+                </SelectItem>
+                <SelectItem value="matched">
+                  {t('token_sales_dashboard_matched')}
                 </SelectItem>
                 <SelectItem value="cancelled">
                   {t('token_sales_dashboard_cancelled')}
@@ -460,14 +511,17 @@ const SalesDashboard = ({
                       </div>
                     )}
                   </td>
-                  <td className="p-4 align-top">{sale.quantity || 0}</td>
+                  <td className="p-4 align-top">
+                    {sale.createdBy ? (sale.quantity ?? 0) : 'N/A'}
+                  </td>
                   <td className="p-4 font-mono align-top">
                     {formatPrice(sale.total_price)}
                   </td>
                   <td className="p-4 align-top">
                     <div className="flex flex-col gap-2">
                       {getStatusBadge(sale.status)}
-                      {sale.status === 'paid' &&
+                      {sale.status !== 'matched' &&
+                        sale.status === 'paid' &&
                         sale.product_type === 'token' &&
                         sale?.buyer && (
                           <Button
@@ -479,13 +533,13 @@ const SalesDashboard = ({
                           </Button>
                         )}
 
-                      {!sale?.buyer && (
+                      {sale.status !== 'matched' && !sale?.buyer && (
                         <Button
                           size="small"
                           onClick={() => handleShowMatchBuyerModal(sale._id)}
                           className="text-xs w-fit rounded-full text-background py-1 h-fit"
                         >
-                          Match buyer manually
+                          {t('token_sales_dashboard_match_buyer_manually')}
                         </Button>
                       )}
                     </div>
@@ -588,62 +642,118 @@ const SalesDashboard = ({
         </Modal>
       )}
       {isMatchBuyerModalOpen && (
-        <Modal closeModal={handleCloseMatchBuyerModal}>
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold mb-2">
-                Match buyer manually
-              </h2>
-              <p className="text-muted-foreground">
-                Please enter the email of the buyer you want to match to this
-                order.
-              </p>
-              <p>
-                {
-                  enrichedSales?.find(
-                    (sale: TokenSale) => sale._id === selectedSaleId,
-                  )?.buyer?.screenname
-                }
-              </p>
-            </div>
+        <Modal
+          closeModal={handleCloseMatchBuyerModal}
+          className="md:w-[800px] md:max-w-[90vw]"
+        >
+          <div className="flex flex-col max-h-[85vh] overflow-y-auto overflow-x-auto">
+            <div className="space-y-6 flex-shrink-0">
+              <div>
+                <h2 className="text-xl font-semibold mb-2">
+                  {t('token_sales_dashboard_match_buyer_manually_title')}
+                </h2>
+                <p className="text-muted-foreground">
+                  {t('token_sales_dashboard_match_buyer_manually_description')}
+                </p>
+              </div>
 
-            <div className="space-y-2">
-              <label htmlFor="buyerEmail" className="block text-sm font-medium">
-                Buyer email
-              </label>
-              <Input
-                id="buyerEmail"
-                type="text"
-                value={buyerEmail}
-                onChange={(e) => setBuyerEmail(e.target.value)}
-                placeholder={'Enter buyer email'}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-              />
-            </div>
+              {isLoadingMatchableSales ? (
+                <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
+                  <Spinner />
+                  {t('token_sales_dashboard_match_buyer_loading')}
+                </div>
+              ) : (
+                <div className="overflow-x-auto border border-border rounded-md">
+                  <table className="w-full border-collapse text-sm">
+                    <thead className="bg-muted">
+                    <tr className="border-b border-border">
+                      <th className="text-left p-2 font-medium">
+                        {t('token_sales_dashboard_price')}
+                      </th>
+                      <th className="text-left p-2 font-medium">
+                        {t('token_sales_dashboard_buyer_email')}
+                      </th>
+                      <th className="text-left p-2 font-medium">
+                        {t('token_sales_dashboard_quantity')}
+                      </th>
+                      <th className="text-left p-2 font-medium">
+                        {t('token_sales_dashboard_status')}
+                      </th>
+                      <th className="text-left p-2 font-medium">
+                        {t('token_sales_dashboard_created')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {matchableSales
+                      .filter((s) => s._id !== selectedSaleId)
+                      .map((sale) => (
+                        <tr
+                          key={sale._id}
+                          onClick={() => handleSelectMatchedSale(sale._id)}
+                          className={`border-b border-border cursor-pointer hover:bg-muted/50 ${
+                            selectedMatchedSaleId === sale._id
+                              ? 'bg-accent/20'
+                              : ''
+                          }`}
+                        >
+                          <td className="p-2 font-mono">
+                            {formatPrice(sale.total_price)}
+                          </td>
+                          <td className="p-2">
+                            {sale.buyer?.email ?? '—'}
+                          </td>
+                          <td className="p-2">
+                            {sale.createdBy ? (sale.quantity ?? 0) : 'N/A'}
+                          </td>
+                          <td className="p-2">
+                            {getStatusBadge(sale.status)}
+                          </td>
+                          <td className="p-2 text-muted-foreground whitespace-nowrap">
+                            {formatDate(sale.created)}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                  </table>
+                </div>
+              )}
 
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="secondary"
-                onClick={handleCloseMatchBuyerModal}
-                isEnabled={!isLoading}
-              >
-                {t('token_sales_dashboard_cancel')}
-              </Button>
-              <Button
-                onClick={handleMatchBuyer}
-                isEnabled={
-                  Boolean(buyerEmail.trim()) &&
-                  !isLoading &&
-                  !isMatchBuyerSuccess
-                }
-                isLoading={isLoading}
-              >
-                {isLoading ? 'Matching buyer...' : 'Match buyer'}
-              </Button>
+              {!isLoadingMatchableSales &&
+                matchableSales.filter((s) => s._id !== selectedSaleId).length === 0 && (
+                  <p className="text-muted-foreground">
+                    {t('token_sales_dashboard_match_buyer_no_sales')}
+                  </p>
+              )}
+
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="secondary"
+                  onClick={handleCloseMatchBuyerModal}
+                  isEnabled={!isLoading}
+                >
+                  {t('token_sales_dashboard_cancel')}
+                </Button>
+                <Button
+                  onClick={handleMatchBuyer}
+                  isEnabled={
+                    Boolean(selectedMatchedSaleId) &&
+                    !isLoading &&
+                    !isMatchBuyerSuccess
+                  }
+                  isLoading={isLoading}
+                >
+                  {isLoading
+                    ? t('token_sales_dashboard_match_buyer_submitting')
+                    : t('token_sales_dashboard_match_buyer_submit')}
+                </Button>
+              </div>
+              {isMatchBuyerSuccess && (
+                <div className="text-green-500">
+                  {t('token_sales_dashboard_match_buyer_success')}
+                </div>
+              )}
             </div>
-            {isMatchBuyerSuccess && (
-              <div className="text-green-500">Buyer matched successfully</div>
-            )}
           </div>
         </Modal>
       )}
