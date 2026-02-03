@@ -35,8 +35,6 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 
-const DEFAULT_END_DATE = '2026-05-31T23:59:59.999Z';
-
 const findActiveMilestone = (milestones: FundraisingMilestone[] | undefined): FundraisingMilestone | null => {
   if (!milestones || milestones.length === 0) return null;
   
@@ -179,7 +177,7 @@ const InvestPage = ({ fundraisingConfig }: Props) => {
     const fetchTotalRaised = async () => {
       try {
         const startDate = activeMilestone?.startDate || null;
-        const endDate = activeMilestone?.endDate || DEFAULT_END_DATE;
+        const endDate = activeMilestone?.endDate;
 
         const dateFilter: Record<string, string> = {};
         if (startDate) {
@@ -669,7 +667,7 @@ const InvestPage = ({ fundraisingConfig }: Props) => {
                 {t('invest_cta_dataroom')}
               </Link>
               <Link
-                href="https://calendly.com/samueldelesque"
+                href="https://samueldelesque.me/calendar"
                 target="_blank"
                 className="text-sm text-gray-600 hover:text-gray-900 underline underline-offset-4"
               >
