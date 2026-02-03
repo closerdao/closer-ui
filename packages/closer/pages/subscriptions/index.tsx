@@ -196,7 +196,7 @@ const SubscriptionsPage: NextPage<Props> = ({
         <meta name="twitter:description" content={`Join ${PLATFORM_NAME} with a subscription plan.`} />
         <link rel="canonical" href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/subscriptions`} />
       </Head>
-      <main className="pt-16 pb-24 md:flex-row flex-wrap">
+      <main className="pt-12 pb-16 md:flex-row flex-wrap">
         <div className="flex justify-center">
           <div className="w-full">
             <Heading

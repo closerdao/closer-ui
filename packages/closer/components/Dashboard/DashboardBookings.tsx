@@ -194,16 +194,16 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
     ).size;
 
   const peopleData = [
-    { name: 'Guests', value: numGuests },
-    { name: 'Volunteers', value: numVolunteers },
-    { name: 'Team', value: numTeam },
-    { name: 'Event Attendees', value: numEventAttendees },
+    { name: t('dashboard_chart_guests'), value: numGuests },
+    { name: t('dashboard_chart_volunteers'), value: numVolunteers },
+    { name: t('dashboard_chart_team'), value: numTeam },
+    { name: t('dashboard_chart_event_attendees'), value: numEventAttendees },
   ];
 
   const applicationsData = [
-    { name: 'Confirmed', value: numConfirmedBookings },
-    { name: 'Pending', value: numPendingBookings },
-    { name: 'Paid', value: numPaidBookings },
+    { name: t('dashboard_chart_confirmed'), value: numConfirmedBookings },
+    { name: t('dashboard_chart_pending'), value: numPendingBookings },
+    { name: t('dashboard_chart_paid'), value: numPaidBookings },
   ];
 
   const loadData = async () => {
@@ -309,7 +309,7 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
               />
             </>
           ) : (
-            'No space listings'
+            t('dashboard_no_space_listings')
           )}
         </div>
       </div>

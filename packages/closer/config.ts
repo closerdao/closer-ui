@@ -778,4 +778,13 @@ export const configDescription: ConfigType[] = [
       },
     },
   },
+  {
+    slug: 'community',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+    },
+  },
 ];

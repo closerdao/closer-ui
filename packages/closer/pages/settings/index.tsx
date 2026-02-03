@@ -524,12 +524,13 @@ const SettingsPage = ({
   return (
     <>
       <Head>
-        <title>{user.screenname} | Settings</title>
+        <title>{user.screenname} | {t('settings_page_title')}</title>
+        <meta name="robots" content="noindex, nofollow" />
       </Head>
       <div className="max-w-screen-xl mx-auto px-4 md:px-8 py-6">
         <div className="flex items-center gap-2 mb-6">
           <SettingsIcon className="w-5 h-5 text-gray-700" />
-          <Heading>Settings</Heading>
+          <Heading>{t('settings_page_title')}</Heading>
         </div>
 
         {error && (
@@ -619,7 +620,7 @@ const SettingsPage = ({
                   <div className="flex items-center gap-2 mb-4">
                     <Key className="w-5 h-5 text-gray-700" />
                     <h3 className="text-lg font-medium text-gray-900">
-                      Account Information
+                      {t('settings_account_information')}
                     </h3>
                   </div>
 
@@ -826,7 +827,7 @@ const SettingsPage = ({
                   <div className="flex items-center gap-2 mb-4">
                     <Star className="w-5 h-5 text-gray-700" />
                     <h3 className="text-lg font-medium text-gray-900">
-                      Recommended Preferences
+                      {t('settings_recommended_preferences')}
                     </h3>
                   </div>
 
@@ -875,7 +876,7 @@ const SettingsPage = ({
                   <div className="flex items-center gap-2 mb-4">
                     <Info className="w-5 h-5 text-gray-700" />
                     <h3 className="text-lg font-medium text-gray-900">
-                      Optional Information
+                      {t('settings_optional_information')}
                     </h3>
                   </div>
 
@@ -921,7 +922,7 @@ const SettingsPage = ({
                   <div className="flex items-center gap-2 mb-4">
                     <Bell className="w-5 h-5 text-gray-700" />
                     <h3 className="text-lg font-medium text-gray-900">
-                      Notification Preferences
+                      {t('settings_notification_preferences')}
                     </h3>
                   </div>
 

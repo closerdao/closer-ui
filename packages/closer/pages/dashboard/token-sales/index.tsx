@@ -140,6 +140,7 @@ const TokenSalesDashboardPage = ({
     <>
       <Head>
         <title>{t('token_sales_dashboard_title')}</title>
+        <meta name="robots" content="noindex, nofollow" />
       </Head>
       <AdminLayout isBookingEnabled={isBookingEnabled}>
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">

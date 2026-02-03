@@ -50,7 +50,10 @@ const VolunteerOpportunitiesPage = ({
   return (
     <div className="max-w-screen-lg mx-auto">
       <Head>
-        <title>{`Volunteers Open Call - ${PLATFORM_NAME}`}</title>
+        <title>{`${t('volunteers_page_title')} - ${PLATFORM_NAME}`}</title>
+        <meta name="description" content={`Join ${PLATFORM_NAME} as a volunteer. Contribute to regenerative community building and gain hands-on experience.`} />
+        <meta property="og:title" content={`${t('volunteers_page_title')} - ${PLATFORM_NAME}`} />
+        <meta property="og:type" content="website" />
       </Head>
       <main className=" pb-24">
         <section className="w-full flex justify-center max-w-4xl mx-auto mb-4 relative">
@@ -73,7 +76,7 @@ const VolunteerOpportunitiesPage = ({
                     height={20}
                   />
                   <label className="text-sm uppercase font-bold flex gap-1">
-                    Any time
+                    {t('volunteers_any_time')}
                   </label>
                 </div>
               </div>

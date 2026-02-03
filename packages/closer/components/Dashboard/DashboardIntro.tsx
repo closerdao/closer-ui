@@ -247,13 +247,13 @@ const DashboardIntro = ({ timeFrame, fromDate, toDate }: Props) => {
           <Spinner />
         </div>
       ) : (
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
           {metrics.map((metric) => (
             <div
               key={metric.key}
               className="bg-accent-light/30 rounded-lg p-3 text-center"
             >
-              <div className="text-xl font-bold text-accent">
+              <div className="text-lg sm:text-xl font-bold text-accent">
                 {(metric.value || 0).toLocaleString()}
               </div>
               <div className="text-xs text-gray-600">{metric.label}</div>

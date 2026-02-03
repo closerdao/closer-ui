@@ -138,34 +138,23 @@ const FundraisingWidget = ({
 
         const [cryptoRes, fiatRes] = await Promise.all([
           api
-            .get('/charge', {
+            .get('/sum/charge/amount.total.val', {
               params: {
                 where: formatSearch(cryptoWhere),
-                limit: 5000,
               },
             })
             .catch(() => null),
           api
-            .get('/charge', {
+            .get('/sum/charge/amount.total.val', {
               params: {
                 where: formatSearch(fiatWhere),
-                limit: 5000,
               },
             })
             .catch(() => null),
         ]);
 
-        const cryptoTotal =
-          cryptoRes?.data?.results?.reduce((sum: number, charge: any) => {
-            const val = charge.amount?.total?.val;
-            return sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0);
-          }, 0) || 0;
-
-        const fiatTotal =
-          fiatRes?.data?.results?.reduce((sum: number, charge: any) => {
-            const val = charge.amount?.total?.val;
-            return sum + (typeof val === 'number' ? val : parseFloat(val || '0') || 0);
-          }, 0) || 0;
+        const cryptoTotal = cryptoRes?.data?.sum || 0;
+        const fiatTotal = fiatRes?.data?.sum || 0;
 
         const loansTotal = (fundraisingConfig?.loans || [])
           .filter(loan => !activeMilestone || loan.countsTowardMilestone === activeMilestone.id)

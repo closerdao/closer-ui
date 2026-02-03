@@ -260,6 +260,7 @@ const ExpenseTrackingDashboardPage = ({
     <>
       <Head>
         <title>{t('expense_tracking_dashboard_title')}</title>
+        <meta name="robots" content="noindex, nofollow" />
       </Head>
       <AdminLayout isBookingEnabled={true}>
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">

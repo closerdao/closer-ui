@@ -239,7 +239,7 @@ const StayPage = ({
                 variant="primary"
                 className={' bg-accent-alt border-accent-alt w-fit my-4'}
               >
-                BOOK A STAY
+                {t('buttons_book_stay')}
               </LinkButton>
             )}
 
@@ -310,7 +310,7 @@ const StayPage = ({
                   ) &&
                   t('stay_chose_accommodation_description')}
               </p>
-              <div className="grid md:grid-cols-4 gap-x-12 md:gap-x-5 gap-y-16">
+              <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-x-6 md:gap-x-5 gap-y-8 md:gap-y-16">
                 {listings.map((listing: any) => {
                   return (
                     <ListingListPreview

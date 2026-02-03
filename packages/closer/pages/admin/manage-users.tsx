@@ -39,6 +39,7 @@ const ManageUsersPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) =>
     <>
       <Head>
         <title>{t('manage_users_heading')}</title>
+        <meta name="robots" content="noindex, nofollow" />
       </Head>
 
       <AdminLayout isBookingEnabled={isBookingEnabled}>

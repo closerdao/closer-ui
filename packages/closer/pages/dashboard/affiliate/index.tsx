@@ -129,6 +129,7 @@ const AffiliateDashboardPage = ({
     <>
       <Head>
         <title>{t('dashboard_affiliate_title')}</title>
+        <meta name="robots" content="noindex, nofollow" />
       </Head>
       <AdminLayout isBookingEnabled={isBookingEnabled}>
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
@@ -137,7 +138,7 @@ const AffiliateDashboardPage = ({
 
         <section className="mt-6">
             {error && <ErrorMessage error={error} />}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
               <StatsCard
                 title={t('affiliate_dashboard_num_affiliates')}
                 value={affiliateCount || 0}
@@ -160,7 +161,7 @@ const AffiliateDashboardPage = ({
               />
             </div>
           </section>
-          <section className="overflow-scroll">
+          <section className="overflow-x-auto max-w-full">
             <table className="w-full text-sm text-left">
               <thead className="text-xs uppercase bg-white">
                 <tr className="border-b">
@@ -235,7 +236,7 @@ const AffiliateDashboardPage = ({
                           setIsExpanded(true);
                         }}
                       >
-                        expand
+                        {t('affiliate_dashboard_expand')}
                       </Button>
                       {isInfoModalOpened && selectedAffiliate && (
                         <Modal closeModal={closeModal}>
