@@ -141,6 +141,7 @@ export const booking = {
   infants: 0,
   pets: 0,
   useTokens: false,
+  useCredits: false,
   utilityFiat: {
     cur: 'EUR',
     val: 20,
@@ -181,6 +182,37 @@ export const booking = {
   _id: '64221200f72ea12f5e9ab86d',
 };
 
+export const bookingWithFood = {
+  ...booking,
+  foodFiat: { val: 24, cur: 'EUR' },
+  status: 'pending-payment',
+};
+
+export const bookingWithTokens = {
+  ...booking,
+  useTokens: true,
+  useCredits: false,
+  rentalFiat: { cur: 'EUR', val: 0 },
+  status: 'tokens-staked',
+};
+
+export const bookingWithCredits = {
+  ...booking,
+  useTokens: false,
+  useCredits: true,
+  rentalFiat: { cur: 'EUR', val: 0 },
+  status: 'credits-paid',
+};
+
+export const bookingWithPaymentDelta = {
+  ...booking,
+  status: 'pending-payment',
+  paymentDelta: {
+    fiat: { val: 10, cur: 'EUR' },
+    token: { val: 0, cur: 'TDF' },
+  },
+};
+
 export const listing = {
   name: 'Van parking space',
   category: 'van',
@@ -217,3 +249,12 @@ export const questions = [
     options: ['soft', 'medium', 'hard'],
   },
 ];
+
+export const paymentConfig = {
+  enabled: true,
+  cardPayment: 'stripe',
+  cryptoPayment: 'monerium',
+  ethereumWalletAddress: '',
+  polygonWalletAddress: '',
+  vatRate: 0,
+};

@@ -354,7 +354,12 @@ const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
               {t('bookings_confirmation_welcome_lead')}
             </p>
           </div>
-          <BookingResult booking={booking} eventName={event?.name || ''} />
+          <BookingResult
+            booking={booking}
+            eventName={event?.name || ''}
+            foodOptionEnabled={bookingConfig?.foodOptionEnabled}
+            utilityOptionEnabled={bookingConfig?.utilityOptionEnabled}
+          />
           <Button onClick={() => viewBooking(_id)}>
             {eventId
               ? t('ticket_list_view_ticket')

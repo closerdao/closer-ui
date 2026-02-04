@@ -663,6 +663,8 @@ const BookingPage = ({
             }
             totalToken={rentalToken}
             totalFiat={total}
+            foodOptionEnabled={bookingConfig?.foodOptionEnabled}
+            utilityOptionEnabled={bookingConfig?.utilityOptionEnabled}
             eventCost={eventFiat}
             eventDefaultCost={
               ticketOption?.price ? ticketOption.price * adults : undefined

@@ -404,6 +404,7 @@ const Summary = ({
           <SummaryCosts
             utilityFiat={utilityFiat}
             rentalFiat={rentalFiat}
+            rentalToken={rentalToken}
             foodFiat={foodFiat}
             useTokens={useTokens || false}
             useCredits={useCredits || false}
@@ -413,6 +414,8 @@ const Summary = ({
             totalFiat={total || { val: 0, cur: CloserCurrencies.EUR }}
             eventCost={eventFiat}
             isFoodIncluded={Boolean(booking?.foodOptionId)}
+            foodOptionEnabled={bookingConfig?.foodOptionEnabled}
+            utilityOptionEnabled={bookingConfig?.utilityOptionEnabled}
             eventDefaultCost={
               booking?.ticketOption?.price
                 ? booking?.ticketOption.price * booking?.adults

@@ -11,6 +11,7 @@ interface EditModelPageLayoutProps {
   backLabel?: string;
   children: ReactNode;
   isEdit?: boolean;
+  fullWidth?: boolean;
 }
 
 const EditModelPageLayout: FC<EditModelPageLayoutProps> = ({
@@ -20,12 +21,15 @@ const EditModelPageLayout: FC<EditModelPageLayoutProps> = ({
   backLabel,
   children,
   isEdit,
+  fullWidth,
 }) => {
   const t = useTranslations();
   const label = backLabel ?? t('generic_back');
 
   return (
-    <div className="main-content max-w-3xl">
+    <div
+      className={`main-content ${fullWidth ? 'w-full' : 'max-w-3xl'}`}
+    >
       {backHref && (
         <Link
           href={backHref}

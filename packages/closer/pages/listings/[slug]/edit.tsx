@@ -52,6 +52,7 @@ const EditListing = ({ listing, bookingConfig }: Props) => {
           title={`${t('listings_edit_listing')} ${listing.name}`}
           backHref={`/stay/${listing.slug}`}
           isEdit
+          fullWidth
         >
           <EditModel
           id={listing._id}

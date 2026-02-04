@@ -5,15 +5,23 @@ import dayjs from 'dayjs';
 import Card from '../ui/Card';
 
 import { Booking } from '../../types';
+import { getDisplayTotalFromComponents } from '../../utils/booking.helpers';
 import { priceFormat } from '../../utils/helpers';
 
 interface Props {
   booking: Booking | null;
   eventName: string;
   className?: string;
+  foodOptionEnabled?: boolean;
+  utilityOptionEnabled?: boolean;
 }
 
-const BookingResult = ({ booking, eventName }: Props) => {
+const BookingResult = ({
+  booking,
+  eventName,
+  foodOptionEnabled,
+  utilityOptionEnabled,
+}: Props) => {
   const t = useTranslations();
   const {
     status,
@@ -25,14 +33,31 @@ const BookingResult = ({ booking, eventName }: Props) => {
     adults,
     children,
     infants,
-    total,
     useTokens,
     rentalToken,
+    rentalFiat,
+    utilityFiat,
+    foodFiat,
+    eventFiat,
+    total,
   } = booking || {};
 
   if (!booking) return null;
 
   if (status !== 'paid' && status !== 'checked-in') return null;
+
+  const displayTotal =
+    total?.val != null && total?.cur
+      ? total
+      : getDisplayTotalFromComponents({
+          rentalFiat,
+          utilityFiat,
+          foodFiat,
+          eventFiat,
+          fallbackCur: total?.cur,
+          foodOptionEnabled,
+          utilityOptionEnabled,
+        });
 
   const guestCount = [adults ?? 0, children ?? 0, infants ?? 0].reduce(
     (sum, n) => sum + (typeof n === 'number' && n > 0 ? n : 0),
@@ -88,15 +113,19 @@ const BookingResult = ({ booking, eventName }: Props) => {
         {useTokens && rentalToken?.val != null && rentalToken.val > 0 && (
           <div className="flex-1 min-w-0">
             <p className="card-feature">{t('bookings_tokens_lock')}</p>
-            <p className="text-sm">{priceFormat(rentalToken.val, rentalToken.cur)}</p>
+            <p className="text-sm">
+              {priceFormat(
+                { val: rentalToken.val, cur: rentalToken.cur ?? 'TDF' },
+              )}
+            </p>
           </div>
         )}
-        {total && (
-          <div className="flex-1 min-w-0">
-            <p className="card-feature">{t('bookings_total')}</p>
-            <p className="text-sm font-medium">{priceFormat(total?.val, total?.cur)}</p>
-          </div>
-        )}
+        <div className="flex-1 min-w-0">
+          <p className="card-feature">{t('bookings_total')}</p>
+          <p className="text-sm font-medium">
+            {priceFormat(displayTotal.val, displayTotal.cur)}
+          </p>
+        </div>
       </div>
     </Card>
   );

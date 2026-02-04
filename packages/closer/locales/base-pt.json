@@ -1374,6 +1374,8 @@
   "config_label_creditPrice180Credits": "Preço por crédito (pacote de 180 créditos)",
   "config_label_pickUpEnabled": "Recolha na estação de comboio/autocarro ativada",
   "config_label_vatRate": "Taxa de IVA (por exemplo, 0,1 é igual a 10%)",
+  "config_label_booking-foodOptionEnabled": "Seleção de comida ativada",
+  "config_label_booking-utilityOptionEnabled": "Pagamento da taxa de utilidade ativado (separado do alojamento)",
   "config_label_foodOptionEnabled": "Seleção de comida ativada",
   "config_label_foodPriceBasic": "Preço da comida (comida básica)",
   "config_label_foodPriceChef": "Preço da comida (comida cozinhada por chef)",

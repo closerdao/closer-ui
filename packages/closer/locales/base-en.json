@@ -1457,6 +1457,8 @@
   "config_label_creditPrice180Credits": "Price per credit (180 credits package)",
   "config_label_pickUpEnabled": "Train / bus station pick up enabled",
   "config_label_vatRate": "VAT rate (e.g. 0.1 equals 10%)",
+  "config_label_booking-foodOptionEnabled": "Food selection enabled",
+  "config_label_booking-utilityOptionEnabled": "Utility fee payment enabled (separate from accommodation)",
   "config_label_foodOptionEnabled": "Food selection enabled",
   "config_label_foodPriceBasic": "Food price (basic food)",
   "config_label_foodPriceChef": "Food price (chef cooked food)",

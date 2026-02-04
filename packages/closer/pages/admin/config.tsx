@@ -307,6 +307,10 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
       }));
     }
     const strippedName = name.replace(/-?\d+$/, '');
+    const fieldKey =
+      selectedConfig && name.startsWith(`${selectedConfig}-`)
+        ? name.slice(selectedConfig.length + 1)
+        : strippedName;
 
     const newConfigs = [
       ...updatedConfigs.map((config) => {
@@ -333,7 +337,7 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
 
           return {
             ...config,
-            value: { ...config.value, [strippedName]: preparedInputValue },
+            value: { ...config.value, [fieldKey]: preparedInputValue },
           };
         }
         return config;

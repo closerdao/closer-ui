@@ -75,6 +75,38 @@ export const getFiatTotal = ({
   );
 };
 
+export const getDisplayTotalFromComponents = ({
+  rentalFiat,
+  utilityFiat,
+  foodFiat,
+  eventFiat,
+  fallbackCur = CloserCurrencies.EUR,
+  foodOptionEnabled,
+  utilityOptionEnabled,
+}: {
+  rentalFiat?: { val?: number; cur?: CloserCurrencies };
+  utilityFiat?: { val?: number; cur?: CloserCurrencies };
+  foodFiat?: { val?: number; cur?: CloserCurrencies };
+  eventFiat?: { val?: number; cur?: CloserCurrencies };
+  fallbackCur?: CloserCurrencies;
+  foodOptionEnabled?: boolean;
+  utilityOptionEnabled?: boolean;
+}) => {
+  const val =
+    (rentalFiat?.val ?? 0) +
+    (utilityOptionEnabled !== false ? (utilityFiat?.val ?? 0) : 0) +
+    (foodOptionEnabled !== false ? (foodFiat?.val ?? 0) : 0) +
+    (eventFiat?.val ?? 0);
+  const cur =
+    rentalFiat?.cur ??
+    utilityFiat?.cur ??
+    foodFiat?.cur ??
+    eventFiat?.cur ??
+    fallbackCur ??
+    CloserCurrencies.EUR;
+  return { val: +(val.toFixed(2)), cur };
+};
+
 export const getUtilityTotal = ({
   utilityFiatVal,
   updatedAdults,
