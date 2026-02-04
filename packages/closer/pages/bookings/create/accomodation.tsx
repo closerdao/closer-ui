@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingStepsInfo from '../../../components/BookingStepsInfo';
+import { IconHome } from '../../../components/BookingIcons';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import ListingCard from '../../../components/ListingCard';
 import { ErrorMessage } from '../../../components/ui';
@@ -195,13 +196,26 @@ const AccomodationSelector = ({
   return (
     <>
       <div className="max-w-screen-sm mx-auto md:first-letter:p-8">
-        <BookingBackButton onClick={backToDates} name={t('buttons_back')} />
+        <div className="flex items-center justify-between gap-6 mb-6">
+          <BookingBackButton onClick={backToDates} name={t('buttons_back')} />
+          <Heading className="flex items-center gap-2 flex-1 min-w-0 pb-0 mt-0">
+            <IconHome className="!mr-0" />
+            <span>{t('bookings_accomodation_step_title')}</span>
+          </Heading>
+        </div>
         <FriendsBookingBlock isFriendsBooking={normalizedIsFriendsBooking} />
-        <Heading className="pb-4 mt-8">
-          <span className="mr-2">🏡</span>
-          <span>{t('bookings_accomodation_step_title')}</span>
-        </Heading>
-        <ProgressBar steps={BOOKING_STEPS} />
+        <ProgressBar
+          steps={BOOKING_STEPS}
+          stepHrefs={[
+            `/bookings/create/dates?start=${start}&end=${end}&adults=${adults}${kids ? `&kids=${kids}` : ''}${infants ? `&infants=${infants}` : ''}${pets ? `&pets=${pets}` : ''}${currency ? `&currency=${currency}` : ''}${eventId ? `&eventId=${eventId}` : ''}${normalizedIsFriendsBooking ? '&isFriendsBooking=true' : ''}${friendEmails ? `&friendEmails=${friendEmails}` : ''}`,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+          ]}
+        />
         <BookingStepsInfo
           startDate={start}
           endDate={end}

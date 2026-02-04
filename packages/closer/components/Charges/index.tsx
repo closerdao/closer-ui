@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 
 
 import { priceFormat } from '../../utils/helpers';
+import { IconHome } from '../BookingIcons';
 import HeadingRow from '../ui/HeadingRow';
 import { ExternalLink } from 'lucide-react';
 
@@ -14,7 +15,7 @@ const Charges = ({ charges }: { charges: Charge[] }) => {
   return (
     <div className="flex flex-col gap-6 pb-6">
       <HeadingRow>
-        <span className="mr-4">🏡</span>
+        <IconHome className="mr-4" />
         <span>Charges</span>
       </HeadingRow>
 

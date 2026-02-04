@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingRules from '../../../components/BookingRules';
+import { IconClipboardList } from '../../../components/BookingIcons';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
 import { Button } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
+import dayjs from 'dayjs';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -48,6 +50,8 @@ const BookingRulesPage = ({
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const { start, end, adults, useTokens, isFriendsBooking, _id } =
+    booking || {};
 
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -94,13 +98,30 @@ const BookingRulesPage = ({
 
   return (
     <div className="w-full max-w-screen-sm mx-auto p-8">
-      <BookingBackButton onClick={goBack} name={t('buttons_back')} />
+      <div className="flex items-center justify-between gap-6 mb-6">
+        <BookingBackButton onClick={goBack} name={t('buttons_back')} />
+        <Heading level={1} className="flex items-center gap-2 flex-1 min-w-0 pb-0 mt-0">
+          <IconClipboardList className="!mr-0" />
+          <span>{t('booking_rules_heading')}</span>
+        </Heading>
+      </div>
       <FriendsBookingBlock isFriendsBooking={booking?.isFriendsBooking} />
-      <Heading level={1} className="pb-4 mt-8">
-        <span className="mr-4">📋</span>
-        <span>{t('booking_rules_heading')}</span>
-      </Heading>
-      <ProgressBar steps={BOOKING_STEPS} />
+      <ProgressBar
+        steps={BOOKING_STEPS}
+        stepHrefs={
+          start && end
+            ? [
+                `/bookings/create/dates?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
+                `/bookings/create/accomodation?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${useTokens ? '&currency=TDF' : ''}${isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
+                `/bookings/${_id}/food`,
+                null,
+                null,
+                null,
+                null,
+              ]
+            : undefined
+        }
+      />
 
       <section className="flex flex-col gap-12 py-12">
         {bookingRules?.enabled && bookingRules?.elements[0].title && (

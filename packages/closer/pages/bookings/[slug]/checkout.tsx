@@ -3,6 +3,16 @@ import { useRouter } from 'next/router';
 import { useContext, useEffect, useMemo, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
+import {
+  IconBanknote,
+  IconCheckCircle,
+  IconHome,
+  IconMail,
+  IconPartyPopper,
+  IconUtensils,
+  IconWrench,
+  IconXCircle,
+} from '../../../components/BookingIcons';
 import BookingWallet from '../../../components/BookingWallet';
 import CheckoutPayment from '../../../components/CheckoutPayment';
 import CheckoutTotal from '../../../components/CheckoutTotal';
@@ -743,15 +753,32 @@ const Checkout = ({
   return (
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
-        <BookingBackButton onClick={goBack} name={t('buttons_back')} />
+        <div className="flex items-center justify-between gap-6 mb-6">
+          <BookingBackButton onClick={goBack} name={t('buttons_back')} />
+          <Heading level={1} className="flex items-center gap-2 flex-1 min-w-0 pb-0 mt-0">
+            <IconBanknote className="!mr-0" />
+            <span>{t('bookings_checkout_step_title')}</span>
+          </Heading>
+        </div>
         {isFriend ? null : (
           <FriendsBookingBlock isFriendsBooking={booking?.isFriendsBooking} />
         )}
-        <Heading level={1} className="pb-4 mt-8">
-          <span className="mr-1">💰</span>
-          <span>{t('bookings_checkout_step_title')}</span>
-        </Heading>
-        <ProgressBar steps={BOOKING_STEPS} />
+        <ProgressBar
+          steps={BOOKING_STEPS}
+          stepHrefs={
+            start && end
+              ? [
+                  `/bookings/create/dates?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
+                  `/bookings/create/accomodation?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${useTokens ? '&currency=TDF' : ''}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
+                  `/bookings/${_id}/food`,
+                  `/bookings/${_id}/rules`,
+                  `/bookings/${_id}/questions`,
+                  `/bookings/${_id}/summary`,
+                  null,
+                ]
+              : undefined
+          }
+        />
 
         <div className="mt-16 flex flex-col gap-16">
           {status === 'pending-payment' ? (
@@ -771,11 +798,38 @@ const Checkout = ({
                   booking?.paymentDelta?.fiat &&
                   booking?.paymentDelta?.fiat?.val > 0
                 ) && (
-                  <CurrencySwitcher
-                    selectedCurrency={currency}
-                    onSelect={setCurrency as any}
-                    currencies={CURRENCIES}
-                  />
+                  <div className="flex flex-col gap-2">
+                    <div
+                      className="flex flex-col gap-1"
+                      title={
+                        currency === CURRENCIES[1]
+                          ? t('bookings_payment_tdf_tooltip')
+                          : undefined
+                      }
+                    >
+                      <CurrencySwitcher
+                        selectedCurrency={currency}
+                        onSelect={setCurrency as any}
+                        currencies={CURRENCIES}
+                        optionsTitles={CURRENCIES.map((c) =>
+                          t(`currency_switch_${c}_title`),
+                        )}
+                      />
+                    </div>
+                    {currency === CURRENCIES[1] && isWalletReady && (
+                      <p className="text-sm text-foreground">
+                        {t('bookings_payment_wallet_balance')}:{' '}
+                        <span className="font-semibold">
+                          {priceFormat(tokenBalanceAvailable, CURRENCIES[1])}
+                        </span>
+                      </p>
+                    )}
+                    {currency === CURRENCIES[1] && (
+                      <p className="text-xs text-foreground">
+                        {t('bookings_payment_tdf_tooltip')}
+                      </p>
+                    )}
+                  </div>
                 )}
               {!(
                 booking?.paymentDelta?.fiat &&
@@ -786,7 +840,7 @@ const Checkout = ({
                     {eventPrice && (
                       <div>
                         <HeadingRow>
-                          <span className="mr-2">🎉</span>
+                          <IconPartyPopper />
                           <span>{t('bookings_checkout_ticket_cost')}</span>
                         </HeadingRow>
                         <div className="mb-16 mt-4">
@@ -803,7 +857,7 @@ const Checkout = ({
                     {!ticketOption?.isDayTicket && (
                       <>
                         <HeadingRow>
-                          <span className="mr-2">🏡</span>
+                          <IconHome />
                           <span>
                             {isHourlyBooking
                               ? t('bookings_checkout_step_accomodation')
@@ -919,7 +973,7 @@ const Checkout = ({
                   bookingConfig?.utilityOptionEnabled ? (
                     <div>
                       <HeadingRow>
-                        <span className="mr-2">🛠</span>
+                        <IconWrench />
                         <span>{t('bookings_checkout_step_utility_title')}</span>
                       </HeadingRow>
                       <div className="flex justify-between items-center mt-3">
@@ -934,7 +988,7 @@ const Checkout = ({
                   {!isHourlyBooking && foodFiat?.val ? (
                     <div>
                       <HeadingRow>
-                        <span className="mr-2">🥦</span>
+                        <IconUtensils />
                         <span>{t('bookings_checkout_step_food_title')}</span>
                       </HeadingRow>
                       <div className="flex justify-between items-center mt-3">
@@ -973,7 +1027,7 @@ const Checkout = ({
             {status === 'tokens-staked' && useTokens && rentalToken && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
                 <div className="flex ">
-                  <span className="text-green-600 mr-2">✅</span>
+                  <IconCheckCircle className="text-green-600 mr-2" />
                   <p className="text-green-800 font-medium">
                     {t.rich('bookings_checkout_tokens_staked_message', {
                       tokens: String(
@@ -1036,19 +1090,24 @@ const Checkout = ({
                     isEnabled={!processing}
                     onClick={handleFriendsBookingSendToFriend}
                   >
-                    📧 {t('friends_booking_send_to_friend')}
+                    <span className="inline-flex items-center gap-2">
+                      <IconMail className="mr-0 shrink-0" />
+                      {t('friends_booking_send_to_friend')}
+                    </span>
                   </Button>
                 )}
 
                 {emailSuccess && (
-                  <div className="text-green-600 text-sm font-medium">
-                    ✅ {t('friends_booking_checkout_sent')}
+                  <div className="text-green-600 text-sm font-medium inline-flex items-center gap-2">
+                    <IconCheckCircle className="shrink-0 text-green-600" />
+                    {t('friends_booking_checkout_sent')}
                   </div>
                 )}
 
                 {emailError && (
-                  <div className="text-red-600 text-sm font-medium">
-                    ❌ {emailError}
+                  <div className="text-red-600 text-sm font-medium inline-flex items-center gap-2">
+                    <IconXCircle className="shrink-0 text-red-600" />
+                    {emailError}
                   </div>
                 )}
               </div>

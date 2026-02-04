@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 
 import BookingDates from '../../../components/BookingDates/BookingDates';
 import BookingGuests from '../../../components/BookingGuests';
+import { IconBanknote, IconHome } from '../../../components/BookingIcons';
 import CurrencySwitch from '../../../components/CurrencySwitch';
 import PageError from '../../../components/PageError';
 import Switch from '../../../components/Switch';
@@ -125,6 +126,7 @@ const DatesSelector = ({
   const [doesNeedPickup, setDoesNeedPickup] = useState(false);
   const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
   const [bookingError, setBookingError] = useState<null | string>(null);
+  const [calendarErrorDismissed, setCalendarErrorDismissed] = useState(false);
 
   const hasEventIdAndValidTicket = Boolean(
     eventId && (!ticketOptions?.length || selectedTicketOption),
@@ -374,6 +376,10 @@ const DatesSelector = ({
     }
   }, [start, end, isMember, isMemberMinDurationMatched, isGuestMinDurationMatched, isTokenPaymentSelected, isTokenMinDurationMatched]);
 
+  useEffect(() => {
+    setCalendarErrorDismissed(false);
+  }, [bookingError]);
+
   const getUrlParams = () => {
     const dateFormat = 'YYYY-MM-DD';
     const params = {
@@ -497,10 +503,27 @@ const DatesSelector = ({
     return <FeatureNotEnabled feature="booking" />;
   }
 
+  const showBackButton =
+    isResidenceApplication || isVolunteerApplication || !!eventId;
+
   return (
     <>
       <div className="max-w-screen-sm mx-auto md:p-8 h-full">
-        <BackButton handleClick={goBack}>{t('buttons_back')}</BackButton>
+        <div className="flex items-center justify-between gap-6 mb-6">
+          {showBackButton ? (
+            <BackButton handleClick={goBack}>{t('buttons_back')}</BackButton>
+          ) : (
+            <span />
+          )}
+          <Heading className="flex items-center gap-2 flex-1 min-w-0 pb-0 mt-0">
+            <IconHome className="!mr-0" />
+            <span>
+              {selectedTicketOption?.isDayTicket
+                ? t('bookings_summary_step_dates_event')
+                : t('bookings_summary_step_dates_title')}
+            </span>
+          </Heading>
+        </div>
 
         {normalizedIsFriendsBooking &&
           !isLoadingUserBookings &&
@@ -530,21 +553,13 @@ const DatesSelector = ({
               </ul>
             </div>
           )}
-        <Heading className="pb-4 mt-8">
-          <span className="mr-2">🏡</span>
-          <span>
-            {selectedTicketOption?.isDayTicket
-              ? t('bookings_summary_step_dates_event')
-              : t('bookings_summary_step_dates_title')}
-          </span>
-        </Heading>
         <ProgressBar steps={BOOKING_STEPS} />
 
-        <div className="mt-16 flex flex-col gap-8">
+        <div className="mt-8 flex flex-col gap-8">
           {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' && (
             <div>
               <HeadingRow>
-                <span className="mr-2">💰</span>
+                <IconBanknote />
                 <span>{t('bookings_dates_step_payment_title')}</span>
               </HeadingRow>
               <CurrencySwitch
@@ -594,11 +609,16 @@ const DatesSelector = ({
                 blockedDateRanges={blockedDateRanges}
                 savedStartDate={savedStartDate as string}
                 savedEndDate={savedEndDate as string}
+                currentStartDate={start}
+                currentEndDate={end}
+                calendarError={
+                  bookingError && !calendarErrorDismissed ? bookingError : null
+                }
+                onCalendarErrorDismiss={() => setCalendarErrorDismissed(true)}
                 eventStartDate={event?.start && event?.start}
                 eventEndDate={event?.end && event?.end}
                 canSelectDates={event?.canSelectDates}
               />
-              {bookingError && <ErrorMessage error={bookingError} />}
               {isTodayAndToken && (
                 <ErrorMessage error={t('booking_token_same_day_error')} />
               )}

@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../hooks/useConfig';
+import { IconBanknote } from './BookingIcons';
 import { CloserCurrencies, Price } from '../types';
 import {
   getBookingPaymentType,
@@ -98,7 +99,7 @@ const SummaryCosts = ({
   return (
     <div>
       <HeadingRow>
-        <span className="mr-4">💰</span>
+        <IconBanknote className="mr-4" />
         <span>{t('bookings_summary_step_costs_title')}</span>
       </HeadingRow>
 
@@ -253,8 +254,9 @@ const SummaryCosts = ({
         </>
       )}
 
-      <div className="flex justify-between items-center mt-3">
-        <p>{t('bookings_total')}</p>
+      <div className="mt-4 pt-4 border-t-2 border-neutral-dark rounded-lg bg-accent-light/10 px-3 py-3">
+        <div className="flex justify-between items-center">
+          <p className="font-semibold text-lg">{t('bookings_total')}</p>
         <div className="flex items-center gap-2">
           {isEditMode &&
             status !== 'cancelled' &&
@@ -296,7 +298,7 @@ const SummaryCosts = ({
             )}
 
           {(priceDuration === 'night' || !priceDuration) && (
-            <div className="font-bold">
+            <div className="font-bold text-lg">
               {useTokens && (
                 <>
                   <span>
@@ -396,11 +398,17 @@ const SummaryCosts = ({
             </div>
           )}
         </div>
+        </div>
+        <p className="text-right text-xs mt-2">
+          {t('bookings_checkout_step_total_description')}{' '}
+          {getVatInfo(displayTotalFiat, vatRate)}
+        </p>
+        {useTokens && displayTotalFiat.val > 0 && (
+          <p className="text-xs text-foreground mt-2 pt-2 border-t border-neutral-dark">
+            {t('bookings_summary_hybrid_payment_note')}
+          </p>
+        )}
       </div>
-      <p className="text-right text-xs">
-        {t('bookings_checkout_step_total_description')}{' '}
-        {getVatInfo(displayTotalFiat, vatRate)}
-      </p>
     </div>
   );
 };

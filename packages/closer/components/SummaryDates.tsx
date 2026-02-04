@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../hooks/useConfig';
 import { Listing } from '../types';
+import { IconHome } from './BookingIcons';
 import api from '../utils/api';
 import {
   dateToPropertyTimeZone,
@@ -158,12 +159,12 @@ const SummaryDates = ({
     <div>
       {eventName ? (
         <HeadingRow>
-          <span className="mr-4">🏡</span>
+          <IconHome className="mr-4" />
           <span>{t('bookings_summary_step_your_event')}</span>
         </HeadingRow>
       ) : (
         <HeadingRow>
-          <span className="mr-4">🏡</span>
+          <IconHome className="mr-4" />
           <span>
             {isHourlyBooking
               ? t('bookings_summary_step_dates_title_hourly')

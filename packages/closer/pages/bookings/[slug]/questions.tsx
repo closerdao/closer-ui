@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
+import { IconFileText } from '../../../components/BookingIcons';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
 import QuestionnaireItem from '../../../components/QuestionnaireItem';
@@ -226,14 +227,31 @@ const Questionnaire = ({
   return (
     <>
       <div className="w-full max-w-screen-sm mx-auto p-8">
-        <BookingBackButton onClick={resetBooking} name={t('buttons_back')} />
+        <div className="flex items-center justify-between gap-6 mb-6">
+          <BookingBackButton onClick={resetBooking} name={t('buttons_back')} />
+          <Heading level={1} className="flex items-center gap-2 flex-1 min-w-0 pb-0 mt-0">
+            <IconFileText className="!mr-0" />
+            <span>{t('bookings_questionnaire_step_title')}</span>
+          </Heading>
+        </div>
         <FriendsBookingBlock isFriendsBooking={booking?.isFriendsBooking} />
 
-        <Heading level={1} className="pb-4 mt-8">
-          <span className="mr-4">📄</span>
-          <span>{t('bookings_questionnaire_step_title')}</span>
-        </Heading>
-        <ProgressBar steps={BOOKING_STEPS} />
+        <ProgressBar
+          steps={BOOKING_STEPS}
+          stepHrefs={
+            booking?.start && booking?.end
+              ? [
+                  `/bookings/create/dates?start=${dayjs(booking.start).format('YYYY-MM-DD')}&end=${dayjs(booking.end).format('YYYY-MM-DD')}&adults=${booking.adults}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
+                  `/bookings/create/accomodation?start=${dayjs(booking.start).format('YYYY-MM-DD')}&end=${dayjs(booking.end).format('YYYY-MM-DD')}&adults=${booking.adults}${booking?.useTokens ? '&currency=TDF' : ''}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
+                  `/bookings/${booking._id}/food`,
+                  `/bookings/${booking._id}/rules`,
+                  null,
+                  null,
+                  null,
+                ]
+              : undefined
+          }
+        />
 
         {preferencesError && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md mb-6">

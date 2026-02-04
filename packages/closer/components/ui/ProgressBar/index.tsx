@@ -4,25 +4,25 @@ import Progress from './Progress';
 
 interface ProgressBarProps {
   steps: string[];
+  stepHrefs?: (string | null)[];
 }
 
-const ProgressBar = ({ steps }: ProgressBarProps) => {
+const ProgressBar = ({ steps, stepHrefs }: ProgressBarProps) => {
   const router = useRouter();
+  const pathSegments = router.pathname.split('/');
+  const lastSegment = pathSegments[pathSegments.length - 1] ?? '';
 
-  const currentStep = steps.find((step) =>
-    router.pathname
-      .split('/')
-      [router.pathname.split('/').length - 1].includes(step),
+  const currentStep = steps.find((step) => lastSegment.includes(step));
+  const currentStepIndex = currentStep ? steps.indexOf(currentStep) : 0;
+
+  return (
+    <Progress
+      progress={currentStepIndex + 1}
+      total={steps.length}
+      stepIds={steps}
+      stepHrefs={stepHrefs}
+    />
   );
-  
-
-  let currentStepIndex;
-  if (currentStep) {
-    currentStepIndex = steps.indexOf(currentStep);
-  } else {
-    currentStepIndex = 0;
-  }
-  return <Progress progress={currentStepIndex + 1} total={steps.length} />;
 };
 
 export default ProgressBar;

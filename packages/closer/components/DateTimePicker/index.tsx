@@ -42,6 +42,7 @@ interface Props {
   hourAvailability?: { hour: string; isAvailable: boolean }[] | [];
   timeZone?: string;
   isDashboard?: boolean;
+  durationLabel?: string;
 }
 
 const DateTimePicker = ({
@@ -60,6 +61,7 @@ const DateTimePicker = ({
   timeZone,
   isDashboard,
   startCollapsed = false,
+  durationLabel,
 }: Props) => {
   const [isExpanded, setIsExpanded] = useState(!startCollapsed);
   // Store the original full dates for timezone conversion
@@ -391,10 +393,10 @@ const DateTimePicker = ({
 
   return (
     <div className="max-w-[550px]">
-      <div data-testid="dates" className="w-full flex flex-wrap items-center gap-3 mb-4">
-        <div className="flex flex-wrap gap-2">
+      <div data-testid="dates" className="w-full flex flex-wrap items-center gap-2 mb-2">
+        <div className="flex flex-wrap gap-2 items-center">
           {priceDuration !== 'night' && startTime && savedStartDate && (
-            <div className="text-sm border rounded-md bg-neutral py-2.5 px-3 font-medium">
+            <div className="text-sm border rounded-md bg-neutral py-2 px-2.5 font-medium">
               {getDateOnly(savedStartDate)}
               {isStartTimeSelected &&
                 startTimeOnly !== endTimeOnly &&
@@ -403,7 +405,7 @@ const DateTimePicker = ({
           )}
           {priceDuration === 'night' && (
             <>
-              <div className="text-sm border rounded-md bg-neutral py-2.5 px-3 font-medium min-w-[120px]">
+              <div className="text-sm border rounded-lg bg-neutral py-2 px-2.5 font-medium w-28 min-w-[7rem] flex items-center justify-center text-center shrink-0">
                 {isAdmin && !showCalendar && (
                   <span className="text-foreground/60 text-xs block">
                     {t('events_event_start_date')}
@@ -413,7 +415,7 @@ const DateTimePicker = ({
                   ? dayjs(dateRange.from).format('ll')
                   : t('listings_book_select_date')}
               </div>
-              <div className="text-sm border rounded-md bg-neutral py-2.5 px-3 font-medium min-w-[120px]">
+              <div className="text-sm border rounded-lg bg-neutral py-2 px-2.5 font-medium w-28 min-w-[7rem] flex items-center justify-center text-center shrink-0">
                 {isAdmin && !showCalendar && (
                   <span className="text-foreground/60 text-xs block">
                     {t('events_event_end_date')}
@@ -423,6 +425,11 @@ const DateTimePicker = ({
                   ? dayjs(dateRange.to).format('ll')
                   : t('listings_book_select_date')}
               </div>
+              {durationLabel && (
+                <span className="text-sm font-medium text-foreground/90 py-2 px-2.5 rounded-lg bg-accent/20 w-28 min-w-[7rem] flex items-center justify-center text-center shrink-0 border border-transparent">
+                  {durationLabel}
+                </span>
+              )}
             </>
           )}
         </div>
@@ -436,18 +443,19 @@ const DateTimePicker = ({
             {hasDates ? (t('events_edit_dates') || 'Edit dates') : (t('events_set_dates') || 'Set dates')}
           </Button>
         ) : (
-          <Button
-            className="hidden sm:block sm:font-normal h-[25px] w-[130px] underline sm:no-underline text-black border-0 sm:border-2 border-black normal-case py-0.5 px-0 sm:px-3 sm:p-3 sm:py-2 text-sm bg-white"
+          <button
+            type="button"
             onClick={handleClearDates}
+            className="text-xs text-foreground/60 hover:text-foreground underline py-1 px-1.5 min-w-0"
           >
             {t('generic_clear_selection')}
-          </Button>
+          </button>
         )}
       </div>
 
       {showCalendar && !startCollapsed && (
         <>
-          <div className="mt-4">
+          <div className="mt-2">
             <DayPicker
               disabled={normalizeBlockedDateRangesForDayPicker(blockedDateRanges)}
               mode="range"

@@ -1,8 +1,10 @@
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
+import { IconBanknote, IconCheckCircle, IconFileText, IconMail, IconXCircle } from '../../../components/BookingIcons';
 import Conditions from '../../../components/Conditions';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
@@ -323,25 +325,39 @@ const Summary = ({
       <div className="space-y-4">
         <div className="flex flex-col gap-3">
           <Button onClick={handleNext} isEnabled={!loading}>
-            💰 {t('friends_booking_pay_now_summary')}
+            <span className="inline-flex items-center gap-2">
+              <IconBanknote className="mr-0 shrink-0" />
+              {t('friends_booking_pay_now_summary')}
+            </span>
           </Button>
 
           <Button
             onClick={handleSendToFriends}
             isEnabled={!loading && !apiLoading}
           >
-            {apiLoading ? 'Sending...' : '📧 Send to friends for payment'}
+            <span className="inline-flex items-center gap-2">
+              {apiLoading ? (
+                'Sending...'
+              ) : (
+                <>
+                  <IconMail className="mr-0 shrink-0" />
+                  {t('friends_booking_send_to_friend_summary')}
+                </>
+              )}
+            </span>
           </Button>
 
           {emailSuccess && (
-            <div className="text-green-600 text-sm font-medium">
-              ✅ {t('friends_booking_checkout_sent')}
+            <div className="text-green-600 text-sm font-medium inline-flex items-center gap-2">
+              <IconCheckCircle className="shrink-0" />
+              {t('friends_booking_checkout_sent')}
             </div>
           )}
 
           {emailError && (
-            <div className="text-red-600 text-sm font-medium">
-              ❌ {emailError}
+            <div className="text-red-600 text-sm font-medium inline-flex items-center gap-2">
+              <IconXCircle className="shrink-0" />
+              {emailError}
             </div>
           )}
         </div>
@@ -365,63 +381,112 @@ const Summary = ({
 
   return (
     <div className="w-full max-w-screen-sm mx-auto p-8">
-      <BookingBackButton onClick={goBack} name={t('buttons_back')} />
+      <div className="flex items-center justify-between gap-6 mb-6">
+        <BookingBackButton onClick={goBack} name={t('buttons_back')} />
+        <Heading level={1} className="flex items-center gap-2 flex-1 min-w-0 pb-0 mt-0">
+          <IconFileText className="!mr-0" />
+          <span>{t('bookings_summary_step_title')}</span>
+        </Heading>
+      </div>
       <FriendsBookingBlock isFriendsBooking={booking?.isFriendsBooking} />
-      <Heading level={1} className="pb-4 mt-8">
-        <span className="mr-4">📑</span>
-        <span>{t('bookings_summary_step_title')}</span>
-      </Heading>
       {handleNextError && <div className="error-box">{handleNextError}</div>}
-      <ProgressBar steps={BOOKING_STEPS} />
+      <ProgressBar
+        steps={BOOKING_STEPS}
+        stepHrefs={
+          booking?.start && booking?.end
+            ? [
+                `/bookings/create/dates?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${children ? `&kids=${children}` : ''}${pets ? `&pets=${pets}` : ''}${infants ? `&infants=${infants}` : ''}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
+                `/bookings/create/accomodation?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${children ? `&kids=${children}` : ''}${pets ? `&pets=${pets}` : ''}${infants ? `&infants=${infants}` : ''}${booking?.useTokens ? '&currency=TDF' : ''}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
+                `/bookings/${booking?._id}/food`,
+                `/bookings/${booking?._id}/rules`,
+                `/bookings/${booking?._id}/questions`,
+                null,
+                null,
+              ]
+            : undefined
+        }
+      />
       {booking && (
-        <div className="mt-16 flex flex-col gap-16">
-          <SummaryDates
-            isDayTicket={booking?.isDayTicket}
-            totalGuests={adults || 0}
-            kids={children}
-            infants={infants}
-            pets={pets}
-            startDate={start || ''}
-            endDate={end || ''}
-            listingName={listing?.name || ''}
-            listingUrl={listing?.slug || ''}
-            eventName={event?.name}
-            ticketOption={ticketOption?.name}
-            priceDuration={listing?.priceDuration}
-            numSpacesRequired={
-              listing?.private
-                ? Math.ceil(booking.adults / (listing?.beds || 1))
-                : booking.adults
-            }
-            isVolunteer={volunteerInfo?.bookingType === 'volunteer'}
-          />
-          <SummaryCosts
-            utilityFiat={utilityFiat}
-            rentalFiat={rentalFiat}
-            rentalToken={rentalToken}
-            foodFiat={foodFiat}
-            useTokens={useTokens || false}
-            useCredits={useCredits || false}
-            accomodationCost={useTokens ? rentalToken : rentalFiat}
-            totalToken={rentalToken || { val: 0, cur: CloserCurrencies.EUR }}
-            creditsPrice={(dailyRentalToken?.val || 0) * (duration || 0)}
-            totalFiat={total || { val: 0, cur: CloserCurrencies.EUR }}
-            eventCost={eventFiat}
-            isFoodIncluded={Boolean(booking?.foodOptionId)}
-            foodOptionEnabled={bookingConfig?.foodOptionEnabled}
-            utilityOptionEnabled={bookingConfig?.utilityOptionEnabled}
-            eventDefaultCost={
-              booking?.ticketOption?.price
-                ? booking?.ticketOption.price * booking?.adults
-                : undefined
-            }
-            accomodationDefaultCost={
-              (listing && listing?.fiatPrice?.val * booking?.adults) ||
-              undefined
-            }
-            priceDuration={listing?.priceDuration}
-            vatRate={vatRate}
-          />
+        <div className="mt-16 flex flex-col gap-8">
+          <details
+            className="rounded-lg border border-neutral-dark bg-neutral-light overflow-hidden"
+            open
+          >
+            <summary className="list-none flex flex-wrap items-center justify-end gap-2 px-4 py-2 font-medium cursor-pointer hover:bg-neutral-dark/30">
+              <Link
+                href={`/bookings/create/dates?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${children ? `&kids=${children}` : ''}${pets ? `&pets=${pets}` : ''}${infants ? `&infants=${infants}` : ''}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`}
+                className="text-sm text-accent-dark font-medium hover:underline"
+              >
+                {t('generic_edit_button')}
+              </Link>
+            </summary>
+            <div className="px-4 pb-4 pt-0">
+              <SummaryDates
+                isDayTicket={booking?.isDayTicket}
+                totalGuests={adults || 0}
+                kids={children}
+                infants={infants}
+                pets={pets}
+                startDate={start || ''}
+                endDate={end || ''}
+                listingName={listing?.name || ''}
+                listingUrl={listing?.slug || ''}
+                eventName={event?.name}
+                ticketOption={ticketOption?.name}
+                priceDuration={listing?.priceDuration}
+                numSpacesRequired={
+                  listing?.private
+                    ? Math.ceil(booking.adults / (listing?.beds || 1))
+                    : booking.adults
+                }
+                isVolunteer={volunteerInfo?.bookingType === 'volunteer'}
+              />
+            </div>
+          </details>
+
+          <details
+            className="rounded-lg border border-neutral-dark bg-neutral-light overflow-hidden"
+            open
+          >
+            <summary className="list-none flex flex-wrap items-center justify-between gap-2 px-4 py-3 font-medium cursor-pointer hover:bg-neutral-dark/30">
+              <span>{t('bookings_summary_step_costs_title')}</span>
+              <Link
+                href={`/bookings/create/accomodation?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${children ? `&kids=${children}` : ''}${pets ? `&pets=${pets}` : ''}${infants ? `&infants=${infants}` : ''}${useTokens ? '&currency=TDF' : ''}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`}
+                className="text-sm text-accent-dark font-medium hover:underline"
+              >
+                {t('generic_edit_button')}
+              </Link>
+            </summary>
+            <div className="px-4 pb-4 pt-0">
+              <SummaryCosts
+                utilityFiat={utilityFiat}
+                rentalFiat={rentalFiat}
+                rentalToken={rentalToken}
+                foodFiat={foodFiat}
+                useTokens={useTokens || false}
+                useCredits={useCredits || false}
+                accomodationCost={useTokens ? rentalToken : rentalFiat}
+                totalToken={rentalToken || { val: 0, cur: CloserCurrencies.EUR }}
+                creditsPrice={(dailyRentalToken?.val || 0) * (duration || 0)}
+                totalFiat={total || { val: 0, cur: CloserCurrencies.EUR }}
+                eventCost={eventFiat}
+                isFoodIncluded={Boolean(booking?.foodOptionId)}
+                foodOptionEnabled={bookingConfig?.foodOptionEnabled}
+                utilityOptionEnabled={bookingConfig?.utilityOptionEnabled}
+                eventDefaultCost={
+                  booking?.ticketOption?.price
+                    ? booking?.ticketOption.price * booking?.adults
+                    : undefined
+                }
+                accomodationDefaultCost={
+                  (listing && listing?.fiatPrice?.val * booking?.adults) ||
+                  undefined
+                }
+                priceDuration={listing?.priceDuration}
+                vatRate={vatRate}
+              />
+            </div>
+          </details>
 
           <div>{buttonContent}</div>
         </div>
