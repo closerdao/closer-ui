@@ -10,7 +10,7 @@ import RevenueIcon from '../../components/icons/RevenueIcon';
 import LinkBuilderTool from '../../components/LinkBuilderTool';
 import { Card, Heading, LinkButton } from 'closer/components/ui';
 
-import { FaLink } from '@react-icons/all-files/fa/FaLink';
+import { Link } from 'lucide-react';
 import { AffiliateConfig, PageNotFound, api, usePlatform } from 'closer';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -222,7 +222,7 @@ const AffiliatePage = ({
             level={2}
             className="text-lg flex gap-2 items-center uppercase"
           >
-            {<FaLink />}
+            {<Link className="h-4 w-4" />}
             {t('affiliate_links')}
           </Heading>
           

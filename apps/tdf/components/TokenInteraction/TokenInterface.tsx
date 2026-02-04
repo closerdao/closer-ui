@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Contract } from 'ethers';
-import { WalletState } from 'closer/contexts/wallet';
+import { WalletState } from 'closer';
 import { getContract, getCurrentNetwork, getContractNames } from '../../utils/abiLoader';
 
 interface TokenInterfaceProps {

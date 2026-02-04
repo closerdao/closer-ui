@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import EditModel from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
 
-import { FaArrowLeft } from '@react-icons/all-files/fa/FaArrowLeft';
+import { ArrowLeft } from 'lucide-react';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
@@ -111,7 +111,7 @@ const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig }: P
           href={`/events/${event.slug}`}
           className="mr-2 italic flex flex-row items-center justify-start"
         >
-          <FaArrowLeft className="mr-1" /> {t('generic_back')}
+          <ArrowLeft className="mr-1 h-4 w-4" /> {t('generic_back')}
         </Link>
         <Heading level={2} className="flex justify-start items-center">
           {t('events_slug_edit_link')} <i>{event.name}</i>

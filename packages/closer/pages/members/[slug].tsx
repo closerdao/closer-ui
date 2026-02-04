@@ -16,8 +16,7 @@ import { Card } from '../../components/ui';
 import Button from '../../components/ui/Button';
 import Heading from '../../components/ui/Heading';
 
-import { FaUser } from '@react-icons/all-files/fa/FaUser';
-import { TiDelete } from '@react-icons/all-files/ti/TiDelete';
+import { Trash2, User as UserIcon } from 'lucide-react';
 import { Twitter, Instagram, Facebook, Linkedin, Github, Youtube, Music, Link as LinkIcon, Settings } from 'lucide-react';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -286,7 +285,7 @@ const MemberPage = ({
                       />
                     ) : (
                       <div className="w-36 md:w-48 h-36 md:h-48 rounded-full bg-gray-100 flex items-center justify-center">
-                        <FaUser className="text-gray-300 text-6xl" />
+                        <UserIcon className="text-gray-300 w-16 h-16" />
                       </div>
                     )}
                   </div>
@@ -548,7 +547,7 @@ const MemberPage = ({
                                   }}
                                   className="opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
-                                  <TiDelete className="text-gray-500 text-xl hover:text-red-500" />
+                                  <Trash2 className="text-gray-500 w-5 h-5 hover:text-red-500" />
                                 </a>
                               )}
                           </li>

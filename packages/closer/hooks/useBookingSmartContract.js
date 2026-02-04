@@ -26,17 +26,15 @@ export const useBookingSmartContract = ({ bookingNights }) => {
     BLOCKCHAIN_DAO_TOKEN,
     BLOCKCHAIN_DIAMOND_ABI,
   } = useConfig();
-  const { isWalletReady, account, library } = useContext(WalletState);
-  const { updateWalletBalance, refetchBookingDates } =
-    useContext(WalletDispatch);
+  const walletState = useContext(WalletState);
+  const walletDispatch = useContext(WalletDispatch);
   const [pendingTransactions, setPendingTransactions] = useState([]);
   const [isPending, setPending] = useState(false);
 
-  // Safety check for required functions
+  const { isWalletReady, account, library } = walletState || {};
+  const { updateWalletBalance, refetchBookingDates } = walletDispatch || {};
+
   if (!updateWalletBalance || !refetchBookingDates) {
-    console.warn(
-      'useBookingSmartContract: Required wallet functions not available',
-    );
     return {
       stakeTokens: async () => ({
         error: 'Wallet functions not available',
@@ -108,14 +106,10 @@ export const useBookingSmartContract = ({ bookingNights }) => {
     try {
       setPending(true);
 
-      console.log('dailyValue =', dailyValue);
-
       const pricePerNightBigNum = utils.parseUnits(
         dailyValue.toString(),
         BLOCKCHAIN_DAO_TOKEN.decimals,
       );
-
-      console.log('pricePerNightBigNum =', pricePerNightBigNum);
 
       const chainId = await Diamond.signer.getChainId();
 
@@ -155,8 +149,10 @@ export const useBookingSmartContract = ({ bookingNights }) => {
       }
       return { error: null, success: { transactionId: tx3.hash } };
     } catch (error) {
-      //User rejected transaction
-      console.error('stakeTokens', error);
+      const errorReason = error?.reason || error?.message || '';
+      if (errorReason.includes('Booking already exists')) {
+        return { error: null, success: { transactionId: 'existing' } };
+      }
       return {
         error,
         success: null,

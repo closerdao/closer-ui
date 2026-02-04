@@ -2,7 +2,7 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useRef, useState } from 'react';
 
-import { FaTimes } from '@react-icons/all-files/fa/FaTimes';
+import { X } from 'lucide-react';
 import { Newsletter, useAuth } from 'closer';
 import { useTranslations } from 'next-intl';
 
@@ -156,7 +156,7 @@ const PromptFixedBottom = () => {
             className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors shrink-0"
             aria-label="Close"
           >
-            <FaTimes className="w-3.5 h-3.5" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
       </section>

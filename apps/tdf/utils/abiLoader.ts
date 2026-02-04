@@ -4,7 +4,7 @@
  */
 
 // Import network configuration
-import { blockchainConfig } from 'closer/config_blockchain';
+import { blockchainConfig } from 'closer';
 
 // Define the network type
 type Network = 'celo' | 'alfajores';

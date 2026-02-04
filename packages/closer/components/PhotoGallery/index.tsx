@@ -1,10 +1,17 @@
 import { useState } from 'react';
-import { Gallery } from 'react-grid-gallery';
-import Lightbox from 'react-image-lightbox';
-import 'react-image-lightbox/style.css';
+
+import dynamic from 'next/dynamic';
 
 import { images } from './images';
 import DynamicPhotoGallery from './DynamicPhotoGallery';
+
+const Gallery = dynamic(
+  () => import('react-grid-gallery').then((mod) => mod.Gallery),
+  { ssr: false }
+);
+const Lightbox = dynamic(() => import('react-image-lightbox'), {
+  ssr: false,
+});
 
 interface Props {
   className?: string;

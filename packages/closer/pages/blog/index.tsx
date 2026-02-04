@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import ArticleList from '../../components/ArticleList';
 import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 
-import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import { User as UserIcon } from 'lucide-react';
 import { User } from 'closer/contexts/auth/types';
 import dayjs from 'dayjs';
 import { NextPageContext } from 'next';
@@ -189,7 +189,7 @@ const Search = ({
                       />
                     ) : (
                       <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
-                        <FaUser className="text-gray-400 w-3.5 h-3.5" />
+                        <UserIcon className="text-gray-400 w-3.5 h-3.5" />
                       </div>
                     )}
                     <div className="text-xs text-gray-500">

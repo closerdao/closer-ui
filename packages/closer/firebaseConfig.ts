@@ -22,8 +22,8 @@ if (firebaseConfig) {
   } catch (e) {
     console.error('Failed to initialize Firebase app:', e);
   }
-} else {
-  console.error('Firebase configuration is missing or invalid.');
+} else if (typeof window !== 'undefined') {
+  console.warn('Firebase not configured');
 }
 
 export { auth };

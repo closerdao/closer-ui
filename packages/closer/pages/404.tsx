@@ -6,11 +6,6 @@ import Heading from '../components/ui/Heading';
 import { loadLocaleData } from '../utils/locale.helpers';
 
 const Page404 = ({ error }: { error?: string }) => {
-
-  // useEffect(() => {
-  //   router.push('/404');
-  // }, []);
-
   return (
     <>
       <Head>
@@ -34,14 +29,13 @@ const Page404 = ({ error }: { error?: string }) => {
   );
 };
 
-export async function getStaticProps() {
+export async function getStaticProps({ locale }: { locale?: string }) {
   const messages = await loadLocaleData(
-    'en',
+    locale || 'en',
     process.env.NEXT_PUBLIC_APP_NAME || 'tdf',
   );
   return {
     props: { messages },
-    revalidate: 86400, // 24 hours
   };
 }
 

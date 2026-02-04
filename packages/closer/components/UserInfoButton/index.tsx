@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import { User } from 'lucide-react';
 
 import { cdn } from '../../utils/api';
 
@@ -25,7 +25,7 @@ const UserInfoButton = ({ userInfo, createdBy, size }: Props) => {
               className="rounded-full"
             />
           ) : (
-            <FaUser size={size === 'md' ? 80 : 30} className=" text-success " />
+            <User className={`text-success ${size === 'md' ? 'w-20 h-20' : 'w-8 h-8'}`} />
           )}
           {userInfo?.name || ''}
         </div>

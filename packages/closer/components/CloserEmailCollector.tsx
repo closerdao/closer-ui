@@ -3,7 +3,7 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 // Added api
 import Dropdown from 'closer/components/ui/Select/Dropdown';
 
-import { FaTimes } from '@react-icons/all-files/fa/FaTimes';
+import { X } from 'lucide-react';
 import { Button, Heading, Input, api } from 'closer';
 // Import custom Dropdown
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
@@ -180,7 +180,7 @@ const CloserEmailCollector = () => {
               size="small"
               className="my-4 absolute right-4 top-0 w-10 h-10 p-0 z-10"
             >
-              <FaTimes className="w-4 h-4" />
+              <X className="w-4 h-4" />
             </Button>
 
             <div className={'flex flex-col'}>

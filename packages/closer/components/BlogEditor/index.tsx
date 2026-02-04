@@ -1,9 +1,6 @@
 import React, { FC, useCallback, useState } from 'react';
 
-import { FaChevronDown } from '@react-icons/all-files/fa/FaChevronDown';
-import { FaChevronUp } from '@react-icons/all-files/fa/FaChevronUp';
-import { FaImage } from '@react-icons/all-files/fa/FaImage';
-import { FaTimes } from '@react-icons/all-files/fa/FaTimes';
+import { ChevronDown, ChevronUp, Image as ImageIcon, X } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { useTranslations } from 'next-intl';
 
@@ -213,7 +210,7 @@ const BlogEditor: FC<Props> = ({
               }}
               className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors"
             >
-              <FaTimes className="w-5 h-5" />
+              <X className="w-5 h-5" />
             </button>
             <div className="absolute bottom-4 left-4 text-white/80 text-sm">
               {t('blog_editor_click_to_change_cover')}
@@ -225,7 +222,7 @@ const BlogEditor: FC<Props> = ({
               <Spinner />
             ) : (
               <>
-                <FaImage className="w-12 h-12 mb-3" />
+                <ImageIcon className="w-12 h-12 mb-3" />
                 <p className="text-lg font-medium">
                   {t('blog_editor_add_cover_image')}
                 </p>
@@ -281,9 +278,9 @@ const BlogEditor: FC<Props> = ({
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
         >
           {showSettings ? (
-            <FaChevronUp className="w-4 h-4" />
+            <ChevronUp className="w-4 h-4" />
           ) : (
-            <FaChevronDown className="w-4 h-4" />
+            <ChevronDown className="w-4 h-4" />
           )}
           <span className="font-medium">{t('blog_editor_settings')}</span>
         </button>
@@ -322,7 +319,7 @@ const BlogEditor: FC<Props> = ({
                       onClick={() => removeTag(tag)}
                       className="hover:text-red-500 transition-colors"
                     >
-                      <FaTimes className="w-3 h-3" />
+                      <X className="w-3 h-3" />
                     </button>
                   </span>
                 ))}

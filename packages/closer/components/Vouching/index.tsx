@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import { User as UserIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Modal, api } from '../..';
@@ -160,7 +160,7 @@ const Vouching = ({
                   />
                 ) : (
                   <div className="rounded-full overflow-hidden">
-                    <FaUser className="text-neutral w-[30px] h-[30px] " />
+                    <UserIcon className="text-neutral w-[30px] h-[30px]" />
                   </div>
                 )}
                 <p className="text-accent">{user.screenname}</p>

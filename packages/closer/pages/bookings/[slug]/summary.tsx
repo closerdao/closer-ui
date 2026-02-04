@@ -283,9 +283,6 @@ const Summary = ({
     } finally {
       setApiLoading(false);
     }
-
-    console.log('booking?.friendEmails=', booking?.friendEmails);
-    console.log('booking?.isFriendsBooking=', booking?.isFriendsBooking);
   };
 
   if (!isBookingEnabled) {

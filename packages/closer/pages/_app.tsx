@@ -4,37 +4,33 @@ import { useRouter } from 'next/router';
 import Script from 'next/script';
 
 import { useEffect, useState } from 'react';
+import 'react-image-lightbox/style.css';
 
 import { PromptGetInTouchProvider } from '../components/PromptGetInTouchContext';
 
 import {
-  ExternalProvider,
-  JsonRpcFetchFunc,
-  Web3Provider,
-} from '@ethersproject/providers';
-import { Web3ReactProvider } from '@web3-react/core';
-import {
   AuthProvider,
   ConfigProvider,
   PlatformProvider,
-  WalletProvider,
   api,
-  blockchainConfig,
 } from 'closer';
+import { blockchainConfig } from '../config_blockchain';
 import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import { NewsletterProvider } from '../contexts/newsletter';
 import { prepareGeneralConfig } from 'closer/utils/app.helpers';
 import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
+import { Web3ReactProvider } from '@web3-react/core';
+import { Web3Provider } from '@ethersproject/providers';
+import { WalletProvider } from '../contexts/wallet';
+
+function getLibrary(provider: any) {
+  return new Web3Provider(provider);
+}
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
-}
-
-export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
-  const library = new Web3Provider(provider);
-  return library;
 }
 
 const prepareDefaultConfig = () => {
@@ -155,7 +151,6 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
                       <Component {...pageProps} config={config} />
                     </NewsletterProvider>
                   </PromptGetInTouchProvider>
-                  {/* TODO: create cookie consent page with property-specific parameters #357  */}
                 </WalletProvider>
               </Web3ReactProvider>
             </PlatformProvider>

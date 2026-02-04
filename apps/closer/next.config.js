@@ -24,7 +24,6 @@ const nextConfig = {
   },
   reactStrictMode: false,
   transpilePackages: ['closer'],
-  presets: ['next/babel'],
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   images: {
     remotePatterns: [

@@ -44,26 +44,27 @@ const BookingDates: FC<Props> = ({
   const renderConditionsDescription = () => {
     if (isMember) {
       return (
-        t(
-          'bookings_dates_step_member_book_horizon',
-         { var: conditions?.memberMaxBookingHorizon }
-          
-        ) +
+        t('bookings_dates_step_member_book_horizon', {
+          var: conditions?.memberMaxBookingHorizon,
+        }) +
         ', ' +
-        t('bookings_dates_step_book_duration',
-          { var: conditions?.memberMaxDuration }
-          
-          )
+        t('bookings_dates_step_book_duration', {
+          var: conditions?.memberMaxDuration,
+        }) +
+        ' ' +
+        t('bookings_dates_step_min_stay', {
+          var: conditions?.memberMinDuration,
+        })
       );
     } else {
       return (
-        t(
-          'bookings_dates_step_guest_book_horizon'
-          ,
-          { var: conditions?.maxBookingHorizon },
-        ) +
+        t('bookings_dates_step_guest_book_horizon', {
+          var: conditions?.maxBookingHorizon,
+        }) +
         ', ' +
-        t('bookings_dates_step_book_duration', { var: conditions?.maxDuration })
+        t('bookings_dates_step_book_duration', { var: conditions?.maxDuration }) +
+        ' ' +
+        t('bookings_dates_step_min_stay', { var: conditions?.minDuration })
       );
     }
   };

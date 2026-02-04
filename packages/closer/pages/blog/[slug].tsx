@@ -14,7 +14,7 @@ import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import RelatedArticles from '../../components/RelatedArticles';
 import { LinkButton } from '../../components/ui';
 
-import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import { User } from 'lucide-react';
 import dayjs from 'dayjs';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -150,7 +150,7 @@ const ArticlePage = ({ article, author, error, relatedArticles, blogConfig }: Pr
                       />
                     ) : (
                       <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                        <FaUser className="text-gray-400 w-6 h-6" />
+                        <User className="text-gray-400 w-6 h-6" />
                       </div>
                     )}
                   </Link>
@@ -268,7 +268,7 @@ const ArticlePage = ({ article, author, error, relatedArticles, blogConfig }: Pr
                       />
                     ) : (
                       <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
-                        <FaUser className="text-gray-400 w-8 h-8" />
+                        <User className="text-gray-400 w-8 h-8" />
                       </div>
                     )}
                   </Link>

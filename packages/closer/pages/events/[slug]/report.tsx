@@ -4,9 +4,14 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { Card, Heading, Spinner } from '../../../components/ui';
-import DonutChart from '../../../components/ui/Charts/DonutChart';
 
-import { FaArrowLeft } from '@react-icons/all-files/fa/FaArrowLeft';
+import dynamic from 'next/dynamic';
+import { ArrowLeft } from 'lucide-react';
+
+const DonutChart = dynamic(() => import('../../../components/ui/Charts/DonutChart'), {
+  ssr: false,
+  loading: () => <Spinner />,
+});
 import dayjs from 'dayjs';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -154,7 +159,7 @@ const EventReport = ({ event, error }: Props) => {
       <main className="main-content w-full">
         <div className="mb-6">
           <Link href={`/events/${event.slug}`} className="flex items-center text-accent hover:underline">
-            <FaArrowLeft className="mr-2" /> {t('back_to_event')}
+            <ArrowLeft className="mr-2 h-4 w-4" /> {t('back_to_event')}
           </Link>
         </div>
 

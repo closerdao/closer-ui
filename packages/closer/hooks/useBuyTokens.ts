@@ -81,7 +81,8 @@ const getReadOnlyContractInstance = async (address: string, abi: any) => {
 };
 
 export const useBuyTokens = () => {
-  const { library, account } = useContext(WalletState);
+  const walletState = useContext(WalletState);
+  const { library, account } = walletState || {};
   const {
     BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS,
     BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
@@ -99,29 +100,42 @@ export const useBuyTokens = () => {
     }
   }, [tokenAddress, BLOCKCHAIN_DAO_TOKEN_ABI]);
 
-  const getContractInstances = () => ({
-    DynamicSale: new Contract(
-      BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS,
-      BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
-      library && library.getUncheckedSigner(),
-    ),
-    TdfToken: new Contract(
-      BLOCKCHAIN_DAO_TOKEN.address,
-      BLOCKCHAIN_DAO_TOKEN_ABI,
-      library && library.getUncheckedSigner(),
-    ),
-    Ceur: new Contract(
-      CEUR_TOKEN_ADDRESS,
-      BLOCKCHAIN_DAO_TOKEN_ABI,
-      library && library.getUncheckedSigner(),
-    ),
-  });
+  const getContractInstances = () => {
+    if (!BLOCKCHAIN_DAO_TOKEN_ABI || !BLOCKCHAIN_DAO_TOKEN?.address) {
+      return null;
+    }
+    return {
+      DynamicSale: BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS && BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI
+        ? new Contract(
+            BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS,
+            BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
+            library && library.getUncheckedSigner(),
+          )
+        : null,
+      TdfToken: new Contract(
+        BLOCKCHAIN_DAO_TOKEN.address,
+        BLOCKCHAIN_DAO_TOKEN_ABI,
+        library && library.getUncheckedSigner(),
+      ),
+      Ceur: CEUR_TOKEN_ADDRESS
+        ? new Contract(
+            CEUR_TOKEN_ADDRESS,
+            BLOCKCHAIN_DAO_TOKEN_ABI,
+            library && library.getUncheckedSigner(),
+          )
+        : null,
+    };
+  };
 
   const getCurrentSupply = async () => {
-    const { TdfToken } = getContractInstances();
+    const contracts = getContractInstances();
+    if (!contracts?.TdfToken) {
+      console.debug('Contracts not ready');
+      return 0;
+    }
 
     try {
-      const supplyInWei = await TdfToken.totalSupply();
+      const supplyInWei = await contracts.TdfToken.totalSupply();
       const supply = parseInt(utils.formatEther(supplyInWei));
       return supply;
     } catch (error) {
@@ -195,10 +209,14 @@ export const useBuyTokens = () => {
   }, [tokenAddress, BLOCKCHAIN_DAO_TOKEN_ABI]);
 
   const getUserTdfBalance = async () => {
-    const { TdfToken } = getContractInstances();
+    const contracts = getContractInstances();
+    if (!contracts?.TdfToken) {
+      console.debug('Contracts not ready');
+      return 0;
+    }
 
     try {
-      const balanceInWei = await TdfToken.balanceOf(account);
+      const balanceInWei = await contracts.TdfToken.balanceOf(account);
       const balance = parseInt(utils.formatEther(balanceInWei));
       return balance;
     } catch (error) {
@@ -233,10 +251,15 @@ export const useBuyTokens = () => {
           return result;
         }
 
-        const { TdfToken, DynamicSale } = getContractInstances();
+        const contracts = getContractInstances();
+        if (!contracts?.TdfToken || !contracts?.DynamicSale) {
+          const result = 0;
+          getTokensAvailableForPurchaseResultCache.set(cacheKey, { result, timestamp: Date.now() });
+          return result;
+        }
 
-        const supply = await TdfToken.totalSupply();
-        const saleCap = await DynamicSale.saleHardCap();
+        const supply = await contracts.TdfToken.totalSupply();
+        const saleCap = await contracts.DynamicSale.saleHardCap();
 
         const remainingTokens = saleCap.sub(supply);
         const result = parseInt(utils.formatEther(remainingTokens));
@@ -257,7 +280,11 @@ export const useBuyTokens = () => {
   };
 
   const buyTokens = async (amount: string) => {
-    const { DynamicSale } = getContractInstances();
+    const contracts = getContractInstances();
+    if (!contracts?.DynamicSale) {
+      return { error: new Error('Contracts not ready'), success: false, txHash: null };
+    }
+    const { DynamicSale } = contracts;
     const amountInWei = utils.parseEther(amount);
 
     try {
@@ -308,9 +335,12 @@ export const useBuyTokens = () => {
   };
 
   const getTotalCost = async (amount: string) => {
+    const contracts = getContractInstances();
+    if (!contracts?.DynamicSale) {
+      return 0;
+    }
     const amountInWei = utils.parseEther(amount);
-    const { DynamicSale } = getContractInstances();
-    const { totalCost } = await DynamicSale.calculateTotalCost(amountInWei);
+    const { totalCost } = await contracts.DynamicSale.calculateTotalCost(amountInWei);
     return parseFloat(utils.formatEther(totalCost));
   };
 
@@ -339,15 +369,22 @@ export const useBuyTokens = () => {
   };
 
   const isCeurApproved = async (tdfAmount: string) => {
+    const contracts = getContractInstances();
+    if (!contracts?.DynamicSale || !contracts?.Ceur) {
+      return false;
+    }
     const amountInWei = utils.parseEther(tdfAmount);
-    const { DynamicSale, Ceur } = getContractInstances();
-    const { totalCost } = await DynamicSale.calculateTotalCost(amountInWei);
-    const allowance = await Ceur.allowance(account, DynamicSale.address);
+    const { totalCost } = await contracts.DynamicSale.calculateTotalCost(amountInWei);
+    const allowance = await contracts.Ceur.allowance(account, contracts.DynamicSale.address);
     return allowance.gte(totalCost);
   };
 
   const approveCeur = async (amount: number) => {
-    const { Ceur, DynamicSale } = getContractInstances();
+    const contracts = getContractInstances();
+    if (!contracts?.Ceur || !contracts?.DynamicSale) {
+      return { error: new Error('Contracts not ready'), success: false };
+    }
+    const { Ceur, DynamicSale } = contracts;
     // we add a small buffer to the approval amount to make up for price increases
     // that might occur after approval
     const bufferFactor = 1.05;

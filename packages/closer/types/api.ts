@@ -90,6 +90,7 @@ export type BookingSettings = {
   pickUpEnabled: boolean;
   foodOptionEnabled: boolean;
   utilityOptionEnabled: boolean;
+  friendsBookingMaxGuests?: number;
 };
 
 export interface Config {

@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import EditModel from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
 
-import { FaArrowLeft } from '@react-icons/all-files/fa/FaArrowLeft';
+import { ArrowLeft } from 'lucide-react';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -56,7 +56,7 @@ const EditLessonPage = ({ lesson, error, learningHubConfig }: Props) => {
           href={`/learn/${lesson.slug}`}
           className="mr-2 italic flex flex-row items-center justify-start"
         >
-          <FaArrowLeft className="mr-1" /> {t('generic_back')}
+          <ArrowLeft className="mr-1 h-4 w-4" /> {t('generic_back')}
         </Link>
         <Heading level={2} className="flex justify-start items-center">
           {t('learn_edit_heading')} <i>{lesson.title}</i>

@@ -37,6 +37,7 @@ const CheckoutPayment = ({
   totalToPayInFiat,
   dailyTokenValue,
   startDate,
+  endDate,
   totalNights,
   user,
   eventId,
@@ -47,6 +48,8 @@ const CheckoutPayment = ({
   setWalletDisclaimer,
   refetchBooking,
   isAdditionalFiatPayment,
+  transactionId,
+  createdBy,
 }) => {
   const t = useTranslations();
 
@@ -146,6 +149,8 @@ const CheckoutPayment = ({
         checkContract,
         user?.email,
         status,
+        transactionId,
+        { start: startDate, end: endDate, createdBy },
       );
 
       if (result?.error) {

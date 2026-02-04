@@ -2,10 +2,7 @@ import Link from 'next/link';
 
 import { useEffect, useState } from 'react';
 
-import { FaChevronDown } from '@react-icons/all-files/fa/FaChevronDown';
-import { FaChevronUp } from '@react-icons/all-files/fa/FaChevronUp';
-import { FaComment } from '@react-icons/all-files/fa/FaComment';
-import { FaTrash } from '@react-icons/all-files/fa/FaTrash';
+import { ChevronDown, ChevronUp, MessageCircle, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
@@ -312,14 +309,14 @@ const Post = ({
                 : 'text-gray-500 hover:text-accent'
             }`}
           >
-            <FaComment className="w-4 h-4" />
+            <MessageCircle className="w-4 h-4" />
             <span>
               {localReplyCount} {t('post_replies')}
             </span>
             {repliesOpen ? (
-              <FaChevronUp className="w-3 h-3" />
+              <ChevronUp className="w-3 h-3" />
             ) : (
-              <FaChevronDown className="w-3 h-3" />
+              <ChevronDown className="w-3 h-3" />
             )}
           </button>
 
@@ -329,7 +326,7 @@ const Post = ({
               onClick={deletePost}
               className="flex items-center gap-2 text-sm text-gray-400 hover:text-red-500 transition-colors ml-auto"
             >
-              <FaTrash className="w-3.5 h-3.5" />
+              <Trash2 className="w-3.5 h-3.5" />
               <span>{t('post_delete')}</span>
             </button>
           )}

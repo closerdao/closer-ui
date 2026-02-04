@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { FaTimes } from '@react-icons/all-files/fa/FaTimes';
+import { X } from 'lucide-react';
 import { z } from 'zod';
 
 import api from '../utils/api';
@@ -116,7 +116,7 @@ const JoinWebinarPrompt = ({
               size="small"
               className="my-4 absolute right-4 top-0 w-10 h-10 p-0"
             >
-              <FaTimes className="w-4 h-4" />
+              <X className="w-4 h-4" />
             </Button>
           </div>
         </section>

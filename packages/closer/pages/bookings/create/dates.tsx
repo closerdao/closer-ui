@@ -27,7 +27,7 @@ import {
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { Event, TicketOption } from '../../../types';
-import { BookingConfig, VolunteerConfig } from '../../../types/api';
+import { BookingSettings, VolunteerConfig } from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
 import api from '../../../utils/api';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
@@ -41,7 +41,7 @@ interface Props {
   ticketOptions?: TicketOption[];
   futureEvents?: Event[];
   event?: Event;
-  bookingConfig: BookingConfig | null;
+  bookingSettings: BookingSettings | null;
   messages?: any;
   volunteerConfig: VolunteerConfig | null;
   isFriendsBooking?: boolean;
@@ -49,7 +49,7 @@ interface Props {
 
 const DatesSelector = ({
   error,
-  bookingConfig,
+  bookingSettings,
   ticketOptions,
   futureEvents,
   event,
@@ -58,7 +58,7 @@ const DatesSelector = ({
 }: Props) => {
   const t = useTranslations();
   const isBookingEnabled =
-    bookingConfig?.enabled &&
+    bookingSettings &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   const router = useRouter();
@@ -67,12 +67,12 @@ const DatesSelector = ({
     normalizeIsFriendsBooking(isFriendsBookingProp);
 
   const conditions = {
-    memberMinDuration: bookingConfig?.memberMinDuration,
-    memberMaxDuration: bookingConfig?.memberMaxDuration,
-    memberMaxBookingHorizon: bookingConfig?.memberMaxBookingHorizon,
-    maxDuration: bookingConfig?.maxDuration,
-    minDuration: bookingConfig?.minDuration,
-    maxBookingHorizon: bookingConfig?.maxBookingHorizon,
+    memberMinDuration: bookingSettings?.memberMinDuration,
+    memberMaxDuration: bookingSettings?.memberMaxDuration,
+    memberMaxBookingHorizon: bookingSettings?.memberMaxBookingHorizon,
+    maxDuration: bookingSettings?.maxDuration,
+    minDuration: bookingSettings?.minDuration,
+    maxBookingHorizon: bookingSettings?.maxBookingHorizon,
   };
   const { user, isAuthenticated } = useAuth();
   const { platform }: any = usePlatform();
@@ -136,13 +136,7 @@ const DatesSelector = ({
   const isResidenceApplication = decodedBookingType === 'residence';
   const isVolunteerApplication = decodedBookingType === 'volunteer';
 
-  // Step 3: Load user bookings when user is available and it's a friends booking
   useEffect(() => {
-    console.log('useEffect triggered:', {
-      isFriendsBooking: normalizedIsFriendsBooking,
-      userId: user?._id,
-      userBookings,
-    });
     if (normalizedIsFriendsBooking && user?._id && !userBookings) {
       setIsLoadingUserBookings(true);
 
@@ -159,29 +153,10 @@ const DatesSelector = ({
       platform.booking
         .get(userBookingsFilter)
         .then((response: any) => {
-          // Handle Immutable.js structure
           const bookings = response?.results ? response.results.toArray() : [];
           setUserBookings(bookings);
-          console.log(
-            'Loaded current user bookings for friends booking:',
-            bookings,
-          );
-
-          if (bookings.length === 0) {
-            console.log('No active bookings found for user:', user._id);
-          } else {
-            console.log(
-              'Current bookings details:',
-              bookings.map((booking: any) => ({
-                start: booking.get('start'),
-                end: booking.get('end'),
-                status: booking.get('status'),
-              })),
-            );
-          }
         })
-        .catch((err: any) => {
-          console.error('Error loading user bookings:', err);
+        .catch(() => {
           setUserBookings([]);
         })
         .finally(() => {
@@ -206,7 +181,7 @@ const DatesSelector = ({
       dateRanges.push({
         after: new Date().setDate(
           new Date().getDate() +
-            getMaxBookingHorizon(bookingConfig, isMember)[0],
+            getMaxBookingHorizon(bookingSettings, isMember)[0],
         ),
       });
     }
@@ -268,10 +243,7 @@ const DatesSelector = ({
           return !isWithinActivePeriod;
         };
 
-        // Use the custom function instead of date ranges
         dateRanges.push(customDisabledFunction);
-
-        console.log('Friends booking: Available date ranges:', activeRanges);
       } else {
         // No active bookings - block all dates
         dateRanges.push({
@@ -314,18 +286,27 @@ const DatesSelector = ({
   const isMinResidenceStayMatched =
     diffInDays >= (volunteerConfig?.residenceMinStay || 1);
 
+  const isMemberMinDurationMatched =
+    diffInDays >= (bookingSettings?.memberMinDuration || 1);
+
+  const isGuestMinDurationMatched =
+    diffInDays >= (bookingSettings?.minDuration || 1);
+
   const isMinDurationMatched = Boolean(
-    (bookingConfig &&
-      diffInDays >= bookingConfig?.minDuration &&
-      !isVolunteerApplication &&
-      !isResidenceApplication) ||
-      eventId ||
-      isMember ||
+    eventId ||
       (isVolunteerApplication && isMinVolunteeringStayMatched) ||
-      (isResidenceApplication && isMinResidenceStayMatched),
+      (isResidenceApplication && isMinResidenceStayMatched) ||
+      (isMember && isMemberMinDurationMatched) ||
+      (!isMember &&
+        !isVolunteerApplication &&
+        !isResidenceApplication &&
+        isGuestMinDurationMatched),
   );
 
-  console.log('isMinDurationMatched', isMinDurationMatched);
+  const isTokenPaymentSelected = currency === CURRENCIES[1];
+  const isTokenMinDurationMatched = diffInDays >= (bookingSettings?.minDuration || 1);
+  const isStartToday = start && dayjs(start).isSame(dayjs(), 'day');
+  const isTodayAndToken = Boolean(isStartToday && isTokenPaymentSelected);
 
   const canProceed = !!(
     ((hasEventIdAndValidTicket && hasValidDates) ||
@@ -333,12 +314,9 @@ const DatesSelector = ({
         hasValidDates &&
         (isMinVolunteeringStayMatched || isMinResidenceStayMatched)) ||
       isGeneralCase) &&
-    isMinDurationMatched
+    isMinDurationMatched &&
+    (!isTokenPaymentSelected || isTokenMinDurationMatched)
   );
-
-  const isTokenPaymentSelected = currency === CURRENCIES[1];
-  const isStartToday = start && dayjs(start).isSame(dayjs(), 'day');
-  const isTodayAndToken = Boolean(isStartToday && isTokenPaymentSelected);
 
   useEffect(() => {
     if (event && eventId && event.canSelectDates === false) {
@@ -357,10 +335,24 @@ const DatesSelector = ({
   useEffect(() => {
     setBookingError(null);
     if (start && end) {
-      if (!isMinDurationMatched) {
+      if (isMember && !isMemberMinDurationMatched) {
         setBookingError(
           t('bookings_dates_min_duration_error', {
-            var: bookingConfig?.minDuration,
+            var: bookingSettings?.memberMinDuration,
+          }),
+        );
+      } else if (!isMember && !isGuestMinDurationMatched && !isVolunteerApplication && !isResidenceApplication) {
+        setBookingError(
+          t('bookings_dates_min_duration_error', {
+            var: bookingSettings?.minDuration,
+          }),
+        );
+      }
+
+      if (isTokenPaymentSelected && !isTokenMinDurationMatched) {
+        setBookingError(
+          t('bookings_dates_min_duration_error', {
+            var: bookingSettings?.minDuration,
           }),
         );
       }
@@ -380,7 +372,7 @@ const DatesSelector = ({
         );
       }
     }
-  }, [start, end]);
+  }, [start, end, isMember, isMemberMinDurationMatched, isGuestMinDurationMatched, isTokenPaymentSelected, isTokenMinDurationMatched]);
 
   const getUrlParams = () => {
     const dateFormat = 'YYYY-MM-DD';
@@ -624,11 +616,11 @@ const DatesSelector = ({
             doesNeedSeparateBeds={doesNeedSeparateBeds}
             setDoesNeedSeparateBeds={setDoesNeedSeparateBeds}
             isFriendsBooking={normalizedIsFriendsBooking}
-            friendsBookingMaxGuests={bookingConfig?.friendsBookingMaxGuests}
+            friendsBookingMaxGuests={bookingSettings?.friendsBookingMaxGuests}
           />
 
-          {bookingConfig?.pickUpEnabled &&
-            bookingConfig?.pickUpEnabled === true && (
+          {bookingSettings?.pickUpEnabled &&
+            bookingSettings?.pickUpEnabled === true && (
               <div>
                 <HeadingRow>
                   <span className="mr-2">➕</span>
@@ -676,12 +668,12 @@ DatesSelector.getInitialProps = async (
     const { query } = context;
     const { eventId, volunteerId, bookingType, isFriendsBooking } = query;
 
-    const [bookingConfigRes, volunteerConfigRes, messages] = await Promise.all([
+    const [bookingSettingsRes, volunteerConfigRes, messages] = await Promise.all([
       api.get('/config/booking').catch(() => null),
       api.get('/config/volunteering').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
-    const bookingConfig = bookingConfigRes?.data?.results?.value;
+    const bookingSettings = bookingSettingsRes?.data?.results?.value;
     const volunteerConfig = volunteerConfigRes?.data?.results?.value;
     if (eventId) {
       const [ticketsAvailable, event] = await Promise.all([
@@ -690,7 +682,7 @@ DatesSelector.getInitialProps = async (
       ]);
 
       return {
-        bookingConfig,
+        bookingSettings,
         volunteerConfig,
         ticketOptions: ticketsAvailable?.data?.ticketOptions,
         isFriendsBooking: normalizeIsFriendsBooking(isFriendsBooking),
@@ -715,7 +707,7 @@ DatesSelector.getInitialProps = async (
         .catch(() => null);
 
       return {
-        bookingConfig,
+        bookingSettings,
         volunteerConfig,
         futureEvents: res?.data?.results,
         isFriendsBooking: normalizeIsFriendsBooking(isFriendsBooking),
@@ -723,7 +715,7 @@ DatesSelector.getInitialProps = async (
       };
     }
     return {
-      bookingConfig,
+      bookingSettings,
       volunteerConfig,
       isFriendsBooking: normalizeIsFriendsBooking(isFriendsBooking),
       messages,
@@ -731,7 +723,7 @@ DatesSelector.getInitialProps = async (
   } catch (err) {
     return {
       error: parseMessageFromError(err),
-      bookingConfig: null,
+      bookingSettings: null,
       messages: null,
       volunteerConfig: null,
       isFriendsBooking: false,

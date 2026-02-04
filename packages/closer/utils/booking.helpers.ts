@@ -1,4 +1,3 @@
-import { format, toZonedTime } from 'date-fns-tz';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
@@ -434,17 +433,10 @@ export const getLocalTimeAvailability = (
   availability: { hour: string; isAvailable: boolean }[],
   timeZone: string | undefined,
 ) => {
-  const DEFAULT_TIMEZONE = 'UTC';
-
   return availability?.map((time) => {
     const [hours, minutes] = time?.hour?.split(':').map(Number) || [0, 0];
-    const date = new Date();
-    date.setUTCHours(hours, minutes, 0, 0);
-
-    const zonedDate = toZonedTime(date, timeZone || DEFAULT_TIMEZONE);
-    const localTime = format(zonedDate, 'HH:mm', {
-      timeZone: timeZone || DEFAULT_TIMEZONE,
-    });
+    const utcDate = dayjs.utc().hour(hours).minute(minutes).second(0);
+    const localTime = utcDate.tz(timeZone || 'UTC').format('HH:mm');
 
     return { hour: localTime, isAvailable: time.isAvailable };
   });
@@ -490,6 +482,8 @@ export const payTokens = async (
   >,
   userEmail?: string | null | undefined,
   bookingStatus?: string,
+  existingTransactionId?: string | null,
+  bookingDates?: { start?: string; end?: string; createdBy?: string },
 ) => {
   if (!dailyRentalTokenVal) {
     await reportIssue(
@@ -525,49 +519,156 @@ export const payTokens = async (
         success: null;
       };
 
-  const { success: isBookingMatchContract, error: nightsRejected } =
-    (await checkContract()) as
-      | {
-          success: boolean;
-          error: null;
+  // Handle staking errors
+  if (stakingError) {
+    if (stakingError?.reason?.trim() === USER_REJECTED_TRANSACTION_ERROR) {
+      await reportIssue(
+        `USER_REJECTED_TRANSACTION: bookingId=${bookingId}, error=User rejected transaction, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
+        userEmail,
+      );
+      return { error: 'User rejected transaction', success: null };
+    }
+    if (stakingError?.reason?.trim() === BOOKING_EXISTS_ERROR) {
+      // Booking already exists on chain - use stored transaction ID if available
+      if (existingTransactionId) {
+        try {
+          await api.post(`/bookings/${bookingId}/token-payment`, {
+            transactionId: existingTransactionId,
+          });
+          return { success: true, error: null };
+        } catch (apiError) {
+          return { 
+            error: 'Booking exists on chain but could not verify. Please contact support.',
+            success: null 
+          };
         }
-      | {
-          success: boolean;
-          error: string;
-        };
-
-  const error = stakingError || nightsRejected;
-  console.log('stakingError=', stakingError);
-  console.log('nightsRejected=', nightsRejected);
-  console.log('error reason=', error?.reason);
-
-  if (error?.reason?.trim() === USER_REJECTED_TRANSACTION_ERROR) {
-    console.log('User rejected transaction!!!!!');
-    await reportIssue(
-      `USER_REJECTED_TRANSACTION: bookingId=${bookingId}, error=User rejected transaction, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
-      userEmail,
-    );
-    return { error: 'User rejected transaction', success: null };
-  }
-  if (error?.reason?.trim() === BOOKING_EXISTS_ERROR) {
-    await reportIssue(
-      `BOOKING_EXISTS_ERROR: bookingId=${bookingId}, error=Booking for these dates already exists, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
-      userEmail,
-    );
-    return { error: 'Booking for these dates already exists', success: null };
-  }
-  if (error) {
-    console.log('TOKEN PAYMENT ERROR=', error);
+      }
+      // No stored transaction ID - check if another booking exists with OVERLAPPING dates
+      // Date overlap condition: booking.start < requested.end AND booking.end > requested.start
+      if (bookingDates?.start && bookingDates?.end) {
+        try {
+          // Search for bookings with overlapping dates (not just exact match)
+          const overlappingBookingsRes = await api.get('/booking', {
+            params: {
+              where: JSON.stringify({
+                start: { $lt: bookingDates.end },
+                end: { $gt: bookingDates.start },
+                _id: { $ne: bookingId },
+                transactionId: { $exists: true, $ne: null },
+              }),
+            },
+          });
+          const overlappingBookings = overlappingBookingsRes?.data?.results || [];
+          const sameUserBookings = overlappingBookings.filter(
+            (b: any) => b.createdBy === bookingDates.createdBy
+          );
+          const otherUserBookings = overlappingBookings.filter(
+            (b: any) => b.createdBy !== bookingDates.createdBy
+          );
+          
+          if (overlappingBookings.length > 0) {
+            return { 
+              error: 'CONFLICTING_BOOKINGS',
+              success: null,
+              conflictingBookings: overlappingBookings,
+              sameUserBookings,
+              otherUserBookings,
+            };
+          }
+        } catch (queryError) {
+          // Ignore query errors, fall through to generic message
+        }
+      }
+      return { 
+        error: 'BLOCKCHAIN_GLOBAL_CONFLICT',
+        success: null,
+        debugInfo: {
+          message: 'A booking already exists on the blockchain for these dates, but no matching booking was found in the database.',
+          possibleCauses: [
+            'Another wallet (not yours) has staked tokens for these exact dates - the smart contract may enforce global date uniqueness',
+            'A booking was made on-chain but the database record was deleted or not synced',
+            'The dates overlap with an existing on-chain booking from a different wallet'
+          ],
+          dates: { start: bookingDates?.start, end: bookingDates?.end },
+        }
+      };
+    }
     await reportIssue(
       `TOKEN_PAYMENT_FAILED: bookingId=${bookingId}, error=${JSON.stringify(
-        error,
+        stakingError,
       )}, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
       userEmail,
     );
-    return { error: parseMessageFromError(error), success: null };
+    return { error: parseMessageFromError(stakingError), success: null };
   }
 
-  if (stakingSuccess?.transactionId && isBookingMatchContract) {
+  // If booking already existed on chain (transactionId === 'existing'), use stored tx ID if available
+  if (stakingSuccess?.transactionId === 'existing') {
+    if (existingTransactionId) {
+      try {
+        await api.post(`/bookings/${bookingId}/token-payment`, {
+          transactionId: existingTransactionId,
+        });
+        return { success: true, error: null };
+      } catch (apiError) {
+        return { 
+          error: 'Booking exists on chain but could not verify. Please contact support.',
+          success: null 
+        };
+      }
+    }
+    // Check if another booking exists with OVERLAPPING dates (from any user)
+    if (bookingDates?.start && bookingDates?.end) {
+      try {
+        const overlappingBookingsRes = await api.get('/booking', {
+          params: {
+            where: JSON.stringify({
+              start: { $lt: bookingDates.end },
+              end: { $gt: bookingDates.start },
+              _id: { $ne: bookingId },
+              transactionId: { $exists: true, $ne: null },
+            }),
+          },
+        });
+        const overlappingBookings = overlappingBookingsRes?.data?.results || [];
+        const sameUserBookings = overlappingBookings.filter(
+          (b: any) => b.createdBy === bookingDates.createdBy
+        );
+        const otherUserBookings = overlappingBookings.filter(
+          (b: any) => b.createdBy !== bookingDates.createdBy
+        );
+        
+        if (overlappingBookings.length > 0) {
+          return { 
+            error: 'CONFLICTING_BOOKINGS',
+            success: null,
+            conflictingBookings: overlappingBookings,
+            sameUserBookings,
+            otherUserBookings,
+          };
+        }
+      } catch (queryError) {
+        // Ignore query errors, fall through to generic message
+      }
+    }
+    return { 
+      error: 'BLOCKCHAIN_GLOBAL_CONFLICT',
+      success: null,
+      debugInfo: {
+        message: 'A booking already exists on the blockchain for these dates, but no matching booking was found in the database.',
+        possibleCauses: [
+          'Another wallet (not yours) has staked tokens for these exact dates - the smart contract may enforce global date uniqueness',
+          'A booking was made on-chain but the database record was deleted or not synced',
+          'The dates overlap with an existing on-chain booking from a different wallet'
+        ],
+        dates: { start: bookingDates?.start, end: bookingDates?.end },
+      }
+    };
+  }
+
+  // We have a real transaction ID - call /token-payment to update backend status
+  // Do this BEFORE checkContract - backend will do its own verification
+  if (stakingSuccess?.transactionId) {
     try {
       await api.post(`/bookings/${bookingId}/token-payment`, {
         transactionId: stakingSuccess.transactionId,
@@ -588,6 +689,8 @@ export const payTokens = async (
       };
     }
   }
+
+  return { error: 'Token staking failed', success: null };
 };
 
 export const formatCheckinDate = (

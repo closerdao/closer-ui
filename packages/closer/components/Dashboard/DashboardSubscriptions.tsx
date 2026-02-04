@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { CalendarSync } from 'lucide-react';
 
+import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
 
 import { MAX_USERS_TO_FETCH } from '../../constants';
@@ -10,7 +11,11 @@ import { useConfig } from '../../hooks/useConfig';
 import { Filter } from '../../types';
 import { getDateRange } from '../../utils/dashboard.helpers';
 import { Heading, Spinner } from '../ui';
-import DonutChart from '../ui/Charts/DonutChart';
+
+const DonutChart = dynamic(() => import('../ui/Charts/DonutChart'), {
+  ssr: false,
+  loading: () => <Spinner />,
+});
 
 interface Props {
   timeFrame: string;

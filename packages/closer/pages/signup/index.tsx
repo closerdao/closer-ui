@@ -8,7 +8,7 @@ import ApplicationForm from '../../components/ApplicationForm';
 import SignupForm from '../../components/SignupForm';
 import { Card, ErrorMessage } from '../../components/ui';
 
-import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import { User } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -107,7 +107,7 @@ const Signup = () => {
                             className="rounded-full"
                           />
                         ) : (
-                          <FaUser className="text-success w-[30px] h-[30px]" />
+                          <User className="text-success w-[30px] h-[30px]" />
                         )}
                         <span>{referrer.get('screenname')}</span>
                       </div>

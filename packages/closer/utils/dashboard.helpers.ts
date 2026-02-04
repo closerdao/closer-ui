@@ -2,7 +2,8 @@ import axios from 'axios';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
-import { ethers } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
+import { formatEther } from '@ethersproject/units';
 import { List } from 'immutable';
 
 import { blockchainConfig } from '../config_blockchain';
@@ -480,8 +481,7 @@ export const isSaleTransaction = (tx: TokenTransaction) => {
   const isTransferEvent = tx.topics[0] === transferEventHash;
   const isNotSelfTransfer =
     tx.fromAddressHash.toLowerCase() !== tx.toAddressHash.toLowerCase();
-  const isPositiveAmount =
-    ethers.BigNumber.from(tx.amount) > ethers.BigNumber.from(0);
+  const isPositiveAmount = BigNumber.from(tx.amount).gt(BigNumber.from(0));
 
   return (
     isTransferEvent &&
@@ -498,11 +498,11 @@ export const getTokenSales = (txs: TokenTransaction[]): SalesResult => {
   });
 
   const totalSales = sales.reduce((sum, tx) => {
-    const amountInWei = ethers.BigNumber.from(tx.amount);
+    const amountInWei = BigNumber.from(tx.amount);
     return sum.add(amountInWei);
-  }, ethers.BigNumber.from(0));
+  }, BigNumber.from(0));
 
-  const totalSalesInTDF = ethers.utils.formatEther(totalSales);
+  const totalSalesInTDF = formatEther(totalSales);
 
   return {
     salesCount: sales.length,

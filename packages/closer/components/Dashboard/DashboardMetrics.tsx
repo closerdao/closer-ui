@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import dayjs from 'dayjs';
+import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -18,7 +19,11 @@ import {
 } from '../../utils/dashboard.helpers';
 import UserMetricsIcon from '../icons/UserMetricsIcon';
 import { Heading, Spinner } from '../ui';
-import StackedBarChart from '../ui/Charts/StackedBarChart';
+
+const StackedBarChart = dynamic(() => import('../ui/Charts/StackedBarChart'), {
+  ssr: false,
+  loading: () => <Spinner />,
+});
 
 interface Props {
   timeFrame: string;

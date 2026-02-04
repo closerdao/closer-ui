@@ -49,8 +49,6 @@ const BookingRulesPage = ({
   const { isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
-  console.log('bookingRules=', bookingRules);
-
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';

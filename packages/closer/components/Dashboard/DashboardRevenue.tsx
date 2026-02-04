@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
+import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -21,9 +22,19 @@ import {
 import { getStartAndEndDate } from '../../utils/performance.utils';
 import RevenueIcon from '../icons/RevenueIcon';
 import { Card, Heading, Spinner } from '../ui';
-import DonutChart from '../ui/Charts/DonutChart';
-import LineChart from '../ui/Charts/LineChart';
-import StackedBarChart from '../ui/Charts/StackedBarChart';
+
+const DonutChart = dynamic(() => import('../ui/Charts/DonutChart'), {
+  ssr: false,
+  loading: () => <Spinner />,
+});
+const LineChart = dynamic(() => import('../ui/Charts/LineChart'), {
+  ssr: false,
+  loading: () => <Spinner />,
+});
+const StackedBarChart = dynamic(() => import('../ui/Charts/StackedBarChart'), {
+  ssr: false,
+  loading: () => <Spinner />,
+});
 
 interface Props {
   timeFrame: string;

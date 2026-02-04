@@ -1,18 +1,29 @@
 import Head from 'next/head';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
 import AdminLayout from '../../components/Dashboard/AdminLayout';
 import DashboardActions from '../../components/Dashboard/DashboardActions';
-import DashboardBookings from '../../components/Dashboard/DashboardBookings';
 import DashboardIntro from '../../components/Dashboard/DashboardIntro';
-import DashboardRevenue from '../../components/Dashboard/DashboardRevenue';
-import DashboardSubscriptions from '../../components/Dashboard/DashboardSubscriptions';
 import RevenueTimeFrameSelector from '../../components/Dashboard/RevenueTimeFrameSelector';
-import { Heading } from '../../components/ui';
+import { Heading, Spinner } from '../../components/ui';
 
 import { NextPageContext } from 'next';
+
+const DashboardBookings = dynamic(
+  () => import('../../components/Dashboard/DashboardBookings'),
+  { ssr: false, loading: () => <Spinner /> }
+);
+const DashboardRevenue = dynamic(
+  () => import('../../components/Dashboard/DashboardRevenue'),
+  { ssr: false, loading: () => <Spinner /> }
+);
+const DashboardSubscriptions = dynamic(
+  () => import('../../components/Dashboard/DashboardSubscriptions'),
+  { ssr: false, loading: () => <Spinner /> }
+);
 import { useTranslations } from 'next-intl';
 import process from 'process';
 

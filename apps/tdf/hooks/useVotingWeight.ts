@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import { WalletState } from 'closer/contexts/wallet';
+import { WalletState } from 'closer';
 import { usePresenceToken } from './usePresenceToken';
 import { useSweatToken } from './useSweatToken';
 

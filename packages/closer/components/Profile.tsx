@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
 
-import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import { User } from 'lucide-react';
 import { Settings, LogOut } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -55,7 +55,7 @@ const Profile = ({ isMenu = false, isDemo, onLogout }: ProfileProps) => {
                   />
                 ) : (
                   <div className="flex items-center justify-center bg-gray-50 rounded-full overflow-hidden pt-1 h-10 w-10">
-                    <FaUser className=" text-gray-200  w-10 h-10" />
+                    <User className="text-gray-200 w-10 h-10" />
                   </div>
                 )}
               </Link>
