@@ -203,6 +203,7 @@ export type Booking = {
   friendEmails?: string;
   paidByMember?: boolean;
   paidBy?: string;
+  transactionId?: string;
 };
 
 export interface StatusColor {

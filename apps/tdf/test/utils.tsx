@@ -13,11 +13,8 @@ import {
   Web3Provider,
 } from '@ethersproject/providers';
 import { Web3ReactProvider } from '@web3-react/core';
-import {
-  AuthProvider,
-  ConfigProvider,
-  PlatformProvider,
-} from 'closer';
+import { ConfigProvider, PlatformProvider } from 'closer';
+import { AuthProvider } from 'closer/contexts/auth';
 import { WalletProvider } from 'closer/contexts/wallet';
 import { blockchainConfig } from 'closer/config_blockchain';
 import { NewsletterProvider } from 'closer/contexts/newsletter';

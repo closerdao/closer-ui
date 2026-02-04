@@ -98,7 +98,7 @@ const Checkout = ({
     adults,
     transactionId,
     createdBy,
-  } = updatedBooking ?? booking ?? {};
+  } = (updatedBooking ?? booking ?? {}) as Booking;
 
   const cancellationPolicy = bookingConfig
     ? {

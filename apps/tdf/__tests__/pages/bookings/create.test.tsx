@@ -6,7 +6,12 @@ import { bookingConfig } from '@/__tests__/mocks/bookingConfig';
 
 describe('DateSelector', () => {
   it('should render and have a proper title', () => {
-    renderWithProviders(<DateSelector bookingConfig={bookingConfig} />);
+    renderWithProviders(
+      <DateSelector
+        bookingSettings={bookingConfig}
+        volunteerConfig={null}
+      />,
+    );
 
     const title = screen.getByRole('heading', {
       name: /your stay/i,
