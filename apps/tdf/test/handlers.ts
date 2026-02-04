@@ -26,4 +26,10 @@ export const handlers = [
       }),
     ),
   ),
+  rest.post('*/carrots/availability', (req, res, ctx) =>
+    res(ctx.status(200), ctx.json({ data: { results: { areCreditsAvailable: false } } })),
+  ),
+  rest.get('*/carrots/balance', (req, res, ctx) =>
+    res(ctx.status(200), ctx.json({ data: { results: 0 } })),
+  ),
 ];

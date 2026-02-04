@@ -10,9 +10,10 @@ import {
 import { bookingConfig, bookingConfigWithFoodAndUtilityDisabled } from '@/__tests__/mocks/bookingConfig';
 import { mockAuthContext } from '@/__tests__/mocks/mockAuthContext';
 
-jest.mock('closer/contexts/auth', () => ({
-  useAuth: () => mockAuthContext,
-}));
+jest.mock('closer/contexts/auth', () => {
+  const actual = jest.requireActual<typeof import('closer/contexts/auth')>('closer/contexts/auth');
+  return { ...actual, useAuth: () => mockAuthContext };
+});
 
 describe('BookingSummaryPage', () => {
   const OLD_ENV = process.env;
@@ -56,7 +57,7 @@ describe('BookingSummaryPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders progress steps', () => {
+  it('renders booking details and costs section', () => {
     renderWithProviders(
       <BookingSummaryPage
         booking={booking}
@@ -66,6 +67,8 @@ describe('BookingSummaryPage', () => {
         paymentConfig={paymentConfig}
       />,
     );
-    expect(screen.getByText(/dates/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Costs/i })).toBeInTheDocument();
+    const accommodationLabels = screen.getAllByText(/Accommodation:/i);
+    expect(accommodationLabels.length).toBeGreaterThan(0);
   });
 });

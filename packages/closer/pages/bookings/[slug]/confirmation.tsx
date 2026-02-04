@@ -41,12 +41,6 @@ const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
   const [showCelebration, setShowCelebration] = useState(true);
 
   useEffect(() => {
-    if (!_id) {
-      console.log('No _id');
-    }
-  }, [_id]);
-
-  useEffect(() => {
     if (status === 'paid') {
       gaEvent('booking_confirm', {
         category: 'booking',
@@ -377,8 +371,7 @@ ConfirmationStep.getInitialProps = async (context: NextPageContext) => {
   const { query } = context;
   try {
     const [bookingRes, bookingConfigRes, messages] = await Promise.all([
-      api.get(`/booking/${query.slug}`).catch((err) => {
-        console.error('Error fetching booking config:', err);
+      api.get(`/booking/${query.slug}`).catch(() => {
         return null;
       }),
       api.get('/config/booking').catch(() => {

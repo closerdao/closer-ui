@@ -134,8 +134,6 @@ const Summary = ({
   }, [booking?.status]);
 
   useEffect(() => {
-    console.log('user?.subscription?.plan=', user?.subscription?.plan);
-    console.log('user.roles=', user?.roles);
     if (user) {
       setIsMember(
         STAY_BOOKING_ALLOWED_PLANS.includes(user?.subscription?.plan) ||
@@ -200,7 +198,6 @@ const Summary = ({
       });
       return res.data.results;
     } catch (error) {
-      console.log('error=', error);
     }
   };
 
@@ -219,7 +216,6 @@ const Summary = ({
       });
       setUpdatedBooking(localUpdatedBooking);
     } catch (error) {
-      console.error('error=', error);
     }
   };
 
@@ -237,8 +233,6 @@ const Summary = ({
         router.push(`/bookings/${booking?._id}/checkout`);
       } else if (status === 'pending') {
         router.push(`/bookings/${booking?._id}/confirmation`);
-      } else {
-        console.log(`Could not redirect: ${status}`);
       }
     } catch (err: any) {
       setHandleNextError(err.response?.data?.error || err.message);
@@ -496,7 +490,6 @@ Summary.getInitialProps = async (context: NextPageContext) => {
       messages,
     };
   } catch (err) {
-    console.log('Error', err);
     return {
       error: parseMessageFromError(err),
       booking: null,

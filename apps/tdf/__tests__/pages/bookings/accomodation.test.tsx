@@ -60,4 +60,22 @@ describe('Select accomodation type page', () => {
     expect(button1).toBeEnabled();
     expect(button2).toBeEnabled();
   });
+
+  it('should render accommodation cards with token currency when useTokens is true', () => {
+    const props = {
+      start: '2023-03-29',
+      end: '2023-04-01',
+      adults: '1',
+      kids: '0',
+      infants: '0',
+      pets: '0',
+      currency: CloserCurrencies.TDF,
+      useTokens: true,
+      listings: listingsMock,
+    };
+    renderWithProviders(<AccomodationSelector bookingConfig={bookingConfig} {...props} />);
+    expect(screen.getByRole('heading', { name: /Accommodation/i })).toBeInTheDocument();
+    const cards = screen.getAllByRole('heading', { level: 4 });
+    expect(cards.length).toBeGreaterThan(0);
+  });
 });
