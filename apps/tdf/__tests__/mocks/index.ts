@@ -180,6 +180,7 @@ export const booking = {
   attributes: [],
   managedBy: [],
   _id: '64221200f72ea12f5e9ab86d',
+  total: { cur: 'EUR', val: 80 },
 };
 
 export const bookingWithFood = {

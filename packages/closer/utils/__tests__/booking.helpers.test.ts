@@ -189,6 +189,27 @@ describe('getFoodTotal', () => {
       }),
     ).toBe(72);
   });
+
+  it.each([
+    { nights: 3, adults: 1, foodPrice: 12, expected: 36 },
+    { nights: 6, adults: 2, foodPrice: 12, expected: 144 },
+    { nights: 3, adults: 2, foodPrice: 12, expected: 72 },
+    { nights: 10, adults: 1, foodPrice: 12, expected: 120 },
+  ])(
+    'calculates food cost as foodPrice × $nights nights × $adults adults = $expected',
+    ({ nights, adults, foodPrice, expected }) => {
+      expect(
+        getFoodTotal({
+          isHourlyBooking: false,
+          foodPrice,
+          durationInDays: nights,
+          adults,
+          isFoodOptionEnabled: true,
+          isTeamMember: false,
+        }),
+      ).toBe(expected);
+    },
+  );
 });
 
 describe('getDisplayTotalFromComponents', () => {

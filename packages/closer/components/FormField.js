@@ -17,6 +17,9 @@ import Switch from './Switch';
 import Tag from './Tag';
 import TicketOptionsEditor from './TicketOptionsEditor';
 
+const TOKEN_PRICE_FIELDS = ['tokenPrice', 'tokenHourlyPrice'];
+const FIAT_PRICE_FIELDS = ['fiatPrice', 'fiatHourlyPrice'];
+
 const FormField = ({
   data,
   update,
@@ -36,7 +39,12 @@ const FormField = ({
   dynamicField = null,
   isPrimaryField = false,
   isSecondary = false,
+  currencyConfig = null,
 }) => {
+  const fixedCurrency =
+    type === 'currency' &&
+    currencyConfig &&
+    (TOKEN_PRICE_FIELDS.includes(name) ? currencyConfig.tokenCur : FIAT_PRICE_FIELDS.includes(name) ? currencyConfig.fiatCur : null);
   const t = useTranslations();
 
   const [addTag, setAddTag] = useState('');
@@ -97,6 +105,7 @@ const FormField = ({
               onChange={(value) => update(name, value)}
               placeholder={placeholder}
               required={required}
+              fixedCurrency={fixedCurrency}
             />
           )}
           {type === 'photos' && (

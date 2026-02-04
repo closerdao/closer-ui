@@ -17,9 +17,11 @@ import { loadLocaleData } from '../../../utils/locale.helpers';
 interface Props {
   listing: Listing;
   bookingConfig: any;
+  paymentConfig: any;
+  web3Config: any;
 }
 
-const EditListing = ({ listing, bookingConfig }: Props) => {
+const EditListing = ({ listing, bookingConfig, paymentConfig, web3Config }: Props) => {
   const t = useTranslations();
   const router = useRouter();
 
@@ -58,6 +60,10 @@ const EditListing = ({ listing, bookingConfig }: Props) => {
           id={listing._id}
           endpoint={'/listing'}
           fields={models.listing}
+          currencyConfig={{
+            fiatCur: paymentConfig?.utilityFiatCur ?? bookingConfig?.utilityFiatCur ?? 'EUR',
+            tokenCur: web3Config?.bookingToken ?? bookingConfig?.utilityTokenCur ?? 'TDF',
+          }}
           onSave={(listing) => router.push(`/stay/${listing.slug}`)}
           onUpdate={(name, value, option, actionType) =>
             onUpdate(name, value, option, actionType)
@@ -79,20 +85,26 @@ EditListing.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No listing');
     }
 
-    const [listingRes, bookingRes, messages] = await Promise.all([
+    const [listingRes, bookingRes, paymentRes, web3Res, messages] = await Promise.all([
       api.get(`/listing/${query.slug}`).catch(() => null),
       api.get('/config/booking').catch(() => null),
+      api.get('/config/payment').catch(() => null),
+      api.get('/config/web3').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const listing = listingRes?.data?.results;
     const bookingConfig = bookingRes?.data?.results?.value;
+    const paymentConfig = paymentRes?.data?.results?.value;
+    const web3Config = web3Res?.data?.results?.value;
 
-    return { listing, bookingConfig, messages };
+    return { listing, bookingConfig, paymentConfig, web3Config, messages };
   } catch (err: unknown) {
     return {
       error: parseMessageFromError(err),
       bookingConfig: null,
+      paymentConfig: null,
+      web3Config: null,
     };
   }
 };

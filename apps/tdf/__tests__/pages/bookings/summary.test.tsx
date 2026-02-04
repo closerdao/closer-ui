@@ -1,6 +1,6 @@
 import { BookingSummaryPage } from 'closer';
 import { renderWithProviders } from '@/test/utils';
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import {
   booking,
   bookingWithFood,
@@ -70,5 +70,63 @@ describe('BookingSummaryPage', () => {
     expect(screen.getByRole('heading', { name: /Costs/i })).toBeInTheDocument();
     const accommodationLabels = screen.getAllByText(/Accommodation:/i);
     expect(accommodationLabels.length).toBeGreaterThan(0);
+  });
+
+  it('shows food €0.00 / not included when booking has no food selected', () => {
+    renderWithProviders(
+      <BookingSummaryPage
+        booking={booking}
+        listing={listing}
+        event={undefined}
+        bookingConfig={bookingConfig}
+        paymentConfig={paymentConfig}
+      />,
+    );
+    const costsSection = screen.getByRole('heading', { name: /Costs/i }).closest('div');
+    expect(costsSection).toBeInTheDocument();
+    const foodLabel = screen.getByText(/Food:/i);
+    expect(foodLabel.closest('div')).toHaveTextContent(/€0\.00|not included/i);
+  });
+
+  it('shows food cost when booking has food selected', () => {
+    const bookingWithFoodSelected = {
+      ...bookingWithFood,
+      foodOptionId: 'food-1',
+    };
+    renderWithProviders(
+      <BookingSummaryPage
+        booking={bookingWithFoodSelected}
+        listing={listing}
+        event={undefined}
+        bookingConfig={bookingConfig}
+        paymentConfig={paymentConfig}
+      />,
+    );
+    const foodRow = screen.getByText(/Food:/i).closest('div');
+    expect(foodRow).toHaveTextContent('€24.00');
+  });
+
+  it('correctly sums accommodation + utilities + food in total', () => {
+    const bookingWithFoodSelected = {
+      ...bookingWithFood,
+      foodOptionId: 'food-1',
+      total: { cur: 'EUR', val: 104 },
+    };
+    renderWithProviders(
+      <BookingSummaryPage
+        booking={bookingWithFoodSelected}
+        listing={listing}
+        event={undefined}
+        bookingConfig={bookingConfig}
+        paymentConfig={paymentConfig}
+      />,
+    );
+    const costsHeading = screen.getByRole('heading', { name: /Costs/i });
+    const costsSection = costsHeading.closest('div')?.parentElement ?? costsHeading.parentElement;
+    const withinCosts = within(costsSection as HTMLElement);
+    expect(withinCosts.getByText(/Accommodation:/i).closest('div')).toHaveTextContent('€60.00');
+    expect(withinCosts.getByText(/Utilities fee:/i).closest('div')).toHaveTextContent('€20.00');
+    expect(withinCosts.getByText(/Food:/i).closest('div')).toHaveTextContent('€24.00');
+    expect(withinCosts.getByText(/Total/i).closest('div')).toHaveTextContent('€104.00');
   });
 });

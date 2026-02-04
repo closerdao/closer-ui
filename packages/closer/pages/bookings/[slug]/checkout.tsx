@@ -1068,6 +1068,7 @@ const Checkout = ({
           {isTokenOnlyBooking && !isFriendsBooking && (
             <div>
               <Checkbox
+                id="token-staking-disclaimer"
                 isChecked={hasAgreedToWalletDisclaimer}
                 onChange={() =>
                   setWalletDisclaimer(!hasAgreedToWalletDisclaimer)

@@ -19,15 +19,15 @@ import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 
 interface Props {
-  bookingConfig: BookingConfig;
+  bookingConfig: BookingConfig | null;
 }
 
 const Listings = ({ bookingConfig }: Props) => {
   const t = useTranslations();
   const discounts = {
-    daily: bookingConfig.discountsDaily,
-    weekly: bookingConfig.discountsWeekly,
-    monthly: bookingConfig.discountsMonthly,
+    daily: bookingConfig?.discountsDaily,
+    weekly: bookingConfig?.discountsWeekly,
+    monthly: bookingConfig?.discountsMonthly,
   };
 
   const { platform }: any = usePlatform();

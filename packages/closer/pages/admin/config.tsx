@@ -56,6 +56,7 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   const isWeb3Enabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
+  const isWeb3BookingEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
   const isBlogEnabled = process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true';
   const isCoursesEnabled = process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true';
   const isReferralEnabled = process.env.NEXT_PUBLIC_FEATURE_REFERRAL === 'true';
@@ -69,12 +70,15 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
     referral: isReferralEnabled,
     airdrop: isWeb3Enabled,
     governance: isWeb3Enabled,
+    web3: isWeb3BookingEnabled,
   };
 
   const baseAllowedConfigs = [
     ...(platformAllowedConfigs || []),
+    ...(isBookingEnabled && !platformAllowedConfigs?.includes('payment') ? ['payment'] : []),
     ...(isWeb3Enabled && !platformAllowedConfigs?.includes('airdrop') ? ['airdrop'] : []),
     ...(isWeb3Enabled && !platformAllowedConfigs?.includes('governance') ? ['governance'] : []),
+    ...(isWeb3BookingEnabled && !platformAllowedConfigs?.includes('web3') ? ['web3'] : []),
     ...(!platformAllowedConfigs?.includes('events') ? ['events'] : []),
     ...(isBlogEnabled && !platformAllowedConfigs?.includes('blog') ? ['blog'] : []),
     ...(isCoursesEnabled && !platformAllowedConfigs?.includes('courses') ? ['courses'] : []),

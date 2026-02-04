@@ -54,6 +54,7 @@ interface Props {
   };
   transformDataBeforeSave?: (data: any) => any;
   timeZone?: string;
+  currencyConfig?: { fiatCur: string; tokenCur: string };
 }
 
 const EditModel: FC<Props> = ({
@@ -71,6 +72,7 @@ const EditModel: FC<Props> = ({
   dynamicField,
   transformDataBeforeSave,
   timeZone,
+  currencyConfig,
 }) => {
   const t = useTranslations();
   const { isAuthenticated, user } = useAuth();
@@ -329,6 +331,7 @@ const EditModel: FC<Props> = ({
               const renderField = (field: any) => (
                 <FormField
                   dynamicField={dynamicField}
+                  currencyConfig={currencyConfig}
                   {...field}
                   key={field.name}
                   data={data}
@@ -366,6 +369,7 @@ const EditModel: FC<Props> = ({
                 <FormField
                   {...field}
                   dynamicField={dynamicField}
+                  currencyConfig={currencyConfig}
                   key={field.name}
                   data={data}
                   update={update}
