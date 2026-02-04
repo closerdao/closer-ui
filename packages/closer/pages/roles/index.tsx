@@ -25,7 +25,7 @@ const RolesPage = ({ generalConfig, roles, error }: Props) => {
 
   const defaultConfig = useConfig();
   const { hasAccess } = useRBAC();
-  const { user } = useAuth();
+  useAuth();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 

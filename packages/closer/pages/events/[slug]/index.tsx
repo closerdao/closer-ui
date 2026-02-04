@@ -13,7 +13,7 @@ import UploadPhoto from '../../../components/UploadPhoto';
 import { Button, Card, ErrorMessage, LinkButton } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
-import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import { User as UserIcon } from 'lucide-react';
 import dayjs from 'dayjs';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -71,7 +71,7 @@ const EventPage = ({
   const [password, setPassword] = useState('');
   const [attendees, setAttendees] = useState(event && (event.attendees || []));
   const [isShowingEvent, setIsShowingEvent] = useState(true);
-  const [passwordError, setPasswordError] = useState<null | string>(null);
+  const [passwordError] = useState<null | string>(null);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
   const [apiError, setApiError] = useState(null);
 
@@ -182,7 +182,7 @@ const EventPage = ({
         data: { results: event },
       } = await api.post(`/attend/event/${_id}`, { attend });
 
-      const res = await api.post(`/events/${_id}/notifications`, {
+      await api.post(`/events/${_id}/notifications`, {
         userId: user?._id,
       });
 
@@ -384,7 +384,7 @@ const EventPage = ({
                           height={20}
                         />
                       ) : (
-                        <FaUser className="text-gray-300 w-[20px] h-[20px] rounded-full" />
+                        <UserIcon className="text-gray-300 w-[20px] h-[20px] rounded-full" />
                       )}
                       <p className="text-sm font-medium">
                         {eventCreator?.screenname}

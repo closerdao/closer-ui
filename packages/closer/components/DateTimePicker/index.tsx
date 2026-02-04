@@ -10,7 +10,11 @@ import { useTranslations } from 'next-intl';
 import { getDateOnly, getTimeOnly } from '../../utils/booking.helpers';
 import TimePicker from '../TimePicker';
 import { Button, ErrorMessage, Input } from '../ui';
-import { getDateTime, includesBlockedDateRange } from './dateTimePicker.utils';
+import {
+  getDateTime,
+  includesBlockedDateRange,
+  normalizeBlockedDateRangesForDayPicker,
+} from './dateTimePicker.utils';
 
 interface Props {
   value?: string;
@@ -66,7 +70,6 @@ const DateTimePicker = ({
   const t = useTranslations();
   const router = useRouter();
   const { volunteerId, bookingType } = router.query;
-  const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [dateError, setDateError] = useState<null | string>(null);
   const [isOneMonthCalendar, setIsOneMonthCalendar] = useState(false);
@@ -94,29 +97,10 @@ const DateTimePicker = ({
   };
 
   const [startTime, setStartTime] = useState(() => {
-    const initialTime =
-      getTimeInTimezone(originalStartDate, timeZone) || '12:00';
-    console.log(
-      'DateTimePicker initial state: originalStartDate=',
-      originalStartDate,
-      'timeZone=',
-      timeZone,
-      'initialTime=',
-      initialTime,
-    );
-    return initialTime;
+    return getTimeInTimezone(originalStartDate, timeZone) || '12:00';
   });
   const [endTime, setEndTime] = useState(() => {
-    const initialTime = getTimeInTimezone(originalEndDate, timeZone) || '12:00';
-    console.log(
-      'DateTimePicker initial state: originalEndDate=',
-      originalEndDate,
-      'timeZone=',
-      timeZone,
-      'initialTime=',
-      initialTime,
-    );
-    return initialTime;
+    return getTimeInTimezone(originalEndDate, timeZone) || '12:00';
   });
 
   const [isDateRangeSet, setIsDateRangeSet] = useState(false);
@@ -146,24 +130,8 @@ const DateTimePicker = ({
   useEffect(() => {
     const newStartTime = getTimeInTimezone(originalStartDate, timeZone);
     const newEndTime = getTimeInTimezone(originalEndDate, timeZone);
-
-    console.log(
-      'DateTimePicker: originalStartDate=',
-      originalStartDate,
-      'timeZone=',
-      timeZone,
-      'newStartTime=',
-      newStartTime,
-    );
-
-    if (newStartTime) {
-      console.log('Setting startTime to:', newStartTime);
-      setStartTime(newStartTime);
-    }
-    if (newEndTime) {
-      console.log('Setting endTime to:', newEndTime);
-      setEndTime(newEndTime);
-    }
+    if (newStartTime) setStartTime(newStartTime);
+    if (newEndTime) setEndTime(newEndTime);
   }, [originalStartDate, originalEndDate, timeZone]);
 
   const checkDefaultDatesAreAvailable = (
@@ -470,7 +438,7 @@ const DateTimePicker = ({
 
       <div>
         <DayPicker
-          disabled={blockedDateRanges || []}
+          disabled={normalizeBlockedDateRangesForDayPicker(blockedDateRanges)}
           mode="range"
           defaultMonth={defaultMonth}
           numberOfMonths={isOneMonthCalendar ? 1 : 2}
@@ -483,17 +451,6 @@ const DateTimePicker = ({
           <div>
             <div className="text-sm mb-2 flex">
               <div className="w-[136px] mr-2">
-                {(() => {
-                  console.log(
-                    'Rendering startTime input with value:',
-                    startTime,
-                    'dateRange?.from:',
-                    dateRange?.from,
-                    'isDisabled:',
-                    !Boolean(dateRange?.from),
-                  );
-                  return null;
-                })()}
                 <Input
                   label={t('events_event_start_time')}
                   value={startTime}

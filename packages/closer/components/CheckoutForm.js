@@ -51,7 +51,6 @@ const CheckoutForm = ({
   buttonDisabled,
   useCredits,
   dailyTokenValue,
-  bookingNights,
   status,
   refetchBooking,
   isAdditionalFiatPayment,
@@ -114,8 +113,17 @@ const CheckoutForm = ({
         if (error) {
           setProcessing(false);
           setError(error);
-          console.error(error);
           return;
+        }
+        
+        // After token payment succeeds, refetch booking to verify status was updated
+        if (refetchBooking) {
+          const updatedBooking = await refetchBooking();
+          if (updatedBooking?.status !== 'tokens-staked') {
+            setProcessing(false);
+            setError('Your tokens have been staked on the blockchain but the booking status could not be verified. Please refresh the page and try again, or contact support if the issue persists.');
+            return;
+          }
         }
         tokenPaymentSuccessful = true;
       }
@@ -253,22 +261,12 @@ const CheckoutForm = ({
   };
 
   const renderButtonText = () => {
-    console.log('[CheckoutForm] renderButtonText called with:', {
-      isProcessingTokenPayment,
-      type: typeof isProcessingTokenPayment,
-      processing,
-      buttonText,
-    });
-
     if (isProcessingTokenPayment) {
-      console.log('[CheckoutForm] Returning token payment processing text');
       return t('checkout_processing_token_payment');
     }
     if (processing) {
-      console.log('[CheckoutForm] Returning payment processing text');
       return t('checkout_processing_payment');
     }
-    console.log('[CheckoutForm] Returning default button text');
     return buttonText || t('checkout_pay');
   };
 

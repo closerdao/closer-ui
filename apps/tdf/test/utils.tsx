@@ -7,21 +7,25 @@ import config from '@/__tests__/mocks/config';
 
 import type { RenderOptions } from '@testing-library/react';
 import { render as rtlRender } from '@testing-library/react';
-import { Web3ReactProvider } from '@web3-react/core';
 import {
-  AuthProvider,
-  ConfigProvider,
-  PlatformProvider,
-  WalletProvider,
-  blockchainConfig,
-} from 'closer';
+  ExternalProvider,
+  JsonRpcFetchFunc,
+  Web3Provider,
+} from '@ethersproject/providers';
+import { Web3ReactProvider } from '@web3-react/core';
+import { ConfigProvider, PlatformProvider } from 'closer';
+import { AuthProvider } from 'closer/contexts/auth';
+import { WalletProvider } from 'closer/contexts/wallet';
+import { blockchainConfig } from 'closer/config_blockchain';
 import { NewsletterProvider } from 'closer/contexts/newsletter';
 import messagesBase from 'closer/locales/base-en.json';
 import messagesLocal from 'closer/locales/tdf/en.json';
 import { NextIntlClientProvider } from 'next-intl';
 import Router from 'next-router-mock';
 
-import { getLibrary } from '../pages/_app';
+function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
+  return new Web3Provider(provider);
+}
 
 const RouterContext = React.createContext<NextRouter>(Router as NextRouter);
 

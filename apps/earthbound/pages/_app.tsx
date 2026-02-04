@@ -10,19 +10,15 @@ import { ErrorBoundary, Layout } from '@/components';
 import AcceptCookies from 'closer/components/AcceptCookies';
 
 import {
-  ExternalProvider,
-  JsonRpcFetchFunc,
-  Web3Provider,
-} from '@ethersproject/providers';
-import { Web3ReactProvider } from '@web3-react/core';
-import {
   AuthProvider,
   ConfigProvider,
   PlatformProvider,
-  WalletProvider,
   api,
-  blockchainConfig,
 } from 'closer';
+import { WalletProvider } from 'closer/contexts/wallet';
+import { blockchainConfig } from 'closer/config_blockchain';
+import { Web3ReactProvider } from '@web3-react/core';
+import { Web3Provider } from '@ethersproject/providers';
 import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import { NewsletterProvider } from 'closer/contexts/newsletter';
@@ -33,20 +29,19 @@ import { GoogleAnalytics } from 'nextjs-google-analytics';
 import appConfig from '../config';
 import '../styles/index.css';
 
-interface AppOwnProps extends AppProps {
-  configGeneral: any;
+function getLibrary(provider: any) {
+  return new Web3Provider(provider);
 }
 
-export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
-  const library = new Web3Provider(provider);
-  return library;
+interface AppOwnProps extends AppProps {
+  configGeneral: any;
 }
 
 const prepareDefaultConfig = () => {
   const general =
     configDescription.find((config) => config.slug === 'general')?.value ?? {};
   const transformedObject = Object.entries(general).reduce(
-    (acc, [key, value]) => {
+    (acc, [key]) => {
       return { ...acc, [key]: '' };
     },
     {},
@@ -138,7 +133,6 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
                         <Component {...pageProps} config={config} />
                       </NewsletterProvider>
                     </Layout>
-                    {/* TODO: create cookie consent page with property-specific parameters #357  */}
                     <AcceptCookies />
                   </WalletProvider>
                 </Web3ReactProvider>

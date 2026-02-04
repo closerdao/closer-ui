@@ -8,7 +8,7 @@ import ApplicationForm from '../../components/ApplicationForm';
 import SignupForm from '../../components/SignupForm';
 import { Card, ErrorMessage } from '../../components/ui';
 
-import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import { User } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -16,14 +16,9 @@ import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
 import { useNewsletter } from '../../contexts/newsletter';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
-import { SubscriptionPlan } from '../../types/subscriptions';
 import api, { cdn } from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
-
-interface Props {
-  subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
-}
 
 const Signup = () => {
   const t = useTranslations();
@@ -112,7 +107,7 @@ const Signup = () => {
                             className="rounded-full"
                           />
                         ) : (
-                          <FaUser className="text-success w-[30px] h-[30px]" />
+                          <User className="text-success w-[30px] h-[30px]" />
                         )}
                         <span>{referrer.get('screenname')}</span>
                       </div>

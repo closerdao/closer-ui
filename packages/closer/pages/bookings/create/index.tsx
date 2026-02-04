@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
 import { NextPageContext } from 'next';
-import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
@@ -19,7 +18,6 @@ interface Props {
 }
 
 const NewBooking = ({ bookingConfig }: Props) => {
-  const t = useTranslations();
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';

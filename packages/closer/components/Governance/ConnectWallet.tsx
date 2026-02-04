@@ -13,7 +13,6 @@ const ConnectWallet: React.FC<ConnectWalletProps> = ({ className }) => {
   const {
     account,
     isWalletConnected,
-    isWalletReady,
     balanceAvailable: tdfBalance,
   } = useContext(WalletState);
   

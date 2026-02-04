@@ -3,8 +3,8 @@ import { GetStaticProps } from 'next';
 
 export default Page404;
 
-export const getStaticProps: GetStaticProps = async () => {
-  const { props } = await getStaticProps404();
+export const getStaticProps: GetStaticProps = async ({ locale }) => {
+  const { props } = await getStaticProps404({ locale });
 
   return { props: { messages: props.messages } };
 };

@@ -21,7 +21,7 @@ interface Props {
   lesson: Lesson | null;
 }
 
-const LearnConfirmation = ({ error, lesson }: Props) => {
+const LearnConfirmation = ({ error }: Props) => {
   const t = useTranslations();
   const router = useRouter();
   const { slug } = router.query;

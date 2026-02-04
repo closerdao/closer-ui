@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Contract } from 'ethers';
-import { WalletState } from 'closer/contexts/wallet';
+import { WalletState } from 'closer';
 import { getContract, getCurrentNetwork, getContractNames } from '../../utils/abiLoader';
 
 interface TokenInterfaceProps {
@@ -99,20 +99,30 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
   };
 
   const switchToCorrectNetwork = async () => {
-    // Get the expected network from the app configuration
-    const expectedNetwork = network === 'celo' ? {
-      chainId: 42220,
-      hexChainId: '0xa4ec',
-      name: 'Celo',
-      rpcUrl: 'https://forno.celo.org',
-      explorerUrl: 'https://celoscan.io'
-    } : {
-      chainId: 44787,
-      hexChainId: '0xaef3',
-      name: 'Alfajores',
-      rpcUrl: 'https://alfajores-forno.celo-testnet.org',
-      explorerUrl: 'https://alfajores.celoscan.io'
+    const networkConfigs: Record<string, { chainId: number; hexChainId: string; name: string; rpcUrl: string; explorerUrl: string }> = {
+      celo: {
+        chainId: 42220,
+        hexChainId: '0xa4ec',
+        name: 'Celo',
+        rpcUrl: 'https://forno.celo.org',
+        explorerUrl: 'https://celoscan.io'
+      },
+      alfajores: {
+        chainId: 44787,
+        hexChainId: '0xaef3',
+        name: 'Alfajores',
+        rpcUrl: 'https://alfajores-forno.celo-testnet.org',
+        explorerUrl: 'https://alfajores.celoscan.io'
+      },
+      celoSepolia: {
+        chainId: 11142220,
+        hexChainId: '0xaa044c',
+        name: 'Celo Sepolia',
+        rpcUrl: 'https://forno.celo-sepolia.celo-testnet.org',
+        explorerUrl: 'https://celo-sepolia.blockscout.com'
+      }
     };
+    const expectedNetwork = networkConfigs[network] || networkConfigs.celo;
 
     try {
       await library.provider.request({
@@ -176,14 +186,12 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
         name: walletNetwork.name
       });
       
-      // Get the expected network from the user's selection
-      const expectedNetwork = network === 'celo' ? {
-        chainId: 42220,
-        name: 'Celo'
-      } : {
-        chainId: 44787,
-        name: 'Alfajores'
+      const expectedChainIds: Record<string, { chainId: number; name: string }> = {
+        celo: { chainId: 42220, name: 'Celo' },
+        alfajores: { chainId: 44787, name: 'Alfajores' },
+        celoSepolia: { chainId: 11142220, name: 'Celo Sepolia' }
       };
+      const expectedNetwork = expectedChainIds[network] || expectedChainIds.celo;
 
       // Check expected network configuration
       console.log('Expected network config:', {

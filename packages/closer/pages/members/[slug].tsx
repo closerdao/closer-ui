@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import React, { FormEvent, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import CitizenSubscriptionProgress from '../../components/CitizenSubscriptionProgress';
 import ConnectedWallet from '../../components/ConnectedWallet';
@@ -16,8 +16,7 @@ import { Card } from '../../components/ui';
 import Button from '../../components/ui/Button';
 import Heading from '../../components/ui/Heading';
 
-import { FaUser } from '@react-icons/all-files/fa/FaUser';
-import { TiDelete } from '@react-icons/all-files/ti/TiDelete';
+import { Trash2, User as UserIcon } from 'lucide-react';
 import { Twitter, Instagram, Facebook, Linkedin, Github, Youtube, Music, Link as LinkIcon, Settings } from 'lucide-react';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -64,8 +63,6 @@ const MemberPage = ({
   const [openIntro, setOpenIntro] = useState(false);
   const [error, setErrors] = useState(null);
   const [sendError, setSendErrors] = useState(false);
-  const [linkName, setLinkName] = useState('');
-  const [linkUrl, setLinkUrl] = useState('');
   const [links, setLinks] = useState<UserLink[]>(member?.links || []);
   const [showForm, toggleShowForm] = useState(false);
   const [formValues, setFormValues] = useState({
@@ -125,23 +122,6 @@ const MemberPage = ({
       })();
     }
   }, [currentUser, isLoading]);
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    try {
-      const { data } = await platform.user.patch(currentUser?._id, {
-        links: [...links, { name: linkName, url: linkUrl }],
-      });
-      setLinks(data.links);
-      setLinkName('');
-      setLinkUrl('');
-      toggleShowForm(!showForm);
-      setErrors(null);
-    } catch (err: unknown) {
-      const error = parseMessageFromError(err);
-      setErrors(error);
-    }
-  };
 
   const deleteLink = async (link: UserLink) => {
     try {
@@ -305,7 +285,7 @@ const MemberPage = ({
                       />
                     ) : (
                       <div className="w-36 md:w-48 h-36 md:h-48 rounded-full bg-gray-100 flex items-center justify-center">
-                        <FaUser className="text-gray-300 text-6xl" />
+                        <UserIcon className="text-gray-300 w-16 h-16" />
                       </div>
                     )}
                   </div>
@@ -567,7 +547,7 @@ const MemberPage = ({
                                   }}
                                   className="opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
-                                  <TiDelete className="text-gray-500 text-xl hover:text-red-500" />
+                                  <Trash2 className="text-gray-500 w-5 h-5 hover:text-red-500" />
                                 </a>
                               )}
                           </li>

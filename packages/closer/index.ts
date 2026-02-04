@@ -38,14 +38,15 @@ export { default as VolunteerEventView } from './components/VolunteerEventView/'
 export { default as YoutubeEmbed } from './components/YoutubeEmbed';
 
 // Config
-export * from './config_blockchain';
+export { blockchainConfig } from './config_blockchain';
 export * from './contexts/auth';
-//Contexts
+// Contexts
 export { useAuth } from './contexts/auth';
 export * from './contexts/config';
 export { ConfigProvider } from './contexts/config';
 export * from './contexts/platform';
-export * from './contexts/wallet/';
+// Wallet exports
+export * from './contexts/wallet';
 // Hooks
 export * from './hooks/useConfig';
 export * from './hooks/useHasMounted';
@@ -180,5 +181,5 @@ export { default as PrivacyPolicyPage } from './pages/privacy-policy';
 export * from './types/';
 // Utils
 export { default as api, cdn } from './utils/api';
-export * from './utils/blockchain';
+// Note: blockchain utils import ethers (~500KB) - import directly from 'closer/utils/blockchain' when needed
 export * from './utils/helpers';

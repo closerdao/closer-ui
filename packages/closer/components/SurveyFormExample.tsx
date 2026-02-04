@@ -29,11 +29,10 @@ const SurveyFormExample: React.FC<SurveyFormExampleProps> = ({
         });
       } else {
         // Create new survey
-        const response = await api.post('/surveys', {
+        await api.post('/surveys', {
           title,
           folder,
         });
-        // You might want to update the surveyId here if needed
       }
     } catch (error) {
       console.error('Auto-save failed:', error);
@@ -54,7 +53,7 @@ const SurveyFormExample: React.FC<SurveyFormExampleProps> = ({
         });
       } else {
         // Create new survey
-        const response = await api.post('/surveys', {
+        await api.post('/surveys', {
           title,
           folder,
         });

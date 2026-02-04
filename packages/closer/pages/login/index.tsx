@@ -16,7 +16,7 @@ import { event as gaEvent } from 'nextjs-google-analytics';
 
 import { useAuth } from '../../contexts/auth';
 import { useNewsletter } from '../../contexts/newsletter';
-import { WalletDispatch, WalletState } from '../../contexts/wallet';
+import { WalletDispatch } from '../../contexts/wallet';
 import api from '../../utils/api';
 import { getRedirectUrl } from '../../utils/auth.helpers';
 import { parseMessageFromError } from '../../utils/common';
@@ -29,7 +29,6 @@ const loginOptions =
 
 const Login = () => {
   const t = useTranslations();
-  const { account } = useContext(WalletState);
   const { signMessage, connectWallet } = useContext(WalletDispatch);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 

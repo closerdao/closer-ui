@@ -23,7 +23,7 @@ import { reportIssue } from '../../utils/reporting.utils';
 
 const AffiliateLandingPage = () => {
   const t = useTranslations();
-  const { user, isLoading, refetchUser } = useAuth();
+  const { user, refetchUser } = useAuth();
   const { platform } = usePlatform() as { platform: any };
   const router = useRouter();
 

@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import { User } from 'lucide-react';
 
 import { cdn } from '../utils/api';
 import Heading from './ui/Heading';
@@ -29,7 +29,7 @@ const UserBookingPreview = ({ user }) => {
               />
             ) : (
               <div className="rounded-full overflow-hidden">
-                <FaUser className="text-neutral w-[160px] h-[160px] " />
+                <User className="text-neutral w-[160px] h-[160px]" />
               </div>
             )}
           </div>

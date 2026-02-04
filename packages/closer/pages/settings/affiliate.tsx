@@ -10,7 +10,7 @@ import RevenueIcon from '../../components/icons/RevenueIcon';
 import LinkBuilderTool from '../../components/LinkBuilderTool';
 import { Card, Heading, LinkButton } from 'closer/components/ui';
 
-import { FaLink } from '@react-icons/all-files/fa/FaLink';
+import { Link } from 'lucide-react';
 import { AffiliateConfig, PageNotFound, api, usePlatform } from 'closer';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -18,7 +18,6 @@ import { useTranslations } from 'next-intl';
 import PageNotAllowed from '../401';
 import { useAuth } from '../../contexts/auth';
 import { User } from '../../contexts/auth/types';
-import { useConfig } from '../../hooks/useConfig';
 import { calculateAffiliateRevenue } from '../../utils/affiliate.utils';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import { getStartAndEndDate } from '../../utils/performance.utils';
@@ -31,10 +30,6 @@ const AffiliatePage = ({
   const t = useTranslations();
   const { platform }: any = usePlatform() || {};
   const { user } = useAuth() || {};
-  const config = useConfig();
-  const { SEMANTIC_URL } = config || {};
-
-  const [copied, setCopied] = useState<null | number>(null);
   const router = useRouter();
   const { time_frame } = router.query;
 
@@ -168,25 +163,6 @@ const AffiliatePage = ({
     financedTokenRevenue = 0,
   } = calculateAffiliateRevenue(referralCharges) || {};
 
-  const copyToClipboard = (link: string, index: number) => {
-    if (!navigator?.clipboard) {
-      console.error('Clipboard API not available');
-      return;
-    }
-
-    navigator.clipboard.writeText(link).then(
-      () => {
-        setCopied(index);
-        setTimeout(() => {
-          setCopied(null);
-        }, 2000);
-      },
-      (err) => {
-        console.error('Failed to copy', err?.message || 'Unknown error');
-      },
-    );
-  };
-
   const loadData = async () => {
     if (!platform) return;
 
@@ -246,13 +222,13 @@ const AffiliatePage = ({
             level={2}
             className="text-lg flex gap-2 items-center uppercase"
           >
-            {<FaLink />}
+            {<Link className="h-4 w-4" />}
             {t('affiliate_links')}
           </Heading>
           
           <LinkBuilderTool
             userId={user?._id || ''}
-            onLinkGenerated={(link) => {
+            onLinkGenerated={() => {
               // Track link generation
               api.post('/metric', {
                 event: 'affiliate-link-generated',

@@ -110,12 +110,6 @@ const StayPage = ({
   const hosts = platform.user.find(hostsFilter);
 
   console.log('hosts=', hosts?.toJS());
-  const guestListings = listings?.filter((listing: any) => {
-    return (
-      listing.get('availableFor') !== 'team' &&
-      listing.get('availableFor') !== 'volunteer'
-    );
-  });
 
   if (!isBookingEnabled) {
     return <FeatureNotEnabled feature="booking" />;
@@ -324,9 +318,6 @@ const StayPage = ({
               </div>
             </div>
           )}
-          {/* {listings?.count() === 0 &&
-            guestListings?.count() === 0 &&
-            t('listing_no_listings_found')} */}
         </div>
 
         {/* TODO some time: move reviews to configs */}

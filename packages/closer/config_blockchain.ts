@@ -80,6 +80,45 @@ const celoConfig = {
   CEUR_TOKEN_ADDRESS: '0xd8763cba276a3738e6de85b4b3bf5fded6d6ca73',
 };
 
+const celoSepoliaConfig = {
+  BLOCKCHAIN_NETWORK_ID: 11142220,
+  BLOCKCHAIN_NAME: 'CELO SEPOLIA',
+  BLOCKCHAIN_RPC_URL: 'https://forno.celo-sepolia.celo-testnet.org',
+  BLOCKCHAIN_EXPLORER_URL: 'https://celo-sepolia.blockscout.com',
+  BLOCKCHAIN_NATIVE_TOKEN: {
+    name: 'CELO',
+    symbol: 'CELO',
+    decimals: 18,
+  },
+  BLOCKCHAIN_DAO_TOKEN: {
+    address: '0x5Bc8e45E6c0019F12bE2979De614AF3cc63538e9',
+    name: 'TDF',
+    symbol: 'TDF',
+    decimals: 18,
+  },
+  BLOCKCHAIN_CEUR_TOKEN: {
+    address: '0x31042e8498A6939d174A2D91FB4f98128089b330',
+    name: 'fakeEUR',
+    symbol: 'fakeEUR',
+    decimals: 18,
+  },
+  BLOCKCHAIN_CELO_TOKEN: {
+    address: '0x471EcE3750Da237f93B8E339c536989b8978a438',
+    name: 'Celo',
+    symbol: 'CELO',
+    decimals: 18,
+  },
+  BLOCKCHAIN_PRESENCE_TOKEN: {
+    address: '0xBA72D0644F465D78e5076284ea3480f4dBc006F6',
+    name: '$Presence',
+    symbol: '$Presence',
+    decimals: 18,
+  },
+  BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS:
+    '0x076F0Ba89A33A6b268F164ddb2cC61df75Ee0168',
+  BLOCKCHAIN_DAO_DIAMOND_ADDRESS: '0x5D2870B37aB72AB9Cc3F46878373EeCc1312FA6e',
+  CEUR_TOKEN_ADDRESS: '0x31042e8498A6939d174A2D91FB4f98128089b330',
+};
 
 // Fallback ABIs for client-side rendering
 const celoABIs = {
@@ -7308,20 +7347,23 @@ const getNetworkConfig = () => {
   const network = process.env.NEXT_PUBLIC_NETWORK;
   if (network === 'celo') {
     return celoConfig;
-  } else {
-    return alfajoresConfig;
   }
+  if (network === 'celoSepolia') {
+    return celoSepoliaConfig;
+  }
+  return alfajoresConfig;
 };
 
 const getABIs = () => {
   const network = process.env.NEXT_PUBLIC_NETWORK || 'celo';
   
-  // Use static ABIs based on network
   if (network === 'alfajores') {
     return alfajoresABIs;
-  } else {
-    return celoABIs;
   }
+  if (network === 'celoSepolia') {
+    return alfajoresABIs;
+  }
+  return celoABIs;
 };
 
 export const blockchainConfig = {

@@ -62,9 +62,7 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
   }, [content.items, settings.isRandomized]); // re-shuffle if items or randomization setting change
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(
-    null,
-  );
+  const [, setSlideDirection] = useState<'left' | 'right' | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [nextIndex, setNextIndex] = useState<number | null>(null);
 

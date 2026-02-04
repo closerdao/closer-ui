@@ -26,7 +26,6 @@ const BookingRequestButtons = ({
   status,
   createdBy,
   paidBy,
-  start,
   end,
   confirmBooking,
   rejectBooking,

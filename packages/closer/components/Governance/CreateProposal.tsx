@@ -15,10 +15,7 @@ interface CreateProposalProps {
   }) => Promise<boolean>;
 }
 
-const CreateProposal: React.FC<CreateProposalProps> = ({
-  onClose,
-  onSubmit,
-}) => {
+const CreateProposal: React.FC<CreateProposalProps> = ({ onClose }) => {
   const { isWalletReady, account } = useContext(WalletState);
   const { signMessage } = useContext(WalletDispatch);
   const { user } = useAuth();

@@ -2,9 +2,7 @@ import Link from 'next/link';
 
 import React, { ReactNode, useState } from 'react';
 
-import { FaCalendarAlt } from '@react-icons/all-files/fa/FaCalendarAlt';
-import { FaHashtag } from '@react-icons/all-files/fa/FaHashtag';
-import { FaUsers } from '@react-icons/all-files/fa/FaUsers';
+import { Calendar, Hash, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
@@ -156,19 +154,19 @@ const MemberHome = () => {
                 <TabButton
                   active={activeTab === 'feed'}
                   onClick={() => setActiveTab('feed')}
-                  icon={<FaHashtag className="w-4 h-4" />}
+                  icon={<Hash className="w-4 h-4" />}
                   label={t('community_tab_feed')}
                 />
                 <TabButton
                   active={activeTab === 'members'}
                   onClick={() => setActiveTab('members')}
-                  icon={<FaUsers className="w-4 h-4" />}
+                  icon={<Users className="w-4 h-4" />}
                   label={t('community_tab_members')}
                 />
                 <TabButton
                   active={activeTab === 'events'}
                   onClick={() => setActiveTab('events')}
-                  icon={<FaCalendarAlt className="w-4 h-4" />}
+                  icon={<Calendar className="w-4 h-4" />}
                   label={t('community_tab_events')}
                 />
 

@@ -188,9 +188,6 @@ const SignupForm = ({ app }: Props) => {
         return;
       }
 
-      const referrer =
-        typeof localStorage !== 'undefined' && localStorage.getItem('referrer');
-
       if (
         process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true' &&
         isEmailConsent

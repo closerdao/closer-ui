@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import EditModel from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
 
-import { FaArrowLeft } from '@react-icons/all-files/fa/FaArrowLeft';
+import { ArrowLeft } from 'lucide-react';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
@@ -22,30 +22,6 @@ import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
-
-// Convert timezone-aware datetime to UTC for database storage
-const convertToUTC = (
-  dateTime: string | Date | null,
-  timeZone: string,
-): string | null => {
-  if (!dateTime || !timeZone) return null;
-
-  // Parse the datetime in the specified timezone and convert to UTC
-  const zonedDateTime = dayjs.tz(dateTime, timeZone);
-  return zonedDateTime.utc().toISOString();
-};
-
-// Convert UTC datetime to timezone-aware datetime for display
-const convertFromUTC = (
-  utcDateTime: string | Date | null,
-  timeZone: string,
-): string | null => {
-  if (!utcDateTime || !timeZone) return null;
-
-  // Parse UTC datetime and convert to the specified timezone
-  const utcDate = dayjs.utc(utcDateTime);
-  return utcDate.tz(timeZone).format('YYYY-MM-DDTHH:mm:ss');
-};
 
 interface EventsConfig {
   enabled: boolean;
@@ -135,7 +111,7 @@ const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig }: P
           href={`/events/${event.slug}`}
           className="mr-2 italic flex flex-row items-center justify-start"
         >
-          <FaArrowLeft className="mr-1" /> {t('generic_back')}
+          <ArrowLeft className="mr-1 h-4 w-4" /> {t('generic_back')}
         </Link>
         <Heading level={2} className="flex justify-start items-center">
           {t('events_slug_edit_link')} <i>{event.name}</i>

@@ -22,15 +22,11 @@ import { NextPageContext } from 'next';
 import { useFaqs } from 'closer/hooks/useFaqs';
 import Faqs from 'closer/components/Faqs';
 
-const getPage = ({
-  listings,
-  hosts,
-  generalConfig,
-}: {
+const getPage = ({}: {
   listings: Listing[] | null;
   hosts: User[] | null;
   generalConfig: GeneralConfig | null;
-  }) => {
+}) => {
   
 
   const localPage: Page = {
@@ -91,15 +87,11 @@ const getPage = ({
   };
   return localPage;
 };
-const getPagePart2 = ({
-  listings,
-  hosts,
-  generalConfig,
-}: {
+const getPagePart2 = ({}: {
   listings: Listing[] | null;
   hosts: User[] | null;
   generalConfig: GeneralConfig | null;
-  }) => {
+}) => {
   
   
   const localPage: Page = {
@@ -192,10 +184,6 @@ const CommunityPage = ({ generalConfig, listings, hosts }: Props) => {
   useEffect(() => {
     loadData();
   }, [isTeamMember]);
-
-  const defaultConfig = useConfig();
-  const PLATFORM_NAME =
-    generalConfig?.platformName || defaultConfig.platformName;
 
   return (
     <div>

@@ -3,8 +3,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
-import { FaImage } from '@react-icons/all-files/fa/FaImage';
-import { FaTimes } from '@react-icons/all-files/fa/FaTimes';
+import { Image as ImageIcon, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
@@ -318,7 +317,7 @@ const CreatePost = ({
                     className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-black/80 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
                     aria-label={t('create_post_remove_photo')}
                   >
-                    <FaTimes className="w-3 h-3" />
+                    <X className="w-3 h-3" />
                   </button>
                 </div>
               ))}
@@ -392,7 +391,7 @@ const CreatePost = ({
               }`}
               title={t('create_post_add_photo')}
             >
-              <FaImage className="w-5 h-5" />
+              <ImageIcon className="w-5 h-5" />
             </button>
             
             {uploadingPhotos && (

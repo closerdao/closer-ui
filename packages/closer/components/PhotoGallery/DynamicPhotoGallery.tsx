@@ -74,7 +74,6 @@ const DynamicPhotoGallery = ({ className, isSlider = false }: Props) => {
   }
 
   if (isSlider) {
-    const currentImage = images[currentIndex];
     const nextIndex = (currentIndex + 1) % images.length;
     const prevIndex = (currentIndex + images.length - 1) % images.length;
 

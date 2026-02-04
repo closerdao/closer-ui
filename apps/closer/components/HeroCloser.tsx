@@ -80,8 +80,8 @@ function useCanvasNeuronNetwork(canvasRef: React.RefObject<HTMLCanvasElement>) {
 export default function HeroCloser() {
   const canvasRef = useRef(null);
   const [isClient, setIsClient] = useState(false);
-  const [heroText, setHeroText] = useState('Build Communities That Thrive');
-  const [heroSubtext, setHeroSubtext] = useState(
+  const [, setHeroText] = useState('Build Communities That Thrive');
+  const [, setHeroSubtext] = useState(
     'Closer is the operating system for regenerative communities. Manage guests, spaces, events and resources through one intuitive platform designed specifically for land-based projects.',
   );
   const [input, setInput] = useState('');
@@ -101,9 +101,7 @@ export default function HeroCloser() {
     setIsClient(true);
   }, []);
 
-  const { setIsOpen: setPromptGetInTouchOpen } = useContext(
-    PromptGetInTouchContext,
-  );
+  useContext(PromptGetInTouchContext);
 
   const heroRef = useRef(null);
   const conversationRef = useRef<HTMLDivElement>(null);
@@ -199,15 +197,6 @@ export default function HeroCloser() {
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
-  };
-
-  const clearConversation = () => {
-    setConversation([]);
-    setIsExpanded(false);
-    setHeroText('Build Communities That Thrive');
-    setHeroSubtext(
-      'Closer is the operating system for regenerative communities. Manage guests, spaces, events and resources through one intuitive platform designed specifically for land-based projects.',
-    );
   };
 
   return (

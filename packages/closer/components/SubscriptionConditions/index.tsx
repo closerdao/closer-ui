@@ -27,10 +27,6 @@ const SubscriptionConditions = ({
     }
   }, [isSubscriptionsTermsChecked]);
 
-  const openModal = () => {
-    setIsInfoModalOpened(true);
-  };
-
   const closeModal = () => {
     setIsInfoModalOpened(false);
   };

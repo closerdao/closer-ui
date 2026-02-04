@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { MdLocationOn } from '@react-icons/all-files/md/MdLocationOn';
+import { MapPin } from 'lucide-react';
 import dayjs from 'dayjs';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -234,7 +234,7 @@ const Events = ({ generalConfig, eventsConfig }: Props) => {
             {/* Timeline line */}
             <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-300"></div>
             
-            {upcomingEventsByMonth.map((monthGroup, monthIndex) => (
+            {upcomingEventsByMonth.map((monthGroup) => (
               <div key={monthGroup.monthKey} className="relative mb-12">
                 {/* Month circle */}
                 <div className="absolute left-4 top-0 w-4 h-4 bg-primary rounded-full border-4 border-white shadow-md z-10"></div>
@@ -287,14 +287,14 @@ const Events = ({ generalConfig, eventsConfig }: Props) => {
                                 
                                 {(event.address || event.location) && !event.virtual && (
                                   <div className="flex items-center text-sm text-gray-500 mb-1">
-                                    <MdLocationOn className="mr-1" />
+                                    <MapPin className="mr-1 h-4 w-4" />
                                     <span>{event.address || event.location}</span>
                                   </div>
                                 )}
                                 
                                 {event.virtual && (
                                   <div className="flex items-center text-sm text-gray-500 mb-1">
-                                    <MdLocationOn className="mr-1" />
+                                    <MapPin className="mr-1 h-4 w-4" />
                                     <span>{t('events_online')}</span>
                                   </div>
                                 )}
@@ -378,14 +378,14 @@ const Events = ({ generalConfig, eventsConfig }: Props) => {
                                 
                                 {(event.address || event.location) && !event.virtual && (
                                   <div className="flex items-center text-sm text-gray-400 mb-1">
-                                    <MdLocationOn className="mr-1" />
+                                    <MapPin className="mr-1 h-4 w-4" />
                                     <span>{event.address || event.location}</span>
                                   </div>
                                 )}
                                 
                                 {event.virtual && (
                                   <div className="flex items-center text-sm text-gray-400 mb-1">
-                                    <MdLocationOn className="mr-1" />
+                                    <MapPin className="mr-1 h-4 w-4" />
                                     <span>{t('events_online')}</span>
                                   </div>
                                 )}

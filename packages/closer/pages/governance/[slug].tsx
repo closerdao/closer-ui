@@ -32,7 +32,6 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   proposal,
   proposalCreator,
   error: propError,
-  messages,
 }) => {
   const router = useRouter();
   const { isWalletReady, account } = useContext(WalletState);
@@ -98,7 +97,6 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     dateStart: '',
     duration: '14', // Default to 14 days (standard)
   });
-  const hasLoaded = useRef(false);
 
   const isCitizen = (): boolean => {
     return user?.roles?.includes('member') || false;
@@ -726,17 +724,6 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     freshProposalData?.status === 'active' &&
     freshProposalData?.endDate &&
     new Date() < new Date(freshProposalData.endDate);
-
-  // Get governance config for quorum percent
-  const governanceConfig = platform.config.findOne('governance');
-  const governanceConfigValue = governanceConfig?.get?.('value') || governanceConfig?.value || {};
-  const quorumPercent = governanceConfigValue?.quorumPercent || 10;
-  
-  // Calculate percentage of quorum reached
-  // proposal.quorum is the actual quorum value (quorumPercent * platform total voting power)
-  const quorumReachedPercent = freshProposalData?.quorum && totalVotes > 0
-    ? roundToTwoDecimals((totalVotes / freshProposalData.quorum) * 100)
-    : 0;
 
   return (
     <>

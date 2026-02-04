@@ -46,7 +46,6 @@ interface Props extends BaseBookingParams {
 
 const FoodSelectionPage = ({
   booking,
-  listing,
   event,
   error,
   bookingConfig,
@@ -58,17 +57,8 @@ const FoodSelectionPage = ({
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
-  const {
-    useTokens,
-    start,
-    end,
-    adults,
-    children,
-    pets,
-    infants,
-    eventId,
-    isFriendsBooking,
-  } = booking || {};
+  const { useTokens, start, end, adults, eventId, isFriendsBooking } =
+    booking || {};
 
   const router = useRouter();
   const { isAuthenticated } = useAuth();
@@ -113,22 +103,6 @@ const FoodSelectionPage = ({
     }
 
     router.push(`/bookings/${booking?._id}/rules`);
-  };
-
-  const getUrlParams = () => {
-    const dateFormat = 'YYYY-MM-DD HH:mm';
-    const params = {
-      start: dayjs(start as string).format(dateFormat),
-      end: dayjs(end as string).format(dateFormat),
-      adults: String(adults),
-      ...(children && { kids: String(children) }),
-      ...(infants && { infants: String(infants) }),
-      ...(pets && { pets: String(pets) }),
-      useTokens: String(booking?.useTokens),
-    };
-    const urlParams = new URLSearchParams(params);
-
-    return urlParams;
   };
 
   const goBack = () => {

@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import { User } from 'lucide-react';
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
@@ -97,7 +97,7 @@ const ArticleList = ({
                           />
                         ) : (
                           <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                            <FaUser className="text-gray-400 w-4 h-4" />
+                            <User className="text-gray-400 w-4 h-4" />
                           </div>
                         )}
                       </Link>

@@ -207,7 +207,7 @@ const ArrayConfig = ({
                                     name={`${innerKey}-${index}`}
                                     value={option}
                                     checked={isChecked}
-                                    onChange={(event) => {
+                                    onChange={() => {
                                       const newValues = isChecked
                                         ? currentValues.filter((v: string) => v !== option)
                                         : [...currentValues, option];

@@ -1,6 +1,5 @@
 import { useTranslations } from 'next-intl';
 
-import { useAuth } from '../../contexts/auth';
 import { Textarea } from '../ui';
 
 interface Props {
@@ -9,10 +8,8 @@ interface Props {
   buyMore?: boolean;
 }
 
-const CitizenWhy = ({ updateApplication, application, buyMore }: Props) => {
+const CitizenWhy = ({ updateApplication, application }: Props) => {
   const t = useTranslations();
-  const { user } = useAuth();
-  const isMember = user?.roles?.includes('member');
 
   return (
     <div className="space-y-2">

@@ -1,12 +1,9 @@
-import { useTranslations } from 'next-intl';
-
 interface Props {
   embedId: string;
   onLoad?: () => void;
 }
 
 const GenericYoutubeEmbed = ({ embedId, onLoad }: Props) => {
-  const t = useTranslations();
   return (
     <>
       <iframe

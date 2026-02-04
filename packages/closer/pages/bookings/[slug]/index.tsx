@@ -172,7 +172,7 @@ const BookingPage = ({
   const [updatedStatus, setUpdatedStatus] = useState<string | undefined>(
     booking?.status,
   );
-  const [amountToRefund, setAmountToRefund] = useState<number | undefined>(
+  const [amountToRefund] = useState<number | undefined>(
     Math.abs(booking?.paymentDelta?.fiat.val || 0),
   );
 

@@ -26,7 +26,6 @@ import {
   Wallet,
 } from 'lucide-react';
 import { NextPageContext } from 'next';
-import { useTranslations } from 'next-intl';
 
 const TOPICS = [
   { id: 'about', label: 'About TDF', icon: Home },
@@ -83,7 +82,6 @@ const FAQ_ITEMS = [
 ];
 
 const LearnMorePage = () => {
-  const t = useTranslations();
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   const scrollToSection = (id: string) => {

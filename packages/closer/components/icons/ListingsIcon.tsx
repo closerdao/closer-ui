@@ -1,4 +1,4 @@
-const HospitalityIcon = ({ color = 'white' }: { color: string }) => {
+const HospitalityIcon = () => {
   return (
     <div>
       <svg

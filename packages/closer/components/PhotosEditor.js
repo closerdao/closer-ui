@@ -17,7 +17,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { TiDelete } from '@react-icons/all-files/ti/TiDelete';
+import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import Heading from './ui/Heading';
@@ -58,7 +58,7 @@ const SortablePhotoItem = ({ id, onDelete }) => {
         }}
         className="absolute flex top-0 right-0 z-10 p-1"
       >
-        <TiDelete className=" text-red-500 drop-shadow text-3xl shadow-md" />
+        <X className="text-red-500 drop-shadow w-8 h-8 shadow-md" />
       </a>
     </div>
   );

@@ -6,16 +6,17 @@ const withMDX = require('@next/mdx')({
   },
 });
 
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
-  swcMinify: false,
-  experimental: {
-    forceSwcTransforms: false,
-  },
+  swcMinify: true,
   compiler: {
-    removeConsole: false,
+    removeConsole: process.env.NODE_ENV === 'production',
   },
   images: {
     remotePatterns: [
@@ -33,5 +34,4 @@ const nextConfig = {
   },
 };
 
-// Merge MDX config with Next.js config
-module.exports = withMDX(nextConfig);
+module.exports = withBundleAnalyzer(withMDX(nextConfig));

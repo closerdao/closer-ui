@@ -7,7 +7,7 @@ interface Props {
   isVolunteer?: boolean;
 }
 
-const EventDescription: FC<Props> = ({ event, isVolunteer = false }) => {
+const EventDescription: FC<Props> = ({ event }) => {
   const [initialRenderComplete, setInitialRenderComplete] = useState(false);
 
   // This useEffect is needed to fix next js hydration issue

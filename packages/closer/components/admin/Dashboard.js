@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Line } from 'react-chartjs-2';
-
 import {
-  CategoryScale,
-  Chart as ChartJS,
+  CartesianGrid,
   Legend,
-  LineElement,
-  LinearScale,
-  PointElement,
-  Title,
+  Line,
+  LineChart,
+  ResponsiveContainer,
   Tooltip,
-} from 'chart.js';
+  XAxis,
+  YAxis,
+} from 'recharts';
+
 import dayjs from 'dayjs';
 
 import { useAuth } from '../../contexts/auth';
@@ -19,16 +18,6 @@ import PageNotAllowed from '../../pages/401';
 import { theme } from '../../tailwind.config';
 import api from '../../utils/api';
 import Loading from '../Loading';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-);
 
 const metricsToPlot = ['user', 'ticket'];
 const last30days = dayjs().subtract(30, 'days').format();
@@ -87,32 +76,29 @@ const Dashboard = () => {
           if (!data) {
             return <h4 key={metric}>{metric} not found.</h4>;
           }
+          const chartData = data.map((p) => ({
+            time: p.get('time'),
+            value: p.get('value'),
+          })).toJS();
+
           return (
-            <div key={metric}>
-              <Line
-                options={{
-                  responsive: true,
-                  plugins: {
-                    legend: {
-                      position: 'top',
-                    },
-                    title: {
-                      display: true,
-                      text: `${metric}s per day`,
-                    },
-                  },
-                }}
-                data={{
-                  labels: data.map((p) => p.get('time')).toJS(),
-                  datasets: [
-                    {
-                      label: '1',
-                      data: data.map((p) => p.get('value')).toJS(),
-                      borderColor: theme.extend.colors.primary,
-                    },
-                  ],
-                }}
-              />
+            <div key={metric} className="w-full md:w-1/2 p-2">
+              <h4 className="text-center font-medium mb-2">{metric}s per day</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="time" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke={theme.extend.colors.primary}
+                    name={metric}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           );
         })}

@@ -5,8 +5,7 @@ import { useEffect, useState } from 'react';
 import { Button, Card, ErrorMessage, Input } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
-import { FaPlus } from '@react-icons/all-files/fa/FaPlus';
-import { FaTrash } from '@react-icons/all-files/fa/FaTrash';
+import { Plus, Trash2 } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -238,7 +237,7 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
                   className="mt-6 p-2 text-red-500 hover:text-red-700"
                   title={t('friends_booking_remove')}
                 >
-                  <FaTrash className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
               )}
             </div>
@@ -250,7 +249,7 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
               isEnabled={emails.length < (friendsBookingMaxGuests || 1)}
               className="text-accent border border-accent bg-transparent hover:bg-accent hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <FaPlus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 mr-2" />
               {t('friends_booking_add_another')}
             </Button>
             {friendsBookingMaxGuests &&

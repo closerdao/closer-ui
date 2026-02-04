@@ -12,7 +12,7 @@ const CustomTextCard: React.FC<{
     title: string;
     body: string;
   };
-}> = ({ content, settings }) => (
+}> = ({ content }) => (
   <section
     className='max-w-2xl mx-auto flex flex-col gap-4'
   >

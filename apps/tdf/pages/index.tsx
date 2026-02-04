@@ -1,6 +1,5 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 
 import { useEffect, useRef, useState } from 'react';
 
@@ -10,11 +9,7 @@ import FundraisingWidget from 'closer/components/FundraisingWidget';
 import LinkButton from 'closer/components/ui/LinkButton';
 import UpcomingEventsIntro from 'closer/components/UpcomingEventsIntro';
 
-import {
-  Heading,
-  useAuth,
-  Webinar,
-} from 'closer';
+import { Heading, Webinar } from 'closer';
 import { DEFAULT_TOKEN_STATS, FundraisingConfig, TokenStats } from 'closer/types';
 import api from 'closer/utils/api';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
@@ -25,9 +20,6 @@ import { event } from 'nextjs-google-analytics';
 
 const HomePage = () => {
   const t = useTranslations();
-
-  const { isAuthenticated, user } = useAuth();
-  const router = useRouter();
 
   const [selectedReport, setSelectedReport] = useState<{
     year: string;

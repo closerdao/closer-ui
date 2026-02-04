@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import { FC } from 'react';
 
-import { MdLocationOn } from '@react-icons/all-files/md/MdLocationOn';
+import { MapPin } from 'lucide-react';
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
 import { useTranslations } from 'next-intl';
@@ -111,13 +111,13 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
             </h4>
             {virtual && (
               <div className="flex flex-row items-center space-x-1 mt-2 text-gray-500">
-                <MdLocationOn />
+                <MapPin className="h-4 w-4" />
                 <p className="text-sm">Online</p>
               </div>
             )}
             {(address || location) && !virtual && (
               <div className="flex flex-row items-center space-x-1 mt-2 text-gray-500">
-                <MdLocationOn />
+                <MapPin className="h-4 w-4" />
                 <p className="text-sm">{address || location}</p>
               </div>
             )}

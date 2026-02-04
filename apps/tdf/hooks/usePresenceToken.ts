@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext } from 'react';
 import { Contract } from 'ethers';
-import { WalletState } from 'closer/contexts/wallet';
+import { WalletState } from 'closer';
 import { getContract, getCurrentNetwork } from '../utils/abiLoader';
 
 export const usePresenceToken = () => {

@@ -40,8 +40,6 @@ interface Props extends BaseBookingParams {
 
 const BookingRulesPage = ({
   booking,
-  listing,
-  event,
   error,
   bookingConfig,
   bookingRules,
@@ -50,8 +48,6 @@ const BookingRulesPage = ({
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-
-  console.log('bookingRules=', bookingRules);
 
   const isBookingEnabled =
     bookingConfig?.enabled &&

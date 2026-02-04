@@ -76,8 +76,7 @@ const Summary = ({
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
-  const { STAY_BOOKING_ALLOWED_PLANS, VISITORS_GUIDE, PLATFORM_NAME } =
-    useConfig();
+  const { STAY_BOOKING_ALLOWED_PLANS, VISITORS_GUIDE } = useConfig();
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
 
@@ -114,7 +113,6 @@ const Summary = ({
     eventFiat,
     total,
     dailyRentalToken,
-    isFriendsBooking,
     duration,
     volunteerInfo,
   } = updatedBooking || booking || {};
@@ -285,9 +283,6 @@ const Summary = ({
     } finally {
       setApiLoading(false);
     }
-
-    console.log('booking?.friendEmails=', booking?.friendEmails);
-    console.log('booking?.isFriendsBooking=', booking?.isFriendsBooking);
   };
 
   if (!isBookingEnabled) {

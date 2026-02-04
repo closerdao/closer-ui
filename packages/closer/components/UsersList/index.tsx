@@ -3,14 +3,16 @@ import Link from 'next/link';
 
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
 
-import { FaUser } from '@react-icons/all-files/fa/FaUser';
-import { FaCheckCircle } from '@react-icons/all-files/fa/FaCheckCircle';
-import { FaClock } from '@react-icons/all-files/fa/FaClock';
-import { FaUserCheck } from '@react-icons/all-files/fa/FaUserCheck';
-import { FaChevronDown } from '@react-icons/all-files/fa/FaChevronDown';
-import { FaChevronUp } from '@react-icons/all-files/fa/FaChevronUp';
-import { FaHome } from '@react-icons/all-files/fa/FaHome';
-import { FaStar } from '@react-icons/all-files/fa/FaStar';
+import {
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Home,
+  Star,
+  User,
+  UserCheck,
+} from 'lucide-react';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useTranslations } from 'next-intl';
@@ -631,7 +633,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                               className="rounded-full"
                             />
                           ) : (
-                            <FaUser className="text-gray-400 w-8 h-8 p-1 bg-gray-100 rounded-full" />
+                            <User className="text-gray-400 w-8 h-8 p-1 bg-gray-100 rounded-full" />
                           )}
                         </div>
                         <div className="flex flex-col min-w-0">
@@ -650,14 +652,14 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                       <div className="flex flex-wrap gap-1.5 items-center justify-start">
                         {user.get('kycPassed') && (
                           <div className="bg-blue-100 flex border px-1.5 py-0.5 gap-1 border-blue-400 rounded items-center" title={t('manage_users_kyc_passed')}>
-                            <FaCheckCircle className="text-blue-600 w-3 h-3" />
+                            <CheckCircle className="text-blue-600 w-3 h-3" />
                             <span className="text-xs text-blue-700">KYC</span>
                           </div>
                         )}
 
                         {vouches && vouches.length > 0 && (
                           <div className="bg-green-100 flex border px-1.5 py-0.5 gap-1 border-green-400 rounded items-center">
-                            <FaUserCheck className="text-green-600 w-3 h-3" />
+                            <UserCheck className="text-green-600 w-3 h-3" />
                             <span className="text-xs text-green-700">{vouches.length}</span>
                           </div>
                         )}
@@ -672,14 +674,14 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
 
                         {presence && presence.get('totalNights') > 0 && (
                           <div className="bg-orange-100 flex border px-1.5 py-0.5 gap-1 border-orange-400 rounded items-center">
-                            <FaHome className="text-orange-600 w-3 h-3" />
+                            <Home className="text-orange-600 w-3 h-3" />
                             <span className="text-xs text-orange-700">{presence.get('totalNights')}n</span>
                           </div>
                         )}
 
                         {citizenDate && (
                           <div className="bg-yellow-100 flex border px-1.5 py-0.5 gap-1 border-yellow-500 rounded items-center">
-                            <FaStar className="text-yellow-600 w-3 h-3" />
+                            <Star className="text-yellow-600 w-3 h-3" />
                             <span className="text-xs text-yellow-700">{t('manage_users_citizen')}</span>
                           </div>
                         )}
@@ -721,9 +723,9 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                           className="p-1.5 hover:bg-gray-100 rounded"
                         >
                           {isExpanded ? (
-                            <FaChevronUp className="w-3 h-3 text-gray-500" />
+                            <ChevronUp className="w-3 h-3 text-gray-500" />
                           ) : (
-                            <FaChevronDown className="w-3 h-3 text-gray-500" />
+                            <ChevronDown className="w-3 h-3 text-gray-500" />
                           )}
                         </button>
                       </div>
@@ -734,18 +736,18 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                         <div className="flex flex-col gap-1.5">
                           <span className="text-gray-500 font-medium">{t('manage_users_account_info')}</span>
                           <div className="flex items-center gap-1 text-gray-700">
-                            <FaClock className="w-3 h-3 text-gray-400" />
+                            <Clock className="w-3 h-3 text-gray-400" />
                             {t('manage_users_joined')}: {dayjs(user.get('created')).format('MMM D, YYYY')}
                           </div>
                           {user.get('lastactive') && (
                             <div className="flex items-center gap-1 text-gray-700">
-                              <FaClock className="w-3 h-3 text-gray-400" />
+                              <Clock className="w-3 h-3 text-gray-400" />
                               {t('manage_users_last_active')}: {dayjs(user.get('lastactive')).fromNow()}
                             </div>
                           )}
                           {citizenDate && (
                             <div className="flex items-center gap-1 text-green-700">
-                              <FaStar className="w-3 h-3 text-green-500" />
+                              <Star className="w-3 h-3 text-green-500" />
                               {t('manage_users_citizen_since')}: {dayjs(citizenDate).format('MMM D, YYYY')}
                             </div>
                           )}
@@ -759,11 +761,11 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                           {presence ? (
                             <>
                               <div className="flex items-center gap-1 text-gray-700">
-                                <FaHome className="w-3 h-3 text-gray-400" />
+                                <Home className="w-3 h-3 text-gray-400" />
                                 {t('manage_users_total_nights')}: {presence.get('totalNights') || 0}
                               </div>
                               <div className="flex items-center gap-1 text-gray-700">
-                                <FaCheckCircle className="w-3 h-3 text-gray-400" />
+                                <CheckCircle className="w-3 h-3 text-gray-400" />
                                 {t('manage_users_total_bookings')}: {presence.get('totalBookings') || 0}
                               </div>
                             </>
@@ -785,7 +787,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                             <div className="flex flex-col gap-1">
                               {vouches.map((vouch: any, idx: number) => (
                                 <div key={idx} className="flex items-center gap-1 text-green-700">
-                                  <FaUserCheck className="w-3 h-3 text-green-500" />
+                                  <UserCheck className="w-3 h-3 text-green-500" />
                                   {vouch.vouchedBy} ({dayjs(vouch.vouchedAt).format('MMM YYYY')})
                                 </div>
                               ))}

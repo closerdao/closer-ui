@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { UnsupportedChainIdError, useWeb3React } from '@web3-react/core';
 import {
@@ -17,9 +17,10 @@ import {
   multiFetcher,
 } from '../../utils/blockchain';
 import { useAuth } from '../auth';
+import { WalletStateContext, WalletDispatchContext } from './hooks';
 
-export const WalletState = createContext();
-export const WalletDispatch = createContext();
+export const WalletState = WalletStateContext;
+export const WalletDispatch = WalletDispatchContext;
 
 const {
   BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
@@ -54,6 +55,7 @@ const injected = new InjectedConnector({
       44787,
       80001,
       421611,
+      11142220,
     ]),
   ],
 });
@@ -84,7 +86,7 @@ export const WalletProvider = ({ children }) => {
   }, [user]);
 
   const [isWalletReady, setIsWalletReady] = useState(false);
-  const isCorrectNetwork = BLOCKCHAIN_NETWORK_ID === chainId;
+  const isCorrectNetwork = Number(BLOCKCHAIN_NETWORK_ID) === Number(chainId);
   const hasSameConnectedAccount =
     user?.walletAddress?.toLowerCase() === account?.toLowerCase();
 

@@ -1,7 +1,7 @@
 import { FC, useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
-import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import { User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
@@ -118,9 +118,9 @@ const UploadPhoto: FC<Props> = ({
       {/* Placeholder when no user photo */}
       {isUserPhoto && !user?.photo && !isPrompt && (
         <div className="group">
-          <FaUser
+          <User
             className={`${
-              isPrompt ? 'text-3xl text-gray-400' : 'text-gray-200 text-8xl'
+              isPrompt ? 'w-8 h-8 text-gray-400' : 'text-gray-200 w-20 h-20'
             }`}
           />
           <UploadPhotoButton
@@ -155,7 +155,7 @@ const UploadPhoto: FC<Props> = ({
       {/* Upload button in prompt mode */}
       {isPrompt && (
         <div className="group">
-          <FaUser className="text-3xl text-gray-400" />
+          <User className="w-8 h-8 text-gray-400" />
           <UploadPhotoButton
             isMinimal={isMinimal}
             isPrompt={isPrompt}

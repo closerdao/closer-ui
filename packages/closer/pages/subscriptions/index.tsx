@@ -32,13 +32,11 @@ interface Props {
 const SubscriptionsPage: NextPage<Props> = ({
   subscriptionsConfig,
   generalConfig,
-  listings,
   error,
 }) => {
   const t = useTranslations();
   const { isAuthenticated, isLoading, user } = useAuth();
   const defaultConfig = useConfig();
-  const { APP_NAME } = defaultConfig;
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 

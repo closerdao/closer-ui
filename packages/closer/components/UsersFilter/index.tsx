@@ -36,7 +36,7 @@ interface Props {
   setSortBy: Dispatch<SetStateAction<string>>;
 }
 
-const UsersFilter = ({ setWhere, setPage, page, sortBy, setSortBy }: Props) => {
+const UsersFilter = ({ setWhere, setPage, page }: Props) => {
   const t = useTranslations();
   const [userRole, setUserRole] = useState('any');
   const [subscriptionTier, setSubscriptionTier] = useState('any');

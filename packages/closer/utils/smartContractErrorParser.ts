@@ -120,3 +120,95 @@ export const extractCoreErrorMessage = (err: any): string => {
 
   return 'An unknown error occurred';
 };
+
+const REVERT_PREFIX = 'execution reverted:';
+const REVERT_PREFIX_LEN = REVERT_PREFIX.length;
+
+function extractRevertReason(raw: string): string {
+  const lower = raw.toLowerCase();
+  const idx = lower.indexOf(REVERT_PREFIX);
+  if (idx === -1) return raw.trim();
+  let reason = raw.slice(idx + REVERT_PREFIX_LEN).trim();
+  const colonIdx = reason.indexOf(':');
+  if (colonIdx !== -1 && reason.slice(0, colonIdx).trim().length < 40) {
+    reason = reason.slice(colonIdx + 1).trim();
+  }
+  const parenClose = reason.indexOf(')');
+  if (reason.startsWith('(') && parenClose !== -1) {
+    reason = reason.slice(parenClose + 1).trim();
+  }
+  return reason || raw.trim();
+}
+
+export type TokenSaleErrorCode =
+  | 'MAX_SUPPLY'
+  | 'INSUFFICIENT_BALANCE'
+  | 'USER_REJECTED'
+  | null;
+
+export interface TokenSaleErrorResult {
+  errorCode: TokenSaleErrorCode;
+  userMessage: string;
+}
+
+export const parseTokenSaleError = (err: any): TokenSaleErrorResult | null => {
+  if (!err || typeof err !== 'object') return null;
+  const reason = err?.reason ?? err?.message ?? '';
+  let str = typeof reason === 'string' ? reason : String(reason);
+  if (err?.code === 'UNPREDICTABLE_GAS_LIMIT' && err?.message && !str.includes('execution reverted')) {
+    str = err.message;
+  }
+  if (!str) return null;
+
+  if (
+    /user denied|user rejected|rejected the request/i.test(str) ||
+    err?.code === 4001
+  ) {
+    return {
+      errorCode: 'USER_REJECTED',
+      userMessage: '',
+    };
+  }
+
+  const lower = str.toLowerCase();
+  if (
+    lower.includes('maxsupply') ||
+    lower.includes('maximum supply reached') ||
+    lower.includes('max supply')
+  ) {
+    return {
+      errorCode: 'MAX_SUPPLY',
+      userMessage: extractRevertReason(str),
+    };
+  }
+
+  if (
+    lower.includes('exceeds balance') ||
+    lower.includes('insufficient') ||
+    lower.includes('transfer amount exceeds')
+  ) {
+    return {
+      errorCode: 'INSUFFICIENT_BALANCE',
+      userMessage: extractRevertReason(str),
+    };
+  }
+
+  if (
+    lower.includes('execution reverted') ||
+    err?.code === 'UNPREDICTABLE_GAS_LIMIT'
+  ) {
+    return {
+      errorCode: null,
+      userMessage: extractRevertReason(str),
+    };
+  }
+
+  if (str.length > 0 && (err?.message || err?.reason)) {
+    return {
+      errorCode: null,
+      userMessage: extractRevertReason(str),
+    };
+  }
+
+  return null;
+};

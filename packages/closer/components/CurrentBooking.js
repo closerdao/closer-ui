@@ -227,10 +227,6 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
     return dayjs(date).format('DD/MM/YYYY');
   };
 
-  const formatTime = (date) => {
-    return dayjs(date).format('HH:mm');
-  };
-
   const getStatusBadge = (status) => {
     const statusColors = {
       paid: 'bg-green-100 text-green-800',

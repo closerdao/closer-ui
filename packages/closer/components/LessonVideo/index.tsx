@@ -2,8 +2,6 @@ import Image from 'next/image';
 
 import { Dispatch, SetStateAction } from 'react';
 
-import { useTranslations } from 'next-intl';
-
 import { cdn } from '../../utils/api';
 import LearnVimeoEmbed from '../LearnVimeoEmbed';
 import LearnYoutubeEmbed from '../LearnYoutubeEmbed';
@@ -28,12 +26,10 @@ const LessonVideo = ({
   isUnlocked,
   setIsVideoLoading,
   isVideoLoading,
-  getAccessUrl,
   canPreview,
   imageUrl,
   isVideoPreview,
 }: Props) => {
-  const t = useTranslations();
   const { platform, embedId } = videoParams;
 
   const handleVideoLoad = () => {

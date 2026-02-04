@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import React, { useEffect, useState } from 'react';
 
-import { FaUser } from '@react-icons/all-files/fa/FaUser';
+import { User } from 'lucide-react';
 import { Button, Heading, priceFormat } from 'closer';
 import { useTranslations } from 'next-intl';
 
@@ -102,7 +102,7 @@ const CustomListing: React.FC<{
                 {!item.imageUrl && settings.isSmallImage && (
                   <div className="px-10 overflow-hidden min-h-[140px]">
                     <div className="rounded-full overflow-hidden bg-white pt-2">
-                      <FaUser className="text-neutral w-full h-full" />
+                      <User className="text-neutral w-full h-full" />
                     </div>
                   </div>
                 )}

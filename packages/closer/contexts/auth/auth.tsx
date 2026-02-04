@@ -11,20 +11,13 @@ import {
 } from 'react';
 
 import axios from 'axios';
-import {
-  Auth,
-  GoogleAuthProvider,
-  getAuth,
-  signInWithPopup,
-  signOut,
-} from 'firebase/auth';
 import Cookies from 'js-cookie';
 import { useTranslations } from 'next-intl';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
+import { signInWithGooglePopup, signOutFirebase } from '../../firebaseLazy';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { auth } from './../../firebaseConfig';
 import { AuthenticationContext, User } from './types';
 
 export const AuthContext = createContext<AuthenticationContext | null>(null);
@@ -246,8 +239,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const logOutGoogle = async () => {
     try {
-      const auth = getAuth();
-      await signOut(auth);
+      await signOutFirebase();
     } catch (error) {
       console.error('Error with Google sign out: ', error);
     }
@@ -280,36 +272,34 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     try {
       setIsGoogleLoading(true);
       setError('');
-      const provider = new GoogleAuthProvider();
 
-      const googleRes = await signInWithPopup(auth as Auth, provider);
-      const idToken = await googleRes.user.getIdToken();
+      const googleRes = await signInWithGooglePopup();
 
       const res = await api.post('/check-user-exists', {
-        email: googleRes.user.email,
+        email: googleRes.email,
       });
       const doesUserExist = res.data.doesUserExist;
 
       if (doesUserExist) {
         await login({
-          email: googleRes.user.email as string,
-          idToken,
+          email: googleRes.email as string,
+          idToken: googleRes.idToken,
           isGoogle: true,
         });
         return { result: 'login' };
       }
       if (!doesUserExist) {
         const referredBy = localStorage.getItem(REFERRAL_ID_LOCAL_STORAGE_KEY);
-        if (!googleRes.user.email) {
+        if (!googleRes.email) {
           setError('Please enter a valid email.');
           return { result: null };
         }
         try {
           const signupRes = await signup({
             isGoogle: true,
-            idToken,
-            email: googleRes.user.email,
-            screenname: googleRes.user.displayName,
+            idToken: googleRes.idToken,
+            email: googleRes.email,
+            screenname: googleRes.displayName,
             ...(referredBy && { referredBy }),
           });
           return signupRes;

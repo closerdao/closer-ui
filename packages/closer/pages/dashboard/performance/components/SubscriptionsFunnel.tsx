@@ -48,13 +48,9 @@ const SubscriptionsFunnel = ({
 }) => {
   const { platform } = usePlatform() as { platform: Platform };
   const t = useTranslations();
-  const { startDate, endDate } = getStartAndEndDate(
-    timeFrame,
-    fromDate,
-    toDate,
-  );
+  const { startDate } = getStartAndEndDate(timeFrame, fromDate, toDate);
 
-  const [error, setError] = useState(null);
+  const [, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const threeMonthsAgo = new Date();

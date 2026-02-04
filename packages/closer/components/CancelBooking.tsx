@@ -29,7 +29,6 @@ interface Props {
 const CancelBooking = ({
   setCancelCompleted,
   bookingId,
-  isMember,
   refundTotal,
   isPolicyLoading,
   policy,
