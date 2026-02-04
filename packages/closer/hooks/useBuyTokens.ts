@@ -3,6 +3,7 @@ import { useCallback, useContext, useEffect, useState } from 'react';
 import { Contract, providers, utils } from 'ethers';
 import { WalletState } from '../contexts/wallet';
 import { useConfig } from './useConfig';
+import { parseTokenSaleError } from '../utils/smartContractErrorParser';
 
 const dataSuffix = getDataSuffix({
   consumer: '0x9B5f6dF2C7A331697Cf2616CA884594F6afDC07d',
@@ -294,6 +295,7 @@ export const useBuyTokens = () => {
     }
     const { DynamicSale } = contracts;
     const amountInWei = utils.parseEther(amount);
+    console.log('buyTokens called', { amount, amountInWei: amountInWei.toString(), contractCall: 'DynamicSale.buy' });
 
     try {
       const txData = DynamicSale.interface.encodeFunctionData('buy', [amountInWei]);
@@ -330,12 +332,18 @@ export const useBuyTokens = () => {
         txHash: receipt.transactionHash,
       };
     } catch (error) {
-      //User rejected transaction
-      console.error('stakeTokens', error);
+      const parsed = parseTokenSaleError(error);
+      if (parsed) {
+        console.error('buyTokens blockchain error:', parsed.userMessage || parsed.errorCode, error);
+      } else {
+        console.error('buyTokens', error);
+      }
       return {
         error,
         success: false,
         txHash: null,
+        errorCode: parsed?.errorCode ?? undefined,
+        userMessage: parsed?.userMessage ?? undefined,
       };
     } finally {
       setPending(false);
@@ -398,10 +406,11 @@ export const useBuyTokens = () => {
       return { error: new Error('Contracts not ready'), success: false };
     }
     const { Ceur, DynamicSale } = contracts;
-    // we add a small buffer to the approval amount to make up for price increases
-    // that might occur after approval
     const bufferFactor = 1.05;
-    const approvalAmount = utils.parseEther((bufferFactor * amount).toString());
+    const approvalAmount = utils.parseEther(
+      (bufferFactor * amount).toString(),
+    );
+    console.log('approveCeur called', { amount, approvalAmount: approvalAmount.toString(), contractCall: 'Ceur.approve' });
 
     try {
       const txData = Ceur.interface.encodeFunctionData('approve', [DynamicSale.address, approvalAmount]);
@@ -430,12 +439,18 @@ export const useBuyTokens = () => {
         txHash: receipt.transactionHash,
       };
     } catch (error) {
-      //User rejected transaction
-      console.error('stakeTokens', error);
+      const parsed = parseTokenSaleError(error);
+      if (parsed) {
+        console.error('approveCeur blockchain error:', parsed.userMessage || parsed.errorCode, error);
+      } else {
+        console.error('approveCeur', error);
+      }
       return {
         error,
         success: false,
         txHash: null,
+        errorCode: parsed?.errorCode ?? undefined,
+        userMessage: parsed?.userMessage ?? undefined,
       };
     } finally {
       setPending(false);

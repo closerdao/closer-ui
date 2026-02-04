@@ -108,7 +108,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     setApiError(null);
     setIsMetamaskLoading(true);
 
-    const { success } = await approveCeur(total);
+    const { success, errorCode, userMessage } = await approveCeur(total);
     if (success) {
       setIsApproved(true);
       (async () => {
@@ -124,7 +124,11 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
         }
       })();
     } else {
-      setWeb3Error(t('token_sale_approval_error'));
+      if (userMessage) {
+        setWeb3Error(t('token_sale_approval_error_reason', { reason: userMessage }));
+      } else {
+        setWeb3Error(t('token_sale_approval_error'));
+      }
     }
     setIsMetamaskLoading(false);
   };
@@ -133,7 +137,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     setWeb3Error(null);
     setApiError(null);
     setIsMetamaskLoading(true);
-    const { success, txHash } = await buyTokens(tokens as string);
+    const { success, txHash, errorCode, userMessage } = await buyTokens(tokens as string);
     if (success) {
       try {
         await api.post('/accounting/token-sales-log', {
@@ -192,7 +196,15 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
         `/token/success?amountOfTokensPurchased=${tokens}&transactionId=${txHash}`,
       );
     } else {
-      setWeb3Error(t('token_sale_buy_error'));
+      if (errorCode === 'MAX_SUPPLY') {
+        setWeb3Error(t('token_sale_buy_error_max_supply'));
+      } else if (errorCode === 'INSUFFICIENT_BALANCE') {
+        setWeb3Error(t('token_sale_buy_error_insufficient_balance'));
+      } else if (userMessage) {
+        setWeb3Error(t('token_sale_buy_error_reason', { reason: userMessage }));
+      } else {
+        setWeb3Error(t('token_sale_buy_error'));
+      }
       setIsMetamaskLoading(false);
     }
   };
