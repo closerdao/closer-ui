@@ -7,7 +7,7 @@
 import { blockchainConfig } from 'closer';
 
 // Define the network type
-type Network = 'celo' | 'alfajores';
+type Network = 'celo' | 'alfajores' | 'celoSepolia';
 
 // Import ABIs for Celo network
 import PresenceTokenCelo from '../abis/celo/PresenceToken.json';
@@ -20,6 +20,12 @@ import CitizenNFTCelo from '../abis/celo/CitizenNFT.json';
 import PresenceTokenAlfajores from '../abis/alfajores/PresenceToken.json';
 import SweatTokenAlfajores from '../abis/alfajores/SweatToken.json';
 import TDFTokenAlfajores from '../abis/alfajores/TDFToken.json';
+
+// Import ABIs for Celo Sepolia network
+import PresenceTokenCeloSepolia from '../abis/celoSepolia/PresenceToken.json';
+import SweatTokenCeloSepolia from '../abis/celoSepolia/SweatToken.json';
+import SweatTokenImplementationCeloSepolia from '../abis/celoSepolia/SweatToken_Implementation.json';
+import TDFTokenCeloSepolia from '../abis/celoSepolia/TDFToken.json';
 
 // Define ABI collections for each network
 const celoAbis = {
@@ -36,10 +42,18 @@ const alfajoresAbis = {
   TDFToken: TDFTokenAlfajores,
 };
 
+const celoSepoliaAbis = {
+  PresenceToken: PresenceTokenCeloSepolia,
+  SweatToken: SweatTokenCeloSepolia,
+  SweatTokenImplementation: SweatTokenImplementationCeloSepolia,
+  TDFToken: TDFTokenCeloSepolia,
+};
+
 // Cache for loaded ABIs to avoid repeated imports
 const abiCache: Record<string, Record<string, any>> = {
   celo: {},
-  alfajores: {}
+  alfajores: {},
+  celoSepolia: {}
 };
 
 /**
@@ -47,7 +61,7 @@ const abiCache: Record<string, Record<string, any>> = {
  */
 export const getCurrentNetwork = (): Network => {
   const network = process.env.NEXT_PUBLIC_NETWORK;
-  return (network === 'celo' || network === 'alfajores') ? network as Network : 'celo';
+  return (network === 'celo' || network === 'alfajores' || network === 'celoSepolia') ? network as Network : 'celo';
 };
 
 /**
@@ -56,9 +70,9 @@ export const getCurrentNetwork = (): Network => {
  * @returns An array of contract names
  */
 export const getContractNames = (network: Network = getCurrentNetwork()): string[] => {
-  return network === 'celo' 
-    ? Object.keys(celoAbis)
-    : Object.keys(alfajoresAbis);
+  if (network === 'celo') return Object.keys(celoAbis);
+  if (network === 'celoSepolia') return Object.keys(celoSepoliaAbis);
+  return Object.keys(alfajoresAbis);
 };
 
 /**
@@ -73,8 +87,7 @@ export const getAbi = (contractName: string, network: Network = getCurrentNetwor
     return abiCache[network][contractName];
   }
 
-  // Get the ABI from the appropriate collection
-  const abiCollection = network === 'celo' ? celoAbis : alfajoresAbis;
+  const abiCollection = network === 'celo' ? celoAbis : network === 'celoSepolia' ? celoSepoliaAbis : alfajoresAbis;
   const abi = abiCollection[contractName as keyof typeof abiCollection];
   
   if (abi) {
@@ -118,7 +131,7 @@ export const getContract = (contractName: string, network: Network = getCurrentN
   const abi = getAbi(contractName, network);
   
   // Special handling for SweatToken - use implementation ABI on Celo network
-  if (network === 'celo' && contractName === 'SweatToken') {
+  if ((network === 'celo' || network === 'celoSepolia') && contractName === 'SweatToken') {
     const proxyAbi = getAbi('SweatToken', network);
     const implementationAbi = getAbi('SweatTokenImplementation', network);
     

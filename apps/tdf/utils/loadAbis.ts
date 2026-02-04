@@ -7,7 +7,7 @@ import path from 'path';
  * @returns An object containing all ABIs for the specified network
  */
 export const loadAllAbis = (network = 'celo') => {
-  const validNetworks = ['celo', 'alfajores'];
+  const validNetworks = ['celo', 'alfajores', 'celoSepolia'];
   const networkToUse = validNetworks.includes(network) ? network : 'celo';
   
   const abiPath = path.join(process.cwd(), 'abis', networkToUse);
@@ -46,7 +46,7 @@ export const loadAllAbis = (network = 'celo') => {
  * @returns The ABI for the specified contract
  */
 export const getAbi = (contractName: string, network = 'celo') => {
-  const validNetworks = ['celo', 'alfajores'];
+  const validNetworks = ['celo', 'alfajores', 'celoSepolia'];
   const networkToUse = validNetworks.includes(network) ? network : 'celo';
   
   const abiPath = path.join(process.cwd(), 'abis', networkToUse, `${contractName}.json`);
@@ -66,7 +66,7 @@ export const getAbi = (contractName: string, network = 'celo') => {
  * @returns An array of contract names
  */
 export const getContractNames = (network = 'celo') => {
-  const validNetworks = ['celo', 'alfajores'];
+  const validNetworks = ['celo', 'alfajores', 'celoSepolia'];
   const networkToUse = validNetworks.includes(network) ? network : 'celo';
   
   const abiPath = path.join(process.cwd(), 'abis', networkToUse);

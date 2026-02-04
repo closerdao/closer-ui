@@ -9,7 +9,7 @@ const dataSuffix = getDataSuffix({
   providers: ['0x0423189886d7966f0dd7e7d256898daeee625dca','0xc95876688026be9d6fa7a7c33328bd013effa2bb','0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8'],
 })
 
-const RPC_ENDPOINTS = {
+const RPC_ENDPOINTS: Record<string, string[]> = {
   celo: [
     'https://forno.celo.org',
     'https://rpc.ankr.com/celo',
@@ -18,6 +18,10 @@ const RPC_ENDPOINTS = {
   alfajores: [
     'https://alfajores-forno.celo-testnet.org',
     'https://celo-alfajores.infura.io',
+  ],
+  celoSepolia: [
+    'https://forno.celo-sepolia.celo-testnet.org',
+    'https://rpc.ankr.com/celo_sepolia',
   ],
 };
 
@@ -45,7 +49,11 @@ const getReadOnlyContractInstance = async (address: string, abi: any) => {
   }
 
   const promise = (async () => {
-    const endpoints = RPC_ENDPOINTS[network as keyof typeof RPC_ENDPOINTS];
+    const endpoints = RPC_ENDPOINTS[network];
+    if (!endpoints || !Array.isArray(endpoints)) {
+      contractInstancePromises.delete(cacheKey);
+      throw new Error(`No RPC endpoints configured for network: ${network}`);
+    }
     let workingProvider: providers.JsonRpcProvider | null = null;
 
     if (providerCache.has(network)) {
@@ -360,8 +368,13 @@ export const useBuyTokens = () => {
       const amountInWei = utils.parseEther(amount);
       const { totalCost } = await readOnlyDynamicSale.calculateTotalCost(amountInWei);
       return parseFloat(utils.formatEther(totalCost));
-    } catch (error) {
-      console.error('Error in getTotalCostWithoutWallet:', error);
+    } catch (error: any) {
+      const message = error?.reason || error?.message || String(error);
+      if (message.includes('totalSupply too low')) {
+        console.error('DynamicSale not yet active:', message);
+      } else {
+        console.error('Error in getTotalCostWithoutWallet:', error);
+      }
       return 0;
     } finally {
       setPending(false);

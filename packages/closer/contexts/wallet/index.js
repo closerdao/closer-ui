@@ -55,6 +55,7 @@ const injected = new InjectedConnector({
       44787,
       80001,
       421611,
+      11142220,
     ]),
   ],
 });
@@ -85,7 +86,7 @@ export const WalletProvider = ({ children }) => {
   }, [user]);
 
   const [isWalletReady, setIsWalletReady] = useState(false);
-  const isCorrectNetwork = BLOCKCHAIN_NETWORK_ID === chainId;
+  const isCorrectNetwork = Number(BLOCKCHAIN_NETWORK_ID) === Number(chainId);
   const hasSameConnectedAccount =
     user?.walletAddress?.toLowerCase() === account?.toLowerCase();
 
