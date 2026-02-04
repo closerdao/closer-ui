@@ -25,7 +25,7 @@ const EventPhoto = ({
 }: {
   event: any;
   photo: unknown;
-  cdn: string;
+  cdn: string | undefined;
   isAuthenticated: boolean;
   user: any;
   setPhoto: (id: string | null) => void;

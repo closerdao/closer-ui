@@ -30,7 +30,7 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
   } = volunteer || {};
 
   const { user, isAuthenticated } = useAuth();
-  const [photo, setPhoto] = useState(volunteer && volunteerPhoto);
+  const [photo, setPhoto] = useState<string | null>(volunteer?.photo ?? null);
   const hasStewardRole = user?.roles?.includes('steward');
   if (!volunteer) {
     return null;

@@ -66,7 +66,7 @@ const EventPage = ({
 
   const isEventsEnabled = eventsConfig?.enabled !== false;
 
-  const [photo, setPhoto] = useState(event && event.photo);
+  const [photo, setPhoto] = useState<string | null>(event?.photo ?? null);
   const [password, setPassword] = useState('');
   const [attendees, setAttendees] = useState(event && (event.attendees || []));
   const [isShowingEvent, setIsShowingEvent] = useState(true);

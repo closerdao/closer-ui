@@ -24,7 +24,7 @@ interface EventPhotoUploadSectionProps {
   event: any;
   photo: unknown;
   setPhoto: (id: string | null) => void;
-  cdn: string;
+  cdn: string | undefined;
   canEditEvent: boolean;
   isAuthenticated: boolean;
   user: any;
