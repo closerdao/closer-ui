@@ -62,10 +62,6 @@ const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
   //   router.push('/bookings/create');
   // };
 
-  const goBack = () => {
-    router.push('/');
-  };
-
   if (error) {
     return <PageError error={error} />;
   }

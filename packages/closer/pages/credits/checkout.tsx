@@ -41,7 +41,6 @@ const CreditsCheckoutPage: NextPage<Props> = ({
   apiError,
 }) => {
   const t = useTranslations();
-  const CREDIT_PACKAGES = ['30', '90', '180'];
   const router = useRouter();
 
   const isCreditPaymentEnabled =

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useContext } from 'react';
 
 import { PromptGetInTouchContext } from 'closer/components/PromptGetInTouchContext';
-import { GeneralConfig, api, useConfig } from 'closer';
+import { GeneralConfig, api } from 'closer';
 import { parseMessageFromError } from 'closer/utils/common';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 
@@ -14,14 +14,10 @@ interface Props {
   generalConfig: GeneralConfig | null;
 }
 
-const PricingPage = ({ generalConfig }: Props) => {
+const PricingPage = ({}: Props) => {
   const { setIsOpen } = useContext(PromptGetInTouchContext) as {
     setIsOpen: (open: boolean) => void;
   };
-
-  const defaultConfig = useConfig();
-  const PLATFORM_NAME =
-    generalConfig?.platformName || defaultConfig.platformName;
 
   const plans = [
     {

@@ -1,15 +1,12 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { NextPageContext } from 'next';
-import { useTranslations } from 'next-intl';
 
 import { loadLocaleData } from '../utils/locale.helpers';
 
 const SITE_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth';
 
 const RoadmapPage = () => {
-  const t = useTranslations();
-
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Article',

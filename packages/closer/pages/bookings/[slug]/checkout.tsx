@@ -408,42 +408,6 @@ const Checkout = ({
     }
   };
 
-  const handleFriendsBookingPayNow = async () => {
-    try {
-      setProcessing(true);
-      setPaymentError(null);
-
-      // Process payment normally
-      if (useTokens && rentalToken && rentalToken?.val > 0) {
-        const tokenStakingResult = await payTokens(
-          _id,
-          dailyRentalToken?.val,
-          stakeTokens,
-          checkContract,
-          user?.email,
-        );
-
-        const { error } = tokenStakingResult || {};
-        if (error) {
-          setProcessing(false);
-          setPaymentError(error);
-          return;
-        }
-      }
-
-      // Update booking to mark as paid by member
-      await api.post(`/bookings/${_id}/friends-payment`, {
-        paidByMember: true,
-      });
-
-      onSuccess();
-    } catch (error) {
-      setPaymentError(parseMessageFromError(error));
-    } finally {
-      setProcessing(false);
-    }
-  };
-
   const handleFriendsBookingSendToFriend = async () => {
     try {
       setProcessing(true);

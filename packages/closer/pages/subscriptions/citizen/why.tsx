@@ -210,10 +210,6 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
     setApplication((prev) => ({ ...prev, [key]: value }));
   };
 
-  const goBack = () => {
-    router.push('/citizenship/');
-  };
-
   const handleNext = async () => {
     try {
       await platform.user.patch(user?._id || '', {

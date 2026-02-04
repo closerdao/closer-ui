@@ -31,7 +31,7 @@ const TokenSalesDashboardPage = ({
   const { hasAccess } = useRBAC();
   const { platform }: any = usePlatform();
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  const [, setIsLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('paid');
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -47,7 +47,6 @@ const TokenSalesDashboardPage = ({
 
   const sales = platform?.sale?.find(filterParams);
   const totalSales = platform?.sale?.findCount(filterParams);
-  const loading = platform?.sale?.areLoading(filterParams);
 
   const loadData = async (
     page: number = currentPage,

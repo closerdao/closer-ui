@@ -31,7 +31,6 @@ interface Props {
 
 const HomePage = ({ generalConfig, bookingSettings }: Props) => {
   const t = useTranslations();
-  const { isAuthenticated } = useAuth();
   const router = useRouter();
 
   const { APP_NAME, FAQS_GOOGLE_SHEET_ID } = useConfig() || {};

@@ -3,7 +3,7 @@ import Head from 'next/head';
 import { useContext } from 'react';
 
 import { PromptGetInTouchContext } from 'closer/components/PromptGetInTouchContext';
-import { GeneralConfig, api, useConfig } from 'closer';
+import { GeneralConfig, api } from 'closer';
 import { parseMessageFromError } from 'closer/utils/common';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 
@@ -13,14 +13,10 @@ interface Props {
   generalConfig: GeneralConfig | null;
 }
 
-const AgentPage = ({ generalConfig }: Props) => {
+const AgentPage = ({}: Props) => {
   const { setIsOpen } = useContext(PromptGetInTouchContext) as {
     setIsOpen: (open: boolean) => void;
   };
-
-  const defaultConfig = useConfig();
-  const PLATFORM_NAME =
-    generalConfig?.platformName || defaultConfig.platformName;
 
   return (
     <div className="bg-black text-white min-h-screen">

@@ -234,7 +234,7 @@ const Events = ({ generalConfig, eventsConfig }: Props) => {
             {/* Timeline line */}
             <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-300"></div>
             
-            {upcomingEventsByMonth.map((monthGroup, monthIndex) => (
+            {upcomingEventsByMonth.map((monthGroup) => (
               <div key={monthGroup.monthKey} className="relative mb-12">
                 {/* Month circle */}
                 <div className="absolute left-4 top-0 w-4 h-4 bg-primary rounded-full border-4 border-white shadow-md z-10"></div>

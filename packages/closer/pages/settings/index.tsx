@@ -236,7 +236,7 @@ const SettingsPage = ({
   const [phoneSaving, setPhoneSaving] = useState<boolean | null>(null);
   const [emailSaved, setEmailSaved] = useState<boolean | null>(null);
   const [hasSaved, setHasSaved] = useState(false);
-  const [showSaveSuccess, setShowSaveSuccess] = useState(false); // For non-auto-saving inputs
+  const [, setShowSaveSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>('profile');
   const { platform } = usePlatform() as any;
   const [countries, setCountries] = useState<
@@ -411,10 +411,7 @@ const SettingsPage = ({
 
             setHasSaved(false);
             console.log('[saveUserData] debounced payload:', debouncedPayload);
-            const result = await platform.user.patch(
-              user?._id,
-              debouncedPayload,
-            );
+            await platform.user.patch(user?._id, debouncedPayload);
             await refetchUser();
             const updatedUserResponse = await api.get('/mine/user');
             const updatedUser = updatedUserResponse?.data?.results as
@@ -442,7 +439,7 @@ const SettingsPage = ({
       try {
         setHasSaved(false);
         console.log('[saveUserData] payload:', payload);
-        const result = await platform.user.patch(user?._id, payload);
+        await platform.user.patch(user?._id, payload);
         await refetchUser();
         const updatedUserResponse = await api.get('/mine/user');
         const updatedUser = updatedUserResponse?.data?.results as

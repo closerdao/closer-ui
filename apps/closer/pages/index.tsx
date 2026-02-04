@@ -9,7 +9,7 @@ import { CommunityMap } from '@/components';
 import CloserEmailCollector from 'closer/components/CloserEmailCollector';
 import { PromptGetInTouchContext } from 'closer/components/PromptGetInTouchContext';
 
-import { GeneralConfig, api, useConfig } from 'closer';
+import { GeneralConfig, api } from 'closer';
 import { parseMessageFromError } from 'closer/utils/common';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 
@@ -20,14 +20,10 @@ interface Props {
   generalConfig: GeneralConfig | null;
 }
 
-const HomePage = ({ generalConfig }: Props) => {
+const HomePage = ({}: Props) => {
   const { setIsOpen } = useContext(PromptGetInTouchContext) as {
     setIsOpen: (open: boolean) => void;
   };
-
-  const defaultConfig = useConfig();
-  const PLATFORM_NAME =
-    generalConfig?.platformName || defaultConfig.platformName;
 
   const visionRef = useRef<HTMLElement>(null);
   const featuresRef = useRef<HTMLElement>(null);

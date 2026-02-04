@@ -30,7 +30,7 @@ interface Props {
   blogConfig: BlogConfig | null;
 }
 
-const Search = ({ articles, error, keyword, tags, authors, blogConfig }: Props) => {
+const Search = ({ articles, keyword, tags, authors, blogConfig }: Props) => {
   const t = useTranslations();
 
   const isBlogEnabled = blogConfig?.enabled !== false;

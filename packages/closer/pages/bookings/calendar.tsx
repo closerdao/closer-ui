@@ -31,7 +31,7 @@ const BookingsCalendarPage = ({
   bookingConfig: BookingConfig;
 }) => {
   const t = useTranslations();
-  const { enabledConfigs, TIME_ZONE } = useConfig();
+  const { enabledConfigs } = useConfig();
   const { user } = useAuth();
   const { platform }: any = usePlatform();
 
@@ -143,7 +143,6 @@ const BookingsCalendarPage = ({
           }
         });
       } else {
-        const assignmentKey = `${listingId}-${booking.start}`;
         const lastAssigned = unitAssignments.get(listingId) ?? -1;
         const nextUnit = (lastAssigned + 1) % units.length;
         unitAssignments.set(listingId, nextUnit);

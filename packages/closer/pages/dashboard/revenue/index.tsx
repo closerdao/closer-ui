@@ -29,14 +29,6 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
   const router = useRouter();
   const { time_frame } = router.query;
 
-  const isTokenEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
-
-  const areSubscriptionsEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
-
-  const isCitizenshipEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
-
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';

@@ -81,7 +81,7 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
     'accounting',
     'admin',
   ]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [, setIsLoading] = useState(false);
   const [hasConfigUpdated, setHasConfigUpdated] = useState(false);
   const isBookingEnabled =
     bookingConfig?.enabled &&

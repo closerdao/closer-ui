@@ -108,7 +108,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     setApiError(null);
     setIsMetamaskLoading(true);
 
-    const { success, error } = await approveCeur(total);
+    const { success } = await approveCeur(total);
     if (success) {
       setIsApproved(true);
       (async () => {
@@ -133,7 +133,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     setWeb3Error(null);
     setApiError(null);
     setIsMetamaskLoading(true);
-    const { success, txHash, error } = await buyTokens(tokens as string);
+    const { success, txHash } = await buyTokens(tokens as string);
     if (success) {
       try {
         await api.post('/accounting/token-sales-log', {

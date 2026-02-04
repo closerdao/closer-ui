@@ -46,7 +46,7 @@ const prepareDefaultConfig = () => {
   const general =
     configDescription.find((config) => config.slug === 'general')?.value ?? {};
   const transformedObject = Object.entries(general).reduce(
-    (acc, [key, value]) => {
+    (acc, [key]) => {
       return { ...acc, [key]: '' };
     },
     {},

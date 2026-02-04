@@ -40,8 +40,6 @@ interface Props extends BaseBookingParams {
 
 const BookingRulesPage = ({
   booking,
-  listing,
-  event,
   error,
   bookingConfig,
   bookingRules,

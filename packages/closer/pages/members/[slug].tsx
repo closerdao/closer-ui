@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import React, { FormEvent, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import CitizenSubscriptionProgress from '../../components/CitizenSubscriptionProgress';
 import ConnectedWallet from '../../components/ConnectedWallet';
@@ -125,23 +125,6 @@ const MemberPage = ({
       })();
     }
   }, [currentUser, isLoading]);
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    try {
-      const { data } = await platform.user.patch(currentUser?._id, {
-        links: [...links, { name: linkName, url: linkUrl }],
-      });
-      setLinks(data.links);
-      setLinkName('');
-      setLinkUrl('');
-      toggleShowForm(!showForm);
-      setErrors(null);
-    } catch (err: unknown) {
-      const error = parseMessageFromError(err);
-      setErrors(error);
-    }
-  };
 
   const deleteLink = async (link: UserLink) => {
     try {

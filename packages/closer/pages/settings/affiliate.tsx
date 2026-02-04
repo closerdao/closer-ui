@@ -18,7 +18,6 @@ import { useTranslations } from 'next-intl';
 import PageNotAllowed from '../401';
 import { useAuth } from '../../contexts/auth';
 import { User } from '../../contexts/auth/types';
-import { useConfig } from '../../hooks/useConfig';
 import { calculateAffiliateRevenue } from '../../utils/affiliate.utils';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import { getStartAndEndDate } from '../../utils/performance.utils';
@@ -31,10 +30,6 @@ const AffiliatePage = ({
   const t = useTranslations();
   const { platform }: any = usePlatform() || {};
   const { user } = useAuth() || {};
-  const config = useConfig();
-  const { SEMANTIC_URL } = config || {};
-
-  const [copied, setCopied] = useState<null | number>(null);
   const router = useRouter();
   const { time_frame } = router.query;
 
@@ -167,25 +162,6 @@ const AffiliatePage = ({
     tokenSaleRevenue = 0,
     financedTokenRevenue = 0,
   } = calculateAffiliateRevenue(referralCharges) || {};
-
-  const copyToClipboard = (link: string, index: number) => {
-    if (!navigator?.clipboard) {
-      console.error('Clipboard API not available');
-      return;
-    }
-
-    navigator.clipboard.writeText(link).then(
-      () => {
-        setCopied(index);
-        setTimeout(() => {
-          setCopied(null);
-        }, 2000);
-      },
-      (err) => {
-        console.error('Failed to copy', err?.message || 'Unknown error');
-      },
-    );
-  };
 
   const loadData = async () => {
     if (!platform) return;

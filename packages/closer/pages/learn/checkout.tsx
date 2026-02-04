@@ -82,7 +82,7 @@ const LearnCheckout = ({ error, lesson, paymentConfig }: Props) => {
 };
 
 LearnCheckout.getInitialProps = async (context: NextPageContext) => {
-  const { query, req } = context;
+  const { query } = context;
   try {
     const [lessonRes, paymentConfigRes, messages] = await Promise.all([
       api.get(`/lesson/${query.lessonId}`).catch(() => {

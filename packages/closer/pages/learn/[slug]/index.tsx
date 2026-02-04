@@ -94,7 +94,6 @@ const LessonPage = ({
     new Date(user?.subscription?.validUntil || '') > new Date();
 
   const isAdmin = user?.roles.includes('admin');
-  const isContentCreator = user?.roles.includes('content-creator');
 
   const canViewLessons = Boolean(
     (isSubscriber && lesson?.access?.includes('subscription-any')) ||

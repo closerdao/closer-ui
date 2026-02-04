@@ -23,30 +23,6 @@ import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-// Convert timezone-aware datetime to UTC for database storage
-const convertToUTC = (
-  dateTime: string | Date | null,
-  timeZone: string,
-): string | null => {
-  if (!dateTime || !timeZone) return null;
-
-  // Parse the datetime in the specified timezone and convert to UTC
-  const zonedDateTime = dayjs.tz(dateTime, timeZone);
-  return zonedDateTime.utc().toISOString();
-};
-
-// Convert UTC datetime to timezone-aware datetime for display
-const convertFromUTC = (
-  utcDateTime: string | Date | null,
-  timeZone: string,
-): string | null => {
-  if (!utcDateTime || !timeZone) return null;
-
-  // Parse UTC datetime and convert to the specified timezone
-  const utcDate = dayjs.utc(utcDateTime);
-  return utcDate.tz(timeZone).format('YYYY-MM-DDTHH:mm:ss');
-};
-
 interface EventsConfig {
   enabled: boolean;
 }

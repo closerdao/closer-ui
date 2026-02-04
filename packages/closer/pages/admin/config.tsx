@@ -1,6 +1,6 @@
 import Head from 'next/head';
 
-import { ChangeEvent, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 
 import ArrayConfig from '../../components/ArrayConfig';
 import AdminLayout from '../../components/Dashboard/AdminLayout';
@@ -45,7 +45,7 @@ interface Props {
   bookingConfig: BookingConfig;
 }
 
-const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
+const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
   const { platformAllowedConfigs } = useConfig() || {};
@@ -116,11 +116,6 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
   const [errors, setErrors] = useState<{
     [key: string]: string | null | undefined | any;
   }>({});
-
-  const currentConfig = useMemo(
-    () => updatedConfigs.find((config) => config.slug === selectedConfig),
-    [updatedConfigs, selectedConfig],
-  );
 
   const arrayConfigsSchema =
     updatedConfigs
@@ -458,7 +453,7 @@ const ConfigPage = ({ defaultEmailsConfig, error, bookingConfig }: Props) => {
                 Object.entries(
                   updatedConfigs.find((config) => config.slug === 'general')
                     ?.value ?? {},
-                ).map(([key, value]) => {
+                ).map(([key]) => {
                   const currentValue: string | number | boolean | any[] =
                     updatedConfigs.find(
                       (config) => config.slug === selectedConfig,

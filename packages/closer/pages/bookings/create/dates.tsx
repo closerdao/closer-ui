@@ -526,7 +526,7 @@ const DatesSelector = ({
                       new Date(a.get('start')).getTime() -
                       new Date(b.get('start')).getTime(),
                   )
-                  .map((booking: any, index: number) => (
+                  .map((booking: any) => (
                     <li
                       key={booking.get('_id')}
                       className="text-blue-700 text-sm"

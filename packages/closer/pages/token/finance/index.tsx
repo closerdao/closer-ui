@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import CitizenFinanceTokens from '../../../components/CitizenFinanceTokens';
 import PageError from '../../../components/PageError';
@@ -12,7 +12,6 @@ import { useTranslations } from 'next-intl';
 
 import { SUBSCRIPTION_CITIZEN_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
-import { WalletState } from '../../../contexts/wallet';
 import { useConfig } from '../../../hooks/useConfig';
 import { CitizenshipConfig, GeneralConfig } from '../../../types';
 import {
@@ -71,8 +70,6 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
-
-  const { balanceTotal } = useContext(WalletState);
 
   useEffect(() => {
     if (!isLoading && !user) {

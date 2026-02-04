@@ -1,14 +1,11 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
-
 
 import Heading from '../components/ui/Heading';
 
 import { loadLocaleData } from '../utils/locale.helpers';
 
 const Page404 = ({ error }: { error?: string }) => {
-  const router = useRouter();
 
   // useEffect(() => {
   //   router.push('/404');
