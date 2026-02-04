@@ -135,8 +135,10 @@ const DisplayPrice = ({
       if (isEditMode && isTotalPrice) {
         return (
           <span>
-            {priceFormat(tokenPrice)} +{' '}
-            {priceFormat({ val: totalFiat?.val, cur: totalFiat?.cur })}
+            {priceFormat(tokenPrice)}
+            {totalFiat?.val ? (
+              <> + {priceFormat({ val: totalFiat.val, cur: totalFiat.cur })}</>
+            ) : null}
           </span>
         );
       }
@@ -144,23 +146,29 @@ const DisplayPrice = ({
       if (isEditMode && isAccommodationPrice) {
         return (
           <span>
-            {priceFormat(tokenPrice)}{' '}
-            + {priceFormat({ val: rentalFiat?.val, cur: rentalFiat?.cur })}
+            {priceFormat(tokenPrice)}
+            {rentalFiat?.val ? (
+              <> + {priceFormat({ val: rentalFiat.val, cur: rentalFiat.cur })}</>
+            ) : null}
           </span>
         );
       }
       if (isAccommodationPrice && !isEditMode) {
         return (
           <span>
-            {priceFormat(tokenPrice)}{' '}
-            + {priceFormat({ val: rentalFiat?.val, cur: rentalFiat?.cur })}
+            {priceFormat(tokenPrice)}
+            {rentalFiat?.val ? (
+              <> + {priceFormat({ val: rentalFiat.val, cur: rentalFiat.cur })}</>
+            ) : null}
           </span>
         );
       }
       return (
         <span>
-          {priceFormat(tokenPrice)}{' '}
-          + {priceFormat({ val: totalFiat?.val, cur: totalFiat?.cur })}
+          {priceFormat(tokenPrice)}
+          {totalFiat?.val ? (
+            <> + {priceFormat({ val: totalFiat.val, cur: totalFiat.cur })}</>
+          ) : null}
         </span>
       );
     }

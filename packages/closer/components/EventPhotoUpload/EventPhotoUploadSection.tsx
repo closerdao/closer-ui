@@ -5,20 +5,7 @@ import { ImagePlus } from 'lucide-react';
 import EventPhoto from '../EventPhoto';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-
-function toPhotoId(value: unknown): string | null {
-  if (value == null) return null;
-  if (typeof value === 'string') return value;
-  if (Array.isArray(value) && value.length > 0) {
-    const first = value[0];
-    return typeof first === 'string' ? first : (first as { _id?: string })?._id ?? null;
-  }
-  if (typeof value === 'object' && value !== null && '_id' in value) {
-    const id = (value as { _id: unknown })._id;
-    return typeof id === 'string' ? id : (id as any)?.toString?.() ?? null;
-  }
-  return null;
-}
+import { toPhotoId } from '../../utils/events.helpers';
 
 interface EventPhotoUploadSectionProps {
   event: any;

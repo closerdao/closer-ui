@@ -1,19 +1,6 @@
 import React, { useState } from 'react';
 import Youtube from 'react-youtube-embed';
-
-function toPhotoId(photo: unknown): string | null {
-  if (photo == null) return null;
-  if (typeof photo === 'string') return photo;
-  if (Array.isArray(photo) && photo.length > 0) {
-    const first = photo[0];
-    return typeof first === 'string' ? first : (first as { _id?: string })?._id ?? null;
-  }
-  if (typeof photo === 'object' && photo !== null && '_id' in photo) {
-    const id = (photo as { _id: unknown })._id;
-    return typeof id === 'string' ? id : (id as any)?.toString?.() ?? null;
-  }
-  return null;
-}
+import { toPhotoId } from '../../utils/events.helpers';
 
 const EventPhoto = ({
   event,

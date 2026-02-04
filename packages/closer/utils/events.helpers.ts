@@ -1,5 +1,19 @@
 import { Listing } from '../types';
 
+export function toPhotoId(value: unknown): string | null {
+  if (value == null) return null;
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value) && value.length > 0) {
+    const first = value[0];
+    return typeof first === 'string' ? first : (first as { _id?: string })?._id ?? null;
+  }
+  if (typeof value === 'object' && value !== null && '_id' in value) {
+    const id = (value as { _id: unknown })._id;
+    return typeof id === 'string' ? id : (id as any)?.toString?.() ?? null;
+  }
+  return null;
+}
+
 const isHighSeason = (seasons: any, startDate: any) => {
   const date = new Date(startDate);
   const currentMonth = date.toLocaleString('en-US', { month: 'long' }); // Get current month in string format
