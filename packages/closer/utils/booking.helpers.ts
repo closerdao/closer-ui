@@ -28,6 +28,13 @@ import { reportIssue } from './reporting.utils';
 
 const DEFAULT_TIMEZONE = 'Europe/Berlin';
 
+const STAKING_VERIFICATION_FAILED_MESSAGE =
+  'Token staking could not be verified. Please try again or contact support if the issue persists.';
+
+function isTokenPaymentVerified(res: { data?: { verified?: boolean } }): boolean {
+  return res?.data?.verified !== false;
+}
+
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -532,14 +539,17 @@ export const payTokens = async (
       // Booking already exists on chain - use stored transaction ID if available
       if (existingTransactionId) {
         try {
-          await api.post(`/bookings/${bookingId}/token-payment`, {
+          const res = await api.post(`/bookings/${bookingId}/token-payment`, {
             transactionId: existingTransactionId,
           });
+          if (!isTokenPaymentVerified(res)) {
+            return { error: STAKING_VERIFICATION_FAILED_MESSAGE, success: null };
+          }
           return { success: true, error: null };
         } catch (apiError) {
-          return { 
+          return {
             error: 'Booking exists on chain but could not verify. Please contact support.',
-            success: null 
+            success: null,
           };
         }
       }
@@ -606,14 +616,17 @@ export const payTokens = async (
   if (stakingSuccess?.transactionId === 'existing') {
     if (existingTransactionId) {
       try {
-        await api.post(`/bookings/${bookingId}/token-payment`, {
+        const res = await api.post(`/bookings/${bookingId}/token-payment`, {
           transactionId: existingTransactionId,
         });
+        if (!isTokenPaymentVerified(res)) {
+          return { error: STAKING_VERIFICATION_FAILED_MESSAGE, success: null };
+        }
         return { success: true, error: null };
       } catch (apiError) {
-        return { 
+        return {
           error: 'Booking exists on chain but could not verify. Please contact support.',
-          success: null 
+          success: null,
         };
       }
     }
@@ -670,9 +683,12 @@ export const payTokens = async (
   // Do this BEFORE checkContract - backend will do its own verification
   if (stakingSuccess?.transactionId) {
     try {
-      await api.post(`/bookings/${bookingId}/token-payment`, {
+      const res = await api.post(`/bookings/${bookingId}/token-payment`, {
         transactionId: stakingSuccess.transactionId,
       });
+      if (!isTokenPaymentVerified(res)) {
+        return { error: STAKING_VERIFICATION_FAILED_MESSAGE, success: null };
+      }
       return { success: true, error: null };
     } catch (apiError) {
       await reportIssue(
