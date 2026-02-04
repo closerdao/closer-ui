@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import EditModel from '../../components/EditModel';
+import EditModel, { EditModelPageLayout } from '../../components/EditModel';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -18,13 +18,16 @@ const CreateTask = () => {
       <Head>
         <title>{t('tasks_create_title')}</title>
       </Head>
-      <div className="main-content intro">
+      <EditModelPageLayout
+        title={t('tasks_create_title')}
+        subtitle={t('edit_model_create_intro')}
+      >
         <EditModel
           endpoint={'/task'}
           fields={models.task}
           onSave={(event) => router.push(`/tasks/${event.slug}`)}
         />
-      </div>
+      </EditModelPageLayout>
     </>
   );
 };

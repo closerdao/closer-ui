@@ -1,7 +1,7 @@
 import Head from 'next/head';
 
 import CreateRoleView from '../../components/CreateRoleView';
-import { Heading } from '../../components/ui';
+import { EditModelPageLayout } from '../../components/EditModel';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -22,12 +22,12 @@ const CreateRole = () => {
       <Head>
         <title>{t('roles_create_page_title')}</title>
       </Head>
-      <div>
-        <Heading level={2} className="mb-2">
-          {t('roles_create_page_title')}
-        </Heading>
+      <EditModelPageLayout
+        title={t('roles_create_page_title')}
+        subtitle={t('edit_model_create_intro')}
+      >
         <CreateRoleView />
-      </div>
+      </EditModelPageLayout>
     </>
   );
 };

@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import EditModel from '../../components/EditModel';
+import EditModel, { EditModelPageLayout } from '../../components/EditModel';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -18,13 +18,16 @@ const AddChannel = () => {
       <Head>
         <title>{t('channel_create_title')}</title>
       </Head>
-      <div className="main-content w-full">
+      <EditModelPageLayout
+        title={t('channel_create_title')}
+        subtitle={t('edit_model_create_intro')}
+      >
         <EditModel
           endpoint={'/channel'}
           fields={models.channel}
           onSave={(channel) => router.push(`/channel/${channel.slug}`)}
         />
-      </div>
+      </EditModelPageLayout>
     </>
   );
 };

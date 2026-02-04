@@ -2,8 +2,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 
 import AdminLayout from '../../components/Dashboard/AdminLayout';
-import EditModel from '../../components/EditModel';
-import Heading from '../../components/ui/Heading';
+import EditModel, { EditModelPageLayout } from '../../components/EditModel';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -30,12 +29,16 @@ const CreateListing = ({ bookingConfig }: Props) => {
         <title>{t('listings_create_title')}</title>
       </Head>
       <AdminLayout isBookingEnabled={isBookingEnabled}>
-        <Heading level={2}>{t('listings_create_title')}</Heading>
-        <EditModel
-          endpoint={'/listing'}
-          fields={models.listing}
-          onSave={(listing) => router.push(`/stay/${listing.slug}`)}
-        />
+        <EditModelPageLayout
+          title={t('listings_create_title')}
+          subtitle={t('edit_model_create_intro')}
+        >
+          <EditModel
+            endpoint={'/listing'}
+            fields={models.listing}
+            onSave={(listing) => router.push(`/stay/${listing.slug}`)}
+          />
+        </EditModelPageLayout>
       </AdminLayout>
     </>
   );

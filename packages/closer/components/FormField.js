@@ -34,6 +34,8 @@ const FormField = ({
   max,
   step,
   dynamicField = null,
+  isPrimaryField = false,
+  isSecondary = false,
 }) => {
   const t = useTranslations();
 
@@ -50,10 +52,15 @@ const FormField = ({
     }
   };
 
+  const labelClass = isSecondary
+    ? 'block text-foreground/70 text-xs font-medium mb-1.5'
+    : 'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2';
+  const fieldWrapperClass = isSecondary ? 'mb-4' : 'mb-6';
+
   return (
-    <div className={`form-field w-full mb-6 form-type-${type}`} key={name}>
+    <div className={`form-field w-full ${fieldWrapperClass} form-type-${type}`} key={name}>
       {name !== 'start' && name !== 'end' && (
-        <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2">
+        <label className={labelClass}>
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
@@ -70,17 +77,19 @@ const FormField = ({
               placeholder={placeholder}
               min={min}
               max={max}
-              className={'bg-transparent ' + className}
+              className={`bg-transparent ${isSecondary ? 'text-sm' : ''} ${className || ''}`}
               onChange={(e) => update(name, e.target.value)}
               required={required}
             />
           )}
           {type === 'longtext' && (
-            <RichTextEditor
-              value={objectPath.get(data, name)}
-              placeholder={placeholder}
-              onChange={(value) => update(name, value)}
-            />
+            <div className={isPrimaryField ? 'rich-text-editor-large min-h-[320px]' : ''}>
+              <RichTextEditor
+                value={objectPath.get(data, name)}
+                placeholder={placeholder}
+                onChange={(value) => update(name, value)}
+              />
+            </div>
           )}
           {type === 'currency' && (
             <PriceEditor

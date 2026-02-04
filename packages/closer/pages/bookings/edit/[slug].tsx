@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import EditModel from '../../../components/EditModel';
+import EditModel, { EditModelPageLayout } from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
 
 import { NextPageContext } from 'next';
@@ -44,7 +44,11 @@ const EditEvent = ({ event, bookingConfig }: Props) => {
       <Head>
         <title>{`${t('bookings_edit_slug_title')} - ${event?.name}`}</title>
       </Head>
-      <div className="main-content">
+      <EditModelPageLayout
+        title={`${t('bookings_edit_slug_title')} ${event?.name}`}
+        backHref={event?.slug ? `/events/${event.slug}` : '/bookings'}
+        isEdit
+      >
         <EditModel
           id={event?._id}
           endpoint={'/event'}
@@ -57,7 +61,7 @@ const EditEvent = ({ event, bookingConfig }: Props) => {
           deleteButton="Delete Event"
           onDelete={() => router.push('/')}
         />
-      </div>
+      </EditModelPageLayout>
     </>
   );
 };

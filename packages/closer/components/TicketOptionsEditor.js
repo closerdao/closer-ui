@@ -38,12 +38,12 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
   };
 
   return (
-    <div className="ticket-options flex justify-start items-center flex-wrap">
+    <div className="ticket-options flex justify-start items-start flex-wrap gap-3 overflow-x-hidden max-w-full">
       {options &&
         options.map((option, index) => (
           <div
             key={option._id || option.id || index}
-            className="mr-3 mb-4 card"
+            className="min-w-0 w-full sm:w-auto sm:min-w-[280px] card overflow-hidden"
           >
             <div className="mb-3">
               <label>{t('ticket_options_ticket_name')}</label>
@@ -71,7 +71,7 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
                 min="0"
                 max="10000"
                 step="1"
-                className="w-32"
+                className="w-full max-w-32"
                 value={option.limit}
                 placeholder="Quantity"
                 onChange={(e) => {
@@ -94,7 +94,7 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
                     disclaimer: e.target.value,
                   })
                 }
-                className="textarea"
+                className="textarea min-w-0 max-w-full"
               />
             </div>
             <div className="mb-3">

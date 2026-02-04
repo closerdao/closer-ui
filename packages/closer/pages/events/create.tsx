@@ -1,8 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import EditModel from '../../components/EditModel';
-import Heading from '../../components/ui/Heading';
+import EditModel, { EditModelPageLayout } from '../../components/EditModel';
 import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 
 import { NextPageContext } from 'next';
@@ -52,10 +51,10 @@ const CreateEvent = ({ foodOptions, eventsConfig }: Props) => {
       <Head>
         <title>{t('events_create_title')}</title>
       </Head>
-      <div className="main-content intro">
-        <Heading level={2} className="mb-2">
-          {t('events_create_title')}
-        </Heading>
+      <EditModelPageLayout
+        title={t('events_create_title')}
+        subtitle={t('edit_model_create_intro')}
+      >
         <EditModel
           dynamicField={{
             name: 'foodOptionId',
@@ -65,7 +64,7 @@ const CreateEvent = ({ foodOptions, eventsConfig }: Props) => {
           fields={models.event}
           onSave={(event) => router.push(`/events/${event.slug}`)}
         />
-      </div>
+      </EditModelPageLayout>
     </>
   );
 };

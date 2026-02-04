@@ -1,7 +1,7 @@
 import Head from 'next/head';
 
 import CreateProjectView from '../../components/CreateProjectView';
-import { Heading } from '../../components/ui';
+import { EditModelPageLayout } from '../../components/EditModel';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -33,12 +33,12 @@ const CreateProject = ({ volunteerConfig }: Props) => {
       <Head>
         <title>{t('projects_create_title')}</title>
       </Head>
-      <div>
-        <Heading level={2} className="mb-2">
-          {t('projects_create_title')}
-        </Heading>
+      <EditModelPageLayout
+        title={t('projects_create_title')}
+        subtitle={t('edit_model_create_intro')}
+      >
         <CreateProjectView dynamicField={skillsDynamicField} />
-      </div>
+      </EditModelPageLayout>
     </>
   );
 };

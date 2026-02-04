@@ -81,3 +81,55 @@
 .heading-alt-color h2 {
   color: #205c66;
 }
+
+.rich-text-editor-large .ql-container {
+  min-height: 280px;
+}
+
+.rich-text-editor-large .ql-editor {
+  min-height: 260px;
+}
+
+.wysiwyg-editor .ql-toolbar {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 8px 0 12px;
+}
+
+.wysiwyg-editor .ql-toolbar .ql-stroke {
+  stroke: rgba(0, 0, 0, 0.2);
+}
+
+.wysiwyg-editor .ql-toolbar .ql-fill {
+  fill: rgba(0, 0, 0, 0.3);
+}
+
+.wysiwyg-editor .ql-toolbar button:hover .ql-stroke,
+.wysiwyg-editor .ql-toolbar .ql-picker-label:hover .ql-stroke {
+  stroke: rgba(0, 0, 0, 0.5);
+}
+
+.wysiwyg-editor .ql-toolbar button.ql-active .ql-stroke,
+.wysiwyg-editor .ql-toolbar .ql-picker-label.ql-active .ql-stroke {
+  stroke: rgba(0, 0, 0, 0.6);
+}
+
+.wysiwyg-editor .ql-container {
+  background: transparent;
+  border: none;
+  font-family: inherit;
+}
+
+.wysiwyg-editor .ql-editor {
+  background: transparent;
+  border: none;
+  padding: 12px 0 0;
+  font-size: inherit;
+  line-height: 1.6;
+}
+
+.wysiwyg-editor .ql-editor.ql-blank::before {
+  color: rgba(0, 0, 0, 0.4);
+  font-style: normal;
+}

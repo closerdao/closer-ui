@@ -2,7 +2,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
-import EditModel from '../../../components/EditModel';
+import EditModel, { EditModelPageLayout } from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
 
 import { NextPageContext } from 'next';
@@ -48,10 +48,12 @@ const EditListing = ({ listing, bookingConfig }: Props) => {
         <title>{`${listing.name} - ${t('listings_slug_edit_title')}`}</title>
       </Head>
       <AdminLayout isBookingEnabled={isBookingEnabled}>
-        <Heading level={2}>
-          {t('listings_edit_listing')} <i>{listing.name}</i>
-        </Heading>
-        <EditModel
+        <EditModelPageLayout
+          title={`${t('listings_edit_listing')} ${listing.name}`}
+          backHref={`/stay/${listing.slug}`}
+          isEdit
+        >
+          <EditModel
           id={listing._id}
           endpoint={'/listing'}
           fields={models.listing}
@@ -63,6 +65,7 @@ const EditListing = ({ listing, bookingConfig }: Props) => {
           deleteButton={t('listings_delete_listing')}
           onDelete={() => router.push('/listings')}
         />
+        </EditModelPageLayout>
       </AdminLayout>
     </>
   );

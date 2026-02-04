@@ -1,0 +1,67 @@
+import React, { useState } from 'react';
+import Youtube from 'react-youtube-embed';
+
+function toPhotoId(photo: unknown): string | null {
+  if (photo == null) return null;
+  if (typeof photo === 'string') return photo;
+  if (Array.isArray(photo) && photo.length > 0) {
+    const first = photo[0];
+    return typeof first === 'string' ? first : (first as { _id?: string })?._id ?? null;
+  }
+  if (typeof photo === 'object' && photo !== null && '_id' in photo) {
+    const id = (photo as { _id: unknown })._id;
+    return typeof id === 'string' ? id : (id as any)?.toString?.() ?? null;
+  }
+  return null;
+}
+
+const EventPhoto = ({
+  event,
+  photo,
+  cdn,
+  isAuthenticated,
+  user: _user,
+  setPhoto: _setPhoto,
+}: {
+  event: any;
+  photo: unknown;
+  cdn: string;
+  isAuthenticated: boolean;
+  user: any;
+  setPhoto: (id: string | null) => void;
+}) => {
+  const [imgError, setImgError] = useState(false);
+  const photoId = toPhotoId(photo);
+  const imageUrl = photoId && cdn ? `${cdn}${photoId}-max-lg.jpg` : null;
+
+  return (
+    <div className="relative bg-gray-50">
+      {event && event.recording && isAuthenticated ? (
+        <Youtube id={event.recording} />
+      ) : photoId && imageUrl && !imgError ? (
+        <div className="h-[400px] w-full bg-accent-light rounded-lg overflow-hidden">
+          <img
+            className="object-cover h-full w-full"
+            src={imageUrl}
+            alt={event?.name ?? 'Event'}
+            onError={() => setImgError(true)}
+          />
+        </div>
+      ) : photoId && imgError ? (
+        <div className="h-[400px] w-full bg-neutral-light rounded-lg flex items-center justify-center text-foreground/60">
+          <span className="text-sm">Image unavailable</span>
+        </div>
+      ) : event?.visual ? (
+        <div className="h-[200px]">
+          <img
+            className="object-cover h-full w-full"
+            src={event.visual}
+            alt={event?.name ?? 'Event'}
+          />
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+export default EventPhoto;

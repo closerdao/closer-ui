@@ -1,8 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import EditModel from '../../components/EditModel';
-import Heading from '../../components/ui/Heading';
+import EditModel, { EditModelPageLayout } from '../../components/EditModel';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -31,16 +30,16 @@ const CreateLessonPage = ({ learningHubConfig }: Props) => {
       <Head>
         <title>{t('learn_create_lesson')}</title>
       </Head>
-      <div className="main-content intro">
-        <Heading level={2} className="mb-2">
-          {t('learn_create_lesson')}
-        </Heading>
+      <EditModelPageLayout
+        title={t('learn_create_lesson')}
+        subtitle={t('edit_model_create_intro')}
+      >
         <EditModel
           endpoint={'/lesson'}
           fields={models.lesson}
           onSave={(lesson) => router.push(`/learn/${lesson.slug}`)}
         />
-      </div>
+      </EditModelPageLayout>
     </>
   );
 };

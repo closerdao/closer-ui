@@ -2,7 +2,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
-import EditModel from '../../../components/EditModel';
+import EditModel, { EditModelPageLayout } from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
 
 import { NextPageContext } from 'next';
@@ -47,21 +47,24 @@ const EditFood = ({ food, bookingConfig }: Props) => {
         <title>{`${food.name} - ${t('listings_slug_edit_title')}`}</title>
       </Head>
       <AdminLayout isBookingEnabled={isBookingEnabled}>
-        <Heading level={2}>
-          {t('food_edit_option')} <i>{food.name}</i>
-        </Heading>
-        <EditModel
-          id={food._id}
-          endpoint={'/food'}
-          fields={models.food}
-          onSave={() => router.push('/food')}
-          onUpdate={(name, value, option, actionType) =>
-            onUpdate(name, value, option, actionType)
-          }
-          allowDelete
-          deleteButton={t('food_delete_option')}
-          onDelete={() => router.push('/food')}
-        />
+        <EditModelPageLayout
+          title={`${t('food_edit_option')} ${food.name}`}
+          backHref="/food"
+          isEdit
+        >
+          <EditModel
+            id={food._id}
+            endpoint={'/food'}
+            fields={models.food}
+            onSave={() => router.push('/food')}
+            onUpdate={(name, value, option, actionType) =>
+              onUpdate(name, value, option, actionType)
+            }
+            allowDelete
+            deleteButton={t('food_delete_option')}
+            onDelete={() => router.push('/food')}
+          />
+        </EditModelPageLayout>
       </AdminLayout>
     </>
   );

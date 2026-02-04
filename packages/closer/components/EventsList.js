@@ -57,9 +57,7 @@ const EventsList = ({
       {title && <h3 className={card ? 'card-title' : ''}>{title}</h3>}
       {events && events.count() > 0 ? (
         <div
-          className={`grid gap-8 md:grid-cols-${cols} md:justify-${
-            center ? 'center' : 'start'
-          } ${card ? 'event-body' : ''} ${isListView ? 'grid-cols-1' : ''} `}
+          className={`grid gap-6 md:gap-8 ${cols === 2 ? 'md:grid-cols-2' : cols === 3 ? 'md:grid-cols-3' : 'md:grid-cols-3'} ${center ? 'md:justify-center' : 'md:justify-start'} ${card ? 'event-body' : ''} ${isListView ? 'grid-cols-1' : ''}`}
         >
           {events.map((event) => (
             <EventPreview

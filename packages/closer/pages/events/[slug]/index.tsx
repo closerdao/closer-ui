@@ -6,10 +6,9 @@ import { useEffect, useState } from 'react';
 
 import EventAttendees from '../../../components/EventAttendees';
 import EventDescription from '../../../components/EventDescription';
-import EventPhoto from '../../../components/EventPhoto';
+import EventPhotoUploadSection from '../../../components/EventPhotoUpload';
 import Photo from '../../../components/Photo';
 import SignupModal from '../../../components/SignupModal';
-import UploadPhoto from '../../../components/UploadPhoto';
 import { Button, Card, ErrorMessage, LinkButton } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
@@ -311,54 +310,45 @@ const EventPage = ({
         </div>
       ) : (
         <div className="w-full flex items-center flex-col gap-4">
-          <section className=" w-full flex justify-center max-w-4xl">
-            <div
-              className={`"w-full relative bg-accent-light rounded-md w-full " ${
-                canEditEvent ? ' min-h-[400px] ' : ''
-              }`}
-            >
-              <EventPhoto
+          <section className="w-full flex flex-col items-center max-w-4xl mx-auto gap-4">
+            <div className="w-full">
+              <EventPhotoUploadSection
                 event={event}
-                user={user}
                 photo={photo}
-                cdn={cdn}
-                isAuthenticated={isAuthenticated}
                 setPhoto={setPhoto}
+                cdn={cdn}
+                canEditEvent={canEditEvent ?? false}
+                isAuthenticated={isAuthenticated ?? false}
+                user={user}
               />
-              {canEditEvent && (
-                <div className="absolute right-0 bottom-0 p-8 flex flex-col gap-4 ">
-                  <LinkButton
-                    size="small"
-                    href={event.slug && `/events/${event.slug}/tickets`}
-                  >
-                    {t('event_view_tickets_button')}
-                  </LinkButton>
-                  <LinkButton
-                    size="small"
-                    href={event.slug && `/events/${event.slug}/report`}
-                  >
-                    {t('event_view_report_button') || 'View Report'}
-                  </LinkButton>
-                  <LinkButton
-                    size="small"
-                    href={event.slug && `/events/${event.slug}/edit`}
-                    className="bg-accent text-white rounded-full px-4 py-2 text-center uppercase text-sm"
-                  >
-                    {t('event_edit_event_button')}
-                  </LinkButton>
-
-                  {isAuthenticated && canEditEvent && (
-                    <UploadPhoto
-                      model="event"
-                      isMinimal
-                      id={event._id}
-                      onSave={(ids) => setPhoto(ids[0])}
-                      label={photo ? 'Change photo' : 'Add photo'}
-                    />
-                  )}
-                </div>
-              )}
             </div>
+            {canEditEvent && (
+              <div className="flex flex-wrap gap-3 justify-center w-full px-4">
+                <LinkButton
+                  size="small"
+                  variant="secondary"
+                  href={event.slug && `/events/${event.slug}/tickets`}
+                  className="!w-auto rounded-lg border-gray-200 px-4 py-2 text-sm normal-case"
+                >
+                  {t('event_view_tickets_button')}
+                </LinkButton>
+                <LinkButton
+                  size="small"
+                  variant="secondary"
+                  href={event.slug && `/events/${event.slug}/report`}
+                  className="!w-auto rounded-lg border-gray-200 px-4 py-2 text-sm normal-case"
+                >
+                  {t('event_view_report_button') || 'View Report'}
+                </LinkButton>
+                <LinkButton
+                  size="small"
+                  href={event.slug && `/events/${event.slug}/edit`}
+                  className="!w-auto rounded-lg px-4 py-2 text-sm normal-case"
+                >
+                  {t('event_edit_event_button')}
+                </LinkButton>
+              </div>
+            )}
           </section>
 
           <section className=" w-full flex justify-center">
@@ -370,25 +360,58 @@ const EventPage = ({
                       {event.name}
                     </Heading>
 
-                    <div className="flex gap-2 my-4 items-center">
-                      <p className="text-sm font-medium">
-                        {t('event_organiser')}
-                      </p>
-                      {eventCreator.photo ? (
-                        <Image
-                          src={`${cdn}${eventCreator?.photo}-profile-lg.jpg`}
-                          loading="lazy"
-                          alt={eventCreator?.screenname}
-                          className="rounded-full"
-                          width={20}
-                          height={20}
-                        />
-                      ) : (
-                        <UserIcon className="text-gray-300 w-[20px] h-[20px] rounded-full" />
+                    <div className="flex flex-wrap gap-x-6 gap-y-2 items-baseline my-4">
+                      {start && (
+                        <div className="flex gap-3 items-baseline text-gray-900">
+                          <Image
+                            alt="calendar icon"
+                            src="/images/icons/calendar-icon.svg"
+                            width={20}
+                            height={20}
+                            className="opacity-60"
+                          />
+                          <span className="text-lg md:text-xl font-semibold tracking-tight">
+                            {dayjs(start).format(dateFormat)}
+                            {end &&
+                              Number(duration) <= 24 &&
+                              ` ${dayjs(start).format('HH:mm')}`}
+                            {end &&
+                              Number(duration) > 24 &&
+                              ` – ${dayjs(end).format(dateFormat)}`}
+                            {end &&
+                              Number(duration) <= 24 &&
+                              ` – ${dayjs(end).format('HH:mm')}`}
+                          </span>
+                          {end && end.isBefore(dayjs()) && (
+                            <span className="text-red-500 text-sm font-medium ml-1">
+                              {t('event_event_ended')}
+                            </span>
+                          )}
+                        </div>
                       )}
-                      <p className="text-sm font-medium">
-                        {eventCreator?.screenname}
-                      </p>
+                      <Link
+                        href={`/members/${eventCreator?.slug || eventCreator?._id}`}
+                        className="flex gap-2 items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                      >
+                        <p className="font-medium">
+                          {t('event_organiser')}
+                        </p>
+                        {eventCreator?.photo ? (
+                          <Image
+                            src={`${cdn}${eventCreator?.photo}-profile-lg.jpg`}
+                            loading="lazy"
+                            alt={eventCreator?.screenname}
+                            className="rounded-full"
+                            width={20}
+                            height={20}
+                          />
+                        ) : (
+                          <UserIcon className="text-gray-300 w-[20px] h-[20px] rounded-full" />
+                        )}
+                        <p className="font-medium">
+                          {eventCreator?.screenname}
+                        </p>
+                      </Link>
                     </div>
 
                     <div>
@@ -427,34 +450,6 @@ const EventPage = ({
                   <div className="h-auto fixed z-10 bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px] space-y-4">
                     <Card className="bg-white border border-gray-100 p-4">
                       <div className="space-y-4">
-                        <div className="flex gap-2 items-center">
-                          <Image
-                            alt="calendar icon"
-                            src="/images/icons/calendar-icon.svg"
-                            width={16}
-                            height={16}
-                          />
-                          <div className="text-sm">
-                            <div className="font-semibold">
-                              {start && dayjs(start).format(dateFormat)}
-                              {end &&
-                                Number(duration) <= 24 &&
-                                ` ${dayjs(start).format('HH:mm')}`}
-                              {end &&
-                                Number(duration) > 24 &&
-                                ` - ${dayjs(end).format(dateFormat)}`}
-                              {end &&
-                                Number(duration) <= 24 &&
-                                ` - ${dayjs(end).format('HH:mm')}`}
-                            </div>
-                            {end && end.isBefore(dayjs()) && (
-                              <div className="text-red-500 text-xs">
-                                {t('event_event_ended')}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
                         {event.address && (
                           <div className="flex gap-2 items-center">
                             <Image
@@ -532,77 +527,26 @@ const EventPage = ({
                                 </div>
                               ) : (
                                 event.paid &&
-                                event.ticketOptions.map((ticketOption: any) => {
-                                const availableTickets =
-                                  soldTickets &&
-                                  ticketOption.limit -
-                                  soldTickets.filter(
-                                    (ticket: any) =>
-                                      ticket.option.name === ticketOption.name,
-                                  ).length;
-                                const areTicketsAvailable =
-                                  availableTickets > 9 || ticketOption.limit === 0;
-                                const areTicketsEnding =
-                                  availableTickets > 1 &&
-                                  availableTickets < 10 &&
-                                  ticketOption.limit !== 0;
-                                const areTicketsSoldOut =
-                                  availableTickets === 0 &&
-                                  ticketOption.limit !== 0;
-                                return (
-                                  <div
-                                    key={ticketOption.name}
-                                    className="flex flex-col gap-1"
-                                  >
-                                    <div className="gap-2 sm:gap-0 flex-row flex sm:flex-col bg-accent-light rounded-md px-2 p-0 sm:p-2 items-center ">
-                                      <p className="text-md text-center">
-                                        {ticketOption.name}
-                                      </p>
-                                      <p className="text-md font-bold">
-                                        {priceFormat(ticketOption.price)}
-                                      </p>
-                                      <div>
-                                        <div className="hidden sm:flex">
-                                          {areTicketsSoldOut && (
-                                            <span className="text-xs text-error">
-                                              {t('event_tickets_sold')}
-                                            </span>
-                                          )}
-                                          {areTicketsAvailable && (
-                                            <>
-                                              <span className="text-xs text-success">
-                                                {t('event_tickets_available')}{' '}
-                                                {getDaysTo(end)}{' '}
-                                                {t('event_tickets_available_days')}
-                                              </span>
-                                            </>
-                                          )}
-                                          {areTicketsEnding && (
-                                            <span className="text-xs text-pending">
-                                              {t('event_tickets_last')}
-                                            </span>
-                                          )}
-                                        </div>
-
-                                        {/* {availableTickets === 0 &&
-                                    ticket.limit !== 0 ? (
-                                      <span className="text-xs text-error">
-                                        {t('event_tickets_sold')}
-                                      </span>
-                                    ) : ticket.limit === 0 ? (
-                                      <span className="text-xs text-success">
-                                        {t('event_tickets_available')}
-                                      </span>
-                                    ) : (
-                                      <span className="text-xs text-pending">
-                                        {t('event_tickets_last')}
-                                      </span>
-                                    )} */}
-                                      </div>
+                                (() => {
+                                  const availableOptions = event.ticketOptions.filter((opt: any) => {
+                                    const sold = soldTickets?.filter((t: any) => t.option?.name === opt.name).length || 0;
+                                    return opt.limit === 0 || opt.limit - sold > 0;
+                                  });
+                                  if (availableOptions.length === 0) return null;
+                                  const prices = availableOptions.map((o: any) => o.price ?? 0);
+                                  const minPrice = Math.min(...prices);
+                                  const maxPrice = Math.max(...prices);
+                                  const currency = availableOptions[0]?.currency;
+                                  const priceSummary = minPrice === maxPrice
+                                    ? priceFormat(minPrice, currency)
+                                    : `${priceFormat(minPrice, currency)} – ${priceFormat(maxPrice, currency)}`;
+                                  return (
+                                    <div className="text-sm">
+                                      {t('events_ticket')}{' '}
+                                      <strong>{priceSummary}</strong>
                                     </div>
-                                  </div>
-                                );
-                              })
+                                  );
+                                })()
                               );
                             })()}
                             {durationInDays > 0 &&
