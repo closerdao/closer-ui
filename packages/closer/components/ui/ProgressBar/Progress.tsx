@@ -37,13 +37,19 @@ const Progress: FC<Props> = ({
             const isClickable = Boolean(href && isCompleted);
             const label = getStepLabel(stepId);
 
-            const pillClass = `flex items-center justify-center rounded-full px-2 py-2 min-h-[2.25rem] min-w-0 text-sm font-medium truncate w-full ${
+            const pillClass = `flex items-center justify-center rounded-full px-2 py-2 min-h-[2.25rem] min-w-0 w-full overflow-hidden ${
               isCurrent
                 ? 'bg-accent text-black'
                 : isCompleted
                   ? 'bg-accent/25 text-foreground'
                   : 'bg-neutral-dark/90 text-foreground'
             } ${isClickable ? 'cursor-pointer hover:opacity-90' : ''}`;
+
+            const labelSpan = (
+              <span className="min-w-0 truncate block text-center text-sm font-medium">
+                {label}
+              </span>
+            );
 
             if (isClickable && href) {
               return (
@@ -53,7 +59,7 @@ const Progress: FC<Props> = ({
                   className="flex-1 min-w-0 flex"
                   title={label}
                 >
-                  <span className={pillClass}>{label}</span>
+                  <span className={pillClass}>{labelSpan}</span>
                 </Link>
               );
             }
@@ -63,7 +69,7 @@ const Progress: FC<Props> = ({
                 className="flex-1 min-w-0 flex"
                 title={label}
               >
-                <span className={pillClass}>{label}</span>
+                <span className={pillClass}>{labelSpan}</span>
               </span>
             );
           })}
