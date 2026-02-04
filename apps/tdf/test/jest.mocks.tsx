@@ -24,6 +24,7 @@ Object.defineProperty(window, 'matchMedia', {
 jest.mock('next/image', () => ({
   __esModule: true,
   default: (props: any) => {
-    return <img {...props} />;
+    const { priority, fill, ...imgProps } = props;
+    return <img {...imgProps} />;
   },
 }));

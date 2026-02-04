@@ -334,8 +334,6 @@ const Checkout = ({
               .then((response) => response.data.results),
           ]);
 
-          console.log('areCreditsAvailable===========', areCreditsAvailable);
-          console.log('creditsBalance===========', creditsBalance);
           setCreditsBalance(creditsBalance);
           setCanApplyCredits(areCreditsAvailable && !useTokens);
         } catch (error) {
@@ -726,7 +724,6 @@ const Checkout = ({
       setUpdatedBooking(updatedBookingData);
       return updatedBookingData;
     } catch (error) {
-      console.error('Failed to refetch booking:', error);
       return null;
     }
   };
@@ -1487,7 +1484,6 @@ Checkout.getInitialProps = async (context: NextPageContext) => {
       messages,
     };
   } catch (err) {
-    console.log(err);
     return {
       error: parseMessageFromError(err),
       booking: null,

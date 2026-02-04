@@ -8,7 +8,7 @@ import { ErrorMessage } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
-import dayjs, { duration } from 'dayjs';
+import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -76,7 +76,6 @@ const AccomodationSelector = ({
 
   const normalizedIsFriendsBooking =
     normalizeIsFriendsBooking(isFriendsBooking);
-  console.log('duration=', duration);
   const durationInDays = dayjs(end).diff(dayjs(start), 'day');
 
   const durationName = getBookingRate(durationInDays);
@@ -157,7 +156,6 @@ const AccomodationSelector = ({
 
       router.push(`/bookings/${newBooking._id}/questions`);
     } catch (err) {
-      console.log(err); // TO DO handle error
     } finally {
     }
   };
@@ -339,7 +337,6 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       volunteerId,
     };
   } catch (err: any) {
-    console.log(err);
     return {
       error: err.response?.data?.error || err.message,
       bookingConfig: null,
