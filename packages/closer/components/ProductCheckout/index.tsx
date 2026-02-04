@@ -1,14 +1,11 @@
 import { useRouter } from 'next/router';
 
-import { useState } from 'react';
-
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
 import { useTranslations } from 'next-intl';
 
 import { CloserCurrencies, Price } from '../../types';
-import { ErrorMessage } from '../ui';
 import HeadingRow from '../ui/HeadingRow';
 import ProductCheckoutForm from './ProductCheckoutForm';
 
@@ -26,8 +23,6 @@ const ProductCheckout = ({
   const t = useTranslations();
 
   const router = useRouter();
-
-  const [error, setError] = useState(null);
 
   const buttonDisabled = false;
 
@@ -53,7 +48,6 @@ const ProductCheckout = ({
         <span>{t('bookings_checkout_step_payment_title')}</span>
       </HeadingRow>
 
-      {error && <ErrorMessage error={error} />}
       <Elements stripe={stripe}>
         <ProductCheckoutForm
           productType={productType}

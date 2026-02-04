@@ -15,12 +15,6 @@ interface Props {
 const FinancedTokenProgress = ({ member, activeApplications }: Props) => {
   const t = useTranslations();
 
-  const amountDue =
-    (member?.citizenship?.totalToPayInFiat ?? 0) -
-    (member?.citizenship?.charges?.reduce(
-      (acc, charge) => acc + charge.amount.total.val,
-      0,
-    ) ?? 0);
   return (
     <Card className="w-full text-sm gap-2">
       <Heading level={3}>

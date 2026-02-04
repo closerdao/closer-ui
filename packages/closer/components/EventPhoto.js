@@ -1,7 +1,7 @@
 import React from 'react';
 import Youtube from 'react-youtube-embed';
 
-const EventPhoto = ({ event, user, photo, cdn, isAuthenticated, setPhoto }) => (
+const EventPhoto = ({ event, photo, cdn, isAuthenticated, user: _user, setPhoto: _setPhoto }) => (
   <div className="relative bg-gray-50 ">
     {event && event.recording && isAuthenticated ? (
       <Youtube id={event.recording} />

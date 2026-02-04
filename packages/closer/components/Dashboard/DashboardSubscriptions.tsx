@@ -21,7 +21,7 @@ interface Props {
 const DashboardSubscriptions = ({ timeFrame, fromDate, toDate }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
-  const { TIME_ZONE, TOKEN_PRICE, APP_NAME } = useConfig();
+  const { TIME_ZONE } = useConfig();
 
   const [isLoading, setIsLoading] = useState(false);
 

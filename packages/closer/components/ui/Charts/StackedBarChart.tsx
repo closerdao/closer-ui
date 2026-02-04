@@ -24,12 +24,7 @@ interface CustomPayload {
   value: string | number;
 }
 
-const CustomTooltipContent = ({
-  payload,
-  label,
-  colorOverride,
-  layout,
-}: any) => {
+const CustomTooltipContent = ({ payload, label, layout }: any) => {
   const t = useTranslations();
 
   if (!payload || !Array.isArray(payload)) return null;

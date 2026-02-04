@@ -51,7 +51,6 @@ const CheckoutForm = ({
   buttonDisabled,
   useCredits,
   dailyTokenValue,
-  bookingNights,
   status,
   refetchBooking,
   isAdditionalFiatPayment,

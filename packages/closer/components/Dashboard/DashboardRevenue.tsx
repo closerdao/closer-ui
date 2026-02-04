@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
-import { List } from 'immutable';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -16,7 +15,6 @@ import { Charge } from '../../types/booking';
 import api from '../../utils/api';
 import {
   getDateRange,
-  getDuration,
   getSubPeriodData,
   getTimePeriod,
 } from '../../utils/dashboard.helpers';
@@ -31,19 +29,6 @@ interface Props {
   timeFrame: string;
   fromDate: Date | string;
   toDate: Date | string;
-}
-
-interface SummaryRevenueParams {
-  bookings: List<any>;
-  tokenSales: List<any>;
-  fromDate: Date | string;
-  toDate: Date | string;
-  stripeSubsPayments?: any[];
-  timeFrame: string;
-  firstBookingDate?: Date | string | null;
-  TIME_ZONE: string;
-  listings: List<any>;
-  TOKEN_PRICE: number;
 }
 
 const getSummaryRevenueData = (sums: {
@@ -478,8 +463,6 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
     });
 
   const firstBookingDate = firstBooking && firstBooking?.get('start');
-
-  const duration = getDuration(timeFrame, fromDate, toDate);
 
   const getRevenueData = () => {
     if (timeFrame === 'custom' && !toDate) return [];

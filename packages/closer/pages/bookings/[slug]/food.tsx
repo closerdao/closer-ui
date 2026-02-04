@@ -57,17 +57,8 @@ const FoodSelectionPage = ({
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
-  const {
-    useTokens,
-    start,
-    end,
-    adults,
-    children,
-    pets,
-    infants,
-    eventId,
-    isFriendsBooking,
-  } = booking || {};
+  const { useTokens, start, end, adults, eventId, isFriendsBooking } =
+    booking || {};
 
   const router = useRouter();
   const { isAuthenticated } = useAuth();

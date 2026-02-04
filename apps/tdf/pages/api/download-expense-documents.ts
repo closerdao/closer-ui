@@ -76,7 +76,7 @@ export default async function handler(
     let failCount = 0;
 
     const downloadPromises = validatedUrls.map(
-      async (item: { url: string; fileName: string }, index: number) => {
+      async (item: { url: string; fileName: string }) => {
         try {
           const response = await fetch(item.url, {
             method: 'GET',

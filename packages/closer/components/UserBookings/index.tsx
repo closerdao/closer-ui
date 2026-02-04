@@ -19,7 +19,6 @@ const UserBookingsComponent = ({
   user,
   isSpaceHostView,
   bookingConfig,
-  hideExportCsv = false,
 }: Props) => {
   const t = useTranslations();
   const bookingsToShowLimit = 50;

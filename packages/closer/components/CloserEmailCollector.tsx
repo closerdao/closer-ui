@@ -8,8 +8,6 @@ import { Button, Heading, Input, api } from 'closer';
 // Import custom Dropdown
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import { parseMessageFromError } from 'closer/utils/common';
-// Added parseMessageFromError
-import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 
 import type { PromptGetInTouchContextType } from './PromptGetInTouchContext';
@@ -55,7 +53,6 @@ const communitySizeOptions = [
 ];
 
 const CloserEmailCollector = () => {
-  const t = useTranslations();
   const { isOpen, setIsOpen } = useContext(
     PromptGetInTouchContext,
   ) as PromptGetInTouchContextType;

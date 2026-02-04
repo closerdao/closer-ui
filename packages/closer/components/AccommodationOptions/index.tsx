@@ -24,7 +24,7 @@ const AccommodationOptions = ({ listings }: Props) => {
 
   return (
     <div className="flex flex-col sm:flex-row gap-[2%] flex-wrap">
-      {listings.map((listing, i) => {
+      {listings.map((listing) => {
         return (
           <Card
             key={listing.slug}

@@ -14,7 +14,7 @@ interface ProposalListProps {
 
 const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
   const router = useRouter();
-  const { isWalletReady, account } = useContext(WalletState);
+  useContext(WalletState);
   const { user } = useAuth();
   const { platform } = usePlatform() as any;
   const t = useTranslations();
@@ -72,7 +72,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
       platform.proposal.get(refetchQuery);
 
       // Clear refetch parameter from URL after triggering refetch
-      const { refetch, ...queryWithoutRefetch } = router.query;
+      const { refetch: _refetch, ...queryWithoutRefetch } = router.query;
       router.replace(
         {
           pathname: router.pathname,

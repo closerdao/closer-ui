@@ -20,7 +20,6 @@ const DisplayPrice = ({
   rentalToken,
   isTotalPrice = false,
   isAccommodationPrice = false,
-  price,
 }: Props) => {
   switch (paymentType) {
     case PaymentType.FULL_CREDITS:

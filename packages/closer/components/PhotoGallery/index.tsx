@@ -3,7 +3,7 @@ import { Gallery } from 'react-grid-gallery';
 import Lightbox from 'react-image-lightbox';
 import 'react-image-lightbox/style.css';
 
-import { CustomImage, images } from './images';
+import { images } from './images';
 import DynamicPhotoGallery from './DynamicPhotoGallery';
 
 interface Props {
@@ -19,7 +19,7 @@ const PhotoGallery = ({ className }: Props) => {
   const prevIndex = (index + images.length - 1) % images.length;
   const prevImage = images[prevIndex] || currentImage;
 
-  const handleClick = (index: number, item: CustomImage) => setIndex(index);
+  const handleClick = (index: number) => setIndex(index);
   const handleClose = () => setIndex(-1);
   const handleMovePrev = () => setIndex(prevIndex);
   const handleMoveNext = () => setIndex(nextIndex);

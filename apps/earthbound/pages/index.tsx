@@ -9,7 +9,6 @@ import {
   api,
   cdn,
   useAuth,
-  useConfig,
   usePlatform,
 } from 'closer';
 import { User } from 'closer/contexts/auth/types';
@@ -19,9 +18,7 @@ import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 
 const getPage = ({
-  listings,
   hosts,
-  generalConfig,
 }: {
   listings: Listing[] | null;
   hosts: User[] | null;
@@ -702,10 +699,6 @@ const HomePage = ({ generalConfig, listings, hosts }: Props) => {
   useEffect(() => {
     loadData();
   }, [isTeamMember]);
-
-  const defaultConfig = useConfig();
-  const PLATFORM_NAME =
-    generalConfig?.platformName || defaultConfig.platformName;
 
   const HEADER_OFFSET = 80; // px, matches h-20 in Navigation
 

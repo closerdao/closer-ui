@@ -110,7 +110,6 @@ const PostList = ({
   visibility,
   showChannels = false,
 }: Props) => {
-  const t = useTranslations() as TranslateFn;
   const { user, isAuthenticated } = useAuth();
   
   const [error, setError] = useState<string | null>(null);

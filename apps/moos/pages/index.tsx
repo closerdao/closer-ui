@@ -28,7 +28,7 @@ interface Props {
   article?: any;
 }
 
-const HomePage = ({ generalConfig, article }: Props) => {
+const HomePage = ({ generalConfig }: Props) => {
   const t = useTranslations();
   const defaultConfig = useConfig();
   const PLATFORM_NAME =

@@ -8,7 +8,6 @@ import {
   Listing,
   api,
   useAuth,
-  useConfig,
   usePlatform,
 } from 'closer';
 import { User } from 'closer/contexts/auth/types';
@@ -17,11 +16,7 @@ import { parseMessageFromError } from 'closer/utils/common';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 
-const getPage = ({
-  listings,
-  hosts,
-  generalConfig,
-}: {
+const getPage = ({}: {
   listings: Listing[] | null;
   hosts: User[] | null;
   generalConfig: GeneralConfig | null;
@@ -411,10 +406,6 @@ const EventsPage = ({ generalConfig, listings, hosts }: Props) => {
   useEffect(() => {
     loadData();
   }, [isTeamMember]);
-
-  const defaultConfig = useConfig();
-  const PLATFORM_NAME =
-    generalConfig?.platformName || defaultConfig.platformName;
 
   return (
     <div>

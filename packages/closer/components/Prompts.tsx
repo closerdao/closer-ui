@@ -208,7 +208,6 @@ const getClosedPrompts = () => {
 };
 
 const getPromptToShow = (user: User | null, isAuthenticated: boolean) => {
-  const daysUserCreated = calculateFullDaysDifference(user?.created);
   const hasUserFilledPreferences = doAllKeysHaveValues(
     user?.preferences,
     REQUIRED_PREFERENCES,

@@ -66,7 +66,6 @@ const DateTimePicker = ({
   const t = useTranslations();
   const router = useRouter();
   const { volunteerId, bookingType } = router.query;
-  const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [dateError, setDateError] = useState<null | string>(null);
   const [isOneMonthCalendar, setIsOneMonthCalendar] = useState(false);

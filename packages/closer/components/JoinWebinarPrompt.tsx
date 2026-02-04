@@ -58,11 +58,6 @@ const JoinWebinarPrompt = ({
     setIsPromptOpen(isOpen);
   };
 
-  const handleSubscriptionSuccess = (email: string) => {
-    // setHasSubscribed(true);
-    // localStorage.setItem('email', email);
-  };
-
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newEmail = e.target.value;
     setEmail(newEmail);

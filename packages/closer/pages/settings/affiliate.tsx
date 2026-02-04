@@ -228,7 +228,7 @@ const AffiliatePage = ({
           
           <LinkBuilderTool
             userId={user?._id || ''}
-            onLinkGenerated={(link) => {
+            onLinkGenerated={() => {
               // Track link generation
               api.post('/metric', {
                 event: 'affiliate-link-generated',

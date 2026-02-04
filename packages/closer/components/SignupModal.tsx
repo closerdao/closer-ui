@@ -25,7 +25,7 @@ interface Props {
 const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
   const t = useTranslations();
   const router = useRouter();
-  const { signup, error, isLoading, user, refetchUser } = useAuth();
+  const { signup, error, user, refetchUser } = useAuth();
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const [step, setStep] = useState(1);
@@ -126,9 +126,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
         if (eventId) {
           try {
             // Register user for the event
-            const {
-              data: { results: event },
-            } = await api.post(`/attend/event/${eventId}`, { attend: true });
+            await api.post(`/attend/event/${eventId}`, { attend: true });
 
             // Send event notification - try to get user from context first, then refetch if needed
             let currentUser = user;

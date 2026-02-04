@@ -83,7 +83,6 @@ const LandingPagePhotoMosaic = ({ className }: LandingPagePhotoMosaicProps) => {
   const getImagePath = (imageName: string) => `/images/landing-page/compressed/${imageName}`;
 
   if (isMobile) {
-    const currentImage = LANDING_PAGE_IMAGES[currentIndex];
     const nextIndex = (currentIndex + 1) % LANDING_PAGE_IMAGES.length;
     const prevIndex = (currentIndex + LANDING_PAGE_IMAGES.length - 1) % LANDING_PAGE_IMAGES.length;
 

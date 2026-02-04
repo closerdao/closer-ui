@@ -88,7 +88,7 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
       return nightlyListingsIds.includes(booking.get('listing'));
     });
 
-  const { bookedNights, numBookedNights } = getBookedNights({
+  const { numBookedNights } = getBookedNights({
     nightlyBookings,
     nightlyListings,
     start,
