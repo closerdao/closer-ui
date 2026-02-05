@@ -1,14 +1,8 @@
-import { getDataSuffix, submitReferral } from '@divvi/referral-sdk'
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Contract, providers, utils } from 'ethers';
 import { WalletState } from '../contexts/wallet';
 import { useConfig } from './useConfig';
 import { parseTokenSaleError } from '../utils/smartContractErrorParser';
-
-const dataSuffix = getDataSuffix({
-  consumer: '0x9B5f6dF2C7A331697Cf2616CA884594F6afDC07d',
-  providers: ['0x0423189886d7966f0dd7e7d256898daeee625dca','0xc95876688026be9d6fa7a7c33328bd013effa2bb','0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8'],
-})
 
 const RPC_ENDPOINTS: Record<string, string[]> = {
   celo: [
@@ -295,43 +289,55 @@ export const useBuyTokens = () => {
     }
     const { DynamicSale } = contracts;
     const amountInWei = utils.parseEther(amount);
-    console.log('buyTokens called', { amount, amountInWei: amountInWei.toString(), contractCall: 'DynamicSale.buy' });
 
     try {
       const txData = DynamicSale.interface.encodeFunctionData('buy', [amountInWei]);
+      const txRequest = {
+        to: DynamicSale.address,
+        data: txData,
+        amount,
+        amountInWei: amountInWei.toString(),
+      };
+      console.log('TDF buy transaction request', txRequest);
       const tx = await DynamicSale.signer.sendTransaction({
         to: DynamicSale.address,
-        data: txData + dataSuffix,
-      })
+        data: txData,
+      });
+      const txResponse = {
+        hash: tx.hash,
+        from: tx.from,
+        nonce: tx.nonce,
+        gasLimit: tx.gasLimit?.toString(),
+        data: tx.data,
+        value: tx.value?.toString(),
+        chainId: tx.chainId,
+      };
+      console.log('TDF buy transaction sent', txResponse);
       setPending(true);
       const receipt = await tx.wait();
-      const success = receipt.status === 1;
-
-      const chainId = await DynamicSale.signer.getChainId();
-      // do not send Divvi referral on alfajores testnet
-      if (chainId !== 44787) {
-        try {
-          await submitReferral({
-            txHash: tx.hash as `0x${string}`,
-            chainId,
-          })
-        } catch (error) {
-          console.error('submitReferral error:', error);
-        }
-      }
-
-      console.log(receipt);
-      console.log({
-        error: success ? null : new Error('reverted'),
-        success,
-        txHash: receipt.transactionHash,
+      console.log('TDF buy transaction mined', {
+        hash: receipt.transactionHash,
+        blockNumber: receipt.blockNumber,
+        blockHash: receipt.blockHash,
+        status: receipt.status,
+        gasUsed: receipt.gasUsed?.toString(),
       });
+      const success = receipt.status === 1;
       return {
         error: success ? null : new Error('reverted'),
         success,
         txHash: receipt.transactionHash,
       };
     } catch (error) {
+      console.log('TDF buy transaction error', {
+        reason: (error as any)?.reason,
+        message: (error as any)?.message,
+        code: (error as any)?.code,
+        transaction: (error as any)?.transaction,
+        receipt: (error as any)?.receipt,
+        error: (error as any)?.error,
+        fullError: error,
+      });
       const parsed = parseTokenSaleError(error);
       if (parsed) {
         console.error('buyTokens blockchain error:', parsed.userMessage || parsed.errorCode, error);
@@ -410,28 +416,39 @@ export const useBuyTokens = () => {
     const approvalAmount = utils.parseEther(
       (bufferFactor * amount).toString(),
     );
-    console.log('approveCeur called', { amount, approvalAmount: approvalAmount.toString(), contractCall: 'Ceur.approve' });
-
     try {
       const txData = Ceur.interface.encodeFunctionData('approve', [DynamicSale.address, approvalAmount]);
+      const txRequest = {
+        to: Ceur.address,
+        data: txData,
+        amount,
+        approvalAmount: approvalAmount.toString(),
+        spender: DynamicSale.address,
+      };
+      console.log('TDF approve cEUR transaction request', txRequest);
       const tx = await Ceur.signer.sendTransaction({
         to: Ceur.address,
-        data: txData + dataSuffix,
-      })
+        data: txData,
+      });
+      const txResponse = {
+        hash: tx.hash,
+        from: tx.from,
+        nonce: tx.nonce,
+        gasLimit: tx.gasLimit?.toString(),
+        data: tx.data,
+        value: tx.value?.toString(),
+        chainId: tx.chainId,
+      };
+      console.log('TDF approve cEUR transaction sent', txResponse);
       setPending(true);
       const receipt = await tx.wait();
-      const chainId = await Ceur.signer.getChainId();
-      // do not send Divvi referral on alfajores testnet
-      if (chainId !== 44787) {
-        try {
-        await submitReferral({
-          txHash: tx.hash as `0x${string}`,
-            chainId,
-          })
-        } catch (error) {
-          console.error('submitReferral error:', error);
-        }
-      }
+      console.log('TDF approve cEUR transaction mined', {
+        hash: receipt.transactionHash,
+        blockNumber: receipt.blockNumber,
+        blockHash: receipt.blockHash,
+        status: receipt.status,
+        gasUsed: receipt.gasUsed?.toString(),
+      });
       const success = receipt.status === 1;
       return {
         error: success ? null : new Error('reverted'),
@@ -439,6 +456,15 @@ export const useBuyTokens = () => {
         txHash: receipt.transactionHash,
       };
     } catch (error) {
+      console.log('TDF approve cEUR transaction error', {
+        reason: (error as any)?.reason,
+        message: (error as any)?.message,
+        code: (error as any)?.code,
+        transaction: (error as any)?.transaction,
+        receipt: (error as any)?.receipt,
+        error: (error as any)?.error,
+        fullError: error,
+      });
       const parsed = parseTokenSaleError(error);
       if (parsed) {
         console.error('approveCeur blockchain error:', parsed.userMessage || parsed.errorCode, error);

@@ -126,6 +126,14 @@ export const WalletProvider = ({ children }) => {
     },
   );
 
+  const { data: nativeBalance } = useSWR(
+    library && account ? [library, account, 'nativeBalance'] : null,
+    {
+      fetcher: ([lib, acc]) => lib.getBalance(acc),
+      fallbackData: BigNumber.from(0),
+    },
+  );
+
   const { data: stakedBalanceOf } = useSWR(
     library && account
       ? [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'stakedBalanceOf', account]
@@ -213,6 +221,10 @@ export const WalletProvider = ({ children }) => {
   const balanceCeloAvailable = formatBigNumberForDisplay(
     balanceCeloToken,
     BLOCKCHAIN_CELO_TOKEN.decimals,
+  );
+  const balanceNativeAvailable = formatBigNumberForDisplay(
+    nativeBalance,
+    BLOCKCHAIN_NATIVE_TOKEN.decimals,
   );
   const proofOfPresence = formatBigNumberForDisplay(
     balancePresence,
@@ -405,6 +417,7 @@ export const WalletProvider = ({ children }) => {
         balanceAvailable,
         balanceCeurAvailable,
         balanceCeloAvailable,
+        balanceNativeAvailable,
         proofOfPresence,
         bookedDates,
         error,

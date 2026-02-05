@@ -13,6 +13,7 @@ const defaultWalletState = {
   balanceAvailable: '0',
   balanceCeurAvailable: '0',
   balanceCeloAvailable: '0',
+  balanceNativeAvailable: '0',
   proofOfPresence: '0',
   bookedDates: null,
   error: null,

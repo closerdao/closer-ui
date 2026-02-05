@@ -17,7 +17,7 @@ import {
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { TOKEN_SALE_STEPS } from '../../constants';
+import { MIN_CELO_FOR_GAS, TOKEN_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
@@ -50,7 +50,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   const [isApproved, setIsApproved] = useState<boolean>(false);
 
   const { isAuthenticated, isLoading, user } = useAuth();
-  const { isWalletReady, balanceCeurAvailable } = useContext(WalletState);
+  const { isWalletReady, balanceCeurAvailable, balanceNativeAvailable } = useContext(WalletState);
 
   const [web3Error, setWeb3Error] = useState<string | null>(null);
   const [apiError, setApiError] = useState(null);
@@ -235,8 +235,22 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
         <ProgressBar steps={TOKEN_SALE_STEPS} />
 
         {isWalletEnabled && (
-          <div className="mt-12">
+          <div className="mt-12 flex flex-col gap-4">
             <Wallet />
+            {isWalletReady &&
+              Number(balanceNativeAvailable ?? 0) < MIN_CELO_FOR_GAS && (
+                <div
+                  className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-amber-800"
+                  role="alert"
+                >
+                  <span className="text-amber-500 text-xl shrink-0" aria-hidden>
+                    ⚠️
+                  </span>
+                  <p className="text-sm font-medium">
+                    {t('insufficient_celo_for_gas')}
+                  </p>
+                </div>
+              )}
           </div>
         )}
 
@@ -313,16 +327,9 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
               )}
             </Button>
           )}
-          <p className="text-center">
-            {!isApproved && !isPending && t('token_sale_approve_text')}
-
-            {!isApproved && isPending && t('token_sale_approve_pending_text')}
-
-            {isApproved && !isPending && t('token_sale_buy_text')}
-
-            {isApproved && isPending && t('token_sale_buy_pending_text')}
-          </p>
-          {web3Error && <ErrorMessage error={web3Error} />}
+          {web3Error && (
+            <ErrorMessage error={web3Error} />
+          )}
           {apiError && <ErrorMessage error={apiError} />}
         </main>
       </div>

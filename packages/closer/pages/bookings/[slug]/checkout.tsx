@@ -38,6 +38,7 @@ import {
   BOOKING_STEPS,
   CURRENCIES,
   DEFAULT_CURRENCY,
+  MIN_CELO_FOR_GAS,
 } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { WalletState } from '../../../contexts/wallet';
@@ -116,7 +117,7 @@ const Checkout = ({
       }
     : null;
 
-  const { balanceAvailable: tokenBalanceAvailable, isWalletReady, library, account } =
+  const { balanceAvailable: tokenBalanceAvailable, isWalletReady, library, account, balanceNativeAvailable } =
     useContext(WalletState);
   
   const {
@@ -570,6 +571,11 @@ const Checkout = ({
   };
 
   const handleTokenOnlyBooking = async () => {
+    const nativeCelo = Number(balanceNativeAvailable ?? 0);
+    if (nativeCelo < MIN_CELO_FOR_GAS) {
+      setPaymentError(t('insufficient_celo_for_gas'));
+      return;
+    }
     setProcessing(true);
     setPaymentError(null);
     setConflictingBookings(null);
