@@ -23,8 +23,4 @@ const HeadingRow = ({ children, className, level = 2 }: HeadingRowProps) => {
   );
 };
 
-HeadingRow.defaultProps = {
-  className: '',
-};
-
 export default HeadingRow;

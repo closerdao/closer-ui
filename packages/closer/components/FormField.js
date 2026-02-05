@@ -36,10 +36,10 @@ const FormField = ({
   min,
   max,
   step,
-  dynamicField = null,
+  dynamicField = /** @type {any} */ (null),
   isPrimaryField = false,
   isSecondary = false,
-  currencyConfig = null,
+  currencyConfig = /** @type {any} */ (null),
 }) => {
   const fixedCurrency =
     type === 'currency' &&
@@ -344,7 +344,5 @@ const FormField = ({
     </div>
   );
 };
-
-FormField.defaultProps = {};
 
 export default FormField;

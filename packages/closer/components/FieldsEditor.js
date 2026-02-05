@@ -10,7 +10,7 @@ const fieldTypes = [
   { value: 'select', label: 'Multi select' },
 ];
 
-const FieldsEditor = ({ value, onChange }) => {
+const FieldsEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {any} */ (undefined) }) => {
   const t = useTranslations();
 
   const [options, setOptions] = useState(value);
@@ -158,11 +158,6 @@ const FieldsEditor = ({ value, onChange }) => {
       </button>
     </div>
   );
-};
-
-FieldsEditor.defaultProps = {
-  onChange: null,
-  value: [],
 };
 
 export default FieldsEditor;

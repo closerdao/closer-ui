@@ -10,11 +10,11 @@ import ProfilePhoto from './ProfilePhoto';
 
 const UserList = ({
   channel,
-  limit,
-  title,
-  titleLink,
+  limit = 12,
+  title = 'New Users',
+  titleLink = /** @type {any} */ (null),
   canInviteUsers,
-  seeAllLink,
+  seeAllLink = /** @type {any} */ (null),
 }) => {
   const t = useTranslations();
 
@@ -102,11 +102,4 @@ const UserList = ({
     </section>
   );
 };
-UserList.defaultProps = {
-  title: 'New Users',
-  limit: 12,
-  seeAllLink: null,
-  titleLink: null,
-};
-
 export default UserList;

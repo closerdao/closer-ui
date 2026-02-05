@@ -7,7 +7,7 @@ const getCurrencyDisplay = (cur) => {
   return found ? `${found.symbol} - ${found.label}` : cur;
 };
 
-const PriceEditor = ({ value, onChange, placeholder, required, fixedCurrency }) => {
+const PriceEditor = ({ value = { val: 0.0, cur: CURRENCIES_WITH_LABELS[0].value }, onChange = /** @type {any} */ (undefined), placeholder, required, fixedCurrency = /** @type {any} */ (null) }) => {
   const effectiveCur = fixedCurrency || (value && value.cur) || CURRENCIES_WITH_LABELS[0].value;
   const [price, setPrice] = useState(
     value && (value.val !== undefined || value.val === 0)
@@ -73,15 +73,6 @@ const PriceEditor = ({ value, onChange, placeholder, required, fixedCurrency }) 
       />
     </div>
   );
-};
-
-PriceEditor.defaultProps = {
-  onChange: null,
-  fixedCurrency: null,
-  value: {
-    val: 0.0,
-    cur: CURRENCIES_WITH_LABELS[0].value,
-  },
 };
 
 export default PriceEditor;

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ObjectId } from 'bson';
 import { useTranslations } from 'next-intl';
 
-const DiscountsEditor = ({ value, onChange }) => {
+const DiscountsEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {any} */ (undefined) }) => {
   const t = useTranslations();
 
   const [options, setOptions] = useState(value);
@@ -129,11 +129,6 @@ const DiscountsEditor = ({ value, onChange }) => {
       </div>
     </div>
   );
-};
-
-DiscountsEditor.defaultProps = {
-  onChange: null,
-  value: [],
 };
 
 export default DiscountsEditor;
