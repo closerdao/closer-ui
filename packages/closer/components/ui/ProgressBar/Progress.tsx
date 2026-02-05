@@ -4,7 +4,6 @@ import { FC } from 'react';
 interface Props {
   progress: number;
   total: number;
-  icon?: string;
   stepIds?: string[];
   stepHrefs?: (string | null)[];
 }

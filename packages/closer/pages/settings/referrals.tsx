@@ -263,7 +263,6 @@ const ReferralsPage = () => {
           {t('referrals_monthly_progress_heading')}
         </Heading>
         <Progress
-          icon={APP_NAME && t('carrots_balance')}
           progress={creditsErnedThisMonth ?? 0}
           total={6}
         />

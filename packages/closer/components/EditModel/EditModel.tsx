@@ -345,7 +345,10 @@ const EditModel: FC<Props> = ({
               return {
                 title: key,
                 value: key,
-                datePicker: null,
+                datePicker:
+                  key === 'general' && datePickerEl && !isGeneralEvent
+                    ? datePickerEl
+                    : null,
                 content: (
                   <>
                     {isGeneralEvent ? (
