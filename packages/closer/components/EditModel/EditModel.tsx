@@ -259,17 +259,21 @@ const EditModel: FC<Props> = ({
     }
   }, [endpoint, id, initialData, fields]);
 
-  // Auto-generate slug on each character typed in title field
   useEffect(() => {
     const titleValue = getTitleValue();
-
-    if (hasSlugField && titleValue && titleValue.length > 0) {
+    const currentSlug = (data.slug ?? '').toString().trim();
+    if (
+      hasSlugField &&
+      titleValue &&
+      titleValue.length > 0 &&
+      !currentSlug
+    ) {
       const newSlug = generateSlug(titleValue);
-      if (newSlug && newSlug !== data.slug) {
+      if (newSlug) {
         update('slug', newSlug);
       }
     }
-  }, [data.title, data.name, hasSlugField]);
+  }, [data.title, data.name, data.slug, hasSlugField]);
 
   if (!isPublic && !isAuthenticated) {
     return (

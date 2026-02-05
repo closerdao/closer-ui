@@ -1,8 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useState } from 'react';
-
 import EditModel, { EditModelPageLayout } from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
 import dayjs from 'dayjs';
@@ -47,7 +45,6 @@ interface Props {
 
 const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig, paymentConfig, web3Config }: Props) => {
   const t = useTranslations();
-  const [saveError, setSaveError] = useState<string | null>(null);
 
   const isEventsEnabled = eventsConfig?.enabled !== false;
   const timeZone = generalConfig?.timeZone;
@@ -150,14 +147,6 @@ const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig, pay
         isEdit
       >
         {error && <div className="error-box mb-4">{error}</div>}
-        {saveError && (
-          <div
-            role="alert"
-            className="mb-4 rounded-lg border border-red-500/50 bg-red-50 p-4 text-sm text-red-800 dark:bg-red-950/30 dark:text-red-200"
-          >
-            {saveError}
-          </div>
-        )}
         {!process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY && (
           <div className="my-4 error-box italic">
             {t('events_no_stripe_integration')}
@@ -174,8 +163,6 @@ const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig, pay
           initialData={eventWithLocalTimes}
           onSave={handleSave}
           onUpdate={onUpdate}
-          onError={setSaveError}
-          onErrorClear={() => setSaveError(null)}
           allowDelete
           deleteButton="Delete Event"
           onDelete={() => router.push('/')}
