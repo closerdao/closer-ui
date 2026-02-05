@@ -79,7 +79,7 @@ const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
 
   if (!_id) {
     return (
-      <div className="max-w-screen-sm mx-auto p-8">
+      <div className="max-w-screen-sm mx-auto p-4 md:p-8">
         <p className="mt-16 text-foreground">{t('bookings_no_bookings')}</p>
       </div>
     );
@@ -322,7 +322,7 @@ const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
           }
         }
       `}</style>
-      <div className="max-w-screen-sm mx-auto p-8">
+      <div className="max-w-screen-sm mx-auto p-4 md:p-8">
         <div className="mt-16 flex flex-col gap-16 flex-nowrap">
           <div className="flex flex-col items-center gap-6">
             <div

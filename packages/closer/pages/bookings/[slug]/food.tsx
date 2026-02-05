@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
-import { IconBanknote, IconUtensils } from '../../../components/BookingIcons';
+import { IconBanknote } from '../../../components/BookingIcons';
 import FoodDescription from '../../../components/FoodDescription';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
@@ -137,13 +137,14 @@ const FoodSelectionPage = ({
   }
 
   return (
-    <div className="w-full max-w-screen-sm mx-auto p-8">
-      <div className="flex items-center justify-between gap-6 mb-6">
-        <BookingBackButton onClick={goBack} name={t('buttons_back')} />
-        <Heading level={1} className="flex items-center gap-2 flex-1 min-w-0 pb-0 mt-0">
-          <IconUtensils className="!mr-0" />
-          <span>{t('bookings_food_step_title')}</span>
-        </Heading>
+    <div className="w-full max-w-screen-sm mx-auto p-4 md:p-8">
+      <div className="relative flex items-center min-h-[2.75rem] mb-6">
+        <BookingBackButton onClick={goBack} name={t('buttons_back')} className="relative z-10" />
+        <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
+          <Heading level={1} className="text-2xl md:text-3xl pb-0 mt-0 text-center">
+            <span>{t('bookings_food_step_title')}</span>
+          </Heading>
+        </div>
       </div>
       <FriendsBookingBlock isFriendsBooking={isFriendsBooking} />
       {apiError && <div className="error-box">{apiError}</div>}
@@ -206,10 +207,44 @@ const FoodSelectionPage = ({
                     })}
                   </p>
                 )}
+              {isFoodAvailable && (
+                <div className="pt-3 border-t border-neutral-dark">
+                  <HeadingRow>
+                    <IconBanknote />
+                    <span>{t('bookings_checkout_step_food_cost')}</span>
+                  </HeadingRow>
+                  <div className="flex justify-between items-center mt-3">
+                    <p>{t('bookings_summary_step_food_total')}</p>
+                    <p className="font-bold text-right">
+                      {booking?.isTeamBooking && 'Free for team members'}{' '}
+                      {isFood && !booking?.isTeamBooking
+                        ? priceFormat(foodPricePerNight || 0)
+                        : priceFormat(0)}
+                    </p>
+                  </div>
+                  <p className="text-right text-xs">
+                    {t('booking_price_per_night_per_adult')}
+                  </p>
+                  {durationNights > 0 && isFood && !booking?.isTeamBooking && (
+                    <div className="flex justify-between items-center mt-2 pt-2 border-t border-neutral-dark">
+                      <p className="font-medium">{t('bookings_food_total_for_stay')}</p>
+                      <p className="font-bold">
+                        {priceFormat(foodTotalForStay)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              {isFoodAvailable && (
+                <div className="pt-3 border-t border-neutral-dark font-normal">
+                  <FoodDescription foodOption={foodOption} hideHeading />
+                </div>
+              )}
             </div>
           )}
 
-        {isFoodAvailable && (
+        {isFoodAvailable &&
+          !(foodOption && foodOption?.name !== 'no_food' && !eventFoodOptionSet) && (
           <div>
             <HeadingRow>
               <IconBanknote />
@@ -238,9 +273,11 @@ const FoodSelectionPage = ({
           </div>
         )}
 
-        <div className="flex items-center gap-2 font-bold mt-1 sm:mt-0">
+        <div className="flex items-center gap-2 mt-1 sm:mt-0">
           {isFoodAvailable ? (
-            <FoodDescription foodOption={foodOption} />
+            (foodOption && foodOption?.name !== 'no_food' && !eventFoodOptionSet) ? null : (
+              <FoodDescription foodOption={foodOption} hideHeading />
+            )
           ) : (
             <div>
               <p>{t('food_no_food_available')}</p>

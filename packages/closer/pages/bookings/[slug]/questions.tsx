@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
-import { IconFileText } from '../../../components/BookingIcons';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
 import QuestionnaireItem from '../../../components/QuestionnaireItem';
@@ -226,13 +225,14 @@ const Questionnaire = ({
 
   return (
     <>
-      <div className="w-full max-w-screen-sm mx-auto p-8">
-        <div className="flex items-center justify-between gap-6 mb-6">
-          <BookingBackButton onClick={resetBooking} name={t('buttons_back')} />
-          <Heading level={1} className="flex items-center gap-2 flex-1 min-w-0 pb-0 mt-0">
-            <IconFileText className="!mr-0" />
-            <span>{t('bookings_questionnaire_step_title')}</span>
-          </Heading>
+      <div className="w-full max-w-screen-sm mx-auto p-4 md:p-8">
+        <div className="relative flex items-center min-h-[2.75rem] mb-6">
+          <BookingBackButton onClick={resetBooking} name={t('buttons_back')} className="relative z-10" />
+          <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
+            <Heading level={1} className="text-2xl md:text-3xl pb-0 mt-0 text-center">
+              <span>{t('bookings_questionnaire_step_title')}</span>
+            </Heading>
+          </div>
         </div>
         <FriendsBookingBlock isFriendsBooking={booking?.isFriendsBooking} />
 

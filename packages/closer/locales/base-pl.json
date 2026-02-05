@@ -1347,6 +1347,7 @@
   "config_true": "True",
   "config_false": "False",
   "booking_rules_heading": "Booking rules",
+  "booking_rules_no_rules": "No additional rules for this booking.",
 
   "config_email_booking_paid_guest": "Booking paid - send to guest",
   "config_email_booking_paid_spaceHost": "Booking paid - send to space hosts",

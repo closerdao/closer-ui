@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 
 import BookingDates from '../../../components/BookingDates/BookingDates';
 import BookingGuests from '../../../components/BookingGuests';
-import { IconBanknote, IconHome } from '../../../components/BookingIcons';
+import { IconBanknote } from '../../../components/BookingIcons';
 import CurrencySwitch from '../../../components/CurrencySwitch';
 import PageError from '../../../components/PageError';
 import Switch from '../../../components/Switch';
@@ -508,21 +508,22 @@ const DatesSelector = ({
 
   return (
     <>
-      <div className="max-w-screen-sm mx-auto md:p-8 h-full">
-        <div className="flex items-center justify-between gap-6 mb-6">
+      <div className="max-w-screen-sm mx-auto p-4 md:p-8 h-full">
+        <div className="relative flex items-center min-h-[2.75rem] mb-6">
           {showBackButton ? (
-            <BackButton handleClick={goBack}>{t('buttons_back')}</BackButton>
+            <BackButton handleClick={goBack} className="relative z-10">{t('buttons_back')}</BackButton>
           ) : (
             <span />
           )}
-          <Heading className="flex items-center gap-2 flex-1 min-w-0 pb-0 mt-0">
-            <IconHome className="!mr-0" />
-            <span>
-              {selectedTicketOption?.isDayTicket
-                ? t('bookings_summary_step_dates_event')
-                : t('bookings_summary_step_dates_title')}
-            </span>
-          </Heading>
+          <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
+            <Heading className="text-2xl md:text-3xl pb-0 mt-0 text-center">
+              <span>
+                {selectedTicketOption?.isDayTicket
+                  ? t('bookings_summary_step_dates_event')
+                  : t('bookings_summary_step_dates_title')}
+              </span>
+            </Heading>
+          </div>
         </div>
 
         {normalizedIsFriendsBooking &&

@@ -1433,6 +1433,7 @@
   "config_true": "Verdadeiro",
   "config_false": "Falso",
   "booking_rules_heading": "Regras de reserva",
+  "booking_rules_no_rules": "Sem regras adicionais para esta reserva.",
   "config_email_booking_paid_guest": "Reserva paga - enviar ao convidado",
   "config_email_booking_paid_spaceHost": "Reserva paga - enviar aos anfitriões do espaço",
   "config_email_booking_cancelled_guest": "Reserva cancelada - enviar ao convidado",

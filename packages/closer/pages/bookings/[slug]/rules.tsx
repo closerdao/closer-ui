@@ -1,10 +1,9 @@
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingRules from '../../../components/BookingRules';
-import { IconClipboardList } from '../../../components/BookingIcons';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
 import { Button } from '../../../components/ui';
@@ -57,16 +56,10 @@ const BookingRulesPage = ({
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
-  useEffect(() => {
-    if (
-      !bookingRules ||
-      !bookingRules?.elements ||
-      bookingRules?.elements?.length === 0 ||
-      !bookingRules?.elements?.[0]?.title
-    ) {
-      router.push(`/bookings/${booking?._id}/questions`);
-    }
-  }, [bookingRules, router, booking?._id]);
+  const hasRules =
+    bookingRules?.enabled &&
+    bookingRules?.elements?.length > 0 &&
+    bookingRules?.elements?.some((el) => el?.title);
 
   const handleNext = async () => {
     setIsLoading(true);
@@ -97,13 +90,14 @@ const BookingRulesPage = ({
   }
 
   return (
-    <div className="w-full max-w-screen-sm mx-auto p-8">
-      <div className="flex items-center justify-between gap-6 mb-6">
-        <BookingBackButton onClick={goBack} name={t('buttons_back')} />
-        <Heading level={1} className="flex items-center gap-2 flex-1 min-w-0 pb-0 mt-0">
-          <IconClipboardList className="!mr-0" />
-          <span>{t('booking_rules_heading')}</span>
-        </Heading>
+    <div className="w-full max-w-screen-sm mx-auto p-4 md:p-8">
+      <div className="relative flex items-center min-h-[2.75rem] mb-6">
+        <BookingBackButton onClick={goBack} name={t('buttons_back')} className="relative z-10" />
+        <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
+          <Heading level={1} className="text-2xl md:text-3xl pb-0 mt-0 text-center">
+            <span>{t('booking_rules_heading')}</span>
+          </Heading>
+        </div>
       </div>
       <FriendsBookingBlock isFriendsBooking={booking?.isFriendsBooking} />
       <ProgressBar
@@ -124,8 +118,12 @@ const BookingRulesPage = ({
       />
 
       <section className="flex flex-col gap-12 py-12">
-        {bookingRules?.enabled && bookingRules?.elements[0].title && (
-          <BookingRules rules={bookingRules?.elements} />
+        {hasRules ? (
+          <BookingRules rules={bookingRules.elements} />
+        ) : (
+          <p className="text-foreground text-sm">
+            {t('booking_rules_no_rules')}
+          </p>
         )}
 
         <Button

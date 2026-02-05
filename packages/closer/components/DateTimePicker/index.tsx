@@ -396,7 +396,7 @@ const DateTimePicker = ({
       <div data-testid="dates" className="w-full flex flex-wrap items-center gap-2 mb-2">
         <div className="flex flex-wrap gap-2 items-center">
           {priceDuration !== 'night' && startTime && savedStartDate && (
-            <div className="text-sm border rounded-md bg-neutral py-2 px-2.5 font-medium">
+            <div className="text-xs md:text-sm border rounded-xl bg-neutral py-1.5 px-2 font-medium">
               {getDateOnly(savedStartDate)}
               {isStartTimeSelected &&
                 startTimeOnly !== endTimeOnly &&
@@ -405,28 +405,34 @@ const DateTimePicker = ({
           )}
           {priceDuration === 'night' && (
             <>
-              <div className="text-sm border rounded-lg bg-neutral py-2 px-2.5 font-medium w-28 min-w-[7rem] flex items-center justify-center text-center shrink-0">
+              <div className="text-xs md:text-sm border rounded-xl bg-neutral py-1.5 px-2 font-medium min-w-4 flex items-center justify-center text-center shrink-0">
                 {isAdmin && !showCalendar && (
                   <span className="text-foreground/60 text-xs block">
                     {t('events_event_start_date')}
                   </span>
                 )}
-                {dateRange?.from
-                  ? dayjs(dateRange.from).format('ll')
-                  : t('listings_book_select_date')}
+                {dateRange?.from ? (
+                  <>
+                    <span className="md:hidden">{dayjs(dateRange.from).format('MMM D')}</span>
+                    <span className="hidden md:inline">{dayjs(dateRange.from).format('ll')}</span>
+                  </>
+                ) : t('listings_book_select_date')}
               </div>
-              <div className="text-sm border rounded-lg bg-neutral py-2 px-2.5 font-medium w-28 min-w-[7rem] flex items-center justify-center text-center shrink-0">
+              <div className="text-xs md:text-sm border rounded-xl bg-neutral py-1.5 px-2 font-medium min-w-4 flex items-center justify-center text-center shrink-0">
                 {isAdmin && !showCalendar && (
                   <span className="text-foreground/60 text-xs block">
                     {t('events_event_end_date')}
                   </span>
                 )}
-                {dateRange?.to
-                  ? dayjs(dateRange.to).format('ll')
-                  : t('listings_book_select_date')}
+                {dateRange?.to ? (
+                  <>
+                    <span className="md:hidden">{dayjs(dateRange.to).format('MMM D')}</span>
+                    <span className="hidden md:inline">{dayjs(dateRange.to).format('ll')}</span>
+                  </>
+                ) : t('listings_book_select_date')}
               </div>
               {durationLabel && (
-                <span className="text-sm font-medium text-foreground/90 py-2 px-2.5 rounded-lg bg-accent/20 w-28 min-w-[7rem] flex items-center justify-center text-center shrink-0 border border-transparent">
+                <span className="text-xs md:text-sm font-medium text-foreground/90 py-1.5 px-2 rounded-xl bg-accent/20 min-w-4 flex items-center justify-center text-center shrink-0 border border-transparent">
                   {durationLabel}
                 </span>
               )}

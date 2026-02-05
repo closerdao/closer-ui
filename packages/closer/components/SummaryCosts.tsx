@@ -41,6 +41,7 @@ interface Props {
   status?: string;
   foodOptionEnabled?: boolean;
   utilityOptionEnabled?: boolean;
+  hideTitle?: boolean;
 }
 
 const SummaryCosts = ({
@@ -71,6 +72,7 @@ const SummaryCosts = ({
   status,
   foodOptionEnabled,
   utilityOptionEnabled,
+  hideTitle,
 }: Props) => {
   const t = useTranslations();
   const { APP_NAME } = useConfig();
@@ -98,10 +100,12 @@ const SummaryCosts = ({
 
   return (
     <div>
-      <HeadingRow>
-        <IconBanknote className="mr-4" />
-        <span>{t('bookings_summary_step_costs_title')}</span>
-      </HeadingRow>
+      {!hideTitle && (
+        <HeadingRow>
+          <IconBanknote className="mr-4" />
+          <span>{t('bookings_summary_step_costs_title')}</span>
+        </HeadingRow>
+      )}
 
       {eventCost ? (
         <div className="flex justify-between items-center mt-3">

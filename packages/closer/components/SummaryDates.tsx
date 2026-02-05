@@ -262,7 +262,7 @@ const SummaryDates = ({
         </>
       )}
 
-      <div className="flex justify-between items-start my-3">
+      <div className="flex justify-between items-start my-3 text-sm md:text-base">
         <p>
           {' '}
           {isDayTicket ? t('listings_book_day') : t('listings_book_check_in')}
@@ -273,16 +273,19 @@ const SummaryDates = ({
             isHourlyBooking &&
             !isEditMode &&
             dateToPropertyTimeZone(TIME_ZONE, startDate)}
-          {startDate && !isHourlyBooking
-            ? dayjs(startDate).format('DD / MM / YY')
-            : null}
+          {startDate && !isHourlyBooking ? (
+            <>
+              <span className="md:hidden">{dayjs(startDate).format('DD / MM')}</span>
+              <span className="hidden md:inline">{dayjs(startDate).format('DD / MM / YY')}</span>
+            </>
+          ) : null}
 
           {startDate && TIME_ZONE && isHourlyBooking && isEditMode && startDate}
         </p>
       </div>
       {!isDayTicket && (
         <>
-          <div className="flex justify-between items-start my-3">
+          <div className="flex justify-between items-start my-3 text-sm md:text-base">
             <p> {t('listings_book_check_out')}</p>
             <p className="font-bold">
               {endDate &&
@@ -291,9 +294,12 @@ const SummaryDates = ({
                 !isEditMode &&
                 dateToPropertyTimeZone(TIME_ZONE, endDate)}
 
-              {startDate && !isHourlyBooking
-                ? dayjs(endDate).format('DD / MM / YY')
-                : null}
+              {startDate && !isHourlyBooking ? (
+                <>
+                  <span className="md:hidden">{dayjs(endDate).format('DD / MM')}</span>
+                  <span className="hidden md:inline">{dayjs(endDate).format('DD / MM / YY')}</span>
+                </>
+              ) : null}
 
               {endDate && TIME_ZONE && isHourlyBooking && isEditMode && endDate}
             </p>
@@ -318,7 +324,7 @@ const SummaryDates = ({
           </div>
 
           {!isHourlyBooking && (
-            <div className="flex justify-between items-start my-3">
+            <div className="flex justify-between items-start my-3 text-sm md:text-base">
               <p> {t('bookings_stay_duration')}</p>
               <p className="font-bold">{durationInDays || '-'}</p>
             </div>

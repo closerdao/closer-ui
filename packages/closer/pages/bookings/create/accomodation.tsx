@@ -2,7 +2,6 @@ import { useRouter } from 'next/router';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingStepsInfo from '../../../components/BookingStepsInfo';
-import { IconHome } from '../../../components/BookingIcons';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import ListingCard from '../../../components/ListingCard';
 import { ErrorMessage } from '../../../components/ui';
@@ -195,13 +194,14 @@ const AccomodationSelector = ({
 
   return (
     <>
-      <div className="max-w-screen-sm mx-auto md:first-letter:p-8">
-        <div className="flex items-center justify-between gap-6 mb-6">
-          <BookingBackButton onClick={backToDates} name={t('buttons_back')} />
-          <Heading className="flex items-center gap-2 flex-1 min-w-0 pb-0 mt-0">
-            <IconHome className="!mr-0" />
-            <span>{t('bookings_accomodation_step_title')}</span>
-          </Heading>
+      <div className="max-w-screen-sm mx-auto p-4 md:p-8">
+        <div className="relative flex items-center min-h-[2.75rem] mb-6">
+          <BookingBackButton onClick={backToDates} name={t('buttons_back')} className="relative z-10" />
+          <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
+            <Heading className="text-2xl md:text-3xl pb-0 mt-0 text-center">
+              <span>{t('bookings_accomodation_step_title')}</span>
+            </Heading>
+          </div>
         </div>
         <FriendsBookingBlock isFriendsBooking={normalizedIsFriendsBooking} />
         <ProgressBar
@@ -239,7 +239,7 @@ const AccomodationSelector = ({
             </p>
           </div>
         )}
-        <div className="flex flex-col gap-4 mt-16 md:grid md:grid-cols-2 md:items-start">
+        <div className="flex flex-col gap-3 mt-8 md:grid md:grid-cols-2 md:items-start">
           {filteredListings &&
             filteredListings?.map((listing) => (
               <ListingCard

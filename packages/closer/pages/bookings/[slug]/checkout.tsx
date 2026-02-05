@@ -4,13 +4,10 @@ import { useContext, useEffect, useMemo, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import {
-  IconBanknote,
   IconCheckCircle,
   IconHome,
   IconMail,
   IconPartyPopper,
-  IconUtensils,
-  IconWrench,
   IconXCircle,
 } from '../../../components/BookingIcons';
 import BookingWallet from '../../../components/BookingWallet';
@@ -752,13 +749,14 @@ const Checkout = ({
 
   return (
     <>
-      <div className="w-full max-w-screen-sm mx-auto p-8">
-        <div className="flex items-center justify-between gap-6 mb-6">
-          <BookingBackButton onClick={goBack} name={t('buttons_back')} />
-          <Heading level={1} className="flex items-center gap-2 flex-1 min-w-0 pb-0 mt-0">
-            <IconBanknote className="!mr-0" />
-            <span>{t('bookings_checkout_step_title')}</span>
-          </Heading>
+      <div className="w-full max-w-screen-sm mx-auto p-4 md:p-6">
+        <div className="relative flex items-center min-h-[2.75rem] mb-4">
+          <BookingBackButton onClick={goBack} name={t('buttons_back')} className="relative z-10" />
+          <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
+            <Heading level={1} className="text-2xl md:text-3xl pb-0 mt-0 text-center">
+              <span>{t('bookings_checkout_step_title')}</span>
+            </Heading>
+          </div>
         </div>
         {isFriend ? null : (
           <FriendsBookingBlock isFriendsBooking={booking?.isFriendsBooking} />
@@ -780,7 +778,7 @@ const Checkout = ({
           }
         />
 
-        <div className="mt-16 flex flex-col gap-16">
+        <div className="mt-6 flex flex-col gap-6">
           {status === 'pending-payment' ? (
             <CheckoutTotal
               total={booking?.paymentDelta?.fiat}
@@ -843,7 +841,7 @@ const Checkout = ({
                           <IconPartyPopper />
                           <span>{t('bookings_checkout_ticket_cost')}</span>
                         </HeadingRow>
-                        <div className="mb-16 mt-4">
+                        <div className="mb-6 mt-2">
                           <Row
                             rowKey={ticketOption?.name}
                             value={`${priceFormat(
@@ -864,7 +862,7 @@ const Checkout = ({
                               : t('bookings_checkout_step_hourly')}
                           </span>
                         </HeadingRow>
-                        <div className="flex justify-between items-center mt-3">
+                        <div className="flex justify-between items-center mt-2">
                           <p>{listingName}</p>
                           {useTokens && rentalToken ? (
                             <>
@@ -947,7 +945,7 @@ const Checkout = ({
                           useCredits || status === 'credits-paid'
                         }
                         creditsError={creditsError}
-                        className="my-12"
+                        className="my-4"
                       />
                     ) : null}
 
@@ -956,7 +954,7 @@ const Checkout = ({
                       rentalToken?.val > 0 &&
                       useTokens &&
                       status !== 'tokens-staked' && (
-                        <div className="mt-4">
+                        <div className="mt-2">
                           <BookingWallet
                             toPay={
                               paymentType === PaymentType.PARTIAL_TOKENS
@@ -968,67 +966,83 @@ const Checkout = ({
                         </div>
                       )}
                   </div>
-                  {!isHourlyBooking &&
-                  utilityFiat?.val &&
-                  bookingConfig?.utilityOptionEnabled ? (
-                    <div>
-                      <HeadingRow>
-                        <IconWrench />
-                        <span>{t('bookings_checkout_step_utility_title')}</span>
-                      </HeadingRow>
-                      <div className="flex justify-between items-center mt-3">
-                        <p> {t('bookings_summary_step_utility_total')}</p>
-                        <p className="font-bold">{priceFormat(utilityFiat)}</p>
-                      </div>
-                      <p className="text-right text-xs">
-                        {t('bookings_summary_step_utility_description')}
-                      </p>
-                    </div>
-                  ) : null}
-                  {!isHourlyBooking && foodFiat?.val ? (
-                    <div>
-                      <HeadingRow>
-                        <IconUtensils />
-                        <span>{t('bookings_checkout_step_food_title')}</span>
-                      </HeadingRow>
-                      <div className="flex justify-between items-center mt-3">
-                        <p> {t('bookings_summary_step_food_total')}</p>
-                        <p className="font-bold">
-                          {booking?.foodOptionId
-                            ? priceFormat(foodFiat)
-                            : 'NOT INCLUDED'}
+                  <div className="rounded-lg border border-neutral-dark bg-neutral-light p-4">
+                    {!isHourlyBooking &&
+                    utilityFiat?.val &&
+                    bookingConfig?.utilityOptionEnabled ? (
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm font-medium">
+                          {t('bookings_checkout_step_utility_title')}
+                        </p>
+                        <p className="font-bold text-sm">
+                          {priceFormat(utilityFiat)}
                         </p>
                       </div>
-                      <p className="text-right text-xs">
-                        {t('bookings_summary_step_utility_description')}
-                      </p>
+                    ) : null}
+                    {!isHourlyBooking && foodFiat?.val ? (
+                      <div
+                        className={`flex justify-between items-center ${
+                          utilityFiat?.val && bookingConfig?.utilityOptionEnabled
+                            ? 'mt-2'
+                            : ''
+                        }`}
+                      >
+                        <p className="text-sm font-medium">
+                          {t('bookings_checkout_step_food_title')}
+                        </p>
+                        <p className="font-bold text-sm">
+                          {booking?.foodOptionId
+                            ? priceFormat(foodFiat)
+                            : t('bookings_food_not_included')}
+                        </p>
+                      </div>
+                    ) : null}
+                    <div
+                      className={
+                        (utilityFiat?.val &&
+                          bookingConfig?.utilityOptionEnabled) ||
+                        foodFiat?.val
+                          ? 'border-t border-neutral-dark/30 mt-2 pt-2'
+                          : ''
+                      }
+                    >
+                      <CheckoutTotal
+                        total={
+                          booking?.paymentDelta?.fiat &&
+                          booking?.paymentDelta?.fiat?.val > 0
+                            ? booking?.paymentDelta?.fiat
+                            : total
+                        }
+                        useTokens={useTokens || false}
+                        useCredits={
+                          (useCredits && status !== 'credits-paid') || false
+                        }
+                        rentalToken={rentalToken}
+                        vatRate={vatRate}
+                        priceInCredits={priceInCredits}
+                        compact
+                      />
                     </div>
-                  ) : null}
+                    {!isHourlyBooking &&
+                      ((utilityFiat?.val &&
+                        bookingConfig?.utilityOptionEnabled) ||
+                        foodFiat?.val) && (
+                        <p className="text-right text-xs mt-1 text-foreground/80">
+                          {t('bookings_summary_step_utility_description')}
+                        </p>
+                      )}
+                  </div>
                 </>
               )}
-
-              <CheckoutTotal
-                total={
-                  booking?.paymentDelta?.fiat &&
-                  booking?.paymentDelta?.fiat?.val > 0
-                    ? booking?.paymentDelta?.fiat
-                    : total
-                }
-                useTokens={useTokens || false}
-                useCredits={(useCredits && status !== 'credits-paid') || false}
-                rentalToken={rentalToken}
-                vatRate={vatRate}
-                priceInCredits={priceInCredits}
-              />
             </>
           )}
 
-          <div className="flex flex-col gap-2">
+          <div className="rounded-lg border-2 border-neutral-dark bg-neutral-light p-4 sm:p-6 flex flex-col gap-3">
             {status === 'tokens-staked' && useTokens && rentalToken && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-0">
                 <div className="flex ">
                   <IconCheckCircle className="text-green-600 mr-2" />
-                  <p className="text-green-800 font-medium">
+                  <p className="text-green-800 font-medium text-sm">
                     {t.rich('bookings_checkout_tokens_staked_message', {
                       tokens: String(
                         priceFormat({

@@ -93,21 +93,21 @@ const ListingCard = ({
 
   return (
     <div
-      className={`flex flex-col rounded-lg p-4 shadow-4xl md:mb-0 md:basis-full md:h-full ${
+      className={`flex flex-col rounded-lg p-3 shadow-4xl md:mb-0 md:basis-full md:h-full ${
         isUnavailable ? 'opacity-75 pointer-events-none' : ''
       }`}
     >
       {isUnavailable && (
-        <div className="rounded-t-lg -mx-4 -mt-4 px-4 py-2 bg-neutral-dark text-foreground text-sm font-semibold text-center">
+        <div className="rounded-t-lg -mx-3 -mt-3 px-3 py-2 bg-neutral-dark text-foreground text-sm font-semibold text-center">
           {t('listing_preview_not_available')}
         </div>
       )}
-      <Heading level={4} className="mb-4">
+      <Heading level={4} className="mb-2">
         {name}
       </Heading>
 
       {listing.photos && listing.photos.length > 0 && (
-        <div className="relative h-48 rounded-lg my-4 overflow-hidden">
+        <div className="relative h-48 rounded-lg my-2 overflow-hidden">
           <Image
             className="object-cover"
             priority
@@ -132,7 +132,7 @@ const ListingCard = ({
           />
         )}
       </ul>
-      <div className="my-8">
+      <div className="my-4">
         <ListingPrice
           rentalFiat={
             isVolunteerOrResidency

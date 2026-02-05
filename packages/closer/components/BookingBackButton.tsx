@@ -20,9 +20,10 @@ const BookingBackButton: FC<{
       type="button"
       onClick={onClick || goBack}
       className={`shrink-0 py-2 flex items-center gap-1.5 text-foreground hover:opacity-80 ${className ?? ''}`}
+      aria-label={label}
     >
       <IconChevronLeft className="!mr-0" />
-      {label}
+      <span className="hidden md:inline">{label}</span>
     </button>
   );
 };

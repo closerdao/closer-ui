@@ -1,8 +1,6 @@
 import Link from 'next/link';
 import { FC } from 'react';
 
-import { useTranslations } from 'next-intl';
-
 interface Props {
   progress: number;
   total: number;
@@ -14,17 +12,9 @@ interface Props {
 const Progress: FC<Props> = ({
   progress,
   total,
-  icon,
   stepIds,
   stepHrefs,
 }) => {
-  const t = useTranslations();
-
-  const getStepLabel = (stepId: string) => {
-    const key = `bookings_progress_step_${stepId}` as 'bookings_progress_step_dates';
-    return t(key);
-  };
-
   return (
     <div className="w-full mt-2 mb-6">
       {stepIds && stepIds.length === total && (
@@ -35,9 +25,8 @@ const Progress: FC<Props> = ({
             const isCurrent = stepNum === progress;
             const href = stepHrefs?.[i];
             const isClickable = Boolean(href && isCompleted);
-            const label = getStepLabel(stepId);
 
-            const pillClass = `flex items-center justify-center rounded-full px-2 py-2 min-h-[2.25rem] min-w-0 w-full overflow-hidden ${
+            const pillClass = `flex items-center justify-center rounded-full min-w-0 w-full overflow-hidden h-1 md:h-[0.35rem] ${
               isCurrent
                 ? 'bg-accent text-black'
                 : isCompleted
@@ -45,21 +34,14 @@ const Progress: FC<Props> = ({
                   : 'bg-neutral-dark/90 text-foreground'
             } ${isClickable ? 'cursor-pointer hover:opacity-90' : ''}`;
 
-            const labelSpan = (
-              <span className="min-w-0 truncate block text-center text-sm font-medium">
-                {label}
-              </span>
-            );
-
             if (isClickable && href) {
               return (
                 <Link
                   key={stepId}
                   href={href}
                   className="flex-1 min-w-0 flex"
-                  title={label}
                 >
-                  <span className={pillClass}>{labelSpan}</span>
+                  <span className={pillClass} />
                 </Link>
               );
             }
@@ -67,9 +49,8 @@ const Progress: FC<Props> = ({
               <span
                 key={stepId}
                 className="flex-1 min-w-0 flex"
-                title={label}
               >
-                <span className={pillClass}>{labelSpan}</span>
+                <span className={pillClass} />
               </span>
             );
           })}
