@@ -12,15 +12,15 @@ dayjs.extend(advancedFormat);
 const now = new Date();
 
 const EventsList = ({
-  center,
-  card,
-  isListView,
-  title,
-  queryParam,
+  center = false,
+  card = false,
+  isListView = false,
+  title = /** @type {any} */ (undefined),
+  queryParam = 'events',
   where,
   limit,
-  showPagination,
-  cols,
+  showPagination = true,
+  cols = 3,
   sort_by='-created',
 }) => {
   const t = useTranslations();
@@ -88,14 +88,4 @@ const EventsList = ({
     </div>
   );
 };
-EventsList.defaultProps = {
-  showPagination: true,
-  isListView: false,
-  cols: 3,
-  card: false,
-  queryParam: 'events',
-  center: false,
-  title: undefined,
-};
-
 export default EventsList;

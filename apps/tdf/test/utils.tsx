@@ -7,12 +7,6 @@ import config from '@/__tests__/mocks/config';
 
 import type { RenderOptions } from '@testing-library/react';
 import { render as rtlRender } from '@testing-library/react';
-import {
-  ExternalProvider,
-  JsonRpcFetchFunc,
-  Web3Provider,
-} from '@ethersproject/providers';
-import { Web3ReactProvider } from '@web3-react/core';
 import { ConfigProvider, PlatformProvider } from 'closer';
 import { AuthProvider } from 'closer/contexts/auth';
 import { WalletProvider } from 'closer/contexts/wallet';
@@ -22,10 +16,6 @@ import messagesBase from 'closer/locales/base-en.json';
 import messagesLocal from 'closer/locales/tdf/en.json';
 import { NextIntlClientProvider } from 'next-intl';
 import Router from 'next-router-mock';
-
-function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
-  return new Web3Provider(provider);
-}
 
 const RouterContext = React.createContext<NextRouter>(Router as NextRouter);
 
@@ -63,9 +53,7 @@ export const renderWithProviders = (
           >
             <AuthProvider>
               <PlatformProvider>
-                <Web3ReactProvider getLibrary={getLibrary}>
-                  <WalletProvider>{children}</WalletProvider>
-                </Web3ReactProvider>
+                <WalletProvider>{children}</WalletProvider>
               </PlatformProvider>
             </AuthProvider>
           </NextIntlClientProvider>
