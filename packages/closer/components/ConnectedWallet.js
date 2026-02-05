@@ -1,13 +1,16 @@
+import { useDisconnect } from '@reown/appkit/react';
 import { useAuth } from '../contexts/auth';
 import api from '../utils/api';
 
 const ConnectedWallet = () => {
   const { user } = useAuth();
   const isAdmin = user?.roles.includes('admin');
+  const { disconnect: disconnectWallet } = useDisconnect();
 
   const disconnect = async () => {
     try {
       await api.post('/auth/web3/unlink');
+      await disconnectWallet();
     } catch (e) {
       console.error('error on disconnecting the wallet', e);
     }

@@ -7,7 +7,7 @@ import PriceEditor from './PriceEditor';
 import Switch from './Switch';
 import { useTranslations } from 'next-intl';
 
-const TicketOptionsEditor = ({ value, onChange, required }) => {
+const TicketOptionsEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {any} */ (undefined), required }) => {
   const t = useTranslations();
   const [options, setOptions] = useState(value);
   const updateOptions = (update) => {
@@ -139,11 +139,6 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
       </div>
     </div>
   );
-};
-
-TicketOptionsEditor.defaultProps = {
-  onChange: null,
-  value: [],
 };
 
 export default TicketOptionsEditor;

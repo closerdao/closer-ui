@@ -2,7 +2,7 @@ import React from 'react';
 
 import { cdn } from '../utils/api';
 
-const ProfilePhoto = ({ user, size, stack }) => {
+const ProfilePhoto = ({ user, size = '12', stack }) => {
   const placeholder = '/images/profile-placeholder.png';
   const url = user?.photo ? `${cdn}${user.photo}-profile-sm.jpg` : placeholder;
 
@@ -31,10 +31,6 @@ const ProfilePhoto = ({ user, size, stack }) => {
       )}
     </span>
   );
-};
-
-ProfilePhoto.defaultProps = {
-  size: '12',
 };
 
 export default ProfilePhoto;

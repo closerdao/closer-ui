@@ -1,14 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { UnsupportedChainIdError, useWeb3React } from '@web3-react/core';
+import { Web3Provider } from '@ethersproject/providers';
 import {
-  InjectedConnector,
-  NoEthereumProviderError,
-  UserRejectedRequestError,
-} from '@web3-react/injected-connector';
-import { BigNumber, utils } from 'ethers';
+  useAppKit,
+  useAppKitAccount,
+  useAppKitNetwork,
+  useAppKitProvider,
+} from '@reown/appkit/react';
+import { BigNumber } from 'ethers';
 import useSWR from 'swr';
 
+import { celoMainnet, alfajores, celoSepolia } from '../../appkit';
 import { blockchainConfig } from '../../config_blockchain';
 import api from '../../utils/api';
 import {
@@ -27,74 +29,94 @@ const {
   BLOCKCHAIN_DAO_TOKEN,
   BLOCKCHAIN_DAO_TOKEN_ABI,
   BLOCKCHAIN_DIAMOND_ABI,
-  BLOCKCHAIN_EXPLORER_URL,
-  BLOCKCHAIN_NAME,
-  BLOCKCHAIN_NATIVE_TOKEN,
   BLOCKCHAIN_NETWORK_ID,
-  BLOCKCHAIN_RPC_URL,
   BLOCKCHAIN_CEUR_TOKEN,
   BLOCKCHAIN_CELO_TOKEN,
   BLOCKCHAIN_PRESENCE_ABI,
   BLOCKCHAIN_PRESENCE_TOKEN,
 } = blockchainConfig;
 
-const injected = new InjectedConnector({
-  supportedChainIds: [
-    ...new Set([
-      BLOCKCHAIN_NETWORK_ID,
-      1,
-      3,
-      4,
-      5,
-      10,
-      42,
-      137,
-      420,
-      42220,
-      42161,
-      44787,
-      80001,
-      421611,
-      11142220,
-    ]),
-  ],
-});
+// Default no-op dispatch for SSR
+const defaultDispatch = {
+  connectWallet: async () => null,
+  switchNetwork: async () => {},
+  updateWalletBalance: () => {},
+  updateCeurBalance: () => {},
+  updateCeloBalance: () => {},
+  refetchBookingDates: () => {},
+  signMessage: async () => null,
+};
 
-export const WalletProvider = ({ children }) => {
-  const {
-    active: isWalletConnected,
-    account,
-    activate,
-    setError,
-    error,
-    library,
-    chainId,
-  } = useWeb3React();
+const defaultState = {
+  isWalletConnected: false,
+  isWalletReady: false,
+  isCorrectNetwork: false,
+  hasSameConnectedAccount: false,
+  account: null,
+  balanceTotal: '0',
+  balanceAvailable: '0',
+  balanceCeurAvailable: '0',
+  balanceCeloAvailable: '0',
+  proofOfPresence: '0',
+  bookedDates: null,
+  error: null,
+  library: null,
+  chainId: null,
+};
+
+// Inner provider that uses AppKit hooks — only rendered on the client
+const WalletProviderInner = ({ children }) => {
+  const getTargetNetwork = () => {
+    if (BLOCKCHAIN_NETWORK_ID === 42220) return celoMainnet;
+    if (BLOCKCHAIN_NETWORK_ID === 11142220) return celoSepolia;
+    return alfajores;
+  };
+
+  const { open } = useAppKit();
+  const { address, isConnected } = useAppKitAccount();
+  const { chainId, switchNetwork: appKitSwitchNetwork } = useAppKitNetwork();
+  const { walletProvider } = useAppKitProvider('eip155');
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (
-      user &&
-      !isWalletConnected &&
-      process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true'
-    ) {
-      injected.isAuthorized().then((isAuthorized) => {
-        if (!isAuthorized) return;
-        connectWallet();
-      });
-    }
-  }, [user]);
+  const [error, setError] = useState(null);
 
-  const [isWalletReady, setIsWalletReady] = useState(false);
+  // Track pending connection promises for the login flow
+  const connectResolveRef = useRef(null);
+
+  const account = address || null;
+  const isWalletConnected = isConnected;
+
+  // Create ethers Web3Provider from AppKit's walletProvider
+  const library = useMemo(() => {
+    if (!walletProvider) return null;
+    try {
+      return new Web3Provider(walletProvider);
+    } catch (e) {
+      console.error('[WalletProvider] Failed to create Web3Provider:', e);
+      return null;
+    }
+  }, [walletProvider]);
+
   const isCorrectNetwork = Number(BLOCKCHAIN_NETWORK_ID) === Number(chainId);
   const hasSameConnectedAccount =
     user?.walletAddress?.toLowerCase() === account?.toLowerCase();
+
+  const [isWalletReady, setIsWalletReady] = useState(false);
 
   useEffect(() => {
     setIsWalletReady(
       isWalletConnected && isCorrectNetwork && hasSameConnectedAccount,
     );
   }, [chainId, isWalletConnected, account, error, user?.walletAddress]);
+
+  // Resolve pending connectWallet promise when account becomes available
+  useEffect(() => {
+    if (isConnected && address && connectResolveRef.current) {
+      const resolve = connectResolveRef.current;
+      connectResolveRef.current = null;
+      resolve(address);
+    }
+  }, [isConnected, address]);
 
   const { data: balanceDAOToken, mutate: updateWalletBalance } = useSWR(
     library && account
@@ -156,12 +178,6 @@ export const WalletProvider = ({ children }) => {
     },
   );
 
-  // const { data: activatedBookingYears } = useSWR(
-  //   [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'getAccommodationYears'],
-  //   {
-  //     fetcher: fetcher(library, BLOCKCHAIN_DIAMOND_ABI),
-  //   },
-  // );
   const { data: activatedBookingYears, error: activatedBookingYearsError } =
     useSWR(
       library
@@ -219,91 +235,65 @@ export const WalletProvider = ({ children }) => {
     BLOCKCHAIN_PRESENCE_TOKEN.decimals,
   );
 
-  const connectWallet = async () => {
+  const connectWallet = useCallback(async () => {
     console.log('[connectWallet] called');
     try {
-      await activate(
-        injected,
-        async (error) => {
-          if (error instanceof UserRejectedRequestError) {
-            console.log('[connectWallet] UserRejectedRequestError');
-            // ignore user rejected error
-          } else if (
-            error instanceof UnsupportedChainIdError &&
-            window.ethereum
-          ) {
-            console.log(
-              '[connectWallet] UnsupportedChainIdError, switching network',
-            );
-            switchNetwork(window.ethereum);
-          } else if (error instanceof NoEthereumProviderError) {
-            console.log('[connectWallet] NoEthereumProviderError');
-            alert(
-              'You need to install and activate an Ethereum compatible wallet',
-            );
-          } else {
-            console.log('[connectWallet] Other error:', error);
-            setError(error);
+      // If already connected, return the current address
+      if (isConnected && address) {
+        console.log('[connectWallet] already connected, returning address:', address);
+
+        if (user && user._id && !user.walletAddress) {
+          await linkWalletWithUser(address, user);
+        }
+
+        return address;
+      }
+
+      // Open the AppKit modal and wait for connection
+      const connectedAccount = await new Promise((resolve) => {
+        connectResolveRef.current = resolve;
+
+        open({ view: 'Connect' }).catch(() => {
+          // Modal was closed without connecting
+          if (connectResolveRef.current) {
+            connectResolveRef.current = null;
+            resolve(null);
           }
-        },
-        false,
-      );
-      console.log('[connectWallet] main activate finished'); // Changed log message for clarity
+        });
 
-      // `user` is from useAuth(), `account` (from useWeb3React) should be updated after activation.
-      // The original code called `injected.activate()` again here.
-      // This is presumably to reliably get the account details immediately post-activation
-      // as useWeb3React state updates might not be synchronous.
-      const activatedConnection = await injected.activate();
-      const connectedAccount = activatedConnection?.account;
-      console.log(
-        '[connectWallet] secondary injected.activate() result:',
-        activatedConnection,
-      );
+        // Timeout: if no connection after 5 minutes, resolve with null
+        setTimeout(() => {
+          if (connectResolveRef.current) {
+            connectResolveRef.current = null;
+            resolve(null);
+          }
+        }, 300000);
+      });
 
-      if (user && user._id && !user.walletAddress && connectedAccount) {
-        // User is logged in, doesn't have a wallet linked, and a wallet is now connected.
+      console.log('[connectWallet] connection result:', connectedAccount);
+
+      if (connectedAccount && user && user._id && !user.walletAddress) {
         console.log(
           `[connectWallet] User ${user._id} authenticated, no wallet linked. Wallet ${connectedAccount} connected. Attempting to link.`,
         );
         await linkWalletWithUser(connectedAccount, user);
-      } else {
-        // Log reasons why linking is not happening
-        if (!user || !user._id) {
-          console.log(
-            '[connectWallet] No authenticated user (or user missing _id). Wallet may be connected, but not linking to a user profile at this stage.',
-          );
-        } else if (user && user.walletAddress) {
-          console.log(
-            `[connectWallet] User ${user._id} already has wallet ${user.walletAddress} linked.`,
-          );
-        } else if (!connectedAccount) {
-          console.log(
-            '[connectWallet] Wallet connection via secondary injected.activate() did not yield an account. Cannot link.',
-          );
-        }
       }
 
-      console.log('[connectWallet] finished successfully, returning account:', connectedAccount);
       return connectedAccount;
     } catch (e) {
       console.log('[connectWallet] Exception during connectWallet process:', e);
-      console.log('[connectWallet] finished with error, returning null');
       return null;
     }
-  };
+  }, [isConnected, address, user, open]);
 
   const linkWalletWithUser = async (accountId, currentUser) => {
-    // Added currentUser parameter
     if (!currentUser || !currentUser._id) {
-      // Added check for currentUser and currentUser._id
       console.error(
         '[linkWalletWithUser] User object or user._id is not available. Cannot link wallet.',
       );
       return null;
     }
     if (!accountId) {
-      // Added check for accountId
       console.error(
         '[linkWalletWithUser] accountId not provided. Cannot link wallet.',
       );
@@ -319,7 +309,6 @@ export const WalletProvider = ({ children }) => {
       const message = `Signing in with code ${nonce}`;
       const signedMessage = await signMessage(message, accountId);
       if (!signedMessage) {
-        // Added check for signedMessage
         console.error('[linkWalletWithUser] Failed to sign message.');
         return null;
       }
@@ -335,7 +324,6 @@ export const WalletProvider = ({ children }) => {
         '[linkWalletWithUser] Wallet linked successfully. User data updated:',
         userUpdated,
       );
-      // TODO: Consider if auth context needs explicit update here, e.g., by calling auth.updateUser(userUpdated);
       return userUpdated;
     } catch (error) {
       console.error(
@@ -346,43 +334,23 @@ export const WalletProvider = ({ children }) => {
     }
   };
 
-  const switchNetwork = async () => {
+  const switchNetwork = useCallback(async () => {
     try {
-      await library.provider.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: utils.hexlify(BLOCKCHAIN_NETWORK_ID) }],
-      });
+      const targetNetwork = getTargetNetwork();
+      await appKitSwitchNetwork(targetNetwork);
     } catch (switchError) {
-      if (switchError.code === 4902) {
-        try {
-          await library.provider.request({
-            method: 'wallet_addEthereumChain',
-            params: [
-              {
-                chainId: utils.hexlify(BLOCKCHAIN_NETWORK_ID),
-                rpcUrls: [BLOCKCHAIN_RPC_URL],
-                chainName: BLOCKCHAIN_NAME,
-                nativeCurrency: BLOCKCHAIN_NATIVE_TOKEN,
-                blockExplorerUrls: [BLOCKCHAIN_EXPLORER_URL],
-              },
-            ],
-          });
-        } catch (error) {
-          setError(error);
-        }
-      }
+      console.error('[switchNetwork] Error switching network:', switchError);
+      setError(switchError);
     }
-  };
+  }, [appKitSwitchNetwork]);
 
-  const signMessage = async (msg, accountId) => {
-    let provider;
-    if (!library) {
-      provider = await injected.getProvider();
-    } else {
-      provider = library.provider;
+  const signMessage = useCallback(async (msg, accountId) => {
+    if (!walletProvider) {
+      console.error('[signMessage] No wallet provider available');
+      return null;
     }
     try {
-      const signedMessage = await provider.request({
+      const signedMessage = await walletProvider.request({
         method: 'personal_sign',
         params: [msg, accountId],
       });
@@ -391,7 +359,7 @@ export const WalletProvider = ({ children }) => {
       console.error(e);
       return null;
     }
-  };
+  }, [walletProvider]);
 
   return (
     <WalletState.Provider
@@ -420,11 +388,32 @@ export const WalletProvider = ({ children }) => {
           updateCeurBalance,
           updateCeloBalance,
           refetchBookingDates: safeRefetchBookingDates,
-          signMessage, // Add signMessage here
+          signMessage,
         }}
       >
         {children}
       </WalletDispatch.Provider>
     </WalletState.Provider>
   );
+};
+
+// Outer provider: renders default state on server, real provider on client
+export const WalletProvider = ({ children }) => {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return (
+      <WalletState.Provider value={defaultState}>
+        <WalletDispatch.Provider value={defaultDispatch}>
+          {children}
+        </WalletDispatch.Provider>
+      </WalletState.Provider>
+    );
+  }
+
+  return <WalletProviderInner>{children}</WalletProviderInner>;
 };

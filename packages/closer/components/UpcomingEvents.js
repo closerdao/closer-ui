@@ -4,8 +4,12 @@ import EventsList from './EventsList';
 
 const now = new Date();
 
-const UpcomingEvents = ({ ...props }) => (
+const UpcomingEvents = ({ showPagination = true, list = false, card = false, queryParam = 'events', ...props }) => (
   <EventsList
+    showPagination={showPagination}
+    list={list}
+    card={card}
+    queryParam={queryParam}
     {...props}
     where={{
       end: {
@@ -14,11 +18,4 @@ const UpcomingEvents = ({ ...props }) => (
     }}
   />
 );
-UpcomingEvents.defaultProps = {
-  showPagination: true,
-  list: false,
-  card: false,
-  queryParam: 'events',
-};
-
 export default UpcomingEvents;

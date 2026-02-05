@@ -2,7 +2,7 @@ import React from 'react';
 
 import PropTypes from 'prop-types';
 
-const Spinner = ({ fixed, className }) => (
+const Spinner = ({ fixed = false, className = '' }) => (
   <div className={fixed ? `${className} fixed top-24 right-4` : className}>
     <svg
       role="status"
@@ -26,11 +26,6 @@ const Spinner = ({ fixed, className }) => (
 Spinner.propTypes = {
   fixed: PropTypes.bool,
   className: PropTypes.string,
-};
-
-Spinner.defaultProps = {
-  fixed: false,
-  className: ''
 };
 
 export default Spinner;
