@@ -8,7 +8,7 @@ import { ErrorMessage } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
-import dayjs, { duration } from 'dayjs';
+import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -76,7 +76,6 @@ const AccomodationSelector = ({
 
   const normalizedIsFriendsBooking =
     normalizeIsFriendsBooking(isFriendsBooking);
-  console.log('duration=', duration);
   const durationInDays = dayjs(end).diff(dayjs(start), 'day');
 
   const durationName = getBookingRate(durationInDays);
@@ -157,7 +156,6 @@ const AccomodationSelector = ({
 
       router.push(`/bookings/${newBooking._id}/questions`);
     } catch (err) {
-      console.log(err); // TO DO handle error
     } finally {
     }
   };
@@ -196,14 +194,28 @@ const AccomodationSelector = ({
 
   return (
     <>
-      <div className="max-w-screen-sm mx-auto md:first-letter:p-8">
-        <BookingBackButton onClick={backToDates} name={t('buttons_back')} />
+      <div className="max-w-screen-sm mx-auto p-4 md:p-8">
+        <div className="relative flex items-center min-h-[2.75rem] mb-6">
+          <BookingBackButton onClick={backToDates} name={t('buttons_back')} className="relative z-10" />
+          <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
+            <Heading className="text-2xl md:text-3xl pb-0 mt-0 text-center">
+              <span>{t('bookings_accomodation_step_title')}</span>
+            </Heading>
+          </div>
+        </div>
         <FriendsBookingBlock isFriendsBooking={normalizedIsFriendsBooking} />
-        <Heading className="pb-4 mt-8">
-          <span className="mr-2">🏡</span>
-          <span>{t('bookings_accomodation_step_title')}</span>
-        </Heading>
-        <ProgressBar steps={BOOKING_STEPS} />
+        <ProgressBar
+          steps={BOOKING_STEPS}
+          stepHrefs={[
+            `/bookings/create/dates?start=${start}&end=${end}&adults=${adults}${kids ? `&kids=${kids}` : ''}${infants ? `&infants=${infants}` : ''}${pets ? `&pets=${pets}` : ''}${currency ? `&currency=${currency}` : ''}${eventId ? `&eventId=${eventId}` : ''}${normalizedIsFriendsBooking ? '&isFriendsBooking=true' : ''}${friendEmails ? `&friendEmails=${friendEmails}` : ''}`,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+          ]}
+        />
         <BookingStepsInfo
           startDate={start}
           endDate={end}
@@ -227,7 +239,7 @@ const AccomodationSelector = ({
             </p>
           </div>
         )}
-        <div className="flex flex-col gap-4 mt-16 md:grid md:grid-cols-2 md:items-start">
+        <div className="flex flex-col gap-3 mt-8 md:grid md:grid-cols-2 md:items-start">
           {filteredListings &&
             filteredListings?.map((listing) => (
               <ListingCard
@@ -339,7 +351,6 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       volunteerId,
     };
   } catch (err: any) {
-    console.log(err);
     return {
       error: err.response?.data?.error || err.message,
       bookingConfig: null,

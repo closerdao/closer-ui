@@ -54,6 +54,7 @@ interface Props {
   };
   transformDataBeforeSave?: (data: any) => any;
   timeZone?: string;
+  currencyConfig?: { fiatCur: string; tokenCur: string };
 }
 
 const EditModel: FC<Props> = ({
@@ -71,6 +72,7 @@ const EditModel: FC<Props> = ({
   dynamicField,
   transformDataBeforeSave,
   timeZone,
+  currencyConfig,
 }) => {
   const t = useTranslations();
   const { isAuthenticated, user } = useAuth();
@@ -280,8 +282,11 @@ const EditModel: FC<Props> = ({
     );
   }
 
+  const isEvent = endpoint === '/event';
+  const isPrimaryField = (field: any) => field.type === 'longtext';
+
   return (
-    <div className="card">
+    <div className="card rounded-lg p-4 shadow-sm border border-neutral-dark/20">
       <form
         action="#"
         onSubmit={(e) => {
@@ -290,13 +295,15 @@ const EditModel: FC<Props> = ({
         }}
         className="w-full"
       >
-        {error && <div className="validation-error">{error}</div>}
+        {error && (
+          <div className="validation-error mb-3 rounded-lg bg-primary-light/30 p-3 text-sm">
+            {error}
+          </div>
+        )}
         {Object.keys(fieldsByTab).length > 1 ? (
           <Tabs
-            tabs={Object.keys(fieldsByTab).map((key) => ({
-              title: key,
-              value: key,
-              datePicker:
+            tabs={Object.keys(fieldsByTab).map((key) => {
+              const datePickerEl =
                 endpoint !== '/listing' &&
                 endpoint !== '/food' &&
                 endpoint !== '/lesson' ? (
@@ -308,22 +315,55 @@ const EditModel: FC<Props> = ({
                     savedEndDate={data.end && data.end}
                     defaultMonth={new Date()}
                     timeZone={timeZone}
+                    startCollapsed={isEvent}
                   />
-                ) : null,
-              content: (
-                <>
-                  {filterFields(fieldsByTab[key], data).map((field) => (
-                    <FormField
-                      dynamicField={dynamicField}
-                      {...field}
-                      key={field.name}
-                      data={data}
-                      update={update}
-                    />
-                  ))}
-                </>
-              ),
-            }))}
+                ) : null;
+              const tabFields = filterFields(fieldsByTab[key], data);
+              const isGeneralEvent = key === 'general' && isEvent;
+              const titleOnly =
+                isGeneralEvent ? tabFields.filter((f: any) => f.name === 'name') : [];
+              const restFields = isGeneralEvent
+                ? tabFields.filter(
+                    (f: any) =>
+                      f.name !== 'name' && f.name !== 'start' && f.name !== 'end',
+                  )
+                : tabFields;
+              const renderField = (field: any) => (
+                <FormField
+                  dynamicField={dynamicField}
+                  currencyConfig={currencyConfig}
+                  {...field}
+                  key={field.name}
+                  data={data}
+                  update={update}
+                  isPrimaryField={isPrimaryField(field)}
+                  isSecondary={
+                    !isPrimaryField(field) && field.name !== 'start' && field.name !== 'end'
+                  }
+                />
+              );
+              return {
+                title: key,
+                value: key,
+                datePicker:
+                  key === 'general' && datePickerEl && !isGeneralEvent
+                    ? datePickerEl
+                    : null,
+                content: (
+                  <>
+                    {isGeneralEvent ? (
+                      <>
+                        {titleOnly.map(renderField)}
+                        {datePickerEl}
+                        {restFields.map(renderField)}
+                      </>
+                    ) : (
+                      tabFields.map(renderField)
+                    )}
+                  </>
+                ),
+              };
+            })}
           />
         ) : (
           <>
@@ -332,10 +372,13 @@ const EditModel: FC<Props> = ({
                 <FormField
                   {...field}
                   dynamicField={dynamicField}
+                  currencyConfig={currencyConfig}
                   key={field.name}
                   data={data}
                   update={update}
                   step={field.step || 1}
+                  isPrimaryField={isPrimaryField(field)}
+                  isSecondary={!isPrimaryField(field) && field.name !== 'start' && field.name !== 'end'}
                 />
               ))}
           </>
@@ -355,12 +398,15 @@ const EditModel: FC<Props> = ({
           </div>
         )}
 
-        <div className="py-6 flex items-center justify-between">
-          <button type="submit" className="btn-primary">
-            <div className="flex gap-2 items-center">
+        <div className="pt-6 mt-6 flex items-center justify-between border-t border-neutral-dark/20 gap-4 flex-wrap">
+          <button
+            type="submit"
+            className="btn-primary min-h-[44px] px-6 inline-flex items-center justify-center"
+          >
+            <span className="flex gap-2 items-center">
               {isLoading && <Spinner />}
               {t('edit_model_save')}
-            </div>
+            </span>
           </button>
           {allowDelete && (
             <button

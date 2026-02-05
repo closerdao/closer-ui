@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import EditModel from '../../../components/EditModel';
+import EditModel, { EditModelPageLayout } from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
 
 import { NextPageContext } from 'next';
@@ -38,7 +38,11 @@ const EditTask = ({ task }: Props) => {
       <Head>
         <title>{`${t('tasks_edit_title')} - ${task.name}`}</title>
       </Head>
-      <div className="main-content">
+      <EditModelPageLayout
+        title={`${t('tasks_edit_title')} ${task.name}`}
+        backHref={`/tasks/${task.slug}`}
+        isEdit
+      >
         <EditModel
           id={task._id}
           endpoint={'/task'}
@@ -51,7 +55,7 @@ const EditTask = ({ task }: Props) => {
           deleteButton="Delete Task"
           onDelete={() => router.push('/')}
         />
-      </div>
+      </EditModelPageLayout>
     </>
   );
 };

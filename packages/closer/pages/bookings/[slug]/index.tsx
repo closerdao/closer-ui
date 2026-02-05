@@ -158,10 +158,16 @@ const BookingPage = ({
   const [updatedPets, setUpdatedPets] = useState(pets);
   const [updatedStartDate, setUpdatedStartDate] = useState<
     string | Date | null
-  >(timeZone && dateToPropertyTimeZone(timeZone, bookingStart));
+  >(
+    (timeZone && dateToPropertyTimeZone(timeZone, bookingStart)) ??
+      bookingStart ??
+      null,
+  );
 
   const [updatedEndDate, setUpdatedEndDate] = useState<string | Date | null>(
-    timeZone && dateToPropertyTimeZone(timeZone, bookingEnd),
+    (timeZone && dateToPropertyTimeZone(timeZone, bookingEnd)) ??
+      bookingEnd ??
+      null,
   );
   const [updatedListingId, setUpdatedListingId] = useState(listing?._id);
   const [isLoading, setIsLoading] = useState(false);
@@ -663,6 +669,8 @@ const BookingPage = ({
             }
             totalToken={rentalToken}
             totalFiat={total}
+            foodOptionEnabled={bookingConfig?.foodOptionEnabled}
+            utilityOptionEnabled={bookingConfig?.utilityOptionEnabled}
             eventCost={eventFiat}
             eventDefaultCost={
               ticketOption?.price ? ticketOption.price * adults : undefined

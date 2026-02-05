@@ -1,11 +1,8 @@
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import EditModel from '../../../components/EditModel';
+import EditModel, { EditModelPageLayout } from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
-
-import { ArrowLeft } from 'lucide-react';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
@@ -39,16 +36,10 @@ const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig }: P
   const t = useTranslations();
 
   const isEventsEnabled = eventsConfig?.enabled !== false;
-
-  console.log('generalConfig=', generalConfig);
-
   const timeZone = generalConfig?.timeZone;
 
   // Pass the original UTC dates to DateTimePicker - it will handle timezone conversion
   const eventWithLocalTimes = event;
-
-  console.log('EditEvent: event.start=', event.start, 'timeZone=', timeZone);
-
   const foodOptionsWithDefault = [
     {
       label: 'No food',
@@ -105,17 +96,12 @@ const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig }: P
       <Head>
         <title>{`${t('events_slug_edit_title')} ${event.name}`}</title>
       </Head>
-      <div className="main-content">
-        {error && <div className="error-box">{error}</div>}
-        <Link
-          href={`/events/${event.slug}`}
-          className="mr-2 italic flex flex-row items-center justify-start"
-        >
-          <ArrowLeft className="mr-1 h-4 w-4" /> {t('generic_back')}
-        </Link>
-        <Heading level={2} className="flex justify-start items-center">
-          {t('events_slug_edit_link')} <i>{event.name}</i>
-        </Heading>
+      <EditModelPageLayout
+        title={`${t('events_slug_edit_link')} ${event.name}`}
+        backHref={`/events/${event.slug}`}
+        isEdit
+      >
+        {error && <div className="error-box mb-4">{error}</div>}
         {!process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY && (
           <div className="my-4 error-box italic">
             {t('events_no_stripe_integration')}
@@ -138,7 +124,7 @@ const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig }: P
           transformDataBeforeSave={transformDataBeforeSave}
           timeZone={timeZone}
         />
-      </div>
+      </EditModelPageLayout>
     </>
   );
 };

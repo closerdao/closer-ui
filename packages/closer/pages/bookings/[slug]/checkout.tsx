@@ -3,6 +3,13 @@ import { useRouter } from 'next/router';
 import { useContext, useEffect, useMemo, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
+import {
+  IconCheckCircle,
+  IconHome,
+  IconMail,
+  IconPartyPopper,
+  IconXCircle,
+} from '../../../components/BookingIcons';
 import BookingWallet from '../../../components/BookingWallet';
 import CheckoutPayment from '../../../components/CheckoutPayment';
 import CheckoutTotal from '../../../components/CheckoutTotal';
@@ -334,8 +341,6 @@ const Checkout = ({
               .then((response) => response.data.results),
           ]);
 
-          console.log('areCreditsAvailable===========', areCreditsAvailable);
-          console.log('creditsBalance===========', creditsBalance);
           setCreditsBalance(creditsBalance);
           setCanApplyCredits(areCreditsAvailable && !useTokens);
         } catch (error) {
@@ -726,7 +731,6 @@ const Checkout = ({
       setUpdatedBooking(updatedBookingData);
       return updatedBookingData;
     } catch (error) {
-      console.error('Failed to refetch booking:', error);
       return null;
     }
   };
@@ -745,18 +749,36 @@ const Checkout = ({
 
   return (
     <>
-      <div className="w-full max-w-screen-sm mx-auto p-8">
-        <BookingBackButton onClick={goBack} name={t('buttons_back')} />
+      <div className="w-full max-w-screen-sm mx-auto p-4 md:p-6">
+        <div className="relative flex items-center min-h-[2.75rem] mb-4">
+          <BookingBackButton onClick={goBack} name={t('buttons_back')} className="relative z-10" />
+          <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
+            <Heading level={1} className="text-2xl md:text-3xl pb-0 mt-0 text-center">
+              <span>{t('bookings_checkout_step_title')}</span>
+            </Heading>
+          </div>
+        </div>
         {isFriend ? null : (
           <FriendsBookingBlock isFriendsBooking={booking?.isFriendsBooking} />
         )}
-        <Heading level={1} className="pb-4 mt-8">
-          <span className="mr-1">💰</span>
-          <span>{t('bookings_checkout_step_title')}</span>
-        </Heading>
-        <ProgressBar steps={BOOKING_STEPS} />
+        <ProgressBar
+          steps={BOOKING_STEPS}
+          stepHrefs={
+            start && end
+              ? [
+                  `/bookings/create/dates?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
+                  `/bookings/create/accomodation?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${useTokens ? '&currency=TDF' : ''}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
+                  `/bookings/${_id}/food`,
+                  `/bookings/${_id}/rules`,
+                  `/bookings/${_id}/questions`,
+                  `/bookings/${_id}/summary`,
+                  null,
+                ]
+              : undefined
+          }
+        />
 
-        <div className="mt-16 flex flex-col gap-16">
+        <div className="mt-6 flex flex-col gap-6">
           {status === 'pending-payment' ? (
             <CheckoutTotal
               total={booking?.paymentDelta?.fiat}
@@ -774,11 +796,38 @@ const Checkout = ({
                   booking?.paymentDelta?.fiat &&
                   booking?.paymentDelta?.fiat?.val > 0
                 ) && (
-                  <CurrencySwitcher
-                    selectedCurrency={currency}
-                    onSelect={setCurrency as any}
-                    currencies={CURRENCIES}
-                  />
+                  <div className="flex flex-col gap-2">
+                    <div
+                      className="flex flex-col gap-1"
+                      title={
+                        currency === CURRENCIES[1]
+                          ? t('bookings_payment_tdf_tooltip')
+                          : undefined
+                      }
+                    >
+                      <CurrencySwitcher
+                        selectedCurrency={currency}
+                        onSelect={setCurrency as any}
+                        currencies={CURRENCIES}
+                        optionsTitles={CURRENCIES.map((c) =>
+                          t(`currency_switch_${c}_title`),
+                        )}
+                      />
+                    </div>
+                    {currency === CURRENCIES[1] && isWalletReady && (
+                      <p className="text-sm text-foreground">
+                        {t('bookings_payment_wallet_balance')}:{' '}
+                        <span className="font-semibold">
+                          {priceFormat(tokenBalanceAvailable, CURRENCIES[1])}
+                        </span>
+                      </p>
+                    )}
+                    {currency === CURRENCIES[1] && (
+                      <p className="text-xs text-foreground">
+                        {t('bookings_payment_tdf_tooltip')}
+                      </p>
+                    )}
+                  </div>
                 )}
               {!(
                 booking?.paymentDelta?.fiat &&
@@ -789,10 +838,10 @@ const Checkout = ({
                     {eventPrice && (
                       <div>
                         <HeadingRow>
-                          <span className="mr-2">🎉</span>
+                          <IconPartyPopper />
                           <span>{t('bookings_checkout_ticket_cost')}</span>
                         </HeadingRow>
-                        <div className="mb-16 mt-4">
+                        <div className="mb-6 mt-2">
                           <Row
                             rowKey={ticketOption?.name}
                             value={`${priceFormat(
@@ -806,14 +855,14 @@ const Checkout = ({
                     {!ticketOption?.isDayTicket && (
                       <>
                         <HeadingRow>
-                          <span className="mr-2">🏡</span>
+                          <IconHome />
                           <span>
                             {isHourlyBooking
                               ? t('bookings_checkout_step_accomodation')
                               : t('bookings_checkout_step_hourly')}
                           </span>
                         </HeadingRow>
-                        <div className="flex justify-between items-center mt-3">
+                        <div className="flex justify-between items-center mt-2">
                           <p>{listingName}</p>
                           {useTokens && rentalToken ? (
                             <>
@@ -896,7 +945,7 @@ const Checkout = ({
                           useCredits || status === 'credits-paid'
                         }
                         creditsError={creditsError}
-                        className="my-12"
+                        className="my-4"
                       />
                     ) : null}
 
@@ -905,7 +954,7 @@ const Checkout = ({
                       rentalToken?.val > 0 &&
                       useTokens &&
                       status !== 'tokens-staked' && (
-                        <div className="mt-4">
+                        <div className="mt-2">
                           <BookingWallet
                             toPay={
                               paymentType === PaymentType.PARTIAL_TOKENS
@@ -917,67 +966,83 @@ const Checkout = ({
                         </div>
                       )}
                   </div>
-                  {!isHourlyBooking &&
-                  utilityFiat?.val &&
-                  bookingConfig?.utilityOptionEnabled ? (
-                    <div>
-                      <HeadingRow>
-                        <span className="mr-2">🛠</span>
-                        <span>{t('bookings_checkout_step_utility_title')}</span>
-                      </HeadingRow>
-                      <div className="flex justify-between items-center mt-3">
-                        <p> {t('bookings_summary_step_utility_total')}</p>
-                        <p className="font-bold">{priceFormat(utilityFiat)}</p>
-                      </div>
-                      <p className="text-right text-xs">
-                        {t('bookings_summary_step_utility_description')}
-                      </p>
-                    </div>
-                  ) : null}
-                  {!isHourlyBooking && foodFiat?.val ? (
-                    <div>
-                      <HeadingRow>
-                        <span className="mr-2">🥦</span>
-                        <span>{t('bookings_checkout_step_food_title')}</span>
-                      </HeadingRow>
-                      <div className="flex justify-between items-center mt-3">
-                        <p> {t('bookings_summary_step_food_total')}</p>
-                        <p className="font-bold">
-                          {booking?.foodOptionId
-                            ? priceFormat(foodFiat)
-                            : 'NOT INCLUDED'}
+                  <div className="rounded-lg border border-neutral-dark bg-neutral-light p-4">
+                    {!isHourlyBooking &&
+                    utilityFiat?.val &&
+                    bookingConfig?.utilityOptionEnabled ? (
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm font-medium">
+                          {t('bookings_checkout_step_utility_title')}
+                        </p>
+                        <p className="font-bold text-sm">
+                          {priceFormat(utilityFiat)}
                         </p>
                       </div>
-                      <p className="text-right text-xs">
-                        {t('bookings_summary_step_utility_description')}
-                      </p>
+                    ) : null}
+                    {!isHourlyBooking && foodFiat?.val ? (
+                      <div
+                        className={`flex justify-between items-center ${
+                          utilityFiat?.val && bookingConfig?.utilityOptionEnabled
+                            ? 'mt-2'
+                            : ''
+                        }`}
+                      >
+                        <p className="text-sm font-medium">
+                          {t('bookings_checkout_step_food_title')}
+                        </p>
+                        <p className="font-bold text-sm">
+                          {booking?.foodOptionId
+                            ? priceFormat(foodFiat)
+                            : t('bookings_food_not_included')}
+                        </p>
+                      </div>
+                    ) : null}
+                    <div
+                      className={
+                        (utilityFiat?.val &&
+                          bookingConfig?.utilityOptionEnabled) ||
+                        foodFiat?.val
+                          ? 'border-t border-neutral-dark/30 mt-2 pt-2'
+                          : ''
+                      }
+                    >
+                      <CheckoutTotal
+                        total={
+                          booking?.paymentDelta?.fiat &&
+                          booking?.paymentDelta?.fiat?.val > 0
+                            ? booking?.paymentDelta?.fiat
+                            : total
+                        }
+                        useTokens={useTokens || false}
+                        useCredits={
+                          (useCredits && status !== 'credits-paid') || false
+                        }
+                        rentalToken={rentalToken}
+                        vatRate={vatRate}
+                        priceInCredits={priceInCredits}
+                        compact
+                      />
                     </div>
-                  ) : null}
+                    {!isHourlyBooking &&
+                      ((utilityFiat?.val &&
+                        bookingConfig?.utilityOptionEnabled) ||
+                        foodFiat?.val) && (
+                        <p className="text-right text-xs mt-1 text-foreground/80">
+                          {t('bookings_summary_step_utility_description')}
+                        </p>
+                      )}
+                  </div>
                 </>
               )}
-
-              <CheckoutTotal
-                total={
-                  booking?.paymentDelta?.fiat &&
-                  booking?.paymentDelta?.fiat?.val > 0
-                    ? booking?.paymentDelta?.fiat
-                    : total
-                }
-                useTokens={useTokens || false}
-                useCredits={(useCredits && status !== 'credits-paid') || false}
-                rentalToken={rentalToken}
-                vatRate={vatRate}
-                priceInCredits={priceInCredits}
-              />
             </>
           )}
 
-          <div className="flex flex-col gap-2">
+          <div className="rounded-lg border-2 border-neutral-dark bg-neutral-light p-4 sm:p-6 flex flex-col gap-3">
             {status === 'tokens-staked' && useTokens && rentalToken && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-0">
                 <div className="flex ">
-                  <span className="text-green-600 mr-2">✅</span>
-                  <p className="text-green-800 font-medium">
+                  <IconCheckCircle className="text-green-600 mr-2" />
+                  <p className="text-green-800 font-medium text-sm">
                     {t.rich('bookings_checkout_tokens_staked_message', {
                       tokens: String(
                         priceFormat({
@@ -1039,19 +1104,24 @@ const Checkout = ({
                     isEnabled={!processing}
                     onClick={handleFriendsBookingSendToFriend}
                   >
-                    📧 {t('friends_booking_send_to_friend')}
+                    <span className="inline-flex items-center gap-2">
+                      <IconMail className="mr-0 shrink-0" />
+                      {t('friends_booking_send_to_friend')}
+                    </span>
                   </Button>
                 )}
 
                 {emailSuccess && (
-                  <div className="text-green-600 text-sm font-medium">
-                    ✅ {t('friends_booking_checkout_sent')}
+                  <div className="text-green-600 text-sm font-medium inline-flex items-center gap-2">
+                    <IconCheckCircle className="shrink-0 text-green-600" />
+                    {t('friends_booking_checkout_sent')}
                   </div>
                 )}
 
                 {emailError && (
-                  <div className="text-red-600 text-sm font-medium">
-                    ❌ {emailError}
+                  <div className="text-red-600 text-sm font-medium inline-flex items-center gap-2">
+                    <IconXCircle className="shrink-0 text-red-600" />
+                    {emailError}
                   </div>
                 )}
               </div>
@@ -1071,6 +1141,7 @@ const Checkout = ({
           {isTokenOnlyBooking && !isFriendsBooking && (
             <div>
               <Checkbox
+                id="token-staking-disclaimer"
                 isChecked={hasAgreedToWalletDisclaimer}
                 onChange={() =>
                   setWalletDisclaimer(!hasAgreedToWalletDisclaimer)
@@ -1487,7 +1558,6 @@ Checkout.getInitialProps = async (context: NextPageContext) => {
       messages,
     };
   } catch (err) {
-    console.log(err);
     return {
       error: parseMessageFromError(err),
       booking: null,

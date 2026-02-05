@@ -5,6 +5,7 @@ import utc from 'dayjs/plugin/utc';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
+import { IconBanknote, IconCheckCircle, IconCircle, IconXCircle } from '../BookingIcons';
 import { Button } from '../ui';
 
 dayjs.extend(utc);
@@ -70,14 +71,14 @@ const BookingRequestButtons = ({
           {status === 'open' && (
             <Link passHref href={`/bookings/${_id}/summary`}>
               <Button variant="secondary">
-                💰 {t('booking_card_checkout_button')}
+                <><IconBanknote className="mr-0 shrink-0" /> {t('booking_card_checkout_button')}</>
               </Button>
             </Link>
           )}
           {status === 'confirmed' && user && isOwnBooking && (
             <Link passHref href={`/bookings/${_id}/checkout`}>
               <Button variant="secondary">
-                💰 {t('booking_card_checkout_button')}
+                <><IconBanknote className="mr-0 shrink-0" /> {t('booking_card_checkout_button')}</>
               </Button>
             </Link>
           )}
@@ -87,28 +88,28 @@ const BookingRequestButtons = ({
           {status === 'tokens-staked' && user && isOwnBooking && (
             <Link passHref href={`/bookings/${_id}/checkout`}>
               <Button variant="secondary">
-                💰 {t('booking_card_checkout_button')}
+                <><IconBanknote className="mr-0 shrink-0" /> {t('booking_card_checkout_button')}</>
               </Button>
             </Link>
           )}
           {status === 'credits-paid' && user && isOwnBooking && (
             <Link passHref href={`/bookings/${_id}/checkout`}>
               <Button variant="secondary">
-                💰 {t('booking_card_checkout_button')}
+                <><IconBanknote className="mr-0 shrink-0" /> {t('booking_card_checkout_button')}</>
               </Button>
             </Link>
           )}
           {status === 'pending-payment' && user && isOwnBooking && (
             <Link passHref href={`/bookings/${_id}/checkout`}>
               <Button variant="secondary">
-                💰 {t('booking_card_checkout_button')}
+                <><IconBanknote className="mr-0 shrink-0" /> {t('booking_card_checkout_button')}</>
               </Button>
             </Link>
           )}
           {user && isBookingCancelable && isOwnBooking && !isSpaceHost && (
             <Link passHref href={`/bookings/${_id}/cancel`}>
               <Button variant="secondary" className="  uppercase">
-                ⭕ {t('booking_cancel_button')}
+                <><IconCircle className="mr-0 shrink-0" /> {t('booking_cancel_button')}</>
               </Button>
             </Link>
           )}
@@ -118,19 +119,19 @@ const BookingRequestButtons = ({
 
       {isSpaceHost && Boolean(user && isBookingCancelable && isOwnBooking) && (
         <Link passHref href={`/bookings/${_id}/cancel`}>
-          <Button variant="secondary">⭕ {t('booking_cancel_button')}</Button>
+          <Button variant="secondary"><><IconCircle className="mr-0 shrink-0" /> {t('booking_cancel_button')}</></Button>
         </Link>
       )}
       {user && user.roles.includes('space-host') && (
         <>
           {status === 'pending' && (
             <Button variant="secondary" onClick={confirmBooking}>
-              ✅ {t('booking_confirm_button')}
+              <><IconCheckCircle className="mr-0 shrink-0" /> {t('booking_confirm_button')}</>
             </Button>
           )}
           {status === 'pending' && (
             <Button variant="secondary" onClick={rejectBooking}>
-              ❌ {t('booking_reject_button')}
+              <><IconXCircle className="mr-0 shrink-0" /> {t('booking_reject_button')}</>
             </Button>
           )}
         </>

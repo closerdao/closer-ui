@@ -245,22 +245,21 @@ const Events = ({ generalConfig, eventsConfig }: Props) => {
                 </div>
                 
                 {/* Events */}
-                <div className="ml-16 space-y-4">
+                <div className="ml-16 space-y-6">
                   {monthGroup.events.map((event) => (
-                    <Link key={event._id} href={`/events/${event.slug}`} className="block">
-                      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
-                        <div className="flex gap-4">
-                          {/* Event image */}
-                          <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                    <Link key={event._id} href={`/events/${event.slug}`} className="block group">
+                      <div className="bg-white rounded-xl border border-gray-100 p-3 md:p-4 hover:shadow-md hover:border-gray-200 transition-all duration-200">
+                        <div className="flex flex-col md:flex-row gap-4 md:gap-5">
+                          <div className="w-full md:w-36 aspect-[4/3] md:aspect-square md:w-32 md:h-32 lg:w-40 lg:h-40 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
                             {event.photo ? (
                               <img
-                                className="w-full h-full object-cover"
-                                src={`${cdn}${event.photo}-profile-lg.jpg`}
+                                className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                                src={`${cdn}${event.photo}-place-lg.jpg`}
                                 alt={event.name}
                               />
                             ) : event.visual ? (
                               <img
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
                                 src={event.visual}
                                 alt={event.name}
                               />
@@ -270,36 +269,21 @@ const Events = ({ generalConfig, eventsConfig }: Props) => {
                               </div>
                             )}
                           </div>
-                          
-                          {/* Event details */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold text-lg mb-1">
-                                  {event.name}
-                                </h4>
-                                
-                                <p className="text-sm text-gray-600 mb-2">
-                                  <span>{formatEventDate(event)}</span> 
-                                  <span className="mx-2">•</span> 
-                                  <span>{formatEventTime(event)}</span>
-                                </p>
-                                
-                                {(event.address || event.location) && !event.virtual && (
-                                  <div className="flex items-center text-sm text-gray-500 mb-1">
-                                    <MapPin className="mr-1 h-4 w-4" />
-                                    <span>{event.address || event.location}</span>
-                                  </div>
-                                )}
-                                
-                                {event.virtual && (
-                                  <div className="flex items-center text-sm text-gray-500 mb-1">
-                                    <MapPin className="mr-1 h-4 w-4" />
-                                    <span>{t('events_online')}</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
+                          <div className="flex-1 min-w-0 flex justify-center flex-col">
+                            <p className="text-[11px] uppercase tracking-[0.15em] text-gray-400 mb-1">
+                              {formatEventDate(event)}
+                              <span className="mx-1.5">·</span>
+                              {formatEventTime(event)}
+                            </p>
+                            <h4 className="font-medium text-base md:text-lg text-gray-900 group-hover:text-primary transition-colors tracking-tight">
+                              {event.name}
+                            </h4>
+                            {(event.virtual || event.address || event.location) && (
+                              <p className="text-sm text-gray-500 mt-2 flex items-center gap-1.5">
+                                <MapPin className="h-4 w-4 flex-shrink-0" />
+                                <span className="truncate">{event.virtual ? t('events_online') : (event.address || event.location)}</span>
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -338,22 +322,21 @@ const Events = ({ generalConfig, eventsConfig }: Props) => {
                 </div>
                 
                 {/* Events */}
-                <div className="ml-16 space-y-4">
+                <div className="ml-16 space-y-6">
                   {yearGroup.events.map((event) => (
-                    <Link key={event._id} href={`/events/${event.slug}`} className="block">
-                      <div className="bg-gray-50 rounded-lg shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow">
-                        <div className="flex gap-4">
-                          {/* Event image */}
-                          <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                    <Link key={event._id} href={`/events/${event.slug}`} className="block group">
+                      <div className="bg-gray-50 rounded-xl border border-gray-100 p-3 md:p-4 hover:shadow-sm hover:border-gray-200 transition-all duration-200">
+                        <div className="flex flex-col md:flex-row gap-4 md:gap-5">
+                          <div className="w-full md:w-36 aspect-[4/3] md:aspect-square md:w-32 md:h-32 lg:w-40 lg:h-40 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
                             {event.photo ? (
                               <img
-                                className="w-full h-full object-cover"
-                                src={`${cdn}${event.photo}-profile-lg.jpg`}
+                                className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                                src={`${cdn}${event.photo}-place-lg.jpg`}
                                 alt={event.name}
                               />
                             ) : event.visual ? (
                               <img
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
                                 src={event.visual}
                                 alt={event.name}
                               />
@@ -363,34 +346,19 @@ const Events = ({ generalConfig, eventsConfig }: Props) => {
                               </div>
                             )}
                           </div>
-                          
-                          {/* Event details */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold text-lg mb-1 hover:text-gray-700">
-                                  {event.name}
-                                </h4>
-                                
-                                <p className="text-sm text-gray-500 mb-2">
-                                  {formatEventDate(event)}
-                                </p>
-                                
-                                {(event.address || event.location) && !event.virtual && (
-                                  <div className="flex items-center text-sm text-gray-400 mb-1">
-                                    <MapPin className="mr-1 h-4 w-4" />
-                                    <span>{event.address || event.location}</span>
-                                  </div>
-                                )}
-                                
-                                {event.virtual && (
-                                  <div className="flex items-center text-sm text-gray-400 mb-1">
-                                    <MapPin className="mr-1 h-4 w-4" />
-                                    <span>{t('events_online')}</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
+                          <div className="flex-1 min-w-0 flex justify-center flex-col">
+                            <p className="text-[11px] uppercase tracking-[0.15em] text-gray-400 mb-1">
+                              {formatEventDate(event)}
+                            </p>
+                            <h4 className="font-medium text-base md:text-lg text-gray-700 group-hover:text-primary transition-colors tracking-tight">
+                              {event.name}
+                            </h4>
+                            {(event.virtual || event.address || event.location) && (
+                              <p className="text-sm text-gray-500 mt-2 flex items-center gap-1.5">
+                                <MapPin className="h-4 w-4 flex-shrink-0" />
+                                <span className="truncate">{event.virtual ? t('events_online') : (event.address || event.location)}</span>
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>

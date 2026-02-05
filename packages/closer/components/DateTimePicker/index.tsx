@@ -23,6 +23,7 @@ interface Props {
   setStartDate: (date: string | null | Date) => void;
   setEndDate: (date: string | null | Date) => void;
   maxDuration?: number;
+  startCollapsed?: boolean;
   blockedDateRanges?: (
     | Date
     | {
@@ -41,6 +42,7 @@ interface Props {
   hourAvailability?: { hour: string; isAvailable: boolean }[] | [];
   timeZone?: string;
   isDashboard?: boolean;
+  durationLabel?: string;
 }
 
 const DateTimePicker = ({
@@ -58,7 +60,10 @@ const DateTimePicker = ({
   hourAvailability,
   timeZone,
   isDashboard,
+  startCollapsed = false,
+  durationLabel,
 }: Props) => {
+  const [isExpanded, setIsExpanded] = useState(!startCollapsed);
   // Store the original full dates for timezone conversion
   const originalStartDate = savedStartDate;
   const originalEndDate = savedEndDate;
@@ -383,101 +388,189 @@ const DateTimePicker = ({
     setIsDateRangeSet(false);
   };
 
+  const showCalendar = !startCollapsed || isExpanded;
+  const hasDates = dateRange?.from || savedStartDate;
+
   return (
     <div className="max-w-[550px]">
-      <div data-testid="dates" className="w-full flex mb-8 justify-between">
-        <div className="flex">
+      <div data-testid="dates" className="w-full flex flex-wrap items-center gap-2 mb-2">
+        <div className="flex flex-wrap gap-2 items-center">
           {priceDuration !== 'night' && startTime && savedStartDate && (
-            <div className="text-sm border rounded-md bg-neutral py-3 px-4 font-bold ">
+            <div className="text-xs md:text-sm border rounded-xl bg-neutral py-1.5 px-2 font-medium">
               {getDateOnly(savedStartDate)}
               {isStartTimeSelected &&
                 startTimeOnly !== endTimeOnly &&
-                ` - ${startTimeOnly} - ${endTimeOnly}`}
+                ` – ${startTimeOnly}–${endTimeOnly}`}
             </div>
           )}
           {priceDuration === 'night' && (
             <>
-              <div>
-                {!isDashboard && (
-                  <div className="text-sm mb-2">
-                    {isAdmin
-                      ? t('events_event_start_date')
-                      : t('listings_book_check_in')}
-                  </div>
+              <div className="text-xs md:text-sm border rounded-xl bg-neutral py-1.5 px-2 font-medium min-w-4 flex items-center justify-center text-center shrink-0">
+                {isAdmin && !showCalendar && (
+                  <span className="text-foreground/60 text-xs block">
+                    {t('events_event_start_date')}
+                  </span>
                 )}
-                <div className="text-sm border rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
-                  {dateRange?.from
-                    ? dayjs(dateRange?.from).format('ll')
-                    : t('listings_book_select_date')}{' '}
-                </div>
+                {dateRange?.from ? (
+                  <>
+                    <span className="md:hidden">{dayjs(dateRange.from).format('MMM D')}</span>
+                    <span className="hidden md:inline">{dayjs(dateRange.from).format('ll')}</span>
+                  </>
+                ) : t('listings_book_select_date')}
               </div>
-              <div>
-                {!isDashboard && (
-                  <div className="text-sm mb-2">
-                    {isAdmin
-                      ? t('events_event_end_date')
-                      : t('listings_book_check_out')}
-                  </div>
+              <div className="text-xs md:text-sm border rounded-xl bg-neutral py-1.5 px-2 font-medium min-w-4 flex items-center justify-center text-center shrink-0">
+                {isAdmin && !showCalendar && (
+                  <span className="text-foreground/60 text-xs block">
+                    {t('events_event_end_date')}
+                  </span>
                 )}
-                <div className="text-sm border rounded-md bg-neutral py-3 px-4 font-bold mr-2 w-[136px]">
-                  {dateRange?.to
-                    ? dayjs(dateRange?.to).format('ll')
-                    : t('listings_book_select_date')}
-                </div>
+                {dateRange?.to ? (
+                  <>
+                    <span className="md:hidden">{dayjs(dateRange.to).format('MMM D')}</span>
+                    <span className="hidden md:inline">{dayjs(dateRange.to).format('ll')}</span>
+                  </>
+                ) : t('listings_book_select_date')}
               </div>
+              {durationLabel && (
+                <span className="text-xs md:text-sm font-medium text-foreground/90 py-1.5 px-2 rounded-xl bg-accent/20 min-w-4 flex items-center justify-center text-center shrink-0 border border-transparent">
+                  {durationLabel}
+                </span>
+              )}
             </>
           )}
         </div>
-        <Button
-          className="hidden sm:block sm:font-normal h-[25px] w-[130px] underline sm:no-underline text-black border-0 sm:border-2 border-black normal-case py-0.5 px-0 sm:px-3 sm:p-3 sm:py-2 text-sm bg-white"
-          onClick={handleClearDates}
-        >
-          {t('generic_clear_selection')}
-        </Button>
-      </div>
-
-      <div>
-        <DayPicker
-          disabled={normalizeBlockedDateRangesForDayPicker(blockedDateRanges)}
-          mode="range"
-          defaultMonth={defaultMonth}
-          numberOfMonths={isOneMonthCalendar ? 1 : 2}
-          onSelect={handleSelectDay}
-          selected={dateRange}
-        />
-        {dateError && <ErrorMessage error={dateError} />}
-
-        {isAdmin && (
-          <div>
-            <div className="text-sm mb-2 flex">
-              <div className="w-[136px] mr-2">
-                <Input
-                  label={t('events_event_start_time')}
-                  value={startTime}
-                  isDisabled={!Boolean(dateRange?.from)}
-                  type="time"
-                  id="startTime"
-                  onChange={handleTimeChange}
-                />
-              </div>
-              <div className="w-[136px]">
-                <Input
-                  label={t('events_event_end_time')}
-                  value={endTime}
-                  isDisabled={!Boolean(dateRange?.to)}
-                  type="time"
-                  id="endTime"
-                  onChange={handleTimeChange}
-                />
-              </div>
-            </div>
-            <div className="text-sm mt-4">
-              {timeZone} {t('events_time')}
-            </div>
-          </div>
+        {startCollapsed ? (
+          <Button
+            type="button"
+            size="small"
+            className="btn-primary"
+            onClick={() => setIsExpanded(true)}
+          >
+            {hasDates ? (t('events_edit_dates') || 'Edit dates') : (t('events_set_dates') || 'Set dates')}
+          </Button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleClearDates}
+            className="text-xs text-foreground/60 hover:text-foreground underline py-1 px-1.5 min-w-0"
+          >
+            {t('generic_clear_selection')}
+          </button>
         )}
       </div>
-      {priceDuration !== 'night' && (
+
+      {showCalendar && !startCollapsed && (
+        <>
+          <div className="mt-2">
+            <DayPicker
+              disabled={normalizeBlockedDateRangesForDayPicker(blockedDateRanges)}
+              mode="range"
+              defaultMonth={defaultMonth}
+              numberOfMonths={isOneMonthCalendar ? 1 : 2}
+              onSelect={handleSelectDay}
+              selected={dateRange}
+            />
+            {dateError && <ErrorMessage error={dateError} />}
+
+            {isAdmin && (
+              <div>
+                <div className="text-sm mb-2 flex">
+                  <div className="w-[136px] mr-2">
+                    <Input
+                      label={t('events_event_start_time')}
+                      value={startTime}
+                      isDisabled={!Boolean(dateRange?.from)}
+                      type="time"
+                      id="startTime"
+                      onChange={handleTimeChange}
+                    />
+                  </div>
+                  <div className="w-[136px]">
+                    <Input
+                      label={t('events_event_end_time')}
+                      value={endTime}
+                      isDisabled={!Boolean(dateRange?.to)}
+                      type="time"
+                      id="endTime"
+                      onChange={handleTimeChange}
+                    />
+                  </div>
+                </div>
+                <div className="text-sm mt-4">
+                  {timeZone} {t('events_time')}
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {startCollapsed && isExpanded && (
+        <>
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            aria-modal
+            role="dialog"
+          >
+            <div
+              className="absolute inset-0 bg-foreground/40"
+              onClick={() => setIsExpanded(false)}
+              aria-hidden
+            />
+            <div className="relative z-10 bg-white rounded-lg shadow-xl border border-neutral-dark/30 p-6 max-h-[90vh] overflow-y-auto">
+              <DayPicker
+                disabled={normalizeBlockedDateRangesForDayPicker(blockedDateRanges)}
+                mode="range"
+                defaultMonth={defaultMonth}
+                numberOfMonths={isOneMonthCalendar ? 1 : 2}
+                onSelect={handleSelectDay}
+                selected={dateRange}
+              />
+              {dateError && <ErrorMessage error={dateError} />}
+              {isAdmin && (
+                <div className="mt-4">
+                  <div className="text-sm mb-2 flex">
+                    <div className="w-[136px] mr-2">
+                      <Input
+                        label={t('events_event_start_time')}
+                        value={startTime}
+                        isDisabled={!Boolean(dateRange?.from)}
+                        type="time"
+                        id="startTime"
+                        onChange={handleTimeChange}
+                      />
+                    </div>
+                    <div className="w-[136px]">
+                      <Input
+                        label={t('events_event_end_time')}
+                        value={endTime}
+                        isDisabled={!Boolean(dateRange?.to)}
+                        type="time"
+                        id="endTime"
+                        onChange={handleTimeChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="text-sm mt-4">
+                    {timeZone} {t('events_time')}
+                  </div>
+                </div>
+              )}
+              <div className="mt-6 flex justify-end">
+                <Button
+                  type="button"
+                  size="small"
+                  className="btn-primary"
+                  onClick={() => setIsExpanded(false)}
+                >
+                  {t('generic_done') || 'Done'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+      {priceDuration !== 'night' && showCalendar && !startCollapsed && (
         <div className="py-2 border-t">
           <TimePicker
             startDate={savedStartDate}

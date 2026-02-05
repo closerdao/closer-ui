@@ -9,6 +9,7 @@ interface Props {
   selectedCurrency: string | CloserCurrencies;
   onSelect: Dispatch<SetStateAction<string | CloserCurrencies>>;
   className?: string;
+  optionsTitles?: string[];
 }
 
 const CurrencySwitcher = ({
@@ -16,6 +17,7 @@ const CurrencySwitcher = ({
   selectedCurrency,
   onSelect,
   className,
+  optionsTitles,
 }: Props) => {
   const { isWalletConnected, isCorrectNetwork, hasSameConnectedAccount } =
     useContext(WalletState);
@@ -28,6 +30,7 @@ const CurrencySwitcher = ({
         options={currencies}
         selectedOption={selectedCurrency}
         setSelectedOption={onSelect}
+        optionsTitles={optionsTitles}
         isTokenPaymentAvailable={
           isWalletConnected &&
           isWeb3BookingEnabled &&

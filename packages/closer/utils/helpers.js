@@ -108,6 +108,14 @@ export const priceFormat = (price, currency = DEFAULT_CURRENCY) => {
     });
   } else if (typeof price?.val !== 'undefined') {
     const priceValue = parseFloat(price.val);
+    const effectiveCur = price.cur || currency;
+    const tokenCurrencies = ['TDF', 'ETH'];
+    if (tokenCurrencies.includes(effectiveCur)) {
+      return `${priceValue.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })} ${effectiveCur}`;
+    }
     if (price.cur === BLOCKCHAIN_DAO_TOKEN.symbol) {
       return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -119,10 +127,20 @@ export const priceFormat = (price, currency = DEFAULT_CURRENCY) => {
     }
     return priceValue.toLocaleString('en-US', {
       style: 'currency',
-      currency: price.cur || currency,
+      currency: effectiveCur,
     });
   } else {
-    return '0.00';
+    const effectiveCur = price?.cur || currency;
+    const tokenCurrencies = ['TDF', 'ETH'];
+    if (effectiveCur && tokenCurrencies.includes(effectiveCur)) {
+      return `0.00 ${effectiveCur}`;
+    }
+    return price?.cur
+      ? `0.00 ${price.cur}`
+      : parseFloat(0).toLocaleString('en-US', {
+          style: 'currency',
+          currency: currency || 'EUR',
+        });
   }
 };
 

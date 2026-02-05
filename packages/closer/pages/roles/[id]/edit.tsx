@@ -1,7 +1,7 @@
 import Head from 'next/head';
 
 import CreateRoleView from '../../../components/CreateRoleView';
-import { Heading } from '../../../components/ui';
+import { EditModelPageLayout } from '../../../components/EditModel';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -38,12 +38,13 @@ const EditRole = ({ role, error }: Props) => {
       <Head>
         <title>{t('roles_edit_page_title')}</title>
       </Head>
-      <div>
-        <Heading level={2} className="mb-2">
-          {t('roles_edit_page_title')}
-        </Heading>
+      <EditModelPageLayout
+        title={t('roles_edit_page_title')}
+        backHref="/roles"
+        isEdit
+      >
         <CreateRoleView isEditMode data={role} />
-      </div>
+      </EditModelPageLayout>
     </>
   );
 };

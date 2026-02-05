@@ -24,4 +24,17 @@ export const bookingConfig = {
   volunteerCommitment: '4h/day',
   cancellationPolicyLastweek: 0.5,
   utilityFiatVal: 2,
+  pickUpEnabled: false,
+  foodOptionEnabled: true,
+  utilityOptionEnabled: true,
+  foodPriceBasic: 12,
+  foodPriceChef: 18,
+  chatLink: '',
+  friendsBookingMaxGuests: 4,
+};
+
+export const bookingConfigWithFoodAndUtilityDisabled = {
+  ...bookingConfig,
+  foodOptionEnabled: false,
+  utilityOptionEnabled: false,
 };

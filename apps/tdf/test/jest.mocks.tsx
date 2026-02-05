@@ -6,6 +6,8 @@ process.env.NEXT_PUBLIC_FEATURE_BOOKING = 'true';
 process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS = 'true';
 process.env.NEXT_PUBLIC_CDN_URL = 'https://cdn.example.com';
 process.env.NEXT_PUBLIC_API_URL = 'https://api.example.com';
+process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY =
+  process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY || 'pk_test_mock';
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
@@ -22,6 +24,7 @@ Object.defineProperty(window, 'matchMedia', {
 jest.mock('next/image', () => ({
   __esModule: true,
   default: (props: any) => {
-    return <img {...props} />;
+    const { priority, fill, ...imgProps } = props;
+    return <img {...imgProps} />;
   },
 }));

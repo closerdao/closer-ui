@@ -1,8 +1,12 @@
 import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../hooks/useConfig';
+import { IconBanknote } from './BookingIcons';
 import { CloserCurrencies, Price } from '../types';
-import { getBookingPaymentType } from '../utils/booking.helpers';
+import {
+  getBookingPaymentType,
+  getDisplayTotalFromComponents,
+} from '../utils/booking.helpers';
 import { getVatInfo, priceFormat } from '../utils/helpers';
 import DisplayPrice from './DisplayPrice';
 import HeadingRow from './ui/HeadingRow';
@@ -35,6 +39,9 @@ interface Props {
   updatedRentalFiat?: Price<CloserCurrencies>;
   updatedRentalToken?: Price<CloserCurrencies>;
   status?: string;
+  foodOptionEnabled?: boolean;
+  utilityOptionEnabled?: boolean;
+  hideTitle?: boolean;
 }
 
 const SummaryCosts = ({
@@ -63,6 +70,9 @@ const SummaryCosts = ({
   updatedRentalFiat,
   updatedRentalToken,
   status,
+  foodOptionEnabled,
+  utilityOptionEnabled,
+  hideTitle,
 }: Props) => {
   const t = useTranslations();
   const { APP_NAME } = useConfig();
@@ -73,12 +83,29 @@ const SummaryCosts = ({
     rentalFiat,
   });
 
+  const calculatedTotalFiat = getDisplayTotalFromComponents({
+    rentalFiat,
+    utilityFiat,
+    foodFiat,
+    eventFiat: eventCost,
+    fallbackCur: totalFiat?.cur ?? CloserCurrencies.EUR,
+    foodOptionEnabled,
+    utilityOptionEnabled,
+  });
+
+  const displayTotalFiat =
+    totalFiat?.val != null && totalFiat?.cur
+      ? totalFiat
+      : calculatedTotalFiat;
+
   return (
     <div>
-      <HeadingRow>
-        <span className="mr-4">💰</span>
-        <span>{t('bookings_summary_step_costs_title')}</span>
-      </HeadingRow>
+      {!hideTitle && (
+        <HeadingRow>
+          <IconBanknote className="mr-4" />
+          <span>{t('bookings_summary_step_costs_title')}</span>
+        </HeadingRow>
+      )}
 
       {eventCost ? (
         <div className="flex justify-between items-center mt-3">
@@ -156,7 +183,7 @@ const SummaryCosts = ({
             {t('bookings_summary_step_accomodation_type_description')}
           </p>
 
-          {utilityFiat?.val ? (
+          {utilityOptionEnabled ? (
             <div>
               <div className="flex justify-between items-center mt-3">
                 <p> {t('bookings_summary_step_utility_total')}</p>
@@ -171,7 +198,12 @@ const SummaryCosts = ({
                     )}
 
                   <p className="font-bold">
-                    {priceFormat(utilityFiat)}
+                    {priceFormat(
+                      utilityFiat ?? {
+                        val: 0,
+                        cur: totalFiat?.cur ?? CloserCurrencies.EUR,
+                      },
+                    )}
                     {isNotPaid && (
                       <span className="text-failure">
                         {' '}
@@ -187,7 +219,7 @@ const SummaryCosts = ({
             </div>
           ) : null}
 
-          {foodFiat?.val ? (
+          {foodOptionEnabled ? (
             <div>
               <div className="flex justify-between items-center mt-3">
                 <p> {t('bookings_summary_step_food_total')}</p>
@@ -202,8 +234,13 @@ const SummaryCosts = ({
                     )}
                   <p className="font-bold">
                     {isFoodIncluded
-                      ? priceFormat(foodFiat.val)
-                      : 'NOT INCLUDED'}
+                      ? priceFormat(
+                          foodFiat ?? {
+                            val: 0,
+                            cur: totalFiat?.cur ?? CloserCurrencies.EUR,
+                          },
+                        )
+                      : t('stay_food_not_included')}
                     {isNotPaid && (
                       <span className="text-failure">
                         {' '}
@@ -221,8 +258,9 @@ const SummaryCosts = ({
         </>
       )}
 
-      <div className="flex justify-between items-center mt-3">
-        <p>{t('bookings_total')}</p>
+      <div className="mt-4 pt-4 border-t-2 border-neutral-dark rounded-lg bg-accent-light/10 px-3 py-3">
+        <div className="flex justify-between items-center">
+          <p className="font-semibold text-lg">{t('bookings_total')}</p>
         <div className="flex items-center gap-2">
           {isEditMode &&
             status !== 'cancelled' &&
@@ -264,14 +302,21 @@ const SummaryCosts = ({
             )}
 
           {(priceDuration === 'night' || !priceDuration) && (
-            <div className="font-bold">
+            <div className="font-bold text-lg">
               {useTokens && (
                 <>
-                  <span>{priceFormat(totalToken)}</span>
-                  {totalFiat?.val > 0 && (
+                  <span>
+                    {priceFormat(
+                      totalToken ?? {
+                        val: 0,
+                        cur: CloserCurrencies.TDF,
+                      },
+                    )}
+                  </span>
+                  {displayTotalFiat.val > 0 && (
                     <>
                       {' '}
-                      + <span>{priceFormat(totalFiat)}</span>
+                      + <span>{priceFormat(displayTotalFiat)}</span>
                     </>
                   )}
                   {isNotPaid && (
@@ -291,7 +336,7 @@ const SummaryCosts = ({
                       app: APP_NAME,
                     })}
                   </span>{' '}
-                  + <span>{priceFormat(totalFiat)}</span>
+                  + <span>{priceFormat(displayTotalFiat)}</span>
                   {isNotPaid && (
                     <span className="text-failure">
                       {' '}
@@ -304,7 +349,7 @@ const SummaryCosts = ({
               {!useTokens && !useCredits && (
                 <div>
                   {' '}
-                  {priceFormat(totalFiat)}
+                  {priceFormat(displayTotalFiat)}
                   {isNotPaid && (
                     <span className="text-failure">
                       {' '}
@@ -320,7 +365,14 @@ const SummaryCosts = ({
             <div className="font-bold">
               {useTokens && (
                 <>
-                  <span>{priceFormat(totalToken)}</span>
+                  <span>
+                    {priceFormat(
+                      totalToken ?? {
+                        val: 0,
+                        cur: CloserCurrencies.TDF,
+                      },
+                    )}
+                  </span>
                 </>
               )}
               {useCredits && (
@@ -338,7 +390,7 @@ const SummaryCosts = ({
               {!useTokens && !useCredits && (
                 <div>
                   {' '}
-                  {priceFormat(totalFiat)}
+                  {priceFormat(displayTotalFiat)}
                   {isNotPaid && (
                     <span className="text-failure">
                       {' '}
@@ -350,11 +402,17 @@ const SummaryCosts = ({
             </div>
           )}
         </div>
+        </div>
+        <p className="text-right text-xs mt-2">
+          {t('bookings_checkout_step_total_description')}{' '}
+          {getVatInfo(displayTotalFiat, vatRate)}
+        </p>
+        {useTokens && displayTotalFiat.val > 0 && (
+          <p className="text-xs text-foreground mt-2 pt-2 border-t border-neutral-dark">
+            {t('bookings_summary_hybrid_payment_note')}
+          </p>
+        )}
       </div>
-      <p className="text-right text-xs">
-        {t('bookings_checkout_step_total_description')}{' '}
-        {getVatInfo(totalFiat, vatRate)}
-      </p>
     </div>
   );
 };

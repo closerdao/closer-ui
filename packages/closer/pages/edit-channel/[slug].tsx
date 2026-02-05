@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import EditModel from '../../components/EditModel';
+import EditModel, { EditModelPageLayout } from '../../components/EditModel';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -32,7 +32,11 @@ const EditChannel = ({ channel }: Props) => {
       <Head>
         <title>{`${t('edit_channel_title')} - ${channel.name}`}</title>
       </Head>
-      <div className="main-content w-full">
+      <EditModelPageLayout
+        title={`${t('edit_channel_title')} ${channel.name}`}
+        backHref={`/channel/${channel.slug}`}
+        isEdit
+      >
         <EditModel
           id={channel._id}
           endpoint={'/channel'}
@@ -45,7 +49,7 @@ const EditChannel = ({ channel }: Props) => {
           deleteButton="Delete Channel"
           onDelete={() => (window.location.href = '/community')}
         />
-      </div>
+      </EditModelPageLayout>
     </>
   );
 };

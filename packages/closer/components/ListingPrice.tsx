@@ -24,7 +24,11 @@ const ListingPrice = ({
             {['volunteer', 'residency'].includes(
               bookingCategory.toLowerCase(),
             ) ? (
-              <div>{priceFormat(0)}</div>
+              <div>
+                {useTokens && rentalToken?.val != null && rentalToken.val > 0
+                  ? priceFormat(rentalToken)
+                  : priceFormat(0)}
+              </div>
             ) : (
               priceFormat(useTokens ? rentalToken : rentalFiat)
             )}

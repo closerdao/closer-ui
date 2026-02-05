@@ -4,13 +4,13 @@ import { FC } from 'react';
 
 import { MapPin } from 'lucide-react';
 import dayjs from 'dayjs';
-import advancedFormat from 'dayjs/plugin/advancedFormat';
 import { useTranslations } from 'next-intl';
 
 import { Event, VolunteerOpportunity } from '../types';
 import { cdn } from '../utils/api';
 
-dayjs.extend(advancedFormat);
+const stripHtml = (html: string): string =>
+  html?.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() || '';
 
 interface BaseProps {
   isListView?: boolean;
@@ -35,6 +35,7 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
   const t = useTranslations();
   const { start, end, photo, name, slug } = event || {};
   const {
+    description = '',
     visual = '',
     virtual = false,
     location = '',
@@ -43,70 +44,39 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
   const startDate = dayjs(start);
   const endDate = dayjs(end);
   const duration = endDate?.diff(start, 'hour', true);
-  const isThisYear = dayjs().isSame(start, 'year');
-  const dateFormat = isThisYear ? 'MMMM Do HH:mm' : 'YYYY MMMM Do HH:mm';
+  const isSameDay = startDate.isSame(endDate, 'day');
+  const dateStr = isSameDay
+    ? startDate.format('MMM D')
+    : `${startDate.format('MMM D')} – ${endDate.format('MMM D')}`;
+  const timeStr =
+    isSameDay && duration > 0 && duration <= 24
+      ? `, ${startDate.format('h a')}–${endDate.format('h a')}`
+      : '';
   const linkHref = isVolunteerCard ? `/volunteer/${slug}` : `/events/${slug}`;
-  const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const strippedDesc = !isVolunteerCard && description ? stripHtml(description) : '';
+  const teaser = strippedDesc.slice(0, 120);
 
-  return (
-    <div role="listitem" className={className}>
-      <div
-        className={`h-full card rounded overflow-hidden
-        ${
-          isVolunteerCard
-            ? 'flex gap-8 p-4 px-8'
-            : 'card rounded overflow-hidden'
-        }  
-        `}
-      >
-        {!isVolunteerCard && (
-          <p className="text-xs font-light">
-            {startDate && dayjs(startDate).format(dateFormat)}
-            {endDate &&
-              duration > 24 &&
-              ` - ${dayjs(endDate).format(dateFormat)}`}
-            {endDate &&
-              duration <= 24 &&
-              ` - ${dayjs(endDate).format('HH:mm')}`}{' '}
-            ({localTimezone} {t('events_time')})
-          </p>
-        )}
-        <div
-          className={`${
-            isListView ? 'w-24 mt-3 mr-3 h-24' : '-mx-4 mt-4 h-44 md:h-50 '
-          } bg-gray-50 overflow-hidden
-          ${isVolunteerCard && 'w-[100px] h-[100px]'}
-            `}
-        >
-          <Link href={linkHref}>
-            {photo ? (
-              <img
-                className="object-cover h-full w-full"
-                src={`${cdn}${photo}-place-lg.jpg`}
-                alt={name}
-              />
-            ) : (
-              visual && (
+  if (isVolunteerCard) {
+    return (
+      <div role="listitem" className={className}>
+        <div className="h-full card rounded overflow-hidden flex gap-8 p-4 px-8">
+          <div className="w-[100px] h-[100px] bg-gray-50 overflow-hidden">
+            <Link href={linkHref}>
+              {photo ? (
                 <img
-                  className="w-full object-fit md:h-full"
-                  src={visual}
+                  className="object-cover h-full w-full"
+                  src={`${cdn}${photo}-place-lg.jpg`}
                   alt={name}
                 />
-              )
-            )}
-          </Link>
-        </div>
-        <div
-          className={` p-2  ${isListView ? 'w-2/3' : 'text-left'} first-letter:
-        ${isVolunteerCard ? 'w-2/3' : ''}
-        `}
-        >
-          <div className="event-description">
-            <h4
-              className={`${isListView ? 'text-sm' : 'font-bold text-xl'}
-            // ${isVolunteerCard && 'w-2/3'}
-            `}
-            >
+              ) : (
+                visual && (
+                  <img className="w-full object-fit h-full" src={visual} alt={name} />
+                )
+              )}
+            </Link>
+          </div>
+          <div className="w-2/3 p-2 text-left">
+            <h4 className="font-bold text-xl">
               <Link href={linkHref}>{name}</Link>
             </h4>
             {virtual && (
@@ -124,6 +94,63 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
           </div>
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div role="listitem" className={className}>
+      <Link
+        href={linkHref}
+        className="group block h-full rounded-xl overflow-hidden border border-gray-200 bg-white hover:border-gray-300 hover:shadow-lg transition-all duration-200"
+      >
+        <div
+          className={`${
+            isListView ? 'w-24 mt-3 mr-3 h-24' : 'h-48 md:h-52'
+          } bg-gray-100 overflow-hidden`}
+        >
+          {photo ? (
+            <img
+              className="object-cover h-full w-full group-hover:scale-[1.02] transition-transform duration-200"
+              src={`${cdn}${photo}-place-lg.jpg`}
+              alt={name}
+            />
+          ) : (
+            visual && (
+              <img
+                className="object-cover h-full w-full group-hover:scale-[1.02] transition-transform duration-200"
+                src={visual}
+                alt={name}
+              />
+            )
+          )}
+        </div>
+        <div className="p-5 text-left">
+          <p className="text-xs text-gray-500 mb-2">
+            {dateStr}{timeStr}
+          </p>
+          <h4
+            className={`font-semibold text-gray-900 group-hover:text-accent transition-colors ${
+              isListView ? 'text-sm' : 'text-lg mb-2'
+            }`}
+          >
+            {name}
+          </h4>
+          {teaser && (
+            <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed mb-3">
+              {teaser}
+              {strippedDesc.length > 120 ? '…' : ''}
+            </p>
+          )}
+          {(virtual || address || location) && (
+            <div className="flex items-center gap-1.5 text-gray-500 min-w-0">
+              <MapPin className="h-4 w-4 flex-shrink-0" />
+              <p className="text-sm truncate">
+                {virtual ? t('events_online') : address || location}
+              </p>
+            </div>
+          )}
+        </div>
+      </Link>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingRules from '../../../components/BookingRules';
@@ -10,6 +10,7 @@ import { Button } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
+import dayjs from 'dayjs';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -48,21 +49,17 @@ const BookingRulesPage = ({
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const { start, end, adults, useTokens, isFriendsBooking, _id } =
+    booking || {};
 
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
-  useEffect(() => {
-    if (
-      !bookingRules ||
-      !bookingRules?.elements ||
-      bookingRules?.elements?.length === 0 ||
-      !bookingRules?.elements?.[0]?.title
-    ) {
-      router.push(`/bookings/${booking?._id}/questions`);
-    }
-  }, [bookingRules, router, booking?._id]);
+  const hasRules =
+    bookingRules?.enabled &&
+    bookingRules?.elements?.length > 0 &&
+    bookingRules?.elements?.some((el) => el?.title);
 
   const handleNext = async () => {
     setIsLoading(true);
@@ -93,18 +90,40 @@ const BookingRulesPage = ({
   }
 
   return (
-    <div className="w-full max-w-screen-sm mx-auto p-8">
-      <BookingBackButton onClick={goBack} name={t('buttons_back')} />
+    <div className="w-full max-w-screen-sm mx-auto p-4 md:p-8">
+      <div className="relative flex items-center min-h-[2.75rem] mb-6">
+        <BookingBackButton onClick={goBack} name={t('buttons_back')} className="relative z-10" />
+        <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
+          <Heading level={1} className="text-2xl md:text-3xl pb-0 mt-0 text-center">
+            <span>{t('booking_rules_heading')}</span>
+          </Heading>
+        </div>
+      </div>
       <FriendsBookingBlock isFriendsBooking={booking?.isFriendsBooking} />
-      <Heading level={1} className="pb-4 mt-8">
-        <span className="mr-4">📋</span>
-        <span>{t('booking_rules_heading')}</span>
-      </Heading>
-      <ProgressBar steps={BOOKING_STEPS} />
+      <ProgressBar
+        steps={BOOKING_STEPS}
+        stepHrefs={
+          start && end
+            ? [
+                `/bookings/create/dates?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
+                `/bookings/create/accomodation?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${useTokens ? '&currency=TDF' : ''}${isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
+                `/bookings/${_id}/food`,
+                null,
+                null,
+                null,
+                null,
+              ]
+            : undefined
+        }
+      />
 
       <section className="flex flex-col gap-12 py-12">
-        {bookingRules?.enabled && bookingRules?.elements[0].title && (
-          <BookingRules rules={bookingRules?.elements} />
+        {hasRules ? (
+          <BookingRules rules={bookingRules.elements} />
+        ) : (
+          <p className="text-foreground text-sm">
+            {t('booking_rules_no_rules')}
+          </p>
         )}
 
         <Button

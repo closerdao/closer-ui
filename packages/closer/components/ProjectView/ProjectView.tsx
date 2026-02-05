@@ -41,7 +41,7 @@ const ProjectView: FC<Props> = ({ project, timeFrame }) => {
   } = project || {};
 
   const { user, isAuthenticated } = useAuth();
-  const [photo, setPhoto] = useState(project && projectPhoto);
+  const [photo, setPhoto] = useState<string | null>(project?.photo ?? null);
   const hasStewardRole = user?.roles?.includes('steward');
   if (!project) {
     return null;

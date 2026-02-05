@@ -5,14 +5,14 @@ import { Heading } from '../ui';
 
 interface Props {
   foodOption: FoodOption;
+  hideHeading?: boolean;
 }
 
-const FoodDescription = ({ foodOption }: Props) => {
-
+const FoodDescription = ({ foodOption, hideHeading }: Props) => {
   return (
     <div className="w-full">
       <div className="flex flex-col gap-4">
-        <Heading level={3}>{foodOption.name}</Heading>
+        {!hideHeading && <Heading level={3}>{foodOption.name}</Heading>}
         {foodOption.photos.length > 0 && (
           <Slider
             className=" rounded-md flex w-full bg-green-200"

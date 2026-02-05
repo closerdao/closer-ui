@@ -1,10 +1,12 @@
 import Head from 'next/head';
+import Link from 'next/link';
 
 import { useEffect } from 'react';
 
 import TicketListPreview from '../../../components/TicketListPreview';
 import Heading from '../../../components/ui/Heading';
 
+import { ArrowLeft } from 'lucide-react';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -73,23 +75,35 @@ const EventTickets = ({ event, eventsConfig }: Props) => {
       {tickets && tickets.get('error') && (
         <div className="validation-error">{tickets.get('error')}</div>
       )}
-      <div className="main-content intro fullwidth">
-        <div className="page-header mb-3 flex justify-between">
-          <Heading>
-            <i>{event.name}</i> {t('events_slug_tickets_title')}
+      <div className="max-w-4xl mx-auto px-6 py-12">
+        <Link
+          href={`/events/${event.slug}`}
+          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-8 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          {event.name}
+        </Link>
+        <div className="mb-10">
+          <Heading level={2} className="text-2xl md:text-3xl font-semibold text-gray-900">
+            {t('events_slug_tickets_title')}
           </Heading>
-        </div>
-        <div className="tickets-list">
-          {tickets && tickets.count() > 0 ? (
-            tickets.map((ticket: any) => (
-              <TicketListPreview key={ticket.get('_id')} ticket={ticket} />
-            ))
-          ) : (
-            <p className="p-3 text-2xl card text-center italic">
-              {t('events_slug_tickets_error')}
+          {tickets && tickets.count() > 0 && (
+            <p className="text-gray-600 mt-1">
+              {t('events_slug_tickets_count', { count: tickets.count() })}
             </p>
           )}
         </div>
+        {tickets && tickets.count() > 0 ? (
+          <div className="space-y-4">
+            {tickets.map((ticket: any) => (
+              <TicketListPreview key={ticket.get('_id')} ticket={ticket} />
+            ))}
+          </div>
+        ) : (
+          <div className="bg-gray-50 rounded-xl border border-gray-100 p-12 text-center">
+            <p className="text-gray-500 italic">{t('events_slug_tickets_error')}</p>
+          </div>
+        )}
       </div>
     </>
   );

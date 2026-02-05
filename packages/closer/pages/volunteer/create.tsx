@@ -1,7 +1,7 @@
 import Head from 'next/head';
 
 import CreateVolunteerView from '../../components/CreateVolunteerView';
-import { Heading } from '../../components/ui';
+import { EditModelPageLayout } from '../../components/EditModel';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -22,12 +22,12 @@ const CreateVolunteerOportunity = () => {
       <Head>
         <title>{t('volunteer_create_page_title')}</title>
       </Head>
-      <div>
-        <Heading level={2} className="mb-2">
-          {t('volunteer_create_page_title')}
-        </Heading>
+      <EditModelPageLayout
+        title={t('volunteer_create_page_title')}
+        subtitle={t('edit_model_create_intro')}
+      >
         <CreateVolunteerView />
-      </div>
+      </EditModelPageLayout>
     </>
   );
 };

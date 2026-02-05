@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
+import { IconBanknote } from '../../../components/BookingIcons';
 import FoodDescription from '../../../components/FoodDescription';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
@@ -75,6 +76,13 @@ const FoodSelectionPage = ({
   const foodPricePerNight =
     booking?.volunteerInfo?.bookingType === 'residence' ? 0 : foodOption?.price;
 
+  const durationNights =
+    start && end
+      ? Math.max(0, dayjs(end).diff(dayjs(start), 'day'))
+      : 0;
+  const foodTotalForStay =
+    (foodPricePerNight ?? 0) * (adults ?? 0) * durationNights;
+
   useEffect(() => {
     if (booking?.status === 'pending' || booking?.status === 'paid') {
       router.push(`/bookings/${booking?._id}`);
@@ -129,46 +137,121 @@ const FoodSelectionPage = ({
   }
 
   return (
-    <div className="w-full max-w-screen-sm mx-auto p-8">
-      <BookingBackButton onClick={goBack} name={t('buttons_back')} />
+    <div className="w-full max-w-screen-sm mx-auto p-4 md:p-8">
+      <div className="relative flex items-center min-h-[2.75rem] mb-6">
+        <BookingBackButton onClick={goBack} name={t('buttons_back')} className="relative z-10" />
+        <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
+          <Heading level={1} className="text-2xl md:text-3xl pb-0 mt-0 text-center">
+            <span>{t('bookings_food_step_title')}</span>
+          </Heading>
+        </div>
+      </div>
       <FriendsBookingBlock isFriendsBooking={isFriendsBooking} />
-      <Heading level={1} className="pb-4 mt-8">
-        <span className="mr-4">🥦</span>
-        <span>{t('bookings_food_step_title')}</span>
-      </Heading>
       {apiError && <div className="error-box">{apiError}</div>}
-      <ProgressBar steps={BOOKING_STEPS} />
+      <ProgressBar
+        steps={BOOKING_STEPS}
+        stepHrefs={
+          booking?.start && booking?.end
+            ? [
+                `/bookings/create/dates?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
+                `/bookings/create/accomodation?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${useTokens ? '&currency=TDF' : ''}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
+                null,
+                null,
+                null,
+                null,
+                null,
+              ]
+            : undefined
+        }
+      />
 
       <section className="flex flex-col gap-12 py-12">
         {foodOption &&
           foodOption?.name !== 'no_food' &&
           !eventFoodOptionSet && (
-            <div className="flex justify-between items-center">
-              <label htmlFor="food">
-                {eventFoodOptionSet
-                  ? foodOption?.name
-                  : t('booking_add_food') + ' ' + foodOption?.name}
-              </label>
-              {!eventFoodOptionSet && (
-                <Switch
-                  disabled={false}
-                  name="food"
-                  onChange={() => setIsFood((oldValue) => !oldValue)}
-                  checked={isFood}
-                  label=""
-                />
+            <div className="rounded-lg border border-neutral-dark bg-neutral-light p-4 flex flex-col gap-3">
+              <div className="flex justify-between items-center flex-wrap gap-2">
+                <label htmlFor="food" className="font-medium flex items-center min-h-6">
+                  {eventFoodOptionSet
+                    ? foodOption?.name
+                    : t('booking_add_food') + ' ' + foodOption?.name}
+                </label>
+                {!eventFoodOptionSet && (
+                  <div className="flex items-center gap-2 [&_.switch]:mb-0">
+                    <span
+                      className={`text-sm font-medium ${
+                        isFood ? 'text-success' : 'text-foreground'
+                      }`}
+                    >
+                      {isFood
+                        ? `✓ ${t('bookings_food_included')}`
+                        : `✗ ${t('bookings_food_not_included')}`}
+                    </span>
+                    <Switch
+                      disabled={false}
+                      name="food"
+                      onChange={() => setIsFood((oldValue) => !oldValue)}
+                      checked={isFood}
+                      label=""
+                    />
+                  </div>
+                )}
+              </div>
+              {!isFood &&
+                isFoodAvailable &&
+                foodTotalForStay > 0 &&
+                !booking?.isTeamBooking && (
+                  <p className="text-sm text-foreground">
+                    {t('bookings_food_save_by_opting_out', {
+                      amount: priceFormat(foodTotalForStay),
+                    })}
+                  </p>
+                )}
+              {isFoodAvailable && (
+                <div className="pt-3 border-t border-neutral-dark">
+                  <HeadingRow>
+                    <IconBanknote />
+                    <span>{t('bookings_checkout_step_food_cost')}</span>
+                  </HeadingRow>
+                  <div className="flex justify-between items-center mt-3">
+                    <p>{t('bookings_summary_step_food_total')}</p>
+                    <p className="font-bold text-right">
+                      {booking?.isTeamBooking && 'Free for team members'}{' '}
+                      {isFood && !booking?.isTeamBooking
+                        ? priceFormat(foodPricePerNight || 0)
+                        : priceFormat(0)}
+                    </p>
+                  </div>
+                  <p className="text-right text-xs">
+                    {t('booking_price_per_night_per_adult')}
+                  </p>
+                  {durationNights > 0 && isFood && !booking?.isTeamBooking && (
+                    <div className="flex justify-between items-center mt-2 pt-2 border-t border-neutral-dark">
+                      <p className="font-medium">{t('bookings_food_total_for_stay')}</p>
+                      <p className="font-bold">
+                        {priceFormat(foodTotalForStay)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              {isFoodAvailable && (
+                <div className="pt-3 border-t border-neutral-dark font-normal">
+                  <FoodDescription foodOption={foodOption} hideHeading />
+                </div>
               )}
             </div>
           )}
 
-        {isFoodAvailable && (
+        {isFoodAvailable &&
+          !(foodOption && foodOption?.name !== 'no_food' && !eventFoodOptionSet) && (
           <div>
             <HeadingRow>
-              <span className="mr-2">💰</span>
+              <IconBanknote />
               <span>{t('bookings_checkout_step_food_cost')}</span>
             </HeadingRow>
-            <div className="flex justify-between items-top mt-3">
-              <p> {t('bookings_summary_step_food_total')}</p>
+            <div className="flex justify-between items-center mt-3">
+              <p>{t('bookings_summary_step_food_total')}</p>
               <p className="font-bold text-right">
                 {booking?.isTeamBooking && 'Free for team members'}{' '}
                 {isFood && !booking?.isTeamBooking
@@ -179,12 +262,22 @@ const FoodSelectionPage = ({
             <p className="text-right text-xs">
               {t('booking_price_per_night_per_adult')}
             </p>
+            {durationNights > 0 && isFood && !booking?.isTeamBooking && (
+              <div className="flex justify-between items-center mt-2 pt-2 border-t border-neutral-dark">
+                <p className="font-medium">{t('bookings_food_total_for_stay')}</p>
+                <p className="font-bold">
+                  {priceFormat(foodTotalForStay)}
+                </p>
+              </div>
+            )}
           </div>
         )}
 
-        <div className="flex items-start gap-2 sm:items-center font-bold mt-1 sm:mt-0">
+        <div className="flex items-center gap-2 mt-1 sm:mt-0">
           {isFoodAvailable ? (
-            <FoodDescription foodOption={foodOption} />
+            (foodOption && foodOption?.name !== 'no_food' && !eventFoodOptionSet) ? null : (
+              <FoodDescription foodOption={foodOption} hideHeading />
+            )
           ) : (
             <div>
               <p>{t('food_no_food_available')}</p>

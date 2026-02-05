@@ -89,14 +89,25 @@ const ListingCard = ({
 
   if (!listing) return null;
 
+  const isUnavailable = listing?.available === false;
+
   return (
-    <div className="flex flex-col rounded-lg p-4 shadow-4xl md:mb-0 md:basis-full md:h-full">
-      <Heading level={4} className="mb-4">
+    <div
+      className={`flex flex-col rounded-lg p-3 shadow-4xl md:mb-0 md:basis-full md:h-full ${
+        isUnavailable ? 'opacity-75 pointer-events-none' : ''
+      }`}
+    >
+      {isUnavailable && (
+        <div className="rounded-t-lg -mx-3 -mt-3 px-3 py-2 bg-neutral-dark text-foreground text-sm font-semibold text-center">
+          {t('listing_preview_not_available')}
+        </div>
+      )}
+      <Heading level={4} className="mb-2">
         {name}
       </Heading>
 
       {listing.photos && listing.photos.length > 0 && (
-        <div className="relative h-48 rounded-lg my-4 overflow-hidden">
+        <div className="relative h-48 rounded-lg my-2 overflow-hidden">
           <Image
             className="object-cover"
             priority
@@ -107,6 +118,11 @@ const ListingCard = ({
           />
         </div>
       )}
+      <div className="mb-2 text-sm font-medium text-foreground">
+        {listing.private
+          ? t('listing_preview_private', { var: listing.beds - 1 })
+          : t('listing_preview_beds', { var: listing.beds - 1 })}
+      </div>
       <ul className="list-disc px-4 flex-1">
         {firstPHtml && (
           <li
@@ -115,14 +131,8 @@ const ListingCard = ({
             }}
           />
         )}
-
-        <li>
-          {listing.private
-            ? t('listing_preview_private', { var: listing.beds - 1 })
-            : t('listing_preview_beds', { var: listing.beds - 1 })}
-        </li>
       </ul>
-      <div className="my-8">
+      <div className="my-4">
         <ListingPrice
           rentalFiat={
             isVolunteerOrResidency
@@ -140,10 +150,11 @@ const ListingCard = ({
         variant="secondary"
         isEnabled={listing?.available !== false}
       >
-        {isAuthenticated
-          ? t('listing_preview_book')
-          : t('listing_preview_sign_in_to_book')}
-        {/* : t('listing_preview_not_available')} */}
+        {isUnavailable
+          ? t('listing_preview_not_available')
+          : isAuthenticated
+            ? t('listing_preview_book')
+            : t('listing_preview_sign_in_to_book')}
       </Button>
     </div>
   );

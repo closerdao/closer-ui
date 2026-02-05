@@ -1,118 +1,133 @@
 import { useTranslations } from 'next-intl';
 
-import Heading from '../ui/Heading';
+import dayjs from 'dayjs';
+
+import Card from '../ui/Card';
 
 import { Booking } from '../../types';
+import { getDisplayTotalFromComponents } from '../../utils/booking.helpers';
+import { priceFormat } from '../../utils/helpers';
 
 interface Props {
   booking: Booking | null;
   eventName: string;
   className?: string;
+  foodOptionEnabled?: boolean;
+  utilityOptionEnabled?: boolean;
 }
 
-const BookingResult = ({ booking, eventName }: Props) => {
+const BookingResult = ({
+  booking,
+  eventName,
+  foodOptionEnabled,
+  utilityOptionEnabled,
+}: Props) => {
   const t = useTranslations();
-  const { status, volunteerId, eventId, _id, volunteerInfo } = booking || {};
+  const {
+    status,
+    volunteerId,
+    eventId,
+    _id,
+    start,
+    end,
+    adults,
+    children,
+    infants,
+    useTokens,
+    rentalToken,
+    rentalFiat,
+    utilityFiat,
+    foodFiat,
+    eventFiat,
+    total,
+  } = booking || {};
 
   if (!booking) return null;
 
+  if (status !== 'paid' && status !== 'checked-in') return null;
+
+  const displayTotal =
+    total?.val != null && total?.cur
+      ? total
+      : getDisplayTotalFromComponents({
+          rentalFiat,
+          utilityFiat,
+          foodFiat,
+          eventFiat,
+          fallbackCur: total?.cur,
+          foodOptionEnabled,
+          utilityOptionEnabled,
+        });
+
+  const guestCount = [adults ?? 0, children ?? 0, infants ?? 0].reduce(
+    (sum, n) => sum + (typeof n === 'number' && n > 0 ? n : 0),
+    0,
+  );
+  const hasGuests = guestCount > 0;
+
   return (
-    <div className="flex flex-col gap-16 flex-nowrap">
-      {status === 'paid' && (volunteerId || volunteerInfo) && (
-        <>
-          <Heading className="pb-4 mt-8">
-            <span className="mr-2">🎊</span>
-            {t('bookings_title_paid')}
-          </Heading>
-          <p>{t('subscriptions_success_thank_you_message')}</p>
-          <p className="uppercase font-bold">
-            {t('bookings_confirmation_step_success_your_booking_id')} {_id}
-          </p>
-          <p>{t('booking_status_booking_complete')}</p>
-        </>
-      )}
-      {status === 'paid' && !volunteerId && !volunteerInfo && !eventId && (
-        <>
-          <Heading className="pb-4 mt-8">
-            <span className="mr-2">🎊</span>
-            {t('bookings_title_paid')}
-          </Heading>
-          <p>{t('subscriptions_success_thank_you_message')}</p>
-          <p className="uppercase font-bold">
-            {t('bookings_confirmation_step_success_your_booking_id')} {_id}
-          </p>
-          <p>{t('booking_status_booking_complete')}</p>
-        </>
-      )}
-
-      {status === 'pending' && !volunteerId && !volunteerInfo && !eventId && (
-        <>
-          <Heading className="pb-4 mt-8">
-            <span className="mr-2">⏳</span>
-            {t('bookings_title_pending')}
-          </Heading>
-          <p>{t('subscriptions_success_thank_you_message')}</p>
-          <p className="uppercase font-bold">
-            {t('bookings_confirmation_step_success_your_booking_id')} {_id}
-          </p>
-          <p>{t('bookings_confirmation_step_success_what_happen_next')}</p>
-          <p>
-            {t('bookings_confirmation_step_success_when_payment_processed')}
-          </p>
-        </>
-      )}
-
-      {eventId && status === 'paid' && (
-        <div>
-          <Heading className="pb-4 mt-8">
-            {t('bookings_confirmation_step_you_are_coming')} {eventName}
-          </Heading>
-          <p>{t('subscriptions_success_thank_you_message')}</p>
-          <p className="my-14 uppercase font-bold">
-            {t('bookings_confirmation_step_success_your_booking_id')} {_id}
-          </p>
-          <p>{t('bookings_event_confirmation_see_you_soon')}</p>
+    <Card className="p-3 gap-2">
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="card-feature shrink-0">{t('bookings_id')}</p>
+        <p className="text-sm truncate">#{_id}</p>
+      </div>
+      {start && end && (
+        <div className="flex gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="card-feature">{t('bookings_checkin')}</p>
+            <p className="text-sm">{dayjs(start).format('ddd, MMM D')}</p>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="card-feature">{t('bookings_checkout')}</p>
+            <p className="text-sm">{dayjs(end).format('ddd, MMM D')}</p>
+          </div>
         </div>
       )}
-
-      {eventId && status === 'pending' && (
-        <div>
-          <Heading className="pb-4 mt-8">
-            <span className="mr-2">⏳</span>
-            {t('bookings_event_approval_pending')}
-          </Heading>
-          <p>{t('subscriptions_success_thank_you_message')}</p>
-          <p className="my-14 uppercase font-bold">
-            {t('bookings_confirmation_step_success_your_booking_id')} {_id}
-          </p>
-          <p>{t('bookings_confirmation_step_success_what_happen_next')}</p>
-          <p>{t('bookings_confirmation_step_success_when_payment_processed')}</p>
+      {eventId && eventName && (
+        <div className="min-w-0">
+          <p className="card-feature">{t('bookings_summary_step_dates_event')}</p>
+          <p className="text-sm truncate">{eventName}</p>
         </div>
       )}
-
-      {status !== 'paid' && (volunteerId || volunteerInfo) && (
-        <>
-          <Heading className="pb-4 mt-8">
-            {volunteerInfo?.bookingType === 'volunteer'
-              ? t('bookings_title_application_sent')
-              : t('bookings_title_residency_application_sent')}
-          </Heading>
-
-          <p>{t('subscriptions_success_thank_you_message')}</p>
-          <p className="font-black uppercase">
-            {t('bookings_confirmation_step_success_your_application_id')} {_id}
+      {!eventId && (
+        <div>
+          <p className="card-feature">{t('bookings_checkout_step_accomodation')}</p>
+          <p className="text-sm">
+            {volunteerId
+              ? t('bookings_summary_step_volunteer_opportunity')
+              : t('bookings_checkout_step_accomodation')}
           </p>
-          <div>
-            <p className="mb-4">
-              {t('bookings_confirmation_step_success_what_happen_next')}
-            </p>
-            <p>
-              {t('bookings_confirmation_step_success_when_payment_processed')}
+        </div>
+      )}
+      <div className="flex gap-3">
+        {hasGuests && (
+          <div className="flex-1 min-w-0">
+            <p className="card-feature">{t('bookings_summary_step_dates_number_of_guests')}</p>
+            <p className="text-sm">
+              {adults}
+              {((children ?? 0) + (infants ?? 0) > 0) &&
+                ` + ${(children ?? 0) + (infants ?? 0)}`}
             </p>
           </div>
-        </>
-      )}
-    </div>
+        )}
+        {useTokens && rentalToken?.val != null && rentalToken.val > 0 && (
+          <div className="flex-1 min-w-0">
+            <p className="card-feature">{t('bookings_tokens_lock')}</p>
+            <p className="text-sm">
+              {priceFormat(
+                { val: rentalToken.val, cur: rentalToken.cur ?? 'TDF' },
+              )}
+            </p>
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="card-feature">{t('bookings_total')}</p>
+          <p className="text-sm font-medium">
+            {priceFormat(displayTotal.val, displayTotal.cur)}
+          </p>
+        </div>
+      </div>
+    </Card>
   );
 };
 

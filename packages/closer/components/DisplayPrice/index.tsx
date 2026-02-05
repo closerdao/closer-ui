@@ -71,11 +71,16 @@ const DisplayPrice = ({
         </span>
       );
 
-    case PaymentType.PARTIAL_TOKENS:
+    case PaymentType.PARTIAL_TOKENS: {
+      const tokenCur = rentalToken?.cur ?? CloserCurrencies.TDF;
+      const tokenPrice = {
+        val: rentalToken?.val,
+        cur: tokenCur,
+      };
       if (isEditMode && isTotalPrice) {
         return (
           <span>
-            {priceFormat({ val: rentalToken?.val, cur: rentalToken?.cur })} +{' '}
+            {priceFormat(tokenPrice)} +{' '}
             {priceFormat({ val: totalFiat?.val, cur: totalFiat?.cur })}
           </span>
         );
@@ -84,7 +89,7 @@ const DisplayPrice = ({
       if (isEditMode && isAccommodationPrice) {
         return (
           <span>
-            {priceFormat({ val: rentalToken?.val, cur: rentalToken?.cur })}
+            {priceFormat(tokenPrice)}
             {rentalFiat?.val ? (
               <div>
                 {' '}
@@ -98,7 +103,7 @@ const DisplayPrice = ({
       if (isTotalPrice && !isEditMode) {
         return (
           <span>
-            {priceFormat({ val: rentalToken?.val, cur: rentalToken?.cur })} +{' '}
+            {priceFormat(tokenPrice)} +{' '}
             {priceFormat({ val: totalFiat?.val, cur: totalFiat?.cur })}
           </span>
         );
@@ -107,7 +112,7 @@ const DisplayPrice = ({
       if (isAccommodationPrice && !isEditMode) {
         return (
           <span>
-            {priceFormat({ val: rentalToken?.val, cur: rentalToken?.cur })} +{' '}
+            {priceFormat(tokenPrice)} +{' '}
             {priceFormat({ val: rentalFiat?.val, cur: rentalFiat?.cur })}
           </span>
         );
@@ -115,17 +120,25 @@ const DisplayPrice = ({
 
       return (
         <span>
-          {priceFormat({ val: rentalToken?.val, cur: rentalToken?.cur })} +{' '}
+          {priceFormat(tokenPrice)} +{' '}
           {priceFormat({ val: rentalFiat?.val, cur: rentalFiat?.cur })}
         </span>
       );
+    }
 
-    case PaymentType.FULL_TOKENS:
+    case PaymentType.FULL_TOKENS: {
+      const tokenCur = rentalToken?.cur ?? CloserCurrencies.TDF;
+      const tokenPrice = {
+        val: rentalToken?.val,
+        cur: tokenCur,
+      };
       if (isEditMode && isTotalPrice) {
         return (
           <span>
-            {priceFormat({ val: rentalToken?.val, cur: rentalToken?.cur })} +{' '}
-            {priceFormat({ val: totalFiat?.val, cur: totalFiat?.cur })}
+            {priceFormat(tokenPrice)}
+            {totalFiat?.val ? (
+              <> + {priceFormat({ val: totalFiat.val, cur: totalFiat.cur })}</>
+            ) : null}
           </span>
         );
       }
@@ -133,27 +146,32 @@ const DisplayPrice = ({
       if (isEditMode && isAccommodationPrice) {
         return (
           <span>
-            {priceFormat({ val: rentalToken?.val, cur: rentalToken?.cur })}
+            {priceFormat(tokenPrice)}
             {rentalFiat?.val ? (
-              <div>
-                {' '}
-                + {priceFormat({ val: rentalFiat?.val, cur: rentalFiat?.cur })}
-              </div>
+              <> + {priceFormat({ val: rentalFiat.val, cur: rentalFiat.cur })}</>
+            ) : null}
+          </span>
+        );
+      }
+      if (isAccommodationPrice && !isEditMode) {
+        return (
+          <span>
+            {priceFormat(tokenPrice)}
+            {rentalFiat?.val ? (
+              <> + {priceFormat({ val: rentalFiat.val, cur: rentalFiat.cur })}</>
             ) : null}
           </span>
         );
       }
       return (
         <span>
-          {priceFormat({ val: rentalToken?.val, cur: rentalToken?.cur })}{' '}
-          {rentalFiat?.val ? (
-            <div>
-              {' '}
-              + {priceFormat({ val: totalFiat?.val, cur: totalFiat?.cur })}
-            </div>
+          {priceFormat(tokenPrice)}
+          {totalFiat?.val ? (
+            <> + {priceFormat({ val: totalFiat.val, cur: totalFiat.cur })}</>
           ) : null}
         </span>
       );
+    }
 
     case PaymentType.FIAT:
       return isEditMode && isTotalPrice ? (

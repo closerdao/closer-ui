@@ -255,7 +255,7 @@ const models = {
       label: 'Food option',
       ownerVisible: true,
       editable: true,
-      default: [],
+      default: 'no_food',
       type: 'select',
       options: [],
     },

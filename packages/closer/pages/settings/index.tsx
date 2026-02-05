@@ -265,7 +265,6 @@ const SettingsPage = ({
 
   useEffect(() => {
     if (initialUser) {
-      console.log('[SettingsPage] initialUser kycData:', initialUser.kycData);
       setUser(initialUser);
 
       if (!initialUser.kycData && initialUser._id) {
@@ -273,21 +272,11 @@ const SettingsPage = ({
           .get('/mine/user')
           .then((response) => {
             const fullUser = response?.data?.results as User | undefined;
-            console.log('[SettingsPage] fetched fullUser:', fullUser);
-            console.log(
-              '[SettingsPage] fetched fullUser.kycData:',
-              fullUser?.kycData,
-            );
             if (fullUser) {
               setUser(fullUser);
             }
           })
-          .catch((err) => {
-            console.error(
-              '[SettingsPage] Error fetching user with kycData:',
-              err,
-            );
-          });
+          .catch(() => {});
       }
     }
   }, [initialUser]);

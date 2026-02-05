@@ -567,6 +567,10 @@ export const configDescription: ConfigType[] = [
         type: 'boolean',
         default: false,
       },
+      utilityFiatCur: {
+        type: 'text',
+        default: 'EUR',
+      },
       polygonWalletAddress: {
         type: 'text',
         default: '',
@@ -578,6 +582,27 @@ export const configDescription: ConfigType[] = [
       vatRate: {
         type: 'number',
         default: 0.23,
+      },
+    },
+  },
+  {
+    slug: 'web3',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      reserveCurrency: {
+        type: 'text',
+        default: 'EURm',
+      },
+      bookingToken: {
+        type: 'text',
+        default: 'TDF',
+      },
+      maxSupply: {
+        type: 'number',
+        default: 0,
       },
     },
   },

@@ -225,15 +225,33 @@ const Questionnaire = ({
 
   return (
     <>
-      <div className="w-full max-w-screen-sm mx-auto p-8">
-        <BookingBackButton onClick={resetBooking} name={t('buttons_back')} />
+      <div className="w-full max-w-screen-sm mx-auto p-4 md:p-8">
+        <div className="relative flex items-center min-h-[2.75rem] mb-6">
+          <BookingBackButton onClick={resetBooking} name={t('buttons_back')} className="relative z-10" />
+          <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
+            <Heading level={1} className="text-2xl md:text-3xl pb-0 mt-0 text-center">
+              <span>{t('bookings_questionnaire_step_title')}</span>
+            </Heading>
+          </div>
+        </div>
         <FriendsBookingBlock isFriendsBooking={booking?.isFriendsBooking} />
 
-        <Heading level={1} className="pb-4 mt-8">
-          <span className="mr-4">📄</span>
-          <span>{t('bookings_questionnaire_step_title')}</span>
-        </Heading>
-        <ProgressBar steps={BOOKING_STEPS} />
+        <ProgressBar
+          steps={BOOKING_STEPS}
+          stepHrefs={
+            booking?.start && booking?.end
+              ? [
+                  `/bookings/create/dates?start=${dayjs(booking.start).format('YYYY-MM-DD')}&end=${dayjs(booking.end).format('YYYY-MM-DD')}&adults=${booking.adults}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
+                  `/bookings/create/accomodation?start=${dayjs(booking.start).format('YYYY-MM-DD')}&end=${dayjs(booking.end).format('YYYY-MM-DD')}&adults=${booking.adults}${booking?.useTokens ? '&currency=TDF' : ''}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
+                  `/bookings/${booking._id}/food`,
+                  `/bookings/${booking._id}/rules`,
+                  null,
+                  null,
+                  null,
+                ]
+              : undefined
+          }
+        />
 
         {preferencesError && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md mb-6">

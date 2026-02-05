@@ -8,6 +8,8 @@ import { BookingConfig } from '../../types/api';
 import dayjs from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { MessageSquareMore } from 'lucide-react';
+
+import { IconCheckCircle } from '../BookingIcons';
 import { useTranslations } from 'next-intl';
 
 import { STATUS_COLOR } from '../../constants';
@@ -357,7 +359,7 @@ const BookingListPreview = ({
       {doesNeedPickup && doesNeedPickup === true && (
         <div>
           <p className="card-feature">{t('booking_card_pickup_needed')}</p>
-          <p>✅</p>
+          <p><IconCheckCircle className="shrink-0" /></p>
         </div>
       )}
       {doesNeedSeparateBeds && doesNeedSeparateBeds === true && (
@@ -365,7 +367,7 @@ const BookingListPreview = ({
           <p className="card-feature">
             {t('booking_card_separate_beds_needed')}
           </p>
-          <p>✅</p>
+          <p><IconCheckCircle className="shrink-0" /></p>
         </div>
       )}
 

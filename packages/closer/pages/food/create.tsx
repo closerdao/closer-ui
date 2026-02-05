@@ -2,8 +2,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 
 import AdminLayout from '../../components/Dashboard/AdminLayout';
-import EditModel from '../../components/EditModel';
-import Heading from '../../components/ui/Heading';
+import EditModel, { EditModelPageLayout } from '../../components/EditModel';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -30,12 +29,16 @@ const CreateFood = ({ bookingConfig }: Props) => {
         <title>{t('food_create_title')}</title>
       </Head>
       <AdminLayout isBookingEnabled={isBookingEnabled}>
-        <Heading level={2}>{t('food_create_title')}</Heading>
-        <EditModel
-          endpoint={'/food'}
-          fields={models.food}
-          onSave={() => router.push('/food')}
-        />
+        <EditModelPageLayout
+          title={t('food_create_title')}
+          subtitle={t('edit_model_create_intro')}
+        >
+          <EditModel
+            endpoint={'/food'}
+            fields={models.food}
+            onSave={() => router.push('/food')}
+          />
+        </EditModelPageLayout>
       </AdminLayout>
     </>
   );

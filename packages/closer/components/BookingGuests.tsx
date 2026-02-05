@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl';
 
+import { IconUsers } from './BookingIcons';
 import Counter from './Counter';
 import Switch from './Switch';
 import HeadingRow from './ui/HeadingRow';
@@ -42,14 +43,14 @@ const BookingGuests = ({
     <div>
       {!shouldHideTitle && (
         <HeadingRow>
-          <span className="mr-2">👨‍👩‍👦</span>
+          <IconUsers className="!mr-0" />
           <span>{t('bookings_dates_step_guests_title')}</span>
         </HeadingRow>
       )}
 
-      <div className="mt-4 ">
+      <div className="mt-2">
         {isFriendsBooking && (
-          <div className="bg-yellow-50 p-2 rounded-lg my-2">
+          <div className="bg-yellow-50 px-2 py-1.5 rounded-lg my-1">
             Max guests for friends bookings: {friendsBookingMaxGuests}
           </div>
         )}
@@ -62,20 +63,20 @@ const BookingGuests = ({
             maxValue={isFriendsBooking ? friendsBookingMaxGuests : undefined}
           />
         </div>
-        <div className="flex space-between items-center mt-9">
+        <div className="flex space-between items-center mt-3">
           <p className="flex-1">{t('bookings_dates_step_guests_children')}</p>
           <Counter value={kids} setFn={setKids} minValue={0} />
         </div>
-        <div className="flex space-between items-center mt-9">
+        <div className="flex space-between items-center mt-3">
           <p className="flex-1">{t('bookings_dates_step_guests_infants')}</p>
           <Counter value={infants} setFn={setInfants} minValue={0} />
         </div>
-        <div className="flex space-between items-center mt-9">
+        <div className="flex space-between items-center mt-3">
           <p className="flex-1">{t('bookings_dates_step_guests_pets')}</p>
           <Counter value={pets} setFn={setPets} minValue={0} />
         </div>
         {adults > 1 && isPrivate && (
-          <div className="mt-6 flex flex-row justify-between items-start">
+          <div className="mt-3 flex flex-row justify-between items-start">
             <label
               htmlFor="separateBeds"
               className={`${shouldHideTitle ? 'text-sm' : 'text-md'}  `}
