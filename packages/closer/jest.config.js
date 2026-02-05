@@ -13,6 +13,9 @@ const customJestConfig = {
   moduleNameMapper: {
     '^next/router$': 'next-router-mock',
     '^next/dist/client/router$': 'next-router-mock',
+    '^@reown/appkit/react$': '<rootDir>/test/__mocks__/reown-appkit-react.js',
+    '^@reown/appkit/networks$': '<rootDir>/test/__mocks__/appkit.js',
+    '(.*)/appkit$': '<rootDir>/test/__mocks__/appkit.js',
   },
 }
 
