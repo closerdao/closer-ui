@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import JoinCommunityCTA from '../../components/JoinCommunityCTA';
 import PeekIntoFuture from '../../components/PeekIntoFuture';
+import TokenGraph from '../../components/TokenGraph';
 import Webinar from '../../components/Webinar';
 import { Button, Card, Heading } from '../../components/ui';
 
@@ -17,6 +18,7 @@ import { MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { useConfig } from '../../hooks/useConfig';
 import { DEFAULT_TOKEN_STATS, GeneralConfig, Listing, TokenStats } from '../../types';
 import api from '../../utils/api';
+import { getReserveTokenDisplay } from '../../utils/config.utils';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 
@@ -30,6 +32,7 @@ interface Props {
 const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
   const t = useTranslations();
   const defaultConfig = useConfig();
+  const reserveToken = getReserveTokenDisplay(defaultConfig);
   const hasComponentRendered = useRef(false);
 
   const PLATFORM_NAME =
@@ -460,20 +463,40 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
             </Card>
 
             <div className="mb-12">
-              <Card className="p-6">
-                <Heading level={3} className="mb-4 text-xl">
-                  {t('token_price_history_title')}
-                </Heading>
-                <div className="bg-gray-50 rounded-lg p-8 text-center min-h-[200px] flex items-center justify-center">
-                  <p className="text-gray-500">
-                    {t('token_price_history_placeholder')}
-                  </p>
-                </div>
-                <p className="text-sm text-gray-600 mt-4">
-                  {t('token_price_history_note')}
-                </p>
-              </Card>
+              <TokenGraph />
             </div>
+
+            <Card className="mb-12 p-6">
+              <Heading level={3} className="mb-4 text-xl">
+                {t('token_explorer_title')}
+              </Heading>
+              <div className="space-y-2">
+                <a
+                  href="https://celoscan.io/token/0x10cb7f49389787a99b59b2f87dfdd3bba141559f"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-accent hover:underline"
+                >
+                  {t('token_explorer_tdf_link')}
+                </a>
+                <a
+                  href="https://celoscan.io/token/tokenholderchart/0x10cb7f49389787a99b59b2f87dfdd3bba141559f"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-accent hover:underline"
+                >
+                  {t('token_explorer_holder_chart_link')}
+                </a>
+                <a
+                  href="https://celoscan.io/token/0x5bc8e45e6c0019f12be2979de614af3cc63538e9"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-accent hover:underline"
+                >
+                  {t('token_explorer_presence_link')}
+                </a>
+              </div>
+            </Card>
 
             <div className="grid md:grid-cols-2 gap-8 mb-12">
               <Card className="p-6">
@@ -532,7 +555,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                       <span className="text-accent font-bold">3.</span>
                       <div>
                         <p className="font-semibold">{t('token_purchase_step_3_title')}</p>
-                        <p className="text-sm text-gray-600">{t('token_purchase_step_3_desc')}</p>
+                        <p className="text-sm text-gray-600">{t('token_purchase_step_3_desc', { reserveToken })}</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">

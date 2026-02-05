@@ -24,6 +24,7 @@ import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
+import { getReserveTokenDisplay } from '../../utils/config.utils';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
@@ -43,7 +44,8 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
 
-  const { SOURCE_TOKEN } = useConfig() || {};
+  const config = useConfig() || {};
+  const reserveToken = getReserveTokenDisplay(config);
   const { buyTokens, getTotalCost, isCeurApproved, approveCeur, isPending } =
     useBuyTokens();
   const [total, setTotal] = useState<number>(0);
@@ -125,9 +127,9 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
       })();
     } else {
       if (userMessage) {
-        setWeb3Error(t('token_sale_approval_error_reason', { reason: userMessage }));
+        setWeb3Error(t('token_sale_approval_error_reason', { reason: userMessage, reserveToken }));
       } else {
-        setWeb3Error(t('token_sale_approval_error'));
+        setWeb3Error(t('token_sale_approval_error', { reserveToken }));
       }
     }
     setIsMetamaskLoading(false);
@@ -199,11 +201,11 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
       if (errorCode === 'MAX_SUPPLY') {
         setWeb3Error(t('token_sale_buy_error_max_supply'));
       } else if (errorCode === 'INSUFFICIENT_BALANCE') {
-        setWeb3Error(t('token_sale_buy_error_insufficient_balance'));
+        setWeb3Error(t('token_sale_buy_error_insufficient_balance', { reserveToken }));
       } else if (userMessage) {
-        setWeb3Error(t('token_sale_buy_error_reason', { reason: userMessage }));
+        setWeb3Error(t('token_sale_buy_error_reason', { reason: userMessage, reserveToken }));
       } else {
-        setWeb3Error(t('token_sale_buy_error'));
+        setWeb3Error(t('token_sale_buy_error', { reserveToken }));
       }
       setIsMetamaskLoading(false);
     }
@@ -265,7 +267,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
                 value={tokens?.toString()}
                 additionalInfo={`1 ${t(
                   'token_sale_token_symbol',
-                )} = ${unitPrice} ${SOURCE_TOKEN}`}
+                )} = ${unitPrice} ${reserveToken}`}
               />
             </div>
             <Button
@@ -283,15 +285,15 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
             <div className="flex flex-col gap-6">
               <Row
                 rowKey={t('token_sale_checkout_total')}
-                value={`${t('token_sale_source_token')} ${total} `}
-                additionalInfo={t('token_sale_ceur_disclaimer')}
+                value={`${t('token_sale_source_token', { reserveToken })} ${total} `}
+                additionalInfo={t('token_sale_ceur_disclaimer', { reserveToken })}
               />
             </div>
           </div>
 
           {balanceCeurAvailable < total && (
             <div className="font-bold">
-              {t('token_sale_not_enough_ceur_error')}
+              {t('token_sale_not_enough_ceur_error', { reserveToken })}
             </div>
           )}
           {isApproved ? (
@@ -323,7 +325,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
                   {t('token_sale_checkout_button_pending_transaction')}
                 </div>
               ) : (
-                t('token_sale_checkout_button_approve_transaction')
+                t('token_sale_checkout_button_approve_transaction', { reserveToken })
               )}
             </Button>
           )}

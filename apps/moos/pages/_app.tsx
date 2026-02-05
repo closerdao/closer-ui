@@ -26,7 +26,7 @@ import { prepareGeneralConfig } from 'closer/utils/app.helpers';
 import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
-import appConfig from '../config';
+import { getAppConfigFromEnv } from 'closer/utils/appConfigFromEnv';
 import '../styles/index.css';
 
 function getLibrary(provider: any) {
@@ -114,14 +114,14 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         config={{
           ...config,
           ...blockchainConfig,
-          ...appConfig,
+          ...getAppConfigFromEnv(),
         }}
       >
         <ErrorBoundary>
           <NextIntlClientProvider
             locale={router.locale || 'en'}
             messages={pageProps.messages}
-            timeZone={config?.timeZone || appConfig.DEFAULT_TIMEZONE}
+            timeZone={config?.TIME_ZONE || process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE || getAppConfigFromEnv().DEFAULT_TIMEZONE}
           >
             <AuthProvider>
               <PlatformProvider>

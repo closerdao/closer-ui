@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import { useRBAC } from '../../hooks/useRBAC';
 import { usePlatform } from '../../contexts/platform';
 import { Event } from '../../types';
 import { GeneralConfig } from '../../types';
@@ -39,8 +40,8 @@ interface MonthGroup {
 
 const Events = ({ generalConfig, eventsConfig }: Props) => {
   const t = useTranslations();
-  const { PERMISSIONS } = useConfig() || {};
   const defaultConfig = useConfig();
+  const { hasAccess } = useRBAC();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
   const { platform }: any = usePlatform();
@@ -218,10 +219,7 @@ const Events = ({ generalConfig, eventsConfig }: Props) => {
             {t('events_upcoming')}
           </Heading>
           <div className="action">
-            {user &&
-              (!PERMISSIONS ||
-                !PERMISSIONS.event.create ||
-                user.roles.includes(PERMISSIONS.event.create)) && (
+            {user && hasAccess('EventCreation') && (
                 <Link href="/events/create" className="btn-primary">
                   {t('events_link')}
                 </Link>

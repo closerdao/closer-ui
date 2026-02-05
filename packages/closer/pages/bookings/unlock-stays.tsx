@@ -11,7 +11,6 @@ import { useTranslations } from 'next-intl';
 
 import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
-import { useConfig } from '../../hooks/useConfig';
 import { SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
@@ -32,26 +31,14 @@ const UnlockStaysPage = ({ subscriptionsConfig, bookingConfig }: Props) => {
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
-  const config = useConfig();
-  const { STAY_BOOKING_ALLOWED_PLANS, MIN_INSTANT_BOOKING_ALLOWED_PLAN } =
-    config || {};
-
-  const allowedSubscriptionPlan = subscriptionPlans.find(
-    (plan: SubscriptionPlan) => plan.slug === MIN_INSTANT_BOOKING_ALLOWED_PLAN,
-  );
+  const allowedSubscriptionPlan = subscriptionPlans[0];
 
   const router = useRouter();
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) {
-      if (
-        user.subscription &&
-        user.subscription.plan &&
-        STAY_BOOKING_ALLOWED_PLANS.includes(user.subscription.plan)
-      ) {
-        router.push('/bookings/create/dates');
-      }
+    if (user?.roles?.includes('member')) {
+      router.push('/bookings/create/dates');
     }
   }, [user]);
 

@@ -1,6 +1,12 @@
 import { configDescription } from '../config';
 import { Config } from '../types';
 
+export const getReserveTokenDisplay = (config: any): string =>
+  config?.web3?.reserveToken ?? 'cEUR';
+
+export const getGasTokenDisplay = (config: any): string =>
+  config?.web3?.gasToken ?? 'CELO';
+
 export const getEnabledConfigs = (configs: any, allConfigs: string[]) => {
   const enabledConfigs = allConfigs.filter((configName) => {
     const isConfigDefined = configs.some((config: any) => {

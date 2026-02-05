@@ -14,6 +14,7 @@ import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
 import { Listing } from '../../types';
 import api from '../../utils/api';
+import { getReserveTokenDisplay } from '../../utils/config.utils';
 import { Information } from '../ui';
 import Select from '../ui/Select/Dropdown';
 import { Item } from '../ui/Select/types';
@@ -36,7 +37,8 @@ const TokenBuyWidget: FC<Props> = ({
   setIsCalculationPending,
 }) => {
   const t = useTranslations();
-  const { SOURCE_TOKEN } = useConfig() || {};
+  const config = useConfig() || {};
+  const reserveToken = getReserveTokenDisplay(config);
   const { isPending, getTotalCostWithoutWallet } = useBuyTokens();
 
   const FUTURE_ACCOMMODATION_TYPES = [
@@ -225,7 +227,7 @@ const TokenBuyWidget: FC<Props> = ({
   return (
     <div className="flex flex-col gap-4 my-10">
       <p className="text-stone-500 text-md w-full  p-1">
-        1 {t('token_sale_token_symbol')} ≈ {tokenPrice} {SOURCE_TOKEN}
+        1 {t('token_sale_token_symbol')} ≈ {tokenPrice} {reserveToken}
       </p>
 
       <div className="flex gap-4">
@@ -251,7 +253,7 @@ const TokenBuyWidget: FC<Props> = ({
           htmlFor="tokensToSpend"
           className="font-bold bg-accent-light py-3.5 px-6 rounded-md text-xl"
         >
-          {t('token_sale_source_token')}
+          {t('token_sale_source_token', { reserveToken })}
         </label>
         <div className="flex-1 relative">
           <input
@@ -287,9 +289,9 @@ const TokenBuyWidget: FC<Props> = ({
       </div>
 
       <div className="flex flex-col gap-4">
-        <Information>{t('token_sale_gas_fees_note')}</Information>
+        <Information>{t('token_sale_gas_fees_note', { reserveToken })}</Information>
         <Information>{t('token_sale_max_amount_note')}</Information>
-        <Information>{t('token_sale_price_disclaimer')}</Information>
+        <Information>{t('token_sale_price_disclaimer', { reserveToken })}</Information>
         <Information>
           {t('token_sale_max_wallet_balance')}
           {Math.max(MAX_WALLET_BALANCE, 0)}

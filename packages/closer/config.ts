@@ -592,9 +592,13 @@ export const configDescription: ConfigType[] = [
         type: 'boolean',
         default: false,
       },
-      reserveCurrency: {
+      reserveToken: {
         type: 'text',
-        default: 'EURm',
+        default: 'cEUR',
+      },
+      gasToken: {
+        type: 'text',
+        default: 'CELO',
       },
       bookingToken: {
         type: 'text',

@@ -316,7 +316,10 @@ const rbacDefaultConfig: RBACConfig = {
     Roles: true,
   },
 
-  // Admin role permissions (has access to everything)
+  'event-creator': {
+    EventCreation: true,
+  },
+
   admin: {
     Dashboard: true,
     Performance: true,

@@ -26,7 +26,7 @@ import { prepareGeneralConfig } from 'closer/utils/app.helpers';
 import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
-import appConfig from '../config';
+import { getAppConfigFromEnv } from 'closer/utils/appConfigFromEnv';
 import rbacDefaultConfig from 'closer/constants/rbac';
 import '../styles/index.css';
 
@@ -91,11 +91,16 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
 
     (async () => {
       try {
-        const [generalConfigRes, rbacConfigRes] = await Promise.all([
+        const [generalConfigRes, rbacConfigRes, web3ConfigRes] = await Promise.all([
           api.get('config/general'),
-          api.get('config/rbac')
+          api.get('config/rbac'),
+          api.get('config/web3').catch(() => null)
         ]).catch(() => []);
-        setConfig(prepareGeneralConfig(generalConfigRes?.data.results.value));
+        const web3Config = web3ConfigRes?.data?.results?.value ?? null;
+        setConfig({
+          ...prepareGeneralConfig(generalConfigRes?.data.results.value),
+          ...(web3Config && { web3: web3Config }),
+        });
         setRBACConfig(rbacConfigRes?.data?.results?.value);
       } catch (err) {
         console.error(err);
@@ -153,7 +158,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         config={{
           ...config,
           ...blockchainConfig,
-          ...appConfig,
+          ...getAppConfigFromEnv(),
           rbacConfig
         }}
       >
@@ -161,7 +166,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
           <NextIntlClientProvider
             locale={router.locale || 'en'}
             messages={pageProps.messages || {}}
-            timeZone={config?.timeZone || appConfig.DEFAULT_TIMEZONE}
+            timeZone={config?.TIME_ZONE || process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE || getAppConfigFromEnv().DEFAULT_TIMEZONE}
             onError={(error) => {
               console.error('Error in NextIntlClientProvider', error);
             }}

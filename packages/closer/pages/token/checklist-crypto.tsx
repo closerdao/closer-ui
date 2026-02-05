@@ -16,6 +16,7 @@ import { WalletState } from '../../contexts/wallet';
 import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
+import { getReserveTokenDisplay } from '../../utils/config.utils';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
@@ -27,6 +28,7 @@ interface Props {
 const ChecklistCryptoPage = ({ generalConfig }: Props) => {
   const t = useTranslations();
   const defaultConfig = useConfig();
+  const reserveToken = getReserveTokenDisplay(defaultConfig);
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
   const router = useRouter();
@@ -177,7 +179,7 @@ const ChecklistCryptoPage = ({ generalConfig }: Props) => {
                 } bg-[length:16px_16px] bg-[top_5px_left]  bg-no-repeat pl-6 mb-1.5`}
               >
                 {doesHaveCeur ? (
-                  t('token_sale_before_you_begin_checklist_3')
+                  t('token_sale_before_you_begin_checklist_3', { reserveToken })
                 ) : (
                   <a
                     className="underline"
@@ -185,7 +187,7 @@ const ChecklistCryptoPage = ({ generalConfig }: Props) => {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    {t('token_sale_before_you_begin_checklist_3_cta')}
+                    {t('token_sale_before_you_begin_checklist_3_cta', { reserveToken })}
                   </a>
                 )}
               </li>
