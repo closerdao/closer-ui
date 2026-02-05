@@ -36,6 +36,7 @@ dayjs.extend(dayOfYear);
 import PageNotAllowed from '../../401';
 import {
   BOOKING_STEPS,
+  BOOKING_STEP_TITLE_KEYS,
   CURRENCIES,
   DEFAULT_CURRENCY,
 } from '../../../constants';
@@ -54,7 +55,13 @@ import {
   PaymentType,
 } from '../../../types';
 import api from '../../../utils/api';
-import { getPaymentType, payTokens } from '../../../utils/booking.helpers';
+import {
+  buildBookingAccomodationUrl,
+  buildBookingDatesUrl,
+  getBookingTokenCurrency,
+  getPaymentType,
+  payTokens,
+} from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
@@ -67,6 +74,7 @@ interface Props extends BaseBookingParams {
   event?: Event | null;
   bookingConfig: BookingConfig | null;
   paymentConfig: PaymentConfig | null;
+  tokenCurrency: string;
 }
 
 const Checkout = ({
@@ -76,6 +84,7 @@ const Checkout = ({
   event,
   bookingConfig,
   paymentConfig,
+  tokenCurrency,
 }: Props) => {
   const t = useTranslations();
   const isHourlyBooking = listing?.priceDuration === 'hour';
@@ -106,6 +115,42 @@ const Checkout = ({
     transactionId,
     createdBy,
   } = (updatedBooking ?? booking ?? {}) as Booking;
+
+  const stepUrlParams =
+    start && end && booking
+      ? {
+          start,
+          end,
+          adults: adults ?? 0,
+          ...(booking.children && { children: booking.children }),
+          ...(booking.infants && { infants: booking.infants }),
+          ...(booking.pets && { pets: booking.pets }),
+          currency: useTokens ? tokenCurrency : undefined,
+          ...(booking.eventId && { eventId: booking.eventId }),
+          ...(booking.volunteerId && { volunteerId: booking.volunteerId }),
+          ...(booking.volunteerInfo && {
+            volunteerInfo: {
+              ...(booking.volunteerInfo.bookingType && {
+                bookingType: booking.volunteerInfo.bookingType,
+              }),
+              ...(booking.volunteerInfo.skills?.length && {
+                skills: booking.volunteerInfo.skills,
+              }),
+              ...(booking.volunteerInfo.diet?.length && {
+                diet: booking.volunteerInfo.diet,
+              }),
+              ...(booking.volunteerInfo.projectId?.length && {
+                projectId: booking.volunteerInfo.projectId,
+              }),
+              ...(booking.volunteerInfo.suggestions && {
+                suggestions: booking.volunteerInfo.suggestions,
+              }),
+            },
+          }),
+          ...(booking.isFriendsBooking && { isFriendsBooking: true }),
+          ...(booking.friendEmails && { friendEmails: booking.friendEmails }),
+        }
+      : null;
 
   const cancellationPolicy = bookingConfig
     ? {
@@ -763,11 +808,12 @@ const Checkout = ({
         )}
         <ProgressBar
           steps={BOOKING_STEPS}
+          stepTitleKeys={BOOKING_STEP_TITLE_KEYS}
           stepHrefs={
-            start && end
+            stepUrlParams
               ? [
-                  `/bookings/create/dates?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
-                  `/bookings/create/accomodation?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${useTokens ? '&currency=TDF' : ''}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
+                  buildBookingDatesUrl(stepUrlParams),
+                  buildBookingAccomodationUrl(stepUrlParams),
                   `/bookings/${_id}/food`,
                   `/bookings/${_id}/rules`,
                   `/bookings/${_id}/questions`,
@@ -797,14 +843,7 @@ const Checkout = ({
                   booking?.paymentDelta?.fiat?.val > 0
                 ) && (
                   <div className="flex flex-col gap-2">
-                    <div
-                      className="flex flex-col gap-1"
-                      title={
-                        currency === CURRENCIES[1]
-                          ? t('bookings_payment_tdf_tooltip')
-                          : undefined
-                      }
-                    >
+                    <div className="flex flex-col gap-1">
                       <CurrencySwitcher
                         selectedCurrency={currency}
                         onSelect={setCurrency as any}
@@ -814,19 +853,6 @@ const Checkout = ({
                         )}
                       />
                     </div>
-                    {currency === CURRENCIES[1] && isWalletReady && (
-                      <p className="text-sm text-foreground">
-                        {t('bookings_payment_wallet_balance')}:{' '}
-                        <span className="font-semibold">
-                          {priceFormat(tokenBalanceAvailable, CURRENCIES[1])}
-                        </span>
-                      </p>
-                    )}
-                    {currency === CURRENCIES[1] && (
-                      <p className="text-xs text-foreground">
-                        {t('bookings_payment_tdf_tooltip')}
-                      </p>
-                    )}
                   </div>
                 )}
               {!(
@@ -1500,30 +1526,25 @@ const Checkout = ({
 Checkout.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
   try {
-    const [bookingRes, bookingConfigRes, paymentConfigRes] = await Promise.all([
-      api
-        .get(`/booking/${query.slug}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
-        })
-        .catch(() => {
-          return null;
-        }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-      api.get('/config/payment').catch(() => {
-        return null;
-      }),
-      api.get('/config/payment').catch(() => {
-        return null;
-      }),
-    ]);
+    const [bookingRes, bookingConfigRes, web3ConfigRes, paymentConfigRes] =
+      await Promise.all([
+        api
+          .get(`/booking/${query.slug}`, {
+            headers: (req as NextApiRequest)?.cookies?.access_token && {
+              Authorization: `Bearer ${
+                (req as NextApiRequest)?.cookies?.access_token
+              }`,
+            },
+          })
+          .catch(() => null),
+        api.get('/config/booking').catch(() => null),
+        api.get('/config/web3').catch(() => null),
+        api.get('/config/payment').catch(() => null),
+      ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
+    const web3Config = web3ConfigRes?.data?.results?.value;
+    const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
     const paymentConfig = paymentConfigRes?.data?.results?.value;
 
     const [optionalEvent, optionalListing, messages] = await Promise.all([
@@ -1556,6 +1577,7 @@ Checkout.getInitialProps = async (context: NextPageContext) => {
       bookingConfig,
       paymentConfig,
       messages,
+      tokenCurrency,
     };
   } catch (err) {
     return {
@@ -1565,6 +1587,7 @@ Checkout.getInitialProps = async (context: NextPageContext) => {
       listing: null,
       messages: null,
       paymentConfig: null,
+      tokenCurrency: getBookingTokenCurrency(),
     };
   }
 };

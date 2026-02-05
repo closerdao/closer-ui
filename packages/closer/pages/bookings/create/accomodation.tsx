@@ -15,7 +15,7 @@ import { useTranslations } from 'next-intl';
 import process from 'process';
 
 import { blockchainConfig } from '../../../config_blockchain';
-import { BOOKING_STEPS } from '../../../constants';
+import { BOOKING_STEPS, BOOKING_STEP_TITLE_KEYS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import {
   BaseBookingParams,
@@ -24,7 +24,12 @@ import {
   Listing,
 } from '../../../types';
 import api from '../../../utils/api';
-import { getBookingType } from '../../../utils/booking.helpers';
+import {
+  buildBookingAccomodationUrl,
+  buildBookingDatesUrl,
+  getBookingTokenCurrency,
+  getBookingType,
+} from '../../../utils/booking.helpers';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { getBookingRate, getDiscountRate } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
@@ -38,7 +43,8 @@ interface Props extends BaseBookingParams {
   error?: string;
   bookingConfig: BookingConfig | null;
   bookingError?: string | null;
-  optionalEvent: Event | null;
+  event: Event | null;
+  tokenCurrency: string;
 }
 
 const AccomodationSelector = ({
@@ -68,6 +74,8 @@ const AccomodationSelector = ({
   volunteerId,
   isFriendsBooking,
   friendEmails,
+  event,
+  tokenCurrency,
 }: Props) => {
   const t = useTranslations();
 
@@ -127,6 +135,17 @@ const AccomodationSelector = ({
         suggestions: suggestions || '',
         bookingType,
       };
+      const eventFoodPayload =
+        event && event.foodOption
+          ? {
+              foodOption: event.foodOption,
+              foodOptionId:
+                event.foodOption === 'food_package'
+                  ? event.foodOptionId ?? null
+                  : null,
+            }
+          : {};
+
       const {
         data: { results: newBooking },
       } = await api.post('/bookings/request', {
@@ -142,7 +161,7 @@ const AccomodationSelector = ({
         ...(eventId && { eventId, ticketOption }),
         doesNeedPickup,
         doesNeedSeparateBeds,
-        foodOption,
+        ...(event ? eventFoodPayload : { foodOption }),
         ...(volunteerInfo && { volunteerInfo }),
         ...(normalizedIsFriendsBooking && { isFriendsBooking: true }),
         ...(friendEmails && { friendEmails }),
@@ -171,25 +190,31 @@ const AccomodationSelector = ({
     return null;
   }
 
+  const stepUrlParams = {
+    start,
+    end,
+    adults: Number(adults),
+    ...(kids && { children: Number(kids) }),
+    ...(infants && { infants: Number(infants) }),
+    ...(pets && { pets: Number(pets) }),
+    ...(currency && { currency }),
+    ...(eventId && { eventId }),
+    ...(volunteerId && { volunteerId }),
+    ...(bookingType && {
+      volunteerInfo: {
+        bookingType,
+        ...(parsedSkills.length && { skills: parsedSkills }),
+        ...(parsedDiet.length && { diet: parsedDiet }),
+        ...(parsedProjectId.length && { projectId: parsedProjectId }),
+        ...(suggestions && { suggestions }),
+      },
+    }),
+    ...(normalizedIsFriendsBooking && { isFriendsBooking: true }),
+    ...(friendEmails && { friendEmails }),
+  };
+
   const backToDates = () => {
-    const params = {
-      start,
-      end,
-      adults,
-      ...(kids && { kids }),
-      ...(infants && { infants }),
-      ...(pets && { pets }),
-      ...(currency && { currency }),
-      ...(eventId && { eventId }),
-      ...(bookingType && { bookingType }),
-      ...(skills && { skills }),
-      ...(diet && { diet }),
-      ...(suggestions && { suggestions }),
-      ...(normalizedIsFriendsBooking && { isFriendsBooking: 'true' }),
-      ...(friendEmails && { friendEmails }),
-    };
-    const urlParams = new URLSearchParams(params);
-    router.push(`/bookings/create/dates?${urlParams}`);
+    router.push(buildBookingDatesUrl(stepUrlParams));
   };
 
   return (
@@ -206,9 +231,13 @@ const AccomodationSelector = ({
         <FriendsBookingBlock isFriendsBooking={normalizedIsFriendsBooking} />
         <ProgressBar
           steps={BOOKING_STEPS}
+          stepTitleKeys={BOOKING_STEP_TITLE_KEYS}
           stepHrefs={[
-            `/bookings/create/dates?start=${start}&end=${end}&adults=${adults}${kids ? `&kids=${kids}` : ''}${infants ? `&infants=${infants}` : ''}${pets ? `&pets=${pets}` : ''}${currency ? `&currency=${currency}` : ''}${eventId ? `&eventId=${eventId}` : ''}${normalizedIsFriendsBooking ? '&isFriendsBooking=true' : ''}${friendEmails ? `&friendEmails=${friendEmails}` : ''}`,
-            null,
+            buildBookingDatesUrl(stepUrlParams),
+            buildBookingAccomodationUrl({
+              ...stepUrlParams,
+              currency: useTokens ? tokenCurrency : stepUrlParams.currency,
+            }),
             null,
             null,
             null,
@@ -291,9 +320,10 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
     const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
     const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
 
-    const [availabilityRes, bookingConfigRes, messages] = await Promise.all([
-      api
-        .post('/bookings/availability', {
+    const [availabilityRes, bookingConfigRes, web3ConfigRes, messages] =
+      await Promise.all([
+        api
+          .post('/bookings/availability', {
           start,
           end,
           adults,
@@ -312,15 +342,22 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
           );
           return { error: err.response.data.error || 'Unknown error' };
         }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+        api.get('/config/booking').catch(() => null),
+        api.get('/config/web3').catch(() => null),
+        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      ]);
     const bookingError = (availabilityRes as any)?.error || null;
     const availability = (availabilityRes as any)?.data?.results;
 
     const bookingConfig = bookingConfigRes?.data?.results?.value;
+    const web3Config = web3ConfigRes?.data?.results?.value;
+    const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
+
+    let event = null;
+    if (eventId) {
+      const eventRes = await api.get(`/event/${eventId}`).catch(() => null);
+      event = eventRes?.data?.results ?? null;
+    }
 
     return {
       listings: availability,
@@ -349,12 +386,15 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       suggestions,
       bookingType,
       volunteerId,
+      event,
+      tokenCurrency,
     };
   } catch (err: any) {
     return {
       error: err.response?.data?.error || err.message,
       bookingConfig: null,
       messages: null,
+      tokenCurrency: getBookingTokenCurrency(),
     };
   }
 };

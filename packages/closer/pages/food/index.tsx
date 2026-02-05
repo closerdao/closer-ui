@@ -36,7 +36,7 @@ const FoodPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
   const foodOptions = platform.food.find(foodFilter);
 
   const loadData = async () => {
-    await Promise.all([platform.food.get(foodFilter)]);
+    await Promise.all([platform.food.get(foodFilter, { force: true })]);
   };
 
   useEffect(() => {

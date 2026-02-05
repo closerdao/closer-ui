@@ -1,6 +1,8 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
+import { useState } from 'react';
+
 import EditModel, { EditModelPageLayout } from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
 import dayjs from 'dayjs';
@@ -13,6 +15,7 @@ import models from '../../../models';
 import { Event, GeneralConfig } from '../../../types';
 import { FoodOption } from '../../../types/food';
 import api from '../../../utils/api';
+import { getBookingTokenCurrency } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
@@ -24,22 +27,43 @@ interface EventsConfig {
   enabled: boolean;
 }
 
+interface PaymentConfig {
+  utilityFiatCur?: string;
+}
+
+interface Web3Config {
+  bookingToken?: string;
+}
+
 interface Props {
   event: Event;
   foodOptions: FoodOption[];
   error?: string;
   generalConfig: GeneralConfig;
   eventsConfig: EventsConfig | null;
+  paymentConfig: PaymentConfig | null;
+  web3Config: Web3Config | null;
 }
 
-const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig }: Props) => {
+const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig, paymentConfig, web3Config }: Props) => {
   const t = useTranslations();
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const isEventsEnabled = eventsConfig?.enabled !== false;
   const timeZone = generalConfig?.timeZone;
 
-  // Pass the original UTC dates to DateTimePicker - it will handle timezone conversion
-  const eventWithLocalTimes = event;
+  const initialFoodOptionIdForForm =
+    event.foodOption === 'no_food'
+      ? 'no_food'
+      : event.foodOption === 'food_package' && event.foodOptionId
+        ? event.foodOptionId
+        : '';
+
+  const eventWithLocalTimes = {
+    ...event,
+    foodOptionId: initialFoodOptionIdForForm,
+  };
+
   const foodOptionsWithDefault = [
     {
       label: 'No food',
@@ -72,16 +96,40 @@ const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig }: P
     router.push(`/events/${savedEvent.slug}`);
   };
 
-  // Transform data before saving: convert timezone times to UTC
-  const transformDataBeforeSave = (data: any) => {
-    if (!timeZone) return data;
+  const transformEventFoodBeforeSave = (data: any) => {
+    const raw = data.foodOptionId;
+    const foodOption =
+      raw === 'no_food'
+        ? 'no_food'
+        : raw && raw !== ''
+          ? 'food_package'
+          : 'default';
+    const foodOptionId =
+      foodOption === 'food_package' ? raw : null;
+    return { ...data, foodOption, foodOptionId };
+  };
 
-    // The DateTimePicker now creates timezone-aware dates, so we need to convert them to UTC
-    return {
-      ...data,
-      start: data.start ? dayjs(data.start).utc().toISOString() : data.start,
-      end: data.end ? dayjs(data.end).utc().toISOString() : data.end,
-    };
+  const paymentCurrency = paymentConfig?.utilityFiatCur ?? 'EUR';
+
+  const transformDataBeforeSave = (data: any) => {
+    let result = { ...data };
+    if (timeZone) {
+      result = {
+        ...result,
+        start: data.start ? dayjs(data.start).utc().toISOString() : data.start,
+        end: data.end ? dayjs(data.end).utc().toISOString() : data.end,
+      };
+    }
+    if (result.ticketOptions?.length && paymentCurrency) {
+      result = {
+        ...result,
+        ticketOptions: result.ticketOptions.map((opt: any) => ({
+          ...opt,
+          currency: paymentCurrency,
+        })),
+      };
+    }
+    return transformEventFoodBeforeSave(result);
   };
   if (!isEventsEnabled) {
     return <FeatureNotEnabled feature="events" />;
@@ -102,6 +150,14 @@ const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig }: P
         isEdit
       >
         {error && <div className="error-box mb-4">{error}</div>}
+        {saveError && (
+          <div
+            role="alert"
+            className="mb-4 rounded-lg border border-red-500/50 bg-red-50 p-4 text-sm text-red-800 dark:bg-red-950/30 dark:text-red-200"
+          >
+            {saveError}
+          </div>
+        )}
         {!process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY && (
           <div className="my-4 error-box italic">
             {t('events_no_stripe_integration')}
@@ -118,11 +174,17 @@ const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig }: P
           initialData={eventWithLocalTimes}
           onSave={handleSave}
           onUpdate={onUpdate}
+          onError={setSaveError}
+          onErrorClear={() => setSaveError(null)}
           allowDelete
           deleteButton="Delete Event"
           onDelete={() => router.push('/')}
           transformDataBeforeSave={transformDataBeforeSave}
           timeZone={timeZone}
+          currencyConfig={{
+            fiatCur: paymentCurrency,
+            tokenCur: getBookingTokenCurrency(web3Config, undefined),
+          }}
         />
       </EditModelPageLayout>
     </>
@@ -136,7 +198,7 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No event');
     }
 
-    const [generalConfigRes, eventRes, foodRes, eventsRes, messages] = await Promise.all([
+    const [generalConfigRes, eventRes, foodRes, eventsRes, paymentRes, web3Res, messages] = await Promise.all([
       api.get('/config/general').catch((err) => {
         console.error('Error fetching general config:', err);
         return null;
@@ -153,15 +215,22 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
         return null;
       }),
       api.get('/config/events').catch(() => null),
+      api.get('/config/payment').catch(() => null),
+      api.get('/config/web3').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const generalConfig = generalConfigRes?.data?.results?.value;
     const event = eventRes?.data?.results;
-    const foodOptions = foodRes?.data?.results;
+    const allFood = foodRes?.data?.results || [];
+    const foodOptions = allFood.filter((f: FoodOption) =>
+      f.availableFor?.includes('events'),
+    );
     const eventsConfig = eventsRes?.data?.results?.value;
+    const paymentConfig = paymentRes?.data?.results?.value ?? null;
+    const web3Config = web3Res?.data?.results?.value ?? null;
 
-    return { event, foodOptions, messages, generalConfig, eventsConfig };
+    return { event, foodOptions, messages, generalConfig, eventsConfig, paymentConfig, web3Config };
   } catch (err) {
     console.log(err);
     return {
@@ -170,6 +239,8 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
       messages: null,
       foodOptions: null,
       eventsConfig: null,
+      paymentConfig: null,
+      web3Config: null,
     };
   }
 };

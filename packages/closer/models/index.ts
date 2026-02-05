@@ -636,6 +636,17 @@ const models = {
       label: 'Default food type (One of food types must be default)',
       type: 'switch',
     },
+    {
+      name: 'availableFor',
+      label: 'Available for',
+      ownerVisible: true,
+      editable: true,
+      enum: ['volunteer', 'guests', 'team', 'events'],
+      default: [],
+      type: 'multi-select',
+      options: ['guests', 'volunteer', 'team', 'events'],
+      tab: 'general',
+    },
     { name: 'photos', label: 'Photos', type: 'photos', tab: 'photos' },
   ],
   booking: [

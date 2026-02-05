@@ -10,7 +10,7 @@ export type Event = {
   slug: string;
   description: string;
   participationGuideUrl: string;
-  foodOption: string; // no_food, chef, basic, default
+  foodOption: string;
   foodOptionId?: string | null;
   ticket: string;
   virtual?: boolean;

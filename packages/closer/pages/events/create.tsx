@@ -1,6 +1,8 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
+import { useState } from 'react';
+
 import EditModel, { EditModelPageLayout } from '../../components/EditModel';
 import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 
@@ -21,9 +23,27 @@ interface Props {
   eventsConfig: EventsConfig | null;
 }
 
+const transformEventFoodBeforeSave = (data: any) => {
+  const raw = data.foodOptionId;
+  const foodOption =
+    raw === 'no_food'
+      ? 'no_food'
+      : raw && raw !== ''
+        ? 'food_package'
+        : 'default';
+  const foodOptionId =
+    foodOption === 'food_package' ? raw : null;
+  return {
+    ...data,
+    foodOption,
+    foodOptionId,
+  };
+};
+
 const CreateEvent = ({ foodOptions, eventsConfig }: Props) => {
   const t = useTranslations();
   const router = useRouter();
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const isEventsEnabled = eventsConfig?.enabled !== false;
 
@@ -55,6 +75,14 @@ const CreateEvent = ({ foodOptions, eventsConfig }: Props) => {
         title={t('events_create_title')}
         subtitle={t('edit_model_create_intro')}
       >
+        {saveError && (
+          <div
+            role="alert"
+            className="mb-4 rounded-lg border border-red-500/50 bg-red-50 p-4 text-sm text-red-800 dark:bg-red-950/30 dark:text-red-200"
+          >
+            {saveError}
+          </div>
+        )}
         <EditModel
           dynamicField={{
             name: 'foodOptionId',
@@ -63,6 +91,9 @@ const CreateEvent = ({ foodOptions, eventsConfig }: Props) => {
           endpoint={'/event'}
           fields={models.event}
           onSave={(event) => router.push(`/events/${event.slug}`)}
+          onError={setSaveError}
+          onErrorClear={() => setSaveError(null)}
+          transformDataBeforeSave={transformEventFoodBeforeSave}
         />
       </EditModelPageLayout>
     </>
@@ -80,7 +111,10 @@ CreateEvent.getInitialProps = async (context: NextPageContext) => {
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
-    const foodOptions = foodRes?.data?.results;
+    const allFood = foodRes?.data?.results || [];
+    const foodOptions = allFood.filter((f: FoodOption) =>
+      f.availableFor?.includes('events'),
+    );
     const eventsConfig = eventsRes?.data?.results?.value;
 
     return {

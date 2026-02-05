@@ -389,17 +389,18 @@ export const PlatformProvider = ({ children }) => {
             )
         );
       },
-      get: (filter) => {
+      get: (filter, opts = {}) => {
         const defaultOptions = { sort_by: '-created' };
         if (model === 'config' && !filter?.limit) {
           defaultOptions.limit = 100;
         }
         const options = Object.assign(defaultOptions, filter);
         const filterKey = filterToKey(filter);
-        if (
+        const useCache =
+          !opts.force &&
           state.getIn([model, 'byFilter', filterKey, 'receivedAt']) >
-          Date.now() - config.CACHE_DURATION
-        ) {
+            Date.now() - config.CACHE_DURATION;
+        if (useCache) {
           return new Promise((resolve) =>
             resolve({
               filterKey,

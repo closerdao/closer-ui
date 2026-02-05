@@ -28,6 +28,7 @@ import { usePlatform } from '../../../contexts/platform';
 import {
   Booking,
   BookingConfig,
+  CloserCurrencies,
   Event,
   GeneralConfig,
   Listing,
@@ -42,6 +43,7 @@ import api from '../../../utils/api';
 import {
   convertToDateString,
   dateToPropertyTimeZone,
+  ensureEventPriceCurrency,
   formatCheckinDate,
   formatCheckoutDate,
   getBookingPaymentType,
@@ -131,6 +133,11 @@ const BookingPage = ({
     roomOrBedNumbers,
     volunteerInfo,
   } = booking || {};
+
+  const eventFiatWithCurrency = ensureEventPriceCurrency(
+    eventFiat,
+    CloserCurrencies.EUR,
+  );
 
   const isFriendBookingForCurrentUser = user?.email && booking?.friendEmails?.includes(user?.email);
 
@@ -385,12 +392,12 @@ const BookingPage = ({
       useTokens || useCredits
         ? { val: updatedRentalToken, cur: rentalToken?.cur }
         : booking?.rentalToken,
-    ...(eventFiat
+    ...(eventFiatWithCurrency
       ? {
           eventFiat: {
             val: updatedEventTotal,
-            cur: eventFiat?.cur,
-            _id: eventFiat?._id,
+            cur: eventFiatWithCurrency.cur,
+            _id: eventFiatWithCurrency._id,
           },
         }
       : null),
@@ -671,7 +678,7 @@ const BookingPage = ({
             totalFiat={total}
             foodOptionEnabled={bookingConfig?.foodOptionEnabled}
             utilityOptionEnabled={bookingConfig?.utilityOptionEnabled}
-            eventCost={eventFiat}
+            eventCost={eventFiatWithCurrency}
             eventDefaultCost={
               ticketOption?.price ? ticketOption.price * adults : undefined
             }
@@ -696,7 +703,7 @@ const BookingPage = ({
             }}
             updatedEventTotal={{
               val: updatedEventTotal,
-              cur: eventFiat?.cur,
+              cur: eventFiatWithCurrency?.cur ?? CloserCurrencies.EUR,
             }}
             updatedRentalFiat={
               updatedRentalFiat || { val: 0, cur: rentalFiat?.cur }

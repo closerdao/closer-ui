@@ -809,15 +809,42 @@ export const getFoodOption = ({
 }) => {
   const defaultFoodOption =
     foodOptions.find((option) => option.isDefault) || foodOptions[0];
-  if (!eventId || !event || !event?.foodOptionId) return defaultFoodOption;
+  if (!eventId || !event) return defaultFoodOption;
 
-  if (event?.foodOptionId) {
+  if (event.foodOption === 'no_food') return defaultFoodOption;
+  if (event.foodOption === 'default') return defaultFoodOption;
+  if (event.foodOption === 'food_package' && event.foodOptionId) {
     const foodOption = foodOptions.find(
-      (option) => option._id === event?.foodOptionId,
+      (option) => option._id === event.foodOptionId,
+    );
+    return foodOption || defaultFoodOption;
+  }
+
+  if (event?.foodOptionId && event.foodOptionId !== 'no_food') {
+    const foodOption = foodOptions.find(
+      (option) => option._id === event.foodOptionId,
     );
     return foodOption || defaultFoodOption;
   }
   return defaultFoodOption;
+};
+
+export type FoodBookingContext = 'events' | 'volunteer' | 'team' | 'guests';
+
+export const getFoodOptionsForBookingContext = (
+  foodOptions: FoodOption[],
+  context: FoodBookingContext,
+): FoodOption[] => {
+  return [...(foodOptions || [])]
+    .filter((f) => f.availableFor?.includes(context))
+    .sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
+};
+
+export const getDefaultSelectedFoodOptionId = (
+  options: FoodOption[],
+): string | null => {
+  const defaultOption = options.find((o) => o.isDefault) || options[0];
+  return defaultOption?._id ?? null;
 };
 
 export const convertToDateString = (date: string | Date | null) => {
@@ -895,3 +922,117 @@ export const getBookingPaymentType = ({
   }
   return PaymentType.FIAT;
 };
+
+export function ensureEventPriceCurrency(
+  eventPrice: { val?: number; cur?: string; _id?: string } | null | undefined,
+  defaultCur: CloserCurrencies = CloserCurrencies.EUR,
+): (Price<CloserCurrencies> & { _id?: string }) | undefined {
+  if (!eventPrice || eventPrice.val == null) return undefined;
+  return {
+    ...eventPrice,
+    val: eventPrice.val,
+    cur: (eventPrice.cur ?? defaultCur) as CloserCurrencies,
+  };
+}
+
+export function getBookingTokenCurrency(
+  web3Config?: { bookingToken?: string } | null,
+  bookingConfig?: { utilityTokenCur?: string } | null,
+): string {
+  return (
+    web3Config?.bookingToken ??
+    bookingConfig?.utilityTokenCur ??
+    'TDF'
+  );
+}
+
+export interface BookingStepUrlParams {
+  start: string | Date;
+  end: string | Date;
+  adults: number;
+  children?: number;
+  infants?: number;
+  pets?: number;
+  useTokens?: boolean;
+  currency?: string;
+  eventId?: string;
+  volunteerId?: string;
+  volunteerInfo?: {
+    bookingType?: 'volunteer' | 'residence';
+    skills?: string[];
+    diet?: string[];
+    projectId?: string[];
+    suggestions?: string;
+  };
+  isFriendsBooking?: boolean;
+  friendEmails?: string;
+  discountCode?: string;
+}
+
+function formatStepDate(d: string | Date): string {
+  return dayjs(d).format('YYYY-MM-DD');
+}
+
+export function buildBookingDatesUrl(params: BookingStepUrlParams): string {
+  const q = new URLSearchParams();
+  if (params.start != null) q.set('start', formatStepDate(params.start));
+  if (params.end != null) q.set('end', formatStepDate(params.end));
+  if (params.adults != null) q.set('adults', String(params.adults));
+  if (params.children != null) q.set('kids', String(params.children));
+  if (params.infants != null) q.set('infants', String(params.infants));
+  if (params.pets != null) q.set('pets', String(params.pets));
+  if (params.currency != null && params.currency !== '')
+    q.set('currency', params.currency);
+  if (params.eventId != null && params.eventId !== '')
+    q.set('eventId', params.eventId);
+  if (params.volunteerId != null && params.volunteerId !== '')
+    q.set('volunteerId', params.volunteerId);
+  if (params.volunteerInfo?.bookingType)
+    q.set('bookingType', params.volunteerInfo.bookingType);
+  if (params.volunteerInfo?.skills?.length)
+    q.set('skills', params.volunteerInfo.skills.join(','));
+  if (params.volunteerInfo?.diet?.length)
+    q.set('diet', params.volunteerInfo.diet.join(','));
+  if (params.volunteerInfo?.suggestions)
+    q.set('suggestions', params.volunteerInfo.suggestions);
+  if (params.volunteerInfo?.projectId?.length)
+    q.set('projectId', params.volunteerInfo.projectId.join(','));
+  if (params.isFriendsBooking) q.set('isFriendsBooking', 'true');
+  if (params.friendEmails != null && params.friendEmails !== '')
+    q.set('friendEmails', params.friendEmails);
+  return `/bookings/create/dates?${q.toString()}`;
+}
+
+export function buildBookingAccomodationUrl(
+  params: BookingStepUrlParams,
+): string {
+  const q = new URLSearchParams();
+  if (params.start != null) q.set('start', formatStepDate(params.start));
+  if (params.end != null) q.set('end', formatStepDate(params.end));
+  if (params.adults != null) q.set('adults', String(params.adults));
+  if (params.children != null) q.set('kids', String(params.children));
+  if (params.infants != null) q.set('infants', String(params.infants));
+  if (params.pets != null) q.set('pets', String(params.pets));
+  if (params.currency != null && params.currency !== '')
+    q.set('currency', params.currency);
+  if (params.eventId != null && params.eventId !== '')
+    q.set('eventId', params.eventId);
+  if (params.volunteerId != null && params.volunteerId !== '')
+    q.set('volunteerId', params.volunteerId);
+  if (params.volunteerInfo?.bookingType)
+    q.set('bookingType', params.volunteerInfo.bookingType);
+  if (params.volunteerInfo?.skills?.length)
+    q.set('skills', params.volunteerInfo.skills.join(','));
+  if (params.volunteerInfo?.diet?.length)
+    q.set('diet', params.volunteerInfo.diet.join(','));
+  if (params.volunteerInfo?.suggestions)
+    q.set('suggestions', params.volunteerInfo.suggestions);
+  if (params.volunteerInfo?.projectId?.length)
+    q.set('projectId', params.volunteerInfo.projectId.join(','));
+  if (params.isFriendsBooking) q.set('isFriendsBooking', 'true');
+  if (params.friendEmails != null && params.friendEmails !== '')
+    q.set('friendEmails', params.friendEmails);
+  if (params.discountCode != null && params.discountCode !== '')
+    q.set('discountCode', params.discountCode);
+  return `/bookings/create/accomodation?${q.toString()}`;
+}

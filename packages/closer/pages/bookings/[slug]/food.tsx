@@ -1,16 +1,13 @@
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
-import { IconBanknote } from '../../../components/BookingIcons';
-import FoodDescription from '../../../components/FoodDescription';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
 import Switch from '../../../components/Switch';
 import { Button, Information } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
-import HeadingRow from '../../../components/ui/HeadingRow';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import dayjs from 'dayjs';
@@ -18,7 +15,7 @@ import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
-import { BOOKING_STEPS } from '../../../constants';
+import { BOOKING_STEPS, BOOKING_STEP_TITLE_KEYS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import {
   BaseBookingParams,
@@ -29,11 +26,21 @@ import {
 } from '../../../types';
 import { FoodOption } from '../../../types/food';
 import api from '../../../utils/api';
-import { getFoodOption } from '../../../utils/booking.helpers';
+import {
+  buildBookingAccomodationUrl,
+  buildBookingDatesUrl,
+  getBookingTokenCurrency,
+  getFoodOption,
+  getFoodOptionsForBookingContext,
+  getDefaultSelectedFoodOptionId,
+  FoodBookingContext,
+} from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+import { cdn } from '../../../utils/api';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Props extends BaseBookingParams {
   listing: Listing | null;
@@ -43,7 +50,69 @@ interface Props extends BaseBookingParams {
   bookingConfig: BookingConfig | null;
   discountCode?: string;
   foodOptions: FoodOption[];
+  tokenCurrency: string;
 }
+
+const SingleOptionPhotoPreview = ({
+  option,
+  photoSlideByOptionId,
+  setPhotoSlideByOptionId,
+  cdnUrl,
+}: {
+  option: FoodOption;
+  photoSlideByOptionId: Record<string, number>;
+  setPhotoSlideByOptionId: Dispatch<
+    SetStateAction<Record<string, number>>
+  >;
+  cdnUrl: string | undefined;
+}) => {
+  const photos = option.photos ?? [];
+  const currentPhotoIndex = photoSlideByOptionId[option._id] ?? 0;
+  const setCurrentPhotoIndex = (next: number) => {
+    setPhotoSlideByOptionId((prev) => ({ ...prev, [option._id]: next }));
+  };
+  const cdn = cdnUrl ?? '';
+  return (
+    <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-neutral-dark/10 relative">
+      <img
+        src={`${cdn}${photos[currentPhotoIndex]}-post-md.jpg`}
+        alt=""
+        className="w-full h-full object-cover"
+      />
+      {photos.length > 1 && (
+        <>
+          <button
+            type="button"
+            className="absolute left-0 top-1/2 -translate-y-1/2 p-0.5 bg-white/80 rounded-r text-neutral-dark hover:bg-white"
+            onClick={(e) => {
+              e.preventDefault();
+              setCurrentPhotoIndex(
+                currentPhotoIndex === 0 ? photos.length - 1 : currentPhotoIndex - 1,
+              );
+            }}
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            className="absolute right-0 top-1/2 -translate-y-1/2 p-0.5 bg-white/80 rounded-l text-neutral-dark hover:bg-white"
+            onClick={(e) => {
+              e.preventDefault();
+              setCurrentPhotoIndex(
+                currentPhotoIndex >= photos.length - 1 ? 0 : currentPhotoIndex + 1,
+              );
+            }}
+          >
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+          <span className="absolute bottom-0.5 right-0.5 bg-white/80 text-[10px] px-1 rounded">
+            {currentPhotoIndex + 1}/{photos.length}
+          </span>
+        </>
+      )}
+    </div>
+  );
+};
 
 const FoodSelectionPage = ({
   booking,
@@ -52,6 +121,7 @@ const FoodSelectionPage = ({
   bookingConfig,
   discountCode,
   foodOptions,
+  tokenCurrency,
 }: Props) => {
   const t = useTranslations();
 
@@ -64,14 +134,73 @@ const FoodSelectionPage = ({
   const router = useRouter();
   const { isAuthenticated } = useAuth();
 
-  const eventFoodOptionSet = Boolean(event?.foodOptionId);
-  const isFoodAvailable = event?.foodOptionId !== 'no_food';
+  const eventFoodOptionSet = Boolean(
+    event?.foodOption === 'food_package'
+      ? event?.foodOptionId
+      : event?.foodOptionId && event?.foodOptionId !== 'no_food',
+  );
+  const isFoodAvailable =
+    event?.foodOption !== undefined
+      ? event.foodOption !== 'no_food'
+      : event?.foodOptionId !== 'no_food';
 
-  const [apiError, setApiError] = useState(null);
+  const foodBookingContext: FoodBookingContext =
+    eventId && event?.foodOption === 'default'
+      ? 'guests'
+      : eventId
+        ? 'events'
+        : booking?.volunteerInfo?.bookingType === 'volunteer' ||
+            booking?.volunteerInfo?.bookingType === 'residence'
+          ? 'volunteer'
+          : booking?.isTeamBooking
+            ? 'team'
+            : 'guests';
+
+  const selectableFoodOptions = getFoodOptionsForBookingContext(
+    foodOptions || [],
+    foodBookingContext,
+  );
+  const isGuestSelectMode =
+    isFoodAvailable &&
+    Boolean(eventId && event?.foodOption === 'default') &&
+    selectableFoodOptions.length > 0;
+
+  const fixedFoodOption = getFoodOption({ eventId, event, foodOptions });
+  const [apiError, setApiError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedFoodOptionId, setSelectedFoodOptionId] = useState<
+    string | null
+  >(null);
   const [isFood, setIsFood] = useState(true);
+  const [photoSlideByOptionId, setPhotoSlideByOptionId] = useState<
+    Record<string, number>
+  >({});
 
-  const foodOption = getFoodOption({ eventId, event, foodOptions });
+  const defaultId = getDefaultSelectedFoodOptionId(selectableFoodOptions);
+  const bookingSelectedId =
+    booking?.foodOptionId &&
+    selectableFoodOptions.some((o) => o._id === booking.foodOptionId)
+      ? booking.foodOptionId
+      : null;
+  const resolvedSelectedId = isGuestSelectMode
+    ? isFood
+      ? selectedFoodOptionId ?? bookingSelectedId ?? defaultId
+      : null
+    : null;
+  const selectedFoodOption =
+    isGuestSelectMode && resolvedSelectedId
+      ? selectableFoodOptions.find((o) => o._id === resolvedSelectedId)
+      : null;
+  const foodOption = isGuestSelectMode
+    ? selectedFoodOption ?? fixedFoodOption
+    : getFoodOption({
+        eventId,
+        event,
+        foodOptions:
+          selectableFoodOptions.length > 0
+            ? selectableFoodOptions
+            : foodOptions || [],
+      });
 
   const foodPricePerNight =
     booking?.volunteerInfo?.bookingType === 'residence' ? 0 : foodOption?.price;
@@ -93,35 +222,72 @@ const FoodSelectionPage = ({
     try {
       setApiError(null);
       setIsLoading(true);
-      await api.post(`/bookings/${booking?._id}/update-food`, {
-        foodOptionId:
-          isFood && foodOption && isFoodAvailable ? foodOption._id : null,
-        discountCode,
-        isDayTicket: booking?.isDayTicket,
-      });
+      const hasSelection =
+        isGuestSelectMode && resolvedSelectedId && isFood
+          ? true
+          : !isGuestSelectMode && isFood && foodOption && isFoodAvailable;
+      const foodOptionIdValue = hasSelection
+        ? (isGuestSelectMode ? resolvedSelectedId : foodOption?._id) ?? null
+        : null;
+      const payload = {
+        foodOption: hasSelection ? 'food_package' : 'no_food',
+        foodOptionId: foodOptionIdValue,
+      };
+      await api.post(`/bookings/${booking?._id}/update-food`, payload);
 
       if (event?.fields) {
         router.push(`/bookings/${booking?._id}/questions`);
         return;
       }
+
+      router.push(`/bookings/${booking?._id}/rules`);
     } catch (err: any) {
-      setApiError(err);
+      setApiError(parseMessageFromError(err));
     } finally {
       setIsLoading(false);
     }
-
-    router.push(`/bookings/${booking?._id}/rules`);
   };
 
+  const stepUrlParams =
+    booking?.start && booking?.end
+      ? {
+          start: booking.start,
+          end: booking.end,
+          adults: adults ?? 0,
+          ...(booking.children && { children: booking.children }),
+          ...(booking.infants && { infants: booking.infants }),
+          ...(booking.pets && { pets: booking.pets }),
+          currency: useTokens ? tokenCurrency : undefined,
+          ...(booking.eventId && { eventId: booking.eventId }),
+          ...(booking.volunteerId && { volunteerId: booking.volunteerId }),
+          ...(booking.volunteerInfo && {
+            volunteerInfo: {
+              ...(booking.volunteerInfo.bookingType && {
+                bookingType: booking.volunteerInfo.bookingType,
+              }),
+              ...(booking.volunteerInfo.skills?.length && {
+                skills: booking.volunteerInfo.skills,
+              }),
+              ...(booking.volunteerInfo.diet?.length && {
+                diet: booking.volunteerInfo.diet,
+              }),
+              ...(booking.volunteerInfo.projectId?.length && {
+                projectId: booking.volunteerInfo.projectId,
+              }),
+              ...(booking.volunteerInfo.suggestions && {
+                suggestions: booking.volunteerInfo.suggestions,
+              }),
+            },
+          }),
+          ...(booking.isFriendsBooking && { isFriendsBooking: true }),
+          ...(booking.friendEmails && { friendEmails: booking.friendEmails }),
+        }
+      : null;
+
   const goBack = () => {
-    const dateFormat = 'YYYY-MM-DD';
-    router.push(
-      `/bookings/create/accomodation?start=${dayjs(start).format(
-        dateFormat,
-      )}&end=${dayjs(end).format(
-        dateFormat,
-      )}&adults=${adults}&useTokens=${useTokens}${isFriendsBooking?'&isFriendsBooking=true':''}`,
-    );
+    if (stepUrlParams) {
+      router.push(buildBookingAccomodationUrl(stepUrlParams));
+    }
   };
 
   if (!isBookingEnabled) {
@@ -147,14 +313,19 @@ const FoodSelectionPage = ({
         </div>
       </div>
       <FriendsBookingBlock isFriendsBooking={isFriendsBooking} />
-      {apiError && <div className="error-box">{apiError}</div>}
+      {apiError && (
+        <div className="error-box mb-4" role="alert">
+          {apiError}
+        </div>
+      )}
       <ProgressBar
         steps={BOOKING_STEPS}
+        stepTitleKeys={BOOKING_STEP_TITLE_KEYS}
         stepHrefs={
-          booking?.start && booking?.end
+          stepUrlParams
             ? [
-                `/bookings/create/dates?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
-                `/bookings/create/accomodation?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${useTokens ? '&currency=TDF' : ''}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
+                buildBookingDatesUrl(stepUrlParams),
+                buildBookingAccomodationUrl(stepUrlParams),
                 null,
                 null,
                 null,
@@ -166,18 +337,167 @@ const FoodSelectionPage = ({
       />
 
       <section className="flex flex-col gap-12 py-12">
-        {foodOption &&
+        {isGuestSelectMode && (
+          <div className="flex flex-col gap-6">
+            <Heading level={2} className="text-xl">
+              {t('bookings_food_step_title')}
+            </Heading>
+            {selectableFoodOptions.map((option) => {
+              const isSelected = resolvedSelectedId === option._id;
+              const optionPricePerNight =
+                booking?.volunteerInfo?.bookingType === 'residence'
+                  ? 0
+                  : option.price;
+              const optionTotal =
+                optionPricePerNight * (adults ?? 0) * durationNights;
+              const photos = option.photos ?? [];
+              const currentPhotoIndex =
+                photoSlideByOptionId[option._id] ?? 0;
+              const setCurrentPhotoIndex = (next: number) => {
+                setPhotoSlideByOptionId((prev) => ({
+                  ...prev,
+                  [option._id]: next,
+                }));
+              };
+              return (
+                <div
+                  key={option._id}
+                  className="rounded-lg border border-neutral-dark/30 bg-neutral-light/50 p-4 flex gap-4"
+                >
+                  <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-neutral-dark/10 relative">
+                    {photos.length > 0 ? (
+                      <>
+                        <img
+                          src={`${cdn}${photos[currentPhotoIndex]}-post-md.jpg`}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                        {photos.length > 1 && (
+                          <>
+                            <button
+                              type="button"
+                              className="absolute left-0 top-1/2 -translate-y-1/2 p-0.5 bg-white/80 rounded-r text-neutral-dark hover:bg-white"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setCurrentPhotoIndex(
+                                  currentPhotoIndex === 0
+                                    ? photos.length - 1
+                                    : currentPhotoIndex - 1,
+                                );
+                              }}
+                            >
+                              <ChevronLeft className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              className="absolute right-0 top-1/2 -translate-y-1/2 p-0.5 bg-white/80 rounded-l text-neutral-dark hover:bg-white"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setCurrentPhotoIndex(
+                                  currentPhotoIndex >= photos.length - 1
+                                    ? 0
+                                    : currentPhotoIndex + 1,
+                                );
+                              }}
+                            >
+                              <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
+                            <span className="absolute bottom-0.5 right-0.5 bg-white/80 text-[10px] px-1 rounded">
+                              {currentPhotoIndex + 1}/{photos.length}
+                            </span>
+                          </>
+                        )}
+                      </>
+                    ) : null}
+                  </div>
+                  <div className="flex-1 min-w-0 flex flex-col gap-2">
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="min-w-0">
+                        <p className="font-medium">{option.name}</p>
+                        {option.description && (
+                          <div
+                            className="text-sm text-foreground/80 mt-0.5 line-clamp-2"
+                            dangerouslySetInnerHTML={{
+                              __html: option.description,
+                            }}
+                          />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 [&_.switch]:mb-0 shrink-0">
+                        <span
+                          className={`text-sm font-medium ${
+                            isSelected ? 'text-success' : 'text-foreground'
+                          }`}
+                        >
+                          {isSelected
+                            ? `✓ ${t('bookings_food_included')}`
+                            : `✗ ${t('bookings_food_not_included')}`}
+                        </span>
+                        <Switch
+                          disabled={false}
+                          name={`food-${option._id}`}
+                          onChange={() => {
+                            setSelectedFoodOptionId(
+                              isSelected ? null : option._id,
+                            );
+                            setIsFood(!isSelected);
+                          }}
+                          checked={isSelected}
+                          label=""
+                        />
+                      </div>
+                    </div>
+                    {isSelected &&
+                      optionPricePerNight > 0 &&
+                      durationNights > 0 &&
+                      !booking?.isTeamBooking && (
+                        <div className="text-sm mt-0.5 flex flex-col gap-0.5">
+                          <p>
+                            {t('bookings_food_price_per_day_x_days', {
+                              price: priceFormat(optionPricePerNight),
+                              days: durationNights,
+                            })}
+                          </p>
+                          <p>
+                            {t('bookings_food_total_for_stay')}:{' '}
+                            {priceFormat(optionTotal)}
+                          </p>
+                        </div>
+                      )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {!isGuestSelectMode &&
+          foodOption &&
           foodOption?.name !== 'no_food' &&
-          !eventFoodOptionSet && (
-            <div className="rounded-lg border border-neutral-dark bg-neutral-light p-4 flex flex-col gap-3">
-              <div className="flex justify-between items-center flex-wrap gap-2">
-                <label htmlFor="food" className="font-medium flex items-center min-h-6">
-                  {eventFoodOptionSet
-                    ? foodOption?.name
-                    : t('booking_add_food') + ' ' + foodOption?.name}
-                </label>
-                {!eventFoodOptionSet && (
-                  <div className="flex items-center gap-2 [&_.switch]:mb-0">
+          eventFoodOptionSet && (
+            <div className="rounded-lg border border-neutral-dark/30 bg-neutral-light/50 p-4 flex gap-4">
+              {(foodOption.photos ?? []).length > 0 && (
+                <SingleOptionPhotoPreview
+                  option={foodOption}
+                  photoSlideByOptionId={photoSlideByOptionId}
+                  setPhotoSlideByOptionId={setPhotoSlideByOptionId}
+                  cdnUrl={cdn}
+                />
+              )}
+              <div className="flex-1 min-w-0 flex flex-col gap-2">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium">{foodOption.name}</p>
+                    {foodOption.description && (
+                      <div
+                        className="text-sm text-foreground/80 mt-0.5 line-clamp-2"
+                        dangerouslySetInnerHTML={{
+                          __html: foodOption.description,
+                        }}
+                      />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 [&_.switch]:mb-0 shrink-0">
                     <span
                       className={`text-sm font-medium ${
                         isFood ? 'text-success' : 'text-foreground'
@@ -195,102 +515,128 @@ const FoodSelectionPage = ({
                       label=""
                     />
                   </div>
-                )}
-              </div>
-              {!isFood &&
-                isFoodAvailable &&
-                foodTotalForStay > 0 &&
-                !booking?.isTeamBooking && (
-                  <p className="text-sm text-foreground">
-                    {t('bookings_food_save_by_opting_out', {
-                      amount: priceFormat(foodTotalForStay),
-                    })}
-                  </p>
-                )}
-              {isFoodAvailable && (
-                <div className="pt-3 border-t border-neutral-dark">
-                  <HeadingRow>
-                    <IconBanknote />
-                    <span>{t('bookings_checkout_step_food_cost')}</span>
-                  </HeadingRow>
-                  <div className="flex justify-between items-center mt-3">
-                    <p>{t('bookings_summary_step_food_total')}</p>
-                    <p className="font-bold text-right">
-                      {booking?.isTeamBooking && 'Free for team members'}{' '}
-                      {isFood && !booking?.isTeamBooking
-                        ? priceFormat(foodPricePerNight || 0)
-                        : priceFormat(0)}
+                </div>
+                {!isFood &&
+                  isFoodAvailable &&
+                  foodTotalForStay > 0 &&
+                  !booking?.isTeamBooking && (
+                    <p className="text-sm text-foreground">
+                      {t('bookings_food_save_by_opting_out', {
+                        amount: priceFormat(foodTotalForStay),
+                      })}
                     </p>
-                  </div>
-                  <p className="text-right text-xs">
-                    {t('booking_price_per_night_per_adult')}
-                  </p>
-                  {durationNights > 0 && isFood && !booking?.isTeamBooking && (
-                    <div className="flex justify-between items-center mt-2 pt-2 border-t border-neutral-dark">
-                      <p className="font-medium">{t('bookings_food_total_for_stay')}</p>
-                      <p className="font-bold">
+                  )}
+                {isFoodAvailable &&
+                  isFood &&
+                  durationNights > 0 &&
+                  !booking?.isTeamBooking &&
+                  (foodPricePerNight ?? 0) > 0 && (
+                    <div className="text-sm mt-0.5 flex flex-col gap-0.5">
+                      <p>
+                        {t('bookings_food_price_per_day_x_days', {
+                          price: priceFormat(foodPricePerNight || 0),
+                          days: durationNights,
+                        })}
+                      </p>
+                      <p>
+                        {t('bookings_food_total_for_stay')}:{' '}
                         {priceFormat(foodTotalForStay)}
                       </p>
                     </div>
                   )}
-                </div>
-              )}
-              {isFoodAvailable && (
-                <div className="pt-3 border-t border-neutral-dark font-normal">
-                  <FoodDescription foodOption={foodOption} hideHeading />
-                </div>
-              )}
+              </div>
             </div>
           )}
 
-        {isFoodAvailable &&
-          !(foodOption && foodOption?.name !== 'no_food' && !eventFoodOptionSet) && (
-          <div>
-            <HeadingRow>
-              <IconBanknote />
-              <span>{t('bookings_checkout_step_food_cost')}</span>
-            </HeadingRow>
-            <div className="flex justify-between items-center mt-3">
-              <p>{t('bookings_summary_step_food_total')}</p>
-              <p className="font-bold text-right">
-                {booking?.isTeamBooking && 'Free for team members'}{' '}
-                {isFood && !booking?.isTeamBooking
-                  ? priceFormat(foodPricePerNight || 0)
-                  : priceFormat(0)}
-              </p>
-            </div>
-            <p className="text-right text-xs">
-              {t('booking_price_per_night_per_adult')}
-            </p>
-            {durationNights > 0 && isFood && !booking?.isTeamBooking && (
-              <div className="flex justify-between items-center mt-2 pt-2 border-t border-neutral-dark">
-                <p className="font-medium">{t('bookings_food_total_for_stay')}</p>
-                <p className="font-bold">
-                  {priceFormat(foodTotalForStay)}
-                </p>
+        {!isGuestSelectMode &&
+          isFoodAvailable &&
+          !(foodOption && foodOption?.name !== 'no_food' && eventFoodOptionSet) &&
+          foodOption &&
+          foodOption?.name !== 'no_food' && (
+            <div className="rounded-lg border border-neutral-dark/30 bg-neutral-light/50 p-4 flex gap-4">
+              {(foodOption.photos ?? []).length > 0 && (
+                <SingleOptionPhotoPreview
+                  option={foodOption}
+                  photoSlideByOptionId={photoSlideByOptionId}
+                  setPhotoSlideByOptionId={setPhotoSlideByOptionId}
+                  cdnUrl={cdn}
+                />
+              )}
+              <div className="flex-1 min-w-0 flex flex-col gap-2">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium">
+                      {t('booking_add_food')} {foodOption.name}
+                    </p>
+                    {foodOption.description && (
+                      <div
+                        className="text-sm text-foreground/80 mt-0.5 line-clamp-2"
+                        dangerouslySetInnerHTML={{
+                          __html: foodOption.description,
+                        }}
+                      />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 [&_.switch]:mb-0 shrink-0">
+                    <span
+                      className={`text-sm font-medium ${
+                        isFood ? 'text-success' : 'text-foreground'
+                      }`}
+                    >
+                      {isFood
+                        ? `✓ ${t('bookings_food_included')}`
+                        : `✗ ${t('bookings_food_not_included')}`}
+                    </span>
+                    <Switch
+                      disabled={false}
+                      name="food"
+                      onChange={() => setIsFood((oldValue) => !oldValue)}
+                      checked={isFood}
+                      label=""
+                    />
+                  </div>
+                </div>
+                {!isFood &&
+                  foodTotalForStay > 0 &&
+                  !booking?.isTeamBooking && (
+                    <p className="text-sm text-foreground">
+                      {t('bookings_food_save_by_opting_out', {
+                        amount: priceFormat(foodTotalForStay),
+                      })}
+                    </p>
+                  )}
+                {isFood &&
+                  durationNights > 0 &&
+                  !booking?.isTeamBooking &&
+                  (foodPricePerNight ?? 0) > 0 && (
+                    <div className="text-sm mt-0.5 flex flex-col gap-0.5">
+                      <p>
+                        {t('bookings_food_price_per_day_x_days', {
+                          price: priceFormat(foodPricePerNight || 0),
+                          days: durationNights,
+                        })}
+                      </p>
+                      <p>
+                        {t('bookings_food_total_for_stay')}:{' '}
+                        {priceFormat(foodTotalForStay)}
+                      </p>
+                    </div>
+                  )}
               </div>
-            )}
+            </div>
+          )}
+
+        {!isFoodAvailable && (
+          <div>
+            <p>{t('food_no_food_available')}</p>
           </div>
         )}
 
-        <div className="flex items-center gap-2 mt-1 sm:mt-0">
-          {isFoodAvailable ? (
-            (foodOption && foodOption?.name !== 'no_food' && !eventFoodOptionSet) ? null : (
-              <FoodDescription foodOption={foodOption} hideHeading />
-            )
-          ) : (
-            <div>
-              <p>{t('food_no_food_available')}</p>
-            </div>
-          )}
-        </div>
-
-        {!isFood ||
-          (!isFoodAvailable && (
-            <Information className=" hidden sm:flex">
-              {t('food_no_food_disclaimer')}
-            </Information>
-          ))}
+        {(!isFood || !isFoodAvailable) && (
+          <Information className="hidden sm:flex">
+            {t('food_no_food_disclaimer')}
+          </Information>
+        )}
 
         <Button
           className="booking-btn"
@@ -310,8 +656,8 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
   const discountCode = query?.discountCode;
 
   try {
-    const [bookingRes, bookingConfigRes, foodRes, messages] = await Promise.all(
-      [
+    const [bookingRes, bookingConfigRes, web3ConfigRes, foodRes, messages] =
+      await Promise.all([
         api
           .get(`/booking/${query.slug}`, {
             headers: (req as NextApiRequest)?.cookies?.access_token && {
@@ -320,21 +666,16 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
               }`,
             },
           })
-          .catch(() => {
-            return null;
-          }),
-        api.get('/config/booking').catch(() => {
-          return null;
-        }),
-        api.get('/food').catch(() => {
-          return null;
-        }),
-
+          .catch(() => null),
+        api.get('/config/booking').catch(() => null),
+        api.get('/config/web3').catch(() => null),
+        api.get('/food').catch(() => null),
         loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      ],
-    );
+      ]);
     const booking = bookingRes?.data?.results || null;
     const bookingConfig = bookingConfigRes?.data?.results?.value || null;
+    const web3Config = web3ConfigRes?.data?.results?.value || null;
+    const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
     const foodOptions = foodRes?.data?.results || null;
 
     const [optionalEvent, optionalListing] = await Promise.all([
@@ -367,6 +708,7 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
       discountCode,
       messages,
       foodOptions,
+      tokenCurrency,
     };
   } catch (err) {
     console.log('Error', err);
@@ -377,6 +719,7 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
       bookingConfig: null,
       messages: null,
       foodOptions: null,
+      tokenCurrency: getBookingTokenCurrency(),
     };
   }
 };
