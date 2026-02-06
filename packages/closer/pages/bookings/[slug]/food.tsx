@@ -413,7 +413,12 @@ const FoodSelectionPage = ({
                   <div className="flex-1 min-w-0 flex flex-col gap-2">
                     <div className="flex justify-between items-start gap-2">
                       <div className="min-w-0">
-                        <p className="font-medium">{option.name}</p>
+                        <p
+                          id={`food-option-label-${option._id}`}
+                          className="font-medium"
+                        >
+                          {option.name}
+                        </p>
                         {option.description && (
                           <div
                             className="text-sm text-foreground/80 mt-0.5 line-clamp-2"
@@ -436,6 +441,7 @@ const FoodSelectionPage = ({
                         <Switch
                           disabled={false}
                           name={`food-${option._id}`}
+                          labelledBy={`food-option-label-${option._id}`}
                           onChange={() => {
                             setSelectedFoodOptionId(
                               isSelected ? null : option._id,
@@ -565,7 +571,10 @@ const FoodSelectionPage = ({
               <div className="flex-1 min-w-0 flex flex-col gap-2">
                 <div className="flex justify-between items-start gap-2">
                   <div className="min-w-0">
-                    <p className="font-medium">
+                    <p
+                      id={`food-option-label-${foodOption._id}`}
+                      className="font-medium"
+                    >
                       {t('booking_add_food')} {foodOption.name}
                     </p>
                     {foodOption.description && (
@@ -590,6 +599,7 @@ const FoodSelectionPage = ({
                     <Switch
                       disabled={false}
                       name="food"
+                      labelledBy={`food-option-label-${foodOption._id}`}
                       onChange={() => setIsFood((oldValue) => !oldValue)}
                       checked={isFood}
                       label=""

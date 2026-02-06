@@ -15,6 +15,7 @@ import { FoodOption } from '../../../types/food';
 import api from '../../../utils/api';
 import { getBookingTokenCurrency } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { transformEventFoodBeforeSave } from '../../../utils/events.helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
@@ -34,7 +35,7 @@ interface Web3Config {
 }
 
 interface Props {
-  event: Event;
+  event?: Event;
   foodOptions: FoodOption[];
   error?: string;
   generalConfig: GeneralConfig;
@@ -45,9 +46,18 @@ interface Props {
 
 const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig, paymentConfig, web3Config }: Props) => {
   const t = useTranslations();
+  const router = useRouter();
 
   const isEventsEnabled = eventsConfig?.enabled !== false;
   const timeZone = generalConfig?.timeZone;
+
+  if (!isEventsEnabled) {
+    return <FeatureNotEnabled feature="events" />;
+  }
+
+  if (!event) {
+    return <Heading>{error ?? t('events_slug_edit_error')}</Heading>;
+  }
 
   const initialFoodOptionIdForForm =
     event.foodOption === 'no_food'
@@ -76,7 +86,6 @@ const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig, pay
     })),
   ];
 
-  const router = useRouter();
   const onUpdate = async (
     name: any,
     value: any,
@@ -91,19 +100,6 @@ const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig, pay
   // Custom onSave handler to convert timezone times to UTC before saving
   const handleSave = (savedEvent: any) => {
     router.push(`/events/${savedEvent.slug}`);
-  };
-
-  const transformEventFoodBeforeSave = (data: any) => {
-    const raw = data.foodOptionId;
-    const foodOption =
-      raw === 'no_food'
-        ? 'no_food'
-        : raw && raw !== ''
-          ? 'food_package'
-          : 'default';
-    const foodOptionId =
-      foodOption === 'food_package' ? raw : null;
-    return { ...data, foodOption, foodOptionId };
   };
 
   const paymentCurrency = paymentConfig?.utilityFiatCur ?? 'EUR';
@@ -128,13 +124,6 @@ const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig, pay
     }
     return transformEventFoodBeforeSave(result);
   };
-  if (!isEventsEnabled) {
-    return <FeatureNotEnabled feature="events" />;
-  }
-
-  if (!event) {
-    return <Heading>{t('events_slug_edit_error')}</Heading>;
-  }
 
   return (
     <>

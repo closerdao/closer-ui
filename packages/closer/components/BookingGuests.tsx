@@ -75,9 +75,10 @@ const BookingGuests = ({
           <p className="flex-1">{t('bookings_dates_step_guests_pets')}</p>
           <Counter value={pets} setFn={setPets} minValue={0} />
         </div>
-        {adults > 1 && isPrivate && (
+        {adults > 1 && isPrivate && setDoesNeedSeparateBeds != null && (
           <div className="mt-3 flex flex-row justify-between items-start">
             <label
+              id="separateBeds-label"
               htmlFor="separateBeds"
               className={`${shouldHideTitle ? 'text-sm' : 'text-md'}  `}
             >
@@ -87,6 +88,7 @@ const BookingGuests = ({
               disabled={false}
               name="separateBeds"
               label=""
+              labelledBy="separateBeds-label"
               onChange={setDoesNeedSeparateBeds}
               checked={doesNeedSeparateBeds}
             />

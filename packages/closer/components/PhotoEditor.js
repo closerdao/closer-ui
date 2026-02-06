@@ -7,7 +7,7 @@ import Heading from './ui/Heading';
 import Photo from './Photo';
 import UploadPhoto from './UploadPhoto/UploadPhoto';
 
-const PhotoEditor = ({ value, onChange, label = 'Photo' }) => {
+const PhotoEditor = ({ value = /** @type {any} */ (null), onChange = /** @type {any} */ (undefined), label = 'Photo' }) => {
   const t = useTranslations();
   const [photo, setPhoto] = useState(value);
 
@@ -60,12 +60,6 @@ const PhotoEditor = ({ value, onChange, label = 'Photo' }) => {
       </div>
     </div>
   );
-};
-
-PhotoEditor.defaultProps = {
-  onChange: null,
-  value: null,
-  label: 'Photo',
 };
 
 export default PhotoEditor;

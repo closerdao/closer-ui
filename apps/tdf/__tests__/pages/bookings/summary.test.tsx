@@ -67,7 +67,7 @@ describe('BookingSummaryPage', () => {
         paymentConfig={paymentConfig}
       />,
     );
-    expect(screen.getByRole('heading', { name: /Costs/i })).toBeInTheDocument();
+    expect(screen.getByText('Costs')).toBeInTheDocument();
     const accommodationLabels = screen.getAllByText(/Accommodation:/i);
     expect(accommodationLabels.length).toBeGreaterThan(0);
   });
@@ -82,7 +82,7 @@ describe('BookingSummaryPage', () => {
         paymentConfig={paymentConfig}
       />,
     );
-    const costsSection = screen.getByRole('heading', { name: /Costs/i }).closest('div');
+    const costsSection = screen.getByText('Costs').closest('details');
     expect(costsSection).toBeInTheDocument();
     const foodLabel = screen.getByText(/Food:/i);
     expect(foodLabel.closest('div')).toHaveTextContent(/€0\.00|not included/i);
@@ -121,8 +121,7 @@ describe('BookingSummaryPage', () => {
         paymentConfig={paymentConfig}
       />,
     );
-    const costsHeading = screen.getByRole('heading', { name: /Costs/i });
-    const costsSection = costsHeading.closest('div')?.parentElement ?? costsHeading.parentElement;
+    const costsSection = screen.getByText('Costs').closest('details');
     const withinCosts = within(costsSection as HTMLElement);
     expect(withinCosts.getByText(/Accommodation:/i).closest('div')).toHaveTextContent('€60.00');
     expect(withinCosts.getByText(/Utilities fee:/i).closest('div')).toHaveTextContent('€20.00');

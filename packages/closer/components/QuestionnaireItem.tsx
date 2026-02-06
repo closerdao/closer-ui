@@ -7,15 +7,15 @@ import { Question } from '../types';
 import Input from './ui/Input';
 
 interface Props {
-  question: Question;
+  question?: Question;
   savedAnswer: string;
-  handleAnswer: (name: string, answer: string) => void;
+  handleAnswer?: (name: string, answer: string) => void;
 }
 
 const QuestionnaireItem = ({
-  question: { type, name, options, required },
+  question: { type, name, options, required } = { type: 'text', name: 'Question', options: [] },
   savedAnswer,
-  handleAnswer,
+  handleAnswer = () => {},
 }: Props) => {
   const t = useTranslations();
   const [answer, setAnswer] = React.useState(savedAnswer || '');
@@ -128,15 +128,6 @@ const QuestionnaireItem = ({
       )}
     </div>
   );
-};
-
-QuestionnaireItem.defaultProps = {
-  question: {
-    type: 'text',
-    name: 'Question',
-    options: [],
-  },
-  handleAnswer: () => null,
 };
 
 export default QuestionnaireItem;

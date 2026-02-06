@@ -10,9 +10,10 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import models from '../../models';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import { FoodOption } from '../../types/food';
 import api from '../../utils/api';
+import { transformEventFoodBeforeSave } from '../../utils/events.helpers';
+import { loadLocaleData } from '../../utils/locale.helpers';
 
 interface EventsConfig {
   enabled: boolean;
@@ -22,23 +23,6 @@ interface Props {
   foodOptions: FoodOption[];
   eventsConfig: EventsConfig | null;
 }
-
-const transformEventFoodBeforeSave = (data: any) => {
-  const raw = data.foodOptionId;
-  const foodOption =
-    raw === 'no_food'
-      ? 'no_food'
-      : raw && raw !== ''
-        ? 'food_package'
-        : 'default';
-  const foodOptionId =
-    foodOption === 'food_package' ? raw : null;
-  return {
-    ...data,
-    foodOption,
-    foodOptionId,
-  };
-};
 
 const CreateEvent = ({ foodOptions, eventsConfig }: Props) => {
   const t = useTranslations();

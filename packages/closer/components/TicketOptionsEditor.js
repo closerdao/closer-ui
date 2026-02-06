@@ -7,7 +7,12 @@ import PriceEditor from './PriceEditor';
 import Switch from './Switch';
 import { useTranslations } from 'next-intl';
 
-const TicketOptionsEditor = ({ value, onChange, required, fixedCurrency }) => {
+const TicketOptionsEditor = ({
+  value = /** @type {any} */ ([]),
+  onChange = /** @type {any} */ (undefined),
+  required,
+  fixedCurrency = null,
+}) => {
   const t = useTranslations();
   const [options, setOptions] = useState(value);
   const defaultCurrency = fixedCurrency || CURRENCIES_WITH_LABELS[0].value;
@@ -141,12 +146,6 @@ const TicketOptionsEditor = ({ value, onChange, required, fixedCurrency }) => {
       </div>
     </div>
   );
-};
-
-TicketOptionsEditor.defaultProps = {
-  onChange: null,
-  value: [],
-  fixedCurrency: null,
 };
 
 export default TicketOptionsEditor;

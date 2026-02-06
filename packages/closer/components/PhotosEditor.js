@@ -64,7 +64,7 @@ const SortablePhotoItem = ({ id, onDelete }) => {
   );
 };
 
-const PhotosEditor = ({ value, onChange }) => {
+const PhotosEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {any} */ (undefined) }) => {
   const t = useTranslations();
 
   const hasMultiplePhotos = Array.isArray(value);
@@ -171,11 +171,6 @@ const PhotosEditor = ({ value, onChange }) => {
       </div>
     </div>
   );
-};
-
-PhotosEditor.defaultProps = {
-  onChange: null,
-  value: [],
 };
 
 export default PhotosEditor;
