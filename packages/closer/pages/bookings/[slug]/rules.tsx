@@ -10,12 +10,11 @@ import { Button } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
-import dayjs from 'dayjs';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
-import { BOOKING_STEPS } from '../../../constants';
+import { BOOKING_STEPS, BOOKING_STEP_TITLE_KEYS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import {
   BaseBookingParams,
@@ -26,6 +25,11 @@ import {
   Listing,
 } from '../../../types';
 import api from '../../../utils/api';
+import {
+  buildBookingAccomodationUrl,
+  buildBookingDatesUrl,
+  getBookingTokenCurrency,
+} from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
@@ -37,6 +41,7 @@ interface Props extends BaseBookingParams {
   event?: Event;
   bookingConfig: BookingConfig | null;
   bookingRules: BookingRulesConfig | null;
+  tokenCurrency: string;
 }
 
 const BookingRulesPage = ({
@@ -44,6 +49,7 @@ const BookingRulesPage = ({
   error,
   bookingConfig,
   bookingRules,
+  tokenCurrency,
 }: Props) => {
   const t = useTranslations();
   const router = useRouter();
@@ -51,6 +57,42 @@ const BookingRulesPage = ({
   const [isLoading, setIsLoading] = useState(false);
   const { start, end, adults, useTokens, isFriendsBooking, _id } =
     booking || {};
+
+  const stepUrlParams =
+    start && end && booking
+      ? {
+          start,
+          end,
+          adults: adults ?? 1,
+          ...(booking.children && { children: booking.children }),
+          ...(booking.infants && { infants: booking.infants }),
+          ...(booking.pets && { pets: booking.pets }),
+          currency: useTokens ? tokenCurrency : undefined,
+          ...(booking.eventId && { eventId: booking.eventId }),
+          ...(booking.volunteerId && { volunteerId: booking.volunteerId }),
+          ...(booking.volunteerInfo && {
+            volunteerInfo: {
+              ...(booking.volunteerInfo.bookingType && {
+                bookingType: booking.volunteerInfo.bookingType,
+              }),
+              ...(booking.volunteerInfo.skills?.length && {
+                skills: booking.volunteerInfo.skills,
+              }),
+              ...(booking.volunteerInfo.diet?.length && {
+                diet: booking.volunteerInfo.diet,
+              }),
+              ...(booking.volunteerInfo.projectId?.length && {
+                projectId: booking.volunteerInfo.projectId,
+              }),
+              ...(booking.volunteerInfo.suggestions && {
+                suggestions: booking.volunteerInfo.suggestions,
+              }),
+            },
+          }),
+          ...(booking.isFriendsBooking && { isFriendsBooking: true }),
+          ...(booking.friendEmails && { friendEmails: booking.friendEmails }),
+        }
+      : null;
 
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -100,22 +142,23 @@ const BookingRulesPage = ({
         </div>
       </div>
       <FriendsBookingBlock isFriendsBooking={booking?.isFriendsBooking} />
-      <ProgressBar
-        steps={BOOKING_STEPS}
-        stepHrefs={
-          start && end
-            ? [
-                `/bookings/create/dates?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
-                `/bookings/create/accomodation?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${useTokens ? '&currency=TDF' : ''}${isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
-                `/bookings/${_id}/food`,
-                null,
-                null,
-                null,
-                null,
-              ]
-            : undefined
-        }
-      />
+        <ProgressBar
+          steps={BOOKING_STEPS}
+          stepTitleKeys={BOOKING_STEP_TITLE_KEYS}
+          stepHrefs={
+            stepUrlParams
+              ? [
+                  buildBookingDatesUrl(stepUrlParams),
+                  buildBookingAccomodationUrl(stepUrlParams),
+                  `/bookings/${_id}/food`,
+                  null,
+                  null,
+                  null,
+                  null,
+                ]
+              : undefined
+          }
+        />
 
       <section className="flex flex-col gap-12 py-12">
         {hasRules ? (
@@ -142,7 +185,7 @@ BookingRulesPage.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
 
   try {
-    const [bookingRes, bookingConfigRes, bookingRulesRes, messages] =
+    const [bookingRes, bookingConfigRes, web3ConfigRes, bookingRulesRes, messages] =
       await Promise.all([
         api
           .get(`/booking/${query.slug}`, {
@@ -155,17 +198,16 @@ BookingRulesPage.getInitialProps = async (context: NextPageContext) => {
           .catch(() => {
             return null;
           }),
-        api.get('/config/booking').catch(() => {
-          return null;
-        }),
-        api.get('/config/booking-rules').catch(() => {
-          return null;
-        }),
+        api.get('/config/booking').catch(() => null),
+        api.get('/config/web3').catch(() => null),
+        api.get('/config/booking-rules').catch(() => null),
         loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       ]);
 
     const booking = bookingRes?.data?.results || null;
     const bookingConfig = bookingConfigRes?.data?.results?.value || null;
+    const web3Config = web3ConfigRes?.data?.results?.value || null;
+    const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
     const bookingRules = bookingRulesRes?.data?.results?.value || null;
 
     const [optionalEvent, optionalListing] = await Promise.all([
@@ -197,6 +239,7 @@ BookingRulesPage.getInitialProps = async (context: NextPageContext) => {
       bookingConfig,
       bookingRules,
       messages,
+      tokenCurrency,
     };
   } catch (err) {
     console.log('Error', err);
@@ -207,6 +250,7 @@ BookingRulesPage.getInitialProps = async (context: NextPageContext) => {
       bookingConfig: null,
       bookingRules: null,
       messages: null,
+      tokenCurrency: getBookingTokenCurrency(),
     };
   }
 };

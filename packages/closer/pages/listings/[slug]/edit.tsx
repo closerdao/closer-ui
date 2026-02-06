@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl';
 import models from '../../../models';
 import { Listing } from '../../../types';
 import api from '../../../utils/api';
+import { getBookingTokenCurrency } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 
@@ -62,7 +63,7 @@ const EditListing = ({ listing, bookingConfig, paymentConfig, web3Config }: Prop
           fields={models.listing}
           currencyConfig={{
             fiatCur: paymentConfig?.utilityFiatCur ?? bookingConfig?.utilityFiatCur ?? 'EUR',
-            tokenCur: web3Config?.bookingToken ?? bookingConfig?.utilityTokenCur ?? 'TDF',
+            tokenCur: getBookingTokenCurrency(web3Config, bookingConfig),
           }}
           onSave={(listing) => router.push(`/stay/${listing.slug}`)}
           onUpdate={(name, value, option, actionType) =>

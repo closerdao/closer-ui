@@ -13,12 +13,11 @@ import ProgressBar from '../../../components/ui/ProgressBar';
 import Select from '../../../components/ui/Select/Dropdown';
 import MultiSelect from '../../../components/ui/Select/MultiSelect';
 
-import dayjs from 'dayjs';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
-import { BOOKING_STEPS } from '../../../constants';
+import { BOOKING_STEPS, BOOKING_STEP_TITLE_KEYS } from '../../../constants';
 import { SHARED_ACCOMMODATION_PREFERENCES } from '../../../constants/shared.constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
@@ -31,6 +30,11 @@ import {
   VolunteerConfig,
 } from '../../../types';
 import api from '../../../utils/api';
+import {
+  buildBookingAccomodationUrl,
+  buildBookingDatesUrl,
+  getBookingTokenCurrency,
+} from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
@@ -49,6 +53,7 @@ interface Props extends BaseBookingParams {
   bookingConfig: BookingConfig | null;
   volunteerConfig: VolunteerConfig | null;
   error?: string;
+  tokenCurrency: string;
 }
 
 const Questionnaire = ({
@@ -57,6 +62,7 @@ const Questionnaire = ({
   error: bookingError,
   bookingConfig,
   volunteerConfig,
+  tokenCurrency,
 }: Props) => {
   const t = useTranslations();
   const router = useRouter();
@@ -166,34 +172,50 @@ const Questionnaire = ({
     setAnswers(updatedAnswers);
   };
 
+  const stepUrlParams =
+    booking?.start && booking?.end
+      ? {
+          start: booking.start,
+          end: booking.end,
+          adults: booking.adults ?? 0,
+          ...(booking.children && { children: booking.children }),
+          ...(booking.infants && { infants: booking.infants }),
+          ...(booking.pets && { pets: booking.pets }),
+          currency: booking.useTokens ? tokenCurrency : undefined,
+          ...(booking.eventId && { eventId: booking.eventId }),
+          ...(booking.volunteerId && { volunteerId: booking.volunteerId }),
+          ...(booking.volunteerInfo && {
+            volunteerInfo: {
+              ...(booking.volunteerInfo.bookingType && {
+                bookingType: booking.volunteerInfo.bookingType,
+              }),
+              ...(booking.volunteerInfo.skills?.length && {
+                skills: booking.volunteerInfo.skills,
+              }),
+              ...(booking.volunteerInfo.diet?.length && {
+                diet: booking.volunteerInfo.diet,
+              }),
+              ...(booking.volunteerInfo.projectId?.length && {
+                projectId: booking.volunteerInfo.projectId,
+              }),
+              ...(booking.volunteerInfo.suggestions && {
+                suggestions: booking.volunteerInfo.suggestions,
+              }),
+            },
+          }),
+          ...(booking.isFriendsBooking && { isFriendsBooking: true }),
+          ...(booking.friendEmails && { friendEmails: booking.friendEmails }),
+        }
+      : null;
+
   const resetBooking = () => {
     if (goBack === 'true') {
       router.push(`/bookings/${booking?._id}/rules`);
       return;
     }
-    if (booking?.eventId) {
-      router.push(
-        `/bookings/create/dates?eventId=${booking.eventId}&start=${dayjs(
-          booking.start,
-        ).format('YYYY-MM-DD')}&end=${dayjs(booking.end).format('YYYY-MM-DD')}`,
-      );
-      return;
+    if (stepUrlParams) {
+      router.push(buildBookingDatesUrl(stepUrlParams));
     }
-    if (booking?.volunteerId) {
-      router.push(
-        `/bookings/create/dates?volunteerId=${
-          booking.volunteerId
-        }&start=${dayjs(booking.start).format('YYYY-MM-DD')}&end=${dayjs(
-          booking.end,
-        ).format('YYYY-MM-DD')}`,
-      );
-      return;
-    }
-    router.push(
-      `/bookings/create/dates?start=${dayjs(booking?.start).format(
-        'YYYY-MM-DD',
-      )}&end=${dayjs(booking?.end).format('YYYY-MM-DD')}`,
-    );
   };
 
   const getAnswer = (
@@ -238,11 +260,12 @@ const Questionnaire = ({
 
         <ProgressBar
           steps={BOOKING_STEPS}
+          stepTitleKeys={BOOKING_STEP_TITLE_KEYS}
           stepHrefs={
-            booking?.start && booking?.end
+            stepUrlParams && booking
               ? [
-                  `/bookings/create/dates?start=${dayjs(booking.start).format('YYYY-MM-DD')}&end=${dayjs(booking.end).format('YYYY-MM-DD')}&adults=${booking.adults}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
-                  `/bookings/create/accomodation?start=${dayjs(booking.start).format('YYYY-MM-DD')}&end=${dayjs(booking.end).format('YYYY-MM-DD')}&adults=${booking.adults}${booking?.useTokens ? '&currency=TDF' : ''}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
+                  buildBookingDatesUrl(stepUrlParams),
+                  buildBookingAccomodationUrl(stepUrlParams),
                   `/bookings/${booking._id}/food`,
                   `/bookings/${booking._id}/rules`,
                   null,
@@ -343,22 +366,21 @@ Questionnaire.getInitialProps = async (context: NextPageContext) => {
   const { query } = context;
 
   try {
-    const [bookingRes, bookingConfigRes, volunteerConfigRes, messages] =
+    const [bookingRes, bookingConfigRes, web3ConfigRes, volunteerConfigRes, messages] =
       await Promise.all([
         api.get(`/booking/${query.slug}`).catch((err) => {
           console.error('Error fetching booking config:', err);
           return null;
         }),
-        api.get('/config/booking').catch(() => {
-          return null;
-        }),
-        api.get('/config/volunteering').catch(() => {
-          return null;
-        }),
+        api.get('/config/booking').catch(() => null),
+        api.get('/config/web3').catch(() => null),
+        api.get('/config/volunteering').catch(() => null),
         loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
+    const web3Config = web3ConfigRes?.data?.results?.value;
+    const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
     const volunteerConfig = volunteerConfigRes?.data?.results?.value;
 
     const optionalEvent =
@@ -372,6 +394,7 @@ Questionnaire.getInitialProps = async (context: NextPageContext) => {
       eventQuestions: event?.fields,
       error: null,
       messages,
+      tokenCurrency,
     };
   } catch (err) {
     return {
@@ -381,6 +404,7 @@ Questionnaire.getInitialProps = async (context: NextPageContext) => {
       volunteerConfig: null,
       questions: null,
       messages: null,
+      tokenCurrency: getBookingTokenCurrency(),
     };
   }
 };

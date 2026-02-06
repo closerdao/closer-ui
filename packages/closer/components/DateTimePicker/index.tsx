@@ -390,13 +390,17 @@ const DateTimePicker = ({
 
   const showCalendar = !startCollapsed || isExpanded;
   const hasDates = dateRange?.from || savedStartDate;
+  const dateTagClass =
+    'text-xs md:text-sm border rounded-full bg-neutral py-2 px-3 font-medium inline-flex items-center justify-center shrink-0 min-w-4 text-center';
+  const durationTagClass =
+    'text-xs md:text-sm font-medium text-foreground/90 py-2 px-3 rounded-full bg-accent/20 min-w-4 inline-flex items-center justify-center shrink-0 text-center border border-accent/30';
 
   return (
-    <div className="max-w-[550px]">
+    <div>
       <div data-testid="dates" className="w-full flex flex-wrap items-center gap-2 mb-2">
         <div className="flex flex-wrap gap-2 items-center">
           {priceDuration !== 'night' && startTime && savedStartDate && (
-            <div className="text-xs md:text-sm border rounded-xl bg-neutral py-1.5 px-2 font-medium">
+            <div className={dateTagClass}>
               {getDateOnly(savedStartDate)}
               {isStartTimeSelected &&
                 startTimeOnly !== endTimeOnly &&
@@ -405,36 +409,54 @@ const DateTimePicker = ({
           )}
           {priceDuration === 'night' && (
             <>
-              <div className="text-xs md:text-sm border rounded-xl bg-neutral py-1.5 px-2 font-medium min-w-4 flex items-center justify-center text-center shrink-0">
+              <div className={`${dateTagClass} flex-col gap-0.5 min-w-0`}>
                 {isAdmin && !showCalendar && (
-                  <span className="text-foreground/60 text-xs block">
+                  <span className="text-foreground/60 text-xs">
                     {t('events_event_start_date')}
                   </span>
                 )}
                 {dateRange?.from ? (
                   <>
-                    <span className="md:hidden">{dayjs(dateRange.from).format('MMM D')}</span>
-                    <span className="hidden md:inline">{dayjs(dateRange.from).format('ll')}</span>
+                    <span className="md:hidden">
+                      {isAdmin && !showCalendar && startTime
+                        ? dayjs(dateRange.from).format('ddd, MMM D') + ' at ' + startTime
+                        : dayjs(dateRange.from).format('ddd, MMM D')}
+                    </span>
+                    <span className="hidden md:inline">
+                      {isAdmin && !showCalendar && startTime
+                        ? dayjs(dateRange.from).format('ddd, MMM D, YYYY') + ' at ' + startTime
+                        : dayjs(dateRange.from).format('ddd, MMM D, YYYY')}
+                    </span>
                   </>
-                ) : t('listings_book_select_date')}
+                ) : (
+                  t('listings_book_select_date')
+                )}
               </div>
-              <div className="text-xs md:text-sm border rounded-xl bg-neutral py-1.5 px-2 font-medium min-w-4 flex items-center justify-center text-center shrink-0">
+              <div className={`${dateTagClass} flex-col gap-0.5 min-w-0`}>
                 {isAdmin && !showCalendar && (
-                  <span className="text-foreground/60 text-xs block">
+                  <span className="text-foreground/60 text-xs">
                     {t('events_event_end_date')}
                   </span>
                 )}
                 {dateRange?.to ? (
                   <>
-                    <span className="md:hidden">{dayjs(dateRange.to).format('MMM D')}</span>
-                    <span className="hidden md:inline">{dayjs(dateRange.to).format('ll')}</span>
+                    <span className="md:hidden">
+                      {isAdmin && !showCalendar && endTime
+                        ? dayjs(dateRange.to).format('ddd, MMM D') + ' at ' + endTime
+                        : dayjs(dateRange.to).format('ddd, MMM D')}
+                    </span>
+                    <span className="hidden md:inline">
+                      {isAdmin && !showCalendar && endTime
+                        ? dayjs(dateRange.to).format('ddd, MMM D, YYYY') + ' at ' + endTime
+                        : dayjs(dateRange.to).format('ddd, MMM D, YYYY')}
+                    </span>
                   </>
-                ) : t('listings_book_select_date')}
+                ) : (
+                  t('listings_book_select_date')
+                )}
               </div>
               {durationLabel && (
-                <span className="text-xs md:text-sm font-medium text-foreground/90 py-1.5 px-2 rounded-xl bg-accent/20 min-w-4 flex items-center justify-center text-center shrink-0 border border-transparent">
-                  {durationLabel}
-                </span>
+                <span className={durationTagClass}>{durationLabel}</span>
               )}
             </>
           )}
@@ -443,7 +465,8 @@ const DateTimePicker = ({
           <Button
             type="button"
             size="small"
-            className="btn-primary"
+            isFullWidth={false}
+            className="btn-primary !py-1.5 !px-3 !min-h-0"
             onClick={() => setIsExpanded(true)}
           >
             {hasDates ? (t('events_edit_dates') || 'Edit dates') : (t('events_set_dates') || 'Set dates')}

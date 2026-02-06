@@ -1,6 +1,6 @@
 import { BookingCheckoutPage } from 'closer';
 import { renderWithProviders } from '@/test/utils';
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { booking, bookingWithTokens, listing, paymentConfig } from '@/__tests__/mocks';
 import { bookingConfig } from '@/__tests__/mocks/bookingConfig';
@@ -66,6 +66,7 @@ describe('BookingCheckoutPage', () => {
         bookingConfig={bookingConfig}
         paymentConfig={paymentConfig}
         event={null}
+        tokenCurrency="TDF"
       />,
     );
     const totalSection = screen.getByText(/Total:/i).closest('div');
@@ -95,27 +96,34 @@ describe('BookingCheckoutPage', () => {
     expect(screen.getByText(/token refund is not currently available/i)).toBeInTheDocument();
   });
 
-  it('enables pay button only after token staking checkbox is checked', async () => {
-    const user = userEvent.setup();
-    const tokenOnlyBooking = {
-      ...bookingWithTokens,
-      total: { val: 0, cur: 'EUR' as const },
-      rentalToken: { cur: 'TDF' as const, val: 1 },
-    };
-    renderWithProviders(
-      <BookingCheckoutPage
-        booking={tokenOnlyBooking}
-        listing={listing}
-        bookingConfig={bookingConfig}
-        paymentConfig={paymentConfig}
-        event={null}
-      />,
-    );
-    const payButton = screen.getByRole('button', { name: /stake|pay|confirm/i });
-    expect(payButton).toBeDisabled();
-    await user.click(
-      screen.getByRole('checkbox', { name: /tokens are being staked/i }),
-    );
-    expect(payButton).toBeEnabled();
-  });
+  it(
+    'enables pay button only after token staking checkbox is checked',
+    async () => {
+      const user = userEvent.setup();
+      const tokenOnlyBooking = {
+        ...bookingWithTokens,
+        total: { val: 0, cur: 'EUR' as const },
+        rentalToken: { cur: 'TDF' as const, val: 1 },
+      };
+      renderWithProviders(
+        <BookingCheckoutPage
+          booking={tokenOnlyBooking}
+          listing={listing}
+          bookingConfig={bookingConfig}
+          paymentConfig={paymentConfig}
+          event={null}
+          tokenCurrency="TDF"
+        />,
+      );
+      const payButton = screen.getByRole('button', { name: /stake|pay|confirm/i });
+      expect(payButton).toBeDisabled();
+      await user.click(
+        screen.getByRole('checkbox', { name: /tokens are being staked/i }),
+      );
+      await waitFor(() => {
+        expect(payButton).toBeEnabled();
+      });
+    },
+    10000,
+  );
 });

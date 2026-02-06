@@ -319,6 +319,7 @@ const FormField = ({
             <TicketOptionsEditor
               value={objectPath.get(data, name)}
               onChange={(value) => update(name, value)}
+              fixedCurrency={currencyConfig?.fiatCur ?? null}
             />
           )}
           {type === 'learnEditor' && (

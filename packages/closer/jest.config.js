@@ -16,6 +16,8 @@ const customJestConfig = {
     '^@reown/appkit/react$': '<rootDir>/test/__mocks__/reown-appkit-react.js',
     '^@reown/appkit/networks$': '<rootDir>/test/__mocks__/appkit.js',
     '(.*)/appkit$': '<rootDir>/test/__mocks__/appkit.js',
+    '^utils/api$': '<rootDir>/test/__mocks__/api.js',
+    '^(\\.\\./)+utils/api$': '<rootDir>/test/__mocks__/api.js',
   },
 }
 

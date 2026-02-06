@@ -6,6 +6,7 @@ interface Props {
   total: number;
   stepIds?: string[];
   stepHrefs?: (string | null)[];
+  stepTitles?: string[];
 }
 
 const Progress: FC<Props> = ({
@@ -13,6 +14,7 @@ const Progress: FC<Props> = ({
   total,
   stepIds,
   stepHrefs,
+  stepTitles,
 }) => {
   return (
     <div className="w-full mt-2 mb-6">
@@ -25,7 +27,7 @@ const Progress: FC<Props> = ({
             const href = stepHrefs?.[i];
             const isClickable = Boolean(href && isCompleted);
 
-            const pillClass = `flex items-center justify-center rounded-full min-w-0 w-full overflow-hidden h-1 md:h-[0.35rem] ${
+            const pillClass = `flex items-center justify-center rounded-full min-w-0 w-full overflow-hidden h-[0.4rem] ${
               isCurrent
                 ? 'bg-accent text-black'
                 : isCompleted
@@ -33,12 +35,15 @@ const Progress: FC<Props> = ({
                   : 'bg-neutral-dark/90 text-foreground'
             } ${isClickable ? 'cursor-pointer hover:opacity-90' : ''}`;
 
+            const stepTitle = stepTitles?.[i];
+
             if (isClickable && href) {
               return (
                 <Link
                   key={stepId}
                   href={href}
                   className="flex-1 min-w-0 flex"
+                  title={stepTitle}
                 >
                   <span className={pillClass} />
                 </Link>
@@ -48,6 +53,7 @@ const Progress: FC<Props> = ({
               <span
                 key={stepId}
                 className="flex-1 min-w-0 flex"
+                title={stepTitle}
               >
                 <span className={pillClass} />
               </span>

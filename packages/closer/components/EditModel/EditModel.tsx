@@ -1,5 +1,6 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 
+import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 import objectPath from 'object-path';
 
@@ -37,6 +38,7 @@ interface Props {
   initialData?: any;
   endpoint: string;
   onSave?: (data: any) => void;
+  onErrorClear?: () => void;
   onUpdate?: (
     name: string,
     value: any,
@@ -63,6 +65,7 @@ const EditModel: FC<Props> = ({
   initialData,
   endpoint,
   onSave,
+  onErrorClear,
   onUpdate,
   onError,
   onDelete,
@@ -88,6 +91,7 @@ const EditModel: FC<Props> = ({
   const [data, setData] = useState(initialModel);
   const [error, setErrors] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const errorRef = useRef<HTMLDivElement>(null);
 
   const [startDate, setStartDate] = useState<string | null | Date>(data.start);
   const [endDate, setEndDate] = useState<string | null | Date>(data.end);
@@ -135,6 +139,12 @@ const EditModel: FC<Props> = ({
       onError(errorMessage);
     }
   };
+
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [error]);
   // Name: visibleBy, value: [1], option: 1, actionType: ADD
   const update = (
     name: string,
@@ -166,6 +176,7 @@ const EditModel: FC<Props> = ({
   const save = async (updatedData: any) => {
     setIsLoading(true);
     setErrors(null);
+    onErrorClear?.();
     try {
       validate(updatedData);
 
@@ -248,17 +259,21 @@ const EditModel: FC<Props> = ({
     }
   }, [endpoint, id, initialData, fields]);
 
-  // Auto-generate slug on each character typed in title field
   useEffect(() => {
     const titleValue = getTitleValue();
-
-    if (hasSlugField && titleValue && titleValue.length > 0) {
+    const currentSlug = (data.slug ?? '').toString().trim();
+    if (
+      hasSlugField &&
+      titleValue &&
+      titleValue.length > 0 &&
+      !currentSlug
+    ) {
       const newSlug = generateSlug(titleValue);
-      if (newSlug && newSlug !== data.slug) {
+      if (newSlug) {
         update('slug', newSlug);
       }
     }
-  }, [data.title, data.name, hasSlugField]);
+  }, [data.title, data.name, data.slug, hasSlugField]);
 
   if (!isPublic && !isAuthenticated) {
     return (
@@ -285,6 +300,22 @@ const EditModel: FC<Props> = ({
   const isEvent = endpoint === '/event';
   const isPrimaryField = (field: any) => field.type === 'longtext';
 
+  const eventDurationLabel = (() => {
+    if (!isEvent || !data.start || !data.end) return undefined;
+    const start = dayjs(data.start);
+    const end = dayjs(data.end);
+    if (start.isSame(end, 'day')) {
+      const hours = Math.max(1, Math.round(end.diff(start, 'hour', true)));
+      return hours === 1
+        ? t('events_duration_hours', { count: 1 })
+        : t('events_duration_hours_plural', { count: hours });
+    }
+    const days = end.diff(start, 'day') + 1;
+    return days === 1
+      ? t('events_duration_days', { count: 1 })
+      : t('events_duration_days_plural', { count: days });
+  })();
+
   return (
     <div className="card rounded-lg p-4 shadow-sm border border-neutral-dark/20">
       <form
@@ -296,7 +327,11 @@ const EditModel: FC<Props> = ({
         className="w-full"
       >
         {error && (
-          <div className="validation-error mb-3 rounded-lg bg-primary-light/30 p-3 text-sm">
+          <div
+            ref={errorRef}
+            role="alert"
+            className="mb-3 rounded-lg border border-red-500/50 bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950/30 dark:text-red-200"
+          >
             {error}
           </div>
         )}
@@ -316,6 +351,7 @@ const EditModel: FC<Props> = ({
                     defaultMonth={new Date()}
                     timeZone={timeZone}
                     startCollapsed={isEvent}
+                    durationLabel={isEvent ? eventDurationLabel : undefined}
                   />
                 ) : null;
               const tabFields = filterFields(fieldsByTab[key], data);
