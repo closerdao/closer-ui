@@ -65,6 +65,9 @@
   "header_nav_events": "Event Booking",
   "header_nav_community": "Community",
   "header_nav_join_us": "Join us",
+  "header_nav_agent": "Agent",
+  "header_nav_pricing": "Pricing",
+  "header_nav_docs": "Docs",
 
   "buttons_apply_to_stay": "Apply to stay"
 }
