@@ -18,7 +18,7 @@ const sizes = {
 };
 
 interface Props {
-  color: keyof typeof colors;
+  color?: keyof typeof colors;
   remove?: () => void;
   className?: string;
   children: React.ReactNode;
@@ -26,10 +26,10 @@ interface Props {
 }
 
 const Tag = ({
-  color,
+  color = 'blue',
   children,
   remove,
-  className,
+  className = '',
   size = 'medium',
 }: Props) => {
   return (
@@ -62,9 +62,4 @@ const Tag = ({
     </span>
   );
 };
-Tag.defaultProps = {
-  color: 'blue',
-  className: '',
-};
-
 export default Tag;

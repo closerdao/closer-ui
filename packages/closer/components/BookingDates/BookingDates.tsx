@@ -11,6 +11,10 @@ import HeadingRow from '../ui/HeadingRow';
 interface Props {
   isMember?: boolean;
   conditions?: BookingConditions;
+  isVolunteerApplication?: boolean;
+  isResidenceApplication?: boolean;
+  volunteerMinStay?: number;
+  residenceMinStay?: number;
   startDate?: string | null | Date;
   endDate?: string | null | Date;
   setStartDate: (startDate: string | null | Date) => void;
@@ -36,6 +40,10 @@ interface Props {
 const BookingDates: FC<Props> = ({
   isMember,
   conditions,
+  isVolunteerApplication,
+  isResidenceApplication,
+  volunteerMinStay,
+  residenceMinStay,
   setStartDate,
   setEndDate,
   blockedDateRanges,
@@ -53,6 +61,17 @@ const BookingDates: FC<Props> = ({
   const endDate = currentEndDate ?? savedEndDate;
   const t = useTranslations();
   const renderConditionsDescription = () => {
+    if (isResidenceApplication) {
+      if (residenceMinStay != null) {
+        return t('bookings_dates_step_residence_min_stay', {
+          var: residenceMinStay,
+        });
+      }
+      return t('bookings_dates_step_residence_conditions');
+    }
+    if (isVolunteerApplication && volunteerMinStay != null) {
+      return t('bookings_dates_step_volunteer_min_stay', { var: volunteerMinStay });
+    }
     if (isMember) {
       return (
         t('bookings_dates_step_member_book_horizon', {

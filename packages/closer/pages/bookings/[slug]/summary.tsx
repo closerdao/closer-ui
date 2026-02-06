@@ -21,6 +21,7 @@ import { useTranslations } from 'next-intl';
 import PageNotAllowed from '../../401';
 import {
   BOOKING_STEPS,
+  BOOKING_STEP_TITLE_KEYS,
   CURRENCIES,
   DEFAULT_CURRENCY,
 } from '../../../constants';
@@ -38,7 +39,12 @@ import {
   PaymentType,
 } from '../../../types';
 import api from '../../../utils/api';
-import { getPaymentType } from '../../../utils/booking.helpers';
+import {
+  buildBookingAccomodationUrl,
+  buildBookingDatesUrl,
+  getBookingTokenCurrency,
+  getPaymentType,
+} from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
@@ -50,6 +56,7 @@ interface Props extends BaseBookingParams {
   event?: Event;
   bookingConfig: BookingConfig | null;
   paymentConfig: PaymentConfig | null;
+  tokenCurrency: string;
 }
 
 const Summary = ({
@@ -59,6 +66,7 @@ const Summary = ({
   error,
   bookingConfig,
   paymentConfig,
+  tokenCurrency,
 }: Props) => {
   const t = useTranslations();
 
@@ -118,6 +126,42 @@ const Summary = ({
     duration,
     volunteerInfo,
   } = updatedBooking || booking || {};
+
+  const stepUrlParams =
+    start && end && booking
+      ? {
+          start,
+          end,
+          adults: adults ?? 0,
+          ...(booking.children && { children: booking.children }),
+          ...(booking.infants && { infants: booking.infants }),
+          ...(booking.pets && { pets: booking.pets }),
+          currency: booking.useTokens ? tokenCurrency : undefined,
+          ...(booking.eventId && { eventId: booking.eventId }),
+          ...(booking.volunteerId && { volunteerId: booking.volunteerId }),
+          ...(booking.volunteerInfo && {
+            volunteerInfo: {
+              ...(booking.volunteerInfo.bookingType && {
+                bookingType: booking.volunteerInfo.bookingType,
+              }),
+              ...(booking.volunteerInfo.skills?.length && {
+                skills: booking.volunteerInfo.skills,
+              }),
+              ...(booking.volunteerInfo.diet?.length && {
+                diet: booking.volunteerInfo.diet,
+              }),
+              ...(booking.volunteerInfo.projectId?.length && {
+                projectId: booking.volunteerInfo.projectId,
+              }),
+              ...(booking.volunteerInfo.suggestions && {
+                suggestions: booking.volunteerInfo.suggestions,
+              }),
+            },
+          }),
+          ...(booking.isFriendsBooking && { isFriendsBooking: true }),
+          ...(booking.friendEmails && { friendEmails: booking.friendEmails }),
+        }
+      : null;
 
   const isHourlyBooking = listing?.priceDuration === 'hour';
 
@@ -390,11 +434,12 @@ const Summary = ({
       {handleNextError && <div className="error-box">{handleNextError}</div>}
       <ProgressBar
         steps={BOOKING_STEPS}
+        stepTitleKeys={BOOKING_STEP_TITLE_KEYS}
         stepHrefs={
-          booking?.start && booking?.end
+          stepUrlParams
             ? [
-                `/bookings/create/dates?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${children ? `&kids=${children}` : ''}${pets ? `&pets=${pets}` : ''}${infants ? `&infants=${infants}` : ''}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
-                `/bookings/create/accomodation?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${children ? `&kids=${children}` : ''}${pets ? `&pets=${pets}` : ''}${infants ? `&infants=${infants}` : ''}${booking?.useTokens ? '&currency=TDF' : ''}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`,
+                buildBookingDatesUrl(stepUrlParams),
+                buildBookingAccomodationUrl(stepUrlParams),
                 `/bookings/${booking?._id}/food`,
                 `/bookings/${booking?._id}/rules`,
                 `/bookings/${booking?._id}/questions`,
@@ -412,7 +457,7 @@ const Summary = ({
           >
             <summary className="list-none flex flex-wrap items-center justify-end gap-2 px-4 py-2 font-medium cursor-pointer hover:bg-neutral-dark/30">
               <Link
-                href={`/bookings/create/dates?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${children ? `&kids=${children}` : ''}${pets ? `&pets=${pets}` : ''}${infants ? `&infants=${infants}` : ''}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`}
+                href={stepUrlParams ? buildBookingDatesUrl(stepUrlParams) : '#'}
                 className="text-sm text-accent-dark font-medium hover:underline"
               >
                 {t('generic_edit_button')}
@@ -449,7 +494,7 @@ const Summary = ({
             <summary className="list-none flex flex-wrap items-center justify-between gap-2 px-4 py-3 font-medium cursor-pointer hover:bg-neutral-dark/30">
               <span>{t('bookings_summary_step_costs_title')}</span>
               <Link
-                href={`/bookings/create/accomodation?start=${dayjs(start).format('YYYY-MM-DD')}&end=${dayjs(end).format('YYYY-MM-DD')}&adults=${adults}${children ? `&kids=${children}` : ''}${pets ? `&pets=${pets}` : ''}${infants ? `&infants=${infants}` : ''}${useTokens ? '&currency=TDF' : ''}${booking?.isFriendsBooking ? '&isFriendsBooking=true' : ''}`}
+                href={stepUrlParams ? buildBookingAccomodationUrl(stepUrlParams) : '#'}
                 className="text-sm text-accent-dark font-medium hover:underline"
               >
                 {t('generic_edit_button')}
@@ -498,7 +543,7 @@ Summary.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
 
   try {
-    const [bookingRes, bookingConfigRes, paymentConfigRes, messages] =
+    const [bookingRes, bookingConfigRes, web3ConfigRes, paymentConfigRes, messages] =
       await Promise.all([
         api
           .get(`/booking/${query.slug}`, {
@@ -508,19 +553,16 @@ Summary.getInitialProps = async (context: NextPageContext) => {
               }`,
             },
           })
-          .catch(() => {
-            return null;
-          }),
-        api.get('/config/booking').catch(() => {
-          return null;
-        }),
-        api.get('/config/payment').catch(() => {
-          return null;
-        }),
+          .catch(() => null),
+        api.get('/config/booking').catch(() => null),
+        api.get('/config/web3').catch(() => null),
+        api.get('/config/payment').catch(() => null),
         loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = bookingConfigRes?.data?.results?.value;
+    const web3Config = web3ConfigRes?.data?.results?.value;
+    const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
     const paymentConfig = paymentConfigRes?.data?.results?.value;
 
     const [optionalEvent, optionalListing] = await Promise.all([
@@ -552,6 +594,7 @@ Summary.getInitialProps = async (context: NextPageContext) => {
       bookingConfig,
       paymentConfig,
       messages,
+      tokenCurrency,
     };
   } catch (err) {
     return {
@@ -561,6 +604,7 @@ Summary.getInitialProps = async (context: NextPageContext) => {
       bookingConfig: null,
       messages: null,
       paymentConfig: null,
+      tokenCurrency: getBookingTokenCurrency(),
     };
   }
 };

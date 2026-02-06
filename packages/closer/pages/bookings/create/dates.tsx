@@ -22,13 +22,14 @@ import { useTranslations } from 'next-intl';
 
 import {
   BOOKING_STEPS,
+  BOOKING_STEP_TITLE_KEYS,
   CURRENCIES,
   DEFAULT_CURRENCY,
 } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { Event, TicketOption } from '../../../types';
-import { BookingSettings, VolunteerConfig } from '../../../types/api';
+import { BookingSettings, Project, VolunteerConfig } from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
 import api from '../../../utils/api';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
@@ -36,6 +37,7 @@ import { parseMessageFromError } from '../../../utils/common';
 import { getMaxBookingHorizon } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+import ProjectPreview from '../../../components/ProjectPreview';
 
 interface Props {
   error?: string;
@@ -46,6 +48,7 @@ interface Props {
   messages?: any;
   volunteerConfig: VolunteerConfig | null;
   isFriendsBooking?: boolean;
+  project?: Project | null;
 }
 
 const DatesSelector = ({
@@ -56,6 +59,7 @@ const DatesSelector = ({
   event,
   volunteerConfig,
   isFriendsBooking: isFriendsBookingProp,
+  project,
 }: Props) => {
   const t = useTranslations();
   const isBookingEnabled =
@@ -415,24 +419,26 @@ const DatesSelector = ({
   const handleNext = async () => {
     setHandleNextError(null);
     try {
-      const data = {
+      const data: Record<string, string> = {
         start: String(dayjs(start as string).format('YYYY-MM-DD')) || '',
         end: String(dayjs(end as string).format('YYYY-MM-DD')) || '',
         adults: String(adults),
-        kids: String(kids),
-        infants: String(infants),
-        pets: String(pets),
-        currency,
-        ...(eventId && { eventId: eventId as string }),
-        ticketOption: selectedTicketOption?.name,
-        discountCode: discountCode,
         doesNeedPickup: String(doesNeedPickup),
         doesNeedSeparateBeds: String(doesNeedSeparateBeds),
+        ...(eventId && { eventId: eventId as string }),
+        ...(kids != null && { kids: String(kids) }),
+        ...(infants != null && { infants: String(infants) }),
+        ...(pets != null && { pets: String(pets) }),
+        ...(currency && { currency }),
+        ...(selectedTicketOption?.name && {
+          ticketOption: selectedTicketOption.name,
+        }),
+        ...(discountCode && { discountCode }),
         ...(skills && { skills: skills as string }),
         ...(diet && { diet: diet as string }),
         ...(projectId && { projectId: projectId as string }),
         ...(suggestions && { suggestions: suggestions as string }),
-        bookingType: (bookingType as string) || '',
+        ...(bookingType && { bookingType: bookingType as string }),
         ...(normalizedIsFriendsBooking && {
           isFriendsBooking: 'true',
         }),
@@ -444,11 +450,20 @@ const DatesSelector = ({
           redirectToSignup();
           return;
         }
-        // Single day ticket - no accomodation needed.
+        const eventFoodPayload =
+          event?.foodOption
+            ? {
+                foodOption: event.foodOption,
+                foodOptionId:
+                  event.foodOption === 'food_package'
+                    ? event.foodOptionId ?? null
+                    : null,
+              }
+            : {};
+
         const {
           data: { results: newBooking },
         } = await api.post('/bookings/request', {
-          // useTokens,
           start: selectedTicketOption?.isDayTicket ? savedStartDate : start,
           end: selectedTicketOption?.isDayTicket ? savedStartDate : end,
           adults,
@@ -464,6 +479,7 @@ const DatesSelector = ({
           isHourlyBooking,
           isResidenceApplication,
           isVolunteerApplication,
+          ...eventFoodPayload,
           ...(normalizedIsFriendsBooking && { isFriendsBooking: true }),
           ...(friendEmails && { friendEmails }),
         });
@@ -471,8 +487,13 @@ const DatesSelector = ({
         router.push(`/bookings/${newBooking._id}/food`);
         return;
       } else {
-        const urlParams = new URLSearchParams(data);
-
+        const urlParams = new URLSearchParams(
+          Object.fromEntries(
+            Object.entries(data).filter(
+              ([, v]) => v != null && v !== '',
+            ) as [string, string][],
+          ),
+        );
         router.push(`/bookings/create/accomodation?${urlParams}`);
       }
     } catch (err: any) {
@@ -554,7 +575,7 @@ const DatesSelector = ({
               </ul>
             </div>
           )}
-        <ProgressBar steps={BOOKING_STEPS} />
+        <ProgressBar steps={BOOKING_STEPS} stepTitleKeys={BOOKING_STEP_TITLE_KEYS} />
 
         <div className="mt-8 flex flex-col gap-8">
           {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' && (
@@ -602,11 +623,18 @@ const DatesSelector = ({
                     </p>
                   </div>
                 )}
+              {isResidenceApplication && project && (
+                <ProjectPreview project={project} />
+              )}
               <BookingDates
                 conditions={conditions}
                 setStartDate={setStartDate}
                 setEndDate={setEndDate}
                 isMember={isMember}
+                isVolunteerApplication={isVolunteerApplication}
+                isResidenceApplication={isResidenceApplication}
+                volunteerMinStay={volunteerConfig?.volunteeringMinStay}
+                residenceMinStay={volunteerConfig?.residenceMinStay}
                 blockedDateRanges={blockedDateRanges}
                 savedStartDate={savedStartDate as string}
                 savedEndDate={savedEndDate as string}
@@ -735,11 +763,28 @@ DatesSelector.getInitialProps = async (
         messages,
       };
     }
+
+    let project: Project | null = null;
+    const projectIdParam = query.projectId;
+    if (
+      bookingType === 'residence' &&
+      projectIdParam &&
+      typeof projectIdParam === 'string'
+    ) {
+      const firstId = projectIdParam.split(',')[0]?.trim();
+      if (firstId) {
+        const projectRes = await api.get(`/project/${firstId}`).catch(() => null);
+        const results = projectRes?.data?.results;
+        project = Array.isArray(results) ? results[0] ?? null : results ?? null;
+      }
+    }
+
     return {
       bookingSettings,
       volunteerConfig,
       isFriendsBooking: normalizeIsFriendsBooking(isFriendsBooking),
       messages,
+      project,
     };
   } catch (err) {
     return {

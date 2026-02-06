@@ -17,8 +17,6 @@ import {
 } from 'closer';
 import { WalletProvider } from 'closer/contexts/wallet';
 import { blockchainConfig } from 'closer/config_blockchain';
-import { Web3ReactProvider } from '@web3-react/core';
-import { Web3Provider } from '@ethersproject/providers';
 import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import { NewsletterProvider } from 'closer/contexts/newsletter';
@@ -29,10 +27,6 @@ import { GoogleAnalytics } from 'nextjs-google-analytics';
 import { getAppConfigFromEnv } from 'closer/utils/appConfigFromEnv';
 import rbacDefaultConfig from 'closer/constants/rbac';
 import '../styles/index.css';
-
-function getLibrary(provider: any) {
-  return new Web3Provider(provider);
-}
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
@@ -173,17 +167,15 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
           >
             <AuthProvider>
               <PlatformProvider>
-                <Web3ReactProvider getLibrary={getLibrary}>
-                  <WalletProvider>
-                    <NewsletterProvider>
-                      <Layout>
-                        <GoogleAnalytics trackPageViews />
-                        <Component {...pageProps} config={config} />
-                      </Layout>
-                    </NewsletterProvider>
-                    <AcceptCookies />
-                  </WalletProvider>
-                </Web3ReactProvider>
+                <WalletProvider>
+                  <NewsletterProvider>
+                    <Layout>
+                      <GoogleAnalytics trackPageViews />
+                      <Component {...pageProps} config={config} />
+                    </Layout>
+                  </NewsletterProvider>
+                  <AcceptCookies />
+                </WalletProvider>
               </PlatformProvider>
             </AuthProvider>
           </NextIntlClientProvider>

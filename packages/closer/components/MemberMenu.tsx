@@ -226,6 +226,13 @@ const MemberMenu = () => {
               rbacPage: 'Listings',
             },
             {
+              label: t('navigation_food'),
+              url: '/food',
+              enabled: isBookingEnabled,
+              roles: ['admin', 'team', 'space-host'],
+              rbacPage: 'Food',
+            },
+            {
               label: t('navigation_user_list'),
               url: '/admin/manage-users',
               enabled: true,

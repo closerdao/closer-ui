@@ -12,6 +12,18 @@ jest.mock('js-cookie', () => ({
   get: () => '123456789',
 }));
 
+jest.mock('closer/utils/api', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn((url: string) => {
+      if (url.includes('count')) return Promise.resolve({ data: { results: 0 } });
+      return Promise.resolve({ data: { results: [] } });
+    }),
+    post: jest.fn(() => Promise.resolve({ data: {} })),
+    defaults: { headers: {} },
+  },
+}));
+
 const mockBookingConfig: BookingConfig = {
   enabled: true,
   minDuration: 1,

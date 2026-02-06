@@ -1,12 +1,6 @@
 import React from 'react';
 
 import { render as rtlRender } from '@testing-library/react';
-import {
-  ExternalProvider,
-  JsonRpcFetchFunc,
-  Web3Provider,
-} from '@ethersproject/providers';
-import { Web3ReactProvider } from '@web3-react/core';
 
 import { getAppConfigFromEnv } from '../utils/appConfigFromEnv';
 import { blockchainConfig } from '../config_blockchain';
@@ -17,10 +11,6 @@ import { WalletProvider } from '../contexts/wallet';
 import { NextIntlClientProvider } from 'next-intl';
 import messagesLocal from '../locales/tdf/en.json';
 import messagesBase from '../locales/base-en.json';
-
-function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
-  return new Web3Provider(provider);
-}
 
 export const renderWithProviders = (ui: React.ReactElement, options = {}) => {
   function Wrapper({ children }: { children?: React.ReactNode }) {
@@ -33,9 +23,7 @@ export const renderWithProviders = (ui: React.ReactElement, options = {}) => {
         >
           <AuthProvider>
             <PlatformProvider>
-              <Web3ReactProvider getLibrary={getLibrary}>
-                <WalletProvider>{children}</WalletProvider>
-              </Web3ReactProvider>
+              <WalletProvider>{children}</WalletProvider>
             </PlatformProvider>
           </AuthProvider>
         </NextIntlClientProvider>

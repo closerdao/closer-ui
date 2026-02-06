@@ -18,8 +18,6 @@ import {
 } from 'closer';
 import { WalletProvider } from 'closer/contexts/wallet';
 import { blockchainConfig } from 'closer/config_blockchain';
-import { Web3ReactProvider } from '@web3-react/core';
-import { Web3Provider } from '@ethersproject/providers';
 import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import { NewsletterProvider } from 'closer/contexts/newsletter';
@@ -29,10 +27,6 @@ import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import { getAppConfigFromEnv } from 'closer/utils/appConfigFromEnv';
 import '../styles/index.css';
-
-function getLibrary(provider: any) {
-  return new Web3Provider(provider);
-}
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
@@ -131,17 +125,15 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
             <AuthProvider>
             <PromptGetInTouchProvider>
               <PlatformProvider>
-                <Web3ReactProvider getLibrary={getLibrary}>
-                  <WalletProvider>
-                    <Layout>
-                      <GoogleAnalytics trackPageViews />
-                      <NewsletterProvider>
-                        <Component {...pageProps} config={config} />
-                      </NewsletterProvider>
-                    </Layout>
-                    <AcceptCookies />
-                  </WalletProvider>
-                </Web3ReactProvider>
+                <WalletProvider>
+                  <Layout>
+                    <GoogleAnalytics trackPageViews />
+                    <NewsletterProvider>
+                      <Component {...pageProps} config={config} />
+                    </NewsletterProvider>
+                  </Layout>
+                  <AcceptCookies />
+                </WalletProvider>
               </PlatformProvider>
               </PromptGetInTouchProvider>
             </AuthProvider>

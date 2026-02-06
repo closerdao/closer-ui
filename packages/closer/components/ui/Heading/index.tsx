@@ -4,7 +4,7 @@ import { twMerge } from 'tailwind-merge';
 
 interface HeadingProps extends React.HTMLAttributes<HTMLHeadingElement> {
   level?: 1 | 2 | 3 | 4 | 5 | 6;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   className?: string;
   display?: boolean;
   hasBorder?: boolean;

@@ -4,5 +4,6 @@ export type FoodOption = {
   description: string;
   photos: string[];
   isDefault: boolean;
+  availableFor?: string[];
   _id: string;
 };

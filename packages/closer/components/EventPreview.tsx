@@ -154,6 +154,4 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
     </div>
   );
 };
-EventPreview.defaultProps = {};
-
 export default EventPreview;

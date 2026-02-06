@@ -21,13 +21,7 @@ import { NewsletterProvider } from '../contexts/newsletter';
 import { prepareGeneralConfig } from 'closer/utils/app.helpers';
 import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
-import { Web3ReactProvider } from '@web3-react/core';
-import { Web3Provider } from '@ethersproject/providers';
 import { WalletProvider } from '../contexts/wallet';
-
-function getLibrary(provider: any) {
-  return new Web3Provider(provider);
-}
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
@@ -143,16 +137,14 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         >
           <AuthProvider>
             <PlatformProvider>
-              <Web3ReactProvider getLibrary={getLibrary}>
-                <WalletProvider>
-                  <GoogleAnalytics trackPageViews />
-                  <PromptGetInTouchProvider>
-                    <NewsletterProvider>
-                      <Component {...pageProps} config={config} />
-                    </NewsletterProvider>
-                  </PromptGetInTouchProvider>
-                </WalletProvider>
-              </Web3ReactProvider>
+              <WalletProvider>
+                <GoogleAnalytics trackPageViews />
+                <PromptGetInTouchProvider>
+                  <NewsletterProvider>
+                    <Component {...pageProps} config={config} />
+                  </NewsletterProvider>
+                </PromptGetInTouchProvider>
+              </WalletProvider>
             </PlatformProvider>
           </AuthProvider>
         </NextIntlClientProvider>

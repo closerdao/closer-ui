@@ -16,6 +16,7 @@ jest.mock('closer/utils/api', () => ({
   default: {
     get: jest.fn(),
     post: jest.fn(() => Promise.resolve({ data: {} })),
+    defaults: { headers: {} },
   },
 }));
 
@@ -58,7 +59,7 @@ describe('FoodSelectionPage', () => {
   });
 
   describe('Toggle State Persistence', () => {
-    it('should show food cost €0.00 when food toggle is OFF', async () => {
+    it('should show save-by-opting-out message when food toggle is OFF', async () => {
       const user = userEvent.setup();
       renderWithProviders(
         <FoodSelectionPage
@@ -68,11 +69,10 @@ describe('FoodSelectionPage', () => {
           foodOptions={foodOptions}
         />,
       );
-      const foodToggle = screen.getByRole('checkbox', { name: /add.*basic/i });
+      const foodToggle = screen.getByRole('checkbox', { name: /basic/i });
       await user.click(foodToggle);
       expect(foodToggle).not.toBeChecked();
-      const foodRow = screen.getByText(/Food:/i).closest('div');
-      expect(foodRow).toHaveTextContent('€0.00');
+      expect(screen.getByText(/Save.*36[.,]00.*by opting out/i)).toBeInTheDocument();
     });
 
     it('should show food cost when food toggle is ON', () => {
@@ -84,10 +84,10 @@ describe('FoodSelectionPage', () => {
           foodOptions={foodOptions}
         />,
       );
-      const foodToggle = screen.getByRole('checkbox', { name: /add.*basic/i });
+      const foodToggle = screen.getByRole('checkbox', { name: /basic/i });
       expect(foodToggle).toBeChecked();
-      const foodRow = screen.getByText(/Food:/i).closest('div');
-      expect(foodRow).toHaveTextContent('€12.00');
+      expect(screen.getByText(/Total for your stay/i)).toBeInTheDocument();
+      expect(screen.getByText(/36\.00|36,00/)).toBeInTheDocument();
     });
 
     it('should update food cost display in real-time when toggle changes', async () => {
@@ -100,17 +100,16 @@ describe('FoodSelectionPage', () => {
           foodOptions={foodOptions}
         />,
       );
-      const foodToggle = screen.getByRole('checkbox', { name: /add.*basic/i });
-      const foodRow = () => screen.getByText(/Food:/i).closest('div');
+      const foodToggle = screen.getByRole('checkbox', { name: /basic/i });
 
       expect(foodToggle).toBeChecked();
-      expect(foodRow()).toHaveTextContent('€12.00');
+      expect(screen.getByText(/36\.00|36,00/)).toBeInTheDocument();
 
       await user.click(foodToggle);
-      expect(foodRow()).toHaveTextContent('€0.00');
+      expect(screen.getByText(/Save.*36[.,]00.*by opting out/i)).toBeInTheDocument();
 
       await user.click(foodToggle);
-      expect(foodRow()).toHaveTextContent('€12.00');
+      expect(screen.getByText(/36\.00|36,00/)).toBeInTheDocument();
     });
   });
 });

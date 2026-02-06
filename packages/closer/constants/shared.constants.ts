@@ -248,7 +248,16 @@ export const BOOKING_STEPS = [
   'questions',
   'summary',
   'checkout',
-  // 'confirmation',
+];
+
+export const BOOKING_STEP_TITLE_KEYS = [
+  'bookings_progress_step_dates',
+  'bookings_progress_step_accomodation',
+  'bookings_progress_step_food',
+  'bookings_progress_step_rules',
+  'bookings_progress_step_questions',
+  'bookings_progress_step_summary',
+  'bookings_progress_step_checkout',
 ];
 export const PRODUCT_SALE_STEPS = [
   'learn',

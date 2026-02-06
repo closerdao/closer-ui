@@ -1,4 +1,4 @@
-const Switch = ({ checked, disabled, name, label, onChange }) => {
+const Switch = ({ checked, disabled, name, label, labelledBy = undefined, onChange }) => {
   const handleChange = () => {
     if (onChange.name.includes('dispatchSetState')) {
       onChange((prevChecked) => !prevChecked);
@@ -18,6 +18,7 @@ const Switch = ({ checked, disabled, name, label, onChange }) => {
         checked={checked}
         disabled={disabled}
         onChange={handleChange}
+        {...(labelledBy && { 'aria-labelledby': labelledBy })}
       />
       <div className="w-11 h-6 bg-gray-200 rounded-full border border-gray-200 flex items-center toggle-bg dark:bg-gray-700 dark:border-gray-600"></div>
       {label && <span className="label">{label}</span>}

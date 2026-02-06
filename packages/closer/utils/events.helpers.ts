@@ -1,5 +1,19 @@
 import { Listing } from '../types';
 
+export function transformEventFoodBeforeSave<T extends { foodOptionId?: string | null }>(
+  data: T,
+): T & { foodOption: string; foodOptionId: string | null } {
+  const raw = data.foodOptionId;
+  const foodOption =
+    raw === 'no_food'
+      ? 'no_food'
+      : raw && raw !== ''
+        ? 'food_package'
+        : 'default';
+  const foodOptionId = foodOption === 'food_package' ? (raw ?? null) : null;
+  return { ...data, foodOption, foodOptionId };
+}
+
 export function toPhotoId(value: unknown): string | null {
   if (value == null) return null;
   if (typeof value === 'string') return value;
