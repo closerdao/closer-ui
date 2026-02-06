@@ -8,8 +8,8 @@ import Switch from './Switch';
 import { useTranslations } from 'next-intl';
 
 const TicketOptionsEditor = ({
-  value = /** @type {any} */ ([]),
-  onChange = /** @type {any} */ (undefined),
+  value = [],
+  onChange,
   required,
   fixedCurrency = null,
 }) => {
