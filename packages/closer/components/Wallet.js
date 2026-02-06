@@ -3,11 +3,15 @@ import { useContext } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { WalletState } from '../contexts/wallet';
+import { useConfig } from '../hooks/useConfig';
+import { getReserveTokenDisplay } from '../utils/config.utils';
 import WalletActions from './WalletActions';
 import WalletHeader from './WalletHeader';
 
 const Wallet = () => {
   const t = useTranslations();
+  const config = useConfig();
+  const reserveToken = getReserveTokenDisplay(config);
 
   const {
     balanceTotal,
@@ -27,7 +31,7 @@ const Wallet = () => {
       {isWalletReady && (
         <div className="flex flex-col gap-2 mt-4">
           <div className="flex justify-between items-center">
-            <p>{t('wallet_ceur')}</p>
+            <p>{t('wallet_ceur', { reserveToken })}</p>
             <p className="font-bold">{balanceCeurAvailable?.toFixed(2)}</p>
           </div>
           <div className="flex justify-between items-center">

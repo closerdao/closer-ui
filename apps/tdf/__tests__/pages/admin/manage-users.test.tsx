@@ -20,6 +20,7 @@ jest.mock('closer/utils/api', () => ({
       return Promise.resolve({ data: { results: [] } });
     }),
     post: jest.fn(() => Promise.resolve({ data: {} })),
+    defaults: { headers: {} },
   },
 }));
 

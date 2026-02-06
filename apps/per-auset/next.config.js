@@ -23,7 +23,19 @@ const nextConfig = {
     defaultLocale: 'en',
   },
   reactStrictMode: false,
-  transpilePackages: ['closer'],
+  transpilePackages: [
+    'closer',
+    '@reown/appkit',
+    '@reown/appkit-adapter-ethers5',
+    '@reown/appkit-common',
+    '@reown/appkit-controllers',
+    '@reown/appkit-pay',
+    '@reown/appkit-polyfills',
+    '@reown/appkit-scaffold-ui',
+    '@reown/appkit-ui',
+    '@reown/appkit-utils',
+    '@reown/appkit-wallet',
+  ],
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   images: {
     remotePatterns: [

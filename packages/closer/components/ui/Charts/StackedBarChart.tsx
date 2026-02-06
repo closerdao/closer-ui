@@ -29,18 +29,6 @@ const CustomTooltipContent = ({ payload, label, layout }: any) => {
 
   if (!payload || !Array.isArray(payload)) return null;
 
-  // Debug logging
-  console.log('StackedBarChart Tooltip Debug:', {
-    payload,
-    label,
-    payloadValues: payload.map((entry: CustomPayload) => ({
-      name: entry.name,
-      value: entry.value,
-      valueType: typeof entry.value,
-      isNaN: isNaN(Number(entry.value)),
-    })),
-  });
-
   const total = Math.floor(
     payload.reduce((sum: number, entry: CustomPayload) => {
       const value = Number(entry.value);

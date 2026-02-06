@@ -511,7 +511,8 @@ export const SALES_CONFIG = {
   MAX_TOKENS_PER_TRANSACTION: 100,
 };
 
-// Token booking errors
+export const MIN_CELO_FOR_GAS = 1;
+
 export const BOOKING_EXISTS_ERROR =
   'execution reverted: BookingFacet: Booking already exists';
 export const USER_REJECTED_TRANSACTION_ERROR = 'user rejected transaction';

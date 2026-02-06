@@ -32,6 +32,7 @@ const {
   BLOCKCHAIN_NETWORK_ID,
   BLOCKCHAIN_CEUR_TOKEN,
   BLOCKCHAIN_CELO_TOKEN,
+  BLOCKCHAIN_NATIVE_TOKEN,
   BLOCKCHAIN_PRESENCE_ABI,
   BLOCKCHAIN_PRESENCE_TOKEN,
 } = blockchainConfig;
@@ -148,6 +149,14 @@ const WalletProviderInner = ({ children }) => {
     },
   );
 
+  const { data: nativeBalance } = useSWR(
+    library && account ? [library, account, 'nativeBalance'] : null,
+    {
+      fetcher: ([lib, acc]) => lib.getBalance(acc),
+      fallbackData: BigNumber.from(0),
+    },
+  );
+
   const { data: stakedBalanceOf } = useSWR(
     library && account
       ? [BLOCKCHAIN_DAO_DIAMOND_ADDRESS, 'stakedBalanceOf', account]
@@ -229,6 +238,10 @@ const WalletProviderInner = ({ children }) => {
   const balanceCeloAvailable = formatBigNumberForDisplay(
     balanceCeloToken,
     BLOCKCHAIN_CELO_TOKEN.decimals,
+  );
+  const balanceNativeAvailable = formatBigNumberForDisplay(
+    nativeBalance,
+    BLOCKCHAIN_NATIVE_TOKEN.decimals,
   );
   const proofOfPresence = formatBigNumberForDisplay(
     balancePresence,
@@ -373,6 +386,7 @@ const WalletProviderInner = ({ children }) => {
         balanceAvailable,
         balanceCeurAvailable,
         balanceCeloAvailable,
+        balanceNativeAvailable,
         proofOfPresence,
         bookedDates,
         error,

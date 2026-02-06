@@ -2,7 +2,7 @@ import React from 'react';
 
 import { render as rtlRender } from '@testing-library/react';
 
-import { closerConfig } from '../config';
+import { getAppConfigFromEnv } from '../utils/appConfigFromEnv';
 import { blockchainConfig } from '../config_blockchain';
 import { AuthProvider } from '../contexts/auth';
 import { ConfigProvider } from '../contexts/config';
@@ -15,7 +15,7 @@ import messagesBase from '../locales/base-en.json';
 export const renderWithProviders = (ui: React.ReactElement, options = {}) => {
   function Wrapper({ children }: { children?: React.ReactNode }) {
     return (
-      <ConfigProvider config={{ ...closerConfig, ...blockchainConfig }}>
+      <ConfigProvider config={{ ...getAppConfigFromEnv(), ...blockchainConfig }}>
         <NextIntlClientProvider
           locale={'en'}
           messages={{ ...messagesBase, ...messagesLocal }}
@@ -36,7 +36,7 @@ export const renderWithProviders = (ui: React.ReactElement, options = {}) => {
 export const renderWithAuth = (ui: React.ReactElement, options = {}) => {
   function Wrapper({ children }: { children?: React.ReactNode }) {
     return (
-      <ConfigProvider config={{ ...closerConfig, ...blockchainConfig }}>
+      <ConfigProvider config={{ ...getAppConfigFromEnv(), ...blockchainConfig }}>
         <NextIntlClientProvider
           locale={'en'}
           messages={{ ...messagesBase, ...messagesLocal }}
@@ -53,7 +53,7 @@ export const renderWithAuth = (ui: React.ReactElement, options = {}) => {
 export const renderWithNextIntl = (ui: React.ReactElement, options = {}) => {
   function Wrapper({ children }: { children?: React.ReactNode }) {
     return (
-      <ConfigProvider config={{ ...closerConfig, ...blockchainConfig }}>
+      <ConfigProvider config={{ ...getAppConfigFromEnv(), ...blockchainConfig }}>
         <NextIntlClientProvider
           locale={'en'}
           messages={{ ...messagesBase, ...messagesLocal }}

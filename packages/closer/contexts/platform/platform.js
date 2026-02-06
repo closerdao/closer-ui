@@ -2,7 +2,6 @@ import { createContext, useContext, useReducer } from 'react';
 
 import { Map, fromJS } from 'immutable';
 
-import { useConfig } from '../../hooks/useConfig';
 import api, { formatSearch } from '../../utils/api';
 import * as constants from './platformActions';
 
@@ -35,6 +34,7 @@ export const models = [
 ];
 
 const filterToKey = (filter) => JSON.stringify(filter) || '__';
+const CACHE_DURATION = 300000;
 const init = (state) => {
   return state.withMutations((map) => {
     models.forEach((model) => {
@@ -304,13 +304,9 @@ const reducer = (state, action) => {
 };
 export const PlatformProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const config = useConfig();
   const platform = {
     toJS: () => state.toJS(),
   };
-  if (config.EXPOSE_STORE && typeof window !== 'undefined') {
-    window.platform = platform;
-  }
   models.forEach((model) => {
     platform[model] = {
       // Find data in the state
@@ -343,7 +339,7 @@ export const PlatformProvider = ({ children }) => {
         dispatch({ type: constants.GET_ONE_INIT, model, id });
         if (
           state.getIn([model, 'byId', id, 'receivedAt']) >
-          Date.now() - config.CACHE_DURATION
+          Date.now() - CACHE_DURATION
         ) {
           return new Promise((resolve) =>
             resolve({
@@ -399,7 +395,7 @@ export const PlatformProvider = ({ children }) => {
         const useCache =
           !opts.force &&
           state.getIn([model, 'byFilter', filterKey, 'receivedAt']) >
-            Date.now() - config.CACHE_DURATION;
+          Date.now() - CACHE_DURATION
         if (useCache) {
           return new Promise((resolve) =>
             resolve({
@@ -454,7 +450,7 @@ export const PlatformProvider = ({ children }) => {
         dispatch({ type: constants.GET_COUNT_INIT, model, filterKey });
         if (
           state.getIn([model, 'count', filterKey, 'receivedAt']) >
-          Date.now() - config.CACHE_DURATION
+          Date.now() - CACHE_DURATION
         ) {
           return new Promise((resolve) =>
             resolve({
@@ -491,7 +487,7 @@ export const PlatformProvider = ({ children }) => {
         dispatch({ type: constants.GET_GRAPH_INIT, model, filterKey });
         if (
           state.getIn([model, 'graph', filterKey, 'receivedAt']) >
-          Date.now() - config.CACHE_DURATION
+          Date.now() - CACHE_DURATION
         ) {
           return new Promise((resolve) =>
             resolve({

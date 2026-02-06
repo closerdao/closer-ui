@@ -21,7 +21,6 @@ import { configDescription } from '../../config';
 import { getValidationSchema } from '../../constants/validation.constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
-import { useConfig } from '../../hooks/useConfig';
 import { Config } from '../../types';
 import { BookingConfig } from '../../types/api';
 import { ConfigType } from '../../types/config';
@@ -48,7 +47,6 @@ interface Props {
 const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
-  const { platformAllowedConfigs } = useConfig() || {};
   const { user } = useAuth();
 
   const isBookingEnabled =
@@ -56,39 +54,43 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   const isWeb3Enabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
-  const isWeb3BookingEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
+  const isWeb3BookingEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
   const isBlogEnabled = process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true';
   const isCoursesEnabled = process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true';
-  const isReferralEnabled = process.env.NEXT_PUBLIC_FEATURE_REFERRAL === 'true';
-  const isSubscriptionsEnabled = process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
+  const isReferralEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_REFERRAL === 'true';
+  const isSubscriptionsEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
+  const isVolunteeringEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
+  const isSupportUsEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true';
+  const isCitizenshipEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
+  const isAffiliateEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true';
 
-  const featureEnvFlags: Record<string, boolean> = {
-    booking: process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true',
-    subscriptions: isSubscriptionsEnabled,
-    blog: isBlogEnabled,
-    courses: isCoursesEnabled,
-    referral: isReferralEnabled,
-    airdrop: isWeb3Enabled,
-    governance: isWeb3Enabled,
-    web3: isWeb3BookingEnabled,
-  };
-
-  const baseAllowedConfigs = [
-    ...(platformAllowedConfigs || []),
-    ...(isBookingEnabled && !platformAllowedConfigs?.includes('payment') ? ['payment'] : []),
-    ...(isWeb3Enabled && !platformAllowedConfigs?.includes('airdrop') ? ['airdrop'] : []),
-    ...(isWeb3Enabled && !platformAllowedConfigs?.includes('governance') ? ['governance'] : []),
-    ...(isWeb3BookingEnabled && !platformAllowedConfigs?.includes('web3') ? ['web3'] : []),
-    ...(!platformAllowedConfigs?.includes('events') ? ['events'] : []),
-    ...(isBlogEnabled && !platformAllowedConfigs?.includes('blog') ? ['blog'] : []),
-    ...(isCoursesEnabled && !platformAllowedConfigs?.includes('courses') ? ['courses'] : []),
-    ...(isReferralEnabled && !platformAllowedConfigs?.includes('referral') ? ['referral'] : []),
+  const effectiveAllowedConfigs = [
+    'general',
+    'events',
+    ...(isBookingEnabled ? ['booking', 'booking-rules', 'payment', 'emails'] : []),
+    ...(isVolunteeringEnabled ? ['volunteering'] : []),
+    ...(isSubscriptionsEnabled ? ['subscriptions'] : []),
+    ...(isSupportUsEnabled ? ['fundraiser'] : []),
+    ...(isCoursesEnabled ? ['learningHub', 'courses'] : []),
+    ...(isCitizenshipEnabled ? ['citizenship'] : []),
+    ...(isAffiliateEnabled ? ['affiliate'] : []),
+    ...(isBlogEnabled ? ['blog'] : []),
+    ...(isReferralEnabled ? ['referral'] : []),
+    ...(isWeb3Enabled ? ['airdrop', 'governance'] : []),
+    ...(isWeb3BookingEnabled ? ['web3'] : []),
+    'newsletter',
+    'photo-gallery',
+    'accounting-entities',
+    'community',
+    'webinar',
   ];
-
-  const effectiveAllowedConfigs = baseAllowedConfigs.filter((config) => {
-    if (featureEnvFlags[config] === undefined) return true;
-    return featureEnvFlags[config];
-  });
 
   const myConfigs = platform.config.find();
 

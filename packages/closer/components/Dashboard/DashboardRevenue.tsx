@@ -67,7 +67,21 @@ const getSummaryRevenueData = (sums: {
 const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
-  const { TIME_ZONE, TOKEN_PRICE, APP_NAME } = useConfig();
+  const { TIME_ZONE, APP_NAME } = useConfig();
+  const [tokenPrice, setTokenPrice] = useState<number>(1);
+
+  useEffect(() => {
+    if (APP_NAME !== 'tdf') return;
+
+    api
+      .get('/token/stats')
+      .then((res) => {
+        if (res?.data?.tokenPrice != null) {
+          setTokenPrice(res.data.tokenPrice);
+        }
+      })
+      .catch(() => {});
+  }, [APP_NAME]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isStripeLoading, setIsStripeLoading] = useState(false);
@@ -625,7 +639,7 @@ const DashboardRevenue = ({ timeFrame, fromDate, toDate }: Props) => {
         TIME_ZONE,
         stripeSubsPayments,
         listings,
-        TOKEN_PRICE,
+        TOKEN_PRICE: tokenPrice,
       });
 
       data.push(subPeriodData);

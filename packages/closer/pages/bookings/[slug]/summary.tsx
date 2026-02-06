@@ -86,7 +86,7 @@ const Summary = ({
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
-  const { STAY_BOOKING_ALLOWED_PLANS, VISITORS_GUIDE } = useConfig();
+  const { VISITORS_GUIDE } = useConfig();
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
 
@@ -181,10 +181,7 @@ const Summary = ({
 
   useEffect(() => {
     if (user) {
-      setIsMember(
-        STAY_BOOKING_ALLOWED_PLANS.includes(user?.subscription?.plan) ||
-          user?.roles.includes('member'),
-      );
+      setIsMember(user?.roles?.includes('member') ?? false);
     }
   }, [user]);
 

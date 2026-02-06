@@ -57,6 +57,7 @@ jest.mock('../utils/api', () => {
     patch: jest.fn(() => Promise.resolve({ data: {} })),
     put: jest.fn(() => Promise.resolve({ data: {} })),
     delete: jest.fn(() => Promise.resolve({ data: {} })),
+    defaults: { headers: {} },
     interceptors: {
       request: { use: jest.fn() },
       response: { use: jest.fn() },

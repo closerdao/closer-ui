@@ -17,6 +17,7 @@ export interface WalletStateContext {
   balanceTotal: string;
   balanceCeurAvailable: string;
   balanceCeloAvailable: string;
+  balanceNativeAvailable: string;
   account?: string | null;
   library: any;
   chainId?: number;

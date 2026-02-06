@@ -17,13 +17,14 @@ import {
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { TOKEN_SALE_STEPS } from '../../constants';
+import { MIN_CELO_FOR_GAS, TOKEN_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
+import { getReserveTokenDisplay } from '../../utils/config.utils';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
@@ -43,14 +44,15 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
 
-  const { SOURCE_TOKEN } = useConfig() || {};
+  const config = useConfig() || {};
+  const reserveToken = getReserveTokenDisplay(config);
   const { buyTokens, getTotalCost, isCeurApproved, approveCeur, isPending } =
     useBuyTokens();
   const [total, setTotal] = useState<number>(0);
   const [isApproved, setIsApproved] = useState<boolean>(false);
 
   const { isAuthenticated, isLoading, user } = useAuth();
-  const { isWalletReady, balanceCeurAvailable } = useContext(WalletState);
+  const { isWalletReady, balanceCeurAvailable, balanceNativeAvailable } = useContext(WalletState);
 
   const [web3Error, setWeb3Error] = useState<string | null>(null);
   const [apiError, setApiError] = useState(null);
@@ -125,9 +127,9 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
       })();
     } else {
       if (userMessage) {
-        setWeb3Error(t('token_sale_approval_error_reason', { reason: userMessage }));
+        setWeb3Error(t('token_sale_approval_error_reason', { reason: userMessage, reserveToken }));
       } else {
-        setWeb3Error(t('token_sale_approval_error'));
+        setWeb3Error(t('token_sale_approval_error', { reserveToken }));
       }
     }
     setIsMetamaskLoading(false);
@@ -199,11 +201,11 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
       if (errorCode === 'MAX_SUPPLY') {
         setWeb3Error(t('token_sale_buy_error_max_supply'));
       } else if (errorCode === 'INSUFFICIENT_BALANCE') {
-        setWeb3Error(t('token_sale_buy_error_insufficient_balance'));
+        setWeb3Error(t('token_sale_buy_error_insufficient_balance', { reserveToken }));
       } else if (userMessage) {
-        setWeb3Error(t('token_sale_buy_error_reason', { reason: userMessage }));
+        setWeb3Error(t('token_sale_buy_error_reason', { reason: userMessage, reserveToken }));
       } else {
-        setWeb3Error(t('token_sale_buy_error'));
+        setWeb3Error(t('token_sale_buy_error', { reserveToken }));
       }
       setIsMetamaskLoading(false);
     }
@@ -235,8 +237,22 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
         <ProgressBar steps={TOKEN_SALE_STEPS} />
 
         {isWalletEnabled && (
-          <div className="mt-12">
+          <div className="mt-12 flex flex-col gap-4">
             <Wallet />
+            {isWalletReady &&
+              Number(balanceNativeAvailable ?? 0) < MIN_CELO_FOR_GAS && (
+                <div
+                  className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-amber-800"
+                  role="alert"
+                >
+                  <span className="text-amber-500 text-xl shrink-0" aria-hidden>
+                    ⚠️
+                  </span>
+                  <p className="text-sm font-medium">
+                    {t('insufficient_celo_for_gas')}
+                  </p>
+                </div>
+              )}
           </div>
         )}
 
@@ -251,7 +267,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
                 value={tokens?.toString()}
                 additionalInfo={`1 ${t(
                   'token_sale_token_symbol',
-                )} = ${unitPrice} ${SOURCE_TOKEN}`}
+                )} = ${unitPrice} ${reserveToken}`}
               />
             </div>
             <Button
@@ -269,15 +285,15 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
             <div className="flex flex-col gap-6">
               <Row
                 rowKey={t('token_sale_checkout_total')}
-                value={`${t('token_sale_source_token')} ${total} `}
-                additionalInfo={t('token_sale_ceur_disclaimer')}
+                value={`${t('token_sale_source_token', { reserveToken })} ${total} `}
+                additionalInfo={t('token_sale_ceur_disclaimer', { reserveToken })}
               />
             </div>
           </div>
 
           {balanceCeurAvailable < total && (
             <div className="font-bold">
-              {t('token_sale_not_enough_ceur_error')}
+              {t('token_sale_not_enough_ceur_error', { reserveToken })}
             </div>
           )}
           {isApproved ? (
@@ -309,20 +325,13 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
                   {t('token_sale_checkout_button_pending_transaction')}
                 </div>
               ) : (
-                t('token_sale_checkout_button_approve_transaction')
+                t('token_sale_checkout_button_approve_transaction', { reserveToken })
               )}
             </Button>
           )}
-          <p className="text-center">
-            {!isApproved && !isPending && t('token_sale_approve_text')}
-
-            {!isApproved && isPending && t('token_sale_approve_pending_text')}
-
-            {isApproved && !isPending && t('token_sale_buy_text')}
-
-            {isApproved && isPending && t('token_sale_buy_pending_text')}
-          </p>
-          {web3Error && <ErrorMessage error={web3Error} />}
+          {web3Error && (
+            <ErrorMessage error={web3Error} />
+          )}
           {apiError && <ErrorMessage error={apiError} />}
         </main>
       </div>

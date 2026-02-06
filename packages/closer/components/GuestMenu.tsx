@@ -8,6 +8,7 @@ import { ChevronDown } from 'lucide-react';
 
 import { useConfig } from '../hooks/useConfig';
 import useRBAC from '../hooks/useRBAC';
+import { getReserveTokenDisplay } from '../utils/config.utils';
 import { useBuyTokens } from '../hooks/useBuyTokens';
 import api from '../utils/api';
 import { getCurrentUnitPrice } from '../utils/bondingCurve';
@@ -28,7 +29,9 @@ interface MenuSection {
 
 const GuestMenu = () => {
   const t = useTranslations();
-  const { APP_NAME, SOURCE_TOKEN } = useConfig() || {};
+  const config = useConfig() || {};
+  const { APP_NAME } = config;
+  const reserveToken = getReserveTokenDisplay(config);
   const { hasAccess } = useRBAC();
   const router = useRouter();
   const { getCurrentSupplyWithoutWallet } = useBuyTokens();
@@ -578,7 +581,7 @@ const GuestMenu = () => {
                   ) : tokenPrice ? (
                     <div className="text-right">
                       <div className="text-sm font-semibold text-gray-900">
-                        {tokenPrice.toFixed(2)} {SOURCE_TOKEN || 'cEUR'}
+                        {tokenPrice.toFixed(2)} {reserveToken}
                       </div>
                       <div className="text-xs text-gray-500">per token</div>
                     </div>

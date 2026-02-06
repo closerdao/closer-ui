@@ -1,3 +1,15 @@
+export interface TokenGraphDataPoint {
+  date: string;
+  supply?: number;
+  tokenPrice?: number | null;
+}
+
+export interface TokenGraphResponse {
+  data?: TokenGraphDataPoint[];
+  supply?: { date: string; value: number }[];
+  price?: { date: string; value: number }[];
+}
+
 export interface TokenStats {
   tokenHolders: number;
   tokenPrice: number;

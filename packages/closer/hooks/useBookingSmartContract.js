@@ -1,6 +1,5 @@
 import { useContext, useState } from 'react';
 
-import { getDataSuffix, submitReferral } from '@divvi/referral-sdk';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import { Contract, utils } from 'ethers';
@@ -10,15 +9,6 @@ import { checkIfBookingEqBlockchain } from '../utils/helpers';
 import { useConfig } from './useConfig';
 
 dayjs.extend(dayOfYear);
-
-const dataSuffix = getDataSuffix({
-  consumer: '0x9B5f6dF2C7A331697Cf2616CA884594F6afDC07d',
-  providers: [
-    '0x0423189886d7966f0dd7e7d256898daeee625dca',
-    '0xc95876688026be9d6fa7a7c33328bd013effa2bb',
-    '0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8',
-  ],
-});
 
 export const useBookingSmartContract = ({ bookingNights }) => {
   const {
@@ -111,30 +101,41 @@ export const useBookingSmartContract = ({ bookingNights }) => {
         BLOCKCHAIN_DAO_TOKEN.decimals,
       );
 
-      const chainId = await Diamond.signer.getChainId();
-
       const txData = Diamond.interface.encodeFunctionData('bookAccommodation', [
         bookingNights,
         pricePerNightBigNum,
       ]);
+      const txRequest = {
+        to: Diamond.address,
+        data: txData,
+        bookingNights,
+        dailyValue,
+        pricePerNightBigNum: pricePerNightBigNum.toString(),
+      };
+      console.log('Token booking transaction request', txRequest);
       const tx3 = await Diamond.signer.sendTransaction({
         to: Diamond.address,
-        data: txData + dataSuffix,
+        data: txData,
       });
+      const txResponse = {
+        hash: tx3.hash,
+        from: tx3.from,
+        nonce: tx3.nonce,
+        gasLimit: tx3.gasLimit?.toString(),
+        data: tx3.data,
+        value: tx3.value?.toString(),
+        chainId: tx3.chainId,
+      };
+      console.log('Token booking transaction sent', txResponse);
       setPendingTransactions([...pendingTransactions, tx3.hash]);
-      await tx3.wait();
-
-      // do not send Divvi referral on alfajores testnet
-      if (chainId !== 44787) {
-        try {
-          await submitReferral({
-            txHash: tx3.hash,
-            chainId,
-          });
-        } catch (error) {
-          console.error('submitReferral error:', error);
-        }
-      }
+      const receipt = await tx3.wait();
+      console.log('Token booking transaction mined', {
+        hash: receipt.transactionHash,
+        blockNumber: receipt.blockNumber,
+        blockHash: receipt.blockHash,
+        status: receipt.status,
+        gasUsed: receipt.gasUsed?.toString(),
+      });
 
       setPendingTransactions((pendingTransactions) =>
         pendingTransactions.filter(
@@ -149,6 +150,15 @@ export const useBookingSmartContract = ({ bookingNights }) => {
       }
       return { error: null, success: { transactionId: tx3.hash } };
     } catch (error) {
+      console.log('Token booking transaction error', {
+        reason: error?.reason,
+        message: error?.message,
+        code: error?.code,
+        transaction: error?.transaction,
+        receipt: error?.receipt,
+        error: error?.error,
+        fullError: error,
+      });
       const errorReason = error?.reason || error?.message || '';
       if (errorReason.includes('Booking already exists')) {
         return { error: null, success: { transactionId: 'existing' } };
