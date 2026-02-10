@@ -368,7 +368,7 @@ const GuestMenu = () => {
                 },
                 {
                   label: t('header_nav_community'),
-                  url: '/pages/community',
+                  url: '/social',
                   enabled: true,
                   rbacPage: 'Community',
                 },

@@ -8,10 +8,10 @@ CreateChannelRedirect.getInitialProps = async (context: NextPageContext) => {
   const { res } = context;
 
   if (res) {
-    res.writeHead(302, { Location: '/community' });
+    res.writeHead(302, { Location: '/social' });
     res.end();
   } else if (typeof window !== 'undefined') {
-    window.location.href = '/community';
+    window.location.href = '/social';
   }
 
   let messages = null;

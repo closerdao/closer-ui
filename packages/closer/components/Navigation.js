@@ -138,7 +138,7 @@ const Navigation = () => {
                   <Link href="/stay">{t('header_nav_stay')}</Link>
                 </li>
                 <li>
-                  <Link href="/pages/community">
+                  <Link href="/social">
                     {t('header_nav_community')}
                   </Link>
                 </li>

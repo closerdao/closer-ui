@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 
-import Cookies from 'js-cookie';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 
+import { getAccessToken } from '../../utils/authStorage';
 import api from '../../utils/api';
 import { Button } from '../ui';
 import Heading from '../ui/Heading';
@@ -333,7 +333,7 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
       const formData = new FormData();
       formData.append('file', file);
 
-      const token = Cookies.get('access_token');
+      const token = getAccessToken();
       const res = await fetch('/api/parse-receipt', {
         method: 'POST',
         body: formData,

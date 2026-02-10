@@ -15,7 +15,10 @@ import { useAuth } from '../contexts/auth';
 import { Channel, ChannelType } from '../types/channel';
 import api from '../utils/api';
 
-type TranslateFn = (key: string) => string;
+type TranslateFn = (
+  key: string,
+  values?: Record<string, string | number>,
+) => string;
 
 interface ChannelGroup {
   type: ChannelType;
@@ -33,10 +36,16 @@ interface SubscribeState {
   userPresence?: number;
 }
 
-interface ChannelListProps {
+export interface ChannelListProps {
   onSelectChannel?: (channel: Channel) => void;
   selectedChannelId?: string | null;
   initialSlug?: string | null;
+  channels?: Channel[];
+  channelsLoading?: boolean;
+  channelsError?: string | null;
+  subscribeStates?: Record<string, SubscribeState>;
+  onSubscribe?: (channelId: string) => void;
+  userPresence?: number;
 }
 
 const ChannelListSkeleton = () => (
@@ -98,6 +107,7 @@ interface ChannelRowProps {
   isSelected: boolean;
   onClick?: () => void;
   userId?: string;
+  userPresence: number;
   subscribeStates: Record<string, SubscribeState>;
   onSubscribe: (channelId: string) => void;
   t: TranslateFn;
@@ -108,15 +118,25 @@ const ChannelRow = ({
   isSelected,
   onClick,
   userId,
+  userPresence,
   subscribeStates,
   onSubscribe,
   t,
 }: ChannelRowProps) => {
-  const isTopicNotJoined =
-    channel.channelType === 'topic' &&
-    !channel.visibleBy?.includes(userId || '');
+  const isGround = channel.channelType === 'ground';
+  const isSeason = channel.channelType === 'season';
+  const isNotJoined = !channel.visibleBy?.includes(userId || '');
   const state = subscribeStates[channel._id] || { status: 'idle' };
   const isInvitation = channel.joinPolicy === 'invitation';
+  const presenceRequired = channel.presenceRequired ?? 0;
+  const hasEnoughPresence = presenceRequired <= 0 || userPresence >= presenceRequired;
+  const showJoinUi = !isGround && !isSeason;
+  const needsMorePresence =
+    showJoinUi &&
+    isNotJoined &&
+    !hasEnoughPresence &&
+    (state.status === 'idle' || state.status === 'error');
+  const presenceRequiredDays = state.presenceRequired ?? presenceRequired;
 
   const content = (
     <div
@@ -152,7 +172,12 @@ const ChannelRow = ({
         </p>
       </div>
 
-      {isTopicNotJoined && state.status === 'idle' && (
+      {needsMorePresence && (
+        <span className="text-[10px] text-amber-600 flex-shrink-0">
+          {presenceRequiredDays}+ {t('community_presence_days_suffix')}
+        </span>
+      )}
+      {showJoinUi && isNotJoined && hasEnoughPresence && state.status === 'idle' && (
         <button
           type="button"
           onClick={(e) => {
@@ -164,10 +189,10 @@ const ChannelRow = ({
           {isInvitation ? t('channels_request_join') : t('channels_join')}
         </button>
       )}
-      {isTopicNotJoined && state.status === 'loading' && (
+      {showJoinUi && isNotJoined && state.status === 'loading' && (
         <span className="text-[10px] text-gray-400 flex-shrink-0">...</span>
       )}
-      {isTopicNotJoined && state.status === 'pending' && (
+      {showJoinUi && isNotJoined && state.status === 'pending' && (
         <span className="text-[10px] text-amber-600 flex-shrink-0">
           {t('channels_pending_approval')}
         </span>
@@ -191,6 +216,7 @@ interface ChannelGroupSectionProps {
   selectedChannelId?: string | null;
   onSelectChannel?: (channel: Channel) => void;
   userId?: string;
+  userPresence: number;
   subscribeStates: Record<string, SubscribeState>;
   onSubscribe: (channelId: string) => void;
   t: TranslateFn;
@@ -201,6 +227,7 @@ const ChannelGroupSection = ({
   selectedChannelId,
   onSelectChannel,
   userId,
+  userPresence,
   subscribeStates,
   onSubscribe,
   t,
@@ -225,6 +252,7 @@ const ChannelGroupSection = ({
               onSelectChannel ? () => onSelectChannel(channel) : undefined
             }
             userId={userId}
+            userPresence={userPresence}
             subscribeStates={subscribeStates}
             onSubscribe={onSubscribe}
             t={t}
@@ -239,27 +267,107 @@ const ChannelList = ({
   onSelectChannel,
   selectedChannelId,
   initialSlug,
+  channels: controlledChannels,
+  channelsLoading: controlledLoading,
+  channelsError: controlledError,
+  subscribeStates: controlledSubscribeStates,
+  onSubscribe: controlledOnSubscribe,
+  userPresence: controlledUserPresence,
 }: ChannelListProps) => {
   const t = useTranslations() as TranslateFn;
   const { user } = useAuth();
+  const internalUserPresence =
+    (user?.stats?.wallet?.presence ?? user?.presence ?? 0) as number;
+  const userPresence = controlledUserPresence ?? internalUserPresence;
 
-  const [channels, setChannels] = useState<Channel[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [subscribeStates, setSubscribeStates] = useState<
+  const [internalChannels, setInternalChannels] = useState<Channel[]>([]);
+  const [internalLoading, setInternalLoading] = useState(true);
+  const [internalError, setInternalError] = useState<string | null>(null);
+  const [internalSubscribeStates, setInternalSubscribeStates] = useState<
     Record<string, SubscribeState>
   >({});
 
+  const isControlled =
+    controlledChannels !== undefined &&
+    controlledOnSubscribe !== undefined &&
+    controlledSubscribeStates !== undefined;
+  const channels = isControlled ? controlledChannels! : internalChannels;
+  const isLoading = isControlled ? (controlledLoading ?? false) : internalLoading;
+  const error = isControlled ? controlledError ?? null : internalError;
+  const subscribeStates = isControlled
+    ? controlledSubscribeStates!
+    : internalSubscribeStates;
+  const handleSubscribe = isControlled
+    ? controlledOnSubscribe!
+    : async (channelId: string) => {
+        const channel = (isControlled ? controlledChannels! : internalChannels).find(
+          (c) => c._id === channelId,
+        );
+        const presenceRequired = channel?.presenceRequired ?? 0;
+        if (presenceRequired > 0 && userPresence < presenceRequired) {
+          setInternalSubscribeStates((prev) => ({
+            ...prev,
+            [channelId]: {
+              status: 'error',
+              presenceRequired,
+              userPresence,
+            },
+          }));
+          return;
+        }
+
+        setInternalSubscribeStates((prev) => ({
+          ...prev,
+          [channelId]: { status: 'loading' },
+        }));
+
+        try {
+          const { data } = await api.post(`/channel/${channelId}/subscribe`);
+          const msg = data?.message || '';
+
+          if (msg.includes('Successfully subscribed')) {
+            setInternalSubscribeStates((prev) => ({
+              ...prev,
+              [channelId]: { status: 'success' },
+            }));
+          } else if (msg.includes('request has been sent')) {
+            setInternalSubscribeStates((prev) => ({
+              ...prev,
+              [channelId]: { status: 'pending' },
+            }));
+          } else {
+            setInternalSubscribeStates((prev) => ({
+              ...prev,
+              [channelId]: { status: 'success' },
+            }));
+          }
+        } catch (err: any) {
+          const responseData = err.response?.data;
+          const message = responseData?.message || err.message;
+          setInternalSubscribeStates((prev) => ({
+            ...prev,
+            [channelId]: {
+              status: 'error',
+              message,
+              presenceRequired: responseData?.presenceRequired,
+              userPresence: responseData?.userPresence,
+            },
+          }));
+        }
+      };
+
   useEffect(() => {
+    if (isControlled) return;
+
     const loadChannels = async () => {
-      setIsLoading(true);
-      setError(null);
+      setInternalLoading(true);
+      setInternalError(null);
       try {
         const { data } = await api.get('/channel', {
           params: { limit: 200, sort_by: 'name' },
         });
         const results = data.results || [];
-        setChannels(results);
+        setInternalChannels(results);
         if (onSelectChannel && results.length > 0 && !selectedChannelId) {
           const match = initialSlug
             ? results.find((ch: Channel) => ch.slug === initialSlug)
@@ -268,61 +376,21 @@ const ChannelList = ({
         }
       } catch (err: any) {
         console.error('Load channels error', err);
-        setError(err.message);
+        setInternalError(err.message);
       } finally {
-        setIsLoading(false);
+        setInternalLoading(false);
       }
     };
 
     loadChannels();
   }, []);
 
-  const handleSubscribe = async (channelId: string) => {
-    setSubscribeStates((prev) => ({
-      ...prev,
-      [channelId]: { status: 'loading' },
-    }));
-
-    try {
-      const { data } = await api.post(`/channel/${channelId}/subscribe`);
-      const msg = data?.message || '';
-
-      if (msg.includes('Successfully subscribed')) {
-        setSubscribeStates((prev) => ({
-          ...prev,
-          [channelId]: { status: 'success' },
-        }));
-      } else if (msg.includes('request has been sent')) {
-        setSubscribeStates((prev) => ({
-          ...prev,
-          [channelId]: { status: 'pending' },
-        }));
-      } else {
-        setSubscribeStates((prev) => ({
-          ...prev,
-          [channelId]: { status: 'success' },
-        }));
-      }
-    } catch (err: any) {
-      const responseData = err.response?.data;
-      const message = responseData?.message || err.message;
-      setSubscribeStates((prev) => ({
-        ...prev,
-        [channelId]: {
-          status: 'error',
-          message,
-          presenceRequired: responseData?.presenceRequired,
-          userPresence: responseData?.userPresence,
-        },
-      }));
-    }
-  };
-
   const groupedChannels: ChannelGroup[] = useMemo(() => {
     const seasons: Channel[] = [];
     const grounds: Channel[] = [];
     const topics: Channel[] = [];
     const legacy: Channel[] = [];
+    const userId = user?._id;
 
     channels.forEach((ch) => {
       switch (ch.channelType) {
@@ -330,7 +398,9 @@ const ChannelList = ({
           seasons.push(ch);
           break;
         case 'ground':
-          grounds.push(ch);
+          if (ch.visibleBy?.includes(userId || '')) {
+            grounds.push(ch);
+          }
           break;
         case 'topic':
           topics.push(ch);
@@ -367,7 +437,7 @@ const ChannelList = ({
         channels: legacy,
       },
     ];
-  }, [channels, t]);
+  }, [channels, t, user?._id]);
 
   if (isLoading) {
     return <ChannelListSkeleton />;
@@ -394,6 +464,7 @@ const ChannelList = ({
           selectedChannelId={selectedChannelId}
           onSelectChannel={onSelectChannel}
           userId={user?._id}
+          userPresence={userPresence}
           subscribeStates={subscribeStates}
           onSubscribe={handleSubscribe}
           t={t}

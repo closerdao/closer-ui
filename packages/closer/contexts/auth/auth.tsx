@@ -11,12 +11,12 @@ import {
 } from 'react';
 
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import { useTranslations } from 'next-intl';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
 import { signInWithGooglePopup, signOutFirebase } from '../../firebaseLazy';
-import api from '../../utils/api';
+import { clearTokens, getAccessToken, getRefreshToken, setTokens } from '../../utils/authStorage';
+import api, { refreshTokensProactively, setOnSessionInvalid } from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { AuthenticationContext, User } from './types';
 
@@ -43,17 +43,16 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
   async function loadUserFromCookies() {
     try {
-      const token = Cookies.get('access_token');
-      if (token) {
-        api.defaults.headers.Authorization = `Bearer ${token}`;
+      const accessToken = getAccessToken();
+      const refreshToken = getRefreshToken();
+      if (accessToken || refreshToken) {
         const {
           data: { results: user },
         } = await api.get('/mine/user');
         if (user) {
           setUser(user);
         }
-      }
-      if (!token) {
+      } else {
         logOutGoogle();
       }
     } catch (err) {
@@ -66,6 +65,18 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   }
   useEffect(() => {
     loadUserFromCookies();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const PROACTIVE_CHECK_INTERVAL_MS = 5 * 60 * 1000;
+    const id = setInterval(async () => {
+      const result = await refreshTokensProactively();
+      if (result?.results) {
+        setUser(result.results as User);
+      }
+    }, PROACTIVE_CHECK_INTERVAL_MS);
+    return () => clearInterval(id);
   }, []);
 
   const login = async ({
@@ -84,30 +95,33 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     try {
       setIsLoading(true);
 
-      let token;
-      let user;
+      let accessToken: string | undefined;
+      let refreshToken: string | undefined;
+      let user: User | undefined;
       if (isGoogle && idToken) {
-        ({
-          data: { access_token: token, results: user },
-        } = await api.post('/login', {
+        const { data } = await api.post('/login', {
           email,
           isGoogle,
           idToken,
           turnstileToken,
-        }));
+        });
+        accessToken = data?.access_token ?? data?.token;
+        refreshToken = data?.refresh_token ?? data?.refreshToken;
+        user = data?.results;
       }
       if (!isGoogle) {
-        ({
-          data: { access_token: token, results: user },
-        } = await api.post('/login', {
+        const { data } = await api.post('/login', {
           email,
           password,
           turnstileToken,
-        }));
+        });
+        accessToken = data?.access_token ?? data?.token;
+        refreshToken = data?.refresh_token ?? data?.refreshToken;
+        user = data?.results;
       }
 
-      if (token && user) {
-        setAuthentification(user, token);
+      if (accessToken && user) {
+        setAuthentification(user, accessToken, refreshToken);
         setUser(user);
         setError('');
       }
@@ -127,14 +141,13 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     }
   };
 
-  const setAuthentification = async (user: User, token: string) => {
-    if (token) {
-      api.defaults.headers.Authorization = `Bearer ${token}`;
-      Cookies.set('access_token', token, {
-        expires: 60,
-        sameSite: 'strict',
-        secure: true,
-      });
+  const setAuthentification = (
+    user: User | null | undefined,
+    accessToken: string,
+    refreshToken?: string,
+  ) => {
+    if (accessToken) {
+      setTokens(accessToken, refreshToken);
       if (user) {
         setUser(user);
       }
@@ -144,11 +157,15 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   const signup = async (data: any, options?: { turnstileToken?: string | null }) => {
     try {
       setHasSignedUp(false);
-      const {
-        data: { access_token: token, results: userData },
-      } = await api.post('/signup', { ...data, turnstileToken: options?.turnstileToken });
-      if (token && userData) {
-        setAuthentification(userData, token);
+      const { data: resData } = await api.post('/signup', {
+        ...data,
+        turnstileToken: options?.turnstileToken,
+      });
+      const accessToken = resData?.access_token ?? resData?.token;
+      const refreshToken = resData?.refresh_token ?? resData?.refreshToken;
+      const userData = resData?.results;
+      if (accessToken && userData) {
+        setAuthentification(userData, accessToken, refreshToken);
         setUser(userData);
       }
       setError('');
@@ -201,11 +218,12 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   ) => {
     try {
       const postData = Object.assign({ signup_token }, data);
-      const {
-        data: { access_token: token, results: userData },
-      } = await api.post('/signup', postData);
-      if (token) {
-        setAuthentification(userData, token);
+      const { data: resData } = await api.post('/signup', postData);
+      const accessToken = resData?.access_token ?? resData?.token;
+      const refreshToken = resData?.refresh_token ?? resData?.refreshToken;
+      const userData = resData?.results;
+      if (accessToken) {
+        setAuthentification(userData, accessToken, refreshToken);
         if (userData) setUser(userData);
         if (onSuccess) onSuccess();
       }
@@ -247,9 +265,8 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   };
 
   const logout = async () => {
-    Cookies.remove('access_token');
+    clearTokens();
     setUser(null);
-    delete api.defaults.headers.Authorization;
 
     await logOutGoogle();
     router.push('/');

@@ -13,7 +13,6 @@ import { Button } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
 import { GeneralConfig } from 'closer/types/api';
-import Cookies from 'js-cookie';
 import { Plus } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -24,6 +23,7 @@ import { MAX_BOOKINGS_TO_FETCH } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
+import { getAccessToken } from '../../../utils/authStorage';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { getDateRange } from '../../../utils/dashboard.helpers';
@@ -205,7 +205,7 @@ const ExpenseTrackingDashboardPage = ({
         return { url, fileName };
       });
 
-      const token = Cookies.get('access_token');
+      const token = getAccessToken();
       const response = await fetch('/api/download-expense-documents', {
         method: 'POST',
         headers: {

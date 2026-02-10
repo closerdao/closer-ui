@@ -62,6 +62,11 @@ export type User = {
   type: string;
   settings: {
     newsletter_weekly: boolean;
+    push_notifications_enabled?: boolean;
+    push_subscription?: {
+      endpoint: string;
+      keys: { p256dh: string; auth: string };
+    } | null;
   };
   links: UserLink[];
   visibleBy: string[];
@@ -131,7 +136,11 @@ export type AuthenticationContext = {
     idToken?: string | undefined;
     turnstileToken?: string | null;
   }) => Promise<void>;
-  setAuthentification: (user: User, token: string) => void;
+  setAuthentification: (
+    user: User | null | undefined,
+    accessToken: string,
+    refreshToken?: string,
+  ) => void;
   isLoading: boolean;
   logout: () => void;
   error: string | null;

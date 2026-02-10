@@ -43,6 +43,7 @@ interface Channel {
 interface Props {
   allowCreate?: boolean;
   channel?: string | null;
+  channelVisibleBy?: string[];
   parentType?: string;
   parentId?: string;
   visibility?: string;
@@ -105,13 +106,21 @@ const EmptyState = () => {
 const PostList = ({
   allowCreate = false,
   channel = null,
+  channelVisibleBy,
   parentType = 'channel',
   parentId,
   visibility,
   showChannels = false,
 }: Props) => {
   const { user, isAuthenticated } = useAuth();
-  
+
+  const canCreateInChannel =
+    parentType !== 'channel' ||
+    !channel ||
+    !channelVisibleBy ||
+    (user?._id && channelVisibleBy.includes(user._id));
+  const canCreate = allowCreate && canCreateInChannel;
+
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [usersById, setUsersById] = useState<Record<string, User>>({});
@@ -219,7 +228,7 @@ const PostList = ({
         </div>
       )}
 
-      {isAuthenticated && allowCreate && (
+      {isAuthenticated && canCreate && (
         <CreatePost
           channel={channel}
           visibility={visibility}

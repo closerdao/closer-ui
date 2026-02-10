@@ -138,15 +138,16 @@ const Login = () => {
       const signedMessage = await signMessage(message, walletAddress);
       console.log('[signInWithWallet] signedMessage:', signedMessage);
       if (signedMessage) {
-        const {
-          data: { access_token: token, results: user },
-        } = await api.post('/auth/web3/login', {
+        const { data } = await api.post('/auth/web3/login', {
           signedMessage,
           walletAddress,
           message,
         });
+        const accessToken = data?.access_token ?? data?.token;
+        const refreshToken = data?.refresh_token ?? data?.refreshToken;
+        const user = data?.results;
         console.log('[signInWithWallet] setAuthentification with user:', user);
-        setAuthentification(user, token);
+        setAuthentification(user, accessToken, refreshToken);
       } else {
         console.log('[signInWithWallet] No signedMessage returned');
       }
@@ -244,6 +245,9 @@ const Login = () => {
           )}
 
           <Card className="w-full pb-12">
+            {router.query.session_expired && (
+              <ErrorMessage error={t('auth_session_expired')} />
+            )}
             {!isLoginWithWallet ? (
               <div>
                 <form

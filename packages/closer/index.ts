@@ -24,6 +24,7 @@ export { default as BackButton } from './components/ui/BackButton';
 export { default as Button } from './components/ui/Button';
 export { default as Card } from './components/ui/Card';
 export { default as Checkbox } from './components/ui/Checkbox';
+export { default as ErrorBoundary } from './components/ErrorBoundary';
 export { default as ErrorMessage } from './components/ui/ErrorMessage';
 export { default as Heading } from './components/ui/Heading';
 export { default as HeadingRow } from './components/ui/HeadingRow';
@@ -82,7 +83,7 @@ export { default as BookingsPage } from './pages/bookings/index';
 export { default as BookingsRequestsPage } from './pages/bookings/requests';
 export { default as ChannelPage } from './pages/channel/[channel]';
 export { default as CreateChannelPage } from './pages/channel/create';
-export { default as CommunityPage } from './pages/community';
+export { default as SocialPage } from './pages/social';
 export { default as EditChannelPage } from './pages/edit-channel/[slug]';
 // Pages
 export { default as ConfigPage } from './pages/admin/config';

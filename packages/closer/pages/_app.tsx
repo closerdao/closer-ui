@@ -11,6 +11,7 @@ import { PromptGetInTouchProvider } from '../components/PromptGetInTouchContext'
 import {
   AuthProvider,
   ConfigProvider,
+  ErrorBoundary,
   PlatformProvider,
   api,
 } from 'closer';
@@ -18,6 +19,8 @@ import { blockchainConfig } from '../config_blockchain';
 import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import { NewsletterProvider } from '../contexts/newsletter';
+import { PushNotificationProvider } from '../contexts/push-notifications';
+import PushNotificationModal from '../components/PushNotificationModal';
 import { prepareGeneralConfig } from 'closer/utils/app.helpers';
 import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
@@ -138,12 +141,17 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
           <AuthProvider>
             <PlatformProvider>
               <WalletProvider>
-                <GoogleAnalytics trackPageViews />
-                <PromptGetInTouchProvider>
-                  <NewsletterProvider>
-                    <Component {...pageProps} config={config} />
-                  </NewsletterProvider>
-                </PromptGetInTouchProvider>
+                <PushNotificationProvider>
+                  <GoogleAnalytics trackPageViews />
+                  <PromptGetInTouchProvider>
+                    <NewsletterProvider>
+                      <PushNotificationModal />
+                      <ErrorBoundary>
+                        <Component {...pageProps} config={config} />
+                      </ErrorBoundary>
+                    </NewsletterProvider>
+                  </PromptGetInTouchProvider>
+                </PushNotificationProvider>
               </WalletProvider>
             </PlatformProvider>
           </AuthProvider>

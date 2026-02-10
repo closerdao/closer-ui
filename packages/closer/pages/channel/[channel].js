@@ -7,8 +7,8 @@ ChannelPage.getInitialProps = async (context) => {
   const slug = query.channel;
 
   const destination = slug
-    ? `/community?channel=${slug}`
-    : '/community';
+    ? `/social?channel=${slug}`
+    : '/social';
 
   if (res) {
     res.writeHead(302, { Location: destination });
