@@ -97,17 +97,46 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
     );
   }
 
+  if (isListView) {
+    return (
+      <div role="listitem" className={className}>
+        <Link
+          href={linkHref}
+          className="group flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-light transition-colors"
+        >
+          <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+            {photo ? (
+              <img
+                className="object-cover h-full w-full"
+                src={`${cdn}${photo}-place-lg.jpg`}
+                alt={name}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                {startDate.format('D')}
+              </div>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground truncate group-hover:text-accent transition-colors">
+              {name}
+            </p>
+            <p className="text-xs text-gray-500">
+              {dateStr}{timeStr}
+            </p>
+          </div>
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div role="listitem" className={className}>
       <Link
         href={linkHref}
         className="group block h-full rounded-xl overflow-hidden border border-gray-200 bg-white hover:border-gray-300 hover:shadow-lg transition-all duration-200"
       >
-        <div
-          className={`${
-            isListView ? 'w-24 mt-3 mr-3 h-24' : 'h-48 md:h-52'
-          } bg-gray-100 overflow-hidden`}
-        >
+        <div className="h-48 md:h-52 bg-gray-100 overflow-hidden">
           {photo ? (
             <img
               className="object-cover h-full w-full group-hover:scale-[1.02] transition-transform duration-200"
@@ -128,11 +157,7 @@ const EventPreview: FC<VolunteerProps | EventProps> = ({
           <p className="text-xs text-gray-500 mb-2">
             {dateStr}{timeStr}
           </p>
-          <h4
-            className={`font-semibold text-gray-900 group-hover:text-accent transition-colors ${
-              isListView ? 'text-sm' : 'text-lg mb-2'
-            }`}
-          >
+          <h4 className="font-semibold text-gray-900 group-hover:text-accent transition-colors text-lg mb-2">
             {name}
           </h4>
           {teaser && (

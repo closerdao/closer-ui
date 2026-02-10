@@ -15,11 +15,21 @@ interface CommunityConfig {
   enabled: boolean;
 }
 
-interface Props {
-  communityConfig: CommunityConfig | null;
+interface BookingConfig {
+  enabled?: boolean;
 }
 
-const Community = ({ communityConfig }: Props) => {
+interface Props {
+  communityConfig: CommunityConfig | null;
+  bookingConfig: BookingConfig | null;
+  initialChannelSlug: string | null;
+}
+
+const Community = ({
+  communityConfig,
+  bookingConfig,
+  initialChannelSlug,
+}: Props) => {
   const t = useTranslations();
   const { isAuthenticated } = useAuth();
 
@@ -39,27 +49,39 @@ const Community = ({ communityConfig }: Props) => {
         <title>{t('community_title')}</title>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
-      <MemberHome />
+      <MemberHome
+        initialChannelSlug={initialChannelSlug}
+        bookingConfig={bookingConfig}
+      />
     </>
   );
 };
 
 Community.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [communityRes, messages] = await Promise.all([
+    const { query } = context;
+    const [communityRes, bookingRes, messages] = await Promise.all([
       api.get('/config/community').catch(() => null),
+      api.get('/config/booking').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const communityConfig = communityRes?.data?.results?.value;
+    const bookingConfig = bookingRes?.data?.results?.value ?? null;
+    const initialChannelSlug =
+      typeof query?.channel === 'string' ? query.channel : null;
 
     return {
       communityConfig,
+      bookingConfig,
+      initialChannelSlug,
       messages,
     };
   } catch (err: unknown) {
     return {
       communityConfig: null,
+      bookingConfig: null,
+      initialChannelSlug: null,
       messages: null,
     };
   }

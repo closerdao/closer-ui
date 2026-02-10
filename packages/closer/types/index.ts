@@ -1,5 +1,6 @@
 export * from './api';
 export * from './booking';
+export * from './channel';
 export * from './currency';
 export * from './event';
 export * from './proposal';

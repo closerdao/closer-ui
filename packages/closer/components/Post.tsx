@@ -38,6 +38,8 @@ interface User {
   screenname: string;
   slug: string;
   photo?: string;
+  presence?: number;
+  stats?: { presence?: { totalNights?: number } };
 }
 
 interface Channel {
@@ -141,7 +143,7 @@ const Post = ({
       }
     };
     loadReplies();
-  }, [_id, channel, setUsersById, usersById]);
+  }, [_id, channel]);
 
   if (deleted) {
     return (
@@ -177,6 +179,18 @@ const Post = ({
                   {author.screenname}
                 </Link>
               )}
+              {author &&
+                (() => {
+                  const days =
+                    author.presence ??
+                    author.stats?.presence?.totalNights ??
+                    0;
+                  return days > 0 ? (
+                    <span className="text-xs text-gray-500 bg-neutral-light px-1.5 py-0.5 rounded">
+                      {days} {t('community_presence_days_suffix')}
+                    </span>
+                  ) : null;
+                })()}
               <span className="text-gray-400 text-sm">·</span>
               <TimeSince time={created} />
               {showChannel && channel && channelsById[channel] && (

@@ -171,6 +171,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
               email: data.email,
               screenname: data.screenname || '',
               tags,
+              turnstileToken: options?.turnstileToken,
             });
           } catch (subscribeErr) {
             console.error('Failed to subscribe email during signup:', subscribeErr);

@@ -22,6 +22,42 @@ const models = {
         { label: 'Private', value: 'private' },
       ],
     },
+    {
+      name: 'channelType',
+      label: 'Channel Type',
+      type: 'select',
+      options: [
+        { label: 'Generic', value: '' },
+        { label: 'Season', value: 'season' },
+        { label: 'Ground', value: 'ground' },
+        { label: 'Topic', value: 'topic' },
+      ],
+    },
+    {
+      name: 'presenceRequired',
+      label: 'Minimum days of presence to join',
+      type: 'number',
+      placeholder: '0',
+      defaultValue: 0,
+      showIf: [{ field: 'channelType', value: 'topic' }],
+    },
+    {
+      name: 'joinPolicy',
+      label: 'Join Policy',
+      type: 'select',
+      options: [
+        { label: 'Automatic', value: 'auto' },
+        { label: 'By Invitation', value: 'invitation' },
+      ],
+      showIf: [{ field: 'channelType', value: 'topic' }],
+    },
+    {
+      name: 'eventId',
+      label: 'Linked Event',
+      type: 'text',
+      placeholder: 'Event ID',
+      showIf: [{ field: 'channelType', value: 'season' }],
+    },
   ],
   user: [
     {

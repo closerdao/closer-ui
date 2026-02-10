@@ -197,6 +197,7 @@ const SignupForm = ({ app }: Props) => {
             email,
             screenname: '',
             tags: ['signup'],
+            turnstileToken,
           });
         } catch (error) {
           console.error('error with subscribe:', error);
