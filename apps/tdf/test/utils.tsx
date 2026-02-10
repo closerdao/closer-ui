@@ -12,6 +12,7 @@ import { AuthProvider } from 'closer/contexts/auth';
 import { WalletProvider } from 'closer/contexts/wallet';
 import { blockchainConfig } from 'closer/config_blockchain';
 import { NewsletterProvider } from 'closer/contexts/newsletter';
+import { PushNotificationProvider } from 'closer/contexts/push-notifications';
 import messagesBase from 'closer/locales/base-en.json';
 import messagesLocal from 'closer/locales/tdf/en.json';
 import { NextIntlClientProvider } from 'next-intl';
@@ -81,7 +82,11 @@ export const renderWithAuth = (
             timeZone={'Europe/Lisbon'}
           >
             <AuthProvider>
-              <NewsletterProvider>{children}</NewsletterProvider>
+              <PlatformProvider>
+                <PushNotificationProvider>
+                  <NewsletterProvider>{children}</NewsletterProvider>
+                </PushNotificationProvider>
+              </PlatformProvider>
             </AuthProvider>
           </NextIntlClientProvider>
         </ConfigProvider>

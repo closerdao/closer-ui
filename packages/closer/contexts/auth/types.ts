@@ -67,6 +67,7 @@ export type User = {
       endpoint: string;
       keys: { p256dh: string; auth: string };
     } | null;
+    social?: Record<string, string>;
   };
   links: UserLink[];
   visibleBy: string[];

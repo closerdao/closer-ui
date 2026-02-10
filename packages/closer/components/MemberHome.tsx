@@ -5,14 +5,18 @@ import { useEffect, useState } from 'react';
 
 import {
   ArrowLeft,
+  Check,
   MessageSquare,
   Plus,
+  Settings,
   Users,
   X,
+  XCircle,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
+import { usePlatform } from '../contexts/platform';
 import models from '../models';
 import { Channel, ChannelType } from '../types/channel';
 import api, { formatSearch } from '../utils/api';
@@ -61,12 +65,16 @@ const ChannelHeader = ({
   members,
   onBack,
   isAdmin,
+  isEditing,
+  onToggleEdit,
   t,
 }: {
   channel: Channel;
   members: ChannelMember[];
   onBack: () => void;
   isAdmin: boolean;
+  isEditing?: boolean;
+  onToggleEdit?: () => void;
   t: TranslateFn;
 }) => (
   <div className="sticky top-0 z-10 border-b border-line/20 bg-white px-4 py-3 flex items-center gap-3">
@@ -103,35 +111,56 @@ const ChannelHeader = ({
       </div>
     </div>
 
-    {isAdmin && (
-      <Link
-        href={`/edit-channel/${channel.slug}`}
-        className="text-sm text-gray-500 hover:text-accent transition-colors"
+    {isAdmin && onToggleEdit && (
+      <button
+        type="button"
+        onClick={onToggleEdit}
+        className={`p-2 rounded-lg transition-colors ${
+          isEditing
+            ? 'bg-accent/10 text-accent'
+            : 'text-gray-400 hover:text-accent hover:bg-neutral-light'
+        }`}
+        title={t('edit_channel_title')}
       >
-        {t('edit_channel_title')}
-      </Link>
+        <Settings className="w-4 h-4" />
+      </button>
     )}
   </div>
 );
 
+type ChannelTab = 'posts' | 'members';
+
 const ChannelContentArea = ({
   channel,
   onBack,
+  onChannelUpdated,
   noteDismissed,
   onDismissNote,
   t,
 }: {
   channel: Channel;
   onBack: () => void;
+  onChannelUpdated?: () => void;
   noteDismissed: boolean;
   onDismissNote: () => void;
   t: TranslateFn;
 }) => {
   const { user } = useAuth();
+  const platform = usePlatform() as any;
   const [members, setMembers] = useState<ChannelMember[]>([]);
+  const [pendingUsers, setPendingUsers] = useState<ChannelMember[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState<ChannelTab>('posts');
+  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
 
+  const isOwner = channel.createdBy === user?._id;
   const isAdmin =
-    user?.roles?.includes('admin') || channel.createdBy === user?._id;
+    user?.roles?.includes('admin') || isOwner;
+
+  useEffect(() => {
+    setIsEditing(false);
+    setActiveTab('posts');
+  }, [channel._id]);
 
   useEffect(() => {
     const loadMembers = async () => {
@@ -140,7 +169,7 @@ const ChannelContentArea = ({
           params: {
             where: formatSearch({ viewChannels: channel._id }),
             sort_by: '-created',
-            limit: 20,
+            limit: 200,
           },
         });
         setMembers(data.results || []);
@@ -152,44 +181,253 @@ const ChannelContentArea = ({
     loadMembers();
   }, [channel._id]);
 
+  // Load pending users if owner and there are pending IDs
+  useEffect(() => {
+    if (!isOwner || !channel.pendingUserIds?.length) {
+      setPendingUsers([]);
+      return;
+    }
+
+    const loadPendingUsers = async () => {
+      try {
+        const { data } = await api.get('/user', {
+          params: {
+            where: formatSearch({ _id: { $in: channel.pendingUserIds } }),
+            limit: 100,
+          },
+        });
+        setPendingUsers(data.results || []);
+      } catch (err) {
+        console.error('Load pending users error', err);
+      }
+    };
+
+    loadPendingUsers();
+  }, [channel._id, channel.pendingUserIds, isOwner]);
+
+  const handleEditSave = () => {
+    setIsEditing(false);
+    onChannelUpdated?.();
+  };
+
+  const handleApproveUser = async (userId: string) => {
+    setActionLoading((prev) => ({ ...prev, [userId]: true }));
+    try {
+      const newPending = (channel.pendingUserIds || []).filter((id) => id !== userId);
+      const newVisible = [...(channel.visibleBy || []), userId];
+      await api.patch(`/channel/${channel._id}`, {
+        pendingUserIds: newPending,
+        visibleBy: newVisible,
+      });
+      setPendingUsers((prev) => prev.filter((u) => u._id !== userId));
+      // Reload members list to include new member
+      const { data } = await api.get('/user', {
+        params: {
+          where: formatSearch({ viewChannels: channel._id }),
+          sort_by: '-created',
+          limit: 200,
+        },
+      });
+      setMembers(data.results || []);
+      onChannelUpdated?.();
+    } catch (err) {
+      console.error('Approve user error', err);
+    } finally {
+      setActionLoading((prev) => ({ ...prev, [userId]: false }));
+    }
+  };
+
+  const handleRejectUser = async (userId: string) => {
+    setActionLoading((prev) => ({ ...prev, [userId]: true }));
+    try {
+      const newPending = (channel.pendingUserIds || []).filter((id) => id !== userId);
+      await api.patch(`/channel/${channel._id}`, {
+        pendingUserIds: newPending,
+      });
+      setPendingUsers((prev) => prev.filter((u) => u._id !== userId));
+      onChannelUpdated?.();
+    } catch (err) {
+      console.error('Reject user error', err);
+    } finally {
+      setActionLoading((prev) => ({ ...prev, [userId]: false }));
+    }
+  };
+
+  const pendingCount = isOwner ? (channel.pendingUserIds?.length || 0) : 0;
+
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col min-h-0">
       <ChannelHeader
         channel={channel}
         members={members}
         onBack={onBack}
         isAdmin={!!isAdmin}
+        isEditing={isEditing}
+        onToggleEdit={() => setIsEditing(!isEditing)}
         t={t}
       />
 
-      {!noteDismissed && (
-        <div className="px-4 py-2 border-b border-line/10 flex items-start gap-2">
-          <p className="text-xs text-gray-500 flex-1">{t(channelManagedNoteKey(channel.channelType))}</p>
+      {isEditing && isAdmin && (
+        <div className="border-b border-line/20 bg-neutral-light/30 p-4">
+          <EditModel
+            id={channel._id}
+            endpoint="/channel"
+            fields={models.channel}
+            onSave={handleEditSave}
+            onUpdate={async (name, option, actionType) => {
+              if (actionType === 'ADD' && name === 'visibleBy' && option._id) {
+                await api.post(`/moderator/channel/${channel._id}/add`, option);
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {!isEditing && (
+        <div className="flex border-b border-line/20 bg-white">
           <button
             type="button"
-            onClick={onDismissNote}
-            className="p-1 rounded hover:bg-neutral-light text-gray-500 shrink-0"
-            aria-label={t('community_channels_note_dismiss')}
+            onClick={() => setActiveTab('posts')}
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors border-b-2 ${
+              activeTab === 'posts'
+                ? 'border-accent text-accent'
+                : 'border-transparent text-gray-500 hover:text-foreground'
+            }`}
           >
-            <X className="w-4 h-4" />
+            {t('channel_tab_posts')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('members')}
+            className={`flex-1 py-2.5 text-sm font-medium transition-colors border-b-2 flex items-center justify-center gap-1.5 ${
+              activeTab === 'members'
+                ? 'border-accent text-accent'
+                : 'border-transparent text-gray-500 hover:text-foreground'
+            }`}
+          >
+            {t('channel_tab_members')}
+            {pendingCount > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
+                {pendingCount}
+              </span>
+            )}
           </button>
         </div>
       )}
 
-      {channel.description && (
-        <div className="px-4 py-2 bg-neutral-light/50 border-b border-line/10">
-          <p className="text-xs text-gray-500">{channel.description}</p>
-        </div>
+      {!isEditing && activeTab === 'posts' && (
+        <>
+          {!noteDismissed && (
+            <div className="px-4 py-2 border-b border-line/10 flex items-start gap-2">
+              <p className="text-xs text-gray-500 flex-1">{t(channelManagedNoteKey(channel.channelType))}</p>
+              <button
+                type="button"
+                onClick={onDismissNote}
+                className="p-1 rounded hover:bg-neutral-light text-gray-500 shrink-0"
+                aria-label={t('community_channels_note_dismiss')}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {channel.description && (
+            <div className="px-4 py-2 bg-neutral-light/50 border-b border-line/10">
+              <p className="text-xs text-gray-500">{channel.description}</p>
+            </div>
+          )}
+
+          <div className="p-4">
+            <PostList
+              allowCreate
+              parentType="channel"
+              channel={channel._id}
+              channelVisibleBy={channel.visibleBy}
+            />
+          </div>
+        </>
       )}
 
-      <div className="flex-1 overflow-y-auto p-4">
-        <PostList
-          allowCreate
-          parentType="channel"
-          channel={channel._id}
-          channelVisibleBy={channel.visibleBy}
-        />
-      </div>
+      {!isEditing && activeTab === 'members' && (
+        <div className="p-4">
+          {/* Pending join requests (visible to channel owner only) */}
+          {isOwner && pendingUsers.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                {t('channel_pending_requests')} ({pendingUsers.length})
+              </h3>
+              <div className="space-y-2">
+                {pendingUsers.map((pendingUser) => (
+                  <div
+                    key={pendingUser._id}
+                    className="flex items-center gap-3 p-3 rounded-lg bg-amber-50 border border-amber-200"
+                  >
+                    <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
+                      <ProfilePhoto user={pendingUser} size="9" stack={false} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {pendingUser.screenname}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleApproveUser(pendingUser._id)}
+                        disabled={actionLoading[pendingUser._id]}
+                        className="min-h-[36px] min-w-[36px] p-2 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-colors disabled:opacity-50"
+                        title={t('channel_approve_user')}
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRejectUser(pendingUser._id)}
+                        disabled={actionLoading[pendingUser._id]}
+                        className="min-h-[36px] min-w-[36px] p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors disabled:opacity-50"
+                        title={t('channel_reject_user')}
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* All channel members */}
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+            {t('channel_members_list')} ({members.length})
+          </h3>
+          {members.length === 0 ? (
+            <p className="text-sm text-gray-500">{t('channel_no_members')}</p>
+          ) : (
+            <div className="space-y-1">
+              {members.map((member) => (
+                <div
+                  key={member._id}
+                  className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-neutral-light/50 transition-colors"
+                >
+                  <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
+                    <ProfilePhoto user={member} size="9" stack={false} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {member.screenname}
+                    </p>
+                  </div>
+                  {member._id === channel.createdBy && (
+                    <span className="text-[10px] font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-full flex-shrink-0">
+                      {t('channel_owner_badge')}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
@@ -272,7 +510,7 @@ const ChannelPreviewJoin = ({
   const presenceHintUserDays = subscribeState.userPresence ?? userPresence;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col min-h-0">
       <ChannelHeader
         channel={channel}
         members={members}
@@ -301,7 +539,7 @@ const ChannelPreviewJoin = ({
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-5">
+      <div className="p-4 flex flex-col gap-5">
         {isAutoManaged ? (
           <p className="text-sm text-gray-600">
             {isGround ? t('community_channel_ground_managed') : t('community_channel_season_managed')}
@@ -403,7 +641,8 @@ const MemberHome = ({
 }: MemberHomeProps) => {
   const t = useTranslations() as TranslateFn;
   const router = useRouter();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, refetchUser } = useAuth();
+  const platform = usePlatform() as any;
   const [channels, setChannels] = useState<Channel[]>([]);
   const [channelsLoading, setChannelsLoading] = useState(true);
   const [channelsError, setChannelsError] = useState<string | null>(null);
@@ -415,6 +654,7 @@ const MemberHome = ({
     Record<string, ChannelSubscribeState>
   >({});
   const [channelManagementNoteDismissed, setChannelManagementNoteDismissed] = useState(false);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
   const currentSlug =
     (router.query.channel as string) || initialChannelSlug || null;
@@ -454,6 +694,76 @@ const MemberHome = ({
 
     loadChannels();
   }, [channelListKey, user?._id]);
+
+  // Fetch unread post counts for all joined channels
+  useEffect(() => {
+    if (!user || channels.length === 0) return;
+
+    const socialSettings = user.settings?.social || {};
+    const joinedChannels = channels.filter((ch) =>
+      ch.visibleBy?.includes(user._id),
+    );
+
+    if (joinedChannels.length === 0) return;
+
+    const fetchUnreadCounts = async () => {
+      const counts: Record<string, number> = {};
+
+      await Promise.all(
+        joinedChannels.map(async (ch) => {
+          try {
+            const lastFetched = socialSettings[ch.slug];
+            const where: Record<string, any> = { channel: ch._id };
+            if (lastFetched) {
+              where.created = { $gt: lastFetched };
+            }
+            const { data } = await api.get('/count/post', {
+              params: {
+                where: formatSearch(where),
+              },
+            });
+            const count = data?.count ?? data?.results ?? 0;
+            if (count > 0) {
+              counts[ch._id] = count;
+            }
+          } catch (err) {
+            // Silently ignore count errors for individual channels
+          }
+        }),
+      );
+
+      setUnreadCounts(counts);
+    };
+
+    fetchUnreadCounts();
+  }, [channels, user?._id, channelListKey]);
+
+  // Save lastFetched timestamp when viewing a channel
+  const saveLastFetched = async (channel: Channel) => {
+    if (!user || !platform?.user?.patch) return;
+    try {
+      const now = new Date().toISOString();
+      const currentSocial = user.settings?.social || {};
+      await platform.user.patch(user._id, {
+        settings: {
+          ...user.settings,
+          social: {
+            ...currentSocial,
+            [channel.slug]: now,
+          },
+        },
+      });
+      // Clear unread count for this channel locally
+      setUnreadCounts((prev) => {
+        const next = { ...prev };
+        delete next[channel._id];
+        return next;
+      });
+      refetchUser();
+    } catch (err) {
+      console.error('Failed to save lastFetched', err);
+    }
+  };
 
   const handleSubscribe = async (channelId: string) => {
     const channel = channels.find((c) => c._id === channelId);
@@ -538,6 +848,10 @@ const MemberHome = ({
       undefined,
       { shallow: true },
     );
+    // Save lastFetched timestamp if user has access to this channel
+    if (channel.visibleBy?.includes(user?._id || '') || channel.createdBy === user?._id) {
+      saveLastFetched(channel);
+    }
   };
 
   const handleBack = () => {
@@ -578,9 +892,9 @@ const MemberHome = ({
 
   return (
     <main className="main-content w-full pb-16 lg:pb-0">
-      <div className="flex h-[calc(100vh-64px)] lg:h-[calc(100vh-64px)]">
+      <div className="flex min-h-[calc(100vh-64px)]">
         <div
-          className={`w-full lg:w-80 lg:flex-shrink-0 border-r border-line/20 bg-white flex flex-col ${
+          className={`w-full lg:w-80 lg:flex-shrink-0 border-r border-line/20 bg-white lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto flex flex-col ${
             mobileShowContent ? 'hidden lg:flex' : 'flex'
           }`}
         >
@@ -603,7 +917,7 @@ const MemberHome = ({
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1">
             <ChannelList
               key={channelListKey}
               channels={channels}
@@ -615,6 +929,7 @@ const MemberHome = ({
               subscribeStates={subscribeStates}
               onSubscribe={handleSubscribe}
               userPresence={userPresence}
+              unreadCounts={unreadCounts}
             />
           </div>
 
@@ -632,15 +947,17 @@ const MemberHome = ({
         </div>
 
         <div
-          className={`flex-1 flex flex-col bg-white min-w-0 min-h-0 ${
+          className={`flex-1 flex flex-col bg-neutral-light/20 min-w-0 ${
             mobileShowContent ? 'flex' : 'hidden lg:flex'
           }`}
         >
           {selectedChannel ? (
-            selectedChannel.visibleBy?.includes(user?._id || '') ? (
+            selectedChannel.visibleBy?.includes(user?._id || '') ||
+            selectedChannel.createdBy === user?._id ? (
               <ChannelContentArea
                 channel={selectedChannel}
                 onBack={handleBack}
+                onChannelUpdated={() => setChannelListKey((k) => k + 1)}
                 noteDismissed={channelManagementNoteDismissed}
                 onDismissNote={() => setChannelManagementNoteDismissed(true)}
                 t={t}

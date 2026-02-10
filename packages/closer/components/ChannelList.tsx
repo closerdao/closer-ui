@@ -46,6 +46,7 @@ export interface ChannelListProps {
   subscribeStates?: Record<string, SubscribeState>;
   onSubscribe?: (channelId: string) => void;
   userPresence?: number;
+  unreadCounts?: Record<string, number>;
 }
 
 const ChannelListSkeleton = () => (
@@ -110,6 +111,7 @@ interface ChannelRowProps {
   userPresence: number;
   subscribeStates: Record<string, SubscribeState>;
   onSubscribe: (channelId: string) => void;
+  unreadCount?: number;
   t: TranslateFn;
 }
 
@@ -121,6 +123,7 @@ const ChannelRow = ({
   userPresence,
   subscribeStates,
   onSubscribe,
+  unreadCount,
   t,
 }: ChannelRowProps) => {
   const isGround = channel.channelType === 'ground';
@@ -161,11 +164,18 @@ const ChannelRow = ({
           >
             {channel.name}
           </span>
-          {channel.eventName && (
-            <span className="text-[10px] text-accent bg-accent/5 px-1.5 py-0.5 rounded flex-shrink-0">
-              {channel.eventName}
-            </span>
-          )}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {channel.eventName && (
+              <span className="text-[10px] text-accent bg-accent/5 px-1.5 py-0.5 rounded">
+                {channel.eventName}
+              </span>
+            )}
+            {unreadCount && unreadCount > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-accent rounded-full">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </div>
         </div>
         <p className="text-xs text-gray-500 truncate mt-0.5">
           {channel.description || '\u00A0'}
@@ -219,6 +229,7 @@ interface ChannelGroupSectionProps {
   userPresence: number;
   subscribeStates: Record<string, SubscribeState>;
   onSubscribe: (channelId: string) => void;
+  unreadCounts: Record<string, number>;
   t: TranslateFn;
 }
 
@@ -230,6 +241,7 @@ const ChannelGroupSection = ({
   userPresence,
   subscribeStates,
   onSubscribe,
+  unreadCounts,
   t,
 }: ChannelGroupSectionProps) => {
   if (group.channels.length === 0) return null;
@@ -255,6 +267,7 @@ const ChannelGroupSection = ({
             userPresence={userPresence}
             subscribeStates={subscribeStates}
             onSubscribe={onSubscribe}
+            unreadCount={unreadCounts[channel._id]}
             t={t}
           />
         ))}
@@ -273,6 +286,7 @@ const ChannelList = ({
   subscribeStates: controlledSubscribeStates,
   onSubscribe: controlledOnSubscribe,
   userPresence: controlledUserPresence,
+  unreadCounts: controlledUnreadCounts,
 }: ChannelListProps) => {
   const t = useTranslations() as TranslateFn;
   const { user } = useAuth();
@@ -467,6 +481,7 @@ const ChannelList = ({
           userPresence={userPresence}
           subscribeStates={subscribeStates}
           onSubscribe={handleSubscribe}
+          unreadCounts={controlledUnreadCounts || {}}
           t={t}
         />
       ))}

@@ -14,15 +14,6 @@ const models = {
       placeholder: 'A place to co-conspire',
     },
     {
-      name: 'visibility',
-      label: 'Visibility',
-      type: 'select',
-      options: [
-        { label: 'Public', value: 'public' },
-        { label: 'Private', value: 'private' },
-      ],
-    },
-    {
       name: 'channelType',
       label: 'Channel Type',
       type: 'select',

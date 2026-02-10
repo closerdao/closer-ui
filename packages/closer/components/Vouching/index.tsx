@@ -37,7 +37,7 @@ const Vouching = ({
   const { platform }: any = usePlatform();
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [updatedVouchData, setUpdatedVouchData] = useState(vouchData);
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);

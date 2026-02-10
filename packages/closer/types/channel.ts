@@ -14,6 +14,7 @@ export interface Channel {
   eventName?: string;
   createdBy: string;
   visibleBy?: string[];
+  pendingUserIds?: string[];
   created: string;
   updated?: string;
 }
