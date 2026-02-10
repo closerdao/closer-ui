@@ -38,7 +38,7 @@ const CancelBooking = ({
   const t = useTranslations();
 
   const router = useRouter();
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [isSendingCancelRequest, setSendingCancelRequest] = useState(false);
 
   const cancelBooking = async () => {

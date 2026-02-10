@@ -24,7 +24,7 @@ export { default as BackButton } from './components/ui/BackButton';
 export { default as Button } from './components/ui/Button';
 export { default as Card } from './components/ui/Card';
 export { default as Checkbox } from './components/ui/Checkbox';
-export { default as ErrorBoundary } from './components/ErrorBoundary';
+export { ErrorBoundary } from './components/ErrorBoundary';
 export { default as ErrorMessage } from './components/ui/ErrorMessage';
 export { default as Heading } from './components/ui/Heading';
 export { default as HeadingRow } from './components/ui/HeadingRow';

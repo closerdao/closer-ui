@@ -40,7 +40,7 @@ const StaysFunnel = ({ timeFrame, fromDate, toDate }: StaysFunnelProps) => {
   const { platform } = usePlatform() as { platform: Platform };
   const t = useTranslations();
 
-  const [, setError] = useState(null);
+  const [, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const filters = useMemo(
     () => ({

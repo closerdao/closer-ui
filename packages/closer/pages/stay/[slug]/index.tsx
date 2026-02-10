@@ -194,7 +194,7 @@ const ListingPage: NextPage<Props> = ({
       isTeamMember: isTeamBooking || false,
     }) || 0;
 
-  const [apiError, setApiError] = useState(null);
+  const [apiError, setApiError] = useState<string | null>(null);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [isListingAvailable, setIsListingAvailable] = useState(true);
   const [isGuestLimit, setIsGuestLimit] = useState(false);
