@@ -14,13 +14,14 @@ const SHOW_DELAY_MS = 3000;
 const PushNotificationModal = () => {
   const t = useTranslations();
   const { user } = useAuth();
-  const { isSupported, permission, wasPrompted, subscribe, dismissPrompt } =
+  const { isSupported, isCommunityEnabled, permission, wasPrompted, subscribe, dismissPrompt } =
     usePushNotifications();
 
   const [isVisible, setIsVisible] = useState(false);
 
   const shouldShow =
     Boolean(user) &&
+    isCommunityEnabled &&
     isSupported &&
     !wasPrompted &&
     permission === 'default';

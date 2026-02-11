@@ -133,7 +133,6 @@ const ChannelRow = ({
   const isSeason = channel.channelType === 'season';
   const isNotJoined = !channel.visibleBy?.includes(userId || '');
   const state = subscribeStates[channel._id] || { status: 'idle' };
-  const isInvitation = channel.joinPolicy === 'invitation';
   const presenceRequired = channel.presenceRequired ?? 0;
   const hasEnoughPresence = presenceRequired <= 0 || userPresence >= presenceRequired;
   const showJoinUi = !isGround && !isSeason;

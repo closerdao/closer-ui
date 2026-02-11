@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 
+import api from '../utils/api';
 import { useAuth } from './auth';
 import { usePlatform } from './platform';
 
@@ -19,6 +20,7 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 
 interface PushNotificationContextType {
   isSupported: boolean;
+  isCommunityEnabled: boolean;
   permission: NotificationPermission | 'unsupported';
   isSubscribed: boolean;
   wasPrompted: boolean;
@@ -46,9 +48,10 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
   const { platform } = usePlatform() as any;
 
   const [isSupported, setIsSupported] = useState(false);
+  const [isCommunityEnabled, setIsCommunityEnabled] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('unsupported');
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [wasPrompted, setWasPrompted] = useState(true); // default true to prevent flash
+  const [wasPrompted, setWasPrompted] = useState(true);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -66,6 +69,13 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
     }
 
     setWasPrompted(localStorage.getItem(PROMPTED_KEY) === 'true');
+  }, []);
+
+  useEffect(() => {
+    api
+      .get('/config/community')
+      .then((res) => setIsCommunityEnabled(res?.data?.results?.value?.enabled === true))
+      .catch(() => setIsCommunityEnabled(false));
   }, []);
 
   // Sync subscription state from user object
@@ -175,6 +185,7 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
     <PushNotificationContext.Provider
       value={{
         isSupported,
+        isCommunityEnabled,
         permission,
         isSubscribed,
         wasPrompted,
