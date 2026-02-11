@@ -109,7 +109,13 @@ api.interceptors.request.use((config) => {
   if (isRefreshRequest(config)) return config;
   const token = getAccessToken();
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    const headers = config.headers ?? {};
+    if (typeof headers.set === 'function') {
+      headers.set('Authorization', `Bearer ${token}`);
+    } else {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    config.headers = headers;
   }
   return config;
 });
@@ -129,7 +135,13 @@ api.interceptors.response.use(
       await doRefresh();
       const token = getAccessToken();
       if (token) {
-        originalRequest.headers.Authorization = `Bearer ${token}`;
+        const headers = originalRequest.headers ?? {};
+        if (typeof headers.set === 'function') {
+          headers.set('Authorization', `Bearer ${token}`);
+        } else {
+          headers.Authorization = `Bearer ${token}`;
+        }
+        originalRequest.headers = headers;
       }
       originalRequest._retry = true;
       return api(originalRequest);

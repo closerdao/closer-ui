@@ -36,6 +36,10 @@ export const handlers = [
   rest.get('https://api.example.com/config/general', (req, res, ctx) =>
     res(ctx.status(200), ctx.json({ results: {} })),
   ),
+  rest.get('*/config/community', (req, res, ctx) =>
+    res(ctx.status(200), ctx.json({ results: { value: { enabled: true } } })),
+  ),
+  rest.options('*/config/community', (req, res, ctx) => res(ctx.status(200))),
   rest.post('https://api.example.com/metric', (req, res, ctx) =>
     res(ctx.status(200), ctx.json({})),
   ),

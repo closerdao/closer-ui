@@ -6,6 +6,7 @@ const REFRESH_TOKEN_STORAGE = 'refresh_token';
 const ACCESS_TOKEN_MAX_AGE_MINUTES = 90;
 
 export function getAccessToken(): string | undefined {
+  if (typeof window === 'undefined') return undefined;
   return Cookies.get(ACCESS_TOKEN_COOKIE);
 }
 

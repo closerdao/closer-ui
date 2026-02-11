@@ -1,11 +1,13 @@
 self.addEventListener('push', (event) => {
-  if (!event.data) return;
-
   let data;
-  try {
-    data = event.data.json();
-  } catch {
-    data = { title: 'New notification', body: event.data.text() };
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch {
+      data = { title: 'New notification', body: event.data.text() };
+    }
+  } else {
+    data = { title: 'New notification', body: '' };
   }
 
   const { title, body, url, icon } = data;

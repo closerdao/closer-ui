@@ -93,7 +93,7 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
 
     (async () => {
       try {
-        const registration = await navigator.serviceWorker.getRegistration('/sw.js');
+        const registration = await navigator.serviceWorker.getRegistration();
         if (registration) {
           const subscription = await registration.pushManager.getSubscription();
           if (!subscription && user.settings?.push_notifications_enabled) {
@@ -154,7 +154,7 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
     if (!user) return;
 
     try {
-      const registration = await navigator.serviceWorker.getRegistration('/sw.js');
+      const registration = await navigator.serviceWorker.getRegistration();
       if (registration) {
         const subscription = await registration.pushManager.getSubscription();
         if (subscription) {
