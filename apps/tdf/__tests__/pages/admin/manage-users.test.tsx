@@ -21,7 +21,11 @@ jest.mock('closer/utils/api', () => ({
     }),
     post: jest.fn(() => Promise.resolve({ data: {} })),
     defaults: { headers: {} },
+    setOnSessionInvalid: jest.fn(),
+    refreshTokensProactively: jest.fn(() => Promise.resolve(null)),
   },
+  setOnSessionInvalid: jest.fn(),
+  refreshTokensProactively: jest.fn(() => Promise.resolve(null)),
 }));
 
 const mockBookingConfig: BookingConfig = {
