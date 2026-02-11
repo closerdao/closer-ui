@@ -276,8 +276,7 @@ const MemberMenu = () => {
                 {
                   label: t('header_nav_invest'),
                   url: '/pages/invest',
-                  enabled: true,
-                  rbacPage: 'Invest',
+                  enabled: true
                 },
                 {
                   label: t('header_nav_stay'),
@@ -286,15 +285,13 @@ const MemberMenu = () => {
                 },
                 {
                   label: t('header_nav_community'),
-                  url: '/social',
-                  enabled: isCommunityEnabled,
-                  rbacPage: 'Community',
+                  url: '/pages/community',
+                  enabled: true
                 },
                 {
                   label: t('header_nav_events'),
                   url: '/pages/events',
-                  enabled: isEventsEnabled,
-                  rbacPage: 'Events',
+                  enabled: true
                 },
               ]
             : []),
