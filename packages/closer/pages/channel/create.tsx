@@ -1,51 +1,30 @@
-import Head from 'next/head';
-import { useRouter } from 'next/router';
-
-import EditModel, { EditModelPageLayout } from '../../components/EditModel';
-
 import { NextPageContext } from 'next';
-import { useTranslations } from 'next-intl';
 
-import models from '../../models';
 import { loadLocaleData } from '../../utils/locale.helpers';
 
-const AddChannel = () => {
-  const t = useTranslations();
-  const router = useRouter();
+const CreateChannelRedirect = () => null;
 
-  return (
-    <>
-      <Head>
-        <title>{t('channel_create_title')}</title>
-      </Head>
-      <EditModelPageLayout
-        title={t('channel_create_title')}
-        subtitle={t('edit_model_create_intro')}
-      >
-        <EditModel
-          endpoint={'/channel'}
-          fields={models.channel}
-          onSave={(channel) => router.push(`/channel/${channel.slug}`)}
-        />
-      </EditModelPageLayout>
-    </>
-  );
-};
+CreateChannelRedirect.getInitialProps = async (context: NextPageContext) => {
+  const { res } = context;
 
-AddChannel.getInitialProps = async (context: NextPageContext) => {
+  if (res) {
+    res.writeHead(302, { Location: '/social' });
+    res.end();
+  } else if (typeof window !== 'undefined') {
+    window.location.href = '/social';
+  }
+
+  let messages = null;
   try {
-    const messages = await loadLocaleData(
+    messages = await loadLocaleData(
       context?.locale,
       process.env.NEXT_PUBLIC_APP_NAME,
     );
-    return {
-      messages,
-    };
   } catch (err: unknown) {
-    return {
-      messages: null,
-    };
+    // noop
   }
+
+  return { messages };
 };
 
-export default AddChannel;
+export default CreateChannelRedirect;

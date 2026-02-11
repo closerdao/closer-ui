@@ -12,6 +12,7 @@
   "apply_submit_button_help": "Select a ticket to apply discount, then click Apply",
   "apply_name": "Name",
   "auth_error_401_message": "Invalid username or password",
+  "auth_session_expired": "Session expired, please log in again.",
   "autocomplete_close": "Close",
   "autocomplete_no_results": "No results",
   "blockchain_wallet": "Blockchain wallet",

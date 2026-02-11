@@ -1,10 +1,10 @@
 import { useEffect, useState, useContext } from 'react';
-import { Contract } from 'ethers';
-import { WalletState } from 'closer/contexts/wallet';
-import PresenceTokenABI from '../abis/PresenceToken.json';
+import { Contract, utils } from 'ethers';
 
-// This is a placeholder - in a real implementation, this would be fetched from a config file or environment variable
-const PRESENCE_TOKEN_ADDRESS = '0x1234567890123456789012345678901234567890';
+import { blockchainConfig } from 'closer/config_blockchain';
+import { WalletState } from 'closer/contexts/wallet';
+
+const { BLOCKCHAIN_PRESENCE_TOKEN, BLOCKCHAIN_PRESENCE_ABI } = blockchainConfig;
 
 export const usePresenceToken = () => {
   const { isWalletReady, account, library } = useContext(WalletState);
@@ -24,13 +24,21 @@ export const usePresenceToken = () => {
 
       try {
         const presenceTokenContract = new Contract(
-          PRESENCE_TOKEN_ADDRESS,
-          PresenceTokenABI,
-          library.getSigner()
+          BLOCKCHAIN_PRESENCE_TOKEN.address,
+          BLOCKCHAIN_PRESENCE_ABI,
+          library,
         );
 
-        const balance = await presenceTokenContract.balanceOf(account);
-        setPresenceBalance(balance.toString());
+        const [balanceRaw, decimalsRaw] = await Promise.all([
+          presenceTokenContract.balanceOf(account),
+          presenceTokenContract.decimals?.().catch(() => null),
+        ]);
+        const decimals =
+          typeof decimalsRaw === 'number'
+            ? decimalsRaw
+            : BLOCKCHAIN_PRESENCE_TOKEN.decimals;
+        const formattedBalance = utils.formatUnits(balanceRaw, decimals);
+        setPresenceBalance(formattedBalance);
       } catch (err) {
         console.error('Error fetching Presence token balance:', err);
         setError('Failed to fetch Presence token balance');
@@ -41,6 +49,9 @@ export const usePresenceToken = () => {
     };
 
     fetchPresenceBalance();
+
+    const intervalId = setInterval(fetchPresenceBalance, 30000);
+    return () => clearInterval(intervalId);
   }, [isWalletReady, account, library]);
 
   return {

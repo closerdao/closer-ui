@@ -6,6 +6,7 @@ import {
   useAppKitAccount,
   useAppKitNetwork,
   useAppKitProvider,
+  useAppKitState,
 } from '@reown/appkit/react';
 import { BigNumber } from 'ethers';
 import useSWR from 'swr';
@@ -77,12 +78,16 @@ const WalletProviderInner = ({ children }) => {
   const { address, isConnected } = useAppKitAccount();
   const { chainId, switchNetwork: appKitSwitchNetwork } = useAppKitNetwork();
   const { walletProvider } = useAppKitProvider('eip155');
+  const { open: isAppKitModalOpen } = useAppKitState();
   const { user } = useAuth();
 
   const [error, setError] = useState(null);
 
   // Track pending connection promises for the login flow
   const connectResolveRef = useRef(null);
+  const connectFinalizeRef = useRef(null);
+  const connectPromiseRef = useRef(null);
+  const connectTimeoutRef = useRef(null);
 
   const account = address || null;
   const isWalletConnected = isConnected;
@@ -113,11 +118,22 @@ const WalletProviderInner = ({ children }) => {
   // Resolve pending connectWallet promise when account becomes available
   useEffect(() => {
     if (isConnected && address && connectResolveRef.current) {
-      const resolve = connectResolveRef.current;
-      connectResolveRef.current = null;
-      resolve(address);
+      const finalize = connectFinalizeRef.current;
+      if (finalize) {
+        finalize(address);
+      }
     }
   }, [isConnected, address]);
+
+  // If modal closes without connection, clear pending connect request quickly
+  useEffect(() => {
+    if (!isAppKitModalOpen && !isConnected && connectResolveRef.current) {
+      const finalize = connectFinalizeRef.current;
+      if (finalize) {
+        finalize(null);
+      }
+    }
+  }, [isAppKitModalOpen, isConnected]);
 
   const { data: balanceDAOToken, mutate: updateWalletBalance } = useSWR(
     library && account
@@ -248,6 +264,92 @@ const WalletProviderInner = ({ children }) => {
     BLOCKCHAIN_PRESENCE_TOKEN.decimals,
   );
 
+  const getErrorCode = (err) => {
+    if (!err) return null;
+
+    const code = Number(err?.code);
+    if (!Number.isNaN(code) && code !== 0) return code;
+
+    const nested =
+      getErrorCode(err?.cause) ||
+      getErrorCode(err?.error) ||
+      getErrorCode(err?.data?.originalError) ||
+      getErrorCode(err?.originalError);
+    if (nested) return nested;
+
+    const message = `${err?.message || ''} ${err?.stack || ''}`;
+    if (message.includes('4902') || message.includes('Unrecognized chain ID')) {
+      return 4902;
+    }
+
+    return null;
+  };
+
+  const ensureTargetNetwork = useCallback(async () => {
+    const targetNetwork = getTargetNetwork();
+
+    if (Number(chainId) === Number(targetNetwork.id)) {
+      setError(null);
+      return;
+    }
+
+    const provider =
+      walletProvider?.request
+        ? walletProvider
+        : typeof window !== 'undefined' && window.ethereum?.request
+          ? window.ethereum
+          : null;
+
+    if (!provider?.request) {
+      throw new Error('No EIP-1193 provider available for network switch');
+    }
+
+    const chainIdHex = `0x${Number(targetNetwork.id).toString(16)}`;
+
+    try {
+      await provider.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: chainIdHex }],
+      });
+    } catch (switchError) {
+      const errorCode = getErrorCode(switchError);
+
+      // Unknown chain in MetaMask -> add first, then switch
+      if (errorCode === 4902) {
+        await provider.request({
+          method: 'wallet_addEthereumChain',
+          params: [
+            {
+              chainId: chainIdHex,
+              chainName: targetNetwork.name,
+              nativeCurrency: targetNetwork.nativeCurrency,
+              rpcUrls: targetNetwork?.rpcUrls?.default?.http || [],
+              blockExplorerUrls: targetNetwork?.blockExplorers?.default?.url
+                ? [targetNetwork.blockExplorers.default.url]
+                : [],
+            },
+          ],
+        });
+
+        await provider.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: chainIdHex }],
+        });
+      } else {
+        throw switchError;
+      }
+    }
+
+    // Keep AppKit internal state in sync (best-effort)
+    try {
+      await appKitSwitchNetwork(targetNetwork);
+    } catch {
+      // no-op
+    }
+
+    setError(null);
+  }, [chainId, walletProvider, appKitSwitchNetwork]);
+
   const connectWallet = useCallback(async () => {
     console.log('[connectWallet] called');
     try {
@@ -262,26 +364,42 @@ const WalletProviderInner = ({ children }) => {
         return address;
       }
 
+      // Prevent overlapping connect attempts (Reown rejects if one is already active)
+      if (connectPromiseRef.current) {
+        return connectPromiseRef.current;
+      }
+
       // Open the AppKit modal and wait for connection
-      const connectedAccount = await new Promise((resolve) => {
-        connectResolveRef.current = resolve;
+      connectPromiseRef.current = new Promise((resolve) => {
+        const finalizeConnect = (result) => {
+          if (connectTimeoutRef.current) {
+            clearTimeout(connectTimeoutRef.current);
+            connectTimeoutRef.current = null;
+          }
+          connectResolveRef.current = null;
+          connectFinalizeRef.current = null;
+          connectPromiseRef.current = null;
+          resolve(result);
+        };
+
+        connectResolveRef.current = finalizeConnect;
+        connectFinalizeRef.current = finalizeConnect;
 
         open({ view: 'Connect' }).catch(() => {
           // Modal was closed without connecting
           if (connectResolveRef.current) {
-            connectResolveRef.current = null;
-            resolve(null);
+            finalizeConnect(null);
           }
         });
 
         // Timeout: if no connection after 5 minutes, resolve with null
-        setTimeout(() => {
+        connectTimeoutRef.current = setTimeout(() => {
           if (connectResolveRef.current) {
-            connectResolveRef.current = null;
-            resolve(null);
+            finalizeConnect(null);
           }
         }, 300000);
       });
+      const connectedAccount = await connectPromiseRef.current;
 
       console.log('[connectWallet] connection result:', connectedAccount);
 
@@ -292,12 +410,24 @@ const WalletProviderInner = ({ children }) => {
         await linkWalletWithUser(connectedAccount, user);
       }
 
+      // Prompt switch to configured Celo network right after connect.
+      if (connectedAccount) {
+        try {
+          await ensureTargetNetwork();
+        } catch (networkError) {
+          console.error(
+            '[connectWallet] Failed to ensure target network:',
+            networkError,
+          );
+        }
+      }
+
       return connectedAccount;
     } catch (e) {
       console.log('[connectWallet] Exception during connectWallet process:', e);
       return null;
     }
-  }, [isConnected, address, user, open]);
+  }, [isConnected, address, user, open, ensureTargetNetwork]);
 
   const linkWalletWithUser = async (accountId, currentUser) => {
     if (!currentUser || !currentUser._id) {
@@ -349,13 +479,12 @@ const WalletProviderInner = ({ children }) => {
 
   const switchNetwork = useCallback(async () => {
     try {
-      const targetNetwork = getTargetNetwork();
-      await appKitSwitchNetwork(targetNetwork);
+      await ensureTargetNetwork();
     } catch (switchError) {
       console.error('[switchNetwork] Error switching network:', switchError);
       setError(switchError);
     }
-  }, [appKitSwitchNetwork]);
+  }, [ensureTargetNetwork]);
 
   const signMessage = useCallback(async (msg, accountId) => {
     if (!walletProvider) {

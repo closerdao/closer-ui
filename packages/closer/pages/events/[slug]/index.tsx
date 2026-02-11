@@ -72,7 +72,7 @@ const EventPage = ({
   const [isShowingEvent, setIsShowingEvent] = useState(true);
   const [passwordError] = useState<null | string>(null);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
-  const [apiError, setApiError] = useState(null);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const canEditEvent = user
     ? user?._id === event?.createdBy || user?.roles.includes('admin')

@@ -21,6 +21,7 @@ import { SHARED_ACCOMMODATION_PREFERENCES } from '../../constants/shared.constan
 import { useAuth } from '../../contexts/auth';
 import { type User } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
+import { usePushNotifications } from '../../contexts/push-notifications';
 import { useConfig } from '../../hooks/useConfig';
 import { VolunteerConfig } from '../../types';
 import api from '../../utils/api';
@@ -239,6 +240,13 @@ const SettingsPage = ({
   const [, setShowSaveSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>('profile');
   const { platform } = usePlatform() as any;
+  const {
+    isSupported: isPushSupported,
+    permission: pushPermission,
+    isSubscribed: isPushSubscribed,
+    subscribe: pushSubscribe,
+    unsubscribe: pushUnsubscribe,
+  } = usePushNotifications();
   const [countries, setCountries] = useState<
     Array<{ label: string; value: string }>
   >([]);
@@ -921,6 +929,38 @@ const SettingsPage = ({
                       {t('settings_weekly_newsletter')}
                     </label>
                   </div>
+
+                  {isPushSupported && (
+                    <div className="flex items-center justify-start gap-2 p-3 hover:bg-gray-50 rounded-md">
+                      {pushPermission === 'denied' ? (
+                        <div className="text-sm text-gray-500">
+                          {t('push_notification_settings_denied')}
+                        </div>
+                      ) : (
+                        <>
+                          <Checkbox
+                            isChecked={isPushSubscribed}
+                            onChange={async () => {
+                              if (isPushSubscribed) {
+                                await pushUnsubscribe();
+                              } else {
+                                await pushSubscribe();
+                              }
+                            }}
+                          />
+                          <label className="cursor-pointer flex-1">
+                            {t('push_notification_settings_label')}
+                          </label>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {!isPushSupported && (
+                    <div className="p-3 text-sm text-gray-500">
+                      {t('push_notification_settings_unsupported')}
+                    </div>
+                  )}
                 </div>
               </div>
             )}

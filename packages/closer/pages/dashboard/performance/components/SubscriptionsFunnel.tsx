@@ -50,7 +50,7 @@ const SubscriptionsFunnel = ({
   const t = useTranslations();
   const { startDate } = getStartAndEndDate(timeFrame, fromDate, toDate);
 
-  const [, setError] = useState(null);
+  const [, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const threeMonthsAgo = new Date();

@@ -21,6 +21,7 @@ import { blockchainConfig } from 'closer/config_blockchain';
 import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import { NewsletterProvider } from 'closer/contexts/newsletter';
+import { PushNotificationProvider } from 'closer/contexts/push-notifications';
 import { prepareGeneralConfig } from 'closer/utils/app.helpers';
 import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
@@ -126,13 +127,15 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
             <PromptGetInTouchProvider>
               <PlatformProvider>
                 <WalletProvider>
-                  <Layout>
-                    <GoogleAnalytics trackPageViews />
-                    <NewsletterProvider>
-                      <Component {...pageProps} config={config} />
-                    </NewsletterProvider>
-                  </Layout>
-                  <AcceptCookies />
+                  <PushNotificationProvider>
+                    <Layout>
+                      <GoogleAnalytics trackPageViews />
+                      <NewsletterProvider>
+                        <Component {...pageProps} config={config} />
+                      </NewsletterProvider>
+                    </Layout>
+                    <AcceptCookies />
+                  </PushNotificationProvider>
                 </WalletProvider>
               </PlatformProvider>
               </PromptGetInTouchProvider>

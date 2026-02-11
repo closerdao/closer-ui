@@ -17,6 +17,16 @@ export const handlers = [
   rest.get('*/user', (req, res, ctx) => {
     return res(ctx.status(200), ctx.json({ results: [user] }));
   }),
+  rest.get('*/user/:id', (req, res, ctx) => {
+    const { id } = req.params;
+    if (id === 'null' || id === 'undefined') {
+      return res(ctx.status(404), ctx.json({ results: null }));
+    }
+    if (id === user._id) {
+      return res(ctx.status(200), ctx.json({ results: user }));
+    }
+    return res(ctx.status(404), ctx.json({ results: null }));
+  }),
   rest.get('*/config/booking', (req, res, ctx) =>
     res(ctx.status(200), ctx.json({ results: bookingSettings })),
   ),
@@ -26,6 +36,10 @@ export const handlers = [
   rest.get('https://api.example.com/config/general', (req, res, ctx) =>
     res(ctx.status(200), ctx.json({ results: {} })),
   ),
+  rest.get('*/config/community', (req, res, ctx) =>
+    res(ctx.status(200), ctx.json({ results: { value: { enabled: true } } })),
+  ),
+  rest.options('*/config/community', (req, res, ctx) => res(ctx.status(200))),
   rest.post('https://api.example.com/metric', (req, res, ctx) =>
     res(ctx.status(200), ctx.json({})),
   ),

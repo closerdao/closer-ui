@@ -55,7 +55,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   const { isWalletReady, balanceCeurAvailable, balanceNativeAvailable } = useContext(WalletState);
 
   const [web3Error, setWeb3Error] = useState<string | null>(null);
-  const [apiError, setApiError] = useState(null);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const [isMetamaskLoading, setIsMetamaskLoading] = useState(false);
 

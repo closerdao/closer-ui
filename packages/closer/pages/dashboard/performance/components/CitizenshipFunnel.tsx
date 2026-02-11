@@ -51,7 +51,7 @@ const CitizenshipFunnel = ({
     toDate,
   );
 
-  const [, setError] = useState(null);
+  const [, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const filters = useMemo(

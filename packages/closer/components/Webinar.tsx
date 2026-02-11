@@ -177,6 +177,7 @@ const Webinar = ({ id, tags = ['webinar'], analyticsCategory = 'Webinar' }: Prop
           await api.post('/subscribe', {
             email,
             tags: subscribeTags,
+            turnstileToken,
           });
         } catch (subscribeError) {
           console.error('Error subscribing to newsletter:', subscribeError);

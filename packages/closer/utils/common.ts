@@ -1,36 +1,36 @@
 import { parseSmartContractError } from './smartContractErrorParser';
 
-export const parseMessageFromError = (err: any) => {
+export const parseMessageFromError = (err: any): string => {
   try {
     if (typeof err === 'string') {
       return err;
     }
 
-    // Try smart contract error parsing first
     const smartContractError = parseSmartContractError(err);
     if (smartContractError) {
       return smartContractError;
     }
 
     if (err?.response?.data?.error) {
-      return err.response?.data?.error;
+      const v = err.response.data.error;
+      return typeof v === 'string' ? v : String(v);
     }
     if (err instanceof Error) {
-      return err.message;
+      return typeof err.message === 'string' ? err.message : 'Something went wrong';
     }
 
     if (typeof err === 'object' && err !== null && 'message' in err) {
-      return err.message;
+      const v = (err as { message: unknown }).message;
+      return typeof v === 'string' ? v : 'Something went wrong';
     }
 
-    // Handle circular references and other complex objects
     try {
       return JSON.stringify(err);
-    } catch (jsonError) {
-      return 'Complex object that could not be stringified';
+    } catch {
+      return 'Something went wrong';
     }
-  } catch (error) {
-    return 'Error parsing error message';
+  } catch {
+    return 'Something went wrong';
   }
 };
 

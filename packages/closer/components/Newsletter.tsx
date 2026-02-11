@@ -28,7 +28,7 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
     const { APP_NAME } = useConfig() || {};
 
     const [email, setEmail] = useState('');
-    const [signupError, setSignupError] = useState(null);
+    const [signupError, setSignupError] = useState<string | null>(null);
     const [referrer, setReferrer] = useState<string | undefined>(undefined);
     const [signupCompleted, setSignupCompleted] = useState(false);
     const [mounted, setMounted] = useState(false);

@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl';
  * @param {Object} props
  * @param {boolean} [props.list]
  * @param {boolean} [props.preview]
+ * @param {boolean} [props.showTitle]
  * @param {string} [props.channel]
  * @param {Object} [props.filter]
  * @param {string} [props.title]
@@ -20,6 +21,7 @@ import { useTranslations } from 'next-intl';
 const MemberList = ({
   list = false,
   preview = false,
+  showTitle = true,
   channel,
   filter,
   title,
@@ -61,67 +63,93 @@ const MemberList = ({
   }, [channel, filter, limit, page]);
 
   return (
-    <section className="member-page">
-      <h3 className="mt-9 mb-8 text-4xl font-light">
-        {title || t('members_community_members')}
-      </h3>
+    <section className={list ? '' : 'member-page'}>
+      {showTitle && (
+        <h3 className="mt-9 mb-8 text-4xl font-light">
+          {title || t('members_community_members')}
+        </h3>
+      )}
       {error && <div className="validation-error">{error}</div>}
       <div
-        className={`grid gap-6 ${
-          list ? 'md:grid-cols-1' : 'md:grid-cols-2'
-        }  justify-start items-start mb-4`}
+        className={
+          list
+            ? 'flex flex-col gap-1'
+            : 'grid gap-6 md:grid-cols-2 justify-start items-start mb-4'
+        }
       >
         {users && users.count() > 0 ? (
-          users.map((user) => (
-            <Link
-              key={user.get('_id')}
-              passHref
-              as={`/members/${user.get('slug')}`}
-              href="/members/[slug]"
-              legacyBehavior
-            >
-              <div className="flex flex-row items-center w-full card cursor-pointer">
-                <div className="w-20 mr-4">
-                  <ProfilePhoto user={user.toJS()} size="20" />
-                </div>
-                <div className="flex flex-col justify-start">
-                  <h4 className="font-light text-2xl md:text-2xl">
+          users.map((user) =>
+            list ? (
+              <Link
+                key={user.get('_id')}
+                href={`/members/${user.get('slug')}`}
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-light transition-colors"
+              >
+                <ProfilePhoto user={user.toJS()} size="10" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">
                     {user.get('screenname')}
-                    <span className="ml-3 text-xs text-gray-500">
-                      {user.get('timezone')}
-                    </span>
-                  </h4>
+                  </p>
                   {user.get('about') && (
-                    <p className="py-2 text-sm">
-                      {preview
-                        ? user.get('about').substring(0, 120).concat('...')
-                        : user.get('about')}
+                    <p className="text-xs text-gray-500 truncate">
+                      {user.get('about').substring(0, 80)}
                     </p>
                   )}
-                  <div className="pt-2 text-accent">
-                    {t('member_list_see_profile')}
+                </div>
+              </Link>
+            ) : (
+              <Link
+                key={user.get('_id')}
+                passHref
+                as={`/members/${user.get('slug')}`}
+                href="/members/[slug]"
+                legacyBehavior
+              >
+                <div className="flex flex-row items-center w-full card cursor-pointer">
+                  <div className="w-20 mr-4">
+                    <ProfilePhoto user={user.toJS()} size="20" />
+                  </div>
+                  <div className="flex flex-col justify-start">
+                    <h4 className="font-light text-2xl md:text-2xl">
+                      {user.get('screenname')}
+                      <span className="ml-3 text-xs text-gray-500">
+                        {user.get('timezone')}
+                      </span>
+                    </h4>
+                    {user.get('about') && (
+                      <p className="py-2 text-sm">
+                        {preview
+                          ? user.get('about').substring(0, 120).concat('...')
+                          : user.get('about')}
+                      </p>
+                    )}
+                    <div className="pt-2 text-accent">
+                      {t('member_list_see_profile')}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))
+              </Link>
+            ),
+          )
         ) : (
-          <p>{t('member_list_error_message')}</p>
+          <p className="text-sm text-gray-500">{t('member_list_error_message')}</p>
         )}
       </div>
 
-      <div className="card-footer">
-        <Pagination
-          loadPage={(page) => {
-            setPage(page);
-            loadData();
-          }}
-          page={page}
-          limit={limit}
-          total={totalUsers}
-          items={users}
-        />
-      </div>
+      {!list && (
+        <div className="card-footer">
+          <Pagination
+            loadPage={(page) => {
+              setPage(page);
+              loadData();
+            }}
+            page={page}
+            limit={limit}
+            total={totalUsers}
+            items={users}
+          />
+        </div>
+      )}
     </section>
   );
 };

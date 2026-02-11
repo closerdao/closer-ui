@@ -50,7 +50,7 @@ const NationalityPage = ({ generalConfig }: Props) => {
       taxNo: '',
     },
   });
-  const [errorMessage, setErrorMessage] = useState();
+  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
   const [canContinue, setCanContinue] = useState(false);
   const [isApiLoading, setApiIsLoading] = useState(false);
 
@@ -134,7 +134,7 @@ const NationalityPage = ({ generalConfig }: Props) => {
 
   const [countries, setCountries] = useState();
   const [isRestrictedNationality, setIsRestrictedNationality] = useState(false);
-  const [error, setError] = useState();
+  const [error, setError] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {

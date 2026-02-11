@@ -41,7 +41,7 @@ const AffiliateDashboardPage = ({
   const [payoutAmount, setPayoutAmount] = useState(0);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [selectedAffiliate, setSelectedAffiliate] = useState<any>(null);

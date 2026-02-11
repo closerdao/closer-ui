@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 
 import { useAuth } from 'closer/contexts/auth';
 import { WalletDispatch, WalletState } from 'closer/contexts/wallet';
+import { usePresenceToken } from 'closer/hooks/usePresenceToken';
 import { useVotingWeight } from 'closer/hooks/useVotingWeight';
 import { useTranslations } from 'next-intl';
 
@@ -17,12 +18,12 @@ const WalletAndVoting: React.FC<WalletAndVotingProps> = ({ className }) => {
     isCorrectNetwork,
     hasSameConnectedAccount,
     balanceTotal,
-    proofOfPresence,
     error,
   } = useContext(WalletState);
 
   const { user } = useAuth();
   const { connectWallet } = useContext(WalletDispatch);
+  const { presenceBalance } = usePresenceToken();
   const { votingWeight } = useVotingWeight();
   const t = useTranslations();
 
@@ -65,10 +66,10 @@ const WalletAndVoting: React.FC<WalletAndVotingProps> = ({ className }) => {
 
   return (
     <div
-      className={`bg-white rounded-lg border border-gray-200 shadow-sm ${className}`}
+      className={`rounded-xl border border-gray-200 bg-white ${className}`}
     >
       <div className="p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">
+        <h2 className="mb-6 text-lg font-semibold text-gray-900">
           {t('governance_wallet_voting_power')}
         </h2>
 
@@ -76,7 +77,7 @@ const WalletAndVoting: React.FC<WalletAndVotingProps> = ({ className }) => {
           <div className="text-center">
             <button
               onClick={connectWallet}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+              className="w-full rounded-lg bg-gray-900 px-4 py-3 font-medium text-white transition-colors hover:bg-black"
             >
               {t('governance_connect_wallet')}
             </button>
@@ -87,7 +88,7 @@ const WalletAndVoting: React.FC<WalletAndVotingProps> = ({ className }) => {
         ) : (
           <div className="space-y-6">
             {/* Wallet Status */}
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="rounded-lg border border-gray-100 bg-gray-50 p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-gray-700">
                   {t('governance_wallet_status')}
@@ -95,8 +96,8 @@ const WalletAndVoting: React.FC<WalletAndVotingProps> = ({ className }) => {
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${
                     networkStatus.status === 'connected'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-red-100 text-red-700'
+                      ? 'bg-gray-900 text-white'
+                      : 'bg-gray-200 text-gray-700'
                   }`}
                 >
                   {networkStatus.status === 'connected'
@@ -123,16 +124,20 @@ const WalletAndVoting: React.FC<WalletAndVotingProps> = ({ className }) => {
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-sm text-gray-600">TDF</span>
+                  <span className="text-sm text-gray-600">
+                    {t('governance_tdf_balance')}
+                  </span>
                   <span className="text-sm font-medium text-gray-900">
                     {formatBalance(balanceTotal)}
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                  <span className="text-sm text-gray-600">Presence</span>
+                  <span className="text-sm text-gray-600">
+                    {t('governance_presence')}
+                  </span>
                   <span className="text-sm font-medium text-gray-900">
-                    {formatBalance(proofOfPresence)}
+                    {formatBalance(presenceBalance)}
                   </span>
                 </div>
               </div>
@@ -140,12 +145,12 @@ const WalletAndVoting: React.FC<WalletAndVotingProps> = ({ className }) => {
 
             {/* Voting Weight */}
             {isWalletReady && (
-              <div className="bg-blue-50 rounded-lg p-4">
+              <div className="rounded-lg border border-gray-100 bg-gray-50 p-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-gray-700">
                     {t('governance_voting_weight_label')}
                   </span>
-                  <span className="text-lg font-bold text-blue-600">
+                  <span className="text-lg font-semibold text-gray-900">
                     {votingWeight.toFixed(2)}
                   </span>
                 </div>

@@ -62,6 +62,8 @@ jest.mock('../utils/api', () => {
       request: { use: jest.fn() },
       response: { use: jest.fn() },
     },
+    refreshTokensProactively: jest.fn(() => Promise.resolve(null)),
+    setOnSessionInvalid: jest.fn(),
   };
   const formatSearch = (where: unknown) =>
     typeof where !== 'undefined' ? encodeURIComponent(JSON.stringify(where)) : '';
@@ -71,6 +73,8 @@ jest.mock('../utils/api', () => {
     default: mockApi,
     formatSearch,
     cdn,
+    refreshTokensProactively: mockApi.refreshTokensProactively,
+    setOnSessionInvalid: mockApi.setOnSessionInvalid,
   };
 });
 

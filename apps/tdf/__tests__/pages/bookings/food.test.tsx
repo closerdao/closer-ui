@@ -17,7 +17,11 @@ jest.mock('closer/utils/api', () => ({
     get: jest.fn(),
     post: jest.fn(() => Promise.resolve({ data: {} })),
     defaults: { headers: {} },
+    setOnSessionInvalid: jest.fn(),
+    refreshTokensProactively: jest.fn(() => Promise.resolve(null)),
   },
+  setOnSessionInvalid: jest.fn(),
+  refreshTokensProactively: jest.fn(() => Promise.resolve(null)),
 }));
 
 describe('FoodSelectionPage', () => {

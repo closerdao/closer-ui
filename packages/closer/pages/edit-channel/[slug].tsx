@@ -47,7 +47,7 @@ const EditChannel = ({ channel }: Props) => {
           }
           allowDelete
           deleteButton="Delete Channel"
-          onDelete={() => (window.location.href = '/community')}
+          onDelete={() => (window.location.href = '/social')}
         />
       </EditModelPageLayout>
     </>

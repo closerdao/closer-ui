@@ -99,6 +99,16 @@ const FormField = ({
               />
             </div>
           )}
+          {type === 'textarea' && (
+            <textarea
+              value={objectPath.get(data, name) || ''}
+              placeholder={placeholder}
+              rows={4}
+              className={`w-full bg-transparent border border-line/30 rounded-lg px-3 py-2 text-sm resize-y min-h-[80px] ${className || ''}`}
+              onChange={(e) => update(name, e.target.value)}
+              required={required}
+            />
+          )}
           {type === 'currency' && (
             <PriceEditor
               value={objectPath.get(data, name)}

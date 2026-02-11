@@ -197,7 +197,7 @@ const Checkout = ({
 
   const [canApplyCredits, setCanApplyCredits] = useState(false);
   const [hasAgreedToWalletDisclaimer, setWalletDisclaimer] = useState(false);
-  const [creditsError, setCreditsError] = useState(null);
+  const [creditsError, setCreditsError] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [conflictingBookings, setConflictingBookings] = useState<{ all: any[]; sameUser: any[]; otherUser: any[] } | null>(null);
   const [onChainData, setOnChainData] = useState<any[] | null>(null);

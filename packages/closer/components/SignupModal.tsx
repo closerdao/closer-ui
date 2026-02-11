@@ -74,6 +74,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
           email,
           screenname: '',
           tags,
+          turnstileToken,
         });
       }
 

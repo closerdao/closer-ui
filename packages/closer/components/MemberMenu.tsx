@@ -12,7 +12,7 @@ import { getReserveTokenDisplay } from '../utils/config.utils';
 import useRBAC from '../hooks/useRBAC';
 import { useBuyTokens } from '../hooks/useBuyTokens';
 import { NavigationLink } from '../types/nav';
-import api from '../utils/api';
+import api, { formatSearch } from '../utils/api';
 import { getCurrentUnitPrice } from '../utils/bondingCurve';
 import Profile from './Profile';
 import ReportABug from './ReportABug';
@@ -39,6 +39,7 @@ const MemberMenu = () => {
   const [currentSupply, setCurrentSupply] = useState<number | null>(null);
   const [tokenPrice, setTokenPrice] = useState<number | null>(null);
   const [isLoadingTokenData, setIsLoadingTokenData] = useState(false);
+  const [socialUnreadCount, setSocialUnreadCount] = useState(0);
 
   // Toggle a section's open/closed state
   const toggleSection = (sectionIndex: number) => {
@@ -56,6 +57,7 @@ const MemberMenu = () => {
     areSubscriptionsEnabled: boolean,
     isVolunteeringEnabled: boolean,
     isEventsEnabled: boolean,
+    isCommunityEnabled: boolean,
   ): MenuSection[] => {
     // TDF-specific navigation structure
     if (APP_NAME?.toLowerCase() === 'tdf') {
@@ -129,6 +131,12 @@ const MemberMenu = () => {
           label: t('menu_community'),
           isOpen: false,
           items: [
+            {
+              label: t('menu_social'),
+              url: '/social',
+              enabled: isCommunityEnabled,
+              rbacPage: 'Community',
+            },
             {
               label: t('menu_become_citizen'),
               url: '/citizenship',
@@ -268,8 +276,7 @@ const MemberMenu = () => {
                 {
                   label: t('header_nav_invest'),
                   url: '/pages/invest',
-                  enabled: true,
-                  rbacPage: 'Invest',
+                  enabled: true
                 },
                 {
                   label: t('header_nav_stay'),
@@ -279,14 +286,12 @@ const MemberMenu = () => {
                 {
                   label: t('header_nav_community'),
                   url: '/pages/community',
-                  enabled: true,
-                  rbacPage: 'Community',
+                  enabled: true
                 },
                 {
                   label: t('header_nav_events'),
                   url: '/pages/events',
-                  enabled: isEventsEnabled,
-                  rbacPage: 'Events',
+                  enabled: true
                 },
               ]
             : []),
@@ -730,7 +735,7 @@ const MemberMenu = () => {
   useEffect(() => {
     (async () => {
       try {
-        const [bookingRes, subscriptionsRes, volunteerRes, eventsRes] = await Promise.all([
+        const [bookingRes, subscriptionsRes, volunteerRes, eventsRes, communityRes] = await Promise.all([
           api.get('config/booking').catch((err) => {
             console.error('Error fetching booking config:', err);
             return null;
@@ -745,6 +750,10 @@ const MemberMenu = () => {
           }),
           api.get('config/events').catch((err) => {
             console.error('Error fetching events config:', err);
+            return null;
+          }),
+          api.get('config/community').catch((err) => {
+            console.error('Error fetching community config:', err);
             return null;
           }),
         ]);
@@ -764,6 +773,8 @@ const MemberMenu = () => {
 
         const isEventsEnabled =
           eventsRes?.data?.results?.value?.enabled !== false;
+        const isCommunityEnabled =
+          communityRes?.data?.results?.value?.enabled === true;
 
         // Get menu sections with all items
         const sections = getMenuSections(
@@ -771,6 +782,7 @@ const MemberMenu = () => {
           areSubscriptionsEnabled,
           isVolunteeringEnabled,
           isEventsEnabled,
+          isCommunityEnabled,
         );
 
         // Filter sections based on user roles and permissions
@@ -809,6 +821,59 @@ const MemberMenu = () => {
     }
   }, [APP_NAME, getCurrentSupplyWithoutWallet]);
 
+  // Fetch total unread social posts count
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchSocialUnread = async () => {
+      try {
+        const { data: channelData } = await api.get('/channel', {
+          params: { limit: 200, sort_by: 'name' },
+        });
+        const channels = channelData.results || [];
+        const joinedChannels = channels.filter((ch: any) =>
+          ch.visibleBy?.includes(user._id),
+        );
+        if (joinedChannels.length === 0) return;
+
+        const socialSettings = (user.settings?.social ?? {}) as Record<
+          string,
+          unknown
+        >;
+        let total = 0;
+
+        await Promise.all(
+          joinedChannels.map(async (ch: any) => {
+            try {
+              const entry = socialSettings[ch._id];
+              const lastFetched =
+                (typeof entry === 'object' && entry !== null && 'lastFetched' in entry
+                  ? (entry as { lastFetched?: string }).lastFetched
+                  : null) ?? (typeof socialSettings[ch.slug] === 'string' ? socialSettings[ch.slug] : null);
+              const where: Record<string, any> = { channel: ch._id };
+              if (lastFetched) {
+                where.created = { $gt: lastFetched };
+              }
+              const { data } = await api.get('/count/post', {
+                params: { where: formatSearch(where) },
+              });
+              const count = data?.count ?? data?.results ?? 0;
+              if (count > 0) total += count;
+            } catch {
+              // ignore individual channel errors
+            }
+          }),
+        );
+
+        setSocialUnreadCount(total);
+      } catch {
+        // ignore
+      }
+    };
+
+    fetchSocialUnread();
+  }, [user?._id]);
+
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
   const isTokenSaleEnabled =
@@ -834,9 +899,14 @@ const MemberMenu = () => {
             <Link
               href={section.items[0].url || ''}
               target={section.items[0].target}
-              className="block py-1 hover:bg-accent-light px-2 rounded text-black"
+              className="flex items-center justify-between py-1 hover:bg-accent-light px-2 rounded text-black"
             >
-              {section.items[0].label}
+              <span>{section.items[0].label}</span>
+              {section.items[0].url === '/social' && socialUnreadCount > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-accent rounded-full">
+                  {socialUnreadCount > 99 ? '99+' : socialUnreadCount}
+                </span>
+              )}
             </Link>
           ) : (
             <>
@@ -846,11 +916,18 @@ const MemberMenu = () => {
                 onClick={() => toggleSection(index)}
               >
                 <span>{section.label}</span>
-                <ChevronDown
-                  className={`h-4 w-4 transition-transform duration-200 ${
-                    section.isOpen ? 'rotate-180' : ''
-                  }`}
-                />
+                <div className="flex items-center gap-1.5">
+                  {section.items.some((item) => item.url === '/social') && socialUnreadCount > 0 && !section.isOpen && (
+                    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-accent rounded-full">
+                      {socialUnreadCount > 99 ? '99+' : socialUnreadCount}
+                    </span>
+                  )}
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform duration-200 ${
+                      section.isOpen ? 'rotate-180' : ''
+                    }`}
+                  />
+                </div>
               </div>
 
               {/* Section items (only shown if section is open) */}
@@ -861,9 +938,14 @@ const MemberMenu = () => {
                       key={item.url}
                       href={item.url || ''}
                       target={item.target}
-                      className="block py-1 hover:bg-accent-light px-2 rounded text-black"
+                      className="flex items-center justify-between py-1 hover:bg-accent-light px-2 rounded text-black"
                     >
-                      {item.label}
+                      <span>{item.label}</span>
+                      {item.url === '/social' && socialUnreadCount > 0 && (
+                        <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-accent rounded-full">
+                          {socialUnreadCount > 99 ? '99+' : socialUnreadCount}
+                        </span>
+                      )}
                     </Link>
                   ))}
                 </div>

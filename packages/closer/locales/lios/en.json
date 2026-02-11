@@ -64,6 +64,9 @@
   "subscriptions_title": "Subscriptions",
   "subscriptions_intro": "Choose your path",
 
+  "header_nav_governance": "Governance",
+  "header_nav_agent": "Agent",
+  "header_nav_docs": "Docs",
 
   "test": "english ok"
 }
