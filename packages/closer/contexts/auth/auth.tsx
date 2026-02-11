@@ -68,6 +68,22 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    setOnSessionInvalid(() => {
+      setUser(null);
+      setError(t('auth_session_expired'));
+      if (router.pathname !== '/login') {
+        router.push('/login?session_expired=1');
+      } else if (!router.query.session_expired) {
+        router.replace('/login?session_expired=1', undefined, { shallow: true });
+      }
+    });
+
+    return () => {
+      setOnSessionInvalid(null);
+    };
+  }, [router, t, setError]);
+
+  useEffect(() => {
     if (typeof window === 'undefined') return;
     const PROACTIVE_CHECK_INTERVAL_MS = 5 * 60 * 1000;
     const id = setInterval(async () => {

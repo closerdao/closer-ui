@@ -65,9 +65,9 @@ function doRefresh() {
       notifySessionInvalid();
       const err = new Error('Session expired');
       err.silentAuthRedirect = true;
-      const p = Promise.reject(err);
-      p.finally(() => (refreshPromise = null));
-      refreshPromise = p;
+      refreshPromise = Promise.reject(err).finally(() => {
+        refreshPromise = null;
+      });
       return refreshPromise;
     }
     refreshPromise = axios
