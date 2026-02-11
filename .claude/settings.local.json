@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(xargs:*)",
-      "Bash(npx tsc:*)",
-      "Bash(git -C /Users/samueldelesque/Code/closer-ui log --oneline -10)"
-    ]
-  }
-}

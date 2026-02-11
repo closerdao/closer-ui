@@ -28,6 +28,9 @@ out/
 .env.local
 **/.env
 
+# Local IDE/editor settings (developer-specific paths)
+.claude/settings.local.json
+
 # debug
 npm-debug.log*
 yarn-debug.log*
