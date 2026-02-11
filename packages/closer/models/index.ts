@@ -10,8 +10,13 @@ const models = {
     {
       name: 'description',
       label: 'Description',
-      type: 'longtext',
+      type: 'textarea',
       placeholder: 'A place to co-conspire',
+    },
+    {
+      name: 'photo',
+      label: 'Channel photo',
+      type: 'photo',
     },
     {
       name: 'channelType',

@@ -6,6 +6,7 @@ export interface Channel {
   name: string;
   slug: string;
   description?: string;
+  photo?: string;
   visibility?: 'public' | 'private';
   channelType: ChannelType;
   presenceRequired: number;

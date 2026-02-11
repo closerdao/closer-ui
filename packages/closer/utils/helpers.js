@@ -164,6 +164,7 @@ export const getSample = (field) => {
   switch (field.type) {
     case 'text':
     case 'longtext':
+    case 'textarea':
     case 'email':
     case 'phone':
       return '';

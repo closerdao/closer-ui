@@ -57,6 +57,7 @@ const MemberMenu = () => {
     areSubscriptionsEnabled: boolean,
     isVolunteeringEnabled: boolean,
     isEventsEnabled: boolean,
+    isCommunityEnabled: boolean,
   ): MenuSection[] => {
     // TDF-specific navigation structure
     if (APP_NAME?.toLowerCase() === 'tdf') {
@@ -133,7 +134,7 @@ const MemberMenu = () => {
             {
               label: t('menu_social'),
               url: '/social',
-              enabled: true,
+              enabled: isCommunityEnabled,
               rbacPage: 'Community',
             },
             {
@@ -286,7 +287,7 @@ const MemberMenu = () => {
                 {
                   label: t('header_nav_community'),
                   url: '/social',
-                  enabled: true,
+                  enabled: isCommunityEnabled,
                   rbacPage: 'Community',
                 },
                 {
@@ -737,7 +738,7 @@ const MemberMenu = () => {
   useEffect(() => {
     (async () => {
       try {
-        const [bookingRes, subscriptionsRes, volunteerRes, eventsRes] = await Promise.all([
+        const [bookingRes, subscriptionsRes, volunteerRes, eventsRes, communityRes] = await Promise.all([
           api.get('config/booking').catch((err) => {
             console.error('Error fetching booking config:', err);
             return null;
@@ -752,6 +753,10 @@ const MemberMenu = () => {
           }),
           api.get('config/events').catch((err) => {
             console.error('Error fetching events config:', err);
+            return null;
+          }),
+          api.get('config/community').catch((err) => {
+            console.error('Error fetching community config:', err);
             return null;
           }),
         ]);
@@ -771,6 +776,8 @@ const MemberMenu = () => {
 
         const isEventsEnabled =
           eventsRes?.data?.results?.value?.enabled !== false;
+        const isCommunityEnabled =
+          communityRes?.data?.results?.value?.enabled === true;
 
         // Get menu sections with all items
         const sections = getMenuSections(
@@ -778,6 +785,7 @@ const MemberMenu = () => {
           areSubscriptionsEnabled,
           isVolunteeringEnabled,
           isEventsEnabled,
+          isCommunityEnabled,
         );
 
         // Filter sections based on user roles and permissions
@@ -831,13 +839,20 @@ const MemberMenu = () => {
         );
         if (joinedChannels.length === 0) return;
 
-        const socialSettings = user.settings?.social || {};
+        const socialSettings = (user.settings?.social ?? {}) as Record<
+          string,
+          unknown
+        >;
         let total = 0;
 
         await Promise.all(
           joinedChannels.map(async (ch: any) => {
             try {
-              const lastFetched = socialSettings[ch.slug];
+              const entry = socialSettings[ch._id];
+              const lastFetched =
+                (typeof entry === 'object' && entry !== null && 'lastFetched' in entry
+                  ? (entry as { lastFetched?: string }).lastFetched
+                  : null) ?? (typeof socialSettings[ch.slug] === 'string' ? socialSettings[ch.slug] : null);
               const where: Record<string, any> = { channel: ch._id };
               if (lastFetched) {
                 where.created = { $gt: lastFetched };

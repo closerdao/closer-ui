@@ -40,6 +40,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   const { platform } = usePlatform() as any;
   const { votingWeight } = useVotingWeight();
   const t = useTranslations();
+  const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Closer';
 
   const hasLoadedConfig = useRef(false);
   const configLoadError = useRef(false);
@@ -125,10 +126,15 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
         ? authorUser.get('screenname')
         : authorUser.screenname;
       const email = authorUser.get ? authorUser.get('email') : authorUser.email;
-      return screenname || email || currentProposal.authorAddress || 'Anonymous';
+      return (
+        screenname ||
+        email ||
+        currentProposal.authorAddress ||
+        t('governance_anonymous')
+      );
     }
 
-    return currentProposal.authorAddress || 'Anonymous';
+    return currentProposal.authorAddress || t('governance_anonymous');
   };
 
   useEffect(() => {
@@ -235,7 +241,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     const signature = await signMessage(message, account);
 
     if (!signature) {
-      throw new Error('Failed to sign vote message');
+      throw new Error(t('governance_failed_sign_vote'));
     }
 
     // Create vote data with signature hash
@@ -396,7 +402,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       setIsEditing(false);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Failed to update proposal',
+        err instanceof Error ? err.message : t('governance_failed_update_proposal'),
       );
     } finally {
       setIsSubmitting(false);
@@ -417,7 +423,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       const authorSignature = await signMessage(descriptionHash, account);
 
       if (!authorSignature) {
-        throw new Error('Failed to sign proposal description');
+        throw new Error(t('governance_failed_sign_proposal'));
       }
 
       const updatedData = {
@@ -466,7 +472,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       setError(
         err instanceof Error
           ? err.message
-          : 'Failed to move proposal to ready status',
+          : t('governance_failed_move_to_ready'),
       );
     } finally {
       setIsSubmitting(false);
@@ -501,7 +507,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       const authorSignature = await signMessage(descriptionHash, account);
 
       if (!authorSignature) {
-        throw new Error('Failed to sign proposal description');
+        throw new Error(t('governance_failed_sign_proposal'));
       }
 
       // Update proposal data to active status
@@ -544,7 +550,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       setError(
         err instanceof Error
           ? err.message
-          : 'Failed to promote proposal to active status',
+          : t('governance_failed_promote_to_active'),
       );
     } finally {
       setIsSubmitting(false);
@@ -555,7 +561,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     if (!date) return t('governance_not_available');
     const dateObj = new Date(date);
     if (isNaN(dateObj.getTime())) return t('governance_not_available');
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat(router.locale || undefined, {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -668,13 +674,13 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   const getStatusColor = (status: 'draft' | 'active' | 'passed' | 'failed'): string => {
     switch (status) {
       case 'draft':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-gray-100 text-gray-600';
       case 'active':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gray-900 text-white';
       case 'passed':
-        return 'bg-emerald-100 text-emerald-800';
+        return 'bg-gray-200 text-gray-800';
       case 'failed':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gray-200 text-gray-700';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -694,9 +700,10 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     return (
       <>
         <Head>
-          <title>{t('governance_proposal_not_found')} - TDF Governance</title>
+          <title>{t('governance_proposal_not_found')} - {appName}</title>
         </Head>
-        <div className="container mx-auto px-4 py-8">
+        <div className="min-h-screen bg-gray-50/70">
+          <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
               {t('governance_proposal_not_found')}
@@ -706,11 +713,12 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
             </p>
             <button
               onClick={() => router.push('/governance')}
-              className="bg-accent hover:bg-accent-dark text-white font-bold py-2 px-4 rounded"
+              className="rounded-lg bg-gray-900 px-4 py-2 font-semibold text-white transition-colors hover:bg-black"
             >
               {t('governance_back_to_governance')}
             </button>
           </div>
+        </div>
         </div>
       </>
     );
@@ -728,19 +736,20 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   return (
     <>
       <Head>
-        <title>{currentProposal.title} - TDF Governance</title>
+        <title>{currentProposal.title} - {appName}</title>
         <meta
           name="description"
           content={currentProposal.description?.substring(0, 160) || ''}
         />
       </Head>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="min-h-screen bg-gray-50/70">
+        <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => router.push('/governance?refetch=true')}
-            className="text-accent hover:text-accent-dark mb-4 flex items-center"
+            className="mb-4 flex items-center text-sm font-medium text-gray-600 hover:text-gray-900"
           >
             {t('governance_back_to_governance')}
           </button>
@@ -786,7 +795,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     <button
                       onClick={handleSaveEdit}
                       disabled={isSubmitting}
-                      className="px-4 py-2 bg-accent hover:bg-accent-dark text-white rounded-md text-sm disabled:opacity-50"
+                      className="rounded-md bg-gray-900 px-4 py-2 text-sm text-white hover:bg-black disabled:opacity-50"
                     >
                       {t('governance_save')}
                     </button>
@@ -794,7 +803,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                       <button
                         onClick={handleMoveToReady}
                         disabled={isSubmitting}
-                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm disabled:opacity-50"
+                        className="rounded-md bg-gray-900 px-4 py-2 text-sm text-white hover:bg-black disabled:opacity-50"
                       >
                         {t('governance_move_to_ready')}
                       </button>
@@ -806,19 +815,19 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
           </div>
 
           {isActive && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="rounded-xl border border-gray-900 bg-gray-900 p-4 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-800 font-medium">{t('governance_voting_is_active')}</p>
-                  <p className="text-blue-600 text-sm">
+                  <p className="font-medium">{t('governance_voting_is_active')}</p>
+                  <p className="text-sm text-gray-200">
                     {getTimeRemaining(String(freshProposalData?.endDate || ''))}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-blue-800 font-medium">
+                  <p className="font-medium">
                     {totalVotes} {t('governance_votes')}
                   </p>
-                  <p className="text-blue-600 text-sm">
+                  <p className="text-sm text-gray-200">
                     {t('governance_ends')} {formatDate(String(freshProposalData?.endDate || ''))}
                   </p>
                 </div>
@@ -831,7 +840,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
           {/* Main Content */}
           <div className="lg:col-span-2">
             {/* Proposal Content */}
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div className="mb-6 rounded-xl border border-gray-200 bg-white p-6">
               <h2 className="text-xl font-semibold mb-4">{t('governance_proposal_content')}</h2>
               {isEditing ? (
                 <div className="space-y-4">
@@ -840,7 +849,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                       htmlFor="edit-title"
                       className="block text-sm font-medium text-gray-700 mb-2"
                     >
-                      Title
+                      {t('governance_title_label')}
                     </label>
                     <input
                       id="edit-title"
@@ -849,7 +858,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                       onChange={(e) =>
                         setEditData({ ...editData, title: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-300"
                     />
                   </div>
                   <div>
@@ -857,7 +866,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                       htmlFor="edit-slug"
                       className="block text-sm font-medium text-gray-700 mb-2"
                     >
-                      Slug (optional)
+                      {t('governance_slug_label')}
                     </label>
                     <input
                       id="edit-slug"
@@ -866,11 +875,11 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                       onChange={(e) =>
                         setEditData({ ...editData, slug: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
-                      placeholder="Auto-generated from title"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                      placeholder={t('governance_slug_placeholder')}
                     />
                     <p className="mt-1 text-sm text-gray-500">
-                      Leave empty to use auto-generated slug from title
+                      {t('governance_slug_help')}
                     </p>
                   </div>
                   <div>
@@ -889,7 +898,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                           description: e.target.value,
                         })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent font-mono text-sm"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
                       rows={15}
                     />
                   </div>
@@ -901,30 +910,27 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
               )}
             </div>
 
-            {/* Comments */}
-            <ProposalComments proposal={currentProposal} />
-
             {/* Voting Section */}
             {isActive && isWalletReady && isCitizen() && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="rounded-xl border border-gray-200 bg-white p-6">
                 <h2 className="text-xl font-semibold mb-4">
                   {hasVoted ? t('governance_your_vote') : t('governance_cast_your_vote')}
                 </h2>
 
                 {showVoteSuccess && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                    <p className="text-green-800 font-medium">
+                  <div className="mb-4 rounded-lg border border-gray-300 bg-gray-100 p-4">
+                    <p className="font-medium text-gray-900">
                       {t('governance_vote_submitted_success')}
                     </p>
                   </div>
                 )}
 
                 {hasVoted ? (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <p className="text-green-800 font-medium">
+                  <div className="rounded-lg border border-gray-300 bg-gray-100 p-4">
+                    <p className="font-medium text-gray-900">
                       {t('governance_you_voted')} <span className="capitalize">{userVote}</span>
                     </p>
-                    <p className="text-green-600 text-sm mt-1">
+                    <p className="mt-1 text-sm text-gray-600">
                       {t('governance_thank_you_participating')}
                     </p>
                   </div>
@@ -934,9 +940,9 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                       {(['yes', 'no', 'abstain'] as const).map((option) => (
                         <label
                           key={option}
-                          className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
-                            selectedVote === option
-                              ? 'border-accent bg-accent-light'
+                            className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                              selectedVote === option
+                              ? 'border-gray-900 bg-gray-100'
                               : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
@@ -974,7 +980,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     <button
                       onClick={handleVote}
                       disabled={!selectedVote || isSubmitting}
-                      className="w-full bg-accent hover:bg-accent-dark disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors"
+                      className="w-full rounded-lg bg-gray-900 px-4 py-3 font-semibold text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:bg-gray-300"
                     >
                       {isSubmitting ? t('governance_submitting_vote') : t('governance_submit_vote')}
                     </button>
@@ -985,11 +991,11 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
 
             {/* Voting Requirements */}
             {isActive && (!isWalletReady || !isCitizen()) && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+              <div className="rounded-lg border border-gray-300 bg-gray-100 p-6">
+                <h3 className="mb-2 text-lg font-semibold text-gray-900">
                   {t('governance_voting_requirements')}
                 </h3>
-                <div className="space-y-2 text-yellow-700">
+                <div className="space-y-2 text-gray-700">
                   {!isWalletReady && <p>• {t('governance_connect_wallet_to_vote')}</p>}
                   {!isCitizen() && (
                     <p>• {t('governance_must_be_member')}</p>
@@ -997,6 +1003,9 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                 </div>
               </div>
             )}
+
+            {/* Comments */}
+            <ProposalComments proposal={currentProposal} className="mt-6" />
           </div>
 
           {/* Sidebar */}
@@ -1010,7 +1019,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
               if (rewards.length === 0) return null;
 
               return (
-                <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                <div className="rounded-xl border border-gray-200 bg-white p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">
                       {t('governance_rewards')}
@@ -1019,7 +1028,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                       <button
                         type="button"
                         onClick={handleAddReward}
-                        className="px-3 py-1.5 bg-accent hover:bg-accent-dark text-white text-xs rounded-md"
+                        className="rounded-md bg-gray-900 px-3 py-1.5 text-xs text-white hover:bg-black"
                       >
                         {t('governance_add_reward')}
                       </button>
@@ -1040,7 +1049,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                               <button
                                 type="button"
                                 onClick={() => handleRemoveReward(index)}
-                                className="text-red-600 hover:text-red-800 text-xs"
+                                className="text-xs text-gray-500 hover:text-gray-800"
                               >
                                 {t('governance_remove')}
                               </button>
@@ -1055,7 +1064,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                                 onChange={(e) =>
                                   handleRewardChange(index, 'name', e.target.value)
                                 }
-                                className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
+                                className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-gray-300"
                                 placeholder={t('governance_reward_name_placeholder')}
                               />
                             </div>
@@ -1074,7 +1083,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                                     parseFloat(e.target.value) || 0,
                                   )
                                 }
-                                className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
+                                className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-gray-300"
                                 placeholder={t('governance_reward_amount_placeholder')}
                               />
                             </div>
@@ -1092,7 +1101,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                                     e.target.value,
                                   )
                                 }
-                                className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent font-mono"
+                                className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-gray-300"
                                 placeholder={t(
                                   'governance_reward_contract_address_placeholder',
                                 )}
@@ -1107,7 +1116,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                                 onChange={(e) =>
                                   handleRewardChange(index, 'source', e.target.value)
                                 }
-                                className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
+                                className="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-gray-300"
                               >
                                 {isTeamMember() && (
                                   <option value="0x5E810b93c51981eccA16e030Ea1cE8D8b1DEB83b">
@@ -1129,7 +1138,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                                 <h4 className="text-sm font-semibold text-gray-900 mb-1">
                                   {reward.name}
                                 </h4>
-                                <p className="text-lg font-bold text-accent">
+                                <p className="text-lg font-semibold text-gray-900">
                                   {reward.amount}
                                 </p>
                               </div>
@@ -1163,7 +1172,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
 
             {/* Promotion Widget for Draft Proposals */}
             {currentProposal.status === 'draft' && isAuthor() && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="rounded-xl border border-gray-200 bg-white p-6">
                 <h3 className="text-lg font-semibold mb-4">
                   {t('governance_promote_to_active')}
                 </h3>
@@ -1185,7 +1194,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                           dateStart: e.target.value,
                         })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-300"
                     />
                   </div>
 
@@ -1201,7 +1210,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                           duration: e.target.value,
                         })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-300"
                     >
                       <option value="7">{t('governance_days_minor')}</option>
                       <option value="14">{t('governance_days_standard')}</option>
@@ -1214,7 +1223,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     disabled={
                       !isWalletReady || !promotionData.dateStart || isSubmitting
                     }
-                    className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors"
+                    className="w-full rounded-lg bg-gray-900 px-4 py-3 font-semibold text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:bg-gray-300"
                   >
                     {isSubmitting ? t('governance_promoting') : t('governance_promote_to_active')}
                   </button>
@@ -1224,13 +1233,13 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
 
             {/* Voting Results for Active/Closed Proposals */}
             {freshProposalData?.status !== 'draft' && voteCounts && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="rounded-xl border border-gray-200 bg-white p-6">
                 <h3 className="text-lg font-semibold mb-4">{t('governance_voting_results')}</h3>
 
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-green-600 font-medium">{t('governance_yes')}</span>
+                      <span className="font-medium text-gray-800">{t('governance_yes')}</span>
                       <span className="text-sm text-gray-600">
                         {roundToTwoDecimals(voteCounts.yes)} (
                         {getVotePercentage(voteCounts.yes, totalVotes)}
@@ -1239,7 +1248,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
-                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                        className="h-2 rounded-full bg-gray-900 transition-all duration-300"
                         style={{
                           width: `${getVotePercentage(
                             voteCounts.yes,
@@ -1252,7 +1261,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
 
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-red-600 font-medium">{t('governance_no')}</span>
+                      <span className="font-medium text-gray-700">{t('governance_no')}</span>
                       <span className="text-sm text-gray-600">
                         {roundToTwoDecimals(voteCounts.no)} (
                         {getVotePercentage(voteCounts.no, totalVotes)}
@@ -1261,7 +1270,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
-                        className="bg-red-500 h-2 rounded-full transition-all duration-300"
+                        className="h-2 rounded-full bg-gray-600 transition-all duration-300"
                         style={{
                           width: `${getVotePercentage(
                             voteCounts.no,
@@ -1283,7 +1292,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
-                        className="bg-gray-500 h-2 rounded-full transition-all duration-300"
+                        className="h-2 rounded-full bg-gray-400 transition-all duration-300"
                         style={{
                           width: `${getVotePercentage(
                             voteCounts.abstain,
@@ -1313,7 +1322,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
             )}
 
             {/* Proposal Info */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="rounded-xl border border-gray-200 bg-white p-6">
               <h3 className="text-lg font-semibold mb-4">
                 {t('governance_proposal_information')}
               </h3>
@@ -1361,7 +1370,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                 {isActive && (
                   <div>
                     <span className="text-gray-600">{t('governance_time_remaining_label')}</span>
-                    <span className="ml-2 text-accent font-medium">
+                    <span className="ml-2 font-medium text-gray-900">
                       {getTimeRemaining(String(currentProposal.endDate || ''))}
                     </span>
                   </div>
@@ -1371,7 +1380,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
 
             {/* Verification Info */}
             {currentProposal.authorSignature && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="rounded-xl border border-gray-200 bg-white p-6">
                 <h3 className="text-lg font-semibold mb-4">{t('governance_verification')}</h3>
 
                 <div className="space-y-3 text-sm  ">
@@ -1393,6 +1402,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
             )}
           </div>
         </div>
+      </div>
       </div>
     </>
   );

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { WalletState } from 'closer/contexts/wallet';
+import { useLocale, useTranslations } from 'next-intl';
 
 interface Vote {
   id: string;
@@ -18,6 +19,8 @@ interface PastVotesProps {
 
 const PastVotes: React.FC<PastVotesProps> = ({ className }) => {
   const { isWalletReady, account } = useContext(WalletState);
+  const t = useTranslations();
+  const locale = useLocale();
   const [votes, setVotes] = useState<Vote[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -80,7 +83,7 @@ const PastVotes: React.FC<PastVotesProps> = ({ className }) => {
 
   // Format date
   const formatDate = (date: Date): string => {
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -103,16 +106,18 @@ const PastVotes: React.FC<PastVotesProps> = ({ className }) => {
 
   return (
     <div className={`p-4 border rounded-lg shadow-sm ${className}`}>
-      <h2 className="text-xl font-bold mb-4">Past Votes</h2>
+      <h2 className="text-xl font-bold mb-4">{t('governance_past_votes')}</h2>
       
       {!isWalletReady ? (
-        <p className="text-gray-500">Connect your wallet to see your past votes</p>
+        <p className="text-gray-500">
+          {t('governance_connect_wallet_to_see_past_votes')}
+        </p>
       ) : isLoading ? (
         <div className="flex justify-center items-center h-40">
-          <p>Loading past votes...</p>
+          <p>{t('governance_loading_past_votes')}</p>
         </div>
       ) : votes.length === 0 ? (
-        <p className="text-gray-500">No past votes found</p>
+        <p className="text-gray-500">{t('governance_no_past_votes_found')}</p>
       ) : (
         <div className="space-y-4">
           {votes.map((vote) => (
@@ -120,19 +125,21 @@ const PastVotes: React.FC<PastVotesProps> = ({ className }) => {
               <div className="flex justify-between items-start mb-2">
                 <h3 className="font-medium">{vote.proposalTitle}</h3>
                 <span className={`text-xs px-2 py-1 rounded-full ${getVoteBadgeColor(vote.vote)}`}>
-                  {vote.vote.toUpperCase()}
+                  {t(`governance_${vote.vote}`)}
                 </span>
               </div>
               
               <div className="flex justify-between text-sm text-gray-500 mb-2">
-                <span>Voted on {formatDate(vote.timestamp)}</span>
-                <span>Weight: {vote.weight.toFixed(2)}</span>
+                <span>
+                  {t('governance_voted_on', { date: formatDate(vote.timestamp) })}
+                </span>
+                <span>{t('governance_weight_label', { weight: vote.weight.toFixed(2) })}</span>
               </div>
               
               {vote.implemented && (
                 <div className="mt-2 text-sm">
                   <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
-                    Implemented
+                    {t('governance_implemented')}
                   </span>
                   {vote.implementationLink && (
                     <a
@@ -141,7 +148,7 @@ const PastVotes: React.FC<PastVotesProps> = ({ className }) => {
                       rel="noopener noreferrer"
                       className="ml-2 text-blue-600 hover:underline"
                     >
-                      View details
+                      {t('governance_view_details')}
                     </a>
                   )}
                 </div>

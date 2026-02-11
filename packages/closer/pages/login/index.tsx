@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { FormEvent, useContext, useEffect, useState } from 'react';
+import { FormEvent, useContext, useEffect, useRef, useState } from 'react';
 
 import GoogleButton from '../../components/GoogleButton';
 import TurnstileWidget from '../../components/TurnstileWidget';
@@ -67,6 +67,7 @@ const Login = () => {
   const [isLoginWithWallet, setisLoginWithWallet] = useState(false);
   const [selectedSwitcherOption, setSelectedSwitcherOption] = useState('Email');
   const [web3Error, setWeb3Error] = useState<string | null>(null);
+  const walletFlowInProgressRef = useRef(false);
 
   if (isAuthenticated && !hasSignedUp) {
     const redirectUrl = getRedirectUrl({
@@ -167,6 +168,10 @@ const Login = () => {
   const walletConnectAndSignInFlow = async (event: FormEvent) => {
     console.log('[walletConnectAndSignInFlow] called');
     event.preventDefault();
+    if (walletFlowInProgressRef.current || isWeb3Loading) {
+      return;
+    }
+    walletFlowInProgressRef.current = true;
     setWeb3Error(null);
     try {
       console.log('[walletConnectAndSignInFlow] calling connectWallet');
@@ -192,6 +197,8 @@ const Login = () => {
     } catch (error) {
       console.log('[walletConnectAndSignInFlow] error during flow:', error);
       setWeb3Error(parseMessageFromError(error));
+    } finally {
+      walletFlowInProgressRef.current = false;
     }
     console.log('[walletConnectAndSignInFlow] finished');
   };

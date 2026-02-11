@@ -16,7 +16,6 @@ import {
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
-import { usePlatform } from '../contexts/platform';
 import models from '../models';
 import { Channel, ChannelType } from '../types/channel';
 import api, { formatSearch } from '../utils/api';
@@ -60,6 +59,11 @@ interface ChannelMember {
   photo?: string;
 }
 
+const getChannelMemberIds = (channel: Channel): string[] =>
+  Array.from(
+    new Set([channel.createdBy, ...(channel.visibleBy || [])].filter(Boolean)),
+  );
+
 const ChannelHeader = ({
   channel,
   members,
@@ -76,18 +80,30 @@ const ChannelHeader = ({
   isEditing?: boolean;
   onToggleEdit?: () => void;
   t: TranslateFn;
-}) => (
-  <div className="sticky top-0 z-10 border-b border-line/20 bg-white px-4 py-3 flex items-center gap-3">
+}) => {
+  const cdn = process.env.NEXT_PUBLIC_CDN_URL;
+  return (
+  <div className="sticky top-0 z-10 border-b border-line/10 bg-white/95 backdrop-blur px-4 py-3 flex items-center gap-3">
     <button
       type="button"
       onClick={onBack}
-      className="lg:hidden min-h-[44px] min-w-[44px] p-2 -ml-2 rounded-lg hover:bg-neutral-light transition-colors flex items-center justify-center"
+      className="lg:hidden min-h-[40px] min-w-[40px] p-2 -ml-2 rounded-lg hover:bg-neutral-light transition-colors flex items-center justify-center"
     >
-      <ArrowLeft className="w-5 h-5 text-gray-600" />
+      <ArrowLeft className="w-4 h-4 text-gray-600" />
     </button>
 
+    {channel.photo && cdn ? (
+      <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 bg-neutral-light">
+        <img
+          src={`${cdn}${channel.photo}-post-md.jpg`}
+          alt=""
+          className="w-full h-full object-cover"
+        />
+      </div>
+    ) : null}
+
     <div className="flex-1 min-w-0">
-      <h2 className="text-sm font-bold text-foreground truncate">
+      <h2 className="text-[13px] font-semibold text-foreground truncate">
         {channel.name}
       </h2>
       <div className="flex items-center gap-2 mt-0.5">
@@ -103,7 +119,7 @@ const ChannelHeader = ({
                 </div>
               ))}
             </div>
-            <span className="text-xs text-gray-500 ml-1">
+            <span className="text-[11px] text-gray-500 ml-1">
               {members.length} {t('community_channel_members_count')}
             </span>
           </div>
@@ -117,8 +133,8 @@ const ChannelHeader = ({
         onClick={onToggleEdit}
         className={`p-2 rounded-lg transition-colors ${
           isEditing
-            ? 'bg-accent/10 text-accent'
-            : 'text-gray-400 hover:text-accent hover:bg-neutral-light'
+            ? 'bg-accent/[0.08] text-accent'
+            : 'text-gray-400 hover:text-accent hover:bg-neutral-light/80'
         }`}
         title={t('edit_channel_title')}
       >
@@ -126,9 +142,11 @@ const ChannelHeader = ({
       </button>
     )}
   </div>
-);
+  );
+};
 
 type ChannelTab = 'posts' | 'members';
+type SocialTab = ChannelTab | 'edit';
 
 const ChannelContentArea = ({
   channel,
@@ -136,6 +154,8 @@ const ChannelContentArea = ({
   onChannelUpdated,
   noteDismissed,
   onDismissNote,
+  initialTab,
+  onTabChange,
   t,
 }: {
   channel: Channel;
@@ -143,14 +163,17 @@ const ChannelContentArea = ({
   onChannelUpdated?: () => void;
   noteDismissed: boolean;
   onDismissNote: () => void;
+  initialTab: SocialTab;
+  onTabChange?: (tab: SocialTab) => void;
   t: TranslateFn;
 }) => {
   const { user } = useAuth();
-  const platform = usePlatform() as any;
   const [members, setMembers] = useState<ChannelMember[]>([]);
   const [pendingUsers, setPendingUsers] = useState<ChannelMember[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState<ChannelTab>('posts');
+  const [isEditing, setIsEditing] = useState(initialTab === 'edit');
+  const [activeTab, setActiveTab] = useState<ChannelTab>(
+    initialTab === 'members' ? 'members' : 'posts',
+  );
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
 
   const isOwner = channel.createdBy === user?._id;
@@ -158,28 +181,45 @@ const ChannelContentArea = ({
     user?.roles?.includes('admin') || isOwner;
 
   useEffect(() => {
+    if (initialTab === 'edit' && isAdmin) {
+      setIsEditing(true);
+      setActiveTab('posts');
+      return;
+    }
+
     setIsEditing(false);
-    setActiveTab('posts');
-  }, [channel._id]);
+    setActiveTab(initialTab === 'members' ? 'members' : 'posts');
+  }, [channel._id, initialTab, isAdmin]);
 
   useEffect(() => {
     const loadMembers = async () => {
+      const memberIds = getChannelMemberIds(channel);
+      if (memberIds.length === 0) {
+        setMembers([]);
+        return;
+      }
+
       try {
         const { data } = await api.get('/user', {
           params: {
-            where: formatSearch({ viewChannels: channel._id }),
+            where: formatSearch({ _id: { $in: memberIds } }),
             sort_by: '-created',
             limit: 200,
           },
         });
-        setMembers(data.results || []);
+        const byId = new Map((data.results || []).map((m: ChannelMember) => [m._id, m]));
+        setMembers(
+          memberIds
+            .map((id) => byId.get(id))
+            .filter((m): m is ChannelMember => Boolean(m)),
+        );
       } catch (err) {
         console.error('Load members error', err);
       }
     };
 
     loadMembers();
-  }, [channel._id]);
+  }, [channel._id, channel.createdBy, channel.visibleBy]);
 
   // Load pending users if owner and there are pending IDs
   useEffect(() => {
@@ -207,6 +247,7 @@ const ChannelContentArea = ({
 
   const handleEditSave = () => {
     setIsEditing(false);
+    onTabChange?.('posts');
     onChannelUpdated?.();
   };
 
@@ -221,14 +262,20 @@ const ChannelContentArea = ({
       });
       setPendingUsers((prev) => prev.filter((u) => u._id !== userId));
       // Reload members list to include new member
+      const memberIds = Array.from(new Set([channel.createdBy, ...newVisible]));
       const { data } = await api.get('/user', {
         params: {
-          where: formatSearch({ viewChannels: channel._id }),
+          where: formatSearch({ _id: { $in: memberIds } }),
           sort_by: '-created',
           limit: 200,
         },
       });
-      setMembers(data.results || []);
+      const byId = new Map((data.results || []).map((m: ChannelMember) => [m._id, m]));
+      setMembers(
+        memberIds
+          .map((id) => byId.get(id))
+          .filter((m): m is ChannelMember => Boolean(m)),
+      );
       onChannelUpdated?.();
     } catch (err) {
       console.error('Approve user error', err);
@@ -256,19 +303,29 @@ const ChannelContentArea = ({
   const pendingCount = isOwner ? (channel.pendingUserIds?.length || 0) : 0;
 
   return (
-    <div className="flex flex-col min-h-0">
+    <div className="flex flex-col min-h-0 bg-white rounded-none lg:rounded-2xl lg:m-3 lg:shadow-sm lg:border lg:border-line/10 overflow-hidden">
       <ChannelHeader
         channel={channel}
         members={members}
         onBack={onBack}
         isAdmin={!!isAdmin}
         isEditing={isEditing}
-        onToggleEdit={() => setIsEditing(!isEditing)}
+        onToggleEdit={() => {
+          if (isEditing) {
+            setIsEditing(false);
+            setActiveTab('posts');
+            onTabChange?.('posts');
+            return;
+          }
+
+          setIsEditing(true);
+          onTabChange?.('edit');
+        }}
         t={t}
       />
 
       {isEditing && isAdmin && (
-        <div className="border-b border-line/20 bg-neutral-light/30 p-4">
+        <div className="border-b border-line/10 bg-neutral-light/20 p-4">
           <EditModel
             id={channel._id}
             endpoint="/channel"
@@ -284,25 +341,33 @@ const ChannelContentArea = ({
       )}
 
       {!isEditing && (
-        <div className="flex border-b border-line/20 bg-white">
+        <div className="flex border-b border-line/10 bg-white px-2 pt-2">
           <button
             type="button"
-            onClick={() => setActiveTab('posts')}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors border-b-2 ${
+            onClick={() => {
+              setIsEditing(false);
+              setActiveTab('posts');
+              onTabChange?.('posts');
+            }}
+            className={`flex-1 py-2 text-sm font-medium transition-colors rounded-lg ${
               activeTab === 'posts'
-                ? 'border-accent text-accent'
-                : 'border-transparent text-gray-500 hover:text-foreground'
+                ? 'bg-accent/[0.08] text-accent'
+                : 'text-gray-500 hover:text-foreground hover:bg-neutral-light/70'
             }`}
           >
             {t('channel_tab_posts')}
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab('members')}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors border-b-2 flex items-center justify-center gap-1.5 ${
+            onClick={() => {
+              setIsEditing(false);
+              setActiveTab('members');
+              onTabChange?.('members');
+            }}
+            className={`flex-1 py-2 text-sm font-medium transition-colors rounded-lg flex items-center justify-center gap-1.5 ${
               activeTab === 'members'
-                ? 'border-accent text-accent'
-                : 'border-transparent text-gray-500 hover:text-foreground'
+                ? 'bg-accent/[0.08] text-accent'
+                : 'text-gray-500 hover:text-foreground hover:bg-neutral-light/70'
             }`}
           >
             {t('channel_tab_members')}
@@ -318,7 +383,7 @@ const ChannelContentArea = ({
       {!isEditing && activeTab === 'posts' && (
         <>
           {!noteDismissed && (
-            <div className="px-4 py-2 border-b border-line/10 flex items-start gap-2">
+            <div className="mx-3 mt-3 px-3 py-2 border border-line/10 rounded-lg bg-neutral-light/20 flex items-start gap-2">
               <p className="text-xs text-gray-500 flex-1">{t(channelManagedNoteKey(channel.channelType))}</p>
               <button
                 type="button"
@@ -332,12 +397,12 @@ const ChannelContentArea = ({
           )}
 
           {channel.description && (
-            <div className="px-4 py-2 bg-neutral-light/50 border-b border-line/10">
+            <div className="mx-3 mt-2 px-3 py-2 bg-neutral-light/30 border border-line/10 rounded-lg">
               <p className="text-xs text-gray-500">{channel.description}</p>
             </div>
           )}
 
-          <div className="p-4">
+          <div className="p-3 lg:p-4">
             <PostList
               allowCreate
               parentType="channel"
@@ -349,7 +414,7 @@ const ChannelContentArea = ({
       )}
 
       {!isEditing && activeTab === 'members' && (
-        <div className="p-4">
+        <div className="p-4 lg:p-5">
           {/* Pending join requests (visible to channel owner only) */}
           {isOwner && pendingUsers.length > 0 && (
             <div className="mb-6">
@@ -360,7 +425,7 @@ const ChannelContentArea = ({
                 {pendingUsers.map((pendingUser) => (
                   <div
                     key={pendingUser._id}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-amber-50 border border-amber-200"
+                    className="flex items-center gap-3 p-3 rounded-xl bg-amber-50/60 border border-amber-200/70"
                   >
                     <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
                       <ProfilePhoto user={pendingUser} size="9" stack={false} />
@@ -375,7 +440,7 @@ const ChannelContentArea = ({
                         type="button"
                         onClick={() => handleApproveUser(pendingUser._id)}
                         disabled={actionLoading[pendingUser._id]}
-                        className="min-h-[36px] min-w-[36px] p-2 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-colors disabled:opacity-50"
+                        className="min-h-[36px] min-w-[36px] p-2 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-colors disabled:opacity-50 shadow-sm"
                         title={t('channel_approve_user')}
                       >
                         <Check className="w-4 h-4" />
@@ -384,7 +449,7 @@ const ChannelContentArea = ({
                         type="button"
                         onClick={() => handleRejectUser(pendingUser._id)}
                         disabled={actionLoading[pendingUser._id]}
-                        className="min-h-[36px] min-w-[36px] p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors disabled:opacity-50"
+                        className="min-h-[36px] min-w-[36px] p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors disabled:opacity-50 shadow-sm"
                         title={t('channel_reject_user')}
                       >
                         <XCircle className="w-4 h-4" />
@@ -396,18 +461,22 @@ const ChannelContentArea = ({
             </div>
           )}
 
-          {/* All channel members */}
+          {/* All channel members (owner first, then others) */}
           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
             {t('channel_members_list')} ({members.length})
           </h3>
           {members.length === 0 ? (
             <p className="text-sm text-gray-500">{t('channel_no_members')}</p>
           ) : (
-            <div className="space-y-1">
-              {members.map((member) => (
+            <div className="space-y-1.5">
+              {[...members]
+                .sort((a, b) =>
+                  a._id === channel.createdBy ? -1 : b._id === channel.createdBy ? 1 : 0,
+                )
+                .map((member) => (
                 <div
                   key={member._id}
-                  className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-neutral-light/50 transition-colors"
+                  className="flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:border-line/10 hover:bg-neutral-light/40 transition-colors"
                 >
                   <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
                     <ProfilePhoto user={member} size="9" stack={false} />
@@ -433,15 +502,15 @@ const ChannelContentArea = ({
 };
 
 const EmptyContentArea = ({ t }: { t: TranslateFn }) => (
-  <div className="flex-1 flex items-center justify-center bg-neutral-light/30">
+  <div className="flex-1 flex items-center justify-center bg-white lg:m-3 lg:rounded-2xl lg:border lg:border-line/10">
     <div className="text-center px-6">
-      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/5 flex items-center justify-center">
-        <MessageSquare className="w-8 h-8 text-accent/40" />
+      <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-accent/5 flex items-center justify-center">
+        <MessageSquare className="w-7 h-7 text-accent/40" />
       </div>
-      <h3 className="text-base font-semibold text-gray-400 mb-1">
+      <h3 className="text-sm font-semibold text-gray-500 mb-1">
         {t('community_select_channel')}
       </h3>
-      <p className="text-sm text-gray-400">
+      <p className="text-sm text-gray-400 max-w-sm">
         {t('community_select_channel_description')}
       </p>
     </div>
@@ -476,22 +545,33 @@ const ChannelPreviewJoin = ({
 
   useEffect(() => {
     const loadMembers = async () => {
+      const memberIds = getChannelMemberIds(channel).slice(0, 20);
+      if (memberIds.length === 0) {
+        setMembers([]);
+        return;
+      }
+
       try {
         const { data } = await api.get('/user', {
           params: {
-            where: formatSearch({ viewChannels: channel._id }),
+            where: formatSearch({ _id: { $in: memberIds } }),
             sort_by: '-created',
             limit: 20,
           },
         });
-        setMembers(data.results || []);
+        const byId = new Map((data.results || []).map((m: ChannelMember) => [m._id, m]));
+        setMembers(
+          memberIds
+            .map((id) => byId.get(id))
+            .filter((m): m is ChannelMember => Boolean(m)),
+        );
       } catch (err) {
         console.error('Load members error', err);
       }
     };
 
     loadMembers();
-  }, [channel._id]);
+  }, [channel._id, channel.createdBy, channel.visibleBy]);
 
   const isGround = channel.channelType === 'ground';
   const isSeason = channel.channelType === 'season';
@@ -510,7 +590,7 @@ const ChannelPreviewJoin = ({
   const presenceHintUserDays = subscribeState.userPresence ?? userPresence;
 
   return (
-    <div className="flex flex-col min-h-0">
+    <div className="flex flex-col min-h-0 bg-white rounded-none lg:rounded-2xl lg:m-3 lg:shadow-sm lg:border lg:border-line/10 overflow-hidden">
       <ChannelHeader
         channel={channel}
         members={members}
@@ -520,7 +600,7 @@ const ChannelPreviewJoin = ({
       />
 
       {!noteDismissed && (
-        <div className="px-4 py-2 border-b border-line/10 flex items-start gap-2">
+        <div className="mx-3 mt-3 px-3 py-2 border border-line/10 rounded-lg bg-neutral-light/20 flex items-start gap-2">
           <p className="text-xs text-gray-500 flex-1">{t(channelManagedNoteKey(channel.channelType))}</p>
           <button
             type="button"
@@ -534,12 +614,12 @@ const ChannelPreviewJoin = ({
       )}
 
       {channel.description && (
-        <div className="px-4 py-2 bg-neutral-light/50 border-b border-line/10">
+        <div className="mx-3 mt-2 px-3 py-2 bg-neutral-light/30 border border-line/10 rounded-lg">
           <p className="text-xs text-gray-500">{channel.description}</p>
         </div>
       )}
 
-      <div className="p-4 flex flex-col gap-5">
+      <div className="p-4 lg:p-5 flex flex-col gap-5">
         {isAutoManaged ? (
           <p className="text-sm text-gray-600">
             {isGround ? t('community_channel_ground_managed') : t('community_channel_season_managed')}
@@ -567,7 +647,7 @@ const ChannelPreviewJoin = ({
                 type="button"
                 disabled={!hasEnoughPresence || subscribeState.status === 'loading'}
                 onClick={() => onSubscribe(channel._id)}
-                className="w-full min-h-[44px] px-4 py-2 rounded-lg font-medium text-white bg-accent hover:bg-accent-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full min-h-[44px] px-4 py-2 rounded-lg font-medium text-white bg-accent hover:bg-accent-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
               >
                 {subscribeState.status === 'loading'
                   ? '...'
@@ -642,7 +722,6 @@ const MemberHome = ({
   const t = useTranslations() as TranslateFn;
   const router = useRouter();
   const { user, isLoading, refetchUser } = useAuth();
-  const platform = usePlatform() as any;
   const [channels, setChannels] = useState<Channel[]>([]);
   const [channelsLoading, setChannelsLoading] = useState(true);
   const [channelsError, setChannelsError] = useState<string | null>(null);
@@ -657,7 +736,13 @@ const MemberHome = ({
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
   const currentSlug =
-    (router.query.channel as string) || initialChannelSlug || null;
+    typeof router.query.channel === 'string'
+      ? router.query.channel
+      : initialChannelSlug || null;
+  const requestedTab =
+    router.query.tab === 'members' || router.query.tab === 'edit'
+      ? (router.query.tab as SocialTab)
+      : 'posts';
   const userPresence =
     (user?.stats?.wallet?.presence ?? user?.presence ?? 0) as number;
 
@@ -671,19 +756,6 @@ const MemberHome = ({
         });
         const results = data.results || [];
         setChannels(results);
-        if (results.length > 0 && !selectedChannel) {
-          const displayable = results.filter(
-            (ch: Channel) =>
-              ch.channelType !== 'ground' ||
-              ch.visibleBy?.includes(user?._id || ''),
-          );
-          const match = currentSlug
-            ? displayable.find((ch: Channel) => ch.slug === currentSlug)
-            : null;
-          const toSelect = currentSlug ? (match || displayable[0]) : null;
-          setSelectedChannel(toSelect);
-          setMobileShowContent(!!toSelect);
-        }
       } catch (err: any) {
         console.error('Load channels error', err);
         setChannelsError(err.message);
@@ -694,6 +766,30 @@ const MemberHome = ({
 
     loadChannels();
   }, [channelListKey, user?._id]);
+
+  useEffect(() => {
+    if (channels.length === 0) {
+      setSelectedChannel(null);
+      setMobileShowContent(false);
+      return;
+    }
+
+    const displayable = channels.filter(
+      (ch: Channel) =>
+        ch.channelType !== 'ground' || ch.visibleBy?.includes(user?._id || ''),
+    );
+
+    if (!currentSlug) {
+      setSelectedChannel(null);
+      setMobileShowContent(false);
+      return;
+    }
+
+    const match = displayable.find((ch: Channel) => ch.slug === currentSlug);
+    const toSelect = match || displayable[0] || null;
+    setSelectedChannel(toSelect);
+    setMobileShowContent(!!toSelect);
+  }, [channels, currentSlug, user?._id]);
 
   // Fetch unread post counts for all joined channels
   useEffect(() => {
@@ -712,7 +808,11 @@ const MemberHome = ({
       await Promise.all(
         joinedChannels.map(async (ch) => {
           try {
-            const lastFetched = socialSettings[ch.slug];
+            const entry = socialSettings[ch._id];
+            const lastFetched =
+              (typeof entry === 'object' && entry !== null && 'lastFetched' in entry
+                ? (entry as { lastFetched?: string }).lastFetched
+                : null) ?? (typeof socialSettings[ch.slug] === 'string' ? socialSettings[ch.slug] : null);
             const where: Record<string, any> = { channel: ch._id };
             if (lastFetched) {
               where.created = { $gt: lastFetched };
@@ -738,22 +838,28 @@ const MemberHome = ({
     fetchUnreadCounts();
   }, [channels, user?._id, channelListKey]);
 
-  // Save lastFetched timestamp when viewing a channel
   const saveLastFetched = async (channel: Channel) => {
-    if (!user || !platform?.user?.patch) return;
+    if (!user) return;
     try {
       const now = new Date().toISOString();
-      const currentSocial = user.settings?.social || {};
-      await platform.user.patch(user._id, {
+      const currentSocial = (user.settings?.social || {}) as Record<
+        string,
+        { lastFetched?: string } | string
+      >;
+      const existing = currentSocial[channel._id];
+      const existingObj =
+        typeof existing === 'object' && existing !== null && !Array.isArray(existing)
+          ? existing
+          : {};
+      await api.patch('/mine/user', {
         settings: {
           ...user.settings,
           social: {
             ...currentSocial,
-            [channel.slug]: now,
+            [channel._id]: { ...existingObj, lastFetched: now },
           },
         },
       });
-      // Clear unread count for this channel locally
       setUnreadCounts((prev) => {
         const next = { ...prev };
         delete next[channel._id];
@@ -764,6 +870,17 @@ const MemberHome = ({
       console.error('Failed to save lastFetched', err);
     }
   };
+
+  useEffect(() => {
+    if (
+      !user ||
+      !selectedChannel ||
+      (!selectedChannel.visibleBy?.includes(user._id) &&
+        selectedChannel.createdBy !== user._id)
+    )
+      return;
+    saveLastFetched(selectedChannel);
+  }, [selectedChannel?._id, user?._id]);
 
   const handleSubscribe = async (channelId: string) => {
     const channel = channels.find((c) => c._id === channelId);
@@ -844,14 +961,29 @@ const MemberHome = ({
     setSelectedChannel(channel);
     setMobileShowContent(true);
     router.push(
-      { pathname: '/social', query: { channel: channel.slug } },
+      {
+        pathname: '/social/[channel]',
+        query: { channel: channel.slug },
+      },
       undefined,
       { shallow: true },
     );
-    // Save lastFetched timestamp if user has access to this channel
-    if (channel.visibleBy?.includes(user?._id || '') || channel.createdBy === user?._id) {
-      saveLastFetched(channel);
-    }
+  };
+
+  const handleTabChange = (tab: SocialTab) => {
+    if (!selectedChannel?.slug) return;
+
+    router.push(
+      {
+        pathname: '/social/[channel]',
+        query:
+          tab === 'posts'
+            ? { channel: selectedChannel.slug }
+            : { channel: selectedChannel.slug, tab },
+      },
+      undefined,
+      { shallow: true },
+    );
   };
 
   const handleBack = () => {
@@ -867,41 +999,41 @@ const MemberHome = ({
   if (isLoading || !user) {
     return (
       <main className="main-content w-full">
-        <div className="flex h-[calc(100vh-64px)]">
-          <div className="w-80 border-r border-line/20 bg-white animate-pulse">
-            <div className="p-4 border-b border-line/20">
+        <div className="flex h-[calc(100vh-64px)] bg-neutral-light/20">
+          <div className="w-80 border-r border-line/10 bg-white animate-pulse">
+            <div className="p-4 border-b border-line/10">
               <div className="h-6 bg-neutral rounded w-1/2" />
             </div>
             <div className="p-3 space-y-3">
               {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex items-center gap-3 p-2">
-                  <div className="w-10 h-10 bg-neutral rounded-full" />
+                <div key={i} className="flex items-center gap-2.5 p-2">
+                  <div className="w-9 h-9 bg-neutral rounded-full" />
                   <div className="flex-1">
-                    <div className="h-3.5 bg-neutral rounded w-2/3 mb-1.5" />
-                    <div className="h-3 bg-neutral rounded w-full" />
+                    <div className="h-3 bg-neutral rounded w-2/3 mb-1" />
+                    <div className="h-2.5 bg-neutral rounded w-full" />
                   </div>
                 </div>
               ))}
             </div>
           </div>
-          <div className="flex-1 bg-neutral-light/30" />
+          <div className="flex-1 bg-neutral-light/10" />
         </div>
       </main>
     );
   }
 
   return (
-    <main className="main-content w-full pb-16 lg:pb-0">
-      <div className="flex min-h-[calc(100vh-64px)]">
+    <main className="main-content w-full pt-28 pb-0 lg:pt-0">
+      <div className="flex min-h-[calc(100vh-64px)] bg-neutral-light/15">
         <div
-          className={`w-full lg:w-80 lg:flex-shrink-0 border-r border-line/20 bg-white lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto flex flex-col ${
+          className={`w-full lg:w-80 lg:flex-shrink-0 border-r border-line/10 bg-white lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto flex flex-col ${
             mobileShowContent ? 'hidden lg:flex' : 'flex'
           }`}
         >
-          <div className="sticky top-0 z-10 px-4 py-3 border-b border-line/20 bg-white flex items-center justify-between flex-shrink-0">
+          <div className="sticky top-0 z-10 px-4 py-3 border-b border-line/10 bg-white/95 backdrop-blur flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-accent" />
-              <h1 className="text-base font-bold text-foreground">
+              <MessageSquare className="w-4 h-4 text-accent" />
+              <h1 className="text-[15px] font-semibold text-foreground">
                 {t('community_title')}
               </h1>
             </div>
@@ -909,10 +1041,10 @@ const MemberHome = ({
               <button
                 type="button"
                 onClick={() => setShowCreateModal(true)}
-                className="min-h-[44px] min-w-[44px] p-2 rounded-lg hover:bg-neutral-light transition-colors flex items-center justify-center"
+                className="min-h-[40px] min-w-[40px] p-2 rounded-lg hover:bg-neutral-light transition-colors flex items-center justify-center"
                 title={t('member_home_add_channel')}
               >
-                <Plus className="w-5 h-5 text-accent" />
+                <Plus className="w-4 h-4 text-accent" />
               </button>
             )}
           </div>
@@ -935,10 +1067,10 @@ const MemberHome = ({
 
           <OnGroundUsers bookingConfig={bookingConfig} />
 
-          <div className="border-t border-line/20 p-3 flex-shrink-0">
+          <div className="border-t border-line/10 p-3 flex-shrink-0">
             <Link
               href="/members"
-              className="flex items-center gap-2 min-h-[44px] px-3 py-3 rounded-lg hover:bg-neutral-light transition-colors text-sm text-gray-600"
+              className="flex items-center gap-2 min-h-[40px] px-3 py-2.5 rounded-xl hover:bg-neutral-light transition-colors text-sm text-gray-600"
             >
               <Users className="w-4 h-4" />
               <span>{t('community_browse_members')}</span>
@@ -947,7 +1079,7 @@ const MemberHome = ({
         </div>
 
         <div
-          className={`flex-1 flex flex-col bg-neutral-light/20 min-w-0 ${
+          className={`flex-1 flex flex-col bg-neutral-light/10 min-w-0 ${
             mobileShowContent ? 'flex' : 'hidden lg:flex'
           }`}
         >
@@ -960,6 +1092,8 @@ const MemberHome = ({
                 onChannelUpdated={() => setChannelListKey((k) => k + 1)}
                 noteDismissed={channelManagementNoteDismissed}
                 onDismissNote={() => setChannelManagementNoteDismissed(true)}
+                initialTab={requestedTab}
+                onTabChange={handleTabChange}
                 t={t}
               />
             ) : (
@@ -981,7 +1115,7 @@ const MemberHome = ({
         </div>
       </div>
 
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 border-t border-line/20 bg-white flex z-20 pb-[env(safe-area-inset-bottom)]">
+      <div className="lg:hidden fixed top-16 left-0 right-0 border-b border-line/10 bg-white/95 backdrop-blur flex z-20">
         <button
           type="button"
           onClick={() => setMobileShowContent(false)}

@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { useAuth } from 'closer/contexts/auth';
 import { usePlatform } from 'closer/contexts/platform';
 import { Proposal } from 'closer/types';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 interface ProposalCommentsProps {
   proposal: Proposal;
@@ -34,12 +34,14 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
   const { user } = useAuth();
   const { platform } = usePlatform() as any;
   const t = useTranslations();
+  const locale = useLocale();
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hasLoaded = useRef(false);
+  const loadedReplyParents = useRef<Set<string>>(new Set());
 
   // Filter for comments
   const commentFilter = {
@@ -81,6 +83,25 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
       }
     }
   }, [commentsMap, platform?.user]);
+
+  // Load replies for each top-level comment
+  useEffect(() => {
+    if (!platform?.post || commentsMap.size === 0) return;
+
+    Array.from(commentsMap.values()).forEach((comment: any) => {
+      const commentId = comment.get('_id');
+      if (!commentId || loadedReplyParents.current.has(commentId)) return;
+
+      loadedReplyParents.current.add(commentId);
+      platform.post.get({
+        where: {
+          parentType: 'post',
+          parentId: commentId,
+        },
+        limit: 1000,
+      });
+    });
+  }, [commentsMap, platform?.post]);
 
   // Load replies for each comment - recalculate whenever commentsMap changes
   const commentsWithReplies = useMemo(() => {
@@ -191,7 +212,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
         stack: err instanceof Error ? err.stack : undefined,
         err: err,
       });
-      setError('Failed to submit comment');
+      setError(t('governance_failed_submit_comment'));
     } finally {
       console.log('ProposalComments: Setting isSubmitting to false');
       setIsSubmitting(false);
@@ -230,26 +251,32 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
       setReplyingTo(null);
 
       // Manually add the new reply to the platform context
-      if (response?.results) {
+      const createdReply = response?.results || response?.data?.results;
+      if (createdReply) {
         console.log(
           'ProposalComments: Manually adding reply to platform context',
         );
-        platform.post.set(response.results);
+        platform.post.set(createdReply);
       }
 
-      // Also try to refetch to ensure we have the latest data
-      console.log('ProposalComments: About to reload comments after reply');
-      platform.post.get(commentFilter);
+      // Refetch replies for this parent to sync replyCount/content updates
+      platform.post.get({
+        where: {
+          parentType: 'post',
+          parentId: parentCommentId,
+        },
+        limit: 1000,
+      });
     } catch (err) {
       console.error('ProposalComments: Error submitting reply:', err);
-      setError('Failed to submit reply');
+      setError(t('governance_failed_submit_reply'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -261,24 +288,24 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
   const renderComment = (comment: Comment, isReply = false) => {
     const author = getUserData(comment.createdBy);
     return (
-      <div key={comment._id} className={`${isReply ? 'ml-8 mt-3' : 'mb-6'}`}>
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="flex items-start space-x-3">
-            <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center text-white text-sm font-medium">
+      <div key={comment._id} className={`${isReply ? 'ml-6 mt-2' : 'mb-4'}`}>
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <div className="flex items-start space-x-2.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-900 text-xs font-medium text-white">
               {(author?.screenname || author?.email || 'U')
                 .charAt(0)
                 .toUpperCase()}
             </div>
             <div className="flex-1">
-              <div className="flex items-center space-x-2 mb-2">
-                <span className="font-medium text-gray-900">
-                  {author?.screenname || author?.email || 'Anonymous'}
+              <div className="mb-1.5 flex items-center space-x-2">
+                <span className="text-sm font-medium text-gray-900">
+                  {author?.screenname || author?.email || t('governance_anonymous')}
                 </span>
-                <span className="text-sm text-gray-500">
+                <span className="text-xs text-gray-500">
                   {formatDate(comment.created)}
                 </span>
               </div>
-              <div className="markdown text-gray-700 break-words">
+              <div className="markdown break-words text-sm text-gray-700">
                 <ReactMarkdown>{comment.content}</ReactMarkdown>
               </div>
               {!isReply && (
@@ -288,7 +315,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
                       replyingTo === comment._id ? null : comment._id,
                     )
                   }
-                  className="mt-2 text-sm text-accent hover:text-accent-dark"
+                  className="mt-1.5 text-xs font-medium text-gray-600 hover:text-gray-900"
                 >
                   {t('governance_reply')}
                 </button>
@@ -301,21 +328,21 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
         {replyingTo === comment._id && (
           <form
             onSubmit={(e) => handleSubmitReply(e, comment._id)}
-            className="mt-3"
+            className="mt-2"
           >
             <div className="flex space-x-2">
               <textarea
                 value={replyContent}
                 onChange={(e) => setReplyContent(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
+                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
                 rows={2}
                 placeholder={t('governance_write_reply')}
               />
-              <div className="flex flex-col space-y-1">
+              <div className="flex flex-col space-y-1.5">
                 <button
                   type="submit"
                   disabled={isSubmitting || !replyContent.trim()}
-                  className="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent-dark disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-md bg-gray-900 px-3 py-2 text-xs font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {t('governance_reply')}
                 </button>
@@ -325,7 +352,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
                     setReplyingTo(null);
                     setReplyContent('');
                   }}
-                  className="px-4 py-2 text-gray-500 hover:text-gray-700"
+                  className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700"
                 >
                   {t('governance_cancel')}
                 </button>
@@ -346,9 +373,9 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
 
   return (
     <div
-      className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}
+      className={`rounded-xl border border-gray-200 bg-white p-5 ${className}`}
     >
-      <h3 className="text-lg font-semibold mb-4">
+      <h3 className="mb-3 text-base font-semibold">
         {t('governance_comments')} ({commentsWithReplies.length})
       </h3>
 
@@ -359,10 +386,10 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
             console.log('ProposalComments: Form submit event triggered');
             handleSubmitComment(e);
           }}
-          className="mb-6"
+          className="mb-4"
         >
-          <div className="flex space-x-3">
-            <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center text-white text-sm font-medium">
+          <div className="flex space-x-2.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-900 text-xs font-medium text-white">
               {(user.screenname || user.email || 'U').charAt(0).toUpperCase()}
             </div>
             <div className="flex-1">
@@ -375,11 +402,11 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
                   );
                   setNewComment(e.target.value);
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
-                rows={3}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                rows={2}
                 placeholder={t('governance_write_comment')}
               />
-              <div className="flex justify-end mt-2">
+              <div className="mt-2 flex justify-end">
                 <button
                   type="submit"
                   disabled={isSubmitting || !newComment.trim()}
@@ -390,7 +417,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
                       newComment: newComment,
                     });
                   }}
-                  className="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent-dark disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isSubmitting
                     ? t('governance_posting')
@@ -403,13 +430,13 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
       )}
 
       {!user && (
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg text-center">
-          <p className="text-gray-600">{t('governance_login_to_comment')}</p>
+        <div className="mb-4 rounded-lg bg-gray-50 p-3 text-center">
+          <p className="text-sm text-gray-600">{t('governance_login_to_comment')}</p>
         </div>
       )}
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+        <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3">
           <p className="text-red-800 text-sm">{error}</p>
         </div>
       )}
@@ -420,11 +447,11 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
           <p className="text-gray-500">{t('governance_loading_comments')}</p>
         </div>
       ) : commentsWithReplies.length === 0 ? (
-        <div className="text-center py-8">
+        <div className="py-6 text-center">
           <p className="text-gray-500">{t('governance_no_comments_yet')}</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {commentsWithReplies.map((comment: Comment) =>
             renderComment(comment),
           )}

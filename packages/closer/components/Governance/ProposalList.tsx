@@ -1,11 +1,10 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import React, { useContext, useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 
 import { useAuth } from 'closer/contexts/auth';
 import { usePlatform } from 'closer/contexts/platform';
-import { WalletState } from 'closer/contexts/wallet';
 import { useTranslations } from 'next-intl';
 
 interface ProposalListProps {
@@ -14,7 +13,6 @@ interface ProposalListProps {
 
 const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
   const router = useRouter();
-  useContext(WalletState);
   const { user } = useAuth();
   const { platform } = usePlatform() as any;
   const t = useTranslations();
@@ -24,21 +22,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
   const filter = (router.query.filter as string) || 'all';
   const shouldRefetch = router.query.refetch === 'true';
 
-  // Build query based on filter
-  const getQuery = () => {
-    switch (filter) {
-      case 'active':
-        return { where: { status: 'active' } };
-      case 'closed':
-        return { where: { status: 'closed' } };
-      case 'yours':
-        return { where: { createdBy: user?._id } };
-      default:
-        return {};
-    }
-  };
-
-  const query = getQuery();
+  const query = useMemo(() => ({}), []);
 
   // Fetch proposals from platform context using immutable structures
   const proposalsMap = platform.proposal.find(query) || new Map();
@@ -54,22 +38,19 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
         // Silently handle error - proposals will show as empty
       }
     }
-  }, [platform, query, shouldRefetch]);
+  }, [platform?.proposal, query, shouldRefetch]);
 
-  // Reload when filter changes
+  // Reload when user changes (for "yours" view freshness)
   useEffect(() => {
-    if (platform?.proposal && filter !== 'all') {
+    if (platform?.proposal && user?._id) {
       platform.proposal.get(query);
     }
-  }, [filter, user?._id]);
+  }, [platform?.proposal, query, user?._id]);
 
   // Handle refetch parameter
   useEffect(() => {
     if (shouldRefetch && platform?.proposal) {
-      console.log('ProposalList: Triggering refetch with query:', query);
-      // Force a fresh fetch by using a unique query key
-      const refetchQuery = { ...query, _refetch: Date.now() };
-      platform.proposal.get(refetchQuery);
+      platform.proposal.get(query);
 
       // Clear refetch parameter from URL after triggering refetch
       const { refetch: _refetch, ...queryWithoutRefetch } = router.query;
@@ -82,7 +63,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
         { shallow: true },
       );
     }
-  }, [shouldRefetch, platform?.proposal, query]);
+  }, [query, router, shouldRefetch, platform?.proposal]);
 
   // Load users after proposals are loaded
   useEffect(() => {
@@ -222,17 +203,52 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
     return { status: 'draft', displayText: currentStatus?.toUpperCase() || t('governance_status_unknown') };
   };
 
+  const proposalItems = Array.from(proposalsMap.values()).filter(
+    (proposal: any) => {
+      if (!proposal?.get || !proposal.get('_id')) return false;
+
+      if (filter === 'yours') {
+        return proposal.get('createdBy') === user?._id;
+      }
+
+      if (filter === 'active') {
+        return getEffectiveStatus(proposal).status === 'active';
+      }
+
+      if (filter === 'closed') {
+        const status = getEffectiveStatus(proposal).status;
+        return status === 'passed' || status === 'failed';
+      }
+
+      return true;
+    },
+  );
+
+  const activeProposalsCount = proposalItems.filter(
+    (proposal: any) => getEffectiveStatus(proposal).status === 'active',
+  ).length;
+
+  const displayedProposals =
+    filter === 'all'
+      ? [...proposalItems].sort((a: any, b: any) => {
+          const aIsActive = getEffectiveStatus(a).status === 'active';
+          const bIsActive = getEffectiveStatus(b).status === 'active';
+          if (aIsActive === bIsActive) return 0;
+          return aIsActive ? -1 : 1;
+        })
+      : proposalItems;
+
   // Get status color classes
   const getStatusColor = (status: 'draft' | 'active' | 'passed' | 'failed'): string => {
     switch (status) {
       case 'draft':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-gray-100 text-gray-600';
       case 'active':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gray-900 text-white';
       case 'passed':
-        return 'bg-emerald-100 text-emerald-800';
+        return 'bg-gray-200 text-gray-800';
       case 'failed':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gray-200 text-gray-700';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -246,7 +262,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
   // Check if platform context is available
   if (!platform?.proposal || !platform?.user) {
     return (
-      <div className={`p-4 border rounded-lg shadow-sm ${className}`}>
+      <div className={`rounded-2xl border border-gray-200 bg-white p-6 ${className}`}>
         <div className="text-center py-8">
           <p className="text-gray-500">
             {t('governance_platform_not_available')}
@@ -257,40 +273,53 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
   }
 
   return (
-    <div className={`p-4 border rounded-lg shadow-sm ${className}`}>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">
-          {t('governance_proposals')} ({proposalsMap.size})
-        </h2>
-        <div className="flex space-x-2">
+    <div className={`rounded-2xl border border-gray-200 bg-white p-6 ${className}`}>
+      <div className="mb-6 flex flex-col gap-4 border-b border-gray-100 pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-semibold tracking-tight text-gray-900">
+            {t('governance_proposals')}
+          </h2>
+          <p className="text-sm text-gray-500">
+            {proposalItems.length} total • {activeProposalsCount} {t('governance_active').toLowerCase()}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2 justify-start sm:justify-end">
           <button
             onClick={() => handleFilterChange('all')}
-            className={`px-3 py-1 text-sm rounded-full ${
-              filter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200'
+            className={`rounded-full border px-3 py-1.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 ${
+              filter === 'all'
+                ? 'border-gray-900 bg-gray-900 text-white'
+                : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
             }`}
           >
             {t('governance_all')}
           </button>
           <button
             onClick={() => handleFilterChange('active')}
-            className={`px-3 py-1 text-sm rounded-full ${
-              filter === 'active' ? 'bg-blue-600 text-white' : 'bg-gray-200'
+            className={`rounded-full border px-3 py-1.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 ${
+              filter === 'active'
+                ? 'border-gray-900 bg-gray-900 text-white'
+                : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
             }`}
           >
             {t('governance_active')}
           </button>
           <button
             onClick={() => handleFilterChange('closed')}
-            className={`px-3 py-1 text-sm rounded-full ${
-              filter === 'closed' ? 'bg-blue-600 text-white' : 'bg-gray-200'
+            className={`rounded-full border px-3 py-1.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 ${
+              filter === 'closed'
+                ? 'border-gray-900 bg-gray-900 text-white'
+                : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
             }`}
           >
             {t('governance_closed')}
           </button>
           <button
             onClick={() => handleFilterChange('yours')}
-            className={`px-3 py-1 text-sm rounded-full ${
-              filter === 'yours' ? 'bg-blue-600 text-white' : 'bg-gray-200'
+            className={`rounded-full border px-3 py-1.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300 ${
+              filter === 'yours'
+                ? 'border-gray-900 bg-gray-900 text-white'
+                : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
             }`}
           >
             {t('governance_yours')}
@@ -302,13 +331,13 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
         <div className="flex justify-center items-center h-40">
           <p>{t('governance_loading_proposals')}</p>
         </div>
-      ) : proposalsMap.size === 0 ? (
+      ) : proposalItems.length === 0 ? (
         <div className="flex justify-center items-center h-40">
           <p className="text-gray-500">{t('governance_no_proposals_found')}</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {Array.from(proposalsMap.values()).map((proposal: any) => {
+        <div className="space-y-3">
+          {displayedProposals.map((proposal: any) => {
             // Ensure we have the required fields
             if (!proposal.get('_id')) {
               return null;
@@ -317,6 +346,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
             const effectiveStatus = getEffectiveStatus(proposal);
             const endDate = proposal.get('endDate');
             const isVotingEnded = endDate && new Date(endDate).getTime() <= new Date().getTime();
+            const isOpen = effectiveStatus.status === 'active';
 
             return (
               <Link
@@ -326,21 +356,25 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
                     ? `/governance/${proposal.get('slug')}`
                     : `/governance/${proposal.get('_id')}`
                 }
-                className="block p-4 border rounded-lg hover:border-blue-500 cursor-pointer transition-colors"
+                className={`block rounded-xl border p-4 transition ${
+                  isOpen
+                    ? 'border-gray-900 bg-white shadow-sm'
+                    : 'border-gray-200 bg-gray-50/60 hover:bg-gray-50'
+                }`}
               >
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-lg font-semibold flex-1 pr-4">
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <h3 className="flex-1 pr-2 text-lg font-medium text-gray-900">
                     {proposal.get('title') || t('governance_untitled_proposal')}
                   </h3>
                   <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${getStatusColor(
                       effectiveStatus.status,
                     )}`}
                   >
                     {effectiveStatus.displayText}
                   </span>
                 </div>
-                <p className="text-sm text-gray-500 mb-3">
+                <p className="mb-3 text-sm text-gray-500">
                   {t('governance_submitted_by')} @
                   {getUserScreenname(proposal.get('createdBy'))} •
                   {effectiveStatus.status === 'active' && endDate && !isVotingEnded
@@ -352,12 +386,12 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
                     : ''}
                 </p>
 
-                <div className="flex justify-between items-center">
+                <div className="flex items-center justify-between">
                   {(() => {
                     const proposalStatus = proposal.get('status');
                     if (proposalStatus === 'draft') {
                       return (
-                        <div className="text-sm text-blue-600 font-medium">
+                        <div className="text-sm font-medium text-gray-500">
                           {t('governance_draft_proposal')}
                         </div>
                       );
@@ -409,21 +443,21 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
 
                     if (totalVotes > 0) {
                       return (
-                        <div className="flex space-x-4">
-                          <div className="text-sm">
-                            <span className="text-green-600 font-medium">
+                        <div className="flex flex-wrap gap-3 text-sm">
+                          <div>
+                            <span className="font-medium text-gray-700">
                               {t('governance_yes')}:{' '}
                               {roundToTwoDecimals(voteCounts.yes)}
                             </span>
                           </div>
-                          <div className="text-sm">
-                            <span className="text-red-600 font-medium">
+                          <div>
+                            <span className="font-medium text-gray-700">
                               {t('governance_no')}:{' '}
                               {roundToTwoDecimals(voteCounts.no)}
                             </span>
                           </div>
-                          <div className="text-sm">
-                            <span className="text-gray-600 font-medium">
+                          <div>
+                            <span className="font-medium text-gray-700">
                               {t('governance_abstain')}:{' '}
                               {roundToTwoDecimals(voteCounts.abstain)}
                             </span>
@@ -440,7 +474,7 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
                   })()}
 
                   {effectiveStatus.status === 'active' && (
-                    <span className="bg-blue-600 text-white text-sm py-1 px-3 rounded">
+                    <span className="rounded-full bg-gray-900 px-3 py-1 text-sm font-medium text-white">
                       {t('governance_vote')}
                     </span>
                   )}

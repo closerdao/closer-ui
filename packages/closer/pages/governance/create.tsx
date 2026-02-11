@@ -24,6 +24,7 @@ const CreateProposalPage: NextPage = () => {
   const { account } = useContext(WalletState);
   const { platform } = usePlatform() as any;
   const t = useTranslations();
+  const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Closer';
 
   const [selectedTemplate, setSelectedTemplate] = useState<string>('standard');
   const [title, setTitle] = useState('');
@@ -160,7 +161,9 @@ const CreateProposalPage: NextPage = () => {
     return (
       <>
         <Head>
-          <title>{t('governance_create_proposal')} - TDF Governance</title>
+          <title>
+            {t('governance_create_proposal')} - {appName}
+          </title>
         </Head>
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto">
@@ -181,7 +184,9 @@ const CreateProposalPage: NextPage = () => {
   return (
     <>
       <Head>
-        <title>{t('governance_create_proposal')} - TDF Governance</title>
+        <title>
+          {t('governance_create_proposal')} - {appName}
+        </title>
       </Head>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">

@@ -64,25 +64,25 @@ const Social = ({
         <meta name="robots" content="noindex, nofollow" />
       </Head>
       {showBanner && (
-        <div className="flex items-center justify-between gap-3 rounded-lg bg-blue-50 border border-blue-200 px-4 py-3 mb-4">
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-blue-50/80 border border-blue-200/70 px-4 py-2.5 mb-3 shadow-sm">
           <div className="flex items-center gap-3">
-            <Bell className="w-4 h-4 text-blue-600 shrink-0" />
-            <span className="text-sm text-blue-800">
+            <Bell className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+            <span className="text-xs sm:text-sm text-blue-800">
               {t('push_notification_community_banner')}
             </span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={subscribe}
-              className="text-sm font-medium text-blue-700 hover:text-blue-900 underline"
+              className="text-xs sm:text-sm font-medium text-blue-700 hover:text-blue-900 underline underline-offset-2"
             >
               {t('push_notification_community_enable')}
             </button>
             <button
               onClick={() => setIsBannerDismissed(true)}
-              className="text-blue-400 hover:text-blue-600"
+              className="text-blue-400 hover:text-blue-600 rounded-md p-1 hover:bg-blue-100/70"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -97,7 +97,29 @@ const Social = ({
 
 Social.getInitialProps = async (context: NextPageContext) => {
   try {
-    const { query } = context;
+    const { query, asPath, res } = context;
+    const legacyChannelQueryPath =
+      typeof asPath === 'string' &&
+      asPath.startsWith('/social?') &&
+      /(?:\?|&)channel=/.test(asPath);
+    const channelSlug =
+      typeof query?.channel === 'string' ? query.channel : null;
+    const tabParam = typeof query?.tab === 'string' ? query.tab : null;
+
+    if (legacyChannelQueryPath && channelSlug) {
+      const encodedSlug = encodeURIComponent(channelSlug);
+      const destination = tabParam
+        ? `/social/${encodedSlug}?tab=${tabParam}`
+        : `/social/${encodedSlug}`;
+
+      if (res) {
+        res.writeHead(302, { Location: destination });
+        res.end();
+      } else if (typeof window !== 'undefined') {
+        window.location.href = destination;
+      }
+    }
+
     const [communityRes, bookingRes, messages] = await Promise.all([
       api.get('/config/community').catch(() => null),
       api.get('/config/booking').catch(() => null),
@@ -106,8 +128,7 @@ Social.getInitialProps = async (context: NextPageContext) => {
 
     const communityConfig = communityRes?.data?.results?.value;
     const bookingConfig = bookingRes?.data?.results?.value ?? null;
-    const initialChannelSlug =
-      typeof query?.channel === 'string' ? query.channel : null;
+    const initialChannelSlug = channelSlug;
 
     return {
       communityConfig,

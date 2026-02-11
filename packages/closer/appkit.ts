@@ -79,18 +79,27 @@ const metadata = {
   icons: ['https://closer.earth/favicon.ico'],
 };
 
+declare global {
+  interface Window {
+    __closerAppKitInitialized?: boolean;
+  }
+}
+
 if (typeof window !== 'undefined') {
-  createAppKit({
-    adapters: [new Ethers5Adapter()],
-    networks,
-    defaultNetwork: getDefaultNetwork(),
-    projectId,
-    metadata,
-    features: {
-      email: false,
-      socials: false,
-    },
-  });
+  if (!window.__closerAppKitInitialized) {
+    createAppKit({
+      adapters: [new Ethers5Adapter()],
+      networks,
+      defaultNetwork: getDefaultNetwork(),
+      projectId,
+      metadata,
+      features: {
+        email: false,
+        socials: false,
+      },
+    });
+    window.__closerAppKitInitialized = true;
+  }
 }
 
 export { celoMainnet, alfajores, celoSepolia };

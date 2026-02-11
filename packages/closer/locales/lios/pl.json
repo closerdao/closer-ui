@@ -61,5 +61,9 @@
   "learn_course_purchase_confirmation_message": "Dear {screenname},<br/><br/><p>Thank you for stepping into this shared exploration with us! 🌿</p><p>Your enrolment marks the beginning of a journey where we'll dive deep into ideas, experiences, and practices that reconnect us with ourselves, each other, and the more-than-human world.</p><p>We can't wait to share this process of embodied, playful, and transformative discovery with you.</p><p>See you soon! 🌾</p><p>With warmth and anticipation, <br/>The School of Ecological Imagination Team 🌍</p>",
   "learn_subheading": "Meander through the garden of offerings, and settle into a ecotone that suits you",
 
+  "header_nav_governance": "Governance",
+  "header_nav_agent": "Agent",
+  "header_nav_docs": "Docs",
+
   "test": "polska ok"
 }

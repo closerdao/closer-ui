@@ -50,13 +50,16 @@ export interface ChannelListProps {
 }
 
 const ChannelListSkeleton = () => (
-  <div className="p-3 space-y-3">
+  <div className="px-3 py-2 space-y-2.5">
     {[1, 2, 3, 4, 5].map((i) => (
-      <div key={i} className="flex items-center gap-3 p-2 animate-pulse">
-        <div className="w-10 h-10 bg-neutral rounded-full flex-shrink-0" />
+      <div
+        key={i}
+        className="flex items-center gap-2.5 px-3 py-2.5 animate-pulse rounded-xl"
+      >
+        <div className="w-8 h-8 bg-neutral rounded-full flex-shrink-0" />
         <div className="flex-1 min-w-0">
-          <div className="h-3.5 bg-neutral rounded w-2/3 mb-1.5" />
-          <div className="h-3 bg-neutral rounded w-full" />
+          <div className="h-2.5 bg-neutral rounded w-2/3 mb-1.5" />
+          <div className="h-2 bg-neutral rounded w-11/12" />
         </div>
       </div>
     ))}
@@ -80,13 +83,13 @@ const EmptyChannels = ({ t }: { t: TranslateFn }) => (
 const channelTypeIcon = (channelType: ChannelType) => {
   switch (channelType) {
     case 'season':
-      return <Calendar className="w-5 h-5 text-white" />;
+      return <Calendar className="w-4 h-4 text-white" />;
     case 'ground':
-      return <MapPin className="w-5 h-5 text-white" />;
+      return <MapPin className="w-4 h-4 text-white" />;
     case 'topic':
-      return <Hash className="w-5 h-5 text-white" />;
+      return <Hash className="w-4 h-4 text-white" />;
     default:
-      return <Hash className="w-5 h-5 text-white" />;
+      return <Hash className="w-4 h-4 text-white" />;
   }
 };
 
@@ -141,32 +144,49 @@ const ChannelRow = ({
     (state.status === 'idle' || state.status === 'error');
   const presenceRequiredDays = state.presenceRequired ?? presenceRequired;
 
+  const cdn = process.env.NEXT_PUBLIC_CDN_URL;
+  const photoUrl =
+    channel.photo &&
+    (channel.photo.startsWith('http')
+      ? channel.photo
+      : cdn
+        ? `${cdn}${channel.photo}-post-md.jpg`
+        : null);
+
   const content = (
     <div
-      className={`flex items-center gap-3 px-3 py-3 lg:py-2.5 cursor-pointer transition-colors min-h-[44px] ${
-        isSelected
-          ? 'bg-accent/10 border-l-2 border-accent'
-          : 'hover:bg-neutral-light border-l-2 border-transparent'
+      className={`group flex items-center gap-2.5 mx-2 px-3 py-2.5 cursor-pointer transition-all rounded-xl min-h-[42px] ${
+        isSelected ? 'bg-neutral-light/60' : 'hover:bg-neutral-light/80'
       }`}
       onClick={onClick}
       role="button"
       tabIndex={0}
     >
-      <div
-        className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${channelTypeColor(channel.channelType)}`}
-      >
-        {channelTypeIcon(channel.channelType)}
-      </div>
+      {photoUrl ? (
+        <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden bg-neutral">
+          <img
+            src={photoUrl}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+        </div>
+      ) : (
+        <div
+          className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${channelTypeColor(channel.channelType)}`}
+        >
+          {channelTypeIcon(channel.channelType)}
+        </div>
+      )}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
           <span
-            className={`text-sm truncate ${isSelected ? 'font-bold text-foreground' : 'font-medium text-foreground'}`}
+            className={`text-[13px] truncate ${isSelected ? 'font-semibold text-foreground' : 'font-medium text-foreground'}`}
           >
             {channel.name}
           </span>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {channel.eventName && (
-              <span className="text-[10px] text-accent bg-accent/5 px-1.5 py-0.5 rounded">
+              <span className="text-[10px] text-accent bg-accent/5 px-1.5 py-0.5 rounded-md">
                 {channel.eventName}
               </span>
             )}
@@ -177,7 +197,7 @@ const ChannelRow = ({
             )}
           </div>
         </div>
-        <p className="text-xs text-gray-500 truncate mt-0.5">
+        <p className="text-[11px] text-gray-500/90 truncate mt-0.5">
           {channel.description || '\u00A0'}
         </p>
       </div>
@@ -186,18 +206,6 @@ const ChannelRow = ({
         <span className="text-[10px] text-amber-600 flex-shrink-0">
           {presenceRequiredDays}+ {t('community_presence_days_suffix')}
         </span>
-      )}
-      {showJoinUi && isNotJoined && hasEnoughPresence && state.status === 'idle' && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onSubscribe(channel._id);
-          }}
-          className="text-[10px] font-semibold text-white bg-accent hover:bg-accent-dark px-2 py-1 rounded-full transition-colors flex-shrink-0"
-        >
-          {isInvitation ? t('channels_request_join') : t('channels_join')}
-        </button>
       )}
       {showJoinUi && isNotJoined && state.status === 'loading' && (
         <span className="text-[10px] text-gray-400 flex-shrink-0">...</span>
@@ -247,10 +255,10 @@ const ChannelGroupSection = ({
   if (group.channels.length === 0) return null;
 
   return (
-    <div>
-      <div className="flex items-center gap-2 px-4 py-2">
+    <div className="pb-1">
+      <div className="flex items-center gap-2 px-4 pt-3 pb-2">
         {group.icon}
-        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-[0.12em]">
           {group.label}
         </span>
       </div>
@@ -470,7 +478,7 @@ const ChannelList = ({
   }
 
   return (
-    <div className="py-1">
+    <div className="py-2">
       {groupedChannels.map((group) => (
         <ChannelGroupSection
           key={group.type || 'legacy'}
