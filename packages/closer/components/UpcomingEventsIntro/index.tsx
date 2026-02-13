@@ -20,18 +20,23 @@ const UpcomingEventsIntro = () => {
   const [hasEvents, setHasEvents] = useState<boolean | null>(null);
 
   useEffect(() => {
+    const filter = {
+      where: { end: { $gt: loadTime } },
+      limit: 1,
+      sort_by: 'start',
+    };
+
     const checkEvents = async () => {
       if (!platform?.event) {
         setHasEvents(false);
         return;
       }
-      
+      const cached = platform.event.find(filter);
+      if (cached && typeof cached.count === 'function') {
+        setHasEvents(cached.count() > 0);
+        return;
+      }
       try {
-        const filter = {
-          where: { end: { $gt: loadTime } },
-          limit: 1,
-          sort_by: 'start',
-        };
         await platform.event.get(filter);
         const events = platform.event.find(filter);
         setHasEvents(events && events.count() > 0);
@@ -40,11 +45,12 @@ const UpcomingEventsIntro = () => {
         setHasEvents(false);
       }
     };
-    
+
     if (platform) {
       checkEvents();
     }
-  }, [platform]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount; platform is unstable ref
+  }, []);
 
   if (hasEvents === false || hasEvents === null) {
     return null;
