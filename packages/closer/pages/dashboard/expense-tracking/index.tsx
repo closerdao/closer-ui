@@ -48,7 +48,7 @@ const ExpenseTrackingDashboardPage = ({
   const allEntities = entitiesConfig?.elements?.map((entity: any) => entity.legalName) || [];
   const uniqueEntities = [...new Set(allEntities)];
 
-  const defaultEntity = entitiesConfig?.elements?.filter((entity: any) => entity.transactionType === 'expense')[0]?.entityName || '';
+  const defaultEntity = entitiesConfig?.elements[0]?.legalName || '';
 
   const expenseCategories = generalConfig?.expenseCategories?.split(',');
 

@@ -140,7 +140,8 @@ const Events = ({ generalConfig, eventsConfig }: Props) => {
     if (platform && platform.event && defaultConfig) {
       loadEvents();
     }
-  }, [platform, defaultConfig]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount; platform is unstable ref
+  }, []);
 
   const formatEventDate = (event: Event) => {
     const startDate = dayjs(event.start);
