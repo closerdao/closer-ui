@@ -56,16 +56,8 @@ const CreditsCheckoutPage: NextPage<Props> = ({
 
     const numericAmount = parseInt(amount as string);
 
-    if (numericAmount < 90) {
-      return numericAmount * fundraisingConfig.creditPrice30Credits;
-    }
-    if (numericAmount >= 90 && numericAmount < 180) {
-      return numericAmount * fundraisingConfig.creditPrice90Credits;
-    }
-    if (numericAmount >= 180) {
-      return numericAmount * fundraisingConfig.creditPrice180Credits;
-    }
-    return 0;
+    const pricePerUnit = Number(fundraisingConfig?.creditPricePerUnit) || 30;
+    return numericAmount * pricePerUnit;
   };
 
   const total = getTotal();

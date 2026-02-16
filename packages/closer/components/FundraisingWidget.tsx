@@ -31,47 +31,57 @@ interface FundraisingBreakdown {
 const DEFAULT_TARGET_AMOUNT = 295000;
 const DEFAULT_END_DATE = '2026-05-31T23:59:59.999Z';
 
+const getMilestoneStart = (m: FundraisingMilestone): string | null =>
+  m.start ?? m.startDate ?? null;
+const getMilestoneEnd = (m: FundraisingMilestone): string | null =>
+  m.end ?? m.endDate ?? null;
+const getMilestoneTarget = (m: FundraisingMilestone): number =>
+  Number(m.goal ?? m.targetAmount) || 0;
+
 const findActiveMilestone = (milestones: FundraisingMilestone[] | undefined): FundraisingMilestone | null => {
   if (!milestones || milestones.length === 0) return null;
-  
+
   const now = new Date();
   const FAR_FUTURE = new Date('2100-01-01T00:00:00.000Z');
-  
+
   const sortedByStartDesc = [...milestones].sort((a, b) => {
-    const startA = a.startDate ? new Date(a.startDate).getTime() : 0;
-    const startB = b.startDate ? new Date(b.startDate).getTime() : 0;
+    const startA = getMilestoneStart(a) ? new Date(getMilestoneStart(a)!).getTime() : 0;
+    const startB = getMilestoneStart(b) ? new Date(getMilestoneStart(b)!).getTime() : 0;
     return startB - startA;
   });
-  
-  const activeMilestone = sortedByStartDesc.find(m => {
-    if (!m.startDate) return false;
-    
-    const start = new Date(m.startDate);
+
+  const activeMilestone = sortedByStartDesc.find((m) => {
+    const startRaw = getMilestoneStart(m);
+    if (!startRaw) return false;
+
+    const start = new Date(startRaw);
     start.setHours(0, 0, 0, 0);
-    
-    const end = m.endDate ? new Date(m.endDate) : FAR_FUTURE;
-    if (m.endDate) end.setHours(23, 59, 59, 999);
-    
+
+    const endRaw = getMilestoneEnd(m);
+    const end = endRaw ? new Date(endRaw) : FAR_FUTURE;
+    if (endRaw) end.setHours(23, 59, 59, 999);
+
     return now >= start && now <= end;
   });
-  
+
   if (activeMilestone) return activeMilestone;
-  
+
   const sortedByStartAsc = [...milestones].sort((a, b) => {
-    const startA = a.startDate ? new Date(a.startDate).getTime() : Infinity;
-    const startB = b.startDate ? new Date(b.startDate).getTime() : Infinity;
+    const startA = getMilestoneStart(a) ? new Date(getMilestoneStart(a)!).getTime() : Infinity;
+    const startB = getMilestoneStart(b) ? new Date(getMilestoneStart(b)!).getTime() : Infinity;
     return startA - startB;
   });
-  
-  const futureMilestones = sortedByStartAsc.filter(m => {
-    if (!m.startDate) return false;
-    const start = new Date(m.startDate);
+
+  const futureMilestones = sortedByStartAsc.filter((m) => {
+    const startRaw = getMilestoneStart(m);
+    if (!startRaw) return false;
+    const start = new Date(startRaw);
     start.setHours(0, 0, 0, 0);
     return start > now;
   });
-  
+
   if (futureMilestones.length > 0) return futureMilestones[0];
-  
+
   return sortedByStartDesc[0] || null;
 };
 
@@ -100,7 +110,10 @@ const FundraisingWidget = ({
   }, [fundraisingConfig?.milestones]);
 
   useEffect(() => {
-    const endDate = activeMilestone?.endDate ? new Date(activeMilestone.endDate) : new Date(DEFAULT_END_DATE);
+    const endRaw = activeMilestone
+      ? getMilestoneEnd(activeMilestone)
+      : null;
+    const endDate = endRaw ? new Date(endRaw) : new Date(DEFAULT_END_DATE);
     const now = new Date();
     const diffTime = endDate.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -110,9 +123,15 @@ const FundraisingWidget = ({
   useEffect(() => {
     const fetchTokenSales = async () => {
       try {
-        const startDate = activeMilestone?.startDate || null;
-        const endDate = activeMilestone?.endDate || DEFAULT_END_DATE;
-        const targetAmount = Number(activeMilestone?.targetAmount) || DEFAULT_TARGET_AMOUNT;
+        const startDate = activeMilestone
+          ? getMilestoneStart(activeMilestone)
+          : null;
+        const endDate =
+          (activeMilestone ? getMilestoneEnd(activeMilestone) : null) ||
+          DEFAULT_END_DATE;
+        const targetAmount = activeMilestone
+          ? getMilestoneTarget(activeMilestone) || DEFAULT_TARGET_AMOUNT
+          : DEFAULT_TARGET_AMOUNT;
 
         const dateFilter: Record<string, string> = {};
         if (startDate) {
@@ -195,7 +214,10 @@ const FundraisingWidget = ({
     return `€${amount.toLocaleString()}`;
   };
 
-  const milestoneName = activeMilestone?.name || t('invest_progress_milestone_default');
+  const milestoneName =
+    activeMilestone?.title ??
+    activeMilestone?.name ??
+    t('invest_progress_milestone_default');
   const isGoalReached = !isLoading && totalRaised >= goalAmount;
 
   if (variant === 'hero') {
@@ -239,9 +261,9 @@ const FundraisingWidget = ({
                 <span className="text-right">€{breakdown.cryptoTokenSales.toLocaleString()}</span>
                 <span>Fiat Token Sales:</span>
                 <span className="text-right">€{breakdown.fiatTokenSales.toLocaleString()}</span>
-                <span>Loans:</span>
+                <span>{fundraisingConfig?.loansLabel ?? 'Loans'}:</span>
                 <span className="text-right">€{breakdown.loans.toLocaleString()}</span>
-                <span>Adjustments:</span>
+                <span>{fundraisingConfig?.adjustmentsLabel ?? 'Adjustments'}:</span>
                 <span className="text-right">€{breakdown.adjustments.toLocaleString()}</span>
                 <span className="font-bold border-t border-accent/30 pt-1">Total:</span>
                 <span className="text-right font-bold border-t border-accent/30 pt-1">€{breakdown.total.toLocaleString()}</span>
@@ -289,9 +311,9 @@ const FundraisingWidget = ({
               <span className="text-right">€{breakdown.cryptoTokenSales.toLocaleString()}</span>
               <span>Fiat Token Sales:</span>
               <span className="text-right">€{breakdown.fiatTokenSales.toLocaleString()}</span>
-              <span>Loans:</span>
+              <span>{fundraisingConfig?.loansLabel ?? 'Loans'}:</span>
               <span className="text-right">€{breakdown.loans.toLocaleString()}</span>
-              <span>Adjustments:</span>
+              <span>{fundraisingConfig?.adjustmentsLabel ?? 'Adjustments'}:</span>
               <span className="text-right">€{breakdown.adjustments.toLocaleString()}</span>
               <span className="font-bold border-t border-gray-300 pt-1">Total:</span>
               <span className="text-right font-bold border-t border-gray-300 pt-1">€{breakdown.total.toLocaleString()}</span>
@@ -311,9 +333,9 @@ const FundraisingWidget = ({
     return (
       <Link
         href="/invest"
-        className={`hidden sm:flex items-center px-2 py-1.5 bg-accent/20 hover:bg-accent/30 rounded-lg transition-colors ${className}`}
+        className={`hidden sm:flex items-center min-w-0 max-w-full px-2 py-1.5 bg-accent/20 hover:bg-accent/30 rounded-lg transition-colors ${className}`}
       >
-        <span className="text-xs font-medium text-accent">
+        <span className="text-xs font-medium text-accent truncate">
           {t('invest_goal_reached_short')}
         </span>
       </Link>
@@ -323,7 +345,7 @@ const FundraisingWidget = ({
   return (
     <Link
       href="/invest"
-      className={`hidden sm:flex items-center gap-2 px-2 py-1.5 bg-accent/10 hover:bg-accent/20 rounded-lg transition-colors ${className}`}
+      className={`hidden sm:flex items-center min-w-0 max-w-full gap-2 px-2 py-1.5 bg-accent/10 hover:bg-accent/20 rounded-lg transition-colors ${className}`}
     >
       <div className="flex flex-col items-start">
         <span className="text-[10px] text-gray-500 font-medium">

@@ -281,7 +281,11 @@ const Navigation = () => {
 
           {APP_NAME && APP_NAME?.toLowerCase() === 'tdf' && (
             <>
-              {isFundraiserEnabled && <FundraisingWidget variant="nav" fundraisingConfig={fundraisingConfig} />}
+              {isFundraiserEnabled && (
+                <div className="min-w-0 flex-shrink">
+                  <FundraisingWidget variant="nav" fundraisingConfig={fundraisingConfig} />
+                </div>
+              )}
               {isAuthenticated && isMember && isBookingEnabled ? (
                 <Button
                   onClick={() => router.push('/bookings/create/dates')}

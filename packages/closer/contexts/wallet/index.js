@@ -7,6 +7,7 @@ import {
   useAppKitNetwork,
   useAppKitProvider,
   useAppKitState,
+  useDisconnect,
 } from '@reown/appkit/react';
 import { BigNumber } from 'ethers';
 import useSWR from 'swr';
@@ -79,6 +80,7 @@ const WalletProviderInner = ({ children }) => {
   const { chainId, switchNetwork: appKitSwitchNetwork } = useAppKitNetwork();
   const { walletProvider } = useAppKitProvider('eip155');
   const { open: isAppKitModalOpen } = useAppKitState();
+  const { disconnect } = useDisconnect();
   const { user } = useAuth();
 
   const [error, setError] = useState(null);
@@ -125,14 +127,31 @@ const WalletProviderInner = ({ children }) => {
     }
   }, [isConnected, address]);
 
-  // If modal closes without connection, clear pending connect request quickly
+  // If modal closes without connection, clear pending connect request after a
+  // short delay.  WalletConnect-based wallets (e.g. Rainbow) may briefly close
+  // the AppKit modal while transitioning to a deep-link / QR flow.  Without
+  // the debounce the promise refs are cleaned up prematurely while WC's
+  // internal SignClient still holds an active session proposal — causing
+  // "Connection declined" on the next attempt.
+  const modalCloseTimerRef = useRef(null);
   useEffect(() => {
     if (!isAppKitModalOpen && !isConnected && connectResolveRef.current) {
-      const finalize = connectFinalizeRef.current;
-      if (finalize) {
-        finalize(null);
-      }
+      modalCloseTimerRef.current = setTimeout(() => {
+        // Re-check refs: the user may have re-connected during the delay
+        if (connectResolveRef.current && !isConnected) {
+          const finalize = connectFinalizeRef.current;
+          if (finalize) {
+            finalize(null);
+          }
+        }
+      }, 1500); // 1.5 s grace period for WC deep-link transitions
     }
+    return () => {
+      if (modalCloseTimerRef.current) {
+        clearTimeout(modalCloseTimerRef.current);
+        modalCloseTimerRef.current = null;
+      }
+    };
   }, [isAppKitModalOpen, isConnected]);
 
   const { data: balanceDAOToken, mutate: updateWalletBalance } = useSWR(
@@ -369,6 +388,16 @@ const WalletProviderInner = ({ children }) => {
         return connectPromiseRef.current;
       }
 
+      // Clear any stale WalletConnect session proposals that may linger from a
+      // previous attempt (e.g. user selected Rainbow, deep-link fired, but
+      // they never approved).  Without this, Reown's SignClient rejects the
+      // new open() call with "Connection declined … previous request still active".
+      try {
+        await disconnect();
+      } catch (_) {
+        // no-op — disconnect may throw if there is no active session
+      }
+
       // Open the AppKit modal and wait for connection
       connectPromiseRef.current = new Promise((resolve) => {
         const finalizeConnect = (result) => {
@@ -427,7 +456,7 @@ const WalletProviderInner = ({ children }) => {
       console.log('[connectWallet] Exception during connectWallet process:', e);
       return null;
     }
-  }, [isConnected, address, user, open, ensureTargetNetwork]);
+  }, [isConnected, address, user, open, disconnect, ensureTargetNetwork]);
 
   const linkWalletWithUser = async (accountId, currentUser) => {
     if (!currentUser || !currentUser._id) {

@@ -16,7 +16,12 @@ import { Heading, LinkButton } from 'closer/components/ui';
 
 import { PageNotFound } from 'closer';
 import { useBuyTokens } from 'closer/hooks/useBuyTokens';
-import { FundraisingConfig, FundraisingMilestone, MilestoneStatus } from 'closer/types';
+import {
+  FundraisingConfig,
+  FundraisingMilestone,
+  FundraisingPackage,
+  MilestoneStatus,
+} from 'closer/types';
 import api, { formatSearch } from 'closer/utils/api';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import {
@@ -35,47 +40,53 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 
+const getMilestoneStart = (m: FundraisingMilestone): string | null =>
+  m.start ?? m.startDate ?? null;
+const getMilestoneEnd = (m: FundraisingMilestone): string | null =>
+  m.end ?? m.endDate ?? null;
+const getMilestoneGoal = (m: FundraisingMilestone): number =>
+  Number(m.goal ?? m.targetAmount) || 0;
+
 const findActiveMilestone = (milestones: FundraisingMilestone[] | undefined): FundraisingMilestone | null => {
   if (!milestones || milestones.length === 0) return null;
-  
+
   const now = new Date();
   const FAR_FUTURE = new Date('2100-01-01T00:00:00.000Z');
-  
+
   const sortedByStartDesc = [...milestones].sort((a, b) => {
-    const startA = a.startDate ? new Date(a.startDate).getTime() : 0;
-    const startB = b.startDate ? new Date(b.startDate).getTime() : 0;
+    const startA = getMilestoneStart(a) ? new Date(getMilestoneStart(a)!).getTime() : 0;
+    const startB = getMilestoneStart(b) ? new Date(getMilestoneStart(b)!).getTime() : 0;
     return startB - startA;
   });
-  
-  const activeMilestone = sortedByStartDesc.find(m => {
-    if (!m.startDate) return false;
-    
-    const start = new Date(m.startDate);
+
+  const activeMilestone = sortedByStartDesc.find((m) => {
+    const startRaw = getMilestoneStart(m);
+    if (!startRaw) return false;
+    const start = new Date(startRaw);
     start.setHours(0, 0, 0, 0);
-    
-    const end = m.endDate ? new Date(m.endDate) : FAR_FUTURE;
-    if (m.endDate) end.setHours(23, 59, 59, 999);
-    
+    const endRaw = getMilestoneEnd(m);
+    const end = endRaw ? new Date(endRaw) : FAR_FUTURE;
+    if (endRaw) end.setHours(23, 59, 59, 999);
     return now >= start && now <= end;
   });
-  
+
   if (activeMilestone) return activeMilestone;
-  
+
   const sortedByStartAsc = [...milestones].sort((a, b) => {
-    const startA = a.startDate ? new Date(a.startDate).getTime() : Infinity;
-    const startB = b.startDate ? new Date(b.startDate).getTime() : Infinity;
+    const startA = getMilestoneStart(a) ? new Date(getMilestoneStart(a)!).getTime() : Infinity;
+    const startB = getMilestoneStart(b) ? new Date(getMilestoneStart(b)!).getTime() : Infinity;
     return startA - startB;
   });
-  
-  const futureMilestones = sortedByStartAsc.filter(m => {
-    if (!m.startDate) return false;
-    const start = new Date(m.startDate);
+
+  const futureMilestones = sortedByStartAsc.filter((m) => {
+    const startRaw = getMilestoneStart(m);
+    if (!startRaw) return false;
+    const start = new Date(startRaw);
     start.setHours(0, 0, 0, 0);
     return start > now;
   });
-  
+
   if (futureMilestones.length > 0) return futureMilestones[0];
-  
   return sortedByStartDesc[0] || null;
 };
 
@@ -83,71 +94,149 @@ interface Props {
   fundraisingConfig: FundraisingConfig;
 }
 
-interface PhaseConfig {
-  id: string;
-  titleKey: string;
-  descKey: string;
-  itemKeys: string[];
-  targetAmount: number;
-  displayAmount: string;
-}
-
-const PHASES: PhaseConfig[] = [
-  {
-    id: 'phase1',
-    titleKey: 'invest_phase1_title',
-    descKey: 'invest_phase1_desc',
-    itemKeys: ['invest_phase1_item1', 'invest_phase1_item2', 'invest_phase1_item3'],
-    targetAmount: 295000,
-    displayAmount: '€295K',
-  },
-  {
-    id: 'phase2',
-    titleKey: 'invest_phase2_title',
-    descKey: 'invest_phase2_desc',
-    itemKeys: [],
-    targetAmount: 150000,
-    displayAmount: '€150K',
-  },
-  {
-    id: 'phase3',
-    titleKey: 'invest_phase3_title',
-    descKey: 'invest_phase3_desc',
-    itemKeys: [],
-    targetAmount: 700000,
-    displayAmount: '~€700K',
-  },
-];
-
-interface PhaseState {
+interface MilestoneState {
   status: MilestoneStatus;
   raised: number;
   progress: number;
 }
 
-const computePhaseStates = (totalRaised: number): Record<string, PhaseState> => {
-  const states: Record<string, PhaseState> = {};
+const formatDisplayAmount = (amount: number, currency: string): string => {
+  const symbol = currency === 'EUR' ? '€' : currency;
+  if (amount >= 1000) return `${symbol}${Math.round(amount / 1000)}K`;
+  return `${symbol}${amount.toLocaleString()}`;
+};
+
+interface PackageCardProps {
+  pkg: FundraisingPackage;
+  formatPrice: (tokens: number) => string;
+  creditPricePerUnit: number;
+  t: (key: string) => string;
+}
+
+const PackageCard = ({ pkg, formatPrice, creditPricePerUnit, t }: PackageCardProps) => {
+  const isTokens = pkg.type === 'tokens';
+  const isLoan = pkg.type === 'loan';
+  const isCredits = pkg.type === 'credits';
+  const isSubscribe = pkg.type === 'subscribe';
+  const tokens = Number(pkg.tokens) || 0;
+  const credits = Number(pkg.credits) || 0;
+  const isFirstToken = isTokens && tokens === 1;
+  const isPopular = isTokens && tokens === 30;
+
+  const priceLabel = isTokens
+    ? formatPrice(tokens)
+    : isLoan
+      ? pkg.minAmount
+        ? `€${pkg.minAmount}+`
+        : '€50K+'
+      : isCredits && credits
+        ? `€${(credits * creditPricePerUnit).toLocaleString()}`
+        : '';
+
+  const href = isTokens
+    ? `/token/checkout?tokens=${tokens}`
+    : isLoan
+      ? 'https://calendly.com/samueldelesque'
+      : isCredits && credits
+        ? `/credits/checkout?amount=${credits}`
+        : isSubscribe
+          ? pkg.subscribeUrl || '/subscriptions/checkout'
+          : '#';
+
+  const borderClass = isFirstToken
+    ? 'p-4 border border-dashed border-gray-300 rounded-xl bg-gradient-to-br from-green-50 to-white hover:border-green-400 transition-colors'
+    : isPopular
+      ? 'p-4 border-2 border-gray-900 rounded-xl bg-white relative'
+      : isSubscribe
+        ? 'p-4 border border-dashed border-gray-300 rounded-xl'
+        : 'p-4 border border-gray-200 rounded-xl bg-white hover:border-gray-300 transition-colors';
+
+  return (
+    <div className={borderClass}>
+      {isPopular && (
+        <div className="absolute -top-3 left-4 bg-gray-900 text-white text-xs font-medium px-2 py-1 rounded">
+          {t('invest_package_popular')}
+        </div>
+      )}
+      <div className="flex items-center justify-between mb-2 mt-1">
+        <div className="flex items-center gap-2">
+          {isFirstToken && <Leaf className="w-4 h-4 text-green-500" />}
+          {isPopular && <Sparkles className="w-4 h-4 text-accent" />}
+          {isSubscribe && <Calendar className="w-5 h-5 text-gray-400" />}
+          <h3 className="font-medium text-gray-900">{pkg.title}</h3>
+        </div>
+        {priceLabel && (
+          <span className="text-xl font-bold text-gray-900">{priceLabel}</span>
+        )}
+      </div>
+      {pkg.description && (
+        <p className="text-sm text-gray-500 mb-3">{pkg.description}</p>
+      )}
+      <div className="space-y-1.5 mb-4 text-sm">
+        {isTokens && tokens > 0 && (
+          <div className="flex items-center gap-2 text-gray-600">
+            <Check className="w-4 h-4 text-gray-400" />
+            <span>
+              {tokens} TDF token{tokens !== 1 ? 's' : ''} ({tokens} night{tokens !== 1 ? 's' : ''}/year forever)
+            </span>
+          </div>
+        )}
+        {isTokens && (
+          <div className="flex items-center gap-2 text-gray-600">
+            <Check className="w-4 h-4 text-gray-400" />
+            <span>{t('invest_package0_benefit2')}</span>
+          </div>
+        )}
+        {pkg.bonus && (
+          <div className="flex items-center gap-2 text-gray-900 font-medium">
+            <Gift className="w-4 h-4 text-gray-600" />
+            <span>{pkg.bonus}</span>
+          </div>
+        )}
+      </div>
+      <LinkButton
+        href={href}
+        target={isLoan ? '_blank' : undefined}
+        variant={isFirstToken || isLoan || isSubscribe ? 'secondary' : 'primary'}
+        className="w-full"
+      >
+        {isLoan
+          ? t('invest_package_lender_cta_action')
+          : isSubscribe
+            ? t('invest_way_subscribe_cta')
+            : t('invest_package_cta_action')}
+      </LinkButton>
+    </div>
+  );
+};
+
+const computeMilestoneStates = (
+  totalRaised: number,
+  milestones: FundraisingMilestone[],
+): Record<string, MilestoneState> => {
+  const states: Record<string, MilestoneState> = {};
   let remainingFunds = totalRaised;
   let foundActive = false;
 
-  for (const phase of PHASES) {
-    if (remainingFunds >= phase.targetAmount) {
-      states[phase.id] = {
+  for (const milestone of milestones) {
+    const target = getMilestoneGoal(milestone);
+    if (remainingFunds >= target) {
+      states[milestone.id] = {
         status: 'completed',
-        raised: phase.targetAmount,
+        raised: target,
         progress: 100,
       };
-      remainingFunds -= phase.targetAmount;
+      remainingFunds -= target;
     } else if (!foundActive) {
-      states[phase.id] = {
+      states[milestone.id] = {
         status: 'active',
         raised: remainingFunds,
-        progress: Math.min((remainingFunds / phase.targetAmount) * 100, 100),
+        progress: target ? Math.min((remainingFunds / target) * 100, 100) : 0,
       };
       remainingFunds = 0;
       foundActive = true;
     } else {
-      states[phase.id] = {
+      states[milestone.id] = {
         status: 'pending',
         raised: 0,
         progress: 0,
@@ -176,8 +265,12 @@ const InvestPage = ({ fundraisingConfig }: Props) => {
   useEffect(() => {
     const fetchTotalRaised = async () => {
       try {
-        const startDate = activeMilestone?.startDate || null;
-        const endDate = activeMilestone?.endDate;
+        const startDate = activeMilestone
+          ? getMilestoneStart(activeMilestone)
+          : null;
+        const endDate = activeMilestone
+          ? getMilestoneEnd(activeMilestone)
+          : null;
 
         const dateFilter: Record<string, string> = {};
         if (startDate) {
@@ -221,7 +314,10 @@ const InvestPage = ({ fundraisingConfig }: Props) => {
           .filter(adj => !activeMilestone || adj.countsTowardMilestone === activeMilestone.id)
           .reduce((sum, adj) => sum + (Number(adj.amount) || 0), 0);
 
-        setTotalRaised(cryptoTotal + fiatTotal + loansTotal + adjustmentsTotal);
+        const preCampaign = Number(fundraisingConfig?.amountRaisedPreCampaign) || 0;
+        setTotalRaised(
+          preCampaign + cryptoTotal + fiatTotal + loansTotal + adjustmentsTotal,
+        );
       } catch (error) {
         console.error('Error fetching total raised:', error);
       } finally {
@@ -232,9 +328,13 @@ const InvestPage = ({ fundraisingConfig }: Props) => {
     fetchTotalRaised();
   }, [fundraisingConfig, activeMilestone]);
 
-  const phaseStates = useMemo(() => {
-    return computePhaseStates(totalRaised);
-  }, [totalRaised]);
+  const milestones = useMemo(
+    () => fundraisingConfig?.milestones ?? [],
+    [fundraisingConfig?.milestones],
+  );
+  const milestoneStates = useMemo(() => {
+    return computeMilestoneStates(totalRaised, milestones);
+  }, [totalRaised, milestones]);
 
   useEffect(() => {
     (async () => {
@@ -262,17 +362,19 @@ const InvestPage = ({ fundraisingConfig }: Props) => {
   return (
     <>
       <Head>
-        <title>{t('invest_page_title')}</title>
+        <title>
+          {fundraisingConfig?.campaignTitle || t('invest_page_title')}
+        </title>
         <meta name="description" content={t('invest_page_description')} />
         <link rel="canonical" href="https://www.traditionaldreamfactory.com/invest" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://www.traditionaldreamfactory.com/invest" />
-        <meta property="og:title" content={t('invest_page_title')} />
+        <meta property="og:title" content={fundraisingConfig?.campaignTitle || t('invest_page_title')} />
         <meta property="og:description" content={t('invest_page_description')} />
         <meta property="og:image" content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@tdfinyourdreams" />
-        <meta name="twitter:title" content={t('invest_page_title')} />
+        <meta name="twitter:title" content={fundraisingConfig?.campaignTitle || t('invest_page_title')} />
         <meta name="twitter:description" content={t('invest_page_description')} />
         <meta name="twitter:image" content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg" />
       </Head>
@@ -294,16 +396,17 @@ const InvestPage = ({ fundraisingConfig }: Props) => {
                   display
                   level={1}
                 >
-                  {t('invest_hero_title')}
+                  {fundraisingConfig?.campaignTitle || t('invest_hero_title')}
                 </Heading>
                 <p className="text-lg text-gray-600 leading-relaxed mb-8 max-w-2xl">
                   {t('invest_hero_subtitle')}
                 </p>
 
-                {/* Video */}
-                <div className="aspect-video bg-gray-100 rounded-xl overflow-hidden mb-6">
-                  <GenericYoutubeEmbed embedId="puxs_qKhldI" />
-                </div>
+                {fundraisingConfig?.campaignVideo && (
+                  <div className="aspect-video bg-gray-100 rounded-xl overflow-hidden mb-6">
+                    <GenericYoutubeEmbed embedId={fundraisingConfig.campaignVideo} />
+                  </div>
+                )}
 
                 {/* Progress Widget */}
                 <FundraisingWidget variant="hero" className="max-w-md" fundraisingConfig={fundraisingConfig} />
@@ -347,126 +450,168 @@ const InvestPage = ({ fundraisingConfig }: Props) => {
               </div>
 
               {/* Roadmap */}
-              <div className="mb-12">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                  {t('invest_roadmap_title')}
-                </h2>
-                <div className="space-y-3">
-                  {PHASES.map((phase, index) => {
-                    const state = phaseStates[phase.id] || { status: 'pending', raised: 0, progress: 0 };
-                    const isCompleted = state.status === 'completed';
-                    const isActive = state.status === 'active';
-                    
-                    const getBadgeLabel = () => {
-                      if (isCompleted) return t('invest_phase_completed');
-                      if (isActive) return t('invest_phase_current');
-                      const activeIndex = PHASES.findIndex(p => phaseStates[p.id]?.status === 'active');
-                      if (index === activeIndex + 1) {
-                        return t('invest_phase_next');
-                      }
-                      return t('invest_phase_future');
-                    };
+              {milestones.length > 0 && (
+                <div className="mb-12">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                    {t('invest_roadmap_title')}
+                  </h2>
+                  <div className="space-y-3">
+                    {milestones.map((milestone, index) => {
+                      const state =
+                        milestoneStates[milestone.id] || {
+                          status: 'pending' as MilestoneStatus,
+                          raised: 0,
+                          progress: 0,
+                        };
+                      const isCompleted = state.status === 'completed';
+                      const isActive = state.status === 'active';
+                      const title = milestone.title || milestone.name;
+                      const description = milestone.description || '';
+                      const itemLines = milestone.items
+                        ? milestone.items.split('\n').filter(Boolean)
+                        : [];
+                      const displayAmount = formatDisplayAmount(
+                        getMilestoneGoal(milestone),
+                        milestone.currency || 'EUR',
+                      );
 
-                    const formatAmount = (amount: number) => {
-                      if (amount >= 1000) return `€${Math.round(amount / 1000)}K`;
-                      return `€${amount.toLocaleString()}`;
-                    };
+                      const getBadgeLabel = () => {
+                        if (isCompleted) return t('invest_phase_completed');
+                        if (isActive) return t('invest_phase_current');
+                        const activeIndex = milestones.findIndex(
+                          m => milestoneStates[m.id]?.status === 'active',
+                        );
+                        if (index === activeIndex + 1) return t('invest_phase_next');
+                        return t('invest_phase_future');
+                      };
 
-                    return (
-                      <div
-                        key={phase.id}
-                        className={`p-4 rounded-lg transition-all duration-500 relative overflow-hidden ${
-                          isCompleted
-                            ? 'border-2 border-green-500 bg-green-50'
-                            : isActive
-                            ? 'border border-gray-900 bg-gray-50'
-                            : 'border border-gray-200'
-                        }`}
-                      >
-                        {isCompleted && (
-                          <div className="absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8">
-                            <div className="absolute transform rotate-45 bg-green-500 text-white text-xs font-bold py-1 right-[-35px] top-[32px] w-[170px] text-center shadow-sm">
-                              {t('invest_phase_completed')}
+                      const formatAmount = (amount: number) => {
+                        if (amount >= 1000) return `€${Math.round(amount / 1000)}K`;
+                        return `€${amount.toLocaleString()}`;
+                      };
+
+                      return (
+                        <div
+                          key={milestone.id}
+                          className={`p-4 rounded-lg transition-all duration-500 relative overflow-hidden ${
+                            isCompleted
+                              ? 'border-2 border-green-500 bg-green-50'
+                              : isActive
+                                ? 'border border-gray-900 bg-gray-50'
+                                : 'border border-gray-200'
+                          }`}
+                        >
+                          {isCompleted && (
+                            <div className="absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8">
+                              <div className="absolute transform rotate-45 bg-green-500 text-white text-xs font-bold py-1 right-[-35px] top-[32px] w-[170px] text-center shadow-sm">
+                                {t('invest_phase_completed')}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            {isCompleted ? (
-                              <span className="bg-green-500 text-white text-xs font-medium px-2 py-0.5 rounded flex items-center gap-1">
-                                <CheckCircle2 className="w-3 h-3" />
-                                {getBadgeLabel()}
+                          )}
+
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              {isCompleted ? (
+                                <span className="bg-green-500 text-white text-xs font-medium px-2 py-0.5 rounded flex items-center gap-1">
+                                  <CheckCircle2 className="w-3 h-3" />
+                                  {getBadgeLabel()}
+                                </span>
+                              ) : isActive ? (
+                                <span className="bg-gray-900 text-white text-xs font-medium px-2 py-0.5 rounded animate-pulse">
+                                  {getBadgeLabel()}
+                                </span>
+                              ) : (
+                                <span className="bg-gray-200 text-gray-600 text-xs font-medium px-2 py-0.5 rounded">
+                                  {getBadgeLabel()}
+                                </span>
+                              )}
+                              <span
+                                className={`font-medium ${isCompleted ? 'text-green-800' : 'text-gray-900'}`}
+                              >
+                                {title}
                               </span>
-                            ) : isActive ? (
-                              <span className="bg-gray-900 text-white text-xs font-medium px-2 py-0.5 rounded animate-pulse">
-                                {getBadgeLabel()}
-                              </span>
-                            ) : (
-                              <span className="bg-gray-200 text-gray-600 text-xs font-medium px-2 py-0.5 rounded">
-                                {getBadgeLabel()}
-                              </span>
-                            )}
-                            <span className={`font-medium ${isCompleted ? 'text-green-800' : 'text-gray-900'}`}>
-                              {t(phase.titleKey)}
+                            </div>
+                            <span
+                              className={`font-semibold ${
+                                isCompleted
+                                  ? 'text-green-600 line-through'
+                                  : isActive
+                                    ? 'text-gray-900'
+                                    : 'text-gray-500'
+                              }`}
+                            >
+                              {displayAmount}
                             </span>
                           </div>
-                          <span className={`font-semibold ${
-                            isCompleted ? 'text-green-600 line-through' : isActive ? 'text-gray-900' : 'text-gray-500'
-                          }`}>
-                            {phase.displayAmount}
-                          </span>
-                        </div>
-                        
-                        <p className={`text-sm mb-2 ${
-                          isCompleted ? 'text-green-700' : isActive ? 'text-gray-600' : 'text-gray-500'
-                        }`}>
-                          {t(phase.descKey)}
-                        </p>
 
-                        {isActive && !isLoadingFunds && (
-                          <div className="mb-3">
-                            <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="text-gray-600">
-                                {formatAmount(state.raised)} {t('invest_progress_raised')}
-                              </span>
-                              <span className="text-gray-900 font-medium">
-                                {formatAmount(phase.targetAmount)} {t('invest_progress_goal')}
-                              </span>
-                            </div>
-                            <div className="w-full rounded-full bg-gray-200 overflow-hidden h-2">
-                              <div
-                                className="bg-accent h-full rounded-full transition-all duration-1000"
-                                style={{ width: `${state.progress}%` }}
-                              />
-                            </div>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {Math.round(state.progress)}% {t('invest_progress_funded')}
+                          {description && (
+                            <p
+                              className={`text-sm mb-2 ${
+                                isCompleted
+                                  ? 'text-green-700'
+                                  : isActive
+                                    ? 'text-gray-600'
+                                    : 'text-gray-500'
+                              }`}
+                            >
+                              {description}
                             </p>
-                          </div>
-                        )}
-                        
-                        {phase.itemKeys.length > 0 && (
-                          <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-xs ${
-                            isCompleted ? 'text-green-600' : 'text-gray-500'
-                          }`}>
-                            {phase.itemKeys.map((itemKey) => (
-                              <span key={itemKey} className={`${isCompleted ? 'flex items-center gap-1' : ''}`}>
-                                {isCompleted && <Check className="w-3 h-3 flex-shrink-0" />}
-                                {t(itemKey)}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                        
-                        {isCompleted && (
-                          <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 to-transparent pointer-events-none" />
-                        )}
-                      </div>
-                    );
-                  })}
+                          )}
+
+                          {isActive && !isLoadingFunds && (
+                            <div className="mb-3">
+                              <div className="flex items-center justify-between text-xs mb-1">
+                                <span className="text-gray-600">
+                                  {formatAmount(state.raised)} {t('invest_progress_raised')}
+                                </span>
+                                <span className="text-gray-900 font-medium">
+                                  {formatAmount(getMilestoneGoal(milestone))}{' '}
+                                  {t('invest_progress_goal')}
+                                </span>
+                              </div>
+                              <div className="w-full rounded-full bg-gray-200 overflow-hidden h-2">
+                                <div
+                                  className="bg-accent h-full rounded-full transition-all duration-1000"
+                                  style={{ width: `${state.progress}%` }}
+                                />
+                              </div>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {Math.round(state.progress)}% {t('invest_progress_funded')}
+                              </p>
+                            </div>
+                          )}
+
+                          {itemLines.length > 0 && (
+                            <div
+                              className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-xs ${
+                                isCompleted ? 'text-green-600' : 'text-gray-500'
+                              }`}
+                            >
+                              {itemLines.map((line, i) => (
+                                <span
+                                  key={i}
+                                  className={
+                                    isCompleted ? 'flex items-center gap-1' : ''
+                                  }
+                                >
+                                  {isCompleted && (
+                                    <Check className="w-3 h-3 flex-shrink-0" />
+                                  )}
+                                  {line}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {isCompleted && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 to-transparent pointer-events-none" />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Right Column - Sticky Packages (1/3) */}
@@ -476,133 +621,15 @@ const InvestPage = ({ fundraisingConfig }: Props) => {
                   {t('invest_packages_label')}
                 </p>
 
-                {/* Package 0 - Entry */}
-                <div className="p-4 border border-dashed border-gray-300 rounded-xl bg-gradient-to-br from-green-50 to-white hover:border-green-400 transition-colors">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Leaf className="w-4 h-4 text-green-500" />
-                      <h3 className="font-medium text-gray-900">{t('invest_package0_title')}</h3>
-                    </div>
-                    <span className="text-xl font-bold text-gray-900">{formatPrice(1)}</span>
-                  </div>
-                  <p className="text-sm text-gray-500 mb-3">{t('invest_package0_desc')}</p>
-                  <div className="space-y-1.5 mb-4 text-sm">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Check className="w-4 h-4 text-green-400" />
-                      <span>{t('invest_package0_benefit1')}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Check className="w-4 h-4 text-green-400" />
-                      <span>{t('invest_package0_benefit2')}</span>
-                    </div>
-                  </div>
-                  <LinkButton href="/token/checkout?tokens=1" className="w-full" variant="secondary">
-                    {t('invest_package_cta_action')}
-                  </LinkButton>
-                </div>
-
-                {/* Package 1 - Supporter */}
-                <div className="p-4 border border-gray-200 rounded-xl bg-white hover:border-gray-300 transition-colors">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium text-gray-900">{t('invest_package1_title')}</h3>
-                    <span className="text-xl font-bold text-gray-900">{formatPrice(10)}</span>
-                  </div>
-                  <p className="text-sm text-gray-500 mb-3">{t('invest_package1_desc')}</p>
-                  <div className="space-y-1.5 mb-4 text-sm">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Check className="w-4 h-4 text-gray-400" />
-                      <span>{t('invest_package1_benefit1')}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Check className="w-4 h-4 text-gray-400" />
-                      <span>{t('invest_package1_benefit2')}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-900 font-medium">
-                      <Gift className="w-4 h-4 text-gray-600" />
-                      <span>{t('invest_package1_bonus')}</span>
-                    </div>
-                  </div>
-                  <LinkButton href="/token/checkout?tokens=10" className="w-full">
-                    {t('invest_package_cta_action')}
-                  </LinkButton>
-                </div>
-
-                {/* Package 2 - Aspiring Citizen (Popular) */}
-                <div className="p-4 border-2 border-gray-900 rounded-xl bg-white relative">
-                  <div className="absolute -top-3 left-4 bg-gray-900 text-white text-xs font-medium px-2 py-1 rounded">
-                    {t('invest_package_popular')}
-                  </div>
-                  <div className="flex items-center justify-between mb-2 mt-1">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-accent" />
-                      <h3 className="font-medium text-gray-900">{t('invest_package2_title')}</h3>
-                    </div>
-                    <span className="text-xl font-bold text-gray-900">{formatPrice(30)}</span>
-                  </div>
-                  <p className="text-sm text-gray-500 mb-3">{t('invest_package2_desc')}</p>
-                  <div className="space-y-1.5 mb-4 text-sm">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Check className="w-4 h-4 text-gray-400" />
-                      <span>{t('invest_package2_benefit1')}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Check className="w-4 h-4 text-gray-400" />
-                      <span>{t('invest_package2_benefit2')}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-900 font-medium">
-                      <Gift className="w-4 h-4 text-gray-600" />
-                      <span>{t('invest_package2_bonus')}</span>
-                    </div>
-                  </div>
-                  <LinkButton href="/token/checkout?tokens=30" className="w-full">
-                    {t('invest_package_cta_action')}
-                  </LinkButton>
-                </div>
-
-                {/* Lender */}
-                <div className="p-4 border border-gray-200 rounded-xl bg-gray-50">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium text-gray-900">{t('invest_package_lender_title')}</h3>
-                    <span className="text-xl font-bold text-gray-900">€50K+</span>
-                  </div>
-                  <p className="text-sm text-gray-500 mb-3">{t('invest_package_lender_desc')}</p>
-                  <div className="space-y-1.5 mb-4 text-sm text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-gray-400" />
-                      <span>{t('invest_package_lender_benefit1')}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-gray-400" />
-                      <span>{t('invest_package_lender_benefit2')}</span>
-                    </div>
-                  </div>
-                  <LinkButton
-                    href="https://calendly.com/samueldelesque"
-                    target="_blank"
-                    variant="secondary"
-                    className="w-full"
-                  >
-                    {t('invest_package_lender_cta_action')}
-                  </LinkButton>
-                </div>
-
-                {/* Monthly Support */}
-                <div className="p-4 border border-dashed border-gray-300 rounded-xl">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Calendar className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <h3 className="font-medium text-gray-900">{t('invest_way_subscribe_title')}</h3>
-                      <p className="text-xs text-gray-500">{t('invest_subscribe_from')}</p>
-                    </div>
-                  </div>
-                  <LinkButton
-                    href={fundraisingConfig.wandererUrl}
-                    variant="secondary"
-                    className="w-full mt-3"
-                  >
-                    {t('invest_way_subscribe_cta')}
-                  </LinkButton>
-                </div>
+                {(fundraisingConfig?.packages ?? []).map((pkg: FundraisingPackage, idx: number) => (
+                  <PackageCard
+                    key={`${pkg.type}-${idx}`}
+                    pkg={pkg}
+                    formatPrice={formatPrice}
+                    creditPricePerUnit={Number(fundraisingConfig?.creditPricePerUnit) || 30}
+                    t={t}
+                  />
+                ))}
 
                 {/* Share */}
                 <div className="p-4 bg-gradient-to-r from-accent/5 via-purple-50 to-pink-50 rounded-xl border border-accent/20">

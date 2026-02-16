@@ -300,94 +300,154 @@ export const configDescription: ConfigType[] = [
         type: 'boolean',
         default: false,
       },
-      creditPrice30Credits: {
+      amountRaisedPreCampaign: {
         type: 'number',
-        default: '50',
+        default: 0,
       },
-      creditPrice90Credits: {
+      campaignVideo: {
+        type: 'text',
+        default: '',
+      },
+      campaignTitle: {
+        type: 'text',
+        default: 'Invest',
+      },
+      creditPricePerUnit: {
         type: 'number',
-        default: '30',
+        default: 30,
       },
-      creditPrice180Credits: {
-        type: 'number',
-        default: '20',
-      },
-      videoId: {
+      loansLabel: {
         type: 'text',
-        default: 'btBqOboLdOg',
+        default: 'Loans',
       },
-      wandererUrl: {
+      adjustmentsLabel: {
         type: 'text',
-        default:
-          '/subscriptions/checkout?priceId=price_1N1YLVE9CDXOM807XtNAwiBW',
-      },
-      pioneerUrl: {
-        type: 'text',
-        default:
-          '/subscriptions/checkout?priceId=price_1O7ddSE9CDXOM807UGJZ5TEP',
-      },
-      oneMonthSharedUrl: {
-        type: 'text',
-        default: 'https://buy.stripe.com/9AQcPH10w8rh0485ko',
-      },
-      oneMonthPrivateUrl: {
-        type: 'text',
-        default: 'https://buy.stripe.com/eVa7vneRm8rh048aEH',
-      },
-      buy5TdfUrl: {
-        type: 'text',
-        default: '/token/checkout?tokens=5',
-      },
-      buy10TdfUrl: {
-        type: 'text',
-        default: '/token/checkout?tokens=10',
-      },
-      hostEventUrl: {
-        type: 'text',
-        default: 'mailto: space@traditionaldreamfactory.com',
+        default: 'Commitments',
       },
       milestones: {
         type: [
           {
             id: 'text',
-            name: 'text',
-            targetAmount: 'number',
-            currency: 'text',
-            startDate: 'text',
-            endDate: 'text',
-            status: {
-              type: 'select',
-              enum: ['pending', 'active', 'completed'],
-            },
+            title: 'text',
+            description: 'text',
+            items: 'long-text',
+            goal: 'number',
+            start: 'text',
+            end: 'text',
           },
         ],
         default: [
           {
             id: 'milestone-1',
-            name: 'Phase 1 - Land Purchase',
-            targetAmount: 295000,
-            currency: 'EUR',
-            startDate: '2025-12-01T00:00:00.000Z',
-            endDate: '2026-05-31T23:59:59.999Z',
-            status: 'active',
+            title: 'Roofs, Pool, Restaurant & Design',
+            description:
+              'Complete the final amenities required for hospitality licensing and opening to guests.',
+            items:
+              'Coliving roofs (€150K)\nPool completion (€20K)\nRestaurant (€100K)',
+            goal: 295000,
+            start: '2025-12-01',
+            end: '2026-05-31',
           },
           {
             id: 'milestone-2',
-            name: 'Phase 2 - Infrastructure',
-            targetAmount: 150000,
-            currency: 'EUR',
-            startDate: '2026-06-01T00:00:00.000Z',
-            endDate: '',
-            status: 'pending',
+            title: 'Artist Studios',
+            description:
+              'Expand capacity with 4 creative studios for artists-in-residence and workshops.',
+            items: '4 studios with natural light and workspace',
+            goal: 150000,
+            start: '2026-06-01',
+            end: '',
           },
           {
             id: 'milestone-3',
-            name: 'Phase 3 - Major Development',
-            targetAmount: 700000,
-            currency: 'EUR',
-            startDate: '',
-            endDate: '',
-            status: 'pending',
+            title: 'Accommodation Rooms',
+            description:
+              'Complete the 12 en-suite rooms, dorm, and 3-bedroom house for full capacity as a licensed coliving destination.',
+            items: '',
+            goal: 700000,
+            start: '',
+            end: '',
+          },
+        ],
+      },
+      packages: {
+        type: [
+          {
+            type: {
+              type: 'select',
+              enum: ['tokens', 'loan', 'credits', 'subscribe'],
+            },
+            title: 'text',
+            description: 'text',
+            tokens: 'number',
+            bonus: 'text',
+            minAmount: 'text',
+            credits: 'number',
+            subscribeUrl: 'text',
+          },
+        ],
+        default: [
+          {
+            type: 'tokens',
+            title: 'First Step',
+            description: 'Start your regenerative journey with just 1 token.',
+            tokens: 1,
+            bonus: '',
+            minAmount: '',
+            credits: 0,
+            subscribeUrl: '',
+          },
+          {
+            type: 'tokens',
+            title: 'Supporter',
+            description: 'Support TDF and get meaningful access with 10 tokens.',
+            tokens: 10,
+            bonus: 'Free weekend stay',
+            minAmount: '',
+            credits: 0,
+            subscribeUrl: '',
+          },
+          {
+            type: 'tokens',
+            title: 'Aspiring Citizen',
+            description:
+              'Our most popular package - commit to 30 nights/year and unlock citizenship path.',
+            tokens: 30,
+            bonus: 'Free permaculture course',
+            minAmount: '',
+            credits: 0,
+            subscribeUrl: '',
+          },
+          {
+            type: 'loan',
+            title: 'Private Lender',
+            description:
+              'Provide a loan directly to TDF with attractive terms and real estate security.',
+            tokens: 0,
+            bonus: 'Annual investor gathering',
+            minAmount: '50K',
+            credits: 0,
+            subscribeUrl: '',
+          },
+          {
+            type: 'credits',
+            title: 'Pre-book 1 month stay',
+            description: 'Pre-purchase 30 credits for a one-month stay.',
+            tokens: 0,
+            bonus: '',
+            minAmount: '',
+            credits: 30,
+            subscribeUrl: '',
+          },
+          {
+            type: 'subscribe',
+            title: 'Monthly Support',
+            description: 'Subscribe to support us monthly.',
+            tokens: 0,
+            bonus: '',
+            minAmount: '',
+            credits: 0,
+            subscribeUrl: '/subscriptions/checkout?priceId=price_1N1YLVE9CDXOM807XtNAwiBW',
           },
         ],
       },

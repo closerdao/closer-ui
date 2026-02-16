@@ -27,6 +27,7 @@ import { ConfigType } from '../../types/config';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import {
+  getDefaultConfigValue,
   getEnabledConfigs,
   getPreparedInputValue,
   getUpdatedArray,
@@ -224,6 +225,21 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
 
     setUpdatedConfigs(newConfigs);
     handleSaveConfig(newConfigs, configCategory);
+  };
+
+  const handleResetToDefaults = async (configSlug: string) => {
+    const defaultValue = getDefaultConfigValue(
+      configSlug,
+      mergedConfigDescription,
+    );
+    const newConfigs = updatedConfigs.map((config) =>
+      config.slug === configSlug
+        ? { ...config, value: defaultValue }
+        : config,
+    );
+    setUpdatedConfigs(newConfigs);
+    await handleSaveConfig(newConfigs, configSlug);
+    await loadData();
   };
 
   const handleSaveConfig = async (
@@ -774,6 +790,15 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
                               size="small"
                             >
                               {t('generic_save_button')}
+                            </Button>
+                            <Button
+                              onClick={() => handleResetToDefaults(configSlug)}
+                              isLoading={isLoading}
+                              isEnabled={!isLoading}
+                              variant="secondary"
+                              size="small"
+                            >
+                              {t('config_reset_to_defaults')}
                             </Button>
                             {hasConfigUpdated &&
                               selectedConfig === configSlug && (

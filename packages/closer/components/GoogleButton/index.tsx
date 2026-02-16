@@ -13,7 +13,7 @@ const GoogleButton = ({ onClick, isLoading }: Props) => {
   const t = useTranslations();
   return (
     <Button
-      className="gap-2 border-[#747775] text-[#1F1F1F] normal-case"
+      className="group justify-center gap-2 border-[#747775] text-[#1F1F1F] normal-case"
       variant="secondary"
       onClick={onClick}
       isEnabled={!isLoading}
@@ -25,6 +25,7 @@ const GoogleButton = ({ onClick, isLoading }: Props) => {
         viewBox="0 0 22 22"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
+        className="transition-[filter] duration-200 group-hover:[filter:none] [filter:grayscale(100%)]"
       >
         <path
           d="M21.56 11.25C21.56 10.47 21.49 9.72 21.36 9H11V13.26H16.92C16.66 14.63 15.88 15.79 14.71 16.57V19.34H18.28C20.36 17.42 21.56 14.6 21.56 11.25Z"

@@ -35,16 +35,8 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
       return 0;
     }
 
-    if (numericAmount < 90) {
-      return numericAmount * fundraisingConfig.creditPrice30Credits;
-    }
-    if (numericAmount >= 90 && numericAmount < 180) {
-      return numericAmount * fundraisingConfig.creditPrice90Credits;
-    }
-    if (numericAmount >= 180) {
-      return numericAmount * fundraisingConfig.creditPrice180Credits;
-    }
-    return 0;
+    const pricePerUnit = Number(fundraisingConfig?.creditPricePerUnit) || 30;
+    return numericAmount * pricePerUnit;
   };
 
   if (!isFundraiserEnabled) {
@@ -142,7 +134,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
                 Vybe {VYBE_PACKAGES[0]}
               </Heading>
               <p className="text-gray-600 text-sm">
-                €{fundraisingConfig.creditPrice30Credits} per Vybe
+                €{fundraisingConfig?.creditPricePerUnit ?? 30} per Vybe
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 items-center">
@@ -154,7 +146,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               </div>
 
               <div className="h-full p-6 sm:border-r sm:border-l font-bold text-lg">
-                €{fundraisingConfig.creditPrice30Credits * VYBE_PACKAGES[0]}
+                €{(fundraisingConfig?.creditPricePerUnit ?? 30) * VYBE_PACKAGES[0]}
               </div>
 
               <div className="pl-2">
@@ -173,7 +165,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
                 Vybe {VYBE_PACKAGES[1]}
               </Heading>
               <p className="text-gray-600 text-sm">
-                €{fundraisingConfig.creditPrice90Credits} per Vybe
+                €{fundraisingConfig?.creditPricePerUnit ?? 30} per Vybe
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 items-center">
@@ -185,7 +177,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               </div>
 
               <div className="h-full p-6 sm:border-r sm:border-l font-bold text-lg">
-                €{fundraisingConfig.creditPrice90Credits * VYBE_PACKAGES[1]}
+                €{(fundraisingConfig?.creditPricePerUnit ?? 30) * VYBE_PACKAGES[1]}
               </div>
 
               <div className="pl-2">
@@ -204,7 +196,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
                 Vybe {VYBE_PACKAGES[2]}
               </Heading>
               <p className="text-gray-600 text-sm">
-                €{fundraisingConfig.creditPrice180Credits} per Vybe
+                €{fundraisingConfig?.creditPricePerUnit ?? 30} per Vybe
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 items-center">
@@ -216,7 +208,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
               </div>
 
               <div className="h-full p-6 sm:border-r sm:border-l font-bold text-lg">
-                €{fundraisingConfig.creditPrice180Credits * VYBE_PACKAGES[2]}
+                €{(fundraisingConfig?.creditPricePerUnit ?? 30) * VYBE_PACKAGES[2]}
               </div>
 
               <div className="pl-2">
@@ -236,17 +228,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
                 Vybe flex — 1/∞ vybes
               </Heading>
               <p className="text-gray-600 text-sm">
-                {fundraisingConfig.creditPrice180Credits !==
-                fundraisingConfig.creditPrice30Credits ? (
-                  <>
-                    {' '}
-                    €{fundraisingConfig.creditPrice180Credits}- €
-                    {fundraisingConfig.creditPrice30Credits}
-                  </>
-                ) : (
-                  <> €{fundraisingConfig.creditPrice180Credits}</>
-                )}{' '}
-                per Vybe
+                €{fundraisingConfig?.creditPricePerUnit ?? 30} per Vybe
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 items-center">

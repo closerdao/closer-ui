@@ -46,6 +46,42 @@ export const getPreparedInputValue = (value: string) => {
   return String(value);
 };
 
+export const getDefaultConfigValue = (
+  slug: string,
+  configDescriptions: any[],
+): Record<string, any> => {
+  const categoryDefaultConfig = configDescriptions.find(
+    (c: any) => c?.slug === slug,
+  );
+  if (!categoryDefaultConfig?.value) return {};
+  const configOutput: Record<string, any> = {};
+  for (const key in categoryDefaultConfig.value) {
+    const def = categoryDefaultConfig.value[key];
+    const defaultConfigData = def.type;
+    const isArray = Array.isArray(defaultConfigData);
+    if (isArray) {
+      const defaultArray = def.default;
+      const isPrimitiveArray =
+        defaultConfigData.length === 1 &&
+        (defaultConfigData[0] === 'text' ||
+          defaultConfigData[0] === 'number' ||
+          defaultConfigData[0] === 'boolean');
+      if (isPrimitiveArray) {
+        configOutput[key] = Array.isArray(defaultArray) ? [...defaultArray] : [];
+      } else {
+        configOutput[key] = Array.isArray(defaultArray)
+          ? defaultArray.map((el: any) =>
+              typeof el === 'object' && el !== null ? { ...el } : el,
+            )
+          : [];
+      }
+    } else {
+      configOutput[key] = def.default;
+    }
+  }
+  return configOutput;
+};
+
 export const prepareConfigs = (
   myConfigs: Config[],
   configDescriptions: any,
