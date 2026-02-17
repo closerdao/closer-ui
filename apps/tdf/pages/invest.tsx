@@ -211,30 +211,39 @@ const PackageCard = ({ pkg, formatPrice, creditPricePerUnit, t }: PackageCardPro
 };
 
 const computeMilestoneStates = (
-  totalRaised: number,
   milestones: FundraisingMilestone[],
+  raisedByMilestoneId: Record<string, number>,
 ): Record<string, MilestoneState> => {
   const states: Record<string, MilestoneState> = {};
-  let remainingFunds = totalRaised;
-  let foundActive = false;
+  const now = new Date();
+  const activeMilestone = findActiveMilestone(milestones);
 
   for (const milestone of milestones) {
-    const target = getMilestoneGoal(milestone);
-    if (remainingFunds >= target) {
+    const goal = getMilestoneGoal(milestone);
+    const raised = raisedByMilestoneId[milestone.id] ?? 0;
+    const startRaw = getMilestoneStart(milestone);
+    const endRaw = getMilestoneEnd(milestone);
+    const start = startRaw ? new Date(startRaw) : null;
+    const end = endRaw ? new Date(endRaw) : null;
+    if (end) end.setHours(23, 59, 59, 999);
+    if (start) start.setHours(0, 0, 0, 0);
+
+    const isActiveByDate = activeMilestone?.id === milestone.id;
+    const isPast = end ? now > end : false;
+    const isReached = goal > 0 && raised >= goal;
+
+    if (isPast && isReached) {
       states[milestone.id] = {
         status: 'completed',
-        raised: target,
+        raised: goal,
         progress: 100,
       };
-      remainingFunds -= target;
-    } else if (!foundActive) {
+    } else if (isActiveByDate) {
       states[milestone.id] = {
         status: 'active',
-        raised: remainingFunds,
-        progress: target ? Math.min((remainingFunds / target) * 100, 100) : 0,
+        raised,
+        progress: goal ? Math.min((raised / goal) * 100, 100) : 0,
       };
-      remainingFunds = 0;
-      foundActive = true;
     } else {
       states[milestone.id] = {
         status: 'pending',
@@ -255,86 +264,83 @@ const InvestPage = ({ fundraisingConfig }: Props) => {
 
   const { getTotalCostWithoutWallet } = useBuyTokens();
   const [tokenPrice, setTokenPrice] = useState<number>(0);
-  const [totalRaised, setTotalRaised] = useState<number>(0);
+  const [raisedByMilestoneId, setRaisedByMilestoneId] = useState<Record<string, number>>({});
   const [isLoadingFunds, setIsLoadingFunds] = useState(true);
 
   const activeMilestone = useMemo(() => {
     return findActiveMilestone(fundraisingConfig?.milestones);
   }, [fundraisingConfig?.milestones]);
 
+  const milestones = useMemo(
+    () => fundraisingConfig?.milestones ?? [],
+    [fundraisingConfig?.milestones],
+  );
+
   useEffect(() => {
-    const fetchTotalRaised = async () => {
+    const fetchRaisedForMilestone = async (milestone: FundraisingMilestone) => {
+      const startDate = getMilestoneStart(milestone);
+      const endDate = getMilestoneEnd(milestone);
+      const dateFilter: Record<string, string> = {};
+      if (startDate) dateFilter.$gte = startDate;
+      if (endDate) dateFilter.$lte = endDate;
+      const cryptoWhere: Record<string, unknown> = {
+        type: 'tokenSale',
+        status: 'paid',
+      };
+      const fiatWhere: Record<string, unknown> = {
+        type: 'fiatTokenSale',
+        status: 'paid',
+      };
+      if (Object.keys(dateFilter).length > 0) {
+        cryptoWhere.created = { ...dateFilter };
+        fiatWhere.created = { ...dateFilter };
+      }
+      const [cryptoRes, fiatRes] = await Promise.all([
+        api.get('/sum/charge/amount.total.val', {
+          params: { where: formatSearch(cryptoWhere) },
+        }).catch(() => null),
+        api.get('/sum/charge/amount.total.val', {
+          params: { where: formatSearch(fiatWhere) },
+        }).catch(() => null),
+      ]);
+      const cryptoTotal = cryptoRes?.data?.sum || 0;
+      const fiatTotal = fiatRes?.data?.sum || 0;
+      const loansTotal = (fundraisingConfig?.loans || [])
+        .filter(loan => loan.countsTowardMilestone === milestone.id)
+        .reduce((sum, loan) => sum + (Number(loan.amount) || 0), 0);
+      const adjustmentsTotal = (fundraisingConfig?.manualAdjustments || [])
+        .filter(adj => adj.countsTowardMilestone === milestone.id)
+        .reduce((sum, adj) => sum + (Number(adj.amount) || 0), 0);
+      return Number(cryptoTotal) + Number(fiatTotal) + loansTotal + adjustmentsTotal;
+    };
+
+    const fetchAllRaised = async () => {
+      if (!milestones.length) {
+        setRaisedByMilestoneId({});
+        setIsLoadingFunds(false);
+        return;
+      }
       try {
-        const startDate = activeMilestone
-          ? getMilestoneStart(activeMilestone)
-          : null;
-        const endDate = activeMilestone
-          ? getMilestoneEnd(activeMilestone)
-          : null;
-
-        const dateFilter: Record<string, string> = {};
-        if (startDate) {
-          dateFilter.$gte = startDate;
-        }
-        if (endDate) {
-          dateFilter.$lte = endDate;
-        }
-
-        const cryptoWhere: Record<string, unknown> = {
-          type: 'tokenSale',
-          status: 'paid',
-        };
-        const fiatWhere: Record<string, unknown> = {
-          type: 'fiatTokenSale',
-          status: 'paid',
-        };
-
-        if (Object.keys(dateFilter).length > 0) {
-          cryptoWhere.created = dateFilter;
-          fiatWhere.created = dateFilter;
-        }
-
-        const [cryptoRes, fiatRes] = await Promise.all([
-          api.get('/sum/charge/amount.total.val', {
-            params: { where: formatSearch(cryptoWhere) },
-          }).catch(() => null),
-          api.get('/sum/charge/amount.total.val', {
-            params: { where: formatSearch(fiatWhere) },
-          }).catch(() => null),
-        ]);
-
-        const cryptoTotal = cryptoRes?.data?.sum || 0;
-        const fiatTotal = fiatRes?.data?.sum || 0;
-
-        const loansTotal = (fundraisingConfig?.loans || [])
-          .filter(loan => !activeMilestone || loan.countsTowardMilestone === activeMilestone.id)
-          .reduce((sum, loan) => sum + (Number(loan.amount) || 0), 0);
-
-        const adjustmentsTotal = (fundraisingConfig?.manualAdjustments || [])
-          .filter(adj => !activeMilestone || adj.countsTowardMilestone === activeMilestone.id)
-          .reduce((sum, adj) => sum + (Number(adj.amount) || 0), 0);
-
-        const preCampaign = Number(fundraisingConfig?.amountRaisedPreCampaign) || 0;
-        setTotalRaised(
-          preCampaign + cryptoTotal + fiatTotal + loansTotal + adjustmentsTotal,
+        const entries = await Promise.all(
+          milestones.map(async m => {
+            const raised = await fetchRaisedForMilestone(m);
+            return [m.id, raised] as const;
+          }),
         );
+        setRaisedByMilestoneId(Object.fromEntries(entries));
       } catch (error) {
-        console.error('Error fetching total raised:', error);
+        console.error('Error fetching raised by milestone:', error);
       } finally {
         setIsLoadingFunds(false);
       }
     };
 
-    fetchTotalRaised();
-  }, [fundraisingConfig, activeMilestone]);
+    fetchAllRaised();
+  }, [fundraisingConfig?.loans, fundraisingConfig?.manualAdjustments, milestones]);
 
-  const milestones = useMemo(
-    () => fundraisingConfig?.milestones ?? [],
-    [fundraisingConfig?.milestones],
-  );
   const milestoneStates = useMemo(() => {
-    return computeMilestoneStates(totalRaised, milestones);
-  }, [totalRaised, milestones]);
+    return computeMilestoneStates(milestones, raisedByMilestoneId);
+  }, [milestones, raisedByMilestoneId]);
 
   useEffect(() => {
     (async () => {

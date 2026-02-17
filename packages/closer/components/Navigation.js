@@ -343,7 +343,7 @@ const Navigation = () => {
                 return null;
               })()}
             {configLoaded && APP_NAME && APP_NAME?.toLowerCase() === 'tdf' && isFundraiserEnabled && (
-              <div className="min-w-0 flex-shrink">
+              <div className="w-fit flex-shrink-0">
                 <FundraisingWidget
                   variant="nav"
                   fundraisingConfig={fundraisingConfig}
@@ -360,7 +360,7 @@ const Navigation = () => {
                 <ProfilePhoto user={user} size="10" />
               </Link>
             )}
-            <div className="ml-4 pr-4">
+            <div className="ml-4 pr-4 flex-shrink-0">
               <Menu isOpen={navOpen} toggleNav={toggleNav}>
                 {configLoaded ? (
                   isAuthenticated ? (
