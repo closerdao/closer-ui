@@ -845,6 +845,7 @@ const Checkout = ({
             <>
               {isWeb3BookingEnabled &&
                 !ticketOption?.isDayTicket &&
+                (status === 'open' || status === 'confirmed') &&
                 !(
                   booking?.paymentDelta?.fiat &&
                   booking?.paymentDelta?.fiat?.val > 0
@@ -986,7 +987,7 @@ const Checkout = ({
                       rentalToken &&
                       rentalToken?.val > 0 &&
                       useTokens &&
-                      status !== 'tokens-staked' && (
+                      (status === 'open' || status === 'confirmed') && (
                         <div className="mt-2">
                           <BookingWallet
                             toPay={
