@@ -2,10 +2,10 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
+import dynamic from 'next/dynamic';
 import React, { useEffect, useState } from 'react';
 
 import CitizenSubscriptionProgress from '../../components/CitizenSubscriptionProgress';
-import ConnectedWallet from '../../components/ConnectedWallet';
 import EventsList from '../../components/EventsList';
 import FinancedTokenProgress from '../../components/FinancedTokenProgress';
 import Modal from '../../components/Modal';
@@ -30,6 +30,15 @@ import api, { cdn } from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
+
+const ConnectedWallet =
+  process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true'
+    ? dynamic(
+        () =>
+          import('../../components/ConnectedWallet').then((m) => m.default),
+        { ssr: false },
+      )
+    : () => null;
 
 interface MemberPageProps {
   member: User;

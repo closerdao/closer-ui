@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 
 import models from '../../../models';
 import { BookingConfig, Event } from '../../../types';
+import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
@@ -73,16 +74,14 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No event');
     }
 
-    const [eventRes, bookingRes, messages] = await Promise.all([
+    const [eventRes, configs, messages] = await Promise.all([
       api.get(`/event/${query.slug}`),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
+      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const event = eventRes?.data.results;
-    const bookingConfig = bookingRes?.data.results.value;
+    const bookingConfig = getConfigValueBySlug(configs, 'booking');
 
     return { event, bookingConfig, messages };
   } catch (err) {

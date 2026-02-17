@@ -16,12 +16,15 @@ const nextConfig = {
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   swcMinify: true,
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: process.env.ENVIRONMENT === 'production',
   },
   images: {
     remotePatterns: [
       {
         hostname: 'cdn.oasa.co',
+      },
+      {
+        hostname: 'oasa.fra1.digitaloceanspaces.com',
       },
     ],
   },

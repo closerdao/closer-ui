@@ -24,7 +24,11 @@ describe('BookingCheckoutPage', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    process.env = { ...OLD_ENV, NEXT_PUBLIC_FEATURE_BOOKING: 'true' };
+    process.env = {
+      ...OLD_ENV,
+      NEXT_PUBLIC_FEATURE_BOOKING: 'true',
+      NEXT_PUBLIC_FEATURE_WEB3_WALLET: 'false',
+    };
   });
 
   afterAll(() => {

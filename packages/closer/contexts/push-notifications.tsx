@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 
+import { getConfig, getConfigValueBySlug } from '../utils/configCache';
 import api from '../utils/api';
 import { useAuth } from './auth';
 import { usePlatform } from './platform';
@@ -72,9 +73,11 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
   }, []);
 
   useEffect(() => {
-    api
-      .get('/config/community')
-      .then((res) => setIsCommunityEnabled(res?.data?.results?.value?.enabled === true))
+    getConfig(api)
+      .then((configs) => {
+        const communityConfig = getConfigValueBySlug(configs, 'community');
+        setIsCommunityEnabled(communityConfig?.enabled === true);
+      })
       .catch(() => setIsCommunityEnabled(false));
   }, []);
 

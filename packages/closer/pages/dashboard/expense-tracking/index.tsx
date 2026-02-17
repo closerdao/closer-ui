@@ -262,7 +262,7 @@ const ExpenseTrackingDashboardPage = ({
         <title>{t('expense_tracking_dashboard_title')}</title>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
-      <AdminLayout isBookingEnabled={true}>
+      <AdminLayout>
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           <Heading level={2}>{t('expense_tracking_dashboard_title')}</Heading>
           <TimeFrameSelector

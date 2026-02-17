@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl';
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
 import { BaseBookingParams, Booking, BookingConfig, CloserCurrencies, Price } from '../../../types';
+import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api from '../../../utils/api';
 import { getBookingPaymentType } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
@@ -61,15 +62,13 @@ const BookingCancelPage = ({ booking, bookingConfig, error }: Props) => {
     const fetchPolicy = async () => {
       try {
         setPolicyLoading(true);
-        const {
-          data: { results: loadPolicy },
-        } = await api.get('/config/booking');
-
+        const configs = await getConfig(api);
+        const bookingConfig = getConfigValueBySlug(configs, 'booking');
         const policy = {
-          lastday: loadPolicy.value.cancellationPolicyLastday,
-          lastweek: loadPolicy.value.cancellationPolicyLastweek,
-          lastmonth: loadPolicy.value.cancellationPolicyLastmonth,
-          default: loadPolicy.value.cancellationPolicyDefault,
+          lastday: bookingConfig?.cancellationPolicyLastday,
+          lastweek: bookingConfig?.cancellationPolicyLastweek,
+          lastmonth: bookingConfig?.cancellationPolicyLastmonth,
+          default: bookingConfig?.cancellationPolicyDefault,
         };
 
         setPolicy(policy);
@@ -125,18 +124,16 @@ const BookingCancelPage = ({ booking, bookingConfig, error }: Props) => {
 BookingCancelPage.getInitialProps = async (context: NextPageContext) => {
   try {
     const { query } = context;
-    const [bookingRes, bookingConfigRes, messages] = await Promise.all([
+    const [bookingRes, configs, messages] = await Promise.all([
       api.get(`/booking/${query.slug}`).catch((err) => {
         console.error('Error fetching booking config:', err);
         return null;
       }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
+      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const booking = bookingRes?.data?.results;
-    const bookingConfig = bookingConfigRes?.data?.results?.value;
+    const bookingConfig = getConfigValueBySlug(configs, 'booking');
 
     return { booking, bookingConfig, messages };
   } catch (err) {

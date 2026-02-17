@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { ChangeEvent, useEffect, useState } from 'react';
 
 import ArrayConfig from '../../components/ArrayConfig';
+import ConfigImageUpload from '../../components/ConfigImageUpload';
 import AdminLayout from '../../components/Dashboard/AdminLayout';
 import PhotosEditor from '../../components/PhotosEditor';
 import {
@@ -23,10 +24,11 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { Config } from '../../types';
 import { BookingConfig } from '../../types/api';
-import { ConfigType } from '../../types/config';
+import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import {
+  getDefaultConfigValue,
   getEnabledConfigs,
   getPreparedInputValue,
   getUpdatedArray,
@@ -39,19 +41,19 @@ import PageNotFound from '../not-found';
 const BETA_FEATURES = ['community', 'governance'];
 
 interface Props {
-  defaultEmailsConfig: ConfigType;
   error: null | string;
   bookingConfig: BookingConfig;
 }
 
-const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
+const ConfigPage = ({ bookingConfig }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
   const { user } = useAuth();
 
-  const isBookingEnabled =
-    bookingConfig?.enabled &&
+  const isBookingAllowedByEnv =
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+  const isBookingEnabled =
+    bookingConfig?.enabled && isBookingAllowedByEnv;
 
   const isWeb3Enabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
   const isWeb3BookingEnabled =
@@ -70,11 +72,12 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
     process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
   const isAffiliateEnabled =
     process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true';
+  const isRolesEnabled = process.env.NEXT_PUBLIC_FEATURE_ROLES === 'true';
 
   const effectiveAllowedConfigs = [
     'general',
     'events',
-    ...(isBookingEnabled ? ['booking', 'booking-rules', 'payment', 'emails'] : []),
+    ...(isBookingAllowedByEnv ? ['booking', 'booking-rules', 'payment'] : []),
     ...(isVolunteeringEnabled ? ['volunteering'] : []),
     ...(isSubscriptionsEnabled ? ['subscriptions'] : []),
     ...(isSupportUsEnabled ? ['fundraiser'] : []),
@@ -82,6 +85,7 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
     ...(isCitizenshipEnabled ? ['citizenship'] : []),
     ...(isAffiliateEnabled ? ['affiliate'] : []),
     ...(isBlogEnabled ? ['blog'] : []),
+    ...(isRolesEnabled ? ['roles'] : []),
     ...(isReferralEnabled ? ['referral'] : []),
     ...(isWeb3Enabled ? ['airdrop', 'governance'] : []),
     ...(isWeb3BookingEnabled ? ['web3'] : []),
@@ -94,8 +98,7 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
 
   const myConfigs = platform.config.find();
 
-  const filter = {};
-  const mergedConfigDescription = configDescription.concat(defaultEmailsConfig);
+  const mergedConfigDescription = configDescription;
 
   const allPossibleFeatures = mergedConfigDescription
     .map((config: any) => config?.slug)
@@ -139,7 +142,8 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
 
   useEffect(() => {
     loadData();
-  }, [platform, filter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load config once on mount to avoid GET /config loop
+  }, []);
 
   useEffect(() => {
     if (myConfigs) {
@@ -173,7 +177,7 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
   };
 
   const saveInitialConfig = async () => {
-    const initialConfigCategories = ['general', 'emails'];
+    const initialConfigCategories = ['general'];
     const newConfigs: Config[] = [
       ...updatedConfigs.map((config) => {
         if (initialConfigCategories.includes(config.slug)) {
@@ -226,6 +230,21 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
     handleSaveConfig(newConfigs, configCategory);
   };
 
+  const handleResetToDefaults = async (configSlug: string) => {
+    const defaultValue = getDefaultConfigValue(
+      configSlug,
+      mergedConfigDescription,
+    );
+    const newConfigs = updatedConfigs.map((config) =>
+      config.slug === configSlug
+        ? { ...config, value: defaultValue }
+        : config,
+    );
+    setUpdatedConfigs(newConfigs);
+    await handleSaveConfig(newConfigs, configSlug);
+    await loadData();
+  };
+
   const handleSaveConfig = async (
     newConfigs: Config[] = [],
     configCategory = '',
@@ -242,22 +261,6 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
       const configExists = myConfigs
         .toJS()
         .some((config: any) => config.slug === configCategoryToSave);
-
-      // Log specific email template being saved
-      if (configCategoryToSave === 'emails') {
-        const elements = updatedConfig?.value?.elements;
-        if (Array.isArray(elements)) {
-          const financedTokenTemplate = elements.find(
-            (element: any) => element.name === 'financedToken_decoupled_user',
-          );
-          if (financedTokenTemplate) {
-            console.log(
-              'Saving financedToken_decoupled_user template to database:',
-              JSON.stringify(financedTokenTemplate, null, 2),
-            );
-          }
-        }
-      }
 
       let res;
       if (configExists) {
@@ -366,11 +369,7 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
 
           const updatedElements = elements.map((element: any) => {
             if (element.name === name) {
-              // Create a new element with default values but explicitly set lowerText to empty
-              const resetElement = { ...defaultValue };
-              // Always ensure lowerText is empty for email templates
-              resetElement.lowerText = '';
-              return resetElement;
+              return { ...defaultValue };
             }
             return element;
           });
@@ -442,7 +441,7 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
         <title>{t('platform_configs')}</title>
       </Head>
 
-      <AdminLayout isBookingEnabled={isBookingEnabled}>
+      <AdminLayout>
         <div className="w-full max-w-5xl flex flex-col gap-6">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-accent/10 rounded-lg">
@@ -464,24 +463,71 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
                   updatedConfigs.find((config) => config.slug === 'general')
                     ?.value ?? {},
                 ).map(([key]) => {
+                  const generalConfig = updatedConfigs.find(
+                    (config) => config.slug === 'general',
+                  );
                   const currentValue: string | number | boolean | any[] =
-                    updatedConfigs.find(
-                      (config) => config.slug === selectedConfig,
-                    )?.value[key] ?? [];
+                    generalConfig?.value[key] ?? [];
                   const description = mergedConfigDescription?.find(
                     (c) => c.slug === 'general',
                   )?.value as Record<string, any>;
                   const inputType = description?.[key]?.type;
                   const isSelect = inputType === 'select';
-                  const selectOptions = description?.[key]?.enum;
+                  let selectOptions = description?.[key]?.enum;
+                  if (
+                    isSelect &&
+                    (key === 'primaryCtaVisitor' ||
+                      key === 'primaryCtaMember')
+                  ) {
+                    const baseVisitor = [
+                      'none',
+                      'login',
+                      ...(isBookingEnabled ? ['bookings'] : []),
+                      ...(isCoursesEnabled ? ['learningHub'] : []),
+                      'events',
+                      'custom',
+                    ];
+                    const baseMember = [
+                      'none',
+                      ...(isBookingEnabled ? ['bookings'] : []),
+                      ...(isCoursesEnabled ? ['learningHub'] : []),
+                      'events',
+                      'custom',
+                    ];
+                    selectOptions =
+                      key === 'primaryCtaVisitor' ? baseVisitor : baseMember;
+                  }
                   const isTime = inputType === 'time';
+                  const isImage = inputType === 'image';
 
                   if (key === 'enabled') return null;
+                  if (
+                    (key === 'primaryCtaCustomUrl' ||
+                      key === 'primaryCtaCustomText') &&
+                    generalConfig?.value?.primaryCtaVisitor !== 'custom' &&
+                    generalConfig?.value?.primaryCtaMember !== 'custom'
+                  ) {
+                    return null;
+                  }
                   return (
                     <div key={key} className="flex flex-col gap-1">
                       <label className="text-sm font-medium text-gray-700">{t(`config_label_${key}`)}</label>
 
-                      {!isSelect && !isTime && (
+                      {isImage && (
+                        <ConfigImageUpload
+                          value={String(currentValue)}
+                          onChange={(url) => {
+                            const newConfigs = updatedConfigs.map((config) => {
+                              if (config.slug === 'general') {
+                                return { ...config, value: { ...config.value, [key]: url } };
+                              }
+                              return config;
+                            });
+                            setUpdatedConfigs(newConfigs);
+                          }}
+                        />
+                      )}
+                      {!isSelect && !isTime && !isImage && (
                         <input
                           className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                           name={key}
@@ -502,14 +548,27 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
                       {isSelect && (
                         <select
                           className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                          value={String(currentValue)}
+                          value={String(
+                            selectOptions?.includes(currentValue)
+                              ? currentValue
+                              : selectOptions?.[0] ?? '',
+                          )}
                           onChange={handleChange}
                           name={key}
                         >
-                          {selectOptions.map((option: string) => {
+                          {selectOptions?.map((option: string) => {
                             return (
                               <option value={option} key={option}>
-                                {option}
+                                {[
+                                  'none',
+                                  'login',
+                                  'bookings',
+                                  'learningHub',
+                                  'events',
+                                  'custom',
+                                ].includes(option)
+                                  ? t(`config_option_cta_${option}`)
+                                  : option}
                               </option>
                             );
                           })}
@@ -613,9 +672,49 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
                               const isArray = Array.isArray(inputType);
                               const isSelect = inputType === 'select';
                               const isTime = inputType === 'time';
-                              const selectOptions = description?.[key]?.enum;
+                              const isImage = inputType === 'image';
+                              let selectOptions = description?.[key]?.enum;
+                              if (
+                                isSelect &&
+                                (key === 'primaryCtaVisitor' ||
+                                  key === 'primaryCtaMember')
+                              ) {
+                                const baseVisitor = [
+                                  'none',
+                                  'login',
+                                  ...(isBookingEnabled ? ['bookings'] : []),
+                                  ...(isCoursesEnabled ? ['learningHub'] : []),
+                                  ...(enabledConfigs?.includes('events')
+                                    ? ['events']
+                                    : []),
+                                  'custom',
+                                ];
+                                const baseMember = [
+                                  'none',
+                                  ...(isBookingEnabled ? ['bookings'] : []),
+                                  ...(isCoursesEnabled ? ['learningHub'] : []),
+                                  ...(enabledConfigs?.includes('events')
+                                    ? ['events']
+                                    : []),
+                                  'custom',
+                                ];
+                                selectOptions =
+                                  key === 'primaryCtaVisitor'
+                                    ? baseVisitor
+                                    : baseMember;
+                              }
 
                               if (key === 'enabled') return null;
+                              if (
+                                (key === 'primaryCtaCustomUrl' ||
+                                  key === 'primaryCtaCustomText') &&
+                                configSlug === 'general' &&
+                                configData.value?.primaryCtaVisitor !==
+                                  'custom' &&
+                                configData.value?.primaryCtaMember !== 'custom'
+                              ) {
+                                return null;
+                              }
 
                               return (
                                 <div
@@ -627,7 +726,23 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
                                       {t(`config_label_${key}`)}
                                     </label>
                                   )}
-                                  {typeof value === 'boolean' ? (
+                                  {isImage ? (
+                                    <ConfigImageUpload
+                                      value={String(currentValue)}
+                                      onChange={(url) => {
+                                        const newConfigs = updatedConfigs.map((config) => {
+                                          if (config.slug === configSlug) {
+                                            return {
+                                              ...config,
+                                              value: { ...config.value, [key]: url },
+                                            };
+                                          }
+                                          return config;
+                                        });
+                                        setUpdatedConfigs(newConfigs);
+                                      }}
+                                    />
+                                  ) : typeof value === 'boolean' ? (
                                     <div className="flex gap-4">
                                       <label className="flex gap-2 items-center text-sm cursor-pointer">
                                         <input
@@ -701,7 +816,7 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
                                           errors={errors}
                                         />
                                       ) : null}
-                                      {!isArray && !isSelect && !isTime && (
+                                      {!isArray && !isSelect && !isTime && !isImage && (
                                         <input
                                           className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                                           name={key}
@@ -733,7 +848,13 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
                                       {isSelect && (
                                         <select
                                           className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                                          value={String(currentValue)}
+                                          value={String(
+                                            selectOptions?.includes(
+                                              currentValue,
+                                            )
+                                              ? currentValue
+                                              : selectOptions?.[0] ?? '',
+                                          )}
                                           onChange={(e) => {
                                             setSelectedConfig(configSlug);
                                             handleChange(e);
@@ -746,7 +867,18 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
                                                 value={option}
                                                 key={option}
                                               >
-                                                {option}
+                                                {[
+                                                  'none',
+                                                  'login',
+                                                  'bookings',
+                                                  'learningHub',
+                                                  'events',
+                                                  'custom',
+                                                ].includes(option)
+                                                  ? t(
+                                                      `config_option_cta_${option}`,
+                                                    )
+                                                  : option}
                                               </option>
                                             ),
                                           )}
@@ -774,6 +906,15 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
                               size="small"
                             >
                               {t('generic_save_button')}
+                            </Button>
+                            <Button
+                              onClick={() => handleResetToDefaults(configSlug)}
+                              isLoading={isLoading}
+                              isEnabled={!isLoading}
+                              variant="secondary"
+                              size="small"
+                            >
+                              {t('config_reset_to_defaults')}
                             </Button>
                             {hasConfigUpdated &&
                               selectedConfig === configSlug && (
@@ -823,24 +964,20 @@ const ConfigPage = ({ defaultEmailsConfig, bookingConfig }: Props) => {
 
 ConfigPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [emailsRes, bookingRes, messages] = await Promise.all([
-      api.get('/emails').catch(() => null),
-      api.get('/config/booking').catch(() => null),
+    const [configs, messages] = await Promise.all([
+      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
-    const defaultEmailsConfig = emailsRes?.data?.results;
-    const bookingConfig = bookingRes?.data?.results?.value;
+    const bookingConfig = getConfigValueBySlug(configs, 'booking');
 
     return {
-      defaultEmailsConfig,
       bookingConfig,
       error: null,
       messages,
     };
   } catch (err: unknown) {
     return {
-      defaultEmailsConfig: null,
       bookingConfig: null,
       error: parseMessageFromError(err),
       messages: null,

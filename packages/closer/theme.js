@@ -39,5 +39,16 @@ module.exports = {
       '4xl':
         '0px 1px 5px rgba(0, 0, 0, 0.12), 0px 2px 2px rgba(0, 0, 0, 0.14), 0px 3px 1px -2px rgba(0, 0, 0, 0.2);',
     },
+    keyframes: {
+      'sparkle-float': {
+        '0%': { opacity: '0', transform: 'translateY(0)' },
+        '25%': { opacity: '1', transform: 'translateY(-4px)' },
+        '75%': { opacity: '0.6', transform: 'translateY(-10px)' },
+        '100%': { opacity: '0', transform: 'translateY(-14px)' },
+      },
+    },
+    animation: {
+      'sparkle-float': 'sparkle-float 2.2s ease-in-out infinite',
+    },
   },
 };

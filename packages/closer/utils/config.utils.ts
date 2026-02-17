@@ -46,123 +46,74 @@ export const getPreparedInputValue = (value: string) => {
   return String(value);
 };
 
+export const buildMergedConfig = (
+  apiConfigs: Array<{ slug: string; value?: Record<string, any> }>,
+): Record<string, Record<string, any>> => {
+  const apiBySlug: Record<string, Record<string, any>> = {};
+  (apiConfigs || []).forEach((c) => {
+    apiBySlug[c.slug] = c.value || {};
+  });
+  const result: Record<string, Record<string, any>> = {};
+  configDescription.forEach((desc) => {
+    const slug = desc.slug;
+    const defaults = getDefaultConfigValue(slug, configDescription);
+    result[slug] = Object.assign({}, defaults, apiBySlug[slug] || {});
+  });
+  Object.keys(apiBySlug).forEach((slug) => {
+    if (!result[slug]) result[slug] = apiBySlug[slug];
+  });
+  return result;
+};
+
+export const getDefaultConfigValue = (
+  slug: string,
+  configDescriptions: any[],
+): Record<string, any> => {
+  const categoryDefaultConfig = configDescriptions.find(
+    (c: any) => c?.slug === slug,
+  );
+  if (!categoryDefaultConfig?.value) return {};
+  const configOutput: Record<string, any> = {};
+  for (const key in categoryDefaultConfig.value) {
+    const def = categoryDefaultConfig.value[key];
+    const defaultConfigData = def.type;
+    const isArray = Array.isArray(defaultConfigData);
+    if (isArray) {
+      const defaultArray = def.default;
+      const isPrimitiveArray =
+        defaultConfigData.length === 1 &&
+        (defaultConfigData[0] === 'text' ||
+          defaultConfigData[0] === 'number' ||
+          defaultConfigData[0] === 'boolean');
+      if (isPrimitiveArray) {
+        configOutput[key] = Array.isArray(defaultArray) ? [...defaultArray] : [];
+      } else {
+        configOutput[key] = Array.isArray(defaultArray)
+          ? defaultArray.map((el: any) =>
+              typeof el === 'object' && el !== null ? { ...el } : el,
+            )
+          : [];
+      }
+    } else {
+      configOutput[key] = def.default;
+    }
+  }
+  return configOutput;
+};
+
 export const prepareConfigs = (
   myConfigs: Config[],
   configDescriptions: any,
-) => {
-  const configsOutput = [];
-
-  for (const categoryDefaultConfig of configDescriptions) {
-    const categoryName = categoryDefaultConfig?.slug;
-    let configOutput = {} as Record<string, any>;
-    const categoryMyConfig: any = myConfigs.find(
-      (config) => config.slug === categoryName,
-    )?.value;
-
-    for (const key in categoryDefaultConfig?.value) {
-      const defaultConfigData = categoryDefaultConfig.value[key].type;
-      const isArray = Array.isArray(defaultConfigData);
-      if (isArray) {
-        const defaultArray = categoryDefaultConfig.value[key].default;
-        const isPrimitiveArray = defaultConfigData.length === 1 && 
-          (defaultConfigData[0] === 'text' || defaultConfigData[0] === 'number' || defaultConfigData[0] === 'boolean');
-        
-        let defaultNestedConfig: any = null;
-        
-        if (Array.isArray(defaultArray) && defaultArray.length > 0) {
-          defaultNestedConfig = defaultArray[0];
-        } else if (Array.isArray(defaultConfigData) && defaultConfigData.length > 0 && !isPrimitiveArray) {
-          const typeDefinition = defaultConfigData[0];
-          if (typeDefinition && typeof typeDefinition === 'object') {
-            defaultNestedConfig = {};
-            Object.keys(typeDefinition).forEach((typeKey) => {
-              const typeValue = typeDefinition[typeKey];
-              if (typeValue === 'text') {
-                defaultNestedConfig[typeKey] = '';
-              } else if (typeValue === 'number') {
-                defaultNestedConfig[typeKey] = 0;
-              } else if (typeValue === 'boolean') {
-                defaultNestedConfig[typeKey] = false;
-              }
-            });
-          }
-        }
-
-        const configArray = categoryMyConfig && categoryMyConfig[key];
-        const output: any[] = [];
-
-        if (categoryName === 'emails') {
-          // if new template is added to defaults, show it in the UI
-          const defaultNestedArrayConfig =
-            categoryDefaultConfig.value[key].default;
-
-          defaultNestedArrayConfig.forEach((element: any, index: number) => {
-            const templateConfig =
-              categoryDefaultConfig.value[key].default[index];
-            const doesIncludeTemplate = configArray?.some(
-              (config: any) => config.name === element.name,
-            );
-            // check if there are elements that exist in db array but not in default array
-            if (!doesIncludeTemplate) {
-              configArray?.push(element);
-            }
-          });
-        }
-
-        if (!configArray) {
-          if (categoryName === 'emails') {
-            output.push(...categoryDefaultConfig.value[key].default);
-          } else if (defaultNestedConfig) {
-            output.push(defaultNestedConfig);
-          }
-        }
-
-        if (isPrimitiveArray) {
-          // For primitive arrays (like ['text']), just use the array as-is
-          output.push(...(configArray || []));
-        } else {
-          configArray?.forEach((myConfigElement: any) => {
-            if (!defaultNestedConfig) {
-              // If no default config, just use the element as-is
-              output.push(myConfigElement || {});
-              return;
-            }
-            const entry = { ...defaultNestedConfig };
-            if (defaultNestedConfig && typeof defaultNestedConfig === 'object') {
-              Object.entries(defaultNestedConfig).forEach(([nestedKey]) => {
-                if (myConfigElement && myConfigElement.hasOwnProperty(nestedKey)) {
-                  entry[nestedKey] = myConfigElement[nestedKey];
-                } else {
-                  entry[nestedKey] = defaultNestedConfig[nestedKey];
-                }
-              });
-            }
-            output.push(entry);
-          });
-        }
-
-        configOutput = {
-          ...configOutput,
-          [key]: output,
-        };
-      } else {
-        if (!categoryMyConfig && key === 'enabled') {
-          configOutput[key] = false;
-        } else {
-          configOutput[key] =
-            categoryMyConfig?.[key] !== undefined
-              ? categoryMyConfig?.[key]
-              : categoryDefaultConfig.value[key].default;
-        }
-      }
-    }
-
-    configsOutput.push({
-      slug: categoryDefaultConfig?.slug,
-      value: configOutput,
-    });
-  }
-  return configsOutput;
+): Array<{ slug: string; value: Record<string, any> }> => {
+  return configDescriptions.map((desc: any) => {
+    const slug = desc.slug;
+    const defaults = getDefaultConfigValue(slug, configDescriptions);
+    const apiValue = myConfigs.find((c) => c.slug === slug)?.value || {};
+    return {
+      slug,
+      value: Object.assign({}, defaults, apiValue),
+    };
+  });
 };
 
 export const getUpdatedArray = (

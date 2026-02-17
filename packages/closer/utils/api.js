@@ -1,12 +1,13 @@
 import axios from 'axios';
 
 import {
+  clearTokens,
   getAccessToken,
   getAccessTokenExpiryMs,
   getRefreshToken,
   setTokens,
-  clearTokens,
 } from './authStorage';
+import { invalidateConfigCache } from './configCache';
 
 export const formatSearch = (where) =>
   encodeURIComponent(JSON.stringify(where));
@@ -14,6 +15,12 @@ export const cdn = process.env.NEXT_PUBLIC_CDN_URL;
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL;
 const api = axios.create({ baseURL });
+
+if (!baseURL) {
+  if (typeof console !== 'undefined' && console.warn) {
+    console.warn('NEXT_PUBLIC_API_URL is not set. API requests may fail.');
+  }
+}
 
 const PROACTIVE_REFRESH_BUFFER_MS = 10 * 60 * 1000;
 
@@ -25,7 +32,8 @@ function getDisplayMessage(error) {
   const status = error?.response?.status;
   if (status === 403) return 'You do not have permission to do this.';
   if (status === 404) return 'The requested resource was not found.';
-  if (status >= 500) return 'The server encountered an error. Please try again later.';
+  if (status >= 500)
+    return 'The server encountered an error. Please try again later.';
   return 'Something went wrong. Please try again.';
 }
 
@@ -71,12 +79,19 @@ function doRefresh() {
       return refreshPromise;
     }
     refreshPromise = axios
-      .post(`${baseURL}/auth/refresh`, { refresh_token: refreshToken }, {
-        headers: { 'Content-Type': 'application/json' },
-      })
+      .post(
+        `${baseURL}/auth/refresh`,
+        { refresh_token: refreshToken },
+        {
+          headers: { 'Content-Type': 'application/json' },
+        },
+      )
       .then((res) => {
-        const { access_token: newAccess, refresh_token: newRefresh, results } =
-          res?.data ?? {};
+        const {
+          access_token: newAccess,
+          refresh_token: newRefresh,
+          results,
+        } = res?.data ?? {};
         if (newAccess && newRefresh) {
           setTokens(newAccess, newRefresh);
           return { access_token: newAccess, results };
@@ -94,7 +109,10 @@ export async function refreshTokensProactively() {
   if (typeof window === 'undefined') return null;
   if (!getRefreshToken()) return null;
   const expiryMs = getAccessTokenExpiryMs();
-  if (expiryMs === null || expiryMs > Date.now() + PROACTIVE_REFRESH_BUFFER_MS) {
+  if (
+    expiryMs === null ||
+    expiryMs > Date.now() + PROACTIVE_REFRESH_BUFFER_MS
+  ) {
     return null;
   }
   try {
@@ -124,7 +142,11 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error?.config;
-    if (error?.response?.status !== 401 || !originalRequest || originalRequest._retry) {
+    if (
+      error?.response?.status !== 401 ||
+      !originalRequest ||
+      originalRequest._retry
+    ) {
       return Promise.reject(error);
     }
     if (isRefreshRequest(originalRequest)) {
@@ -152,10 +174,24 @@ api.interceptors.response.use(
       notifySessionInvalid();
       return Promise.reject(refreshErr);
     }
-  }
+  },
 );
 
-api.interceptors.response.use((response) => response, normalizeApiError);
+api.interceptors.response.use(
+  (response) => {
+    const method = response?.config?.method?.toLowerCase();
+    const url = response?.config?.url ?? '';
+    if (
+      (method === 'patch' || method === 'post' || method === 'put') &&
+      typeof url === 'string' &&
+      url.includes('/config/')
+    ) {
+      invalidateConfigCache();
+    }
+    return response;
+  },
+  normalizeApiError,
+);
 
 if (process.env.NEXT_PUBLIC_LOG_REQUESTS === 'true') {
   api.interceptors.request.use((req) => {

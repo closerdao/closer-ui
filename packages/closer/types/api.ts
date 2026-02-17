@@ -2,6 +2,20 @@ import { User } from 'closer/contexts/auth/types';
 
 import { CloserCurrencies, Price } from './currency';
 
+export type FileUploadResult = {
+  _id: string;
+  slug: string;
+  url: string;
+  filename: string;
+  extension: string;
+  contentType: string;
+  size: number;
+  createdBy: string;
+  visibility: string;
+  created: string;
+  updated: string;
+};
+
 export type BookingConditions = {
   minDuration: number | undefined;
   maxDuration: number | undefined;
@@ -130,6 +144,10 @@ export type GeneralConfig = {
   expenseCategories?: string;
   discordUrl: string;
   telegramUrl: string;
+  primaryCtaVisitor?: string;
+  primaryCtaMember?: string;
+  primaryCtaCustomUrl?: string;
+  primaryCtaCustomText?: string;
 };
 export type CitizenshipConfig = {
   enabled: boolean;
@@ -206,12 +224,34 @@ export type MilestoneStatus = 'pending' | 'active' | 'completed';
 
 export type FundraisingMilestone = {
   id: string;
-  name: string;
+  title?: string;
+  name?: string;
   description?: string;
-  targetAmount: number;
-  currency: string;
-  startDate: string | null;
-  endDate: string | null;
+  items?: string;
+  goal?: number;
+  targetAmount?: number;
+  start?: string;
+  end?: string;
+  startDate?: string | null;
+  endDate?: string | null;
+  currency?: string;
+};
+
+export type FundraisingPackageType =
+  | 'tokens'
+  | 'loan'
+  | 'credits'
+  | 'subscribe';
+
+export type FundraisingPackage = {
+  type: FundraisingPackageType;
+  title: string;
+  description?: string;
+  tokens?: number;
+  bonus?: string;
+  minAmount?: string;
+  credits?: number;
+  subscribeUrl?: string;
 };
 
 export type FundraisingLoan = {
@@ -235,19 +275,15 @@ export type FundraisingManualAdjustment = {
 };
 
 export type FundraisingConfig = {
-  videoId: string;
-  wandererUrl: string;
-  pioneerUrl: string;
-  oneMonthSharedUrl: string;
-  oneMonthPrivateUrl: string;
-  buy5TdfUrl: string;
-  buy10TdfUrl: string;
-  hostEventUrl: string;
   enabled: boolean;
-  creditPrice30Credits: number;
-  creditPrice90Credits: number;
-  creditPrice180Credits: number;
+  amountRaisedPreCampaign?: number;
+  campaignVideo?: string;
+  campaignTitle?: string;
+  creditPricePerUnit?: number;
+  loansLabel?: string;
+  adjustmentsLabel?: string;
   milestones?: FundraisingMilestone[];
+  packages?: FundraisingPackage[];
   loans?: FundraisingLoan[];
   manualAdjustments?: FundraisingManualAdjustment[];
 };

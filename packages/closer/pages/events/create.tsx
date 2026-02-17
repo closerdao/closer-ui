@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl';
 
 import models from '../../models';
 import { FoodOption } from '../../types/food';
+import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
 import api from '../../utils/api';
 import { transformEventFoodBeforeSave } from '../../utils/events.helpers';
 import { loadLocaleData } from '../../utils/locale.helpers';
@@ -86,12 +87,12 @@ const CreateEvent = ({ foodOptions, eventsConfig }: Props) => {
 
 CreateEvent.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [foodRes, eventsRes, messages] = await Promise.all([
+    const [foodRes, configs, messages] = await Promise.all([
       api.get('/food').catch((err) => {
         console.error('Error fetching food:', err);
         return null;
       }),
-      api.get('/config/events').catch(() => null),
+      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
@@ -99,7 +100,7 @@ CreateEvent.getInitialProps = async (context: NextPageContext) => {
     const foodOptions = allFood.filter((f: FoodOption) =>
       f.availableFor?.includes('events'),
     );
-    const eventsConfig = eventsRes?.data?.results?.value;
+    const eventsConfig = getConfigValueBySlug(configs, 'events');
 
     return {
       messages,

@@ -39,6 +39,7 @@ import {
   VolunteerOpportunity,
 } from '../../../types';
 import { FoodOption } from '../../../types/food';
+import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api from '../../../utils/api';
 import {
   convertToDateString,
@@ -840,10 +841,8 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
   try {
     const [
       bookingRes,
-      bookingConfigRes,
+      configs,
       listingRes,
-      generalConfigRes,
-      paymentConfigRes,
       foodRes,
       projectsRes,
       messages,
@@ -856,41 +855,22 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
             }`,
           },
         })
-        .catch(() => {
-          return null;
-        }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
+        .catch(() => null),
+      getConfig(api),
       api
         .get('/listing', {
-          params: {
-            limit: MAX_LISTINGS_TO_FETCH,
-          },
+          params: { limit: MAX_LISTINGS_TO_FETCH },
         })
-        .catch(() => {
-          return null;
-        }),
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      api.get('/config/payment').catch(() => {
-        return null;
-      }),
-      api.get('/food').catch(() => {
-        return null;
-      }),
-      api.get('/project').catch(() => {
-        return null;
-      }),
+        .catch(() => null),
+      api.get('/food').catch(() => null),
+      api.get('/project').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const booking = bookingRes?.data?.results;
-    const bookingConfig = bookingConfigRes?.data?.results?.value;
-    const generalConfig = generalConfigRes?.data?.results?.value;
-
+    const bookingConfig = getConfigValueBySlug(configs, 'booking');
+    const generalConfig = getConfigValueBySlug(configs, 'general');
     const listings = listingRes?.data?.results;
-    const paymentConfig = paymentConfigRes?.data?.results?.value;
+    const paymentConfig = getConfigValueBySlug(configs, 'payment');
 
     const foodOptions = foodRes?.data?.results;
     const projects = projectsRes?.data?.results;

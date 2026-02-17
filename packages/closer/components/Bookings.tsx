@@ -45,27 +45,21 @@ const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false 
     }));
   }, [listingsData]);
 
-  const eventsFilter = bookings && {
-    where: {
-      _id: {
-        $in: bookings.map((booking: any) => booking.get('eventId')),
-      },
-    },
-  };
-  const volunteerFilter = bookings && {
-    where: {
-      _id: {
-        $in: bookings.map((booking: any) => booking.get('volunteerId')),
-      },
-    },
-  };
-  const listingFilter = bookings && {
-    where: {
-      _id: {
-        $in: bookings.map((booking: any) => booking.get('listing')),
-      },
-    },
-  };
+  const eventIds =
+    bookings &&
+    bookings.map((b: any) => b.get('eventId')).filter(Boolean).toJS();
+  const volunteerIds =
+    bookings &&
+    bookings.map((b: any) => b.get('volunteerId')).filter(Boolean).toJS();
+  const listingIds =
+    bookings &&
+    bookings.map((b: any) => b.get('listing')).filter(Boolean).toJS();
+  const eventsFilter =
+    eventIds?.length > 0 && { where: { _id: { $in: eventIds } } };
+  const volunteerFilter =
+    volunteerIds?.length > 0 && { where: { _id: { $in: volunteerIds } } };
+  const listingFilter =
+    listingIds?.length > 0 && { where: { _id: { $in: listingIds } } };
 
   const error = bookings && bookings.get('error');
 
@@ -86,9 +80,9 @@ const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false 
         setLoading(true);
       if (bookings) {
         await Promise.all([
-          platform.event.get(eventsFilter),
-          platform.volunteer.get(volunteerFilter),
-          platform.listing.get(listingFilter),
+          ...(eventsFilter ? [platform.event.get(eventsFilter)] : []),
+          ...(volunteerFilter ? [platform.volunteer.get(volunteerFilter)] : []),
+          ...(listingFilter ? [platform.listing.get(listingFilter)] : []),
           platform.listing.get({ where: {}, limit: MAX_LISTINGS_TO_FETCH }),
           platform.user.get({ limit: MAX_USERS_TO_FETCH }),
         ]);

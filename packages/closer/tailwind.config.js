@@ -104,13 +104,35 @@ module.exports = {
   					opacity: '1',
   					transform: 'scale(1)'
   				}
+  			},
+  			'wallet-ready': {
+  				'0%, 100%': { transform: 'scale(1)' },
+  				'50%': { transform: 'scale(1.01)' }
+  			},
+  			sparkle: {
+  				'0%, 100%': { opacity: '0.7', transform: 'scale(1)' },
+  				'50%': { opacity: '1', transform: 'scale(1.15)' }
+  			},
+  			'sparkle-dot': {
+  				'0%, 100%': { opacity: '0.15' },
+  				'50%': { opacity: '1' }
+  			},
+  			'sparkle-float': {
+  				'0%': { opacity: '0', transform: 'translateY(0)' },
+  				'25%': { opacity: '1', transform: 'translateY(-4px)' },
+  				'75%': { opacity: '0.6', transform: 'translateY(-10px)' },
+  				'100%': { opacity: '0', transform: 'translateY(-14px)' }
   			}
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out',
   			'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
-  			'checkmark-pop': 'checkmark-pop 0.4s ease-out forwards'
+  			'checkmark-pop': 'checkmark-pop 0.4s ease-out forwards',
+  			'wallet-ready': 'wallet-ready 2s ease-in-out infinite',
+  			sparkle: 'sparkle 1.8s ease-in-out infinite',
+  			'sparkle-dot': 'sparkle-dot 1.5s ease-in-out infinite',
+  			'sparkle-float': 'sparkle-float 2.2s ease-in-out infinite'
   		}
   	}
   },

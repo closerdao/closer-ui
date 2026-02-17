@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 import { useConfig } from '../../hooks/useConfig';
+import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
 import api from '../../utils/api';
 
 interface Props {
@@ -23,8 +24,9 @@ const DynamicPhotoGallery = ({ className, isSlider = false }: Props) => {
   useEffect(() => {
     const loadGalleryImages = async () => {
       try {
-        const response = await api.get('/config/photo-gallery').catch(() => null);
-        const photoIds = response?.data?.results?.value?.photoIds;
+        const configs = await getConfig(api);
+        const photoGalleryConfig = getConfigValueBySlug(configs, 'photo-gallery');
+        const photoIds = photoGalleryConfig?.photoIds;
         
         if (photoIds && Array.isArray(photoIds) && photoIds.length > 0) {
           const cdn = process.env.NEXT_PUBLIC_CDN_URL || '';

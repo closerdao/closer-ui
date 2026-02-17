@@ -13,7 +13,11 @@ export const AppHead: FC = () => {
 
   const fullUrl = `${SEMANTIC_URL}${router.asPath}`;
   const defaultDescription = 'The operating system for regenerative communities. Manage guests, spaces, events and resources through one intuitive platform designed specifically for land-based projects.';
-  const ogImage = LOGO_HEADER ? `${SEMANTIC_URL}${LOGO_HEADER}` : `${SEMANTIC_URL}/images/logo.png`;
+  const ogImage = LOGO_HEADER
+    ? LOGO_HEADER.startsWith('http')
+      ? LOGO_HEADER
+      : `${SEMANTIC_URL}${LOGO_HEADER}`
+    : `${SEMANTIC_URL}/images/logo.png`;
 
   return (
     <Head>

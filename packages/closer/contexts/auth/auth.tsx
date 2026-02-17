@@ -15,8 +15,16 @@ import { useTranslations } from 'next-intl';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
 import { signInWithGooglePopup, signOutFirebase } from '../../firebaseLazy';
-import { clearTokens, getAccessToken, getRefreshToken, setTokens } from '../../utils/authStorage';
-import api, { refreshTokensProactively, setOnSessionInvalid } from '../../utils/api';
+import api, {
+  refreshTokensProactively,
+  setOnSessionInvalid,
+} from '../../utils/api';
+import {
+  clearTokens,
+  getAccessToken,
+  getRefreshToken,
+  setTokens,
+} from '../../utils/authStorage';
 import { parseMessageFromError } from '../../utils/common';
 import { AuthenticationContext, User } from './types';
 
@@ -74,7 +82,9 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       if (router.pathname !== '/login') {
         router.push('/login?session_expired=1');
       } else if (!router.query.session_expired) {
-        router.replace('/login?session_expired=1', undefined, { shallow: true });
+        router.replace('/login?session_expired=1', undefined, {
+          shallow: true,
+        });
       }
     });
 
@@ -170,7 +180,10 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     }
   };
 
-  const signup = async (data: any, options?: { turnstileToken?: string | null }) => {
+  const signup = async (
+    data: any,
+    options?: { turnstileToken?: string | null },
+  ) => {
     try {
       setHasSignedUp(false);
       const { data: resData } = await api.post('/signup', {
@@ -188,8 +201,12 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
       if (userData && userData._id) {
         setHasSignedUp(true);
-        
-        if (process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true' && data.email && data.emailConsent !== false) {
+
+        if (
+          process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true' &&
+          data.email &&
+          data.emailConsent !== false
+        ) {
           try {
             const referrer =
               typeof window !== 'undefined'
@@ -207,10 +224,13 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
               turnstileToken: options?.turnstileToken,
             });
           } catch (subscribeErr) {
-            console.error('Failed to subscribe email during signup:', subscribeErr);
+            console.error(
+              'Failed to subscribe email during signup:',
+              subscribeErr,
+            );
           }
         }
-        
+
         return { result: 'signup' };
       } else {
         console.log('Invalid response', userData);

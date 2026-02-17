@@ -49,7 +49,6 @@ const DashboardPage = ({ generalConfig, bookingConfig }: Props) => {
 
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
-  const [hasRedirected, setHasRedirected] = useState(false);
 
   const router = useRouter();
 
@@ -96,13 +95,6 @@ const DashboardPage = ({ generalConfig, bookingConfig }: Props) => {
     }
   }, [router.query]);
 
-  useEffect(() => {
-    if (!hasRedirected && bookingConfig && !isBookingEnabled) {
-      setHasRedirected(true);
-      router.push('/admin/manage-users');
-    }
-  }, [bookingConfig, isBookingEnabled, hasRedirected]);
-
   const { hasAccess } = useRBAC();
   const hasAccessToDashboard = hasAccess('Dashboard');
 
@@ -119,7 +111,7 @@ const DashboardPage = ({ generalConfig, bookingConfig }: Props) => {
         <title>{`${t('dashboard_title')} - ${PLATFORM_NAME}`}</title>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
-      <AdminLayout isBookingEnabled={isBookingEnabled}>
+      <AdminLayout>
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           <Heading level={2}>{t('dashboard_title')}</Heading>
           <RevenueTimeFrameSelector

@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 
 import models from '../../../models';
 import api from '../../../utils/api';
+import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
@@ -85,7 +86,7 @@ EditLessonPage.getInitialProps = async (context: NextPageContext) => {
       {
         data: { results: lesson },
       },
-      learningHubRes,
+      configs,
       messages,
     ] = await Promise.all([
       api.get(`/lesson/${query.slug}`, {
@@ -95,13 +96,10 @@ EditLessonPage.getInitialProps = async (context: NextPageContext) => {
           }`,
         },
       }),
-      api.get('/config/learningHub').catch(() => {
-        return null;
-      }),
+      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
-
-    const learningHubConfig = learningHubRes?.data?.results?.value || null;
+    const learningHubConfig = getConfigValueBySlug(configs, 'learningHub') || null;
 
     return { lesson, learningHubConfig, messages };
   } catch (err) {

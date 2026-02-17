@@ -22,6 +22,7 @@ import {
   VolunteerConfig,
   VolunteerOpportunity,
 } from '../../types';
+import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
@@ -337,39 +338,16 @@ const StayPage = ({
 
 StayPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [
-      bookingResponse,
-      bookingRulesResponse,
-      generalRes,
-      volunteerRes,
-      volunteerConfigRes,
-      messages,
-    ] = await Promise.all([
-      api.get('/config/booking').catch((err) => {
-        console.error('Error fetching booking config:', err);
-        return null;
-      }),
-      api.get('/config/booking-rules').catch((err) => {
-        console.error('Error fetching booking rules:', err);
-        return null;
-      }),
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      api.get('/volunteer').catch(() => {
-        return null;
-      }),
-      api.get('/config/volunteering').catch(() => {
-        return null;
-      }),
+    const [configs, volunteerRes, messages] = await Promise.all([
+      getConfig(api),
+      api.get('/volunteer').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
-    const generalConfig = generalRes?.data?.results?.value;
-
-    const bookingSettings = bookingResponse?.data?.results?.value;
-    const bookingRules = bookingRulesResponse?.data?.results?.value;
+    const generalConfig = getConfigValueBySlug(configs, 'general');
+    const bookingSettings = getConfigValueBySlug(configs, 'booking');
+    const bookingRules = getConfigValueBySlug(configs, 'booking-rules');
     const opportunities = volunteerRes?.data?.results;
-    const volunteerConfig = volunteerConfigRes?.data?.results?.value;
+    const volunteerConfig = getConfigValueBySlug(configs, 'volunteering');
 
     return {
       bookingSettings,

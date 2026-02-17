@@ -3,17 +3,17 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
-import { useTranslations } from 'next-intl';
 import { ChevronDown } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
-import { useConfig } from '../hooks/useConfig';
-import { getReserveTokenDisplay } from '../utils/config.utils';
-import useRBAC from '../hooks/useRBAC';
 import { useBuyTokens } from '../hooks/useBuyTokens';
+import { useConfig } from '../hooks/useConfig';
+import useRBAC from '../hooks/useRBAC';
 import { NavigationLink } from '../types/nav';
 import api, { formatSearch } from '../utils/api';
 import { getCurrentUnitPrice } from '../utils/bondingCurve';
+import { getReserveTokenDisplay } from '../utils/config.utils';
 import Profile from './Profile';
 import ReportABug from './ReportABug';
 import Wallet from './Wallet';
@@ -58,6 +58,13 @@ const MemberMenu = () => {
     isVolunteeringEnabled: boolean,
     isEventsEnabled: boolean,
     isCommunityEnabled: boolean,
+    isGovernanceEnabled: boolean,
+    isLearningHubEnabled: boolean,
+    isBlogEnabled: boolean,
+    isCitizenshipEnabled: boolean,
+    isRolesEnabled: boolean,
+    isFaqEnabled: boolean,
+    isAffiliateEnabled: boolean,
   ): MenuSection[] => {
     // TDF-specific navigation structure
     if (APP_NAME?.toLowerCase() === 'tdf') {
@@ -140,12 +147,12 @@ const MemberMenu = () => {
             {
               label: t('menu_become_citizen'),
               url: '/citizenship',
-              enabled: process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true',
+              enabled: isCitizenshipEnabled,
             },
             {
               label: t('menu_governance_dao'),
               url: '/governance',
-              enabled: true,
+              enabled: isGovernanceEnabled,
             },
             {
               label: t('navigation_volunteer'),
@@ -161,7 +168,7 @@ const MemberMenu = () => {
             {
               label: t('menu_faq'),
               url: '/resources',
-              enabled: true,
+              enabled: isFaqEnabled,
               rbacPage: 'Resources',
             },
           ],
@@ -194,14 +201,14 @@ const MemberMenu = () => {
             {
               label: t('navigation_governance'),
               url: '/governance',
-              enabled: true,
+              enabled: isGovernanceEnabled,
               roles: ['member'],
               rbacPage: 'Governance',
             },
             {
               label: t('navigation_token_sales'),
               url: '/dashboard/token-sales',
-              enabled: true,
+              enabled: isWalletEnabled,
               roles: ['admin', 'team'],
               rbacPage: 'TokenSales',
             },
@@ -215,21 +222,21 @@ const MemberMenu = () => {
             {
               label: t('navigation_booking_requests'),
               url: '/bookings/requests',
-              enabled: true,
+              enabled: isBookingEnabled,
               roles: ['admin', 'team', 'space-host'],
               rbacPage: 'Bookings',
             },
             {
               label: t('navigation_all_bookings'),
               url: '/bookings/all',
-              enabled: true,
+              enabled: isBookingEnabled,
               roles: ['admin', 'team', 'space-host'],
               rbacPage: 'Bookings',
             },
             {
               label: t('navigation_edit_listings'),
               url: '/listings',
-              enabled: true,
+              enabled: isBookingEnabled,
               roles: ['admin', 'team', 'space-host'],
               rbacPage: 'Listings',
             },
@@ -242,17 +249,38 @@ const MemberMenu = () => {
             },
             {
               label: t('navigation_user_list'),
-              url: '/admin/manage-users',
+              url: '/dashboard/admin/manage-users',
               enabled: true,
               roles: ['admin', 'team'],
               rbacPage: 'UserManagement',
             },
             {
               label: t('navigation_platform_settings'),
-              url: '/admin/config',
+              url: '/dashboard/admin/config',
               enabled: true,
               roles: ['admin'],
               rbacPage: 'PlatformSettings',
+            },
+            {
+              label: t('navigation_email_templates'),
+              url: '/dashboard/admin/emails',
+              enabled: true,
+              roles: ['admin'],
+              rbacPage: 'PlatformSettings',
+            },
+            {
+              label: t('navigation_rbac'),
+              url: '/dashboard/admin/rbac',
+              enabled: true,
+              roles: ['admin'],
+              rbacPage: 'RBAC',
+            },
+            {
+              label: t('navigation_learn_settings'),
+              url: '/dashboard/admin/learn',
+              enabled: isLearningHubEnabled,
+              roles: ['admin'],
+              rbacPage: 'LearnSettings',
             },
           ],
         },
@@ -276,22 +304,22 @@ const MemberMenu = () => {
                 {
                   label: t('header_nav_invest'),
                   url: '/pages/invest',
-                  enabled: true
+                  enabled: true,
                 },
                 {
                   label: t('header_nav_stay'),
                   url: '/stay',
-                  enabled: true,
+                  enabled: isBookingEnabled,
                 },
                 {
                   label: t('header_nav_community'),
                   url: '/pages/community',
-                  enabled: true
+                  enabled: true,
                 },
                 {
                   label: t('header_nav_events'),
                   url: '/pages/events',
-                  enabled: true
+                  enabled: true,
                 },
               ]
             : []),
@@ -303,14 +331,12 @@ const MemberMenu = () => {
           {
             label: 'Become a Citizen',
             url: '/citizenship',
-            enabled:
-              process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true' &&
-              APP_NAME?.toLowerCase() === 'tdf',
+            enabled: isCitizenshipEnabled,
           },
           {
             label: t('navigation_work_with_us'),
             url: '/roles',
-            enabled: process.env.NEXT_PUBLIC_FEATURE_ROLES === 'true',
+            enabled: isRolesEnabled,
             rbacPage: 'Roles',
           },
         ],
@@ -381,7 +407,7 @@ const MemberMenu = () => {
           {
             label: t('navigation_blog'),
             url: '/blog',
-            enabled: process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true',
+            enabled: isBlogEnabled,
             rbacPage: 'Blog',
           },
         ],
@@ -395,7 +421,7 @@ const MemberMenu = () => {
           {
             label: t('navigation_learning_hub'),
             url: '/learn/category/all',
-            enabled: process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true',
+            enabled: isLearningHubEnabled,
             rbacPage: 'LearningHub',
           },
         ],
@@ -433,7 +459,7 @@ const MemberMenu = () => {
                 {
                   label: t('header_nav_governance'),
                   url: '/#governance',
-                  enabled: true,
+                  enabled: isGovernanceEnabled,
                 },
               ],
             },
@@ -474,7 +500,33 @@ const MemberMenu = () => {
           ]
         : []),
 
-      // Dashboard section
+      {
+        label: t('navigation_faq'),
+        isOpen: false,
+        items: [
+          {
+            label: t('navigation_faq'),
+            url: '/resources',
+            enabled: isFaqEnabled,
+            rbacPage: 'Resources',
+          },
+        ],
+      },
+      {
+        label: t('menu_section_other'),
+        isOpen: false,
+        items: [
+          ...(isAffiliateEnabled && user?.affiliate
+            ? [
+                {
+                  label: t('navigation_affiliate_dashboard'),
+                  url: '/dashboard/affiliate',
+                  enabled: isAffiliateEnabled && !!user?.affiliate,
+                },
+              ]
+            : []),
+        ],
+      },
       {
         label: t('menu_section_dashboard'),
         isOpen: false,
@@ -503,7 +555,7 @@ const MemberMenu = () => {
           {
             label: t('navigation_governance'),
             url: '/governance',
-            enabled: true,
+            enabled: isGovernanceEnabled,
             roles: ['member'],
             rbacPage: 'Governance',
           },
@@ -544,23 +596,42 @@ const MemberMenu = () => {
           },
           {
             label: t('navigation_user_list'),
-            url: '/admin/manage-users',
+            url: '/dashboard/admin/manage-users',
             enabled: true,
             roles: ['admin', 'team'],
             rbacPage: 'UserManagement',
           },
           {
             label: t('navigation_platform_settings'),
-            url: '/admin/config',
+            url: '/dashboard/admin/config',
             enabled: true,
             roles: ['admin'],
             rbacPage: 'PlatformSettings',
           },
+          {
+            label: t('navigation_email_templates'),
+            url: '/dashboard/admin/emails',
+            enabled: true,
+            roles: ['admin'],
+            rbacPage: 'PlatformSettings',
+          },
+          {
+            label: t('navigation_rbac'),
+            url: '/dashboard/admin/rbac',
+            enabled: true,
+            roles: ['admin'],
+            rbacPage: 'RBAC',
+          },
+          {
+            label: t('navigation_learn_settings'),
+            url: '/dashboard/admin/learn',
+            enabled: true,
+            roles: ['admin'],
+            rbacPage: 'LearnSettings',
+          },
         ],
       },
     ];
-
-
 
     // Bookings section (only if booking is enabled)
     if (isBookingEnabled) {
@@ -626,80 +697,6 @@ const MemberMenu = () => {
       });
     }
 
-    // User Management section
-    sections.push({
-      label: t('menu_section_user_management'),
-      isOpen: false,
-      items: [
-        {
-          label: t('navigation_user_list'),
-          url: '/admin/manage-users',
-          enabled: true,
-          roles: ['admin'],
-          rbacPage: 'UserManagement',
-        },
-      ],
-    });
-
-    // FAQ section (standalone)
-
-    sections.push({
-      label: t('navigation_faq'),
-      isOpen: false,
-      items: [
-        {
-          label: t('navigation_faq'),
-          url: '/resources',
-          enabled:
-            APP_NAME?.toLowerCase() !== 'lios' &&
-            APP_NAME !== 'foz' &&
-            APP_NAME !== 'earthbound' &&
-            APP_NAME?.toLowerCase() !== 'closer',
-          rbacPage: 'Resources',
-        },
-      ],
-    });
-
-    // Other sections
-    sections.push({
-      label: t('menu_section_other'),
-      isOpen: false,
-      items: [
-        ...(process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true' &&
-        user?.affiliate
-          ? [
-              {
-                label: t('navigation_affiliate_dashboard'),
-                url: '/settings/affiliate',
-                enabled: true
-              },
-            ]
-          : []),
-      ],
-    });
-
-    // Settings section
-    sections.push({
-      label: t('menu_section_settings'),
-      isOpen: false,
-      items: [
-        {
-          label: t('navigation_platform_settings'),
-          url: '/admin/config',
-          enabled: true,
-          roles: ['admin'],
-          rbacPage: 'PlatformSettings',
-        },
-        {
-          label: t('navigation_rbac'),
-          url: '/admin/rbac',
-          enabled: true,
-          roles: ['admin'],
-          rbacPage: 'RBAC',
-        },
-      ],
-    });
-
     return sections;
   };
 
@@ -733,70 +730,59 @@ const MemberMenu = () => {
   };
 
   useEffect(() => {
-    (async () => {
-      try {
-        const [bookingRes, subscriptionsRes, volunteerRes, eventsRes, communityRes] = await Promise.all([
-          api.get('config/booking').catch((err) => {
-            console.error('Error fetching booking config:', err);
-            return null;
-          }),
-          api.get('config/subscriptions').catch((err) => {
-            console.error('Error fetching subscriptions config:', err);
-            return null;
-          }),
-          api.get('config/volunteering').catch((err) => {
-            console.error('Error fetching volunteering config:', err);
-            return null;
-          }),
-          api.get('config/events').catch((err) => {
-            console.error('Error fetching events config:', err);
-            return null;
-          }),
-          api.get('config/community').catch((err) => {
-            console.error('Error fetching community config:', err);
-            return null;
-          }),
-        ]);
+    if (!config?._configLoaded) return;
+    const bookingConfig = config.booking;
+    const subscriptionsConfig = config.subscriptions;
+    const volunteerConfig = config.volunteering;
+    const eventsConfig = config.events;
+    const communityConfig = config.community;
 
-        const areSubscriptionsEnabled =
-          subscriptionsRes &&
-          subscriptionsRes?.data.results.value.enabled &&
-          process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
-        const isBookingEnabled =
-          bookingRes &&
-          bookingRes?.data.results.value.enabled &&
-          process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+    const areSubscriptionsEnabled =
+      subscriptionsConfig?.enabled &&
+      process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
+    const isBookingEnabled =
+      bookingConfig?.enabled &&
+      process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+    const isVolunteeringEnabled =
+      volunteerConfig?.enabled === true &&
+      process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
+    const isEventsEnabled = eventsConfig?.enabled !== false;
+    const isCommunityEnabled = communityConfig?.enabled === true;
+    const isGovernanceEnabled = config.governance?.enabled === true;
+    const isLearningHubEnabled =
+      config.learningHub?.enabled === true &&
+      process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true';
+    const isBlogEnabled =
+      config.blog?.enabled === true &&
+      process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true';
+    const isCitizenshipEnabled =
+      config.citizenship?.enabled === true &&
+      process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
+    const isRolesEnabled =
+      config.roles?.enabled === true &&
+      process.env.NEXT_PUBLIC_FEATURE_ROLES === 'true';
+    const isFaqEnabled = Boolean(config?.FAQS_GOOGLE_SHEET_ID);
+    const isAffiliateEnabled =
+      config.affiliate?.enabled === true &&
+      process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true';
 
-        const isVolunteeringEnabled =
-          volunteerRes?.data.results.value.enabled === true &&
-          process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
-
-        const isEventsEnabled =
-          eventsRes?.data?.results?.value?.enabled !== false;
-        const isCommunityEnabled =
-          communityRes?.data?.results?.value?.enabled === true;
-
-        // Get menu sections with all items
-        const sections = getMenuSections(
-          isBookingEnabled,
-          areSubscriptionsEnabled,
-          isVolunteeringEnabled,
-          isEventsEnabled,
-          isCommunityEnabled,
-        );
-
-        // Filter sections based on user roles and permissions
-        const filteredSections = filterMenuSections(
-          sections,
-          user?.roles || [],
-        );
-
-        setMenuSections(filteredSections);
-      } catch (err) {
-        console.log('error');
-      }
-    })();
-  }, [user, router.locale]);
+    const sections = getMenuSections(
+      isBookingEnabled,
+      areSubscriptionsEnabled,
+      isVolunteeringEnabled,
+      isEventsEnabled,
+      isCommunityEnabled,
+      isGovernanceEnabled,
+      isLearningHubEnabled,
+      isBlogEnabled,
+      isCitizenshipEnabled,
+      isRolesEnabled,
+      isFaqEnabled,
+      isAffiliateEnabled,
+    );
+    const filteredSections = filterMenuSections(sections, user?.roles || []);
+    setMenuSections(filteredSections);
+  }, [config, user, router.locale]);
 
   useEffect(() => {
     if (
@@ -847,9 +833,14 @@ const MemberMenu = () => {
             try {
               const entry = socialSettings[ch._id];
               const lastFetched =
-                (typeof entry === 'object' && entry !== null && 'lastFetched' in entry
+                (typeof entry === 'object' &&
+                entry !== null &&
+                'lastFetched' in entry
                   ? (entry as { lastFetched?: string }).lastFetched
-                  : null) ?? (typeof socialSettings[ch.slug] === 'string' ? socialSettings[ch.slug] : null);
+                  : null) ??
+                (typeof socialSettings[ch.slug] === 'string'
+                  ? socialSettings[ch.slug]
+                  : null);
               const where: Record<string, any> = { channel: ch._id };
               if (lastFetched) {
                 where.created = { $gt: lastFetched };
@@ -917,11 +908,13 @@ const MemberMenu = () => {
               >
                 <span>{section.label}</span>
                 <div className="flex items-center gap-1.5">
-                  {section.items.some((item) => item.url === '/social') && socialUnreadCount > 0 && !section.isOpen && (
-                    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-accent rounded-full">
-                      {socialUnreadCount > 99 ? '99+' : socialUnreadCount}
-                    </span>
-                  )}
+                  {section.items.some((item) => item.url === '/social') &&
+                    socialUnreadCount > 0 &&
+                    !section.isOpen && (
+                      <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-accent rounded-full">
+                        {socialUnreadCount > 99 ? '99+' : socialUnreadCount}
+                      </span>
+                    )}
                   <ChevronDown
                     className={`h-4 w-4 transition-transform duration-200 ${
                       section.isOpen ? 'rotate-180' : ''
@@ -956,6 +949,7 @@ const MemberMenu = () => {
       ))}
 
       {APP_NAME?.toLowerCase() === 'tdf' &&
+        isWalletEnabled &&
         process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && (
           <div className="mt-3 mb-2 rounded-lg border border-gray-200 bg-white overflow-hidden">
             <div className="p-3 bg-gradient-to-br from-accent/5 to-accent-light/5">

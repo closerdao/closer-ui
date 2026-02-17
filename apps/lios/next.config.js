@@ -16,6 +16,16 @@ const withMDX = require('@next/mdx')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async redirects() {
+    return [
+      { source: '/admin/manage-users', destination: '/dashboard/admin/manage-users', permanent: true },
+      { source: '/admin/config', destination: '/dashboard/admin/config', permanent: true },
+      { source: '/admin/rbac', destination: '/dashboard/admin/rbac', permanent: true },
+      { source: '/admin/learn', destination: '/dashboard/admin/learn', permanent: true },
+      { source: '/admin/emails', destination: '/dashboard/admin/emails', permanent: true },
+      { source: '/admin/emails/:slug', destination: '/dashboard/admin/emails/:slug', permanent: true },
+    ];
+  },
   // If set to true, there are some infinite loops occuring with our loadData
   // https://stackoverflow.com/questions/60618844/react-hooks-useeffect-is-called-twice-even-if-an-empty-array-is-used-as-an-ar
   i18n: {
@@ -41,6 +51,9 @@ const nextConfig = {
     remotePatterns: [
       {
         hostname: 'cdn.oasa.co',
+      },
+      {
+        hostname: 'oasa.fra1.digitaloceanspaces.com',
       },
     ],
   },

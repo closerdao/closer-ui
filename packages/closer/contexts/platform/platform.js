@@ -3,6 +3,7 @@ import { createContext, useContext, useReducer } from 'react';
 import { Map, fromJS } from 'immutable';
 
 import api, { formatSearch } from '../../utils/api';
+import { CONFIG_FILTER_KEY, getConfigArray } from '../../utils/configCache';
 import * as constants from './platformActions';
 
 const PlatformContext = createContext({});
@@ -35,6 +36,7 @@ export const models = [
 
 const filterToKey = (filter) => JSON.stringify(filter) || '__';
 const CACHE_DURATION = 300000;
+const CONFIG_CACHE_TTL = 60 * 60 * 1000;
 const init = (state) => {
   return state.withMutations((map) => {
     models.forEach((model) => {
@@ -386,6 +388,48 @@ export const PlatformProvider = ({ children }) => {
         );
       },
       get: (filter, opts = {}) => {
+        if (model === 'config') {
+          const filterKey = CONFIG_FILTER_KEY;
+          const receivedAt = state.getIn([
+            model,
+            'byFilter',
+            filterKey,
+            'receivedAt',
+          ]);
+          const useCache =
+            !opts.force && receivedAt && Date.now() - receivedAt < CONFIG_CACHE_TTL;
+          if (useCache) {
+            return new Promise((resolve) =>
+              resolve({
+                filterKey,
+                type: constants.GET_SUCCESS,
+                fromCache: true,
+                receivedAt,
+                results: state.getIn([model, 'byFilter', filterKey, 'data']),
+              }),
+            );
+          }
+          dispatch({ type: constants.GET_INIT, model, filterKey });
+          return getConfigArray(api).then((configs) => {
+              const action = {
+                results: fromJS(configs),
+                receivedAt: Date.now(),
+                filterKey,
+                model,
+                type: constants.GET_SUCCESS,
+              };
+              dispatch(action);
+              return action;
+            })
+            .catch((error) =>
+              dispatch({
+                error,
+                filterKey,
+                model,
+                type: constants.GET_ERROR,
+              }),
+            );
+        }
         const defaultOptions = { sort_by: '-created' };
         if (model === 'config' && !filter?.limit) {
           defaultOptions.limit = 100;
@@ -395,7 +439,7 @@ export const PlatformProvider = ({ children }) => {
         const useCache =
           !opts.force &&
           state.getIn([model, 'byFilter', filterKey, 'receivedAt']) >
-          Date.now() - CACHE_DURATION
+          Date.now() - CACHE_DURATION;
         if (useCache) {
           return new Promise((resolve) =>
             resolve({
@@ -414,7 +458,6 @@ export const PlatformProvider = ({ children }) => {
         }
 
         dispatch({ type: constants.GET_INIT, model, filterKey });
-        // ids_loading[model] = ids_loading[model].concat(id);
         return api
           .get(`/${model}`, {
             params: {

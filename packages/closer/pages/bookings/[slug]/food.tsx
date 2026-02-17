@@ -25,6 +25,7 @@ import {
   Listing,
 } from '../../../types';
 import { FoodOption } from '../../../types/food';
+import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api from '../../../utils/api';
 import {
   buildBookingAccomodationUrl,
@@ -666,25 +667,23 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
   const discountCode = query?.discountCode;
 
   try {
-    const [bookingRes, bookingConfigRes, web3ConfigRes, foodRes, messages] =
-      await Promise.all([
-        api
-          .get(`/booking/${query.slug}`, {
-            headers: (req as NextApiRequest)?.cookies?.access_token && {
-              Authorization: `Bearer ${
-                (req as NextApiRequest)?.cookies?.access_token
-              }`,
-            },
-          })
-          .catch(() => null),
-        api.get('/config/booking').catch(() => null),
-        api.get('/config/web3').catch(() => null),
-        api.get('/food').catch(() => null),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      ]);
+    const [bookingRes, configs, foodRes, messages] = await Promise.all([
+      api
+        .get(`/booking/${query.slug}`, {
+          headers: (req as NextApiRequest)?.cookies?.access_token && {
+            Authorization: `Bearer ${
+              (req as NextApiRequest)?.cookies?.access_token
+            }`,
+          },
+        })
+        .catch(() => null),
+      getConfig(api),
+      api.get('/food').catch(() => null),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
     const booking = bookingRes?.data?.results || null;
-    const bookingConfig = bookingConfigRes?.data?.results?.value || null;
-    const web3Config = web3ConfigRes?.data?.results?.value || null;
+    const bookingConfig = getConfigValueBySlug(configs, 'booking') || null;
+    const web3Config = getConfigValueBySlug(configs, 'web3') || null;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
     const foodOptions = foodRes?.data?.results || null;
 

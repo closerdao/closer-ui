@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl';
 
 import models from '../../../models';
 import { Listing } from '../../../types';
+import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api from '../../../utils/api';
 import { getBookingTokenCurrency } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
@@ -50,7 +51,7 @@ const EditListing = ({ listing, bookingConfig, paymentConfig, web3Config }: Prop
       <Head>
         <title>{`${listing.name} - ${t('listings_slug_edit_title')}`}</title>
       </Head>
-      <AdminLayout isBookingEnabled={isBookingEnabled}>
+      <AdminLayout>
         <EditModelPageLayout
           title={`${t('listings_edit_listing')} ${listing.name}`}
           backHref={`/stay/${listing.slug}`}
@@ -86,18 +87,16 @@ EditListing.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No listing');
     }
 
-    const [listingRes, bookingRes, paymentRes, web3Res, messages] = await Promise.all([
+    const [listingRes, configs, messages] = await Promise.all([
       api.get(`/listing/${query.slug}`).catch(() => null),
-      api.get('/config/booking').catch(() => null),
-      api.get('/config/payment').catch(() => null),
-      api.get('/config/web3').catch(() => null),
+      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const listing = listingRes?.data?.results;
-    const bookingConfig = bookingRes?.data?.results?.value;
-    const paymentConfig = paymentRes?.data?.results?.value;
-    const web3Config = web3Res?.data?.results?.value;
+    const bookingConfig = getConfigValueBySlug(configs, 'booking');
+    const paymentConfig = getConfigValueBySlug(configs, 'payment');
+    const web3Config = getConfigValueBySlug(configs, 'web3');
 
     return { listing, bookingConfig, paymentConfig, web3Config, messages };
   } catch (err: unknown) {

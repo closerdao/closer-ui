@@ -8,61 +8,48 @@ import { useEffect, useRef, useState } from 'react';
 import { ErrorBoundary, Layout } from '@/components';
 
 import AcceptCookies from 'closer/components/AcceptCookies';
+import PushNotificationModal from 'closer/components/PushNotificationModal';
 
 import {
   AuthProvider,
   ConfigProvider,
   PlatformProvider,
   api,
+  getConfig,
 } from 'closer';
-import { WalletProvider } from 'closer/contexts/wallet';
 import { blockchainConfig } from 'closer/config_blockchain';
-import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
+import rbacDefaultConfig from 'closer/constants/rbac';
 import { NewsletterProvider } from 'closer/contexts/newsletter';
 import { PushNotificationProvider } from 'closer/contexts/push-notifications';
-import PushNotificationModal from 'closer/components/PushNotificationModal';
-import { prepareGeneralConfig } from 'closer/utils/app.helpers';
+import { WalletProvider } from 'closer/contexts/wallet';
+import {
+  mergeGeneralConfigWithDefaults,
+  prepareGeneralConfig,
+} from 'closer/utils/app.helpers';
+import { getAppConfigFromEnv } from 'closer/utils/appConfigFromEnv';
 import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
-import { getAppConfigFromEnv } from 'closer/utils/appConfigFromEnv';
-import rbacDefaultConfig from 'closer/constants/rbac';
 import '../styles/index.css';
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
 }
 
-const prepareDefaultConfig = () => {
-  const general =
-    configDescription.find((config) => config.slug === 'general')?.value ?? {};
-  const transformedObject = Object.entries(general).reduce(
-    (acc, [key]) => {
-      return { ...acc, [key]: '' };
-    },
-    {},
-  );
-  return transformedObject;
-};
-
 const MyApp = ({ Component, pageProps }: AppOwnProps) => {
-  const defaultGeneralConfig = prepareDefaultConfig();
+  const defaultGeneralConfig = mergeGeneralConfigWithDefaults(null);
   const router = useRouter();
   const { query } = router;
   const referral = query.referral;
   const mountedRef = useRef(false);
-  const [config, setConfig] = useState<any>(
-    prepareGeneralConfig(defaultGeneralConfig),
-  );
-  const [rbacConfig, setRBACConfig] = useState<any>(
-    rbacDefaultConfig,
-  );
+  const [config, setConfig] = useState<any>(() => ({
+    ...prepareGeneralConfig(defaultGeneralConfig),
+    _configLoaded: false,
+  }));
+  const [rbacConfig, setRBACConfig] = useState<any>(rbacDefaultConfig);
   const [isLocalhost, setIsLocalhost] = useState(true); // Default to true to prevent initial flash
   const [isEnvironmentChecked, setIsEnvironmentChecked] = useState(false);
-
-
-
 
   const { FACEBOOK_PIXEL_ID } = config || {};
 
@@ -87,20 +74,17 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
 
     (async () => {
       try {
-        const [generalConfigRes, rbacConfigRes, web3ConfigRes] = await Promise.all([
-          api.get('config/general'),
-          api.get('config/rbac'),
-          api.get('config/web3').catch(() => null)
-        ]).catch(() => []);
-        const web3Config = web3ConfigRes?.data?.results?.value ?? null;
+        const keyedConfig = await getConfig(api);
+        const mergedGeneral = mergeGeneralConfigWithDefaults(keyedConfig.general);
         setConfig({
-          ...prepareGeneralConfig(generalConfigRes?.data.results.value),
-          ...(web3Config && { web3: web3Config }),
+          ...prepareGeneralConfig(mergedGeneral),
+          ...keyedConfig,
+          _configLoaded: true,
         });
-        setRBACConfig(rbacConfigRes?.data?.results?.value);
+        setRBACConfig(keyedConfig.rbac || {});
       } catch (err) {
         console.error(err);
-        return;
+        setConfig((prev: any) => ({ ...prev, _configLoaded: true }));
       }
     })();
   }, []);
@@ -155,14 +139,18 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
           ...config,
           ...blockchainConfig,
           ...getAppConfigFromEnv(),
-          rbacConfig
+          rbacConfig,
         }}
       >
         <ErrorBoundary>
           <NextIntlClientProvider
             locale={router.locale || 'en'}
             messages={pageProps.messages || {}}
-            timeZone={config?.TIME_ZONE || process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE || getAppConfigFromEnv().DEFAULT_TIMEZONE}
+            timeZone={
+              config?.TIME_ZONE ||
+              process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE ||
+              getAppConfigFromEnv().DEFAULT_TIMEZONE
+            }
             onError={(error) => {
               console.error('Error in NextIntlClientProvider', error);
             }}

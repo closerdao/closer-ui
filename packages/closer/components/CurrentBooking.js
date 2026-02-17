@@ -52,20 +52,16 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
 
   const bookings = platform.booking.find(filter);
 
-  const eventsFilter = bookings && {
-    where: {
-      _id: {
-        $in: bookings.map((booking) => booking.get('eventId')).toJS(),
-      },
-    },
-  };
-  const volunteerFilter = bookings && {
-    where: {
-      _id: {
-        $in: bookings.map((booking) => booking.get('volunteerId')).toJS(),
-      },
-    },
-  };
+  const eventIds =
+    bookings && bookings.map((b) => b.get('eventId')).filter(Boolean).toJS();
+  const volunteerIds =
+    bookings && bookings.map((b) => b.get('volunteerId')).filter(Boolean).toJS();
+  const eventsFilter =
+    eventIds?.length > 0 &&
+    ({ where: { _id: { $in: eventIds } } });
+  const volunteerFilter =
+    volunteerIds?.length > 0 &&
+    ({ where: { _id: { $in: volunteerIds } } });
 
   const listings = platform.listing.find({
     where: {},
@@ -208,8 +204,8 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
           limit: MAX_LISTINGS_TO_FETCH,
         }),
         platform.user.get(userFilter),
-        platform.event.get(eventsFilter),
-        platform.volunteer.get(volunteerFilter),
+        ...(eventsFilter ? [platform.event.get(eventsFilter)] : []),
+        ...(volunteerFilter ? [platform.volunteer.get(volunteerFilter)] : []),
       ]);
     } catch (err) {
       console.log('Error loading data...');

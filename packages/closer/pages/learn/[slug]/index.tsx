@@ -21,6 +21,7 @@ import { usePlatform } from '../../../contexts/platform';
 import { Lesson } from '../../../types/lesson';
 import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
+import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { getVideoParams } from '../../../utils/learn.helpers';
@@ -389,31 +390,34 @@ const LessonPage = ({
 LessonPage.getInitialProps = async (context: NextPageContext) => {
   const { req, query } = context;
   try {
-    const [subscriptionsConfigRes, lessonRes, learningHubRes, messages] =
-      await Promise.all([
-        api.get('/config/subscriptions').catch(() => {
+    const [configs, lessonRes, messages] = await Promise.all([
+      getConfig(api),
+      api
+        .get(`/lesson/${query.slug}`, {
+          headers: (req as NextApiRequest)?.cookies?.access_token && {
+            Authorization: `Bearer ${
+              (req as NextApiRequest)?.cookies?.access_token
+            }`,
+          },
+        })
+        .catch(() => {
           return null;
         }),
-        api
-          .get(`/lesson/${query.slug}`, {
-            headers: (req as NextApiRequest)?.cookies?.access_token && {
-              Authorization: `Bearer ${
-                (req as NextApiRequest)?.cookies?.access_token
-              }`,
-            },
-          })
-          .catch(() => {
-            return null;
-          }),
-        api.get('/config/learningHub').catch(() => {
-          return null;
-        }),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      ]);
-    const learningHubConfig = learningHubRes?.data?.results?.value || null;
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
+    const subscriptionsConfig =
+      getConfigValueBySlug(configs, 'subscriptions') ?? {
+        enabled: false,
+        elements: [],
+      };
+    const learningHubConfig =
+      getConfigValueBySlug(configs, 'learningHub') || null;
 
     return {
-      subscriptionsConfig: subscriptionsConfigRes?.data?.results?.value || null,
+      subscriptionsConfig:
+        subscriptionsConfig?.enabled === true
+          ? subscriptionsConfig
+          : { enabled: false, elements: [] },
       lesson: lessonRes?.data?.results || null,
       error: null,
       learningHubConfig,

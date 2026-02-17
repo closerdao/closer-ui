@@ -14,6 +14,7 @@ import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { Event } from '../../../types';
+import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
@@ -111,7 +112,7 @@ const EventTickets = ({ event, eventsConfig }: Props) => {
 EventTickets.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
   try {
-    const [eventRes, eventsRes, messages] = await Promise.all([
+    const [eventRes, configs, messages] = await Promise.all([
       api
         .get(`/event/${query.slug}`, {
           headers: (req as NextApiRequest)?.cookies?.access_token && {
@@ -124,12 +125,12 @@ EventTickets.getInitialProps = async (context: NextPageContext) => {
           console.error('Error fetching event:', err);
           return null;
         }),
-      api.get('/config/events').catch(() => null),
+      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const event = eventRes?.data?.results;
-    const eventsConfig = eventsRes?.data?.results?.value;
+    const eventsConfig = getConfigValueBySlug(configs, 'events');
 
     return { event, eventsConfig, messages };
   } catch (err) {

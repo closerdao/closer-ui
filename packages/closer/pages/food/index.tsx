@@ -15,6 +15,7 @@ import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 import AdminLayout from '../../components/Dashboard/AdminLayout';
+import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
 import api from '../../utils/api';
 import { BookingConfig } from '../../types/api';
 
@@ -52,7 +53,7 @@ const FoodPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
       <Head>
         <title>{t('food_edit_title')}</title>
       </Head>
-      <AdminLayout isBookingEnabled={isBookingEnabled}>
+      <AdminLayout>
         {foodOptions?.get('error') && (
           <div className="validation-error">{foodOptions.get('error')}</div>
         )}
@@ -91,12 +92,12 @@ const FoodPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
 
 FoodPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [messages, bookingRes] = await Promise.all([
+    const [messages, configs] = await Promise.all([
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      api.get('/config/booking').catch(() => null),
+      getConfig(api),
     ]);
 
-    const bookingConfig = bookingRes?.data?.results?.value;
+    const bookingConfig = getConfigValueBySlug(configs, 'booking');
 
     return {
       messages,

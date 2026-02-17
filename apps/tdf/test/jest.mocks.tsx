@@ -1,7 +1,7 @@
 import React from 'react';
 
 process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING = 'true';
-process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET = 'true';
+process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET = 'false';
 process.env.NEXT_PUBLIC_FEATURE_BOOKING = 'true';
 process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS = 'true';
 process.env.NEXT_PUBLIC_CDN_URL = 'https://cdn.example.com';

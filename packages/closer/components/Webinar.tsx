@@ -8,6 +8,7 @@ import utc from 'dayjs/plugin/utc';
 import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
+import { getConfig, getConfigValueBySlug } from '../utils/configCache';
 import api from '../utils/api';
 import TurnstileWidget from './TurnstileWidget';
 import { Button, ErrorMessage, Heading } from './ui';
@@ -49,32 +50,21 @@ const Webinar = ({ id, tags = ['webinar'], analyticsCategory = 'Webinar' }: Prop
     }
   }, []);
 
-  useEffect(() => {
-    const fetchWebinarConfig = async () => {
-      try {
-        const res = await api.get('/config/webinar');
-        setWebinarConfig(res?.data?.results?.value || null);
-      } catch (err) {
-        console.error('Error fetching webinar config:', err);
-        setWebinarConfig(null);
-      }
-    };
-    fetchWebinarConfig();
-  }, []);
-
   const [generalTimezone, setGeneralTimezone] = useState<string>('Europe/Lisbon');
 
   useEffect(() => {
-    const fetchGeneralConfig = async () => {
+    const fetchConfig = async () => {
       try {
-        const res = await api.get('/config/general');
-        const tz = res?.data?.results?.value?.timezone;
-        if (tz) setGeneralTimezone(tz);
+        const configs = await getConfig(api);
+        const webinar = getConfigValueBySlug(configs, 'webinar');
+        const general = getConfigValueBySlug(configs, 'general');
+        setWebinarConfig(webinar || null);
+        if (general?.timezone) setGeneralTimezone(general.timezone);
       } catch (err) {
-        console.error('Error fetching general config:', err);
+        setWebinarConfig(null);
       }
     };
-    fetchGeneralConfig();
+    fetchConfig();
   }, []);
 
   const nextWebinarDate = useMemo(() => {
