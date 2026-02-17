@@ -88,6 +88,8 @@ const channelTypeIcon = (channelType: ChannelType) => {
       return <MapPin className="w-4 h-4 text-white" />;
     case 'topic':
       return <Hash className="w-4 h-4 text-white" />;
+    case 'dream':
+      return <Hash className="w-4 h-4 text-white" />;
     default:
       return <Hash className="w-4 h-4 text-white" />;
   }
@@ -101,6 +103,8 @@ const channelTypeColor = (channelType: ChannelType) => {
       return 'bg-green-500';
     case 'topic':
       return 'bg-purple-500';
+    case 'dream':
+      return 'bg-amber-500';
     default:
       return 'bg-gray-400';
   }
@@ -131,11 +135,12 @@ const ChannelRow = ({
 }: ChannelRowProps) => {
   const isGround = channel.channelType === 'ground';
   const isSeason = channel.channelType === 'season';
+  const isDream = channel.channelType === 'dream';
   const isNotJoined = !channel.visibleBy?.includes(userId || '');
   const state = subscribeStates[channel._id] || { status: 'idle' };
   const presenceRequired = channel.presenceRequired ?? 0;
   const hasEnoughPresence = presenceRequired <= 0 || userPresence >= presenceRequired;
-  const showJoinUi = !isGround && !isSeason;
+  const showJoinUi = !isGround && !isSeason && !isDream;
   const needsMorePresence =
     showJoinUi &&
     isNotJoined &&
@@ -413,6 +418,7 @@ const ChannelList = ({
     const legacy: Channel[] = [];
     const userId = user?._id;
 
+    const dreams: Channel[] = [];
     channels.forEach((ch) => {
       switch (ch.channelType) {
         case 'season':
@@ -425,6 +431,11 @@ const ChannelList = ({
           break;
         case 'topic':
           topics.push(ch);
+          break;
+        case 'dream':
+          if (ch.visibleBy?.includes(userId || '')) {
+            dreams.push(ch);
+          }
           break;
         default:
           legacy.push(ch);
@@ -450,6 +461,12 @@ const ChannelList = ({
         label: t('channels_group_topics'),
         icon: <Users className="w-3.5 h-3.5 text-purple-600" />,
         channels: topics,
+      },
+      {
+        type: 'dream' as ChannelType,
+        label: t('channels_group_dreams'),
+        icon: <Hash className="w-3.5 h-3.5 text-amber-600" />,
+        channels: dreams,
       },
       {
         type: null,

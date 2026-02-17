@@ -119,7 +119,10 @@ const ListingPage: NextPage<Props> = ({
   const durationInDays = dayjs(end).diff(dayjs(start), 'day') || 30;
   const durationInHours = dayjs(end).diff(dayjs(start), 'hour') || 1;
 
-  const isDurationValid = durationInDays >= (settings?.minDuration || 1);
+  const minDurationRequired = isMember
+    ? Number(settings?.memberMinDuration) || 1
+    : Number(settings?.minDuration) || 1;
+  const isDurationValid = durationInDays >= minDurationRequired;
 
   const [adults, setAdults] = useState<number>(Number(savedAdults) || 1);
   const [kids, setKids] = useState<number>(Number(savedKids) || 0);
@@ -806,7 +809,8 @@ const ListingPage: NextPage<Props> = ({
                     <div className="hidden sm:block w-full">
                       {isListingAvailable &&
                       !calendarError &&
-                      !isHourlyBooking ? (
+                      !isHourlyBooking &&
+                      isDurationValid ? (
                         <>
                           {' '}
                           <div className="flex justify-between items-center mt-3">
@@ -864,18 +868,23 @@ const ListingPage: NextPage<Props> = ({
                           </div>
                         </>
                       ) : (
-                        !isListingAvailable && (
+                        (!isListingAvailable ||
+                          !isDurationValid ||
+                          isGuestLimit) && (
                           <Information>
+                            {!isDurationValid &&
+                              t('bookings_dates_min_duration_error', {
+                                var:
+                                  isMember
+                                    ? settings?.memberMinDuration
+                                    : settings?.minDuration,
+                              })}
+                            {isGuestLimit &&
+                              t('listing_not_available_guest_limit')}
                             {!isListingAvailable &&
                               !isGuestLimit &&
                               isDurationValid &&
                               t('listing_not_available')}
-                            {!isDurationValid &&
-                              t('bookings_dates_min_duration_error', {
-                                var: settings?.minDuration,
-                              })}
-                            {isGuestLimit &&
-                              t('listing_not_available_guest_limit')}
                           </Information>
                         )
                       )}

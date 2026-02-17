@@ -2,16 +2,52 @@ import Head from 'next/head';
 import Link from 'next/link';
 
 import { Heading } from 'closer';
+import { useConfig } from 'closer/hooks/useConfig';
+import { twitterUrlToHandle } from 'closer/utils/app.helpers';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 const RoadmapPage = () => {
   const t = useTranslations();
+  const config = useConfig();
+  const twitterHandle = twitterUrlToHandle(config?.TWITTER_URL);
   return (
     <>
       <Head>
         <title>{t('roadmap_title')}</title>
+        <meta name="description" content={t('roadmap_meta_description')} />
+        <link
+          rel="canonical"
+          href="https://www.traditionaldreamfactory.com/roadmap"
+        />
+        <meta property="og:type" content="website" />
+        <meta
+          property="og:url"
+          content="https://www.traditionaldreamfactory.com/roadmap"
+        />
+        <meta property="og:title" content={t('roadmap_title')} />
+        <meta
+          property="og:description"
+          content={t('roadmap_meta_description')}
+        />
+        <meta
+          property="og:image"
+          content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
+        />
+        <meta name="twitter:card" content="summary_large_image" />
+        {twitterHandle && (
+          <meta name="twitter:site" content={twitterHandle} />
+        )}
+        <meta name="twitter:title" content={t('roadmap_title')} />
+        <meta
+          name="twitter:description"
+          content={t('roadmap_meta_description')}
+        />
+        <meta
+          name="twitter:image"
+          content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
+        />
       </Head>
       <main className="mx-auto max-w-3xl">
         <section className="flex flex-wrap justify-center">
@@ -270,7 +306,7 @@ const RoadmapPage = () => {
             </div>
           </div>
         </section>
-        
+
         {/* Call to Action */}
         <section className="flex justify-center py-16 bg-accent-light">
           <div className="text-center max-w-4xl mx-auto px-4">

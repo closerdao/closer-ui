@@ -10,6 +10,7 @@ import { GeneralConfig, api } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import { useFaqs } from 'closer/hooks/useFaqs';
 import { parseMessageFromError } from 'closer/utils/common';
+import { twitterUrlToHandle } from 'closer/utils/app.helpers';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -21,8 +22,8 @@ interface Props {
 
 const ResourcesPage = ({ generalConfig, error }: Props) => {
   const t = useTranslations();
-
   const defaultConfig = useConfig();
+  const twitterHandle = twitterUrlToHandle(defaultConfig?.TWITTER_URL);
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
   const { FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
@@ -36,6 +37,30 @@ const ResourcesPage = ({ generalConfig, error }: Props) => {
     <div className="max-w-screen-lg mx-auto">
       <Head>
         <title>{`${t('resources_heading')} - ${PLATFORM_NAME}`}</title>
+        <meta name="description" content={t('resources_subheading')} />
+        <link
+          rel="canonical"
+          href="https://www.traditionaldreamfactory.com/resources"
+        />
+        <meta property="og:type" content="website" />
+        <meta
+          property="og:url"
+          content="https://www.traditionaldreamfactory.com/resources"
+        />
+        <meta
+          property="og:title"
+          content={`${t('resources_heading')} - ${PLATFORM_NAME}`}
+        />
+        <meta property="og:description" content={t('resources_subheading')} />
+        <meta name="twitter:card" content="summary_large_image" />
+        {twitterHandle && (
+          <meta name="twitter:site" content={twitterHandle} />
+        )}
+        <meta
+          name="twitter:title"
+          content={`${t('resources_heading')} - ${PLATFORM_NAME}`}
+        />
+        <meta name="twitter:description" content={t('resources_subheading')} />
       </Head>
       <main className="pt-16 pb-24 md:flex-row flex-wrap">
         <div className="flex justify-center bg-cover bg-[center_top_6rem] sm:bg-[center_top_4rem] bg-no-repeat bg-[url(/images/resources/resources-hero.png)] h-[650px]">

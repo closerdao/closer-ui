@@ -172,6 +172,11 @@ export { default as CreateVolunteerOportunity } from './pages/volunteer/create';
 export { default as ExpenseTrackingDashboardPage } from './pages/dashboard/expense-tracking';
 
 export { default as RevenuePage } from './pages/dashboard/revenue';
+export {
+  default as InvestPage,
+  getInvestPageInitialProps,
+  type InvestPageProps,
+} from './pages/invest';
 export { default as PhilosophyPage } from './pages/philosophy/index';
 export { default as CommonsGovernancePage } from './pages/philosophy/commons-governance';
 export { default as TragedyMythPage } from './pages/philosophy/tragedy-myth';

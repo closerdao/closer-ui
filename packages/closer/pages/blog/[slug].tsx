@@ -20,8 +20,10 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
+import { useConfig } from '../../hooks/useConfig';
 import { Article, ArticleWithAuthorInfo, Author } from '../../types/blog';
 import api, { cdn, formatSearch } from '../../utils/api';
+import { twitterUrlToHandle } from '../../utils/app.helpers';
 import { estimateReadingTime } from '../../utils/blog.utils';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
@@ -41,6 +43,8 @@ interface Props {
 
 const ArticlePage = ({ article, author, error, relatedArticles, blogConfig }: Props) => {
   const t = useTranslations();
+  const config = useConfig();
+  const twitterHandle = twitterUrlToHandle(config?.TWITTER_URL);
   const { user } = useAuth();
   const isAdmin = user && user?.roles.includes('admin');
   const isContentCreator = user && user?.roles.includes('content-creator');
@@ -224,7 +228,7 @@ const ArticlePage = ({ article, author, error, relatedArticles, blogConfig }: Pr
                   </svg>
                 </div>
               </FacebookShareButton>
-              <TwitterShareButton title={article?.title} url={process.env.NEXT_PUBLIC_PLATFORM_URL + '/blog/' + article?.slug} related={['@tdfinyourdreams']}>
+              <TwitterShareButton title={article?.title} url={process.env.NEXT_PUBLIC_PLATFORM_URL + '/blog/' + article?.slug} related={twitterHandle ? [twitterHandle] : undefined}>
                 <div className="w-11 h-11 rounded-full border border-gray-200 hover:border-gray-800 hover:bg-gray-100 flex items-center justify-center transition-all duration-200">
                   <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>

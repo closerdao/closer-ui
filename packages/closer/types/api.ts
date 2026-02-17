@@ -235,6 +235,7 @@ export type FundraisingMilestone = {
   startDate?: string | null;
   endDate?: string | null;
   currency?: string;
+  ctaUrl?: string;
 };
 
 export type FundraisingPackageType =
@@ -252,17 +253,7 @@ export type FundraisingPackage = {
   minAmount?: string;
   credits?: number;
   subscribeUrl?: string;
-};
-
-export type FundraisingLoan = {
-  id: string;
-  description: string;
-  amount: number;
-  currency: string;
-  date: string;
-  lender: string;
-  terms: string;
-  countsTowardMilestone: string;
+  ctaUrl?: string;
 };
 
 export type FundraisingManualAdjustment = {
@@ -277,15 +268,23 @@ export type FundraisingManualAdjustment = {
 export type FundraisingConfig = {
   enabled: boolean;
   amountRaisedPreCampaign?: number;
+  loansCollectedTotal?: number;
   campaignVideo?: string;
   campaignTitle?: string;
   creditPricePerUnit?: number;
-  loansLabel?: string;
   adjustmentsLabel?: string;
   milestones?: FundraisingMilestone[];
   packages?: FundraisingPackage[];
-  loans?: FundraisingLoan[];
-  manualAdjustments?: FundraisingManualAdjustment[];
+};
+
+export type InvestPageOptions = {
+  canonicalUrl?: string;
+  shareUrl?: string;
+  ogImageUrl?: string;
+  twitterHandle?: string;
+  dataroomHref?: string;
+  scheduleCallHref?: string;
+  loanPackageHref?: string;
 };
 
 export type TokenSale = {

@@ -1,3 +1,4 @@
+import Head from 'next/head';
 import Link from 'next/link';
 
 import { useEffect, useState } from 'react';
@@ -33,9 +34,11 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
+import { useConfig } from '../../hooks/useConfig';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { CitizenshipConfig } from '../../types/api';
 import api from '../../utils/api';
+import { twitterUrlToHandle } from '../../utils/app.helpers';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
@@ -57,11 +60,13 @@ const citizenFilter = {
 };
 
 const CitizenshipPage = ({
-  appName = 'Traditional Dream Factory',
+  appName,
   citizenshipConfig = {} as CitizenshipConfig,
   customConfig = {} as { citizenTarget?: number; apiEndpoint?: string },
 }: CitizenshipPageProps) => {
   const t = useTranslations();
+  const config = useConfig();
+  const twitterHandle = twitterUrlToHandle(config?.TWITTER_URL);
 
   const { user } = useAuth();
   const [citizenCurrent, setCitizenCurrent] = useState(0);
@@ -288,8 +293,47 @@ const CitizenshipPage = ({
     return <PageNotFound error="" />;
   }
 
+  const baseUrl =
+    process.env.NEXT_PUBLIC_PLATFORM_URL ||
+    'https://www.traditionaldreamfactory.com';
+  const canonicalUrl = `${String(baseUrl)
+    .replace(/\/$/, '')
+    .replace(/^(?!https?:\/\/)/, 'https://')}/citizenship`;
+
   return (
     <div className="min-h-screen bg-neutral-light text-foreground">
+      <Head>
+        <title>{t('citizenship_page_title')}</title>
+        <meta
+          name="description"
+          content={t('citizenship_page_meta_description')}
+        />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:title" content={t('citizenship_page_title')} />
+        <meta
+          property="og:description"
+          content={t('citizenship_page_meta_description')}
+        />
+        <meta
+          property="og:image"
+          content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
+        />
+        <meta name="twitter:card" content="summary_large_image" />
+        {twitterHandle && (
+          <meta name="twitter:site" content={twitterHandle} />
+        )}
+        <meta name="twitter:title" content={t('citizenship_page_title')} />
+        <meta
+          name="twitter:description"
+          content={t('citizenship_page_meta_description')}
+        />
+        <meta
+          name="twitter:image"
+          content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
+        />
+      </Head>
       {/* Hero */}
 
       <section className="relative isolate overflow-hidden">
@@ -307,8 +351,13 @@ const CitizenshipPage = ({
             {t('citizenship_founding_cohort_badge')}
           </Badge>
           <h1 className="text-4xl md:text-6xl font-semibold tracking-tight leading-tight">
-            {t('citizenship_hero_title')}{' '}
-            <span className="text-accent">{appName}</span>
+            {t('citizenship_hero_title')}
+            {appName ? (
+              <>
+                {' '}
+                <span className="text-accent">{appName}</span>
+              </>
+            ) : null}
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-foreground">
             {t('citizenship_hero_subtitle')}
@@ -556,7 +605,13 @@ const CitizenshipPage = ({
                     size="lg"
                     className="rounded-2xl px-6 w-full sm:w-auto"
                   >
-                    <Link href={`${user?.roles?.includes('member') ? '/token/finance' : '/subscriptions/citizen/why'}`}>
+                    <Link
+                      href={`${
+                        user?.roles?.includes('member')
+                          ? '/token/finance'
+                          : '/subscriptions/citizen/why'
+                      }`}
+                    >
                       {t('citizenship_start_financed_plan')}
                     </Link>
                   </Button>

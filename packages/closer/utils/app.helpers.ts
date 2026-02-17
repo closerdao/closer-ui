@@ -31,3 +31,9 @@ export function prepareGeneralConfig(
 
   return result;
 }
+
+export function twitterUrlToHandle(url: string | undefined): string {
+  if (!url || typeof url !== 'string') return '';
+  const match = url.match(/(?:twitter\.com|x\.com)\/([^/?]+)/i);
+  return match ? `@${match[1]}` : '';
+}

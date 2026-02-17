@@ -1,39 +1,67 @@
-import React from 'react';
-import { NextPage, NextPageContext } from 'next';
 import Head from 'next/head';
-import { Layout } from '@/components/Layout';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
+
+import React from 'react';
+
 import { TokenInterface } from '../../components/TokenInteraction';
 
+import { useConfig } from 'closer/hooks/useConfig';
+import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { twitterUrlToHandle } from 'closer/utils/app.helpers';
+import { NextPage, NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
 const TokensPage: NextPage = () => {
+  const t = useTranslations();
+  const config = useConfig();
+  const twitterHandle = twitterUrlToHandle(config?.TWITTER_URL);
   return (
-    <Layout>
+    <>
       <Head>
-        <title>TDF Token Explorer</title>
+        <title>{t('tokens_page_title')}</title>
+        <meta name="description" content={t('tokens_page_meta_description')} />
+        <link
+          rel="canonical"
+          href="https://www.traditionaldreamfactory.com/tokens"
+        />
+        <meta property="og:type" content="website" />
         <meta
-          name="description"
-          content="Interact with blockchain tokens in the TDF ecosystem"
+          property="og:url"
+          content="https://www.traditionaldreamfactory.com/tokens"
+        />
+        <meta property="og:title" content={t('tokens_page_title')} />
+        <meta
+          property="og:description"
+          content={t('tokens_page_meta_description')}
+        />
+        <meta name="twitter:card" content="summary_large_image" />
+        {twitterHandle && (
+          <meta name="twitter:site" content={twitterHandle} />
+        )}
+        <meta name="twitter:title" content={t('tokens_page_title')} />
+        <meta
+          name="twitter:description"
+          content={t('tokens_page_meta_description')}
         />
       </Head>
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Token Explorer</h1>
+          <h1 className="text-3xl font-bold">{t('tokens_page_heading')}</h1>
         </div>
-        
-        <p className="mb-8">
-          This page allows you to interact with various tokens on the blockchain.
-          Connect your wallet to view token balances and interact with token contracts.
-        </p>
-        
+
+        <p className="mb-8">{t('tokens_page_intro')}</p>
+
         <TokenInterface className="mb-8" />
       </div>
-    </Layout>
+    </>
   );
 };
 
 TokensPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME);
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
     return {
       messages,
     };
