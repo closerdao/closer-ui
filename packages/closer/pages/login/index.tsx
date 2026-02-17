@@ -29,9 +29,6 @@ import { getRedirectUrl } from '../../utils/auth.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 
-const isWeb3WalletEnabled =
-  process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
-
 const SPARKLE_ANIMATION = 'sparkle-fade-move 2.2s ease-in-out infinite';
 
 const SparkleTwinkle = ({
@@ -52,6 +49,8 @@ const SparkleTwinkle = ({
 
 const Login = () => {
   const t = useTranslations();
+  const isWeb3WalletEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
   const { signMessage, connectWallet } = useContext(WalletDispatch);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 

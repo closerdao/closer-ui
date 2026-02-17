@@ -2,59 +2,6 @@ import React from 'react';
 
 process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING = 'true';
 process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET = 'false';
-
-jest.mock('closer/contexts/wallet', () => {
-  const React = require('react');
-  const actual = jest.requireActual('closer/contexts/wallet');
-  const {
-    WalletStateContext,
-    WalletDispatchContext,
-  } = jest.requireActual('closer/contexts/wallet/hooks');
-
-  const defaultState = {
-    isWalletConnected: false,
-    isWalletReady: false,
-    isCorrectNetwork: false,
-    hasSameConnectedAccount: false,
-    account: null,
-    balanceTotal: '0',
-    balanceAvailable: '0',
-    balanceCeurAvailable: '0',
-    balanceCeloAvailable: '0',
-    proofOfPresence: '0',
-    bookedDates: null,
-    error: null,
-    library: null,
-    chainId: null,
-  };
-
-  const defaultDispatch = {
-    connectWallet: async () => null,
-    switchNetwork: async () => {},
-    updateWalletBalance: () => {},
-    updateCeurBalance: () => {},
-    updateCeloBalance: () => {},
-    refetchBookingDates: () => {},
-    signMessage: async () => null,
-  };
-
-  const DefaultProvider = ({ children }: { children: React.ReactNode }) =>
-    React.createElement(
-      WalletStateContext.Provider,
-      { value: defaultState },
-      React.createElement(
-        WalletDispatchContext.Provider,
-        { value: defaultDispatch },
-        children,
-      ),
-    );
-
-  return {
-    ...actual,
-    WalletProvider: ({ children }: { children?: React.ReactNode }) =>
-      DefaultProvider({ children }),
-  };
-});
 process.env.NEXT_PUBLIC_FEATURE_BOOKING = 'true';
 process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS = 'true';
 process.env.NEXT_PUBLIC_CDN_URL = 'https://cdn.example.com';
