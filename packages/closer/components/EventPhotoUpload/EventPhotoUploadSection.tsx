@@ -56,7 +56,7 @@ const EventPhotoUploadSection: FC<EventPhotoUploadSectionProps> = ({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: 'image/*',
+    accept: { 'image/*': [] },
     multiple: false,
     disabled: !canEditEvent || loading,
   });

@@ -326,7 +326,7 @@ const MemberMenu = () => {
           {
             label: 'Learn about the $TDF token',
             url: '/token',
-            enabled: process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true',
+            enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
           },
           {
             label: 'Become a Citizen',
@@ -873,7 +873,7 @@ const MemberMenu = () => {
     <nav className="flex flex-col gap-4">
       <Profile isMenu={true} isDemo={false} onLogout={logout} />
       {isWalletEnabled && <Wallet />}
-      {isWalletEnabled && (
+      {isTokenSaleEnabled && (
         <Button
           variant="primary"
           onClick={() => (window.location.href = '/token')}

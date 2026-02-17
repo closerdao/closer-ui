@@ -27,6 +27,17 @@ export const handlers = [
     }
     return res(ctx.status(404), ctx.json({ results: null }));
   }),
+  rest.get('*/config', (req, res, ctx) =>
+    res(
+      ctx.status(200),
+      ctx.json({
+        results: [
+          { slug: 'general', value: {} },
+          { slug: 'booking', value: bookingSettings },
+        ],
+      }),
+    ),
+  ),
   rest.get('*/config/booking', (req, res, ctx) =>
     res(ctx.status(200), ctx.json({ results: bookingSettings })),
   ),

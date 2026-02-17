@@ -93,7 +93,7 @@ const BlogEditor: FC<Props> = ({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: 'image/*',
+    accept: { 'image/*': [] },
     multiple: false,
   });
 

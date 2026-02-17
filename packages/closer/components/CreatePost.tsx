@@ -141,7 +141,12 @@ const CreatePost = ({
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
-    accept: 'image/jpeg, image/png, image/gif, image/webp',
+    accept: {
+      'image/jpeg': [],
+      'image/png': [],
+      'image/gif': [],
+      'image/webp': [],
+    },
     multiple: true,
     noClick: true,
     noKeyboard: true,

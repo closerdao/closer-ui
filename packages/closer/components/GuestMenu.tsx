@@ -389,7 +389,7 @@ const GuestMenu = () => {
           {
             label: t('navigation_buy_tokens'),
             url: '/token',
-            enabled: process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true',
+            enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
             rbacPage: 'Token',
           },
           {

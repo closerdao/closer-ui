@@ -66,6 +66,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         });
       } catch (err) {
         console.error(err);
+        setConfig((prev: any) => ({ ...prev, _configLoaded: true }));
       }
     })();
   }, []);

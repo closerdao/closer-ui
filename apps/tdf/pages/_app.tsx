@@ -84,6 +84,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         setRBACConfig(keyedConfig.rbac || {});
       } catch (err) {
         console.error(err);
+        setConfig((prev: any) => ({ ...prev, _configLoaded: true }));
       }
     })();
   }, []);
