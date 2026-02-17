@@ -2,13 +2,13 @@ import { generalConfig } from '@/__tests__/mocks/generalConfig';
 import SubscriptionsPage from '@/pages/subscriptions';
 import { renderWithProviders } from '@/test/utils';
 
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 
 import { listings } from '../../mocks/listings';
 import { subscriptionsConfig } from '../../mocks/subscriptions';
 
 describe('Subscriptions', () => {
-  it('should have a proper title', () => {
+  it('should have a proper title', async () => {
     renderWithProviders(
       <SubscriptionsPage
         listings={listings}
@@ -16,6 +16,10 @@ describe('Subscriptions', () => {
         generalConfig={generalConfig}
       />,
     );
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
 
     const title = screen.getByRole('heading', {
       name: /Subscriptions/i,
@@ -24,7 +28,7 @@ describe('Subscriptions', () => {
     expect(title).toBeInTheDocument();
   });
 
-  it('should show free plan card by default', () => {
+  it('should show free plan card by default', async () => {
     renderWithProviders(
       <SubscriptionsPage
         listings={listings}
@@ -32,6 +36,10 @@ describe('Subscriptions', () => {
         generalConfig={generalConfig}
       />,
     );
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
 
     const createAccountButton = screen.getByRole('button', {
       name: /create account/i,

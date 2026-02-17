@@ -53,7 +53,7 @@ const ConfigImageUpload: FC<ConfigImageUploadProps> = ({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { 'image/*': [] },
+    accept: 'image/*',
     multiple: false,
     disabled: disabled || loading,
   });
