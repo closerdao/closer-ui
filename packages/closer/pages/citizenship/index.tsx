@@ -34,9 +34,11 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
+import { useConfig } from '../../hooks/useConfig';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { CitizenshipConfig } from '../../types/api';
 import api from '../../utils/api';
+import { twitterUrlToHandle } from '../../utils/app.helpers';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
@@ -63,6 +65,8 @@ const CitizenshipPage = ({
   customConfig = {} as { citizenTarget?: number; apiEndpoint?: string },
 }: CitizenshipPageProps) => {
   const t = useTranslations();
+  const config = useConfig();
+  const twitterHandle = twitterUrlToHandle(config?.TWITTER_URL);
 
   const { user } = useAuth();
   const [citizenCurrent, setCitizenCurrent] = useState(0);
@@ -317,7 +321,9 @@ const CitizenshipPage = ({
           content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
         />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@tdfinyourdreams" />
+        {twitterHandle && (
+          <meta name="twitter:site" content={twitterHandle} />
+        )}
         <meta name="twitter:title" content={t('citizenship_page_title')} />
         <meta
           name="twitter:description"

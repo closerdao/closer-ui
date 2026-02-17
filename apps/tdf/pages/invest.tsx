@@ -10,7 +10,6 @@ const TDF_INVEST_OPTIONS = {
   canonicalUrl: 'https://www.traditionaldreamfactory.com/invest',
   shareUrl: 'https://www.traditionaldreamfactory.com/invest',
   ogImageUrl: 'https://cdn.oasa.co/tdf/tdf-invest-og.jpg',
-  twitterHandle: '@tdfinyourdreams',
   dataroomHref: '/dataroom',
   scheduleCallHref: 'https://samueldelesque.me/calendar',
   loanPackageHref: '/dataroom',

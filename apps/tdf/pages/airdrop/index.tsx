@@ -6,7 +6,9 @@ import { useState } from 'react';
 import { Heading, LinkButton } from 'closer/components/ui';
 
 import { PageNotFound, useAuth } from 'closer';
+import { useConfig } from 'closer/hooks/useConfig';
 import api from 'closer/utils/api';
+import { twitterUrlToHandle } from 'closer/utils/app.helpers';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import {
   Calendar,
@@ -37,6 +39,8 @@ const DEFAULT_AIRDROP_CONFIG: AirdropConfig = {
 
 const AirdropPage = ({ airdropConfig }: Props) => {
   const t = useTranslations();
+  const appConfig = useConfig();
+  const twitterHandle = twitterUrlToHandle(appConfig?.TWITTER_URL);
   const { user } = useAuth();
   const [showHistoricDetails, setShowHistoricDetails] = useState(false);
 
@@ -72,7 +76,9 @@ const AirdropPage = ({ airdropConfig }: Props) => {
           content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
         />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@tdfinyourdreams" />
+        {twitterHandle && (
+          <meta name="twitter:site" content={twitterHandle} />
+        )}
         <meta name="twitter:title" content={t('airdrop_page_title')} />
         <meta
           name="twitter:description"

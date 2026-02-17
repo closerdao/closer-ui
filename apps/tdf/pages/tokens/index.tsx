@@ -4,12 +4,16 @@ import React from 'react';
 
 import { TokenInterface } from '../../components/TokenInteraction';
 
+import { useConfig } from 'closer/hooks/useConfig';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
+import { twitterUrlToHandle } from 'closer/utils/app.helpers';
 import { NextPage, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 const TokensPage: NextPage = () => {
   const t = useTranslations();
+  const config = useConfig();
+  const twitterHandle = twitterUrlToHandle(config?.TWITTER_URL);
   return (
     <>
       <Head>
@@ -30,7 +34,9 @@ const TokensPage: NextPage = () => {
           content={t('tokens_page_meta_description')}
         />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@tdfinyourdreams" />
+        {twitterHandle && (
+          <meta name="twitter:site" content={twitterHandle} />
+        )}
         <meta name="twitter:title" content={t('tokens_page_title')} />
         <meta
           name="twitter:description"

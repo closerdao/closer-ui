@@ -10,6 +10,7 @@ import { GeneralConfig, api } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import { useFaqs } from 'closer/hooks/useFaqs';
 import { parseMessageFromError } from 'closer/utils/common';
+import { twitterUrlToHandle } from 'closer/utils/app.helpers';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -21,8 +22,8 @@ interface Props {
 
 const ResourcesPage = ({ generalConfig, error }: Props) => {
   const t = useTranslations();
-
   const defaultConfig = useConfig();
+  const twitterHandle = twitterUrlToHandle(defaultConfig?.TWITTER_URL);
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
   const { FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
@@ -52,7 +53,9 @@ const ResourcesPage = ({ generalConfig, error }: Props) => {
         />
         <meta property="og:description" content={t('resources_subheading')} />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@tdfinyourdreams" />
+        {twitterHandle && (
+          <meta name="twitter:site" content={twitterHandle} />
+        )}
         <meta
           name="twitter:title"
           content={`${t('resources_heading')} - ${PLATFORM_NAME}`}

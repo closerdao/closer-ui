@@ -16,6 +16,7 @@ import {
   TokenStats,
 } from 'closer/types';
 import api from 'closer/utils/api';
+import { twitterUrlToHandle } from 'closer/utils/app.helpers';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import {
   ArrowRight,
@@ -35,9 +36,12 @@ import {
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { event } from 'nextjs-google-analytics';
+import { useConfig } from 'closer/hooks/useConfig';
 
 const HomePage = () => {
   const t = useTranslations();
+  const config = useConfig();
+  const twitterHandle = twitterUrlToHandle(config?.TWITTER_URL);
 
   const [selectedReport, setSelectedReport] = useState<{
     year: string;
@@ -110,7 +114,9 @@ const HomePage = () => {
           content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
         />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@tdfinyourdreams" />
+        {twitterHandle && (
+          <meta name="twitter:site" content={twitterHandle} />
+        )}
         <meta name="twitter:title" content={t('home_title')} />
         <meta name="twitter:description" content={t('home_meta_description')} />
         <meta

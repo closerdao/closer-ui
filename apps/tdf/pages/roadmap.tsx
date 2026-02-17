@@ -2,12 +2,16 @@ import Head from 'next/head';
 import Link from 'next/link';
 
 import { Heading } from 'closer';
+import { useConfig } from 'closer/hooks/useConfig';
+import { twitterUrlToHandle } from 'closer/utils/app.helpers';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 const RoadmapPage = () => {
   const t = useTranslations();
+  const config = useConfig();
+  const twitterHandle = twitterUrlToHandle(config?.TWITTER_URL);
   return (
     <>
       <Head>
@@ -32,7 +36,9 @@ const RoadmapPage = () => {
           content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
         />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@tdfinyourdreams" />
+        {twitterHandle && (
+          <meta name="twitter:site" content={twitterHandle} />
+        )}
         <meta name="twitter:title" content={t('roadmap_title')} />
         <meta
           name="twitter:description"

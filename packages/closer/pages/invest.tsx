@@ -15,6 +15,7 @@ import Webinar from '../components/Webinar';
 import { Heading, LinkButton } from '../components/ui';
 
 import PageNotFound from './not-found';
+import { useConfig } from '../hooks/useConfig';
 import { useBuyTokens } from '../hooks/useBuyTokens';
 import {
   FundraisingConfig,
@@ -31,6 +32,7 @@ import {
   getMilestoneGoal,
   sortMilestonesByStartDate,
 } from '../utils/fundraising.helpers';
+import { twitterUrlToHandle } from '../utils/app.helpers';
 import { loadLocaleData } from '../utils/locale.helpers';
 import {
   Building2,
@@ -166,8 +168,11 @@ const InvestPage = ({
   investPageOptions: optionsOverride,
 }: InvestPageProps) => {
   const t = useTranslations();
+  const config = useConfig();
   const defaults = getDefaultInvestPageOptions();
   const opts = { ...defaults, ...optionsOverride };
+  const twitterHandle =
+    opts.twitterHandle || twitterUrlToHandle(config?.TWITTER_URL);
 
   const isFundraiserEnabled =
     process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true' &&
@@ -254,8 +259,8 @@ const InvestPage = ({
           <meta property="og:image" content={opts.ogImageUrl} />
         )}
         <meta name="twitter:card" content="summary_large_image" />
-        {opts.twitterHandle && (
-          <meta name="twitter:site" content={opts.twitterHandle} />
+        {twitterHandle && (
+          <meta name="twitter:site" content={twitterHandle} />
         )}
         <meta
           name="twitter:title"

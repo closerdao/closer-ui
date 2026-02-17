@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import { Card, Heading, LinkButton } from 'closer';
+import { useConfig } from 'closer/hooks/useConfig';
+import { twitterUrlToHandle } from 'closer/utils/app.helpers';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import {
   ArrowRight,
@@ -52,6 +54,8 @@ const FAQ_KEYS = [
 
 const LearnMorePage = () => {
   const t = useTranslations();
+  const config = useConfig();
+  const twitterHandle = twitterUrlToHandle(config?.TWITTER_URL);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   const scrollToSection = (id: string) => {
@@ -88,7 +92,9 @@ const LearnMorePage = () => {
           content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
         />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@tdfinyourdreams" />
+        {twitterHandle && (
+          <meta name="twitter:site" content={twitterHandle} />
+        )}
         <meta name="twitter:title" content={t('learn_more_page_title')} />
         <meta
           name="twitter:description"
