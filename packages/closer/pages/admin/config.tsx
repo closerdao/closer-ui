@@ -40,6 +40,17 @@ import PageNotFound from '../not-found';
 
 const BETA_FEATURES = ['community', 'governance'];
 
+const FUNDRAISER_CONFIG_KEYS_ORDER = [
+  'amountRaisedPreCampaign',
+  'loansCollectedTotal',
+  'campaignVideo',
+  'campaignTitle',
+  'creditPricePerUnit',
+  'adjustmentsLabel',
+  'milestones',
+  'packages',
+];
+
 interface Props {
   error: null | string;
   bookingConfig: BookingConfig;
@@ -390,8 +401,21 @@ const ConfigPage = ({ bookingConfig }: Props) => {
       (config: any) => config.slug === selectedConfig,
     );
     const defaultPlan = configDesc?.value?.[elementsKey]?.default;
-    
-    if (!defaultPlan || !Array.isArray(defaultPlan)) {
+    const schema = configDesc?.value?.[elementsKey]?.type?.[0];
+
+    let newElement: Record<string, unknown> = {};
+    if (defaultPlan && Array.isArray(defaultPlan) && defaultPlan[0]) {
+      newElement = { ...defaultPlan[0] };
+    } else if (schema && typeof schema === 'object') {
+      Object.keys(schema).forEach((key) => {
+        const fieldType = schema[key];
+        if (fieldType === 'number') {
+          newElement[key] = 0;
+        } else {
+          newElement[key] = '';
+        }
+      });
+    } else {
       return;
     }
 
@@ -399,7 +423,6 @@ const ConfigPage = ({ bookingConfig }: Props) => {
       ...updatedConfigs.map((config) => {
         if (config.slug === selectedConfig) {
           const currentArray: any = config.value[elementsKey] || [];
-          const newElement = defaultPlan[0] ? { ...defaultPlan[0] } : {};
           const newArray = [...currentArray, newElement];
           return {
             ...config,
@@ -412,17 +435,20 @@ const ConfigPage = ({ bookingConfig }: Props) => {
     setUpdatedConfigs(newConfigs);
   };
 
-  const handleDeleteElement = (index: number) => {
+  const handleDeleteElement = (index: number, elementsKey = 'elements') => {
     const newConfigs = [
       ...updatedConfigs.map((config) => {
         if (config.slug === selectedConfig) {
-          const elements: any = config.value.elements;
+          const elements: any = config.value[elementsKey];
+          if (!Array.isArray(elements)) {
+            return config;
+          }
           const updatedElements = elements.filter(
             (_: any, idx: number) => idx !== index,
           );
           return {
             ...config,
-            value: { ...config.value, elements: updatedElements },
+            value: { ...config.value, [elementsKey]: updatedElements },
           };
         }
         return config;
@@ -665,7 +691,15 @@ const ConfigPage = ({ bookingConfig }: Props) => {
 
                     {isEnabled && selectedConfig === configSlug && (
                         <div className="border-t border-gray-100 p-4 flex flex-col gap-4">
-                          {Object.entries(configData.value).map(
+                          {(configSlug === 'fundraiser'
+                            ? FUNDRAISER_CONFIG_KEYS_ORDER.filter((k) =>
+                                Object.prototype.hasOwnProperty.call(
+                                  configData.value,
+                                  k,
+                                ),
+                              ).map((k) => [k, configData.value[k]] as const)
+                            : Object.entries(configData.value)
+                          ).map(
                             ([key, value]) => {
                               const currentValue = configData.value[key];
                               const inputType = description?.[key]?.type;
@@ -716,16 +750,27 @@ const ConfigPage = ({ bookingConfig }: Props) => {
                                 return null;
                               }
 
+                              const fundraiserSectionKey =
+                                configSlug === 'fundraiser' &&
+                                (key === 'milestones' || key === 'packages')
+                                  ? key
+                                  : null;
+
                               return (
                                 <div
                                   key={`${configSlug}-${key}`}
                                   className="flex flex-col gap-1"
                                 >
-                                  {!isArray && (
-                                    <label className="text-sm font-medium text-gray-700">
-                                      {t(`config_label_${key}`)}
-                                    </label>
+                                  {fundraiserSectionKey && (
+                                    <h4 className="text-sm font-semibold text-gray-800 mt-4 mb-1 first:mt-0">
+                                      {t(
+                                        `config_section_fundraiser_${fundraiserSectionKey}`,
+                                      )}
+                                    </h4>
                                   )}
+                                  <label className="text-sm font-medium text-gray-700">
+                                    {t(`config_label_${key}`)}
+                                  </label>
                                   {isImage ? (
                                     <ConfigImageUpload
                                       value={String(currentValue)}

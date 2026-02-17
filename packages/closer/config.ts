@@ -295,6 +295,10 @@ export const configDescription: ConfigType[] = [
         type: 'number',
         default: 0,
       },
+      loansCollectedTotal: {
+        type: 'number',
+        default: 0,
+      },
       campaignVideo: {
         type: 'text',
         default: '',
@@ -306,10 +310,6 @@ export const configDescription: ConfigType[] = [
       creditPricePerUnit: {
         type: 'number',
         default: 30,
-      },
-      loansLabel: {
-        type: 'text',
-        default: 'Loans',
       },
       adjustmentsLabel: {
         type: 'text',
@@ -325,39 +325,50 @@ export const configDescription: ConfigType[] = [
             goal: 'number',
             start: 'text',
             end: 'text',
+            ctaUrl: 'text',
           },
         ],
         default: [
           {
             id: 'milestone-1',
-            title: 'Roofs, Pool, Restaurant & Design',
+            title: 'Buildings option exercise, architecture & engineering fees',
             description:
-              'Complete the final amenities required for hospitality licensing and opening to guests.',
-            items:
-              'Coliving roofs (€150K)\nPool completion (€20K)\nRestaurant (€100K)',
-            goal: 295000,
+              'Execute secured option to buy signed in 2023 at €200k (asset expected to appraise at €1M).',
+            items: '',
+            goal: 236000,
             start: '2025-12-01',
-            end: '2026-05-31',
+            end: '2026-03-31',
           },
           {
             id: 'milestone-2',
-            title: 'Artist Studios',
+            title: 'Solar roofs, pool completion',
             description:
-              'Expand capacity with 4 creative studios for artists-in-residence and workshops.',
-            items: '4 studios with natural light and workspace',
+              'Solar prices are raising. We have a special deal to buy panels at cost, and will stack functionality by turning our panels into an extra waterproofing layer over our roofs to avoid further rain dammage next year. Plus it includes €600+ energy income in the future as we establish a microgrid in Abela.',
+            items: '',
             goal: 150000,
-            start: '2026-06-01',
-            end: '',
+            start: '2026-03-31',
+            end: '2026-06-01',
           },
           {
             id: 'milestone-3',
-            title: 'Accommodation Rooms',
+            title:
+              'Industrial kitchen, 30 seat restaurant & 4 creative studios',
             description:
-              'Complete the 12 en-suite rooms, dorm, and 3-bedroom house for full capacity as a licensed coliving destination.',
+              'This milestone completes our legal restaurant with 30 seat, a core business driver for our operation - alongside 4 studios with natural light and workspace for artists-in-residence and workshops. We expect some bank or grant co-financing for this step.',
             items: '',
-            goal: 700000,
-            start: '',
-            end: '',
+            goal: 150000,
+            start: '2026-06-01',
+            end: '2026-08-01',
+          },
+          {
+            id: 'milestone-4',
+            title: 'Co-living building',
+            description:
+              'Complete the 12 en-suite rooms, dorm, and 3-bedroom house for full capacity as a licensed coliving destination. This is the community co-budget - for a €750k build that we aim to finance via bank or grants.',
+            items: '',
+            goal: 150000,
+            start: '2026-08-01',
+            end: '2026-12-01',
           },
         ],
       },
@@ -375,6 +386,7 @@ export const configDescription: ConfigType[] = [
             minAmount: 'text',
             credits: 'number',
             subscribeUrl: 'text',
+            ctaUrl: 'text',
           },
         ],
         default: [
@@ -443,34 +455,6 @@ export const configDescription: ConfigType[] = [
               '/subscriptions/checkout?priceId=price_1N1YLVE9CDXOM807XtNAwiBW',
           },
         ],
-      },
-      loans: {
-        type: [
-          {
-            id: 'text',
-            description: 'text',
-            amount: 'number',
-            currency: 'text',
-            date: 'text',
-            lender: 'text',
-            terms: 'text',
-            countsTowardMilestone: 'text',
-          },
-        ],
-        default: [],
-      },
-      manualAdjustments: {
-        type: [
-          {
-            id: 'text',
-            description: 'text',
-            amount: 'number',
-            currency: 'text',
-            date: 'text',
-            countsTowardMilestone: 'text',
-          },
-        ],
-        default: [],
       },
     },
   },

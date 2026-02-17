@@ -6,11 +6,15 @@ import { CheckCircle2, PartyPopper } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
+import { FundraisingConfig } from '../types/api';
 import {
-  FundraisingConfig,
-  FundraisingMilestone,
-} from '../types/api';
-import api, { formatSearch } from '../utils/api';
+  computeMilestoneStates,
+  fetchFundraisingBreakdown,
+  findActiveMilestone,
+  getMilestoneEnd,
+  getMilestoneGoal,
+  sortMilestonesByStartDate,
+} from '../utils/fundraising.helpers';
 
 interface FundraisingWidgetProps {
   variant?: 'nav' | 'hero';
@@ -18,72 +22,7 @@ interface FundraisingWidgetProps {
   fundraisingConfig?: FundraisingConfig;
 }
 
-interface FundraisingBreakdown {
-  cryptoTokenSales: number;
-  fiatTokenSales: number;
-  loans: number;
-  adjustments: number;
-  total: number;
-  target: number;
-  progressPercent: number;
-}
-
-const DEFAULT_TARGET_AMOUNT = 295000;
 const DEFAULT_END_DATE = '2026-05-31T23:59:59.999Z';
-
-const getMilestoneStart = (m: FundraisingMilestone): string | null =>
-  m.start ?? m.startDate ?? null;
-const getMilestoneEnd = (m: FundraisingMilestone): string | null =>
-  m.end ?? m.endDate ?? null;
-const getMilestoneTarget = (m: FundraisingMilestone): number =>
-  Number(m.goal ?? m.targetAmount) || 0;
-
-const findActiveMilestone = (milestones: FundraisingMilestone[] | undefined): FundraisingMilestone | null => {
-  if (!milestones || milestones.length === 0) return null;
-
-  const now = new Date();
-  const FAR_FUTURE = new Date('2100-01-01T00:00:00.000Z');
-
-  const sortedByStartDesc = [...milestones].sort((a, b) => {
-    const startA = getMilestoneStart(a) ? new Date(getMilestoneStart(a)!).getTime() : 0;
-    const startB = getMilestoneStart(b) ? new Date(getMilestoneStart(b)!).getTime() : 0;
-    return startB - startA;
-  });
-
-  const activeMilestone = sortedByStartDesc.find((m) => {
-    const startRaw = getMilestoneStart(m);
-    if (!startRaw) return false;
-
-    const start = new Date(startRaw);
-    start.setHours(0, 0, 0, 0);
-
-    const endRaw = getMilestoneEnd(m);
-    const end = endRaw ? new Date(endRaw) : FAR_FUTURE;
-    if (endRaw) end.setHours(23, 59, 59, 999);
-
-    return now >= start && now <= end;
-  });
-
-  if (activeMilestone) return activeMilestone;
-
-  const sortedByStartAsc = [...milestones].sort((a, b) => {
-    const startA = getMilestoneStart(a) ? new Date(getMilestoneStart(a)!).getTime() : Infinity;
-    const startB = getMilestoneStart(b) ? new Date(getMilestoneStart(b)!).getTime() : Infinity;
-    return startA - startB;
-  });
-
-  const futureMilestones = sortedByStartAsc.filter((m) => {
-    const startRaw = getMilestoneStart(m);
-    if (!startRaw) return false;
-    const start = new Date(startRaw);
-    start.setHours(0, 0, 0, 0);
-    return start > now;
-  });
-
-  if (futureMilestones.length > 0) return futureMilestones[0];
-
-  return sortedByStartDesc[0] || null;
-};
 
 const FundraisingWidget = ({
   variant = 'nav',
@@ -93,21 +32,23 @@ const FundraisingWidget = ({
   const t = useTranslations();
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('admin');
-  const [breakdown, setBreakdown] = useState<FundraisingBreakdown>({
-    cryptoTokenSales: 0,
-    fiatTokenSales: 0,
-    loans: 0,
-    adjustments: 0,
-    total: 0,
-    target: DEFAULT_TARGET_AMOUNT,
-    progressPercent: 0,
-  });
+  const [totalRaised, setTotalRaised] = useState(0);
+  const [cryptoTotal, setCryptoTotal] = useState(0);
+  const [fiatTotal, setFiatTotal] = useState(0);
+  const [activeRaised, setActiveRaised] = useState(0);
+  const [goalAmount, setGoalAmount] = useState(0);
+  const [progressPercent, setProgressPercent] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [daysLeft, setDaysLeft] = useState(0);
 
-  const activeMilestone = useMemo(() => {
-    return findActiveMilestone(fundraisingConfig?.milestones);
-  }, [fundraisingConfig?.milestones]);
+  const sortedMilestones = useMemo(
+    () => sortMilestonesByStartDate(fundraisingConfig?.milestones ?? []),
+    [fundraisingConfig?.milestones],
+  );
+  const activeMilestone = useMemo(
+    () => findActiveMilestone(fundraisingConfig?.milestones),
+    [fundraisingConfig?.milestones],
+  );
 
   useEffect(() => {
     const endRaw = activeMilestone
@@ -121,91 +62,36 @@ const FundraisingWidget = ({
   }, [activeMilestone]);
 
   useEffect(() => {
-    const fetchTokenSales = async () => {
+    const load = async () => {
       try {
-        const startDate = activeMilestone
-          ? getMilestoneStart(activeMilestone)
+        const breakdown = await fetchFundraisingBreakdown(fundraisingConfig);
+        setTotalRaised(breakdown.totalRaised);
+        setCryptoTotal(breakdown.cryptoTotal);
+        setFiatTotal(breakdown.fiatTotal);
+        const states = computeMilestoneStates(
+          sortedMilestones,
+          breakdown.totalRaised,
+        );
+        const goal = activeMilestone
+          ? getMilestoneGoal(activeMilestone)
+          : 0;
+        const state = activeMilestone
+          ? states[activeMilestone.id]
           : null;
-        const endDate =
-          (activeMilestone ? getMilestoneEnd(activeMilestone) : null) ||
-          DEFAULT_END_DATE;
-        const targetAmount = activeMilestone
-          ? getMilestoneTarget(activeMilestone) || DEFAULT_TARGET_AMOUNT
-          : DEFAULT_TARGET_AMOUNT;
-
-        const dateFilter: Record<string, string> = {};
-        if (startDate) {
-          dateFilter.$gte = startDate;
-        }
-        if (endDate) {
-          dateFilter.$lte = endDate;
-        }
-
-        const cryptoWhere: Record<string, unknown> = {
-          type: 'tokenSale',
-          status: 'paid',
-        };
-        const fiatWhere: Record<string, unknown> = {
-          type: 'fiatTokenSale',
-          status: 'paid',
-        };
-
-        if (Object.keys(dateFilter).length > 0) {
-          cryptoWhere.created = dateFilter;
-          fiatWhere.created = dateFilter;
-        }
-
-        const [cryptoRes, fiatRes] = await Promise.all([
-          api
-            .get('/sum/charge/amount.total.val', {
-              params: {
-                where: formatSearch(cryptoWhere),
-              },
-            })
-            .catch(() => null),
-          api
-            .get('/sum/charge/amount.total.val', {
-              params: {
-                where: formatSearch(fiatWhere),
-              },
-            })
-            .catch(() => null),
-        ]);
-
-        const cryptoTotal = cryptoRes?.data?.sum || 0;
-        const fiatTotal = fiatRes?.data?.sum || 0;
-
-        const loansTotal = (fundraisingConfig?.loans || [])
-          .filter(loan => !activeMilestone || loan.countsTowardMilestone === activeMilestone.id)
-          .reduce((sum, loan) => sum + (Number(loan.amount) || 0), 0);
-
-        const adjustmentsTotal = (fundraisingConfig?.manualAdjustments || [])
-          .filter(adj => !activeMilestone || adj.countsTowardMilestone === activeMilestone.id)
-          .reduce((sum, adj) => sum + (Number(adj.amount) || 0), 0);
-
-        const total = Number(cryptoTotal) + Number(fiatTotal) + Number(loansTotal) + Number(adjustmentsTotal);
-        const progressPercent = Math.min((total / targetAmount) * 100, 100);
-
-        setBreakdown({
-          cryptoTokenSales: cryptoTotal,
-          fiatTokenSales: fiatTotal,
-          loans: loansTotal,
-          adjustments: adjustmentsTotal,
-          total,
-          target: targetAmount,
-          progressPercent,
-        });
+        setGoalAmount(goal);
+        setActiveRaised(state?.raised ?? 0);
+        setProgressPercent(state?.progress ?? 0);
       } catch (error) {
-        console.error('Error fetching token sales:', error);
+        console.error('Error fetching fundraising breakdown:', error);
       } finally {
         setIsLoading(false);
       }
     };
+    load();
+  }, [fundraisingConfig, sortedMilestones, activeMilestone]);
 
-    fetchTokenSales();
-  }, [fundraisingConfig, activeMilestone]);
-
-  const { total: totalRaised, target: goalAmount, progressPercent } = breakdown;
+  const displayRaised = activeMilestone ? activeRaised : totalRaised;
+  const displayGoal = activeMilestone ? goalAmount : 0;
 
   const formatAmount = (amount: number) => {
     if (amount >= 1000) {
@@ -218,7 +104,7 @@ const FundraisingWidget = ({
     activeMilestone?.title ??
     activeMilestone?.name ??
     t('invest_progress_milestone_default');
-  const isGoalReached = !isLoading && totalRaised >= goalAmount;
+  const isGoalReached = !isLoading && displayRaised >= displayGoal;
 
   if (variant === 'hero') {
     if (isGoalReached) {
@@ -239,10 +125,10 @@ const FundraisingWidget = ({
           
           <div className="flex items-center justify-between mb-3">
             <span className="text-lg font-bold text-accent">
-              {formatAmount(totalRaised)} {t('invest_progress_raised')}
+              {formatAmount(displayRaised)} {t('invest_progress_raised')}
             </span>
             <span className="text-sm font-medium text-gray-500 line-through opacity-70">
-              {formatAmount(goalAmount)} {t('invest_progress_goal')}
+              {formatAmount(displayGoal)} {t('invest_progress_goal')}
             </span>
           </div>
           
@@ -258,19 +144,15 @@ const FundraisingWidget = ({
             <div className="mt-4 p-3 bg-accent/10 rounded-lg text-xs font-mono">
               <div className="grid grid-cols-2 gap-1 text-gray-700">
                 <span>Crypto Token Sales:</span>
-                <span className="text-right">€{breakdown.cryptoTokenSales.toLocaleString()}</span>
+                <span className="text-right">€{cryptoTotal.toLocaleString()}</span>
                 <span>Fiat Token Sales:</span>
-                <span className="text-right">€{breakdown.fiatTokenSales.toLocaleString()}</span>
-                <span>{fundraisingConfig?.loansLabel ?? 'Loans'}:</span>
-                <span className="text-right">€{breakdown.loans.toLocaleString()}</span>
-                <span>{fundraisingConfig?.adjustmentsLabel ?? 'Adjustments'}:</span>
-                <span className="text-right">€{breakdown.adjustments.toLocaleString()}</span>
+                <span className="text-right">€{fiatTotal.toLocaleString()}</span>
                 <span className="font-bold border-t border-accent/30 pt-1">Total:</span>
-                <span className="text-right font-bold border-t border-accent/30 pt-1">€{breakdown.total.toLocaleString()}</span>
+                <span className="text-right font-bold border-t border-accent/30 pt-1">€{totalRaised.toLocaleString()}</span>
                 <span>Target:</span>
-                <span className="text-right">€{breakdown.target.toLocaleString()}</span>
+                <span className="text-right">€{displayGoal.toLocaleString()}</span>
                 <span>Progress:</span>
-                <span className="text-right">{breakdown.progressPercent.toFixed(2)}%</span>
+                <span className="text-right">{progressPercent.toFixed(2)}%</span>
               </div>
               <p className="mt-2 text-accent">Milestone ID: {activeMilestone?.id || 'none'}</p>
             </div>
@@ -284,11 +166,11 @@ const FundraisingWidget = ({
         <p className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">{milestoneName}</p>
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm text-gray-600 font-medium">
-            {isLoading ? '...' : formatAmount(totalRaised)}{' '}
+            {isLoading ? '...' : formatAmount(displayRaised)}{' '}
             {t('invest_progress_raised')}
           </span>
           <span className="text-sm font-semibold text-gray-900">
-            {formatAmount(goalAmount)} {t('invest_progress_goal')}
+            {formatAmount(displayGoal)} {t('invest_progress_goal')}
           </span>
         </div>
         <div className="w-full rounded-full bg-gray-200 overflow-hidden h-3 mb-3">
@@ -308,19 +190,15 @@ const FundraisingWidget = ({
           <div className="mt-4 p-3 bg-gray-100 rounded-lg text-xs font-mono">
             <div className="grid grid-cols-2 gap-1 text-gray-600">
               <span>Crypto Token Sales:</span>
-              <span className="text-right">€{breakdown.cryptoTokenSales.toLocaleString()}</span>
+              <span className="text-right">€{cryptoTotal.toLocaleString()}</span>
               <span>Fiat Token Sales:</span>
-              <span className="text-right">€{breakdown.fiatTokenSales.toLocaleString()}</span>
-              <span>{fundraisingConfig?.loansLabel ?? 'Loans'}:</span>
-              <span className="text-right">€{breakdown.loans.toLocaleString()}</span>
-              <span>{fundraisingConfig?.adjustmentsLabel ?? 'Adjustments'}:</span>
-              <span className="text-right">€{breakdown.adjustments.toLocaleString()}</span>
+              <span className="text-right">€{fiatTotal.toLocaleString()}</span>
               <span className="font-bold border-t border-gray-300 pt-1">Total:</span>
-              <span className="text-right font-bold border-t border-gray-300 pt-1">€{breakdown.total.toLocaleString()}</span>
+              <span className="text-right font-bold border-t border-gray-300 pt-1">€{totalRaised.toLocaleString()}</span>
               <span>Target:</span>
-              <span className="text-right">€{breakdown.target.toLocaleString()}</span>
+              <span className="text-right">€{displayGoal.toLocaleString()}</span>
               <span>Progress:</span>
-              <span className="text-right">{breakdown.progressPercent.toFixed(2)}%</span>
+              <span className="text-right">{progressPercent.toFixed(2)}%</span>
             </div>
             <p className="mt-2 text-gray-500">Milestone ID: {activeMilestone?.id || 'none'}</p>
           </div>

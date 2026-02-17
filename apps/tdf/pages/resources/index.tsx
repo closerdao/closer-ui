@@ -36,6 +36,28 @@ const ResourcesPage = ({ generalConfig, error }: Props) => {
     <div className="max-w-screen-lg mx-auto">
       <Head>
         <title>{`${t('resources_heading')} - ${PLATFORM_NAME}`}</title>
+        <meta name="description" content={t('resources_subheading')} />
+        <link
+          rel="canonical"
+          href="https://www.traditionaldreamfactory.com/resources"
+        />
+        <meta property="og:type" content="website" />
+        <meta
+          property="og:url"
+          content="https://www.traditionaldreamfactory.com/resources"
+        />
+        <meta
+          property="og:title"
+          content={`${t('resources_heading')} - ${PLATFORM_NAME}`}
+        />
+        <meta property="og:description" content={t('resources_subheading')} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@tdfinyourdreams" />
+        <meta
+          name="twitter:title"
+          content={`${t('resources_heading')} - ${PLATFORM_NAME}`}
+        />
+        <meta name="twitter:description" content={t('resources_subheading')} />
       </Head>
       <main className="pt-16 pb-24 md:flex-row flex-wrap">
         <div className="flex justify-center bg-cover bg-[center_top_6rem] sm:bg-[center_top_4rem] bg-no-repeat bg-[url(/images/resources/resources-hero.png)] h-[650px]">

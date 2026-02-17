@@ -776,7 +776,8 @@ const MemberHome = ({
 
     const displayable = channels.filter(
       (ch: Channel) =>
-        ch.channelType !== 'ground' || ch.visibleBy?.includes(user?._id || ''),
+        (ch.channelType !== 'ground' && ch.channelType !== 'dream') ||
+        ch.visibleBy?.includes(user?._id || ''),
     );
 
     if (!currentSlug) {

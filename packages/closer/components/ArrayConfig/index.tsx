@@ -14,7 +14,7 @@ interface Props {
     index?: null | number,
   ) => void;
   handleAddElement: (elementsKey?: string) => void;
-  handleDeleteElement: (index: number) => void;
+  handleDeleteElement: (index: number, elementsKey?: string) => void;
   elementsKey: string;
   description: any;
   slug: string;
@@ -198,7 +198,7 @@ const ArrayConfig = ({
 
               {index > 0 && !isSubscriptionsConfig && (
                 <Button
-                  onClick={() => handleDeleteElement(index)}
+                  onClick={() => handleDeleteElement(index, elementsKey)}
                   className="w-40"
                   variant="secondary"
                 >

@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import { useState } from 'react';
 
-import { Heading, Card, LinkButton } from 'closer';
+import { Card, Heading, LinkButton } from 'closer';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import {
   ArrowRight,
@@ -26,62 +26,32 @@ import {
   Wallet,
 } from 'lucide-react';
 import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 const TOPICS = [
-  { id: 'about', label: 'About TDF', icon: Home },
-  { id: 'location', label: 'Location', icon: MapPin },
-  { id: 'token', label: '$TDF Token', icon: Coins },
-  { id: 'governance', label: 'Governance', icon: Vote },
-  { id: 'regeneration', label: 'Regeneration', icon: Leaf },
-  { id: 'community', label: 'Community', icon: Users },
-  { id: 'oasa', label: 'OASA Network', icon: Globe },
-  { id: 'faq', label: 'FAQ', icon: BookOpen },
+  { id: 'about', labelKey: 'learn_more_topic_about', icon: Home },
+  { id: 'location', labelKey: 'learn_more_topic_location', icon: MapPin },
+  { id: 'token', labelKey: 'learn_more_topic_token', icon: Coins },
+  { id: 'governance', labelKey: 'learn_more_topic_governance', icon: Vote },
+  { id: 'regeneration', labelKey: 'learn_more_topic_regeneration', icon: Leaf },
+  { id: 'community', labelKey: 'learn_more_topic_community', icon: Users },
+  { id: 'oasa', labelKey: 'learn_more_topic_oasa', icon: Globe },
+  { id: 'faq', labelKey: 'learn_more_topic_faq', icon: BookOpen },
 ];
 
-const FAQ_ITEMS = [
-  {
-    question: 'What is Traditional Dream Factory?',
-    answer:
-      'Traditional Dream Factory (TDF) is a regenerative co-living village in Abela, Portugal. We combine web3 technology with sustainable living practices to create a community-owned space where members can live, work, and contribute to ecological restoration.',
-  },
-  {
-    question: 'What is the $TDF token and how does it work?',
-    answer:
-      'The $TDF token is a utility token that grants holders access to TDF facilities. 1 $TDF = 1 night of accommodation. Tokens are staked and can be used to unlock stays at TDF. Token holders also participate in governance decisions through our DAO structure.',
-  },
-  {
-    question: 'How can I visit TDF?',
-    answer:
-      'You can visit TDF by booking a stay through our platform. We offer various accommodation types including glamping tents, suites, and van parking. You can also attend events or apply for volunteer opportunities to experience the community.',
-  },
-  {
-    question: 'What does "regenerative" mean at TDF?',
-    answer:
-      'Regenerative means going beyond sustainability—we aim to actively restore and improve the land. This includes rewilding, water restoration, soil building, agroforestry, and creating habitats for wildlife. Our goal is to leave the land better than we found it.',
-  },
-  {
-    question: 'How is TDF governed?',
-    answer:
-      'TDF operates as a Decentralized Autonomous Organization (DAO) with governance based on three factors: $TDF tokens held, Proof of Presence (time spent at TDF), and Proof of Sweat (contributions to the community). This ensures those most engaged have the most voice.',
-  },
-  {
-    question: 'What is OASA and how does it relate to TDF?',
-    answer:
-      'OASA is a Swiss association that serves as a land conservation network. TDF is the first village in the OASA network. OASA holds the land in trust, ensuring it can never be sold for profit and must always serve regenerative purposes.',
-  },
-  {
-    question: 'Can I live at TDF permanently?',
-    answer:
-      'TDF is designed primarily for medium-term stays (weeks to months) rather than permanent residence. However, active community members can extend their stays, and we are developing co-housing options for those seeking longer-term arrangements.',
-  },
-  {
-    question: 'How can I support TDF without visiting?',
-    answer:
-      'You can support TDF by purchasing $TDF tokens, which directly funds infrastructure development. You can also subscribe to our newsletter, follow our progress, share our mission, or participate in online governance discussions.',
-  },
+const FAQ_KEYS = [
+  { qKey: 'learn_more_faq_1_q', aKey: 'learn_more_faq_1_a' },
+  { qKey: 'learn_more_faq_2_q', aKey: 'learn_more_faq_2_a' },
+  { qKey: 'learn_more_faq_3_q', aKey: 'learn_more_faq_3_a' },
+  { qKey: 'learn_more_faq_4_q', aKey: 'learn_more_faq_4_a' },
+  { qKey: 'learn_more_faq_5_q', aKey: 'learn_more_faq_5_a' },
+  { qKey: 'learn_more_faq_6_q', aKey: 'learn_more_faq_6_a' },
+  { qKey: 'learn_more_faq_7_q', aKey: 'learn_more_faq_7_a' },
+  { qKey: 'learn_more_faq_8_q', aKey: 'learn_more_faq_8_a' },
 ];
 
 const LearnMorePage = () => {
+  const t = useTranslations();
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   const scrollToSection = (id: string) => {
@@ -94,10 +64,39 @@ const LearnMorePage = () => {
   return (
     <div>
       <Head>
-        <title>Learn More About TDF - Traditional Dream Factory</title>
+        <title>{t('learn_more_page_title')}</title>
         <meta
           name="description"
-          content="Learn about Traditional Dream Factory (TDF), a regenerative co-living village in Portugal. Understand our mission, governance, $TDF token, and how to get involved."
+          content={t('learn_more_page_meta_description')}
+        />
+        <link
+          rel="canonical"
+          href="https://www.traditionaldreamfactory.com/learn-more"
+        />
+        <meta property="og:type" content="website" />
+        <meta
+          property="og:url"
+          content="https://www.traditionaldreamfactory.com/learn-more"
+        />
+        <meta property="og:title" content={t('learn_more_page_title')} />
+        <meta
+          property="og:description"
+          content={t('learn_more_page_meta_description')}
+        />
+        <meta
+          property="og:image"
+          content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
+        />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@tdfinyourdreams" />
+        <meta name="twitter:title" content={t('learn_more_page_title')} />
+        <meta
+          name="twitter:description"
+          content={t('learn_more_page_meta_description')}
+        />
+        <meta
+          name="twitter:image"
+          content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
         />
       </Head>
 
@@ -105,27 +104,21 @@ const LearnMorePage = () => {
         <div className="max-w-6xl mx-auto px-6">
           <div className="max-w-3xl">
             <p className="text-xs uppercase tracking-widest text-accent-dark mb-4 font-medium">
-              Knowledge Base
+              {t('learn_more_hero_label')}
             </p>
-            <Heading
-              className="text-3xl md:text-5xl mb-6"
-              display
-              level={1}
-            >
-              Understanding Traditional Dream Factory
+            <Heading className="text-3xl md:text-5xl mb-6" display level={1}>
+              {t('learn_more_hero_title')}
             </Heading>
             <p className="text-lg text-gray-700 leading-relaxed mb-8">
-              Everything you need to know about our regenerative co-living
-              village, the $TDF token, governance structure, and how to become
-              part of our community.
+              {t('learn_more_hero_subtitle')}
             </p>
 
             <div className="flex flex-wrap gap-3">
               <LinkButton href="/stay" variant="primary">
-                Book a Stay
+                {t('learn_more_book_stay')}
               </LinkButton>
               <LinkButton href="/token" variant="secondary">
-                Get $TDF Tokens
+                {t('learn_more_get_tokens')}
               </LinkButton>
             </div>
           </div>
@@ -142,7 +135,7 @@ const LearnMorePage = () => {
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-accent hover:bg-accent-light/30 rounded-lg transition-colors whitespace-nowrap"
               >
                 <topic.icon className="w-4 h-4" />
-                {topic.label}
+                {t(topic.labelKey)}
               </button>
             ))}
           </div>
@@ -215,15 +208,21 @@ const LearnMorePage = () => {
                     <span>Abela, Alentejo, Portugal</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="font-medium min-w-[100px]">Land Size:</span>
+                    <span className="font-medium min-w-[100px]">
+                      Land Size:
+                    </span>
                     <span>25 hectares (62 acres)</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="font-medium min-w-[100px]">Legal Structure:</span>
+                    <span className="font-medium min-w-[100px]">
+                      Legal Structure:
+                    </span>
                     <span>DAO under OASA (Swiss Association)</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="font-medium min-w-[100px]">Token Holders:</span>
+                    <span className="font-medium min-w-[100px]">
+                      Token Holders:
+                    </span>
                     <span>280+ community members</span>
                   </li>
                 </ul>
@@ -255,7 +254,10 @@ const LearnMorePage = () => {
         </div>
       </section>
 
-      <section id="location" className="py-20 bg-gray-50 border-b border-gray-200">
+      <section
+        id="location"
+        className="py-20 bg-gray-50 border-b border-gray-200"
+      >
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
@@ -325,8 +327,8 @@ const LearnMorePage = () => {
                     10 Glamping accommodations
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-accent" />
-                    6 Van parking spots
+                    <span className="w-2 h-2 rounded-full bg-accent" />6 Van
+                    parking spots
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-accent" />
@@ -354,9 +356,7 @@ const LearnMorePage = () => {
                 <div className="flex items-center gap-3">
                   <Map className="w-5 h-5 text-accent" />
                   <div>
-                    <p className="font-medium text-gray-900">
-                      View Impact Map
-                    </p>
+                    <p className="font-medium text-gray-900">View Impact Map</p>
                     <p className="text-sm text-gray-500">
                       Explore our land projects
                     </p>
@@ -457,7 +457,9 @@ const LearnMorePage = () => {
                   </div>
                   <div className="flex justify-between items-start border-b border-gray-100 pb-3">
                     <span className="text-gray-600">Token Type</span>
-                    <span className="font-medium">ERC-20 (Celo blockchain)</span>
+                    <span className="font-medium">
+                      ERC-20 (Celo blockchain)
+                    </span>
                   </div>
                   <div className="flex justify-between items-start border-b border-gray-100 pb-3">
                     <span className="text-gray-600">Staking</span>
@@ -486,7 +488,10 @@ const LearnMorePage = () => {
         </div>
       </section>
 
-      <section id="governance" className="py-20 bg-gray-50 border-b border-gray-200">
+      <section
+        id="governance"
+        className="py-20 bg-gray-50 border-b border-gray-200"
+      >
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
@@ -605,9 +610,7 @@ const LearnMorePage = () => {
                 <div className="flex items-center gap-3">
                   <Users className="w-5 h-5 text-purple-600" />
                   <div>
-                    <p className="font-medium text-gray-900">
-                      TDF Citizenship
-                    </p>
+                    <p className="font-medium text-gray-900">TDF Citizenship</p>
                     <p className="text-sm text-gray-500">
                       Become a full member
                     </p>
@@ -632,7 +635,10 @@ const LearnMorePage = () => {
         </div>
       </section>
 
-      <section id="regeneration" className="py-20 bg-white border-b border-gray-200">
+      <section
+        id="regeneration"
+        className="py-20 bg-white border-b border-gray-200"
+      >
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
@@ -686,7 +692,10 @@ const LearnMorePage = () => {
                 <LinkButton href="/pages/ecology" variant="primary">
                   Ecology Deep Dive
                 </LinkButton>
-                <LinkButton href="/pages/regenerative-agriculture" variant="secondary">
+                <LinkButton
+                  href="/pages/regenerative-agriculture"
+                  variant="secondary"
+                >
                   Agriculture Practices
                 </LinkButton>
               </div>
@@ -699,7 +708,9 @@ const LearnMorePage = () => {
                 </Heading>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">25ha</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      25ha
+                    </div>
                     <div className="text-xs text-gray-600">Total Land</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
@@ -737,7 +748,10 @@ const LearnMorePage = () => {
         </div>
       </section>
 
-      <section id="community" className="py-20 bg-gray-50 border-b border-gray-200">
+      <section
+        id="community"
+        className="py-20 bg-gray-50 border-b border-gray-200"
+      >
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-12 h-12 rounded-xl bg-pink-100 flex items-center justify-center">
@@ -958,7 +972,7 @@ const LearnMorePage = () => {
           </div>
 
           <div className="space-y-3">
-            {FAQ_ITEMS.map((item, index) => (
+            {FAQ_KEYS.map((item, index) => (
               <Card key={index} className="overflow-hidden">
                 <button
                   onClick={() =>
@@ -967,7 +981,7 @@ const LearnMorePage = () => {
                   className="w-full p-5 text-left flex items-center justify-between gap-4 hover:bg-gray-50 transition-colors"
                 >
                   <span className="font-medium text-gray-900">
-                    {item.question}
+                    {t(item.qKey)}
                   </span>
                   <ChevronDown
                     className={`w-5 h-5 text-gray-400 transition-transform ${
@@ -977,7 +991,7 @@ const LearnMorePage = () => {
                 </button>
                 {expandedFaq === index && (
                   <div className="px-5 pb-5 text-gray-600 border-t border-gray-100 pt-4">
-                    {item.answer}
+                    {t(item.aKey)}
                   </div>
                 )}
               </Card>
@@ -985,7 +999,9 @@ const LearnMorePage = () => {
           </div>
 
           <div className="mt-12 text-center">
-            <p className="text-gray-600 mb-4">Want to stay updated or have more questions?</p>
+            <p className="text-gray-600 mb-4">
+              Want to stay updated or have more questions?
+            </p>
             <div className="flex flex-wrap justify-center gap-3">
               <a
                 href="https://t.me/traditionaldreamfactor"

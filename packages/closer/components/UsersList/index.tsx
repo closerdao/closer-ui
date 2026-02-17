@@ -3,6 +3,8 @@ import Link from 'next/link';
 
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
 
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import {
   CheckCircle,
   ChevronDown,
@@ -13,8 +15,6 @@ import {
   User,
   UserCheck,
 } from 'lucide-react';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
 import { useTranslations } from 'next-intl';
 
 import { ACTIONS, USER_ROLE_OPTIONS } from '../../constants';
@@ -39,6 +39,7 @@ dayjs.extend(relativeTime);
 
 const USERS_PER_PAGE = 50;
 const MAX_USERS_TO_FETCH = 2000;
+const MAX_VOUCH_CSV_COLUMNS = 10;
 
 interface Props {
   where: any;
@@ -78,6 +79,8 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
   const [success, setSuccess] = useState(false);
   const [usersEmails, setUsersEmails] = useState<any[]>([]);
   const [csvData, setCsvData] = useState<any>(null);
+  const [isExportLoading, setIsExportLoading] = useState(false);
+  const [exportError, setExportError] = useState<any>(null);
 
   const toggleUserExpanded = (userId: string) => {
     setExpandedUsers((prev) =>
@@ -101,24 +104,27 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
     }
   };
 
-  const getAllUserData = async () => {
-    try {
-      setIsLoading(true);
-      const allUsersFilter = {
-        limit: MAX_USERS_TO_FETCH,
-        sort_by: 'screenname',
-      };
-      await platform.user.get(allUsersFilter);
-      return platform.user.find(allUsersFilter);
-    } catch (err) {
-      setError(err);
-    } finally {
-      setIsLoading(false);
-    }
+  const getAllUserDataForExport = async () => {
+    const exportFilter = {
+      where: updatedWhere,
+      limit: MAX_USERS_TO_FETCH,
+      sort_by: sortBy,
+    };
+    const res = await platform.user.get(exportFilter);
+    const results = res?.results;
+    if (!results) return null;
+    const list = results.toArray
+      ? results.toArray()
+      : Array.isArray(results)
+      ? results
+      : [];
+    return list;
   };
 
   const formatUsersForCsv = (users: any[]) => {
-    const escapeCsvCell = (cell: string | number | undefined | null): string => {
+    const escapeCsvCell = (
+      cell: string | number | undefined | null,
+    ): string => {
       if (cell === undefined || cell === null) return '';
       const str = String(cell);
       if (str.includes(',') || str.includes('"') || str.includes('\n')) {
@@ -126,6 +132,14 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
       }
       return str;
     };
+
+    const vouchHeaders = Array.from(
+      { length: MAX_VOUCH_CSV_COLUMNS },
+      (_, i) => ({
+        key: `vouch${i + 1}`,
+        label: `Vouch ${i + 1}`,
+      }),
+    );
 
     const headers = [
       { key: 'screenname', label: 'Name' },
@@ -135,30 +149,78 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
       { key: 'roles', label: 'Roles' },
       { key: 'kycPassed', label: 'KYC Passed' },
       { key: 'tokenBalance', label: 'Token Balance' },
-      { key: 'totalNights', label: 'Total Nights' },
+      { key: 'presence', label: 'Total Nights' },
       { key: 'totalBookings', label: 'Total Bookings' },
       { key: 'citizenshipStatus', label: 'Citizenship Status' },
       { key: 'citizenDate', label: 'Citizen Since' },
       { key: 'subscriptionPlan', label: 'Subscription Plan' },
       { key: 'vouchCount', label: 'Vouch Count' },
+      ...vouchHeaders,
     ];
 
     const data = users.map((user: any) => {
       const userData = user.toJS ? user.toJS() : user;
+      const roles = userData.roles;
+      const isMember = Array.isArray(roles) && roles.includes('member');
+      const citizenshipStatus = isMember
+        ? 'citizen'
+        : userData.citizenship?.status || '';
+      const rawVouched = userData.vouched;
+      const vouchedList = !rawVouched
+        ? []
+        : typeof rawVouched.toArray === 'function'
+        ? rawVouched.toArray()
+        : Array.isArray(rawVouched)
+        ? rawVouched
+        : [];
+      const vouchCells: Record<string, string> = {};
+      vouchHeaders.forEach((h, i) => {
+        const v = vouchedList[i];
+        if (!v) {
+          vouchCells[h.key] = '';
+          return;
+        }
+        const vouchedBy = v.get ? v.get('vouchedBy') : (v as any).vouchedBy;
+        const vouchedAt = v.get ? v.get('vouchedAt') : (v as any).vouchedAt;
+        const val =
+          vouchedBy ?? (vouchedAt ? dayjs(vouchedAt).format('YYYY-MM-DD') : '');
+        const str =
+          val != null &&
+          typeof val === 'object' &&
+          typeof (val as any).toJS === 'function'
+            ? (val as any).toJS()
+            : String(val ?? '');
+        vouchCells[h.key] = escapeCsvCell(str);
+      });
       return {
         screenname: escapeCsvCell(userData.screenname),
         email: escapeCsvCell(userData.email),
-        created: escapeCsvCell(userData.created ? dayjs(userData.created).format('YYYY-MM-DD') : ''),
-        lastactive: escapeCsvCell(userData.lastactive ? dayjs(userData.lastactive).format('YYYY-MM-DD') : ''),
+        created: escapeCsvCell(
+          userData.created ? dayjs(userData.created).format('YYYY-MM-DD') : '',
+        ),
+        lastactive: escapeCsvCell(
+          userData.lastactive
+            ? dayjs(userData.lastactive).format('YYYY-MM-DD')
+            : '',
+        ),
         roles: escapeCsvCell(userData.roles?.join('; ') || ''),
         kycPassed: escapeCsvCell(userData.kycPassed ? 'Yes' : 'No'),
         tokenBalance: escapeCsvCell(userData.stats?.wallet?.tdf || 0),
-        totalNights: escapeCsvCell(userData.stats?.presence?.totalNights || 0),
-        totalBookings: escapeCsvCell(userData.stats?.presence?.totalBookings || 0),
-        citizenshipStatus: escapeCsvCell(userData.citizenship?.status || ''),
-        citizenDate: escapeCsvCell(userData.citizenship?.date ? dayjs(userData.citizenship.date).format('YYYY-MM-DD') : ''),
+        presence: escapeCsvCell(userData.stats?.all_time?.presence || 0),
+        totalBookings: escapeCsvCell(
+          userData.stats?.all_time?.volunteeringPresence || 0,
+        ),
+        citizenshipStatus: escapeCsvCell(citizenshipStatus),
+        citizenDate: escapeCsvCell(
+          userData.citizenship?.date
+            ? dayjs(userData.citizenship.date).format('YYYY-MM-DD')
+            : userData.citizenship?.appliedAt
+            ? dayjs(userData.citizenship.appliedAt).format('YYYY-MM-DD')
+            : '',
+        ),
         subscriptionPlan: escapeCsvCell(userData.subscription?.plan || ''),
-        vouchCount: escapeCsvCell(userData.vouched?.length || 0),
+        vouchCount: escapeCsvCell(vouchedList.length || 0),
+        ...vouchCells,
       };
     });
 
@@ -179,6 +241,38 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
       closeModal();
     }
   }, [copied]);
+
+  useEffect(() => {
+    expandedUsers.forEach((id) => {
+      platform.user.getOne(id);
+    });
+  }, [expandedUsers, platform.user]);
+
+  useEffect(() => {
+    if (!expandedUsers.length || !filteredUsers) return;
+    const vouchedByIds = new Set<string>();
+    filteredUsers.forEach((row: any) => {
+      if (!expandedUsers.includes(row.get('_id'))) return;
+      const u = platform.user.findOne(row.get('_id'));
+      const vouched = u?.get?.('vouched');
+      if (!vouched) return;
+      const list = vouched.toArray
+        ? vouched.toArray()
+        : Array.isArray(vouched)
+        ? vouched
+        : [];
+      list.forEach((v: any) => {
+        const id = v.get ? v.get('vouchedBy') : v.vouchedBy;
+        if (id) vouchedByIds.add(id);
+      });
+    });
+    if (vouchedByIds.size > 0) {
+      platform.user.get({
+        where: { _id: { $in: Array.from(vouchedByIds) } },
+        limit: Math.max(vouchedByIds.size, 100),
+      });
+    }
+  }, [expandedUsers, filteredUsers, platform.user]);
 
   const handleAddRole = async (role: string, user?: any) => {
     if (typeof user !== 'undefined') {
@@ -257,6 +351,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
     setSuccess(false);
     setError(null);
     setCsvData(null);
+    setExportError(null);
 
     switch (action) {
       case 'Copy emails':
@@ -269,9 +364,16 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
         setCsvData(formatUsersForCsv(selectedUsers));
         break;
       case 'Export all':
-        const allData = await getAllUserData();
-        if (allData) {
-          setCsvData(formatUsersForCsv(allData.toArray()));
+        setIsExportLoading(true);
+        try {
+          const allData = await getAllUserDataForExport();
+          if (allData) {
+            setCsvData(formatUsersForCsv(allData));
+          }
+        } catch (err) {
+          setExportError(err);
+        } finally {
+          setIsExportLoading(false);
         }
         break;
       case 'Unlink wallet':
@@ -292,6 +394,8 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
 
   const closeModal = () => {
     setIsInfoModalOpened(false);
+    setIsExportLoading(false);
+    setExportError(null);
   };
 
   const copyToClipboard = (text: string) => {
@@ -459,7 +563,16 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
             <div className="flex flex-col gap-6">
               <Heading level={4}>{t('manage_users_export_all')}</Heading>
 
-              {csvData ? (
+              {(isExportLoading || (!csvData && !exportError)) && (
+                <div className="flex items-center gap-2">
+                  <Spinner />
+                  <span>{t('manage_users_preparing_data')}</span>
+                </div>
+              )}
+              {!isExportLoading && exportError && (
+                <ErrorMessage error={exportError} />
+              )}
+              {!isExportLoading && csvData && (
                 <Button
                   className="bg-accent rounded-full w-full py-3 text-center px-4 text-white uppercase"
                   onClick={() => {
@@ -482,8 +595,6 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                 >
                   {t('manage_users_save_button')}
                 </Button>
-              ) : (
-                <>{t('manage_users_preparing_data')}</>
               )}
             </div>
           )}
@@ -536,23 +647,55 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                 ? t('manage_users_user')
                 : t('manage_users_users')}
             </Heading>
-            
+
             <div className="flex items-center gap-3">
-              <label className="text-sm font-medium text-gray-600 min-w-[80px]">{t('manage_users_sort_by')}</label>
+              <label className="text-sm font-medium text-gray-600 min-w-[80px]">
+                {t('manage_users_sort_by')}
+              </label>
               <Select
                 className="min-w-[200px] border-gray-300 rounded-lg"
                 value={sortBy}
                 options={[
-                  { value: '-created', label: t('manage_users_sort_by_created_desc') },
-                  { value: 'created', label: t('manage_users_sort_by_created_asc') },
-                  { value: '-screenname', label: t('manage_users_sort_by_name_desc') },
-                  { value: 'screenname', label: t('manage_users_sort_by_name_asc') },
-                  { value: '-lastactive', label: t('manage_users_sort_by_lastactive_desc') },
-                  { value: 'lastactive', label: t('manage_users_sort_by_lastactive_asc') },
-                  { value: '-email', label: t('manage_users_sort_by_email_desc') },
-                  { value: 'email', label: t('manage_users_sort_by_email_asc') },
-                  { value: '-stats.wallet.tdf', label: t('manage_users_sort_by_token_balance_desc') },
-                  { value: 'stats.wallet.tdf', label: t('manage_users_sort_by_token_balance_asc') },
+                  {
+                    value: '-created',
+                    label: t('manage_users_sort_by_created_desc'),
+                  },
+                  {
+                    value: 'created',
+                    label: t('manage_users_sort_by_created_asc'),
+                  },
+                  {
+                    value: '-screenname',
+                    label: t('manage_users_sort_by_name_desc'),
+                  },
+                  {
+                    value: 'screenname',
+                    label: t('manage_users_sort_by_name_asc'),
+                  },
+                  {
+                    value: '-lastactive',
+                    label: t('manage_users_sort_by_lastactive_desc'),
+                  },
+                  {
+                    value: 'lastactive',
+                    label: t('manage_users_sort_by_lastactive_asc'),
+                  },
+                  {
+                    value: '-email',
+                    label: t('manage_users_sort_by_email_desc'),
+                  },
+                  {
+                    value: 'email',
+                    label: t('manage_users_sort_by_email_asc'),
+                  },
+                  {
+                    value: '-stats.wallet.tdf',
+                    label: t('manage_users_sort_by_token_balance_desc'),
+                  },
+                  {
+                    value: 'stats.wallet.tdf',
+                    label: t('manage_users_sort_by_token_balance_asc'),
+                  },
                 ]}
                 onChange={setSortBy}
                 isRequired
@@ -599,9 +742,12 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
               const user = platform.user.findOne(row.get('_id'));
               const isExpanded = expandedUsers.includes(user.get('_id'));
               const citizenDate = user.getIn(['citizenship', 'date']);
-              const presence = user.getIn(['stats', 'presence']);
+              const sweatBalance =
+                user.getIn(['stats', 'wallet', 'sweat']) || 0;
+              const presenceBalance =
+                user.getIn(['stats', 'wallet', 'presence']) || 0;
               const vouches = user.get('vouched');
-              const tokenBalance = user.getIn(['stats', 'wallet', 'tdf']);
+              const tokenBalance = user.getIn(['stats', 'wallet', 'tdf']) || 0;
 
               return (
                 <Card
@@ -644,14 +790,18 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                             {user.get('screenname')}
                           </Link>
                           <span className="text-xs text-gray-500">
-                            {dayjs(new Date()).from(user.get('created'), true)} ago
+                            {dayjs(new Date()).from(user.get('created'), true)}{' '}
+                            ago
                           </span>
                         </div>
                       </div>
 
                       <div className="flex flex-wrap gap-1.5 items-center justify-start">
                         {user.get('kycPassed') && (
-                          <div className="bg-blue-100 flex border px-1.5 py-0.5 gap-1 border-blue-400 rounded items-center" title={t('manage_users_kyc_passed')}>
+                          <div
+                            className="bg-blue-100 flex border px-1.5 py-0.5 gap-1 border-blue-400 rounded items-center"
+                            title={t('manage_users_kyc_passed')}
+                          >
                             <CheckCircle className="text-blue-600 w-3 h-3" />
                             <span className="text-xs text-blue-700">KYC</span>
                           </div>
@@ -660,7 +810,9 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                         {vouches && vouches.length > 0 && (
                           <div className="bg-green-100 flex border px-1.5 py-0.5 gap-1 border-green-400 rounded items-center">
                             <UserCheck className="text-green-600 w-3 h-3" />
-                            <span className="text-xs text-green-700">{vouches.length}</span>
+                            <span className="text-xs text-green-700">
+                              {vouches.length}
+                            </span>
                           </div>
                         )}
 
@@ -672,30 +824,50 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                           </div>
                         )}
 
-                        {presence && presence.get('totalNights') > 0 && (
+                        {presenceBalance > 0 && (
                           <div className="bg-orange-100 flex border px-1.5 py-0.5 gap-1 border-orange-400 rounded items-center">
                             <Home className="text-orange-600 w-3 h-3" />
-                            <span className="text-xs text-orange-700">{presence.get('totalNights')}n</span>
+                            <span className="text-xs text-orange-700">
+                              {parseFloat(presenceBalance || 0).toFixed(0)}{' '}
+                              $Presence
+                            </span>
+                          </div>
+                        )}
+
+                        {sweatBalance > 0 && (
+                          <div className="bg-green-100 flex border px-1.5 py-0.5 gap-1 border-green-400 rounded items-center">
+                            <Home className="text-green-600 w-3 h-3" />
+                            <span className="text-xs text-green-700">
+                              {parseFloat(sweatBalance || 0).toFixed(0)} $Sweat
+                            </span>
                           </div>
                         )}
 
                         {citizenDate && (
                           <div className="bg-yellow-100 flex border px-1.5 py-0.5 gap-1 border-yellow-500 rounded items-center">
                             <Star className="text-yellow-600 w-3 h-3" />
-                            <span className="text-xs text-yellow-700">{t('manage_users_citizen')}</span>
+                            <span className="text-xs text-yellow-700">
+                              {t('manage_users_citizen')}
+                            </span>
                           </div>
                         )}
 
                         {user.get('subscription')?.get('plan') && (
                           <div className="bg-white flex border px-1.5 py-0.5 border-gray-300 rounded gap-1 items-center">
                             <Image
-                              src={`/images/admin/icon-${user.get('subscription').get('plan')}.png`}
+                              src={`/images/admin/icon-${user
+                                .get('subscription')
+                                .get('plan')}.png`}
                               alt={user.get('subscription').get('plan')}
                               width={14}
                               height={14}
                             />
                             <span className="text-xs text-gray-700">
-                              {user.get('subscription').get('plan').slice(0, 1).toUpperCase() +
+                              {user
+                                .get('subscription')
+                                .get('plan')
+                                .slice(0, 1)
+                                .toUpperCase() +
                                 user.get('subscription').get('plan').slice(1)}
                             </span>
                           </div>
@@ -713,7 +885,9 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                           className="rounded text-xs border-gray-300 min-w-[90px]"
                           value=""
                           options={USER_ROLE_OPTIONS.slice(1)}
-                          onChange={(value: string) => handleAddRole(value, user)}
+                          onChange={(value: string) =>
+                            handleAddRole(value, user)
+                          }
                           isRequired
                           placeholder="+ Role"
                         />
@@ -734,21 +908,26 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                     {isExpanded && (
                       <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                         <div className="flex flex-col gap-1.5">
-                          <span className="text-gray-500 font-medium">{t('manage_users_account_info')}</span>
+                          <span className="text-gray-500 font-medium">
+                            {t('manage_users_account_info')}
+                          </span>
                           <div className="flex items-center gap-1 text-gray-700">
                             <Clock className="w-3 h-3 text-gray-400" />
-                            {t('manage_users_joined')}: {dayjs(user.get('created')).format('MMM D, YYYY')}
+                            {t('manage_users_joined')}:{' '}
+                            {dayjs(user.get('created')).format('MMM D, YYYY')}
                           </div>
                           {user.get('lastactive') && (
                             <div className="flex items-center gap-1 text-gray-700">
                               <Clock className="w-3 h-3 text-gray-400" />
-                              {t('manage_users_last_active')}: {dayjs(user.get('lastactive')).fromNow()}
+                              {t('manage_users_last_active')}:{' '}
+                              {dayjs(user.get('lastactive')).fromNow()}
                             </div>
                           )}
                           {citizenDate && (
                             <div className="flex items-center gap-1 text-green-700">
                               <Star className="w-3 h-3 text-green-500" />
-                              {t('manage_users_citizen_since')}: {dayjs(citizenDate).format('MMM D, YYYY')}
+                              {t('manage_users_citizen_since')}:{' '}
+                              {dayjs(citizenDate).format('MMM D, YYYY')}
                             </div>
                           )}
                           <div className="flex items-center gap-1 text-gray-600">
@@ -757,23 +936,33 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                          <span className="text-gray-500 font-medium">{t('manage_users_presence_stats')}</span>
-                          {presence ? (
-                            <>
-                              <div className="flex items-center gap-1 text-gray-700">
-                                <Home className="w-3 h-3 text-gray-400" />
-                                {t('manage_users_total_nights')}: {presence.get('totalNights') || 0}
-                              </div>
-                              <div className="flex items-center gap-1 text-gray-700">
-                                <CheckCircle className="w-3 h-3 text-gray-400" />
-                                {t('manage_users_total_bookings')}: {presence.get('totalBookings') || 0}
-                              </div>
-                            </>
-                          ) : (
-                            <span className="text-gray-400">{t('manage_users_no_presence_data')}</span>
+                          {presenceBalance > 0 && (
+                            <div className="flex items-center gap-1 text-orange-700">
+                              <span className="text-gray-500 font-medium">
+                                {t('manage_users_presence_stats')}
+                              </span>
+                              <span className="font-medium">
+                                {parseFloat(presenceBalance || 0).toFixed(2)}{' '}
+                                $Presence
+                              </span>
+                            </div>
+                          )}
+                          {sweatBalance > 0 && (
+                            <div className="flex items-center gap-1 text-green-700">
+                              <span className="text-gray-500 font-medium">
+                                {t('manage_users_presence_stats')}
+                              </span>
+                              <span className="font-medium">
+                                {parseFloat(sweatBalance || 0).toFixed(2)}{' '}
+                                $Sweat
+                              </span>
+                            </div>
                           )}
                           {tokenBalance > 0 && (
                             <div className="flex items-center gap-1 text-purple-700">
+                              <span className="text-gray-500 font-medium">
+                                {t('manage_users_token_balance')}
+                              </span>
                               <span className="font-medium">
                                 {parseFloat(tokenBalance || 0).toFixed(2)} $TDF
                               </span>
@@ -782,67 +971,180 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                         </div>
 
                         <div className="flex flex-col gap-1.5">
-                          <span className="text-gray-500 font-medium">{t('manage_users_vouches')}</span>
-                          {vouches && vouches.length > 0 ? (
-                            <div className="flex flex-col gap-1">
-                              {vouches.map((vouch: any, idx: number) => (
-                                <div key={idx} className="flex items-center gap-1 text-green-700">
-                                  <UserCheck className="w-3 h-3 text-green-500" />
-                                  {vouch.vouchedBy} ({dayjs(vouch.vouchedAt).format('MMM YYYY')})
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">{t('manage_users_no_vouches')}</span>
-                          )}
+                          <span className="text-gray-500 font-medium">
+                            {t('manage_users_vouches')}
+                          </span>
+                          {(() => {
+                            const vouchList = vouches
+                              ? vouches.toArray
+                                ? vouches.toArray()
+                                : Array.isArray(vouches)
+                                ? vouches
+                                : []
+                              : [];
+                            if (vouchList.length === 0) {
+                              return (
+                                <span className="text-gray-400">
+                                  {t('manage_users_no_vouches')}
+                                </span>
+                              );
+                            }
+                            return (
+                              <div className="flex flex-col gap-2">
+                                {vouchList.map((vouch: any, idx: number) => {
+                                  const vouchedBy = vouch.get
+                                    ? vouch.get('vouchedBy')
+                                    : vouch.vouchedBy;
+                                  const vouchedAt = vouch.get
+                                    ? vouch.get('vouchedAt')
+                                    : vouch.vouchedAt;
+                                  const message = vouch.get
+                                    ? vouch.get('message')
+                                    : vouch.message;
+                                  const voucherUser = vouchedBy
+                                    ? platform.user.findOne(vouchedBy)
+                                    : null;
+                                  const name =
+                                    voucherUser?.get?.('screenname') ||
+                                    voucherUser?.screenname ||
+                                    vouchedBy ||
+                                    '—';
+                                  return (
+                                    <div
+                                      key={
+                                        vouch.get?.('_id') ||
+                                        vouch._id ||
+                                        vouchedBy ||
+                                        idx
+                                      }
+                                      className="flex flex-col gap-0.5 text-green-700 border-l-2 border-green-200 pl-2"
+                                    >
+                                      <div className="flex items-center gap-1">
+                                        <UserCheck className="w-3 h-3 text-green-500 flex-shrink-0" />
+                                        <span className="font-medium">
+                                          {name}
+                                        </span>
+                                        <span className="text-gray-500 text-[10px]">
+                                          {vouchedAt
+                                            ? dayjs(vouchedAt).format(
+                                                'MMM D, YYYY',
+                                              )
+                                            : ''}
+                                        </span>
+                                      </div>
+                                      {message ? (
+                                        <p className="text-gray-600 text-xs italic">
+                                          &ldquo;{message}&rdquo;
+                                        </p>
+                                      ) : null}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })()}
                         </div>
 
                         {user.get('citizenship') && (
                           <div className="sm:col-span-3 flex flex-col gap-1.5 pt-2 border-t border-gray-100">
-                            <span className="text-gray-500 font-medium">{t('manage_users_citizenship')}</span>
+                            <span className="text-gray-500 font-medium">
+                              {t('manage_users_citizenship')}
+                            </span>
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                               {user.getIn(['citizenship', 'status']) && (
                                 <div className="flex flex-col">
-                                  <span className="text-gray-400 text-[10px]">{t('manage_users_citizenship_status')}</span>
-                                  <span className={`font-medium ${
-                                    user.getIn(['citizenship', 'status']) === 'completed' ? 'text-green-600' :
-                                    user.getIn(['citizenship', 'status']) === 'pending-payment' ? 'text-yellow-600' :
-                                    user.getIn(['citizenship', 'status']) === 'cancelled' ? 'text-red-600' : 'text-gray-700'
-                                  }`}>
+                                  <span className="text-gray-400 text-[10px]">
+                                    {t('manage_users_citizenship_status')}
+                                  </span>
+                                  <span
+                                    className={`font-medium ${
+                                      user.getIn(['citizenship', 'status']) ===
+                                      'completed'
+                                        ? 'text-green-600'
+                                        : user.getIn([
+                                            'citizenship',
+                                            'status',
+                                          ]) === 'pending-payment'
+                                        ? 'text-yellow-600'
+                                        : user.getIn([
+                                            'citizenship',
+                                            'status',
+                                          ]) === 'cancelled'
+                                        ? 'text-red-600'
+                                        : 'text-gray-700'
+                                    }`}
+                                  >
                                     {user.getIn(['citizenship', 'status'])}
                                   </span>
                                 </div>
                               )}
                               {user.getIn(['citizenship', 'appliedAt']) && (
                                 <div className="flex flex-col">
-                                  <span className="text-gray-400 text-[10px]">{t('manage_users_citizenship_applied')}</span>
-                                  <span className="text-gray-700">{dayjs(user.getIn(['citizenship', 'appliedAt'])).format('MMM D, YYYY')}</span>
+                                  <span className="text-gray-400 text-[10px]">
+                                    {t('manage_users_citizenship_applied')}
+                                  </span>
+                                  <span className="text-gray-700">
+                                    {dayjs(
+                                      user.getIn(['citizenship', 'appliedAt']),
+                                    ).format('MMM D, YYYY')}
+                                  </span>
                                 </div>
                               )}
-                              {user.getIn(['citizenship', 'tokensToFinance']) && (
+                              {user.getIn([
+                                'citizenship',
+                                'tokensToFinance',
+                              ]) && (
                                 <div className="flex flex-col">
-                                  <span className="text-gray-400 text-[10px]">{t('manage_users_citizenship_tokens_financed')}</span>
-                                  <span className="text-gray-700">{user.getIn(['citizenship', 'tokensToFinance'])} TDF</span>
+                                  <span className="text-gray-400 text-[10px]">
+                                    {t(
+                                      'manage_users_citizenship_tokens_financed',
+                                    )}
+                                  </span>
+                                  <span className="text-gray-700">
+                                    {user.getIn([
+                                      'citizenship',
+                                      'tokensToFinance',
+                                    ])}{' '}
+                                    TDF
+                                  </span>
                                 </div>
                               )}
-                              {user.getIn(['citizenship', 'totalToPayInFiat']) && (
+                              {user.getIn([
+                                'citizenship',
+                                'totalToPayInFiat',
+                              ]) && (
                                 <div className="flex flex-col">
-                                  <span className="text-gray-400 text-[10px]">{t('manage_users_citizenship_total_to_pay')}</span>
-                                  <span className="text-gray-700">€{user.getIn(['citizenship', 'totalToPayInFiat'])}</span>
+                                  <span className="text-gray-400 text-[10px]">
+                                    {t('manage_users_citizenship_total_to_pay')}
+                                  </span>
+                                  <span className="text-gray-700">
+                                    €
+                                    {user.getIn([
+                                      'citizenship',
+                                      'totalToPayInFiat',
+                                    ])}
+                                  </span>
                                 </div>
                               )}
                             </div>
                             {user.getIn(['citizenship', 'why']) && (
                               <div className="flex flex-col mt-1">
-                                <span className="text-gray-400 text-[10px]">{t('manage_users_citizenship_why')}</span>
-                                <span className="text-gray-700 italic">&ldquo;{user.getIn(['citizenship', 'why'])}&rdquo;</span>
+                                <span className="text-gray-400 text-[10px]">
+                                  {t('manage_users_citizenship_why')}
+                                </span>
+                                <span className="text-gray-700 italic">
+                                  &ldquo;{user.getIn(['citizenship', 'why'])}
+                                  &rdquo;
+                                </span>
                               </div>
                             )}
                           </div>
                         )}
 
                         <div className="sm:col-span-3 flex flex-wrap gap-1 pt-2 border-t border-gray-100">
-                          <span className="text-gray-500 font-medium mr-2">{t('manage_users_all_roles')}:</span>
+                          <span className="text-gray-500 font-medium mr-2">
+                            {t('manage_users_all_roles')}:
+                          </span>
                           {user.get('roles').map((role: string) => (
                             <div
                               key={role}

@@ -30,7 +30,7 @@ const HomePage = () => {
         <meta name="description" content={t('dataroom_page_description')} />
         <link
           rel="canonical"
-          href="https://www.traditionaldreamfactory.com/"
+          href="https://www.traditionaldreamfactory.com/dataroom"
           key="canonical"
         />
       </Head>

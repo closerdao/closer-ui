@@ -12,6 +12,36 @@ const RoadmapPage = () => {
     <>
       <Head>
         <title>{t('roadmap_title')}</title>
+        <meta name="description" content={t('roadmap_meta_description')} />
+        <link
+          rel="canonical"
+          href="https://www.traditionaldreamfactory.com/roadmap"
+        />
+        <meta property="og:type" content="website" />
+        <meta
+          property="og:url"
+          content="https://www.traditionaldreamfactory.com/roadmap"
+        />
+        <meta property="og:title" content={t('roadmap_title')} />
+        <meta
+          property="og:description"
+          content={t('roadmap_meta_description')}
+        />
+        <meta
+          property="og:image"
+          content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
+        />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@tdfinyourdreams" />
+        <meta name="twitter:title" content={t('roadmap_title')} />
+        <meta
+          name="twitter:description"
+          content={t('roadmap_meta_description')}
+        />
+        <meta
+          name="twitter:image"
+          content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
+        />
       </Head>
       <main className="mx-auto max-w-3xl">
         <section className="flex flex-wrap justify-center">
@@ -270,7 +300,7 @@ const RoadmapPage = () => {
             </div>
           </div>
         </section>
-        
+
         {/* Call to Action */}
         <section className="flex justify-center py-16 bg-accent-light">
           <div className="text-center max-w-4xl mx-auto px-4">

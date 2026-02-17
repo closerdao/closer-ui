@@ -1,4 +1,4 @@
-export type ChannelType = 'season' | 'ground' | 'topic' | null;
+export type ChannelType = 'season' | 'ground' | 'topic' | 'dream' | null;
 export type JoinPolicy = 'auto' | 'invitation' | null;
 
 export interface Channel {

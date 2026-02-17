@@ -10,6 +10,43 @@ For smaller issues you can create tickets in our open source code repositories a
 
 ## UI
 
+### Fundraising (Invest) page
+
+The standardized fundraising page is available from the `closer` package. Any app can enable it.
+
+1. **Feature flag**: Set `NEXT_PUBLIC_FEATURE_SUPPORT_US=true` in the app env. The backend `/config/fundraiser` must have `enabled: true`.
+
+2. **Use the page**: Create `pages/invest.tsx` that uses the shared page and (optionally) app-specific SEO/CTA options:
+
+```tsx
+import { NextPageContext } from 'next';
+import { getInvestPageInitialProps, InvestPage as CloserInvestPage, type InvestPageProps } from 'closer';
+
+function InvestPage(props: InvestPageProps) {
+  return <CloserInvestPage {...props} />;
+}
+
+InvestPage.getInitialProps = async (context: NextPageContext) => {
+  const base = await getInvestPageInitialProps(context);
+  return {
+    ...base,
+    investPageOptions: {
+      canonicalUrl: 'https://yourapp.com/invest',
+      shareUrl: 'https://yourapp.com/invest',
+      ogImageUrl: 'https://...',
+      twitterHandle: '@yourapp',
+      dataroomHref: '/dataroom',
+      scheduleCallHref: 'https://...',
+      loanPackageHref: '/dataroom',
+    },
+  };
+};
+
+export default InvestPage;
+```
+
+If you omit `investPageOptions`, the page falls back to `NEXT_PUBLIC_APP_URL` for canonical/share URLs and default CTA paths.
+
 ### Tailwind
 
 https://tailwindcss.com/docs
