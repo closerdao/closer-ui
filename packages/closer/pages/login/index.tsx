@@ -2,15 +2,21 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { FormEvent, useContext, useEffect, useRef, useState } from 'react';
-
-import { Sparkle } from 'lucide-react';
+import {
+  CSSProperties,
+  FormEvent,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import GoogleButton from '../../components/GoogleButton';
 import TurnstileWidget from '../../components/TurnstileWidget';
 import { Card, ErrorMessage, Heading, Input } from '../../components/ui';
 import Button from '../../components/ui/Button';
 
+import { Sparkle } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
@@ -33,7 +39,7 @@ const SparkleTwinkle = ({
   style,
 }: {
   className?: string;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 }) => (
   <span
     className={`pointer-events-none ${className ?? ''}`}
@@ -88,7 +94,8 @@ const Login = () => {
 
   useEffect(() => {
     setHasBrowserWallet(
-      typeof window !== 'undefined' && typeof (window as any).ethereum !== 'undefined',
+      typeof window !== 'undefined' &&
+        typeof (window as any).ethereum !== 'undefined',
     );
   }, []);
 
@@ -185,7 +192,9 @@ const Login = () => {
       const q = { ...router.query };
       delete q.session_expired;
       setError(null);
-      router.replace({ pathname: '/login', query: q }, undefined, { shallow: true });
+      router.replace({ pathname: '/login', query: q }, undefined, {
+        shallow: true,
+      });
     }
   };
 
@@ -273,18 +282,19 @@ const Login = () => {
           )}
 
           <Card className="w-full pb-12">
-            {(router.query.session_expired ? t('auth_session_expired') : error) && (
+            {(router.query.session_expired
+              ? t('auth_session_expired')
+              : error) && (
               <ErrorMessage
                 error={
-                  router.query.session_expired ? t('auth_session_expired') : error!
+                  router.query.session_expired
+                    ? t('auth_session_expired')
+                    : error!
                 }
               />
             )}
             <div className="flex flex-col gap-4">
-              <form
-                onSubmit={onSubmit}
-                className="w-full flex flex-col gap-4"
-              >
+              <form onSubmit={onSubmit} className="w-full flex flex-col gap-4">
                 <Input
                   label={t('login_email')}
                   value={email}
@@ -299,10 +309,7 @@ const Login = () => {
                   placeholder={t('login_password_placeholder')}
                 />
 
-                <TurnstileWidget
-                  action="login"
-                  onVerify={setTurnstileToken}
-                />
+                <TurnstileWidget action="login" onVerify={setTurnstileToken} />
 
                 <div className="flex flex-col justify-between items-center gap-3 sm:flex-row">
                   <div className="flex flex-col gap-3 w-full sm:flex-row py-2">
@@ -335,7 +342,9 @@ const Login = () => {
                     {web3Error && <ErrorMessage error={web3Error} />}
                     <div className="group/wallet relative">
                       <Button
-                        isEnabled={hasBrowserWallet && !isWeb3Loading && !isLoading}
+                        isEnabled={
+                          hasBrowserWallet && !isWeb3Loading && !isLoading
+                        }
                         isLoading={isWeb3Loading}
                         variant="secondary"
                         className="w-full justify-center normal-case"

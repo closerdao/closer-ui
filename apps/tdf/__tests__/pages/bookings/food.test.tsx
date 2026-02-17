@@ -34,7 +34,11 @@ describe('FoodSelectionPage', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    process.env.NEXT_PUBLIC_FEATURE_BOOKING = 'true';
+    process.env = {
+      ...process.env,
+      NEXT_PUBLIC_FEATURE_BOOKING: 'true',
+      NEXT_PUBLIC_FEATURE_WEB3_WALLET: 'false',
+    };
   });
 
   it('renders food selection when booking config has food enabled', () => {

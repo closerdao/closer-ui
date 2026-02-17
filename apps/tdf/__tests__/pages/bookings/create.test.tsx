@@ -18,6 +18,14 @@ jest.mock('closer/contexts/auth', () => {
 });
 
 describe('DateSelector', () => {
+  beforeEach(() => {
+    process.env = {
+      ...process.env,
+      NEXT_PUBLIC_FEATURE_BOOKING: 'true',
+      NEXT_PUBLIC_FEATURE_WEB3_WALLET: 'false',
+    };
+  });
+
   it('should render and have a proper title', () => {
     renderWithProviders(
       <DateSelector

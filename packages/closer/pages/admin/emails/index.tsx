@@ -1,6 +1,5 @@
 import Head from 'next/head';
 
-import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import EmailTemplatesLayout from '../../../components/EmailTemplates/EmailTemplatesLayout';
 import { Heading } from '../../../components/ui';
 
@@ -12,8 +11,8 @@ import { useAuth } from '../../../contexts/auth';
 import useRBAC from '../../../hooks/useRBAC';
 import { BookingConfig } from '../../../types/api';
 import { EmailTemplate } from '../../../types/emailTemplate';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api from '../../../utils/api';
+import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
@@ -55,7 +54,9 @@ const EmailsPage = ({ templates, bookingConfig }: Props) => {
           <Heading level={4} className="text-gray-600 mb-2">
             {t('admin_emails_title')}
           </Heading>
-          <p className="text-sm max-w-sm">{t('admin_emails_select_template')}</p>
+          <p className="text-sm max-w-sm">
+            {t('admin_emails_select_template')}
+          </p>
         </div>
       </EmailTemplatesLayout>
     </>

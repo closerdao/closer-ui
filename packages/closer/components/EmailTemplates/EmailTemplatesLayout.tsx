@@ -1,19 +1,18 @@
 import Link from 'next/link';
-
 import { useRouter } from 'next/router';
 
-import { useTranslations } from 'next-intl';
+import { ReactNode } from 'react';
 
 import { Mail } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
+import { EmailTemplate } from '../../types/emailTemplate';
 import AdminLayout from '../Dashboard/AdminLayout';
 import { Heading } from '../ui';
 
-import { EmailTemplate } from '../../types/emailTemplate';
-
 interface Props {
   templates: EmailTemplate[];
-  children: React.ReactNode;
+  children: ReactNode;
   heading?: string;
   isBookingEnabled?: boolean;
 }
@@ -56,7 +55,9 @@ const EmailTemplatesLayout = ({
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  <span className="font-medium block truncate">{template.name}</span>
+                  <span className="font-medium block truncate">
+                    {template.name}
+                  </span>
                 </Link>
               );
             })}

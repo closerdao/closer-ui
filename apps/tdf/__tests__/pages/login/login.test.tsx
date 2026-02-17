@@ -1,7 +1,46 @@
-import Login from '@/pages/login';
 import { renderWithProviders } from '@/test/utils';
 
 import { screen } from '@testing-library/react';
+import React from 'react';
+
+jest.mock('closer/contexts/wallet', () => {
+  const actual = jest.requireActual('closer/contexts/wallet');
+  const defaultState = {
+    isWalletConnected: false,
+    isWalletReady: false,
+    isCorrectNetwork: false,
+    hasSameConnectedAccount: false,
+    account: null,
+    balanceTotal: '0',
+    balanceAvailable: '0',
+    balanceCeurAvailable: '0',
+    balanceCeloAvailable: '0',
+    proofOfPresence: '0',
+    bookedDates: null,
+    error: null,
+    library: null,
+    chainId: null,
+  };
+  const defaultDispatch = {
+    connectWallet: async () => null,
+    switchNetwork: async () => {},
+    updateWalletBalance: () => {},
+    updateCeurBalance: () => {},
+    refetchBookingDates: () => {},
+    signMessage: async () => null,
+  };
+  const WalletProvider = ({ children }) =>
+    React.createElement(
+      actual.WalletState.Provider,
+      { value: defaultState },
+      React.createElement(
+        actual.WalletDispatch.Provider,
+        { value: defaultDispatch },
+        children,
+      ),
+    );
+  return { ...actual, WalletProvider };
+});
 
 describe('Login', () => {
   const OLD_ENV = process.env;
@@ -15,26 +54,24 @@ describe('Login', () => {
     process.env = OLD_ENV;
   });
 
-  it('should have both Email and wallet log in buttons if NEXT_PUBLIC_FEATURE_WEB3_WALLET is true', () => {
+  it('should show Sign in with Wallet button when NEXT_PUBLIC_FEATURE_WEB3_WALLET is true', () => {
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET = 'true';
-    renderWithProviders(<Login />);
+    const LoginWithWallet = require('@/pages/login').default;
+    renderWithProviders(<LoginWithWallet />);
 
-    const switcherEmailButton = screen.getByRole('button', { name: /email/i });
-    const switcherWalletButton = screen.getByRole('button', {
-      name: /wallet/i,
-    });
-
-    expect(switcherEmailButton).toBeDisabled();
-    expect(switcherWalletButton).toBeEnabled();
+    expect(
+      screen.getByRole('button', { name: /sign in with wallet/i }),
+    ).toBeInTheDocument();
   });
 
-  it('should not render wallet login switcher button if NEXT_PUBLIC_FEATURE_WEB3_WALLET is false', () => {
+  it('should not render Sign in with Wallet button when NEXT_PUBLIC_FEATURE_WEB3_WALLET is false', () => {
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET = 'false';
-    renderWithProviders(<Login />);
+    const LoginWithoutWallet = require('@/pages/login').default;
+    renderWithProviders(<LoginWithoutWallet />);
 
-    const switcherWalletButton = screen.queryByRole('button', {
-      name: /wallet/i,
+    const walletButton = screen.queryByRole('button', {
+      name: /sign in with wallet/i,
     });
-    expect(switcherWalletButton).not.toBeInTheDocument();
+    expect(walletButton).not.toBeInTheDocument();
   });
 });
