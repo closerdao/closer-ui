@@ -311,7 +311,6 @@ const DatesSelector = ({
   );
 
   const isTokenPaymentSelected = currency === CURRENCIES[1];
-  const isTokenMinDurationMatched = diffInDays >= (bookingSettings?.minDuration || 1);
   const isStartToday = start && dayjs(start).isSame(dayjs(), 'day');
   const isTodayAndToken = Boolean(isStartToday && isTokenPaymentSelected);
 
@@ -321,8 +320,7 @@ const DatesSelector = ({
         hasValidDates &&
         (isMinVolunteeringStayMatched || isMinResidenceStayMatched)) ||
       isGeneralCase) &&
-    isMinDurationMatched &&
-    (!isTokenPaymentSelected || isTokenMinDurationMatched)
+    isMinDurationMatched
   );
 
   useEffect(() => {
@@ -356,14 +354,6 @@ const DatesSelector = ({
         );
       }
 
-      if (isTokenPaymentSelected && !isTokenMinDurationMatched) {
-        setBookingError(
-          t('bookings_dates_min_duration_error', {
-            var: bookingSettings?.minDuration,
-          }),
-        );
-      }
-
       if (!isMinVolunteeringStayMatched && isVolunteerApplication) {
         setBookingError(
           t('bookings_dates_min_volunteering_stay_error', {
@@ -379,7 +369,7 @@ const DatesSelector = ({
         );
       }
     }
-  }, [start, end, isMember, isMemberMinDurationMatched, isGuestMinDurationMatched, isTokenPaymentSelected, isTokenMinDurationMatched]);
+  }, [start, end, isMember, isMemberMinDurationMatched, isGuestMinDurationMatched]);
 
   useEffect(() => {
     setCalendarErrorDismissed(false);
