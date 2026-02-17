@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl';
 import models from '../../../models';
 import { Event, GeneralConfig } from '../../../types';
 import { FoodOption } from '../../../types/food';
+import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api from '../../../utils/api';
 import { getBookingTokenCurrency } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
@@ -174,11 +175,8 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No event');
     }
 
-    const [generalConfigRes, eventRes, foodRes, eventsRes, paymentRes, web3Res, messages] = await Promise.all([
-      api.get('/config/general').catch((err) => {
-        console.error('Error fetching general config:', err);
-        return null;
-      }),
+    const [configs, eventRes, foodRes, messages] = await Promise.all([
+      getConfig(api),
       api.get(`/event/${query.slug}`, {
         headers: (req as NextApiRequest)?.cookies?.access_token && {
           Authorization: `Bearer ${
@@ -190,21 +188,18 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
         console.error('Error fetching food:', err);
         return null;
       }),
-      api.get('/config/events').catch(() => null),
-      api.get('/config/payment').catch(() => null),
-      api.get('/config/web3').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
-    const generalConfig = generalConfigRes?.data?.results?.value;
+    const generalConfig = getConfigValueBySlug(configs, 'general');
     const event = eventRes?.data?.results;
     const allFood = foodRes?.data?.results || [];
     const foodOptions = allFood.filter((f: FoodOption) =>
       f.availableFor?.includes('events'),
     );
-    const eventsConfig = eventsRes?.data?.results?.value;
-    const paymentConfig = paymentRes?.data?.results?.value ?? null;
-    const web3Config = web3Res?.data?.results?.value ?? null;
+    const eventsConfig = getConfigValueBySlug(configs, 'events');
+    const paymentConfig = getConfigValueBySlug(configs, 'payment') ?? null;
+    const web3Config = getConfigValueBySlug(configs, 'web3') ?? null;
 
     return { event, foodOptions, messages, generalConfig, eventsConfig, paymentConfig, web3Config };
   } catch (err) {

@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import 'react-image-lightbox/style.css';
 
 import { PromptGetInTouchProvider } from '../components/PromptGetInTouchContext';
+import PushNotificationModal from '../components/PushNotificationModal';
 
 import {
   AuthProvider,
@@ -14,16 +15,20 @@ import {
   ErrorBoundary,
   PlatformProvider,
   api,
+  getConfig,
 } from 'closer';
-import { blockchainConfig } from '../config_blockchain';
 import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
-import { NewsletterProvider } from '../contexts/newsletter';
-import { PushNotificationProvider } from '../contexts/push-notifications';
-import PushNotificationModal from '../components/PushNotificationModal';
-import { prepareGeneralConfig } from 'closer/utils/app.helpers';
+import {
+  mergeGeneralConfigWithDefaults,
+  prepareGeneralConfig,
+} from 'closer/utils/app.helpers';
 import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
+
+import { blockchainConfig } from '../config_blockchain';
+import { NewsletterProvider } from '../contexts/newsletter';
+import { PushNotificationProvider } from '../contexts/push-notifications';
 import { WalletProvider } from '../contexts/wallet';
 
 interface AppOwnProps extends AppProps {
@@ -33,12 +38,9 @@ interface AppOwnProps extends AppProps {
 const prepareDefaultConfig = () => {
   const general =
     configDescription.find((config) => config.slug === 'general')?.value ?? {};
-  const transformedObject = Object.entries(general).reduce(
-    (acc, [key]) => {
-      return { ...acc, [key]: '' };
-    },
-    {},
-  );
+  const transformedObject = Object.entries(general).reduce((acc, [key]) => {
+    return { ...acc, [key]: '' };
+  }, {});
   return transformedObject;
 };
 
@@ -78,23 +80,18 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
   useEffect(() => {
     (async () => {
       try {
-        const [generalConfigRes, rbacConfigRes] = await Promise.all([
-          api.get('config/general').catch(() => null),
-          api.get('config/rbac').catch(() => null),
-        ]);
-
-        const generalConfig = generalConfigRes?.data?.results?.value;
-        const rbacConfig = rbacConfigRes?.data?.results?.value;
-
-        setConfig(
-          prepareGeneralConfig({
-            ...generalConfig,
-            rbacConfig: rbacConfig || {},
-          }),
-        );
+        const keyedConfig = await getConfig(api);
+        const mergedGeneral = mergeGeneralConfigWithDefaults({
+          ...keyedConfig.general,
+          rbacConfig: keyedConfig.rbac || {},
+        });
+        setConfig({
+          ...prepareGeneralConfig(mergedGeneral),
+          ...keyedConfig,
+          _configLoaded: true,
+        });
       } catch (err) {
         console.error(err);
-        return;
       }
     })();
   }, []);
@@ -108,11 +105,12 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         />
       </Head>
 
-      <Script
-        id="fb-pixel"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
+      {FACEBOOK_PIXEL_ID && (
+        <Script
+          id="fb-pixel"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
   !function(f,b,e,v,n,t,s)
   {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
   n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -124,8 +122,9 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
   fbq('init', '${FACEBOOK_PIXEL_ID}');
   fbq('track', 'PageView');
   `,
-        }}
-      />
+          }}
+        />
+      )}
 
       <ConfigProvider
         config={{

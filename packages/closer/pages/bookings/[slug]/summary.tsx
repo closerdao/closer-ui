@@ -38,6 +38,7 @@ import {
   PaymentConfig,
   PaymentType,
 } from '../../../types';
+import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api from '../../../utils/api';
 import {
   buildBookingAccomodationUrl,
@@ -543,27 +544,24 @@ Summary.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
 
   try {
-    const [bookingRes, bookingConfigRes, web3ConfigRes, paymentConfigRes, messages] =
-      await Promise.all([
-        api
-          .get(`/booking/${query.slug}`, {
-            headers: (req as NextApiRequest)?.cookies?.access_token && {
-              Authorization: `Bearer ${
-                (req as NextApiRequest)?.cookies?.access_token
-              }`,
-            },
-          })
-          .catch(() => null),
-        api.get('/config/booking').catch(() => null),
-        api.get('/config/web3').catch(() => null),
-        api.get('/config/payment').catch(() => null),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      ]);
+    const [bookingRes, configs, messages] = await Promise.all([
+      api
+        .get(`/booking/${query.slug}`, {
+          headers: (req as NextApiRequest)?.cookies?.access_token && {
+            Authorization: `Bearer ${
+              (req as NextApiRequest)?.cookies?.access_token
+            }`,
+          },
+        })
+        .catch(() => null),
+      getConfig(api),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
     const booking = bookingRes?.data?.results;
-    const bookingConfig = bookingConfigRes?.data?.results?.value;
-    const web3Config = web3ConfigRes?.data?.results?.value;
+    const bookingConfig = getConfigValueBySlug(configs, 'booking');
+    const web3Config = getConfigValueBySlug(configs, 'web3');
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
-    const paymentConfig = paymentConfigRes?.data?.results?.value;
+    const paymentConfig = getConfigValueBySlug(configs, 'payment');
 
     const [optionalEvent, optionalListing] = await Promise.all([
       booking?.eventId &&

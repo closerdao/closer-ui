@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl';
 import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { SubscriptionPlan } from '../../types/subscriptions';
+import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { getCurrencySymbol } from '../../utils/helpers';
@@ -125,18 +126,13 @@ const UnlockStaysPage = ({ subscriptionsConfig, bookingConfig }: Props) => {
 
 UnlockStaysPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [subscriptionsRes, bookingRes, messages] = await Promise.all([
-      api.get('/config/subscriptions').catch(() => {
-        return null;
-      }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
+    const [configs, messages] = await Promise.all([
+      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
-    const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
-    const bookingConfig = bookingRes?.data?.results?.value;
+    const subscriptionsConfig = getConfigValueBySlug(configs, 'subscriptions');
+    const bookingConfig = getConfigValueBySlug(configs, 'booking');
 
     return {
       subscriptionsConfig,

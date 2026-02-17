@@ -24,6 +24,7 @@ import {
   Event,
   Listing,
 } from '../../../types';
+import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api from '../../../utils/api';
 import {
   buildBookingAccomodationUrl,
@@ -185,30 +186,25 @@ BookingRulesPage.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
 
   try {
-    const [bookingRes, bookingConfigRes, web3ConfigRes, bookingRulesRes, messages] =
-      await Promise.all([
-        api
-          .get(`/booking/${query.slug}`, {
-            headers: (req as NextApiRequest)?.cookies?.access_token && {
-              Authorization: `Bearer ${
-                (req as NextApiRequest)?.cookies?.access_token
-              }`,
-            },
-          })
-          .catch(() => {
-            return null;
-          }),
-        api.get('/config/booking').catch(() => null),
-        api.get('/config/web3').catch(() => null),
-        api.get('/config/booking-rules').catch(() => null),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      ]);
+    const [bookingRes, configs, messages] = await Promise.all([
+      api
+        .get(`/booking/${query.slug}`, {
+          headers: (req as NextApiRequest)?.cookies?.access_token && {
+            Authorization: `Bearer ${
+              (req as NextApiRequest)?.cookies?.access_token
+            }`,
+          },
+        })
+        .catch(() => null),
+      getConfig(api),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
 
     const booking = bookingRes?.data?.results || null;
-    const bookingConfig = bookingConfigRes?.data?.results?.value || null;
-    const web3Config = web3ConfigRes?.data?.results?.value || null;
+    const bookingConfig = getConfigValueBySlug(configs, 'booking') || null;
+    const web3Config = getConfigValueBySlug(configs, 'web3') || null;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
-    const bookingRules = bookingRulesRes?.data?.results?.value || null;
+    const bookingRules = getConfigValueBySlug(configs, 'booking-rules') || null;
 
     const [optionalEvent, optionalListing] = await Promise.all([
       booking?.eventId &&

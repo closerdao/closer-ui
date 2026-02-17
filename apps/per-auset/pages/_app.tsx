@@ -14,14 +14,17 @@ import {
   ConfigProvider,
   PlatformProvider,
   api,
+  getConfig,
 } from 'closer';
 import { WalletProvider } from 'closer/contexts/wallet';
 import { blockchainConfig } from 'closer/config_blockchain';
-import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import { NewsletterProvider } from 'closer/contexts/newsletter';
 import { PushNotificationProvider } from 'closer/contexts/push-notifications';
-import { prepareGeneralConfig } from 'closer/utils/app.helpers';
+import {
+  mergeGeneralConfigWithDefaults,
+  prepareGeneralConfig,
+} from 'closer/utils/app.helpers';
 import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
@@ -32,28 +35,15 @@ interface AppOwnProps extends AppProps {
   configGeneral: any;
 }
 
-const prepareDefaultConfig = () => {
-  const general =
-    configDescription.find((config) => config.slug === 'general')?.value ?? {};
-  const transformedObject = Object.entries(general).reduce(
-    (acc, [key]) => {
-      return { ...acc, [key]: '' };
-    },
-    {},
-  );
-  return transformedObject;
-};
-
 const MyApp = ({ Component, pageProps }: AppOwnProps) => {
-  const defaultGeneralConfig = prepareDefaultConfig();
-
   const router = useRouter();
   const { query } = router;
   const referral = query.referral;
 
-  const [config, setConfig] = useState<any>(
-    prepareGeneralConfig(defaultGeneralConfig),
-  );
+  const [config, setConfig] = useState<any>(() => ({
+    ...prepareGeneralConfig(mergeGeneralConfigWithDefaults(null)),
+    _configLoaded: false,
+  }));
 
   const { FACEBOOK_PIXEL_ID } = config || {};
 
@@ -66,13 +56,15 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
   useEffect(() => {
     (async () => {
       try {
-        const generalConfigRes = await api.get('config/general').catch(() => {
-          return;
+        const keyedConfig = await getConfig(api);
+        const mergedGeneral = mergeGeneralConfigWithDefaults(keyedConfig.general);
+        setConfig({
+          ...prepareGeneralConfig(mergedGeneral),
+          ...keyedConfig,
+          _configLoaded: true,
         });
-        setConfig(prepareGeneralConfig(generalConfigRes?.data.results.value));
       } catch (err) {
         console.error(err);
-        return;
       }
     })();
   }, []);

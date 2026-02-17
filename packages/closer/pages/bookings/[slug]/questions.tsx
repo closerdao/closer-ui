@@ -29,6 +29,7 @@ import {
   Question,
   VolunteerConfig,
 } from '../../../types';
+import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api from '../../../utils/api';
 import {
   buildBookingAccomodationUrl,
@@ -366,22 +367,19 @@ Questionnaire.getInitialProps = async (context: NextPageContext) => {
   const { query } = context;
 
   try {
-    const [bookingRes, bookingConfigRes, web3ConfigRes, volunteerConfigRes, messages] =
-      await Promise.all([
-        api.get(`/booking/${query.slug}`).catch((err) => {
-          console.error('Error fetching booking config:', err);
-          return null;
-        }),
-        api.get('/config/booking').catch(() => null),
-        api.get('/config/web3').catch(() => null),
-        api.get('/config/volunteering').catch(() => null),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      ]);
+    const [bookingRes, configs, messages] = await Promise.all([
+      api.get(`/booking/${query.slug}`).catch((err) => {
+        console.error('Error fetching booking config:', err);
+        return null;
+      }),
+      getConfig(api),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
     const booking = bookingRes?.data?.results;
-    const bookingConfig = bookingConfigRes?.data?.results?.value;
-    const web3Config = web3ConfigRes?.data?.results?.value;
+    const bookingConfig = getConfigValueBySlug(configs, 'booking');
+    const web3Config = getConfigValueBySlug(configs, 'web3');
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
-    const volunteerConfig = volunteerConfigRes?.data?.results?.value;
+    const volunteerConfig = getConfigValueBySlug(configs, 'volunteering');
 
     const optionalEvent =
       booking.eventId && (await api.get(`/event/${booking.eventId}`));

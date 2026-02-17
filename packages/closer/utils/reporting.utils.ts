@@ -89,8 +89,8 @@ export const sendTelegramNotification = async (message: any) => {
           {
             chat_id: chatId,
             text: `[TDF ERROR] ${
-              process.env.NODE_ENV === 'development' ? '[DEV]' : '[PROD]'
-            } [${new Date().toLocaleString('ru-RU', {
+              process.env.ENVIRONMENT === 'development' ? '[DEV]' : '[PROD]'
+            } [${new Date().toLocaleString('en-US', {
               hour12: false,
             })}] ${formattedMessage}`,
             parse_mode: 'Markdown',

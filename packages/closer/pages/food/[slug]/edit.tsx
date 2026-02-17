@@ -9,6 +9,7 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import models from '../../../models';
+import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
@@ -46,7 +47,7 @@ const EditFood = ({ food, bookingConfig }: Props) => {
       <Head>
         <title>{`${food.name} - ${t('listings_slug_edit_title')}`}</title>
       </Head>
-      <AdminLayout isBookingEnabled={isBookingEnabled}>
+      <AdminLayout>
         <EditModelPageLayout
           title={`${t('food_edit_option')} ${food.name}`}
           backHref="/food"
@@ -77,14 +78,14 @@ EditFood.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No food slug provided');
     }
 
-    const [foodRes, bookingRes, messages] = await Promise.all([
+    const [foodRes, configs, messages] = await Promise.all([
       api.get(`/food/${query.slug}`).catch(() => null),
-      api.get('/config/booking').catch(() => null),
+      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const food = foodRes?.data?.results;
-    const bookingConfig = bookingRes?.data?.results?.value;
+    const bookingConfig = getConfigValueBySlug(configs, 'booking');
 
     return { food, bookingConfig, messages };
   } catch (err: unknown) {

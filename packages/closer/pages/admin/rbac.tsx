@@ -137,7 +137,7 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
       <Head>
         <title>Role Based Access Control</title>
       </Head>
-      <AdminLayout isBookingEnabled={isBookingEnabled}>
+      <AdminLayout>
         <div className="flex justify-between items-center mb-6">
           <Heading level={1}>Role Based Access Control</Heading>
         </div>

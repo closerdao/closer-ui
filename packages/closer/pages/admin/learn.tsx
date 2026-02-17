@@ -135,7 +135,7 @@ const LearnDashboardPage = ({ bookingConfig }: { bookingConfig: BookingConfig })
       <Head>
         <title>{t('learn_heading')}</title>
       </Head>
-      <AdminLayout isBookingEnabled={isBookingEnabled}>
+      <AdminLayout>
         <section className="flex flex-col gap-4 mb-12 ">
           <div className="md:max-w-3xl">
             <div className="mb-6 flex justify-between flex-col sm:flex-row gap-4">

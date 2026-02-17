@@ -23,6 +23,7 @@ import {
   Event,
   Listing,
 } from '../../../types';
+import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api from '../../../utils/api';
 import {
   buildBookingAccomodationUrl,
@@ -320,8 +321,7 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
     const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
     const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
 
-    const [availabilityRes, bookingConfigRes, web3ConfigRes, messages] =
-      await Promise.all([
+    const [availabilityRes, configs, messages] = await Promise.all([
         api
           .post('/bookings/availability', {
           start,
@@ -342,15 +342,14 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
           );
           return { error: err.response.data.error || 'Unknown error' };
         }),
-        api.get('/config/booking').catch(() => null),
-        api.get('/config/web3').catch(() => null),
+        getConfig(api),
         loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       ]);
     const bookingError = (availabilityRes as any)?.error || null;
     const availability = (availabilityRes as any)?.data?.results;
 
-    const bookingConfig = bookingConfigRes?.data?.results?.value;
-    const web3Config = web3ConfigRes?.data?.results?.value;
+    const bookingConfig = getConfigValueBySlug(configs, 'booking');
+    const web3Config = getConfigValueBySlug(configs, 'web3');
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
 
     let event = null;

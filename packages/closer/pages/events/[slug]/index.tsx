@@ -23,6 +23,7 @@ import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
 import { Event, Listing } from '../../../types';
+import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { getAccommodationPriceRange } from '../../../utils/events.helpers';
@@ -826,7 +827,7 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
   const { convert } = require('html-to-text');
   try {
-    const [event, listings, settings, eventsRes, messages] = await Promise.all([
+    const [event, listings, configs, messages] = await Promise.all([
       api
         .get(`/event/${query.slug}`, {
           headers: (req as NextApiRequest)?.cookies?.access_token && {
@@ -841,23 +842,14 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
         }),
       api
         .get('/listing', {
-          params: {
-            limit: MAX_LISTINGS_TO_FETCH,
-          },
+          params: { limit: MAX_LISTINGS_TO_FETCH },
         })
-        .catch(() => {
-          return null;
-        }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-      api.get('/config/events').catch(() => {
-        return null;
-      }),
+        .catch(() => null),
+      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
-    const eventsConfig = eventsRes?.data?.results?.value;
+    const eventsConfig = getConfigValueBySlug(configs, 'events');
 
     const options = {
       baseElements: { selectors: ['p', 'h2', 'span'] },
@@ -892,7 +884,7 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
       eventCreator,
       descriptionText,
       listings: listings?.data?.results,
-      settings: settings?.data?.results?.value,
+      settings: getConfigValueBySlug(configs, 'booking'),
       eventsConfig,
       messages,
     };

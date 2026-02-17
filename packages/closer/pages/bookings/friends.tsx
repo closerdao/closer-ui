@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { BookingConfig } from '../../types';
+import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
@@ -282,11 +283,11 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
 
 FriendsBooking.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [bookingRes, messages] = await Promise.all([
-      api.get('/config/booking').catch(() => null),
+    const [configs, messages] = await Promise.all([
+      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
-    const bookingConfig = bookingRes?.data.results.value;
+    const bookingConfig = getConfigValueBySlug(configs, 'booking');
 
     return { bookingConfig, messages };
   } catch (err) {

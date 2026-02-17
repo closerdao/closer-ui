@@ -43,6 +43,10 @@ const nextConfig = {
         hostname: 'cdn.oasa.co',
         pathname: '/**',
       },
+      {
+        hostname: 'oasa.fra1.digitaloceanspaces.com',
+        pathname: '/**',
+      },
     ],
   },
   webpack: (config) => {
@@ -53,6 +57,12 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      { source: '/admin/manage-users', destination: '/dashboard/admin/manage-users', permanent: true },
+      { source: '/admin/config', destination: '/dashboard/admin/config', permanent: true },
+      { source: '/admin/rbac', destination: '/dashboard/admin/rbac', permanent: true },
+      { source: '/admin/learn', destination: '/dashboard/admin/learn', permanent: true },
+      { source: '/admin/emails', destination: '/dashboard/admin/emails', permanent: true },
+      { source: '/admin/emails/:slug', destination: '/dashboard/admin/emails/:slug', permanent: true },
       {
         source: '/invest',
         destination: '/pages/invest',

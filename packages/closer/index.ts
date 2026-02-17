@@ -87,6 +87,8 @@ export { default as SocialPage } from './pages/social';
 export { default as EditChannelPage } from './pages/edit-channel/[slug]';
 // Pages
 export { default as ConfigPage } from './pages/admin/config';
+export { default as EmailsPage } from './pages/admin/emails';
+export { default as EmailEditorPage } from './pages/admin/emails/[slug]';
 export { default as LearnDashboardPage } from './pages/admin/learn';
 export { default as ManageUsersPage } from './pages/admin/manage-users';
 export { default as RBACPage } from './pages/admin/rbac';
@@ -182,5 +184,14 @@ export { default as PrivacyPolicyPage } from './pages/privacy-policy';
 export * from './types/';
 // Utils
 export { default as api, cdn } from './utils/api';
+export {
+  getConfig,
+  getConfigArray,
+  getConfigBySlug,
+  getConfigValueBySlug,
+  invalidateConfigCache,
+  CONFIG_CACHE_TTL,
+} from './utils/configCache';
+export { buildMergedConfig } from './utils/config.utils';
 // Note: blockchain utils import ethers (~500KB) - import directly from 'closer/utils/blockchain' when needed
 export * from './utils/helpers';

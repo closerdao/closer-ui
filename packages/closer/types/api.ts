@@ -2,6 +2,20 @@ import { User } from 'closer/contexts/auth/types';
 
 import { CloserCurrencies, Price } from './currency';
 
+export type FileUploadResult = {
+  _id: string;
+  slug: string;
+  url: string;
+  filename: string;
+  extension: string;
+  contentType: string;
+  size: number;
+  createdBy: string;
+  visibility: string;
+  created: string;
+  updated: string;
+};
+
 export type BookingConditions = {
   minDuration: number | undefined;
   maxDuration: number | undefined;
@@ -130,6 +144,10 @@ export type GeneralConfig = {
   expenseCategories?: string;
   discordUrl: string;
   telegramUrl: string;
+  primaryCtaVisitor?: string;
+  primaryCtaMember?: string;
+  primaryCtaCustomUrl?: string;
+  primaryCtaCustomText?: string;
 };
 export type CitizenshipConfig = {
   enabled: boolean;

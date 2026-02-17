@@ -425,7 +425,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
         <title>{t('dashboard_revenue_title')}</title>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
-      <AdminLayout isBookingEnabled={isBookingEnabled}>
+      <AdminLayout>
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           <Heading level={2}>{t('dashboard_revenue_title')}</Heading>
           <RevenueTimeFrameSelector

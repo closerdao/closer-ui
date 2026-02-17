@@ -1,8 +1,19 @@
+import { configDescription } from '../config';
+import { getDefaultConfigValue } from './config.utils';
+
 interface InputObject {
   [key: string]: {
     label: string;
     value: string | number;
   };
+}
+
+export function mergeGeneralConfigWithDefaults(
+  apiValue: Record<string, unknown> | null | undefined,
+): Record<string, unknown> {
+  const defaults = getDefaultConfigValue('general', configDescription);
+  if (!apiValue || typeof apiValue !== 'object') return defaults;
+  return Object.assign({}, defaults, apiValue);
 }
 
 export function prepareGeneralConfig(

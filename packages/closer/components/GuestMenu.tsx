@@ -3,15 +3,16 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
-import { useTranslations } from 'next-intl';
 import { ChevronDown } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
+import { useBuyTokens } from '../hooks/useBuyTokens';
 import { useConfig } from '../hooks/useConfig';
 import useRBAC from '../hooks/useRBAC';
-import { getReserveTokenDisplay } from '../utils/config.utils';
-import { useBuyTokens } from '../hooks/useBuyTokens';
 import api from '../utils/api';
 import { getCurrentUnitPrice } from '../utils/bondingCurve';
+import { getReserveTokenDisplay } from '../utils/config.utils';
+import { getConfig, getConfigValueBySlug } from '../utils/configCache';
 import ReportABug from './ReportABug';
 import NavLink from './ui/NavLink';
 
@@ -55,6 +56,11 @@ const GuestMenu = () => {
   const getMenuSections = (
     isBookingEnabled: boolean,
     isVolunteeringEnabled: boolean,
+    isGovernanceEnabled: boolean,
+    isLearningHubEnabled: boolean,
+    isBlogEnabled: boolean,
+    isCitizenshipEnabled: boolean,
+    isFaqEnabled: boolean,
   ): MenuSection[] => {
     // TDF-specific navigation structure
     if (APP_NAME?.toLowerCase() === 'tdf') {
@@ -142,12 +148,12 @@ const GuestMenu = () => {
             {
               label: t('menu_become_citizen'),
               url: '/citizenship',
-              enabled: process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true' && APP_NAME?.toLowerCase() === 'tdf',
+              enabled: isCitizenshipEnabled,
             },
             {
               label: t('menu_governance_dao'),
               url: '/governance',
-              enabled: APP_NAME?.toLowerCase() === 'tdf',
+              enabled: isGovernanceEnabled,
             },
             {
               label: t('navigation_volunteer'),
@@ -163,7 +169,7 @@ const GuestMenu = () => {
             {
               label: t('menu_faq'),
               url: '/resources',
-              enabled: true,
+              enabled: isFaqEnabled,
               rbacPage: 'Resources',
             },
           ],
@@ -181,7 +187,7 @@ const GuestMenu = () => {
           {
             label: t('navigation_stay'),
             url: '/stay',
-            enabled: isBookingEnabled && APP_NAME?.toLowerCase() !== 'tdf',
+            enabled: isBookingEnabled,
             rbacPage: 'Stay',
           },
           {
@@ -238,7 +244,7 @@ const GuestMenu = () => {
           {
             label: t('navigation_blog'),
             url: '/blog',
-            enabled: process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true',
+            enabled: isBlogEnabled,
             rbacPage: 'Blog',
           },
         ],
@@ -252,7 +258,7 @@ const GuestMenu = () => {
           {
             label: t('navigation_learning_hub'),
             url: '/learn/category/all',
-            enabled: process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true',
+            enabled: isLearningHubEnabled,
             rbacPage: 'LearningHub',
           },
         ],
@@ -364,7 +370,7 @@ const GuestMenu = () => {
                 {
                   label: t('header_nav_stay'),
                   url: '/stay',
-                  enabled: true,
+                  enabled: isBookingEnabled,
                 },
                 {
                   label: t('header_nav_community'),
@@ -383,13 +389,13 @@ const GuestMenu = () => {
           {
             label: t('navigation_buy_tokens'),
             url: '/token',
-            enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
+            enabled: process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true',
             rbacPage: 'Token',
           },
           {
             label: 'Become a Citizen',
             url: '/citizenship',
-            enabled: process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true' && APP_NAME?.toLowerCase() === 'tdf',
+            enabled: isCitizenshipEnabled,
           },
         ],
       },
@@ -402,11 +408,7 @@ const GuestMenu = () => {
           {
             label: t('navigation_faq'),
             url: '/resources',
-            enabled:
-              APP_NAME?.toLowerCase() !== 'lios' &&
-              APP_NAME !== 'foz' &&
-              APP_NAME !== 'earthbound' &&
-              APP_NAME?.toLowerCase() !== 'closer',
+            enabled: isFaqEnabled,
             rbacPage: 'Resources',
           },
         ],
@@ -443,27 +445,41 @@ const GuestMenu = () => {
   useEffect(() => {
     (async () => {
       try {
-        const [volunteerRes, bookingRes] = await Promise.all([
-          api.get('config/volunteering').catch((err) => {
-            console.error('Error fetching volunteering config:', err);
-            return null;
-          }),
-          api.get('config/booking').catch((err) => {
-            console.error('Error fetching booking config:', err);
-            return null;
-          }),
-        ]);
+        const configs = await getConfig(api);
+        const volunteerConfig = getConfigValueBySlug(configs, 'volunteering');
+        const bookingConfig = getConfigValueBySlug(configs, 'booking');
+        const governanceConfig = getConfigValueBySlug(configs, 'governance');
+        const learningHubConfig = getConfigValueBySlug(configs, 'learningHub');
+        const blogConfig = getConfigValueBySlug(configs, 'blog');
+        const citizenshipConfig = getConfigValueBySlug(configs, 'citizenship');
+        const generalConfig = getConfigValueBySlug(configs, 'general');
 
         const isVolunteeringEnabled =
-          volunteerRes?.data.results.value.enabled === true &&
+          volunteerConfig?.enabled === true &&
           process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
         const isBookingEnabled =
-          bookingRes?.data.results.value.enabled === true;
+          bookingConfig?.enabled === true &&
+          process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+        const isGovernanceEnabled = governanceConfig?.enabled === true;
+        const isLearningHubEnabled =
+          learningHubConfig?.enabled === true &&
+          process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true';
+        const isBlogEnabled =
+          blogConfig?.enabled === true &&
+          process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true';
+        const isCitizenshipEnabled =
+          citizenshipConfig?.enabled === true &&
+          process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
+        const isFaqEnabled = Boolean(generalConfig?.faqsGoogleSheetId);
 
-        // Get menu sections with all items
         const sections = getMenuSections(
           isBookingEnabled,
           isVolunteeringEnabled,
+          isGovernanceEnabled,
+          isLearningHubEnabled,
+          isBlogEnabled,
+          isCitizenshipEnabled,
+          isFaqEnabled,
         );
 
         // Filter sections based on RBAC permissions
@@ -564,6 +580,7 @@ const GuestMenu = () => {
 
         {/* TDF Token Sale Widget */}
         {APP_NAME?.toLowerCase() === 'tdf' &&
+          process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true' &&
           process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && (
             <div className="mt-3 mb-2 rounded-lg border border-gray-200 bg-white overflow-hidden">
               <div className="p-3 bg-gradient-to-br from-accent/5 to-accent-light/5">

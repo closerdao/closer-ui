@@ -1,8 +1,8 @@
-import { ChangeEvent, useState } from 'react';
+import { ChangeEvent } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { Button, Card, ErrorMessage, Heading } from '../ui';
+import { Button, Card, ErrorMessage } from '../ui';
 
 interface Props {
   currentValue: string | number | boolean | any[];
@@ -34,17 +34,7 @@ const ArrayConfig = ({
   errors,
 }: Props) => {
   const t = useTranslations();
-  const isEmailConfig = slug === 'emails';
   const isSubscriptionsConfig = slug === 'subscriptions';
-  const [openCards, setOpenCards] = useState<boolean[]>([]);
-
-  const toggleCard = (index: number) => {
-    setOpenCards((prevOpenCards) => {
-      const newOpenCards = [...prevOpenCards];
-      newOpenCards[index] = !newOpenCards[index];
-      return newOpenCards;
-    });
-  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -58,57 +48,16 @@ const ArrayConfig = ({
             return null;
           }
           return (
-            <Card
-              key={index}
-              className={`${
-                isEmailConfig
-                  ? openCards[index]
-                    ? 'h-auto '
-                    : 'h-[60px] overflow-hidden'
-                  : ''
-              }`}
-            >
+            <Card key={index}>
               {Object.entries(element).map(([innerKey]) => {
                 const inputType = elementType[innerKey];
 
                 return (
-                  <div
-                    key={`${innerKey}-${index}`}
-                    className="flex flex-col gap-1"
-                  >
-                    {isEmailConfig && innerKey === 'name' && (
-                      <button
-                        onClick={() => toggleCard(index)}
-                        className="flex justify-between items-center"
-                      >
-                        <Heading level={3}>
-                          {t(
-                            `config_email_${String(
-                              currentValue[index][innerKey],
-                            )}`,
-                          )}
-                        </Heading>
-
-                        <svg
-                          className={`inline-block border-black transform ${
-                            openCards[index] ? 'rotate-90' : ''
-                          }`}
-                          width="7"
-                          height="14"
-                          viewBox="0 0 7 14"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M7 7L0.25 13.0622L0.250001 0.937822L7 7Z"
-                            fill="#313131"
-                          />
-                        </svg>
-                      </button>
-                    )}
-
-                    {!(isEmailConfig && innerKey === 'name') && (
-                      <>
+                <div
+                  key={`${innerKey}-${index}`}
+                  className="flex flex-col gap-1"
+                >
+                  <>
                         <label>{t(`config_label_${innerKey}`)}:</label>
                         {inputType === 'boolean' && (
                           <div className="flex gap-3">
@@ -242,23 +191,12 @@ const ArrayConfig = ({
                               }
                             ></ErrorMessage>
                           )}
-                      </>
-                    )}
-                  </div>
+                  </>
+                </div>
                 );
               })}
 
-              {isEmailConfig && (
-                <Button
-                  className="w-[300px]"
-                  onClick={() => resetToDefault(currentValue[index].name)}
-                  variant="secondary"
-                >
-                  {t('config_reset_to_default')}
-                </Button>
-              )}
-
-              {index > 0 && !isEmailConfig && !isSubscriptionsConfig && (
+              {index > 0 && !isSubscriptionsConfig && (
                 <Button
                   onClick={() => handleDeleteElement(index)}
                   className="w-40"
@@ -271,11 +209,9 @@ const ArrayConfig = ({
           );
         })}
 
-      {slug !== 'emails' && (
-        <Button onClick={() => handleAddElement(elementsKey)} variant="secondary">
-          {t('config_add_entry_button')}
-        </Button>
-      )}
+      <Button onClick={() => handleAddElement(elementsKey)} variant="secondary">
+        {t('config_add_entry_button')}
+      </Button>
     </div>
   );
 };

@@ -5,7 +5,8 @@ export const closerConfig = {
   APP_NAME: 'closer',
   GA_ANALYTICS: false,
   FB_DOMAIN_VERIFICATION: false,
-  PLATFORM_LEGAL_ADDRESS: 'OASA Verein, Industriestrasse 47, c/o Juris Services AG, 6300 Zug, Switzerland',
+  PLATFORM_LEGAL_ADDRESS:
+    'OASA Verein, Industriestrasse 47, c/o Juris Services AG, 6300 Zug, Switzerland',
   DEFAULT_TITLE: 'The operating system for regenerative communities',
   SEMANTIC_URL: 'https://dev.closer.earth',
   TEAM_EMAIL: 'team@closer.earth',
@@ -13,25 +14,15 @@ export const closerConfig = {
   EXPOSE_STORE: true,
   NEWSLETTER: false,
   CACHE_DURATION: 6000000, // 1h
-  LOGO_HEADER: '/images/logo.png',
   FACEBOOK_URL: 'https://instagram.com/closerearth',
   INSTAGRAM_URL: 'https://instagram.com/closerearth',
   DISCORD_URL: 'https://discord.gg/A5WFMwPRaK',
   TWITTER_URL: 'https://twitter.com/closerearth',
   TELEGRAM_URL: 'https://t.me/closerearth',
   GOVERNANCE_URL: 'https://snapshot.org/#/traditionaldreamfactory.eth',
-  // Set which roles are permitted to do certain actions
-  PERMISSIONS: {
-    event: {
-      create: 'event-creator',
-    },
-    booking: {
-      create: 'member',
-    },
-  },
 
-  TOKEN_PRICE: 230.23,
-  SOURCE_TOKEN: 'CEUR',
+  TOKEN_PRICE: 259.44,
+  SOURCE_TOKEN: 'EURm',
 };
 
 export const configDescription: ConfigType[] = [
@@ -400,7 +391,8 @@ export const configDescription: ConfigType[] = [
           {
             type: 'tokens',
             title: 'Supporter',
-            description: 'Support TDF and get meaningful access with 10 tokens.',
+            description:
+              'Support TDF and get meaningful access with 10 tokens.',
             tokens: 10,
             bonus: 'Free weekend stay',
             minAmount: '',
@@ -447,7 +439,8 @@ export const configDescription: ConfigType[] = [
             bonus: '',
             minAmount: '',
             credits: 0,
-            subscribeUrl: '/subscriptions/checkout?priceId=price_1N1YLVE9CDXOM807XtNAwiBW',
+            subscribeUrl:
+              '/subscriptions/checkout?priceId=price_1N1YLVE9CDXOM807XtNAwiBW',
           },
         ],
       },
@@ -519,6 +512,10 @@ export const configDescription: ConfigType[] = [
         type: 'text',
         default: 'tdf',
       },
+      logoHeader: {
+        type: 'image',
+        default: '/images/logo.png',
+      },
       platformName: {
         type: 'text',
         default: 'Traditional Dream Factory',
@@ -580,6 +577,10 @@ export const configDescription: ConfigType[] = [
         type: 'text',
         default: '',
       },
+      governanceUrl: {
+        type: 'text',
+        default: '',
+      },
       locationLat: {
         type: 'text',
         default: '38.003164469592555',
@@ -609,6 +610,24 @@ export const configDescription: ConfigType[] = [
         type: 'text',
         default:
           'Legal & business, Land Infrastructure, Forestry, Tools & Machines, Maintenance, Operations, Energy, Factory, Miscellaneous, Lease, Equipment, Furniture, Water, Buildings Renovations, Shares, Experiment, Donations, Food, Salaries, Events, Stays, Internal op',
+      },
+      primaryCtaVisitor: {
+        type: 'select',
+        enum: ['none', 'login', 'bookings', 'learningHub', 'events', 'custom'],
+        default: 'login',
+      },
+      primaryCtaMember: {
+        type: 'select',
+        enum: ['none', 'bookings', 'learningHub', 'events', 'custom'],
+        default: 'bookings',
+      },
+      primaryCtaCustomUrl: {
+        type: 'text',
+        default: '',
+      },
+      primaryCtaCustomText: {
+        type: 'text',
+        default: '',
       },
     },
   },
@@ -790,7 +809,14 @@ export const configDescription: ConfigType[] = [
             address: 'text',
             products: {
               type: 'multiselect',
-              enum: ['accommodations', 'events', 'subscriptions', 'tokens', 'food', 'products'],
+              enum: [
+                'accommodations',
+                'events',
+                'subscriptions',
+                'tokens',
+                'food',
+                'products',
+              ],
             },
           },
         ],
@@ -836,7 +862,8 @@ export const configDescription: ConfigType[] = [
       },
       description: {
         type: 'text',
-        default: 'Reward community members with token airdrops for participation.',
+        default:
+          'Reward community members with token airdrops for participation.',
       },
     },
   },
@@ -869,6 +896,15 @@ export const configDescription: ConfigType[] = [
   },
   {
     slug: 'community',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+    },
+  },
+  {
+    slug: 'roles',
     value: {
       enabled: {
         type: 'boolean',

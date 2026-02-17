@@ -34,11 +34,6 @@ jest.mock('closer', () => ({
   }),
   useConfig: () => ({
     platformName: 'Test Platform',
-    PERMISSIONS: {
-      event: {
-        create: 'admin',
-      },
-    },
   }),
   useAuth: () => ({
     user: null,
