@@ -1608,6 +1608,7 @@
   "config_product_products": "Products",
   "config_product_payment-link": "Payment link",
   "config_product_terminal": "Terminal",
+  "config_product_expenses": "Expenses",
   "config_label_quorumPercent": "Quorum percent",
 
   "config_features_heading": "Platform features",

@@ -802,6 +802,7 @@ export const configDescription: ConfigType[] = [
                 'products',
                 'payment-link',
                 'terminal',
+                'expenses',
               ],
             },
           },
