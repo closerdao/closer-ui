@@ -1526,6 +1526,8 @@
   "config_product_tokens": "Tokens",
   "config_product_food": "Alimentação",
   "config_product_products": "Produtos",
+  "config_product_payment-link": "Link de pagamento",
+  "config_product_terminal": "Terminal",
   "config_label_quorumPercent": "Percentagem de quórum",
   "config_features_heading": "Recursos da plataforma",
   "config_feature_disabled": "Ativar para configurar",

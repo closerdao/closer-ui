@@ -800,6 +800,8 @@ export const configDescription: ConfigType[] = [
                 'tokens',
                 'food',
                 'products',
+                'payment-link',
+                'terminal',
               ],
             },
           },
