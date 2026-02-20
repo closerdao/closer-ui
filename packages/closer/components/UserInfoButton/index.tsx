@@ -1,9 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { User } from 'lucide-react';
-
 import { cdn } from '../../utils/api';
+import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 
 interface Props {
   userInfo: { name: string; photo: string } | null;
@@ -25,7 +24,7 @@ const UserInfoButton = ({ userInfo, createdBy, size }: Props) => {
               className="rounded-full"
             />
           ) : (
-            <User className={`text-success ${size === 'md' ? 'w-20 h-20' : 'w-8 h-8'}`} />
+            <UserAvatarPlaceholder size={size === 'md' ? '3xl' : 'md'} />
           )}
           {userInfo?.name || ''}
         </div>

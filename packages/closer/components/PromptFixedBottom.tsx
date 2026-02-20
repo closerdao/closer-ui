@@ -27,10 +27,12 @@ const PromptFixedBottom = () => {
   const [timeElapsed, setTimeElapsed] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Check if we're on pages where we don't want to show the prompt
   const isSignupPage = router.pathname === '/signup';
   const isSubscriptionsPage = router.pathname === '/subscriptions';
-  const shouldHidePrompt = isSignupPage || isSubscriptionsPage;
+  const hasFloatingCta =
+    router.pathname === '/events/[slug]' || router.pathname === '/stay/[slug]';
+  const shouldHidePrompt =
+    isSignupPage || isSubscriptionsPage || hasFloatingCta;
 
   useEffect(() => {
     if (isLoading) {
@@ -88,7 +90,6 @@ const PromptFixedBottom = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [hasScrolled, shouldHidePrompt]);
 
-  // Control visibility with animation
   useEffect(() => {
     const shouldShow =
       open &&
@@ -98,17 +99,14 @@ const PromptFixedBottom = () => {
       !shouldHidePrompt;
 
     if (shouldShow && !isVisible) {
-      // Show the prompt
       setIsVisible(true);
     } else if (!shouldShow && isVisible) {
-      // Hide the prompt
       setIsVisible(false);
     }
 
-    // Update context state
     if (setFloatingNewsletterActive && setHideFooterNewsletter) {
       setFloatingNewsletterActive(shouldShow);
-      setHideFooterNewsletter(shouldShow);
+      setHideFooterNewsletter(shouldShow || shouldHidePrompt);
     }
   }, [
     open,
@@ -133,6 +131,10 @@ const PromptFixedBottom = () => {
     setHasSubscribed(true);
     localStorage.setItem('email', email);
   };
+
+  if (shouldHidePrompt) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 sm:bottom-4 sm:left-1/2 sm:-translate-x-1/2 sm:inset-auto pointer-events-none">

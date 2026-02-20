@@ -75,7 +75,6 @@ const SettingsSidebar = ({
   );
 };
 
-// Mobile tab selector component
 const MobileTabSelector = ({
   activeTab,
   setActiveTab,
@@ -86,18 +85,23 @@ const MobileTabSelector = ({
   tabs: Tab[];
 }) => {
   return (
-    <div className="md:hidden mb-6">
-      <select
-        value={activeTab}
-        onChange={(e) => setActiveTab(e.target.value as TabId)}
-        className="w-full p-2 border border-gray-300 rounded-md"
-      >
+    <div className="md:hidden -mx-4 px-4 mb-3 overflow-x-auto" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+      <div className="flex gap-1 min-w-max pb-1">
         {tabs.map((tab) => (
-          <option key={tab.id} value={tab.id}>
-            {tab.label}
-          </option>
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+              activeTab === tab.id
+                ? 'bg-gray-900 text-white'
+                : 'bg-gray-50 text-gray-600 border border-gray-200'
+            }`}
+          >
+            <span className="w-4 h-4 shrink-0">{tab.icon}</span>
+            <span>{tab.label}</span>
+          </button>
         ))}
-      </select>
+      </div>
     </div>
   );
 };
@@ -521,19 +525,19 @@ const SettingsPage = ({
         <title>{user.screenname} | {t('settings_page_title')}</title>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
-      <div className="max-w-screen-xl mx-auto px-4 md:px-8 py-6">
-        <div className="flex items-center gap-2 mb-6">
+      <div className="max-w-screen-xl mx-auto px-4 md:px-8 py-3 md:py-6">
+        <div className="flex items-center gap-2 mb-3 md:mb-4">
           <SettingsIcon className="w-5 h-5 text-gray-700" />
           <Heading>{t('settings_page_title')}</Heading>
         </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md mb-6">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md mb-4">
             <span className="block sm:inline">{error}</span>
           </div>
         )}
 
-        <div className="flex flex-col md:flex-row gap-8">
+        <div className="flex flex-col md:flex-row gap-4 md:gap-8">
           {/* Sidebar navigation */}
           <SettingsSidebar
             activeTab={activeTab}
@@ -601,6 +605,7 @@ const SettingsPage = ({
                       id={user._id}
                       label={t('settings_change')}
                       className="my-4"
+                      allowDelete
                     />
                   </div>
                 </div>

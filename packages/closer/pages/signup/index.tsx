@@ -6,9 +6,9 @@ import { useEffect, useState } from 'react';
 
 import ApplicationForm from '../../components/ApplicationForm';
 import SignupForm from '../../components/SignupForm';
+import UserAvatarPlaceholder from '../../components/UserAvatarPlaceholder';
 import { Card, ErrorMessage } from '../../components/ui';
 
-import { User } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -107,7 +107,7 @@ const Signup = () => {
                             className="rounded-full"
                           />
                         ) : (
-                          <User className="text-success w-[30px] h-[30px]" />
+                          <UserAvatarPlaceholder size="md" />
                         )}
                         <span>{referrer.get('screenname')}</span>
                       </div>

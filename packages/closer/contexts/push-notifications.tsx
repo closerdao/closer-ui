@@ -73,12 +73,19 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     getConfig(api)
       .then((configs) => {
+        if (cancelled) return;
         const communityConfig = getConfigValueBySlug(configs, 'community');
         setIsCommunityEnabled(communityConfig?.enabled === true);
       })
-      .catch(() => setIsCommunityEnabled(false));
+      .catch(() => {
+        if (!cancelled) setIsCommunityEnabled(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Sync subscription state from user object
@@ -94,23 +101,27 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
   useEffect(() => {
     if (!isSupported || !user) return;
 
+    let cancelled = false;
     (async () => {
       try {
         const registration = await navigator.serviceWorker.getRegistration();
+        if (cancelled) return;
         if (registration) {
           const subscription = await registration.pushManager.getSubscription();
+          if (cancelled) return;
           if (!subscription && user.settings?.push_notifications_enabled) {
-            // Browser subscription was lost but user thinks they're subscribed — mark as unsubscribed
             await platform.user.patch(user._id, {
               settings: { push_notifications_enabled: false, push_subscription: null },
             });
-            await refetchUser();
+            if (!cancelled) await refetchUser();
           }
         }
       } catch {
-        // Silently fail — this is a best-effort sync
       }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [isSupported, user?._id]);
 
   const subscribe = useCallback(async () => {

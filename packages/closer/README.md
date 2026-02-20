@@ -19,8 +19,12 @@ The standardized fundraising page is available from the `closer` package. Any ap
 2. **Use the page**: Create `pages/invest.tsx` that uses the shared page and (optionally) app-specific SEO/CTA options:
 
 ```tsx
+import {
+  InvestPage as CloserInvestPage,
+  type InvestPageProps,
+  getInvestPageInitialProps,
+} from 'closer';
 import { NextPageContext } from 'next';
-import { getInvestPageInitialProps, InvestPage as CloserInvestPage, type InvestPageProps } from 'closer';
 
 function InvestPage(props: InvestPageProps) {
   return <CloserInvestPage {...props} />;
@@ -45,7 +49,7 @@ InvestPage.getInitialProps = async (context: NextPageContext) => {
 export default InvestPage;
 ```
 
-If you omit `investPageOptions`, the page falls back to `NEXT_PUBLIC_APP_URL` for canonical/share URLs and default CTA paths.
+If you omit `investPageOptions`, the page falls back to `NEXT_PUBLIC_PLATFORM_URL` for canonical/share URLs and default CTA paths.
 
 ### Tailwind
 

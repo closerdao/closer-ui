@@ -80,7 +80,8 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       setUser(null);
       setError(t('auth_session_expired'));
       if (router.pathname !== '/login') {
-        router.push('/login?session_expired=1');
+        const back = encodeURIComponent(router.asPath);
+        router.push(`/login?session_expired=1&back=${back}`);
       } else if (!router.query.session_expired) {
         router.replace('/login?session_expired=1', undefined, {
           shallow: true,

@@ -12,12 +12,12 @@ import {
   Clock,
   Home,
   Star,
-  User,
   UserCheck,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { ACTIONS, USER_ROLE_OPTIONS } from '../../constants';
+import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import api, { cdn } from '../../utils/api';
@@ -779,7 +779,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                               className="rounded-full"
                             />
                           ) : (
-                            <User className="text-gray-400 w-8 h-8 p-1 bg-gray-100 rounded-full" />
+                            <UserAvatarPlaceholder size="md" />
                           )}
                         </div>
                         <div className="flex flex-col min-w-0">

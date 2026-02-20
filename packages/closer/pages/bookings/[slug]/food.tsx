@@ -213,11 +213,34 @@ const FoodSelectionPage = ({
   const foodTotalForStay =
     (foodPricePerNight ?? 0) * (adults ?? 0) * durationNights;
 
+  const shouldSkipFood = Boolean(eventId && event?.foodOption === 'no_food');
+
   useEffect(() => {
     if (booking?.status === 'pending' || booking?.status === 'paid') {
       router.push(`/bookings/${booking?._id}`);
     }
   }, [booking?.status]);
+
+  useEffect(() => {
+    if (!shouldSkipFood || !booking?._id) return;
+
+    const skipFoodStep = async () => {
+      try {
+        await api.post(`/bookings/${booking._id}/update-food`, {
+          foodOption: 'no_food',
+          foodOptionId: null,
+        });
+        const nextStep = event?.fields
+          ? `/bookings/${booking._id}/questions`
+          : `/bookings/${booking._id}/rules`;
+        router.push(nextStep);
+      } catch (err: any) {
+        setApiError(parseMessageFromError(err));
+      }
+    };
+
+    skipFoodStep();
+  }, [shouldSkipFood, booking?._id]);
 
   const handleNext = async () => {
     try {
@@ -301,6 +324,10 @@ const FoodSelectionPage = ({
 
   if (!isAuthenticated) {
     return <PageNotAllowed />;
+  }
+
+  if (shouldSkipFood) {
+    return null;
   }
 
   return (

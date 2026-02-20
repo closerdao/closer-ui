@@ -1,9 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { User } from 'lucide-react';
-
 import { cdn } from '../utils/api';
+import UserAvatarPlaceholder from './UserAvatarPlaceholder';
 import Heading from './ui/Heading';
 
 const UserBookingPreview = ({ user }) => {
@@ -28,9 +27,7 @@ const UserBookingPreview = ({ user }) => {
                 className="rounded-full"
               />
             ) : (
-              <div className="rounded-full overflow-hidden">
-                <User className="text-neutral w-[160px] h-[160px]" />
-              </div>
+              <UserAvatarPlaceholder size="5xl" />
             )}
           </div>
         </div>

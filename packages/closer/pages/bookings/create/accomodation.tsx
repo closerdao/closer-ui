@@ -1,5 +1,7 @@
 import { useRouter } from 'next/router';
 
+import { useState } from 'react';
+
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingStepsInfo from '../../../components/BookingStepsInfo';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
@@ -32,6 +34,7 @@ import {
   getBookingType,
 } from '../../../utils/booking.helpers';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
+import { parseMessageFromError } from '../../../utils/common';
 import { getBookingRate, getDiscountRate } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
@@ -126,8 +129,11 @@ const AccomodationSelector = ({
 
   const bookingCategory = getBookingType(eventId, bookingType, volunteerId);
 
+  const [requestError, setRequestError] = useState<string | null>(null);
+
   const bookListing = async (listingId: string) => {
     try {
+      setRequestError(null);
       const volunteerInfo = (bookingType === 'volunteer' ||
         bookingType === 'residence') && {
         skills: parsedSkills,
@@ -176,6 +182,7 @@ const AccomodationSelector = ({
 
       router.push(`/bookings/${newBooking._id}/questions`);
     } catch (err) {
+      setRequestError(parseMessageFromError(err));
     } finally {
     }
   };
@@ -257,6 +264,11 @@ const AccomodationSelector = ({
         {bookingError && (
           <section className="my-12">
             <ErrorMessage error={bookingError} />
+          </section>
+        )}
+        {requestError && (
+          <section className="my-12">
+            <ErrorMessage error={requestError} />
           </section>
         )}
         {filteredListings?.length === 0 && (

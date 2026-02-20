@@ -70,8 +70,11 @@ function doRefresh() {
   if (!refreshPromise) {
     const refreshToken = getRefreshToken();
     if (!refreshToken) {
-      notifySessionInvalid();
-      const err = new Error('Session expired');
+      const hadSession = Boolean(getAccessToken());
+      if (hadSession) {
+        notifySessionInvalid();
+      }
+      const err = new Error(hadSession ? 'Session expired' : 'Not authenticated');
       err.silentAuthRedirect = true;
       refreshPromise = Promise.reject(err).finally(() => {
         refreshPromise = null;

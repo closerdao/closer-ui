@@ -28,12 +28,6 @@ const AskPage: NextPage = () => {
       </Head>
       <main className="max-w-screen-md mx-auto px-4">
         <h1 className="text-3xl font-bold mt-6 mb-4">{t('ask_page_title')}</h1>
-        <iframe
-          title={t('ask_page_title')}
-          className="w-full"
-          src="https://app.gpt-trainer.com/gpt-trainer-widget/a9d70d04c6b64f328acd966ad87e4fb4"
-          height="500px"
-        ></iframe>
       </main>
     </>
   );

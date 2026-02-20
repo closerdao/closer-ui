@@ -3,8 +3,8 @@ import Link from 'next/link';
 
 import React, { useEffect, useState } from 'react';
 
-import { User } from 'lucide-react';
 import { Button, Heading, priceFormat } from 'closer';
+import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 import { useTranslations } from 'next-intl';
 
 const CustomListing: React.FC<{
@@ -100,10 +100,8 @@ const CustomListing: React.FC<{
                   </div>
                 )}
                 {!item.imageUrl && settings.isSmallImage && (
-                  <div className="px-10 overflow-hidden min-h-[140px]">
-                    <div className="rounded-full overflow-hidden bg-white pt-2">
-                      <User className="text-neutral w-full h-full" />
-                    </div>
+                  <div className="flex justify-center py-4">
+                    <UserAvatarPlaceholder size="5xl" />
                   </div>
                 )}
                 <Heading

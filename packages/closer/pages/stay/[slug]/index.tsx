@@ -456,7 +456,7 @@ const ListingPage: NextPage<Props> = ({
       sendAnalyticsEvent('Click', 'ListingPage', 'Book');
       redirectToNextStep(newBooking._id);
     } catch (err: any) {
-      setApiError(err);
+      setApiError(parseMessageFromError(err));
     } finally {
     }
   };
@@ -699,9 +699,7 @@ const ListingPage: NextPage<Props> = ({
                           <ErrorMessage error={parseMessageFromError(error)} />
                         )}
                         {apiError && (
-                          <ErrorMessage
-                            error={parseMessageFromError(apiError)}
-                          />
+                          <ErrorMessage error={apiError} />
                         )}
                         {calendarError &&
                           calendarError !== t('bookings_date_range_error') && (

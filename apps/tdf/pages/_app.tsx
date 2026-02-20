@@ -48,8 +48,6 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
     _configLoaded: false,
   }));
   const [rbacConfig, setRBACConfig] = useState<any>(rbacDefaultConfig);
-  const [isLocalhost, setIsLocalhost] = useState(true); // Default to true to prevent initial flash
-  const [isEnvironmentChecked, setIsEnvironmentChecked] = useState(false);
 
   const { FACEBOOK_PIXEL_ID } = config || {};
 
@@ -62,14 +60,6 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
   useEffect(() => {
     if (!mountedRef.current) {
       mountedRef.current = true;
-
-      const isRunningLocally =
-        typeof window !== 'undefined' &&
-        (window.location.hostname === 'localhost' ||
-          window.location.hostname === '127.0.0.1');
-
-      setIsLocalhost(isRunningLocally);
-      setIsEnvironmentChecked(true);
     }
 
     (async () => {
@@ -90,8 +80,6 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
       }
     })();
   }, []);
-
-  const shouldShowWidget = !isLocalhost && isEnvironmentChecked;
 
   return (
     <>
@@ -121,21 +109,6 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
   `,
           }}
         />
-      )}
-
-      {/* TDF specific chatbot widget */}
-      {shouldShowWidget && (
-        <>
-          <Script
-            id="gptconfig"
-            dangerouslySetInnerHTML={{
-              __html: `window.GPTTConfig = {
-                uuid: "a9d70d04c6b64f328acd966ad87e4fb4",
-              };`,
-            }}
-          />
-          <Script src="https://app.gpt-trainer.com/widget-asset.min.js" defer />
-        </>
       )}
 
       <ConfigProvider

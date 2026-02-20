@@ -488,7 +488,7 @@ const DatesSelector = ({
         router.push(`/bookings/create/accomodation?${urlParams}`);
       }
     } catch (err: any) {
-      setHandleNextError(err.response?.data?.error || err.message);
+      setHandleNextError(parseMessageFromError(err));
     }
   };
 

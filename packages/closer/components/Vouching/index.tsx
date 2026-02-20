@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { User as UserIcon } from 'lucide-react';
+import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 import { useTranslations } from 'next-intl';
 
 import { Modal, api } from '../..';
@@ -159,9 +159,7 @@ const Vouching = ({
                     height={30}
                   />
                 ) : (
-                  <div className="rounded-full overflow-hidden">
-                    <UserIcon className="text-neutral w-[30px] h-[30px]" />
-                  </div>
+                  <UserAvatarPlaceholder size="md" />
                 )}
                 <p className="text-accent">{user.screenname}</p>
               </Link>

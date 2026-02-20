@@ -1,41 +1,66 @@
-import { FC, useCallback, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
-import { User } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 import UploadPhotoButton from './UploadPhotoButton';
 
 interface Props {
   model?: string;
   id?: string;
   onSave?: (photoIds: string[] | string) => void;
+  onDelete?: () => void;
   label?: string;
   isMinimal?: boolean;
   className?: string;
   isPrompt?: boolean;
+  allowDelete?: boolean;
 }
 
 const UploadPhoto: FC<Props> = ({
   model,
   id,
   onSave,
+  onDelete,
   label,
   isMinimal = false,
   className,
   isPrompt = false,
+  allowDelete = false,
 }) => {
   const t = useTranslations();
   const { isAuthenticated, user, refetchUser } = useAuth();
   const [error, setErrors] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const isUserPhoto = model === 'user' && id === user?._id;
   const isEditor = model !== 'event' && model !== 'volunteer' && !isUserPhoto;
   const cdn = process.env.NEXT_PUBLIC_CDN_URL;
+
+  const handleDeletePhoto = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!model || !id) return;
+
+    setErrors(null);
+    setIsDeleting(true);
+
+    try {
+      await api.patch(`/${model}/${id}`, { photo: null });
+      refetchUser();
+      if (onDelete) onDelete();
+    } catch (err) {
+      const errorMessage = parseMessageFromError(err);
+      setErrors(errorMessage);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -92,37 +117,34 @@ const UploadPhoto: FC<Props> = ({
     return null;
   }
 
-  return (
-    <div
-      {...getRootProps()}
-      className={`${isMinimal ? 'w-[120px]' : 'w-fit'} relative ${className}`}
-    >
-      {/* User photo display */}
-      {isUserPhoto && user?.photo && (
-        <div>
-          <img
-            src={`${cdn}${user.photo}-profile-lg.jpg`}
-            loading="lazy"
-            alt={user.screenname}
-            className="group w-32 md:w-44 rounded-full peer"
-          />
-          <UploadPhotoButton
-            isMinimal={isMinimal}
-            isPrompt={isPrompt}
-            label={label}
-            getInputProps={getInputProps}
-          />
-        </div>
-      )}
+  const showDeleteButton = allowDelete && !isPrompt && isUserPhoto && user?.photo;
 
-      {/* Placeholder when no user photo */}
+  return (
+    <div className={`${isMinimal ? 'w-[120px]' : 'w-fit'} ${className}`}>
+      <div
+        {...getRootProps()}
+        className="relative"
+      >
+        {isUserPhoto && user?.photo && (
+          <div className="group">
+            <img
+              src={`${cdn}${user.photo}-profile-lg.jpg`}
+              loading="lazy"
+              alt={user.screenname}
+              className={`rounded-full peer ${isPrompt ? 'w-10 h-10' : 'w-32 md:w-44'}`}
+            />
+            <UploadPhotoButton
+              isMinimal={isMinimal}
+              isPrompt={isPrompt}
+              label={label}
+              getInputProps={getInputProps}
+            />
+          </div>
+        )}
+
       {isUserPhoto && !user?.photo && !isPrompt && (
         <div className="group">
-          <User
-            className={`${
-              isPrompt ? 'w-8 h-8 text-gray-400' : 'text-gray-200 w-20 h-20'
-            }`}
-          />
+          <UserAvatarPlaceholder size="3xl" />
           <UploadPhotoButton
             isMinimal={isMinimal}
             isPrompt={isPrompt}
@@ -132,30 +154,27 @@ const UploadPhoto: FC<Props> = ({
         </div>
       )}
 
-      {/* Upload button for event/volunteer */}
-      {(model === 'event' || model === 'volunteer') && (
-        <UploadPhotoButton
-          isMinimal={isMinimal}
-          isPrompt={isPrompt}
-          label={label}
-          getInputProps={getInputProps}
-        />
-      )}
+        {(model === 'event' || model === 'volunteer') && (
+          <UploadPhotoButton
+            isMinimal={isMinimal}
+            isPrompt={isPrompt}
+            label={label}
+            getInputProps={getInputProps}
+          />
+        )}
 
-      {/* Upload button for editor (excluding events/volunteers) */}
-      {isEditor && (
-        <UploadPhotoButton
-          isMinimal={isMinimal}
-          isPrompt={isPrompt}
-          label={label}
-          getInputProps={getInputProps}
-        />
-      )}
+        {isEditor && (
+          <UploadPhotoButton
+            isMinimal={isMinimal}
+            isPrompt={isPrompt}
+            label={label}
+            getInputProps={getInputProps}
+          />
+        )}
 
-      {/* Upload button in prompt mode */}
-      {isPrompt && (
+      {isPrompt && !(isUserPhoto && user?.photo) && (
         <div className="group">
-          <User className="w-8 h-8 text-gray-400" />
+          <UserAvatarPlaceholder size="md" />
           <UploadPhotoButton
             isMinimal={isMinimal}
             isPrompt={isPrompt}
@@ -165,13 +184,28 @@ const UploadPhoto: FC<Props> = ({
         </div>
       )}
 
-      {error && <p className="text-red-500 mt-2">{error}</p>}
-      {loading && (
-        <p className="absolute top-[40px]">
-          {t('upload_photo_loading_message')}
-        </p>
+        {error && <p className="text-red-500 mt-2">{error}</p>}
+        {loading && (
+          <p className="absolute top-[40px]">
+            {t('upload_photo_loading_message')}
+          </p>
+        )}
+        {isDragActive && <p>{t('upload_photo_prompt_message')}</p>}
+      </div>
+
+      {showDeleteButton && (
+        <button
+          type="button"
+          onClick={handleDeletePhoto}
+          disabled={isDeleting}
+          className="mt-2 flex items-center gap-1 text-sm text-red-600 hover:text-red-800 transition-colors disabled:opacity-50"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+          {isDeleting
+            ? t('upload_photo_loading_message')
+            : t('settings_delete_photo')}
+        </button>
       )}
-      {isDragActive && <p>{t('upload_photo_prompt_message')}</p>}
     </div>
   );
 };
