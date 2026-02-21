@@ -791,6 +791,7 @@ export const configDescription: ConfigType[] = [
             legalName: 'text',
             taxNumber: 'text',
             address: 'text',
+            accountingDescription: 'text',
             products: {
               type: 'multiselect',
               enum: [
@@ -813,6 +814,7 @@ export const configDescription: ConfigType[] = [
             taxNumber: '',
             address: '',
             products: [],
+            accountingDescription: 'Formação Profissional',
           },
         ],
       },

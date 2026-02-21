@@ -49,8 +49,9 @@ const ArrayConfig = ({
           }
           return (
             <Card key={index}>
-              {Object.entries(element).map(([innerKey]) => {
+              {Object.entries(elementType).map(([innerKey]) => {
                 const inputType = elementType[innerKey];
+                const fieldValue = currentValue[index]?.[innerKey];
 
                 return (
                 <div
@@ -66,7 +67,7 @@ const ArrayConfig = ({
                                 type="radio"
                                 name={`${innerKey}-${index}`}
                                 value="true"
-                                checked={currentValue[index][innerKey] === true}
+                                checked={fieldValue === true}
                                 onChange={(event) =>
                                   handleChange(event, elementsKey, index)
                                 }
@@ -78,9 +79,7 @@ const ArrayConfig = ({
                                 type="radio"
                                 name={`${innerKey}-${index}`}
                                 value="false"
-                                checked={
-                                  currentValue[index][innerKey] === false
-                                }
+                                checked={fieldValue === false}
                                 onChange={(event) =>
                                   handleChange(event, elementsKey, index)
                                 }
@@ -97,7 +96,7 @@ const ArrayConfig = ({
                               handleChange(event, elementsKey, index)
                             }
                             type="text"
-                            value={String(currentValue[index][innerKey])}
+                            value={String(fieldValue ?? '')}
                             autoComplete="off"
                             data-lpignore="true"
                           />
@@ -110,7 +109,7 @@ const ArrayConfig = ({
                               handleChange(event, elementsKey, index)
                             }
                             rows={innerKey === 'body' ? 16 : 2}
-                            value={String(currentValue[index][innerKey])}
+                            value={String(fieldValue ?? '')}
                             autoComplete="off"
                             data-lpignore="true"
                           />
@@ -118,7 +117,7 @@ const ArrayConfig = ({
                         {inputType?.type === 'select' && (
                           <select
                             className="px-2 py-1"
-                            value={String(currentValue[index][innerKey] || '')}
+                            value={String(fieldValue ?? '')}
                             onChange={(event) =>
                               handleChange(event, elementsKey, index)
                             }
@@ -138,8 +137,8 @@ const ArrayConfig = ({
                         {inputType?.type === 'multiselect' && (
                           <div className="flex flex-wrap gap-2">
                             {inputType.enum.map((option: string) => {
-                              const currentValues = Array.isArray(currentValue[index][innerKey]) 
-                                ? currentValue[index][innerKey] 
+                              const currentValues = Array.isArray(fieldValue)
+                                ? fieldValue
                                 : [];
                               const isChecked = currentValues.includes(option);
                               return (

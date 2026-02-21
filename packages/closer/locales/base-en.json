@@ -1595,7 +1595,7 @@
   "config_label_friendsBookingMaxGuests": "Maximum number of guests for friends bookings",
   "config_label_entityName": "Entity name (legacy)",
   "config_label_transactionType": "Transaction type (legacy)",
-  "config_label_accountingDescription": "Product/service description for accounting (legacy)",
+  "config_label_accountingDescription": "Product/service description for accounting",
   "config_label_legalName": "Legal name",
   "config_label_taxNumber": "Tax identification number",
   "config_label_address": "Address",
