@@ -5,6 +5,7 @@ import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useTranslations } from 'next-intl';
 
 import api from '../utils/api';
+import { parseMessageFromError } from '../utils/common';
 import { ErrorMessage } from './ui';
 import Button from './ui/Button';
 
@@ -236,11 +237,7 @@ const CheckoutForm = ({
     } catch (err) {
       setProcessing(false);
       console.error(err);
-      const errorMessage =
-        err.response && err.response.data.error
-          ? err.response.data.error
-          : err.message;
-      setError(errorMessage);
+      setError(parseMessageFromError(err));
       if (tokenPaymentSuccessful && refetchBooking) {
         await refetchBooking();
       }

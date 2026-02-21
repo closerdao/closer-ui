@@ -91,6 +91,7 @@ const EditModel: FC<Props> = ({
   const [data, setData] = useState(initialModel);
   const [error, setErrors] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const errorRef = useRef<HTMLDivElement>(null);
 
   const [startDate, setStartDate] = useState<string | null | Date>(data.start);
@@ -152,6 +153,9 @@ const EditModel: FC<Props> = ({
     option?: string,
     actionType?: string,
   ) => {
+    if (name === 'slug') {
+      setSlugManuallyEdited(true);
+    }
     const copy = { ...data };
 
     objectPath.set(copy, name, value);
@@ -260,20 +264,19 @@ const EditModel: FC<Props> = ({
   }, [endpoint, id, initialData, fields]);
 
   useEffect(() => {
-    const titleValue = getTitleValue();
-    const currentSlug = (data.slug ?? '').toString().trim();
-    if (
-      hasSlugField &&
-      titleValue &&
-      titleValue.length > 0 &&
-      !currentSlug
-    ) {
-      const newSlug = generateSlug(titleValue);
-      if (newSlug) {
-        update('slug', newSlug);
-      }
+    if (!hasSlugField || slugManuallyEdited) {
+      return;
     }
-  }, [data.title, data.name, data.slug, hasSlugField]);
+    const titleValue = getTitleValue();
+    if (!titleValue || titleValue.length === 0) {
+      return;
+    }
+    const newSlug = generateSlug(titleValue);
+    const currentSlug = (data.slug ?? '').toString().trim();
+    if (newSlug && newSlug !== currentSlug) {
+      setData((prev: any) => ({ ...prev, slug: newSlug }));
+    }
+  }, [data.title, data.name, data.slug, hasSlugField, slugManuallyEdited]);
 
   if (!isPublic && !isAuthenticated) {
     return (

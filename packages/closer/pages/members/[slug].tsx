@@ -10,13 +10,14 @@ import EventsList from '../../components/EventsList';
 import FinancedTokenProgress from '../../components/FinancedTokenProgress';
 import Modal from '../../components/Modal';
 import UploadPhoto from '../../components/UploadPhoto';
+import UserAvatarPlaceholder from '../../components/UserAvatarPlaceholder';
 import UserBookings from '../../components/UserBookings';
 import Vouching from '../../components/Vouching';
 import { Card } from '../../components/ui';
 import Button from '../../components/ui/Button';
 import Heading from '../../components/ui/Heading';
 
-import { Trash2, User as UserIcon } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { Twitter, Instagram, Facebook, Linkedin, Github, Youtube, Music, Link as LinkIcon, Settings } from 'lucide-react';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -293,9 +294,7 @@ const MemberPage = ({
                         className="peer w-36 md:w-48 rounded-full border-4 border-white shadow-md"
                       />
                     ) : (
-                      <div className="w-36 md:w-48 h-36 md:h-48 rounded-full bg-gray-100 flex items-center justify-center">
-                        <UserIcon className="text-gray-300 w-16 h-16" />
-                      </div>
+                      <UserAvatarPlaceholder size="4xl" />
                     )}
                   </div>
                 </div>

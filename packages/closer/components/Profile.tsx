@@ -3,13 +3,13 @@ import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
 
-import { User } from 'lucide-react';
 import { Settings, LogOut } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import { cdn } from '../utils/api';
 import CreditsBalance from './CreditsBalance';
+import UserAvatarPlaceholder from './UserAvatarPlaceholder';
 import { Button, Heading } from './ui';
 
 interface ProfileProps {
@@ -54,9 +54,7 @@ const Profile = ({ isMenu = false, isDemo, onLogout }: ProfileProps) => {
                     className="rounded-full "
                   />
                 ) : (
-                  <div className="flex items-center justify-center bg-gray-50 rounded-full overflow-hidden pt-1 h-10 w-10">
-                    <User className="text-gray-200 w-10 h-10" />
-                  </div>
+                  <UserAvatarPlaceholder size="lg" />
                 )}
               </Link>
             </div>

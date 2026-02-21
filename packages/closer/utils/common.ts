@@ -11,9 +11,21 @@ export const parseMessageFromError = (err: any): string => {
       return smartContractError;
     }
 
-    if (err?.response?.data?.error) {
-      const v = err.response.data.error;
-      return typeof v === 'string' ? v : String(v);
+    const data = err?.response?.data;
+    if (data) {
+      const errVal = data.error;
+      if (typeof errVal === 'string' && errVal.trim()) return errVal;
+      if (typeof data.message === 'string' && data.message.trim())
+        return data.message;
+      if (
+        typeof errVal === 'object' &&
+        errVal !== null &&
+        typeof (errVal as { message?: unknown }).message === 'string'
+      ) {
+        const msg = (errVal as { message: string }).message.trim();
+        if (msg) return msg;
+      }
+      return 'Something went wrong';
     }
     if (err instanceof Error) {
       return typeof err.message === 'string' ? err.message : 'Something went wrong';

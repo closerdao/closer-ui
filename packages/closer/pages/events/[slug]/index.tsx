@@ -12,7 +12,7 @@ import SignupModal from '../../../components/SignupModal';
 import { Button, Card, ErrorMessage, LinkButton } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
-import { User as UserIcon } from 'lucide-react';
+import UserAvatarPlaceholder from '../../../components/UserAvatarPlaceholder';
 import dayjs from 'dayjs';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -407,7 +407,7 @@ const EventPage = ({
                             height={20}
                           />
                         ) : (
-                          <UserIcon className="text-gray-300 w-[20px] h-[20px] rounded-full" />
+                          <UserAvatarPlaceholder size="xs" />
                         )}
                         <p className="font-medium">
                           {eventCreator?.screenname}
@@ -448,6 +448,7 @@ const EventPage = ({
                       </section>
                     )}
                   </div>
+                  {(event.address || (event.location && !event.address) || (attendees && attendees.length > 0) || (end && !end.isBefore(dayjs()))) && (
                   <div className="h-auto fixed z-10 bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px] space-y-4">
                     <Card className="bg-white border border-gray-100 p-4">
                       <div className="space-y-4">
@@ -619,13 +620,14 @@ const EventPage = ({
                                           </p>
                                         )}
                                         <LinkButton
-                                          href={`/bookings/create/dates/?eventId=${event._id
-                                            }&start=${start ? start.format('YYYY-MM-DD') : ''
-                                            }&end=${end ? end.format('YYYY-MM-DD') : ''
-                                            }`}
+                                          href={
+                                            isAuthenticated
+                                              ? `/bookings/create/dates/?eventId=${event._id}&start=${start ? start.format('YYYY-MM-DD') : ''}&end=${end ? end.format('YYYY-MM-DD') : ''}`
+                                              : `/login?back=${encodeURIComponent(`/bookings/create/dates/?eventId=${event._id}&start=${start ? start.format('YYYY-MM-DD') : ''}&end=${end ? end.format('YYYY-MM-DD') : ''}`)}`
+                                          }
                                           className=""
                                         >
-                                          {t('events_buy_ticket_button')}
+                                          {isAuthenticated ? t('events_buy_ticket_button') : t('events_login_to_book')}
                                         </LinkButton>
                                       </>
                                     )}
@@ -807,6 +809,7 @@ const EventPage = ({
                         )}
                     </Card>
                   </div>
+                  )}
                 </div>
               </div>
             </div>

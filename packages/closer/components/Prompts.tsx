@@ -2,6 +2,9 @@ import Link from 'next/link';
 
 import { useEffect, useState } from 'react';
 
+import { X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+
 import { useAuth } from '../contexts/auth';
 import { User } from '../contexts/auth/types';
 import {
@@ -42,61 +45,51 @@ const PromptCloseButton = ({
   promptName,
 }: PromptCloseButtonProps) => {
   return (
-    <div className="flex items-center">
-      <Link
-        className="p-1 px-3 border  border-gray-500 text-gray-500 rounded-full"
-        href="#"
-        onClick={(e) => {
-          e.preventDefault();
-          closePrompt(promptName || '');
-        }}
-      >
-        X
-      </Link>
-    </div>
+    <button
+      onClick={() => closePrompt(promptName || '')}
+      className="absolute top-1.5 right-1.5 p-0.5 text-gray-400 hover:text-gray-700 transition-colors"
+      aria-label="Close"
+    >
+      <X className="w-4 h-4" />
+    </button>
   );
 };
 
 const AddPhotoPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
+  const t = useTranslations();
   const { user, setUser } = useAuth();
   const [photo, setPhoto] = useState<string | null>(null);
 
-  const image = photo || user?.photo;
+  const hasPhoto = Boolean(photo || user?.photo);
   return (
     <>
-      <div className="flex gap-3 items-center">
-        <p>
-          It&apos;s nice to have you here {user?.screenname}. Now let&apos;s add
-          a photo to your profile ♥️
+      <div className="flex gap-3 items-center flex-1 min-w-0">
+        <p className="text-sm">
+          {hasPhoto
+            ? t('prompt_photo_updated', { name: user?.screenname })
+            : t('prompt_add_photo', { name: user?.screenname })}
         </p>
-
-        <div className="flex flex-row justify-center items-center">
-          <div className="h-[30px]">
-            <UploadPhoto
-              isPrompt={true}
-              model="user"
-              id={user?._id}
-              onSave={(id: string | string[]) => {
-                // Use the id regardless of type - most likely your logic already handles this
-                const photoId = Array.isArray(id) ? id[0] : id;
-                setPhoto(photoId);
-                setTimeout(() => setUser({ ...user, photo: photoId } as User), 4000);
-              }}
-              label={image ? 'Change photo' : 'Add photo'}
-            />
-          </div>
+        <div className="shrink-0">
+          <UploadPhoto
+            isPrompt={true}
+            model="user"
+            id={user?._id}
+            onSave={(id: string | string[]) => {
+              const photoId = Array.isArray(id) ? id[0] : id;
+              setPhoto(photoId);
+              setTimeout(() => setUser({ ...user, photo: photoId } as User), 4000);
+            }}
+            label={hasPhoto ? t('prompt_change_photo') : t('settings_add_photo')}
+          />
         </div>
       </div>
-
-      <PromptCloseButton
-        closePrompt={closePrompt}
-        promptName="AddPhotoPrompt"
-      />
+      <PromptCloseButton closePrompt={closePrompt} promptName="AddPhotoPrompt" />
     </>
   );
 };
 
 const FundraiserPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
+  const t = useTranslations();
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
 
   const closeModal = () => {
@@ -110,82 +103,63 @@ const FundraiserPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
           <YoutubeEmbed embedId={FUNDRASING_VIDEO_ID} />
         </Modal>
       )}
-
-      <div className=" flex gap-3 justify-between w-full">
-        <div className="flex justify-start sm:items-center gap-2">
+      <div className="flex gap-3 items-center justify-between w-full">
+        <div className="flex items-center gap-2">
           <Link
             href="/invest"
             className="bg-white min-w-[40px] h-6 flex items-center justify-center rounded-md"
           >
             <IconPlay className="w-4 h-4" />
           </Link>
-          <span>We are looking for 300 dreamers to make TDF a reality</span>
+          <span className="text-sm">{t('prompt_fundraiser_text')}</span>
         </div>
-        <div className="flex items-end justify-end sm:items-center gap-2 flex-col-reverse sm:flex-row">
-          <LinkButton
-            size="small"
-            className="max-h-[34px] p-0 px-4"
-            href="/invest"
-          >
-            Support TDF
-          </LinkButton>
-          <PromptCloseButton
-            closePrompt={closePrompt}
-            promptName="FundraiserPrompt"
-          />
-        </div>
+        <LinkButton
+          size="small"
+          className="max-h-[34px] p-0 px-4 shrink-0"
+          href="/invest"
+        >
+          {t('prompt_fundraiser_cta')}
+        </LinkButton>
       </div>
+      <PromptCloseButton closePrompt={closePrompt} promptName="FundraiserPrompt" />
     </>
   );
 };
 const PreferencesPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
+  const t = useTranslations();
   return (
     <>
-      <div className=" flex gap-3 justify-between w-full">
-        <div className="flex items-center gap-1 ">
-          <span>
-            Complete setting up your profile by filling{' '}
+      <p className="text-sm">
+        {t.rich('prompt_preferences_text', {
+          link: (chunks) => (
             <Link className="underline" href="/settings/#recommended">
-              recommended preferences
+              {chunks}
             </Link>
-          </span>{' '}
-        </div>
-        <div></div>
-      </div>
-
-      <PromptCloseButton
-        closePrompt={closePrompt}
-        promptName="PreferencesPrompt"
-      />
+          ),
+        })}
+      </p>
+      <PromptCloseButton closePrompt={closePrompt} promptName="PreferencesPrompt" />
     </>
   );
 };
 
 const AirdropPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
+  const t = useTranslations();
   return (
     <>
-      <div className=" flex gap-3 justify-between w-full">
-        <div className="flex justify-start flex-col sm:flex-row sm:items-center gap-2">
-          <span>
-            We are doing an airdrop! A way to send gifts for past visits,
-            volunteering, governance participation, and wallet interactions with
-            the $TDF token.
-          </span>
-          <LinkButton
-            size="small"
-            className="max-h-[34px] p-0 px-4 w-[200px]"
-            href="/airdrop"
-          >
-            see how you qualify{' '}
-          </LinkButton>
-        </div>
-        <div className="flex items-end justify-end sm:items-center gap-2 flex-col-reverse sm:flex-row">
-          <PromptCloseButton
-            closePrompt={closePrompt}
-            promptName="AirdropPrompt"
-          />
-        </div>
+      <div className="flex gap-3 items-center w-full">
+        <p className="text-sm flex-1">
+          {t('prompt_airdrop_text')}
+        </p>
+        <LinkButton
+          size="small"
+          className="max-h-[34px] p-0 px-4 shrink-0"
+          href="/airdrop"
+        >
+          {t('prompt_airdrop_cta')}
+        </LinkButton>
       </div>
+      <PromptCloseButton closePrompt={closePrompt} promptName="AirdropPrompt" />
     </>
   );
 };
@@ -268,8 +242,8 @@ const Prompts = () => {
   }
 
   return (
-    <div className="w-full flex justify-center bg-accent-light mb-2">
-      <div className="w-[800px] p-2.5 flex justify-between text-left gap-2">
+    <div className="w-full flex justify-center bg-accent-light">
+      <div className="relative max-w-screen-xl w-full mx-auto px-6 py-2 pr-10 flex text-left gap-2">
         {promptTosShow === 'AddPhotoPrompt' && (
           <AddPhotoPrompt closePrompt={closePrompt} />
         )}

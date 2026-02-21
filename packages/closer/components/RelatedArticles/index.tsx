@@ -1,7 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { User } from 'lucide-react';
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
@@ -9,6 +8,7 @@ import { DEFAULT_BLOG_IMAGE_ID } from '../../constants';
 import { ArticleWithAuthorInfo } from '../../types/blog';
 import { cdn } from '../../utils/api';
 import { estimateReadingTime, getCleanString } from '../../utils/blog.utils';
+import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 
 interface Props {
   relatedArticles: ArticleWithAuthorInfo[];
@@ -80,9 +80,7 @@ const RelatedArticles = ({ relatedArticles }: Props) => {
                       height={32}
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                      <User className="text-gray-400 w-4 h-4" />
-                    </div>
+                    <UserAvatarPlaceholder size="md" />
                   )}
                 </Link>
                 <div className="flex-1 text-xs text-gray-500">

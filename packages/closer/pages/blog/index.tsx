@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import ArticleList from '../../components/ArticleList';
 import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 
-import { User as UserIcon } from 'lucide-react';
+import UserAvatarPlaceholder from '../../components/UserAvatarPlaceholder';
 import { User } from 'closer/contexts/auth/types';
 import dayjs from 'dayjs';
 import { NextPageContext } from 'next';
@@ -188,9 +188,7 @@ const Search = ({
                         height={28}
                       />
                     ) : (
-                      <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
-                        <UserIcon className="text-gray-400 w-3.5 h-3.5" />
-                      </div>
+                      <UserAvatarPlaceholder size="sm" />
                     )}
                     <div className="text-xs text-gray-500">
                       <span className="font-medium text-gray-700">{latestArticle?.authorInfo?.screenname}</span>

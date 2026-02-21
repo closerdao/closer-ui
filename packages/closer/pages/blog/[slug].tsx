@@ -14,7 +14,7 @@ import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import RelatedArticles from '../../components/RelatedArticles';
 import { LinkButton } from '../../components/ui';
 
-import { User } from 'lucide-react';
+import UserAvatarPlaceholder from '../../components/UserAvatarPlaceholder';
 import dayjs from 'dayjs';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -153,9 +153,7 @@ const ArticlePage = ({ article, author, error, relatedArticles, blogConfig }: Pr
                         height={48}
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                        <User className="text-gray-400 w-6 h-6" />
-                      </div>
+                      <UserAvatarPlaceholder size="xl" />
                     )}
                   </Link>
                   <div className="flex flex-col">
@@ -271,9 +269,7 @@ const ArticlePage = ({ article, author, error, relatedArticles, blogConfig }: Pr
                         height={64}
                       />
                     ) : (
-                      <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
-                        <User className="text-gray-400 w-8 h-8" />
-                      </div>
+                      <UserAvatarPlaceholder size="2xl" />
                     )}
                   </Link>
                   <div className="flex-1">

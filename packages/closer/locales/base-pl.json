@@ -544,6 +544,7 @@
   "events_duration_days_plural": "{count} days",
   "events_time": "time",
   "events_buy_ticket_button": "Buy ticket",
+  "events_login_to_book": "Login to book",
   "events_see_ticket_button": "See ticket",
   "events_disclaimer": "Accommodation booking required for multi-day events",
   "incorrect_event_password_error": "Please enter correct event password",

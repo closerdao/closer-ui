@@ -419,6 +419,7 @@ const Checkout = ({
   const handleFreeBooking = async () => {
     try {
       setProcessing(true);
+      setPaymentError(null);
       if (useCreditsUpdated && !booking?.paymentDelta?.fiat?.val) {
         await api.post(`/bookings/${booking?._id}/credit-payment`, {
           startDate: start,
@@ -433,12 +434,12 @@ const Checkout = ({
         email: user?.email,
         name: user?.screenname,
       });
+      router.push(`/bookings/${booking?._id}`);
     } catch (error) {
       setPaymentError(parseMessageFromError(error));
     } finally {
       setProcessing(false);
     }
-    router.push(`/bookings/${booking?._id}`);
   };
 
   const onSuccess = () => {
