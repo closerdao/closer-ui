@@ -111,8 +111,10 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {charges.map((charge) => {
-                  const description = charge?.description || t('expense_tracking_not_available');
-                  const category = charge?.category || t('expense_tracking_not_available');
+                  const description =
+                    charge?.description || t('expense_tracking_not_available');
+                  const category =
+                    charge?.category || t('expense_tracking_not_available');
                   const amount = charge.amount?.total?.val || 0;
                   const date = new Date(
                     charge.date || charge.created,
@@ -145,7 +147,9 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                             {t('expense_tracking_view')}
                           </LinkButton>
                         ) : (
-                          <span className="text-gray-400 text-xs">{t('expense_tracking_no_document')}</span>
+                          <span className="text-gray-400 text-xs">
+                            {t('expense_tracking_no_document')}
+                          </span>
                         )}
                       </td>
                       <td className="px-2 py-1 text-sm text-gray-900">
@@ -170,8 +174,10 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
 
           <div className="md:hidden flex flex-col gap-3">
             {charges.map((charge) => {
-              const description = charge?.description || t('expense_tracking_not_available');
-              const category = charge?.category || t('expense_tracking_not_available');
+              const description =
+                charge?.description || t('expense_tracking_not_available');
+              const category =
+                charge?.category || t('expense_tracking_not_available');
               const amount = charge.amount?.total?.val || 0;
               const date = new Date(
                 charge.date || charge.created,
@@ -250,7 +256,9 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
               <div className="space-y-4 sm:space-y-6">
                 {selectedCharge.meta?.uploadedDocumentUrl && (
                   <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
-                    <div className="text-sm font-bold">{t('expense_tracking_document')}:</div>
+                    <div className="text-sm font-bold">
+                      {t('expense_tracking_document')}:
+                    </div>
                     <a
                       href={selectedCharge.meta.uploadedDocumentUrl}
                       target="_blank"
@@ -266,44 +274,93 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                   <div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm">
                       <div className="bg-gray-50 p-2 rounded">
-                        <span className="font-semibold block text-gray-600">{t('expense_tracking_entity')}</span>
-                        <span className="break-words">{selectedCharge.entity || t('expense_tracking_not_available')}</span>
+                        <span className="font-semibold block text-gray-600">
+                          {t('expense_tracking_entity')}
+                        </span>
+                        <span className="break-words">
+                          {selectedCharge.entity ||
+                            t('expense_tracking_not_available')}
+                        </span>
                       </div>
                       <div className="bg-gray-50 p-2 rounded">
-                        <span className="font-semibold block text-gray-600">{t('expense_tracking_document_date')}</span>
-                        <span>{selectedCharge.meta.toconlineData.document_date || t('expense_tracking_not_available')}</span>
+                        <span className="font-semibold block text-gray-600">
+                          {t('expense_tracking_document_date')}
+                        </span>
+                        <span>
+                          {selectedCharge.meta.toconlineData.document_date ||
+                            t('expense_tracking_not_available')}
+                        </span>
                       </div>
                       <div className="bg-gray-50 p-2 rounded sm:col-span-2">
-                        <span className="font-semibold block text-gray-600">{t('expense_tracking_description')}</span>
-                        <span className="break-words">{selectedCharge.description || t('expense_tracking_not_available')}</span>
+                        <span className="font-semibold block text-gray-600">
+                          {t('expense_tracking_description')}
+                        </span>
+                        <span className="break-words">
+                          {selectedCharge.description ||
+                            t('expense_tracking_not_available')}
+                        </span>
                       </div>
                       {selectedCharge.meta?.comment && (
                         <div className="bg-gray-50 p-2 rounded sm:col-span-2">
-                          <span className="font-semibold block text-gray-600">{t('expense_tracking_comment')}</span>
-                          <span className="break-words">{selectedCharge.meta.comment}</span>
+                          <span className="font-semibold block text-gray-600">
+                            {t('expense_tracking_comment')}
+                          </span>
+                          <span className="break-words">
+                            {selectedCharge.meta.comment}
+                          </span>
                         </div>
                       )}
                       <div className="bg-gray-50 p-2 rounded">
-                        <span className="font-semibold block text-gray-600">{t('expense_tracking_supplier')}</span>
-                        <span className="break-words">{selectedCharge.meta.toconlineData.supplier_business_name || t('expense_tracking_not_available')}</span>
+                        <span className="font-semibold block text-gray-600">
+                          {t('expense_tracking_supplier')}
+                        </span>
+                        <span className="break-words">
+                          {selectedCharge.meta.toconlineData
+                            .supplier_business_name ||
+                            t('expense_tracking_not_available')}
+                        </span>
                       </div>
                       <div className="bg-gray-50 p-2 rounded">
-                        <span className="font-semibold block text-gray-600">{t('expense_tracking_category')}</span>
-                        <span>{selectedCharge.category || t('expense_tracking_not_available')}</span>
+                        <span className="font-semibold block text-gray-600">
+                          {t('expense_tracking_category')}
+                        </span>
+                        <span>
+                          {selectedCharge.category ||
+                            t('expense_tracking_not_available')}
+                        </span>
                       </div>
-                      {selectedCharge.meta.toconlineData.tax_exemption_reason_id && (
+                      {selectedCharge.meta.toconlineData
+                        .tax_exemption_reason_id && (
                         <div className="bg-gray-50 p-2 rounded sm:col-span-2">
-                          <span className="font-semibold block text-gray-600">{t('expense_tracking_tax_exemption_reason_id')}</span>
-                          <span>{selectedCharge.meta.toconlineData.tax_exemption_reason_id}</span>
+                          <span className="font-semibold block text-gray-600">
+                            {t('expense_tracking_tax_exemption_reason_id')}
+                          </span>
+                          <span>
+                            {
+                              selectedCharge.meta.toconlineData
+                                .tax_exemption_reason_id
+                            }
+                          </span>
                         </div>
                       )}
                       <div className="bg-gray-50 p-2 rounded">
-                        <span className="font-semibold block text-gray-600">{t('expense_tracking_receipt_total')}</span>
-                        <span className="font-semibold text-base">€{selectedCharge.amount?.total?.val?.toFixed(2) || t('expense_tracking_not_available')}</span>
+                        <span className="font-semibold block text-gray-600">
+                          {t('expense_tracking_receipt_total')}
+                        </span>
+                        <span className="font-semibold text-base">
+                          €
+                          {selectedCharge.amount?.total?.val?.toFixed(2) ||
+                            t('expense_tracking_not_available')}
+                        </span>
                       </div>
                       <div className="bg-gray-50 p-2 rounded">
-                        <span className="font-semibold block text-gray-600">{t('expense_tracking_currency')}</span>
-                        <span>{selectedCharge.amount?.total?.cur?.toUpperCase() || t('expense_tracking_not_available')}</span>
+                        <span className="font-semibold block text-gray-600">
+                          {t('expense_tracking_currency')}
+                        </span>
+                        <span>
+                          {selectedCharge.amount?.total?.cur?.toUpperCase() ||
+                            t('expense_tracking_not_available')}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -315,7 +372,7 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                       <div className="text-sm font-semibold text-gray-600 mb-2">
                         {t('expense_tracking_vat_summary')}
                       </div>
-                      
+
                       <div className="hidden sm:block overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead className="border-b bg-gray-50">
@@ -338,10 +395,18 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                             {selectedCharge.meta.toconlineData?.lines.map(
                               (line: any, index: number) => (
                                 <tr key={index} className="border-b">
-                                  <td className="px-2 py-2">{line.description}</td>
-                                  <td className="px-2 py-2 text-center">{line.tax_percentage}%</td>
-                                  <td className="px-2 py-2 text-center">{line.tax_code}</td>
-                                  <td className="px-2 py-2 text-right">€{line.unit_price?.toFixed(2)}</td>
+                                  <td className="px-2 py-2">
+                                    {line.description}
+                                  </td>
+                                  <td className="px-2 py-2 text-center">
+                                    {line.tax_percentage}%
+                                  </td>
+                                  <td className="px-2 py-2 text-center">
+                                    {line.tax_code}
+                                  </td>
+                                  <td className="px-2 py-2 text-right">
+                                    €{line.unit_price?.toFixed(2)}
+                                  </td>
                                 </tr>
                               ),
                             )}
@@ -352,10 +417,18 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                       <div className="sm:hidden flex flex-col gap-2">
                         {selectedCharge.meta.toconlineData?.lines.map(
                           (line: any, index: number) => (
-                            <div key={index} className="bg-gray-50 p-3 rounded border border-gray-200">
-                              <p className="text-sm font-medium mb-1 break-words">{line.description}</p>
+                            <div
+                              key={index}
+                              className="bg-gray-50 p-3 rounded border border-gray-200"
+                            >
+                              <p className="text-sm font-medium mb-1 break-words">
+                                {line.description}
+                              </p>
                               <div className="flex justify-between text-sm text-gray-600">
-                                <span>{t('expense_tracking_vat_percentage')}: {line.tax_percentage}%</span>
+                                <span>
+                                  {t('expense_tracking_vat_percentage')}:{' '}
+                                  {line.tax_percentage}%
+                                </span>
                                 <span>{line.tax_code}</span>
                               </div>
                               <div className="text-right font-semibold text-sm mt-1">

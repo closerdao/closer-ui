@@ -2293,6 +2293,8 @@
   "expense_tracking_description": "Descrição",
   "expense_tracking_comment": "Comentário",
   "expense_tracking_supplier": "Fornecedor",
+  "expense_tracking_supplier_address_detail": "Endereço do Fornecedor",
+  "expense_tracking_supplier_country": "País do Fornecedor",
   "expense_tracking_category": "Categoria",
   "expense_tracking_tax_exemption_reason_id": "ID do Motivo de Isenção Fiscal",
   "expense_tracking_receipt_total": "Total do Recibo",

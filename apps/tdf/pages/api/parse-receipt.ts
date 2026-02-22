@@ -324,6 +324,8 @@ export default async function handler(
       Example of complete output:
       {
         "supplier_business_name": "Supermercado do João", // MANDATORY field
+        "supplier_address_detail": "Morada do fornecedor", // MANDATORY field for the address of the supplier, if unable to extract, fallback to "Morada do fornecedor"
+        "supplier_country": "PT", // MANDATORY field for the country of the supplier, ISO 3166 country code, if unable to extract, fallback to "PT"
         "document_date": "2025-01-01", // MANDATORY field document date in string format YYYY-MM-DD
         "tax_exemption_reason_id": "1", // MANDATORY field when any item has vat_percentage=0
         "currency_iso_code": "EUR" | "USD", // MANDATORY field for the currency of the document

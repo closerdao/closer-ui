@@ -1819,6 +1819,8 @@
   "expense_tracking_description": "Opis",
   "expense_tracking_comment": "Komentarz",
   "expense_tracking_supplier": "Dostawca",
+  "expense_tracking_supplier_address_detail": "Adres dostawcy",
+  "expense_tracking_supplier_country": "Kraj dostawcy",
   "expense_tracking_category": "Kategoria",
   "expense_tracking_tax_exemption_reason_id": "ID powodu zwolnienia z podatku",
   "expense_tracking_receipt_total": "Suma rachunku",

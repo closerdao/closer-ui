@@ -2456,6 +2456,8 @@
   "expense_tracking_description": "Description",
   "expense_tracking_comment": "Comment",
   "expense_tracking_supplier": "Supplier",
+  "expense_tracking_supplier_address_detail": "Supplier Address",
+  "expense_tracking_supplier_country": "Supplier Country",
   "expense_tracking_category": "Category",
   "expense_tracking_tax_exemption_reason_id": "Tax Exemption Reason ID",
   "expense_tracking_receipt_total": "Receipt Total",

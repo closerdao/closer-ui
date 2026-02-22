@@ -16,6 +16,8 @@ import {
 
 interface ReceiptData {
   supplier_business_name: string;
+  supplier_address_detail?: string;
+  supplier_country?: string;
   document_date: string;
   tax_exemption_reason_id?: string;
   description?: string;

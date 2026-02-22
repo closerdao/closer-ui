@@ -27,6 +27,8 @@ const expenseFormSchema = z.object({
 
 interface ReceiptData {
   supplier_business_name: string;
+  supplier_address_detail?: string;
+  supplier_country?: string;
   document_date: string;
   tax_exemption_reason_id?: string;
   description?: string;
@@ -105,6 +107,12 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
         }),
         ...(currency && { currency_iso_code: currency }),
         supplier_business_name: editableData.supplier_business_name,
+        ...(editableData?.supplier_address_detail && {
+          supplier_address_detail: editableData.supplier_address_detail,
+        }),
+        ...(editableData?.supplier_country && {
+          supplier_country: editableData.supplier_country,
+        }),
         document_date: editableData.document_date,
         lines: editableData.vat_summary.map((summary) => ({
           description: summary?.description || '',
@@ -364,6 +372,12 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
           const formattedData: ReceiptData = {
             supplier_business_name: parsed.supplier_business_name || '',
             document_date: parsed.document_date || '',
+            ...(parsed.supplier_address_detail && {
+              supplier_address_detail: parsed.supplier_address_detail,
+            }),
+            ...(parsed.supplier_country && {
+              supplier_country: parsed.supplier_country,
+            }),
             ...(parsed.tax_exemption_reason_id && {
               tax_exemption_reason_id: parsed.tax_exemption_reason_id,
             }),

@@ -119,6 +119,8 @@ const ExpenseTrackingDashboardPage = ({
       t('expense_tracking_document_date'),
       t('expense_tracking_description'),
       t('expense_tracking_supplier'),
+      t('expense_tracking_supplier_address_detail'),
+      t('expense_tracking_supplier_country'),
       t('expense_tracking_category'),
       t('expense_tracking_tax_exemption_reason_id'),
       t('expense_tracking_receipt_total'),
@@ -134,6 +136,10 @@ const ExpenseTrackingDashboardPage = ({
       const description = charge?.description || '';
       const supplier =
         charge.meta?.toconlineData?.supplier_business_name || '';
+      const supplierAddressDetail =
+        charge.meta?.toconlineData?.supplier_address_detail || '';
+      const supplierCountry =
+        charge.meta?.toconlineData?.supplier_country || '';
       const category = charge?.category || '';
       const taxExemptionReasonId =
         charge.meta?.toconlineData?.tax_exemption_reason_id || '';
@@ -154,6 +160,8 @@ const ExpenseTrackingDashboardPage = ({
         documentDate,
         description,
         supplier,
+        supplierAddressDetail,
+        supplierCountry,
         category,
         taxExemptionReasonId,
         receiptTotal.toFixed(2),
