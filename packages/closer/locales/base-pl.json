@@ -226,6 +226,8 @@
   "create_post_title": "Create post",
   "create_post_submit_button": "Publish",
   "checkout_pay": "Pay",
+  "checkout_complete_payment": "Complete payment",
+  "checkout_listing_no_longer_available": "This listing is no longer available for the selected dates. Please go back and choose different dates or accommodation.",
   "checkout_processing_payment": "Processing payment...",
   "checkout_processing_token_payment": "Staking tokens...",
   "checkout_payment_disabled_error": "Payment is disabled. Please contact support.",

@@ -67,6 +67,7 @@ import {
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
+import { formatDate } from '../../../utils/listings.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 interface Props extends BaseBookingParams {
@@ -215,6 +216,12 @@ const Checkout = ({
   );
   const [emailSuccess, setEmailSuccess] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [isListingAvailable, setIsListingAvailable] = useState<boolean | null>(
+    null,
+  );
+  const [availabilityCheckLoading, setAvailabilityCheckLoading] = useState(
+    false,
+  );
 
   const creditsOrTokensPricePerNight = listing?.tokenPrice?.val;
 
@@ -396,6 +403,56 @@ const Checkout = ({
       })();
     }
   }, [user, currency, useTokens]);
+
+  useEffect(() => {
+    const listingId = booking?.listing;
+    if (!listingId || !start || !end) {
+      setIsListingAvailable(null);
+      return;
+    }
+    let cancelled = false;
+    setAvailabilityCheckLoading(true);
+    (async () => {
+      try {
+        const {
+          data: { results },
+        } = await api.post('/bookings/listing/availability', {
+          start: isHourlyBooking ? start : formatDate(start),
+          end: isHourlyBooking ? end : formatDate(end),
+          listing: listingId,
+          adults: adults ?? 0,
+          children: booking?.children,
+          infants: booking?.infants,
+          pets: booking?.pets,
+          useTokens: useTokens ?? false,
+        });
+        if (!cancelled) {
+          setIsListingAvailable(Boolean(results));
+        }
+      } catch {
+        if (!cancelled) {
+          setIsListingAvailable(false);
+        }
+      } finally {
+        if (!cancelled) {
+          setAvailabilityCheckLoading(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    booking?.listing,
+    booking?.children,
+    booking?.infants,
+    booking?.pets,
+    start,
+    end,
+    adults,
+    useTokens,
+    isHourlyBooking,
+  ]);
 
   useEffect(() => {
     if (booking?.status === 'paid') {
@@ -952,6 +1009,9 @@ const Checkout = ({
                     ((rentalFiat && rentalFiat?.val > 0) || useCredits) &&
                     status !== 'credits-paid' ? (
                       <RedeemCredits
+                        disabled={
+                          availabilityCheckLoading || isListingAvailable === false
+                        }
                         isPartialCreditsPayment={
                           paymentType === PaymentType.PARTIAL_CREDITS
                         }
@@ -1094,41 +1154,60 @@ const Checkout = ({
               </div>
             )}
             {isStripeBooking && (
-              <CheckoutPayment
-                cancellationPolicy={cancellationPolicy}
-                isPartialCreditsPayment={
-                  paymentType === PaymentType.PARTIAL_CREDITS
-                }
-                partialPriceInCredits={partialPriceInCredits}
-                bookingId={booking?._id || ''}
-                buttonDisabled={
-                  (useTokens &&
-                    (!hasAgreedToWalletDisclaimer ||
-                      (isNotEnoughBalance &&
-                        booking?.status !== 'tokens-staked'))) ||
-                  false
-                }
-                useTokens={useTokens || false}
-                useCredits={useCredits}
-                totalToPayInFiat={totalToPayInFiat}
-                dailyTokenValue={dailyRentalToken?.val || 0}
-                startDate={start}
-                endDate={end}
-                rentalTokenVal={
-                  dailyRentalToken?.val || 0 * (nightsToPayWithTokens || 0)
-                }
-                totalNights={nightsToPayWithTokens}
-                user={user}
-                eventId={event?._id}
-                status={booking?.status}
-                transactionId={booking?.transactionId}
-                createdBy={booking?.createdBy}
-                shouldShowTokenDisclaimer={shouldShowTokenDisclaimer}
-                hasAgreedToWalletDisclaimer={hasAgreedToWalletDisclaimer}
-                setWalletDisclaimer={setWalletDisclaimer}
-                refetchBooking={refetchBooking}
-                isAdditionalFiatPayment={isAdditionalFiatPayment}
-              />
+              <>
+                {!availabilityCheckLoading && isListingAvailable === false && (
+                  <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-amber-800 font-medium">
+                      {t('checkout_listing_no_longer_available')}
+                    </p>
+                  </div>
+                )}
+                <div
+                  className={
+                    availabilityCheckLoading || isListingAvailable === false
+                      ? 'pointer-events-none opacity-60'
+                      : ''
+                  }
+                >
+                  <CheckoutPayment
+                    cancellationPolicy={cancellationPolicy}
+                    isPartialCreditsPayment={
+                      paymentType === PaymentType.PARTIAL_CREDITS
+                    }
+                    partialPriceInCredits={partialPriceInCredits}
+                    bookingId={booking?._id || ''}
+                    buttonDisabled={
+                      availabilityCheckLoading ||
+                      isListingAvailable === false ||
+                      (useTokens &&
+                        (!hasAgreedToWalletDisclaimer ||
+                          (isNotEnoughBalance &&
+                            booking?.status !== 'tokens-staked'))) ||
+                      false
+                    }
+                    useTokens={useTokens || false}
+                    useCredits={useCredits}
+                    totalToPayInFiat={totalToPayInFiat}
+                    dailyTokenValue={dailyRentalToken?.val || 0}
+                    startDate={start}
+                    endDate={end}
+                    rentalTokenVal={
+                      dailyRentalToken?.val || 0 * (nightsToPayWithTokens || 0)
+                    }
+                    totalNights={nightsToPayWithTokens}
+                    user={user}
+                    eventId={event?._id}
+                    status={booking?.status}
+                    transactionId={booking?.transactionId}
+                    createdBy={booking?.createdBy}
+                    shouldShowTokenDisclaimer={shouldShowTokenDisclaimer}
+                    hasAgreedToWalletDisclaimer={hasAgreedToWalletDisclaimer}
+                    setWalletDisclaimer={setWalletDisclaimer}
+                    refetchBooking={refetchBooking}
+                    isAdditionalFiatPayment={isAdditionalFiatPayment}
+                  />
+                </div>
+              </>
             )}
           </div>
           {isFriendsBooking && (

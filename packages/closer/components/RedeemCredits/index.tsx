@@ -16,6 +16,7 @@ interface Props {
   hasAppliedCredits?: boolean;
   creditsError?: string | null | undefined;
   isDemo?: boolean;
+  disabled?: boolean;
 }
 
 const RedeemCredits = ({
@@ -30,6 +31,7 @@ const RedeemCredits = ({
   hasAppliedCredits,
   creditsError,
   isDemo,
+  disabled,
 }: Props) => {
   const t = useTranslations();
   const { APP_NAME } = useConfig();
@@ -85,7 +87,7 @@ const RedeemCredits = ({
             </div>
 
             {!isDemo && (
-              <Button onClick={applyCredits}>
+              <Button onClick={applyCredits} isEnabled={!disabled}>
                 {t('carrots_button_apply_discount')}
               </Button>
             )}
