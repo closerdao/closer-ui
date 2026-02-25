@@ -425,6 +425,7 @@ const Checkout = ({
           infants: booking?.infants,
           pets: booking?.pets,
           useTokens: useTokens ?? false,
+          eventId,
         });
         if (!cancelled) {
           setIsListingAvailable(Boolean(results));
