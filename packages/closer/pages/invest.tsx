@@ -652,8 +652,6 @@ const InvestPage = ({
               {opts.scheduleCallHref && (
                 <Link
                   href={opts.scheduleCallHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="text-sm text-gray-600 hover:text-gray-900 underline underline-offset-2"
                 >
                   {t('invest_cta_schedule_call')}
