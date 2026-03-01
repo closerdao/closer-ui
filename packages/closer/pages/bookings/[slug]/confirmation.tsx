@@ -52,7 +52,13 @@ const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
 
   useEffect(() => {
     if (!_id) return;
-    if (status !== 'paid' && status !== 'checked-in') {
+    if (status === 'open') {
+      router.replace(`/bookings/${_id}/summary`);
+    } else if (status === 'confirmed') {
+      router.replace(`/bookings/${_id}/checkout`);
+    } else if (status === 'pending') {
+      router.replace(`/bookings/${_id}`);
+    } else if (status !== 'paid' && status !== 'checked-in') {
       router.replace(`/bookings/${_id}/summary`);
     }
   }, [_id, status, router]);

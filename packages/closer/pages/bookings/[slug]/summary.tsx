@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import { IconBanknote, IconCheckCircle, IconMail, IconXCircle } from '../../../components/BookingIcons';
@@ -22,11 +22,8 @@ import PageNotAllowed from '../../401';
 import {
   BOOKING_STEPS,
   BOOKING_STEP_TITLE_KEYS,
-  CURRENCIES,
-  DEFAULT_CURRENCY,
 } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
-import { WalletState } from '../../../contexts/wallet';
 import { useConfig } from '../../../hooks/useConfig';
 import {
   BaseBookingParams,
@@ -36,7 +33,6 @@ import {
   Event,
   Listing,
   PaymentConfig,
-  PaymentType,
 } from '../../../types';
 import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api from '../../../utils/api';
@@ -44,7 +40,6 @@ import {
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
   getBookingTokenCurrency,
-  getPaymentType,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
@@ -80,9 +75,6 @@ const Summary = ({
       }
     : null;
 
-  const { balanceAvailable: tokenBalanceAvailable, isWalletReady } =
-    useContext(WalletState);
-
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -98,7 +90,6 @@ const Summary = ({
   const [handleNextError, setHandleNextError] = useState<string | null>(null);
   const [hasComplied, setCompliance] = useState(false);
   const [isMember, setIsMember] = useState(false);
-  const [updatedBooking, setUpdatedBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(false);
   const [emailSuccess, setEmailSuccess] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
@@ -126,7 +117,7 @@ const Summary = ({
     dailyRentalToken,
     duration,
     volunteerInfo,
-  } = updatedBooking || booking || {};
+  } = booking || {};
 
   const stepUrlParams =
     start && end && booking
@@ -166,14 +157,6 @@ const Summary = ({
 
   const isHourlyBooking = listing?.priceDuration === 'hour';
 
-  const creditsOrTokensPricePerNight = listing?.tokenPrice?.val;
-  const maxNightsToPayWithTokens =
-    (creditsOrTokensPricePerNight &&
-      isWalletReady &&
-      creditsOrTokensPricePerNight > 0 &&
-      Math.floor(tokenBalanceAvailable / creditsOrTokensPricePerNight)) ||
-    0;
-
   useEffect(() => {
     if (booking?.status === 'pending' || booking?.status === 'paid') {
       router.push(`/bookings/${booking?._id}`);
@@ -185,83 +168,6 @@ const Summary = ({
       setIsMember(user?.roles?.includes('member') ?? false);
     }
   }, [user]);
-
-  useEffect(() => {
-    const type = getPaymentType({
-      useCredits: useCredits || false,
-      duration: duration || 0,
-      currency: useTokens ? CURRENCIES[1] : DEFAULT_CURRENCY,
-      maxNightsToPayWithTokens,
-      maxNightsToPayWithCredits: 0,
-    });
-
-    const processTokenPayment = (paymentType: PaymentType) => {
-      if (useTokens && tokenBalanceAvailable) {
-        const nights = maxNightsToPayWithTokens;
-        const price = (nights || 0) * (creditsOrTokensPricePerNight || 0);
-        switchToToken(nights, price, paymentType);
-      }
-    };
-
-    switch (type) {
-      case PaymentType.PARTIAL_TOKENS:
-        {
-          processTokenPayment(PaymentType.PARTIAL_TOKENS);
-        }
-        break;
-      case PaymentType.FULL_TOKENS:
-        {
-          processTokenPayment(PaymentType.FULL_TOKENS);
-        }
-        break;
-    }
-  }, [tokenBalanceAvailable, useTokens]);
-
-  const updateBooking = async ({
-    useTokens,
-    useCredits,
-    paymentType,
-    partialTokenPaymentNights,
-    partialPriceInTokens,
-  }: {
-    useTokens: boolean;
-    useCredits?: boolean;
-    partialTokenPaymentNights?: number;
-    partialPriceInTokens?: number;
-    paymentType?: PaymentType;
-  }) => {
-    try {
-      const res = await api.post(`/bookings/${booking?._id}/update-payment`, {
-        useCredits,
-        useTokens,
-        isHourlyBooking,
-        maxNightsToPayWithCredits: 0,
-        paymentType,
-        partialTokenPaymentNights,
-        partialPriceInTokens,
-      });
-      return res.data.results;
-    } catch (error) {
-    }
-  };
-
-  const switchToToken = async (
-    nights: number,
-    price: number,
-    type: PaymentType,
-  ) => {
-    try {
-      const localUpdatedBooking = await updateBooking({
-        useTokens: true,
-        useCredits: false,
-        partialTokenPaymentNights: nights,
-        partialPriceInTokens: price,
-        paymentType: type,
-      });
-      setUpdatedBooking(localUpdatedBooking);
-    } catch (error) {
-    }
-  };
 
   const handleNext = async () => {
     setLoading(true);
@@ -276,10 +182,10 @@ const Summary = ({
       if (status === 'confirmed') {
         router.push(`/bookings/${booking?._id}/checkout`);
       } else if (status === 'pending') {
-        router.push(`/bookings/${booking?._id}/confirmation`);
+        router.push(`/bookings/${booking?._id}`);
       }
-    } catch (err: any) {
-      setHandleNextError(err.response?.data?.error || err.message);
+    } catch (err) {
+      setHandleNextError(parseMessageFromError(err));
     } finally {
       setLoading(false);
     }
