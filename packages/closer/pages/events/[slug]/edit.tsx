@@ -60,11 +60,19 @@ const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig, pay
     return <Heading>{error ?? t('events_slug_edit_error')}</Heading>;
   }
 
+  const rawFoodOptionId = event.foodOptionId;
+  const isInvalidFoodOptionId =
+    rawFoodOptionId === 'null' ||
+    rawFoodOptionId === 'undefined' ||
+    (typeof rawFoodOptionId === 'string' &&
+      rawFoodOptionId.trim().toLowerCase() === 'null');
   const initialFoodOptionIdForForm =
     event.foodOption === 'no_food'
       ? 'no_food'
-      : event.foodOption === 'food_package' && event.foodOptionId
-        ? event.foodOptionId
+      : event.foodOption === 'food_package' &&
+          rawFoodOptionId &&
+          !isInvalidFoodOptionId
+        ? rawFoodOptionId
         : '';
 
   const eventWithLocalTimes = {

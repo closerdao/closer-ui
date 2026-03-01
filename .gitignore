@@ -48,3 +48,5 @@ closer-firebase-key.json
 !.yarn/sdks
 !.yarn/versions
 .pnp.*
+
+/_copy-of-backend-repo/*

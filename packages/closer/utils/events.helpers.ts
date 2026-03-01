@@ -3,7 +3,14 @@ import { Listing } from '../types';
 export function transformEventFoodBeforeSave<T extends { foodOptionId?: string | null }>(
   data: T,
 ): T & { foodOption: string; foodOptionId: string | null } {
-  const raw = data.foodOptionId;
+  let raw = data.foodOptionId;
+  if (
+    raw === 'null' ||
+    raw === 'undefined' ||
+    (typeof raw === 'string' && raw.trim().toLowerCase() === 'null')
+  ) {
+    raw = null;
+  }
   const foodOption =
     raw === 'no_food'
       ? 'no_food'
