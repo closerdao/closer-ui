@@ -221,6 +221,7 @@
   "checkout_pay": "Pagar",
   "checkout_complete_payment": "Concluir pagamento",
   "checkout_listing_no_longer_available": "Este alojamento já não está disponível para as datas selecionadas. Por favor, volte atrás e escolha datas ou alojamento diferentes.",
+  "checkout_listing_no_longer_available_min_duration_not_met": "As datas selecionadas não cumprem o requisito de duração mínima de estadia. Por favor, contacte os nossos anfitriões.",
   "checkout_processing_payment": "A processar pagamento...",
   "checkout_processing_token_payment": "A fazer staking de tokens...",
   "checkout_payment_disabled_error": "O pagamento está desativado. Por favor, entre em contato com o suporte.",

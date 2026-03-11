@@ -14,6 +14,7 @@ import BookingWallet from '../../../components/BookingWallet';
 import CheckoutPayment from '../../../components/CheckoutPayment';
 import CheckoutTotal from '../../../components/CheckoutTotal';
 import CurrencySwitcher from '../../../components/CurrencySwitcher';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
 import RedeemCredits from '../../../components/RedeemCredits';
@@ -30,8 +31,6 @@ import dayOfYear from 'dayjs/plugin/dayOfYear';
 import { Contract, utils } from 'ethers';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
-
-dayjs.extend(dayOfYear);
 
 import PageNotAllowed from '../../401';
 import {
@@ -55,7 +54,6 @@ import {
   PaymentConfig,
   PaymentType,
 } from '../../../types';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api from '../../../utils/api';
 import {
   buildBookingAccomodationUrl,
@@ -65,10 +63,12 @@ import {
   payTokens,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import { priceFormat } from '../../../utils/helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import { formatDate } from '../../../utils/listings.helpers';
-import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+import { loadLocaleData } from '../../../utils/locale.helpers';
+
+dayjs.extend(dayOfYear);
 
 interface Props extends BaseBookingParams {
   listing: Listing | null;
@@ -94,6 +94,10 @@ const Checkout = ({
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+
+  const [availabilityReason, setAvailabilityReason] = useState<string | null>(
+    null,
+  );
 
   const [updatedBooking, setUpdatedBooking] = useState<Booking | null>(null);
   const {
@@ -164,9 +168,14 @@ const Checkout = ({
       }
     : null;
 
-  const { balanceAvailable: tokenBalanceAvailable, isWalletReady, library, account, balanceNativeAvailable } =
-    useContext(WalletState);
-  
+  const {
+    balanceAvailable: tokenBalanceAvailable,
+    isWalletReady,
+    library,
+    account,
+    balanceNativeAvailable,
+  } = useContext(WalletState);
+
   const {
     BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
     BLOCKCHAIN_DIAMOND_ABI,
@@ -201,12 +210,18 @@ const Checkout = ({
   const [hasAgreedToWalletDisclaimer, setWalletDisclaimer] = useState(false);
   const [creditsError, setCreditsError] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
-  const [conflictingBookings, setConflictingBookings] = useState<{ all: any[]; sameUser: any[]; otherUser: any[] } | null>(null);
+  const [conflictingBookings, setConflictingBookings] = useState<{
+    all: any[];
+    sameUser: any[];
+    otherUser: any[];
+  } | null>(null);
   const [onChainData, setOnChainData] = useState<any[] | null>(null);
   const [onChainLoading, setOnChainLoading] = useState(false);
   const [onChainError, setOnChainError] = useState<string | null>(null);
   const [blockchainDebugInfo, setBlockchainDebugInfo] = useState<any>(null);
-  const [globalOverlappingBookings, setGlobalOverlappingBookings] = useState<any[] | null>(null);
+  const [globalOverlappingBookings, setGlobalOverlappingBookings] = useState<
+    any[] | null
+  >(null);
   const [globalBookingsLoading, setGlobalBookingsLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [useCreditsUpdated, setUseCreditsUpdated] = useState(useCredits);
@@ -219,9 +234,8 @@ const Checkout = ({
   const [isListingAvailable, setIsListingAvailable] = useState<boolean | null>(
     null,
   );
-  const [availabilityCheckLoading, setAvailabilityCheckLoading] = useState(
-    false,
-  );
+  const [availabilityCheckLoading, setAvailabilityCheckLoading] =
+    useState(false);
 
   const creditsOrTokensPricePerNight = listing?.tokenPrice?.val;
 
@@ -415,7 +429,7 @@ const Checkout = ({
     (async () => {
       try {
         const {
-          data: { results },
+          data: { results, availabilityReason },
         } = await api.post('/bookings/listing/availability', {
           start: isHourlyBooking ? start : formatDate(start),
           end: isHourlyBooking ? end : formatDate(end),
@@ -427,6 +441,10 @@ const Checkout = ({
           useTokens: useTokens ?? false,
           eventId,
         });
+
+        setAvailabilityReason(availabilityReason);
+
+        console.log('availabilityReason=', availabilityReason);
         if (!cancelled) {
           setIsListingAvailable(Boolean(results));
         }
@@ -509,9 +527,11 @@ const Checkout = ({
   const fetchOnChainData = async () => {
     setOnChainLoading(true);
     setOnChainError(null);
-    
+
     if (!library) {
-      setOnChainError('Wallet not connected. Please connect your wallet to view on-chain data.');
+      setOnChainError(
+        'Wallet not connected. Please connect your wallet to view on-chain data.',
+      );
       setOnChainLoading(false);
       return;
     }
@@ -525,7 +545,7 @@ const Checkout = ({
       setOnChainLoading(false);
       return;
     }
-    
+
     try {
       const Diamond = new Contract(
         BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
@@ -534,16 +554,25 @@ const Checkout = ({
       );
       const year = dayjs(start).year();
       const bookings = await Diamond.getAccommodationBookings(account, year);
-      const formattedBookings = bookings.map((b: any) => ({
-        status: b.status,
-        year: b.year,
-        dayOfYear: b.dayOfYear,
-        price: b.price ? utils.formatUnits(b.price, BLOCKCHAIN_DAO_TOKEN?.decimals || 18) : '0',
-        date: dayjs().year(b.year).dayOfYear(b.dayOfYear).format('YYYY-MM-DD'),
-      })).filter((b: any) => b.status > 0);
+      const formattedBookings = bookings
+        .map((b: any) => ({
+          status: b.status,
+          year: b.year,
+          dayOfYear: b.dayOfYear,
+          price: b.price
+            ? utils.formatUnits(b.price, BLOCKCHAIN_DAO_TOKEN?.decimals || 18)
+            : '0',
+          date: dayjs()
+            .year(b.year)
+            .dayOfYear(b.dayOfYear)
+            .format('YYYY-MM-DD'),
+        }))
+        .filter((b: any) => b.status > 0);
       setOnChainData(formattedBookings.length > 0 ? formattedBookings : []);
     } catch (err: any) {
-      setOnChainError(`Failed to fetch on-chain data: ${err?.message || 'Unknown error'}`);
+      setOnChainError(
+        `Failed to fetch on-chain data: ${err?.message || 'Unknown error'}`,
+      );
     } finally {
       setOnChainLoading(false);
     }
@@ -551,7 +580,7 @@ const Checkout = ({
 
   const fetchGlobalOverlappingBookings = async () => {
     if (!start || !end) return;
-    
+
     setGlobalBookingsLoading(true);
     try {
       const res = await api.get('/booking', {
@@ -572,12 +601,19 @@ const Checkout = ({
     }
   };
 
-  const [allWalletsOnChainData, setAllWalletsOnChainData] = useState<any[] | null>(null);
+  const [allWalletsOnChainData, setAllWalletsOnChainData] = useState<
+    any[] | null
+  >(null);
   const [allWalletsLoading, setAllWalletsLoading] = useState(false);
   const [yearStatus, setYearStatus] = useState<any>(null);
 
   const fetchYearStatus = async () => {
-    if (!library || !BLOCKCHAIN_DAO_DIAMOND_ADDRESS || !BLOCKCHAIN_DIAMOND_ABI || !start) {
+    if (
+      !library ||
+      !BLOCKCHAIN_DAO_DIAMOND_ADDRESS ||
+      !BLOCKCHAIN_DIAMOND_ABI ||
+      !start
+    ) {
       return;
     }
     try {
@@ -606,10 +642,15 @@ const Checkout = ({
   };
 
   const fetchAllWalletsOnChainData = async () => {
-    if (!library || !BLOCKCHAIN_DAO_DIAMOND_ADDRESS || !BLOCKCHAIN_DIAMOND_ABI || !start) {
+    if (
+      !library ||
+      !BLOCKCHAIN_DAO_DIAMOND_ADDRESS ||
+      !BLOCKCHAIN_DIAMOND_ABI ||
+      !start
+    ) {
       return;
     }
-    
+
     setAllWalletsLoading(true);
     try {
       // Get all unique wallet addresses from users who have made bookings
@@ -637,28 +678,41 @@ const Checkout = ({
       const requestedEndDay = dayjs(end).dayOfYear();
 
       const results: any[] = [];
-      
+
       for (const wallet of walletAddresses) {
         try {
           const bookings = await Diamond.getAccommodationBookings(wallet, year);
           const activeBookings = bookings.filter((b: any) => b.status > 0);
-          
+
           // Check if any booking overlaps with requested dates
           const overlapping = activeBookings.filter((b: any) => {
             const bookingDay = Number(b.dayOfYear);
-            return bookingDay >= requestedStartDay && bookingDay <= requestedEndDay;
+            return (
+              bookingDay >= requestedStartDay && bookingDay <= requestedEndDay
+            );
           });
-          
+
           if (overlapping.length > 0) {
-            const user = users.find((u: any) => u.walletAddress?.toLowerCase() === wallet.toLowerCase());
+            const user = users.find(
+              (u: any) =>
+                u.walletAddress?.toLowerCase() === wallet.toLowerCase(),
+            );
             results.push({
               wallet,
               user: user?.screenname || user?.email || 'Unknown',
               bookings: overlapping.map((b: any) => ({
                 status: Number(b.status),
                 dayOfYear: Number(b.dayOfYear),
-                price: b.price ? utils.formatUnits(b.price, BLOCKCHAIN_DAO_TOKEN?.decimals || 18) : '0',
-                date: dayjs().year(year).dayOfYear(Number(b.dayOfYear)).format('YYYY-MM-DD'),
+                price: b.price
+                  ? utils.formatUnits(
+                      b.price,
+                      BLOCKCHAIN_DAO_TOKEN?.decimals || 18,
+                    )
+                  : '0',
+                date: dayjs()
+                  .year(year)
+                  .dayOfYear(Number(b.dayOfYear))
+                  .format('YYYY-MM-DD'),
               })),
             });
           }
@@ -666,7 +720,7 @@ const Checkout = ({
           // Skip wallets that fail
         }
       }
-      
+
       setAllWalletsOnChainData(results);
     } catch (err) {
       setAllWalletsOnChainData([]);
@@ -698,15 +752,29 @@ const Checkout = ({
       { start, end, createdBy },
     );
 
-    const { error, conflictingBookings: conflicts, sameUserBookings, otherUserBookings, debugInfo } = tokenStakingResult || {};
+    const {
+      error,
+      conflictingBookings: conflicts,
+      sameUserBookings,
+      otherUserBookings,
+      debugInfo,
+    } = tokenStakingResult || {};
     if (error) {
       setProcessing(false);
       if (error === 'CONFLICTING_BOOKINGS' && conflicts) {
-        setConflictingBookings({ all: conflicts, sameUser: sameUserBookings || [], otherUser: otherUserBookings || [] });
+        setConflictingBookings({
+          all: conflicts,
+          sameUser: sameUserBookings || [],
+          otherUser: otherUserBookings || [],
+        });
         if (otherUserBookings?.length > 0) {
-          setPaymentError('A blockchain booking exists for these dates from a DIFFERENT USER. The smart contract may have a global date conflict. See details below.');
+          setPaymentError(
+            'A blockchain booking exists for these dates from a DIFFERENT USER. The smart contract may have a global date conflict. See details below.',
+          );
         } else {
-          setPaymentError('A blockchain booking already exists for these dates from another booking. See details below.');
+          setPaymentError(
+            'A blockchain booking already exists for these dates from another booking. See details below.',
+          );
         }
         fetchOnChainData();
       } else if (error === 'BLOCKCHAIN_GLOBAL_CONFLICT') {
@@ -714,7 +782,11 @@ const Checkout = ({
         setBlockchainDebugInfo(debugInfo);
         fetchOnChainData();
         fetchGlobalOverlappingBookings();
-      } else if (error.includes && error.includes('blockchain') && error.includes('exists')) {
+      } else if (
+        error.includes &&
+        error.includes('blockchain') &&
+        error.includes('exists')
+      ) {
         setPaymentError(error);
         fetchOnChainData();
         fetchGlobalOverlappingBookings();
@@ -862,9 +934,16 @@ const Checkout = ({
     <>
       <div className="w-full max-w-screen-sm mx-auto p-4 md:p-6">
         <div className="relative flex items-center min-h-[2.75rem] mb-4">
-          <BookingBackButton onClick={goBack} name={t('buttons_back')} className="relative z-10" />
+          <BookingBackButton
+            onClick={goBack}
+            name={t('buttons_back')}
+            className="relative z-10"
+          />
           <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
-            <Heading level={1} className="text-2xl md:text-3xl pb-0 mt-0 text-center">
+            <Heading
+              level={1}
+              className="text-2xl md:text-3xl pb-0 mt-0 text-center"
+            >
               <span>{t('bookings_checkout_step_title')}</span>
             </Heading>
           </div>
@@ -1011,7 +1090,8 @@ const Checkout = ({
                     status !== 'credits-paid' ? (
                       <RedeemCredits
                         disabled={
-                          availabilityCheckLoading || isListingAvailable === false
+                          availabilityCheckLoading ||
+                          isListingAvailable === false
                         }
                         isPartialCreditsPayment={
                           paymentType === PaymentType.PARTIAL_CREDITS
@@ -1078,7 +1158,8 @@ const Checkout = ({
                     {!isHourlyBooking && foodFiat?.val ? (
                       <div
                         className={`flex justify-between items-center ${
-                          utilityFiat?.val && bookingConfig?.utilityOptionEnabled
+                          utilityFiat?.val &&
+                          bookingConfig?.utilityOptionEnabled
                             ? 'mt-2'
                             : ''
                         }`}
@@ -1159,7 +1240,11 @@ const Checkout = ({
                 {!availabilityCheckLoading && isListingAvailable === false && (
                   <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                     <p className="text-amber-800 font-medium">
-                      {t('checkout_listing_no_longer_available')}
+                      {availabilityReason === 'min_duration_not_met'
+                        ? t(
+                            'checkout_listing_no_longer_available_min_duration_not_met',
+                          )
+                        : t('checkout_listing_no_longer_available')}
                     </p>
                   </div>
                 )}
@@ -1279,79 +1364,145 @@ const Checkout = ({
           {paymentError && paymentError !== 'BLOCKCHAIN_GLOBAL_CONFLICT' && (
             <ErrorMessage error={paymentError} />
           )}
-          
-          {paymentError === 'BLOCKCHAIN_GLOBAL_CONFLICT' && blockchainDebugInfo && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-300 rounded-lg">
-              <p className="font-semibold text-red-800 mb-2">
-                ⚠️ Blockchain Global Date Conflict
-              </p>
-              <p className="text-sm text-red-700 mb-3">
-                {blockchainDebugInfo.message}
-              </p>
-              <p className="text-sm font-semibold text-red-700 mb-2">Possible causes:</p>
-              <ul className="list-disc list-inside text-sm text-red-600 mb-3 space-y-1">
-                {blockchainDebugInfo.possibleCauses?.map((cause: string, idx: number) => (
-                  <li key={idx}>{cause}</li>
-                ))}
-              </ul>
-              <div className="bg-white p-3 rounded border text-sm">
-                <p><strong>Requested dates:</strong></p>
-                <p>Start: {blockchainDebugInfo.dates?.start ? dayjs(blockchainDebugInfo.dates.start).format('MMM D, YYYY HH:mm') : 'N/A'}</p>
-                <p>End: {blockchainDebugInfo.dates?.end ? dayjs(blockchainDebugInfo.dates.end).format('MMM D, YYYY HH:mm') : 'N/A'}</p>
-                <p className="mt-2 text-gray-500">
-                  Day of year range: {blockchainDebugInfo.dates?.start ? dayjs(blockchainDebugInfo.dates.start).dayOfYear() : '?'} 
-                  - {blockchainDebugInfo.dates?.end ? dayjs(blockchainDebugInfo.dates.end).dayOfYear() : '?'}
+
+          {paymentError === 'BLOCKCHAIN_GLOBAL_CONFLICT' &&
+            blockchainDebugInfo && (
+              <div className="mt-4 p-4 bg-red-50 border border-red-300 rounded-lg">
+                <p className="font-semibold text-red-800 mb-2">
+                  ⚠️ Blockchain Global Date Conflict
+                </p>
+                <p className="text-sm text-red-700 mb-3">
+                  {blockchainDebugInfo.message}
+                </p>
+                <p className="text-sm font-semibold text-red-700 mb-2">
+                  Possible causes:
+                </p>
+                <ul className="list-disc list-inside text-sm text-red-600 mb-3 space-y-1">
+                  {blockchainDebugInfo.possibleCauses?.map(
+                    (cause: string, idx: number) => (
+                      <li key={idx}>{cause}</li>
+                    ),
+                  )}
+                </ul>
+                <div className="bg-white p-3 rounded border text-sm">
+                  <p>
+                    <strong>Requested dates:</strong>
+                  </p>
+                  <p>
+                    Start:{' '}
+                    {blockchainDebugInfo.dates?.start
+                      ? dayjs(blockchainDebugInfo.dates.start).format(
+                          'MMM D, YYYY HH:mm',
+                        )
+                      : 'N/A'}
+                  </p>
+                  <p>
+                    End:{' '}
+                    {blockchainDebugInfo.dates?.end
+                      ? dayjs(blockchainDebugInfo.dates.end).format(
+                          'MMM D, YYYY HH:mm',
+                        )
+                      : 'N/A'}
+                  </p>
+                  <p className="mt-2 text-gray-500">
+                    Day of year range:{' '}
+                    {blockchainDebugInfo.dates?.start
+                      ? dayjs(blockchainDebugInfo.dates.start).dayOfYear()
+                      : '?'}
+                    -{' '}
+                    {blockchainDebugInfo.dates?.end
+                      ? dayjs(blockchainDebugInfo.dates.end).dayOfYear()
+                      : '?'}
+                  </p>
+                </div>
+                <p className="text-xs text-red-600 mt-3">
+                  The smart contract appears to enforce global date uniqueness
+                  across all wallets. Another user may have already staked
+                  tokens for these dates. Please contact support.
                 </p>
               </div>
-              <p className="text-xs text-red-600 mt-3">
-                The smart contract appears to enforce global date uniqueness across all wallets. 
-                Another user may have already staked tokens for these dates. Please contact support.
-              </p>
-            </div>
-          )}
-          
+            )}
+
           {conflictingBookings && conflictingBookings.all?.length > 0 && (
             <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
               <p className="font-semibold text-amber-800 mb-2">
-                Debug: Conflicting blockchain bookings found ({conflictingBookings.all.length} total)
+                Debug: Conflicting blockchain bookings found (
+                {conflictingBookings.all.length} total)
               </p>
-              
+
               {conflictingBookings.otherUser?.length > 0 && (
                 <>
                   <p className="text-sm font-semibold text-red-700 mt-3 mb-2">
-                    ⚠️ Bookings from OTHER USERS ({conflictingBookings.otherUser.length}):
+                    ⚠️ Bookings from OTHER USERS (
+                    {conflictingBookings.otherUser.length}):
                   </p>
                   <p className="text-xs text-red-600 mb-2">
-                    These bookings are from different users but have the same dates. 
-                    The smart contract may be enforcing global date uniqueness (not per-user).
+                    These bookings are from different users but have the same
+                    dates. The smart contract may be enforcing global date
+                    uniqueness (not per-user).
                   </p>
                   <div className="space-y-2">
                     {conflictingBookings.otherUser.map((b: any) => (
-                      <div key={b._id} className="p-3 bg-red-50 rounded border border-red-200 text-sm">
-                        <p><strong>Booking ID:</strong> {b._id}</p>
-                        <p><strong>Created By:</strong> {b.createdBy}</p>
-                        <p><strong>Dates:</strong> {dayjs(b.start).format('MMM D, YYYY')} - {dayjs(b.end).format('MMM D, YYYY')}</p>
-                        <p><strong>Status:</strong> {b.status}</p>
-                        <p><strong>Transaction ID:</strong> <code className="text-xs bg-gray-100 px-1">{b.transactionId}</code></p>
+                      <div
+                        key={b._id}
+                        className="p-3 bg-red-50 rounded border border-red-200 text-sm"
+                      >
+                        <p>
+                          <strong>Booking ID:</strong> {b._id}
+                        </p>
+                        <p>
+                          <strong>Created By:</strong> {b.createdBy}
+                        </p>
+                        <p>
+                          <strong>Dates:</strong>{' '}
+                          {dayjs(b.start).format('MMM D, YYYY')} -{' '}
+                          {dayjs(b.end).format('MMM D, YYYY')}
+                        </p>
+                        <p>
+                          <strong>Status:</strong> {b.status}
+                        </p>
+                        <p>
+                          <strong>Transaction ID:</strong>{' '}
+                          <code className="text-xs bg-gray-100 px-1">
+                            {b.transactionId}
+                          </code>
+                        </p>
                       </div>
                     ))}
                   </div>
                 </>
               )}
-              
+
               {conflictingBookings.sameUser?.length > 0 && (
                 <>
                   <p className="text-sm font-semibold text-amber-700 mt-3 mb-2">
-                    Your other bookings with same dates ({conflictingBookings.sameUser.length}):
+                    Your other bookings with same dates (
+                    {conflictingBookings.sameUser.length}):
                   </p>
                   <div className="space-y-2">
                     {conflictingBookings.sameUser.map((b: any) => (
-                      <div key={b._id} className="p-3 bg-white rounded border text-sm">
-                        <p><strong>Booking ID:</strong> {b._id}</p>
-                        <p><strong>Dates:</strong> {dayjs(b.start).format('MMM D, YYYY')} - {dayjs(b.end).format('MMM D, YYYY')}</p>
-                        <p><strong>Status:</strong> {b.status}</p>
-                        <p><strong>Transaction ID:</strong> <code className="text-xs bg-gray-100 px-1">{b.transactionId}</code></p>
-                        <a 
+                      <div
+                        key={b._id}
+                        className="p-3 bg-white rounded border text-sm"
+                      >
+                        <p>
+                          <strong>Booking ID:</strong> {b._id}
+                        </p>
+                        <p>
+                          <strong>Dates:</strong>{' '}
+                          {dayjs(b.start).format('MMM D, YYYY')} -{' '}
+                          {dayjs(b.end).format('MMM D, YYYY')}
+                        </p>
+                        <p>
+                          <strong>Status:</strong> {b.status}
+                        </p>
+                        <p>
+                          <strong>Transaction ID:</strong>{' '}
+                          <code className="text-xs bg-gray-100 px-1">
+                            {b.transactionId}
+                          </code>
+                        </p>
+                        <a
                           href={`/bookings/${b._id}`}
                           className="text-blue-600 underline hover:text-blue-800"
                           target="_blank"
@@ -1364,248 +1515,379 @@ const Checkout = ({
                   </div>
                 </>
               )}
-              
+
               <p className="text-xs text-amber-600 mt-3">
-                This is a smart contract limitation. Please contact support for assistance.
+                This is a smart contract limitation. Please contact support for
+                assistance.
               </p>
             </div>
           )}
-          {paymentError && (paymentError.includes('blockchain') || paymentError === 'BLOCKCHAIN_GLOBAL_CONFLICT') && (
-            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex justify-between items-center mb-2">
-                <p className="font-semibold text-purple-800">
-                  Contract: Year Status
-                </p>
-                <button
-                  onClick={fetchYearStatus}
-                  className="text-xs bg-purple-200 hover:bg-purple-300 px-2 py-1 rounded"
-                >
-                  {yearStatus ? 'Refresh' : 'Check year status'}
-                </button>
-              </div>
-              {yearStatus?.error && (
-                <p className="text-sm text-red-600">{yearStatus.error}</p>
-              )}
-              {yearStatus && !yearStatus.error && (
-                <div className="text-sm mb-3">
-                  <p><strong>Year {yearStatus.year}:</strong> {yearStatus.enabled ? '✓ Enabled' : '✗ NOT ENABLED'}</p>
-                  {yearStatus.allYears && (
-                    <details className="mt-2">
-                      <summary className="cursor-pointer text-purple-600">All configured years ({yearStatus.allYears.length})</summary>
-                      <div className="mt-1 ml-4 text-xs">
-                        {yearStatus.allYears.map((y: any) => (
-                          <p key={y.year}>
-                            {y.year}: {y.enabled ? '✓' : '✗'} (min: {y.minDaysPerBooking}, max: {y.maxDaysPerBooking} days)
-                          </p>
-                        ))}
-                      </div>
-                    </details>
-                  )}
-                </div>
-              )}
-              
-              <div className="border-t border-blue-200 pt-3 mt-3">
+          {paymentError &&
+            (paymentError.includes('blockchain') ||
+              paymentError === 'BLOCKCHAIN_GLOBAL_CONFLICT') && (
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex justify-between items-center mb-2">
-                  <p className="font-semibold text-blue-800">
-                    Debug: On-chain data {account && `for ${account.slice(0, 6)}...${account.slice(-4)}`}
+                  <p className="font-semibold text-purple-800">
+                    Contract: Year Status
                   </p>
                   <button
-                    onClick={fetchOnChainData}
-                    disabled={onChainLoading}
-                    className="text-xs bg-blue-200 hover:bg-blue-300 px-2 py-1 rounded disabled:opacity-50"
+                    onClick={fetchYearStatus}
+                    className="text-xs bg-purple-200 hover:bg-purple-300 px-2 py-1 rounded"
                   >
-                    {onChainLoading ? 'Loading...' : (onChainData ? 'Refresh' : 'Load on-chain data')}
+                    {yearStatus ? 'Refresh' : 'Check year status'}
                   </button>
                 </div>
-              </div>
-              
-              {onChainLoading && (
-                <p className="text-sm text-blue-600">Fetching on-chain data...</p>
-              )}
-              
-              {onChainError && (
-                <p className="text-sm text-red-600">{onChainError}</p>
-              )}
-              
-              {!onChainLoading && !onChainError && !onChainData && (
-                <p className="text-sm text-blue-600">Click the button to load on-chain booking data for your wallet.</p>
-              )}
-              
-              {onChainData && onChainData.length === 0 && (
-                <p className="text-sm text-blue-600">No bookings found on-chain for {dayjs(start).year()}.</p>
-              )}
-              
-              {onChainData && onChainData.length > 0 && (
-                <>
-                  <p className="text-sm text-blue-700 mb-3">
-                    Bookings stored on the blockchain for your wallet in {dayjs(start).year()}:
-                  </p>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full text-sm">
-                      <thead className="bg-blue-100">
-                        <tr>
-                          <th className="px-3 py-2 text-left">Date</th>
-                          <th className="px-3 py-2 text-left">Day of Year</th>
-                          <th className="px-3 py-2 text-left">Status</th>
-                          <th className="px-3 py-2 text-left">Price (TDF)</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {onChainData.map((b: any, idx: number) => (
-                          <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-blue-50'}>
-                            <td className="px-3 py-2">{b.date}</td>
-                            <td className="px-3 py-2">{b.dayOfYear}</td>
-                            <td className="px-3 py-2">
-                              <span className={`px-2 py-1 rounded text-xs ${
-                                b.status === 1 ? 'bg-yellow-200 text-yellow-800' :
-                                b.status === 2 ? 'bg-green-200 text-green-800' :
-                                'bg-gray-200 text-gray-800'
-                              }`}>
-                                {b.status === 1 ? 'Booked' : b.status === 2 ? 'Checked-in' : `Status ${b.status}`}
-                              </span>
-                            </td>
-                            <td className="px-3 py-2">{b.price}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                {yearStatus?.error && (
+                  <p className="text-sm text-red-600">{yearStatus.error}</p>
+                )}
+                {yearStatus && !yearStatus.error && (
+                  <div className="text-sm mb-3">
+                    <p>
+                      <strong>Year {yearStatus.year}:</strong>{' '}
+                      {yearStatus.enabled ? '✓ Enabled' : '✗ NOT ENABLED'}
+                    </p>
+                    {yearStatus.allYears && (
+                      <details className="mt-2">
+                        <summary className="cursor-pointer text-purple-600">
+                          All configured years ({yearStatus.allYears.length})
+                        </summary>
+                        <div className="mt-1 ml-4 text-xs">
+                          {yearStatus.allYears.map((y: any) => (
+                            <p key={y.year}>
+                              {y.year}: {y.enabled ? '✓' : '✗'} (min:{' '}
+                              {y.minDaysPerBooking}, max: {y.maxDaysPerBooking}{' '}
+                              days)
+                            </p>
+                          ))}
+                        </div>
+                      </details>
+                    )}
                   </div>
-                  <p className="text-xs text-blue-600 mt-3">
-                    Current booking dates: {dayjs(start).format('YYYY-MM-DD')} to {dayjs(end).format('YYYY-MM-DD')} 
-                    (Days {dayjs(start).dayOfYear()} - {dayjs(end).dayOfYear()})
-                  </p>
-                </>
-              )}
-              
-              {account && (
-                <p className="text-xs text-gray-500 mt-2">
-                  Wallet: {account}
-                </p>
-              )}
-              
-              <div className="mt-4 pt-4 border-t border-blue-200">
-                <div className="flex justify-between items-center mb-2">
-                  <p className="font-semibold text-blue-800">
-                    Database: All overlapping bookings
-                  </p>
-                  <button
-                    onClick={fetchGlobalOverlappingBookings}
-                    disabled={globalBookingsLoading}
-                    className="text-xs bg-blue-200 hover:bg-blue-300 px-2 py-1 rounded disabled:opacity-50"
-                  >
-                    {globalBookingsLoading ? 'Loading...' : (globalOverlappingBookings ? 'Refresh' : 'Load from DB')}
-                  </button>
-                </div>
-                
-                {globalBookingsLoading && (
-                  <p className="text-sm text-blue-600">Fetching bookings from database...</p>
                 )}
-                
-                {!globalBookingsLoading && !globalOverlappingBookings && (
-                  <p className="text-sm text-blue-600">Click to load all bookings with overlapping dates from the database.</p>
-                )}
-                
-                {globalOverlappingBookings && globalOverlappingBookings.length === 0 && (
-                  <p className="text-sm text-blue-600">No overlapping bookings found in database.</p>
-                )}
-                
-                {globalOverlappingBookings && globalOverlappingBookings.length > 0 && (
-                  <>
-                    <p className="text-sm text-blue-700 mb-2">
-                      Found {globalOverlappingBookings.length} booking(s) with overlapping dates:
+
+                <div className="border-t border-blue-200 pt-3 mt-3">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="font-semibold text-blue-800">
+                      Debug: On-chain data{' '}
+                      {account &&
+                        `for ${account.slice(0, 6)}...${account.slice(-4)}`}
                     </p>
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {globalOverlappingBookings.map((b: any) => (
-                        <div key={b._id} className={`p-3 rounded border text-sm ${b.transactionId ? 'bg-yellow-50 border-yellow-300' : 'bg-white'}`}>
-                          <p><strong>ID:</strong> {b._id}</p>
-                          <p><strong>Dates:</strong> {dayjs(b.start).format('MMM D, YYYY')} - {dayjs(b.end).format('MMM D, YYYY')}</p>
-                          <p><strong>Days:</strong> {dayjs(b.start).dayOfYear()} - {dayjs(b.end).dayOfYear()}</p>
-                          <p><strong>Status:</strong> {b.status}</p>
-                          <p><strong>Created By:</strong> {b.createdBy}</p>
-                          {b.transactionId ? (
-                            <p className="text-yellow-700"><strong>Transaction ID:</strong> <code className="text-xs bg-yellow-100 px-1">{b.transactionId}</code></p>
-                          ) : (
-                            <p className="text-gray-500"><strong>Transaction ID:</strong> None (not on-chain)</p>
-                          )}
-                          {b.walletAddress && (
-                            <p><strong>Wallet:</strong> {b.walletAddress}</p>
-                          )}
-                          <a 
-                            href={`/bookings/${b._id}`}
-                            className="text-blue-600 underline hover:text-blue-800 text-xs"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            View booking →
-                          </a>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-              
-              <div className="mt-4 pt-4 border-t border-blue-200">
-                <div className="flex justify-between items-center mb-2">
-                  <p className="font-semibold text-red-800">
-                    On-chain: ALL wallets with overlapping dates
-                  </p>
-                  <button
-                    onClick={fetchAllWalletsOnChainData}
-                    disabled={allWalletsLoading}
-                    className="text-xs bg-red-200 hover:bg-red-300 px-2 py-1 rounded disabled:opacity-50"
-                  >
-                    {allWalletsLoading ? 'Scanning...' : (allWalletsOnChainData ? 'Rescan' : 'Scan all wallets')}
-                  </button>
+                    <button
+                      onClick={fetchOnChainData}
+                      disabled={onChainLoading}
+                      className="text-xs bg-blue-200 hover:bg-blue-300 px-2 py-1 rounded disabled:opacity-50"
+                    >
+                      {onChainLoading
+                        ? 'Loading...'
+                        : onChainData
+                        ? 'Refresh'
+                        : 'Load on-chain data'}
+                    </button>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-500 mb-2">
-                  Scans on-chain bookings from all known wallet addresses in the database for days {dayjs(start).dayOfYear()}-{dayjs(end).dayOfYear()}.
-                </p>
-                
-                {allWalletsLoading && (
-                  <p className="text-sm text-red-600">Scanning all wallets on-chain... This may take a moment.</p>
+
+                {onChainLoading && (
+                  <p className="text-sm text-blue-600">
+                    Fetching on-chain data...
+                  </p>
                 )}
-                
-                {!allWalletsLoading && !allWalletsOnChainData && (
-                  <p className="text-sm text-red-600">Click to scan ALL known wallets for on-chain bookings on these dates.</p>
+
+                {onChainError && (
+                  <p className="text-sm text-red-600">{onChainError}</p>
                 )}
-                
-                {allWalletsOnChainData && allWalletsOnChainData.length === 0 && (
-                  <p className="text-sm text-green-600">✓ No on-chain bookings found from any known wallet for these dates.</p>
+
+                {!onChainLoading && !onChainError && !onChainData && (
+                  <p className="text-sm text-blue-600">
+                    Click the button to load on-chain booking data for your
+                    wallet.
+                  </p>
                 )}
-                
-                {allWalletsOnChainData && allWalletsOnChainData.length > 0 && (
+
+                {onChainData && onChainData.length === 0 && (
+                  <p className="text-sm text-blue-600">
+                    No bookings found on-chain for {dayjs(start).year()}.
+                  </p>
+                )}
+
+                {onChainData && onChainData.length > 0 && (
                   <>
-                    <p className="text-sm font-semibold text-red-700 mb-2">
-                      ⚠️ Found {allWalletsOnChainData.length} wallet(s) with on-chain bookings for these dates:
+                    <p className="text-sm text-blue-700 mb-3">
+                      Bookings stored on the blockchain for your wallet in{' '}
+                      {dayjs(start).year()}:
                     </p>
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {allWalletsOnChainData.map((item: any, idx: number) => (
-                        <div key={idx} className="p-3 bg-red-50 rounded border border-red-300 text-sm">
-                          <p><strong>Wallet:</strong> <code className="text-xs bg-red-100 px-1">{item.wallet}</code></p>
-                          <p><strong>User:</strong> {item.user}</p>
-                          <p><strong>On-chain bookings:</strong></p>
-                          <div className="ml-4 mt-1 space-y-1">
-                            {item.bookings.map((b: any, bIdx: number) => (
-                              <div key={bIdx} className="text-xs bg-white p-2 rounded">
-                                <span className="font-mono">{b.date}</span> (Day {b.dayOfYear}) - 
-                                <span className={`ml-1 px-1 rounded ${
-                                  b.status === 1 ? 'bg-yellow-200' : b.status === 2 ? 'bg-green-200' : 'bg-gray-200'
-                                }`}>
-                                  {b.status === 1 ? 'Booked' : b.status === 2 ? 'Checked-in' : `Status ${b.status}`}
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full text-sm">
+                        <thead className="bg-blue-100">
+                          <tr>
+                            <th className="px-3 py-2 text-left">Date</th>
+                            <th className="px-3 py-2 text-left">Day of Year</th>
+                            <th className="px-3 py-2 text-left">Status</th>
+                            <th className="px-3 py-2 text-left">Price (TDF)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {onChainData.map((b: any, idx: number) => (
+                            <tr
+                              key={idx}
+                              className={
+                                idx % 2 === 0 ? 'bg-white' : 'bg-blue-50'
+                              }
+                            >
+                              <td className="px-3 py-2">{b.date}</td>
+                              <td className="px-3 py-2">{b.dayOfYear}</td>
+                              <td className="px-3 py-2">
+                                <span
+                                  className={`px-2 py-1 rounded text-xs ${
+                                    b.status === 1
+                                      ? 'bg-yellow-200 text-yellow-800'
+                                      : b.status === 2
+                                      ? 'bg-green-200 text-green-800'
+                                      : 'bg-gray-200 text-gray-800'
+                                  }`}
+                                >
+                                  {b.status === 1
+                                    ? 'Booked'
+                                    : b.status === 2
+                                    ? 'Checked-in'
+                                    : `Status ${b.status}`}
                                 </span>
-                                - {b.price} TDF
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
+                              </td>
+                              <td className="px-3 py-2">{b.price}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
+                    <p className="text-xs text-blue-600 mt-3">
+                      Current booking dates: {dayjs(start).format('YYYY-MM-DD')}{' '}
+                      to {dayjs(end).format('YYYY-MM-DD')}
+                      (Days {dayjs(start).dayOfYear()} -{' '}
+                      {dayjs(end).dayOfYear()})
+                    </p>
                   </>
                 )}
+
+                {account && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    Wallet: {account}
+                  </p>
+                )}
+
+                <div className="mt-4 pt-4 border-t border-blue-200">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="font-semibold text-blue-800">
+                      Database: All overlapping bookings
+                    </p>
+                    <button
+                      onClick={fetchGlobalOverlappingBookings}
+                      disabled={globalBookingsLoading}
+                      className="text-xs bg-blue-200 hover:bg-blue-300 px-2 py-1 rounded disabled:opacity-50"
+                    >
+                      {globalBookingsLoading
+                        ? 'Loading...'
+                        : globalOverlappingBookings
+                        ? 'Refresh'
+                        : 'Load from DB'}
+                    </button>
+                  </div>
+
+                  {globalBookingsLoading && (
+                    <p className="text-sm text-blue-600">
+                      Fetching bookings from database...
+                    </p>
+                  )}
+
+                  {!globalBookingsLoading && !globalOverlappingBookings && (
+                    <p className="text-sm text-blue-600">
+                      Click to load all bookings with overlapping dates from the
+                      database.
+                    </p>
+                  )}
+
+                  {globalOverlappingBookings &&
+                    globalOverlappingBookings.length === 0 && (
+                      <p className="text-sm text-blue-600">
+                        No overlapping bookings found in database.
+                      </p>
+                    )}
+
+                  {globalOverlappingBookings &&
+                    globalOverlappingBookings.length > 0 && (
+                      <>
+                        <p className="text-sm text-blue-700 mb-2">
+                          Found {globalOverlappingBookings.length} booking(s)
+                          with overlapping dates:
+                        </p>
+                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                          {globalOverlappingBookings.map((b: any) => (
+                            <div
+                              key={b._id}
+                              className={`p-3 rounded border text-sm ${
+                                b.transactionId
+                                  ? 'bg-yellow-50 border-yellow-300'
+                                  : 'bg-white'
+                              }`}
+                            >
+                              <p>
+                                <strong>ID:</strong> {b._id}
+                              </p>
+                              <p>
+                                <strong>Dates:</strong>{' '}
+                                {dayjs(b.start).format('MMM D, YYYY')} -{' '}
+                                {dayjs(b.end).format('MMM D, YYYY')}
+                              </p>
+                              <p>
+                                <strong>Days:</strong>{' '}
+                                {dayjs(b.start).dayOfYear()} -{' '}
+                                {dayjs(b.end).dayOfYear()}
+                              </p>
+                              <p>
+                                <strong>Status:</strong> {b.status}
+                              </p>
+                              <p>
+                                <strong>Created By:</strong> {b.createdBy}
+                              </p>
+                              {b.transactionId ? (
+                                <p className="text-yellow-700">
+                                  <strong>Transaction ID:</strong>{' '}
+                                  <code className="text-xs bg-yellow-100 px-1">
+                                    {b.transactionId}
+                                  </code>
+                                </p>
+                              ) : (
+                                <p className="text-gray-500">
+                                  <strong>Transaction ID:</strong> None (not
+                                  on-chain)
+                                </p>
+                              )}
+                              {b.walletAddress && (
+                                <p>
+                                  <strong>Wallet:</strong> {b.walletAddress}
+                                </p>
+                              )}
+                              <a
+                                href={`/bookings/${b._id}`}
+                                className="text-blue-600 underline hover:text-blue-800 text-xs"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                View booking →
+                              </a>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-blue-200">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="font-semibold text-red-800">
+                      On-chain: ALL wallets with overlapping dates
+                    </p>
+                    <button
+                      onClick={fetchAllWalletsOnChainData}
+                      disabled={allWalletsLoading}
+                      className="text-xs bg-red-200 hover:bg-red-300 px-2 py-1 rounded disabled:opacity-50"
+                    >
+                      {allWalletsLoading
+                        ? 'Scanning...'
+                        : allWalletsOnChainData
+                        ? 'Rescan'
+                        : 'Scan all wallets'}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mb-2">
+                    Scans on-chain bookings from all known wallet addresses in
+                    the database for days {dayjs(start).dayOfYear()}-
+                    {dayjs(end).dayOfYear()}.
+                  </p>
+
+                  {allWalletsLoading && (
+                    <p className="text-sm text-red-600">
+                      Scanning all wallets on-chain... This may take a moment.
+                    </p>
+                  )}
+
+                  {!allWalletsLoading && !allWalletsOnChainData && (
+                    <p className="text-sm text-red-600">
+                      Click to scan ALL known wallets for on-chain bookings on
+                      these dates.
+                    </p>
+                  )}
+
+                  {allWalletsOnChainData &&
+                    allWalletsOnChainData.length === 0 && (
+                      <p className="text-sm text-green-600">
+                        ✓ No on-chain bookings found from any known wallet for
+                        these dates.
+                      </p>
+                    )}
+
+                  {allWalletsOnChainData &&
+                    allWalletsOnChainData.length > 0 && (
+                      <>
+                        <p className="text-sm font-semibold text-red-700 mb-2">
+                          ⚠️ Found {allWalletsOnChainData.length} wallet(s) with
+                          on-chain bookings for these dates:
+                        </p>
+                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                          {allWalletsOnChainData.map(
+                            (item: any, idx: number) => (
+                              <div
+                                key={idx}
+                                className="p-3 bg-red-50 rounded border border-red-300 text-sm"
+                              >
+                                <p>
+                                  <strong>Wallet:</strong>{' '}
+                                  <code className="text-xs bg-red-100 px-1">
+                                    {item.wallet}
+                                  </code>
+                                </p>
+                                <p>
+                                  <strong>User:</strong> {item.user}
+                                </p>
+                                <p>
+                                  <strong>On-chain bookings:</strong>
+                                </p>
+                                <div className="ml-4 mt-1 space-y-1">
+                                  {item.bookings.map((b: any, bIdx: number) => (
+                                    <div
+                                      key={bIdx}
+                                      className="text-xs bg-white p-2 rounded"
+                                    >
+                                      <span className="font-mono">
+                                        {b.date}
+                                      </span>{' '}
+                                      (Day {b.dayOfYear}) -
+                                      <span
+                                        className={`ml-1 px-1 rounded ${
+                                          b.status === 1
+                                            ? 'bg-yellow-200'
+                                            : b.status === 2
+                                            ? 'bg-green-200'
+                                            : 'bg-gray-200'
+                                        }`}
+                                      >
+                                        {b.status === 1
+                                          ? 'Booked'
+                                          : b.status === 2
+                                          ? 'Checked-in'
+                                          : `Status ${b.status}`}
+                                      </span>
+                                      - {b.price} TDF
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ),
+                          )}
+                        </div>
+                      </>
+                    )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
       </div>
     </>
