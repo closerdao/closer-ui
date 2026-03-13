@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import { useEffect, useState } from 'react';
 
-import { Heading, Card, LinkButton, Newsletter, useAuth } from 'closer';
+import { Heading, Card, LinkButton, Newsletter, Webinar, useAuth } from 'closer';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { BarChart3, Building2, Check, Droplets, FileSpreadsheet, Landmark, Map, MapPin, Rocket, Sprout, Users, Wallet } from 'lucide-react';
 import { NextPageContext } from 'next';
@@ -75,8 +75,7 @@ const HomePage = () => {
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <LinkButton
-                  href="https://calendly.com/samueldelesque"
-                  target="_blank"
+                  href="#webinar"
                   variant="primary"
                   className="bg-gray-900 text-white hover:bg-gray-800 border-0"
                 >
@@ -1019,6 +1018,8 @@ const HomePage = () => {
           </div>
         </div>
 
+        <Webinar id="webinar" tags={['dataroom', 'investor-webinar']} analyticsCategory="Dataroom" />
+
         {/* Call to Action */}
         <div className="py-24 bg-gray-900 text-white">
           <div className="max-w-4xl mx-auto px-6 text-center">
@@ -1030,8 +1031,7 @@ const HomePage = () => {
             </p>
             <div className="flex justify-center">
               <LinkButton
-                href="https://calendly.com/samueldelesque"
-                target="_blank"
+                href="#webinar"
                 variant="primary"
                 className="bg-white text-gray-900 hover:bg-gray-100 border-0"
               >

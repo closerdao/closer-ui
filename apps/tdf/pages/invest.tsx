@@ -11,7 +11,7 @@ const TDF_INVEST_OPTIONS = {
   shareUrl: 'https://www.traditionaldreamfactory.com/invest',
   ogImageUrl: 'https://cdn.oasa.co/tdf/tdf-invest-og.jpg',
   dataroomHref: '/dataroom',
-  scheduleCallHref: 'https://samueldelesque.me/calendar',
+  scheduleCallHref: '#webinar',
   loanPackageHref: '/dataroom',
 };
 
