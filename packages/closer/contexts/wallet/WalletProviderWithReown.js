@@ -47,7 +47,7 @@ const WalletProviderInner = ({ children }) => {
   const { chainId, switchNetwork: appKitSwitchNetwork } = useAppKitNetwork();
   const { walletProvider } = useAppKitProvider('eip155');
   const { open: isAppKitModalOpen } = useAppKitState();
-  const { user } = useAuth();
+  const { user, refetchUser } = useAuth();
 
   const [error, setError] = useState(null);
 
@@ -364,6 +364,7 @@ const WalletProviderInner = ({ children }) => {
         message,
         userId: user?._id,
       });
+      await refetchUser();
       return userUpdated;
     } catch (error) {
       console.error(
@@ -433,7 +434,7 @@ const WalletProviderInner = ({ children }) => {
 
       return connectedAccount;
     } catch (e) {
-      console.log('[connectWallet] Exception during connectWallet process:', e);
+      console.error('[connectWallet] Exception during connectWallet process:', e);
       return null;
     }
   }, [isConnected, address, user, open, ensureTargetNetwork]);

@@ -2,11 +2,14 @@ import { useContext } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { useAuth } from '../contexts/auth';
 import { WalletDispatch, WalletState } from '../contexts/wallet';
+import { userNeedsWalletLinked } from '../utils/auth.helpers';
 import { Button } from './ui';
 
 const WalletActions = () => {
   const t = useTranslations();
+  const { user } = useAuth();
 
   const { switchNetwork, connectWallet } = useContext(WalletDispatch);
   const { isCorrectNetwork, isWalletConnected } = useContext(WalletState);
@@ -23,8 +26,10 @@ const WalletActions = () => {
     );
   }
 
-  if (!isWalletConnected) {
-    console.log('[WalletActions] Rendering connect wallet button');
+  const profileHasNoWallet = userNeedsWalletLinked(user);
+  const showConnectWallet = !isWalletConnected || profileHasNoWallet;
+
+  if (showConnectWallet) {
     return (
       <>
         <p className="my-4 text-xs">{t('wallet_not_connected_cta')}</p>
@@ -32,7 +37,6 @@ const WalletActions = () => {
           variant="secondary"
           className=" mt-4 w-full uppercase"
           onClick={() => {
-            console.log('[WalletActions] Connect wallet button clicked');
             connectWallet();
           }}
         >

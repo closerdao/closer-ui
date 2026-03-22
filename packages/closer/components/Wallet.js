@@ -2,14 +2,17 @@ import { useContext } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { useAuth } from '../contexts/auth';
 import { WalletState } from '../contexts/wallet';
 import { useConfig } from '../hooks/useConfig';
+import { userHasLinkedWallet } from '../utils/auth.helpers';
 import { getReserveTokenDisplay } from '../utils/config.utils';
 import WalletActions from './WalletActions';
 import WalletHeader from './WalletHeader';
 
 const Wallet = () => {
   const t = useTranslations();
+  const { user } = useAuth();
   const config = useConfig();
   const reserveToken = getReserveTokenDisplay(config);
 
@@ -52,7 +55,10 @@ const Wallet = () => {
           </div>
         </div>
       )}
-      {isWalletConnected && isCorrectNetwork && !hasSameConnectedAccount && (
+      {userHasLinkedWallet(user) &&
+        isWalletConnected &&
+        isCorrectNetwork &&
+        !hasSameConnectedAccount && (
         <div className="flex flex-col gap-2 mt-4">
           <div className="flex justify-between items-center">
             <p>{t('wallet_different_saved_address')}</p>

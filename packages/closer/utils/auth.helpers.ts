@@ -1,5 +1,13 @@
 import dayjs from 'dayjs';
 
+export const userNeedsWalletLinked = (
+  user: { _id?: string; walletAddress?: string } | null | undefined,
+): boolean => Boolean(user?._id && !user.walletAddress);
+
+export const userHasLinkedWallet = (
+  user: { walletAddress?: string } | null | undefined,
+): boolean => Boolean(user?.walletAddress);
+
 export const getRedirectUrl = ({
   back,
   source,
