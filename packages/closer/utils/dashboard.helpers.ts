@@ -93,14 +93,19 @@ export const getDateRange = ({
         start:
           fromDate && toDate
             ? toStartOfDay(fromDate, timeZone)
-            : new Date('1970-01-01'),
+            : toStartOfDay('1970-01-01', timeZone),
         end: toEndOfDay(new Date(), timeZone),
       };
     case 'custom':
+      if (!fromDate || !toDate) {
+        return {
+          start: toStartOfDay(new Date(), timeZone),
+          end: toEndOfDay(new Date(), timeZone),
+        };
+      }
       return {
-        start:
-          fromDate && toDate ? toStartOfDay(fromDate, timeZone) : new Date(),
-        end: toDate && fromDate ? toEndOfDay(toDate, timeZone) : new Date(),
+        start: toStartOfDay(fromDate, timeZone),
+        end: toEndOfDay(toDate, timeZone),
       };
 
     default:
@@ -110,6 +115,9 @@ export const getDateRange = ({
       };
   }
 };
+
+export const formatDateForApi = (date: Date, timeZone: string) =>
+  dayjs(date).tz(timeZone).format('YYYY-MM-DD');
 
 export const getTotalNumNights = (listings: List<Map<string, unknown>>) => {
   if (!listings) return 0;
