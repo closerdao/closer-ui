@@ -2,12 +2,6 @@ import { createAppKit } from '@reown/appkit/react';
 import { Ethers5Adapter } from '@reown/appkit-adapter-ethers5';
 import { defineChain } from '@reown/appkit/networks';
 
-import { blockchainConfig } from './config_blockchain';
-
-const {
-  BLOCKCHAIN_NETWORK_ID,
-} = blockchainConfig;
-
 const celoMainnet = defineChain({
   id: 42220,
   caipNetworkId: 'eip155:42220',
@@ -64,12 +58,6 @@ const celoSepolia = defineChain({
 
 const networks: [typeof celoMainnet, typeof alfajores, typeof celoSepolia] = [celoMainnet, alfajores, celoSepolia];
 
-const getDefaultNetwork = () => {
-  if (BLOCKCHAIN_NETWORK_ID === 42220) return celoMainnet;
-  if (BLOCKCHAIN_NETWORK_ID === 11142220) return celoSepolia;
-  return alfajores;
-};
-
 const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || '';
 
 const metadata = {
@@ -90,7 +78,6 @@ if (typeof window !== 'undefined') {
     createAppKit({
       adapters: [new Ethers5Adapter()],
       networks,
-      defaultNetwork: getDefaultNetwork(),
       projectId,
       metadata,
       features: {
