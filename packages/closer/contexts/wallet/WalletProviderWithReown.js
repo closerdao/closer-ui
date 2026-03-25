@@ -388,6 +388,36 @@ const WalletProviderInner = ({ children }) => {
         return connectPromiseRef.current;
       }
 
+      // Pre-add the target Celo chain to the injected wallet BEFORE opening
+      // the AppKit modal. wallet_addEthereumChain works without an active
+      // connection and is a no-op if the chain already exists.
+      const targetNetwork = getTargetNetwork();
+      const injectedProvider =
+        typeof window !== 'undefined' && window.ethereum?.request
+          ? window.ethereum
+          : null;
+      if (injectedProvider) {
+        try {
+          const chainIdHex = `0x${Number(targetNetwork.id).toString(16)}`;
+          await injectedProvider.request({
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainId: chainIdHex,
+                chainName: targetNetwork.name,
+                nativeCurrency: targetNetwork.nativeCurrency,
+                rpcUrls: targetNetwork?.rpcUrls?.default?.http || [],
+                blockExplorerUrls: targetNetwork?.blockExplorers?.default?.url
+                  ? [targetNetwork.blockExplorers.default.url]
+                  : [],
+              },
+            ],
+          });
+        } catch {
+          // User rejected or wallet doesn't support it — continue anyway
+        }
+      }
+
       connectPromiseRef.current = new Promise((resolve) => {
         const finalizeConnect = (result) => {
           if (connectTimeoutRef.current) {
