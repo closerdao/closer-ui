@@ -216,7 +216,7 @@ const MemberMenu = () => {
               label: t('navigation_expense_tracking'),
               url: '/dashboard/expense-tracking',
               enabled: true,
-              roles: ['admin', 'team'],
+              roles: ['admin', 'team', 'accounting'],
               rbacPage: 'ExpenseTracking',
             },
             {
@@ -570,7 +570,7 @@ const MemberMenu = () => {
             label: t('navigation_expense_tracking'),
             url: '/dashboard/expense-tracking',
             enabled: true,
-            roles: ['admin', 'team'],
+            roles: ['admin', 'team', 'accounting'],
             rbacPage: 'ExpenseTracking',
           },
           {

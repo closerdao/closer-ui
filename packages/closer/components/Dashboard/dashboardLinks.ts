@@ -69,7 +69,7 @@ export const getDashboardLinks = (
       url: '/dashboard/expense-tracking',
       rbacPage: 'ExpenseTracking',
       enabled: true,
-      roles: ['admin', 'team'],
+      roles: ['admin', 'team', 'accounting'],
     },
   ];
 

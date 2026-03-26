@@ -12,6 +12,10 @@ import {
 import { Button } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
+import {
+  userRolesCanAccessExpenseDashboard,
+  userRolesCanCreateExpense,
+} from 'closer/constants/expenseTrackingAccess';
 import { GeneralConfig } from 'closer/types/api';
 import {
   ExpenseTrackingChargeRow,
@@ -330,9 +334,12 @@ const ExpenseTrackingDashboardPage = ({
     setCurrentPage(1);
   }, [timeFrame, fromDate, toDate]);
 
-  if (!user?.roles.includes('admin') && !user?.roles.includes('team')) {
+  const roles = user?.roles ?? [];
+  if (!userRolesCanAccessExpenseDashboard(roles)) {
     return <PageNotAllowed />;
   }
+
+  const canCreateExpenses = userRolesCanCreateExpense(roles);
 
   return (
     <>
@@ -360,15 +367,21 @@ const ExpenseTrackingDashboardPage = ({
         </div>
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mt-6">
-          <Button
-            onClick={() => setIsDialogOpen(true)}
-            className="flex items-center gap-2 w-full sm:w-fit"
-            size="small"
+          {canCreateExpenses ? (
+            <Button
+              onClick={() => setIsDialogOpen(true)}
+              className="flex items-center gap-2 w-full sm:w-fit"
+              size="small"
+            >
+              <Plus className="w-4 h-4" />
+              {t('expense_tracking_add_new_expense')}
+            </Button>
+          ) : (
+            <span className="hidden sm:block sm:min-w-0" aria-hidden />
+          )}
+          <div
+            className={`flex flex-col sm:flex-row gap-2 w-full sm:w-auto ${!canCreateExpenses ? 'sm:ml-auto' : ''}`}
           >
-            <Plus className="w-4 h-4" />
-            {t('expense_tracking_add_new_expense')}
-          </Button>
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Button
               onClick={() => handleDownloadAllDocuments()}
               variant="secondary"
@@ -404,14 +417,16 @@ const ExpenseTrackingDashboardPage = ({
           />
         )}
 
-        <ExpenseDialog
-          isOpen={isDialogOpen}
-          onClose={() => setIsDialogOpen(false)}
-          expenseCategories={expenseCategories}
-          onSuccess={() => loadData(true)}
-          uniqueEntities={uniqueEntities as string[]}
-          defaultEntity={defaultEntity}
-        />
+        {canCreateExpenses && (
+          <ExpenseDialog
+            isOpen={isDialogOpen}
+            onClose={() => setIsDialogOpen(false)}
+            expenseCategories={expenseCategories}
+            onSuccess={() => loadData(true)}
+            uniqueEntities={uniqueEntities as string[]}
+            defaultEntity={defaultEntity}
+          />
+        )}
       </AdminLayout>
     </>
   );

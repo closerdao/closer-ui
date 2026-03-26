@@ -1,6 +1,9 @@
 import { GoogleGenAI } from '@google/genai';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
+import { userRolesCanCreateExpense } from '../../../../packages/closer/constants/expenseTrackingAccess';
+import api from '../../../../packages/closer/utils/api';
+
 const USE_MOCK = false;
 
 const mockOutput = {
@@ -140,6 +143,28 @@ export default async function handler(
       structuredData: mockOutput,
       documentUrl: null,
     });
+  }
+
+  const token =
+    req.headers.authorization?.replace('Bearer ', '') ||
+    (req as NextApiRequest & { cookies?: { access_token?: string } }).cookies
+      ?.access_token;
+
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    const {
+      data: { results: user },
+    } = await api.get('/mine/user', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!user || !userRolesCanCreateExpense(user.roles)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+  } catch {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   const startTime = Date.now();

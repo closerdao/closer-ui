@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
+import { userRolesCanAccessExpenseDashboard } from '../../../../packages/closer/constants/expenseTrackingAccess';
 import JSZip from 'jszip';
 import api from '../../../../packages/closer/utils/api';
 
@@ -29,11 +30,7 @@ export default async function handler(
         },
       });
 
-      if (
-        !user ||
-        !user.roles ||
-        (!user.roles.includes('admin') && !user.roles.includes('team'))
-      ) {
+      if (!user || !userRolesCanAccessExpenseDashboard(user.roles)) {
         return res.status(403).json({ error: 'Forbidden' });
       }
     } catch (authError) {
