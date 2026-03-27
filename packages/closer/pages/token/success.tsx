@@ -427,7 +427,7 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
                         {t.rich('token_sale_bank_transfer_no_wallet_step_1', {
                           link: (chunks) => (
                             <a
-                              href="https://metamask.io/"
+                              href="https://www.youtube.com/watch?v=f3vwOxSLBUc"
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-accent underline"
