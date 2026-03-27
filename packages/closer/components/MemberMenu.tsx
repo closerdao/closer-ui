@@ -145,6 +145,12 @@ const MemberMenu = () => {
               rbacPage: 'Community',
             },
             {
+              label: t('navigation_subscriptions'),
+              url: '/subscriptions',
+              enabled: areSubscriptionsEnabled,
+              rbacPage: 'Subscriptions',
+            },
+            {
               label: t('menu_become_citizen'),
               url: '/citizenship',
               enabled: isCitizenshipEnabled,
@@ -363,20 +369,6 @@ const MemberMenu = () => {
             url: '/projects',
             enabled: isVolunteeringEnabled && APP_NAME?.toLowerCase() === 'tdf',
             rbacPage: 'Residence',
-          },
-        ],
-      },
-
-      // Subscriptions section (standalone)
-      {
-        label: t('navigation_subscriptions'),
-        isOpen: false,
-        items: [
-          {
-            label: t('navigation_subscriptions'),
-            url: '/subscriptions',
-            enabled: areSubscriptionsEnabled,
-            rbacPage: 'Subscriptions',
           },
         ],
       },
