@@ -3,9 +3,9 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
-import Card from '../../components/ui/Card';
 import Wallet from '../../components/Wallet';
 import Button from '../../components/ui/Button';
+import Card from '../../components/ui/Card';
 
 import { Info } from 'lucide-react';
 import { NextPageContext } from 'next';
@@ -183,7 +183,7 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
           --r: -120deg;
         }
         .confirmation-celebration__particle:nth-child(3) {
-          background: #E8AB1B;
+          background: #e8ab1b;
           --tx: 90px;
           --ty: 100px;
           --r: 90deg;
@@ -207,7 +207,7 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
           --r: 200deg;
         }
         .confirmation-celebration__particle:nth-child(7) {
-          background: #E8AB1B;
+          background: #e8ab1b;
           --tx: -80px;
           --ty: -120px;
           --r: -90deg;
@@ -231,7 +231,7 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
           --r: 150deg;
         }
         .confirmation-celebration__particle:nth-child(11) {
-          background: #E8AB1B;
+          background: #e8ab1b;
           --tx: 110px;
           --ty: -60px;
           --r: -180deg;
@@ -255,7 +255,7 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
           --r: 30deg;
         }
         .confirmation-celebration__particle:nth-child(15) {
-          background: #E8AB1B;
+          background: #e8ab1b;
           --tx: -90px;
           --ty: 80px;
           --r: -45deg;
@@ -279,7 +279,7 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
           --r: 0deg;
         }
         .confirmation-celebration__particle:nth-child(19) {
-          background: #E8AB1B;
+          background: #e8ab1b;
           --tx: -120px;
           --ty: 100px;
           --r: 75deg;
@@ -303,7 +303,7 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
           --r: -160deg;
         }
         .confirmation-celebration__particle:nth-child(23) {
-          background: #E8AB1B;
+          background: #e8ab1b;
           --tx: -150px;
           --ty: -70px;
           --r: 40deg;
@@ -361,8 +361,7 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
                     {t('token_sale_checkout_your_purchse')}
                   </p>
                   <p className="text-sm font-medium">
-                    {amountOfTokensPurchased}{' '}
-                    {t('token_sale_token_symbol')}
+                    {amountOfTokensPurchased} {t('token_sale_token_symbol')}
                   </p>
                 </div>
                 <div className="flex flex-col gap-1 min-w-0">
@@ -428,7 +427,7 @@ const TokenSaleSuccessPage = ({ generalConfig }: Props) => {
                         {t.rich('token_sale_bank_transfer_no_wallet_step_1', {
                           link: (chunks) => (
                             <a
-                              href="https://grimsnas.se"
+                              href="https://metamask.io/"
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-accent underline"

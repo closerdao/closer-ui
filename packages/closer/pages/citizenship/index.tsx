@@ -34,8 +34,8 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
-import { useConfig } from '../../hooks/useConfig';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
+import { useConfig } from '../../hooks/useConfig';
 import { CitizenshipConfig } from '../../types/api';
 import api from '../../utils/api';
 import { twitterUrlToHandle } from '../../utils/app.helpers';
@@ -321,9 +321,7 @@ const CitizenshipPage = ({
           content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
         />
         <meta name="twitter:card" content="summary_large_image" />
-        {twitterHandle && (
-          <meta name="twitter:site" content={twitterHandle} />
-        )}
+        {twitterHandle && <meta name="twitter:site" content={twitterHandle} />}
         <meta name="twitter:title" content={t('citizenship_page_title')} />
         <meta
           name="twitter:description"
@@ -398,7 +396,7 @@ const CitizenshipPage = ({
               className="rounded-2xl px-6"
             >
               <a
-                href="https://traditionaldreamfactory.gitbook.io/game-guide/02_roles-and-stakeholders/citizenship"
+                href="https://traditionaldreamfactory.gitbook.io/game-guide/02_roles-and-stakeholders/citizen"
                 target="_blank"
                 rel="noreferrer"
               >
@@ -647,7 +645,7 @@ const CitizenshipPage = ({
                     className="rounded-2xl px-6"
                   >
                     <a
-                      href="https://traditionaldreamfactory.gitbook.io/game-guide/02_roles-and-stakeholders/citizenship"
+                      href="https://traditionaldreamfactory.gitbook.io/game-guide/02_roles-and-stakeholders/citizen"
                       target="_blank"
                       rel="noreferrer"
                     >
