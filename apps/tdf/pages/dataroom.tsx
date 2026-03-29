@@ -753,11 +753,6 @@ const HomePage = () => {
                 <p className="text-sm text-gray-700 font-light">{t('dataroom_team_sam_bio')}</p>
               </Card>
               <Card className="p-6 border border-gray-300 rounded-lg bg-white">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('dataroom_team_peter_name')}</h3>
-                <p className="text-sm text-gray-600 mb-3">{t('dataroom_team_peter_role')}</p>
-                <p className="text-sm text-gray-700 font-light">{t('dataroom_team_peter_bio')}</p>
-              </Card>
-              <Card className="p-6 border border-gray-300 rounded-lg bg-white">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('dataroom_team_luna_name')}</h3>
                 <p className="text-sm text-gray-600 mb-3">{t('dataroom_team_luna_role')}</p>
                 <p className="text-sm text-gray-700 font-light">{t('dataroom_team_luna_bio')}</p>
