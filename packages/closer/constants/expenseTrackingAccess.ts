@@ -17,5 +17,9 @@ export function userRolesCanCreateExpense(
   if (!roles?.length) {
     return false;
   }
-  return roles.includes('admin') || roles.includes('accounting');
+  return (
+    roles.includes('admin') ||
+    roles.includes('accounting') ||
+    roles.includes('team')
+  );
 }
