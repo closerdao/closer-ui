@@ -186,9 +186,18 @@ const AffiliateDashboardPage = ({
                 </tr>
               </thead>
 
-              {/* {JSON.stringify(data?.affiliateData)} */}
 
-              {data?.affiliateData?.map((affiliate: any) => (
+              {data?.affiliateData?.map((affiliate: any) => {
+                const rowRevenue = Number(affiliate?.totalRevenue) || 0;
+                const rowPaid =
+                  Number(
+                    data?.payoutData?.find((p: any) => {
+                      return p?.user?._id === affiliate?.user?._id;
+                    })?.totalPaid,
+                  ) || 0;
+                const rowUnpaid = rowRevenue - rowPaid;
+
+                return (
                 <tbody key={affiliate._id}>
                   <tr className="bg-white border-b">
                     <td className="px-3 py-2 font-medium">
@@ -196,16 +205,10 @@ const AffiliateDashboardPage = ({
                     </td>
                     <td className="px-3 py-2">{affiliate?.user?.email}</td>
                     <td className="px-3 py-2 text-right">
-                      €{affiliate?.totalRevenue.toLocaleString()}
+                      €{rowRevenue.toLocaleString()}
                     </td>
                     <td className="px-3 py-2 text-right">
-                      €
-                      {(
-                        affiliate?.totalRevenue -
-                        data?.payoutData?.find((user: any) => {
-                          return user?.user?._id === affiliate?.user?._id;
-                        })?.totalPaid
-                      ).toLocaleString() || 0}
+                      €{rowUnpaid.toLocaleString()}
                     </td>
                     <td className="px-3 py-2">
                       {data?.payoutData
@@ -374,7 +377,8 @@ const AffiliateDashboardPage = ({
                       </tr>
                     )}
                 </tbody>
-              ))}
+              );
+              })}
             </table>
         </section>
       </AdminLayout>
