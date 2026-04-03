@@ -176,6 +176,41 @@ export const sortCombinedExpenseEntriesByDateDesc = (
   });
 };
 
+export const EXPENSE_TRACKING_TOCONLINE_DOCUMENT_TYPE = 'FC' as const;
+
+const isExpenseFcToconlineDocument = (doc: ToconlineDocument): boolean =>
+  doc.document_type === EXPENSE_TRACKING_TOCONLINE_DOCUMENT_TYPE;
+
+export const filterCombinedEntriesToExpenseFcToconlineDocuments = (
+  entries: ExpenseTrackingCombinedEntry[],
+): ExpenseTrackingCombinedEntry[] => {
+  const out: ExpenseTrackingCombinedEntry[] = [];
+  for (const entry of entries) {
+    if (entry.kind === 'toconline_orphan') {
+      if (isExpenseFcToconlineDocument(entry.document)) {
+        out.push(entry);
+      }
+      continue;
+    }
+    if (entry.toconline.status === 'linked') {
+      const dt = entry.toconline.document.document_type;
+      if (
+        typeof dt === 'string' &&
+        dt !== EXPENSE_TRACKING_TOCONLINE_DOCUMENT_TYPE
+      ) {
+        out.push({
+          kind: 'charge',
+          charge: entry.charge,
+          toconline: { status: 'none' },
+        });
+        continue;
+      }
+    }
+    out.push(entry);
+  }
+  return sortCombinedExpenseEntriesByDateDesc(out);
+};
+
 export const parseExpenseTrackingCombinedEntriesPayload = (
   payload: unknown,
 ): { entries: ExpenseTrackingCombinedEntry[]; total: number } => {

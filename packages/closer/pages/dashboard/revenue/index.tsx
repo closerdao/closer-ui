@@ -17,10 +17,15 @@ import { useAuth } from '../../../contexts/auth';
 import useRBAC from '../../../hooks/useRBAC';
 import { BookingConfig } from '../../../types/api';
 import { Charge } from '../../../types/booking';
+import { ToconlineDocument } from '../../../types/expense';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import { getStartAndEndDate } from '../../../utils/performance.utils';
+import {
+  buildToconlineDocumentsByExternalReference,
+  parseRevenueToconlineDocumentsPayload,
+} from '../../../utils/revenueToconline.helpers';
 
 const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
   const t = useTranslations();
@@ -45,6 +50,10 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
   const [moneriumChargesLoading, setMoneriumChargesLoading] =
     useState<boolean>(false);
   const [cryptoTokenChargesLoading, setCryptoTokenChargesLoading] =
+    useState<boolean>(false);
+  const [toconlineByStripePaymentIntent, setToconlineByStripePaymentIntent] =
+    useState<Map<string, ToconlineDocument>>(() => new Map());
+  const [toconlineDocumentsLoading, setToconlineDocumentsLoading] =
     useState<boolean>(false);
   const [categorySums, setCategorySums] = useState<{
     tokenSales: number;
@@ -130,7 +139,6 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
           sort: '-date',
         },
       });
-      console.log('monerium response.data=======', response.data);
       // Sort charges from newest to oldest (client-side backup)
       const sortedCharges = response.data.results.sort(
         (a: Charge, b: Charge) => {
@@ -152,7 +160,6 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
         },
       }));
 
-      console.log('processed monerium charges=======', processedCharges);
       setMoneriumCharges(processedCharges);
     } catch (error) {
       console.error('Error fetching monerium charges:', error);
@@ -212,6 +219,34 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
       console.error('Error fetching crypto token charges:', error);
     } finally {
       setCryptoTokenChargesLoading(false);
+    }
+  }, [timeFrame, fromDate, toDate]);
+
+  const fetchRevenueToconlineDocuments = useCallback(async () => {
+    setToconlineDocumentsLoading(true);
+    try {
+      const { startDate, endDate } = getStartAndEndDate(
+        timeFrame,
+        fromDate,
+        toDate,
+      );
+      const response = await api.get('/revenue-tracking/toconline-documents', {
+        params: {
+          from: startDate.toISOString(),
+          to: endDate.toISOString(),
+          limit: 10000,
+          sort_by: '-date',
+        },
+      });
+      const documents = parseRevenueToconlineDocumentsPayload(response.data);
+      setToconlineByStripePaymentIntent(
+        buildToconlineDocumentsByExternalReference(documents),
+      );
+    } catch (error) {
+      console.error('Error fetching revenue Toconline documents:', error);
+      setToconlineByStripePaymentIntent(new Map());
+    } finally {
+      setToconlineDocumentsLoading(false);
     }
   }, [timeFrame, fromDate, toDate]);
 
@@ -314,6 +349,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
           fetchCharges();
           fetchMoneriumCharges();
           fetchCryptoTokenCharges();
+          fetchRevenueToconlineDocuments();
           fetchCategorySums();
         }, 500); // 500ms debounce
         debounceTimeoutRef.current = timeout;
@@ -323,6 +359,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
       fetchCharges();
       fetchMoneriumCharges();
       fetchCryptoTokenCharges();
+      fetchRevenueToconlineDocuments();
       fetchCategorySums();
     }
 
@@ -340,6 +377,7 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
     fetchCharges,
     fetchMoneriumCharges,
     fetchCryptoTokenCharges,
+    fetchRevenueToconlineDocuments,
     fetchCategorySums,
   ]);
 
@@ -762,6 +800,8 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                   moneriumChargesLoading ||
                   cryptoTokenChargesLoading
                 }
+                toconlineByStripePaymentIntent={toconlineByStripePaymentIntent}
+                toconlineDocumentsLoading={toconlineDocumentsLoading}
               />
         </div>
       </AdminLayout>

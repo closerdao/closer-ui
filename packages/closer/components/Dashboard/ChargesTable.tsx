@@ -1,53 +1,53 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { ToconlineDocument } from 'closer/types/expense';
+import { getToconlineDocumentForChargeByStripePaymentIntent } from 'closer/utils/revenueToconline.helpers';
+
 import { Charge } from '../../types/booking';
-import { Heading } from '../ui';
+import ToconlineDocumentDialog from '../expense-tracking/ToconlineDocumentDialog';
+import { Button, Heading } from '../ui';
 import MultiSelect from '../ui/Select/MultiSelect';
 
 interface ChargesTableProps {
   charges: Charge[];
   loading?: boolean;
+  toconlineByStripePaymentIntent?: ReadonlyMap<string, ToconlineDocument>;
+  toconlineDocumentsLoading?: boolean;
 }
 
 const ChargesTable: React.FC<ChargesTableProps> = ({
   charges,
   loading = false,
+  toconlineByStripePaymentIntent,
+  toconlineDocumentsLoading = false,
 }) => {
   const t = useTranslations();
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [toconlineDialogOpen, setToconlineDialogOpen] = useState(false);
+  const [toconlineDocument, setToconlineDocument] =
+    useState<ToconlineDocument | null>(null);
 
-  // Get unique charge types from the charges array
+  const openToconlineDocument = useCallback((doc: ToconlineDocument) => {
+    setToconlineDocument(doc);
+    setToconlineDialogOpen(true);
+  }, []);
+
   const availableTypes = useMemo(() => {
     const types = [
       ...new Set(charges.map((charge) => charge.type).filter(Boolean)),
     ];
-    console.log('Available types:', types);
-    console.log(
-      'All charges types:',
-      charges.map((c) => ({ type: c.type, method: c.method })),
-    );
     return types.sort();
   }, [charges]);
 
-  // Filter charges based on selected types
   const filteredCharges = useMemo(() => {
     if (selectedTypes.length === 0) {
       return charges;
     }
-    const filtered = charges.filter((charge) => {
-      const chargeType = charge.type;
-      const isIncluded = selectedTypes.includes(chargeType);
-      console.log(
-        `Charge type: ${chargeType}, Selected: ${selectedTypes}, Included: ${isIncluded}`,
-      );
-      return isIncluded;
-    });
-    console.log(
-      `Filtered ${filtered.length} charges from ${charges.length} total`,
+    return charges.filter((charge) =>
+      selectedTypes.includes(charge.type),
     );
-    return filtered;
   }, [charges, selectedTypes]);
   const formatCurrency = (amount: { val: number; cur: string }) => {
     if (!amount || !amount.cur || !amount.val) {
@@ -195,6 +195,9 @@ const ChargesTable: React.FC<ChargesTableProps> = ({
                       <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
                         {t('dashboard_charges_total')}
                       </th>
+                      <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wide w-24">
+                        {t('expense_tracking_toconline')}
+                      </th>
                       <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
                         {t('dashboard_charges_rental')}
                       </th>
@@ -216,7 +219,16 @@ const ChargesTable: React.FC<ChargesTableProps> = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {filteredCharges.map((charge, index) => (
+                    {filteredCharges.map((charge, index) => {
+                      const matchedToconlineDoc =
+                        toconlineByStripePaymentIntent &&
+                        toconlineByStripePaymentIntent.size > 0
+                          ? getToconlineDocumentForChargeByStripePaymentIntent(
+                              charge,
+                              toconlineByStripePaymentIntent,
+                            )
+                          : undefined;
+                      return (
                       <tr
                         key={charge._id || charge.id || `charge-${index}`}
                         className="hover:bg-gray-50"
@@ -252,6 +264,27 @@ const ChargesTable: React.FC<ChargesTableProps> = ({
                           {charge.amount?.total
                             ? formatCurrency(charge.amount.total)
                             : 'N/A'}
+                        </td>
+                        <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-900 text-left align-middle">
+                          {toconlineDocumentsLoading ? (
+                            <span className="inline-block h-4 w-12 animate-pulse rounded bg-gray-200" />
+                          ) : matchedToconlineDoc ? (
+                            <Button
+                              type="button"
+                              onClick={() =>
+                                openToconlineDocument(matchedToconlineDoc)
+                              }
+                              variant="secondary"
+                              size="small"
+                              className="text-xs py-0 min-h-[24px] w-fit"
+                            >
+                              {t('expense_tracking_view_doc')}
+                            </Button>
+                          ) : (
+                            <span className="text-gray-400 text-xs">
+                              {t('expense_tracking_toconline_na')}
+                            </span>
+                          )}
                         </td>
                         <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-600 text-right">
                           {charge.amount?.rental
@@ -294,13 +327,23 @@ const ChargesTable: React.FC<ChargesTableProps> = ({
                             : '-'}
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
         )}
+        {toconlineDialogOpen ? (
+          <ToconlineDocumentDialog
+            document={toconlineDocument}
+            onClose={() => {
+              setToconlineDialogOpen(false);
+              setToconlineDocument(null);
+            }}
+          />
+        ) : null}
       </div>
     </div>
   );
