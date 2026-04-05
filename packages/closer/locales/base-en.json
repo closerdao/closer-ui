@@ -1427,6 +1427,7 @@
   "config_label_legalPostalCode": "Postal code",
   "config_label_legalCity": "City",
   "config_label_legalCountry": "Country",
+  "config_label_country": "Country code for price formatting (ISO 3166-1 alpha-2)",
   "config_label_teamEmail": "Client support email",
   "config_label_instagramUrl": "Instagram url",
   "config_label_facebookUrl": "Facebook url",
@@ -1664,6 +1665,7 @@
   "config_label_telegramUrl": "Telegram link",
   "config_label_discordUrl": "Discord link",
   "config_label_governanceUrl": "Governance (e.g. Snapshot) URL",
+  "config_label_fiatCur": "Base currency",
 
   "subscriptions_citizen_introduce_yourself_in_discord": "Introduce yourself in discord to get vouched by other members:",
 

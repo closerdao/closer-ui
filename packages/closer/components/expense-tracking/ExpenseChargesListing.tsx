@@ -15,6 +15,7 @@ import {
   ToconlineRowUiState,
   toconlineLinkToRowUiState,
 } from 'closer/utils/expenseTracking.helpers';
+import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 
 import ToconlineDocumentDialog from './ToconlineDocumentDialog';
 
@@ -188,7 +189,10 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                           {date}
                         </td>
                         <td className="px-2 py-1 text-sm font-medium text-gray-900">
-                          €{amount.toFixed(2)}
+                          {formatIsoFiatAmount(
+                            amount,
+                            charge.amount?.total?.cur?.toUpperCase() || 'EUR',
+                          )}
                         </td>
                         <td className="px-2 py-1 text-sm text-gray-900">
                           {description || t('expense_tracking_not_available')}
@@ -317,7 +321,10 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                     <div className="flex justify-between items-start mb-2">
                       <span className="text-sm text-gray-500">{date}</span>
                       <span className="text-sm font-semibold text-gray-900">
-                        €{amount.toFixed(2)}
+                        {formatIsoFiatAmount(
+                          amount,
+                          charge.amount?.total?.cur?.toUpperCase() || 'EUR',
+                        )}
                       </span>
                     </div>
                     <div className="mb-2">
@@ -526,9 +533,13 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                           {t('expense_tracking_receipt_total')}
                         </span>
                         <span className="font-semibold text-base">
-                          €
-                          {selectedCharge.amount?.total?.val?.toFixed(2) ||
-                            t('expense_tracking_not_available')}
+                          {selectedCharge.amount?.total?.val != null
+                            ? formatIsoFiatAmount(
+                                selectedCharge.amount.total.val,
+                                selectedCharge.amount?.total?.cur?.toUpperCase() ||
+                                  'EUR',
+                              )
+                            : t('expense_tracking_not_available')}
                         </span>
                       </div>
                       <div className="bg-gray-50 p-2 rounded">
@@ -583,7 +594,11 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                                     {line.tax_code}
                                   </td>
                                   <td className="px-2 py-2 text-right">
-                                    €{line.unit_price?.toFixed(2)}
+                                    {formatIsoFiatAmount(
+                                      line.unit_price ?? 0,
+                                      selectedCharge.amount?.total?.cur?.toUpperCase() ||
+                                        'EUR',
+                                    )}
                                   </td>
                                 </tr>
                               ),
@@ -610,7 +625,11 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                                 <span>{line.tax_code}</span>
                               </div>
                               <div className="text-right font-semibold text-sm mt-1">
-                                €{line.unit_price?.toFixed(2)}
+                                {formatIsoFiatAmount(
+                                  line.unit_price ?? 0,
+                                  selectedCharge.amount?.total?.cur?.toUpperCase() ||
+                                    'EUR',
+                                )}
                               </div>
                             </div>
                           ),

@@ -14,3 +14,7 @@
 #rcc-confirm-button {
   margin: 0 !important;
 }
+
+.rdp .rdp-button:not(.rdp-day_disabled):hover {
+  @apply !text-white;
+}

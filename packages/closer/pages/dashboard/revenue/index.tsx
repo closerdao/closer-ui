@@ -18,7 +18,9 @@ import useRBAC from '../../../hooks/useRBAC';
 import { BookingConfig } from '../../../types/api';
 import { Charge } from '../../../types/booking';
 import api from '../../../utils/api';
+import { DEFAULT_CURRENCY } from '../../../constants';
 import { parseMessageFromError } from '../../../utils/common';
+import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import { getStartAndEndDate } from '../../../utils/performance.utils';
 
@@ -454,17 +456,15 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                         sumsLoading ? (
                           <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
                         ) : (
-                          new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: 'EUR',
-                          }).format(
+                          formatIsoFiatAmount(
                             categoryTotals.events +
-                            categoryTotals.rental +
-                            categoryTotals.food +
-                            categoryTotals.utilities +
-                            categoryTotals.subscriptions +
-                            categoryTotals.tokenSales +
-                            categoryTotals.cryptoTokenSales,
+                              categoryTotals.rental +
+                              categoryTotals.food +
+                              categoryTotals.utilities +
+                              categoryTotals.subscriptions +
+                              categoryTotals.tokenSales +
+                              categoryTotals.cryptoTokenSales,
+                            DEFAULT_CURRENCY,
                           )
                         )}
                       </dd>
@@ -482,14 +482,12 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                         {chargesLoading || sumsLoading ? (
                           <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
                         ) : (
-                          new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: 'EUR',
-                          }).format(
+                          formatIsoFiatAmount(
                             categoryTotals.events +
                               categoryTotals.rental +
                               categoryTotals.food +
                               categoryTotals.utilities,
+                            DEFAULT_CURRENCY,
                           )
                         )}
                       </dd>
@@ -507,10 +505,10 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                         {chargesLoading || sumsLoading ? (
                           <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
                         ) : (
-                          new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: 'EUR',
-                          }).format(categoryTotals.subscriptions)
+                          formatIsoFiatAmount(
+                            categoryTotals.subscriptions,
+                            DEFAULT_CURRENCY,
+                          )
                         )}
                       </dd>
                     </dl>
@@ -527,10 +525,10 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                         {moneriumChargesLoading || sumsLoading ? (
                           <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
                         ) : (
-                          new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: 'EUR',
-                          }).format(categoryTotals.tokenSales)
+                          formatIsoFiatAmount(
+                            categoryTotals.tokenSales,
+                            DEFAULT_CURRENCY,
+                          )
                         )}
                       </dd>
                     </dl>
@@ -547,10 +545,10 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                         {cryptoTokenChargesLoading || sumsLoading ? (
                           <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
                         ) : (
-                          new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: 'EUR',
-                          }).format(categoryTotals.cryptoTokenSales)
+                          formatIsoFiatAmount(
+                            categoryTotals.cryptoTokenSales,
+                            DEFAULT_CURRENCY,
+                          )
                         )}
                       </dd>
                     </dl>
@@ -567,10 +565,10 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                         {chargesLoading || moneriumChargesLoading || sumsLoading ? (
                           <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
                         ) : (
-                          new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: 'EUR',
-                          }).format(categoryTotals.refunds)
+                          formatIsoFiatAmount(
+                            categoryTotals.refunds,
+                            DEFAULT_CURRENCY,
+                          )
                         )}
                       </dd>
                     </dl>
@@ -661,11 +659,11 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                                   className={`animate-pulse ${category.animateColor} h-3 w-8 rounded`}
                                 ></div>
                               ) : (
-                                new Intl.NumberFormat('en-US', {
-                                  style: 'currency',
-                                  currency: 'EUR',
-                                  maximumFractionDigits: 0,
-                                }).format(category.amount)
+                                formatIsoFiatAmount(
+                                  category.amount,
+                                  DEFAULT_CURRENCY,
+                                  { min: 0, max: 0 },
+                                )
                               )}
                             </div>
                           </div>
@@ -729,11 +727,11 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
                                   className={`animate-pulse ${category.animateColor} h-3 w-8 rounded`}
                                 ></div>
                               ) : (
-                                new Intl.NumberFormat('en-US', {
-                                  style: 'currency',
-                                  currency: 'EUR',
-                                  maximumFractionDigits: 0,
-                                }).format(category.amount)
+                                formatIsoFiatAmount(
+                                  category.amount,
+                                  DEFAULT_CURRENCY,
+                                  { min: 0, max: 0 },
+                                )
                               )}
                             </div>
                           </div>

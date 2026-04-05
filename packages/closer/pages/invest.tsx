@@ -42,6 +42,7 @@ import {
   getMilestoneGoal,
   sortMilestonesByStartDate,
 } from '../utils/fundraising.helpers';
+import { getCurrencySymbol } from '../utils/currencyFormat';
 import { loadLocaleData } from '../utils/locale.helpers';
 import PageNotFound from './not-found';
 
@@ -59,7 +60,7 @@ interface MilestoneState {
 }
 
 const formatDisplayAmount = (amount: number, currency: string): string => {
-  const symbol = currency === 'EUR' ? '€' : currency;
+  const symbol = getCurrencySymbol(currency);
   if (amount >= 1000) return `${symbol}${Math.round(amount / 1000)}K`;
   return `${symbol}${amount.toLocaleString()}`;
 };
@@ -87,14 +88,15 @@ const PackageCard = ({
   const credits = Number(pkg.credits) || 0;
   const isPopular = isTokens && tokens === 30;
 
+  const eur = getCurrencySymbol('EUR');
   const priceLabel = isTokens
     ? formatPrice(tokens)
     : isLoan
     ? pkg.minAmount
-      ? `€${pkg.minAmount}+`
-      : '€50K+'
+      ? `${eur}${pkg.minAmount}+`
+      : `${eur}50K+`
     : isCredits && credits
-    ? `€${(credits * creditPricePerUnit).toLocaleString()}`
+    ? `${eur}${(credits * creditPricePerUnit).toLocaleString()}`
     : '';
 
   const defaultHref = isTokens
@@ -230,7 +232,9 @@ const InvestPage = ({
 
   const formatPrice = (tokens: number) => {
     if (!tokenPrice) return '...';
-    return `€${Math.round(tokens * tokenPrice).toLocaleString()}`;
+    return `${getCurrencySymbol('EUR')}${Math.round(
+      tokens * tokenPrice,
+    ).toLocaleString()}`;
   };
 
   const shareUrl = opts.shareUrl || '';
@@ -366,9 +370,12 @@ const InvestPage = ({
                         };
 
                         const formatAmount = (amount: number) => {
+                          const sym = getCurrencySymbol(
+                            milestone.currency || 'EUR',
+                          );
                           if (amount >= 1000)
-                            return `€${Math.round(amount / 1000)}K`;
-                          return `€${amount.toLocaleString()}`;
+                            return `${sym}${Math.round(amount / 1000)}K`;
+                          return `${sym}${amount.toLocaleString()}`;
                         };
 
                         return (

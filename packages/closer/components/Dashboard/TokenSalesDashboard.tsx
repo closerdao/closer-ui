@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import { TokenSale } from '../../types/api';
 import api, { formatSearch } from '../../utils/api';
+import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import Modal from '../Modal';
 import Pagination from '../Pagination';
 import { Input, Spinner } from '../ui/';
@@ -348,10 +349,7 @@ const SalesDashboard = ({
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(price);
+    return formatIsoFiatAmount(price, 'USD');
   };
 
   return (

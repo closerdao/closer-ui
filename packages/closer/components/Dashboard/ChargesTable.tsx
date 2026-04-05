@@ -3,6 +3,10 @@ import React, { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { Charge } from '../../types/booking';
+import {
+  formatIsoFiatAmount,
+  isIso4217Currency,
+} from '../../utils/currencyFormat';
 import { Heading } from '../ui';
 import MultiSelect from '../ui/Select/MultiSelect';
 
@@ -60,15 +64,10 @@ const ChargesTable: React.FC<ChargesTableProps> = ({
       currencyCode = 'EUR';
     }
 
-    try {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: currencyCode,
-      }).format(amount.val);
-    } catch (error) {
-      // Fallback for invalid currency codes
-      return `${amount.val.toFixed(2)} ${amount.cur}`;
+    if (isIso4217Currency(currencyCode)) {
+      return formatIsoFiatAmount(amount.val, currencyCode);
     }
+    return `${amount.val.toFixed(2)} ${amount.cur}`;
   };
 
   const formatDate = (date: string | Date) => {

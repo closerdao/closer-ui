@@ -13,6 +13,7 @@ import models from '../../models';
 import { FoodOption } from '../../types/food';
 import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
 import api from '../../utils/api';
+import { getBookingTokenCurrency } from '../../utils/booking.helpers';
 import { transformEventFoodBeforeSave } from '../../utils/events.helpers';
 import { loadLocaleData } from '../../utils/locale.helpers';
 
@@ -23,9 +24,14 @@ interface EventsConfig {
 interface Props {
   foodOptions: FoodOption[];
   eventsConfig: EventsConfig | null;
+  paymentConfig: {
+    fiatCur?: string;
+    utilityFiatCur?: string;
+  } | null;
+  web3Config: { bookingToken?: string } | null;
 }
 
-const CreateEvent = ({ foodOptions, eventsConfig }: Props) => {
+const CreateEvent = ({ foodOptions, eventsConfig, paymentConfig, web3Config }: Props) => {
   const t = useTranslations();
   const router = useRouter();
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -50,6 +56,29 @@ const CreateEvent = ({ foodOptions, eventsConfig }: Props) => {
   if (!isEventsEnabled) {
     return <FeatureNotEnabled feature="events" />;
   }
+
+  const eventFiatCurrency =
+    paymentConfig?.fiatCur ??
+    paymentConfig?.utilityFiatCur ??
+    'EUR';
+
+  const transformDataBeforeSave = (data: Record<string, unknown>) => {
+    let result = { ...data };
+    if (
+      Array.isArray(result.ticketOptions) &&
+      result.ticketOptions.length > 0 &&
+      eventFiatCurrency
+    ) {
+      result = {
+        ...result,
+        ticketOptions: result.ticketOptions.map((opt: Record<string, unknown>) => ({
+          ...opt,
+          currency: eventFiatCurrency,
+        })),
+      };
+    }
+    return transformEventFoodBeforeSave(result);
+  };
 
   return (
     <>
@@ -78,7 +107,11 @@ const CreateEvent = ({ foodOptions, eventsConfig }: Props) => {
           onSave={(event) => router.push(`/events/${event.slug}`)}
           onError={setSaveError}
           onErrorClear={() => setSaveError(null)}
-          transformDataBeforeSave={transformEventFoodBeforeSave}
+          transformDataBeforeSave={transformDataBeforeSave}
+          currencyConfig={{
+            fiatCur: eventFiatCurrency,
+            tokenCur: getBookingTokenCurrency(web3Config, undefined),
+          }}
         />
       </EditModelPageLayout>
     </>
@@ -101,17 +134,23 @@ CreateEvent.getInitialProps = async (context: NextPageContext) => {
       f.availableFor?.includes('events'),
     );
     const eventsConfig = getConfigValueBySlug(configs, 'events');
+    const paymentConfig = getConfigValueBySlug(configs, 'payment') ?? null;
+    const web3Config = getConfigValueBySlug(configs, 'web3') ?? null;
 
     return {
       messages,
       foodOptions,
       eventsConfig,
+      paymentConfig,
+      web3Config,
     };
   } catch (err: unknown) {
     return {
       messages: null,
       foodOptions: null,
       eventsConfig: null,
+      paymentConfig: null,
+      web3Config: null,
     };
   }
 };

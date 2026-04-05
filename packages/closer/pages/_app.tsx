@@ -20,6 +20,7 @@ import {
 import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import {
+  applyCurrencyLocaleFromGeneralConfig,
   mergeGeneralConfigWithDefaults,
   prepareGeneralConfig,
 } from 'closer/utils/app.helpers';
@@ -85,6 +86,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
           ...keyedConfig.general,
           rbacConfig: keyedConfig.rbac || {},
         });
+        applyCurrencyLocaleFromGeneralConfig(mergedGeneral);
         setConfig({
           ...prepareGeneralConfig(mergedGeneral),
           ...keyedConfig,

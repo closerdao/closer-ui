@@ -41,6 +41,17 @@ const PriceEditor = ({ value = { val: 0.0, cur: CURRENCIES_WITH_LABELS[0].value 
     setPrice(hasVal ? { ...value, cur: nextCur } : { val: 0.0, cur: nextCur });
   }, [value, fixedCurrency]);
 
+  useEffect(() => {
+    if (!fixedCurrency || !onChange || !value) return;
+    if (value.cur === fixedCurrency) return;
+    const hasVal = value.val !== undefined && value.val !== null;
+    onChange({
+      ...value,
+      cur: fixedCurrency,
+      val: hasVal ? Number(value.val) : 0,
+    });
+  }, [fixedCurrency, value?.cur, value?.val, onChange]);
+
   return (
     <div className="currency-group flex justify-start items-center">
       {fixedCurrency ? (

@@ -16,6 +16,7 @@ import { useAuth } from '../../contexts/auth';
 import { CloserCurrencies, PaymentConfig } from '../../types';
 import { Lesson } from '../../types/lesson';
 import api from '../../utils/api';
+import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 
@@ -84,19 +85,25 @@ const LearnCheckout = ({ error, lesson, paymentConfig }: Props) => {
 LearnCheckout.getInitialProps = async (context: NextPageContext) => {
   const { query } = context;
   try {
-    const [lessonRes, paymentConfigRes, messages] = await Promise.all([
-      api.get(`/lesson/${query.lessonId}`).catch(() => {
-        return null;
-      }),
-      api.get('/config/payment').catch(() => {
-        return null;
-      }),
-
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const [lessonRes, paymentConfigRes, bookingConfigRes, messages] =
+      await Promise.all([
+        api.get(`/lesson/${query.lessonId}`).catch(() => {
+          return null;
+        }),
+        api.get('/config/payment').catch(() => {
+          return null;
+        }),
+        api.get('/config/booking').catch(() => {
+          return null;
+        }),
+        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      ]);
 
     const lesson = lessonRes?.data?.results;
-    const paymentConfig = paymentConfigRes?.data?.results?.value;
+    const paymentConfig = (mergePaymentValueWithBookingCurrencyFallback(
+      paymentConfigRes?.data?.results?.value,
+      bookingConfigRes?.data?.results?.value,
+    ) ?? null) as PaymentConfig | null;
     return {
       error: null,
       paymentConfig,
