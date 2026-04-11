@@ -134,7 +134,7 @@ const DatesSelector = ({
   const [calendarErrorDismissed, setCalendarErrorDismissed] = useState(false);
 
   const hasEventIdAndValidTicket = Boolean(
-    eventId && (!ticketOptions?.length || selectedTicketOption),
+    eventId && (!event?.paid || selectedTicketOption),
   );
 
   const decodedBookingType = bookingType
@@ -409,6 +409,12 @@ const DatesSelector = ({
 
   const handleNext = async () => {
     setHandleNextError(null);
+
+    if (event?.paid && !selectedTicketOption) {
+      setHandleNextError(t('bookings_error_no_ticket_option'));
+      return;
+    }
+
     try {
       const data: Record<string, string> = {
         start: String(dayjs(start as string).format('YYYY-MM-DD')) || '',

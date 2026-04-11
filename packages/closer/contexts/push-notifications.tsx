@@ -73,6 +73,7 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
   }, []);
 
   useEffect(() => {
+    if (!isSupported) return;
     let cancelled = false;
     getConfig(api)
       .then((configs) => {
@@ -86,7 +87,7 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isSupported]);
 
   // Sync subscription state from user object
   useEffect(() => {

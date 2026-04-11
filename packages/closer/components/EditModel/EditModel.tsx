@@ -91,7 +91,9 @@ const EditModel: FC<Props> = ({
   const [data, setData] = useState(initialModel);
   const [error, setErrors] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(
+    Boolean(initialData?.slug),
+  );
   const errorRef = useRef<HTMLDivElement>(null);
 
   const [startDate, setStartDate] = useState<string | null | Date>(data.start);

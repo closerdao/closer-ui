@@ -1,7 +1,20 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import React, { useContext, useEffect, useState } from 'react';
+
+import {
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  Info,
+  Map,
+  Shield,
+  Users,
+  Vote,
+} from 'lucide-react';
 
 import {
   getTemplateFields,
@@ -18,6 +31,47 @@ import { useTranslations } from 'next-intl';
 
 const TREASURY_ADDRESS = '0x5E810b93c51981eccA16e030Ea1cE8D8b1DEB83b';
 
+const PROPOSAL_TYPES = [
+  {
+    icon: Map,
+    titleKey: 'governance_proposal_type_masterplan',
+    descKey: 'governance_proposal_type_masterplan_desc',
+  },
+  {
+    icon: Users,
+    titleKey: 'governance_proposal_type_team_election',
+    descKey: 'governance_proposal_type_team_election_desc',
+  },
+  {
+    icon: FileText,
+    titleKey: 'governance_proposal_type_documents',
+    descKey: 'governance_proposal_type_documents_desc',
+  },
+];
+
+const DECISION_STEPS = [
+  {
+    titleKey: 'governance_step_crafting',
+    descKey: 'governance_step_crafting_desc',
+  },
+  {
+    titleKey: 'governance_step_feedback',
+    descKey: 'governance_step_feedback_desc',
+  },
+  {
+    titleKey: 'governance_step_refinement',
+    descKey: 'governance_step_refinement_desc',
+  },
+  {
+    titleKey: 'governance_step_voting',
+    descKey: 'governance_step_voting_desc',
+  },
+  {
+    titleKey: 'governance_step_implementation',
+    descKey: 'governance_step_implementation_desc',
+  },
+];
+
 const CreateProposalPage: NextPage = () => {
   const router = useRouter();
   const { user } = useAuth();
@@ -26,13 +80,14 @@ const CreateProposalPage: NextPage = () => {
   const t = useTranslations();
   const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Closer';
 
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('standard');
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('masterplan');
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
   const [rewards, setRewards] = useState<ProposalReward[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isProcessExpanded, setIsProcessExpanded] = useState(false);
 
   const isCitizen = (): boolean => {
     return user?.roles?.includes('member') || false;
@@ -197,6 +252,130 @@ const CreateProposalPage: NextPage = () => {
             <p className="text-gray-600">
               {t('governance_create_new_proposal')}
             </p>
+          </div>
+
+          <div className="mb-8 space-y-6">
+            <div className="rounded-xl border border-gray-200 bg-white p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Vote className="h-5 w-5 text-accent" />
+                <h2 className="text-lg font-semibold">
+                  {t('governance_what_proposals_include')}
+                </h2>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">
+                {t('governance_dao_membership_note')}
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {PROPOSAL_TYPES.map((type) => (
+                  <div
+                    key={type.titleKey}
+                    className="flex gap-3 rounded-lg border border-gray-100 bg-gray-50/70 p-4"
+                  >
+                    <type.icon className="h-5 w-5 text-gray-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {t(type.titleKey)}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {t(type.descKey)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-gray-200 bg-white">
+              <button
+                type="button"
+                onClick={() => setIsProcessExpanded(!isProcessExpanded)}
+                className="flex w-full items-center justify-between p-6"
+                aria-expanded={isProcessExpanded}
+                aria-controls="decision-process-content"
+              >
+                <div className="flex items-center gap-2">
+                  <Info className="h-5 w-5 text-accent" />
+                  <h2 className="text-lg font-semibold">
+                    {t('governance_decision_process_title')}
+                  </h2>
+                </div>
+                {isProcessExpanded ? (
+                  <ChevronUp className="h-5 w-5 text-gray-400" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-gray-400" />
+                )}
+              </button>
+              {isProcessExpanded && (
+                <div id="decision-process-content" className="px-6 pb-6 space-y-6">
+                  <div className="grid grid-cols-1 gap-3">
+                    {DECISION_STEPS.map((step, index) => (
+                      <div
+                        key={step.titleKey}
+                        className="flex items-start gap-3"
+                      >
+                        <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-accent text-white text-xs font-bold mt-0.5">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {t(step.titleKey)}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {t(step.descKey)}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="rounded-lg border border-gray-100 bg-gray-50/70 p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-gray-500" />
+                      <p className="text-sm font-medium text-gray-900">
+                        {t('governance_voting_rules_title')}
+                      </p>
+                    </div>
+                    <ul className="text-xs text-gray-600 space-y-1.5 ml-6">
+                      <li className="flex items-start gap-2">
+                        <CheckCircle className="h-3.5 w-3.5 text-green-500 flex-shrink-0 mt-0.5" />
+                        {t('governance_voting_rule_quorum')}
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle className="h-3.5 w-3.5 text-green-500 flex-shrink-0 mt-0.5" />
+                        {t('governance_voting_rule_approval')}
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle className="h-3.5 w-3.5 text-green-500 flex-shrink-0 mt-0.5" />
+                        {t('governance_voting_rule_weight')}
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle className="h-3.5 w-3.5 text-green-500 flex-shrink-0 mt-0.5" />
+                        {t('governance_voting_rule_guardians')}
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <Link
+                      href="https://traditionaldreamfactory.gitbook.io/game-guide/03_governance"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline hover:text-gray-700"
+                    >
+                      {t('governance_read_game_guide')}
+                    </Link>
+                    <Link
+                      href="https://traditionaldreamfactory.gitbook.io/game-guide/03_governance/decision_process"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline hover:text-gray-700"
+                    >
+                      {t('governance_read_decision_process')}
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">

@@ -39,82 +39,97 @@ const EventReport = ({ event, error }: Props) => {
   const { payment } = useConfig() || {};
   const vatRate = payment?.vatRate || 0.23;
   const [loading, setLoading] = useState(true);
+  const [eventRevenue, setEventRevenue] = useState(0);
+  const [bookingRevenue, setBookingRevenue] = useState(0);
+  const [ticketCount, setTicketCount] = useState(0);
+  const [dayTicketCount, setDayTicketCount] = useState(0);
 
   const ticketsFilter = event && {
     where: {
-      event: event._id
+      event: event._id,
     },
   };
 
-  const bookingsFilter = event && {
+  const dayTicketsFilter = event && {
     where: {
-      eventId: event._id,
-      status: { $in: ['paid', 'checked-in', 'checked-out'] },
+      event: event._id,
+      'option.isDayTicket': true,
     },
+  };
+
+  const chargeFilter = {
+    eventId: event?._id,
+    status: { $ne: 'refunded' },
   };
 
   const tickets = platform.ticket.find(ticketsFilter);
-  const bookings = platform.booking.find(bookingsFilter);
 
-  // Calculate total event revenue (from tickets)
-  let eventRevenue = 0;
-  let ticketCount = 0;
-  let dayTicketCount = 0;
   const ticketTypeMap = new Map();
-
   tickets?.forEach((ticket: any) => {
-    const price = ticket.getIn(['price','val']) || 0;
+    const price = ticket.getIn(['price', 'val']) || 0;
     const quantity = ticket.get('quantity') || 1;
     const ticketType = ticket.getIn(['option', 'name']) || 'Standard';
 
-    eventRevenue += price;
-    ticketCount += quantity;
-
-    // Check if it's a day ticket (based on name containing "day" or "daily")
-    const isDay = ticketType.toLowerCase().includes('day');
-    if (isDay) {
-      dayTicketCount += quantity;
-    }
-
-    // Aggregate tickets by type
     if (ticketTypeMap.has(ticketType)) {
       ticketTypeMap.set(ticketType, {
         count: ticketTypeMap.get(ticketType).count + quantity,
-        revenue: ticketTypeMap.get(ticketType).revenue + price
+        revenue: ticketTypeMap.get(ticketType).revenue + price,
       });
     } else {
       ticketTypeMap.set(ticketType, { count: quantity, revenue: price });
     }
   });
 
-  // Convert ticket type map to array for chart
-  const ticketsByType = Array.from(ticketTypeMap.entries()).map(([name, data]) => ({
-    name,
-    value: data.count,
-    revenue: data.revenue
-  }));
-
-  // Calculate total booking revenue
-  let bookingRevenue = 0;
-  bookings?.forEach((booking: any) => {
-    const total = booking.getIn(['total', 'val']) || 0;
-    bookingRevenue += total;
-  });
-
+  const ticketsByType = Array.from(ticketTypeMap.entries()).map(
+    ([name, data]) => ({
+      name,
+      value: data.count,
+      revenue: data.revenue,
+    }),
+  );
 
   const canViewReport = user
     ? user?._id === event?.createdBy || user?.roles.includes('admin')
     : false;
 
-
   const loadData = async () => {
     try {
       setLoading(true);
       if (event) {
-        await Promise.all([
+        const [
+          eventRevenueRes,
+          totalRevenueRes,
+          ticketCountRes,
+          dayTicketCountRes,
+        ] = await Promise.all([
+          api
+            .get('/sum/charge/amount.event.val', {
+              params: { where: chargeFilter },
+            })
+            .catch(() => ({ data: { sum: 0 } })),
+          api
+            .get('/sum/charge/amount.total.val', {
+              params: { where: chargeFilter },
+            })
+            .catch(() => ({ data: { sum: 0 } })),
+          platform.ticket.getCount(ticketsFilter),
+          platform.ticket.getCount(dayTicketsFilter),
           platform.ticket.get(ticketsFilter),
-          platform.booking.get(bookingsFilter),
         ]);
+
+        setEventRevenue(eventRevenueRes.data?.sum || 0);
+        const totalRev = totalRevenueRes.data?.sum || 0;
+        setBookingRevenue(totalRev - (eventRevenueRes.data?.sum || 0));
+        setTicketCount(
+          typeof ticketCountRes?.results === 'number'
+            ? ticketCountRes.results
+            : platform.ticket.findCount(ticketsFilter) || 0,
+        );
+        setDayTicketCount(
+          typeof dayTicketCountRes?.results === 'number'
+            ? dayTicketCountRes.results
+            : platform.ticket.findCount(dayTicketsFilter) || 0,
+        );
       }
     } catch (err) {
       console.error('Error loading data:', err);

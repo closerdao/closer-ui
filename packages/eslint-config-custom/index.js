@@ -31,5 +31,6 @@ module.exports = {
   },
   globals: {
     NodeJS: true,
+    BigInt: true,
   },
 };

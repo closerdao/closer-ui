@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingStepsInfo from '../../../components/BookingStepsInfo';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import ListingCard from '../../../components/ListingCard';
 import { ErrorMessage } from '../../../components/ui';
@@ -25,7 +26,6 @@ import {
   Event,
   Listing,
 } from '../../../types';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api from '../../../utils/api';
 import {
   buildBookingAccomodationUrl,
@@ -35,9 +35,9 @@ import {
 } from '../../../utils/booking.helpers';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
+import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import { getBookingRate, getDiscountRate } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
-import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageNotFound from '../../not-found';
 
 dayjs.extend(advancedFormat);
@@ -131,9 +131,17 @@ const AccomodationSelector = ({
 
   const [requestError, setRequestError] = useState<string | null>(null);
 
+  const isPaidEventWithoutTicket = Boolean(event?.paid && !ticketOption);
+
   const bookListing = async (listingId: string) => {
     try {
       setRequestError(null);
+
+      if (isPaidEventWithoutTicket) {
+        setRequestError(t('bookings_error_no_ticket_option'));
+        return;
+      }
+
       const volunteerInfo = (bookingType === 'volunteer' ||
         bookingType === 'residence') && {
         skills: parsedSkills,
@@ -229,7 +237,11 @@ const AccomodationSelector = ({
     <>
       <div className="max-w-screen-sm mx-auto p-4 md:p-8">
         <div className="relative flex items-center min-h-[2.75rem] mb-6">
-          <BookingBackButton onClick={backToDates} name={t('buttons_back')} className="relative z-10" />
+          <BookingBackButton
+            onClick={backToDates}
+            name={t('buttons_back')}
+            className="relative z-10"
+          />
           <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
             <Heading className="text-2xl md:text-3xl pb-0 mt-0 text-center">
               <span>{t('bookings_accomodation_step_title')}</span>
@@ -334,8 +346,8 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
     const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
 
     const [availabilityRes, configs, messages] = await Promise.all([
-        api
-          .post('/bookings/availability', {
+      api
+        .post('/bookings/availability', {
           start,
           end,
           adults,
@@ -354,9 +366,9 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
           );
           return { error: err.response.data.error || 'Unknown error' };
         }),
-        getConfig(api),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      ]);
+      getConfig(api),
+      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    ]);
     const bookingError = (availabilityRes as any)?.error || null;
     const availability = (availabilityRes as any)?.data?.results;
 

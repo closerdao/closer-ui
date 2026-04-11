@@ -88,7 +88,7 @@ describe('BookingSummaryPage', () => {
       .find(Boolean);
     expect(costsSection).toBeInTheDocument();
     const foodLabel = screen.getByText(/Food:/i);
-    expect(foodLabel.closest('div')).toHaveTextContent(/€0\.00|not included/i);
+    expect(foodLabel.closest('div')).toHaveTextContent(/€0\.00|0,00\s*€|not included/i);
   });
 
   it('shows food cost when booking has food selected', () => {
@@ -106,7 +106,7 @@ describe('BookingSummaryPage', () => {
       />,
     );
     const foodRow = screen.getByText(/Food:/i).closest('div');
-    expect(foodRow).toHaveTextContent('€24.00');
+    expect(foodRow).toHaveTextContent(/24,00\s*€/);
   });
 
   it('correctly sums accommodation + utilities + food in total', () => {
@@ -130,9 +130,9 @@ describe('BookingSummaryPage', () => {
       .find(Boolean);
     expect(costsSection).toBeInTheDocument();
     const withinCosts = within(costsSection as HTMLElement);
-    expect(withinCosts.getByText(/Accommodation:/i).closest('div')).toHaveTextContent('€60.00');
-    expect(withinCosts.getByText(/Utilities fee:/i).closest('div')).toHaveTextContent('€20.00');
-    expect(withinCosts.getByText(/Food:/i).closest('div')).toHaveTextContent('€24.00');
-    expect(withinCosts.getByText(/Total/i).closest('div')).toHaveTextContent('€104.00');
+    expect(withinCosts.getByText(/Accommodation:/i).closest('div')).toHaveTextContent(/60,00\s*€/);
+    expect(withinCosts.getByText(/Utilities fee:/i).closest('div')).toHaveTextContent(/20,00\s*€/);
+    expect(withinCosts.getByText(/Food:/i).closest('div')).toHaveTextContent(/24,00\s*€/);
+    expect(withinCosts.getByText(/Total/i).closest('div')).toHaveTextContent(/104,00\s*€/);
   });
 });

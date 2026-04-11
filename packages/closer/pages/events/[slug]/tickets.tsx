@@ -1,8 +1,9 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
+import Pagination from '../../../components/Pagination';
 import TicketListPreview from '../../../components/TicketListPreview';
 import Heading from '../../../components/ui/Heading';
 
@@ -10,6 +11,7 @@ import { ArrowLeft } from 'lucide-react';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import { TICKETS_PER_PAGE } from '../../../constants';
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
@@ -35,20 +37,38 @@ const EventTickets = ({ event, eventsConfig }: Props) => {
 
   const { user } = useAuth();
   const { platform }: any = usePlatform();
+
+  const [page, setPage] = useState(1);
+  const [totalTickets, setTotalTickets] = useState(0);
+
   const ticketsFilter = { where: { event: event && event._id } };
-  const tickets = platform.ticket.find(ticketsFilter);
+  const paginatedFilter = {
+    where: { event: event && event._id },
+    limit: TICKETS_PER_PAGE,
+    page,
+  };
+
+  const tickets = platform.ticket.find(paginatedFilter);
 
   const isEventsEnabled = eventsConfig?.enabled !== false;
 
   const loadData = async () => {
-    await Promise.all([platform.ticket.get(ticketsFilter)]);
+    const [countRes] = await Promise.all([
+      platform.ticket.getCount(ticketsFilter),
+      platform.ticket.get(paginatedFilter),
+    ]);
+    const count =
+      typeof countRes?.results === 'number'
+        ? countRes.results
+        : platform.ticket.findCount(ticketsFilter) || 0;
+    setTotalTickets(count);
   };
 
   useEffect(() => {
     if (user && user.roles.includes('admin')) {
       loadData();
     }
-  }, [user]);
+  }, [user, page]);
 
   if (!isEventsEnabled) {
     return <FeatureNotEnabled feature="events" />;
@@ -88,9 +108,9 @@ const EventTickets = ({ event, eventsConfig }: Props) => {
           <Heading level={2} className="text-2xl md:text-3xl font-semibold text-gray-900">
             {t('events_slug_tickets_title')}
           </Heading>
-          {tickets && tickets.count() > 0 && (
+          {totalTickets > 0 && (
             <p className="text-gray-600 mt-1">
-              {t('events_slug_tickets_count', { count: tickets.count() })}
+              {t('events_slug_tickets_count', { count: totalTickets })}
             </p>
           )}
         </div>
@@ -105,6 +125,14 @@ const EventTickets = ({ event, eventsConfig }: Props) => {
             <p className="text-gray-500 italic">{t('events_slug_tickets_error')}</p>
           </div>
         )}
+        <div className="mt-10">
+          <Pagination
+            loadPage={(p: number) => setPage(p)}
+            page={page}
+            limit={TICKETS_PER_PAGE}
+            total={totalTickets}
+          />
+        </div>
       </div>
     </>
   );

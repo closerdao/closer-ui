@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { blockchainConfig } from '../../config_blockchain';
 import { useAuth } from '../../contexts/auth';
 import { TokenSale } from '../../types/api';
 import api, { formatSearch } from '../../utils/api';
-import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import { formatIsoFiatAmount, parseTokenUnits } from '../../utils/currencyFormat';
+import MintSweatModal from './MintSweatModal';
 import Modal from '../Modal';
 import Pagination from '../Pagination';
 import { Input, Spinner } from '../ui/';
@@ -92,6 +94,9 @@ const SalesDashboard = ({
   const [isLoadingMatchableSales, setIsLoadingMatchableSales] = useState(false);
   const [isMatchBuyerSuccess, setIsMatchBuyerSuccess] = useState(false);
   const isAdmin = currentUser?.roles.includes('admin');
+  const isSpaceHost = currentUser?.roles?.includes('space-host');
+
+  const [isMintSweatModalOpen, setIsMintSweatModalOpen] = useState(false);
 
   // Fetch complete user data including private fields for admin users
   useEffect(() => {
@@ -352,6 +357,66 @@ const SalesDashboard = ({
     return formatIsoFiatAmount(price, 'USD');
   };
 
+  const paidSalesWithWallet = enrichedSales.filter(
+    (sale) =>
+      sale.status === 'paid' &&
+      sale.buyer?.walletAddress &&
+      sale.quantity,
+  );
+
+  const handleCreateBatchSafeTx = () => {
+    const { address: tokenAddress, symbol: tokenSymbol, decimals: tokenDecimals } =
+      blockchainConfig.BLOCKCHAIN_DAO_TOKEN;
+    const chainId = String(blockchainConfig.BLOCKCHAIN_NETWORK_ID);
+
+    const transactions = paidSalesWithWallet.map((sale) => {
+      const amountSmallestUnit = parseTokenUnits(sale.quantity!, tokenDecimals);
+      return {
+        to: tokenAddress,
+        value: '0',
+        data: null,
+        contractMethod: {
+          inputs: [
+            { internalType: 'address', name: 'to', type: 'address' },
+            { internalType: 'uint256', name: 'amount', type: 'uint256' },
+          ],
+          name: 'mint',
+          payable: false,
+        },
+        contractInputsValues: {
+          to: sale.buyer!.walletAddress,
+          amount: amountSmallestUnit.toString(),
+        },
+      };
+    });
+
+    const batchJson = {
+      version: '1.0',
+      chainId,
+      createdAt: Date.now(),
+      meta: {
+        name: `${tokenSymbol} Token Mint Batch`,
+        description: `Mint $${tokenSymbol} tokens to ${transactions.length} member addresses`,
+        txBuilderVersion: '1.16.5',
+        createdFromSafeAddress: '',
+        createdFromOwnerAddress: '',
+      },
+      transactions,
+    };
+
+    const blob = new Blob([JSON.stringify(batchJson, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `batch-safe-tx-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-4">
       <Card className="bg-background">
@@ -375,6 +440,24 @@ const SalesDashboard = ({
             )}
           </div>
           <div className="flex items-center gap-2">
+            {isSpaceHost && (
+              <Button
+                size="small"
+                onClick={() => setIsMintSweatModalOpen(true)}
+                className="text-xs rounded-full text-background py-1 h-fit"
+              >
+                {t('token_sales_dashboard_mint_sweat_button')}
+              </Button>
+            )}
+            {statusFilter === 'paid' && isAdmin && paidSalesWithWallet.length > 0 && (
+              <Button
+                size="small"
+                onClick={handleCreateBatchSafeTx}
+                className="text-xs rounded-full text-background py-1 h-fit"
+              >
+                {t('token_sales_dashboard_create_batch_safe_tx')}
+              </Button>
+            )}
             {t('token_sales_dashboard_select_status')}
             <Select
               value={statusFilter}
@@ -601,6 +684,10 @@ const SalesDashboard = ({
           </div>
         </Modal>
       )}
+      {isMintSweatModalOpen && (
+        <MintSweatModal onClose={() => setIsMintSweatModalOpen(false)} />
+      )}
+
       {isMatchBuyerModalOpen && (
         <Modal
           closeModal={handleCloseMatchBuyerModal}
