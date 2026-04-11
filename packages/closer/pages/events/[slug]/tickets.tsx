@@ -39,24 +39,29 @@ const EventTickets = ({ event, eventsConfig }: Props) => {
   const { platform }: any = usePlatform();
 
   const [page, setPage] = useState(1);
+  const [totalTickets, setTotalTickets] = useState(0);
 
-  const allTicketsFilter = { where: { event: event && event._id } };
+  const ticketsFilter = { where: { event: event && event._id } };
   const paginatedFilter = {
     where: { event: event && event._id },
     limit: TICKETS_PER_PAGE,
     page,
   };
 
-  const allTickets = platform.ticket.find(allTicketsFilter);
   const tickets = platform.ticket.find(paginatedFilter);
 
   const isEventsEnabled = eventsConfig?.enabled !== false;
 
   const loadData = async () => {
-    await Promise.all([
-      platform.ticket.get(allTicketsFilter),
+    const [countRes] = await Promise.all([
+      platform.ticket.getCount(ticketsFilter),
       platform.ticket.get(paginatedFilter),
     ]);
+    const count =
+      typeof countRes?.results === 'number'
+        ? countRes.results
+        : platform.ticket.findCount(ticketsFilter) || 0;
+    setTotalTickets(count);
   };
 
   useEffect(() => {
@@ -82,8 +87,6 @@ const EventTickets = ({ event, eventsConfig }: Props) => {
   if (!event) {
     return <PageNotFound error="Event not found" />;
   }
-
-  const totalTickets = allTickets ? allTickets.size : 0;
 
   return (
     <>

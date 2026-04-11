@@ -8,7 +8,7 @@ import { blockchainConfig } from '../../config_blockchain';
 import { useAuth } from '../../contexts/auth';
 import { TokenSale } from '../../types/api';
 import api, { formatSearch } from '../../utils/api';
-import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import { formatIsoFiatAmount, parseTokenUnits } from '../../utils/currencyFormat';
 import MintSweatModal from './MintSweatModal';
 import Modal from '../Modal';
 import Pagination from '../Pagination';
@@ -370,10 +370,7 @@ const SalesDashboard = ({
     const chainId = String(blockchainConfig.BLOCKCHAIN_NETWORK_ID);
 
     const transactions = paidSalesWithWallet.map((sale) => {
-      const quantityStr = String(sale.quantity!);
-      const [intPart = '0', fracPart = ''] = quantityStr.split('.');
-      const paddedFrac = fracPart.padEnd(tokenDecimals, '0').slice(0, tokenDecimals);
-      const amountSmallestUnit = BigInt(intPart + paddedFrac);
+      const amountSmallestUnit = parseTokenUnits(sale.quantity!, tokenDecimals);
       return {
         to: tokenAddress,
         value: '0',

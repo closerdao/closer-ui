@@ -290,6 +290,8 @@ const CreateProposalPage: NextPage = () => {
                 type="button"
                 onClick={() => setIsProcessExpanded(!isProcessExpanded)}
                 className="flex w-full items-center justify-between p-6"
+                aria-expanded={isProcessExpanded}
+                aria-controls="decision-process-content"
               >
                 <div className="flex items-center gap-2">
                   <Info className="h-5 w-5 text-accent" />
@@ -304,7 +306,7 @@ const CreateProposalPage: NextPage = () => {
                 )}
               </button>
               {isProcessExpanded && (
-                <div className="px-6 pb-6 space-y-6">
+                <div id="decision-process-content" className="px-6 pb-6 space-y-6">
                   <div className="grid grid-cols-1 gap-3">
                     {DECISION_STEPS.map((step, index) => (
                       <div

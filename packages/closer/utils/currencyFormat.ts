@@ -80,3 +80,19 @@ export function formatIsoFiatAmount(
     return `${symbol}${formatted}`;
   }
 }
+
+export function parseTokenUnits(amount: string | number, decimals: number): bigint {
+  let str = typeof amount === 'number' ? amount.toFixed(decimals) : String(amount);
+
+  if (str.includes('e') || str.includes('E')) {
+    str = Number(str).toFixed(decimals);
+  }
+
+  const negative = str.startsWith('-');
+  if (negative) str = str.slice(1);
+
+  const [intPart = '0', fracPart = ''] = str.split('.');
+  const paddedFrac = fracPart.padEnd(decimals, '0').slice(0, decimals);
+  const result = BigInt(intPart + paddedFrac);
+  return negative ? -result : result;
+}

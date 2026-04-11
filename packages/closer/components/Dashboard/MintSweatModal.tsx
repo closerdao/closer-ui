@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 
 import { blockchainConfig } from '../../config_blockchain';
 import api, { formatSearch } from '../../utils/api';
+import { parseTokenUnits } from '../../utils/currencyFormat';
 import Modal from '../Modal';
 import { Input } from '../ui/';
 import Button from '../ui/Button';
@@ -216,8 +217,7 @@ const MintSweatModal = ({ onClose }: MintSweatModalProps) => {
     const chainId = String(blockchainConfig.BLOCKCHAIN_NETWORK_ID);
 
     const transactions = validEntries.map((entry) => {
-      const amountSmallestUnit =
-        BigInt(Math.round(Number(entry.amount) * 10 ** tokenDecimals));
+      const amountSmallestUnit = parseTokenUnits(entry.amount, tokenDecimals);
       return {
         to: tokenAddress,
         value: '0',
