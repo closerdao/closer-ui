@@ -103,6 +103,7 @@
   "bookings_dates_enter_date": "Insira a data",
   "bookings_dates_error_prefix": "Erro",
   "bookings_dates_min_duration_error": "A duração mínima da reserva é de {var} dias",
+  "bookings_error_no_ticket_option": "Por favor, selecione uma opção de bilhete antes de reservar",
   "bookings_questionnaire_step_title": "Sobre você",
   "bookings_questionnaire_step_subtitle": "Responda às perguntas abaixo",
   "bookings_checkout_step_title": "Finalizar Compra",
