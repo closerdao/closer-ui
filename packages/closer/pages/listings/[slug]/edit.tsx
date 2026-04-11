@@ -32,21 +32,6 @@ const EditListing = ({ listing, bookingConfig, paymentConfig, web3Config }: Prop
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
-  const onUpdate = async (
-    name: any,
-    value: any,
-    option: any,
-    actionType: any,
-  ) => {
-    if (actionType === 'ADD' && name === 'visibleBy' && option._id) {
-      await api.post(`/moderator/listing/${listing._id}/add`, option);
-    }
-  };
-
-  if (!listing) {
-    return <Heading>{t('listings_slug_edit_error')}</Heading>;
-  }
-
   const listingFiatCurrency =
     paymentConfig?.fiatCur ??
     paymentConfig?.utilityFiatCur ??
@@ -65,6 +50,17 @@ const EditListing = ({ listing, bookingConfig, paymentConfig, web3Config }: Prop
         field.name !== 'tokenPrice' && field.name !== 'tokenHourlyPrice',
     );
   }, [showTokenRentalPrices]);
+
+  const onUpdate = async (
+    name: any,
+    value: any,
+    option: any,
+    actionType: any,
+  ) => {
+    if (actionType === 'ADD' && name === 'visibleBy' && option._id) {
+      await api.post(`/moderator/listing/${listing._id}/add`, option);
+    }
+  };
 
   const transformListingBeforeSave = (data: Record<string, unknown>) => ({
     ...data,
@@ -87,6 +83,10 @@ const EditListing = ({ listing, bookingConfig, paymentConfig, web3Config }: Prop
           }
         : data.fiatHourlyPrice,
   });
+
+  if (!listing) {
+    return <Heading>{t('listings_slug_edit_error')}</Heading>;
+  }
 
   return (
     <>

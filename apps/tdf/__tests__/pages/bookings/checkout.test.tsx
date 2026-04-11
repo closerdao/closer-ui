@@ -74,7 +74,7 @@ describe('BookingCheckoutPage', () => {
       />,
     );
     const totalSection = screen.getByText(/Total:/i).closest('div');
-    expect(totalSection).toHaveTextContent(/€\d+\.\d{2}/);
+    expect(totalSection).toHaveTextContent(/\d+[.,]\d{2}\s*€/);
     expect(totalSection).not.toHaveTextContent('TDF');
   });
 
