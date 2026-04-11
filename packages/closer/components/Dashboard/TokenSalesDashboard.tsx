@@ -352,6 +352,65 @@ const SalesDashboard = ({
     return formatIsoFiatAmount(price, 'USD');
   };
 
+  const TOKEN_CONTRACT_ADDRESS =
+    '0x10CB7F49389787A99b59B2f87dfDd3bba141559f';
+
+  const handleCreateBatchSafeTx = () => {
+    const paidSalesWithWallet = enrichedSales.filter(
+      (sale) =>
+        sale.status === 'paid' &&
+        sale.buyer?.walletAddress &&
+        sale.quantity,
+    );
+
+    const transactions = paidSalesWithWallet.map((sale) => {
+      const amountWei = BigInt(sale.quantity!) * BigInt(10 ** 18);
+      return {
+        to: TOKEN_CONTRACT_ADDRESS,
+        value: '0',
+        data: null,
+        contractMethod: {
+          inputs: [
+            { internalType: 'address', name: 'to', type: 'address' },
+            { internalType: 'uint256', name: 'amount', type: 'uint256' },
+          ],
+          name: 'mint',
+          payable: false,
+        },
+        contractInputsValues: {
+          to: sale.buyer!.walletAddress,
+          amount: amountWei.toString(),
+        },
+      };
+    });
+
+    const batchJson = {
+      version: '1.0',
+      chainId: '42220',
+      createdAt: Date.now(),
+      meta: {
+        name: 'TDF Token Mint Batch',
+        description: `Mint $TDF tokens to ${transactions.length} member addresses`,
+        txBuilderVersion: '1.16.5',
+        createdFromSafeAddress: '',
+        createdFromOwnerAddress: '',
+      },
+      transactions,
+    };
+
+    const blob = new Blob([JSON.stringify(batchJson, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `batch-safe-tx-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-4">
       <Card className="bg-background">
@@ -375,6 +434,15 @@ const SalesDashboard = ({
             )}
           </div>
           <div className="flex items-center gap-2">
+            {statusFilter === 'paid' && enrichedSales.length > 0 && (
+              <Button
+                size="small"
+                onClick={handleCreateBatchSafeTx}
+                className="text-xs rounded-full text-background py-1 h-fit"
+              >
+                {t('token_sales_dashboard_create_batch_safe_tx')}
+              </Button>
+            )}
             {t('token_sales_dashboard_select_status')}
             <Select
               value={statusFilter}

@@ -2293,6 +2293,7 @@
   "token_sales_dashboard_match_buyer_submitting": "A associar…",
   "token_sales_dashboard_match_buyer_submit": "Associar comprador",
   "token_sales_dashboard_match_buyer_success": "Comprador associado com sucesso",
+  "token_sales_dashboard_create_batch_safe_tx": "Criar Tx Safe em Lote",
 
   "expense_tracking_dashboard_title": "Controle de Despesas",
   "expense_tracking_dashboard_info_start_date": "O controlo de despesas neste painel inclui dados a partir de 1 de janeiro de 2026.",

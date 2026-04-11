@@ -1812,6 +1812,7 @@
   "token_sales_dashboard_match_buyer_submitting": "Dopasowywanie…",
   "token_sales_dashboard_match_buyer_submit": "Dopasuj kupującego",
   "token_sales_dashboard_match_buyer_success": "Kupujący został pomyślnie dopasowany",
+  "token_sales_dashboard_create_batch_safe_tx": "Utwórz zbiorczą tx Safe",
 
   "expense_tracking_dashboard_title": "Śledzenie wydatków",
   "expense_tracking_dashboard_info_start_date": "Śledzenie wydatków w tym panelu obejmuje dane od 1 stycznia 2026 r.",

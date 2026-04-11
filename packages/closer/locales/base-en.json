@@ -2447,6 +2447,7 @@
   "token_sales_dashboard_match_buyer_submitting": "Matching…",
   "token_sales_dashboard_match_buyer_submit": "Match buyer",
   "token_sales_dashboard_match_buyer_success": "Buyer matched successfully",
+  "token_sales_dashboard_create_batch_safe_tx": "Create Batch Safe Tx",
 
   "expense_tracking_dashboard_title": "Expense Tracking",
   "expense_tracking_dashboard_info_start_date": "Expense tracking in this dashboard includes data from January 1, 2026 onward.",
