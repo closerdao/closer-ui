@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { blockchainConfig } from '../../config_blockchain';
 import { useAuth } from '../../contexts/auth';
 import { TokenSale } from '../../types/api';
 import api, { formatSearch } from '../../utils/api';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import MintSweatModal from './MintSweatModal';
 import Modal from '../Modal';
 import Pagination from '../Pagination';
 import { Input, Spinner } from '../ui/';
@@ -92,6 +94,9 @@ const SalesDashboard = ({
   const [isLoadingMatchableSales, setIsLoadingMatchableSales] = useState(false);
   const [isMatchBuyerSuccess, setIsMatchBuyerSuccess] = useState(false);
   const isAdmin = currentUser?.roles.includes('admin');
+  const isSpaceHost = currentUser?.roles?.includes('space-host');
+
+  const [isMintSweatModalOpen, setIsMintSweatModalOpen] = useState(false);
 
   // Fetch complete user data including private fields for admin users
   useEffect(() => {
@@ -352,21 +357,25 @@ const SalesDashboard = ({
     return formatIsoFiatAmount(price, 'USD');
   };
 
-  const TOKEN_CONTRACT_ADDRESS =
-    '0x10CB7F49389787A99b59B2f87dfDd3bba141559f';
+  const paidSalesWithWallet = enrichedSales.filter(
+    (sale) =>
+      sale.status === 'paid' &&
+      sale.buyer?.walletAddress &&
+      sale.quantity,
+  );
 
   const handleCreateBatchSafeTx = () => {
-    const paidSalesWithWallet = enrichedSales.filter(
-      (sale) =>
-        sale.status === 'paid' &&
-        sale.buyer?.walletAddress &&
-        sale.quantity,
-    );
+    const { address: tokenAddress, symbol: tokenSymbol, decimals: tokenDecimals } =
+      blockchainConfig.BLOCKCHAIN_DAO_TOKEN;
+    const chainId = String(blockchainConfig.BLOCKCHAIN_NETWORK_ID);
 
     const transactions = paidSalesWithWallet.map((sale) => {
-      const amountWei = BigInt(sale.quantity!) * BigInt(10 ** 18);
+      const quantityStr = String(sale.quantity!);
+      const [intPart = '0', fracPart = ''] = quantityStr.split('.');
+      const paddedFrac = fracPart.padEnd(tokenDecimals, '0').slice(0, tokenDecimals);
+      const amountSmallestUnit = BigInt(intPart + paddedFrac);
       return {
-        to: TOKEN_CONTRACT_ADDRESS,
+        to: tokenAddress,
         value: '0',
         data: null,
         contractMethod: {
@@ -379,18 +388,18 @@ const SalesDashboard = ({
         },
         contractInputsValues: {
           to: sale.buyer!.walletAddress,
-          amount: amountWei.toString(),
+          amount: amountSmallestUnit.toString(),
         },
       };
     });
 
     const batchJson = {
       version: '1.0',
-      chainId: '42220',
+      chainId,
       createdAt: Date.now(),
       meta: {
-        name: 'TDF Token Mint Batch',
-        description: `Mint $TDF tokens to ${transactions.length} member addresses`,
+        name: `${tokenSymbol} Token Mint Batch`,
+        description: `Mint $${tokenSymbol} tokens to ${transactions.length} member addresses`,
         txBuilderVersion: '1.16.5',
         createdFromSafeAddress: '',
         createdFromOwnerAddress: '',
@@ -434,7 +443,16 @@ const SalesDashboard = ({
             )}
           </div>
           <div className="flex items-center gap-2">
-            {statusFilter === 'paid' && enrichedSales.length > 0 && (
+            {isSpaceHost && (
+              <Button
+                size="small"
+                onClick={() => setIsMintSweatModalOpen(true)}
+                className="text-xs rounded-full text-background py-1 h-fit"
+              >
+                {t('token_sales_dashboard_mint_sweat_button')}
+              </Button>
+            )}
+            {statusFilter === 'paid' && isAdmin && paidSalesWithWallet.length > 0 && (
               <Button
                 size="small"
                 onClick={handleCreateBatchSafeTx}
@@ -669,6 +687,10 @@ const SalesDashboard = ({
           </div>
         </Modal>
       )}
+      {isMintSweatModalOpen && (
+        <MintSweatModal onClose={() => setIsMintSweatModalOpen(false)} />
+      )}
+
       {isMatchBuyerModalOpen && (
         <Modal
           closeModal={handleCloseMatchBuyerModal}
