@@ -33,8 +33,11 @@ import { useConfig } from '../../../hooks/useConfig';
 import { getAccessToken } from '../../../utils/authStorage';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
+import {
+  filterCombinedEntriesToExpenseFcToconlineDocuments,
+  parseExpenseTrackingCombinedEntriesPayload,
+} from '../../../utils/expenseTracking.helpers';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
-import { parseExpenseTrackingCombinedEntriesPayload } from '../../../utils/expenseTracking.helpers';
 import { formatDateForApi, getDateRange } from '../../../utils/dashboard.helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 
@@ -121,6 +124,7 @@ const ExpenseTrackingDashboardPage = ({
               page: 1,
               limit: CHARGE_DOWNLOAD_LIMIT,
               sort_by: '-date',
+              toconline_document_type: 'FC',
               ...(forceRefresh && { _refresh: Date.now() }),
             },
           }),
@@ -129,8 +133,11 @@ const ExpenseTrackingDashboardPage = ({
         const parsed = parseExpenseTrackingCombinedEntriesPayload(
           combinedRes.data,
         );
-        setCombinedEntries(parsed.entries);
-        setTotalCombinedCount(parsed.total);
+        const filtered = filterCombinedEntriesToExpenseFcToconlineDocuments(
+          parsed.entries,
+        );
+        setCombinedEntries(filtered);
+        setTotalCombinedCount(filtered.length);
         setChargeCountInRange(normalizePlatformCount(countRes));
       } catch (err) {
         setCombinedEntries([]);

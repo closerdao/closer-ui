@@ -63,6 +63,7 @@ export interface ToconlineDocument {
   supplier_country?: string;
   currency_iso_code?: string;
   external_reference?: string;
+  public_link?: string;
   lines?: ToconlineDocumentLine[];
   [key: string]: unknown;
 }

@@ -1,22 +1,20 @@
 import React, { useCallback, useState } from 'react';
 
-import { useTranslations } from 'next-intl';
-
-import { Button, Card, LinkButton } from '../ui';
-import Heading from '../ui/Heading';
-
 import {
   ExpenseTrackingChargeRow,
   ExpenseTrackingCombinedEntry,
   ToconlineDocument,
 } from 'closer/types/expense';
 import {
-  getCombinedEntryRowKey,
   ToconlineRowUiState,
+  getCombinedEntryRowKey,
   toconlineLinkToRowUiState,
 } from 'closer/utils/expenseTracking.helpers';
+import { useTranslations } from 'next-intl';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 
+import { Button, Card, LinkButton } from '../ui';
+import Heading from '../ui/Heading';
 import ToconlineDocumentDialog from './ToconlineDocumentDialog';
 
 const renderExpenseToconlineCell = (
@@ -38,18 +36,36 @@ const renderExpenseToconlineCell = (
   }
   if (state.kind === 'linked') {
     return (
-      <Button
-        onClick={() => onOpenToconline(state.doc)}
-        variant="secondary"
-        size="small"
-        className={
-          layout === 'table'
-            ? 'text-xs py-0 min-h-[24px] w-fit'
-            : 'text-xs py-1'
-        }
-      >
-        {t('expense_tracking_view_doc')}
-      </Button>
+      <div className="flex gap-1 items-center justify-center">
+        <Button
+          onClick={() => onOpenToconline(state.doc)}
+          variant="secondary"
+          size="small"
+          className={
+            layout === 'table'
+              ? 'text-xs py-0 min-h-[24px] w-fit'
+              : 'text-xs py-1'
+          }
+        >
+          {t('expense_tracking_view_doc')}
+        </Button>
+        {state.doc.public_link && (
+          <LinkButton
+            href={state.doc.public_link}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="secondary"
+            size="small"
+            className={
+              layout === 'table'
+                ? 'text-xs py-0 min-h-[24px] w-fit px-2'
+                : 'text-xs py-1'
+            }
+          >
+            PDF
+          </LinkButton>
+        )}
+      </div>
     );
   }
   return (
@@ -92,7 +108,9 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
             </Heading>
           </div>
           <div className="flex flex-1 items-center justify-center p-8">
-            <p className="text-gray-500">{t('expense_tracking_loading_list')}</p>
+            <p className="text-gray-500">
+              {t('expense_tracking_loading_list')}
+            </p>
           </div>
         </Card>
       </section>
@@ -175,7 +193,8 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                   if (entry.kind === 'charge') {
                     const charge = entry.charge;
                     const description =
-                      charge?.description || t('expense_tracking_not_available');
+                      charge?.description ||
+                      t('expense_tracking_not_available');
                     const category =
                       charge?.category || t('expense_tracking_not_available');
                     const amount = charge.amount?.total?.val || 0;
@@ -248,8 +267,7 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
                     doc.date != null && doc.date !== ''
                       ? new Date(doc.date).toLocaleDateString()
                       : t('expense_tracking_not_available');
-                  const gross =
-                    doc.gross_total ?? doc.pending_total ?? 0;
+                  const gross = doc.gross_total ?? doc.pending_total ?? 0;
                   const cur = doc.currency_iso_code ?? 'EUR';
                   const desc =
                     doc.supplier_business_name ||
