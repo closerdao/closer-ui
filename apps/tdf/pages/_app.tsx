@@ -24,6 +24,7 @@ import { NewsletterProvider } from 'closer/contexts/newsletter';
 import { PushNotificationProvider } from 'closer/contexts/push-notifications';
 import { WalletProvider } from 'closer/contexts/wallet';
 import {
+  applyCurrencyLocaleFromGeneralConfig,
   mergeGeneralConfigWithDefaults,
   prepareGeneralConfig,
 } from 'closer/utils/app.helpers';
@@ -39,6 +40,7 @@ interface AppOwnProps extends AppProps {
 
 const MyApp = ({ Component, pageProps }: AppOwnProps) => {
   const defaultGeneralConfig = mergeGeneralConfigWithDefaults(null);
+  applyCurrencyLocaleFromGeneralConfig(defaultGeneralConfig);
   const router = useRouter();
   const { query } = router;
   const referral = query.referral;
@@ -68,6 +70,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         const mergedGeneral = mergeGeneralConfigWithDefaults(
           keyedConfig.general,
         );
+        applyCurrencyLocaleFromGeneralConfig(mergedGeneral);
         setConfig({
           ...prepareGeneralConfig(mergedGeneral),
           ...keyedConfig,

@@ -197,6 +197,9 @@ export {
   invalidateConfigCache,
   CONFIG_CACHE_TTL,
 } from './utils/configCache';
-export { buildMergedConfig } from './utils/config.utils';
+export {
+  buildMergedConfig,
+  mergePaymentValueWithBookingCurrencyFallback,
+} from './utils/config.utils';
 // Note: blockchain utils import ethers (~500KB) - import directly from 'closer/utils/blockchain' when needed
 export * from './utils/helpers';

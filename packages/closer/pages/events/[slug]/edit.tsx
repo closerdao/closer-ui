@@ -28,6 +28,7 @@ interface EventsConfig {
 }
 
 interface PaymentConfig {
+  fiatCur?: string;
   utilityFiatCur?: string;
 }
 
@@ -111,7 +112,8 @@ const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig, pay
     router.push(`/events/${savedEvent.slug}`);
   };
 
-  const paymentCurrency = paymentConfig?.utilityFiatCur ?? 'EUR';
+  const paymentCurrency =
+    paymentConfig?.fiatCur ?? paymentConfig?.utilityFiatCur ?? 'EUR';
 
   const transformDataBeforeSave = (data: any) => {
     let result = { ...data };

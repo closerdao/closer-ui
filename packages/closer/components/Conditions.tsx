@@ -58,15 +58,20 @@ const Conditions = ({
       >
         <p className='text-md'>
           <span>{t('bookings_checkout_step_comply_with')}</span>
-          <a
-            className="border-b pb-1 border-neutral-400 border-dashed no-underline"
-            href={visitorsGuide}
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            {t('bookings_checkout_step_visitors_guide')}
-          </a>
-          <span className="mx-2">{t('generic_and')}</span>
+          {visitorsGuide && (
+            <>
+              <a
+                className="border-b pb-1 border-neutral-400 border-dashed no-underline"
+                href={visitorsGuide}
+                target="_blank"
+                rel="noreferrer noopener"
+              >
+                {t('bookings_checkout_step_visitors_guide')}
+              </a>
+              <span className="mx-2">{t('generic_and')}</span>
+            </>
+          )}
+
           <button
             className="border-b pb-1 border-neutral-400 border-dashed"
             onClick={openModal}

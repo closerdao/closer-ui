@@ -22,6 +22,7 @@ import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
+import { CloserCurrencies } from '../../../types/currency';
 import { Event, Listing } from '../../../types';
 import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api, { cdn } from '../../../utils/api';
@@ -107,8 +108,11 @@ const EventPage = ({
     ? 1 - getDiscountRate(durationName, settings)
     : 0;
 
-  const { min: minAccommodationPrice, max: maxAccommodationPrice } =
-    getAccommodationPriceRange(settings, listings, durationInDays, start);
+  const {
+    min: minAccommodationPrice,
+    max: maxAccommodationPrice,
+    currency: accommodationCurrency,
+  } = getAccommodationPriceRange(settings, listings, durationInDays, start);
 
   const myTickets = platform.ticket.find(myTicketFilter);
 
@@ -564,10 +568,12 @@ const EventPage = ({
                                     <strong>
                                       {priceFormat(
                                         minAccommodationPrice * discountRate,
+                                        accommodationCurrency as CloserCurrencies,
                                       )}{' '}
                                       -{' '}
                                       {priceFormat(
                                         maxAccommodationPrice * discountRate,
+                                        accommodationCurrency as CloserCurrencies,
                                       )}
                                     </strong>
                                   </div>

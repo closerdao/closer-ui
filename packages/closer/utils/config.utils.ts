@@ -62,8 +62,42 @@ export const buildMergedConfig = (
   Object.keys(apiBySlug).forEach((slug) => {
     if (!result[slug]) result[slug] = apiBySlug[slug];
   });
+
+  const rawPayment = apiBySlug['payment'] ?? {};
+  const mergedBooking = result['booking'];
+  if (
+    result.payment &&
+    mergedBooking?.utilityFiatCur &&
+    !('fiatCur' in rawPayment) &&
+    !('utilityFiatCur' in rawPayment)
+  ) {
+    const cur = String(mergedBooking.utilityFiatCur);
+    result.payment = { ...result.payment, fiatCur: cur, utilityFiatCur: cur };
+  }
+
   return result;
 };
+
+export function mergePaymentValueWithBookingCurrencyFallback(
+  payment: Record<string, unknown> | null | undefined,
+  booking: Record<string, unknown> | null | undefined,
+): Record<string, unknown> | null | undefined {
+  if (!payment) {
+    return payment === null ? null : undefined;
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(payment, 'fiatCur') ||
+    Object.prototype.hasOwnProperty.call(payment, 'utilityFiatCur')
+  ) {
+    return payment;
+  }
+  const cur = booking?.utilityFiatCur;
+  if (cur == null || cur === '') {
+    return payment;
+  }
+  const curStr = String(cur);
+  return { ...payment, fiatCur: curStr, utilityFiatCur: curStr };
+}
 
 export const getDefaultConfigValue = (
   slug: string,

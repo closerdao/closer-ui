@@ -18,6 +18,7 @@ import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import { FundraisingConfig, GeneralConfig, PaymentConfig } from '../../types';
 import api from '../../utils/api';
+import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
 import { parseMessageFromError } from '../../utils/common';
 import { getVatInfo, priceFormat } from '../../utils/helpers';
 import { loadLocaleData } from '../../utils/locale.helpers';
@@ -152,23 +153,28 @@ const CreditsCheckoutPage: NextPage<Props> = ({
 
 CreditsCheckoutPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [fundraiserRes, paymentRes, generalRes, messages] = await Promise.all(
-      [
+    const [fundraiserRes, paymentRes, bookingRes, generalRes, messages] =
+      await Promise.all([
         api.get('/config/fundraiser').catch(() => {
           return null;
         }),
         api.get('/config/payment').catch(() => {
           return null;
         }),
+        api.get('/config/booking').catch(() => {
+          return null;
+        }),
         api.get('/config/general').catch(() => {
           return null;
         }),
         loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      ],
-    );
+      ]);
 
     const fundraisingConfig = fundraiserRes?.data?.results?.value;
-    const paymentConfig = paymentRes?.data?.results?.value;
+    const paymentConfig = (mergePaymentValueWithBookingCurrencyFallback(
+      paymentRes?.data?.results?.value,
+      bookingRes?.data?.results?.value,
+    ) ?? null) as PaymentConfig | null;
     const generalConfig = generalRes?.data?.results?.value;
     return {
       fundraisingConfig,

@@ -81,13 +81,14 @@ const DiscountsEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type
                 max="100"
                 step="1"
                 className="w-32"
-                value={option.percent && option.percent * 100}
+                value={option.percent ? Math.round(option.percent * 10000) / 100 : ''}
                 placeholder="24%"
                 onChange={(e) => {
                   e.preventDefault();
+                  const val = parseFloat(e.target.value);
                   updateOption(index, {
                     ...option,
-                    percent: e.target.value / 100,
+                    percent: isNaN(val) ? '' : Math.round(val * 100) / 10000,
                   });
                 }}
               />

@@ -1,4 +1,5 @@
 import { configDescription } from '../config';
+import { syncCurrencyLocaleFromCountryCode } from './currencyFormat';
 import { getDefaultConfigValue } from './config.utils';
 
 interface InputObject {
@@ -14,6 +15,16 @@ export function mergeGeneralConfigWithDefaults(
   const defaults = getDefaultConfigValue('general', configDescription);
   if (!apiValue || typeof apiValue !== 'object') return defaults;
   return Object.assign({}, defaults, apiValue);
+}
+
+export function applyCurrencyLocaleFromGeneralConfig(
+  general: Record<string, unknown> | null | undefined,
+): void {
+  syncCurrencyLocaleFromCountryCode(
+    general && typeof general === 'object'
+      ? (general.country as string | undefined)
+      : undefined,
+  );
 }
 
 export function prepareGeneralConfig(

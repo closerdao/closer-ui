@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import { useMemo } from 'react';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import EditModel, { EditModelPageLayout } from '../../../components/EditModel';
@@ -31,6 +32,25 @@ const EditListing = ({ listing, bookingConfig, paymentConfig, web3Config }: Prop
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
+  const listingFiatCurrency =
+    paymentConfig?.fiatCur ??
+    paymentConfig?.utilityFiatCur ??
+    bookingConfig?.utilityFiatCur ??
+    'EUR';
+
+  const showTokenRentalPrices =
+    web3Config != null && web3Config.enabled === true;
+
+  const listingFields = useMemo(() => {
+    if (showTokenRentalPrices) {
+      return models.listing;
+    }
+    return models.listing.filter(
+      (field) =>
+        field.name !== 'tokenPrice' && field.name !== 'tokenHourlyPrice',
+    );
+  }, [showTokenRentalPrices]);
+
   const onUpdate = async (
     name: any,
     value: any,
@@ -41,6 +61,28 @@ const EditListing = ({ listing, bookingConfig, paymentConfig, web3Config }: Prop
       await api.post(`/moderator/listing/${listing._id}/add`, option);
     }
   };
+
+  const transformListingBeforeSave = (data: Record<string, unknown>) => ({
+    ...data,
+    fiatPrice:
+      data.fiatPrice &&
+      typeof data.fiatPrice === 'object' &&
+      data.fiatPrice !== null
+        ? {
+            ...(data.fiatPrice as object),
+            cur: listingFiatCurrency,
+          }
+        : data.fiatPrice,
+    fiatHourlyPrice:
+      data.fiatHourlyPrice &&
+      typeof data.fiatHourlyPrice === 'object' &&
+      data.fiatHourlyPrice !== null
+        ? {
+            ...(data.fiatHourlyPrice as object),
+            cur: listingFiatCurrency,
+          }
+        : data.fiatHourlyPrice,
+  });
 
   if (!listing) {
     return <Heading>{t('listings_slug_edit_error')}</Heading>;
@@ -61,9 +103,10 @@ const EditListing = ({ listing, bookingConfig, paymentConfig, web3Config }: Prop
           <EditModel
           id={listing._id}
           endpoint={'/listing'}
-          fields={models.listing}
+          fields={listingFields}
+          transformDataBeforeSave={transformListingBeforeSave}
           currencyConfig={{
-            fiatCur: paymentConfig?.utilityFiatCur ?? bookingConfig?.utilityFiatCur ?? 'EUR',
+            fiatCur: listingFiatCurrency,
             tokenCur: getBookingTokenCurrency(web3Config, bookingConfig),
           }}
           onSave={(listing) => router.push(`/stay/${listing.slug}`)}

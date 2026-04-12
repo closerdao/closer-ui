@@ -2,6 +2,7 @@ import { useTranslations } from 'next-intl';
 
 import { DEFAULT_CURRENCY } from '../constants';
 import { CloserCurrencies, Price } from '../types';
+import { getCurrencySymbol } from '../utils/currencyFormat';
 import { getVatInfo, priceFormat } from '../utils/helpers';
 import CalculatorIcon from './icons/CalculatorIcon';
 import HeadingRow from './ui/HeadingRow';
@@ -34,7 +35,9 @@ const CheckoutTotal = ({
       {useTokens && `${priceFormat(rentalToken?.val, rentalToken?.cur)} + `}
       {useCredits &&
         `${priceFormat({ val: priceInCredits, cur: 'credits' })} + `}
-      {total ? priceFormat(total.val, total.cur || DEFAULT_CURRENCY) : '?€'}
+      {total
+        ? priceFormat(total.val, total.cur || DEFAULT_CURRENCY)
+        : `?${getCurrencySymbol(DEFAULT_CURRENCY)}`}
     </>
   );
   const vatLine = (

@@ -37,6 +37,7 @@ import {
   filterCombinedEntriesToExpenseFcToconlineDocuments,
   parseExpenseTrackingCombinedEntriesPayload,
 } from '../../../utils/expenseTracking.helpers';
+import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
 import { formatDateForApi, getDateRange } from '../../../utils/dashboard.helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 
@@ -219,7 +220,12 @@ const ExpenseTrackingDashboardPage = ({
         const vatSummary = vatSummaryLines
           .map(
             (line) =>
-              `${line.description || ''}|${line.tax_percentage || 0}%|${line.tax_code || ''}|€${(line.unit_price ?? 0).toFixed(2)}`,
+              `${line.description || ''}|${line.tax_percentage || 0}%|${
+                line.tax_code || ''
+              }|${formatIsoFiatAmount(
+                line.unit_price ?? 0,
+                currency || 'EUR',
+              )}`,
           )
           .join('; ');
 

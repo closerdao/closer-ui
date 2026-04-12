@@ -13,6 +13,12 @@ import { useTranslations } from 'next-intl';
 
 import ToconlineDocumentDialog from '../expense-tracking/ToconlineDocumentDialog';
 import { Button, Heading, LinkButton } from '../ui';
+import { Charge } from '../../types/booking';
+import {
+  formatIsoFiatAmount,
+  isIso4217Currency,
+} from '../../utils/currencyFormat';
+
 import MultiSelect from '../ui/Select/MultiSelect';
 
 const renderIncomeToconlineCell = (
@@ -124,14 +130,10 @@ const ChargesTable: React.FC<ChargesTableProps> = ({
       currencyCode = 'EUR';
     }
 
-    try {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: currencyCode,
-      }).format(amount.val);
-    } catch (error) {
-      return `${amount.val.toFixed(2)} ${amount.cur}`;
+    if (isIso4217Currency(currencyCode)) {
+      return formatIsoFiatAmount(amount.val, currencyCode);
     }
+    return `${amount.val.toFixed(2)} ${amount.cur}`;
   };
 
   const formatDate = (date: string | Date | undefined) => {

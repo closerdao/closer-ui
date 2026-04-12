@@ -10,6 +10,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { blockchainConfig } from '../config_blockchain';
 import { DEFAULT_CURRENCY, REFUND_PERIODS } from '../constants';
 import { PaymentType } from '../types';
+import { formatIsoFiatAmount, isIso4217Currency } from './currencyFormat';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(relativeTime);
@@ -88,23 +89,35 @@ export const priceFormat = (price, currency = DEFAULT_CURRENCY) => {
     return `${price.val} ${price.cur}`;
   }
   if (price?.val === null) {
+    const cur = currency || DEFAULT_CURRENCY;
+    if (isIso4217Currency(cur)) {
+      return formatIsoFiatAmount(0, cur);
+    }
     return parseFloat(0).toLocaleString('en-US', {
       style: 'currency',
-      currency,
+      currency: cur,
     });
   }
   if (!currency) {
     currency = DEFAULT_CURRENCY;
   }
   if (typeof price === 'number') {
+    if (isIso4217Currency(currency)) {
+      return formatIsoFiatAmount(parseFloat(price), currency);
+    }
     return parseFloat(price).toLocaleString('en-US', {
       style: 'currency',
       currency,
     });
   } else if (price?.get && typeof price.get('val') !== 'undefined') {
-    return parseFloat(price.get('val')).toLocaleString('en-US', {
+    const priceValue = parseFloat(price.get('val'));
+    const curFromGet = price.get('cur');
+    if (isIso4217Currency(curFromGet)) {
+      return formatIsoFiatAmount(priceValue, curFromGet);
+    }
+    return priceValue.toLocaleString('en-US', {
       style: 'currency',
-      currency: price.get('cur'),
+      currency: curFromGet,
     });
   } else if (typeof price?.val !== 'undefined') {
     const priceValue = parseFloat(price.val);
@@ -125,6 +138,9 @@ export const priceFormat = (price, currency = DEFAULT_CURRENCY) => {
         .map((v, i) => (i === 0 ? '$' + v.value : v.value))
         .join('');
     }
+    if (isIso4217Currency(effectiveCur)) {
+      return formatIsoFiatAmount(priceValue, effectiveCur);
+    }
     return priceValue.toLocaleString('en-US', {
       style: 'currency',
       currency: effectiveCur,
@@ -135,11 +151,18 @@ export const priceFormat = (price, currency = DEFAULT_CURRENCY) => {
     if (effectiveCur && tokenCurrencies.includes(effectiveCur)) {
       return `0.00 ${effectiveCur}`;
     }
+    if (price?.cur && isIso4217Currency(price.cur)) {
+      return formatIsoFiatAmount(0, price.cur);
+    }
+    const fallbackCur = currency || 'EUR';
+    if (isIso4217Currency(fallbackCur)) {
+      return formatIsoFiatAmount(0, fallbackCur);
+    }
     return price?.cur
       ? `0.00 ${price.cur}`
       : parseFloat(0).toLocaleString('en-US', {
           style: 'currency',
-          currency: currency || 'EUR',
+          currency: fallbackCur,
         });
   }
 };

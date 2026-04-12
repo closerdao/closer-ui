@@ -444,7 +444,6 @@ const Checkout = ({
 
         setAvailabilityReason(availabilityReason);
 
-        console.log('availabilityReason=', availabilityReason);
         if (!cancelled) {
           setIsListingAvailable(Boolean(results));
         }
@@ -1005,7 +1004,7 @@ const Checkout = ({
                 booking?.paymentDelta?.fiat &&
                 booking?.paymentDelta?.fiat?.val > 0
               ) && (
-                <>
+                <div className="flex flex-col gap-4">
                   <div>
                     {eventPrice && (
                       <div>
@@ -1203,13 +1202,13 @@ const Checkout = ({
                     {!isHourlyBooking &&
                       ((utilityFiat?.val &&
                         bookingConfig?.utilityOptionEnabled) ||
-                        foodFiat?.val) && (
+                        foodFiat?.val) ? (
                         <p className="text-right text-xs mt-1 text-foreground/80">
                           {t('bookings_summary_step_utility_description')}
                         </p>
-                      )}
+                      ) : null}
                   </div>
-                </>
+                </div>
               )}
             </>
           )}

@@ -1,3 +1,4 @@
+import { DEFAULT_CURRENCY } from '../constants';
 import { Listing } from '../types';
 
 export function transformEventFoodBeforeSave<T extends { foodOptionId?: string | null }>(
@@ -98,6 +99,20 @@ const getMinMaxFiatPrice = (
   return { min, max };
 };
 
+const getAccommodationListingCurrency = (listings: Listing[]): string => {
+  if (listings.length === 0) {
+    return DEFAULT_CURRENCY;
+  }
+  const curs = listings
+    .map((l) => l?.fiatPrice?.cur as string | undefined)
+    .filter((c): c is string => Boolean(c));
+  const unique = [...new Set(curs)];
+  if (unique.length === 1) {
+    return unique[0];
+  }
+  return listings[0]?.fiatPrice?.cur ?? DEFAULT_CURRENCY;
+};
+
 function calculateDurationDiscount(duration: number, settings: any) {
   let discount;
   if (duration >= 28) {
@@ -115,7 +130,7 @@ export const getAccommodationPriceRange = (
   listings: Listing[],
   duration: number,
   start: any,
-) => {
+): { min: number; max: number; currency: string } => {
   const durationDiscount = calculateDurationDiscount(duration, settings);
 
   const listingsAvailableForEvents = listings.filter(
@@ -125,6 +140,7 @@ export const getAccommodationPriceRange = (
       !listing?.availableFor,
   );
   const minMaxValues = getMinMaxFiatPrice(listingsAvailableForEvents);
+  const currency = getAccommodationListingCurrency(listingsAvailableForEvents);
   const seasons = {
     high: {
       start: settings.seasonsHighStart,
@@ -137,9 +153,11 @@ export const getAccommodationPriceRange = (
     ? {
         min: minMaxValues.min * settings.seasonsHighModifier * duration,
         max: minMaxValues.max * settings.seasonsHighModifier * duration,
+        currency,
       }
     : {
         min: minMaxValues.min * duration,
         max: minMaxValues.max * duration * (1 - durationDiscount),
+        currency,
       };
 };

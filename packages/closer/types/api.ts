@@ -126,6 +126,7 @@ export interface BookingRulesConfig {
 
 export type GeneralConfig = {
   enabled: boolean;
+  country?: string;
   appName: string;
   platformName: string;
   semanticUrl: string;

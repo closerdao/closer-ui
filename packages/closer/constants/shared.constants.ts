@@ -528,6 +528,8 @@ export const MAX_USERS_TO_FETCH = 3000;
 
 export const MAX_LISTINGS_TO_FETCH = 100;
 
+export const TICKETS_PER_PAGE = 20;
+
 export const DEFAULT_AVAILABILITY_RANGE_TO_CHECK = 120;
 
 export const paidStatuses = [

@@ -66,6 +66,9 @@ export const handlers = [
       }),
     ),
   ),
+  rest.post('*/bookings/listing/availability', (req, res, ctx) =>
+    res(ctx.status(200), ctx.json({ results: [] })),
+  ),
   rest.post('*/carrots/availability', (req, res, ctx) =>
     res(ctx.status(200), ctx.json({ data: { results: { areCreditsAvailable: false } } })),
   ),

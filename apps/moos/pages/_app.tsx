@@ -22,6 +22,7 @@ import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import { NewsletterProvider } from 'closer/contexts/newsletter';
 import { PushNotificationProvider } from 'closer/contexts/push-notifications';
 import {
+  applyCurrencyLocaleFromGeneralConfig,
   mergeGeneralConfigWithDefaults,
   prepareGeneralConfig,
 } from 'closer/utils/app.helpers';
@@ -40,10 +41,14 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
   const { query } = router;
   const referral = query.referral;
 
-  const [config, setConfig] = useState<any>(() => ({
-    ...prepareGeneralConfig(mergeGeneralConfigWithDefaults(null)),
-    _configLoaded: false,
-  }));
+  const [config, setConfig] = useState<any>(() => {
+    const merged = mergeGeneralConfigWithDefaults(null);
+    applyCurrencyLocaleFromGeneralConfig(merged);
+    return {
+      ...prepareGeneralConfig(merged),
+      _configLoaded: false,
+    };
+  });
 
   const { FACEBOOK_PIXEL_ID } = config || {};
 
@@ -58,6 +63,7 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
       try {
         const keyedConfig = await getConfig(api);
         const mergedGeneral = mergeGeneralConfigWithDefaults(keyedConfig.general);
+        applyCurrencyLocaleFromGeneralConfig(mergedGeneral);
         setConfig({
           ...prepareGeneralConfig(mergedGeneral),
           ...keyedConfig,

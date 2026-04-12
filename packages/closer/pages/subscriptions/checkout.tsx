@@ -32,6 +32,7 @@ import {
   SubscriptionPlan, // Tier,
 } from '../../types/subscriptions';
 import api from '../../utils/api';
+import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
 import { parseMessageFromError } from '../../utils/common';
 import {
   calculateSubscriptionPrice,
@@ -234,12 +235,15 @@ SubscriptionsCheckoutPage.getInitialProps = async (
   context: NextPageContext,
 ) => {
   try {
-    const [subscriptionsRes, paymentRes, generalRes, messages] =
+    const [subscriptionsRes, paymentRes, bookingRes, generalRes, messages] =
       await Promise.all([
         api.get('/config/subscriptions').catch(() => {
           return null;
         }),
         api.get('/config/payment').catch(() => {
+          return null;
+        }),
+        api.get('/config/booking').catch(() => {
           return null;
         }),
         api.get('/config/general').catch(() => {
@@ -249,7 +253,10 @@ SubscriptionsCheckoutPage.getInitialProps = async (
       ]);
 
     const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
-    const paymentConfig = paymentRes?.data?.results?.value;
+    const paymentConfig = (mergePaymentValueWithBookingCurrencyFallback(
+      paymentRes?.data?.results?.value,
+      bookingRes?.data?.results?.value,
+    ) ?? null) as PaymentConfig | null;
     const generalConfig = generalRes?.data?.results?.value;
     return {
       subscriptionsConfig,
