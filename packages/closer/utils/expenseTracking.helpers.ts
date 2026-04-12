@@ -1,11 +1,10 @@
-import dayjs from 'dayjs';
-
 import {
   ExpenseTrackingChargeRow,
   ExpenseTrackingCombinedEntry,
   ExpenseTrackingToconlineLink,
   ToconlineDocument,
 } from 'closer/types/expense';
+import dayjs from 'dayjs';
 
 export type ToconlineRowUiState =
   | { kind: 'na' }
@@ -57,8 +56,11 @@ const normalizeCombinedEntry = (
   if (!isRecord(raw)) return null;
   const kind = raw.kind;
   if (kind === 'charge' && isRecord(raw.charge)) {
-    const toconline = normalizeToconlineLink(raw.toconline);
-    if (!toconline) return null;
+    // If toconline is missing or invalid, we default to status: 'none'
+    // instead of dropping the entire charge.
+    const toconline = normalizeToconlineLink(raw.toconline) ?? {
+      status: 'none',
+    };
     return {
       kind: 'charge',
       charge: raw.charge as unknown as ExpenseTrackingChargeRow,
@@ -88,6 +90,9 @@ const coerceUnknownToEpochMs = (value: unknown): number | null => {
     const t = value.getTime();
     return Number.isNaN(t) ? null : t;
   }
+  if (isRecord(value) && typeof value.$date === 'string') {
+    return coerceUnknownToEpochMs(value.$date);
+  }
   if (typeof value === 'string') {
     const d = dayjs(value);
     if (d.isValid()) return d.valueOf();
@@ -98,9 +103,16 @@ const coerceUnknownToEpochMs = (value: unknown): number | null => {
 };
 
 const mongoObjectIdStringToEpochMs = (id: unknown): number | null => {
-  if (typeof id !== 'string' || id.length !== 24) return null;
-  if (!/^[a-f0-9]{24}$/i.test(id)) return null;
-  const seconds = parseInt(id.slice(0, 8), 16);
+  let idStr = '';
+  if (typeof id === 'string') {
+    idStr = id;
+  } else if (isRecord(id) && typeof id.$oid === 'string') {
+    idStr = id.$oid;
+  }
+
+  if (!idStr || idStr.length !== 24) return null;
+  if (!/^[a-f0-9]{24}$/i.test(idStr)) return null;
+  const seconds = parseInt(idStr.slice(0, 8), 16);
   return Number.isFinite(seconds) ? seconds * 1000 : null;
 };
 
@@ -153,11 +165,11 @@ export const getCombinedEntryDateSortMs = (
     typeof doc._id === 'string'
       ? doc._id
       : doc._id &&
-          typeof doc._id === 'object' &&
-          '$oid' in doc._id &&
-          typeof (doc._id as { $oid: string }).$oid === 'string'
-        ? (doc._id as { $oid: string }).$oid
-        : undefined;
+        typeof doc._id === 'object' &&
+        '$oid' in doc._id &&
+        typeof (doc._id as { $oid: string }).$oid === 'string'
+      ? (doc._id as { $oid: string }).$oid
+      : undefined;
   const fromDoc =
     coerceUnknownToEpochMs(doc.date) ?? mongoObjectIdStringToEpochMs(oidStr);
   return fromDoc ?? 0;
@@ -170,9 +182,7 @@ export const sortCombinedExpenseEntriesByDateDesc = (
     const mb = getCombinedEntryDateSortMs(b);
     const ma = getCombinedEntryDateSortMs(a);
     if (mb !== ma) return mb - ma;
-    return getCombinedEntryRowKey(b).localeCompare(
-      getCombinedEntryRowKey(a),
-    );
+    return getCombinedEntryRowKey(b).localeCompare(getCombinedEntryRowKey(a));
   });
 };
 
@@ -211,6 +221,40 @@ export const filterCombinedEntriesToExpenseFcToconlineDocuments = (
   return sortCombinedExpenseEntriesByDateDesc(out);
 };
 
+export const INCOME_TRACKING_TOCONLINE_DOCUMENT_TYPE = 'FR' as const;
+
+export const filterCombinedEntriesToIncomeFrToconlineDocuments = (
+  entries: ExpenseTrackingCombinedEntry[],
+): ExpenseTrackingCombinedEntry[] => {
+  const out: ExpenseTrackingCombinedEntry[] = [];
+  for (const entry of entries) {
+    if (entry.kind === 'toconline_orphan') {
+      if (
+        entry.document.document_type === INCOME_TRACKING_TOCONLINE_DOCUMENT_TYPE
+      ) {
+        out.push(entry);
+      }
+      continue;
+    }
+    if (entry.toconline.status === 'linked') {
+      const dt = entry.toconline.document.document_type;
+      if (
+        typeof dt === 'string' &&
+        dt !== INCOME_TRACKING_TOCONLINE_DOCUMENT_TYPE
+      ) {
+        out.push({
+          kind: 'charge',
+          charge: entry.charge,
+          toconline: { status: 'none' },
+        });
+        continue;
+      }
+    }
+    out.push(entry);
+  }
+  return sortCombinedExpenseEntriesByDateDesc(out);
+};
+
 export const parseExpenseTrackingCombinedEntriesPayload = (
   payload: unknown,
 ): { entries: ExpenseTrackingCombinedEntry[]; total: number } => {
@@ -220,8 +264,8 @@ export const parseExpenseTrackingCombinedEntriesPayload = (
   const resultsBlock = isRecord(payload.results)
     ? payload.results
     : isRecord(payload.data)
-      ? payload.data
-      : payload;
+    ? payload.data
+    : payload;
   const entriesRaw = resultsBlock.entries;
   const totalRaw = resultsBlock.total;
   const total =
