@@ -13,7 +13,6 @@ import { useTranslations } from 'next-intl';
 
 import ToconlineDocumentDialog from '../expense-tracking/ToconlineDocumentDialog';
 import { Button, Heading, LinkButton } from '../ui';
-import { Charge } from '../../types/booking';
 import {
   formatIsoFiatAmount,
   isIso4217Currency,
