@@ -1671,6 +1671,7 @@
   "governance_show_replies": "Show replies",
   "governance_hide_replies": "Hide replies",
   "governance_just_now": "just now",
+  "governance_login_to_view_comments": "Please log in to view & post comments.",
   "governance_write_reply": "Write a reply...",
   "governance_cancel": "Cancel",
   "governance_anonymous": "Anonymous",

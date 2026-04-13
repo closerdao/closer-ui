@@ -416,33 +416,39 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
       className={`rounded-xl border border-gray-200 bg-white p-5 ${className}`}
     >
       <h3 className="mb-4 text-base font-semibold">
-        {t('governance_comments')} ({commentsWithReplies.length})
+        {t('governance_comments')}
+        {user && ` (${commentsWithReplies.length})`}
       </h3>
 
-      {error && (
-        <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3">
-          <p className="text-red-800 text-sm">{error}</p>
-        </div>
-      )}
-
-      {isLoading ? (
+      {!user ? (
         <div className="py-4 text-center">
-          <p className="text-gray-500">{t('governance_loading_comments')}</p>
-        </div>
-      ) : commentsWithReplies.length === 0 ? (
-        <div className="py-4 text-center">
-          <p className="text-sm text-gray-400">{t('governance_no_comments_yet')}</p>
+          <p className="text-sm text-gray-500">{t('governance_login_to_view_comments')}</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {commentsWithReplies.map((comment: Comment) =>
-            renderComment(comment),
+        <>
+          {error && (
+            <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3">
+              <p className="text-red-800 text-sm">{error}</p>
+            </div>
           )}
-        </div>
-      )}
 
-      {user ? (
-        <form
+          {isLoading ? (
+            <div className="py-4 text-center">
+              <p className="text-gray-500">{t('governance_loading_comments')}</p>
+            </div>
+          ) : commentsWithReplies.length === 0 ? (
+            <div className="py-4 text-center">
+              <p className="text-sm text-gray-400">{t('governance_no_comments_yet')}</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {commentsWithReplies.map((comment: Comment) =>
+                renderComment(comment),
+              )}
+            </div>
+          )}
+
+          <form
           onSubmit={(e) => {
             handleSubmitComment(e);
           }}
@@ -474,10 +480,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
             </div>
           </div>
         </form>
-      ) : (
-        <div className="mt-4 rounded-lg bg-gray-50 p-3 text-center">
-          <p className="text-sm text-gray-600">{t('governance_login_to_comment')}</p>
-        </div>
+        </>
       )}
     </div>
   );
