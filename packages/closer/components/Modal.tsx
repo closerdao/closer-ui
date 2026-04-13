@@ -15,7 +15,7 @@ interface Props {
 const Modal = ({ children, closeModal, doesShowVideo, className }: Props) => {
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
-      <button className="fixed inset-0 bg-black opacity-50" onClick={closeModal} />
+      <button type="button" aria-label="Close" className="fixed inset-0 bg-black opacity-50" onClick={closeModal} />
       <div
         className={`p-4 rounded-t-xl sm:rounded-md relative bg-white z-[101] shadow-lg max-h-[92vh] sm:max-h-[85vh] overflow-y-auto ${twMerge(
           'w-full sm:p-8 md:w-[500px]',
@@ -24,6 +24,8 @@ const Modal = ({ children, closeModal, doesShowVideo, className }: Props) => {
         )}`}
       >
         <button
+          type="button"
+          aria-label="Close"
           className="absolute top-3 right-3 sm:top-4 sm:right-4 text-2xl z-10"
           onClick={closeModal}
         >

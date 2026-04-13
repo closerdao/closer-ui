@@ -275,15 +275,15 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMin = Math.floor(diffMs / 60000);
-    const diffHr = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
+    const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffMin < 1) return t('governance_just_now');
-    if (diffMin < 60) return `${diffMin}m`;
-    if (diffHr < 24) return `${diffHr}h`;
-    if (diffDays < 7) return `${diffDays}d`;
+    if (diffSec < 60) return t('governance_just_now');
+
+    const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style: 'narrow' });
+    if (diffSec < 3600) return rtf.format(-Math.floor(diffSec / 60), 'minute');
+    if (diffSec < 86400) return rtf.format(-Math.floor(diffSec / 3600), 'hour');
+    if (diffSec < 604800) return rtf.format(-Math.floor(diffSec / 86400), 'day');
+
     return date.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
   };
 
@@ -295,11 +295,13 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
     const sizeClass = size === 'sm' ? 'h-6 w-6 text-[10px]' : 'h-8 w-8 text-xs';
     const initial = (name || 'U').charAt(0).toUpperCase();
 
+    const label = name || t('governance_anonymous');
+
     if (photo) {
       return (
         <img
           src={`${cdn}${photo}-profile-sm.jpg`}
-          alt={name || ''}
+          alt={label}
           className={`shrink-0 rounded-full object-cover ${sizeClass}`}
         />
       );
@@ -307,6 +309,8 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
 
     return (
       <div
+        role="img"
+        aria-label={label}
         className={`flex shrink-0 items-center justify-center rounded-full bg-gray-900 font-medium text-white ${sizeClass}`}
       >
         {initial}
@@ -399,9 +403,10 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
                 <button
                   type="submit"
                   disabled={isSubmitting || !replyContent.trim()}
-                  className="shrink-0 text-[13px] font-semibold text-gray-900 hover:text-black disabled:text-gray-300"
+                  aria-label={isSubmitting ? t('governance_posting') : t('governance_reply')}
+                  className="shrink-0 rounded-full bg-gray-900 px-3 py-1.5 text-[12px] font-medium text-white hover:bg-black disabled:opacity-30"
                 >
-                  {isSubmitting ? '...' : '↵'}
+                  {isSubmitting ? t('governance_posting') : t('governance_reply')}
                 </button>
               </form>
             )}
