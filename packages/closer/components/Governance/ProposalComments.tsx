@@ -195,9 +195,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
         createdBy: user._id,
         created: new Date().toISOString(),
         updated: new Date().toISOString(),
-        visibleBy: [],
-        attributes: [],
-        managedBy: [],
+        visibility: 'public',
       };
 
       console.log('ProposalComments: Comment data prepared:', commentData);
@@ -247,9 +245,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
         createdBy: user._id,
         created: new Date().toISOString(),
         updated: new Date().toISOString(),
-        visibleBy: [],
-        attributes: [],
-        managedBy: [],
+        visibility: 'public',
       };
 
       await platform.post.post(replyData);
