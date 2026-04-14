@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { useAuth } from 'closer/contexts/auth';
 import { usePlatform } from 'closer/contexts/platform';
 import { Proposal } from 'closer/types';
+import { cdn } from 'closer/utils/api';
 import { useLocale, useTranslations } from 'next-intl';
 
 interface ProposalCommentsProps {
@@ -19,12 +20,7 @@ interface Comment {
   parentType?: string;
   parentId?: string;
   replies?: Comment[];
-  author?: {
-    _id: string;
-    name?: string;
-    email?: string;
-    photo?: string;
-  };
+  replyCount?: number;
 }
 
 const ProposalComments: React.FC<ProposalCommentsProps> = ({
@@ -40,8 +36,11 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
   const [replyContent, setReplyContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [replyVersion, setReplyVersion] = useState(0);
+  const [expandedComments, setExpandedComments] = useState<Set<string>>(
+    new Set(),
+  );
   const hasLoaded = useRef(false);
-  const loadedReplyParents = useRef<Set<string>>(new Set());
 
   // Filter for comments
   const commentFilter = {
@@ -52,14 +51,15 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
     limit: 1000,
   };
 
-  // Get comments from platform context
+  const getReplyFilter = (commentId: string) => ({
+    where: { parentType: 'post', parentId: commentId },
+  });
+
   const commentsMap = platform.post.find(commentFilter) || new Map();
   const isLoading = platform.post.areLoading(commentFilter);
 
-  // Load comments
   useEffect(() => {
     if (proposal._id && platform?.post) {
-      // Always load if we don't have any comments in the cache
       if (!hasLoaded.current || commentsMap.size === 0) {
         hasLoaded.current = true;
         platform.post.get(commentFilter);
@@ -67,73 +67,82 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
     }
   }, [proposal._id, platform, commentsMap.size]);
 
-  // Load users after comments are loaded
-  useEffect(() => {
-    if (commentsMap.size > 0 && platform?.user) {
-      try {
-        // Get unique user IDs from comments and replies
-        const userIds = Array.from(commentsMap.values())
-          .map((comment: any) => comment.get('createdBy'))
-          .filter((id: string) => id);
-
-        // Fetch only the users needed for the displayed comments
-        platform.user.get({ _id: { $in: userIds } });
-      } catch (error) {
-        // Silently handle error - users will show as anonymous
-      }
-    }
-  }, [commentsMap, platform?.user]);
-
-  // Load replies for each top-level comment
   useEffect(() => {
     if (!platform?.post || commentsMap.size === 0) return;
-
     Array.from(commentsMap.values()).forEach((comment: any) => {
       const commentId = comment.get('_id');
-      if (!commentId || loadedReplyParents.current.has(commentId)) return;
-
-      loadedReplyParents.current.add(commentId);
-      platform.post.get({
-        where: {
-          parentType: 'post',
-          parentId: commentId,
-        },
-        limit: 1000,
-      });
+      if (commentId) {
+        platform.post.getCount(getReplyFilter(commentId));
+      }
     });
-  }, [commentsMap, platform?.post]);
+  }, [commentsMap, platform?.post, replyVersion]);
 
-  // Load replies for each comment - recalculate whenever commentsMap changes
+  useEffect(() => {
+    if (!platform?.post || expandedComments.size === 0) return;
+    expandedComments.forEach((commentId) => {
+      platform.post.get(getReplyFilter(commentId));
+    });
+  }, [expandedComments, platform?.post, replyVersion]);
+
   const commentsWithReplies = useMemo(() => {
-    return Array.from(commentsMap.values()).map((comment: any) => {
-      const repliesMap =
-        platform.post.find({
-          where: {
-            parentType: 'post',
-            parentId: comment.get('_id'),
-          },
-        }) || new Map();
+    const comments = Array.from(commentsMap.values()).map((comment: any) => {
+      const commentId = comment.get('_id');
+      const replyCount = platform.post.findCount(getReplyFilter(commentId));
 
-      const replies = Array.from(repliesMap.values()).map((reply: any) => ({
-        _id: reply.get('_id'),
-        content: reply.get('content'),
-        createdBy: reply.get('createdBy'),
-        created: reply.get('created'),
-        parentType: reply.get('parentType'),
-        parentId: reply.get('parentId'),
-      }));
+      let replies: Comment[] = [];
+      if (expandedComments.has(commentId)) {
+        const repliesMap =
+          platform.post.find(getReplyFilter(commentId)) || new Map();
+        replies = Array.from(repliesMap.values())
+          .map((reply: any) => ({
+            _id: reply.get('_id'),
+            content: reply.get('content'),
+            createdBy: reply.get('createdBy'),
+            created: reply.get('created'),
+            parentType: reply.get('parentType'),
+            parentId: reply.get('parentId'),
+          }))
+          .sort(
+            (a, b) =>
+              new Date(a.created).getTime() - new Date(b.created).getTime(),
+          );
+      }
 
       return {
-        _id: comment.get('_id'),
+        _id: commentId,
         content: comment.get('content'),
         createdBy: comment.get('createdBy'),
         created: comment.get('created'),
         parentType: comment.get('parentType'),
         parentId: comment.get('parentId'),
         replies,
+        replyCount: typeof replyCount === 'number' ? replyCount : 0,
       };
     });
-  }, [commentsMap, platform.post]);
+
+    return comments.sort(
+      (a, b) =>
+        new Date(a.created).getTime() - new Date(b.created).getTime(),
+    );
+  }, [commentsMap, platform.post, expandedComments, replyVersion]);
+
+  useEffect(() => {
+    if (!platform?.user || commentsWithReplies.length === 0) return;
+
+    const userIds = new Set<string>();
+    commentsWithReplies.forEach((comment) => {
+      if (comment.createdBy) userIds.add(comment.createdBy);
+      comment.replies?.forEach((reply) => {
+        if (reply.createdBy) userIds.add(reply.createdBy);
+      });
+    });
+
+    userIds.forEach((userId) => {
+      if (!platform.user.findOne(userId)) {
+        platform.user.getOne(userId);
+      }
+    });
+  }, [commentsWithReplies, platform?.user]);
 
   // Get user data by ID using platform.user.findOne
   const getUserData = (userId: string) => {
@@ -243,30 +252,18 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
         managedBy: [],
       };
 
-      console.log('ProposalComments: Submitting reply:', replyData);
-      const response = await platform.post.post(replyData);
-      console.log('ProposalComments: Reply submission response:', response);
+      await platform.post.post(replyData);
 
       setReplyContent('');
-      setReplyingTo(null);
 
-      // Manually add the new reply to the platform context
-      const createdReply = response?.results || response?.data?.results;
-      if (createdReply) {
-        console.log(
-          'ProposalComments: Manually adding reply to platform context',
-        );
-        platform.post.set(createdReply);
-      }
+      setExpandedComments((prev) => new Set(prev).add(parentCommentId));
 
-      // Refetch replies for this parent to sync replyCount/content updates
-      platform.post.get({
-        where: {
-          parentType: 'post',
-          parentId: parentCommentId,
-        },
-        limit: 1000,
-      });
+      await Promise.all([
+        platform.post.get(getReplyFilter(parentCommentId)),
+        platform.post.getCount(getReplyFilter(parentCommentId)),
+      ]);
+
+      setReplyVersion((v) => v + 1);
     } catch (err) {
       console.error('ProposalComments: Error submitting reply:', err);
       setError(t('governance_failed_submit_reply'));
@@ -276,95 +273,143 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(locale, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffSec < 60) return t('governance_just_now');
+
+    const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style: 'narrow' });
+    if (diffSec < 3600) return rtf.format(-Math.floor(diffSec / 60), 'minute');
+    if (diffSec < 86400) return rtf.format(-Math.floor(diffSec / 3600), 'hour');
+    if (diffSec < 604800) return rtf.format(-Math.floor(diffSec / 86400), 'day');
+
+    return date.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
+  };
+
+  const renderAvatar = (
+    name: string | undefined,
+    photo: string | undefined,
+    size: 'sm' | 'md',
+  ) => {
+    const sizeClass = size === 'sm' ? 'h-6 w-6 text-[10px]' : 'h-8 w-8 text-xs';
+    const initial = (name || 'U').charAt(0).toUpperCase();
+
+    const label = name || t('governance_anonymous');
+
+    if (photo) {
+      return (
+        <img
+          src={`${cdn}${photo}-profile-sm.jpg`}
+          alt={label}
+          className={`shrink-0 rounded-full object-cover ${sizeClass}`}
+        />
+      );
+    }
+
+    return (
+      <div
+        role="img"
+        aria-label={label}
+        className={`flex shrink-0 items-center justify-center rounded-full bg-gray-900 font-medium text-white ${sizeClass}`}
+      >
+        {initial}
+      </div>
+    );
   };
 
   const renderComment = (comment: Comment, isReply = false) => {
     const author = getUserData(comment.createdBy);
+
     return (
-      <div key={comment._id} className={`${isReply ? 'ml-6 mt-2' : 'mb-4'}`}>
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <div className="flex items-start space-x-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-900 text-xs font-medium text-white">
-              {(author?.screenname || author?.email || 'U')
-                .charAt(0)
-                .toUpperCase()}
-            </div>
-            <div className="flex-1">
-              <div className="mb-1.5 flex items-center space-x-2">
-                <span className="text-sm font-medium text-gray-900">
-                  {author?.screenname || author?.email || t('governance_anonymous')}
+      <div key={comment._id}>
+        <div className="flex items-start gap-2">
+          {renderAvatar(
+            author?.screenname || author?.email,
+            author?.photo,
+            isReply ? 'sm' : 'md',
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="inline-block rounded-2xl bg-gray-100 px-3 py-1.5">
+              <div className="flex items-baseline gap-2">
+                <span className="text-[13px] font-semibold text-gray-900">
+                  {author?.screenname ||
+                    author?.email ||
+                    t('governance_anonymous')}
                 </span>
-                <span className="text-xs text-gray-500">
+                <span className="text-[11px] text-gray-400">
                   {formatDate(comment.created)}
                 </span>
               </div>
-              <div className="markdown break-words text-sm text-gray-700">
+              <div className="markdown break-words text-[13px] text-gray-800">
                 <ReactMarkdown>{comment.content}</ReactMarkdown>
               </div>
-              {!isReply && (
-                <button
-                  onClick={() =>
-                    setReplyingTo(
-                      replyingTo === comment._id ? null : comment._id,
-                    )
-                  }
-                  className="mt-1.5 text-xs font-medium text-gray-600 hover:text-gray-900"
-                >
-                  {t('governance_reply')}
-                </button>
-              )}
             </div>
+            {!isReply && (
+              <div className="flex items-center pl-3 pt-0.5">
+                <button
+                  onClick={() => {
+                    const isExpanding = !expandedComments.has(comment._id);
+                    setExpandedComments((prev) => {
+                      const next = new Set(prev);
+                      if (isExpanding) {
+                        next.add(comment._id);
+                      } else {
+                        next.delete(comment._id);
+                      }
+                      return next;
+                    });
+                    setReplyingTo(isExpanding ? comment._id : null);
+                    if (!isExpanding) setReplyContent('');
+                  }}
+                  className="text-[11px] font-semibold text-gray-500 hover:text-gray-900"
+                >
+                  {expandedComments.has(comment._id)
+                    ? t('governance_hide_replies')
+                    : (comment.replyCount ?? 0) > 0
+                      ? `${t('governance_show_replies')} (${comment.replyCount})`
+                      : t('governance_reply')}
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Reply form */}
-        {replyingTo === comment._id && (
-          <form
-            onSubmit={(e) => handleSubmitReply(e, comment._id)}
-            className="mt-2"
-          >
-            <div className="flex space-x-2">
-              <textarea
-                value={replyContent}
-                onChange={(e) => setReplyContent(e.target.value)}
-                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
-                rows={2}
-                placeholder={t('governance_write_reply')}
-              />
-              <div className="flex flex-col space-y-1.5">
+        {expandedComments.has(comment._id) && (
+          <div className="ml-5 border-l-2 border-gray-200 pl-4 pt-1">
+            {comment.replies && comment.replies.length > 0 && (
+              <div className="flex flex-col gap-1.5 pb-1.5">
+                {comment.replies.map((reply) => renderComment(reply, true))}
+              </div>
+            )}
+
+            {replyingTo === comment._id && (
+              <form
+                onSubmit={(e) => handleSubmitReply(e, comment._id)}
+                className="flex items-center gap-2 py-1"
+              >
+                {renderAvatar(
+                  user?.screenname || user?.email,
+                  user?.photo,
+                  'sm',
+                )}
+                <input
+                  type="text"
+                  value={replyContent}
+                  onChange={(e) => setReplyContent(e.target.value)}
+                  className="flex-1 rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-[13px] placeholder-gray-400 focus:border-gray-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-ring"
+                  placeholder={t('governance_write_reply')}
+                />
                 <button
                   type="submit"
                   disabled={isSubmitting || !replyContent.trim()}
-                  className="rounded-md bg-gray-900 px-3 py-2 text-xs font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label={isSubmitting ? t('governance_posting') : t('governance_reply')}
+                  className="shrink-0 rounded-full bg-gray-900 px-3 py-1.5 text-[12px] font-medium text-white hover:bg-black disabled:opacity-30"
                 >
-                  {t('governance_reply')}
+                  {isSubmitting ? t('governance_posting') : t('governance_reply')}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setReplyingTo(null);
-                    setReplyContent('');
-                  }}
-                  className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700"
-                >
-                  {t('governance_cancel')}
-                </button>
-              </div>
-            </div>
-          </form>
-        )}
-
-        {/* Render replies */}
-        {comment.replies && comment.replies.length > 0 && (
-          <div className="mt-3">
-            {comment.replies.map((reply) => renderComment(reply, true))}
+              </form>
+            )}
           </div>
         )}
       </div>
@@ -375,87 +420,72 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
     <div
       className={`rounded-xl border border-gray-200 bg-white p-5 ${className}`}
     >
-      <h3 className="mb-3 text-base font-semibold">
-        {t('governance_comments')} ({commentsWithReplies.length})
+      <h3 className="mb-4 text-base font-semibold">
+        {t('governance_comments')}
+        {user && ` (${commentsWithReplies.length})`}
       </h3>
 
-      {/* New comment form */}
-      {user && (
-        <form
+      {!user ? (
+        <div className="py-4 text-center">
+          <p className="text-sm text-gray-500">{t('governance_login_to_view_comments')}</p>
+        </div>
+      ) : (
+        <>
+          {error && (
+            <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3">
+              <p className="text-red-800 text-sm">{error}</p>
+            </div>
+          )}
+
+          {isLoading ? (
+            <div className="py-4 text-center">
+              <p className="text-gray-500">{t('governance_loading_comments')}</p>
+            </div>
+          ) : commentsWithReplies.length === 0 ? (
+            <div className="py-4 text-center">
+              <p className="text-sm text-gray-400">{t('governance_no_comments_yet')}</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {commentsWithReplies.map((comment: Comment) =>
+                renderComment(comment),
+              )}
+            </div>
+          )}
+
+          <form
           onSubmit={(e) => {
-            console.log('ProposalComments: Form submit event triggered');
             handleSubmitComment(e);
           }}
-          className="mb-4"
+          className="mt-4"
         >
-          <div className="flex space-x-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-900 text-xs font-medium text-white">
-              {(user.screenname || user.email || 'U').charAt(0).toUpperCase()}
-            </div>
+          <div className="flex items-start gap-2.5">
+            {renderAvatar(
+              user.screenname || user.email,
+              user.photo,
+              'md',
+            )}
             <div className="flex-1">
               <textarea
                 value={newComment}
-                onChange={(e) => {
-                  console.log(
-                    'ProposalComments: Comment input changed:',
-                    e.target.value,
-                  );
-                  setNewComment(e.target.value);
-                }}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
-                rows={2}
+                onChange={(e) => setNewComment(e.target.value)}
+                className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm leading-relaxed placeholder-gray-400 focus:border-gray-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-ring"
+                rows={3}
                 placeholder={t('governance_write_comment')}
               />
-              <div className="mt-2 flex justify-end">
+              <div className="mt-1.5 flex justify-end">
                 <button
                   type="submit"
                   disabled={isSubmitting || !newComment.trim()}
-                  onClick={() => {
-                    console.log('ProposalComments: Submit button clicked', {
-                      isSubmitting,
-                      hasContent: !!newComment.trim(),
-                      newComment: newComment,
-                    });
-                  }}
-                  className="rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-lg bg-gray-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-30"
                 >
-                  {isSubmitting
-                    ? t('governance_posting')
-                    : t('governance_post_comment')}
+                  {isSubmitting ? t('governance_posting') : t('governance_post_comment')}
                 </button>
               </div>
             </div>
           </div>
         </form>
-      )}
-
-      {!user && (
-        <div className="mb-4 rounded-lg bg-gray-50 p-3 text-center">
-          <p className="text-sm text-gray-600">{t('governance_login_to_comment')}</p>
-        </div>
-      )}
-
-      {error && (
-        <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3">
-          <p className="text-red-800 text-sm">{error}</p>
-        </div>
-      )}
-
-      {/* Comments list */}
-      {isLoading ? (
-        <div className="text-center py-4">
-          <p className="text-gray-500">{t('governance_loading_comments')}</p>
-        </div>
-      ) : commentsWithReplies.length === 0 ? (
-        <div className="py-6 text-center">
-          <p className="text-gray-500">{t('governance_no_comments_yet')}</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {commentsWithReplies.map((comment: Comment) =>
-            renderComment(comment),
-          )}
-        </div>
+        </>
       )}
     </div>
   );

@@ -420,7 +420,7 @@ const SalesDashboard = ({
   return (
     <div className="space-y-4">
       <Card className="bg-background">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-muted-foreground font-bold">
               {totalSalesCount}{' '}
@@ -439,7 +439,7 @@ const SalesDashboard = ({
               </p>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {isSpaceHost && (
               <Button
                 size="small"
@@ -458,12 +458,12 @@ const SalesDashboard = ({
                 {t('token_sales_dashboard_create_batch_safe_tx')}
               </Button>
             )}
-            {t('token_sales_dashboard_select_status')}
+            <span className="text-sm">{t('token_sales_dashboard_select_status')}</span>
             <Select
               value={statusFilter}
               onValueChange={handleStatusFilterChange}
             >
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-40 md:w-48">
                 <SelectValue
                   placeholder={t('token_sales_dashboard_filter_by_status')}
                 />
@@ -491,7 +491,88 @@ const SalesDashboard = ({
             </Select>
           </div>
         </div>
-        <div className="overflow-x-auto">
+        {/* Mobile card layout */}
+        <div className="md:hidden space-y-3">
+          {currentSales.map((sale: TokenSale) => (
+            <div
+              key={sale._id}
+              className={`${
+                sale.buyer ? '' : 'bg-yellow-100'
+              } border border-border rounded-lg p-4 space-y-3`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="font-medium">{sale.name}</div>
+                {getStatusBadge(sale.status)}
+              </div>
+              <div>
+                {sale.buyer ? (
+                  <div className="flex flex-col gap-1">
+                    <Link
+                      href={`/members/${sale.buyer._id}`}
+                      className="bg-accent text-background px-2 py-0.5 rounded-full w-fit text-sm"
+                    >
+                      {sale.buyer.screenname}
+                    </Link>
+                    <div className="text-sm text-muted-foreground">
+                      {isAdmin && sale.buyer.email
+                        ? sale.buyer.email
+                        : t('token_sales_dashboard_no_email_provided')}
+                    </div>
+                    <div className="text-xs text-muted-foreground font-mono break-all">
+                      {isAdmin && sale.buyer.walletAddress
+                        ? sale.buyer.walletAddress
+                        : t('token_sales_dashboard_no_wallet_address')}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-muted-foreground text-sm">
+                    {t('token_sales_dashboard_unknown_buyer')}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <div>
+                  <span className="text-muted-foreground">{t('token_sales_dashboard_quantity')}: </span>
+                  {sale.createdBy ? (sale.quantity ?? 0) : 'N/A'}
+                </div>
+                <div className="font-mono">
+                  {formatPrice(sale.total_price)}
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">
+                  {formatDate(sale.created)}
+                </span>
+                <div className="flex gap-2">
+                  {sale.status !== 'matched' &&
+                    sale.status === 'paid' &&
+                    sale.product_type === 'token' &&
+                    sale?.buyer && (
+                      <Button
+                        size="small"
+                        onClick={() => handleDistributeTokens(sale._id)}
+                        className="text-xs w-fit rounded-full text-background py-1 h-fit"
+                      >
+                        {t('token_sales_dashboard_distribute_tokens')}
+                      </Button>
+                    )}
+                  {sale.status !== 'matched' && !sale?.buyer && (
+                    <Button
+                      size="small"
+                      onClick={() => handleShowMatchBuyerModal(sale._id)}
+                      className="text-xs w-fit rounded-full text-background py-1 h-fit"
+                    >
+                      {t('token_sales_dashboard_match_buyer_manually')}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop table layout */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-border">
@@ -620,12 +701,12 @@ const SalesDashboard = ({
 
       {isModalOpen && (
         <Modal closeModal={handleCloseModal}>
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             <div>
-              <h2 className="text-xl font-semibold mb-2">
+              <h2 className="text-lg md:text-xl font-semibold mb-2">
                 {t('token_sales_dashboard_distribute_tokens_modal_title')}
               </h2>
-              <p className="text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 {t('token_sales_dashboard_enter_transaction_id')}{' '}
               </p>
               <p>
@@ -656,7 +737,7 @@ const SalesDashboard = ({
               />
             </div>
 
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
               <Button
                 variant="secondary"
                 onClick={handleCloseModal}
@@ -693,13 +774,13 @@ const SalesDashboard = ({
           closeModal={handleCloseMatchBuyerModal}
           className="md:w-[800px] md:max-w-[90vw]"
         >
-          <div className="flex flex-col max-h-[85vh] overflow-y-auto overflow-x-auto">
-            <div className="space-y-6 flex-shrink-0">
+          <div className="flex flex-col max-h-[85vh] overflow-y-auto">
+            <div className="space-y-4 md:space-y-6 flex-shrink-0">
               <div>
-                <h2 className="text-xl font-semibold mb-2">
+                <h2 className="text-lg md:text-xl font-semibold mb-2">
                   {t('token_sales_dashboard_match_buyer_manually_title')}
                 </h2>
-                <p className="text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   {t('token_sales_dashboard_match_buyer_manually_description')}
                 </p>
               </div>
@@ -710,60 +791,95 @@ const SalesDashboard = ({
                   {t('token_sales_dashboard_match_buyer_loading')}
                 </div>
               ) : (
-                <div className="overflow-x-auto border border-border rounded-md">
-                  <table className="w-full border-collapse text-sm">
-                    <thead className="bg-muted">
-                    <tr className="border-b border-border">
-                      <th className="text-left p-2 font-medium">
-                        {t('token_sales_dashboard_price')}
-                      </th>
-                      <th className="text-left p-2 font-medium">
-                        {t('token_sales_dashboard_buyer_email')}
-                      </th>
-                      <th className="text-left p-2 font-medium">
-                        {t('token_sales_dashboard_quantity')}
-                      </th>
-                      <th className="text-left p-2 font-medium">
-                        {t('token_sales_dashboard_status')}
-                      </th>
-                      <th className="text-left p-2 font-medium">
-                        {t('token_sales_dashboard_created')}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <>
+                  {/* Mobile card layout */}
+                  <div className="md:hidden space-y-2">
                     {matchableSales
                       .filter((s) => s._id !== selectedSaleId)
                       .map((sale) => (
-                        <tr
+                        <button
                           key={sale._id}
+                          type="button"
                           onClick={() => handleSelectMatchedSale(sale._id)}
-                          className={`border-b border-border cursor-pointer hover:bg-muted/50 ${
+                          className={`w-full text-left border rounded-lg p-3 space-y-1 ${
                             selectedMatchedSaleId === sale._id
-                              ? 'bg-accent/20'
-                              : ''
+                              ? 'border-accent bg-accent/20'
+                              : 'border-border'
                           }`}
                         >
-                          <td className="p-2 font-mono">
-                            {formatPrice(sale.total_price)}
-                          </td>
-                          <td className="p-2">
-                            {sale.buyer?.email ?? '—'}
-                          </td>
-                          <td className="p-2">
-                            {sale.createdBy ? (sale.quantity ?? 0) : 'N/A'}
-                          </td>
-                          <td className="p-2">
+                          <div className="flex items-center justify-between">
+                            <span className="font-mono text-sm">
+                              {formatPrice(sale.total_price)}
+                            </span>
                             {getStatusBadge(sale.status)}
-                          </td>
-                          <td className="p-2 text-muted-foreground whitespace-nowrap">
-                            {formatDate(sale.created)}
-                          </td>
-                        </tr>
+                          </div>
+                          <div className="text-sm truncate">
+                            {sale.buyer?.email ?? '—'}
+                          </div>
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>{t('token_sales_dashboard_quantity')}: {sale.createdBy ? (sale.quantity ?? 0) : 'N/A'}</span>
+                            <span>{formatDate(sale.created)}</span>
+                          </div>
+                        </button>
                       ))}
-                  </tbody>
-                  </table>
-                </div>
+                  </div>
+
+                  {/* Desktop table layout */}
+                  <div className="hidden md:block overflow-x-auto border border-border rounded-md">
+                    <table className="w-full border-collapse text-sm">
+                      <thead className="bg-muted">
+                        <tr className="border-b border-border">
+                          <th className="text-left p-2 font-medium">
+                            {t('token_sales_dashboard_price')}
+                          </th>
+                          <th className="text-left p-2 font-medium">
+                            {t('token_sales_dashboard_buyer_email')}
+                          </th>
+                          <th className="text-left p-2 font-medium">
+                            {t('token_sales_dashboard_quantity')}
+                          </th>
+                          <th className="text-left p-2 font-medium">
+                            {t('token_sales_dashboard_status')}
+                          </th>
+                          <th className="text-left p-2 font-medium">
+                            {t('token_sales_dashboard_created')}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {matchableSales
+                          .filter((s) => s._id !== selectedSaleId)
+                          .map((sale) => (
+                            <tr
+                              key={sale._id}
+                              onClick={() => handleSelectMatchedSale(sale._id)}
+                              className={`border-b border-border cursor-pointer hover:bg-muted/50 ${
+                                selectedMatchedSaleId === sale._id
+                                  ? 'bg-accent/20'
+                                  : ''
+                              }`}
+                            >
+                              <td className="p-2 font-mono">
+                                {formatPrice(sale.total_price)}
+                              </td>
+                              <td className="p-2">
+                                {sale.buyer?.email ?? '—'}
+                              </td>
+                              <td className="p-2">
+                                {sale.createdBy ? (sale.quantity ?? 0) : 'N/A'}
+                              </td>
+                              <td className="p-2">
+                                {getStatusBadge(sale.status)}
+                              </td>
+                              <td className="p-2 text-muted-foreground whitespace-nowrap">
+                                {formatDate(sale.created)}
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
 
               {!isLoadingMatchableSales &&

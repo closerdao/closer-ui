@@ -1431,7 +1431,6 @@ ProposalDetailPage.getInitialProps = async (context: NextPageContext) => {
     let proposalCreator = null;
     if (proposal?.data?.results) {
       const proposalCreatorId = proposal.data.results.createdBy;
-      console.log('proposalCreatorId', proposalCreatorId);
       try {
         const {
           data: { results: proposalCreatorData },
@@ -1444,7 +1443,6 @@ ProposalDetailPage.getInitialProps = async (context: NextPageContext) => {
         });
         proposalCreator = proposalCreatorData;
       } catch (err) {
-        // Silently handle error - proposal will show without creator info
       }
     }
 
