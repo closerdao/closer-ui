@@ -1,7 +1,6 @@
 import Link from 'next/link';
 
 import {
-  FacebookShareButton,
   LinkedinShareButton,
   TelegramShareButton,
   TwitterShareButton,
