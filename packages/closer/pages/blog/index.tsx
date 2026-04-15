@@ -5,13 +5,12 @@ import { useRouter } from 'next/router';
 
 import ArticleList from '../../components/ArticleList';
 import FeatureNotEnabled from '../../components/FeatureNotEnabled';
-
 import UserAvatarPlaceholder from '../../components/UserAvatarPlaceholder';
+
 import { User } from 'closer/contexts/auth/types';
 import dayjs from 'dayjs';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
-import process from 'process';
 
 import { BLOG_POSTS_PER_PAGE, HOME_PAGE_CATEGORY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
@@ -103,26 +102,53 @@ const Search = ({
   return (
     <>
       <Head>
-        <title>{`${PLATFORM_NAME} ${t('blog_title')} - ${PLATFORM_NAME}`}</title>
+        <title>{`${PLATFORM_NAME} ${t(
+          'blog_title',
+        )} - ${PLATFORM_NAME}`}</title>
         <meta
           name="description"
           content={`Read articles and stories from ${PLATFORM_NAME}. Community insights, regenerative living, and updates from our network.`}
         />
-        <meta name="keywords" content={`${PLATFORM_NAME}, blog, articles, regenerative communities, community stories, ecovillage, intentional community`} />
-        <meta property="og:title" content={`${PLATFORM_NAME} ${t('blog_title')}`} />
-        <meta property="og:description" content={`Read articles and stories from ${PLATFORM_NAME}. Community insights, regenerative living, and updates from our network.`} />
+        <meta
+          name="keywords"
+          content={`${PLATFORM_NAME}, blog, articles, regenerative communities, community stories, ecovillage, intentional community`}
+        />
+        <meta
+          property="og:title"
+          content={`${PLATFORM_NAME} ${t('blog_title')}`}
+        />
+        <meta
+          property="og:description"
+          content={`Read articles and stories from ${PLATFORM_NAME}. Community insights, regenerative living, and updates from our network.`}
+        />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/blog`} />
+        <meta
+          property="og:url"
+          content={`${
+            process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'
+          }/blog`}
+        />
         {latestArticleImageUrl && (
           <meta property="og:image" content={latestArticleImageUrl} />
         )}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${PLATFORM_NAME} ${t('blog_title')}`} />
-        <meta name="twitter:description" content={`Read articles and stories from ${PLATFORM_NAME}. Community insights, regenerative living, and updates from our network.`} />
+        <meta
+          name="twitter:title"
+          content={`${PLATFORM_NAME} ${t('blog_title')}`}
+        />
+        <meta
+          name="twitter:description"
+          content={`Read articles and stories from ${PLATFORM_NAME}. Community insights, regenerative living, and updates from our network.`}
+        />
         {latestArticleImageUrl && (
           <meta name="twitter:image" content={latestArticleImageUrl} />
         )}
-        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/blog`} />
+        <link
+          rel="canonical"
+          href={`${
+            process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'
+          }/blog`}
+        />
       </Head>
       <main className="w-full flex flex-col items-center px-4 md:px-8">
         <section className="w-full max-w-5xl pt-12 pb-8">
@@ -140,8 +166,18 @@ const Search = ({
                 href="/blog/create"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-colors flex-shrink-0"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
                 </svg>
                 {t('blog_write_article')}
               </Link>
@@ -191,11 +227,14 @@ const Search = ({
                       <UserAvatarPlaceholder size="sm" />
                     )}
                     <div className="text-xs text-gray-500">
-                      <span className="font-medium text-gray-700">{latestArticle?.authorInfo?.screenname}</span>
+                      <span className="font-medium text-gray-700">
+                        {latestArticle?.authorInfo?.screenname}
+                      </span>
                       <span className="mx-1">·</span>
                       {dayjs(latestArticle?.updated).format('MMM D, YYYY')}
                       <span className="mx-1">·</span>
-                      {estimateReadingTime(latestArticle?.html)} {t('blog_min_read')}
+                      {estimateReadingTime(latestArticle?.html)}{' '}
+                      {t('blog_min_read')}
                     </div>
                   </div>
                 </div>
@@ -225,29 +264,30 @@ Search.getInitialProps = async (context: NextPageContext) => {
   const search = formatSearch({ category: { $ne: HOME_PAGE_CATEGORY } });
 
   try {
-    const [articles, numArticles, generalRes, blogRes, messages] = await Promise.all([
-      api
-        .get(
-          `/article?limit=${
-            Number(page) === 1 || !page
-              ? BLOG_POSTS_PER_PAGE + 1
-              : BLOG_POSTS_PER_PAGE
-          }&sort_by=-created&where=${search}&page=${page}`,
-        )
-        .catch(() => {
+    const [articles, numArticles, generalRes, blogRes, messages] =
+      await Promise.all([
+        api
+          .get(
+            `/article?limit=${
+              Number(page) === 1 || !page
+                ? BLOG_POSTS_PER_PAGE + 1
+                : BLOG_POSTS_PER_PAGE
+            }&sort_by=-created&where=${search}&page=${page}`,
+          )
+          .catch(() => {
+            return null;
+          }),
+        api.get('/count/article').catch(() => {
           return null;
         }),
-      api.get('/count/article').catch(() => {
-        return null;
-      }),
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      api.get('/config/blog').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+        api.get('/config/general').catch(() => {
+          return null;
+        }),
+        api.get('/config/blog').catch(() => {
+          return null;
+        }),
+        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      ]);
 
     const authorIds = articles?.data?.results.map(
       (article: Article) => article.createdBy,
