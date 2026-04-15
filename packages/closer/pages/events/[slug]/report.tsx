@@ -119,10 +119,6 @@ const EventReport = ({ event, error }: Props) => {
           platform.ticket.get(ticketsFilter),
         ]);
 
-        // #region agent log
-        fetch('http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'831006'},body:JSON.stringify({sessionId:'831006',location:'report.tsx:loadData',message:'Revenue API responses',data:{eventRevenueRes:eventRevenueRes.data,bookingRevenueRes:bookingRevenueRes.data,ticketsFilter,bookingFilter},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
-
         const ticketRevenue = eventRevenueRes.data?.sum || 0;
         const bookingTotal = bookingRevenueRes.data?.sum || 0;
         setEventRevenue(ticketRevenue);
