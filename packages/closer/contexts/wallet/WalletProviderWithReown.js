@@ -66,7 +66,7 @@ const WalletProviderInner = ({ children }) => {
       console.error('[WalletProvider] Failed to create Web3Provider:', e);
       return null;
     }
-  }, [walletProvider]);
+  }, [walletProvider, chainId]);
 
   const isCorrectNetwork = Number(BLOCKCHAIN_NETWORK_ID) === Number(chainId);
   const hasSameConnectedAccount =
