@@ -1,8 +1,8 @@
 import { createAppKit } from '@reown/appkit/react';
 import { Ethers5Adapter } from '@reown/appkit-adapter-ethers5';
-import { celo, celoSepolia, celoAlfajores } from '@reown/appkit/networks';
+import { celo, celoSepolia } from '@reown/appkit/networks';
 
-const networks: [typeof celo, typeof celoSepolia, typeof celoAlfajores] = [celo, celoSepolia, celoAlfajores]
+const networks: [typeof celo, typeof celoSepolia] = [celo, celoSepolia]
 
 const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || '';
 
@@ -38,6 +38,5 @@ if (typeof window !== 'undefined') {
 
 export { 
   celo as celoMainnet, 
-  celoAlfajores as alfajores, 
   celoSepolia 
 };

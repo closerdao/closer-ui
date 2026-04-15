@@ -22,8 +22,9 @@ const BookingWallet = ({ toPay, switchToFiat }) => {
     Number(balanceNativeAvailable ?? 0) < MIN_CELO_FOR_GAS;
 
   return (
-    <div className="p-4 flex flex-col rounded-lg shadow-4xl">
+    <div className="flex flex-col rounded-lg shadow-4xl overflow-hidden">
       <WalletHeader />
+      <div className="p-4 flex flex-col">
       {hasInsufficientCeloForGas && (
         <div
           className="mt-4 flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-amber-800"
@@ -63,6 +64,7 @@ const BookingWallet = ({ toPay, switchToFiat }) => {
         </div>
       ) : null}
       <WalletActions />
+      </div>
     </div>
   );
 };

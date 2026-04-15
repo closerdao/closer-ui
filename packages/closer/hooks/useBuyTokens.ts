@@ -10,10 +10,6 @@ const RPC_ENDPOINTS: Record<string, string[]> = {
     'https://rpc.ankr.com/celo',
     'https://celo-mainnet.public.blastapi.io',
   ],
-  alfajores: [
-    'https://alfajores-forno.celo-testnet.org',
-    'https://celo-alfajores.infura.io',
-  ],
   celoSepolia: [
     'https://forno.celo-sepolia.celo-testnet.org',
     'https://rpc.ankr.com/celo_sepolia',
@@ -31,7 +27,7 @@ const getTokensAvailableForPurchaseResultCache = new Map<string, { result: numbe
 const CACHE_TTL = 30000;
 
 const getReadOnlyContractInstance = async (address: string, abi: any) => {
-  const network = process.env.NEXT_PUBLIC_NETWORK || 'alfajores';
+  const network = process.env.NEXT_PUBLIC_NETWORK || 'celo';
   const abiKey = Array.isArray(abi) ? abi.map((item: any) => item.name || JSON.stringify(item)).join(',') : String(abi);
   const cacheKey = `${network}-${address.toLowerCase()}-${abiKey}`;
   
@@ -98,10 +94,15 @@ export const useBuyTokens = () => {
   const [isConfigReady, setIsConfigReady] = useState(false);
 
   useEffect(() => {
-    if (tokenAddress && BLOCKCHAIN_DAO_TOKEN_ABI) {
+    if (
+      tokenAddress &&
+      BLOCKCHAIN_DAO_TOKEN_ABI &&
+      BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS &&
+      BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI
+    ) {
       setIsConfigReady(true);
     }
-  }, [tokenAddress, BLOCKCHAIN_DAO_TOKEN_ABI]);
+  }, [tokenAddress, BLOCKCHAIN_DAO_TOKEN_ABI, BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS, BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI]);
 
   const getContractInstances = () => {
     if (!BLOCKCHAIN_DAO_TOKEN_ABI || !BLOCKCHAIN_DAO_TOKEN?.address) {

@@ -99,6 +99,7 @@ export { default as DashboardPage } from './pages/dashboard';
 export { default as AffiliateDashboardPage } from './pages/dashboard/affiliate';
 export { default as PerformancePage } from './pages/dashboard/performance/index';
 export { default as TokenSalesDashboardPage } from './pages/dashboard/token-sales';
+export { default as ContractsPage } from './pages/token/contracts';
 export { default as EventsPage } from './pages/events';
 export { default as EventPage } from './pages/events/[slug]';
 export { default as EditEventPage } from './pages/events/[slug]/edit';

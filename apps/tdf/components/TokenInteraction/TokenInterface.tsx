@@ -107,13 +107,6 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
         rpcUrl: 'https://forno.celo.org',
         explorerUrl: 'https://celoscan.io'
       },
-      alfajores: {
-        chainId: 44787,
-        hexChainId: '0xaef3',
-        name: 'Alfajores',
-        rpcUrl: 'https://alfajores-forno.celo-testnet.org',
-        explorerUrl: 'https://alfajores.celoscan.io'
-      },
       celoSepolia: {
         chainId: 11142220,
         hexChainId: '0xaa044c',
@@ -188,7 +181,6 @@ const TokenInterface: React.FC<TokenInterfaceProps> = ({ className }) => {
       
       const expectedChainIds: Record<string, { chainId: number; name: string }> = {
         celo: { chainId: 42220, name: 'Celo' },
-        alfajores: { chainId: 44787, name: 'Alfajores' },
         celoSepolia: { chainId: 11142220, name: 'Celo Sepolia' }
       };
       const expectedNetwork = expectedChainIds[network] || expectedChainIds.celo;

@@ -46,13 +46,13 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
 
   const config = useConfig() || {};
   const reserveToken = getReserveTokenDisplay(config);
-  const { buyTokens, getTotalCost, isCeurApproved, approveCeur, isPending } =
+  const { buyTokens, getTotalCost, isCeurApproved, approveCeur, isPending, isConfigReady } =
     useBuyTokens();
   const [total, setTotal] = useState<number>(0);
   const [isApproved, setIsApproved] = useState<boolean>(false);
 
   const { isAuthenticated, isLoading, user } = useAuth();
-  const { isWalletReady, balanceCeurAvailable, balanceNativeAvailable } = useContext(WalletState);
+  const { isWalletReady, balanceCeurAvailable, balanceCeloAvailable } = useContext(WalletState);
 
   const [web3Error, setWeb3Error] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -88,14 +88,15 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   }, [isAuthenticated, isLoading]);
 
   useEffect(() => {
-    isWalletReady &&
+    if (isWalletReady && isConfigReady) {
       (async () => {
         const totalCost = await getTotalCost(tokens as string);
         setTotal(totalCost);
         const isAllowanceSufficient = await isCeurApproved(tokens as string);
         setIsApproved(isAllowanceSufficient);
       })();
-  }, [isWalletReady]);
+    }
+  }, [isWalletReady, isConfigReady]);
 
   const goBack = async () => {
     if (user && user.kycPassed) {
@@ -240,7 +241,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
           <div className="mt-12 flex flex-col gap-4">
             <Wallet />
             {isWalletReady &&
-              Number(balanceNativeAvailable ?? 0) < MIN_CELO_FOR_GAS && (
+              Number(balanceCeloAvailable ?? 0) < MIN_CELO_FOR_GAS && (
                 <div
                   className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-amber-800"
                   role="alert"
@@ -250,6 +251,21 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
                   </span>
                   <p className="text-sm font-medium">
                     {t('insufficient_celo_for_gas')}
+                  </p>
+                </div>
+              )}
+            {isWalletReady &&
+              total > 0 &&
+              Number(balanceCeurAvailable ?? 0) < total && (
+                <div
+                  className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-amber-800"
+                  role="alert"
+                >
+                  <span className="text-amber-500 text-xl shrink-0" aria-hidden>
+                    ⚠️
+                  </span>
+                  <p className="text-sm font-medium">
+                    {t('token_sale_not_enough_reserve_for_purchase', { reserveToken })}
                   </p>
                 </div>
               )}
@@ -291,11 +307,6 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
             </div>
           </div>
 
-          {balanceCeurAvailable < total && (
-            <div className="font-bold">
-              {t('token_sale_not_enough_ceur_error', { reserveToken })}
-            </div>
-          )}
           {isApproved ? (
             <Button
               onClick={handlePurchaseTx}

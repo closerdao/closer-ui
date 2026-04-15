@@ -1,17 +1,12 @@
 import { useEffect, useState, useContext } from 'react';
-import { Contract } from 'ethers';
+import { Contract, utils } from 'ethers';
+
+import { blockchainConfig } from 'closer/config_blockchain';
 import { WalletState } from 'closer/contexts/wallet';
 
-// This is a placeholder - in a real implementation, this would use the actual Sweat token ABI
-// and address from a config file or environment variable
-const SWEAT_TOKEN_ADDRESS = '0x0987654321098765432109876543210987654321';
-const SWEAT_TOKEN_ABI = [
-  // Basic ERC20 functions
-  'function balanceOf(address owner) view returns (uint256)',
-  'function decimals() view returns (uint8)',
-  'function symbol() view returns (string)',
-  'function name() view returns (string)',
-];
+const config = blockchainConfig as Record<string, any>;
+const SWEAT_TOKEN = config.BLOCKCHAIN_SWEAT_TOKEN ?? null;
+const SWEAT_TOKEN_ABI = config.BLOCKCHAIN_SWEAT_TOKEN_ABI ?? null;
 
 export const useSweatToken = () => {
   const { isWalletReady, account, library } = useContext(WalletState);
@@ -21,7 +16,7 @@ export const useSweatToken = () => {
 
   useEffect(() => {
     const fetchSweatBalance = async () => {
-      if (!isWalletReady || !account || !library) {
+      if (!isWalletReady || !account || !library || !SWEAT_TOKEN || !SWEAT_TOKEN_ABI) {
         setSweatBalance('0');
         return;
       }
@@ -31,28 +26,34 @@ export const useSweatToken = () => {
 
       try {
         const sweatTokenContract = new Contract(
-          SWEAT_TOKEN_ADDRESS,
+          SWEAT_TOKEN.address,
           SWEAT_TOKEN_ABI,
-          library.getSigner()
+          library,
         );
 
-        // In a real implementation, this would fetch the actual balance
-        // For now, we'll use a mock value
-        // const balance = await sweatTokenContract.balanceOf(account);
-        const balance = 0; // Mock value
-        setSweatBalance(balance.toString());
+        const [balanceRaw, decimalsRaw] = await Promise.all([
+          sweatTokenContract.balanceOf(account),
+          sweatTokenContract.decimals?.().catch(() => null),
+        ]);
+        const decimals =
+          typeof decimalsRaw === 'number'
+            ? decimalsRaw
+            : SWEAT_TOKEN.decimals;
+        const formattedBalance = utils.formatUnits(balanceRaw, decimals);
+        setSweatBalance(formattedBalance);
       } catch (err) {
         console.error('Error fetching Sweat token balance:', err);
         setError('Failed to fetch Sweat token balance');
-        
-        // For demo purposes, we'll still set a mock value even if there's an error
-        setSweatBalance('0.4');
+        setSweatBalance('0');
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchSweatBalance();
+
+    const intervalId = setInterval(fetchSweatBalance, 30000);
+    return () => clearInterval(intervalId);
   }, [isWalletReady, account, library]);
 
   return {
