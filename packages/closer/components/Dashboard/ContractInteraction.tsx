@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Contract, providers, utils } from 'ethers';
+import { Contract, providers } from 'ethers';
 import { useTranslations } from 'next-intl';
 
 import { allNetworkConfigs } from '../../config_blockchain';
@@ -76,7 +76,7 @@ function resolveAddress(config: Record<string, any>, key: string): string {
 function formatResult(value: any): string {
   if (value === null || value === undefined) return 'null';
   if (typeof value === 'object' && value._isBigNumber) {
-    return `${value.toString()} (${utils.formatUnits(value, 18)} with 18 decimals)`;
+    return value.toString();
   }
   if (Array.isArray(value)) {
     return JSON.stringify(

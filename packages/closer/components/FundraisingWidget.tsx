@@ -40,6 +40,8 @@ const FundraisingWidget = ({
   const [progressPercent, setProgressPercent] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [daysLeft, setDaysLeft] = useState(0);
+  const [showSparkle, setShowSparkle] = useState(false);
+  const [showBubble, setShowBubble] = useState(false);
 
   const sortedMilestones = useMemo(
     () => sortMilestonesByStartDate(fundraisingConfig?.milestones ?? []),
@@ -90,6 +92,29 @@ const FundraisingWidget = ({
     load();
   }, [fundraisingConfig, sortedMilestones, activeMilestone]);
 
+  useEffect(() => {
+    const show = setTimeout(() => setShowSparkle(true), 5000);
+    const hide = setTimeout(() => setShowSparkle(false), 11500);
+    return () => {
+      clearTimeout(show);
+      clearTimeout(hide);
+    };
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowBubble(true), 2000);
+    const dismiss = () => setShowBubble(false);
+    window.addEventListener('scroll', dismiss, { once: true, passive: true });
+    window.addEventListener('touchstart', dismiss, { once: true });
+    window.addEventListener('click', dismiss, { once: true });
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('scroll', dismiss);
+      window.removeEventListener('touchstart', dismiss);
+      window.removeEventListener('click', dismiss);
+    };
+  }, []);
+
   const displayRaised = activeMilestone ? activeRaised : totalRaised;
   const displayGoal = activeMilestone ? goalAmount : 0;
 
@@ -111,7 +136,7 @@ const FundraisingWidget = ({
     activeMilestone?.title ??
     activeMilestone?.name ??
     t('invest_progress_milestone_default');
-  const isGoalReached = !isLoading && displayRaised >= displayGoal;
+  const isGoalReached = !isLoading && displayGoal > 0 && displayRaised >= displayGoal;
 
   if (variant === 'hero') {
     if (isGoalReached) {
@@ -213,32 +238,6 @@ const FundraisingWidget = ({
       </div>
     );
   }
-
-  const [showSparkle, setShowSparkle] = useState(false);
-  const [showBubble, setShowBubble] = useState(false);
-
-  useEffect(() => {
-    const show = setTimeout(() => setShowSparkle(true), 5000);
-    const hide = setTimeout(() => setShowSparkle(false), 11500);
-    return () => {
-      clearTimeout(show);
-      clearTimeout(hide);
-    };
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowBubble(true), 2000);
-    const dismiss = () => setShowBubble(false);
-    window.addEventListener('scroll', dismiss, { once: true, passive: true });
-    window.addEventListener('touchstart', dismiss, { once: true });
-    window.addEventListener('click', dismiss, { once: true });
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('scroll', dismiss);
-      window.removeEventListener('touchstart', dismiss);
-      window.removeEventListener('click', dismiss);
-    };
-  }, []);
 
   const circumference = 2 * Math.PI * 11;
   const navPercent = totalProgress;

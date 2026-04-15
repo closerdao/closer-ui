@@ -2,7 +2,6 @@ import Head from 'next/head';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
-import process from 'process';
 
 import ContractInteraction from '../../components/Dashboard/ContractInteraction';
 import Heading from '../../components/ui/Heading';

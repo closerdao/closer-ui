@@ -11,7 +11,6 @@ import InvestMilestones from '../components/Invest/InvestMilestones';
 import InvestProgressCard from '../components/Invest/InvestProgressCard';
 import InvestRewards from '../components/Invest/InvestRewards';
 import InvestStatsRow from '../components/Invest/InvestStatsRow';
-import InvestTestimonials from '../components/Invest/InvestTestimonials';
 import InvestTrustBar from '../components/Invest/InvestTrustBar';
 import Webinar from '../components/Webinar';
 import { Heading } from '../components/ui';
@@ -21,7 +20,6 @@ import {
   DEFAULT_TOKEN_STATS,
   FundraisingConfig,
   InvestPageOptions,
-  MilestoneStatus,
   TokenStats,
 } from '../types';
 import api from '../utils/api';
