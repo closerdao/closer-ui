@@ -17,7 +17,7 @@ import { getReserveTokenDisplay } from '../utils/config.utils';
 import Profile from './Profile';
 import ReportABug from './ReportABug';
 import Wallet from './Wallet';
-import Button from './ui/Button';
+
 
 interface MenuSection {
   label: string;
@@ -859,20 +859,9 @@ const MemberMenu = () => {
 
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
-  const isTokenSaleEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true';
   return (
     <nav className="flex flex-col gap-4">
       <Profile isMenu={true} isDemo={false} onLogout={logout} />
-      {isWalletEnabled && <Wallet />}
-      {isTokenSaleEnabled && (
-        <Button
-          variant="primary"
-          onClick={() => (window.location.href = '/token')}
-        >
-          {t('navigation_buy_token')}
-        </Button>
-      )}
 
       {/* Render menu items */}
       {menuSections.map((section, index) => (
@@ -940,10 +929,12 @@ const MemberMenu = () => {
         </div>
       ))}
 
+      {isWalletEnabled && <Wallet />}
+
       {APP_NAME?.toLowerCase() === 'tdf' &&
         isWalletEnabled &&
         process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true' && (
-          <div className="mt-3 mb-2 rounded-lg border border-gray-200 bg-white overflow-hidden">
+          <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
             <div className="p-3 bg-gradient-to-br from-accent/5 to-accent-light/5">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -972,7 +963,7 @@ const MemberMenu = () => {
               )}
               <Link
                 href="/token"
-                className="block w-full py-2 px-3 bg-accent hover:bg-accent-dark text-white text-center text-sm font-medium rounded-md transition-colors"
+                className="block w-full py-2 px-3 bg-accent hover:bg-accent-dark text-white text-center text-sm font-medium rounded-full uppercase tracking-wide transition-colors hover:scale-105 duration-150"
               >
                 {t('navigation_buy_tokens')}
               </Link>

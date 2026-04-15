@@ -94,10 +94,15 @@ export const useBuyTokens = () => {
   const [isConfigReady, setIsConfigReady] = useState(false);
 
   useEffect(() => {
-    if (tokenAddress && BLOCKCHAIN_DAO_TOKEN_ABI) {
+    if (
+      tokenAddress &&
+      BLOCKCHAIN_DAO_TOKEN_ABI &&
+      BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS &&
+      BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI
+    ) {
       setIsConfigReady(true);
     }
-  }, [tokenAddress, BLOCKCHAIN_DAO_TOKEN_ABI]);
+  }, [tokenAddress, BLOCKCHAIN_DAO_TOKEN_ABI, BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS, BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI]);
 
   const getContractInstances = () => {
     if (!BLOCKCHAIN_DAO_TOKEN_ABI || !BLOCKCHAIN_DAO_TOKEN?.address) {
