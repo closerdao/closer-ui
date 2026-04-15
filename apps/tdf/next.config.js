@@ -35,6 +35,7 @@ const nextConfig = {
   reactStrictMode: false,
   transpilePackages: [
     'closer',
+    'recharts',
     '@reown/appkit',
     '@reown/appkit-adapter-ethers5',
     '@reown/appkit-common',

@@ -53,6 +53,9 @@ const EventTickets = ({ event, eventsConfig }: Props) => {
   const isEventsEnabled = eventsConfig?.enabled !== false;
 
   const loadData = async () => {
+    // #region agent log
+    fetch('http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1431c7'},body:JSON.stringify({sessionId:'1431c7',location:'tickets.tsx:loadData-start',message:'loadData executing',data:{ticketsFilter,paginatedFilter},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
+    // #endregion
     const [countRes] = await Promise.all([
       platform.ticket.getCount(ticketsFilter),
       platform.ticket.get(paginatedFilter),
@@ -61,19 +64,37 @@ const EventTickets = ({ event, eventsConfig }: Props) => {
       typeof countRes?.results === 'number'
         ? countRes.results
         : platform.ticket.findCount(ticketsFilter) || 0;
+    // #region agent log
+    fetch('http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1431c7'},body:JSON.stringify({sessionId:'1431c7',location:'tickets.tsx:loadData-result',message:'loadData completed',data:{countResResults:countRes?.results,count,ticketCount:platform.ticket.find(paginatedFilter)?.count?.()},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
+    // #endregion
     setTotalTickets(count);
   };
 
+  const canViewTickets =
+    user &&
+    (user.roles.includes('admin') ||
+      user.roles.includes('space-host') ||
+      event?.createdBy === user._id);
+
   useEffect(() => {
-    if (user && user.roles.includes('admin')) {
+    // #region agent log
+    fetch('http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1431c7'},body:JSON.stringify({sessionId:'1431c7',location:'tickets.tsx:useEffect',message:'useEffect fired',data:{hasUser:!!user,roles:user?.roles,canViewTickets,userId:user?._id,eventCreatedBy:event?.createdBy,page},timestamp:Date.now(),runId:'post-fix',hypothesisId:'H1'})}).catch(()=>{});
+    // #endregion
+    if (canViewTickets) {
+      // #region agent log
+      fetch('http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1431c7'},body:JSON.stringify({sessionId:'1431c7',location:'tickets.tsx:loadData-call',message:'loadData being called for authorized user',data:{roles:user?.roles,isCreator:event?.createdBy===user?._id},timestamp:Date.now(),runId:'post-fix',hypothesisId:'H1'})}).catch(()=>{});
+      // #endregion
       loadData();
     }
-  }, [user, page]);
+  }, [canViewTickets, page]);
 
   if (!isEventsEnabled) {
     return <FeatureNotEnabled feature="events" />;
   }
 
+  // #region agent log
+  fetch('http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1431c7'},body:JSON.stringify({sessionId:'1431c7',location:'tickets.tsx:access-check',message:'access check evaluation',data:{hasUser:!!user,roles:user?.roles,isAdmin:user?.roles?.includes('admin'),isSpaceHost:user?.roles?.includes('space-host'),userId:user?._id,userIdType:typeof user?._id,eventCreatedBy:event?.createdBy,eventCreatedByType:typeof event?.createdBy,isCreator:event?.createdBy===user?._id,willBlock:!user||(!user?.roles?.includes('admin')&&!user?.roles?.includes('space-host')&&event?.createdBy!==user?._id)},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
+  // #endregion
   if (
     !user ||
     (!user.roles.includes('admin') &&

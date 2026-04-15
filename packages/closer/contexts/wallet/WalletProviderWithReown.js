@@ -11,7 +11,7 @@ import {
 import { BigNumber } from 'ethers';
 import useSWR from 'swr';
 
-import { celoMainnet, alfajores, celoSepolia } from '../../appkit';
+import { celoMainnet, celoSepolia } from '../../appkit';
 import { blockchainConfig } from '../../config_blockchain';
 import api from '../../utils/api';
 import {
@@ -37,9 +37,8 @@ const {
 
 const WalletProviderInner = ({ children }) => {
   const getTargetNetwork = () => {
-    if (BLOCKCHAIN_NETWORK_ID === 42220) return celoMainnet;
     if (BLOCKCHAIN_NETWORK_ID === 11142220) return celoSepolia;
-    return alfajores;
+    return celoMainnet;
   };
 
   const { open } = useAppKit();

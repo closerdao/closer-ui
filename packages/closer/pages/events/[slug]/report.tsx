@@ -57,9 +57,11 @@ const EventReport = ({ event, error }: Props) => {
     },
   };
 
-  const chargeFilter = {
-    eventId: event?._id,
-    status: { $ne: 'refunded' },
+  const bookingFilter = event && {
+    where: {
+      eventId: event._id,
+      status: { $ne: 'cancelled' },
+    },
   };
 
   const tickets = platform.ticket.find(ticketsFilter);
@@ -98,18 +100,18 @@ const EventReport = ({ event, error }: Props) => {
       if (event) {
         const [
           eventRevenueRes,
-          totalRevenueRes,
+          bookingRevenueRes,
           ticketCountRes,
           dayTicketCountRes,
         ] = await Promise.all([
           api
-            .get('/sum/charge/amount.event.val', {
-              params: { where: chargeFilter },
+            .get('/sum/ticket/price.val', {
+              params: ticketsFilter,
             })
             .catch(() => ({ data: { sum: 0 } })),
           api
-            .get('/sum/charge/amount.total.val', {
-              params: { where: chargeFilter },
+            .get('/sum/booking/total.val', {
+              params: bookingFilter,
             })
             .catch(() => ({ data: { sum: 0 } })),
           platform.ticket.getCount(ticketsFilter),
@@ -117,9 +119,14 @@ const EventReport = ({ event, error }: Props) => {
           platform.ticket.get(ticketsFilter),
         ]);
 
-        setEventRevenue(eventRevenueRes.data?.sum || 0);
-        const totalRev = totalRevenueRes.data?.sum || 0;
-        setBookingRevenue(totalRev - (eventRevenueRes.data?.sum || 0));
+        // #region agent log
+        fetch('http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'831006'},body:JSON.stringify({sessionId:'831006',location:'report.tsx:loadData',message:'Revenue API responses',data:{eventRevenueRes:eventRevenueRes.data,bookingRevenueRes:bookingRevenueRes.data,ticketsFilter,bookingFilter},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+
+        const ticketRevenue = eventRevenueRes.data?.sum || 0;
+        const bookingTotal = bookingRevenueRes.data?.sum || 0;
+        setEventRevenue(ticketRevenue);
+        setBookingRevenue(Math.max(0, bookingTotal - ticketRevenue));
         setTicketCount(
           typeof ticketCountRes?.results === 'number'
             ? ticketCountRes.results

@@ -46,9 +46,14 @@ module.exports = {
         '75%': { opacity: '0.6', transform: 'translateY(-10px)' },
         '100%': { opacity: '0', transform: 'translateY(-14px)' },
       },
+      'fade-in': {
+        '0%': { opacity: '0', transform: 'translateX(-50%) translateY(4px)' },
+        '100%': { opacity: '1', transform: 'translateX(-50%) translateY(0)' },
+      },
     },
     animation: {
       'sparkle-float': 'sparkle-float 2.2s ease-in-out infinite',
+      'fade-in': 'fade-in 0.3s ease-out forwards',
     },
   },
 };
