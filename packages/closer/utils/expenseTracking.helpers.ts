@@ -120,14 +120,17 @@ const getChargeRowEpochMs = (
   charge: ExpenseTrackingChargeRow,
   toconline: ExpenseTrackingToconlineLink,
 ): number => {
-  const candidates: unknown[] = [
-    charge.date,
-    charge.created,
-    charge.meta?.toconlineData?.document_date,
-  ];
+  const candidates: unknown[] = [];
+
+  candidates.push(charge.date);
+
   if (toconline.status === 'linked') {
     candidates.push(toconline.document.date);
   }
+
+  candidates.push(charge.meta?.toconlineData?.document_date);
+  candidates.push(charge.created);
+
   for (const v of candidates) {
     const ms = coerceUnknownToEpochMs(v);
     if (ms != null) return ms;
@@ -135,6 +138,19 @@ const getChargeRowEpochMs = (
   const fromId = mongoObjectIdStringToEpochMs(charge._id);
   if (fromId != null) return fromId;
   return 0;
+};
+
+export const getExpenseDocumentDate = (
+  charge: ExpenseTrackingChargeRow,
+  toconline: ExpenseTrackingToconlineLink,
+): string | undefined => {
+  if (charge.date) {
+    return charge.date;
+  }
+  if (toconline.status === 'linked') {
+    return toconline.document.date;
+  }
+  return charge.meta?.toconlineData?.document_date;
 };
 
 export const getCombinedEntryRowKey = (

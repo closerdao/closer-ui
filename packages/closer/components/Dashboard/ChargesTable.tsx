@@ -7,22 +7,22 @@ import {
 import {
   ToconlineRowUiState,
   getCombinedEntryRowKey,
+  getExpenseDocumentDate,
   toconlineLinkToRowUiState,
 } from 'closer/utils/expenseTracking.helpers';
 import { useTranslations } from 'next-intl';
 
-import ToconlineDocumentDialog from '../expense-tracking/ToconlineDocumentDialog';
-import { Button, Heading, LinkButton } from '../ui';
 import {
   formatIsoFiatAmount,
   isIso4217Currency,
 } from '../../utils/currencyFormat';
-
+import ToconlineDocumentDialog from '../expense-tracking/ToconlineDocumentDialog';
+import { Button, Heading, LinkButton } from '../ui';
 import MultiSelect from '../ui/Select/MultiSelect';
 
 const renderIncomeToconlineCell = (
   state: ToconlineRowUiState,
-  t: ReturnType<typeof useTranslations>,
+  t: any,
   onOpenToconline: (doc: ToconlineDocument) => void,
 ): React.ReactNode => {
   if (state.kind === 'na') {
@@ -308,7 +308,9 @@ const ChargesTable: React.FC<ChargesTableProps> = ({
                         return (
                           <tr key={rowKey} className="hover:bg-gray-50">
                             <td className="whitespace-nowrap px-2 py-2 text-xs text-gray-900">
-                              {formatDate(charge.date)}
+                              {formatDate(
+                                getExpenseDocumentDate(charge, entry.toconline),
+                              )}
                             </td>
                             <td className=" px-2 py-2 text-xs text-gray-900">
                               {charge._id ? charge._id : 'N/A'}
