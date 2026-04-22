@@ -186,6 +186,10 @@ export { default as DigitalCommonsPage } from './pages/philosophy/digital-common
 export { default as SharedAbundancePage } from './pages/philosophy/shared-abundance';
 export { default as RoadmapPage } from './pages/roadmap';
 export { default as PrivacyPolicyPage } from './pages/privacy-policy';
+export { default as CohousingApplicationIndexPage } from './pages/cohousing/application/index';
+export { default as CohousingApplicationDetailPage } from './pages/cohousing/application/[id]';
+export { default as CohousingApplicationAdminPage } from './pages/cohousing/application/[id]/admin';
+export { default as CohousingApplicationsTeamPage } from './pages/cohousing/applications/index';
 // Types
 export * from './types/';
 // Utils

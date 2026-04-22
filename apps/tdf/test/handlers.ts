@@ -75,4 +75,100 @@ export const handlers = [
   rest.get('*/carrots/balance', (req, res, ctx) =>
     res(ctx.status(200), ctx.json({ data: { results: 0 } })),
   ),
+  rest.get('*/my/CohousingApplication', (req, res, ctx) =>
+    res(
+      ctx.status(200),
+      ctx.json({
+        results: [
+          {
+            _id: 'cohousing-mock-1',
+            createdBy: user._id,
+            currentStep: 1,
+            status: 'waitlist',
+            isDraft: true,
+            financingMode: null,
+          },
+        ],
+      }),
+    ),
+  ),
+  rest.get('*/mine/CohousingApplication', (req, res, ctx) =>
+    res(
+      ctx.status(200),
+      ctx.json({
+        results: {
+          _id: 'cohousing-mock-1',
+          createdBy: user._id,
+          currentStep: 2,
+          status: 'waitlist',
+          isDraft: true,
+        },
+      }),
+    ),
+  ),
+  rest.get('*/cohousingapplication/:id', (req, res, ctx) => {
+    const { id } = req.params;
+    return res(
+      ctx.status(200),
+      ctx.json({
+        results: {
+          _id: id,
+          createdBy: user._id,
+          currentStep: 2,
+          status: 'waitlist',
+          isDraft: true,
+          financingMode: null,
+        },
+      }),
+    );
+  }),
+  rest.post('*/CohousingApplication', async (req, res, ctx) => {
+    const body = (await req.json().catch(() => ({}))) as {
+      status?: string;
+      isDraft?: boolean;
+      createdBy?: string;
+    };
+    return res(
+      ctx.status(200),
+      ctx.json({
+        results: {
+          _id: 'cohousing-new-mock',
+          createdBy: body.createdBy || user._id,
+          currentStep: 1,
+          status: body.status || 'waitlist',
+          isDraft: body.isDraft !== false,
+        },
+      }),
+    );
+  }),
+  rest.patch('*/mine/CohousingApplication', (req, res, ctx) =>
+    res(
+      ctx.status(200),
+      ctx.json({
+        results: {
+          _id: 'cohousing-mock-1',
+          createdBy: user._id,
+          currentStep: 3,
+          status: 'waitlist',
+          isDraft: true,
+        },
+      }),
+    ),
+  ),
+  rest.get('*/cohousingapplication', (req, res, ctx) =>
+    res(
+      ctx.status(200),
+      ctx.json({
+        results: [
+          {
+            _id: 'cohousing-mock-1',
+            createdBy: user._id,
+            currentStep: 2,
+            status: 'waitlist',
+            cohort: '2026-28',
+          },
+        ],
+      }),
+    ),
+  ),
 ];
