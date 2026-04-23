@@ -269,7 +269,7 @@ const CohousingPage = () => {
             </div>
             <div>
               <div className="text-4xl md:text-5xl font-normal text-gray-900 mb-2 font-serif">2027</div>
-              <div className="text-sm text-gray-600 font-light">Estimated Handover</div>
+              <div className="text-sm text-gray-600 font-light">{t('cohousing_stat_construction_start')}</div>
             </div>
           </div>
         </div>

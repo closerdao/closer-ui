@@ -3,20 +3,17 @@ import { useTranslations } from 'next-intl';
 import {
   COHOUSING_PHASES,
   COHOUSING_POOL_BASE,
-  COHOUSING_POOL_GOAL,
   COHOUSING_STEP_BY_N,
 } from '../../constants/cohousingFlow';
 import Button from '../ui/Button';
 import Heading from '../ui/Heading';
 
-import { FlowBadge, FlowProgressBar } from './cohousingFlowUi';
+import { FlowBadge } from './cohousingFlowUi';
 
 export const CohousingLandingHero = ({
-  committed,
   onStart,
   onReadAgreement,
 }: {
-  committed: number;
   onStart: () => void;
   onReadAgreement: () => void;
 }) => {
@@ -103,19 +100,6 @@ export const CohousingLandingHero = ({
         </Button>
       </div>
 
-      <div className="max-w-md mx-auto mt-9">
-        <div className="flex justify-between text-xs text-gray-500 mb-1.5">
-          <span>{t('cohousing_flow_pool_label')}</span>
-          <span className="text-gray-900 font-bold">
-            €{committed.toLocaleString()} / €{COHOUSING_POOL_GOAL.toLocaleString()}
-          </span>
-        </div>
-        <FlowProgressBar
-          value={committed}
-          max={COHOUSING_POOL_GOAL}
-          className="h-1.5"
-        />
-      </div>
     </section>
   );
 };

@@ -192,7 +192,6 @@ export const CohousingParticipantView = ({
     return (
       <>
         <CohousingLandingHero
-          committed={committed}
           onStart={() => setStarted(true)}
           onReadAgreement={() => setAgreementOpen(true)}
         />
@@ -206,7 +205,7 @@ export const CohousingParticipantView = ({
 
   return (
     <>
-      <div className="sticky top-0 z-40 bg-white border-b border-gray-200 py-3.5 mb-8 -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div className="sticky top-0 z-20 bg-white border-b border-gray-200 py-3.5 mb-8 -mx-4 px-4 sm:mx-0 sm:px-0">
         <div className="max-w-[860px] mx-auto flex flex-wrap justify-between items-center gap-3">
           <div className="flex gap-2 items-center">
             <Button
