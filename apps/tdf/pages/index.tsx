@@ -746,15 +746,15 @@ const HomePage = () => {
 
           {isFundraiserEnabled && fundraisingConfig?.enabled && (
             <div className="max-w-2xl mx-auto">
-              <div className="bg-white rounded-2xl border-2 border-accent/20 p-6 shadow-lg">
-                <div className="flex flex-col sm:flex-row gap-6 items-start">
-                  <div className="flex-1">
-                    <p className="text-xs uppercase tracking-wider text-accent mb-2 font-semibold">
+              <div className="bg-white rounded-2xl border-2 border-accent/20 p-5 sm:p-6 shadow-lg">
+                <div className="flex flex-col sm:flex-row gap-5 sm:gap-6 items-start">
+                  <div className="flex-1 space-y-3">
+                    <p className="text-xs uppercase tracking-wider text-accent font-semibold">
                       {t('home_fundraising_preview_label')}
                     </p>
                     <Heading
                       level={3}
-                      className="text-lg font-semibold text-gray-900 mb-2"
+                      className="text-lg font-semibold text-gray-900"
                     >
                       {t('home_fundraising_preview_title')}
                     </Heading>
@@ -762,11 +762,10 @@ const HomePage = () => {
                       {t('home_fundraising_preview_desc')}
                     </p>
                   </div>
-                  <div className="w-full sm:w-auto flex-shrink-0">
+                  <div className="w-full sm:w-auto flex-shrink-0 space-y-3">
                     <FundraisingWidget
                       variant="hero"
                       fundraisingConfig={fundraisingConfig}
-                      className="mb-4"
                     />
                     <Link
                       href="/invest"

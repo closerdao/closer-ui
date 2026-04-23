@@ -264,9 +264,11 @@ const Login = () => {
           >
             {t('login_title')}
           </Heading>
-          <p className="text-sm text-gray-500 -mt-2">
-            {t('login_description')}
-          </p>
+          {!back && (
+            <p className="text-sm text-gray-500 -mt-2">
+              {t('login_description')}
+            </p>
+          )}
 
           {back && (
             <p className="text-sm text-gray-600">

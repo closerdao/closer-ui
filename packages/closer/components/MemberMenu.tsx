@@ -90,6 +90,11 @@ const MemberMenu = () => {
           isOpen: false,
           items: [
             {
+              label: t('menu_cohousing'),
+              url: '/cohousing',
+              enabled: true,
+            },
+            {
               label: t('menu_regenerative_agriculture'),
               url: '/pages/regenerative-agriculture',
               enabled: true,

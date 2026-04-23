@@ -126,10 +126,7 @@ const FundraisingWidget = ({
     totalGoal > 0 ? Math.min(100, (totalRaised / totalGoal) * 100) : 0;
 
   const formatAmount = (amount: number) => {
-    if (amount >= 1000) {
-      return `€${Math.round(amount / 1000)}K`;
-    }
-    return `€${amount.toLocaleString()}`;
+    return `€${Math.round(amount)}`;
   };
 
   const milestoneName =
@@ -211,7 +208,7 @@ const FundraisingWidget = ({
             style={{ width: `${progressPercent}%` }}
           ></div>
         </div>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-4">
           <p className="text-sm text-gray-500">{t('invest_progress_deadline')}</p>
           <p className="text-lg font-bold text-accent">
             {daysLeft} {t('invest_countdown_days_left')}
