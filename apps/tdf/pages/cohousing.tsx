@@ -244,9 +244,6 @@ const CohousingPage = () => {
               {t('cohousing_hero_subtitle')}
             </p>
 
-            <div className="max-w-xl mx-auto mb-6">
-              <Newsletter placement="cohousing" showTitle={false} className="w-full pt-0 pb-0 sm:w-full" />
-            </div>
             <p className="text-sm text-gray-600">
               {isLoadingStats ? '...' : t('cohousing_hero_members_note', { citizens: displayCitizenCount, holders: displayTokenHolders })}
             </p>
@@ -272,7 +269,7 @@ const CohousingPage = () => {
             </div>
             <div>
               <div className="text-4xl md:text-5xl font-normal text-gray-900 mb-2 font-serif">2027</div>
-              <div className="text-sm text-gray-600 font-light">{t('cohousing_stat_ready')}</div>
+              <div className="text-sm text-gray-600 font-light">Estimated Handover</div>
             </div>
           </div>
         </div>
@@ -304,6 +301,9 @@ const CohousingPage = () => {
               </p>
               <p className="text-sm text-gray-700 mb-6 leading-relaxed">
                 {t('cohousing_earthpods_description')}
+              </p>
+              <p className="text-sm text-gray-700 mb-6 leading-relaxed">
+                Price estimated between EUR 110k-EUR 220k (transparent cost transfer from developer to buyer. A more final price is defined at the Design lock step, when participants lock funds. 30% of the estimate is locked at that step.)
               </p>
 
               <div className="flex flex-wrap gap-6 mb-6 pb-6 border-b border-gray-200">
@@ -376,6 +376,9 @@ const CohousingPage = () => {
               </p>
               <p className="text-sm text-gray-700 mb-6 leading-relaxed">
                 {t('cohousing_townhouses_description')}
+              </p>
+              <p className="text-sm text-gray-700 mb-6 leading-relaxed">
+                {t('cohousing_townhouses_price_note')}
               </p>
 
               <div className="flex flex-wrap gap-6 mb-6 pb-6 border-b border-gray-200">
@@ -558,7 +561,7 @@ const CohousingPage = () => {
                   date: 'Apr 2026',
                   titleKey: 'cohousing_timeline_pip_received',
                   detailKey: 'cohousing_timeline_pip_received_detail',
-                  status: 'upcoming',
+                  status: 'complete',
                 },
                 {
                   date: '2026',
