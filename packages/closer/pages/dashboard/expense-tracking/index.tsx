@@ -30,8 +30,8 @@ import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
-import { getAccessToken } from '../../../utils/authStorage';
 import api from '../../../utils/api';
+import { getAccessToken } from '../../../utils/authStorage';
 import { parseMessageFromError } from '../../../utils/common';
 import {
   filterCombinedEntriesToExpenseFcToconlineDocuments,
@@ -68,7 +68,7 @@ const ExpenseTrackingDashboardPage = ({
   generalConfig,
   entitiesConfig,
 }: {
-    generalConfig: GeneralConfig | null;
+  generalConfig: GeneralConfig | null;
   entitiesConfig: any;
 }) => {
   const t = useTranslations();
@@ -76,7 +76,8 @@ const ExpenseTrackingDashboardPage = ({
   const { platform }: any = usePlatform();
   const { TIME_ZONE } = useConfig();
 
-  const allEntities = entitiesConfig?.elements?.map((entity: any) => entity.legalName) || [];
+  const allEntities =
+    entitiesConfig?.elements?.map((entity: any) => entity.legalName) || [];
   const uniqueEntities = [...new Set(allEntities)];
 
   const defaultEntity = entitiesConfig?.elements[0]?.legalName || '';
@@ -164,20 +165,21 @@ const ExpenseTrackingDashboardPage = ({
     setCurrentPage(page);
   };
 
-  const fetchAllChargesForDateRange =
-    async (): Promise<ExpenseTrackingChargeRow[]> => {
-      const filter = {
-        where: {
-          type: 'expense',
-          date: { $gte: chargeFromStr, $lte: chargeToStr },
-        },
-        sort_by: '-date',
-        limit: CHARGE_DOWNLOAD_LIMIT,
-      };
-      const res = await platform.charge.get(filter);
-      const items = res?.results?.toJS?.() ?? [];
-      return Array.isArray(items) ? (items as ExpenseTrackingChargeRow[]) : [];
+  const fetchAllChargesForDateRange = async (): Promise<
+    ExpenseTrackingChargeRow[]
+  > => {
+    const filter = {
+      where: {
+        type: 'expense',
+        date: { $gte: chargeFromStr, $lte: chargeToStr },
+      },
+      sort_by: '-date',
+      limit: CHARGE_DOWNLOAD_LIMIT,
     };
+    const res = await platform.charge.get(filter);
+    const items = res?.results?.toJS?.() ?? [];
+    return Array.isArray(items) ? (items as ExpenseTrackingChargeRow[]) : [];
+  };
 
   const handleDownloadCSV = async () => {
     try {
@@ -186,6 +188,7 @@ const ExpenseTrackingDashboardPage = ({
       const headers = [
         t('expense_tracking_entity'),
         t('expense_tracking_document_date'),
+        t('expense_tracking_date_added'),
         t('expense_tracking_description'),
         t('expense_tracking_supplier'),
         t('expense_tracking_supplier_address_detail'),
@@ -200,8 +203,17 @@ const ExpenseTrackingDashboardPage = ({
 
       const rows = allCharges.map((charge) => {
         const entity = charge.entity || '';
-        const documentDate =
-          charge.meta?.toconlineData?.document_date || '';
+        const documentDate = formatDateForApi(
+          new Date(
+            charge.meta?.toconlineData?.document_date ||
+              charge.date ||
+              Date.now(),
+          ),
+          TIME_ZONE,
+        );
+        const dateAdded = charge.created
+          ? formatDateForApi(new Date(charge.created), TIME_ZONE)
+          : '';
         const description = charge?.description || '';
         const supplier =
           charge.meta?.toconlineData?.supplier_business_name || '';
@@ -232,6 +244,7 @@ const ExpenseTrackingDashboardPage = ({
         return [
           entity,
           documentDate,
+          dateAdded,
           description,
           supplier,
           supplierAddressDetail,
@@ -284,8 +297,8 @@ const ExpenseTrackingDashboardPage = ({
     try {
       setIsLoading(true);
       const allCharges = await fetchAllChargesForDateRange();
-      const chargesWithDocuments = allCharges.filter(
-        (charge) => Boolean(charge.meta?.uploadedDocumentUrl),
+      const chargesWithDocuments = allCharges.filter((charge) =>
+        Boolean(charge.meta?.uploadedDocumentUrl),
       );
 
       if (chargesWithDocuments.length === 0) {
@@ -324,7 +337,9 @@ const ExpenseTrackingDashboardPage = ({
 
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = `expense_documents_${new Date().toISOString().split('T')[0]}.zip`;
+      link.download = `expense_documents_${
+        new Date().toISOString().split('T')[0]
+      }.zip`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -393,7 +408,9 @@ const ExpenseTrackingDashboardPage = ({
             <span className="hidden sm:block sm:min-w-0" aria-hidden />
           )}
           <div
-            className={`flex flex-col sm:flex-row gap-2 w-full sm:w-auto ${!canCreateExpenses ? 'sm:ml-auto' : ''}`}
+            className={`flex flex-col sm:flex-row gap-2 w-full sm:w-auto ${
+              !canCreateExpenses ? 'sm:ml-auto' : ''
+            }`}
           >
             <Button
               onClick={() => handleDownloadAllDocuments()}
@@ -419,6 +436,7 @@ const ExpenseTrackingDashboardPage = ({
         <ExpenseChargesListing
           entries={combinedEntriesForListing}
           isLoading={isLoading}
+          timeZone={TIME_ZONE}
         />
 
         {combinedEntriesPaginationTotal > EXPENSES_PER_PAGE && (
@@ -449,7 +467,7 @@ ExpenseTrackingDashboardPage.getInitialProps = async (
   context: NextPageContext,
 ) => {
   try {
-    const [generalConfigRes, entitiesConfigRes,messages] = await Promise.all([
+    const [generalConfigRes, entitiesConfigRes, messages] = await Promise.all([
       api.get('/config/general').catch(() => {
         return null;
       }),

@@ -271,7 +271,7 @@ const MintSweatModal = ({ onClose }: MintSweatModalProps) => {
     >
       <div className="flex flex-col max-h-[85vh]">
         <div className="flex-shrink-0 mb-4">
-          <h2 className="text-xl font-semibold">
+          <h2 className="text-lg md:text-xl font-semibold">
             {t('token_sales_dashboard_mint_sweat_title')}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
@@ -283,7 +283,7 @@ const MintSweatModal = ({ onClose }: MintSweatModalProps) => {
           {entries.map((entry, index) => (
             <div
               key={entry.id}
-              className="flex items-start gap-2 p-3 border border-border rounded-lg bg-muted/20"
+              className="flex flex-col gap-2 p-3 border border-border rounded-lg bg-muted/20 sm:flex-row sm:items-start"
             >
               <div className="flex-1 min-w-0">
                 <label className="block text-xs font-medium text-muted-foreground mb-1">
@@ -303,26 +303,28 @@ const MintSweatModal = ({ onClose }: MintSweatModalProps) => {
                   </p>
                 )}
               </div>
-              <div className="w-28 flex-shrink-0">
-                <label className="block text-xs font-medium text-muted-foreground mb-1">
-                  {t('token_sales_dashboard_mint_sweat_amount')}
-                </label>
-                <Input
-                  type="number"
-                  value={entry.amount}
-                  onChange={(e) => updateEntryAmount(entry.id, e.target.value)}
-                  placeholder="0"
-                  className="w-full px-3 py-2 text-sm"
-                />
+              <div className="flex items-end gap-2">
+                <div className="flex-1 sm:w-28 sm:flex-shrink-0">
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">
+                    {t('token_sales_dashboard_mint_sweat_amount')}
+                  </label>
+                  <Input
+                    type="number"
+                    value={entry.amount}
+                    onChange={(e) => updateEntryAmount(entry.id, e.target.value)}
+                    placeholder="0"
+                    className="w-full px-3 py-2 text-sm"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeEntry(entry.id)}
+                  disabled={entries.length <= 1}
+                  className="p-1.5 text-muted-foreground hover:text-red-500 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  ✕
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => removeEntry(entry.id)}
-                disabled={entries.length <= 1}
-                className="mt-5 p-1.5 text-muted-foreground hover:text-red-500 disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                ✕
-              </button>
             </div>
           ))}
         </div>
@@ -336,7 +338,7 @@ const MintSweatModal = ({ onClose }: MintSweatModalProps) => {
             + {t('token_sales_dashboard_mint_sweat_add_entry')}
           </button>
 
-          <div className="flex items-center justify-between text-sm border-t border-border pt-3">
+          <div className="flex flex-col gap-3 text-sm border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col gap-1">
               <span className="text-muted-foreground">
                 {t('token_sales_dashboard_mint_sweat_total')}: {totalAmount}{' '}
@@ -353,7 +355,7 @@ const MintSweatModal = ({ onClose }: MintSweatModalProps) => {
                 </span>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 self-end">
               <Button variant="secondary" onClick={onClose}>
                 {t('token_sales_dashboard_cancel')}
               </Button>

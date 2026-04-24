@@ -99,6 +99,7 @@ export { default as DashboardPage } from './pages/dashboard';
 export { default as AffiliateDashboardPage } from './pages/dashboard/affiliate';
 export { default as PerformancePage } from './pages/dashboard/performance/index';
 export { default as TokenSalesDashboardPage } from './pages/dashboard/token-sales';
+export { default as ContractsPage } from './pages/token/contracts';
 export { default as EventsPage } from './pages/events';
 export { default as EventPage } from './pages/events/[slug]';
 export { default as EditEventPage } from './pages/events/[slug]/edit';
@@ -185,6 +186,10 @@ export { default as DigitalCommonsPage } from './pages/philosophy/digital-common
 export { default as SharedAbundancePage } from './pages/philosophy/shared-abundance';
 export { default as RoadmapPage } from './pages/roadmap';
 export { default as PrivacyPolicyPage } from './pages/privacy-policy';
+export { default as CohousingApplicationIndexPage } from './pages/cohousing/application/index';
+export { default as CohousingApplicationDetailPage } from './pages/cohousing/application/[id]';
+export { default as CohousingApplicationAdminPage } from './pages/cohousing/application/[id]/admin';
+export { default as CohousingApplicationsTeamPage } from './pages/cohousing/applications/index';
 // Types
 export * from './types/';
 // Utils

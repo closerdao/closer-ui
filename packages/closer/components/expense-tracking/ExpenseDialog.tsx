@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 
-import { getAccessToken } from '../../utils/authStorage';
 import api from '../../utils/api';
+import { getAccessToken } from '../../utils/authStorage';
 import { Button } from '../ui';
 import Heading from '../ui/Heading';
 import {
@@ -425,7 +425,6 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
           const errors = validateReceiptData(formattedData);
           setValidationErrors(errors);
         } catch (e) {
-          console.log('Structured data parsing error:', e);
           setParsedData(null);
           setValidationErrors([
             'Invalid structured data format received from AI',
@@ -549,8 +548,6 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
         entityName: selectedEntity,
       };
 
-      console.log('updatedExpenseData=', updatedExpenseData);
-
       const res = await api.post('/toconline/expense', {
         expenseData: updatedExpenseData,
       });
@@ -595,11 +592,12 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-
       <div className="bg-white rounded-lg w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
         <div className="p-4 sm:p-6">
           <div className="flex justify-between items-start gap-2 mb-4">
-            <Heading level={3} className="text-lg sm:text-xl">{t('expense_tracking_add_new_expense')}</Heading>
+            <Heading level={3} className="text-lg sm:text-xl">
+              {t('expense_tracking_add_new_expense')}
+            </Heading>
             <Button
               onClick={handleClose}
               variant="secondary"
@@ -611,10 +609,14 @@ const ExpenseDialog: React.FC<ExpenseDialogProps> = ({
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
-            <span className="text-sm sm:text-base">{t('expense_tracking_choose_accounting_entity')}</span>
+            <span className="text-sm sm:text-base">
+              {t('expense_tracking_choose_accounting_entity')}
+            </span>
             <Select value={selectedEntity} onValueChange={setSelectedEntity}>
               <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder={t('expense_tracking_select_entity')} />
+                <SelectValue
+                  placeholder={t('expense_tracking_select_entity')}
+                />
               </SelectTrigger>
               <SelectContent>
                 {uniqueEntities.map((entity) => (

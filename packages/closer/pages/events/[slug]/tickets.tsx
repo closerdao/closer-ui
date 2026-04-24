@@ -64,11 +64,17 @@ const EventTickets = ({ event, eventsConfig }: Props) => {
     setTotalTickets(count);
   };
 
+  const canViewTickets =
+    user &&
+    (user.roles.includes('admin') ||
+      user.roles.includes('space-host') ||
+      event?.createdBy === user._id);
+
   useEffect(() => {
-    if (user && user.roles.includes('admin')) {
+    if (canViewTickets) {
       loadData();
     }
-  }, [user, page]);
+  }, [canViewTickets, page]);
 
   if (!isEventsEnabled) {
     return <FeatureNotEnabled feature="events" />;

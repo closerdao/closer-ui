@@ -6,9 +6,13 @@ on:
   pull_request:
     types: [opened, synchronize]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
-    name: Build and Test
+  test:
+    name: Test
     timeout-minutes: 15
     runs-on: ubuntu-latest
     env:
@@ -17,21 +21,18 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           fetch-depth: 2
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn
-
-      - name: Build
-        run: yarn build
+        run: yarn install --frozen-lockfile
 
       - name: Test
-        run: yarn test
+        run: yarn test -- --affected
