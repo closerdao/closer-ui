@@ -59,9 +59,10 @@ function DonateBankPage({ generalConfig }: DonateBankPageProps) {
     setSession(stored);
   }, [router, router.isReady, router.asPath, id, isAuthenticated, isAuthLoading]);
 
-  const bankBlock: CreateDonationBankResult | null =
-    session !== 'loading' && session !== 'missing' && session.kind === 'bank' ? session.result : null;
-  const amount = session !== 'loading' && session !== 'missing' && session.kind === 'bank' ? session.amount : 0;
+  const bankPayload =
+    session && typeof session === 'object' && session.kind === 'bank' ? session : null;
+  const bankBlock: CreateDonationBankResult | null = bankPayload?.result ?? null;
+  const amount = bankPayload?.amount ?? 0;
   const formattedAmount = priceFormat(amount, DEFAULT_CURRENCY);
 
   const bankBeneficiaryDisplay =
