@@ -59,7 +59,7 @@ function DonateCardPage({ generalConfig }: DonateCardPageProps) {
   }, [router, router.isReady, router.asPath, id, isAuthenticated, isAuthLoading]);
 
   const cardPayload =
-    session !== 'loading' && session !== 'missing' && session.kind === 'card' ? session : null;
+    session && typeof session === 'object' && session.kind === 'card' ? session : null;
   const amount = cardPayload?.amount ?? 0;
   const formattedAmount = priceFormat(amount, DEFAULT_CURRENCY);
 

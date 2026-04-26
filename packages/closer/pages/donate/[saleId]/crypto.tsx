@@ -78,7 +78,7 @@ function DonateCryptoPage({ generalConfig }: DonateCryptoPageProps) {
   }, [router, router.isReady, router.asPath, id, isAuthenticated, isAuthLoading]);
 
   const cryptoPayload =
-    session !== 'loading' && session !== 'missing' && session.kind === 'crypto' ? session : null;
+    session && typeof session === 'object' && session.kind === 'crypto' ? session : null;
   const amount = cryptoPayload?.amount ?? 0;
   const cryptoBlock = cryptoPayload?.result;
   const cryptoReady =
