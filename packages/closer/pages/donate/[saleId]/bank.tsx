@@ -74,19 +74,27 @@ function DonateBankPage({ generalConfig }: DonateBankPageProps) {
   useEffect(() => {
     if (!bankBlock?.saleId || session === 'loading' || session === 'missing') return;
     const sid = bankBlock.saleId;
-    let cancelled = false;
+    const ac = new AbortController();
+    const { signal } = ac;
+    let mounted = true;
     (async () => {
-      const paid = await pollDonationSaleUntilPaid(sid, (status) => {
-        if (!cancelled && status) setBankPollStatus(status);
-      });
-      if (!cancelled && paid) {
+      const paid = await pollDonationSaleUntilPaid(
+        sid,
+        (status) => {
+          if (!mounted || signal.aborted || !status) return;
+          setBankPollStatus(status);
+        },
+        { signal },
+      );
+      if (mounted && !signal.aborted && paid) {
         router.push(
           `/donate/success?amount=${amount}&method=bank&saleId=${encodeURIComponent(sid)}`,
         );
       }
     })();
     return () => {
-      cancelled = true;
+      mounted = false;
+      ac.abort();
     };
   }, [bankBlock?.saleId, session, amount, router]);
 

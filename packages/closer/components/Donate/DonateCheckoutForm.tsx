@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { useTranslations } from 'next-intl';
@@ -49,9 +49,22 @@ function DonateCheckoutForm({
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitEnabled, setIsSubmitEnabled] = useState(false);
   const [pollHint, setPollHint] = useState<string | null>(null);
+  const pollAbortRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      pollAbortRef.current?.abort();
+      pollAbortRef.current = null;
+    };
+  }, []);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    pollAbortRef.current?.abort();
+    pollAbortRef.current = null;
     setError(null);
     setPollHint(null);
     setIsLoading(true);
@@ -103,19 +116,39 @@ function DonateCheckoutForm({
         return;
       } catch (confirmErr: unknown) {
         setPollHint(t('donate_card_poll_pending'));
-        const paid = await pollDonationSaleUntilPaid(saleId, (status) => {
-          if (status) setPollHint(t('donate_poll_status', { status }));
-        });
-        if (paid) {
+        const ac = new AbortController();
+        pollAbortRef.current = ac;
+        let paid = false;
+        try {
+          paid = await pollDonationSaleUntilPaid(
+            saleId,
+            (status) => {
+              if (!status || !isMountedRef.current || ac.signal.aborted) return;
+              setPollHint(t('donate_poll_status', { status }));
+            },
+            { signal: ac.signal },
+          );
+        } finally {
+          if (pollAbortRef.current === ac) {
+            pollAbortRef.current = null;
+          }
+        }
+        if (paid && isMountedRef.current && !ac.signal.aborted) {
           onPaid();
           return;
         }
-        setError(parseMessageFromError(confirmErr));
+        if (isMountedRef.current && !ac.signal.aborted) {
+          setError(parseMessageFromError(confirmErr));
+        }
       }
     } catch (err: unknown) {
-      setError(parseMessageFromError(err));
+      if (isMountedRef.current) {
+        setError(parseMessageFromError(err));
+      }
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 
