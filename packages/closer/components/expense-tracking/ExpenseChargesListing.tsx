@@ -522,6 +522,15 @@ const ExpenseChargesListing: React.FC<ExpenseChargesListingProps> = ({
 
                 <div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm">
+                    <div className="bg-gray-50 p-2 rounded sm:col-span-2">
+                      <span className="font-semibold block text-gray-600">
+                        {t('expense_tracking_charge_id')}
+                      </span>
+                      <span className="break-all font-mono text-xs sm:text-sm">
+                        {selectedEntry.charge._id ||
+                          t('expense_tracking_not_available')}
+                      </span>
+                    </div>
                     <div className="bg-gray-50 p-2 rounded">
                       <span className="font-semibold block text-gray-600">
                         {t('expense_tracking_entity')}
