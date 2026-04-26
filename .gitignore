@@ -28,6 +28,7 @@ out/
 .env.local
 **/.env
 **/*.tsbuildinfo
+apps/*/tsconfig.tsbuildinfo
 
 # Local IDE/editor settings (developer-specific paths)
 .claude/settings.local.json
