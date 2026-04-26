@@ -1853,6 +1853,7 @@
   "expense_tracking_close": "Zamknij",
   "expense_tracking_view_uploaded_document": "Zobacz przesłany dokument",
   "expense_tracking_entity": "Jednostka",
+  "expense_tracking_charge_id": "ID obciążenia",
   "expense_tracking_currency": "Waluta",
   "expense_tracking_select_entity": "Wybierz jednostkę",
   "expense_tracking_warning_toconline": "UWAGA: w Toconline zostanie utworzony dokument na podstawie powyższych danych. Ta operacja jest nieodwracalna. Przed kontynuacją dokładnie sprawdź dane z paragonu.",

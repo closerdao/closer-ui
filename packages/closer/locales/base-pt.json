@@ -2382,6 +2382,7 @@
   "expense_tracking_close": "Fechar",
   "expense_tracking_view_uploaded_document": "Ver documento carregado",
   "expense_tracking_entity": "Entidade",
+  "expense_tracking_charge_id": "ID da cobrança",
   "expense_tracking_currency": "Moeda",
   "expense_tracking_select_entity": "Selecionar uma entidade",
   "expense_tracking_warning_toconline": "AVISO: será criado um documento no Toconline com os dados acima. Esta ação não é reversível. Por favor, revise cuidadosamente os dados do recibo extraídos antes de prosseguir.",
