@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useState } from 'react';
 
 import {
   LinkedinShareButton,
@@ -21,6 +23,8 @@ interface InvestProgressCardProps {
   daysLeft?: number;
   shareUrl: string;
   dataroomHref?: string;
+  subscriptionHref?: string;
+  donationHref?: string;
   twitterHandle?: string;
   t: (key: string) => string;
 }
@@ -35,16 +39,53 @@ const InvestProgressCard = ({
   daysLeft,
   shareUrl,
   dataroomHref,
+  subscriptionHref,
+  donationHref,
   twitterHandle,
   t,
 }: InvestProgressCardProps) => {
+  const router = useRouter();
   const eur = getCurrencySymbol('EUR');
   const goal = totalGoal || (activeMilestone ? getMilestoneGoal(activeMilestone) : 0);
   const progress = goal > 0 ? Math.min(100, (fundraisingTotal / goal) * 100) : 0;
+  const [step, setStep] = useState<'idle' | 'choose' | 'donation'>('idle');
+  const [donationAmount, setDonationAmount] = useState<number>(100);
+
+  const donationPresets = [25, 50, 100, 250, 500, 1000];
 
   const formatAmount = (amount: number) => {
     if (amount >= 1000) return `${eur}${Math.round(amount / 1000).toLocaleString()}K`;
     return `${eur}${amount.toLocaleString()}`;
+  };
+
+  const resetFlow = () => {
+    setStep('idle');
+    setDonationAmount(100);
+  };
+
+  const goTo = (href: string) => {
+    resetFlow();
+    router.push(href);
+  };
+
+  const handleParticipationSelect = (type: 'tokens' | 'donation' | 'subscription' | 'lender') => {
+    if (type === 'tokens') {
+      goTo('/token');
+      return;
+    }
+    if (type === 'lender') {
+      goTo(dataroomHref || '/dataroom');
+      return;
+    }
+    if (type === 'subscription') {
+      goTo(subscriptionHref || '/subscriptions');
+      return;
+    }
+    setStep('donation');
+  };
+
+  const handleDonationCheckout = () => {
+    goTo(`${donationHref || '/donate'}?amount=${donationAmount}`);
   };
 
   return (
@@ -84,14 +125,99 @@ const InvestProgressCard = ({
         </>
       )}
 
-      <Link
-        href="/token/checkout?tokens=1"
-        className="block w-full py-3 bg-accent border-2 border-accent text-white text-center rounded-full font-semibold uppercase tracking-wide transition-all hover:bg-accent-dark hover:border-accent-dark"
-      >
-        {t('invest_cta_back_project')}
-      </Link>
+      {step === 'idle' && (
+        <button
+          type="button"
+          onClick={() => setStep('choose')}
+          className="block w-full py-3 bg-accent border-2 border-accent text-white text-center rounded-full font-semibold uppercase tracking-wide transition-all hover:bg-accent-dark hover:border-accent-dark"
+        >
+          {t('invest_cta_back_project')}
+        </button>
+      )}
 
-      {dataroomHref && (
+      {step !== 'idle' && (
+        <div className="mt-2 mb-3 pt-4 border-t border-gray-100 flex flex-col gap-3">
+          {step === 'choose' && (
+            <>
+              <p className="text-sm font-semibold text-gray-900">
+                {t('invest_cta_choose_contribution')}
+              </p>
+              <div className="grid grid-cols-1 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleParticipationSelect('tokens')}
+                  className="w-full px-3 py-2.5 rounded-xl text-left border border-gray-200 bg-white hover:border-accent hover:text-accent transition-colors"
+                >
+                  {t('invest_cta_option_tokens')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleParticipationSelect('donation')}
+                  className="w-full px-3 py-2.5 rounded-xl text-left border border-gray-200 bg-white hover:border-accent hover:text-accent transition-colors"
+                >
+                  {t('invest_cta_option_donation')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleParticipationSelect('subscription')}
+                  className="w-full px-3 py-2.5 rounded-xl text-left border border-gray-200 bg-white hover:border-accent hover:text-accent transition-colors"
+                >
+                  {t('invest_cta_option_subscription')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleParticipationSelect('lender')}
+                  className="w-full px-3 py-2.5 rounded-xl text-left border border-gray-200 bg-white hover:border-accent hover:text-accent transition-colors"
+                >
+                  {t('invest_cta_option_lender')}
+                </button>
+              </div>
+            </>
+          )}
+
+          {step === 'donation' && (
+            <>
+              <p className="text-sm font-semibold text-gray-900">
+                {t('invest_cta_donation_choose')}
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {donationPresets.map((amount) => (
+                  <button
+                    key={amount}
+                    type="button"
+                    onClick={() => setDonationAmount(amount)}
+                    className={`w-full px-2 py-2 rounded-xl text-sm border transition-colors ${
+                      donationAmount === amount
+                        ? 'border-accent bg-accent text-white'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-accent'
+                    }`}
+                  >
+                    {eur}
+                    {amount}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={handleDonationCheckout}
+                className="w-full py-3 bg-accent border-2 border-accent text-white text-center rounded-full font-semibold uppercase tracking-wide transition-all hover:bg-accent-dark hover:border-accent-dark"
+              >
+                {t('invest_cta_continue')}
+              </button>
+            </>
+          )}
+
+          <button
+            type="button"
+            onClick={resetFlow}
+            className="w-full py-2 text-xs text-gray-500 hover:text-gray-700 uppercase tracking-wide"
+          >
+            {t('buttons_cancel')}
+          </button>
+        </div>
+      )}
+
+      {step === 'idle' && dataroomHref && (
         <Link
           href={dataroomHref}
           className="block w-full py-3 mt-2.5 text-center text-accent border-2 border-accent rounded-full font-semibold uppercase tracking-wide transition-colors hover:bg-accent hover:text-white"

@@ -307,7 +307,7 @@ const FundraisingWidget = ({
       <>
         <div className="relative flex sm:hidden items-center justify-center">
           <Link
-            href="/invest"
+            href="/fundraiser"
             className={`relative flex items-center justify-center w-8 h-8 bg-accent/20 hover:bg-accent/30 rounded-full transition-colors ${className}`}
             title={t('invest_goal_reached_short')}
           >
@@ -318,7 +318,7 @@ const FundraisingWidget = ({
         </div>
         <div className="relative hidden sm:flex items-center justify-center">
           <Link
-            href="/invest"
+            href="/fundraiser"
             className={`relative flex items-center min-w-0 max-w-full px-2 py-1.5 bg-accent/20 hover:bg-accent/30 rounded-lg transition-colors ${className}`}
           >
             <span className="text-xs font-medium text-accent truncate">
@@ -336,7 +336,7 @@ const FundraisingWidget = ({
     <>
       <div className="relative flex sm:hidden items-center justify-center">
         <Link
-          href="/invest"
+          href="/fundraiser"
           className={`relative flex items-center justify-center w-8 h-8 ${className}`}
           title={`${Math.round(navPercent)}% ${t('invest_progress_funded')}`}
         >
@@ -347,7 +347,7 @@ const FundraisingWidget = ({
       </div>
       <div className="relative hidden sm:flex items-center justify-center">
         <Link
-          href="/invest"
+          href="/fundraiser"
           className={`relative flex items-center gap-2.5 bg-gray-100 rounded-full py-1.5 px-4 pl-2 hover:bg-gray-200 transition-colors ${className}`}
         >
           <div className="w-7 h-7 flex-shrink-0"><ProgressRing /></div>

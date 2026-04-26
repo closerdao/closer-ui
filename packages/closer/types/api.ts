@@ -286,6 +286,8 @@ export type InvestPageOptions = {
   dataroomHref?: string;
   scheduleCallHref?: string;
   loanPackageHref?: string;
+  subscriptionHref?: string;
+  donationHref?: string;
 };
 
 export type TokenSale = {

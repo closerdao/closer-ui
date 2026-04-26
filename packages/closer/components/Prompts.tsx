@@ -106,7 +106,7 @@ const FundraiserPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
       <div className="flex gap-3 items-center justify-between w-full">
         <div className="flex items-center gap-2">
           <Link
-            href="/invest"
+            href="/fundraiser"
             className="bg-white min-w-[40px] h-6 flex items-center justify-center rounded-md"
           >
             <IconPlay className="w-4 h-4" />
@@ -116,7 +116,7 @@ const FundraiserPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
         <LinkButton
           size="small"
           className="max-h-[34px] p-0 px-4 shrink-0"
-          href="/invest"
+          href="/fundraiser"
         >
           {t('prompt_fundraiser_cta')}
         </LinkButton>

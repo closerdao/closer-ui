@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 
 import CitizenGoodToBuy from '../../../components/CitizenGoodToBuy';
 import CitizenWhy from '../../../components/CitizenWhy';
@@ -69,6 +69,7 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
   // const currentCitizenshipStatus = user?.citizenship?.status;
 
   const [eligibility, setEligibility] = useState<null | string>(null);
+  const stampedCitizenshipAppliedAtForUserIdRef = useRef<string | null>(null);
   const [application, setApplication] = useState<{
     owns30Tokens: boolean;
     why: string;
@@ -133,59 +134,86 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
         },
       }));
     }
-    if (user) {
-      (async () => {
-        try {
-          const hasStayedRes = await api.get(
-            '/subscription/citizen/check-has-stayed-for-min-duration',
-          );
-
-          const hasStayedForMinDurationLocal =
-            hasStayedRes?.data?.hasStayedForMinDuration;
-
-          const isVouchedRes = await api.get(
-            '/subscription/citizen/check-is-vouched',
-          );
-          const isVouchedLocal = isVouchedRes?.data?.isVouched;
-
-          if (
-            (isVouchedLocal && hasStayedForMinDurationLocal && owns30Tokens) ||
-            isMember
-          ) {
-            setEligibility('buy_more');
-          } else if (isVouchedLocal && hasStayedForMinDurationLocal) {
-            setEligibility('good_to_buy');
-          } else {
-            setEligibility('not_eligible');
-          }
-        } catch (error) {}
-      })();
+    if (!user?._id) {
+      return;
     }
-  }, [owns30Tokens, isMember, user]);
+    (async () => {
+      try {
+        const hasStayedRes = await api.get(
+          '/subscription/citizen/check-has-stayed-for-min-duration',
+        );
+
+        const hasStayedForMinDurationLocal =
+          hasStayedRes?.data?.hasStayedForMinDuration;
+
+        const isVouchedRes = await api.get(
+          '/subscription/citizen/check-is-vouched',
+        );
+        const isVouchedLocal = isVouchedRes?.data?.isVouched;
+
+        if (
+          (isVouchedLocal && hasStayedForMinDurationLocal && owns30Tokens) ||
+          isMember
+        ) {
+          setEligibility('buy_more');
+        } else if (isVouchedLocal && hasStayedForMinDurationLocal) {
+          setEligibility('good_to_buy');
+        } else {
+          setEligibility('not_eligible');
+        }
+      } catch (error) {}
+    })();
+  }, [owns30Tokens, isMember, user?._id]);
 
   useEffect(() => {
     if (!isLoading && !user) {
+      stampedCitizenshipAppliedAtForUserIdRef.current = null;
       router.push(`/signup?back=${router.asPath}`);
+      return;
+    }
+
+    if (isLoading || !user?._id) {
+      return;
+    }
+
+    if (stampedCitizenshipAppliedAtForUserIdRef.current === user._id) {
+      return;
     }
 
     if (
-      !citizenshipStatus &&
-      !userCitizenshipWhy &&
-      !user?.citizenship?.appliedAt &&
-      !user?.citizenship?.why
+      citizenshipStatus ||
+      userCitizenshipWhy ||
+      user.citizenship?.appliedAt ||
+      user.citizenship?.why
     ) {
-      platform.user
-        .patch(user?._id || '', {
-          citizenship: {
-            ...user?.citizenship,
-            appliedAt: new Date(),
-          },
-        })
-        .then(() => {
-          refetchUser();
-        });
+      return;
     }
-  }, [user, isLoading, refetchUser]);
+
+    stampedCitizenshipAppliedAtForUserIdRef.current = user._id;
+    platform.user
+      .patch(user._id, {
+        citizenship: {
+          ...user.citizenship,
+          appliedAt: new Date(),
+        },
+      })
+      .then(() => {
+        refetchUser();
+      })
+      .catch(() => {
+        if (stampedCitizenshipAppliedAtForUserIdRef.current === user._id) {
+          stampedCitizenshipAppliedAtForUserIdRef.current = null;
+        }
+      });
+  }, [
+    user,
+    isLoading,
+    refetchUser,
+    citizenshipStatus,
+    userCitizenshipWhy,
+    router,
+    platform,
+  ]);
 
   useEffect(() => {
     if (userCitizenshipWhy && !application.why) {

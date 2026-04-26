@@ -309,7 +309,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     router.push('/');
   };
 
-  const refetchUser = async () => {
+  const refetchUser = useCallback(async () => {
     try {
       const {
         data: { results: user },
@@ -321,7 +321,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       const message = parseMessageFromError(err);
       setError(message);
     }
-  };
+  }, [setError]);
 
   const authGoogle = async () => {
     try {

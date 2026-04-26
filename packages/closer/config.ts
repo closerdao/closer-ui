@@ -990,6 +990,7 @@ export const configDescription: ConfigType[] = [
                 'payment-link',
                 'terminal',
                 'expenses',
+                'donation',
               ],
             },
           },

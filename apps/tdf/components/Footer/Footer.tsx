@@ -61,7 +61,7 @@ export const Footer: FC = () => {
               <li><Link href="/cohousing" className="hover:text-gray-900">{t('footer_cohousing')}</Link></li>
               <li><Link href="/pages/regenerative-agriculture" className="hover:text-gray-900">{t('footer_regenerative_agriculture')}</Link></li>
               <li><Link href="/pages/restaurant" className="hover:text-gray-900">{t('footer_restaurant')}</Link></li>
-              <li><Link href="/invest" className="hover:text-gray-900">{t('footer_invest')}</Link></li>
+              <li><Link href="/fundraiser" className="hover:text-gray-900">{t('footer_invest')}</Link></li>
               <li><Link href="/impact-map" className="hover:text-gray-900">{t('footer_impact_map')}</Link></li>
             </ul>
           </div>

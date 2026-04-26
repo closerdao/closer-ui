@@ -1,30 +1,20 @@
-import { NextPageContext } from 'next';
+import type { GetServerSideProps } from 'next';
 
-import {
-  getInvestPageInitialProps,
-  InvestPage as CloserInvestPage,
-  type InvestPageProps,
-} from 'closer';
-
-const TDF_INVEST_OPTIONS = {
-  canonicalUrl: 'https://www.traditionaldreamfactory.com/invest',
-  shareUrl: 'https://www.traditionaldreamfactory.com/invest',
-  ogImageUrl: 'https://cdn.oasa.co/tdf/tdf-invest-og.jpg',
-  dataroomHref: '/dataroom',
-  scheduleCallHref: '#webinar',
-  loanPackageHref: '/dataroom',
-};
-
-function InvestPage(props: InvestPageProps) {
-  return <CloserInvestPage {...props} />;
+function InvestRedirect() {
+  return null;
 }
 
-InvestPage.getInitialProps = async (context: NextPageContext) => {
-  const base = await getInvestPageInitialProps(context);
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const path = ctx.resolvedUrl || '/invest';
+  const destination = path.startsWith('/invest')
+    ? path.replace(/^\/invest/, '/fundraiser')
+    : '/fundraiser';
   return {
-    ...base,
-    investPageOptions: TDF_INVEST_OPTIONS,
+    redirect: {
+      destination,
+      permanent: true,
+    },
   };
 };
 
-export default InvestPage;
+export default InvestRedirect;
