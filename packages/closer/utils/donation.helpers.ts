@@ -1,3 +1,5 @@
+import type { AxiosRequestConfig } from 'axios';
+
 import api, { formatSearch } from './api';
 
 const POLL_INTERVAL_MS = 3000;
@@ -48,13 +50,16 @@ export async function fetchDonationSaleStatus(
   saleId: string,
   signal?: AbortSignal,
 ): Promise<string | undefined> {
-  const res = await api.get('/sale', {
+  const requestConfig: AxiosRequestConfig & { signal?: AbortSignal } = {
     params: {
       where: formatSearch({ _id: saleId }),
       limit: 1,
     },
-    signal,
-  });
+  };
+  if (signal) {
+    requestConfig.signal = signal;
+  }
+  const res = await api.get('/sale', requestConfig);
   const rows = res.data?.results;
   const list = Array.isArray(rows)
     ? rows
