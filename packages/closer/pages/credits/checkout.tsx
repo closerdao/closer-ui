@@ -77,7 +77,7 @@ const CreditsCheckoutPage: NextPage<Props> = ({
   }, [isAuthenticated]);
 
   const goBack = () => {
-    router.push('/invest');
+    router.push('/fundraiser');
   };
 
   if (!isCreditPaymentEnabled) {

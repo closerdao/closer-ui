@@ -46,19 +46,21 @@ const getDefaultInvestPageOptions = (): InvestPageOptions => {
   const baseUrl =
     (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_PLATFORM_URL) ||
     '';
-  const investPath = '/invest';
+  const fundraiserPath = '/fundraiser';
   return {
-    canonicalUrl: baseUrl ? `${baseUrl.replace(/\/$/, '')}${investPath}` : '',
-    shareUrl: baseUrl ? `${baseUrl.replace(/\/$/, '')}${investPath}` : '',
+    canonicalUrl: baseUrl ? `${baseUrl.replace(/\/$/, '')}${fundraiserPath}` : '',
+    shareUrl: baseUrl ? `${baseUrl.replace(/\/$/, '')}${fundraiserPath}` : '',
     ogImageUrl: '',
     twitterHandle: '',
     dataroomHref: '/dataroom',
     scheduleCallHref: '',
     loanPackageHref: '/dataroom',
+    subscriptionHref: '/subscriptions',
+    donationHref: '/donate',
   };
 };
 
-const InvestPage = ({
+const FundraiserPage = ({
   fundraisingConfig,
   investPageOptions: optionsOverride,
 }: InvestPageProps) => {
@@ -190,7 +192,6 @@ const InvestPage = ({
       </Head>
 
       <div className="bg-white min-h-screen">
-        {/* HERO */}
         <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 sm:pt-16 pb-10">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 lg:gap-12 items-start">
             <div>
@@ -229,23 +230,22 @@ const InvestPage = ({
               daysLeft={daysLeft}
               shareUrl={shareUrl}
               dataroomHref={opts.dataroomHref}
+              subscriptionHref={opts.subscriptionHref}
+              donationHref={opts.donationHref}
               twitterHandle={twitterHandle}
               t={t}
             />
           </div>
         </section>
 
-        {/* TRUST BAR */}
         <InvestTrustBar t={t} />
 
-        {/* WHAT WE'VE BUILT */}
         <InvestStatsRow t={t} />
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <hr className="border-gray-100" />
         </div>
 
-        {/* MILESTONES */}
         <InvestMilestones
           milestones={milestones}
           milestoneStates={milestoneStates}
@@ -257,14 +257,6 @@ const InvestPage = ({
           <hr className="border-gray-100" />
         </div>
 
-        {/* TESTIMONIALS - uncomment when real testimonials are available
-        <InvestTestimonials tokenHolderCount={tokenStats.tokenHolders} t={t} />
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <hr className="border-gray-100" />
-        </div>
-        */}
-
-        {/* REWARDS */}
         <InvestRewards
           packages={fundraisingConfig?.packages ?? []}
           formatPrice={formatPrice}
@@ -275,9 +267,8 @@ const InvestPage = ({
           t={t}
         />
 
-        {/* WEBINAR */}
         <Webinar
-          tags={['invest-page', 'fundraising']}
+          tags={['fundraiser-page', 'fundraising']}
           analyticsCategory="Fundraising"
         />
       </div>
@@ -305,6 +296,6 @@ export async function getInvestPageInitialProps(context: NextPageContext) {
   }
 }
 
-InvestPage.getInitialProps = getInvestPageInitialProps;
+FundraiserPage.getInitialProps = getInvestPageInitialProps;
 
-export default InvestPage;
+export default FundraiserPage;

@@ -1,13 +1,20 @@
-import {
-  getInvestPageInitialProps,
-  InvestPage as CloserInvestPage,
-  type InvestPageProps,
-} from 'closer';
+import type { GetServerSideProps } from 'next';
 
-function InvestPage(props: InvestPageProps) {
-  return <CloserInvestPage {...props} />;
+function InvestRedirect() {
+  return null;
 }
 
-InvestPage.getInitialProps = getInvestPageInitialProps;
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const path = ctx.resolvedUrl || '/invest';
+  const destination = path.startsWith('/invest')
+    ? path.replace(/^\/invest/, '/fundraiser')
+    : '/fundraiser';
+  return {
+    redirect: {
+      destination,
+      permanent: true,
+    },
+  };
+};
 
-export default InvestPage;
+export default InvestRedirect;

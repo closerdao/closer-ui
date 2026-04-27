@@ -174,10 +174,16 @@ export { default as ExpenseTrackingDashboardPage } from './pages/dashboard/expen
 
 export { default as RevenuePage } from './pages/dashboard/revenue';
 export {
-  default as InvestPage,
+  default as FundraiserPage,
   getInvestPageInitialProps,
   type InvestPageProps,
-} from './pages/invest';
+} from './pages/fundraiser';
+export { default as InvestPage } from './pages/fundraiser';
+export { default as DonatePage } from './pages/donate/index';
+export { default as DonateBankPage } from './pages/donate/[saleId]/bank';
+export { default as DonateCardPage } from './pages/donate/[saleId]/card';
+export { default as DonateCryptoPage } from './pages/donate/[saleId]/crypto';
+export { default as DonateSuccessPage } from './pages/donate/success';
 export { default as PhilosophyPage } from './pages/philosophy/index';
 export { default as CommonsGovernancePage } from './pages/philosophy/commons-governance';
 export { default as TragedyMythPage } from './pages/philosophy/tragedy-myth';

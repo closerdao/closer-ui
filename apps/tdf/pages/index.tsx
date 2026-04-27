@@ -768,7 +768,7 @@ const HomePage = () => {
                       fundraisingConfig={fundraisingConfig}
                     />
                     <Link
-                      href="/invest"
+                      href="/fundraiser"
                       className="group flex items-center justify-center gap-2 w-full bg-accent hover:bg-accent-dark text-white font-medium py-2.5 px-4 rounded-lg transition-colors text-sm"
                       onClick={() =>
                         event('click', {
