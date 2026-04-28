@@ -1757,7 +1757,7 @@
   "token_utility_citizenship_value": "30 tokens",
   "token_utility_secondary": "Secondary Market",
   "token_utility_secondary_value": "Post Go-Live",
-  "token_total_supply_title": "Total Supply",
+  "token_total_supply_title": "Max supply",
   "token_total_supply_amount": "18,600",
   "token_total_supply_description": "Fixed supply of 18,600 $TDF tokens as per whitepaper. Each token provides lifetime access rights to TDF accommodations.",
   "token_supply_current": "Current Supply",

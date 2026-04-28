@@ -74,7 +74,6 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
   const [networkTokenPrice, setNetworkTokenPrice] = useState<number | null>(null);
   const [saleHardCap, setSaleHardCap] = useState<number>(18600);
   const [animatedSupplyCurrent, setAnimatedSupplyCurrent] = useState(0);
-  const [animatedSupplySold, setAnimatedSupplySold] = useState(0);
   const [animatedSupplyRemaining, setAnimatedSupplyRemaining] = useState(0);
   const [showBuySparkle, setShowBuySparkle] = useState(false);
   const [showMaxAmountWarning, setShowMaxAmountWarning] = useState(false);
@@ -209,16 +208,13 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
   useEffect(() => {
     if (isLoadingTokenStats) {
       setAnimatedSupplyCurrent(0);
-      setAnimatedSupplySold(0);
       setAnimatedSupplyRemaining(0);
       return;
     }
     const current = Math.max(0, tokenStats.currentSupply || 0);
-    const sold = Math.max(0, Math.round(current - saleHardCap * 0.2));
     const remaining = Math.max(0, saleHardCap - current);
 
     const cleanupCurrent = animateNumber(current, setAnimatedSupplyCurrent, 1400);
-    const cleanupSold = animateNumber(sold, setAnimatedSupplySold, 1400);
     const cleanupRemaining = animateNumber(
       remaining,
       setAnimatedSupplyRemaining,
@@ -227,7 +223,6 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
     return () => {
       cleanupCurrent();
-      cleanupSold();
       cleanupRemaining();
     };
   }, [isLoadingTokenStats, saleHardCap, tokenStats.currentSupply]);
@@ -414,12 +409,12 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
                   <div className="rounded-xl border border-accent/20 bg-white/90 p-3 text-center">
                     <div className="text-2xl md:text-3xl font-bold text-accent mb-1">
-                      {isLoadingTokenStats
-                        ? '...'
-                        : numberFormatter.format(Math.round(animatedSupplySold))}
+                      {tokenPrice !== null
+                        ? currencyFormatter.format(animatedTokenPrice)
+                        : '...'}
                     </div>
                     <div className="text-xs md:text-sm text-gray-600">
-                      {t('token_supply_sold')}
+                      {t('home_token_stat_price')}
                     </div>
                   </div>
 
@@ -717,14 +712,11 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-700">{t('token_supply_sold')}</span>
+                      <span className="text-gray-700">{t('home_token_stat_price')}</span>
                       <span className="font-semibold">
-                        {isLoadingTokenStats
+                        {tokenPrice === null
                           ? t('token_supply_loading')
-                          : Math.max(
-                            0,
-                            Math.round(tokenStats.currentSupply - saleHardCap * 0.2),
-                          ).toLocaleString()}
+                          : currencyFormatter.format(animatedTokenPrice)}
                       </span>
                     </div>
                     <div className="flex justify-between">
