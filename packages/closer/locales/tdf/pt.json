@@ -1547,7 +1547,7 @@
   "token_utility_citizenship_value": "30 tokens",
   "token_utility_secondary": "Mercado Secundário",
   "token_utility_secondary_value": "Pós Go-Live",
-  "token_total_supply_title": "Fornecimento Total",
+  "token_total_supply_title": "Oferta máxima",
   "token_total_supply_amount": "18.600",
   "token_total_supply_description": "Fornecimento fixo de 18.600 tokens $TDF conforme whitepaper. Cada token fornece direitos de acesso vitalícios aos alojamentos da TDF.",
   "token_supply_current": "Fornecimento Atual",
