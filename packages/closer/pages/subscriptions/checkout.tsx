@@ -218,6 +218,11 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
                     priceId={priceId}
                     monthlyCredits={Number(monthlyCredits)}
                     source={source as string}
+                    tierMetricEvent={
+                      selectedPlan?.title?.toLowerCase() === 'wanderer'
+                        ? 'tier-1-first-payment'
+                        : 'tier-2-first-payment'
+                    }
                   />
                 </Elements>
               ) : (

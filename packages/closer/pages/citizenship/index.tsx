@@ -299,11 +299,14 @@ const CitizenshipPage = ({
   const canonicalUrl = `${String(baseUrl)
     .replace(/\/$/, '')
     .replace(/^(?!https?:\/\/)/, 'https://')}/citizenship`;
+  const heroTitle = appName
+    ? `${t('citizenship_hero_title')} ${appName}`
+    : t('citizenship_hero_title');
 
   return (
     <div className="min-h-screen bg-neutral-light text-foreground">
       <Head>
-        <title>{t('citizenship_page_title')}</title>
+        <title>{heroTitle}</title>
         <meta
           name="description"
           content={t('citizenship_page_meta_description')}
@@ -311,7 +314,7 @@ const CitizenshipPage = ({
         <link rel="canonical" href={canonicalUrl} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:title" content={t('citizenship_page_title')} />
+        <meta property="og:title" content={heroTitle} />
         <meta
           property="og:description"
           content={t('citizenship_page_meta_description')}
@@ -322,7 +325,7 @@ const CitizenshipPage = ({
         />
         <meta name="twitter:card" content="summary_large_image" />
         {twitterHandle && <meta name="twitter:site" content={twitterHandle} />}
-        <meta name="twitter:title" content={t('citizenship_page_title')} />
+        <meta name="twitter:title" content={heroTitle} />
         <meta
           name="twitter:description"
           content={t('citizenship_page_meta_description')}
@@ -350,12 +353,7 @@ const CitizenshipPage = ({
           </Badge>
           <h1 className="text-4xl md:text-6xl font-semibold tracking-tight leading-tight">
             {t('citizenship_hero_title')}
-            {appName ? (
-              <>
-                {' '}
-                <span className="text-accent">{appName}</span>
-              </>
-            ) : null}
+            {appName ? <span className="text-accent"> {appName}</span> : null}
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-foreground">
             {t('citizenship_hero_subtitle')}
@@ -369,6 +367,12 @@ const CitizenshipPage = ({
                   onClick={() => {
                     api.post('/metric', {
                       event: 'become-citizen-button-click',
+                      value: 'citizenship',
+                      point: 0,
+                      category: 'engagement',
+                    });
+                    api.post('/metric', {
+                      event: 'subscribe-button-click',
                       value: 'citizenship',
                       point: 0,
                       category: 'engagement',

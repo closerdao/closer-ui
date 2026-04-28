@@ -93,6 +93,12 @@ const SubscriptionsPage: NextPage<Props> = ({
         point: 0,
         category: 'engagement',
       });
+      api.post('/metric', {
+        event: 'subscribe-button-click',
+        value: 'citizenship',
+        point: 0,
+        category: 'engagement',
+      });
       router.push('/subscriptions/citizen/why');
       return;
     }

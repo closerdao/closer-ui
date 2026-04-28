@@ -23,6 +23,8 @@ const getCurrentSupplyWithoutWalletCallInProgress = new Map<string, Promise<numb
 const getCurrentSupplyWithoutWalletResultCache = new Map<string, { result: number; timestamp: number }>();
 const getTokensAvailableForPurchaseCallInProgress = new Map<string, Promise<number>>();
 const getTokensAvailableForPurchaseResultCache = new Map<string, { result: number; timestamp: number }>();
+const getSaleHardCapWithoutWalletCallInProgress = new Map<string, Promise<number>>();
+const getSaleHardCapWithoutWalletResultCache = new Map<string, { result: number; timestamp: number }>();
 
 const CACHE_TTL = 30000;
 
@@ -283,6 +285,57 @@ export const useBuyTokens = () => {
     return promise;
   };
 
+  const getSaleHardCapWithoutWallet = useCallback(async () => {
+    if (
+      !BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS ||
+      !BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI
+    ) {
+      return 0;
+    }
+
+    const cacheKey = BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS.toLowerCase();
+    const cached = getSaleHardCapWithoutWalletResultCache.get(cacheKey);
+
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.result;
+    }
+
+    if (getSaleHardCapWithoutWalletCallInProgress.has(cacheKey)) {
+      return getSaleHardCapWithoutWalletCallInProgress.get(cacheKey)!;
+    }
+
+    const promise = (async () => {
+      try {
+        setPending(true);
+        const readOnlyDynamicSale = await getReadOnlyContractInstance(
+          BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS,
+          BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI,
+        );
+        const saleHardCapInWei = await readOnlyDynamicSale.saleHardCap();
+        const result = parseInt(utils.formatEther(saleHardCapInWei));
+        getSaleHardCapWithoutWalletResultCache.set(cacheKey, {
+          result,
+          timestamp: Date.now(),
+        });
+        return result;
+      } catch (error) {
+        console.error('Error in getSaleHardCapWithoutWallet:', error);
+        const result = 0;
+        getSaleHardCapWithoutWalletResultCache.set(cacheKey, {
+          result,
+          timestamp: Date.now(),
+        });
+        return result;
+      } finally {
+        setPending(false);
+        getSaleHardCapWithoutWalletCallInProgress.delete(cacheKey);
+      }
+    })();
+
+    getSaleHardCapWithoutWalletCallInProgress.set(cacheKey, promise);
+    return promise;
+  }, [BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS, BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ABI]);
+
   const buyTokens = async (amount: string) => {
     const contracts = getContractInstances();
     if (!contracts?.DynamicSale) {
@@ -489,6 +542,7 @@ export const useBuyTokens = () => {
     getCurrentSupplyWithoutWallet,
     buyTokens,
     getTokensAvailableForPurchase,
+    getSaleHardCapWithoutWallet,
     getTotalCost,
     getTotalCostWithoutWallet,
     getUserTdfBalance,

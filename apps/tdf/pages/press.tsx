@@ -18,6 +18,21 @@ const PressPage = () => {
           href="https://www.traditionaldreamfactory.com/press"
           key="canonical"
         />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.traditionaldreamfactory.com/press" />
+        <meta property="og:title" content={t('press_page_title')} />
+        <meta property="og:description" content={t('press_page_description')} />
+        <meta
+          property="og:image"
+          content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
+        />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={t('press_page_title')} />
+        <meta name="twitter:description" content={t('press_page_description')} />
+        <meta
+          name="twitter:image"
+          content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
+        />
       </Head>
 
       <main>

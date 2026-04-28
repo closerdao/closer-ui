@@ -19,7 +19,7 @@ import { Information } from '../ui';
 import Select from '../ui/Select/Dropdown';
 import { Item } from '../ui/Select/types';
 
-const { MAX_TOKENS_PER_TRANSACTION, MAX_WALLET_BALANCE } = SALES_CONFIG;
+const { MAX_TOKENS_PER_TRANSACTION } = SALES_CONFIG;
 
 interface Props {
   tokensToBuy: number;
@@ -79,6 +79,7 @@ const TokenBuyWidget: FC<Props> = ({
   });
 
   const [nightsPerYear, setNightsPerYear] = useState(0);
+  const [showMaxAmountWarning, setShowMaxAmountWarning] = useState(false);
   const calculationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -210,6 +211,9 @@ const TokenBuyWidget: FC<Props> = ({
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const newValue = Number(event.target.value);
+    const attemptedAboveMax =
+      Number.isFinite(newValue) && newValue > MAX_TOKENS_PER_TRANSACTION;
+    setShowMaxAmountWarning(attemptedAboveMax);
     const clampedValue =
       newValue > MAX_TOKENS_PER_TRANSACTION
         ? MAX_TOKENS_PER_TRANSACTION
@@ -226,7 +230,7 @@ const TokenBuyWidget: FC<Props> = ({
 
   return (
     <div className="flex flex-col gap-4 my-10">
-      <p className="text-stone-500 text-md w-full  p-1">
+      <p className="text-stone-500 text-md w-full p-1">
         1 {t('token_sale_token_symbol')} ≈ {tokenPrice} {reserveToken}
       </p>
 
@@ -290,12 +294,12 @@ const TokenBuyWidget: FC<Props> = ({
 
       <div className="flex flex-col gap-4">
         <Information>{t('token_sale_gas_fees_note', { reserveToken })}</Information>
-        <Information>{t('token_sale_max_amount_note')}</Information>
+        {showMaxAmountWarning && (
+          <Information>
+            {`Max ${MAX_TOKENS_PER_TRANSACTION} tokens per purchase. Contact the team for larger allocations.`}
+          </Information>
+        )}
         <Information>{t('token_sale_price_disclaimer', { reserveToken })}</Information>
-        <Information>
-          {t('token_sale_max_wallet_balance')}
-          {Math.max(MAX_WALLET_BALANCE, 0)}
-        </Information>
       </div>
     </div>
   );

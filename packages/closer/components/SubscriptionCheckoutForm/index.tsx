@@ -19,6 +19,7 @@ interface SubscriptionCheckoutFormProps {
   priceId: string | string[] | undefined;
   monthlyCredits?: number;
   source?: string;
+  tierMetricEvent?: 'tier-1-first-payment' | 'tier-2-first-payment';
 }
 
 function SubscriptionCheckoutForm({
@@ -26,6 +27,7 @@ function SubscriptionCheckoutForm({
   priceId,
   monthlyCredits,
   source,
+  tierMetricEvent = 'tier-1-first-payment',
 }: SubscriptionCheckoutFormProps) {
   const t = useTranslations();
   const [isSubmitEnabled, setIsSubmitEnabled] = useState(true);
@@ -136,7 +138,7 @@ function SubscriptionCheckoutForm({
               // Track subscription payment
               try {
                 await api.post('/metric', {
-                  event: 'tier-1-first-payment',
+                  event: tierMetricEvent,
                   value: 'subscriptions',
                   point: 0,
                   category: 'engagement',
@@ -169,7 +171,7 @@ function SubscriptionCheckoutForm({
           // Track subscription payment
           try {
             await api.post('/metric', {
-              event: 'tier-1-first-payment',
+              event: tierMetricEvent,
               value: 'subscriptions',
               point: 0,
               category: 'engagement',
