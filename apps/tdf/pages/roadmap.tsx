@@ -15,7 +15,7 @@ const RoadmapPage = () => {
   return (
     <>
       <Head>
-        <title>{t('roadmap_title')}</title>
+        <title>{t('roadmap_heading')}</title>
         <meta name="description" content={t('roadmap_meta_description')} />
         <link
           rel="canonical"
@@ -26,7 +26,7 @@ const RoadmapPage = () => {
           property="og:url"
           content="https://www.traditionaldreamfactory.com/roadmap"
         />
-        <meta property="og:title" content={t('roadmap_title')} />
+        <meta property="og:title" content={t('roadmap_heading')} />
         <meta
           property="og:description"
           content={t('roadmap_meta_description')}
@@ -39,7 +39,7 @@ const RoadmapPage = () => {
         {twitterHandle && (
           <meta name="twitter:site" content={twitterHandle} />
         )}
-        <meta name="twitter:title" content={t('roadmap_title')} />
+        <meta name="twitter:title" content={t('roadmap_heading')} />
         <meta
           name="twitter:description"
           content={t('roadmap_meta_description')}
@@ -54,7 +54,7 @@ const RoadmapPage = () => {
           <div>
             <Heading
               className="text-4xl mb-6 max-w-3xl text-center mt-8  uppercase sm:text-5xl bg-[url(/images/landing/spade.png)] bg-no-repeat pt-[170px] bg-top"
-              level={2}
+              level={1}
             >
               {t('roadmap_heading')}
             </Heading>

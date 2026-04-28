@@ -17,7 +17,7 @@ const TokensPage: NextPage = () => {
   return (
     <>
       <Head>
-        <title>{t('tokens_page_title')}</title>
+        <title>{t('tokens_page_heading')}</title>
         <meta name="description" content={t('tokens_page_meta_description')} />
         <link
           rel="canonical"
@@ -28,7 +28,7 @@ const TokensPage: NextPage = () => {
           property="og:url"
           content="https://www.traditionaldreamfactory.com/tokens"
         />
-        <meta property="og:title" content={t('tokens_page_title')} />
+        <meta property="og:title" content={t('tokens_page_heading')} />
         <meta
           property="og:description"
           content={t('tokens_page_meta_description')}
@@ -37,10 +37,14 @@ const TokensPage: NextPage = () => {
         {twitterHandle && (
           <meta name="twitter:site" content={twitterHandle} />
         )}
-        <meta name="twitter:title" content={t('tokens_page_title')} />
+        <meta name="twitter:title" content={t('tokens_page_heading')} />
         <meta
           name="twitter:description"
           content={t('tokens_page_meta_description')}
+        />
+        <meta
+          name="twitter:image"
+          content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
         />
       </Head>
       <div className="container mx-auto px-4 py-8">

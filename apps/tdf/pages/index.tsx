@@ -95,7 +95,7 @@ const HomePage = () => {
   return (
     <>
       <Head>
-        <title>{t('home_title')}</title>
+        <title>{t('home_hero_title')}</title>
         <meta name="description" content={t('home_meta_description')} />
         <link
           rel="canonical"
@@ -107,7 +107,7 @@ const HomePage = () => {
           property="og:url"
           content="https://www.traditionaldreamfactory.com/"
         />
-        <meta property="og:title" content={t('home_title')} />
+        <meta property="og:title" content={t('home_hero_title')} />
         <meta property="og:description" content={t('home_meta_description')} />
         <meta
           property="og:image"
@@ -117,7 +117,7 @@ const HomePage = () => {
         {twitterHandle && (
           <meta name="twitter:site" content={twitterHandle} />
         )}
-        <meta name="twitter:title" content={t('home_title')} />
+        <meta name="twitter:title" content={t('home_hero_title')} />
         <meta name="twitter:description" content={t('home_meta_description')} />
         <meta
           name="twitter:image"

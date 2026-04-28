@@ -150,6 +150,7 @@ const FundraiserPage = ({
   };
 
   const shareUrl = opts.shareUrl || '';
+  const pageTitle = fundraisingConfig?.campaignTitle || t('invest_hero_title');
 
   if (!isFundraiserEnabled) {
     return <PageNotFound />;
@@ -158,17 +159,12 @@ const FundraiserPage = ({
   return (
     <>
       <Head>
-        <title>
-          {fundraisingConfig?.campaignTitle || t('invest_page_title')}
-        </title>
+        <title>{pageTitle}</title>
         <meta name="description" content={t('invest_page_description')} />
         {opts.canonicalUrl && <link rel="canonical" href={opts.canonicalUrl} />}
         <meta property="og:type" content="website" />
         {opts.shareUrl && <meta property="og:url" content={opts.shareUrl} />}
-        <meta
-          property="og:title"
-          content={fundraisingConfig?.campaignTitle || t('invest_page_title')}
-        />
+        <meta property="og:title" content={pageTitle} />
         <meta
           property="og:description"
           content={t('invest_page_description')}
@@ -178,10 +174,7 @@ const FundraiserPage = ({
         )}
         <meta name="twitter:card" content="summary_large_image" />
         {twitterHandle && <meta name="twitter:site" content={twitterHandle} />}
-        <meta
-          name="twitter:title"
-          content={fundraisingConfig?.campaignTitle || t('invest_page_title')}
-        />
+        <meta name="twitter:title" content={pageTitle} />
         <meta
           name="twitter:description"
           content={t('invest_page_description')}
@@ -205,7 +198,7 @@ const FundraiserPage = ({
                 data-testid="page-title"
                 level={1}
               >
-                {fundraisingConfig?.campaignTitle || t('invest_hero_title')}
+                {pageTitle}
               </Heading>
 
               <p className="text-lg text-gray-600 leading-relaxed mb-8 max-w-xl">

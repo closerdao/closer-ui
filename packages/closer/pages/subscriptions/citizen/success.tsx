@@ -86,6 +86,14 @@ const SuccessCitizenPage: NextPage<Props> = ({
         point: user.citizenship.tokensToFinance,
         category: 'engagement',
       });
+      if (user.citizenship.tokensToFinance >= 30) {
+        api.post('/metric', {
+          event: 'citizen-bought-30-tokens',
+          value: 'citizenship',
+          point: user.citizenship.tokensToFinance,
+          category: 'engagement',
+        });
+      }
     }
   }, [intent, user?.citizenship?.tokensToFinance]);
 

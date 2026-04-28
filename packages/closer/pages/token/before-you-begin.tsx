@@ -10,6 +10,7 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { TOKEN_SALE_STEPS } from '../../constants';
+import { SALES_CONFIG } from '../../constants/shared.constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
@@ -19,6 +20,7 @@ import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 const DEFAULT_TOKENS = 10;
+const { MAX_TOKENS_PER_TRANSACTION } = SALES_CONFIG;
 
 interface Props {
   generalConfig: GeneralConfig | null;
@@ -39,7 +41,12 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
     process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
 
   const [tokensToBuy, setTokensToBuy] = useState<number>(
-    tokens !== undefined ? Number(tokens) : DEFAULT_TOKENS,
+    tokens !== undefined
+      ? Math.min(
+          MAX_TOKENS_PER_TRANSACTION,
+          Math.max(1, Number(tokens)),
+        )
+      : DEFAULT_TOKENS,
   );
   const [tokensToSpend, setTokensToSpend] = useState(0);
   const [tokenSaleType, setTokenSaleType] = useState<

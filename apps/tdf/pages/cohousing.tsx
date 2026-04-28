@@ -216,12 +216,33 @@ const CohousingPage = () => {
   return (
     <>
       <Head>
-        <title>{t('cohousing_page_title')}</title>
+        <title>{t('cohousing_hero_title')}</title>
         <meta name="description" content={t('cohousing_page_description')} />
         <link
           rel="canonical"
           href="https://www.traditionaldreamfactory.com/cohousing"
           key="canonical"
+        />
+        <meta property="og:type" content="website" />
+        <meta
+          property="og:url"
+          content="https://www.traditionaldreamfactory.com/cohousing"
+        />
+        <meta property="og:title" content={t('cohousing_hero_title')} />
+        <meta property="og:description" content={t('cohousing_page_description')} />
+        <meta
+          property="og:image"
+          content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
+        />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={t('cohousing_hero_title')} />
+        <meta
+          name="twitter:description"
+          content={t('cohousing_page_description')}
+        />
+        <meta
+          name="twitter:image"
+          content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
         />
       </Head>
 
