@@ -70,6 +70,7 @@ export interface FinanceApplication {
     | 'pending'
     | 'delinquent'
     | 'up-to-date';
+  memoCode?: string;
   iban: string;
   tokensToFinance: number;
   totalToPayInFiat: number;

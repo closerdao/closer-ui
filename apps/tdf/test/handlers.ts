@@ -92,20 +92,6 @@ export const handlers = [
       }),
     ),
   ),
-  rest.get('*/mine/CohousingApplication', (req, res, ctx) =>
-    res(
-      ctx.status(200),
-      ctx.json({
-        results: {
-          _id: 'cohousing-mock-1',
-          createdBy: user._id,
-          currentStep: 2,
-          status: 'waitlist',
-          isDraft: true,
-        },
-      }),
-    ),
-  ),
   rest.get('*/cohousingapplication/:id', (req, res, ctx) => {
     const { id } = req.params;
     return res(
@@ -141,20 +127,21 @@ export const handlers = [
       }),
     );
   }),
-  rest.patch('*/mine/CohousingApplication', (req, res, ctx) =>
-    res(
+  rest.patch('*/cohousingapplication/:id', (req, res, ctx) => {
+    const { id } = req.params;
+    return res(
       ctx.status(200),
       ctx.json({
         results: {
-          _id: 'cohousing-mock-1',
+          _id: id,
           createdBy: user._id,
           currentStep: 3,
           status: 'waitlist',
           isDraft: true,
         },
       }),
-    ),
-  ),
+    );
+  }),
   rest.get('*/cohousingapplication', (req, res, ctx) =>
     res(
       ctx.status(200),

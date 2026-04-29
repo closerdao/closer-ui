@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
 import Wallet from '../../components/Wallet';
+import { Badge } from '../../components/ui/badge';
 import { Button, Card, ErrorMessage, Heading, Spinner } from '../../components/ui';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
@@ -24,8 +25,13 @@ import {
   formatIsoFiatAmount,
   isIso4217Currency,
 } from '../../utils/currencyFormat';
+import {
+  tokenSaleStatusBadgeVariant,
+  tokenSaleStatusLabelKey,
+} from '../../utils/orderStatusBadge';
 import { getTransactionExplorerUrl } from '../../utils/transactionExplorerUrl';
 import { loadLocaleData } from '../../utils/locale.helpers';
+import { TOKEN_PURCHASE_TERMS_DOC_URL } from '../../constants';
 import PageNotFound from '../not-found';
 
 const CELEBRATION_DURATION_MS = 2800;
@@ -608,7 +614,18 @@ const SaleSummaryPage = ({
                   </p>
                 ) : null}
                 <p className="text-sm text-gray-700 leading-relaxed">
-                  {t('sale_summary_bank_transfer_footer')}
+                  {t.rich('sale_summary_bank_transfer_footer', {
+                    termsLink: (chunks) => (
+                      <a
+                        href={TOKEN_PURCHASE_TERMS_DOC_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-accent underline"
+                      >
+                        {chunks}
+                      </a>
+                    ),
+                  })}
                 </p>
                 {!user?.walletAddress && sale.product_type === 'token' ? (
                   <div className="flex gap-4 bg-neutral p-6 pb-8 rounded-lg border-t border-gray-100 pt-5">
@@ -690,9 +707,11 @@ const SaleSummaryPage = ({
                 <p className="card-feature">{t('sale_summary_sale_id')}</p>
                 <p className="text-sm font-mono">{sale._id}</p>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <p className="card-feature">{t('sale_summary_status')}</p>
-                <p className="text-sm">{sale.status}</p>
+                <Badge variant={tokenSaleStatusBadgeVariant(sale.status)}>
+                  {t(tokenSaleStatusLabelKey(sale.status))}
+                </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <p className="card-feature">{t('sale_summary_type')}</p>

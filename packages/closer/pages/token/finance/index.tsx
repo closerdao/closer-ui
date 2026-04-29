@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl';
 
 import { SUBSCRIPTION_CITIZEN_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
 import { CitizenshipConfig, GeneralConfig } from '../../../types';
 import {
@@ -21,6 +22,7 @@ import {
 } from '../../../types/subscriptions';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
+import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
@@ -46,6 +48,7 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
 
   const { isLoading, user } = useAuth();
+  const { platform } = usePlatform();
   const router = useRouter();
 
   const { citizenApplication } = router.query;
@@ -75,28 +78,22 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
     if (!isLoading && !user) {
       router.push(`/signup?back=${router.asPath}`);
     }
-    if (user && !isLoading) {
+    if (user && !isLoading && platform?.financeapplication) {
       (async () => {
-        const financeApplicationRes = await api.get('/finance-application', {
-          params: {
-            where: {
-              userId: user?._id,
-            },
-          },
-        });
-        const financeApplications = financeApplicationRes?.data?.results;
+        const params = { where: { userId: user._id } };
+        const action = await platform.financeapplication.get(params);
+        const financeApplications =
+          financeApplicationListFromGetAction(action);
 
         const activeApplications = financeApplications.filter(
           (application: FinanceApplication) =>
             ['pending-payment', 'paid'].includes(application.status),
         );
 
-        if (financeApplications) {
-          setActiveApplications(activeApplications);
-        }
+        setActiveApplications(activeApplications);
       })();
     }
-  }, [user, isLoading]);
+  }, [user, isLoading, router]);
 
   const goBack = () => {
     router.push('/citizenship/why');
@@ -129,10 +126,19 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
       } as FinanceApplicationCreateRequest);
 
       if (res.data.status === 'success') {
+        const rawResults = res?.data?.results;
+        const appId =
+          (rawResults &&
+          typeof rawResults === 'object' &&
+          '_id' in rawResults &&
+          typeof (rawResults as { _id?: unknown })._id === 'string'
+            ? (rawResults as { _id: string })._id
+            : '') || '';
         return {
           success: true,
           error: null,
           memoCode: res?.data?.memoCode,
+          applicationId: appId,
         };
       }
     } catch (error) {
@@ -149,11 +155,11 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
   const handleNext = async () => {
     const res = await financedTokenApply(isCitizenApplication);
     if (res?.success) {
-      router.push(
-        isCitizenApplication
-          ? '/token/finance/success-citizen?memoCode=' + res?.memoCode
-          : '/token/finance/success?memoCode=' + res?.memoCode,
-      );
+      if (res.applicationId) {
+        router.push(`/token/financed/${encodeURIComponent(res.applicationId)}`);
+        return;
+      }
+      router.push('/token/financed');
     }
   };
 
@@ -182,8 +188,15 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
 
         <main className="pt-14 pb-24 flex flex-col gap-8">
           {activeApplications.length > 0 ? (
-            <div className="bg-yellow-100 py-2 px-3 rounded-md">
-              {t('subscriptions_citizen_active_applications')}
+            <div className="bg-yellow-100 py-2 px-3 rounded-md flex items-center justify-between gap-3">
+              <span>{t('subscriptions_citizen_active_applications')}</span>
+              <button
+                type="button"
+                className="text-sm underline"
+                onClick={() => router.push('/token/financed')}
+              >
+                {t('token_financed_view_contract')}
+              </button>
             </div>
           ) : (
             <CitizenFinanceTokens

@@ -166,6 +166,8 @@ export { default as TokenSaleCheckoutPage } from './pages/token/checkout';
 export { default as TokenFinancePage } from './pages/token/finance';
 export { default as TokenFinanceSuccessPage } from './pages/token/finance/success';
 export { default as TokenFinanceCitizenSuccessPage } from './pages/token/finance/success-citizen';
+export { default as TokenFinancedApplicationsPage } from './pages/token/financed';
+export { default as TokenFinancedApplicationPage } from './pages/token/financed/[applicationId]';
 export { default as PublicTokenSalePage } from './pages/token/index';
 export { default as NationalityPage } from './pages/token/nationality';
 export { default as TokenSaleSuccessPage } from './pages/token/success';

@@ -14,6 +14,7 @@ import { NavigationLink } from '../types/nav';
 import api, { formatSearch } from '../utils/api';
 import { getCurrentUnitPrice } from '../utils/bondingCurve';
 import { getReserveTokenDisplay } from '../utils/config.utils';
+import FinancedTokenMenuWidget from './FinancedTokenMenuWidget';
 import Profile from './Profile';
 import ReportABug from './ReportABug';
 import Wallet from './Wallet';
@@ -136,6 +137,11 @@ const MemberMenu = () => {
               label: t('menu_token_economics'),
               url: '/token',
               enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
+            },
+            {
+              label: t('navigation_financed_tokens'),
+              url: '/token/financed',
+              enabled: process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true',
             },
           ],
         },
@@ -343,6 +349,11 @@ const MemberMenu = () => {
             label: 'Learn about the $TDF token',
             url: '/token',
             enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
+          },
+          {
+            label: t('navigation_financed_tokens'),
+            url: '/token/financed',
+            enabled: process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true',
           },
           {
             label: 'Become a Citizen',
@@ -979,6 +990,10 @@ const MemberMenu = () => {
             </div>
           </div>
         )}
+
+      {APP_NAME?.toLowerCase() === 'tdf' &&
+        process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true' &&
+        user && <FinancedTokenMenuWidget />}
 
       <ReportABug />
     </nav>

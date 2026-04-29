@@ -1,9 +1,13 @@
-import { useCallback, useState } from 'react';
+import Link from 'next/link';
+import { useCallback, useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { COHOUSING_STEP_BY_N } from '../../constants/cohousingFlow';
 import type { CohousingApplication } from '../../types/cohousingApplication';
+import { buildClearParticipantStepPatch } from '../../utils/cohousingResetStep';
 import Button from '../ui/Button';
+import Card from '../ui/Card';
 import { CohousingAgreementModal } from './cohousingAgreementModal';
 import {
   COHOUSING_DEFAULT_COMMITTED,
@@ -20,21 +24,64 @@ const getEffectiveStep = (application: CohousingApplication) => {
   return clampStep(application.currentStep ?? 1);
 };
 
+const getQuizAnswersFromApplication = (
+  application: CohousingApplication,
+): Record<string, string> | undefined => {
+  const q = application.quiz as Record<string, unknown> | undefined;
+  if (!q) {
+    return undefined;
+  }
+  const direct = q.answers;
+  if (
+    direct &&
+    typeof direct === 'object' &&
+    !Array.isArray(direct)
+  ) {
+    return direct as Record<string, string>;
+  }
+  const nested = q.quiz as Record<string, unknown> | undefined;
+  const nestedAnswers = nested?.answers;
+  if (
+    nestedAnswers &&
+    typeof nestedAnswers === 'object' &&
+    !Array.isArray(nestedAnswers)
+  ) {
+    return nestedAnswers as Record<string, string>;
+  }
+  return undefined;
+};
+
+const SHARED_FLOW_STEP_CAP = 3;
+
 export const CohousingParticipantView = ({
   application,
   onPersist,
+  sharedLeadApplication,
+  readOnly = false,
 }: {
   application: CohousingApplication;
   onPersist: (data: Record<string, unknown>) => Promise<void>;
+  sharedLeadApplication?: {
+    applicationId: string;
+    partnerName: string;
+  } | null;
+  readOnly?: boolean;
 }) => {
   const t = useTranslations();
   const step = getEffectiveStep(application);
-  const [started, setStarted] = useState(() => step > 1);
+  const [started, setStarted] = useState(() => readOnly || step > 1);
   const [agreementOpen, setAgreementOpen] = useState(false);
   const [committed, setCommitted] = useState(COHOUSING_DEFAULT_COMMITTED);
+  const [adminClearing, setAdminClearing] = useState(false);
   const [mode, setMode] = useState<string | null>(
     application.financingMode ?? null,
   );
+  const stepDef = COHOUSING_STEP_BY_N[step];
+  const hasParticipantPanel = Boolean(stepDef?.panel);
+
+  useEffect(() => {
+    setMode(application.financingMode ?? null);
+  }, [application.financingMode]);
   const submittedSteps = new Set(
     (application.stepHistory || [])
       .filter((entry) => entry?.event === 'participant_submitted')
@@ -43,10 +90,19 @@ export const CohousingParticipantView = ({
   );
   const currentStepSubmitted = submittedSteps.has(step);
   const quizDraftStorageKey = `cohousing:tdf-quiz:${application._id}`;
-  const quizInitialAnswers =
-    application.quiz && typeof (application.quiz as Record<string, unknown>).answers === 'object'
-      ? ((application.quiz as Record<string, unknown>).answers as Record<string, string>)
-      : undefined;
+  const applicantUserId =
+    typeof application.createdBy === 'string'
+      ? application.createdBy
+      : application.createdBy &&
+          typeof application.createdBy === 'object' &&
+          application.createdBy !== null &&
+          '_id' in application.createdBy
+        ? String((application.createdBy as { _id: string })._id)
+        : undefined;
+  const quizInitialAnswers = getQuizAnswersFromApplication(application);
+
+  const stepCap = sharedLeadApplication ? SHARED_FLOW_STEP_CAP : 14;
+  const headerStepDisplay = Math.min(step, stepCap);
 
   const handlePersist = useCallback(
     async (data: Record<string, unknown>) => {
@@ -56,43 +112,100 @@ export const CohousingParticipantView = ({
   );
 
   const handleAdvance = useCallback(async () => {
+    if (readOnly) {
+      return;
+    }
     const next = Math.min(step + 1, 14);
     await handlePersist({ currentStep: next });
-  }, [handlePersist, step]);
+  }, [handlePersist, readOnly, step]);
 
   const handleMode = useCallback(
     async (m: string) => {
+      if (readOnly) {
+        return;
+      }
       setMode(m);
       await handlePersist({ financingMode: m });
     },
-    [handlePersist],
+    [handlePersist, readOnly],
   );
 
-  const handlePoolAdd = useCallback((amount: number) => {
-    setCommitted((c) => Math.min(c + amount, 500000));
-  }, []);
+  const handlePoolAdd = useCallback(
+    (amount: number) => {
+      if (readOnly) {
+        return;
+      }
+      setCommitted((c) => Math.min(c + amount, 500000));
+    },
+    [readOnly],
+  );
+
+  const handleResetStepSubmission = useCallback(async () => {
+    if (readOnly) {
+      return;
+    }
+    if (
+      typeof window !== 'undefined' &&
+      !window.confirm(t('cohousing_reset_step_confirm'))
+    ) {
+      return;
+    }
+    setAdminClearing(true);
+    try {
+      await handlePersist(
+        buildClearParticipantStepPatch(application, step),
+      );
+      if (
+        step === 2 &&
+        typeof window !== 'undefined' &&
+        typeof quizDraftStorageKey === 'string'
+      ) {
+        window.localStorage.removeItem(quizDraftStorageKey);
+      }
+    } finally {
+      setAdminClearing(false);
+    }
+  }, [
+    application,
+    handlePersist,
+    quizDraftStorageKey,
+    readOnly,
+    step,
+    t,
+  ]);
 
   const handleStepSubmit = useCallback(
     async (payload: Record<string, unknown>) => {
+      if (readOnly) {
+        return;
+      }
       const now = new Date().toISOString();
       const stepDataByPanel: Record<string, Record<string, unknown>> = {
-        quiz: {
-          quiz: {
-            ...(application.quiz || {}),
+        quiz: (() => {
+          const prev = application.quiz as Record<string, unknown> | undefined;
+          const base =
+            prev && typeof prev === 'object' ? { ...prev } : {};
+          if ('quiz' in base) {
+            delete base.quiz;
+          }
+          return {
+            ...base,
             passed: Boolean(payload.passed),
             score: Number(payload.score || 0),
             answers: payload.answers,
             passedAt: now,
-          },
-        },
+          };
+        })(),
         cosigner: {
-          cosigner: {
-            ...(application.cosigner || {}),
-            mode: payload.mode,
-            invitedName: payload.invitedName,
-            invitedEmail: payload.invitedEmail,
-            invitedAt: now,
-          },
+          ...(application.cosigner || {}),
+          mode: payload.mode,
+          invitedName: payload.invitedName,
+          invitedEmail: payload.invitedEmail,
+          userId:
+            typeof payload.invitedUserId === 'string'
+              ? payload.invitedUserId
+              : undefined,
+          invitedAt: now,
         },
         financing: {
           financingMode: payload.mode,
@@ -102,11 +215,9 @@ export const CohousingParticipantView = ({
           tier: payload.tier,
         },
         unit: {
-          unit: {
-            ...(application.unit || {}),
-            ref: payload.ref,
-            reservedAt: now,
-          },
+          ...(application.unit || {}),
+          ref: payload.ref,
+          reservedAt: now,
         },
         citizen: {
           citizenshipAttestation: {
@@ -134,10 +245,8 @@ export const CohousingParticipantView = ({
           },
         },
         keys: {
-          keys: {
-            ...(application.keys || {}),
-            transferredAt: now,
-          },
+          ...(application.keys || {}),
+          transferredAt: now,
         },
       };
       const dataKey =
@@ -160,18 +269,54 @@ export const CohousingParticipantView = ({
                         : step === 14
                           ? 'keys'
                           : '';
+      const panelData = stepDataByPanel[dataKey];
+      const stepHistoryPayload = [
+        ...(application.stepHistory || []),
+        {
+          step,
+          event: 'participant_submitted',
+          at: now,
+          by: 'participant',
+          payload,
+        },
+      ];
+
+      if (!panelData && dataKey) {
+        return;
+      }
+
+      if (dataKey === 'quiz') {
+        await handlePersist({
+          quiz: panelData,
+          stepHistory: stepHistoryPayload,
+        });
+        return;
+      }
+      if (dataKey === 'cosigner') {
+        await handlePersist({
+          cosigner: panelData,
+          stepHistory: stepHistoryPayload,
+        });
+        return;
+      }
+      if (dataKey === 'unit') {
+        await handlePersist({
+          unit: panelData,
+          stepHistory: stepHistoryPayload,
+        });
+        return;
+      }
+      if (dataKey === 'keys') {
+        await handlePersist({
+          keys: panelData,
+          stepHistory: stepHistoryPayload,
+        });
+        return;
+      }
+
       await handlePersist({
-        ...(stepDataByPanel[dataKey] || {}),
-        stepHistory: [
-          ...(application.stepHistory || []),
-          {
-            step,
-            event: 'participant_submitted',
-            at: now,
-            by: 'participant',
-            payload,
-          },
-        ],
+        ...(panelData || {}),
+        stepHistory: stepHistoryPayload,
       });
     },
     [
@@ -184,9 +329,16 @@ export const CohousingParticipantView = ({
       application.stepHistory,
       application.unit,
       handlePersist,
+      readOnly,
       step,
     ],
   );
+
+  useEffect(() => {
+    if (readOnly) {
+      setStarted(true);
+    }
+  }, [readOnly]);
 
   if (!started) {
     return (
@@ -205,17 +357,24 @@ export const CohousingParticipantView = ({
 
   return (
     <>
+      {readOnly && (
+        <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-950">
+          {t('cohousing_view_only_banner')}
+        </div>
+      )}
       <div className="sticky top-0 z-20 bg-white border-b border-gray-200 py-3.5 mb-8 -mx-4 px-4 sm:mx-0 sm:px-0">
         <div className="max-w-[860px] mx-auto flex flex-wrap justify-between items-center gap-3">
           <div className="flex gap-2 items-center">
-            <Button
-              isFullWidth={false}
-              size="small"
-              variant="secondary"
-              onClick={() => setStarted(false)}
-            >
-              {t('cohousing_flow_back_overview')}
-            </Button>
+            {!readOnly && (
+              <Button
+                isFullWidth={false}
+                size="small"
+                variant="secondary"
+                onClick={() => setStarted(false)}
+              >
+                {t('cohousing_flow_back_overview')}
+              </Button>
+            )}
             <Button
               isFullWidth={false}
               size="small"
@@ -224,6 +383,20 @@ export const CohousingParticipantView = ({
             >
               {t('cohousing_flow_agreement_short')}
             </Button>
+            {!readOnly &&
+              currentStepSubmitted &&
+              hasParticipantPanel && (
+              <Button
+                isFullWidth={false}
+                size="small"
+                variant="secondary"
+                isLoading={adminClearing}
+                onClick={() => void handleResetStepSubmission()}
+                className="border-red-300 text-red-800 hover:bg-red-50"
+              >
+                {t('cohousing_reset_step')}
+              </Button>
+            )}
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             {mode && (
@@ -233,12 +406,12 @@ export const CohousingParticipantView = ({
             )}
             <div className="text-xs text-gray-500">
               <span className="font-sans text-lg font-black text-accent">
-                {Math.min(step, 14)}
+                {headerStepDisplay}
               </span>
-              <span className="ml-1">/ 14</span>
+              <span className="ml-1">/ {stepCap}</span>
             </div>
             <div className="w-32 hidden sm:block">
-              <FlowProgressBar value={Math.min(step, 14)} max={14} />
+              <FlowProgressBar value={headerStepDisplay} max={stepCap} />
             </div>
           </div>
         </div>
@@ -254,6 +427,30 @@ export const CohousingParticipantView = ({
         currentStepSubmitted={currentStepSubmitted}
         quizDraftStorageKey={quizDraftStorageKey}
         quizInitialAnswers={quizInitialAnswers}
+        applicantUserId={applicantUserId}
+        readOnly={readOnly}
+        maxStepInclusive={
+          sharedLeadApplication ? SHARED_FLOW_STEP_CAP : undefined
+        }
+        footerBelowSteps={
+          sharedLeadApplication ? (
+            <Card className="p-5 mt-2 border border-accent/30 bg-accent/5">
+              <p className="text-sm text-gray-700 mb-4">
+                {t('cohousing_cosigner_shared_application_body')}
+              </p>
+              <Link
+                href={`/cohousing/application/${encodeURIComponent(
+                  sharedLeadApplication.applicationId,
+                )}`}
+                className="inline-flex items-center justify-center px-4 py-2.5 rounded-full bg-accent text-white text-sm font-semibold uppercase tracking-wide hover:opacity-90 transition-opacity"
+              >
+                {t('cohousing_cosigner_shared_application_cta', {
+                  name: sharedLeadApplication.partnerName,
+                })}
+              </Link>
+            </Card>
+          ) : undefined
+        }
       />
 
       <CohousingAgreementModal

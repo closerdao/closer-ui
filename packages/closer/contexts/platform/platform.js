@@ -623,11 +623,7 @@ export const PlatformProvider = ({ children }) => {
   platform.cohousingapplication.getMine = () =>
     api.get('/my/CohousingApplication').then((res) => res.data);
 
-  platform.cohousingapplication.getMineOne = () =>
-    api.get('/mine/CohousingApplication').then((res) => res.data);
-
-  platform.cohousingapplication.patchMine = (data) =>
-    api.patch('/mine/CohousingApplication', data).then((res) => res.data);
+  platform.CohousingApplication = platform.cohousingapplication;
 
   platform.cohousingapplication.create = (data) =>
     api.post('/CohousingApplication', data).then((res) => res.data);

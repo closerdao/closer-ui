@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 
 import { useTranslations } from 'next-intl';
 
@@ -33,6 +33,8 @@ const TimelineStepBlock = ({
   currentStepSubmitted,
   quizDraftStorageKey,
   quizInitialAnswers,
+  applicantUserId,
+  readOnly,
 }: {
   step: CohousingStepDef;
   state: 'done' | 'active' | 'locked';
@@ -44,6 +46,8 @@ const TimelineStepBlock = ({
   currentStepSubmitted: boolean;
   quizDraftStorageKey: string;
   quizInitialAnswers?: Record<string, string>;
+  applicantUserId?: string;
+  readOnly: boolean;
 }) => {
   const t = useTranslations();
   const isDone = state === 'done';
@@ -139,55 +143,72 @@ const TimelineStepBlock = ({
                 {t('cohousing_flow_submitted_waiting_team')}
               </FlowBadge>
             )}
-            {step.panel === 'quiz' && !currentStepSubmitted && (
-              <QuizPanel
-                draftStorageKey={quizDraftStorageKey}
-                initialAnswers={quizInitialAnswers}
-                onSubmit={onStepSubmit}
-              />
+            {readOnly ? (
+              !(
+                step.owner === 'participant' &&
+                currentStepSubmitted
+              ) && (
+                <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+                  {t('cohousing_view_only_step_hint')}
+                </div>
+              )
+            ) : (
+              <>
+                {step.panel === 'quiz' && !currentStepSubmitted && (
+                  <QuizPanel
+                    draftStorageKey={quizDraftStorageKey}
+                    initialAnswers={quizInitialAnswers}
+                    onSubmit={onStepSubmit}
+                  />
+                )}
+                {step.panel === 'cosigner' && !currentStepSubmitted && (
+                  <CosignerPanel
+                    excludeUserId={applicantUserId}
+                    onSubmit={(p) => void onStepSubmit(p)}
+                  />
+                )}
+                {step.panel === 'financing' && !currentStepSubmitted && (
+                  <FinancingPanel
+                    onSubmit={(p) => {
+                      onMode(String(p.mode || ''));
+                      void onStepSubmit(p);
+                    }}
+                  />
+                )}
+                {step.panel === 'commitment' && !currentStepSubmitted && (
+                  <CommitmentPanel
+                    onSubmit={(p) => void onStepSubmit(p)}
+                    financingMode={mode}
+                    onPoolAdd={onPoolAdd}
+                  />
+                )}
+                {step.panel === 'unit' && !currentStepSubmitted && (
+                  <UnitPanel onSubmit={(p) => void onStepSubmit(p)} />
+                )}
+                {step.panel === 'citizen' && !currentStepSubmitted && (
+                  <CitizenPanel onSubmit={(p) => void onStepSubmit(p)} />
+                )}
+                {step.panel === 'designlock' && !currentStepSubmitted && (
+                  <DesignLockPanel
+                    onSubmit={(p) => void onStepSubmit(p)}
+                    mode={mode}
+                  />
+                )}
+                {step.panel === 'stage' && !currentStepSubmitted && (
+                  <StagePanel
+                    onSubmit={(p) => void onStepSubmit(p)}
+                    step={step}
+                    mode={mode}
+                  />
+                )}
+                {step.panel === 'keys' && !currentStepSubmitted && (
+                  <KeysPanel onSubmit={(p) => void onStepSubmit(p)} />
+                )}
+                {step.owner === 'team' && step.teamActionKey && (
+                  <TeamWaitingInline step={step} onAdvance={onAdvance} />
+                )}
+              </>
             )}
-            {step.panel === 'cosigner' && !currentStepSubmitted && (
-              <CosignerPanel onSubmit={(p) => void onStepSubmit(p)} />
-            )}
-            {step.panel === 'financing' && !currentStepSubmitted && (
-              <FinancingPanel
-                onSubmit={(p) => {
-                  onMode(String(p.mode || ''));
-                  void onStepSubmit(p);
-                }}
-              />
-            )}
-            {step.panel === 'commitment' && !currentStepSubmitted && (
-              <CommitmentPanel
-                onSubmit={(p) => void onStepSubmit(p)}
-                financingMode={mode}
-                onPoolAdd={onPoolAdd}
-              />
-            )}
-            {step.panel === 'unit' && !currentStepSubmitted && (
-              <UnitPanel onSubmit={(p) => void onStepSubmit(p)} />
-            )}
-            {step.panel === 'citizen' && !currentStepSubmitted && (
-              <CitizenPanel onSubmit={(p) => void onStepSubmit(p)} />
-            )}
-            {step.panel === 'designlock' && !currentStepSubmitted && (
-              <DesignLockPanel onSubmit={(p) => void onStepSubmit(p)} mode={mode} />
-            )}
-            {step.panel === 'stage' && !currentStepSubmitted && (
-              <StagePanel onSubmit={(p) => void onStepSubmit(p)} step={step} mode={mode} />
-            )}
-            {step.panel === 'keys' && !currentStepSubmitted && (
-              <KeysPanel onSubmit={(p) => void onStepSubmit(p)} />
-            )}
-            {step.owner === 'team' && step.teamActionKey && (
-              <TeamWaitingInline step={step} onAdvance={onAdvance} />
-            )}
-          </div>
-        )}
-
-        {isDone && (
-          <div className="mt-2.5 px-3 py-2 rounded-lg bg-green-50 border border-green-200 text-[11px] text-green-800 font-semibold tracking-wide">
-            {t('cohousing_flow_step_completed')}
           </div>
         )}
       </div>
@@ -229,6 +250,10 @@ export const CohousingVerticalTimeline = ({
   currentStepSubmitted,
   quizDraftStorageKey,
   quizInitialAnswers,
+  applicantUserId,
+  maxStepInclusive,
+  footerBelowSteps,
+  readOnly = false,
 }: {
   currentStep: number;
   mode: string | null;
@@ -239,19 +264,47 @@ export const CohousingVerticalTimeline = ({
   currentStepSubmitted: boolean;
   quizDraftStorageKey: string;
   quizInitialAnswers?: Record<string, string>;
+  applicantUserId?: string;
+  maxStepInclusive?: number;
+  footerBelowSteps?: ReactNode;
+  readOnly?: boolean;
 }) => {
   const t = useTranslations();
   const stepRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
+  const cap = maxStepInclusive ?? 14;
+  const progressDen =
+    maxStepInclusive != null ? Math.max(maxStepInclusive - 1, 1) : 13;
+  const cursor = Math.min(currentStep, cap);
+  const pastCap =
+    maxStepInclusive != null && currentStep > maxStepInclusive;
+
+  const stepVisualState = (
+    sn: number,
+  ): 'done' | 'active' | 'locked' => {
+    if (pastCap) {
+      return 'done';
+    }
+    if (sn < cursor) {
+      return 'done';
+    }
+    if (sn === cursor) {
+      return 'active';
+    }
+    return 'locked';
+  };
+
   useEffect(() => {
-    const el = stepRefs.current[currentStep];
+    const scrollTarget = pastCap ? maxStepInclusive ?? currentStep : cursor;
+    const el = stepRefs.current[scrollTarget];
     if (el) {
       const tmr = setTimeout(() => {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 400);
       return () => clearTimeout(tmr);
     }
-  }, [currentStep]);
+  }, [cursor, currentStep, maxStepInclusive, pastCap]);
+
 
   return (
     <div className="relative max-w-[860px] mx-auto">
@@ -259,42 +312,58 @@ export const CohousingVerticalTimeline = ({
       <div
         className="absolute left-[31px] top-10 w-0.5 bg-accent transition-[height] duration-1000 ease-out"
         style={{
-          height: `${Math.max(0, ((currentStep - 1) / 13) * 100)}%`,
+          height: `${Math.max(0, ((Math.min(currentStep, cap) - 1) / progressDen) * 100)}%`,
         }}
       />
 
-      {COHOUSING_PHASES.map((ph) => (
-        <div key={ph.id} className="mb-4">
-          <PhaseHeader phase={ph} />
-          {ph.steps.map((sn) => {
-            const s = COHOUSING_STEP_BY_N[sn];
-            const state =
-              sn < currentStep ? 'done' : sn === currentStep ? 'active' : 'locked';
-            return (
-              <div
-                key={sn}
-                ref={(el) => {
-                  stepRefs.current[sn] = el;
-                }}
-              >
-                <TimelineStepBlock
-                  step={s}
-                  state={state}
-                  mode={mode}
-                  onMode={onMode}
-                  onAdvance={onAdvance}
-                  onPoolAdd={onPoolAdd}
-                  onStepSubmit={onStepSubmit}
-                  currentStepSubmitted={currentStepSubmitted && sn === currentStep}
-                  quizDraftStorageKey={quizDraftStorageKey}
-                  quizInitialAnswers={quizInitialAnswers}
-                />
-              </div>
-            );
-          })}
-        </div>
-      ))}
+      {COHOUSING_PHASES.map((ph) => {
+        const stepsForPhase = ph.steps.filter(
+          (sn) => maxStepInclusive == null || sn <= maxStepInclusive,
+        );
+        if (stepsForPhase.length === 0) {
+          return null;
+        }
+        return (
+          <div key={ph.id} className="mb-4">
+            <PhaseHeader phase={ph} />
+            {stepsForPhase.map((sn) => {
+              const s = COHOUSING_STEP_BY_N[sn];
+              const state = stepVisualState(sn);
+              return (
+                <div
+                  key={sn}
+                  ref={(el) => {
+                    stepRefs.current[sn] = el;
+                  }}
+                >
+                  <TimelineStepBlock
+                    step={s}
+                    state={state}
+                    mode={mode}
+                    onMode={onMode}
+                    onAdvance={onAdvance}
+                    onPoolAdd={onPoolAdd}
+                    onStepSubmit={onStepSubmit}
+                    currentStepSubmitted={
+                      currentStepSubmitted &&
+                      sn === currentStep &&
+                      !pastCap
+                    }
+                    quizDraftStorageKey={quizDraftStorageKey}
+                    quizInitialAnswers={quizInitialAnswers}
+                    applicantUserId={applicantUserId}
+                    readOnly={readOnly}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
 
+      {footerBelowSteps}
+
+      {!footerBelowSteps && (
       <div className="flex gap-5 items-center pl-[22px] mt-6">
         <div
           className={`w-5 h-5 rounded-full border-[3px] border-white shrink-0 shadow-[0_0_0_2px] ${
@@ -309,6 +378,7 @@ export const CohousingVerticalTimeline = ({
           {t('cohousing_flow_end_marker')}
         </div>
       </div>
+      )}
     </div>
   );
 };

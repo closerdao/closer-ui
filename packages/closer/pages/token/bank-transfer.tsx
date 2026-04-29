@@ -17,7 +17,10 @@ import { isValid } from 'iban-ts';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { TOKEN_SALE_STEPS_BANK_TRANSFER } from '../../constants';
+import {
+  TOKEN_PURCHASE_TERMS_DOC_URL,
+  TOKEN_SALE_STEPS_BANK_TRANSFER,
+} from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
@@ -231,7 +234,7 @@ const BankTransferPage = ({ generalConfig }: Props) => {
                 {t.rich('subscriptions_citizen_agree_to_token_terms', {
                   link1: (chunks) => (
                     <a
-                      href="https://docs.google.com/document/d/1kz4SH1UVWhamniqUW4GWmFOU0nmXyhpAzUJwFTW0ybs/edit?tab=t.0"
+                      href={TOKEN_PURCHASE_TERMS_DOC_URL}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{ textDecoration: 'underline' }}

@@ -3,6 +3,9 @@ import { useRouter } from 'next/router';
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 
+import { NextPageContext } from 'next';
+import process from 'process';
+
 import AdminLayout from '../../../../components/Dashboard/AdminLayout';
 import { Button, Card, Heading, Input } from '../../../../components/ui';
 import { Badge } from '../../../../components/ui/badge';
@@ -17,6 +20,8 @@ import { FinanceApplication } from '../../../../types/subscriptions';
 import api from '../../../../utils/api';
 import { parseMessageFromError } from '../../../../utils/common';
 import { formatIsoFiatAmount } from '../../../../utils/currencyFormat';
+import { getFinancedMonthlyAmountDue } from '../../../../utils/financeApplicationMonthlyDue';
+import { loadLocaleData } from '../../../../utils/locale.helpers';
 
 const getScheduleRows = (
   paymentsScheduled: FinanceApplication['paymentsScheduled'],
@@ -70,11 +75,15 @@ const FinancedApplicationDetailPage = () => {
       return;
     }
     platform.financeapplication.getOne(applicationId as string);
-  }, [applicationId, platform]);
+  }, [applicationId]);
 
   const paymentScheduleRows = useMemo(
     () => getScheduleRows(application?.paymentsScheduled || {}),
     [application?.paymentsScheduled],
+  );
+  const monthlyInstallmentDue = useMemo(
+    () => getFinancedMonthlyAmountDue(application, paymentScheduleRows.length),
+    [application, paymentScheduleRows.length],
   );
   const paidMonths = paymentScheduleRows.filter((row) => row.status === 'paid').length;
   const pendingMonths = paymentScheduleRows.length - paidMonths;
@@ -238,7 +247,7 @@ const FinancedApplicationDetailPage = () => {
                           {t('token_sales_dashboard_status')}
                         </th>
                         <th className="text-left p-3">
-                          {t('token_sales_dashboard_financed_schedule_amount_paid')}
+                          {t('token_sales_dashboard_financed_schedule_amount_due')}
                         </th>
                         <th className="text-left p-3">
                           {t('token_sales_dashboard_financed_schedule_payment_date')}
@@ -255,7 +264,7 @@ const FinancedApplicationDetailPage = () => {
                             </Badge>
                           </td>
                           <td className="p-3">
-                            {formatIsoFiatAmount(row.amountPaid || 0, 'EUR')}
+                            {formatIsoFiatAmount(monthlyInstallmentDue, 'EUR')}
                           </td>
                           <td className="p-3">{formatDate(row.paymentDate)}</td>
                         </tr>
@@ -364,7 +373,9 @@ const FinancedApplicationDetailPage = () => {
                       type="text"
                       value={distributionDate}
                       onChange={(event) => setDistributionDate(event.target.value)}
-                      placeholder="YYYY-MM-DDTHH:mm:ss.sssZ"
+                      placeholder={t(
+                        'token_sales_dashboard_financed_distribution_date_placeholder',
+                      )}
                     />
                     <div className="flex items-center gap-2">
                       <Button
@@ -392,6 +403,21 @@ const FinancedApplicationDetailPage = () => {
       </AdminLayout>
     </>
   );
+};
+
+FinancedApplicationDetailPage.getInitialProps = async (context: NextPageContext) => {
+  try {
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    return { messages };
+  } catch (error) {
+    return {
+      error: parseMessageFromError(error),
+      messages: null,
+    };
+  }
 };
 
 export default FinancedApplicationDetailPage;

@@ -12,8 +12,57 @@ import Spinner from '../../../components/ui/Spinner';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import type { CohousingApplication } from '../../../types/cohousingApplication';
-import api from '../../../utils/api';
+import {
+  cohousingApplicationsFromGetAction,
+  getCosignerUserId,
+  getPrimaryApplicantDisplayName,
+} from '../../../utils/cohousingApplicationFromPlatform';
 import { loadLocaleData } from '../../../utils/locale.helpers';
+
+const unwrapPlatformResults = (raw: unknown): unknown => {
+  if (raw == null) {
+    return null;
+  }
+  if (
+    typeof raw === 'object' &&
+    typeof (raw as { get?: (k: string) => unknown }).get === 'function'
+  ) {
+    const data = (raw as { get: (k: string) => unknown }).get('data');
+    if (data !== undefined && data !== null) {
+      return data;
+    }
+  }
+  return raw;
+};
+
+const immutableResultsToPlain = (
+  action: unknown,
+): CohousingApplication | null => {
+  if (!action || typeof action !== 'object') {
+    return null;
+  }
+  let results = (action as { results?: unknown }).results;
+  results = unwrapPlatformResults(results);
+  if (results == null) {
+    return null;
+  }
+  if (
+    typeof results === 'object' &&
+    'toJS' in results &&
+    typeof (results as { toJS?: () => unknown }).toJS === 'function'
+  ) {
+    const plain = (results as { toJS: () => unknown }).toJS();
+    if (
+      plain &&
+      typeof plain === 'object' &&
+      plain !== null &&
+      '_id' in plain
+    ) {
+      return plain as CohousingApplication;
+    }
+  }
+  return null;
+};
 
 const CohousingApplicationDetailPage = () => {
   const t = useTranslations();
@@ -26,6 +75,8 @@ const CohousingApplicationDetailPage = () => {
   );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sharedLeadApplication, setSharedLeadApplication] =
+    useState<CohousingApplication | null>(null);
   const isTeamUser = Boolean(user?.roles?.includes('team'));
 
   const load = useCallback(async () => {
@@ -35,15 +86,21 @@ const CohousingApplicationDetailPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get(`/cohousingapplication/${id}`);
-      setApplication(data.results as CohousingApplication);
+      const action = await platform.cohousingapplication.getOne(id);
+      const doc = immutableResultsToPlain(action);
+      if (doc) {
+        setApplication(doc);
+      } else {
+        setError(t('cohousing_app_load_error'));
+        setApplication(null);
+      }
     } catch {
       setError(t('cohousing_app_load_error'));
       setApplication(null);
     } finally {
       setLoading(false);
     }
-  }, [id, t]);
+  }, [id, platform, t]);
 
   useEffect(() => {
     if (router.isReady && id) {
@@ -51,12 +108,64 @@ const CohousingApplicationDetailPage = () => {
     }
   }, [router.isReady, id, load]);
 
+  useEffect(() => {
+    if (!user?._id || !application || !platform?.cohousingapplication) {
+      return;
+    }
+    const ownerId =
+      typeof application.createdBy === 'string'
+        ? application.createdBy
+        : application.createdBy?._id;
+    if (ownerId !== user._id) {
+      setSharedLeadApplication(null);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const action = await platform.cohousingapplication.get({
+          where: { 'cosigner.userId': user._id },
+          limit: 10,
+          sort_by: '-created',
+        });
+        const rows = cohousingApplicationsFromGetAction(action);
+        const match = rows.find((a) => a._id !== application._id);
+        if (!cancelled) {
+          setSharedLeadApplication(match ?? null);
+        }
+      } catch {
+        if (!cancelled) {
+          setSharedLeadApplication(null);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?._id, application?._id, platform]);
+
   const handlePersist = useCallback(
     async (data: Record<string, unknown>) => {
-      await platform.cohousingapplication.patchMine(data);
-      await load();
+      if (typeof id !== 'string' || !id || !application || !user?._id) {
+        return;
+      }
+      const ownerId =
+        typeof application.createdBy === 'string'
+          ? application.createdBy
+          : application.createdBy?._id;
+      if (ownerId !== user._id) {
+        return;
+      }
+      const patchAction = await platform.cohousingapplication.patch(id, data);
+      const updated = immutableResultsToPlain(patchAction);
+      if (updated) {
+        setApplication(updated);
+      } else {
+        await load();
+      }
     },
-    [platform, load],
+    [platform, load, id, application, user?._id],
   );
 
   if (!user) {
@@ -114,7 +223,14 @@ const CohousingApplicationDetailPage = () => {
     typeof application.createdBy === 'string'
       ? application.createdBy
       : application.createdBy?._id;
-  if (user._id && createdById && createdById !== user._id) {
+  const cosignerUserId = getCosignerUserId(application.cosigner);
+  const isCosignerViewer = Boolean(
+    user._id && cosignerUserId && cosignerUserId === user._id,
+  );
+  const isOwner = Boolean(
+    user._id && createdById && createdById === user._id,
+  );
+  if (user._id && createdById && !isOwner && !isCosignerViewer) {
     return (
       <>
         <Head>
@@ -198,6 +314,16 @@ const CohousingApplicationDetailPage = () => {
         <CohousingParticipantView
           application={application}
           onPersist={handlePersist}
+          readOnly={isCosignerViewer && !isOwner}
+          sharedLeadApplication={
+            sharedLeadApplication
+              ? {
+                  applicationId: sharedLeadApplication._id,
+                  partnerName:
+                    getPrimaryApplicantDisplayName(sharedLeadApplication),
+                }
+              : null
+          }
         />
       </div>
     </>
