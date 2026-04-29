@@ -376,7 +376,7 @@ export const configDescription: ConfigType[] = [
             tier: 'number',
             monthlyCredits: 'number',
             price: 'number',
-            perks: 'text',
+            perks: 'long-text',
             billingPeriod: 'text',
             available: 'boolean',
             tiersAvailable: 'boolean',
@@ -976,6 +976,7 @@ export const configDescription: ConfigType[] = [
           {
             legalName: 'text',
             taxNumber: 'text',
+            iban: 'text',
             address: 'text',
             accountingDescription: 'text',
             products: {
@@ -999,6 +1000,7 @@ export const configDescription: ConfigType[] = [
           {
             legalName: '',
             taxNumber: '',
+            iban: '',
             address: '',
             products: [],
             accountingDescription: 'Formação Profissional',

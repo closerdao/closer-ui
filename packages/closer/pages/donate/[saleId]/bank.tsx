@@ -87,9 +87,7 @@ function DonateBankPage({ generalConfig }: DonateBankPageProps) {
         { signal },
       );
       if (mounted && !signal.aborted && paid) {
-        router.push(
-          `/donate/success?amount=${amount}&method=bank&saleId=${encodeURIComponent(sid)}`,
-        );
+        router.push(`/sale/${encodeURIComponent(sid)}`);
       }
     })();
     return () => {
@@ -100,9 +98,7 @@ function DonateBankPage({ generalConfig }: DonateBankPageProps) {
 
   const handleMarkSent = () => {
     if (!bankBlock) return;
-    router.push(
-      `/donate/success?amount=${amount}&method=bank&saleId=${encodeURIComponent(bankBlock.saleId)}`,
-    );
+    router.push(`/sale/${encodeURIComponent(bankBlock.saleId)}`);
   };
 
   if (!router.isReady || isAuthLoading || session === 'loading') {

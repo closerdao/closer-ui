@@ -17,6 +17,7 @@ import {
   TokenGraphResponse,
 } from '../../types/token';
 import { formatThousands } from '../../utils/dashboard.helpers';
+import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 
 interface ChartDataPoint {
   name: string;
@@ -250,7 +251,7 @@ const TokenGraph = () => {
             data={priceData}
             dataKey="value"
             color={CHART_COLORS[3]}
-            valueFormatter={(v) => `€${v.toLocaleString()}`}
+            valueFormatter={(v) => formatIsoFiatAmount(v, 'EUR')}
           />
           <p className="text-sm text-gray-600 mt-4">
             {t('token_price_history_note')}

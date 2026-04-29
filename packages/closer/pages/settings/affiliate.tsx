@@ -19,6 +19,7 @@ import PageNotAllowed from '../401';
 import { useAuth } from '../../contexts/auth';
 import { User } from '../../contexts/auth/types';
 import { calculateAffiliateRevenue } from '../../utils/affiliate.utils';
+import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import { getStartAndEndDate } from '../../utils/performance.utils';
 
@@ -27,6 +28,7 @@ const AffiliatePage = ({
 }: {
   affiliateConfig: AffiliateConfig;
 }) => {
+  const formatEurAmount = (amount: number) => formatIsoFiatAmount(amount || 0, 'EUR');
   const t = useTranslations();
   const { platform }: any = usePlatform() || {};
   const { user } = useAuth() || {};
@@ -269,13 +271,13 @@ const AffiliatePage = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <StatsCard
               title={t('stats_total_earnings')}
-              value={`€${totalRevenue.toFixed(2)}`}
+              value={formatEurAmount(totalRevenue)}
               isAccent={true}
               subtext={t('stats_earnings_subtext')}
             />
             <StatsCard
               title={t('stats_unpaid_earnings')}
-              value={`€${(totalRevenue - totalPayoutCharges).toFixed(2)}`}
+              value={formatEurAmount(totalRevenue - totalPayoutCharges)}
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -296,7 +298,7 @@ const AffiliatePage = ({
             />
             <StatsCard
               title={t('stats_token_sales')}
-              value={`€${(tokenSaleRevenue + financedTokenRevenue).toFixed(2)}`}
+              value={formatEurAmount(tokenSaleRevenue + financedTokenRevenue)}
               subtext={t('stats_tokens_subtext')}
             />
           </div>
@@ -340,7 +342,7 @@ const AffiliatePage = ({
               {affiliateConfig?.staysCommissionPercent || 0}%{' '}
               {t('affiliate_commission')})
             </p>
-            <p className="font-bold">€{staysRevenue.toFixed(2)}</p>
+            <p className="font-bold">{formatEurAmount(staysRevenue)}</p>
             <PercentageBar
               percentage={
                 totalRevenue ? (staysRevenue / totalRevenue) * 100 : 0
@@ -353,7 +355,7 @@ const AffiliatePage = ({
               {affiliateConfig?.eventsCommissionPercent || 0}%{' '}
               {t('affiliate_commission')})
             </p>
-            <p className="font-bold">€{eventsRevenue.toFixed(2)}</p>
+            <p className="font-bold">{formatEurAmount(eventsRevenue)}</p>
             <PercentageBar
               percentage={
                 totalRevenue ? (eventsRevenue / totalRevenue) * 100 : 0
@@ -366,7 +368,7 @@ const AffiliatePage = ({
               {affiliateConfig?.subscriptionCommissionPercent || 0}%{' '}
               {t('affiliate_commission')})
             </p>
-            <p className="font-bold">€{subscriptionsRevenue.toFixed(2)}</p>
+            <p className="font-bold">{formatEurAmount(subscriptionsRevenue)}</p>
             <PercentageBar
               percentage={
                 totalRevenue ? (subscriptionsRevenue / totalRevenue) * 100 : 0
@@ -379,7 +381,7 @@ const AffiliatePage = ({
               {affiliateConfig?.tokenSaleCommissionPercent || 0}%{' '}
               {t('affiliate_commission')})
             </p>
-            <p className="font-bold">€{tokenSaleRevenue.toFixed(2)}</p>
+            <p className="font-bold">{formatEurAmount(tokenSaleRevenue)}</p>
             <PercentageBar
               percentage={
                 totalRevenue ? (tokenSaleRevenue / totalRevenue) * 100 : 0
@@ -392,7 +394,7 @@ const AffiliatePage = ({
               {affiliateConfig?.financedTokenSaleCommissionPercent || 0}%{' '}
               {t('affiliate_commission')})
             </p>
-            <p className="font-bold">€{financedTokenRevenue.toFixed(2)}</p>
+            <p className="font-bold">{formatEurAmount(financedTokenRevenue)}</p>
             <PercentageBar
               percentage={
                 totalRevenue ? (financedTokenRevenue / totalRevenue) * 100 : 0
@@ -417,7 +419,7 @@ const AffiliatePage = ({
                   <div key={payout._id} className="grid grid-cols-2 gap-2 pt-1">
                     <p>{payout.created?.slice(0, 10) || ''}</p>
                     <p className="text-right">
-                      €{payout.amount?.total?.val?.toLocaleString() || '0'}
+                      {formatEurAmount(payout.amount?.total?.val || 0)}
                     </p>
                   </div>
                 ))}

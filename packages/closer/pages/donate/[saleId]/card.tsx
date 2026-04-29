@@ -65,11 +65,7 @@ function DonateCardPage({ generalConfig }: DonateCardPageProps) {
 
   const handlePaid = () => {
     if (!cardPayload) return;
-    router.push(
-      `/donate/success?amount=${amount}&method=card&saleId=${encodeURIComponent(
-        cardPayload.result.saleId,
-      )}`,
-    );
+    router.push(`/sale/${encodeURIComponent(cardPayload.result.saleId)}`);
   };
 
   if (!router.isReady || isAuthLoading || session === 'loading') {

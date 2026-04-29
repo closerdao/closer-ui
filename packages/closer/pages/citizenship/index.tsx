@@ -39,6 +39,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { CitizenshipConfig } from '../../types/api';
 import api from '../../utils/api';
 import { twitterUrlToHandle } from '../../utils/app.helpers';
+import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
@@ -590,7 +591,7 @@ const CitizenshipPage = ({
                       {t('citizenship_from')}
                     </div>
                     <div className="text-4xl font-semibold leading-tight">
-                      €{tokenPlans[0]?.monthlyPayment || 0}
+                      {formatIsoFiatAmount(tokenPlans[0]?.monthlyPayment || 0, 'EUR')}
                       <span className="text-base font-normal">
                         {t('citizenship_per_month')}
                       </span>

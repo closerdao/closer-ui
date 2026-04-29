@@ -81,6 +81,40 @@ export function formatIsoFiatAmount(
   }
 }
 
+export function formatIntlNumberTwoDecimals(amount: number, locale?: string): string {
+  const loc = locale ?? getDefaultCurrencyLocale();
+  return new Intl.NumberFormat(loc, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+export function formatCompactCurrencyAmount(
+  amount: number,
+  currencyCode: string,
+  locale?: string,
+): string {
+  const loc = locale ?? 'en-US';
+  try {
+    const formatted = new Intl.NumberFormat(loc, {
+      style: 'currency',
+      currency: currencyCode,
+      notation: 'compact',
+      maximumFractionDigits: 1,
+    }).format(amount);
+    return formatted.replace('K', 'k');
+  } catch {
+    const symbol = getCurrencySymbol(currencyCode);
+    const compact = new Intl.NumberFormat(loc, {
+      notation: 'compact',
+      maximumFractionDigits: 1,
+    })
+      .format(amount)
+      .replace('K', 'k');
+    return `${symbol}${compact}`;
+  }
+}
+
 export function parseTokenUnits(amount: string | number, decimals: number): bigint {
   let str = typeof amount === 'number' ? amount.toFixed(decimals) : String(amount);
 

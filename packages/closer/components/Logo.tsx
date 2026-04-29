@@ -10,6 +10,11 @@ const Logo: FC = () => {
   const APP_NAME = config.APP_NAME ?? '';
   const LOGO_HEADER = config.LOGO_HEADER ?? '';
   const PLATFORM_NAME = config.PLATFORM_NAME ?? '';
+  const isConfigLoading = config?._configLoaded === false;
+
+  if (isConfigLoading) {
+    return <div />;
+  }
 
   return PLATFORM_NAME !== '[object Object]' ? (
     <Link href="/" className="block ">

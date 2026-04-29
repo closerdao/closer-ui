@@ -20,6 +20,7 @@ import { useTranslations } from 'next-intl';
 import { TOKEN_SALE_STEPS_BANK_TRANSFER } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
@@ -34,7 +35,9 @@ const BankTransferPage = ({ generalConfig }: Props) => {
   const t = useTranslations();
 
   const router = useRouter();
-  const { totalFiat, tokens } = router.query;
+  const { totalFiat, tokens, saleId } = router.query;
+
+  useSalePaidRedirect();
 
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
@@ -127,9 +130,27 @@ const BankTransferPage = ({ generalConfig }: Props) => {
           point: 0,
           category: 'engagement',
         });
-        router.push(
-          `/token/success?totalFiat=${totalFiat}&tokenSaleType=fiat&ibanNumber=${ibanNumber}&memoCode=${res?.data?.memoCode}`,
-        );
+        const memo =
+          typeof res?.data?.memoCode === 'string' ? res.data.memoCode : '';
+        const sid =
+          typeof saleId === 'string'
+            ? saleId
+            : Array.isArray(saleId)
+              ? saleId[0]
+              : '';
+        const tf =
+          typeof totalFiat === 'string'
+            ? totalFiat
+            : Array.isArray(totalFiat)
+              ? totalFiat[0]
+              : String(totalFiat ?? '');
+        const qs = new URLSearchParams({
+          totalFiat: tf,
+          tokenSaleType: 'fiat',
+          ibanNumber: ibanNumber.replace(/\s/g, ''),
+          memoCode: memo,
+        }).toString();
+        router.push(`/sale/${encodeURIComponent(sid)}?${qs}`);
       }
     } catch (error) {
       setError(parseMessageFromError(error));

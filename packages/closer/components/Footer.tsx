@@ -27,6 +27,9 @@ const Footer: FC = () => {
     TELEGRAM_URL,
     TWITTER_URL,
   } = config || {};
+  const isLearningHubEnabled =
+    config?.learningHub?.enabled === true &&
+    process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true';
 
   const isCloserApp = APP_NAME?.toLowerCase() === 'closer';
 
@@ -135,6 +138,14 @@ const Footer: FC = () => {
               <p className="text-sm font-medium text-foreground/70">
                 {t('footer_mission')}
               </p>
+              {isLearningHubEnabled && (
+                <Link
+                  href="/learn/category/all"
+                  className="text-xs underline hover:text-accent"
+                >
+                  {t('navigation_learning_hub')}
+                </Link>
+              )}
               <p className="text-xs">
                 {t('footer_phrase')}{' '}
                 <a href="https://closer.earth" className="underline hover:text-accent">

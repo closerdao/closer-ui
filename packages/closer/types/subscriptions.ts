@@ -66,7 +66,10 @@ export interface FinanceApplication {
     | 'pending-payment'
     | 'paid'
     | 'cancelled'
-    | 'completed';
+    | 'completed'
+    | 'pending'
+    | 'delinquent'
+    | 'up-to-date';
   iban: string;
   tokensToFinance: number;
   totalToPayInFiat: number;
@@ -74,6 +77,25 @@ export interface FinanceApplication {
   downPaymentAmount: number;
   charges: any[];
   isCitizenApplication?: boolean;
+  durationInMonths?: number;
+  isDownPaymentMade?: boolean;
+  isAnnualCreditsAwarded?: boolean;
+  paymentsScheduled?: Record<
+    string,
+    {
+      status: 'pending' | 'paid';
+      amountPaid: number;
+      paymentDate: string | Date;
+    }
+  >;
+  tokensAccrued?: number;
+  tokensDistributed?: number;
+  tokenDistributions?: Array<{
+    amount: number;
+    date: string | Date;
+    createdBy: string;
+    txHash: string;
+  }>;
   visibility: 'public' | 'private';
   visibleBy: string[];
   createdBy: string;

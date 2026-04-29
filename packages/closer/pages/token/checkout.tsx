@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import Wallet from '../../components/Wallet';
 import {
@@ -21,11 +21,13 @@ import { MIN_CELO_FOR_GAS, TOKEN_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
+import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
-import { getReserveTokenDisplay } from '../../utils/config.utils';
 import { parseMessageFromError } from '../../utils/common';
+import { formatIntlNumberTwoDecimals } from '../../utils/currencyFormat';
+import { getReserveTokenDisplay } from '../../utils/config.utils';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
@@ -39,27 +41,49 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
   const router = useRouter();
-  const { tokens } = router.query || { tokens: '33' };
+  const { tokens, saleId } = router.query || { tokens: '33' };
+
+  useSalePaidRedirect();
 
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
 
   const config = useConfig() || {};
   const reserveToken = getReserveTokenDisplay(config);
-  const { buyTokens, getTotalCost, isCeurApproved, approveCeur, isPending, isConfigReady } =
-    useBuyTokens();
+  const {
+    buyTokens,
+    getTotalCost,
+    isCeurApproved,
+    approveCeur,
+    isPending,
+    isConfigReady,
+  } = useBuyTokens();
   const [total, setTotal] = useState<number>(0);
   const [isApproved, setIsApproved] = useState<boolean>(false);
 
-  const { isAuthenticated, isLoading, user } = useAuth();
-  const { isWalletReady, balanceCeurAvailable, balanceCeloAvailable } = useContext(WalletState);
+  const { isAuthenticated, isLoading } = useAuth();
+  const { isWalletReady, balanceCeurAvailable, balanceCeloAvailable } =
+    useContext(WalletState);
 
   const [web3Error, setWeb3Error] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [pendingValidationTxHash, setPendingValidationTxHash] = useState<string | null>(null);
 
   const [isMetamaskLoading, setIsMetamaskLoading] = useState(false);
 
-  const unitPrice = (total / parseInt(tokens as string)).toFixed(2);
+  const formattedUnitPrice = useMemo(() => {
+    const qty = parseInt(tokens as string, 10);
+    const n = qty > 0 ? total / qty : 0;
+    return formatIntlNumberTwoDecimals(
+      Number.isFinite(n) ? n : 0,
+      router.locale || undefined,
+    );
+  }, [total, tokens, router.locale]);
+
+  const formattedTotalAmount = useMemo(
+    () => formatIntlNumberTwoDecimals(total, router.locale || undefined),
+    [total, router.locale],
+  );
 
   const hasComponentRendered = useRef(false);
 
@@ -99,11 +123,11 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   }, [isWalletReady, isConfigReady]);
 
   const goBack = async () => {
-    if (user && user.kycPassed) {
-      router.push(`/token/before-you-begin?tokens=${tokens}`);
-    } else {
-      router.push(`/token/nationality?tokens=${tokens}`);
-    }
+    router.push(
+      `/token/nationality?tokenSaleType=crypto&tokens=${encodeURIComponent(
+        String(tokens || ''),
+      )}&saleId=${encodeURIComponent(String(saleId || ''))}`,
+    );
   };
 
   const handleApprovalTx = async () => {
@@ -128,7 +152,12 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
       })();
     } else {
       if (userMessage) {
-        setWeb3Error(t('token_sale_approval_error_reason', { reason: userMessage, reserveToken }));
+        setWeb3Error(
+          t('token_sale_approval_error_reason', {
+            reason: userMessage,
+            reserveToken,
+          }),
+        );
       } else {
         setWeb3Error(t('token_sale_approval_error', { reserveToken }));
       }
@@ -139,72 +168,51 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   const handlePurchaseTx = async () => {
     setWeb3Error(null);
     setApiError(null);
+    setPendingValidationTxHash(null);
     setIsMetamaskLoading(true);
-    const { success, txHash, errorCode, userMessage } = await buyTokens(tokens as string);
+    const normalizedSaleId = String(saleId || '').trim();
+    if (!normalizedSaleId) {
+      setApiError(t('donate_create_invalid_response'));
+      setIsMetamaskLoading(false);
+      return;
+    }
+    const { success, txHash, errorCode, userMessage } = await buyTokens(
+      tokens as string,
+    );
     if (success) {
       try {
-        await api.post('/accounting/token-sales-log', {
-          txHash,
-          unitPrice,
-          tokens,
-          total,
-          userId: user?._id,
-        });
-      } catch (error) {
-        console.error('Error logging page view:', error);
-        setApiError(parseMessageFromError(error));
-      }
-
-      try {
-        await api.post('/metric', {
-          event: 'token-sale',
-          value: Number(tokens),
-          point: Number(tokens),
-          category: 'revenue',
-        });
-      } catch (error) {
-        console.error('Error logging metric:', error);
-      }
-      try {
-        await api.post('/token-sale', {
-          totalStablecoin: total,
-          tokens,
-          txHash,
-          userId: user?._id,
-        });
-      } catch (error) {
-        console.error('Error logging metric:', error);
-
-      }
-
-      try {
-        (async () => {
-          try {
-            await api.post('/metric', {
-              event: 'success',
-              value: 'token-sale',
-              point: 0,
-              category: 'engagement',
-            });
-          } catch (error) {
-            console.error('Error logging page view:', error);
-          }
-        })();
+        await api.post(
+          `/sale/${encodeURIComponent(normalizedSaleId)}/confirm-token-sale`,
+          {
+            txHash,
+          },
+        );
       } catch (error: unknown) {
-        setApiError(parseMessageFromError(error));
-      } finally {
+        setPendingValidationTxHash(txHash || null);
+        setApiError(
+          t('token_sale_validation_failed_error', {
+            error_details: parseMessageFromError(error),
+          }),
+        );
         setIsMetamaskLoading(false);
+        return;
       }
-      router.push(
-        `/token/success?amountOfTokensPurchased=${tokens}&transactionId=${txHash}`,
-      );
+
+      router.push(`/sale/${encodeURIComponent(normalizedSaleId)}`);
     } else {
       if (errorCode === 'MAX_SUPPLY') {
         setWeb3Error(t('token_sale_buy_error_max_supply'));
       } else if (errorCode === 'INSUFFICIENT_BALANCE') {
-        setWeb3Error(t('token_sale_buy_error_insufficient_balance', { reserveToken }));
+        setWeb3Error(
+          t('token_sale_buy_error_insufficient_balance', { reserveToken }),
+        );
       } else if (userMessage) {
-        setWeb3Error(t('token_sale_buy_error_reason', { reason: userMessage, reserveToken }));
+        setWeb3Error(
+          t('token_sale_buy_error_reason', {
+            reason: userMessage,
+            reserveToken,
+          }),
+        );
       } else {
         setWeb3Error(t('token_sale_buy_error', { reserveToken }));
       }
@@ -212,8 +220,37 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     }
   };
 
+  const handleRetrySaleValidation = async () => {
+    setWeb3Error(null);
+    setApiError(null);
+    setIsMetamaskLoading(true);
+
+    const normalizedSaleId = String(saleId || '').trim();
+    if (!normalizedSaleId || !pendingValidationTxHash) {
+      setApiError(t('donate_create_invalid_response'));
+      setIsMetamaskLoading(false);
+      return;
+    }
+
+    try {
+      await api.post(`/sale/${encodeURIComponent(normalizedSaleId)}/confirm-token-sale`, {
+        txHash: pendingValidationTxHash,
+      });
+      setPendingValidationTxHash(null);
+      router.push(`/sale/${encodeURIComponent(normalizedSaleId)}`);
+    } catch (error: unknown) {
+      setApiError(
+        t('token_sale_validation_failed_error', {
+          error_details: parseMessageFromError(error),
+        }),
+      );
+    } finally {
+      setIsMetamaskLoading(false);
+    }
+  };
+
   const handleEditAmount = () => {
-    router.push(`/token/before-you-begin?tokens=${tokens}`);
+    router.push(`/token/before-you-begin?tokens=${tokens}&saleId=${saleId}`);
   };
 
   if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
@@ -265,7 +302,9 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
                     ⚠️
                   </span>
                   <p className="text-sm font-medium">
-                    {t('token_sale_not_enough_reserve_for_purchase', { reserveToken })}
+                    {t('token_sale_not_enough_reserve_for_purchase', {
+                      reserveToken,
+                    })}
                   </p>
                 </div>
               )}
@@ -275,43 +314,36 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
         <main className="pt- pb-24 flex flex-col gap-12">
           <div className="">
             <Heading level={3} hasBorder={true}>
-              🏡 {t('token_sale_checkout_your_purchse')}
+              ➕ {t('token_sale_checkout_total')}
             </Heading>
-            <div className="mb-10">
+            <div className="flex flex-col gap-6">
               <Row
                 rowKey={t('token_sale_token_symbol')}
                 value={tokens?.toString()}
                 additionalInfo={`1 ${t(
                   'token_sale_token_symbol',
-                )} = ${unitPrice} ${reserveToken}`}
+                )} = ${formattedUnitPrice} ${reserveToken}`}
               />
-            </div>
-            <Button
-              className="mt-3"
-              variant="secondary"
-              onClick={handleEditAmount}
-            >
-              {t('subscriptions_summary_edit_button')}
-            </Button>
-          </div>
-          <div className="">
-            <Heading level={3} hasBorder={true}>
-              ➕ {t('token_sale_checkout_total')}
-            </Heading>
-            <div className="flex flex-col gap-6">
               <Row
                 rowKey={t('token_sale_checkout_total')}
-                value={`${t('token_sale_source_token', { reserveToken })} ${total} `}
-                additionalInfo={t('token_sale_ceur_disclaimer', { reserveToken })}
+                value={`${t('token_sale_source_token', {
+                  reserveToken,
+                })} ${formattedTotalAmount} `}
+                additionalInfo={t('token_sale_ceur_disclaimer', {
+                  reserveToken,
+                })}
               />
             </div>
           </div>
 
           {isApproved ? (
             <Button
-              onClick={handlePurchaseTx}
+              className="normal-case tracking-normal"
+              onClick={pendingValidationTxHash ? handleRetrySaleValidation : handlePurchaseTx}
               isEnabled={
-                !isPending && !isMetamaskLoading && balanceCeurAvailable > total
+                !isPending &&
+                !isMetamaskLoading &&
+                (pendingValidationTxHash !== null || balanceCeurAvailable > total)
               }
             >
               {isPending || isMetamaskLoading ? (
@@ -320,11 +352,14 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
                   {t('token_sale_checkout_button_pending_transaction')}
                 </div>
               ) : (
-                t('token_sale_checkout_button_purchase_transaction')
+                pendingValidationTxHash
+                  ? t('token_sale_checkout_button_retry_validation')
+                  : t('token_sale_checkout_button_purchase_transaction')
               )}
             </Button>
           ) : (
             <Button
+              className="normal-case tracking-normal"
               onClick={handleApprovalTx}
               isEnabled={
                 !isPending && !isMetamaskLoading && balanceCeurAvailable > total
@@ -336,13 +371,13 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
                   {t('token_sale_checkout_button_pending_transaction')}
                 </div>
               ) : (
-                t('token_sale_checkout_button_approve_transaction', { reserveToken })
+                t('token_sale_checkout_button_approve_transaction', {
+                  reserveToken,
+                })
               )}
             </Button>
           )}
-          {web3Error && (
-            <ErrorMessage error={web3Error} />
-          )}
+          {web3Error && <ErrorMessage error={web3Error} />}
           {apiError && <ErrorMessage error={apiError} />}
         </main>
       </div>

@@ -8,7 +8,7 @@ import { listings } from '../../mocks/listings';
 import { subscriptionsConfig } from '../../mocks/subscriptions';
 
 describe('Subscriptions', () => {
-  it('should have a proper title', async () => {
+  it('should render featured plan heading', async () => {
     renderWithProviders(
       <SubscriptionsPage
         listings={listings}
@@ -22,13 +22,13 @@ describe('Subscriptions', () => {
     });
 
     const title = screen.getByRole('heading', {
-      name: /Subscriptions/i,
+      name: /Explorer/i,
     });
 
     expect(title).toBeInTheDocument();
   });
 
-  it('should show free plan card by default', async () => {
+  it('should show create account CTA by default', async () => {
     renderWithProviders(
       <SubscriptionsPage
         listings={listings}

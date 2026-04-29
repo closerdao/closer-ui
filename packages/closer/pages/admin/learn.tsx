@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { parseMessageFromError } from '../../utils/common';
+import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 import api from '../../utils/api';
@@ -168,7 +169,7 @@ const LearnDashboardPage = ({ bookingConfig }: { bookingConfig: BookingConfig })
                                   </div>
                                   <div className="sm:w-1/3">{buyer?.email}</div>
                                   <div className="text-left sm:text-right sm:w-1/3 border-b sm:border-b-0">
-                                    €{buyer?.amount}
+                                    {formatIsoFiatAmount(buyer?.amount || 0, 'EUR')}
                                   </div>
                                 </div>
                               );

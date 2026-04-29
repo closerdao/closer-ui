@@ -107,17 +107,13 @@ function DonateCryptoPage({ generalConfig }: DonateCryptoPageProps) {
         to: cryptoBlock.treasuryAddress,
         humanAmount: cryptoBlock.expectedAmount,
       });
-      await api.post(`/donations/${cryptoBlock.saleId}/confirm-crypto`, {
+      await api.post(`/sale/${cryptoBlock.saleId}/confirm-crypto`, {
         txHash,
       });
       if (typeof updateWalletBalance === 'function') {
         updateWalletBalance();
       }
-      router.push(
-        `/donate/success?amount=${amount}&method=crypto&saleId=${encodeURIComponent(
-          cryptoBlock.saleId,
-        )}`,
-      );
+      router.push(`/sale/${encodeURIComponent(cryptoBlock.saleId)}`);
     } catch (err: unknown) {
       setCryptoError(parseMessageFromError(err));
     } finally {
@@ -186,7 +182,6 @@ function DonateCryptoPage({ generalConfig }: DonateCryptoPageProps) {
         <Heading level={1} className="mb-0">
           {t('donate_crypto_head_title')}
         </Heading>
-        <p className="text-sm text-gray-700">{t('donate_crypto_network')}</p>
         <p className="text-sm text-gray-700">
           {t('donate_crypto_send_exact', {
             amount: priceFormat(cryptoBlock.expectedAmount, DEFAULT_CURRENCY),

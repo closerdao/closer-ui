@@ -31,6 +31,7 @@ export const models = [
   'metric',
   'charge',
   'sale',
+  'financeapplication',
   'vote',
   'cohousingapplication',
 ];

@@ -290,11 +290,34 @@ export type InvestPageOptions = {
   donationHref?: string;
 };
 
+export type AccountingEntityElement = {
+  _id?: string;
+  legalName: string;
+  taxNumber?: string;
+  address?: string;
+  accountingDescription?: string;
+  products?: string[];
+  iban?: string;
+  bic?: string;
+};
+
+export type AccountingEntitiesConfig = {
+  enabled?: boolean;
+  elements?: AccountingEntityElement[];
+};
+
 export type TokenSale = {
   name: string;
   total_price: number;
+  currency?: string;
   product_type: 'token';
   quantity?: number;
+  entity?: string;
+  memoCode?: string;
+  paymentMethod?: 'bank' | 'card' | 'crypto';
+  charge?: string;
+  chargeId?: string;
+  charges?: string[];
   tx_hash?: string;
   meta?: {
     normalizedSenderIban?: string;

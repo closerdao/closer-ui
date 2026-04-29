@@ -131,7 +131,7 @@ const LearnMorePage = () => {
         </div>
       </section>
 
-      <nav className="sticky top-20 z-40 bg-white border-b border-gray-200 shadow-sm">
+      <nav className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex gap-1 overflow-x-auto py-3 scrollbar-hide">
             {TOPICS.map((topic) => (

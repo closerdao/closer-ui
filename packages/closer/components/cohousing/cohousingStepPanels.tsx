@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import Button from '../ui/Button';
+import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import {
   COHOUSING_UNITS,
   type CohousingStepDef,
@@ -252,6 +253,7 @@ export const CommitmentPanel = ({
   onPoolAdd: (n: number) => void;
 }) => {
   const t = useTranslations();
+  const formatEurAmount = (amount: number) => formatIsoFiatAmount(amount || 0, 'EUR');
   const [tier, setTier] = useState<'low' | 'standard' | null>(null);
   const [topup, setTopup] = useState<number | 'custom' | 0>(0);
   const [topupCustom, setTopupCustom] = useState('');
@@ -360,20 +362,20 @@ export const CommitmentPanel = ({
             </span>
             <div className="mt-2 flex justify-between text-sm">
               <span className="text-gray-600">{t('cohousing_commit_reservation_line')}</span>
-              <span className="font-sans tabular-nums font-bold">€{reservation.toLocaleString()}</span>
+              <span className="font-sans tabular-nums font-bold">{formatEurAmount(reservation)}</span>
             </div>
             {topupAmount > 0 && (
               <div className="flex justify-between text-sm mt-1">
                 <span className="text-gray-600">{t('cohousing_commit_topup_line')}</span>
                 <span className="font-sans tabular-nums font-bold">
-                  €{topupAmount.toLocaleString()}
+                  {formatEurAmount(topupAmount)}
                 </span>
               </div>
             )}
             <div className="border-t border-accent/30 my-2" />
             <div className="flex justify-between items-baseline">
               <span className="font-medium text-gray-900">{t('cohousing_commit_total')}</span>
-              <span className="font-sans text-2xl font-black">€{total.toLocaleString()}</span>
+              <span className="font-sans text-2xl font-black">{formatEurAmount(total)}</span>
             </div>
             {financingMode && (
               <p className="text-xs text-gray-500 mt-2">

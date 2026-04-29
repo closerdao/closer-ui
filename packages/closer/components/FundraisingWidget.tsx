@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import { FundraisingConfig } from '../types/api';
+import { formatIsoFiatAmount } from '../utils/currencyFormat';
 import {
   computeMilestoneStates,
   fetchFundraisingBreakdown,
@@ -126,7 +127,7 @@ const FundraisingWidget = ({
     totalGoal > 0 ? Math.min(100, (totalRaised / totalGoal) * 100) : 0;
 
   const formatAmount = (amount: number) => {
-    return `€${Math.round(amount)}`;
+    return formatIsoFiatAmount(Math.round(amount), 'EUR');
   };
 
   const milestoneName =
@@ -173,13 +174,13 @@ const FundraisingWidget = ({
             <div className="mt-4 p-3 bg-accent/10 rounded-lg text-xs font-mono">
               <div className="grid grid-cols-2 gap-1 text-gray-700">
                 <span>Crypto Token Sales:</span>
-                <span className="text-right">€{cryptoTotal.toLocaleString()}</span>
+                <span className="text-right">{formatAmount(cryptoTotal)}</span>
                 <span>Fiat Token Sales:</span>
-                <span className="text-right">€{fiatTotal.toLocaleString()}</span>
+                <span className="text-right">{formatAmount(fiatTotal)}</span>
                 <span className="font-bold border-t border-accent/30 pt-1">Total:</span>
-                <span className="text-right font-bold border-t border-accent/30 pt-1">€{totalRaised.toLocaleString()}</span>
+                <span className="text-right font-bold border-t border-accent/30 pt-1">{formatAmount(totalRaised)}</span>
                 <span>Target:</span>
-                <span className="text-right">€{displayGoal.toLocaleString()}</span>
+                <span className="text-right">{formatAmount(displayGoal)}</span>
                 <span>Progress:</span>
                 <span className="text-right">{progressPercent.toFixed(2)}%</span>
               </div>
@@ -219,13 +220,13 @@ const FundraisingWidget = ({
           <div className="mt-4 p-3 bg-gray-100 rounded-lg text-xs font-mono">
             <div className="grid grid-cols-2 gap-1 text-gray-600">
               <span>Crypto Token Sales:</span>
-              <span className="text-right">€{cryptoTotal.toLocaleString()}</span>
+              <span className="text-right">{formatAmount(cryptoTotal)}</span>
               <span>Fiat Token Sales:</span>
-              <span className="text-right">€{fiatTotal.toLocaleString()}</span>
+              <span className="text-right">{formatAmount(fiatTotal)}</span>
               <span className="font-bold border-t border-gray-300 pt-1">Total:</span>
-              <span className="text-right font-bold border-t border-gray-300 pt-1">€{totalRaised.toLocaleString()}</span>
+              <span className="text-right font-bold border-t border-gray-300 pt-1">{formatAmount(totalRaised)}</span>
               <span>Target:</span>
-              <span className="text-right">€{displayGoal.toLocaleString()}</span>
+              <span className="text-right">{formatAmount(displayGoal)}</span>
               <span>Progress:</span>
               <span className="text-right">{progressPercent.toFixed(2)}%</span>
             </div>

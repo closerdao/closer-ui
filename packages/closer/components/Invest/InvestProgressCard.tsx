@@ -9,7 +9,10 @@ import {
   WhatsappShareButton,
 } from 'react-share';
 
-import { getCurrencySymbol } from '../../utils/currencyFormat';
+import {
+  formatCompactCurrencyAmount,
+  formatIsoFiatAmount,
+} from '../../utils/currencyFormat';
 import { getMilestoneGoal } from '../../utils/fundraising.helpers';
 import { FundraisingMilestone } from '../../types';
 
@@ -45,7 +48,6 @@ const InvestProgressCard = ({
   t,
 }: InvestProgressCardProps) => {
   const router = useRouter();
-  const eur = getCurrencySymbol('EUR');
   const goal = totalGoal || (activeMilestone ? getMilestoneGoal(activeMilestone) : 0);
   const progress = goal > 0 ? Math.min(100, (fundraisingTotal / goal) * 100) : 0;
   const [step, setStep] = useState<'idle' | 'choose' | 'donation'>('idle');
@@ -54,8 +56,9 @@ const InvestProgressCard = ({
   const donationPresets = [25, 50, 100, 250, 500, 1000];
 
   const formatAmount = (amount: number) => {
-    if (amount >= 1000) return `${eur}${Math.round(amount / 1000).toLocaleString()}K`;
-    return `${eur}${amount.toLocaleString()}`;
+    return amount >= 1000
+      ? formatCompactCurrencyAmount(amount, 'EUR')
+      : formatIsoFiatAmount(amount, 'EUR');
   };
 
   const resetFlow = () => {
@@ -192,8 +195,7 @@ const InvestProgressCard = ({
                         : 'border-gray-200 bg-white text-gray-700 hover:border-accent'
                     }`}
                   >
-                    {eur}
-                    {amount}
+                    {formatIsoFiatAmount(amount, 'EUR')}
                   </button>
                 ))}
               </div>

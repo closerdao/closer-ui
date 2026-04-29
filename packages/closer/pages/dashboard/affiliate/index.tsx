@@ -22,6 +22,7 @@ import PageNotAllowed from '../../../pages/401';
 import { BookingConfig } from '../../../types/api';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
+import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 
 const AffiliateDashboardPage = ({
@@ -29,6 +30,7 @@ const AffiliateDashboardPage = ({
 }: {
   bookingConfig: BookingConfig;
 }) => {
+  const formatEurAmount = (amount: number) => formatIsoFiatAmount(amount || 0, 'EUR');
   const t = useTranslations();
   const { user } = useAuth();
   const { platform }: any = usePlatform();
@@ -145,11 +147,11 @@ const AffiliateDashboardPage = ({
               />
               <StatsCard
                 title={t('affiliate_dashboard_total_revenue')}
-                value={`€${totalRevenue?.toLocaleString() || '0'} `}
+                value={formatEurAmount(totalRevenue || 0)}
               />
               <StatsCard
                 title={t('affiliate_dashboard_unpaid_balance')}
-                value={`€${totalUnpaidBalance?.toLocaleString() || '0'} `}
+                value={formatEurAmount(totalUnpaidBalance || 0)}
               />
               <StatsCard
                 title={t('affiliate_dashboard_page_views')}
@@ -205,10 +207,10 @@ const AffiliateDashboardPage = ({
                     </td>
                     <td className="px-3 py-2">{affiliate?.user?.email}</td>
                     <td className="px-3 py-2 text-right">
-                      €{rowRevenue.toLocaleString()}
+                      {formatEurAmount(rowRevenue)}
                     </td>
                     <td className="px-3 py-2 text-right">
-                      €{rowUnpaid.toLocaleString()}
+                      {formatEurAmount(rowUnpaid)}
                     </td>
                     <td className="px-3 py-2">
                       {data?.payoutData
@@ -321,12 +323,10 @@ const AffiliateDashboardPage = ({
                                         )}
                                       </p>
                                       <p className="text-right">
-                                        €
-                                        {charge?.amount?.total?.val?.toLocaleString()}
+                                        {formatEurAmount(charge?.amount?.total?.val || 0)}
                                       </p>
                                       <p className="text-right">
-                                        €
-                                        {charge?.affiliateRevenue?.val?.toLocaleString()}
+                                        {formatEurAmount(charge?.affiliateRevenue?.val || 0)}
                                       </p>
                                       <p className="text-right">
                                         {charge?.created?.slice(0, 10)}
@@ -362,8 +362,7 @@ const AffiliateDashboardPage = ({
                                       className="grid grid-cols-2 gap-2 pt-1"
                                     >
                                       <p className="text-right">
-                                        €
-                                        {payout.amount.total.val.toLocaleString()}
+                                        {formatEurAmount(payout.amount.total.val || 0)}
                                       </p>
                                       <p className="text-right">
                                         {payout.created.slice(0, 10)}

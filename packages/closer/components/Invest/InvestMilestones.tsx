@@ -1,7 +1,10 @@
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 import { FundraisingMilestone, MilestoneStatus } from '../../types';
-import { getCurrencySymbol } from '../../utils/currencyFormat';
+import {
+  formatCompactCurrencyAmount,
+  formatIsoFiatAmount,
+} from '../../utils/currencyFormat';
 import { getMilestoneGoal } from '../../utils/fundraising.helpers';
 
 interface MilestoneState {
@@ -27,9 +30,9 @@ const InvestMilestones = ({
   if (milestones.length === 0) return null;
 
   const formatAmount = (amount: number, currency: string) => {
-    const sym = getCurrencySymbol(currency);
-    if (amount >= 1000) return `${sym}${Math.round(amount / 1000)}K`;
-    return `${sym}${amount.toLocaleString()}`;
+    return amount >= 1000
+      ? formatCompactCurrencyAmount(amount, currency)
+      : formatIsoFiatAmount(amount, currency);
   };
 
   const getBadgeLabel = (index: number, state: MilestoneState) => {

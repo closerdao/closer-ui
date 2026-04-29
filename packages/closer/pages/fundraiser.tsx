@@ -24,7 +24,7 @@ import {
 } from '../types';
 import api from '../utils/api';
 import { twitterUrlToHandle } from '../utils/app.helpers';
-import { getCurrencySymbol } from '../utils/currencyFormat';
+import { formatIsoFiatAmount } from '../utils/currencyFormat';
 import {
   computeMilestoneStates,
   fetchFundraisingBreakdown,
@@ -144,9 +144,7 @@ const FundraiserPage = ({
 
   const formatPrice = (tokens: number) => {
     if (!tokenPrice) return '...';
-    return `${getCurrencySymbol('EUR')}${Math.round(
-      tokens * tokenPrice,
-    ).toLocaleString()}`;
+    return formatIsoFiatAmount(Math.round(tokens * tokenPrice), 'EUR');
   };
 
   const shareUrl = opts.shareUrl || '';

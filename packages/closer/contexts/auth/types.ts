@@ -109,7 +109,7 @@ export type User = {
   referrals?: number;
   actions?: any;
   affiliate?: Date;
-  kycData: {
+  kycData?: {
     IP: string;
     dateRecorded: Date;
     legalName: string;

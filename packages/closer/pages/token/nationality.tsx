@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useRef, useState } from 'react';
 
 import {
   BackButton,
@@ -19,6 +19,7 @@ import { useTranslations } from 'next-intl';
 import { TOKEN_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
@@ -33,9 +34,40 @@ interface Props {
 const NationalityPage = ({ generalConfig }: Props) => {
   const router = useRouter();
 
-  const { totalFiat, tokens, tokenSaleType } = router.query;
+  useSalePaidRedirect();
 
-  const { isAuthenticated, isLoading, refetchUser } = useAuth();
+  const { totalFiat, tokens, tokenSaleType, saleId } = router.query;
+
+  const { isAuthenticated, isLoading, refetchUser, user } = useAuth();
+
+  const didPrefillFromKyc = useRef(false);
+
+  useEffect(() => {
+    if (didPrefillFromKyc.current || !user) return;
+    const k = user.kycData;
+    if (
+      !k ||
+      (!k.legalName?.trim() &&
+        !k.country?.trim() &&
+        !k.address1?.trim())
+    ) {
+      return;
+    }
+    didPrefillFromKyc.current = true;
+    setFormData({
+      required: {
+        name: k.legalName?.trim() || '',
+        phone: user.phone?.trim() || '',
+        address: k.address1?.trim() || '',
+        postalCode: k.postalCode?.trim() || '',
+        city: k.city?.trim() || '',
+        nationality: k.country?.trim() || '',
+      },
+      optional: {
+        taxNo: k.TIN?.trim() || '',
+      },
+    });
+  }, [user]);
 
   const [formData, setFormData] = useState({
     required: {
@@ -103,10 +135,14 @@ const NationalityPage = ({ generalConfig }: Props) => {
 
       if (tokenSaleType === 'fiat') {
         router.push(
-          `/token/bank-transfer?tokens=${tokens}&totalFiat=${totalFiat}`,
+          `/token/bank-transfer?tokens=${tokens}&totalFiat=${totalFiat}&saleId=${saleId}`,
         );
       } else if (tokenSaleType === 'crypto') {
-        router.push(`/token/checkout?tokens=${tokens}`);
+        router.push(`/token/checkout?tokens=${tokens}&saleId=${saleId}`);
+      } else if (tokens && saleId) {
+        router.push(
+          `/token/checkout?tokens=${encodeURIComponent(String(tokens))}&saleId=${encodeURIComponent(String(saleId))}`,
+        );
       }
     } catch (error) {
       setErrorMessage(parseMessageFromError(error));
@@ -196,25 +232,6 @@ const NationalityPage = ({ generalConfig }: Props) => {
         <main className="pt-14 pb-24">
           <div>
             <fieldset className="flex flex-col gap-6 mb-16">
-              <Select
-                label={t('token_sale_label_nationality')}
-                value={formData.required.nationality}
-                options={countries || []}
-                className="h-10"
-                onChange={(value: string) =>
-                  setFormData({
-                    ...formData,
-                    required: { ...formData.required, nationality: value },
-                  })
-                }
-                isRequired
-              />
-              {isRestrictedNationality && (
-                <ErrorMessage
-                  error={t('token_sale_restricted_nationality_warning')}
-                />
-              )}
-
               <Input
                 label={t('token_sale_label_name')}
                 onChange={handleChange}
@@ -275,6 +292,24 @@ const NationalityPage = ({ generalConfig }: Props) => {
                 isRequired={true}
                 
               />
+              <Select
+                label={t('token_sale_label_nationality')}
+                value={formData.required.nationality}
+                options={countries || []}
+                className="h-10"
+                onChange={(value: string) =>
+                  setFormData({
+                    ...formData,
+                    required: { ...formData.required, nationality: value },
+                  })
+                }
+                isRequired
+              />
+              {isRestrictedNationality && (
+                <ErrorMessage
+                  error={t('token_sale_restricted_nationality_warning')}
+                />
+              )}
               {errorMessage && <ErrorMessage error={errorMessage} />}
               {error && <ErrorMessage error={parseMessageFromError(error)} />}
             </fieldset>

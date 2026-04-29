@@ -167,6 +167,11 @@ const GuestMenu = () => {
               enabled: true,
             },
             {
+              label: t('navigation_learning_hub'),
+              url: '/learn/category/all',
+              enabled: isLearningHubEnabled,
+            },
+            {
               label: t('menu_faq'),
               url: '/resources',
               enabled: isFaqEnabled,
@@ -259,7 +264,6 @@ const GuestMenu = () => {
             label: t('navigation_learning_hub'),
             url: '/learn/category/all',
             enabled: isLearningHubEnabled,
-            rbacPage: 'LearningHub',
           },
         ],
       },
