@@ -21,6 +21,7 @@ import { parseMessageFromError } from '../../utils/common';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import { parseSubscriptionPerks } from '../../utils/subscriptionPerks';
+import { sanitizeSubscriptionPerkHtml } from '../../utils/sanitizeSubscriptionPerkHtml';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
@@ -241,7 +242,9 @@ const SubscriptionsPage: NextPage<Props> = ({
                     {perk.title.includes('<') ? (
                       <span
                         className="text-base leading-relaxed font-semibold"
-                        dangerouslySetInnerHTML={{ __html: perk.title }}
+                        dangerouslySetInnerHTML={{
+                          __html: sanitizeSubscriptionPerkHtml(perk.title),
+                        }}
                       />
                     ) : (
                       <p className="text-base leading-relaxed font-semibold">
@@ -252,7 +255,9 @@ const SubscriptionsPage: NextPage<Props> = ({
                       perk.description.includes('<') ? (
                         <span
                           className="text-sm text-foreground/75 leading-relaxed"
-                          dangerouslySetInnerHTML={{ __html: perk.description }}
+                          dangerouslySetInnerHTML={{
+                            __html: sanitizeSubscriptionPerkHtml(perk.description),
+                          }}
                         />
                       ) : (
                         <p className="text-sm text-foreground/75 leading-relaxed">

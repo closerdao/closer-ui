@@ -18,6 +18,7 @@ import { parseMessageFromError } from '../../utils/common';
 import { getCurrencySymbol } from '../../utils/helpers';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import { parseSubscriptionPerks } from '../../utils/subscriptionPerks';
+import { sanitizeSubscriptionPerkHtml } from '../../utils/sanitizeSubscriptionPerkHtml';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
@@ -102,7 +103,9 @@ const UnlockStaysPage = ({ subscriptionsConfig, bookingConfig }: Props) => {
                         {perk.title.includes('<') ? (
                           <span
                             className="block font-medium"
-                            dangerouslySetInnerHTML={{ __html: perk.title }}
+                            dangerouslySetInnerHTML={{
+                              __html: sanitizeSubscriptionPerkHtml(perk.title),
+                            }}
                           />
                         ) : (
                           <span className="block font-medium">{perk.title}</span>
@@ -112,7 +115,9 @@ const UnlockStaysPage = ({ subscriptionsConfig, bookingConfig }: Props) => {
                             <span
                               className="block text-foreground/70 mt-1"
                               dangerouslySetInnerHTML={{
-                                __html: perk.description,
+                                __html: sanitizeSubscriptionPerkHtml(
+                                  perk.description,
+                                ),
                               }}
                             />
                           ) : (

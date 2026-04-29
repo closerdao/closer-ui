@@ -30,6 +30,13 @@ import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
+const firstQueryString = (value: string | string[] | undefined): string =>
+  typeof value === 'string'
+    ? value
+    : Array.isArray(value)
+      ? value[0] ?? ''
+      : '';
+
 interface Props {
   generalConfig: GeneralConfig | null;
 }
@@ -39,6 +46,8 @@ const BankTransferPage = ({ generalConfig }: Props) => {
 
   const router = useRouter();
   const { totalFiat, tokens, saleId } = router.query;
+  const resolvedSaleId = firstQueryString(saleId);
+  const hasValidSaleId = resolvedSaleId.trim().length > 0;
 
   useSalePaidRedirect();
 
@@ -135,12 +144,11 @@ const BankTransferPage = ({ generalConfig }: Props) => {
         });
         const memo =
           typeof res?.data?.memoCode === 'string' ? res.data.memoCode : '';
-        const sid =
-          typeof saleId === 'string'
-            ? saleId
-            : Array.isArray(saleId)
-              ? saleId[0]
-              : '';
+        const sid = resolvedSaleId.trim();
+        if (!sid) {
+          setError(t('token_sale_bank_transfer_missing_sale_id'));
+          return;
+        }
         const tf =
           typeof totalFiat === 'string'
             ? totalFiat
@@ -256,12 +264,20 @@ const BankTransferPage = ({ generalConfig }: Props) => {
               </label>
             </div>
 
-            {error && <ErrorMessage error={error} />}
+            {(error || (router.isReady && !hasValidSaleId)) && (
+              <ErrorMessage
+                error={
+                  error ?? t('token_sale_bank_transfer_missing_sale_id')
+                }
+              />
+            )}
 
             <Button
               onClick={handleNext}
               isLoading={isApiLoading}
               isEnabled={
+                router.isReady &&
+                hasValidSaleId &&
                 isValid(ibanNumber) &&
                 !isApiLoading &&
                 isTokenTermsAccepted &&

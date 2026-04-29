@@ -1025,6 +1025,8 @@
   "token_sale_before_you_begin_guide_2_link": "https://chainlist.org/?search=celo",
   "token_sale_before_you_begin_guide_3_link": "https://ramp.network/buy",
   "token_sale_before_you_begin_guide_link_contact": "https://t.me/+T8NAQJfobqhjYzE0",
+  "token_sale_checklist_status_ready": "Gotowe! Twój portfel jest przygotowany do kontynuacji.",
+  "token_sale_checklist_status_incomplete": "Ukończ wszystkie punkty listy kontrolnej, aby kontynuować.",
   "token_sale_i_should_buy": "I should buy",
   "token_sale_gas_fees_note": "Gas fees are paid in CELO not {reserveToken}. Max fee is ~0.0008 CELO",
   "token_sale_max_wallet_balance": "The total limit per wallet is 915 $TDF. The amount of $TDF you can buy is ",

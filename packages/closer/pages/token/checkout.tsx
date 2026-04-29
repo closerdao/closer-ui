@@ -311,7 +311,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
           </div>
         )}
 
-        <main className="pt- pb-24 flex flex-col gap-12">
+        <main className="pt-14 pb-24 flex flex-col gap-12">
           <div className="">
             <Heading level={3} hasBorder={true}>
               ➕ {t('token_sale_checkout_total')}

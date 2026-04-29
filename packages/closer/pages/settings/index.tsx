@@ -332,7 +332,7 @@ const SettingsPage = ({
         | keyof User['preferences']
         | keyof User
         | keyof User['settings']
-        | keyof User['kycData'],
+        | keyof NonNullable<User['kycData']>,
     ): UpdateUserFunction =>
     async (value: string | string[] | React.ChangeEvent<HTMLInputElement>) => {
       let actualValue: string | string[];

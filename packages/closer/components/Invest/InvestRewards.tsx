@@ -28,7 +28,7 @@ const InvestRewards = ({
     if (pkg.type === 'tokens') return formatPrice(tokens);
     if (pkg.type === 'loan')
       return pkg.minAmount
-        ? `${formatIsoFiatAmount(pkg.minAmount, 'EUR')}+`
+        ? `${formatIsoFiatAmount(Number(pkg.minAmount), 'EUR')}+`
         : `${formatIsoFiatAmount(50000, 'EUR')}+`;
     if (pkg.type === 'credits' && credits)
       return formatIsoFiatAmount(credits * creditPricePerUnit, 'EUR');

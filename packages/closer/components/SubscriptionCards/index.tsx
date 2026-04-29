@@ -10,6 +10,7 @@ import { SubscriptionPlan } from '../../types/subscriptions';
 import { slugify } from '../../utils/common';
 import { getCurrencySymbol } from '../../utils/helpers';
 import { parseSubscriptionPerks } from '../../utils/subscriptionPerks';
+import { sanitizeSubscriptionPerkHtml } from '../../utils/sanitizeSubscriptionPerkHtml';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Heading from '../ui/Heading';
@@ -149,7 +150,9 @@ const SubscriptionCards = ({
                                 {perk.title.includes('<') ? (
                                   <span
                                     className="block font-medium"
-                                    dangerouslySetInnerHTML={{ __html: perk.title }}
+                                    dangerouslySetInnerHTML={{
+                                      __html: sanitizeSubscriptionPerkHtml(perk.title),
+                                    }}
                                   />
                                 ) : (
                                   <span className="block font-medium">
@@ -161,7 +164,9 @@ const SubscriptionCards = ({
                                     <span
                                       className="block text-foreground/70 mt-1"
                                       dangerouslySetInnerHTML={{
-                                        __html: perk.description,
+                                        __html: sanitizeSubscriptionPerkHtml(
+                                          perk.description,
+                                        ),
                                       }}
                                     />
                                   ) : (
