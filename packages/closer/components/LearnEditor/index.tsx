@@ -1,6 +1,6 @@
 import { ChangeEvent, useState } from 'react';
 
-import { ObjectId } from 'bson';
+import { ObjectId } from '../../utils/bsonObjectId';
 import { useTranslations } from 'next-intl';
 
 import { Button, Card, Checkbox, Heading, Input } from '../ui';

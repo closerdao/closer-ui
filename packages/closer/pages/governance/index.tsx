@@ -15,7 +15,7 @@ const GovernancePage: NextPage = () => {
   return (
     <>
       <Head>
-        <title>{t('governance_title')} - {appName}</title>
+        <title>{`${t('governance_title')} - ${appName}`}</title>
         <meta
           name="description"
           content={t('governance_meta_description')}

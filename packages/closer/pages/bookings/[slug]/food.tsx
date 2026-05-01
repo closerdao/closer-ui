@@ -26,7 +26,8 @@ import {
 } from '../../../types';
 import { FoodOption } from '../../../types/food';
 import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
-import api from '../../../utils/api';
+import api, { cdn } from '../../../utils/api';
+import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import {
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
@@ -40,7 +41,6 @@ import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
-import { cdn } from '../../../utils/api';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Props extends BaseBookingParams {
@@ -697,11 +697,7 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
     const [bookingRes, configs, foodRes, messages] = await Promise.all([
       api
         .get(`/booking/${query.slug}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         })
         .catch(() => null),
       getConfig(api),
@@ -717,19 +713,11 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
     const [optionalEvent, optionalListing] = await Promise.all([
       booking?.eventId &&
         api.get(`/event/${booking?.eventId}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         }),
       booking?.listing &&
         api.get(`/listing/${booking?.listing}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         }),
     ]);
     const event = optionalEvent?.data?.results;

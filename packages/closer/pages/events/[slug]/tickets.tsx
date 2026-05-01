@@ -18,6 +18,7 @@ import { usePlatform } from '../../../contexts/platform';
 import { Event } from '../../../types';
 import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api from '../../../utils/api';
+import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
@@ -149,11 +150,7 @@ EventTickets.getInitialProps = async (context: NextPageContext) => {
     const [eventRes, configs, messages] = await Promise.all([
       api
         .get(`/event/${query.slug}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         })
         .catch((err) => {
           console.error('Error fetching event:', err);

@@ -26,6 +26,7 @@ import { CloserCurrencies } from '../../../types/currency';
 import { Event, Listing } from '../../../types';
 import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api, { cdn } from '../../../utils/api';
+import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { getAccommodationPriceRange } from '../../../utils/events.helpers';
 import {
@@ -839,11 +840,7 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
     const [event, listings, configs, messages] = await Promise.all([
       api
         .get(`/event/${query.slug}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         })
         .catch((err) => {
           console.error('Error fetching event:', err);
@@ -876,11 +873,7 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
       const {
         data: { results: eventCreatorData },
       } = await api.get(`/user/${eventCreatorId}`, {
-        headers: (req as NextApiRequest)?.cookies?.access_token && {
-          Authorization: `Bearer ${
-            (req as NextApiRequest)?.cookies?.access_token
-          }`,
-        },
+        headers: getBearerAuthHeaders(req as NextApiRequest),
       });
       eventCreator = eventCreatorData;
       descriptionText = convert(event?.data.results.description, options)

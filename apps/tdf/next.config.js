@@ -16,6 +16,9 @@ const withMDX = require('@next/mdx')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    largePageDataBytes: 512 * 1024,
+  },
   async redirects() {
     return [
       { source: '/admin/manage-users', destination: '/dashboard/admin/manage-users', permanent: true },
@@ -35,7 +38,6 @@ const nextConfig = {
   reactStrictMode: false,
   transpilePackages: [
     'closer',
-    'recharts',
     '@reown/appkit',
     '@reown/appkit-adapter-ethers5',
     '@reown/appkit-common',
@@ -60,8 +62,8 @@ const nextConfig = {
   },
   webpack: (config) => {
     config.experiments = {
+      ...config.experiments,
       topLevelAwait: true,
-      layers: true,
     };
     return config;
   },

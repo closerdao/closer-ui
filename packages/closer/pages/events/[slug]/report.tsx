@@ -22,6 +22,7 @@ import { useConfig } from '../../../hooks/useConfig';
 import PageNotAllowed from '../../401';
 import PageNotFound from '../../not-found';
 import api from '../../../utils/api';
+import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
@@ -172,7 +173,7 @@ const EventReport = ({ event, error }: Props) => {
   return (
     <>
       <Head>
-        <title>{event.name} - {t('event_report')}</title>
+        <title>{`${event.name} - ${t('event_report')}`}</title>
       </Head>
       <main className="main-content w-full">
         <div className="mb-6">
@@ -323,11 +324,7 @@ EventReport.getInitialProps = async (context: NextPageContext) => {
     const [eventRes, messages] = await Promise.all([
       api
         .get(`/event/${query.slug}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         })
         .catch((err) => {
           console.error('Error fetching event:', err);

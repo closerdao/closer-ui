@@ -90,7 +90,7 @@ const PrivacyPolicyPage = ({ accountingEntities }: PrivacyPolicyPageProps) => {
   return (
     <>
       <Head>
-        <title>{t('privacy_policy_title')} — {platformName}</title>
+        <title>{`${t('privacy_policy_title')} — ${platformName}`}</title>
         <meta name="description" content={t('privacy_policy_meta', { platformName })} />
         <meta name="robots" content="noindex, follow" />
         
