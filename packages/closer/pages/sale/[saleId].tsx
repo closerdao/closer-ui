@@ -8,6 +8,9 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
+import ConfirmationCelebrationOverlay, {
+  CONFIRMATION_CELEBRATION_DURATION_MS,
+} from '../../components/ConfirmationCelebrationOverlay';
 import Wallet from '../../components/Wallet';
 import { Badge } from '../../components/ui/badge';
 import { Button, Card, ErrorMessage, Heading, Spinner } from '../../components/ui';
@@ -33,9 +36,6 @@ import { getTransactionExplorerUrl } from '../../utils/transactionExplorerUrl';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import { TOKEN_PURCHASE_TERMS_DOC_URL } from '../../constants';
 import PageNotFound from '../not-found';
-
-const CELEBRATION_DURATION_MS = 2800;
-const OVERLAY_FADE_MS = 500;
 
 interface Props {
   generalConfig: GeneralConfig | null;
@@ -141,7 +141,10 @@ const SaleSummaryPage = ({
   useEffect(() => {
     if (!sale || !router.isReady || !showCelebrationShell) return;
     setShowCelebration(true);
-    const timer = window.setTimeout(() => setShowCelebration(false), CELEBRATION_DURATION_MS);
+    const timer = window.setTimeout(
+      () => setShowCelebration(false),
+      CONFIRMATION_CELEBRATION_DURATION_MS,
+    );
     return () => window.clearTimeout(timer);
   }, [sale, router.isReady, showCelebrationShell]);
 
@@ -313,239 +316,10 @@ const SaleSummaryPage = ({
       </Head>
 
       {sale && !saleError && showCelebrationShell && (
-        <>
-          <div
-            aria-hidden
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white"
-            style={{
-              opacity: showCelebration ? 1 : 0,
-              pointerEvents: showCelebration ? 'auto' : 'none',
-              transition: `opacity ${OVERLAY_FADE_MS}ms ease-out`,
-            }}
-          >
-            <div className="confirmation-celebration__particles">
-              {[...Array(24)].map((_, i) => (
-                <span
-                  key={i}
-                  className="confirmation-celebration__particle"
-                  style={{ animationDelay: `${i * 0.04}s` }}
-                />
-              ))}
-            </div>
-            <div className="flex flex-col items-center gap-6 relative z-10 px-4">
-              <div
-                className="flex h-24 w-24 items-center justify-center rounded-full bg-success"
-                style={{
-                  animation: showCelebration
-                    ? 'confirmation-check-pop 0.5s ease-out forwards'
-                    : 'none',
-                }}
-              >
-                <svg
-                  className="h-12 w-12 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h2 className="text-center text-2xl font-semibold text-foreground">
-                {celebrationOverlayHeading}
-              </h2>
-            </div>
-          </div>
-          <style jsx global>{`
-            @keyframes confirmation-check-pop {
-              0% {
-                opacity: 0;
-                transform: scale(0.4);
-              }
-              70% {
-                transform: scale(1.05);
-              }
-              100% {
-                opacity: 1;
-                transform: scale(1);
-              }
-            }
-            .confirmation-celebration__particles {
-              position: fixed;
-              inset: 0;
-              pointer-events: none;
-              overflow: hidden;
-            }
-            .confirmation-celebration__particle {
-              position: absolute;
-              left: 50%;
-              top: 50%;
-              width: 8px;
-              height: 8px;
-              margin-left: -4px;
-              margin-top: -4px;
-              border-radius: 2px;
-              animation: confirmation-confetti 1.8s ease-out forwards;
-              opacity: 0;
-            }
-            .confirmation-celebration__particle:nth-child(1) {
-              background: #58b741;
-              --tx: 120px;
-              --ty: -80px;
-              --r: 180deg;
-            }
-            .confirmation-celebration__particle:nth-child(2) {
-              background: #e4427d;
-              --tx: -100px;
-              --ty: -100px;
-              --r: -120deg;
-            }
-            .confirmation-celebration__particle:nth-child(3) {
-              background: #e8ab1b;
-              --tx: 90px;
-              --ty: 100px;
-              --r: 90deg;
-            }
-            .confirmation-celebration__particle:nth-child(4) {
-              background: #1b3bc3;
-              --tx: -130px;
-              --ty: 60px;
-              --r: -60deg;
-            }
-            .confirmation-celebration__particle:nth-child(5) {
-              background: #58b741;
-              --tx: 0;
-              --ty: -150px;
-              --r: 45deg;
-            }
-            .confirmation-celebration__particle:nth-child(6) {
-              background: #e4427d;
-              --tx: 140px;
-              --ty: 20px;
-              --r: 200deg;
-            }
-            .confirmation-celebration__particle:nth-child(7) {
-              background: #e8ab1b;
-              --tx: -80px;
-              --ty: -120px;
-              --r: -90deg;
-            }
-            .confirmation-celebration__particle:nth-child(8) {
-              background: #1b3bc3;
-              --tx: -110px;
-              --ty: -50px;
-              --r: 120deg;
-            }
-            .confirmation-celebration__particle:nth-child(9) {
-              background: #58b741;
-              --tx: 70px;
-              --ty: -130px;
-              --r: -30deg;
-            }
-            .confirmation-celebration__particle:nth-child(10) {
-              background: #e4427d;
-              --tx: -70px;
-              --ty: 110px;
-              --r: 150deg;
-            }
-            .confirmation-celebration__particle:nth-child(11) {
-              background: #e8ab1b;
-              --tx: 110px;
-              --ty: -60px;
-              --r: -180deg;
-            }
-            .confirmation-celebration__particle:nth-child(12) {
-              background: #1b3bc3;
-              --tx: 50px;
-              --ty: 130px;
-              --r: 60deg;
-            }
-            .confirmation-celebration__particle:nth-child(13) {
-              background: #58b741;
-              --tx: -140px;
-              --ty: -30px;
-              --r: -150deg;
-            }
-            .confirmation-celebration__particle:nth-child(14) {
-              background: #e4427d;
-              --tx: 80px;
-              --ty: 90px;
-              --r: 30deg;
-            }
-            .confirmation-celebration__particle:nth-child(15) {
-              background: #e8ab1b;
-              --tx: -90px;
-              --ty: 80px;
-              --r: -45deg;
-            }
-            .confirmation-celebration__particle:nth-child(16) {
-              background: #1b3bc3;
-              --tx: 130px;
-              --ty: -100px;
-              --r: 100deg;
-            }
-            .confirmation-celebration__particle:nth-child(17) {
-              background: #58b741;
-              --tx: -50px;
-              --ty: -140px;
-              --r: -100deg;
-            }
-            .confirmation-celebration__particle:nth-child(18) {
-              background: #e4427d;
-              --tx: 100px;
-              --ty: 70px;
-              --r: 0deg;
-            }
-            .confirmation-celebration__particle:nth-child(19) {
-              background: #e8ab1b;
-              --tx: -120px;
-              --ty: 100px;
-              --r: 75deg;
-            }
-            .confirmation-celebration__particle:nth-child(20) {
-              background: #1b3bc3;
-              --tx: 60px;
-              --ty: -110px;
-              --r: -75deg;
-            }
-            .confirmation-celebration__particle:nth-child(21) {
-              background: #58b741;
-              --tx: -60px;
-              --ty: -90px;
-              --r: 160deg;
-            }
-            .confirmation-celebration__particle:nth-child(22) {
-              background: #e4427d;
-              --tx: 150px;
-              --ty: 50px;
-              --r: -160deg;
-            }
-            .confirmation-celebration__particle:nth-child(23) {
-              background: #e8ab1b;
-              --tx: -150px;
-              --ty: -70px;
-              --r: 40deg;
-            }
-            .confirmation-celebration__particle:nth-child(24) {
-              background: #1b3bc3;
-              --tx: 40px;
-              --ty: -120px;
-              --r: -40deg;
-            }
-            @keyframes confirmation-confetti {
-              0% {
-                opacity: 1;
-                transform: translate(0, 0) rotate(0deg);
-              }
-              100% {
-                opacity: 0;
-                transform: translate(var(--tx), var(--ty)) rotate(var(--r));
-              }
-            }
-          `}</style>
-        </>
+        <ConfirmationCelebrationOverlay
+          show={showCelebration}
+          title={celebrationOverlayHeading}
+        />
       )}
 
       <div className="w-full max-w-screen-sm mx-auto py-8 px-4 flex flex-col gap-6">

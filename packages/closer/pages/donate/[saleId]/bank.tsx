@@ -125,6 +125,11 @@ function DonateBankPage({ generalConfig }: DonateBankPageProps) {
     );
   }
 
+  const memoCode =
+    bankBlock.memoCode?.trim() ||
+    (bankBlock as { confirmation_code?: string }).confirmation_code?.trim() ||
+    '';
+
   return (
     <>
       <Head>
@@ -153,7 +158,7 @@ function DonateBankPage({ generalConfig }: DonateBankPageProps) {
 
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
           <p className="text-sm font-semibold text-amber-950">
-            {t('donate_bank_memo_block', { reference: bankBlock.confirmation_code })}
+            {t('donate_bank_memo_block', { reference: memoCode })}
           </p>
         </div>
 
@@ -215,10 +220,10 @@ function DonateBankPage({ generalConfig }: DonateBankPageProps) {
                 {t('donate_reference_label')}
               </span>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-sm font-mono text-gray-900">{bankBlock.confirmation_code}</span>
+                <span className="text-sm font-mono text-gray-900">{memoCode}</span>
                 <button
                   type="button"
-                  onClick={() => copyToClipboard(bankBlock.confirmation_code)}
+                  onClick={() => copyToClipboard(memoCode)}
                   className="text-xs text-accent font-medium shrink-0"
                 >
                   {t('donate_copy')}

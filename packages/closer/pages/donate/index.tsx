@@ -142,13 +142,29 @@ function DonatePage({ generalConfig }: DonatePageProps) {
       }
 
       if (method === 'bank') {
-        const r = results as CreateDonationBankResult;
-        if (!r.saleId || !r.confirmation_code || !r.closerIban) {
+        const raw = results as CreateDonationBankResult & {
+          confirmation_code?: string;
+        };
+        const memoCode =
+          typeof raw.memoCode === 'string' && raw.memoCode.trim()
+            ? raw.memoCode.trim()
+            : typeof raw.confirmation_code === 'string' && raw.confirmation_code.trim()
+              ? raw.confirmation_code.trim()
+              : '';
+        if (!raw.saleId || !memoCode || !raw.closerIban) {
           setCreateError(t('donate_create_invalid_response'));
           return;
         }
-        saveDonationSession(r.saleId, { kind: 'bank', amount, result: r });
-        await router.push(`/donate/${encodeURIComponent(r.saleId)}/bank`);
+        const bankResult: CreateDonationBankResult = {
+          saleId: raw.saleId,
+          memoCode,
+          closerIban: raw.closerIban,
+          beneficiary: raw.beneficiary,
+          beneficiaryAddress: raw.beneficiaryAddress,
+          beneficiaryBic: raw.beneficiaryBic,
+        };
+        saveDonationSession(raw.saleId, { kind: 'bank', amount, result: bankResult });
+        await router.push(`/donate/${encodeURIComponent(raw.saleId)}/bank`);
         return;
       }
 

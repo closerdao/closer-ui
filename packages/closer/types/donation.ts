@@ -2,7 +2,7 @@ export type DonationPaymentMethod = 'bank' | 'card' | 'crypto';
 
 export type CreateDonationBankResult = {
   saleId: string;
-  confirmation_code: string;
+  memoCode: string;
   closerIban: string;
   beneficiary?: string;
   beneficiaryAddress?: string;
