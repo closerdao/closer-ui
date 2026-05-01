@@ -64,6 +64,7 @@ const nextConfig = {
     config.experiments = {
       ...config.experiments,
       topLevelAwait: true,
+      layers: true,
     };
     return config;
   },
