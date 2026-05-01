@@ -37,10 +37,10 @@ const Listings = ({ bookingConfig }: Props) => {
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
-  const isTeamMember = false;
-  user?.roles.includes('space-host') ||
-    user?.roles.includes('steward') ||
-    user?.roles.includes('land-manager');
+  const isTeamMember =
+    Boolean(user?.roles.includes('space-host')) ||
+    Boolean(user?.roles.includes('steward')) ||
+    Boolean(user?.roles.includes('land-manager'));
 
   const listingFilter = {
     where: {},

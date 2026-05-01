@@ -76,8 +76,8 @@ const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false 
       platform.booking.get({
         where: filter.where,
         limit: MAX_BOOKINGS_TO_FETCH,
-      }),
-        setLoading(true);
+      });
+      setLoading(true);
       if (bookings) {
         await Promise.all([
           ...(eventsFilter ? [platform.event.get(eventsFilter)] : []),

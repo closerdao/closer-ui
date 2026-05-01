@@ -18,6 +18,7 @@ import {
 import Heading from '../../../components/ui/Heading';
 
 import dayjs from 'dayjs';
+import { convert } from 'html-to-text';
 import { NextPage, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -900,7 +901,6 @@ const ListingPage: NextPage<Props> = ({
 
 ListingPage.getInitialProps = async (context: NextPageContext) => {
   const { query } = context;
-  const { convert } = require('html-to-text');
   try {
     const [listing, messages] = await Promise.all([
       api.get(`/listing/${query.slug}`).catch((err) => {

@@ -14,6 +14,7 @@ import Heading from '../../../components/ui/Heading';
 
 import UserAvatarPlaceholder from '../../../components/UserAvatarPlaceholder';
 import dayjs from 'dayjs';
+import { convert } from 'html-to-text';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -835,7 +836,6 @@ const EventPage = ({
 
 EventPage.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
-  const { convert } = require('html-to-text');
   try {
     const [event, listings, messages] = await Promise.all([
       api

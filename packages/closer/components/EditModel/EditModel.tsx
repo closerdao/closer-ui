@@ -126,14 +126,13 @@ const EditModel: FC<Props> = ({
   const fieldsByTab: Record<string, any> = {
     general: [],
   };
-  fields &&
-    fields.forEach((field) => {
-      if (field.tab) {
-        fieldsByTab[field.tab] = (fieldsByTab[field.tab] || []).concat(field);
-      } else {
-        fieldsByTab.general = (fieldsByTab.general || []).concat(field);
-      }
-    });
+  fields?.forEach((field) => {
+    if (field.tab) {
+      fieldsByTab[field.tab] = (fieldsByTab[field.tab] || []).concat(field);
+    } else {
+      fieldsByTab.general = (fieldsByTab.general || []).concat(field);
+    }
+  });
 
   const propagateError = (error: unknown) => {
     const errorMessage = parseMessageFromError(error);

@@ -1,3 +1,5 @@
+import { convert } from 'html-to-text';
+
 import Metatags from '../../../components/Metatags';
 import VolunteerEventView from '../../../components/VolunteerEventView';
 
@@ -34,7 +36,6 @@ const VolunteerPage = ({ volunteer, descriptionText }: Props) => {
 };
 
 VolunteerPage.getInitialProps = async (context: NextPageContext) => {
-  const { convert } = require('html-to-text');
   try {
     const id = context.query.slug;
     const [volunteerResponse, messages] = await Promise.all([

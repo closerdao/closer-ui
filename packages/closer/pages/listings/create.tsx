@@ -10,7 +10,6 @@ import { useTranslations } from 'next-intl';
 
 import models from '../../models';
 import config from '../../configCached';
-import api from '../../utils/api';
 import { getBookingTokenCurrency } from '../../utils/booking.helpers';
 import { loadLocaleData } from '../../utils/locale.helpers';
 

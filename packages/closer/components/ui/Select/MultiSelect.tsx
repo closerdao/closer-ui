@@ -22,19 +22,19 @@ const MultiSelect: FC<MultiSelectProps> = React.memo(
     }
 
     const handleChange = (value: string[]) => {
-      onChange && onChange(value);
+      if (onChange) onChange(value);
     };
 
     const handleCreate = (createdValue: string) => {
       const update = [...(values?.length ? values : []), createdValue];
       setData(update);
-      onChange && onChange(update);
+      if (onChange) onChange(update);
     };
 
     const handleRemove = (label: unknown) => {
       if (!values) return null;
       const update = values.filter((item) => item !== label);
-      onChange && onChange(update);
+      if (onChange) onChange(update);
     };
 
     return (

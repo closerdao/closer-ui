@@ -17,13 +17,13 @@ const PriceEditor = ({ value = { val: 0.0, cur: CURRENCIES_WITH_LABELS[0].value 
   const updateValue = (val) => {
     const update = { ...price, val: parseFloat(val), cur: fixedCurrency || price.cur };
     setPrice(update);
-    onChange && onChange(update);
+    if (onChange) onChange(update);
   };
   const updateCurrency = (cur) => {
     if (fixedCurrency) return;
     const update = { ...price, cur };
     setPrice(update);
-    onChange && onChange(update);
+    if (onChange) onChange(update);
   };
   useEffect(() => {
     if (!fixedCurrency && !(value && value.cur)) {

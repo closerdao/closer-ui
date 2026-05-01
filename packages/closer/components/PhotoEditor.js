@@ -13,12 +13,12 @@ const PhotoEditor = ({ value = /** @type {any} */ (null), onChange = /** @type {
 
   const addPhoto = (photoId) => {
     setPhoto(photoId);
-    onChange && onChange(photoId);
+    if (onChange) onChange(photoId);
   };
 
   const deletePhoto = () => {
     setPhoto(null);
-    onChange && onChange(null);
+    if (onChange) onChange(null);
   };
 
   return (

@@ -1,3 +1,4 @@
+import { convert } from 'html-to-text';
 import Head from 'next/head';
 import Image from 'next/image';
 
@@ -198,8 +199,6 @@ const ProjectsPage = ({
 };
 
 ProjectsPage.getInitialProps = async (context: NextPageContext) => {
-  const { convert } = require('html-to-text');
-
   try {
     const [messages, generalRes, projectsRes, volunteerConfigRes] =
       await Promise.all([
