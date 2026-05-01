@@ -14,6 +14,7 @@ import { Event, GeneralConfig } from '../../../types';
 import { FoodOption } from '../../../types/food';
 import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api from '../../../utils/api';
+import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { getBookingTokenCurrency } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { transformEventFoodBeforeSave } from '../../../utils/events.helpers';
@@ -188,11 +189,7 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
     const [configs, eventRes, foodRes, messages] = await Promise.all([
       getConfig(api),
       api.get(`/event/${query.slug}`, {
-        headers: (req as NextApiRequest)?.cookies?.access_token && {
-          Authorization: `Bearer ${
-            (req as NextApiRequest)?.cookies?.access_token
-          }`,
-        },
+        headers: getBearerAuthHeaders(req as NextApiRequest),
       }),
       api.get('/food').catch((err) => {
         console.error('Error fetching food:', err);

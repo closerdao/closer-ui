@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { ObjectId } from 'bson';
+import { ObjectId } from '../utils/bsonObjectId';
 
 import { CURRENCIES_WITH_LABELS } from '../constants';
 import PriceEditor from './PriceEditor';

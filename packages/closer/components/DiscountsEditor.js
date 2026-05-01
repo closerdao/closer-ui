@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { ObjectId } from 'bson';
+import { ObjectId } from '../utils/bsonObjectId';
 import { useTranslations } from 'next-intl';
 
 const DiscountsEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {any} */ (undefined) }) => {

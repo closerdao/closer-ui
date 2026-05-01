@@ -21,6 +21,7 @@ import { usePlatform } from '../../../contexts/platform';
 import { Lesson } from '../../../types/lesson';
 import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
+import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
@@ -394,11 +395,7 @@ LessonPage.getInitialProps = async (context: NextPageContext) => {
       getConfig(api),
       api
         .get(`/lesson/${query.slug}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         })
         .catch(() => {
           return null;

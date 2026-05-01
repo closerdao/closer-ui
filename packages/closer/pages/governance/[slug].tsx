@@ -17,6 +17,7 @@ import {
   createProposalSignatureHash,
   createVoteSignatureHash,
 } from 'closer/utils/crypto';
+import { getBearerAuthHeaders } from 'closer/utils/authHeaders.helpers';
 import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextApiRequest, NextPage, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -700,7 +701,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     return (
       <>
         <Head>
-          <title>{t('governance_proposal_not_found')} - {appName}</title>
+          <title>{`${t('governance_proposal_not_found')} - ${appName}`}</title>
         </Head>
         <div className="min-h-screen bg-gray-50/70">
           <div className="container mx-auto px-4 py-8">
@@ -736,7 +737,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   return (
     <>
       <Head>
-        <title>{currentProposal.title} - {appName}</title>
+        <title>{`${currentProposal.title} - ${appName}`}</title>
         <meta
           name="description"
           content={currentProposal.description?.substring(0, 160) || ''}
@@ -1416,11 +1417,7 @@ ProposalDetailPage.getInitialProps = async (context: NextPageContext) => {
     const [proposal, messages] = await Promise.all([
       api
         .get(`/proposal/${slug}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         })
         .catch(() => {
           return null;
@@ -1435,11 +1432,7 @@ ProposalDetailPage.getInitialProps = async (context: NextPageContext) => {
         const {
           data: { results: proposalCreatorData },
         } = await api.get(`/user/${proposalCreatorId}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         });
         proposalCreator = proposalCreatorData;
       } catch (err) {

@@ -1,6 +1,6 @@
 import ReactGA from 'react-ga';
 
-import { ObjectId } from 'bson';
+import { ObjectId } from './bsonObjectId';
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
 import duration from 'dayjs/plugin/duration';

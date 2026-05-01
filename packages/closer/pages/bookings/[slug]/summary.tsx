@@ -36,6 +36,7 @@ import {
 } from '../../../types';
 import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
 import api from '../../../utils/api';
+import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import {
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
@@ -453,11 +454,7 @@ Summary.getInitialProps = async (context: NextPageContext) => {
     const [bookingRes, configs, messages] = await Promise.all([
       api
         .get(`/booking/${query.slug}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         })
         .catch(() => null),
       getConfig(api),
@@ -472,19 +469,11 @@ Summary.getInitialProps = async (context: NextPageContext) => {
     const [optionalEvent, optionalListing] = await Promise.all([
       booking?.eventId &&
         api.get(`/event/${booking?.eventId}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         }),
       booking?.listing &&
         api.get(`/listing/${booking?.listing}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         }),
     ]);
     const event = optionalEvent?.data?.results;
