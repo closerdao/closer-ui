@@ -22,7 +22,7 @@ import {
   VolunteerConfig,
   VolunteerOpportunity,
 } from '../../types';
-import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
+import config from '../../configCached';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
@@ -338,16 +338,15 @@ const StayPage = ({
 
 StayPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [configs, volunteerRes, messages] = await Promise.all([
-      getConfig(api),
+    const [volunteerRes, messages] = await Promise.all([
       api.get('/volunteer').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
-    const generalConfig = getConfigValueBySlug(configs, 'general');
-    const bookingSettings = getConfigValueBySlug(configs, 'booking');
-    const bookingRules = getConfigValueBySlug(configs, 'booking-rules');
+    const generalConfig = config.general;
+    const bookingSettings = config.booking;
+    const bookingRules = config['booking-rules'];
     const opportunities = volunteerRes?.data?.results;
-    const volunteerConfig = getConfigValueBySlug(configs, 'volunteering');
+    const volunteerConfig = config.volunteering;
 
     return {
       bookingSettings,

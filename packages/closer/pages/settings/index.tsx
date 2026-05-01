@@ -522,7 +522,7 @@ const SettingsPage = ({
   return (
     <>
       <Head>
-        <title>{user.screenname} | {t('settings_page_title')}</title>
+        <title>{`${user.screenname} | ${t('settings_page_title')}`}</title>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
       <div className="max-w-screen-xl mx-auto px-4 md:px-8 py-3 md:py-6">

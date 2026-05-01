@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
+import configCached from '../../configCached';
 import { useConfig } from '../../hooks/useConfig';
-import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
-import api from '../../utils/api';
 
 interface Props {
   className?: string;
@@ -22,40 +21,29 @@ const DynamicPhotoGallery = ({ className, isSlider = false }: Props) => {
   const { APP_NAME } = useConfig() || {};
 
   useEffect(() => {
-    const loadGalleryImages = async () => {
-      try {
-        const configs = await getConfig(api);
-        const photoGalleryConfig = getConfigValueBySlug(configs, 'photo-gallery');
-        const photoIds = photoGalleryConfig?.photoIds;
-        
-        if (photoIds && Array.isArray(photoIds) && photoIds.length > 0) {
-          const cdn = process.env.NEXT_PUBLIC_CDN_URL || '';
-          const galleryImages: GalleryImage[] = photoIds.map((photoId: string) => {
-            const thumbnailUrl = `${cdn}${photoId}-max-lg.jpg`;
-            const fullSizeUrl = `${cdn}${photoId}-max-xl.jpg`;
-            
-            return {
-              src: thumbnailUrl,
-              original: fullSizeUrl,
-            };
-          });
-          setImages(galleryImages);
-        } else {
-          setImages([]);
-        }
-      } catch (error) {
-        console.error('Error loading gallery images:', error);
-        setImages([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (APP_NAME?.toLowerCase() === 'tdf') {
-      loadGalleryImages();
-    } else {
+    if (APP_NAME?.toLowerCase() !== 'tdf') {
       setIsLoading(false);
+      return;
     }
+    const photoGalleryConfig = configCached['photo-gallery'];
+    const photoIds = photoGalleryConfig?.photoIds;
+
+    if (photoIds && Array.isArray(photoIds) && photoIds.length > 0) {
+      const cdn = process.env.NEXT_PUBLIC_CDN_URL || '';
+      const galleryImages: GalleryImage[] = photoIds.map((photoId: string) => {
+        const thumbnailUrl = `${cdn}${photoId}-max-lg.jpg`;
+        const fullSizeUrl = `${cdn}${photoId}-max-xl.jpg`;
+
+        return {
+          src: thumbnailUrl,
+          original: fullSizeUrl,
+        };
+      });
+      setImages(galleryImages);
+    } else {
+      setImages([]);
+    }
+    setIsLoading(false);
   }, [APP_NAME]);
 
   useEffect(() => {

@@ -29,7 +29,7 @@ import {
   Question,
   VolunteerConfig,
 } from '../../../types';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import config from '../../../configCached';
 import api from '../../../utils/api';
 import {
   buildBookingAccomodationUrl,
@@ -367,19 +367,18 @@ Questionnaire.getInitialProps = async (context: NextPageContext) => {
   const { query } = context;
 
   try {
-    const [bookingRes, configs, messages] = await Promise.all([
+    const [bookingRes, messages] = await Promise.all([
       api.get(`/booking/${query.slug}`).catch((err) => {
         console.error('Error fetching booking config:', err);
         return null;
       }),
-      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const booking = bookingRes?.data?.results;
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
-    const web3Config = getConfigValueBySlug(configs, 'web3');
+    const bookingConfig = config.booking;
+    const web3Config = config.web3;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
-    const volunteerConfig = getConfigValueBySlug(configs, 'volunteering');
+    const volunteerConfig = config.volunteering;
 
     const optionalEvent =
       booking.eventId && (await api.get(`/event/${booking.eventId}`));

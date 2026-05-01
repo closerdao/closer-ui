@@ -11,7 +11,7 @@ import { useTranslations } from 'next-intl';
 
 import models from '../../../models';
 import { Listing } from '../../../types';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import config from '../../../configCached';
 import api from '../../../utils/api';
 import { getBookingTokenCurrency } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
@@ -130,16 +130,15 @@ EditListing.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No listing');
     }
 
-    const [listingRes, configs, messages] = await Promise.all([
+    const [listingRes, messages] = await Promise.all([
       api.get(`/listing/${query.slug}`).catch(() => null),
-      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const listing = listingRes?.data?.results;
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
-    const paymentConfig = getConfigValueBySlug(configs, 'payment');
-    const web3Config = getConfigValueBySlug(configs, 'web3');
+    const bookingConfig = config.booking;
+    const paymentConfig = config.payment;
+    const web3Config = config.web3;
 
     return { listing, bookingConfig, paymentConfig, web3Config, messages };
   } catch (err: unknown) {

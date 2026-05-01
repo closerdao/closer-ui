@@ -9,13 +9,8 @@ import { ErrorBoundary, Layout } from '@/components';
 
 import AcceptCookies from 'closer/components/AcceptCookies';
 
-import {
-  AuthProvider,
-  ConfigProvider,
-  PlatformProvider,
-  api,
-  getConfig,
-} from 'closer';
+import { AuthProvider, ConfigProvider, PlatformProvider } from 'closer';
+import configKeyed from 'closer/configCached';
 import { WalletProvider } from 'closer/contexts/wallet';
 import { blockchainConfig } from 'closer/config_blockchain';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
@@ -41,12 +36,13 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
   const { query } = router;
   const referral = query.referral;
 
-  const [config, setConfig] = useState<any>(() => {
-    const merged = mergeGeneralConfigWithDefaults(null);
-    applyCurrencyLocaleFromGeneralConfig(merged);
+  const [config] = useState<any>(() => {
+    const mergedGeneral = mergeGeneralConfigWithDefaults(configKeyed.general);
+    applyCurrencyLocaleFromGeneralConfig(mergedGeneral);
     return {
-      ...prepareGeneralConfig(merged),
-      _configLoaded: false,
+      ...prepareGeneralConfig(mergedGeneral),
+      ...configKeyed,
+      _configLoaded: true,
     };
   });
 
@@ -57,24 +53,6 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
       localStorage.setItem(REFERRAL_ID_LOCAL_STORAGE_KEY, referral as string);
     }
   }, [referral]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const keyedConfig = await getConfig(api);
-        const mergedGeneral = mergeGeneralConfigWithDefaults(keyedConfig.general);
-        applyCurrencyLocaleFromGeneralConfig(mergedGeneral);
-        setConfig({
-          ...prepareGeneralConfig(mergedGeneral),
-          ...keyedConfig,
-          _configLoaded: true,
-        });
-      } catch (err) {
-        console.error(err);
-        setConfig((prev: any) => ({ ...prev, _configLoaded: true }));
-      }
-    })();
-  }, []);
 
   return (
     <>

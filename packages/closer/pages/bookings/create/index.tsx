@@ -7,8 +7,7 @@ import { NextPageContext } from 'next';
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
 import { BookingConfig } from '../../../types';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
-import api from '../../../utils/api';
+import config from '../../../configCached';
 import { parseMessageFromError } from '../../../utils/common';
 import '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
@@ -45,11 +44,11 @@ const NewBooking = ({ bookingConfig }: Props) => {
 
 NewBooking.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [configs, messages] = await Promise.all([
-      getConfig(api),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    const bookingConfig = config.booking;
 
     return { bookingConfig, messages };
   } catch (err) {

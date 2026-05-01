@@ -25,8 +25,9 @@ import {
   Listing,
 } from '../../../types';
 import { FoodOption } from '../../../types/food';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
-import api from '../../../utils/api';
+import config from '../../../configCached';
+import api, { cdn } from '../../../utils/api';
+import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import {
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
@@ -40,7 +41,6 @@ import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
-import { cdn } from '../../../utils/api';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Props extends BaseBookingParams {
@@ -694,42 +694,29 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
   const discountCode = query?.discountCode;
 
   try {
-    const [bookingRes, configs, foodRes, messages] = await Promise.all([
+    const [bookingRes, foodRes, messages] = await Promise.all([
       api
         .get(`/booking/${query.slug}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         })
         .catch(() => null),
-      getConfig(api),
       api.get('/food').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const booking = bookingRes?.data?.results || null;
-    const bookingConfig = getConfigValueBySlug(configs, 'booking') || null;
-    const web3Config = getConfigValueBySlug(configs, 'web3') || null;
+    const bookingConfig = config.booking || null;
+    const web3Config = config.web3 || null;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
     const foodOptions = foodRes?.data?.results || null;
 
     const [optionalEvent, optionalListing] = await Promise.all([
       booking?.eventId &&
         api.get(`/event/${booking?.eventId}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         }),
       booking?.listing &&
         api.get(`/listing/${booking?.listing}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         }),
     ]);
     const event = optionalEvent?.data?.results;

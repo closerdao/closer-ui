@@ -31,7 +31,7 @@ import { usePlatform } from '../../../contexts/platform';
 import { Event, TicketOption } from '../../../types';
 import { BookingSettings, Project, VolunteerConfig } from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import config from '../../../configCached';
 import api from '../../../utils/api';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
@@ -714,12 +714,12 @@ DatesSelector.getInitialProps = async (
     const { query } = context;
     const { eventId, volunteerId, bookingType, isFriendsBooking } = query;
 
-    const [configs, messages] = await Promise.all([
-      getConfig(api),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const bookingSettings = getConfigValueBySlug(configs, 'booking');
-    const volunteerConfig = getConfigValueBySlug(configs, 'volunteering');
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    const bookingSettings = config.booking as BookingSettings;
+    const volunteerConfig = config.volunteering as VolunteerConfig;
     if (eventId) {
       const [ticketsAvailable, event] = await Promise.all([
         api.get(`/bookings/event/${eventId}/availability`).catch(() => null),

@@ -15,8 +15,7 @@ import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 import AdminLayout from '../../components/Dashboard/AdminLayout';
-import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
-import api from '../../utils/api';
+import config from '../../configCached';
 import { BookingConfig } from '../../types/api';
 
 const FoodPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
@@ -92,12 +91,12 @@ const FoodPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
 
 FoodPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [messages, configs] = await Promise.all([
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      getConfig(api),
-    ]);
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
 
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
+    const bookingConfig = config.booking;
 
     return {
       messages,

@@ -19,8 +19,7 @@ import { useConfig } from '../../../../hooks/useConfig';
 import useRBAC from '../../../../hooks/useRBAC';
 import { GeneralConfig } from '../../../../types';
 import { Lesson } from '../../../../types/lesson';
-import api from '../../../../utils/api';
-import { getConfig, getConfigValueBySlug } from '../../../../utils/configCache';
+import config from '../../../../configCached';
 import { parseMessageFromError } from '../../../../utils/common';
 import { capitalizeFirstLetter } from '../../../../utils/learn.helpers';
 import { loadLocaleData } from '../../../../utils/locale.helpers';
@@ -199,12 +198,12 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
 
 LearnCategoryPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [configs, messages] = await Promise.all([
-      getConfig(api),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const generalConfig = getConfigValueBySlug(configs, 'general') || null;
-    const learningHubConfig = getConfigValueBySlug(configs, 'learningHub') || null;
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    const generalConfig = config.general || null;
+    const learningHubConfig = config.learningHub || null;
 
     return {
       generalConfig,

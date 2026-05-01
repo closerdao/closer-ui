@@ -13,8 +13,7 @@ import { useTranslations } from 'next-intl';
 import PageNotAllowed from '../401';
 import { useAuth } from '../../contexts/auth';
 import { usePushNotifications } from '../../contexts/push-notifications';
-import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
-import api from '../../utils/api';
+import config from '../../configCached';
 import { loadLocaleData } from '../../utils/locale.helpers';
 
 interface CommunityConfig {
@@ -121,13 +120,13 @@ Social.getInitialProps = async (context: NextPageContext) => {
       }
     }
 
-    const [configs, messages] = await Promise.all([
-      getConfig(api),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
 
-    const communityConfig = getConfigValueBySlug(configs, 'community');
-    const bookingConfig = getConfigValueBySlug(configs, 'booking') ?? null;
+    const communityConfig = config.community;
+    const bookingConfig = config.booking ?? null;
     const initialChannelSlug = channelSlug;
 
     return {

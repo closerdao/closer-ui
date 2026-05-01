@@ -21,7 +21,8 @@ import { usePlatform } from '../../../contexts/platform';
 import { Lesson } from '../../../types/lesson';
 import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
+import config from '../../../configCached';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { getVideoParams } from '../../../utils/learn.helpers';
@@ -390,15 +391,10 @@ const LessonPage = ({
 LessonPage.getInitialProps = async (context: NextPageContext) => {
   const { req, query } = context;
   try {
-    const [configs, lessonRes, messages] = await Promise.all([
-      getConfig(api),
+    const [lessonRes, messages] = await Promise.all([
       api
         .get(`/lesson/${query.slug}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         })
         .catch(() => {
           return null;
@@ -406,12 +402,11 @@ LessonPage.getInitialProps = async (context: NextPageContext) => {
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const subscriptionsConfig =
-      getConfigValueBySlug(configs, 'subscriptions') ?? {
+      config.subscriptions ?? {
         enabled: false,
         elements: [],
       };
-    const learningHubConfig =
-      getConfigValueBySlug(configs, 'learningHub') || null;
+    const learningHubConfig = config.learningHub || null;
 
     return {
       subscriptionsConfig:

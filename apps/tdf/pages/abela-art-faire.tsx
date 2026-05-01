@@ -10,10 +10,7 @@ const ArtFaire = () => {
   return (
     <>
       <Head>
-        <title>
-          Abela Art Faire - a regenerative art faire in the Traditional Dream
-          Factory, Abela, Portugal.
-        </title>
+        <title>{'Abela Art Faire - a regenerative art faire in the Traditional Dream Factory, Abela, Portugal.'}</title>
         <meta
           name="description"
           content="Traditional Dream Factory (TDF) is a regenerative playground in Abela, Portugal."

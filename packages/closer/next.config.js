@@ -14,7 +14,6 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 const nextConfig = {
   reactStrictMode: false,
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
-  swcMinify: true,
   compiler: {
     removeConsole: process.env.ENVIRONMENT === 'production',
   },

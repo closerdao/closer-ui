@@ -106,7 +106,10 @@ const FundraiserPage = ({
   useEffect(() => {
     const load = async () => {
       try {
-        const breakdown = await fetchFundraisingBreakdown(fundraisingConfig);
+        const breakdown = await fetchFundraisingBreakdown({
+          amountRaisedPreCampaign: fundraisingConfig?.amountRaisedPreCampaign,
+          loansCollectedTotal: fundraisingConfig?.loansCollectedTotal,
+        });
         setFundraisingTotal(breakdown.totalRaised);
       } catch (error) {
         console.error('Error fetching fundraising total:', error);

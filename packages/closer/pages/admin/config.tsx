@@ -24,7 +24,7 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { Config } from '../../types';
 import { BookingConfig } from '../../types/api';
-import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
+import config from '../../configCached';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import {
@@ -1009,12 +1009,12 @@ const ConfigPage = ({ bookingConfig }: Props) => {
 
 ConfigPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [configs, messages] = await Promise.all([
-      getConfig(api),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
 
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
+    const bookingConfig = config.booking;
 
     return {
       bookingConfig,

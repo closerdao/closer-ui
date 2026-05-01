@@ -39,8 +39,9 @@ import {
   VolunteerOpportunity,
 } from '../../../types';
 import { FoodOption } from '../../../types/food';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import config from '../../../configCached';
 import api from '../../../utils/api';
+import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import {
   convertToDateString,
   dateToPropertyTimeZone,
@@ -839,38 +840,27 @@ const BookingPage = ({
 BookingPage.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
   try {
-    const [
-      bookingRes,
-      configs,
-      listingRes,
-      foodRes,
-      projectsRes,
-      messages,
-    ] = await Promise.all([
-      api
-        .get(`/booking/${query.slug}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
-        })
-        .catch(() => null),
-      getConfig(api),
-      api
-        .get('/listing', {
-          params: { limit: MAX_LISTINGS_TO_FETCH },
-        })
-        .catch(() => null),
-      api.get('/food').catch(() => null),
-      api.get('/project').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const [bookingRes, listingRes, foodRes, projectsRes, messages] =
+      await Promise.all([
+        api
+          .get(`/booking/${query.slug}`, {
+            headers: getBearerAuthHeaders(req as NextApiRequest),
+          })
+          .catch(() => null),
+        api
+          .get('/listing', {
+            params: { limit: MAX_LISTINGS_TO_FETCH },
+          })
+          .catch(() => null),
+        api.get('/food').catch(() => null),
+        api.get('/project').catch(() => null),
+        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      ]);
     const booking = bookingRes?.data?.results;
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
-    const generalConfig = getConfigValueBySlug(configs, 'general');
+    const bookingConfig = config.booking;
+    const generalConfig = config.general;
     const listings = listingRes?.data?.results;
-    const paymentConfig = getConfigValueBySlug(configs, 'payment');
+    const paymentConfig = config.payment;
 
     const foodOptions = foodRes?.data?.results;
     const projects = projectsRes?.data?.results;
@@ -879,27 +869,15 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       await Promise.all([
         booking.eventId &&
           api.get(`/event/${booking.eventId}`, {
-            headers: (req as NextApiRequest)?.cookies?.access_token && {
-              Authorization: `Bearer ${
-                (req as NextApiRequest)?.cookies?.access_token
-              }`,
-            },
+            headers: getBearerAuthHeaders(req as NextApiRequest),
           }),
         booking.listing &&
           api.get(`/listing/${booking.listing}`, {
-            headers: (req as NextApiRequest)?.cookies?.access_token && {
-              Authorization: `Bearer ${
-                (req as NextApiRequest)?.cookies?.access_token
-              }`,
-            },
+            headers: getBearerAuthHeaders(req as NextApiRequest),
           }),
         booking.volunteerId &&
           api.get(`/volunteer/${booking.volunteerId}`, {
-            headers: (req as NextApiRequest)?.cookies?.access_token && {
-              Authorization: `Bearer ${
-                (req as NextApiRequest)?.cookies?.access_token
-              }`,
-            },
+            headers: getBearerAuthHeaders(req as NextApiRequest),
           }),
       ]);
     const event = optionalEvent?.data?.results;
@@ -911,11 +889,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       const optionalCreatedBy =
         booking.createdBy &&
         (await api.get(`/user/${booking.createdBy}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         }));
       bookingCreatedBy = optionalCreatedBy?.data?.results;
     } catch (error) {}

@@ -7,8 +7,7 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import models from '../../models';
-import api from '../../utils/api';
-import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
+import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
@@ -47,11 +46,11 @@ const CreateLessonPage = ({ learningHubConfig }: Props) => {
 
 CreateLessonPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [configs, messages] = await Promise.all([
-      getConfig(api),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const learningHubConfig = getConfigValueBySlug(configs, 'learningHub') || null;
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    const learningHubConfig = config.learningHub || null;
     return {
       learningHubConfig,
       messages,

@@ -8,7 +8,8 @@ import { useTranslations } from 'next-intl';
 
 import models from '../../../models';
 import api from '../../../utils/api';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
+import config from '../../../configCached';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
@@ -86,20 +87,14 @@ EditLessonPage.getInitialProps = async (context: NextPageContext) => {
       {
         data: { results: lesson },
       },
-      configs,
       messages,
     ] = await Promise.all([
       api.get(`/lesson/${query.slug}`, {
-        headers: (req as NextApiRequest)?.cookies?.access_token && {
-          Authorization: `Bearer ${
-            (req as NextApiRequest)?.cookies?.access_token
-          }`,
-        },
+        headers: getBearerAuthHeaders(req as NextApiRequest),
       }),
-      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
-    const learningHubConfig = getConfigValueBySlug(configs, 'learningHub') || null;
+    const learningHubConfig = config.learningHub || null;
 
     return { lesson, learningHubConfig, messages };
   } catch (err) {

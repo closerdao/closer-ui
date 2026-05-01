@@ -35,7 +35,7 @@ import {
   GeneralConfig,
   Listing,
 } from '../../../types';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import config from '../../../configCached';
 import api, { cdn } from '../../../utils/api';
 import {
   getFiatTotal,
@@ -902,12 +902,11 @@ ListingPage.getInitialProps = async (context: NextPageContext) => {
   const { query } = context;
   const { convert } = require('html-to-text');
   try {
-    const [listing, configs, messages] = await Promise.all([
+    const [listing, messages] = await Promise.all([
       api.get(`/listing/${query.slug}`).catch((err) => {
         console.error('Error fetching listing:', err);
         return null;
       }),
-      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
@@ -920,8 +919,8 @@ ListingPage.getInitialProps = async (context: NextPageContext) => {
 
     return {
       listing: listing?.data.results,
-      settings: getConfigValueBySlug(configs, 'booking'),
-      generalSettings: getConfigValueBySlug(configs, 'general'),
+      settings: config.booking as BookingSettings,
+      generalSettings: config.general as GeneralConfig,
       descriptionText,
       messages,
     };

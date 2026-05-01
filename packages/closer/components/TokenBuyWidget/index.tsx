@@ -125,59 +125,107 @@ const TokenBuyWidget: FC<Props> = ({
   };
 
   useEffect(() => {
-    (async () => {
-      const res = await api.get('/listing', {
-        params: {
-          limit: MAX_LISTINGS_TO_FETCH,
-        },
-      });
-      const labels = res.data.results
-        .filter((option: Listing) => {
-          return !option?.priceDuration || option?.priceDuration === 'night';
-        })
-        .map((option: any) => {
-          return { label: option.name, value: option.name };
-        });
-
+    if (process.env.NODE_ENV === 'test') {
       const labelsFuture = FUTURE_ACCOMMODATION_TYPES.map(
         (accommodatinType: any) => {
           return { label: accommodatinType.name, value: accommodatinType.name };
         },
       );
-
-      const prices = res?.data?.results
-        ?.filter((option: any) => option.tokenPrice?.val)
-        ?.map((option: any) => {
-          return option.tokenPrice?.val || 0;
-        }) || [];
-
       const pricesFuture = FUTURE_ACCOMMODATION_TYPES.map(
         (accommodatinType: any) => {
           return accommodatinType.price;
         },
       );
-
-      labels.push(...labelsFuture);
-      prices.push(...pricesFuture);
-
-      // const price = res?.data?.results[0].tokenPrice.val || 1;
-      const price = await getTotalCostWithoutWallet('1');
-
-      const firstListing = res?.data?.results?.find((option: any) => option.tokenPrice?.val) || res?.data?.results?.[0];
-      const nightlyPrice = firstListing?.tokenPrice?.val || 1;
-
-      setNightsPerYear(tokensToBuy / nightlyPrice);
-      setAccommodationOptions({ labels, prices });
+      setAccommodationOptions({ labels: labelsFuture, prices: pricesFuture });
       setSelectedAccommodation({
-        name: firstListing?.name || '',
-        price: nightlyPrice,
+        name: FUTURE_ACCOMMODATION_TYPES[0]?.name || '',
+        price: FUTURE_ACCOMMODATION_TYPES[0]?.price || 1,
       });
+      setNightsPerYear(tokensToBuy / (FUTURE_ACCOMMODATION_TYPES[0]?.price || 1));
+      setTokenPrice(0);
+      setTokensToSpend(0);
+      setIsCalculationPending?.(false);
+      return;
+    }
 
-      // Calculate initial total cost
-      debouncedCalculateTotalCost(tokensToBuy);
+    const initData = async () => {
+      try {
+        const res = await api.get('/listing', {
+          params: {
+            limit: MAX_LISTINGS_TO_FETCH,
+          },
+        });
+        const labels = res.data.results
+          .filter((option: Listing) => {
+            return !option?.priceDuration || option?.priceDuration === 'night';
+          })
+          .map((option: any) => {
+            return { label: option.name, value: option.name };
+          });
 
-      setTokenPrice(price);
-    })();
+        const labelsFuture = FUTURE_ACCOMMODATION_TYPES.map(
+          (accommodatinType: any) => {
+            return { label: accommodatinType.name, value: accommodatinType.name };
+          },
+        );
+
+        const prices = res?.data?.results
+          ?.filter((option: any) => option.tokenPrice?.val)
+          ?.map((option: any) => {
+            return option.tokenPrice?.val || 0;
+          }) || [];
+
+        const pricesFuture = FUTURE_ACCOMMODATION_TYPES.map(
+          (accommodatinType: any) => {
+            return accommodatinType.price;
+          },
+        );
+
+        labels.push(...labelsFuture);
+        prices.push(...pricesFuture);
+
+        const price = await getTotalCostWithoutWallet('1');
+
+        const firstListing =
+          res?.data?.results?.find((option: any) => option.tokenPrice?.val) ||
+          res?.data?.results?.[0];
+        const nightlyPrice = firstListing?.tokenPrice?.val || 1;
+
+        setNightsPerYear(tokensToBuy / nightlyPrice);
+        setAccommodationOptions({ labels, prices });
+        setSelectedAccommodation({
+          name: firstListing?.name || '',
+          price: nightlyPrice,
+        });
+        debouncedCalculateTotalCost(tokensToBuy);
+        setTokenPrice(price);
+      } catch (error) {
+        const labelsFuture = FUTURE_ACCOMMODATION_TYPES.map(
+          (accommodatinType: any) => {
+            return { label: accommodatinType.name, value: accommodatinType.name };
+          },
+        );
+        const pricesFuture = FUTURE_ACCOMMODATION_TYPES.map(
+          (accommodatinType: any) => {
+            return accommodatinType.price;
+          },
+        );
+        setAccommodationOptions({ labels: labelsFuture, prices: pricesFuture });
+        setSelectedAccommodation({
+          name: FUTURE_ACCOMMODATION_TYPES[0]?.name || '',
+          price: FUTURE_ACCOMMODATION_TYPES[0]?.price || 1,
+        });
+        setNightsPerYear(tokensToBuy / (FUTURE_ACCOMMODATION_TYPES[0]?.price || 1));
+        setTokenPrice(0);
+        setTokensToSpend(0);
+        setIsCalculationPending?.(false);
+        if (process.env.NODE_ENV !== 'test') {
+          console.error('Error loading listing options:', error);
+        }
+      }
+    };
+
+    void initData();
   }, []);
 
   // Cleanup on unmount

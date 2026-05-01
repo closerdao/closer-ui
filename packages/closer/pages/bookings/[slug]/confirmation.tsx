@@ -16,7 +16,7 @@ import {
   BookingConfig,
   Event,
 } from '../../../types';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import config from '../../../configCached';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
@@ -153,13 +153,12 @@ const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
 ConfirmationStep.getInitialProps = async (context: NextPageContext) => {
   const { query } = context;
   try {
-    const [bookingRes, configs, messages] = await Promise.all([
+    const [bookingRes, messages] = await Promise.all([
       api.get(`/booking/${query.slug}`).catch(() => null),
-      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const booking = bookingRes?.data?.results ?? null;
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
+    const bookingConfig = config.booking;
 
     const optionalEvent =
       booking?.eventId &&

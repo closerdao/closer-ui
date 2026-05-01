@@ -8,12 +8,11 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import { useBuyTokens } from '../hooks/useBuyTokens';
-import { useConfig } from '../hooks/useConfig';
 import useRBAC from '../hooks/useRBAC';
 import { NavigationLink } from '../types/nav';
 import api, { formatSearch } from '../utils/api';
 import { getCurrentUnitPrice } from '../utils/bondingCurve';
-import { getReserveTokenDisplay } from '../utils/config.utils';
+import type { MemberMenuFeatureFlags } from '../utils/memberMenuFeatureFlags';
 import FinancedTokenMenuWidget from './FinancedTokenMenuWidget';
 import Profile from './Profile';
 import ReportABug from './ReportABug';
@@ -26,11 +25,25 @@ interface MenuSection {
   items: NavigationLink[];
 }
 
-const MemberMenu = () => {
+const MemberMenu = ({
+  ready,
+  appName,
+  reserveToken,
+  isBookingEnabled,
+  areSubscriptionsEnabled,
+  isVolunteeringEnabled,
+  isEventsEnabled,
+  isCommunityEnabled,
+  isGovernanceEnabled,
+  isLearningHubEnabled,
+  isBlogEnabled,
+  isCitizenshipEnabled,
+  isRolesEnabled,
+  isFaqEnabled,
+  isAffiliateEnabled,
+}: MemberMenuFeatureFlags) => {
   const t = useTranslations();
-  const config = useConfig();
-  const { APP_NAME } = config || {};
-  const reserveToken = getReserveTokenDisplay(config);
+  const APP_NAME = appName;
   const { hasAccess } = useRBAC();
   const router = useRouter();
   const { getCurrentSupplyWithoutWallet } = useBuyTokens();
@@ -742,41 +755,7 @@ const MemberMenu = () => {
   };
 
   useEffect(() => {
-    if (!config?._configLoaded) return;
-    const bookingConfig = config.booking;
-    const subscriptionsConfig = config.subscriptions;
-    const volunteerConfig = config.volunteering;
-    const eventsConfig = config.events;
-    const communityConfig = config.community;
-
-    const areSubscriptionsEnabled =
-      subscriptionsConfig?.enabled &&
-      process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
-    const isBookingEnabled =
-      bookingConfig?.enabled &&
-      process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
-    const isVolunteeringEnabled =
-      volunteerConfig?.enabled === true &&
-      process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
-    const isEventsEnabled = eventsConfig?.enabled !== false;
-    const isCommunityEnabled = communityConfig?.enabled === true;
-    const isGovernanceEnabled = config.governance?.enabled === true;
-    const isLearningHubEnabled =
-      config.learningHub?.enabled === true &&
-      process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true';
-    const isBlogEnabled =
-      config.blog?.enabled === true &&
-      process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true';
-    const isCitizenshipEnabled =
-      config.citizenship?.enabled === true &&
-      process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
-    const isRolesEnabled =
-      config.roles?.enabled === true &&
-      process.env.NEXT_PUBLIC_FEATURE_ROLES === 'true';
-    const isFaqEnabled = Boolean(config?.FAQS_GOOGLE_SHEET_ID);
-    const isAffiliateEnabled =
-      config.affiliate?.enabled === true &&
-      process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true';
+    if (!ready) return;
 
     const sections = getMenuSections(
       isBookingEnabled,
@@ -794,7 +773,23 @@ const MemberMenu = () => {
     );
     const filteredSections = filterMenuSections(sections, user?.roles || []);
     setMenuSections(filteredSections);
-  }, [config, user, router.locale]);
+  }, [
+    ready,
+    isBookingEnabled,
+    areSubscriptionsEnabled,
+    isVolunteeringEnabled,
+    isEventsEnabled,
+    isCommunityEnabled,
+    isGovernanceEnabled,
+    isLearningHubEnabled,
+    isBlogEnabled,
+    isCitizenshipEnabled,
+    isRolesEnabled,
+    isFaqEnabled,
+    isAffiliateEnabled,
+    user,
+    router.locale,
+  ]);
 
   useEffect(() => {
     if (

@@ -15,9 +15,7 @@ import {
   ErrorBoundary,
   PlatformProvider,
   api,
-  getConfig,
 } from 'closer';
-import { configDescription } from 'closer/config';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import {
   applyCurrencyLocaleFromGeneralConfig,
@@ -28,6 +26,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import { blockchainConfig } from '../config_blockchain';
+import configKeyed from '../configCached';
 import { NewsletterProvider } from '../contexts/newsletter';
 import { PushNotificationProvider } from '../contexts/push-notifications';
 import { WalletProvider } from '../contexts/wallet';
@@ -36,24 +35,29 @@ interface AppOwnProps extends AppProps {
   configGeneral: any;
 }
 
-const prepareDefaultConfig = () => {
-  const general =
-    configDescription.find((config) => config.slug === 'general')?.value ?? {};
-  const transformedObject = Object.entries(general).reduce((acc, [key]) => {
-    return { ...acc, [key]: '' };
-  }, {});
-  return transformedObject;
+const buildStateFromKeyedConfig = (
+  keyedConfig: Record<string, any>,
+  configLoaded: boolean,
+) => {
+  const mergedGeneral = mergeGeneralConfigWithDefaults({
+    ...keyedConfig.general,
+    rbacConfig: keyedConfig.rbac || {},
+  });
+  applyCurrencyLocaleFromGeneralConfig(mergedGeneral);
+  return {
+    ...prepareGeneralConfig(mergedGeneral),
+    ...keyedConfig,
+    _configLoaded: configLoaded,
+  };
 };
 
 const MyApp = ({ Component, pageProps }: AppOwnProps) => {
-  const defaultGeneralConfig = prepareDefaultConfig();
-
   const router = useRouter();
   const { query } = router;
   const referral = query.referral;
 
-  const [config, setConfig] = useState<any>(
-    prepareGeneralConfig(defaultGeneralConfig),
+  const [config] = useState<any>(() =>
+    buildStateFromKeyedConfig(configKeyed, true),
   );
 
   const { FACEBOOK_PIXEL_ID } = config || {};
@@ -77,26 +81,6 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
       })();
     }
   }, [referral]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const keyedConfig = await getConfig(api);
-        const mergedGeneral = mergeGeneralConfigWithDefaults({
-          ...keyedConfig.general,
-          rbacConfig: keyedConfig.rbac || {},
-        });
-        applyCurrencyLocaleFromGeneralConfig(mergedGeneral);
-        setConfig({
-          ...prepareGeneralConfig(mergedGeneral),
-          ...keyedConfig,
-          _configLoaded: true,
-        });
-      } catch (err) {
-        console.error(err);
-      }
-    })();
-  }, []);
 
   return (
     <>

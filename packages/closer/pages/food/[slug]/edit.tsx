@@ -9,7 +9,7 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import models from '../../../models';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import config from '../../../configCached';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
@@ -78,14 +78,13 @@ EditFood.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No food slug provided');
     }
 
-    const [foodRes, configs, messages] = await Promise.all([
+    const [foodRes, messages] = await Promise.all([
       api.get(`/food/${query.slug}`).catch(() => null),
-      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const food = foodRes?.data?.results;
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
+    const bookingConfig = config.booking;
 
     return { food, bookingConfig, messages };
   } catch (err: unknown) {

@@ -12,7 +12,6 @@ import LinkButton from 'closer/components/ui/LinkButton';
 import { Heading, Webinar } from 'closer';
 import {
   DEFAULT_TOKEN_STATS,
-  FundraisingConfig,
   TokenStats,
 } from 'closer/types';
 import api from 'closer/utils/api';
@@ -33,15 +32,15 @@ import {
   Users,
   Users2,
 } from 'lucide-react';
-import { NextPageContext } from 'next';
+import type { GetStaticPropsContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { event } from 'nextjs-google-analytics';
-import { useConfig } from 'closer/hooks/useConfig';
+
+import config from '../configCached';
 
 const HomePage = () => {
   const t = useTranslations();
-  const config = useConfig();
-  const twitterHandle = twitterUrlToHandle(config?.TWITTER_URL);
+  const twitterHandle = twitterUrlToHandle(config.general.twitterUrl);
 
   const [selectedReport, setSelectedReport] = useState<{
     year: string;
@@ -49,27 +48,11 @@ const HomePage = () => {
   } | null>(null);
   const [tokenStats, setTokenStats] = useState<TokenStats>(DEFAULT_TOKEN_STATS);
   const [isLoadingTokenStats, setIsLoadingTokenStats] = useState(true);
-  const [fundraisingConfig, setFundraisingConfig] =
-    useState<FundraisingConfig | null>(null);
   const hasFetchedTokenStats = useRef(false);
 
   const isFundraiserEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true';
-
-  useEffect(() => {
-    if (!isFundraiserEnabled) return;
-
-    const fetchFundraisingConfig = async () => {
-      try {
-        const res = await api.get('/config/fundraiser');
-        setFundraisingConfig(res?.data?.results?.value);
-      } catch (error) {
-        console.error('Error fetching fundraising config:', error);
-      }
-    };
-
-    fetchFundraisingConfig();
-  }, [isFundraiserEnabled]);
+    process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true' &&
+    config.fundraiser.enabled;
 
   useEffect(() => {
     if (hasFetchedTokenStats.current) return;
@@ -744,7 +727,7 @@ const HomePage = () => {
             </div>
           </div>
 
-          {isFundraiserEnabled && fundraisingConfig?.enabled && (
+          {isFundraiserEnabled && (
             <div className="max-w-2xl mx-auto">
               <div className="bg-white rounded-2xl border-2 border-accent/20 p-5 sm:p-6 shadow-lg">
                 <div className="flex flex-col sm:flex-row gap-5 sm:gap-6 items-start">
@@ -765,7 +748,13 @@ const HomePage = () => {
                   <div className="w-full sm:w-auto flex-shrink-0 space-y-3">
                     <FundraisingWidget
                       variant="hero"
-                      fundraisingConfig={fundraisingConfig}
+                      milestones={config.fundraiser.milestones}
+                      amountRaisedPreCampaign={
+                        config.fundraiser.amountRaisedPreCampaign
+                      }
+                      loansCollectedTotal={
+                        config.fundraiser.loansCollectedTotal
+                      }
                     />
                     <Link
                       href="/fundraiser"
@@ -1072,10 +1061,14 @@ const HomePage = () => {
         </div>
       </section>
 
-      <Webinar
-        tags={['landing-page', 'investor-webinar']}
-        analyticsCategory="HomePage"
-      />
+      {config.webinar.enabled && (
+        <Webinar
+          tags={['landing-page', 'investor-webinar']}
+          analyticsCategory="HomePage"
+          schedule={config.webinar}
+          generalTimezone={config.general.timeZone}
+        />
+      )}
 
       <UpcomingEventsIntro />
 
@@ -1092,7 +1085,7 @@ const HomePage = () => {
 
 export default HomePage;
 
-export async function getStaticProps({ locale }: NextPageContext) {
+export async function getStaticProps({ locale }: GetStaticPropsContext) {
   return {
     props: {
       messages: await loadLocaleData(locale, 'tdf'),

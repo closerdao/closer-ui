@@ -207,14 +207,8 @@ export { default as CohousingApplicationsTeamPage } from './pages/cohousing/appl
 export * from './types/';
 // Utils
 export { default as api, cdn } from './utils/api';
-export {
-  getConfig,
-  getConfigArray,
-  getConfigBySlug,
-  getConfigValueBySlug,
-  invalidateConfigCache,
-  CONFIG_CACHE_TTL,
-} from './utils/configCache';
+export { invalidateConfigCache } from './utils/configCache';
+export { default as configCached } from './configCached';
 export {
   buildMergedConfig,
   mergePaymentValueWithBookingCurrencyFallback,

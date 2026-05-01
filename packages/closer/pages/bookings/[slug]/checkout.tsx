@@ -55,6 +55,7 @@ import {
   PaymentType,
 } from '../../../types';
 import api from '../../../utils/api';
+import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import {
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
@@ -63,7 +64,7 @@ import {
   payTokens,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import config from '../../../configCached';
 import { priceFormat } from '../../../utils/helpers';
 import { formatDate } from '../../../utils/listings.helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
@@ -1896,40 +1897,25 @@ const Checkout = ({
 Checkout.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
   try {
-    const [bookingRes, configs] = await Promise.all([
-      api
-        .get(`/booking/${query.slug}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
-        })
-        .catch(() => null),
-      getConfig(api),
-    ]);
+    const bookingRes = await api
+      .get(`/booking/${query.slug}`, {
+        headers: getBearerAuthHeaders(req as NextApiRequest),
+      })
+      .catch(() => null);
     const booking = bookingRes?.data?.results;
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
-    const web3Config = getConfigValueBySlug(configs, 'web3');
+    const bookingConfig = config.booking;
+    const web3Config = config.web3;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
-    const paymentConfig = getConfigValueBySlug(configs, 'payment');
+    const paymentConfig = config.payment;
 
     const [optionalEvent, optionalListing, messages] = await Promise.all([
       booking.eventId &&
         api.get(`/event/${booking.eventId}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         }),
       booking.listing &&
         api.get(`/listing/${booking.listing}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         }),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);

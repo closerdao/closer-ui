@@ -24,8 +24,9 @@ import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
 import { CloserCurrencies } from '../../../types/currency';
 import { Event, Listing } from '../../../types';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import config from '../../../configCached';
 import api, { cdn } from '../../../utils/api';
+import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { getAccommodationPriceRange } from '../../../utils/events.helpers';
 import {
@@ -836,14 +837,10 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
   const { convert } = require('html-to-text');
   try {
-    const [event, listings, configs, messages] = await Promise.all([
+    const [event, listings, messages] = await Promise.all([
       api
         .get(`/event/${query.slug}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         })
         .catch((err) => {
           console.error('Error fetching event:', err);
@@ -854,11 +851,10 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
           params: { limit: MAX_LISTINGS_TO_FETCH },
         })
         .catch(() => null),
-      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
-    const eventsConfig = getConfigValueBySlug(configs, 'events');
+    const eventsConfig = config.events;
 
     const options = {
       baseElements: { selectors: ['p', 'h2', 'span'] },
@@ -876,11 +872,7 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
       const {
         data: { results: eventCreatorData },
       } = await api.get(`/user/${eventCreatorId}`, {
-        headers: (req as NextApiRequest)?.cookies?.access_token && {
-          Authorization: `Bearer ${
-            (req as NextApiRequest)?.cookies?.access_token
-          }`,
-        },
+        headers: getBearerAuthHeaders(req as NextApiRequest),
       });
       eventCreator = eventCreatorData;
       descriptionText = convert(event?.data.results.description, options)
@@ -893,7 +885,7 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
       eventCreator,
       descriptionText,
       listings: listings?.data?.results,
-      settings: getConfigValueBySlug(configs, 'booking'),
+      settings: config.booking,
       eventsConfig,
       messages,
     };

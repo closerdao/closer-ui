@@ -12,7 +12,7 @@ import useRBAC from '../../../hooks/useRBAC';
 import { BookingConfig } from '../../../types/api';
 import { EmailTemplate } from '../../../types/emailTemplate';
 import api from '../../../utils/api';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import config from '../../../configCached';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
@@ -65,14 +65,13 @@ const EmailsPage = ({ templates, bookingConfig }: Props) => {
 
 EmailsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [emailsRes, configs, messages] = await Promise.all([
+    const [emailsRes, messages] = await Promise.all([
       api.get('/emailtemplates?limit=100'),
-      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const templates = emailsRes?.data?.results ?? [];
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
+    const bookingConfig = config.booking;
 
     return {
       templates,

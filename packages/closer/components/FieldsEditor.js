@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { ObjectId } from 'bson';
+import { ObjectId } from '../utils/bsonObjectId';
 import { Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 

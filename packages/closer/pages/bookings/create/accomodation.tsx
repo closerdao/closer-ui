@@ -35,7 +35,7 @@ import {
 } from '../../../utils/booking.helpers';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import config from '../../../configCached';
 import { getBookingRate, getDiscountRate } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
@@ -345,7 +345,7 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
     const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
     const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
 
-    const [availabilityRes, configs, messages] = await Promise.all([
+    const [availabilityRes, messages] = await Promise.all([
       api
         .post('/bookings/availability', {
           start,
@@ -366,14 +366,13 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
           );
           return { error: err.response.data.error || 'Unknown error' };
         }),
-      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const bookingError = (availabilityRes as any)?.error || null;
     const availability = (availabilityRes as any)?.data?.results;
 
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
-    const web3Config = getConfigValueBySlug(configs, 'web3');
+    const bookingConfig = config.booking;
+    const web3Config = config.web3;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
 
     let event = null;

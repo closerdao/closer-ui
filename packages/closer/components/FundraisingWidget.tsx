@@ -6,7 +6,7 @@ import { CheckCircle2, PartyPopper } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
-import { FundraisingConfig } from '../types/api';
+import type { FundraisingMilestone } from '../types/api';
 import { formatIsoFiatAmount } from '../utils/currencyFormat';
 import {
   computeMilestoneStates,
@@ -20,7 +20,9 @@ import {
 interface FundraisingWidgetProps {
   variant?: 'nav' | 'hero';
   className?: string;
-  fundraisingConfig?: FundraisingConfig;
+  milestones?: FundraisingMilestone[];
+  amountRaisedPreCampaign?: number | string;
+  loansCollectedTotal?: number | string;
 }
 
 const DEFAULT_END_DATE = '2026-05-31T23:59:59.999Z';
@@ -28,7 +30,9 @@ const DEFAULT_END_DATE = '2026-05-31T23:59:59.999Z';
 const FundraisingWidget = ({
   variant = 'nav',
   className = '',
-  fundraisingConfig,
+  milestones = [],
+  amountRaisedPreCampaign,
+  loansCollectedTotal,
 }: FundraisingWidgetProps) => {
   const t = useTranslations();
   const { user } = useAuth();
@@ -45,12 +49,12 @@ const FundraisingWidget = ({
   const [showBubble, setShowBubble] = useState(false);
 
   const sortedMilestones = useMemo(
-    () => sortMilestonesByStartDate(fundraisingConfig?.milestones ?? []),
-    [fundraisingConfig?.milestones],
+    () => sortMilestonesByStartDate(milestones ?? []),
+    [milestones],
   );
   const activeMilestone = useMemo(
-    () => findActiveMilestone(fundraisingConfig?.milestones),
-    [fundraisingConfig?.milestones],
+    () => findActiveMilestone(milestones),
+    [milestones],
   );
 
   useEffect(() => {
@@ -67,7 +71,10 @@ const FundraisingWidget = ({
   useEffect(() => {
     const load = async () => {
       try {
-        const breakdown = await fetchFundraisingBreakdown(fundraisingConfig);
+        const breakdown = await fetchFundraisingBreakdown({
+          amountRaisedPreCampaign,
+          loansCollectedTotal,
+        });
         setTotalRaised(breakdown.totalRaised);
         setCryptoTotal(breakdown.cryptoTotal);
         setFiatTotal(breakdown.fiatTotal);
@@ -91,7 +98,12 @@ const FundraisingWidget = ({
       }
     };
     load();
-  }, [fundraisingConfig, sortedMilestones, activeMilestone]);
+  }, [
+    amountRaisedPreCampaign,
+    loansCollectedTotal,
+    sortedMilestones,
+    activeMilestone,
+  ]);
 
   useEffect(() => {
     const show = setTimeout(() => setShowSparkle(true), 5000);

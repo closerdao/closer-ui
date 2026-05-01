@@ -9,7 +9,7 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import models from '../../models';
-import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
+import config from '../../configCached';
 import api from '../../utils/api';
 import { getBookingTokenCurrency } from '../../utils/booking.helpers';
 import { loadLocaleData } from '../../utils/locale.helpers';
@@ -103,13 +103,13 @@ const CreateListing = ({ bookingConfig, paymentConfig, web3Config }: Props) => {
 
 CreateListing.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [configs, messages] = await Promise.all([
-      getConfig(api),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
-    const paymentConfig = getConfigValueBySlug(configs, 'payment');
-    const web3Config = getConfigValueBySlug(configs, 'web3');
+    const messages = await loadLocaleData(
+      context?.locale,
+      process.env.NEXT_PUBLIC_APP_NAME,
+    );
+    const bookingConfig = config.booking;
+    const paymentConfig = config.payment;
+    const web3Config = config.web3;
     return {
       bookingConfig,
       paymentConfig,

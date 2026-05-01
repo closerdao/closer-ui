@@ -16,8 +16,9 @@ import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { Event } from '../../../types';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import config from '../../../configCached';
 import api from '../../../utils/api';
+import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
@@ -146,25 +147,20 @@ const EventTickets = ({ event, eventsConfig }: Props) => {
 EventTickets.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
   try {
-    const [eventRes, configs, messages] = await Promise.all([
+    const [eventRes, messages] = await Promise.all([
       api
         .get(`/event/${query.slug}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         })
         .catch((err) => {
           console.error('Error fetching event:', err);
           return null;
         }),
-      getConfig(api),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const event = eventRes?.data?.results;
-    const eventsConfig = getConfigValueBySlug(configs, 'events');
+    const eventsConfig = config.events;
 
     return { event, eventsConfig, messages };
   } catch (err) {

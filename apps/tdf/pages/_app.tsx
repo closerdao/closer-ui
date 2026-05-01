@@ -3,20 +3,14 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Script from 'next/script';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { ErrorBoundary, Layout } from '@/components';
 
 import AcceptCookies from 'closer/components/AcceptCookies';
 import PushNotificationModal from 'closer/components/PushNotificationModal';
 
-import {
-  AuthProvider,
-  ConfigProvider,
-  PlatformProvider,
-  api,
-  getConfig,
-} from 'closer';
+import { AuthProvider, ConfigProvider, PlatformProvider } from 'closer';
 import { blockchainConfig } from 'closer/config_blockchain';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import rbacDefaultConfig from 'closer/constants/rbac';
@@ -32,6 +26,7 @@ import { getAppConfigFromEnv } from 'closer/utils/appConfigFromEnv';
 import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
+import configKeyed from '../configCached';
 import '../styles/index.css';
 
 interface AppOwnProps extends AppProps {
@@ -39,17 +34,21 @@ interface AppOwnProps extends AppProps {
 }
 
 const MyApp = ({ Component, pageProps }: AppOwnProps) => {
-  const defaultGeneralConfig = mergeGeneralConfigWithDefaults(null);
-  applyCurrencyLocaleFromGeneralConfig(defaultGeneralConfig);
   const router = useRouter();
   const { query } = router;
   const referral = query.referral;
-  const mountedRef = useRef(false);
-  const [config, setConfig] = useState<any>(() => ({
-    ...prepareGeneralConfig(defaultGeneralConfig),
-    _configLoaded: false,
-  }));
-  const [rbacConfig, setRBACConfig] = useState<any>(rbacDefaultConfig);
+  const [config] = useState<any>(() => {
+    const mergedGeneral = mergeGeneralConfigWithDefaults(configKeyed.general);
+    applyCurrencyLocaleFromGeneralConfig(mergedGeneral);
+    return {
+      ...prepareGeneralConfig(mergedGeneral),
+      ...configKeyed,
+      _configLoaded: true,
+    };
+  });
+  const [rbacConfig] = useState<any>(
+    () => configKeyed.rbac || rbacDefaultConfig,
+  );
 
   const { FACEBOOK_PIXEL_ID } = config || {};
 
@@ -58,31 +57,6 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
       localStorage.setItem(REFERRAL_ID_LOCAL_STORAGE_KEY, referral as string);
     }
   }, [referral]);
-
-  useEffect(() => {
-    if (!mountedRef.current) {
-      mountedRef.current = true;
-    }
-
-    (async () => {
-      try {
-        const keyedConfig = await getConfig(api);
-        const mergedGeneral = mergeGeneralConfigWithDefaults(
-          keyedConfig.general,
-        );
-        applyCurrencyLocaleFromGeneralConfig(mergedGeneral);
-        setConfig({
-          ...prepareGeneralConfig(mergedGeneral),
-          ...keyedConfig,
-          _configLoaded: true,
-        });
-        setRBACConfig(keyedConfig.rbac || {});
-      } catch (err) {
-        console.error(err);
-        setConfig((prev: any) => ({ ...prev, _configLoaded: true }));
-      }
-    })();
-  }, []);
 
   return (
     <>
