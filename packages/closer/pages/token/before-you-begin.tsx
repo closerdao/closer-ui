@@ -135,9 +135,7 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
         point: tokensToBuy,
       });
       router.push(
-        `/token/nationality?tokenSaleType=fiat&tokens=${encodeURIComponent(
-          tokensToBuy,
-        )}&totalFiat=${encodeURIComponent(tokensToSpend)}&saleId=${encodeURIComponent(saleId)}`,
+        `/token/nationality?tokenSaleType=fiat&saleId=${encodeURIComponent(saleId)}`,
       );
     } else if (tokenSaleType === 'crypto') {
       void logMetric({
@@ -146,7 +144,7 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
         point: tokensToBuy,
       });
       router.push(
-        `/token/checklist-crypto?tokens=${encodeURIComponent(tokensToBuy)}&saleId=${encodeURIComponent(saleId)}`,
+        `/token/checklist-crypto?saleId=${encodeURIComponent(saleId)}`,
       );
     }
   };

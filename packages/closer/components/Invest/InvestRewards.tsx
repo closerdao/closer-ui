@@ -40,7 +40,8 @@ const InvestRewards = ({
     const tokens = Number(pkg.tokens) || 0;
     const credits = Number(pkg.credits) || 0;
     if (pkg.ctaUrl && pkg.ctaUrl.trim() !== '') return pkg.ctaUrl;
-    if (pkg.type === 'tokens') return `/token/checkout?tokens=${tokens}`;
+    if (pkg.type === 'tokens')
+      return `/token/before-you-begin?tokens=${tokens}`;
     if (pkg.type === 'loan') return loanPackageHref;
     if (pkg.type === 'credits' && credits)
       return `/credits/checkout?amount=${credits}`;

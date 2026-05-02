@@ -24,6 +24,7 @@ import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { logMetric } from '../../utils/metrics';
+import { fetchTokenSaleQuantityForMetric } from '../../utils/tokenSale.helpers';
 import { doesAddressMatchPattern, isInputValid } from '../../utils/helpers';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
@@ -37,7 +38,7 @@ const NationalityPage = ({ generalConfig }: Props) => {
 
   useSalePaidRedirect();
 
-  const { totalFiat, tokens, tokenSaleType, saleId } = router.query;
+  const { tokenSaleType, saleId } = router.query;
 
   const { isAuthenticated, isLoading, refetchUser, user } = useAuth();
 
@@ -134,13 +135,13 @@ const NationalityPage = ({ generalConfig }: Props) => {
       });
       await refetchUser();
 
-      const tokenQty = parseInt(String(tokens ?? ''), 10);
-      const point = Number.isFinite(tokenQty) ? tokenQty : 0;
+      const sid = String(saleId ?? '').trim();
+      const point = sid ? await fetchTokenSaleQuantityForMetric(sid) : 0;
 
       if (tokenSaleType === 'fiat') {
         await logMetric({ event: 'kyc-submit-fiat', value: 'token-sale', point });
         router.push(
-          `/token/bank-transfer?tokens=${tokens}&totalFiat=${totalFiat}&saleId=${saleId}`,
+          `/token/bank-transfer?saleId=${encodeURIComponent(sid)}`,
         );
       } else if (tokenSaleType === 'crypto') {
         await logMetric({
@@ -148,23 +149,22 @@ const NationalityPage = ({ generalConfig }: Props) => {
           value: 'token-sale',
           point,
         });
-        router.push(`/token/checkout?tokens=${tokens}&saleId=${saleId}`);
-      } else if (tokens && saleId) {
+        router.push(`/token/checkout?saleId=${encodeURIComponent(sid)}`);
+      } else if (sid) {
         await logMetric({
           event: 'kyc-submit-checkout',
           value: 'token-sale',
           point,
         });
-        router.push(
-          `/token/checkout?tokens=${encodeURIComponent(String(tokens))}&saleId=${encodeURIComponent(String(saleId))}`,
-        );
+        router.push(`/token/checkout?saleId=${encodeURIComponent(sid)}`);
       }
     } catch (error) {
-      const tokenQty = parseInt(String(tokens ?? ''), 10);
+      const sid = String(saleId ?? '').trim();
+      const fallbackPoint = sid ? await fetchTokenSaleQuantityForMetric(sid) : 0;
       void logMetric({
         event: 'kyc-submit-error',
         value: 'token-sale',
-        point: Number.isFinite(tokenQty) ? tokenQty : 0,
+        point: fallbackPoint,
       });
       setErrorMessage(parseMessageFromError(error));
     } finally {

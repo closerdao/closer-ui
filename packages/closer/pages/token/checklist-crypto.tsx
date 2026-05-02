@@ -18,6 +18,7 @@ import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
 import { logMetric } from '../../utils/metrics';
+import { fetchTokenSaleQuantityForMetric } from '../../utils/tokenSale.helpers';
 import { getReserveTokenDisplay } from '../../utils/config.utils';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
@@ -37,7 +38,7 @@ const ChecklistCryptoPage = ({ generalConfig }: Props) => {
 
   useSalePaidRedirect();
 
-  const { tokens, saleId } = router.query;
+  const { saleId } = router.query;
 
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
@@ -69,15 +70,16 @@ const ChecklistCryptoPage = ({ generalConfig }: Props) => {
   }, []);
 
   const handleNext = async () => {
-    const qty = parseInt(String(tokens ?? ''), 10);
+    const sid = String(saleId ?? '').trim();
+    const point = sid ? await fetchTokenSaleQuantityForMetric(sid) : 0;
     void logMetric({
       event: 'continue-checklist-crypto',
       value: 'token-sale',
-      point: Number.isFinite(qty) ? qty : 0,
+      point,
     });
-    const encodedSaleId = encodeURIComponent(String(saleId || ''));
+    const encodedSaleId = encodeURIComponent(sid);
     router.push(
-      `/token/nationality?tokenSaleType=crypto&tokens=${encodeURIComponent(tokens as string)}&saleId=${encodedSaleId}`,
+      `/token/nationality?tokenSaleType=crypto&saleId=${encodedSaleId}`,
     );
   };
 

@@ -2,6 +2,7 @@ import Head from 'next/head';
 
 import { ChangeEvent, useEffect, useState } from 'react';
 
+import AccountingEntitiesVatFields from '../../components/AccountingEntitiesVatFields';
 import ArrayConfig from '../../components/ArrayConfig';
 import ConfigImageUpload from '../../components/ConfigImageUpload';
 import AdminLayout from '../../components/Dashboard/AdminLayout';
@@ -50,6 +51,8 @@ const FUNDRAISER_CONFIG_KEYS_ORDER = [
   'milestones',
   'packages',
 ];
+
+const ACCOUNTING_ENTITIES_CONFIG_KEYS_ORDER = ['elements', 'vatByProductType'];
 
 interface Props {
   error: null | string;
@@ -698,7 +701,17 @@ const ConfigPage = ({ bookingConfig }: Props) => {
                                   k,
                                 ),
                               ).map((k) => [k, configData.value[k]] as const)
-                            : Object.entries(configData.value)
+                            : configSlug === 'accounting-entities'
+                              ? ACCOUNTING_ENTITIES_CONFIG_KEYS_ORDER.filter(
+                                  (k) =>
+                                    Object.prototype.hasOwnProperty.call(
+                                      configData.value,
+                                      k,
+                                    ),
+                                ).map(
+                                  (k) => [k, configData.value[k]] as const,
+                                )
+                              : Object.entries(configData.value)
                           ).map(
                             ([key, value]) => {
                               const currentValue = configData.value[key];
@@ -748,6 +761,61 @@ const ConfigPage = ({ bookingConfig }: Props) => {
                                 configData.value?.primaryCtaMember !== 'custom'
                               ) {
                                 return null;
+                              }
+
+                              if (
+                                configSlug === 'accounting-entities' &&
+                                key === 'vatByProductType'
+                              ) {
+                                const paymentVal = updatedConfigs.find(
+                                  (c) => c.slug === 'payment',
+                                )?.value;
+                                const defaultVatRate = paymentVal?.vatRate as
+                                  | number
+                                  | undefined;
+                                const vatMap =
+                                  currentValue &&
+                                  typeof currentValue === 'object' &&
+                                  !Array.isArray(currentValue)
+                                    ? (currentValue as Record<
+                                        string,
+                                        number | undefined
+                                      >)
+                                    : {};
+                                return (
+                                  <div
+                                    key={`${configSlug}-${key}`}
+                                    className="flex flex-col gap-2"
+                                  >
+                                    <h4 className="text-sm font-semibold text-gray-800">
+                                      {t('config_section_accounting_vat')}
+                                    </h4>
+                                    <AccountingEntitiesVatFields
+                                      elements={
+                                        Array.isArray(configData.value.elements)
+                                          ? configData.value.elements
+                                          : []
+                                      }
+                                      vatByProductType={vatMap}
+                                      defaultVatRate={defaultVatRate}
+                                      onChange={(next) => {
+                                        setUpdatedConfigs(
+                                          updatedConfigs.map((config) =>
+                                            config.slug === configSlug
+                                              ? {
+                                                  ...config,
+                                                  value: {
+                                                    ...config.value,
+                                                    vatByProductType: next,
+                                                  } as unknown as Config['value'],
+                                                }
+                                              : config,
+                                          ),
+                                        );
+                                      }}
+                                    />
+                                  </div>
+                                );
                               }
 
                               const fundraiserSectionKey =

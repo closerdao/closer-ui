@@ -16,12 +16,16 @@ export function useSalePaidRedirect(): void {
 
     (async () => {
       try {
-        const res = await api.get('/sale', {
-          params: {
-            where: formatSearch({ _id: saleId }),
-            limit: 1,
-          },
-        });
+        const res = await api.get(
+          '/sale',
+          {
+            params: {
+              where: formatSearch({ _id: saleId }),
+              limit: 1,
+            },
+            cache: false,
+          } as Parameters<typeof api.get>[1],
+        );
         const rows = res?.data?.results;
         const list = Array.isArray(rows) ? rows : [];
         const first = list[0] as { status?: string } | undefined;

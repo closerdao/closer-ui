@@ -1,5 +1,7 @@
 import { User } from 'closer/contexts/auth/types';
 
+import type { AccountingEntityProductSlug } from '../constants/accountingEntities.constants';
+
 import { CloserCurrencies, Price } from './currency';
 
 export type FileUploadResult = {
@@ -304,6 +306,24 @@ export type AccountingEntityElement = {
 export type AccountingEntitiesConfig = {
   enabled?: boolean;
   elements?: AccountingEntityElement[];
+  vatByProductType?: Partial<
+    Record<AccountingEntityProductSlug, number>
+  >;
+};
+
+export type SaleInitPaymentMethod = 'bank' | 'card' | 'crypto';
+
+export type SaleInitBody = {
+  type: string;
+  total_price?: number;
+  token_price?: number;
+  quantity?: number;
+  productId?: string;
+  paymentMethod?: SaleInitPaymentMethod;
+  entity?: string;
+  name?: string;
+  email?: string;
+  message?: string;
 };
 
 export type TokenSale = {

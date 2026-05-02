@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useMemo, useState } from 'react';
@@ -24,8 +25,15 @@ import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
+import { TokenSale } from '../../types/api';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import {
+  checkoutTokensFromSaleQuantity,
+  fetchTokenSaleById,
+  rawQuantityFromSale,
+  waitForTokenSalePaidStatus,
+} from '../../utils/tokenSale.helpers';
 import { logMetric } from '../../utils/metrics';
 import { formatIntlNumberTwoDecimals } from '../../utils/currencyFormat';
 import { getReserveTokenDisplay } from '../../utils/config.utils';
@@ -42,7 +50,44 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
   const router = useRouter();
-  const { tokens, saleId } = router.query || { tokens: '33' };
+  const { tokens: tokensQuery, saleId: saleIdQuery } = router.query;
+
+  const [sale, setSale] = useState<TokenSale | null>(null);
+  const [saleLoading, setSaleLoading] = useState(false);
+  const [saleFetchError, setSaleFetchError] = useState<string | null>(null);
+
+  const saleIdTrimmed = useMemo(() => {
+    const s = saleIdQuery;
+    if (s === undefined || s === null) return '';
+    const raw = Array.isArray(s) ? s[0] : s;
+    return String(raw ?? '').trim();
+  }, [saleIdQuery]);
+
+  const tokensForCheckout = useMemo(
+    () => checkoutTokensFromSaleQuantity(sale),
+    [sale],
+  );
+
+  const rawQty = useMemo(() => rawQuantityFromSale(sale), [sale]);
+
+  const missingSaleId = router.isReady && !saleIdTrimmed;
+  const isZeroTokens =
+    router.isReady &&
+    !saleLoading &&
+    !!sale &&
+    Number.isFinite(rawQty) &&
+    rawQty === 0;
+  const showCheckoutActions =
+    Boolean(tokensForCheckout) &&
+    !missingSaleId &&
+    !saleFetchError &&
+    !saleLoading;
+
+  const startSaleFlowHref = useMemo(() => {
+    const base = '/token/before-you-begin';
+    if (!saleIdTrimmed) return base;
+    return `${base}?saleId=${encodeURIComponent(saleIdTrimmed)}`;
+  }, [saleIdTrimmed]);
 
   useSalePaidRedirect();
 
@@ -73,13 +118,13 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   const [isMetamaskLoading, setIsMetamaskLoading] = useState(false);
 
   const formattedUnitPrice = useMemo(() => {
-    const qty = parseInt(tokens as string, 10);
+    const qty = tokensForCheckout ? parseInt(tokensForCheckout, 10) : 0;
     const n = qty > 0 ? total / qty : 0;
     return formatIntlNumberTwoDecimals(
       Number.isFinite(n) ? n : 0,
       router.locale || undefined,
     );
-  }, [total, tokens, router.locale]);
+  }, [total, tokensForCheckout, router.locale]);
 
   const formattedTotalAmount = useMemo(
     () => formatIntlNumberTwoDecimals(total, router.locale || undefined),
@@ -93,30 +138,76 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   }, [isAuthenticated, isLoading]);
 
   useEffect(() => {
-    if (isWalletReady && isConfigReady) {
-      (async () => {
-        const totalCost = await getTotalCost(tokens as string);
-        setTotal(totalCost);
-        const isAllowanceSufficient = await isCeurApproved(tokens as string);
-        setIsApproved(isAllowanceSufficient);
-      })();
+    if (!router.isReady || tokensQuery === undefined || !saleIdTrimmed) return;
+    router.replace(
+      {
+        pathname: router.pathname,
+        query: { saleId: saleIdTrimmed },
+      },
+      undefined,
+      { shallow: true },
+    );
+  }, [router.isReady, tokensQuery, saleIdTrimmed, router.pathname]);
+
+  useEffect(() => {
+    if (!router.isReady || !saleIdTrimmed) {
+      setSale(null);
+      setSaleFetchError(null);
+      setSaleLoading(false);
+      return;
     }
-  }, [isWalletReady, isConfigReady]);
+    let cancelled = false;
+    setSaleLoading(true);
+    setSaleFetchError(null);
+    (async () => {
+      const fetched = await fetchTokenSaleById(saleIdTrimmed);
+      if (cancelled) return;
+      if (!fetched) {
+        setSale(null);
+        setSaleFetchError(t('sale_summary_not_found'));
+      } else {
+        setSale(fetched);
+      }
+      setSaleLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router.isReady, saleIdTrimmed, t]);
+
+  useEffect(() => {
+    if (!isWalletReady || !isConfigReady || !tokensForCheckout) {
+      return;
+    }
+    (async () => {
+      const totalCost = await getTotalCost(tokensForCheckout);
+      setTotal(totalCost);
+      const isAllowanceSufficient = await isCeurApproved(tokensForCheckout);
+      setIsApproved(isAllowanceSufficient);
+    })();
+  }, [isWalletReady, isConfigReady, tokensForCheckout]);
+
+  useEffect(() => {
+    if (tokensForCheckout) return;
+    setTotal(0);
+    setIsApproved(false);
+  }, [tokensForCheckout]);
 
   const goBack = async () => {
     router.push(
-      `/token/nationality?tokenSaleType=crypto&tokens=${encodeURIComponent(
-        String(tokens || ''),
-      )}&saleId=${encodeURIComponent(String(saleId || ''))}`,
+      `/token/nationality?tokenSaleType=crypto&saleId=${encodeURIComponent(
+        saleIdTrimmed,
+      )}`,
     );
   };
 
   const handleApprovalTx = async () => {
+    if (!tokensForCheckout) return;
     setWeb3Error(null);
     setApiError(null);
     setIsMetamaskLoading(true);
 
-    const purchaseQty = parseInt(String(tokens ?? ''), 10);
+    const purchaseQty = parseInt(tokensForCheckout, 10);
     const tokenPoint = Number.isFinite(purchaseQty) ? purchaseQty : 0;
 
     const { success, errorCode, userMessage } = await approveCeur(total);
@@ -144,12 +235,13 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   };
 
   const handlePurchaseTx = async () => {
+    if (!tokensForCheckout) return;
     setWeb3Error(null);
     setApiError(null);
     setPendingValidationTxHash(null);
     setIsMetamaskLoading(true);
-    const normalizedSaleId = String(saleId || '').trim();
-    const purchaseQty = parseInt(String(tokens ?? ''), 10);
+    const normalizedSaleId = saleIdTrimmed;
+    const purchaseQty = parseInt(tokensForCheckout, 10);
     const tokenPoint = Number.isFinite(purchaseQty) ? purchaseQty : 0;
 
     if (!normalizedSaleId) {
@@ -162,9 +254,8 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
       setIsMetamaskLoading(false);
       return;
     }
-    const { success, txHash, errorCode, userMessage } = await buyTokens(
-      tokens as string,
-    );
+    const { success, txHash, errorCode, userMessage } =
+      await buyTokens(tokensForCheckout);
     if (success) {
       try {
         await api.post(
@@ -189,6 +280,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
         return;
       }
 
+      await waitForTokenSalePaidStatus(normalizedSaleId);
       await logMetric({
         event: 'purchase-complete-crypto',
         value: 'token-sale',
@@ -222,12 +314,13 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   };
 
   const handleRetrySaleValidation = async () => {
+    if (!tokensForCheckout) return;
     setWeb3Error(null);
     setApiError(null);
     setIsMetamaskLoading(true);
 
-    const normalizedSaleId = String(saleId || '').trim();
-    const retryQty = parseInt(String(tokens ?? ''), 10);
+    const normalizedSaleId = saleIdTrimmed;
+    const retryQty = parseInt(tokensForCheckout, 10);
     const retryTokenPoint = Number.isFinite(retryQty) ? retryQty : 0;
 
     if (!normalizedSaleId || !pendingValidationTxHash) {
@@ -246,6 +339,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
         txHash: pendingValidationTxHash,
       });
       setPendingValidationTxHash(null);
+      await waitForTokenSalePaidStatus(normalizedSaleId);
       await logMetric({
         event: 'purchase-complete-crypto',
         value: 'token-sale',
@@ -269,12 +363,49 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   };
 
   const handleEditAmount = () => {
-    router.push(`/token/before-you-begin?tokens=${tokens}&saleId=${saleId}`);
+    if (!saleIdTrimmed) return;
+    router.push(
+      `/token/before-you-begin?saleId=${encodeURIComponent(saleIdTrimmed)}`,
+    );
   };
 
   if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
     return <PageNotFound />;
   }
+
+  if (!router.isReady) {
+    return (
+      <>
+        <Head>
+          <title>{`
+        ${t('token_sale_heading_checkout')} - 
+        ${t('token_sale_public_sale_announcement')} - ${PLATFORM_NAME}`}</title>
+        </Head>
+        <div className="w-full max-w-screen-sm mx-auto py-8 px-4 flex justify-center pt-24">
+          <Spinner />
+        </div>
+      </>
+    );
+  }
+
+  if (saleIdTrimmed && saleLoading) {
+    return (
+      <>
+        <Head>
+          <title>{`
+        ${t('token_sale_heading_checkout')} - 
+        ${t('token_sale_public_sale_announcement')} - ${PLATFORM_NAME}`}</title>
+        </Head>
+        <div className="w-full max-w-screen-sm mx-auto py-8 px-4 flex justify-center pt-24">
+          <Spinner />
+        </div>
+      </>
+    );
+  }
+
+  const tokensDisplayValue =
+    tokensForCheckout ??
+    (sale && Number.isFinite(rawQty) ? String(rawQty) : '');
 
   return (
     <>
@@ -293,44 +424,29 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
 
         <ProgressBar steps={TOKEN_SALE_STEPS} />
 
-        {isWalletEnabled && (
-          <div className="mt-12 flex flex-col gap-4">
-            <Wallet />
-            {isWalletReady &&
-              Number(balanceCeloAvailable ?? 0) < MIN_CELO_FOR_GAS && (
-                <div
-                  className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-amber-800"
-                  role="alert"
-                >
-                  <span className="text-amber-500 text-xl shrink-0" aria-hidden>
-                    ⚠️
-                  </span>
-                  <p className="text-sm font-medium">
-                    {t('insufficient_celo_for_gas')}
-                  </p>
-                </div>
-              )}
-            {isWalletReady &&
-              total > 0 &&
-              Number(balanceCeurAvailable ?? 0) < total && (
-                <div
-                  className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-amber-800"
-                  role="alert"
-                >
-                  <span className="text-amber-500 text-xl shrink-0" aria-hidden>
-                    ⚠️
-                  </span>
-                  <p className="text-sm font-medium">
-                    {t('token_sale_not_enough_reserve_for_purchase', {
-                      reserveToken,
-                    })}
-                  </p>
-                </div>
-              )}
+        {missingSaleId && (
+          <div className="mt-6">
+            <ErrorMessage error={t('token_sale_checkout_error_missing_sale_id')} />
+          </div>
+        )}
+        {saleFetchError && (
+          <div className="mt-6">
+            <ErrorMessage error={saleFetchError} />
+          </div>
+        )}
+        {isZeroTokens && (
+          <div className="mt-6 flex flex-col gap-3">
+            <ErrorMessage error={t('token_sale_checkout_error_zero_tokens')} />
+            <Link
+              href={startSaleFlowHref}
+              className="text-accent hover:underline font-medium"
+            >
+              {t('token_sale_checkout_start_sale_flow_link')}
+            </Link>
           </div>
         )}
 
-        <main className="pt-14 pb-24 flex flex-col gap-12">
+        <main className="pb-24 flex flex-col gap-12">
           <div className="">
             <Heading level={3} hasBorder={true}>
               ➕ {t('token_sale_checkout_total')}
@@ -338,7 +454,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
             <div className="flex flex-col gap-6">
               <Row
                 rowKey={t('token_sale_token_symbol')}
-                value={tokens?.toString()}
+                value={tokensDisplayValue}
                 additionalInfo={`1 ${t(
                   'token_sale_token_symbol',
                 )} = ${formattedUnitPrice} ${reserveToken}`}
@@ -355,49 +471,99 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
             </div>
           </div>
 
-          {isApproved ? (
-            <Button
-              className="normal-case tracking-normal"
-              onClick={pendingValidationTxHash ? handleRetrySaleValidation : handlePurchaseTx}
-              isEnabled={
-                !isPending &&
-                !isMetamaskLoading &&
-                (pendingValidationTxHash !== null || balanceCeurAvailable > total)
-              }
-            >
-              {isPending || isMetamaskLoading ? (
-                <div className="flex gap-2 items-center">
-                  <Spinner />
-                  {t('token_sale_checkout_button_pending_transaction')}
-                </div>
+          {isWalletEnabled &&
+            isWalletReady &&
+            (Number(balanceCeloAvailable ?? 0) < MIN_CELO_FOR_GAS ||
+              (total > 0 &&
+                Number(balanceCeurAvailable ?? 0) < total)) && (
+              <div className="flex flex-col gap-4">
+                {Number(balanceCeloAvailable ?? 0) < MIN_CELO_FOR_GAS && (
+                  <div
+                    className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-amber-800"
+                    role="alert"
+                  >
+                    <span className="text-amber-500 text-xl shrink-0" aria-hidden>
+                      ⚠️
+                    </span>
+                    <p className="text-sm font-medium">
+                      {t('insufficient_celo_for_gas')}
+                    </p>
+                  </div>
+                )}
+                {total > 0 &&
+                  Number(balanceCeurAvailable ?? 0) < total && (
+                    <div
+                      className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-amber-800"
+                      role="alert"
+                    >
+                      <span className="text-amber-500 text-xl shrink-0" aria-hidden>
+                        ⚠️
+                      </span>
+                      <p className="text-sm font-medium">
+                        {t('token_sale_not_enough_reserve_for_purchase', {
+                          reserveToken,
+                        })}
+                      </p>
+                    </div>
+                  )}
+              </div>
+            )}
+
+          {showCheckoutActions && (
+            <div className="flex flex-col gap-3">
+              {web3Error && <ErrorMessage error={web3Error} />}
+              {apiError && <ErrorMessage error={apiError} />}
+              {isApproved ? (
+                <Button
+                  className="normal-case tracking-normal"
+                  onClick={
+                    pendingValidationTxHash
+                      ? handleRetrySaleValidation
+                      : handlePurchaseTx
+                  }
+                  isEnabled={
+                    !isPending &&
+                    !isMetamaskLoading &&
+                    (pendingValidationTxHash !== null ||
+                      balanceCeurAvailable > total)
+                  }
+                >
+                  {isPending || isMetamaskLoading ? (
+                    <div className="flex gap-2 items-center">
+                      <Spinner />
+                      {t('token_sale_checkout_button_pending_transaction')}
+                    </div>
+                  ) : pendingValidationTxHash ? (
+                    t('token_sale_checkout_button_retry_validation')
+                  ) : (
+                    t('token_sale_checkout_button_purchase_transaction')
+                  )}
+                </Button>
               ) : (
-                pendingValidationTxHash
-                  ? t('token_sale_checkout_button_retry_validation')
-                  : t('token_sale_checkout_button_purchase_transaction')
+                <Button
+                  className="normal-case tracking-normal"
+                  onClick={handleApprovalTx}
+                  isEnabled={
+                    !isPending &&
+                    !isMetamaskLoading &&
+                    balanceCeurAvailable > total
+                  }
+                >
+                  {isPending || isMetamaskLoading ? (
+                    <div className="flex gap-2 items-center">
+                      <Spinner />
+                      {t('token_sale_checkout_button_pending_transaction')}
+                    </div>
+                  ) : (
+                    t('token_sale_checkout_button_approve_transaction', {
+                      reserveToken,
+                    })
+                  )}
+                </Button>
               )}
-            </Button>
-          ) : (
-            <Button
-              className="normal-case tracking-normal"
-              onClick={handleApprovalTx}
-              isEnabled={
-                !isPending && !isMetamaskLoading && balanceCeurAvailable > total
-              }
-            >
-              {isPending || isMetamaskLoading ? (
-                <div className="flex gap-2 items-center">
-                  <Spinner />
-                  {t('token_sale_checkout_button_pending_transaction')}
-                </div>
-              ) : (
-                t('token_sale_checkout_button_approve_transaction', {
-                  reserveToken,
-                })
-              )}
-            </Button>
+            </div>
           )}
-          {web3Error && <ErrorMessage error={web3Error} />}
-          {apiError && <ErrorMessage error={apiError} />}
+          {isWalletEnabled && <Wallet />}
         </main>
       </div>
     </>

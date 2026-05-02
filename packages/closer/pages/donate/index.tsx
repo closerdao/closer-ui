@@ -16,6 +16,7 @@ import type {
   CreateDonationCryptoResult,
   DonationPaymentMethod,
 } from '../../types/donation';
+import type { SaleInitBody } from '../../types/api';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
@@ -124,11 +125,18 @@ function DonatePage({ generalConfig }: DonatePageProps) {
     setCreateError(null);
     setCreateLoading(true);
     try {
-      const { data } = await api.post('/donations', {
-        price: amount,
+      const msg = optionalMessage.trim();
+      const saleInitBody: SaleInitBody = {
+        type: 'donation',
+        total_price: amount,
+        quantity: 1,
         paymentMethod: method,
-        message: optionalMessage.trim() || undefined,
-      });
+      };
+      if (msg) saleInitBody.message = msg;
+      if (user?.email) saleInitBody.email = user.email;
+      const donorName = user?.screenname?.trim();
+      if (donorName) saleInitBody.name = donorName;
+      const { data } = await api.post('/sale/init', saleInitBody);
       const rawResults = data?.results;
       const results =
         rawResults &&

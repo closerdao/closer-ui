@@ -1,3 +1,4 @@
+import { ACCOUNTING_ENTITY_PRODUCT_SLUGS } from './constants/accountingEntities.constants';
 import { ISO_COUNTRY_CODES_FOR_CONFIG } from './constants/countryLocales';
 import { ConfigType } from './types/config';
 
@@ -981,18 +982,7 @@ export const configDescription: ConfigType[] = [
             accountingDescription: 'text',
             products: {
               type: 'multiselect',
-              enum: [
-                'accommodations',
-                'events',
-                'subscriptions',
-                'tokens',
-                'food',
-                'products',
-                'payment-link',
-                'terminal',
-                'expenses',
-                'donation',
-              ],
+              enum: [...ACCOUNTING_ENTITY_PRODUCT_SLUGS],
             },
           },
         ],
@@ -1006,6 +996,10 @@ export const configDescription: ConfigType[] = [
             accountingDescription: 'Formação Profissional',
           },
         ],
+      },
+      vatByProductType: {
+        type: 'vat-by-product-type',
+        default: {},
       },
     },
   },
