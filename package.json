@@ -4,7 +4,11 @@
   "private": true,
   "packageManager": "yarn@1.22.22",
   "workspaces": [
-    "apps/*",
+    "apps/closer",
+    "apps/earthbound",
+    "apps/foz",
+    "apps/lios",
+    "apps/tdf",
     "packages/*"
   ],
   "scripts": {

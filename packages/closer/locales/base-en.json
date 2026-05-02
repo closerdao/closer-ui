@@ -1567,6 +1567,7 @@
   "config_label_packages": "Funding packages",
   "config_label_loans": "Loans (entries)",
   "config_label_manualAdjustments": "Manual adjustments",
+  "config_label_elements": "Items",
   "config_section_fundraiser_milestones": "Milestones",
   "config_section_fundraiser_packages": "Funding packages & rewards",
 

@@ -35,6 +35,7 @@ import config from '../../../configCached';
 import api from '../../../utils/api';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
+import { logMetricIfAuthenticated } from '../../../utils/metrics';
 import { getMaxBookingHorizon } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
@@ -411,6 +412,11 @@ const DatesSelector = ({
     setHandleNextError(null);
 
     if (event?.paid && !selectedTicketOption) {
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-dates-error',
+        value: 'booking',
+        point: adults,
+      });
       setHandleNextError(t('bookings_error_no_ticket_option'));
       return;
     }
@@ -481,6 +487,11 @@ const DatesSelector = ({
           ...(friendEmails && { friendEmails }),
         });
 
+        void logMetricIfAuthenticated(user, {
+          event: 'booking-dates-request-success',
+          value: 'booking',
+          point: adults,
+        });
         router.push(`/bookings/${newBooking._id}/food`);
         return;
       } else {
@@ -491,9 +502,23 @@ const DatesSelector = ({
             ) as [string, string][],
           ),
         );
+        const nights =
+          start && end
+            ? Math.max(0, dayjs(end as string).diff(dayjs(start as string), 'day'))
+            : 0;
+        void logMetricIfAuthenticated(user, {
+          event: 'booking-dates-continue-success',
+          value: 'booking',
+          point: nights || adults,
+        });
         router.push(`/bookings/create/accomodation?${urlParams}`);
       }
     } catch (err: any) {
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-dates-error',
+        value: 'booking',
+        point: adults,
+      });
       setHandleNextError(parseMessageFromError(err));
     }
   };

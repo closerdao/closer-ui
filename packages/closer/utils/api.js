@@ -16,6 +16,85 @@ export const cdn = process.env.NEXT_PUBLIC_CDN_URL;
 const baseURL = process.env.NEXT_PUBLIC_API_URL;
 const api = axios.create({ baseURL });
 
+const GET_CACHE_TTL_MS = 5 * 60 * 1000;
+const getResponseCache = new Map();
+const getInflight = new Map();
+
+function stableSerializeParams(params) {
+  if (params == null || typeof params !== 'object') return '';
+  const keys = Object.keys(params).sort();
+  const sorted = {};
+  for (const k of keys) sorted[k] = params[k];
+  return JSON.stringify(sorted);
+}
+
+function buildGetCacheKey(url, config) {
+  const paramsPart = stableSerializeParams(config?.params);
+  const auth = getAccessToken() ?? '';
+  return `${url}\u0000${paramsPart}\u0000${auth}`;
+}
+
+function cloneResponseData(data) {
+  if (data === null || typeof data !== 'object') return data;
+  try {
+    return structuredClone(data);
+  } catch {
+    try {
+      return JSON.parse(JSON.stringify(data));
+    } catch {
+      return data;
+    }
+  }
+}
+
+function omitCacheOption(config) {
+  if (!config || config.cache === undefined) return config;
+  const next = { ...config };
+  delete next.cache;
+  return next;
+}
+
+const axiosGet = api.get.bind(api);
+api.get = function getWithCache(url, config) {
+  const merged = config ?? {};
+  if (merged.cache === false || typeof window === 'undefined') {
+    return axiosGet(url, omitCacheOption(merged));
+  }
+  const axiosConfig = omitCacheOption(merged);
+  const key = buildGetCacheKey(url, axiosConfig);
+  const now = Date.now();
+  const hit = getResponseCache.get(key);
+  if (hit && hit.expiresAt > now) {
+    return Promise.resolve({
+      data: cloneResponseData(hit.data),
+      status: hit.status,
+      statusText: hit.statusText,
+      headers: hit.headers,
+      config: { ...axiosConfig, url, method: 'get' },
+      request: {},
+    });
+  }
+  if (getInflight.has(key)) {
+    return getInflight.get(key);
+  }
+  const pending = axiosGet(url, axiosConfig)
+    .then((response) => {
+      getResponseCache.set(key, {
+        data: response.data,
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+        expiresAt: Date.now() + GET_CACHE_TTL_MS,
+      });
+      return response;
+    })
+    .finally(() => {
+      getInflight.delete(key);
+    });
+  getInflight.set(key, pending);
+  return pending;
+};
+
 if (!baseURL) {
   if (typeof console !== 'undefined' && console.warn) {
     console.warn('NEXT_PUBLIC_API_URL is not set. API requests may fail.');

@@ -23,6 +23,7 @@ import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import { logMetric } from '../../utils/metrics';
 import { doesAddressMatchPattern, isInputValid } from '../../utils/helpers';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
@@ -133,18 +134,38 @@ const NationalityPage = ({ generalConfig }: Props) => {
       });
       await refetchUser();
 
+      const tokenQty = parseInt(String(tokens ?? ''), 10);
+      const point = Number.isFinite(tokenQty) ? tokenQty : 0;
+
       if (tokenSaleType === 'fiat') {
+        await logMetric({ event: 'kyc-submit-fiat', value: 'token-sale', point });
         router.push(
           `/token/bank-transfer?tokens=${tokens}&totalFiat=${totalFiat}&saleId=${saleId}`,
         );
       } else if (tokenSaleType === 'crypto') {
+        await logMetric({
+          event: 'kyc-submit-crypto',
+          value: 'token-sale',
+          point,
+        });
         router.push(`/token/checkout?tokens=${tokens}&saleId=${saleId}`);
       } else if (tokens && saleId) {
+        await logMetric({
+          event: 'kyc-submit-checkout',
+          value: 'token-sale',
+          point,
+        });
         router.push(
           `/token/checkout?tokens=${encodeURIComponent(String(tokens))}&saleId=${encodeURIComponent(String(saleId))}`,
         );
       }
     } catch (error) {
+      const tokenQty = parseInt(String(tokens ?? ''), 10);
+      void logMetric({
+        event: 'kyc-submit-error',
+        value: 'token-sale',
+        point: Number.isFinite(tokenQty) ? tokenQty : 0,
+      });
       setErrorMessage(parseMessageFromError(error));
     } finally {
       setApiIsLoading(false);

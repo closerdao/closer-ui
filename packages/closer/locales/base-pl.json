@@ -1334,6 +1334,7 @@
   "config_label_packages": "Pakiety finansowania",
   "config_label_loans": "Pożyczki (wpisy)",
   "config_label_manualAdjustments": "Ręczne korekty",
+  "config_label_elements": "Elementy",
   "config_section_fundraiser_milestones": "Kamienie milowe",
   "config_section_fundraiser_packages": "Pakiety i nagrody",
 

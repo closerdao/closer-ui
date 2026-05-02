@@ -20,6 +20,7 @@ import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
 import { DEFAULT_TOKEN_STATS, GeneralConfig, Listing, TokenStats } from '../../types';
 import api from '../../utils/api';
+import { logMetric } from '../../utils/metrics';
 import { getCurrentUnitPrice } from '../../utils/bondingCurve';
 import { getReserveTokenDisplay } from '../../utils/config.utils';
 import { parseMessageFromError } from '../../utils/common';
@@ -41,7 +42,6 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
   const defaultConfig = useConfig();
   const { getCurrentSupplyWithoutWallet, getSaleHardCapWithoutWallet } = useBuyTokens();
   const reserveToken = getReserveTokenDisplay(defaultConfig);
-  const hasComponentRendered = useRef(false);
   const heroRef = useRef<HTMLElement | null>(null);
 
   const PLATFORM_NAME =
@@ -81,16 +81,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
   const hasUserAdjustedTokens = useRef(false);
 
   const trackMetric = async (event: string, point = 0) => {
-    try {
-      await api.post('/metric', {
-        event,
-        value: 'token-sale',
-        point,
-        category: 'engagement',
-      });
-    } catch (error) {
-      console.error(`Error tracking metric "${event}":`, error);
-    }
+    await logMetric({ event, value: 'token-sale', point });
   };
 
   useEffect(() => {
@@ -140,15 +131,6 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
   }, [getCurrentSupplyWithoutWallet, getSaleHardCapWithoutWallet]);
 
   useEffect(() => {
-    if (!hasComponentRendered.current) {
-      (async () => {
-        await trackMetric('page-view');
-      })();
-      hasComponentRendered.current = true;
-    }
-  }, []);
-
-  useEffect(() => {
     const onScroll = () => {
       const heroBottom = heroRef.current?.getBoundingClientRect().bottom ?? 0;
       setShowStickyCta(heroBottom < 0);
@@ -159,7 +141,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
   }, []);
 
   const handleNext = async () => {
-    await trackMetric('open-flow', selectedTokens);
+    await trackMetric('buy-tokens', selectedTokens);
     router.push(
       `/token/before-you-begin?tokens=${encodeURIComponent(selectedTokens)}`,
     );

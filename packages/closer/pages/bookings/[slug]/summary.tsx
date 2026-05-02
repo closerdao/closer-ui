@@ -43,6 +43,7 @@ import {
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { logMetricIfAuthenticated } from '../../../utils/metrics';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
@@ -173,7 +174,15 @@ const Summary = ({
   const handleNext = async () => {
     setLoading(true);
     setHandleNextError(null);
+    const metricPoint =
+      Math.round(Number(duration ?? adults ?? 0)) || 0;
     if (booking?.status === 'confirmed') {
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-summary-to-checkout',
+        value: 'booking',
+        point: metricPoint,
+      });
+      setLoading(false);
       return router.push(`/bookings/${booking?._id}/checkout`);
     }
     try {
@@ -181,11 +190,26 @@ const Summary = ({
       const status = res.data.results.status;
 
       if (status === 'confirmed') {
+        void logMetricIfAuthenticated(user, {
+          event: 'booking-summary-complete-success',
+          value: 'booking',
+          point: metricPoint,
+        });
         router.push(`/bookings/${booking?._id}/checkout`);
       } else if (status === 'pending') {
+        void logMetricIfAuthenticated(user, {
+          event: 'booking-summary-pending-success',
+          value: 'booking',
+          point: metricPoint,
+        });
         router.push(`/bookings/${booking?._id}`);
       }
     } catch (err) {
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-summary-complete-error',
+        value: 'booking',
+        point: metricPoint,
+      });
       setHandleNextError(parseMessageFromError(err));
     } finally {
       setLoading(false);
@@ -217,12 +241,27 @@ const Summary = ({
       });
 
       if (res.status === 200) {
+        void logMetricIfAuthenticated(user, {
+          event: 'booking-friends-send-success',
+          value: 'booking',
+          point: Math.round(Number(duration ?? adults ?? 0)) || 0,
+        });
         setEmailSuccess(true);
       } else {
+        void logMetricIfAuthenticated(user, {
+          event: 'booking-friends-send-error',
+          value: 'booking',
+          point: Math.round(Number(duration ?? adults ?? 0)) || 0,
+        });
         setEmailSuccess(false);
         setEmailError(res.data.error);
       }
     } catch (error) {
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-friends-send-error',
+        value: 'booking',
+        point: Math.round(Number(duration ?? adults ?? 0)) || 0,
+      });
       setEmailSuccess(false);
       setEmailError(parseMessageFromError(error));
     } finally {

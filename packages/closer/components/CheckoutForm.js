@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 
 import api from '../utils/api';
 import { parseMessageFromError } from '../utils/common';
+import { logMetricIfAuthenticated } from '../utils/metrics';
 import { ErrorMessage } from './ui';
 import Button from './ui/Button';
 
@@ -57,8 +58,18 @@ const CheckoutForm = ({
   isAdditionalFiatPayment,
   stakeTokens,
   checkContract,
+  metricBookingContext,
 }) => {
   const t = useTranslations();
+
+  const logBookingPaymentFailureMetric = () => {
+    if (type !== 'booking') return;
+    void logMetricIfAuthenticated(metricBookingContext?.user, {
+      event: 'booking-payment-error',
+      value: 'booking',
+      point: Math.round(Number(metricBookingContext?.fiatAmount) || 0),
+    });
+  };
 
   const stripe = useStripe();
   const elements = useElements();
@@ -112,6 +123,7 @@ const CheckoutForm = ({
 
         const { error } = res || {};
         if (error) {
+          logBookingPaymentFailureMetric();
           setProcessing(false);
           setError(error);
           return;
@@ -121,6 +133,7 @@ const CheckoutForm = ({
         if (refetchBooking) {
           const updatedBooking = await refetchBooking();
           if (updatedBooking?.status !== 'tokens-staked') {
+            logBookingPaymentFailureMetric();
             setProcessing(false);
             setError('Your tokens have been staked on the blockchain but the booking status could not be verified. Please refresh the page and try again, or contact support if the issue persists.');
             return;
@@ -135,11 +148,13 @@ const CheckoutForm = ({
         elements.getElement(CardElement),
       );
       if (error) {
+        logBookingPaymentFailureMetric();
         setProcessing(false);
         setError(error.message);
         return;
       }
       if (!token) {
+        logBookingPaymentFailureMetric();
         setProcessing(false);
         setError('No token returned from Stripe.');
         return;
@@ -153,6 +168,7 @@ const CheckoutForm = ({
       });
 
       if (createdPaymentMethod?.error) {
+        logBookingPaymentFailureMetric();
         setError(createdPaymentMethod.error || '');
         return;
       }
@@ -185,6 +201,7 @@ const CheckoutForm = ({
             payment.paymentIntent.client_secret,
           );
           if (confirmationResult?.error) {
+            logBookingPaymentFailureMetric();
             setError(confirmationResult?.error);
             if (tokenPaymentSuccessful && refetchBooking) {
               await refetchBooking();
@@ -209,6 +226,7 @@ const CheckoutForm = ({
             }
           }
         } catch (err) {
+          logBookingPaymentFailureMetric();
           setError(err);
           if (tokenPaymentSuccessful && refetchBooking) {
             await refetchBooking();
@@ -235,6 +253,7 @@ const CheckoutForm = ({
         }
       }
     } catch (err) {
+      logBookingPaymentFailureMetric();
       setProcessing(false);
       console.error(err);
       setError(parseMessageFromError(err));

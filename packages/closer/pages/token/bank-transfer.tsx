@@ -27,6 +27,7 @@ import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import { logMetric } from '../../utils/metrics';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
@@ -135,20 +136,27 @@ const BankTransferPage = ({ generalConfig }: Props) => {
         tokens,
       });
 
+      const tokenQty = parseInt(firstQueryString(tokens), 10);
+      const point = Number.isFinite(tokenQty) ? tokenQty : 0;
+
       if (res.data.status === 'success') {
-        await api.post('/metric', {
-          event: 'apply',
-          value: 'token-sale-fiat',
-          point: 0,
-          category: 'engagement',
-        });
         const memo =
           typeof res?.data?.memoCode === 'string' ? res.data.memoCode : '';
         const sid = resolvedSaleId.trim();
         if (!sid) {
+          void logMetric({
+            event: 'apply-error',
+            value: 'token-sale-fiat',
+            point,
+          });
           setError(t('token_sale_bank_transfer_missing_sale_id'));
           return;
         }
+        await logMetric({
+          event: 'apply',
+          value: 'token-sale-fiat',
+          point,
+        });
         const tf =
           typeof totalFiat === 'string'
             ? totalFiat
@@ -162,8 +170,20 @@ const BankTransferPage = ({ generalConfig }: Props) => {
           memoCode: memo,
         }).toString();
         router.push(`/sale/${encodeURIComponent(sid)}?${qs}`);
+      } else {
+        void logMetric({
+          event: 'apply-error',
+          value: 'token-sale-fiat',
+          point,
+        });
       }
     } catch (error) {
+      const tokenQty = parseInt(firstQueryString(tokens), 10);
+      void logMetric({
+        event: 'apply-error',
+        value: 'token-sale-fiat',
+        point: Number.isFinite(tokenQty) ? tokenQty : 0,
+      });
       setError(parseMessageFromError(error));
       console.error('error with bank transfer:', error);
     } finally {

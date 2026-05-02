@@ -37,6 +37,7 @@ import {
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { logMetricIfAuthenticated } from '../../../utils/metrics';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
@@ -157,8 +158,18 @@ const Questionnaire = ({
       await api.patch(`/booking/${booking?._id}`, {
         fields: answers,
       });
+      void logMetricIfAuthenticated(initialUser, {
+        event: 'booking-questions-save-success',
+        value: 'booking',
+        point: booking?.duration ?? booking?.adults ?? 0,
+      });
       router.push(`/bookings/${booking?._id}/summary`);
     } catch (err) {
+      void logMetricIfAuthenticated(initialUser, {
+        event: 'booking-questions-save-error',
+        value: 'booking',
+        point: booking?.duration ?? booking?.adults ?? 0,
+      });
       console.log(err);
     }
   };

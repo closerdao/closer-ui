@@ -36,7 +36,7 @@ export const models = [
 ];
 
 const filterToKey = (filter) => JSON.stringify(filter) || '__';
-const CACHE_DURATION = 300000;
+const CACHE_DURATION_MS = 5 * 60 * 1000;
 const init = (state) => {
   return state.withMutations((map) => {
     models.forEach((model) => {
@@ -341,7 +341,7 @@ export const PlatformProvider = ({ children }) => {
         dispatch({ type: constants.GET_ONE_INIT, model, id });
         if (
           state.getIn([model, 'byId', id, 'receivedAt']) >
-          Date.now() - CACHE_DURATION
+          Date.now() - CACHE_DURATION_MS
         ) {
           return new Promise((resolve) =>
             resolve({
@@ -397,7 +397,7 @@ export const PlatformProvider = ({ children }) => {
         const useCache =
           !opts.force &&
           state.getIn([model, 'byFilter', filterKey, 'receivedAt']) >
-          Date.now() - CACHE_DURATION;
+          Date.now() - CACHE_DURATION_MS;
         if (useCache) {
           return new Promise((resolve) =>
             resolve({
@@ -451,7 +451,7 @@ export const PlatformProvider = ({ children }) => {
         dispatch({ type: constants.GET_COUNT_INIT, model, filterKey });
         if (
           state.getIn([model, 'count', filterKey, 'receivedAt']) >
-          Date.now() - CACHE_DURATION
+          Date.now() - CACHE_DURATION_MS
         ) {
           return new Promise((resolve) =>
             resolve({
@@ -488,7 +488,7 @@ export const PlatformProvider = ({ children }) => {
         dispatch({ type: constants.GET_GRAPH_INIT, model, filterKey });
         if (
           state.getIn([model, 'graph', filterKey, 'receivedAt']) >
-          Date.now() - CACHE_DURATION
+          Date.now() - CACHE_DURATION_MS
         ) {
           return new Promise((resolve) =>
             resolve({

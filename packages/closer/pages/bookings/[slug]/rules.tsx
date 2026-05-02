@@ -33,6 +33,7 @@ import {
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { logMetricIfAuthenticated } from '../../../utils/metrics';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
@@ -55,7 +56,7 @@ const BookingRulesPage = ({
 }: Props) => {
   const t = useTranslations();
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const { start, end, adults, useTokens, isFriendsBooking, _id } =
     booking || {};
@@ -107,14 +108,18 @@ const BookingRulesPage = ({
 
   const handleNext = async () => {
     setIsLoading(true);
-
-    router.push(`/bookings/${booking?._id}/questions`);
-    // if (event?.fields) {
-    //   router.push(`/bookings/${booking?._id}/questions`);
-    //   return;
-    // }
-
-    // router.push(`/bookings/${booking?._id}/summary`);
+    const metricPoint =
+      Math.round(Number(booking?.duration ?? booking?.adults ?? 0)) || 0;
+    void logMetricIfAuthenticated(user, {
+      event: 'booking-rules-continue-success',
+      value: 'booking',
+      point: metricPoint,
+    });
+    try {
+      await router.push(`/bookings/${booking?._id}/questions`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const goBack = () => {

@@ -15,6 +15,7 @@ import { useConfig } from '../../../hooks/useConfig';
 import { GeneralConfig } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
+import { logMetricIfAuthenticated } from '../../../utils/metrics';
 import {
   resolveDonationStablecoinAddress,
   transferDonationStablecoin,
@@ -40,7 +41,7 @@ function DonateCryptoPage({ generalConfig }: DonateCryptoPageProps) {
   const router = useRouter();
   const { saleId } = router.query;
   const id = typeof saleId === 'string' ? saleId : '';
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
   const config = useConfig();
   const platformName = generalConfig?.platformName || config.platformName;
 
@@ -113,8 +114,18 @@ function DonateCryptoPage({ generalConfig }: DonateCryptoPageProps) {
       if (typeof updateWalletBalance === 'function') {
         updateWalletBalance();
       }
+      void logMetricIfAuthenticated(user, {
+        event: 'donation-payment-success',
+        value: 'donation',
+        point: amount,
+      });
       router.push(`/sale/${encodeURIComponent(cryptoBlock.saleId)}`);
     } catch (err: unknown) {
+      void logMetricIfAuthenticated(user, {
+        event: 'donation-payment-error',
+        value: 'donation',
+        point: amount,
+      });
       setCryptoError(parseMessageFromError(err));
     } finally {
       setCtaLoading(false);

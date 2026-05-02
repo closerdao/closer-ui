@@ -2,6 +2,7 @@
   "name": "per-auset",
   "version": "0.0.0",
   "private": true,
+  "description": "Excluded from root workspaces. Restore: add \"apps/per-auset\" to workspaces in repo package.json.",
   "scripts": {
     "prebuild": "node ../../packages/closer/scripts/syncBuildConfig.cjs",
     "dev": "dotenv -e .env next dev --turbo",

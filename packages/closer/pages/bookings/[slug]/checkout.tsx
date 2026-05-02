@@ -64,6 +64,7 @@ import {
   payTokens,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { logMetricIfAuthenticated } from '../../../utils/metrics';
 import config from '../../../configCached';
 import { priceFormat } from '../../../utils/helpers';
 import { formatDate } from '../../../utils/listings.helpers';
@@ -492,6 +493,9 @@ const Checkout = ({
     router.push(`/bookings/${booking?._id}/summary`);
   };
 
+  const bookingPaymentMetricPoint = () =>
+    Math.round(Number(duration ?? adults ?? total?.val ?? 0) || 0);
+
   const handleFreeBooking = async () => {
     try {
       setProcessing(true);
@@ -510,8 +514,18 @@ const Checkout = ({
         email: user?.email,
         name: user?.screenname,
       });
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-payment-success',
+        value: 'booking',
+        point: bookingPaymentMetricPoint(),
+      });
       router.push(`/bookings/${booking?._id}`);
     } catch (error) {
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-payment-error',
+        value: 'booking',
+        point: bookingPaymentMetricPoint(),
+      });
       setPaymentError(parseMessageFromError(error));
     } finally {
       setProcessing(false);
@@ -732,6 +746,11 @@ const Checkout = ({
   const handleTokenOnlyBooking = async () => {
     const nativeCelo = Number(balanceNativeAvailable ?? 0);
     if (nativeCelo < MIN_CELO_FOR_GAS) {
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-payment-token-error',
+        value: 'booking',
+        point: bookingPaymentMetricPoint(),
+      });
       setPaymentError(t('insufficient_celo_for_gas'));
       return;
     }
@@ -760,6 +779,11 @@ const Checkout = ({
       debugInfo,
     } = tokenStakingResult || {};
     if (error) {
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-payment-token-error',
+        value: 'booking',
+        point: bookingPaymentMetricPoint(),
+      });
       setProcessing(false);
       if (error === 'CONFLICTING_BOOKINGS' && conflicts) {
         setConflictingBookings({
@@ -801,8 +825,18 @@ const Checkout = ({
         isTokenOnlyBooking: true,
         _id,
       });
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-payment-success',
+        value: 'booking',
+        point: bookingPaymentMetricPoint(),
+      });
       onSuccess();
     } catch (error) {
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-payment-error',
+        value: 'booking',
+        point: bookingPaymentMetricPoint(),
+      });
       setPaymentError(parseMessageFromError(error));
     } finally {
       setProcessing(false);
@@ -821,12 +855,27 @@ const Checkout = ({
       });
 
       if (res.status === 200) {
+        void logMetricIfAuthenticated(user, {
+          event: 'booking-friends-send-success',
+          value: 'booking',
+          point: bookingPaymentMetricPoint(),
+        });
         setEmailSuccess(true);
       } else {
+        void logMetricIfAuthenticated(user, {
+          event: 'booking-friends-send-error',
+          value: 'booking',
+          point: bookingPaymentMetricPoint(),
+        });
         setEmailSuccess(false);
         setEmailError(res.data.error);
       }
     } catch (error) {
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-friends-send-error',
+        value: 'booking',
+        point: bookingPaymentMetricPoint(),
+      });
       setEmailSuccess(false);
       setEmailError(parseMessageFromError(error));
     } finally {

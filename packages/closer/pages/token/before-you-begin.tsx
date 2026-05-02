@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import TokenBuyWidget from '../../components/TokenBuyWidget';
 import { BackButton, Button, ErrorMessage, Heading, ProgressBar } from '../../components/ui';
@@ -17,6 +17,7 @@ import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import { logMetric } from '../../utils/metrics';
 import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
@@ -59,26 +60,6 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
   const [createSaleError, setCreateSaleError] = useState<string | null>(null);
   const [isCreateSaleLoading, setIsCreateSaleLoading] = useState(false);
 
-  const hasComponentRendered = useRef(false);
-
-  useEffect(() => {
-    if (!hasComponentRendered.current) {
-      (async () => {
-        try {
-          await api.post('/metric', {
-            event: 'open-flow',
-            value: 'token-sale',
-            point: 0,
-            category: 'engagement',
-          });
-        } catch (error) {
-          console.error('Error logging page view:', error);
-        }
-      })();
-      hasComponentRendered.current = true;
-    }
-  }, []);
-
   useEffect(() => {
     if (!isLoading && !user) {
       router.push(`/signup?back=${encodeURIComponent(router.asPath)}`);
@@ -87,6 +68,10 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
 
   const handleNext = async () => {
     if (tokenSaleType === 'finance') {
+      void logMetric({
+        event: 'continue-before-you-begin-finance',
+        value: 'token-sale',
+      });
       router.push('/token/finance');
       return;
     }
@@ -113,15 +98,30 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
           : rawResults;
       saleId = (results as { saleId?: string })?.saleId || '';
       if (!saleId) {
+        void logMetric({
+          event: 'sale-init-error',
+          value: 'token-sale',
+          point: tokensToBuy,
+        });
         setCreateSaleError(t('donate_create_invalid_response'));
         return;
       }
     } catch (error: unknown) {
       const status = (error as { response?: { status?: number } })?.response?.status;
       if (status === 401) {
+        void logMetric({
+          event: 'sale-init-error',
+          value: 'token-sale',
+          point: tokensToBuy,
+        });
         router.push(`/signup?back=${encodeURIComponent(router.asPath)}`);
         return;
       }
+      void logMetric({
+        event: 'sale-init-error',
+        value: 'token-sale',
+        point: tokensToBuy,
+      });
       setCreateSaleError(parseMessageFromError(error));
       return;
     } finally {
@@ -129,12 +129,22 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
     }
 
     if (tokenSaleType === 'fiat') {
+      void logMetric({
+        event: 'continue-before-you-begin-fiat',
+        value: 'token-sale',
+        point: tokensToBuy,
+      });
       router.push(
         `/token/nationality?tokenSaleType=fiat&tokens=${encodeURIComponent(
           tokensToBuy,
         )}&totalFiat=${encodeURIComponent(tokensToSpend)}&saleId=${encodeURIComponent(saleId)}`,
       );
     } else if (tokenSaleType === 'crypto') {
+      void logMetric({
+        event: 'continue-before-you-begin-crypto',
+        value: 'token-sale',
+        point: tokensToBuy,
+      });
       router.push(
         `/token/checklist-crypto?tokens=${encodeURIComponent(tokensToBuy)}&saleId=${encodeURIComponent(saleId)}`,
       );

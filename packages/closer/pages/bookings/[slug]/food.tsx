@@ -38,6 +38,7 @@ import {
   FoodBookingContext,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { logMetricIfAuthenticated } from '../../../utils/metrics';
 import { priceFormat } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
@@ -133,7 +134,7 @@ const FoodSelectionPage = ({
     booking || {};
 
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const eventFoodOptionSet = Boolean(
     event?.foodOption === 'food_package'
@@ -259,6 +260,12 @@ const FoodSelectionPage = ({
       };
       await api.post(`/bookings/${booking?._id}/update-food`, payload);
 
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-food-update-success',
+        value: 'booking',
+        point: durationNights || adults || 0,
+      });
+
       if (event?.fields) {
         router.push(`/bookings/${booking?._id}/questions`);
         return;
@@ -266,6 +273,11 @@ const FoodSelectionPage = ({
 
       router.push(`/bookings/${booking?._id}/rules`);
     } catch (err: any) {
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-food-update-error',
+        value: 'booking',
+        point: durationNights || adults || 0,
+      });
       setApiError(parseMessageFromError(err));
     } finally {
       setIsLoading(false);

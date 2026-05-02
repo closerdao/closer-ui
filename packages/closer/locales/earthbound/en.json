@@ -34,6 +34,10 @@
 
   "navigation_stay": "Book a stay",
   "navigation_member_login": "Member login",
+  "navigation_sign_in": "Log in",
+  "navigation_sign_in_cta": "Sign up to unlock full access and features!",
+  "navigation_signup": "Sign up",
+  "report_a_bug": "Report a bug",
 
   "signup_form_get_credits": "Get 🥕 2 carrots for signing up. ",
 
@@ -77,7 +81,5 @@
 
   "navigation_invest": "Support",
   "navigation_buy_tokens": "Buy Tokens",
-  "navigation_join_program": "Join a program",
-
-  "": ""
+  "navigation_join_program": "Join a program"
 }

@@ -35,6 +35,7 @@ import {
 } from '../../../utils/booking.helpers';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
+import { logMetricIfAuthenticated } from '../../../utils/metrics';
 import config from '../../../configCached';
 import { getBookingRate, getDiscountRate } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
@@ -138,6 +139,11 @@ const AccomodationSelector = ({
       setRequestError(null);
 
       if (isPaidEventWithoutTicket) {
+        void logMetricIfAuthenticated(user, {
+          event: 'booking-request-error',
+          value: 'booking',
+          point: Number(adults) || 0,
+        });
         setRequestError(t('bookings_error_no_ticket_option'));
         return;
       }
@@ -181,6 +187,13 @@ const AccomodationSelector = ({
         ...(normalizedIsFriendsBooking && { isFriendsBooking: true }),
         ...(friendEmails && { friendEmails }),
       });
+      const nights =
+        start && end ? Math.max(0, dayjs(end).diff(dayjs(start), 'day')) : 0;
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-request-success',
+        value: 'booking',
+        point: nights || Number(adults) || 0,
+      });
       if (bookingConfig?.foodOptionEnabled) {
         router.push(
           `/bookings/${newBooking._id}/food?discountCode=${discountCode}`,
@@ -190,6 +203,16 @@ const AccomodationSelector = ({
 
       router.push(`/bookings/${newBooking._id}/questions`);
     } catch (err) {
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-request-error',
+        value: 'booking',
+        point:
+          start && end
+            ? Math.max(0, dayjs(end).diff(dayjs(start), 'day')) ||
+              Number(adults) ||
+              0
+            : Number(adults) || 0,
+      });
       setRequestError(parseMessageFromError(err));
     } finally {
     }

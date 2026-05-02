@@ -78,7 +78,7 @@ const TokenSalesFunnel = ({
         fromDate,
         toDate,
         timeFrame,
-        event: 'open-flow',
+        event: ['buy-tokens', 'open-flow'],
       }),
       checkoutFilter: generateTokenSalesFilter({
         fromDate,

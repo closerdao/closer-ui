@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
 import Wallet from '../../components/Wallet';
 import { BackButton, Button, Heading, ProgressBar } from '../../components/ui';
@@ -17,6 +17,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
+import { logMetric } from '../../utils/metrics';
 import { getReserveTokenDisplay } from '../../utils/config.utils';
 import { parseMessageFromError } from '../../utils/common';
 import { loadLocaleData } from '../../utils/locale.helpers';
@@ -45,30 +46,10 @@ const ChecklistCryptoPage = ({ generalConfig }: Props) => {
   const { isWalletReady, balanceCeloAvailable, balanceCeurAvailable } =
     useContext(WalletState);
 
-  const hasComponentRendered = useRef(false);
-
   const doesHaveCelo = balanceCeloAvailable > 0.1;
   const doesHaveCeur = balanceCeurAvailable > 250;
   const isChecklistComplete = isWalletReady && doesHaveCelo && doesHaveCeur;
   const [visibleChecks, setVisibleChecks] = useState([false, false, false]);
-
-  useEffect(() => {
-    if (!hasComponentRendered.current) {
-      (async () => {
-        try {
-          await api.post('/metric', {
-            event: 'open-flow',
-            value: 'token-sale',
-            point: 0,
-            category: 'engagement',
-          });
-        } catch (error) {
-          console.error('Error logging page view:', error);
-        }
-      })();
-      hasComponentRendered.current = true;
-    }
-  }, []);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -88,6 +69,12 @@ const ChecklistCryptoPage = ({ generalConfig }: Props) => {
   }, []);
 
   const handleNext = async () => {
+    const qty = parseInt(String(tokens ?? ''), 10);
+    void logMetric({
+      event: 'continue-checklist-crypto',
+      value: 'token-sale',
+      point: Number.isFinite(qty) ? qty : 0,
+    });
     const encodedSaleId = encodeURIComponent(String(saleId || ''));
     router.push(
       `/token/nationality?tokenSaleType=crypto&tokens=${encodeURIComponent(tokens as string)}&saleId=${encodedSaleId}`,

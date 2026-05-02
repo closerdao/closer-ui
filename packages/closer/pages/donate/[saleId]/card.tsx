@@ -123,6 +123,8 @@ function DonateCardPage({ generalConfig }: DonateCardPageProps) {
             saleId={cardPayload.result.saleId}
             paymentIntentId={cardPayload.result.paymentIntentId}
             userEmail={user?.email}
+            metricUser={user}
+            metricAmount={amount}
             onPaid={handlePaid}
           />
         </Elements>

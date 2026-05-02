@@ -15,6 +15,7 @@ import { useConfig } from '../hooks/useConfig';
 import api from '../utils/api';
 import { payTokens } from '../utils/booking.helpers';
 import { parseMessageFromError } from '../utils/common';
+import { logMetricIfAuthenticated } from '../utils/metrics';
 import { reportIssue } from '../utils/reporting.utils';
 import CheckoutForm from './CheckoutForm';
 import Conditions from './Conditions';
@@ -95,6 +96,11 @@ const CheckoutPayment = ({
   const onComply = (isComplete) => setCompliance(isComplete);
 
   const onSuccess = () => {
+    void logMetricIfAuthenticated(user, {
+      event: 'booking-payment-success',
+      value: 'booking',
+      point: Math.round(Number(totalToPayInFiat?.val) || 0),
+    });
     try {
       router.push(
         `/bookings/${bookingId}/confirmation${
@@ -198,6 +204,10 @@ const CheckoutPayment = ({
           type="booking"
           _id={bookingId}
           onSuccess={onSuccess}
+          metricBookingContext={{
+            user,
+            fiatAmount: totalToPayInFiat?.val,
+          }}
           email={user.email}
           name={user.screenname}
           buttonText={t('bookings_checkout_step_payment_button')}
