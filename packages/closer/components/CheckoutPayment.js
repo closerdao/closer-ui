@@ -95,14 +95,17 @@ const CheckoutPayment = ({
 
   const onComply = (isComplete) => setCompliance(isComplete);
 
-  const onSuccess = () => {
+  const onSuccess = async () => {
     void logMetricIfAuthenticated(user, {
       event: 'booking-payment-success',
       value: 'booking',
       point: Math.round(Number(totalToPayInFiat?.val) || 0),
     });
     try {
-      router.push(
+      if (typeof refetchBooking === 'function') {
+        await refetchBooking({ afterFiatPayment: true });
+      }
+      await router.push(
         `/bookings/${bookingId}/confirmation${
           eventId ? `?eventId=${eventId}` : ''
         }`,

@@ -221,7 +221,7 @@ const CheckoutForm = ({
             if (confirmationResponse.status === 200) {
               if (onSuccess) {
                 setProcessing(false);
-                onSuccess(payment);
+                await onSuccess(payment);
               }
             }
           }
@@ -248,7 +248,7 @@ const CheckoutForm = ({
         if (confirmationResponse.status === 200) {
           if (onSuccess) {
             setProcessing(false);
-            onSuccess(payment);
+            await onSuccess(payment);
           }
         }
       }

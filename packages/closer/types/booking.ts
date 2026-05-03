@@ -312,6 +312,8 @@ export enum PaymentType {
   PARTIAL_TOKENS = 'partialTokens',
   PARTIAL_CREDITS = 'partialCredits',
 }
+export type BookingPaymentDelta = NonNullable<Booking['paymentDelta']>;
+
 export type UpdatedPrices = {
   rentalFiat: Price<CloserCurrencies.EUR>;
   rentalToken: Price<CloserCurrencies.TDF>;
@@ -319,6 +321,7 @@ export type UpdatedPrices = {
   foodFiat: Price<CloserCurrencies.EUR>;
   utilityFiat: Price<CloserCurrencies.EUR>;
   total: Price<CloserCurrencies.EUR>;
+  paymentDelta?: BookingPaymentDelta | null;
 };
 
 export type DynamicField = {

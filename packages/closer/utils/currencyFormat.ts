@@ -36,6 +36,13 @@ export function isIso4217Currency(currencyCode: string): boolean {
   return Object.prototype.hasOwnProperty.call(CURRENCY_ISO_SYMBOL, currencyCode);
 }
 
+export function roundToTwoDecimals(amount: number): number {
+  if (!Number.isFinite(amount)) {
+    return 0;
+  }
+  return Math.round(amount * 100) / 100;
+}
+
 function normalizeFractionDigits(
   fd?: { min?: number; max?: number },
 ): { min: number; max: number } {
@@ -64,29 +71,31 @@ export function formatIsoFiatAmount(
   }
   const { min, max } = normalizeFractionDigits(fd);
   const loc = locale ?? getDefaultCurrencyLocale();
+  const roundedAmount = roundToTwoDecimals(amount);
   try {
     return new Intl.NumberFormat(loc, {
       style: 'currency',
       currency: currencyCode,
       minimumFractionDigits: min,
       maximumFractionDigits: max,
-    }).format(amount);
+    }).format(roundedAmount);
   } catch {
     const symbol = getCurrencySymbol(currencyCode);
     const formatted = new Intl.NumberFormat(loc, {
       minimumFractionDigits: min,
       maximumFractionDigits: max,
-    }).format(amount);
+    }).format(roundedAmount);
     return `${symbol}${formatted}`;
   }
 }
 
 export function formatIntlNumberTwoDecimals(amount: number, locale?: string): string {
   const loc = locale ?? getDefaultCurrencyLocale();
+  const rounded = roundToTwoDecimals(amount);
   return new Intl.NumberFormat(loc, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(amount);
+  }).format(rounded);
 }
 
 export function formatCompactCurrencyAmount(
@@ -94,7 +103,7 @@ export function formatCompactCurrencyAmount(
   currencyCode: string,
   locale?: string,
 ): string {
-  const loc = locale ?? 'en-US';
+  const loc = locale ?? getDefaultCurrencyLocale();
   try {
     const formatted = new Intl.NumberFormat(loc, {
       style: 'currency',

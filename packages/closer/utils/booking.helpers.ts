@@ -38,6 +38,18 @@ function isTokenPaymentVerified(res: { data?: { verified?: boolean } }): boolean
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+export const areNumberArraysEqual = (
+  a: number[] | undefined,
+  b: number[] | undefined,
+): boolean => {
+  const aa = a ?? [];
+  const bb = b ?? [];
+  if (aa.length !== bb.length) {
+    return false;
+  }
+  return aa.every((value, index) => value === bb[index]);
+};
+
 export const getBookingType = (
   eventId: string | undefined,
   bookingType: 'volunteer' | 'residence' | undefined,

@@ -23,6 +23,7 @@ import { loadLocaleData } from '../../../utils/locale.helpers';
 import ConfirmationCelebrationOverlay, {
   CONFIRMATION_CELEBRATION_DURATION_MS,
 } from '../../../components/ConfirmationCelebrationOverlay';
+import { useRedirectPaidBookingToDetail } from '../../../hooks/useRedirectPaidBookingToDetail';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 interface Props extends BaseBookingParams {
@@ -38,8 +39,40 @@ const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
   const router = useRouter();
-  const { status, _id, volunteerId, eventId } = booking || {};
+  const slugParam = router.query.slug;
+  const slug =
+    typeof slugParam === 'string' ? slugParam : slugParam?.[0];
+
+  const [clientBooking, setClientBooking] = useState<
+    Booking | null | undefined
+  >(undefined);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    if (!slug) {
+      setClientBooking(null);
+      return;
+    }
+    let cancelled = false;
+    api
+      .get(`/booking/${slug}`)
+      .then((res) => {
+        if (!cancelled) setClientBooking(res?.data?.results ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setClientBooking(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [router.isReady, slug]);
+
+  const resolvedBooking =
+    clientBooking !== undefined ? clientBooking ?? booking : booking;
+  const { status, _id, volunteerId, eventId } = resolvedBooking || {};
   const [showCelebration, setShowCelebration] = useState(true);
+
+  useRedirectPaidBookingToDetail(resolvedBooking);
 
   useEffect(() => {
     if (status === 'paid') {
@@ -51,17 +84,23 @@ const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
   }, [status]);
 
   useEffect(() => {
-    if (!_id) return;
-    if (status === 'open') {
-      router.replace(`/bookings/${_id}/summary`);
-    } else if (status === 'confirmed') {
-      router.replace(`/bookings/${_id}/checkout`);
-    } else if (status === 'pending') {
-      router.replace(`/bookings/${_id}`);
-    } else if (status !== 'paid' && status !== 'checked-in') {
-      router.replace(`/bookings/${_id}/summary`);
+    if (clientBooking === undefined) return;
+    const b = clientBooking ?? booking;
+    if (!b?._id) return;
+    const { status: redirectStatus, _id: redirectId } = b;
+    if (redirectStatus === 'open') {
+      router.replace(`/bookings/${redirectId}/summary`);
+    } else if (redirectStatus === 'confirmed') {
+      router.replace(`/bookings/${redirectId}/checkout`);
+    } else if (redirectStatus === 'pending') {
+      router.replace(`/bookings/${redirectId}`);
+    } else if (
+      redirectStatus !== 'paid' &&
+      redirectStatus !== 'checked-in'
+    ) {
+      router.replace(`/bookings/${redirectId}`);
     }
-  }, [_id, status, router]);
+  }, [clientBooking, booking, router]);
 
   useEffect(() => {
     if (!_id || (status !== 'paid' && status !== 'checked-in')) return;
@@ -132,7 +171,7 @@ const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
             </p>
           </div>
           <BookingResult
-            booking={booking}
+            booking={resolvedBooking}
             eventName={event?.name || ''}
             foodOptionEnabled={bookingConfig?.foodOptionEnabled}
             utilityOptionEnabled={bookingConfig?.utilityOptionEnabled}

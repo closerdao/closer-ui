@@ -25,6 +25,7 @@ import {
 } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
+import { useRedirectPaidBookingToDetail } from '../../../hooks/useRedirectPaidBookingToDetail';
 import {
   BaseBookingParams,
   Booking,
@@ -84,6 +85,8 @@ const Summary = ({
   const { VISITORS_GUIDE } = useConfig();
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
+
+  useRedirectPaidBookingToDetail(booking);
 
   const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
   const vatRateFromConfig = Number(paymentConfig?.vatRate);

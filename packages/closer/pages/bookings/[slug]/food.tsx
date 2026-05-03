@@ -17,6 +17,7 @@ import { useTranslations } from 'next-intl';
 import PageNotAllowed from '../../401';
 import { BOOKING_STEPS, BOOKING_STEP_TITLE_KEYS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import { useRedirectPaidBookingToDetail } from '../../../hooks/useRedirectPaidBookingToDetail';
 import {
   BaseBookingParams,
   Booking,
@@ -135,6 +136,8 @@ const FoodSelectionPage = ({
 
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
+
+  useRedirectPaidBookingToDetail(booking);
 
   const eventFoodOptionSet = Boolean(
     event?.foodOption === 'food_package'

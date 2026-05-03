@@ -44,6 +44,7 @@ import { useAuth } from '../../../contexts/auth';
 import { WalletState } from '../../../contexts/wallet';
 import { useBookingSmartContract } from '../../../hooks/useBookingSmartContract';
 import { useConfig } from '../../../hooks/useConfig';
+import { useRedirectPaidBookingToDetail } from '../../../hooks/useRedirectPaidBookingToDetail';
 import {
   BaseBookingParams,
   Booking,
@@ -124,6 +125,8 @@ const Checkout = ({
     transactionId,
     createdBy,
   } = (updatedBooking ?? booking ?? {}) as Booking;
+
+  useRedirectPaidBookingToDetail(updatedBooking ?? booking);
 
   const stepUrlParams =
     start && end && booking
@@ -519,7 +522,8 @@ const Checkout = ({
         value: 'booking',
         point: bookingPaymentMetricPoint(),
       });
-      router.push(`/bookings/${booking?._id}`);
+      await refetchBooking({ afterFiatPayment: true });
+      await router.push(`/bookings/${booking?._id}`);
     } catch (error) {
       void logMetricIfAuthenticated(user, {
         event: 'booking-payment-error',
@@ -532,8 +536,9 @@ const Checkout = ({
     }
   };
 
-  const onSuccess = () => {
-    router.push(
+  const onSuccess = async () => {
+    await refetchBooking({ afterFiatPayment: true });
+    await router.push(
       `/bookings/${_id}/confirmation${eventId ? `?eventId=${eventId}` : ''}`,
     );
   };
@@ -830,7 +835,7 @@ const Checkout = ({
         value: 'booking',
         point: bookingPaymentMetricPoint(),
       });
-      onSuccess();
+      await onSuccess();
     } catch (error) {
       void logMetricIfAuthenticated(user, {
         event: 'booking-payment-error',
@@ -954,9 +959,23 @@ const Checkout = ({
     setUpdatedBooking(localUpdatedBooking);
   };
 
-  const refetchBooking = async () => {
+  const refetchBooking = async (options?: { afterFiatPayment?: boolean }) => {
     try {
-      // Add a small delay to allow the backend to update the booking status
+      if (options?.afterFiatPayment) {
+        let latest: Booking | null = null;
+        for (let attempt = 0; attempt < 15; attempt++) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, attempt === 0 ? 250 : 450),
+          );
+          const response = await api.get(`/booking/${_id}`);
+          latest = response.data.results;
+          setUpdatedBooking(latest);
+          if (latest?.status && latest.status !== 'pending-payment') {
+            return latest;
+          }
+        }
+        return latest;
+      }
       await new Promise((resolve) => setTimeout(resolve, 2000));
       const response = await api.get(`/booking/${_id}`);
       const updatedBookingData = response.data.results;

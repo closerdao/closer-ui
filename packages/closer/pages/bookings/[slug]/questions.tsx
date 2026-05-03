@@ -22,6 +22,7 @@ import { SHARED_ACCOMMODATION_PREFERENCES } from '../../../constants/shared.cons
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
+import { useRedirectPaidBookingToDetail } from '../../../hooks/useRedirectPaidBookingToDetail';
 import {
   BaseBookingParams,
   Booking,
@@ -69,6 +70,8 @@ const Questionnaire = ({
   const t = useTranslations();
   const router = useRouter();
   const { goBack } = router.query;
+
+  useRedirectPaidBookingToDetail(booking);
   const { isAuthenticated, user: initialUser, refetchUser } = useAuth();
   const { APP_NAME } = useConfig();
   const { platform } = usePlatform() as any;
