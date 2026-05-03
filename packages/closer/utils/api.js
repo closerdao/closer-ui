@@ -153,7 +153,9 @@ function doRefresh() {
       if (hadSession) {
         notifySessionInvalid();
       }
-      const err = new Error(hadSession ? 'Session expired' : 'Not authenticated');
+      const err = new Error(
+        hadSession ? 'Session expired' : 'Not authenticated',
+      );
       err.silentAuthRedirect = true;
       refreshPromise = Promise.reject(err).finally(() => {
         refreshPromise = null;
@@ -207,6 +209,21 @@ export async function refreshTokensProactively() {
 
 api.interceptors.request.use((config) => {
   if (isRefreshRequest(config)) return config;
+
+  // Protect against Axios 1.x default paramsSerializer serializing nested JSON
+  // objects into bracket notation (e.g. where[date][$gte]=...).
+  // This automatically strings them just like formatSearch does.
+  if (
+    config.params &&
+    typeof config.params.where === 'object' &&
+    config.params.where !== null
+  ) {
+    config.params = {
+      ...config.params,
+      where: JSON.stringify(config.params.where),
+    };
+  }
+
   const token = getAccessToken();
   if (token) {
     const headers = config.headers ?? {};
@@ -259,21 +276,18 @@ api.interceptors.response.use(
   },
 );
 
-api.interceptors.response.use(
-  (response) => {
-    const method = response?.config?.method?.toLowerCase();
-    const url = response?.config?.url ?? '';
-    if (
-      (method === 'patch' || method === 'post' || method === 'put') &&
-      typeof url === 'string' &&
-      url.includes('/config/')
-    ) {
-      invalidateConfigCache();
-    }
-    return response;
-  },
-  normalizeApiError,
-);
+api.interceptors.response.use((response) => {
+  const method = response?.config?.method?.toLowerCase();
+  const url = response?.config?.url ?? '';
+  if (
+    (method === 'patch' || method === 'post' || method === 'put') &&
+    typeof url === 'string' &&
+    url.includes('/config/')
+  ) {
+    invalidateConfigCache();
+  }
+  return response;
+}, normalizeApiError);
 
 if (process.env.NEXT_PUBLIC_LOG_REQUESTS === 'true') {
   api.interceptors.request.use((req) => {
