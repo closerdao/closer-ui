@@ -22,8 +22,9 @@ import {
 } from '../../../types/subscriptions';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
+import { financeApplicationIdFromCreateResponse } from '../../../utils/financeApplicationIdFromResponse';
 import { loadLocaleData } from '../../../utils/locale.helpers';
+import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
 import PageNotFound from '../../not-found';
 
 interface Props {
@@ -81,9 +82,10 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
     if (user && !isLoading && platform?.financeapplication) {
       (async () => {
         const params = { where: { userId: user._id } };
-        const action = await platform.financeapplication.get(params);
-        const financeApplications =
-          financeApplicationListFromGetAction(action);
+        const action = await platform.financeapplication.get(params, {
+          force: true,
+        });
+        const financeApplications = financeApplicationListFromGetAction(action);
 
         const activeApplications = financeApplications.filter(
           (application: FinanceApplication) =>
@@ -93,7 +95,7 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
         setActiveApplications(activeApplications);
       })();
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, platform?.financeapplication]);
 
   const goBack = () => {
     router.push('/citizenship/why');
@@ -126,14 +128,8 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
       } as FinanceApplicationCreateRequest);
 
       if (res.data.status === 'success') {
-        const rawResults = res?.data?.results;
-        const appId =
-          (rawResults &&
-          typeof rawResults === 'object' &&
-          '_id' in rawResults &&
-          typeof (rawResults as { _id?: unknown })._id === 'string'
-            ? (rawResults as { _id: string })._id
-            : '') || '';
+        const appId = financeApplicationIdFromCreateResponse(res.data);
+
         return {
           success: true,
           error: null,
@@ -159,7 +155,7 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
         router.push(`/token/financed/${encodeURIComponent(res.applicationId)}`);
         return;
       }
-      router.push('/token/financed');
+      router.push(`/token/financed?afterApply=${Date.now()}`);
     }
   };
 

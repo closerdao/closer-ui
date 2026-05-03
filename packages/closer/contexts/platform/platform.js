@@ -340,8 +340,9 @@ export const PlatformProvider = ({ children }) => {
       getOne: (id, opts = {}) => {
         dispatch({ type: constants.GET_ONE_INIT, model, id });
         if (
+          !opts.force &&
           state.getIn([model, 'byId', id, 'receivedAt']) >
-          Date.now() - CACHE_DURATION_MS
+            Date.now() - CACHE_DURATION_MS
         ) {
           return new Promise((resolve) =>
             resolve({
@@ -353,7 +354,9 @@ export const PlatformProvider = ({ children }) => {
         }
         return (
           api
-            .get(`/${model}/${id}`)
+            .get(`/${model}/${id}`, {
+              ...(opts.force ? { cache: false } : {}),
+            })
             .then((res) => {
               const results = fromJS(res.data.results);
               if (opts.fetchLinkedObjects && results.count()) {
@@ -397,7 +400,7 @@ export const PlatformProvider = ({ children }) => {
         const useCache =
           !opts.force &&
           state.getIn([model, 'byFilter', filterKey, 'receivedAt']) >
-          Date.now() - CACHE_DURATION_MS;
+            Date.now() - CACHE_DURATION_MS;
         if (useCache) {
           return new Promise((resolve) =>
             resolve({
@@ -422,6 +425,7 @@ export const PlatformProvider = ({ children }) => {
               ...options,
               where: options.where && formatSearch(options.where),
             },
+            ...(opts.force ? { cache: false } : {}),
           })
           .then((res) => {
             const action = {

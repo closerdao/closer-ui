@@ -6,8 +6,8 @@ import { useEffect, useMemo, useState } from 'react';
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import TokenSalesDashboard from '../../../components/Dashboard/TokenSalesDashboard';
 import { Card } from '../../../components/ui';
-import { Badge } from '../../../components/ui/badge';
 import Heading from '../../../components/ui/Heading';
+import { Badge } from '../../../components/ui/badge';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -15,10 +15,10 @@ import process from 'process';
 
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
-import useRBAC from '../../../hooks/useRBAC';
 import { usePlatform } from '../../../contexts/platform';
-import { FinanceApplication } from '../../../types/subscriptions';
+import useRBAC from '../../../hooks/useRBAC';
 import { BookingConfig } from '../../../types/api';
+import { FinanceApplication } from '../../../types/subscriptions';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
@@ -43,12 +43,16 @@ const getFinancedCurrentStatus = (application: FinanceApplication) => {
   const schedule = getScheduleEntries(application.paymentsScheduled);
   const now = new Date();
   const hasOverduePending = schedule.some(
-    (item) => item.status === 'pending' && item.paymentDate && item.paymentDate < now,
+    (item) =>
+      item.status === 'pending' && item.paymentDate && item.paymentDate < now,
   );
   if (hasOverduePending) {
     return 'delinquent';
   }
-  if (schedule.length > 0 && schedule.some((item) => item.status === 'pending')) {
+  if (
+    schedule.length > 0 &&
+    schedule.some((item) => item.status === 'pending')
+  ) {
     return 'up-to-date';
   }
   return application.status || 'pending';
@@ -60,7 +64,9 @@ const getNextPaymentDueDate = (application: FinanceApplication) => {
   const pendingSorted = schedule.filter(
     (item) => item.status === 'pending' && item.paymentDate,
   );
-  const nextFuture = pendingSorted.find((item) => item.paymentDate && item.paymentDate >= now);
+  const nextFuture = pendingSorted.find(
+    (item) => item.paymentDate && item.paymentDate >= now,
+  );
   return nextFuture?.paymentDate || pendingSorted[0]?.paymentDate || null;
 };
 
@@ -101,7 +107,9 @@ const TokenSalesDashboardPage = ({
   const { user } = useAuth();
   const { hasAccess } = useRBAC();
   const { platform }: any = usePlatform();
-  const [activeTab, setActiveTab] = useState<'financed' | 'regular'>('financed');
+  const [activeTab, setActiveTab] = useState<'financed' | 'regular'>(
+    'financed',
+  );
 
   const [currentPage, setCurrentPage] = useState(1);
   const [financedPage, setFinancedPage] = useState(1);
@@ -123,7 +131,8 @@ const TokenSalesDashboardPage = ({
     () => ({
       page: financedPage,
       limit: FINANCED_PER_PAGE,
-      where: financedStatusFilter === 'all' ? {} : { status: financedStatusFilter },
+      where:
+        financedStatusFilter === 'all' ? {} : { status: financedStatusFilter },
       ...(refreshKey > 0 ? { _refresh: refreshKey } : {}),
     }),
     [financedPage, financedStatusFilter, refreshKey],
@@ -131,7 +140,8 @@ const TokenSalesDashboardPage = ({
 
   const sales = platform?.sale?.find(saleFilterParams);
   const totalSales = platform?.sale?.findCount(saleFilterParams);
-  const financeApplications = platform?.financeapplication?.find(financedFilterParams);
+  const financeApplications =
+    platform?.financeapplication?.find(financedFilterParams);
   const totalFinanceApplications =
     platform?.financeapplication?.findCount(financedFilterParams);
 
@@ -152,8 +162,8 @@ const TokenSalesDashboardPage = ({
     setIsLoading(true);
     try {
       await Promise.all([
-        platform.sale?.get(params),
-        platform.sale?.getCount(params),
+        platform.sale?.get(params, { force: true }),
+        platform.sale?.getCount(params, { force: true }),
       ]);
       setCurrentPage(page);
     } catch (error) {
@@ -178,8 +188,8 @@ const TokenSalesDashboardPage = ({
     setIsLoading(true);
     try {
       await Promise.all([
-        platform.financeapplication?.get(params),
-        platform.financeapplication?.getCount(params),
+        platform.financeapplication?.get(params, { force: true }),
+        platform.financeapplication?.getCount(params, { force: true }),
       ]);
       setFinancedPage(page);
     } catch (error) {
@@ -233,7 +243,8 @@ const TokenSalesDashboardPage = ({
     const params = {
       page: financedPage,
       limit: FINANCED_PER_PAGE,
-      where: financedStatusFilter === 'all' ? {} : { status: financedStatusFilter },
+      where:
+        financedStatusFilter === 'all' ? {} : { status: financedStatusFilter },
       _refresh: refreshTimestamp,
     };
     setIsLoading(true);
@@ -357,12 +368,18 @@ const TokenSalesDashboardPage = ({
                     }
                     className="bg-background border border-border rounded-md px-2 py-1"
                   >
-                    <option value="all">{t('token_sales_dashboard_all_sales')}</option>
-                    <option value="pending">{t('token_sales_dashboard_status_pending')}</option>
+                    <option value="all">
+                      {t('token_sales_dashboard_all_sales')}
+                    </option>
+                    <option value="pending">
+                      {t('token_sales_dashboard_status_pending')}
+                    </option>
                     <option value="pending-payment">
                       {t('token_sales_dashboard_pending_payment')}
                     </option>
-                    <option value="paid">{t('token_sales_dashboard_paid')}</option>
+                    <option value="paid">
+                      {t('token_sales_dashboard_paid')}
+                    </option>
                     <option value="completed">
                       {t('token_sales_dashboard_completed')}
                     </option>
@@ -387,7 +404,9 @@ const TokenSalesDashboardPage = ({
                         {t('token_sales_dashboard_financed_next_payment_due')}
                       </th>
                       <th className="text-left p-3">
-                        {t('token_sales_dashboard_financed_total_contract_tokens')}
+                        {t(
+                          'token_sales_dashboard_financed_total_contract_tokens',
+                        )}
                       </th>
                       <th className="text-left p-3">
                         {t('token_sales_dashboard_financed_total_contract_eur')}
@@ -422,13 +441,20 @@ const TokenSalesDashboardPage = ({
                           <td className="p-3">
                             {formatDate(getNextPaymentDueDate(application))}
                           </td>
-                          <td className="p-3">{application.tokensToFinance || 0}</td>
                           <td className="p-3">
-                            {formatIsoFiatAmount(application.totalToPayInFiat || 0, 'EUR')}
+                            {application.tokensToFinance || 0}
+                          </td>
+                          <td className="p-3">
+                            {formatIsoFiatAmount(
+                              application.totalToPayInFiat || 0,
+                              'EUR',
+                            )}
                           </td>
                           <td className="p-3">
                             {formatDate(
-                              application.created ? new Date(application.created) : null,
+                              application.created
+                                ? new Date(application.created)
+                                : null,
                             )}
                           </td>
                         </tr>
@@ -454,7 +480,8 @@ const TokenSalesDashboardPage = ({
                   type="button"
                   onClick={() => refetchFinanced(financedPage + 1)}
                   disabled={
-                    (totalFinanceApplications || 0) <= financedPage * FINANCED_PER_PAGE
+                    (totalFinanceApplications || 0) <=
+                    financedPage * FINANCED_PER_PAGE
                   }
                   className="px-3 py-1 rounded border border-border disabled:opacity-50"
                 >
