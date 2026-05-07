@@ -16,6 +16,7 @@ import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
+import BookingSurface from '../../../components/booking/bookingSurface';
 import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
@@ -426,11 +427,14 @@ const Summary = ({
       />
       {booking && (
         <div className="mt-16 flex flex-col gap-8">
-          <details
-            className="rounded-lg border border-neutral-dark bg-neutral-light overflow-hidden"
+          <BookingSurface
+            as="details"
+            tone="elevated"
+            padding="none"
             open
+            className="overflow-hidden [&>summary]:list-none"
           >
-            <summary className="list-none flex flex-wrap items-center justify-end gap-2 px-4 py-2 font-medium cursor-pointer hover:bg-neutral-dark/30">
+            <summary className="flex flex-wrap items-center justify-end gap-2 px-5 py-3 font-medium text-foreground transition-colors hover:bg-foreground/[0.04] md:px-6">
               <Link
                 href={stepUrlParams ? buildBookingDatesUrl(stepUrlParams) : '#'}
                 className="text-sm text-accent-dark font-medium hover:underline"
@@ -438,7 +442,7 @@ const Summary = ({
                 {t('generic_edit_button')}
               </Link>
             </summary>
-            <div className="px-4 pb-4 pt-0">
+            <div className="px-5 pb-5 pt-0 md:px-6">
               <SummaryDates
                 isDayTicket={booking?.isDayTicket}
                 totalGuests={adults || 0}
@@ -460,13 +464,16 @@ const Summary = ({
                 isVolunteer={volunteerInfo?.bookingType === 'volunteer'}
               />
             </div>
-          </details>
+          </BookingSurface>
 
-          <details
-            className="rounded-lg border border-neutral-dark bg-neutral-light overflow-hidden"
+          <BookingSurface
+            as="details"
+            tone="elevated"
+            padding="none"
             open
+            className="overflow-hidden [&>summary]:list-none"
           >
-            <summary className="list-none flex flex-wrap items-center justify-between gap-2 px-4 py-3 font-medium cursor-pointer hover:bg-neutral-dark/30">
+            <summary className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 font-medium text-foreground transition-colors hover:bg-foreground/[0.04] md:px-6">
               <span>{t('bookings_summary_step_costs_title')}</span>
               <Link
                 href={
@@ -479,7 +486,7 @@ const Summary = ({
                 {t('generic_edit_button')}
               </Link>
             </summary>
-            <div className="px-4 pb-4 pt-0">
+            <div className="px-5 pb-5 pt-0 md:px-6">
               <SummaryCosts
                 hideTitle
                 utilityFiat={utilityFiat}
@@ -511,7 +518,7 @@ const Summary = ({
                 vatRate={vatRate}
               />
             </div>
-          </details>
+          </BookingSurface>
 
           <div>{buttonContent}</div>
         </div>

@@ -117,7 +117,6 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
               userId: currentUser?._id,
             },
           },
-          cache: false,
         });
         const financeApplications = financeApplicationRes?.data?.results;
         if (!Array.isArray(financeApplications)) {

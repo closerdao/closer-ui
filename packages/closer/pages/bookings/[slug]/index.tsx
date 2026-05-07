@@ -5,11 +5,16 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import BookingRequestButtons from '../../../components/BookingRequestButtons';
+import BookingStatusTag from '../../../components/BookingStatusTag';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
 import UserInfoButton from '../../../components/UserInfoButton';
-import { Button, Card, Information } from '../../../components/ui';
+import { Button, Information } from '../../../components/ui';
+import BookingSurface, {
+  BookingSectionEyebrow,
+  BookingSurfaceDivider,
+} from '../../../components/booking/bookingSurface';
 import Heading from '../../../components/ui/Heading';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select/Dropdown';
@@ -21,7 +26,7 @@ import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
 import { HeadingRow, Tag, useConfig } from '../../..';
-import { MAX_LISTINGS_TO_FETCH, STATUS_COLOR } from '../../../constants';
+import { MAX_LISTINGS_TO_FETCH } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
@@ -34,6 +39,7 @@ import {
   Listing,
   PaymentConfig,
   PaymentType,
+  Price,
   Project,
   UpdatedPrices,
   VolunteerOpportunity,
@@ -51,42 +57,38 @@ import {
   ensureEventPriceCurrency,
   formatCheckinDate,
   formatCheckoutDate,
+  getBookingListingRefId,
   getBookingPaymentType,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
+import {
+  approveStayExtension,
+  approveStayRequest,
+  assignStayBeds,
+  checkInStay,
+  checkOutStay,
+  computeCreditsOwed,
+  computeFiatOwed,
+  computeTokensOwed,
+  extendStay,
+  formatStayMoney,
+  getStay,
+  isStayShapedBooking,
+  mapStayQuoteToUpdatedPrices,
+  quoteStay,
+  rejectStayExtension,
+  rejectStayRequest,
+  setStayStatusApi,
+  shortenStay,
+  upgradeStayListing,
+  updateStayGuests,
+} from '../../../utils/stays.api';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageNotFound from '../../not-found';
 
 dayjs.extend(LocalizedFormat);
-
-const BOOKING_STATUS_BADGE_SURFACE: Record<string, string> = {
-  failure: 'bg-failure',
-  pending: 'bg-pending',
-  success: 'bg-success',
-};
-
-const BookingStatusTag = ({ status }: { status?: string }) => {
-  if (!status) {
-    return null;
-  }
-  const tone = STATUS_COLOR[status];
-  const surface =
-    tone && BOOKING_STATUS_BADGE_SURFACE[tone]
-      ? BOOKING_STATUS_BADGE_SURFACE[tone]
-      : null;
-  const label = status.replace(/-/g, ' ');
-  return (
-    <span
-      className={`inline-flex shrink-0 items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
-        surface ? `${surface} text-white` : 'bg-neutral text-foreground'
-      }`}
-    >
-      {label}
-    </span>
-  );
-};
 
 const statusOptions = [
   { label: 'Pending Payment', value: 'pending-payment' },
@@ -153,6 +155,11 @@ const BookingPage = ({
 
   const bookingView = liveBooking ?? booking;
 
+  const stayShaped = useMemo(
+    () => isStayShapedBooking(bookingView as unknown as Record<string, unknown>),
+    [bookingView],
+  );
+
   const {
     utilityFiat,
     rentalToken,
@@ -193,7 +200,7 @@ const BookingPage = ({
   }, [ledgerChargesForSummary]);
 
   const eventFiatWithCurrency = ensureEventPriceCurrency(
-    eventFiat,
+    bookingView?.priceLock?.lines?.event ?? eventFiat,
     CloserCurrencies.EUR,
   );
 
@@ -235,9 +242,12 @@ const BookingPage = ({
       bookingEnd ??
       null,
   );
-  const [updatedListingId, setUpdatedListingId] = useState(listing?._id);
+  const [updatedListingId, setUpdatedListingId] = useState(
+    getBookingListingRefId(booking?.listing as unknown) ?? listing?._id,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [hasUpdated, setHasUpdated] = useState(false);
+  const [stayEditError, setStayEditError] = useState<string | null>(null);
   const [updatedPrices, setUpdatedPrices] = useState<UpdatedPrices | null>(
     null,
   );
@@ -267,8 +277,22 @@ const BookingPage = ({
   const isBookingOwnerEditor =
     user?._id === createdBy || user?._id === bookingView?.paidBy;
 
+  const stayGuestEditableStatuses = ['confirmed', 'pending-payment', 'paid'];
+
+  const canStayGuestEdit =
+    stayShaped &&
+    !isHourlyBooking &&
+    Boolean(isBookingOwnerEditor) &&
+    !canManageBooking &&
+    canEditBooking &&
+    stayGuestEditableStatuses.includes(String(bookingView?.status ?? ''));
+
   const canGuestEditBookingDetails =
-    Boolean(isBookingOwnerEditor) && !canManageBooking && canEditBooking;
+    canStayGuestEdit ||
+    (!stayShaped &&
+      Boolean(isBookingOwnerEditor) &&
+      !canManageBooking &&
+      canEditBooking);
 
   const checkInTime = bookingConfig?.checkinTime || 14;
   const checkOutTime = bookingConfig?.checkoutTime || 11;
@@ -308,6 +332,33 @@ const BookingPage = ({
   );
   const updatedMaxBeds = updatedListing?.beds || 1;
 
+  const displayAccommodationFiat = (bookingView?.priceLock?.lines
+    ?.accommodation ?? rentalFiat) as Price<CloserCurrencies.EUR>;
+  const displayUtilityFiatRow = (bookingView?.priceLock?.lines?.utility ??
+    utilityFiat) as Price<CloserCurrencies.EUR>;
+  const displayFoodFiatRow = (bookingView?.priceLock?.lines?.food ??
+    foodFiat) as Price<CloserCurrencies.EUR>;
+  const displayRentalTokenForCosts = useMemo((): Price<
+    CloserCurrencies.TDF | CloserCurrencies.ETH
+  > => {
+    const pl = bookingView?.priceLock;
+    if (
+      pl?.dailyRentalToken != null &&
+      bookingView?.duration != null &&
+      !Number.isNaN(bookingView.duration)
+    ) {
+      return {
+        val: pl.dailyRentalToken.val * bookingView.duration,
+        cur: pl.dailyRentalToken.cur as CloserCurrencies.TDF,
+      };
+    }
+    return rentalToken;
+  }, [bookingView?.priceLock, bookingView?.duration, rentalToken]);
+  const displayTotalForCosts = (bookingView?.priceLock?.total ??
+    total) as Price<
+    CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH
+  >;
+
   useEffect(() => {
     if (
       !_id ||
@@ -320,6 +371,28 @@ const BookingPage = ({
 
     const fetchUpdatedPrice = async () => {
       try {
+        if (stayShaped && !isHourlyBooking) {
+          const origListing =
+            getBookingListingRefId(bookingView.listing as unknown) ??
+            bookingView.listing;
+          const listingIdForQuote =
+            String(updatedListingId ?? '') !== String(origListing ?? '')
+              ? updatedListingId
+              : undefined;
+          const res = await quoteStay(_id, {
+            end: convertToDateString(updatedEndDate),
+            duration: updatedDuration,
+            adults: updatedAdults,
+            children: updatedChildren,
+            infants: updatedInfants,
+            pets: updatedPets,
+            ...(listingIdForQuote ? { listingId: listingIdForQuote } : {}),
+          });
+          if (cancelled) return;
+          setUpdatedPrices(mapStayQuoteToUpdatedPrices(res, updatedDuration));
+          return;
+        }
+
         const res = await api.post('/bookings/calculate-totals', {
           bookingId: _id,
 
@@ -363,6 +436,9 @@ const BookingPage = ({
     canManageBooking,
     canGuestEditBookingDetails,
     isEditMode,
+    stayShaped,
+    isHourlyBooking,
+    bookingView.listing,
   ]);
 
   useEffect(() => {
@@ -452,7 +528,12 @@ const BookingPage = ({
     updatedChildren !== children ||
     updatedInfants !== infants ||
     updatedPets !== pets ||
-    String(updatedListingId ?? '') !== String(bookingView?.listing ?? '') ||
+    String(updatedListingId ?? '') !==
+      String(
+        getBookingListingRefId(bookingView?.listing as unknown) ??
+          bookingView?.listing ??
+          '',
+      ) ||
     hasDateEdits;
 
   const showPayNowChip =
@@ -467,18 +548,63 @@ const BookingPage = ({
 
   const previewUsesTokenPricing = useTokens || useCredits;
   const previewOriginalTotalVal = previewUsesTokenPricing
-    ? rentalToken?.val ?? 0
-    : total?.val ?? 0;
+    ? displayRentalTokenForCosts?.val ?? 0
+    : displayTotalForCosts?.val ?? total?.val ?? 0;
   const previewNewTotalVal = previewUsesTokenPricing
-    ? updatedPrices?.rentalToken?.val ?? rentalToken?.val ?? 0
-    : updatedPrices?.total?.val ?? total?.val ?? 0;
+    ? updatedPrices?.rentalToken?.val ??
+      displayRentalTokenForCosts?.val ??
+      0
+    : updatedPrices?.total?.val ?? displayTotalForCosts?.val ?? total?.val ?? 0;
   const previewDeltaVal = previewNewTotalVal - previewOriginalTotalVal;
   const previewFormatCurrency = previewUsesTokenPricing
-    ? rentalToken?.cur ?? CloserCurrencies.TDF
-    : total?.cur ?? rentalFiat?.cur ?? CloserCurrencies.EUR;
+    ? displayRentalTokenForCosts?.cur ?? CloserCurrencies.TDF
+    : displayTotalForCosts?.cur ??
+      rentalFiat?.cur ??
+      CloserCurrencies.EUR;
 
   const syncBookingFromServer = async () => {
     try {
+      const preferStay = isStayShapedBooking(
+        (liveBooking ?? booking) as unknown as Record<string, unknown>,
+      );
+      if (preferStay) {
+        try {
+          const fresh = await getStay(_id);
+          setLiveBooking(fresh as unknown as Booking);
+          setStatus(fresh.status);
+          setUpdatedStatus(fresh.status);
+          setUpdatedRoomNumbers(fresh.roomOrBedNumbers ?? []);
+          setUpdatedAdults(fresh.adults);
+          setUpdatedChildren(fresh.children);
+          setUpdatedInfants(fresh.infants);
+          setUpdatedPets(fresh.pets);
+          setUpdatedStartDate(
+            (timeZone && dateToPropertyTimeZone(timeZone, fresh.start)) ??
+              fresh.start ??
+              null,
+          );
+          setUpdatedEndDate(
+            (timeZone && dateToPropertyTimeZone(timeZone, fresh.end)) ??
+              fresh.end ??
+              null,
+          );
+          setUpdatedListingId(
+            (getBookingListingRefId(fresh.listing as unknown) ??
+              fresh.listing) as string,
+          );
+          setFiatDeltaBaseline(
+            Math.abs(
+              (fresh as unknown as Booking).paymentDelta?.fiat?.val ?? 0,
+            ),
+          );
+          setUpdatedPrices(null);
+          setStayEditError(null);
+          refetchCharges();
+          return;
+        } catch {
+          // fall through to legacy booking fetch
+        }
+      }
       const {
         data: { results: fresh },
       } = await api.get(`/booking/${_id}`);
@@ -500,9 +626,13 @@ const BookingPage = ({
           fresh.end ??
           null,
       );
-      setUpdatedListingId(fresh.listing);
+      setUpdatedListingId(
+        (getBookingListingRefId(fresh.listing as unknown) ??
+          fresh.listing) as string,
+      );
       setFiatDeltaBaseline(Math.abs(fresh.paymentDelta?.fiat.val || 0));
       setUpdatedPrices(null);
+      setStayEditError(null);
       refetchCharges();
     } catch (error) {
       console.error(error);
@@ -512,17 +642,100 @@ const BookingPage = ({
   const createdFormatted = dayjs(created).format('DD/MM/YYYY HH:mm A');
 
   const confirmBooking = async () => {
-    await platform.bookings.confirm(_id);
+    if (stayShaped) {
+      await approveStayRequest(_id);
+    } else {
+      await platform.bookings.confirm(_id);
+    }
     await syncBookingFromServer();
   };
   const rejectBooking = async () => {
-    await platform.bookings.reject(_id);
+    if (stayShaped) {
+      await rejectStayRequest(_id);
+    } else {
+      await platform.bookings.reject(_id);
+    }
     await syncBookingFromServer();
   };
 
-  const persistBookingUpdate = async (): Promise<boolean> => {
+  const persistStayBookingUpdate = async (): Promise<boolean> => {
     try {
       setIsLoading(true);
+      setStayEditError(null);
+
+      if (
+        dayjs(pendingSaveStart).startOf('day').valueOf() !==
+        dayjs(bookingView.start).startOf('day').valueOf()
+      ) {
+        setStayEditError(t('booking_details_stay_arrival_change_not_supported'));
+        return false;
+      }
+
+      const origListing = String(
+        getBookingListingRefId(bookingView.listing as unknown) ??
+          bookingView.listing ??
+          '',
+      );
+      const newListing = String(updatedListingId ?? '');
+
+      if (newListing && newListing !== origListing) {
+        await upgradeStayListing(_id, { listingId: newListing });
+      }
+
+      if (
+        updatedAdults !== adults ||
+        updatedChildren !== children ||
+        updatedInfants !== infants ||
+        updatedPets !== pets
+      ) {
+        await updateStayGuests(_id, {
+          adults: updatedAdults,
+          children: updatedChildren,
+          infants: updatedInfants,
+          pets: updatedPets,
+        });
+      }
+
+      const baselineEnd = dayjs(bookingEnd).startOf('day');
+      const targetEnd = dayjs(pendingSaveEnd).startOf('day');
+      if (!baselineEnd.isSame(targetEnd)) {
+        const endIso = dayjs(pendingSaveEnd).toISOString();
+        if (targetEnd.isAfter(baselineEnd)) {
+          await extendStay(_id, { end: endIso });
+        } else {
+          await shortenStay(_id, { end: endIso });
+        }
+      }
+
+      if (canManageBooking) {
+        if (isAdmin && updatedStatus && updatedStatus !== bookingView.status) {
+          await setStayStatusApi(_id, { status: updatedStatus });
+        }
+        if (
+          !areNumberArraysEqual(pendingRoomOrBedNumbers, roomOrBedNumbers)
+        ) {
+          await assignStayBeds(_id, {
+            roomOrBedNumbers: pendingRoomOrBedNumbers ?? [],
+          });
+        }
+      }
+
+      return true;
+    } catch (error) {
+      setStayEditError(parseMessageFromError(error));
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const persistBookingUpdate = async (): Promise<boolean> => {
+    if (stayShaped && !isHourlyBooking) {
+      return persistStayBookingUpdate();
+    }
+    try {
+      setIsLoading(true);
+      setStayEditError(null);
       const res = await platform.bookings.update(_id, {
         updatedBookingValues,
         paymentType,
@@ -530,6 +743,7 @@ const BookingPage = ({
       return res.status === 200;
     } catch (error) {
       console.log('error=', error);
+      setStayEditError(parseMessageFromError(error));
       return false;
     } finally {
       setIsLoading(false);
@@ -577,6 +791,33 @@ const BookingPage = ({
     }
   };
 
+  const bv = bookingView as Record<string, unknown>;
+  const showPaymentLedgerCard =
+    stayShaped ||
+    bv?.fiatTarget != null ||
+    bv?.fiatPaid != null ||
+    bv?.creditsTarget != null ||
+    bv?.creditsPaid != null ||
+    bv?.tokensTarget != null ||
+    bv?.tokensStaked != null;
+
+  const handleApproveExtension = async () => {
+    await approveStayExtension(_id);
+    await syncBookingFromServer();
+  };
+  const handleRejectExtension = async () => {
+    await rejectStayExtension(_id);
+    await syncBookingFromServer();
+  };
+  const handleStayCheckIn = async () => {
+    await checkInStay(_id);
+    await syncBookingFromServer();
+  };
+  const handleStayCheckOut = async () => {
+    await checkOutStay(_id);
+    await syncBookingFromServer();
+  };
+
   if (!isBookingEnabled) {
     return <FeatureNotEnabled feature="booking" />;
   }
@@ -610,8 +851,12 @@ const BookingPage = ({
         />
         <meta property="og:type" content="booking" />
       </Head>
-      <main className="main-content booking mx-auto flex w-full max-w-2xl flex-col gap-4 pb-6">
-        <Card className="flex flex-col gap-3 border-line bg-neutral-light p-4">
+      <main className="main-content booking mx-auto flex w-full max-w-2xl flex-col gap-6 pb-10 md:gap-8 md:pb-16">
+        <BookingSurface
+          tone="elevated"
+          padding="lg"
+          className="flex flex-col gap-4 md:gap-5"
+        >
           <div className="flex flex-wrap items-start justify-between gap-2">
             <Heading level={3} className="!mt-0 max-w-[85%] flex-1 text-xl md:text-2xl">
               {t(`bookings_title_${status}`)}
@@ -644,15 +889,143 @@ const BookingPage = ({
           </div>
 
           {bookingView?.adminBookingReason && (
-            <Card className="bg-accent font-semibold text-white">
+            <BookingSurface tone="banner" padding="sm">
               {bookingView.adminBookingReason}
-            </Card>
+            </BookingSurface>
+          )}
+
+          {showPaymentLedgerCard && (
+            <BookingSurface
+              tone="inset"
+              padding="md"
+              className="flex flex-col gap-3 text-sm"
+            >
+              <BookingSectionEyebrow>
+                {t('booking_details_payment_ledger_title')}
+              </BookingSectionEyebrow>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="flex flex-col gap-1">
+                  <p className="text-xs font-semibold text-disabled">
+                    {t('booking_details_ledger_fiat')}
+                  </p>
+                  <p>
+                    {t('booking_details_target')}:{' '}
+                    {bv.fiatTarget != null || bv.priceLock != null
+                      ? formatStayMoney(
+                          (bv.fiatTarget ??
+                            (bv.priceLock as { total?: { val: number; cur: string } })
+                              ?.total) as { val: number; cur: string },
+                        )
+                      : priceFormat(total?.val ?? 0, total?.cur ?? CloserCurrencies.EUR)}
+                  </p>
+                  <p>
+                    {t('booking_details_paid')}:{' '}
+                    {bv.fiatPaid != null
+                      ? formatStayMoney(bv.fiatPaid as { val: number; cur: string })
+                      : '—'}
+                  </p>
+                  <p>
+                    {t('booking_details_owed')}:{' '}
+                    {bv.fiatTarget != null || bv.priceLock != null
+                      ? priceFormat(
+                          computeFiatOwed(bookingView as never),
+                          ((bv.fiatTarget as { cur?: string })?.cur ??
+                            (bv.priceLock as { total?: { cur: string } })?.total
+                              ?.cur) as CloserCurrencies,
+                        )
+                      : '—'}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <p className="text-xs font-semibold text-disabled">
+                    {t('booking_details_ledger_credits')}
+                  </p>
+                  <p>
+                    {t('booking_details_target')}:{' '}
+                    {bv.creditsTarget != null ||
+                    (bv.priceLock as { appliedCredits?: { val: number; cur: string } })
+                      ?.appliedCredits != null
+                      ? formatStayMoney(
+                          (bv.creditsTarget ??
+                            (
+                              bv.priceLock as {
+                                appliedCredits: { val: number; cur: string };
+                              }
+                            ).appliedCredits) as { val: number; cur: string },
+                        )
+                      : '—'}
+                  </p>
+                  <p>
+                    {t('booking_details_paid')}:{' '}
+                    {bv.creditsPaid != null
+                      ? formatStayMoney(bv.creditsPaid as { val: number; cur: string })
+                      : '—'}
+                  </p>
+                  <p>
+                    {t('booking_details_owed')}:{' '}
+                    {bv.creditsTarget != null || bv.creditsPaid != null
+                      ? `${computeCreditsOwed(bookingView as never)}`
+                      : '—'}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <p className="text-xs font-semibold text-disabled">
+                    {t('booking_details_ledger_tokens')}
+                  </p>
+                  <p>
+                    {t('booking_details_target')}:{' '}
+                    {bv.tokensTarget != null ||
+                    (bv.priceLock as { appliedTokens?: { val: number; cur: string } })
+                      ?.appliedTokens != null
+                      ? formatStayMoney(
+                          (bv.tokensTarget ??
+                            (
+                              bv.priceLock as {
+                                appliedTokens: { val: number; cur: string };
+                              }
+                            ).appliedTokens) as { val: number; cur: string },
+                        )
+                      : '—'}
+                  </p>
+                  <p>
+                    {t('booking_details_paid')}:{' '}
+                    {bv.tokensStaked != null
+                      ? formatStayMoney(bv.tokensStaked as { val: number; cur: string })
+                      : '—'}
+                  </p>
+                  <p>
+                    {t('booking_details_owed')}:{' '}
+                    {bv.tokensTarget != null || bv.tokensStaked != null
+                      ? `${computeTokensOwed(bookingView as never)}`
+                      : '—'}
+                  </p>
+                </div>
+              </div>
+              {stayShaped &&
+                (bv.checkedIn != null || bv.checkedOut != null) && (
+                <div className="flex flex-col gap-2 pt-1 text-xs">
+                  <BookingSurfaceDivider />
+                  {bv.checkedIn != null && String(bv.checkedIn).length > 0 && (
+                    <p>
+                      {t('booking_details_checked_in_at')}:{' '}
+                      {dayjs(String(bv.checkedIn)).format('LLL')}
+                    </p>
+                  )}
+                  {bv.checkedOut != null && String(bv.checkedOut).length > 0 && (
+                    <p>
+                      {t('booking_details_checked_out_at')}:{' '}
+                      {dayjs(String(bv.checkedOut)).format('LLL')}
+                    </p>
+                  )}
+                </div>
+              )}
+            </BookingSurface>
           )}
 
           <div className="flex flex-col gap-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-disabled">
+            <BookingSectionEyebrow>
               {t('bookings_dates_step_title')}
-            </p>
+            </BookingSectionEyebrow>
             <SummaryDates
               isDayTicket={bookingView?.isDayTicket}
               totalGuests={
@@ -715,9 +1088,9 @@ const BookingPage = ({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-disabled">
+            <BookingSectionEyebrow>
               {t('bookings_dates_step_guests_title')}
-            </p>
+            </BookingSectionEyebrow>
             {(userInfo || payerInfo) && (
               <div className="flex flex-col gap-1">
                 {bookingView?.paidBy &&
@@ -759,24 +1132,26 @@ const BookingPage = ({
           </div>
 
           <div className="flex flex-col gap-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-disabled">
+            <BookingSectionEyebrow>
               {t('bookings_summary_step_costs_title')}
-            </p>
+            </BookingSectionEyebrow>
             <SummaryCosts
               hideTitle
               compact
-              rentalFiat={rentalFiat}
-              rentalToken={rentalToken}
+              rentalFiat={displayAccommodationFiat}
+              rentalToken={displayRentalTokenForCosts}
               isFoodIncluded={Boolean(bookingView?.foodOptionId)}
-              utilityFiat={utilityFiat}
-              foodFiat={foodFiat}
+              utilityFiat={displayUtilityFiatRow}
+              foodFiat={displayFoodFiatRow}
               useTokens={useTokens}
               useCredits={useCredits}
               accomodationCost={
-                useTokens || useCredits ? rentalToken : rentalFiat
+                useTokens || useCredits
+                  ? displayRentalTokenForCosts
+                  : displayAccommodationFiat
               }
-              totalToken={rentalToken}
-              totalFiat={total}
+              totalToken={displayRentalTokenForCosts}
+              totalFiat={displayTotalForCosts}
               foodOptionEnabled={bookingConfig?.foodOptionEnabled}
               utilityOptionEnabled={bookingConfig?.utilityOptionEnabled}
               eventCost={eventFiatWithCurrency}
@@ -787,7 +1162,9 @@ const BookingPage = ({
               isNotPaid={isNotPaid}
               updatedAccomodationTotal={{
                 val: updatedAccomodationTotal,
-                cur: useTokens ? rentalToken.cur : rentalFiat?.cur,
+                cur: useTokens
+                  ? displayRentalTokenForCosts?.cur
+                  : displayAccommodationFiat?.cur,
               }}
               isEditMode={canManageBooking || canGuestEditBookingDetails}
               updatedUtilityTotal={{
@@ -825,17 +1202,25 @@ const BookingPage = ({
               bookingCheckoutLoading={isLoading}
             />
           </div>
-        </Card>
+        </BookingSurface>
 
         {canGuestEditBookingDetails &&
           hasGuestBookingEdits &&
           updatedPrices && (
-            <Card className="flex flex-col gap-3 border-2 border-accent bg-accent-light p-4">
+            <BookingSurface
+              tone="promote"
+              padding="lg"
+              className="flex flex-col gap-4"
+            >
               <Heading level={4} className="!mt-0 text-lg">
                 {t('booking_details_complete_change')}
               </Heading>
               <div className="grid gap-2 sm:grid-cols-3">
-                <div className="flex flex-col gap-0.5 rounded-lg bg-white/80 p-3">
+                <BookingSurface
+                  tone="panelTransparent"
+                  padding="sm"
+                  className="flex flex-col gap-0.5"
+                >
                   <p className="text-xs font-medium uppercase tracking-wide text-disabled">
                     {t('booking_details_previous_total')}
                   </p>
@@ -845,15 +1230,19 @@ const BookingPage = ({
                       previewFormatCurrency,
                     )}
                   </p>
-                </div>
-                <div className="flex flex-col gap-0.5 rounded-lg bg-white/80 p-3">
+                </BookingSurface>
+                <BookingSurface
+                  tone="panelTransparent"
+                  padding="sm"
+                  className="flex flex-col gap-0.5"
+                >
                   <p className="text-xs font-medium uppercase tracking-wide text-disabled">
                     {t('booking_details_new_total')}
                   </p>
                   <p className="text-lg font-bold text-foreground">
                     {priceFormat(previewNewTotalVal, previewFormatCurrency)}
                   </p>
-                </div>
+                </BookingSurface>
                 <div
                   className={`flex flex-col gap-0.5 rounded-lg p-3 ${
                     previewDeltaVal > 0
@@ -879,13 +1268,13 @@ const BookingPage = ({
                 isEnabled={
                   hasGuestBookingEdits &&
                   !isLoading &&
-                  canEditBooking &&
+                  ((stayShaped && !isHourlyBooking) || canEditBooking) &&
                   Boolean(updatedPrices)
                 }
               >
                 {t('booking_details_complete_change')}
               </Button>
-            </Card>
+            </BookingSurface>
           )}
 
         {bookingView?.volunteerInfo && (
@@ -950,50 +1339,129 @@ const BookingPage = ({
         )}
 
         {canManageBooking && (
-          <Card className="flex flex-col gap-2 border-line bg-neutral-light p-3">
+          <BookingSurface
+            tone="elevated"
+            padding="md"
+            className="flex flex-col gap-3"
+          >
             <Heading level={4} className="!mt-0 text-base font-semibold">
               {t('booking_details_space_host_heading')}
             </Heading>
 
-            {bookingView?.roomOrBedNumbers &&
-              bookingView.roomOrBedNumbers.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  <p className="text-sm font-semibold text-foreground">
-                    {listing?.private
-                      ? t('booking_card_room_number')
-                      : t('booking_card_bed_numbers')}{' '}
-                    {bookingView.roomOrBedNumbers.join(', ')}
+            {stayShaped &&
+              bv.pendingExtension != null &&
+              typeof bv.pendingExtension === 'object' && (
+                <BookingSurface
+                  tone="inset"
+                  padding="md"
+                  className="flex flex-col gap-2 text-sm"
+                >
+                  <p className="font-semibold">
+                    {t('booking_details_extension_pending')}
                   </p>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs text-disabled" htmlFor="roomNumbers">
-                      {roomOrBedNumbers && roomOrBedNumbers?.length > 0
-                        ? 'Enter new bed numbers (comma delimited, must match updated number of adults):'
-                        : 'Enter new room number:'}
-                    </label>
-                    <Input
-                      onChange={handleUpdateRoomNumbers}
-                      placeholder="Number (s)"
-                      id="roomNumbers"
-                      type="text"
-                      className="max-w-xs bg-white py-1.5 px-2 text-sm"
-                    />
-                  </div>
-                </div>
+                  <p className="text-xs text-disabled">
+                    {t('listings_book_check_out')}:{' '}
+                    {dayjs(
+                      String(
+                        (bv.pendingExtension as { end: string }).end,
+                      ),
+                    ).format('LL')}
+                  </p>
+                  {canManageBooking && (
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="secondary"
+                        isLoading={isLoading}
+                        isFullWidth={false}
+                        onClick={() => void handleApproveExtension()}
+                      >
+                        {t('booking_details_approve_extension')}
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        isLoading={isLoading}
+                        isFullWidth={false}
+                        onClick={() => void handleRejectExtension()}
+                      >
+                        {t('booking_details_reject_extension')}
+                      </Button>
+                    </div>
+                  )}
+                </BookingSurface>
               )}
 
-            <div className="flex flex-col gap-1.5 border-t border-line pt-3">
-              <label className="text-xs font-semibold text-foreground">
-                {t('booking_card_set_booking_status')}
-              </label>
-              <Select
-                className="rounded-full border-foreground"
-                value={updatedStatus}
-                options={statusOptions}
-                onChange={(value: string) => setUpdatedStatus(value)}
-                isRequired
-                placeholder={t('booking_card_set_booking_status')}
-              />
-            </div>
+            {(stayShaped ||
+              (bookingView?.roomOrBedNumbers &&
+                bookingView.roomOrBedNumbers.length > 0)) && (
+              <div className="flex flex-col gap-2">
+                {bookingView?.roomOrBedNumbers &&
+                  bookingView.roomOrBedNumbers.length > 0 && (
+                    <p className="text-sm font-semibold text-foreground">
+                      {listing?.private
+                        ? t('booking_card_room_number')
+                        : t('booking_card_bed_numbers')}{' '}
+                      {bookingView.roomOrBedNumbers.join(', ')}
+                    </p>
+                  )}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-disabled" htmlFor="roomNumbers">
+                    {roomOrBedNumbers && roomOrBedNumbers?.length > 0
+                      ? 'Enter new bed numbers (comma delimited, must match updated number of adults):'
+                      : 'Enter new room number:'}
+                  </label>
+                  <Input
+                    onChange={handleUpdateRoomNumbers}
+                    placeholder="Number (s)"
+                    id="roomNumbers"
+                    type="text"
+                    className="max-w-xs bg-white py-1.5 px-2 text-sm"
+                  />
+                </div>
+              </div>
+            )}
+
+            {stayShaped &&
+              status === 'paid' &&
+              !(bv.checkedIn != null && String(bv.checkedIn).length > 0) &&
+              canManageBooking && (
+                <Button
+                  variant="secondary"
+                  isLoading={isLoading}
+                  onClick={() => void handleStayCheckIn()}
+                >
+                  {t('booking_details_check_in_stay')}
+                </Button>
+              )}
+            {stayShaped &&
+              bv.checkedIn != null &&
+              String(bv.checkedIn).length > 0 &&
+              !(bv.checkedOut != null && String(bv.checkedOut).length > 0) &&
+              (canManageBooking || isBookingOwnerEditor) && (
+                <Button
+                  variant="secondary"
+                  isLoading={isLoading}
+                  onClick={() => void handleStayCheckOut()}
+                >
+                  {t('booking_details_check_out_stay')}
+                </Button>
+              )}
+
+            {((stayShaped && isAdmin) || (!stayShaped && canManageBooking)) && (
+              <div className="flex flex-col gap-1.5 pt-1">
+                <BookingSurfaceDivider className="mb-2" />
+                <label className="text-xs font-semibold text-foreground">
+                  {t('booking_card_set_booking_status')}
+                </label>
+                <Select
+                  className="rounded-full border-foreground"
+                  value={updatedStatus}
+                  options={statusOptions}
+                  onChange={(value: string) => setUpdatedStatus(value)}
+                  isRequired
+                  placeholder={t('booking_card_set_booking_status')}
+                />
+              </div>
+            )}
 
             {previewPaymentDelta?.token?.val &&
             (paymentType === PaymentType.FULL_TOKENS ||
@@ -1014,7 +1482,8 @@ const BookingPage = ({
             ) : null}
 
             {previewPaymentDelta?.fiat.val ? (
-              <div className="flex flex-col gap-2 border-t border-line pt-3 text-sm">
+              <div className="flex flex-col gap-2 pt-1 text-sm">
+                <BookingSurfaceDivider className="mb-2" />
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-semibold">
                     {previewPaymentDelta.fiat.val >= 0
@@ -1042,10 +1511,16 @@ const BookingPage = ({
               </div>
             ) : null}
 
-            {!canEditBooking && (
+            {!canEditBooking && !(stayShaped && !isHourlyBooking) && (
               <Information className="border-error/30 bg-error/10 text-foreground">
                 WARNING: editing this type of booking is not currently supported.
                 Please handle these operations manually.
+              </Information>
+            )}
+
+            {stayEditError && (
+              <Information className="border-error/30 bg-error/10 text-foreground">
+                {stayEditError}
               </Information>
             )}
 
@@ -1054,7 +1529,10 @@ const BookingPage = ({
                 isLoading={isLoading}
                 onClick={handleSaveBooking}
                 isEnabled={
-                  hasHostBookingEdits && !isLoading && canEditBooking
+                  hasHostBookingEdits &&
+                  !isLoading &&
+                  ((stayShaped && !isHourlyBooking) ||
+                    (!stayShaped && canEditBooking))
                 }
               >
                 {t('booking_card_save_booking')}
@@ -1063,7 +1541,7 @@ const BookingPage = ({
                 <Information>{t('booking_card_booking_updated')}</Information>
               )}
             </div>
-          </Card>
+          </BookingSurface>
         )}
 
         <section className="flex flex-col gap-3">
@@ -1087,9 +1565,9 @@ const BookingPage = ({
         </section>
 
         {status === 'confirmed' && (
-          <section className="rounded-xl border border-line bg-neutral-light p-3 text-sm">
+          <BookingSurface tone="soft" padding="md" className="text-sm">
             {t('bookings_confirmation')}
-          </section>
+          </BookingSurface>
         )}
       </main>
     </>
@@ -1120,9 +1598,14 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
     const generalConfig = config.general;
     const listings = listingRes?.data?.results;
     const paymentConfig = config.payment;
-
     const foodOptions = foodRes?.data?.results;
     const projects = projectsRes?.data?.results;
+
+    const listingRef = booking?.listing;
+    const listingIdForFetch =
+      listingRef &&
+      (getBookingListingRefId(listingRef) ??
+        (typeof listingRef === 'string' ? listingRef : null));
 
     const [optionalEvent, optionalListing, optionalVolunteer] =
       await Promise.all([
@@ -1130,8 +1613,8 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
           api.get(`/event/${booking.eventId}`, {
             headers: getBearerAuthHeaders(req as NextApiRequest),
           }),
-        booking.listing &&
-          api.get(`/listing/${booking.listing}`, {
+        listingIdForFetch &&
+          api.get(`/listing/${listingIdForFetch}`, {
             headers: getBearerAuthHeaders(req as NextApiRequest),
           }),
         booking.volunteerId &&

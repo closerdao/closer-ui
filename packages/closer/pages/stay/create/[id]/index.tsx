@@ -2,21 +2,26 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 
 import {
+  Dispatch,
+  SetStateAction,
   useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
 import { CardElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import Conditions from '../../../../components/Conditions';
 import FeatureNotEnabled from '../../../../components/FeatureNotEnabled';
 import PageError from '../../../../components/PageError';
 import Modal from '../../../../components/Modal';
-import { ErrorMessage } from '../../../../components/ui';
+import Switch from '../../../../components/Switch';
+import { ErrorMessage, Information } from '../../../../components/ui';
 import BackButton from '../../../../components/ui/BackButton';
 import Button from '../../../../components/ui/Button';
 import Checkbox from '../../../../components/ui/Checkbox';
@@ -46,18 +51,26 @@ import {
   VolunteerConfig,
 } from '../../../../types/api';
 import { Listing } from '../../../../types/booking';
+import { Event } from '../../../../types/event';
+import { FoodOption } from '../../../../types/food';
 import {
   Stay,
   StayCheckoutResponse,
 } from '../../../../types/stay';
 import api, { cdn } from '../../../../utils/api';
+import {
+  getDefaultSelectedFoodOptionId,
+  getFoodOption,
+  getFoodOptionsForBookingContext,
+  FoodBookingContext,
+} from '../../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../../utils/common';
+import { priceFormat } from '../../../../utils/helpers';
 import { patchUserAndSyncAuthStore } from '../../../../utils/platformUserSync';
 import { loadLocaleData } from '../../../../utils/locale.helpers';
 import {
   canChangeStayPaymentMethod,
   checkoutStay,
-  computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
   confirmStayCheckout,
@@ -81,10 +94,77 @@ const stripePromise = process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY
     })
   : null;
 
+const formatModalTwoDecimals = (value: number) =>
+  Number.isFinite(value) ? value.toFixed(2) : '0.00';
+
+const StayCheckoutFoodPhotoPreview = ({
+  option,
+  photoSlideByOptionId,
+  setPhotoSlideByOptionId,
+  cdnUrl,
+}: {
+  option: FoodOption;
+  photoSlideByOptionId: Record<string, number>;
+  setPhotoSlideByOptionId: Dispatch<SetStateAction<Record<string, number>>>;
+  cdnUrl: string | undefined;
+}) => {
+  const photos = option.photos ?? [];
+  const currentPhotoIndex = photoSlideByOptionId[option._id] ?? 0;
+  const setCurrentPhotoIndex = (next: number) => {
+    setPhotoSlideByOptionId((prev) => ({ ...prev, [option._id]: next }));
+  };
+  const base = cdnUrl ?? '';
+  return (
+    <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-neutral-dark/10 relative">
+      <img
+        src={`${base}${photos[currentPhotoIndex]}-post-md.jpg`}
+        alt=""
+        className="w-full h-full object-cover"
+      />
+      {photos.length > 1 && (
+        <>
+          <button
+            type="button"
+            className="absolute left-0 top-1/2 -translate-y-1/2 p-0.5 bg-white/80 rounded-r text-neutral-dark hover:bg-white"
+            onClick={(e) => {
+              e.preventDefault();
+              setCurrentPhotoIndex(
+                currentPhotoIndex === 0
+                  ? photos.length - 1
+                  : currentPhotoIndex - 1,
+              );
+            }}
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            className="absolute right-0 top-1/2 -translate-y-1/2 p-0.5 bg-white/80 rounded-l text-neutral-dark hover:bg-white"
+            onClick={(e) => {
+              e.preventDefault();
+              setCurrentPhotoIndex(
+                currentPhotoIndex >= photos.length - 1
+                  ? 0
+                  : currentPhotoIndex + 1,
+              );
+            }}
+          >
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+          <span className="absolute bottom-0.5 right-0.5 bg-white/80 text-[10px] px-1 rounded">
+            {currentPhotoIndex + 1}/{photos.length}
+          </span>
+        </>
+      )}
+    </div>
+  );
+};
+
 interface Props {
   bookingSettings: BookingSettings | null;
   generalConfig: GeneralConfig | null;
   volunteerConfig: VolunteerConfig | null;
+  foodOptions: FoodOption[] | null;
   error?: string;
   messages?: any;
 }
@@ -93,6 +173,7 @@ const StayCheckoutPage = ({
   bookingSettings,
   generalConfig,
   volunteerConfig,
+  foodOptions,
   error,
 }: Props) => {
   const router = useRouter();
@@ -261,6 +342,7 @@ const StayCheckoutPage = ({
           refetchStay={refetchStay}
           bookingSettings={bookingSettings}
           volunteerConfig={volunteerConfig}
+          foodOptions={foodOptions ?? []}
         />
       </Elements>
     </>
@@ -276,6 +358,7 @@ interface ContentProps {
   refetchStay: () => Promise<Stay | null>;
   bookingSettings: BookingSettings | null;
   volunteerConfig: VolunteerConfig | null;
+  foodOptions: FoodOption[];
 }
 
 const StayCheckoutContent = ({
@@ -287,6 +370,7 @@ const StayCheckoutContent = ({
   refetchStay,
   bookingSettings,
   volunteerConfig,
+  foodOptions,
 }: ContentProps) => {
   const router = useRouter();
   const t = useTranslations();
@@ -313,7 +397,6 @@ const StayCheckoutContent = ({
 
   const [currentStay, setCurrentStay] = useState<Stay>(stay);
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
-  const [isApplyingBalance, setIsApplyingBalance] = useState(false);
   const [isSavingOptions, setIsSavingOptions] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
@@ -342,6 +425,16 @@ const StayCheckoutContent = ({
     sharedAccomodation: string;
   }>({ diet: [], sharedAccomodation: '' });
   const [stayMessage, setStayMessage] = useState(stay.message || '');
+  const [stayEvent, setStayEvent] = useState<Event | null>(null);
+  const [foodPhotoSlideByOptionId, setFoodPhotoSlideByOptionId] = useState<
+    Record<string, number>
+  >({});
+
+  const pendingTokenPaymentPayloadRef = useRef<
+    | { method: 'full-tokens' }
+    | { method: 'partial-tokens'; appliedTokens: number }
+    | null
+  >(null);
 
   useEffect(() => {
     setCurrentStay(stay);
@@ -364,6 +457,25 @@ const StayCheckoutContent = ({
   }, [currentStay._id, currentStay.message]);
 
   useEffect(() => {
+    if (!currentStay.eventId) {
+      setStayEvent(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await api.get(`/event/${currentStay.eventId}`);
+        if (!cancelled) setStayEvent(data?.results ?? null);
+      } catch {
+        if (!cancelled) setStayEvent(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentStay.eventId]);
+
+  useEffect(() => {
     if (isStayPaid(currentStay)) {
       router.replace(`/stay/create/${currentStay._id}/confirmation`);
     }
@@ -381,7 +493,6 @@ const StayCheckoutContent = ({
     : 0;
 
   const fiatOwed = computeFiatOwed(currentStay);
-  const creditsOwed = computeCreditsOwed(currentStay);
   const tokensOwed = computeTokensOwed(currentStay);
 
   const canChangePaymentMethod = canChangeStayPaymentMethod(currentStay);
@@ -428,6 +539,105 @@ const StayCheckoutContent = ({
     [volunteerConfig?.diet],
   );
 
+  const stayEventId = currentStay.eventId;
+  const eventFoodOptionSet = Boolean(
+    stayEvent?.foodOption === 'food_package'
+      ? stayEvent?.foodOptionId
+      : stayEvent?.foodOptionId && stayEvent?.foodOptionId !== 'no_food',
+  );
+  const isFoodAvailable =
+    stayEvent?.foodOption !== undefined
+      ? stayEvent.foodOption !== 'no_food'
+      : stayEvent?.foodOptionId !== 'no_food';
+
+  const foodBookingContext: FoodBookingContext = useMemo(() => {
+    return stayEventId && stayEvent?.foodOption === 'default'
+      ? 'guests'
+      : stayEventId
+        ? 'events'
+        : currentStay.volunteerInfo?.bookingType === 'volunteer' ||
+            currentStay.volunteerInfo?.bookingType === 'residence'
+          ? 'volunteer'
+          : currentStay.isTeamBooking
+            ? 'team'
+            : 'guests';
+  }, [
+    stayEventId,
+    stayEvent?.foodOption,
+    currentStay.volunteerInfo?.bookingType,
+    currentStay.isTeamBooking,
+  ]);
+
+  const selectableFoodOptions = useMemo(
+    () => getFoodOptionsForBookingContext(foodOptions, foodBookingContext),
+    [foodOptions, foodBookingContext],
+  );
+
+  const isGuestSelectMode =
+    isFoodAvailable &&
+    Boolean(stayEventId && stayEvent?.foodOption === 'default') &&
+    selectableFoodOptions.length > 0;
+
+  const fixedFoodOption = useMemo(
+    () =>
+      getFoodOption({
+        eventId: stayEventId,
+        event: stayEvent || undefined,
+        foodOptions,
+      }),
+    [stayEventId, stayEvent, foodOptions],
+  );
+
+  const defaultSelectableId = useMemo(
+    () => getDefaultSelectedFoodOptionId(selectableFoodOptions),
+    [selectableFoodOptions],
+  );
+
+  const staySelectedFoodId =
+    currentStay.foodOptionId &&
+    selectableFoodOptions.some((o) => o._id === currentStay.foodOptionId)
+      ? currentStay.foodOptionId
+      : null;
+
+  const resolvedGuestFoodId = isGuestSelectMode
+    ? currentStay.foodOption === 'food_package'
+      ? staySelectedFoodId ?? defaultSelectableId
+      : null
+    : null;
+
+  const selectedFoodOption =
+    isGuestSelectMode && resolvedGuestFoodId
+      ? selectableFoodOptions.find((o) => o._id === resolvedGuestFoodId)
+      : null;
+
+  const activeFoodOption = isGuestSelectMode
+    ? selectedFoodOption ?? fixedFoodOption
+    : getFoodOption({
+        eventId: stayEventId,
+        event: stayEvent || undefined,
+        foodOptions:
+          selectableFoodOptions.length > 0
+            ? selectableFoodOptions
+            : foodOptions,
+      });
+
+  const foodPricePerNight =
+    currentStay.volunteerInfo?.bookingType === 'residence'
+      ? 0
+      : activeFoodOption?.price;
+
+  const durationNights = currentStay.duration || 0;
+
+  const foodTotalForStay =
+    (foodPricePerNight ?? 0) * (currentStay.adults ?? 0) * durationNights;
+
+  const shouldSkipFood = Boolean(
+    stayEventId && stayEvent?.foodOption === 'no_food',
+  );
+
+  const showFoodSection =
+    !!bookingSettings?.foodOptionEnabled && !shouldSkipFood;
+
   const isWeb3Enabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
   const needsTokenStakeCompletion =
     isWeb3Enabled &&
@@ -459,8 +669,8 @@ const StayCheckoutContent = ({
   const isApplyCreditsEnabled =
     canChangePaymentMethod &&
     creditsAmountToApply > 0 &&
-    !isApplyingBalance &&
-    !isApplyingCredits;
+    !isApplyingCredits &&
+    !isStakeModalOpen;
 
   const isFullCreditsForAccommodation =
     creditsAmountToApply >= tokenAccommodationVal && tokenAccommodationVal > 0;
@@ -469,7 +679,7 @@ const StayCheckoutContent = ({
     '!normal-case tracking-normal min-h-[36px] text-sm';
 
   const applyCreditsDisabledExplanation = useMemo(() => {
-    if (isApplyCreditsEnabled || isApplyingBalance || isApplyingCredits) {
+    if (isApplyCreditsEnabled || isApplyingCredits) {
       return undefined;
     }
     if (!canChangePaymentMethod) {
@@ -484,11 +694,11 @@ const StayCheckoutContent = ({
     return undefined;
   }, [
     isApplyCreditsEnabled,
-    isApplyingBalance,
     isApplyingCredits,
     canChangePaymentMethod,
     tokenAccommodationVal,
     creditsBalance,
+    isStakeModalOpen,
     t,
   ]);
 
@@ -523,18 +733,23 @@ const StayCheckoutContent = ({
   const nativeCelo = displayedNativeCeloBalance;
   const isLowCeloForStake = nativeCelo < MIN_CELO_FOR_GAS;
 
-  const buildStakePlan = (stayToStake: Stay) => {
+  const buildStakePlanFromTokenAmount = (
+    stayToStake: Stay,
+    tokensToStakeTotal: number,
+  ): {
+    dailyValue: number;
+    bookingNights: number[][];
+    tokenAmount: number;
+  } | null => {
     const startDate = dayjs(stayToStake.start);
     const duration = stayToStake.duration || 0;
     const dailyValue = stayToStake.priceLock?.dailyRentalToken?.val || 0;
-    const tokensToStake = computeTokensOwed(stayToStake);
 
     if (!startDate.isValid() || duration <= 0 || dailyValue <= 0) return null;
 
-    const nightsToStake = Math.min(
-      duration,
-      Math.floor(tokensToStake / dailyValue),
-    );
+    const maxTokensForStay = duration * dailyValue;
+    const capped = Math.min(tokensToStakeTotal, maxTokensForStay);
+    const nightsToStake = Math.min(duration, Math.floor(capped / dailyValue));
     if (nightsToStake <= 0) return null;
 
     return {
@@ -547,46 +762,49 @@ const StayCheckoutContent = ({
     };
   };
 
-  const handleApplyTokens = async () => {
+  const buildStakePlan = (stayToStake: Stay) => {
+    const owed = computeTokensOwed(stayToStake);
+    if (owed <= 0) return null;
+    return buildStakePlanFromTokenAmount(stayToStake, owed);
+  };
+
+  const handleApplyTokens = () => {
     if (!canChangePaymentMethod) return;
     if (isSameDayTokenBooking) return;
     if (!isWalletConnected || tokenAmountToApply <= 0) return;
+    if (isCreditsModalOpen) return;
     setActionError(null);
-    setIsApplyingBalance(true);
-    try {
-      let editableStay = currentStay;
-      if (editableStay.status === 'draft') {
-        editableStay = await submitStay(editableStay._id);
-        setCurrentStay(editableStay);
-      }
-      const payload =
-        tokenAmountToApply >= tokenAccommodationVal
-          ? { method: 'full-tokens' as const }
-          : {
-              method: 'partial-tokens' as const,
-              appliedTokens: tokenAmountToApply,
-            };
-      const updated = await setStayPaymentMethod(editableStay._id, payload);
-      setCurrentStay(updated);
-      const nextStakePlan = buildStakePlan(updated);
-      if (!nextStakePlan) {
-        setActionError(t('stay_create_token_stake_plan_error'));
-        return;
-      }
-      setStakePlan(nextStakePlan);
-      setStakeModalError(null);
-      setIsStakeModalOpen(true);
-    } catch (err) {
-      setActionError(parseMessageFromError(err));
-    } finally {
-      setIsApplyingBalance(false);
+
+    const payload =
+      tokenAmountToApply >= tokenAccommodationVal
+        ? { method: 'full-tokens' as const }
+        : {
+            method: 'partial-tokens' as const,
+            appliedTokens: tokenAmountToApply,
+          };
+
+    const intentTokens =
+      payload.method === 'full-tokens'
+        ? tokenAccommodationVal
+        : tokenAmountToApply;
+
+    const plan = buildStakePlanFromTokenAmount(currentStay, intentTokens);
+    if (!plan) {
+      setActionError(t('stay_create_token_stake_plan_error'));
+      return;
     }
+
+    pendingTokenPaymentPayloadRef.current = payload;
+    setStakePlan(plan);
+    setStakeModalError(null);
+    setIsStakeModalOpen(true);
   };
 
   const handleResumeTokenStake = () => {
     if (isSameDayTokenBooking) return;
     if (!isWalletConnected || tokensOwed <= 0) return;
     setActionError(null);
+    pendingTokenPaymentPayloadRef.current = null;
     const nextStakePlan = buildStakePlan(currentStay);
     if (!nextStakePlan) {
       setActionError(t('stay_create_token_stake_plan_error'));
@@ -600,6 +818,8 @@ const StayCheckoutContent = ({
   const closeStakeModal = () => {
     setIsStakeModalOpen(false);
     setStakeModalError(null);
+    pendingTokenPaymentPayloadRef.current = null;
+    setStakePlan(null);
   };
 
   const handleStakeTokens = async () => {
@@ -616,6 +836,24 @@ const StayCheckoutContent = ({
     setStakeModalError(null);
     setActionError(null);
     try {
+      let stayForStake = currentStay;
+      const pendingPayload = pendingTokenPaymentPayloadRef.current;
+      if (pendingPayload) {
+        let editableStay = currentStay;
+        if (editableStay.status === 'draft') {
+          editableStay = await submitStay(editableStay._id);
+          setCurrentStay(editableStay);
+          stayForStake = editableStay;
+        }
+        const updated = await setStayPaymentMethod(
+          editableStay._id,
+          pendingPayload,
+        );
+        pendingTokenPaymentPayloadRef.current = null;
+        setCurrentStay(updated);
+        stayForStake = updated;
+      }
+
       const stakingResult = await stakeTokens(stakePlan.dailyValue);
       if (!stakingResult) {
         setStakeModalError(t('stay_create_token_stake_failed'));
@@ -644,7 +882,7 @@ const StayCheckoutContent = ({
 
       setIsVerifyingStake(true);
       const stakeResult = await stakeStayTokens(
-        currentStay._id,
+        stayForStake._id,
         stakingResult.success.transactionId,
       );
       setCurrentStay(stakeResult.booking);
@@ -660,6 +898,7 @@ const StayCheckoutContent = ({
 
   const openCreditsConfirmationModal = () => {
     if (!canChangePaymentMethod || creditsAmountToApply <= 0) return;
+    if (isStakeModalOpen) return;
     setCreditsModalError(null);
     setIsCreditsModalOpen(true);
   };
@@ -711,6 +950,34 @@ const StayCheckoutContent = ({
       setIsSavingOptions(false);
     }
   };
+
+  useEffect(() => {
+    if (!shouldSkipFood || !currentStay._id) return;
+    const alreadyNoFood =
+      currentStay.foodOption === 'no_food' &&
+      (currentStay.foodOptionId == null || currentStay.foodOptionId === '');
+    if (alreadyNoFood) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const updated = await updateStayOptions(currentStay._id, {
+          foodOption: 'no_food',
+          foodOptionId: null,
+        });
+        if (!cancelled) setCurrentStay(updated);
+      } catch (err) {
+        if (!cancelled) setActionError(parseMessageFromError(err));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    shouldSkipFood,
+    currentStay._id,
+    currentStay.foodOption,
+    currentStay.foodOptionId,
+  ]);
 
   const patchUserPreference = async (
     attribute: 'diet' | 'sharedAccomodation',
@@ -966,78 +1233,80 @@ const StayCheckoutContent = ({
           <Heading id="trip-summary-heading" level={2} className="text-lg mb-4">
             {t('stay_create_your_trip')}
           </Heading>
-          <div className="flex gap-4">
-            {cover && (
-              <img
-                src={cover}
-                alt={
-                  listing?.name
-                    ? t('stay_create_listing_image_alt', {
-                        name: listing.name,
-                      })
-                    : ''
-                }
-                loading="lazy"
-                width={96}
-                height={96}
-                className="w-24 h-24 rounded-xl object-cover flex-shrink-0"
-              />
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-gray-900 break-words">
-                {listing?.name || t('stay_create_listing_unknown')}
-              </p>
-              <p className="text-sm text-gray-600 mt-1">
-                <time dateTime={currentStay.start}>
-                  {dayjs(currentStay.start).format('MMM D, YYYY')}
-                </time>{' '}
-                –{' '}
-                <time dateTime={currentStay.end}>
-                  {dayjs(currentStay.end).format('MMM D, YYYY')}
-                </time>
-              </p>
-              <p className="text-sm text-gray-600">
-                {t('stay_create_guests_summary', {
-                  adults: currentStay.adults,
-                  children: currentStay.children || 0,
-                })}
-              </p>
-              <p className="text-sm text-gray-600">
-                {t('bookings_dates_nights_selected', {
-                  count: currentStay.duration,
-                })}
-              </p>
+          <div className="flex flex-col lg:flex-row lg:gap-8 lg:items-start">
+            <div className="flex gap-4 flex-1 min-w-0">
+              {cover && (
+                <img
+                  src={cover}
+                  alt={
+                    listing?.name
+                      ? t('stay_create_listing_image_alt', {
+                          name: listing.name,
+                        })
+                      : ''
+                  }
+                  loading="lazy"
+                  width={96}
+                  height={96}
+                  className="w-24 h-24 rounded-xl object-cover flex-shrink-0"
+                />
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-gray-900 break-words">
+                  {listing?.name || t('stay_create_listing_unknown')}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  <time dateTime={currentStay.start}>
+                    {dayjs(currentStay.start).format('MMM D, YYYY')}
+                  </time>{' '}
+                  –{' '}
+                  <time dateTime={currentStay.end}>
+                    {dayjs(currentStay.end).format('MMM D, YYYY')}
+                  </time>
+                </p>
+                <p className="text-sm text-gray-600">
+                  {t('stay_create_guests_summary', {
+                    adults: currentStay.adults,
+                    children: currentStay.children || 0,
+                  })}
+                </p>
+                <p className="text-sm text-gray-600">
+                  {t('bookings_dates_nights_selected', {
+                    count: currentStay.duration,
+                  })}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="mt-5">
-            <p className="text-sm font-semibold text-gray-900 mb-3">
-              {t('stay_create_options_title')}
-            </p>
-            <div className="flex flex-col gap-3">
-              <Checkbox
-                isChecked={!!currentStay.doesNeedPickup}
-                onChange={() =>
-                  handleToggleOption({
-                    doesNeedPickup: !currentStay.doesNeedPickup,
-                  })
-                }
-                isEnabled={!isSavingOptions}
-                id="opt-pickup"
-              >
-                {t('stay_create_option_pickup')}
-              </Checkbox>
-              <Checkbox
-                isChecked={!!currentStay.doesNeedSeparateBeds}
-                onChange={() =>
-                  handleToggleOption({
-                    doesNeedSeparateBeds: !currentStay.doesNeedSeparateBeds,
-                  })
-                }
-                isEnabled={!isSavingOptions}
-                id="opt-separate"
-              >
-                {t('stay_create_option_separate_beds')}
-              </Checkbox>
+            <div className="mt-5 lg:mt-0 w-full lg:w-auto lg:min-w-[220px] lg:max-w-xs lg:flex-shrink-0 border-t border-gray-100 lg:border-t-0 lg:border-l lg:pl-8 pt-5 lg:pt-0">
+              <p className="text-sm font-semibold text-gray-900 mb-3">
+                {t('stay_create_options_title')}
+              </p>
+              <div className="flex flex-col gap-3">
+                <Checkbox
+                  isChecked={!!currentStay.doesNeedPickup}
+                  onChange={() =>
+                    handleToggleOption({
+                      doesNeedPickup: !currentStay.doesNeedPickup,
+                    })
+                  }
+                  isEnabled={!isSavingOptions}
+                  id="opt-pickup"
+                >
+                  {t('stay_create_option_pickup')}
+                </Checkbox>
+                <Checkbox
+                  isChecked={!!currentStay.doesNeedSeparateBeds}
+                  onChange={() =>
+                    handleToggleOption({
+                      doesNeedSeparateBeds: !currentStay.doesNeedSeparateBeds,
+                    })
+                  }
+                  isEnabled={!isSavingOptions}
+                  id="opt-separate"
+                >
+                  {t('stay_create_option_separate_beds')}
+                </Checkbox>
+              </div>
             </div>
           </div>
         </section>
@@ -1103,6 +1372,374 @@ const StayCheckoutContent = ({
             />
           </div>
         </section>
+
+        {showFoodSection && (
+          <section
+            aria-labelledby="stay-food-heading"
+            className="rounded-2xl border border-gray-200 p-4 md:p-5"
+          >
+            <Heading id="stay-food-heading" level={2} className="text-lg mb-4">
+              {t('bookings_food_step_title')}
+            </Heading>
+            <div className="flex flex-col gap-6">
+              {isGuestSelectMode && (
+                <div className="flex flex-col gap-4">
+                  {selectableFoodOptions.map((option) => {
+                    const isSelected = resolvedGuestFoodId === option._id;
+                    const optionPricePerNight =
+                      currentStay.volunteerInfo?.bookingType === 'residence'
+                        ? 0
+                        : option.price;
+                    const optionTotal =
+                      optionPricePerNight *
+                      (currentStay.adults ?? 0) *
+                      durationNights;
+                    const photos = option.photos ?? [];
+                    const currentPhotoIndex =
+                      foodPhotoSlideByOptionId[option._id] ?? 0;
+                    const setCurrentPhotoIndex = (next: number) => {
+                      setFoodPhotoSlideByOptionId((prev) => ({
+                        ...prev,
+                        [option._id]: next,
+                      }));
+                    };
+                    return (
+                      <div
+                        key={option._id}
+                        className="rounded-lg border border-gray-200 bg-gray-50/80 p-4 flex gap-4"
+                      >
+                        <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-gray-200 relative">
+                          {photos.length > 0 ? (
+                            <>
+                              <img
+                                src={`${cdn}${photos[currentPhotoIndex]}-post-md.jpg`}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                              {photos.length > 1 && (
+                                <>
+                                  <button
+                                    type="button"
+                                    className="absolute left-0 top-1/2 -translate-y-1/2 p-0.5 bg-white/80 rounded-r text-gray-800 hover:bg-white"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      setCurrentPhotoIndex(
+                                        currentPhotoIndex === 0
+                                          ? photos.length - 1
+                                          : currentPhotoIndex - 1,
+                                      );
+                                    }}
+                                  >
+                                    <ChevronLeft className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="absolute right-0 top-1/2 -translate-y-1/2 p-0.5 bg-white/80 rounded-l text-gray-800 hover:bg-white"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      setCurrentPhotoIndex(
+                                        currentPhotoIndex >= photos.length - 1
+                                          ? 0
+                                          : currentPhotoIndex + 1,
+                                      );
+                                    }}
+                                  >
+                                    <ChevronRight className="w-3.5 h-3.5" />
+                                  </button>
+                                  <span className="absolute bottom-0.5 right-0.5 bg-white/80 text-[10px] px-1 rounded">
+                                    {currentPhotoIndex + 1}/{photos.length}
+                                  </span>
+                                </>
+                              )}
+                            </>
+                          ) : null}
+                        </div>
+                        <div className="flex-1 min-w-0 flex flex-col gap-2">
+                          <div className="flex justify-between items-start gap-2">
+                            <div className="min-w-0">
+                              <p
+                                id={`stay-food-option-label-${option._id}`}
+                                className="font-medium text-gray-900"
+                              >
+                                {option.name}
+                              </p>
+                              {option.description && (
+                                <div
+                                  className="text-sm text-gray-600 mt-0.5 line-clamp-2"
+                                  dangerouslySetInnerHTML={{
+                                    __html: option.description,
+                                  }}
+                                />
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 [&_.switch]:mb-0 shrink-0">
+                              <span
+                                className={`text-sm font-medium ${
+                                  isSelected ? 'text-success' : 'text-gray-700'
+                                }`}
+                              >
+                                {isSelected
+                                  ? `✓ ${t('bookings_food_included')}`
+                                  : `✗ ${t('bookings_food_not_included')}`}
+                              </span>
+                              <Switch
+                                disabled={isSavingOptions}
+                                name={`stay-food-${option._id}`}
+                                labelledBy={`stay-food-option-label-${option._id}`}
+                                onChange={() => {
+                                  void handleToggleOption(
+                                    isSelected
+                                      ? {
+                                          foodOption: 'no_food',
+                                          foodOptionId: null,
+                                        }
+                                      : {
+                                          foodOption: 'food_package',
+                                          foodOptionId: option._id,
+                                        },
+                                  );
+                                }}
+                                checked={isSelected}
+                                label=""
+                              />
+                            </div>
+                          </div>
+                          {isSelected &&
+                            optionPricePerNight > 0 &&
+                            durationNights > 0 &&
+                            !currentStay.isTeamBooking && (
+                              <div className="text-sm mt-0.5 flex flex-col gap-0.5 text-gray-700">
+                                <p>
+                                  {t('bookings_food_price_per_day_x_days', {
+                                    price: priceFormat(optionPricePerNight),
+                                    days: durationNights,
+                                  })}
+                                </p>
+                                <p>
+                                  {t('bookings_food_total_for_stay')}:{' '}
+                                  {priceFormat(optionTotal)}
+                                </p>
+                              </div>
+                            )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {!isGuestSelectMode &&
+                activeFoodOption &&
+                activeFoodOption.name !== 'no_food' &&
+                eventFoodOptionSet && (
+                  <div className="rounded-lg border border-gray-200 bg-gray-50/80 p-4 flex gap-4">
+                    {(activeFoodOption.photos ?? []).length > 0 && (
+                      <StayCheckoutFoodPhotoPreview
+                        option={activeFoodOption}
+                        photoSlideByOptionId={foodPhotoSlideByOptionId}
+                        setPhotoSlideByOptionId={setFoodPhotoSlideByOptionId}
+                        cdnUrl={cdn}
+                      />
+                    )}
+                    <div className="flex-1 min-w-0 flex flex-col gap-2">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-900">
+                            {activeFoodOption.name}
+                          </p>
+                          {activeFoodOption.description && (
+                            <div
+                              className="text-sm text-gray-600 mt-0.5 line-clamp-2"
+                              dangerouslySetInnerHTML={{
+                                __html: activeFoodOption.description,
+                              }}
+                            />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 [&_.switch]:mb-0 shrink-0">
+                          <span
+                            className={`text-sm font-medium ${
+                              currentStay.foodOption === 'food_package'
+                                ? 'text-success'
+                                : 'text-gray-700'
+                            }`}
+                          >
+                            {currentStay.foodOption === 'food_package'
+                              ? `✓ ${t('bookings_food_included')}`
+                              : `✗ ${t('bookings_food_not_included')}`}
+                          </span>
+                          <Switch
+                            disabled={isSavingOptions}
+                            name="stay-food-fixed"
+                            onChange={() => {
+                              const nextOn =
+                                currentStay.foodOption !== 'food_package';
+                              void handleToggleOption(
+                                nextOn
+                                  ? {
+                                      foodOption: 'food_package',
+                                      foodOptionId: activeFoodOption._id,
+                                    }
+                                  : {
+                                      foodOption: 'no_food',
+                                      foodOptionId: null,
+                                    },
+                              );
+                            }}
+                            checked={currentStay.foodOption === 'food_package'}
+                            label=""
+                          />
+                        </div>
+                      </div>
+                      {currentStay.foodOption !== 'food_package' &&
+                        isFoodAvailable &&
+                        foodTotalForStay > 0 &&
+                        !currentStay.isTeamBooking && (
+                          <p className="text-sm text-gray-700">
+                            {t('bookings_food_save_by_opting_out', {
+                              amount: priceFormat(foodTotalForStay),
+                            })}
+                          </p>
+                        )}
+                      {isFoodAvailable &&
+                        currentStay.foodOption === 'food_package' &&
+                        durationNights > 0 &&
+                        !currentStay.isTeamBooking &&
+                        (foodPricePerNight ?? 0) > 0 && (
+                          <div className="text-sm mt-0.5 flex flex-col gap-0.5 text-gray-700">
+                            <p>
+                              {t('bookings_food_price_per_day_x_days', {
+                                price: priceFormat(foodPricePerNight || 0),
+                                days: durationNights,
+                              })}
+                            </p>
+                            <p>
+                              {t('bookings_food_total_for_stay')}:{' '}
+                              {priceFormat(foodTotalForStay)}
+                            </p>
+                          </div>
+                        )}
+                    </div>
+                  </div>
+                )}
+
+              {!isGuestSelectMode &&
+                isFoodAvailable &&
+                !(
+                  activeFoodOption &&
+                  activeFoodOption.name !== 'no_food' &&
+                  eventFoodOptionSet
+                ) &&
+                activeFoodOption &&
+                activeFoodOption.name !== 'no_food' && (
+                  <div className="rounded-lg border border-gray-200 bg-gray-50/80 p-4 flex gap-4">
+                    {(activeFoodOption.photos ?? []).length > 0 && (
+                      <StayCheckoutFoodPhotoPreview
+                        option={activeFoodOption}
+                        photoSlideByOptionId={foodPhotoSlideByOptionId}
+                        setPhotoSlideByOptionId={setFoodPhotoSlideByOptionId}
+                        cdnUrl={cdn}
+                      />
+                    )}
+                    <div className="flex-1 min-w-0 flex flex-col gap-2">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="min-w-0">
+                          <p
+                            id={`stay-food-option-label-${activeFoodOption._id}`}
+                            className="font-medium text-gray-900"
+                          >
+                            {t('booking_add_food')} {activeFoodOption.name}
+                          </p>
+                          {activeFoodOption.description && (
+                            <div
+                              className="text-sm text-gray-600 mt-0.5 line-clamp-2"
+                              dangerouslySetInnerHTML={{
+                                __html: activeFoodOption.description,
+                              }}
+                            />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 [&_.switch]:mb-0 shrink-0">
+                          <span
+                            className={`text-sm font-medium ${
+                              currentStay.foodOption === 'food_package'
+                                ? 'text-success'
+                                : 'text-gray-700'
+                            }`}
+                          >
+                            {currentStay.foodOption === 'food_package'
+                              ? `✓ ${t('bookings_food_included')}`
+                              : `✗ ${t('bookings_food_not_included')}`}
+                          </span>
+                          <Switch
+                            disabled={isSavingOptions}
+                            name="stay-food-optional"
+                            labelledBy={`stay-food-option-label-${activeFoodOption._id}`}
+                            onChange={() => {
+                              const nextOn =
+                                currentStay.foodOption !== 'food_package';
+                              void handleToggleOption(
+                                nextOn
+                                  ? {
+                                      foodOption: 'food_package',
+                                      foodOptionId: activeFoodOption._id,
+                                    }
+                                  : {
+                                      foodOption: 'no_food',
+                                      foodOptionId: null,
+                                    },
+                              );
+                            }}
+                            checked={currentStay.foodOption === 'food_package'}
+                            label=""
+                          />
+                        </div>
+                      </div>
+                      {currentStay.foodOption !== 'food_package' &&
+                        foodTotalForStay > 0 &&
+                        !currentStay.isTeamBooking && (
+                          <p className="text-sm text-gray-700">
+                            {t('bookings_food_save_by_opting_out', {
+                              amount: priceFormat(foodTotalForStay),
+                            })}
+                          </p>
+                        )}
+                      {currentStay.foodOption === 'food_package' &&
+                        durationNights > 0 &&
+                        !currentStay.isTeamBooking &&
+                        (foodPricePerNight ?? 0) > 0 && (
+                          <div className="text-sm mt-0.5 flex flex-col gap-0.5 text-gray-700">
+                            <p>
+                              {t('bookings_food_price_per_day_x_days', {
+                                price: priceFormat(foodPricePerNight || 0),
+                                days: durationNights,
+                              })}
+                            </p>
+                            <p>
+                              {t('bookings_food_total_for_stay')}:{' '}
+                              {priceFormat(foodTotalForStay)}
+                            </p>
+                          </div>
+                        )}
+                    </div>
+                  </div>
+                )}
+
+              {!isFoodAvailable && (
+                <p className="text-sm text-gray-700">
+                  {t('food_no_food_available')}
+                </p>
+              )}
+
+              {(currentStay.foodOption !== 'food_package' ||
+                !isFoodAvailable) && (
+                <Information className="hidden sm:flex">
+                  {t('food_no_food_disclaimer')}
+                </Information>
+              )}
+            </div>
+          </section>
+        )}
 
         <section
           aria-labelledby="summary-heading"
@@ -1179,13 +1816,15 @@ const StayCheckoutContent = ({
                 label={t('stay_create_line_subtotal')}
                 value={formatStayMoney(priceLock.subtotal)}
               />
-              {priceLock.vat.val > 0 && (
-                <p className="text-xs text-gray-500 -mt-1">
-                  {t('stay_create_includes_vat', {
-                    amount: formatStayMoney(priceLock.vat),
-                  })}
-                </p>
-              )}
+              <Row
+                label={t('stay_create_line_tax')}
+                value={formatStayMoney(
+                  priceLock.vat ?? {
+                    val: 0,
+                    cur: priceLock.total.cur,
+                  },
+                )}
+              />
               <Row
                 bold
                 label={t('stay_create_line_total')}
@@ -1203,25 +1842,14 @@ const StayCheckoutContent = ({
                   value={`-${priceLock.appliedTokens.val} ${priceLock.appliedTokens.cur}`}
                 />
               )}
-              <hr className="my-2 border-gray-200" />
-              <Row
-                label={t('stay_create_line_fiat_owed')}
-                value={formatStayMoney({
-                  val: fiatOwed,
-                  cur: priceLock.total.cur,
-                })}
-              />
-              {creditsOwed > 0 && (
-                <Row
-                  label={t('stay_create_line_credits_owed')}
-                  value={`${creditsOwed} credits`}
-                />
-              )}
               {tokensOwed > 0 && (
-                <Row
-                  label={t('stay_create_line_tokens_owed')}
-                  value={`${tokensOwed} ${currentStay.tokensTarget?.cur || ''}`}
-                />
+                <>
+                  <hr className="my-2 border-gray-200" />
+                  <Row
+                    label={t('stay_create_line_tokens_owed')}
+                    value={`${tokensOwed} ${currentStay.tokensTarget?.cur || ''}`}
+                  />
+                </>
               )}
             </div>
           ) : (
@@ -1250,12 +1878,12 @@ const StayCheckoutContent = ({
                             canChangePaymentMethod &&
                             tokenAmountToApply > 0 &&
                             !isSameDayTokenBooking &&
-                            !isApplyingBalance &&
+                            !isCreditsModalOpen &&
                             !isStaking &&
                             !isVerifyingStake
                           }
                           isLoading={
-                            isApplyingBalance || isStaking || isVerifyingStake
+                            isStaking || isVerifyingStake
                           }
                           className={compactPaymentButtonClass}
                         >
@@ -1422,12 +2050,12 @@ const StayCheckoutContent = ({
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm space-y-2">
               <p>
                 {t('stay_create_credits_modal_amount', {
-                  amount: creditsAmountToApply,
+                  amount: formatModalTwoDecimals(creditsAmountToApply),
                 })}
               </p>
               <p className="text-gray-600">
                 {t('stay_create_credits_modal_balance', {
-                  balance: creditsBalance,
+                  balance: formatModalTwoDecimals(creditsBalance ?? 0),
                 })}
               </p>
               {tokenAccommodationVal > 0 && (
@@ -1483,7 +2111,7 @@ const StayCheckoutContent = ({
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm">
               <p>
                 {t('stay_create_stake_modal_amount', {
-                  amount: stakePlan?.tokenAmount || 0,
+                  amount: formatModalTwoDecimals(stakePlan?.tokenAmount ?? 0),
                 })}
               </p>
               <p>
@@ -1509,10 +2137,12 @@ const StayCheckoutContent = ({
                 ) : (
                   t('wallet_tdf_available')
                 )}
-                : {tokenBalanceAvailable || '0'}
+                :{' '}
+                {formatModalTwoDecimals(Number(tokenBalanceAvailable || 0))}
               </p>
               <p className="text-gray-700">
-                {t('wallet_celo')}: {displayedNativeCeloBalance}
+                {t('wallet_celo')}:{' '}
+                {formatModalTwoDecimals(displayedNativeCeloBalance)}
               </p>
               {tokenContractAddress && (
                 <p className="text-xs text-gray-500 break-all mt-1">
@@ -1578,21 +2208,32 @@ const Row = ({ label, value, bold }: RowProps) => (
 
 StayCheckoutPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
+    const [messages, foodRes] = await Promise.all([
+      loadLocaleData(
+        context?.locale,
+        process.env.NEXT_PUBLIC_APP_NAME,
+      ),
+      api.get('/food').catch(() => null),
+    ]);
     const bookingSettings = config.booking as BookingSettings;
     const generalConfig = (config.general || null) as GeneralConfig | null;
     const volunteerConfig = (config.volunteering ||
       null) as VolunteerConfig | null;
-    return { bookingSettings, generalConfig, volunteerConfig, messages };
+    const foodOptions = foodRes?.data?.results ?? null;
+    return {
+      bookingSettings,
+      generalConfig,
+      volunteerConfig,
+      foodOptions,
+      messages,
+    };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
       bookingSettings: null,
       generalConfig: null,
       volunteerConfig: null,
+      foodOptions: null,
       messages: null,
     };
   }

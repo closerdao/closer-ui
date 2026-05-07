@@ -206,7 +206,7 @@ const Questionnaire = ({
   };
 
   const handleAnswer = (name: string, value: string) => {
-    const updatedAnswers = answers.map((answer) => {
+    const updatedAnswers = answers.map((answer: Record<string, string>) => {
       if (Object.keys(answer)[0] === name) {
         return { [name]: value };
       }

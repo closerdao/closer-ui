@@ -12,6 +12,11 @@ import BookingListPreview from './BookingListPreview/BookingListPreview';
 import Pagination from './Pagination';
 import { Heading, Spinner } from './ui';
 import { BookingConfig } from '../types/api';
+import {
+  getBookingListingDisplayName,
+  getBookingListingEmbedded,
+  getBookingListingRefId,
+} from '../utils/booking.helpers';
 
 interface Props {
   filter: any;
@@ -19,11 +24,19 @@ interface Props {
   setPage: Dispatch<SetStateAction<number>>;
   bookingConfig?: BookingConfig;
   hideExportCsv?: boolean;
+  previewAsAdmin?: boolean;
 }
 
 const MAX_USERS_TO_FETCH = 2000;
 
-const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false }: Props) => {
+const Bookings = ({
+  filter,
+  page,
+  setPage,
+  bookingConfig,
+  hideExportCsv = false,
+  previewAsAdmin = true,
+}: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
   const { user } = useAuth();
@@ -53,7 +66,10 @@ const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false 
     bookings.map((b: any) => b.get('volunteerId')).filter(Boolean).toJS();
   const listingIds =
     bookings &&
-    bookings.map((b: any) => b.get('listing')).filter(Boolean).toJS();
+    bookings
+      .map((b: any) => getBookingListingRefId(b.get('listing')))
+      .filter((id: string | null) => id != null && id !== '')
+      .toJS();
   const eventsFilter =
     eventIds?.length > 0 && { where: { _id: { $in: eventIds } } };
   const volunteerFilter =
@@ -116,19 +132,28 @@ const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false 
     const data = bookings
       .map((booking: any) => {
         const user = platform.user.findOne(booking.get('createdBy'));
-        const listing = platform.listing.findOne(booking.get('listing'));
+        const listingRef = booking.get('listing');
+        const listingId = getBookingListingRefId(listingRef);
+        const listing = listingId
+          ? platform.listing.findOne(listingId)
+          : null;
         const bookingEvent = platform.event.findOne(booking.get('eventId'));
 
         return {
           id: booking.get('_id'),
           name: user?.get('screenname'),
-          listing: listing?.get('name'),
+          listing:
+            listing?.get('name') ??
+            getBookingListingDisplayName(listingRef, listing, ''),
           event: bookingEvent?.get('name'),
           guests: booking.get('adults'),
           volunteer: booking.get('volunteerId'),
           arrival: booking.get('start'),
           pickup: booking.get('doesNeedPickup'),
-          total: booking.getIn(['total', 'val']),
+          total:
+            booking.getIn(['total', 'val']) ??
+            booking.getIn(['priceLock', 'total', 'val']) ??
+            booking.getIn(['fiatTarget', 'val']),
         };
       })
       .toJS();
@@ -182,17 +207,22 @@ const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false 
                 </div>
               )}
             </div>
-            <div className="bookings-list mt-8 flex flex-wrap gap-4">
+            <div className="bookings-list mt-8 grid grid-cols-1 justify-items-start gap-4 md:grid-cols-2">
               {!bookings || bookings.count() === 0 ? (
                 <p className="mt-4">{t('no_bookings')}</p>
               ) : (
                 bookings.map((booking: any) => {
-                  const listing = platform.listing.findOne(
-                    booking.get('listing'),
+                  const listingRef = booking.get('listing');
+                  const listingId = getBookingListingRefId(listingRef);
+                  const listing = listingId
+                    ? platform.listing.findOne(listingId)
+                    : null;
+                  const embedded = getBookingListingEmbedded(listingRef);
+                  const listingName = getBookingListingDisplayName(
+                    listingRef,
+                    listing,
+                    t('no_listing_type'),
                   );
-                  const listingName = listing
-                    ? listing.get('name')
-                    : t('no_listing_type');
 
                   const user =
                     allUsers &&
@@ -228,16 +258,20 @@ const Bookings = ({ filter, page, setPage, bookingConfig, hideExportCsv = false 
 
                   const userToShow = payer || user;
 
+                  const isPrivateListing =
+                    (listing && listing.get('private')) ?? embedded.private;
+                  const isHourlyListing =
+                    (listing && listing.get('priceDuration') === 'hour') ||
+                    embedded.priceDuration === 'hour';
+
                   return (
                     <BookingListPreview
-                      isAdmin={true}
+                      isAdmin={previewAsAdmin}
                       key={booking.get('_id')}
                       booking={platform.booking.findOne(booking.get('_id'))}
                       listingName={listingName}
-                      isPrivate={listing && listing.get('private')}
-                      isHourly={
-                        listing && listing.get('priceDuration') === 'hour'
-                      }
+                      isPrivate={isPrivateListing}
+                      isHourly={isHourlyListing}
                       userInfo={
                         userToShow && {
                           name: userToShow.screenname,

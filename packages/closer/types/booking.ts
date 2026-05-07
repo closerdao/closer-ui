@@ -1,6 +1,7 @@
 import { BookingConfig } from './api';
 import { CloserCurrencies, Price } from './currency';
 import { Discount, TicketOption } from './event';
+import type { PendingExtension, PriceLock, StayMoney } from './stay';
 
 // we set those as url params on
 // - /bookings/create/dates
@@ -204,6 +205,18 @@ export type Booking = {
   paidByMember?: boolean;
   paidBy?: string;
   transactionId?: string;
+  priceLock?: PriceLock;
+  fiatTarget?: StayMoney;
+  creditsTarget?: StayMoney;
+  tokensTarget?: StayMoney;
+  fiatPaid?: StayMoney;
+  creditsPaid?: StayMoney;
+  tokensStaked?: StayMoney;
+  appliedCredits?: StayMoney;
+  appliedTokens?: StayMoney;
+  pendingExtension?: PendingExtension;
+  checkedIn?: string;
+  checkedOut?: string;
 };
 
 export interface StatusColor {

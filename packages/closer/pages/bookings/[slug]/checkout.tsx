@@ -17,6 +17,7 @@ import CurrencySwitcher from '../../../components/CurrencySwitcher';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
+import BookingSurface from '../../../components/booking/bookingSurface';
 import RedeemCredits from '../../../components/RedeemCredits';
 import { ErrorMessage } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
@@ -1240,7 +1241,7 @@ const Checkout = ({
                         </div>
                       )}
                   </div>
-                  <div className="rounded-lg border border-neutral-dark bg-neutral-light p-4">
+                  <BookingSurface tone="inset" padding="md">
                     {!isHourlyBooking &&
                     utilityFiat?.val &&
                     bookingConfig?.utilityOptionEnabled ? (
@@ -1277,7 +1278,7 @@ const Checkout = ({
                         (utilityFiat?.val &&
                           bookingConfig?.utilityOptionEnabled) ||
                         foodFiat?.val
-                          ? 'border-t border-neutral-dark/30 mt-2 pt-2'
+                          ? 'mt-3 border-t border-foreground/[0.08] pt-3'
                           : ''
                       }
                     >
@@ -1306,13 +1307,10 @@ const Checkout = ({
                           {t('bookings_summary_step_utility_description')}
                         </p>
                       ) : null}
-                  </div>
+                  </BookingSurface>
                 </div>
               )}
-            </>
-          )}
-
-          <div className="rounded-lg border-2 border-neutral-dark bg-neutral-light p-4 sm:p-6 flex flex-col gap-3">
+          <BookingSurface tone="elevated" padding="lg" className="flex flex-col gap-3">
             {status === 'tokens-staked' && useTokens && rentalToken && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-0">
                 <div className="flex ">
@@ -1393,7 +1391,7 @@ const Checkout = ({
                 </div>
               </>
             )}
-          </div>
+          </BookingSurface>
           {isFriendsBooking && (
             <div className="space-y-4">
               <div className="flex flex-col gap-3">
@@ -1461,6 +1459,8 @@ const Checkout = ({
                 {renderButtonText()}
               </Button>
             </div>
+          )}
+          </>
           )}
           {paymentError && paymentError !== 'BLOCKCHAIN_GLOBAL_CONFLICT' && (
             <ErrorMessage error={paymentError} />

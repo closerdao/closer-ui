@@ -351,6 +351,17 @@ const StayConfirmationPage = ({
                     {formatStayMoney(stay.priceLock.total)}
                   </span>
                 </div>
+                <div className="flex items-center justify-between text-xs text-gray-600">
+                  <span>{t('stay_create_line_tax')}</span>
+                  <span>
+                    {formatStayMoney(
+                      stay.priceLock.vat ?? {
+                        val: 0,
+                        cur: stay.priceLock.total.cur,
+                      },
+                    )}
+                  </span>
+                </div>
                 {stay.priceLock.appliedCredits.val > 0 && (
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">

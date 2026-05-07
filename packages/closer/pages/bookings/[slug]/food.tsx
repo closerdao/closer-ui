@@ -5,6 +5,7 @@ import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import BookingBackButton from '../../../components/BookingBackButton';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
+import BookingSurface from '../../../components/booking/bookingSurface';
 import Switch from '../../../components/Switch';
 import { Button, Information } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
@@ -420,9 +421,11 @@ const FoodSelectionPage = ({
                 }));
               };
               return (
-                <div
+                <BookingSurface
                   key={option._id}
-                  className="rounded-lg border border-neutral-dark/30 bg-neutral-light/50 p-4 flex gap-4"
+                  tone="soft"
+                  padding="md"
+                  className="flex gap-4"
                 >
                   <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-neutral-dark/10 relative">
                     {photos.length > 0 ? (
@@ -531,7 +534,7 @@ const FoodSelectionPage = ({
                         </div>
                       )}
                   </div>
-                </div>
+                </BookingSurface>
               );
             })}
           </div>
@@ -541,7 +544,7 @@ const FoodSelectionPage = ({
           foodOption &&
           foodOption?.name !== 'no_food' &&
           eventFoodOptionSet && (
-            <div className="rounded-lg border border-neutral-dark/30 bg-neutral-light/50 p-4 flex gap-4">
+            <BookingSurface tone="soft" padding="md" className="flex gap-4">
               {(foodOption.photos ?? []).length > 0 && (
                 <SingleOptionPhotoPreview
                   option={foodOption}
@@ -611,7 +614,7 @@ const FoodSelectionPage = ({
                     </div>
                   )}
               </div>
-            </div>
+            </BookingSurface>
           )}
 
         {!isGuestSelectMode &&
@@ -619,7 +622,7 @@ const FoodSelectionPage = ({
           !(foodOption && foodOption?.name !== 'no_food' && eventFoodOptionSet) &&
           foodOption &&
           foodOption?.name !== 'no_food' && (
-            <div className="rounded-lg border border-neutral-dark/30 bg-neutral-light/50 p-4 flex gap-4">
+            <BookingSurface tone="soft" padding="md" className="flex gap-4">
               {(foodOption.photos ?? []).length > 0 && (
                 <SingleOptionPhotoPreview
                   option={foodOption}
@@ -693,7 +696,7 @@ const FoodSelectionPage = ({
                     </div>
                   )}
               </div>
-            </div>
+            </BookingSurface>
           )}
 
         {!isFoodAvailable && (

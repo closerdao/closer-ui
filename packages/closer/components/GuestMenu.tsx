@@ -32,7 +32,7 @@ const GuestMenu = () => {
   const config = useConfig() || {};
   const { APP_NAME } = config;
   const reserveToken = getReserveTokenDisplay(config);
-  const { hasAccess } = useRBAC();
+  const { hasAccess, rbacLiveRevision } = useRBAC();
   const router = useRouter();
   const { getCurrentSupplyWithoutWallet } = useBuyTokens();
 
@@ -485,7 +485,7 @@ const GuestMenu = () => {
     const filteredSections = filterMenuSections(sections);
 
     setMenuSections(filteredSections);
-  }, [router.locale]);
+  }, [router.locale, rbacLiveRevision]);
 
   useEffect(() => {
     if (

@@ -44,7 +44,7 @@ const MemberMenu = ({
 }: MemberMenuFeatureFlags) => {
   const t = useTranslations();
   const APP_NAME = appName;
-  const { hasAccess } = useRBAC();
+  const { hasAccess, rbacLiveRevision } = useRBAC();
   const router = useRouter();
   const { getCurrentSupplyWithoutWallet } = useBuyTokens();
 
@@ -281,6 +281,18 @@ const MemberMenu = ({
               enabled: isBookingEnabled,
               roles: ['admin', 'team', 'space-host'],
               rbacPage: 'Food',
+            },
+            {
+              label: t('navigation_my_bookings'),
+              url: '/bookings',
+              enabled: isBookingEnabled,
+              rbacPage: 'MyBookings',
+            },
+            {
+              label: t('navigation_book_friend'),
+              url: '/bookings/friends',
+              enabled: isBookingEnabled,
+              rbacPage: 'FriendsBooking',
             },
             {
               label: t('navigation_user_list'),
@@ -789,6 +801,7 @@ const MemberMenu = ({
     isAffiliateEnabled,
     user,
     router.locale,
+    rbacLiveRevision,
   ]);
 
   useEffect(() => {

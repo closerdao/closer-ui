@@ -1,7 +1,11 @@
 import api from './api';
 import { priceFormat } from './helpers';
 
-import type { CloserCurrencies } from '../types/currency';
+import { CloserCurrencies } from '../types/currency';
+import type {
+  BookingPaymentDelta,
+  UpdatedPrices,
+} from '../types/booking';
 import type {
   Stay,
   StayCheckoutResponse,
@@ -209,6 +213,9 @@ export type StayQuotePayload = Partial<{
   duration: number;
   end: string;
   adults: number;
+  children: number;
+  infants: number;
+  pets: number;
   listingId: string;
   foodOption: string;
   foodOptionId: string | null;
@@ -262,4 +269,146 @@ export const cancelStay = async (
 ): Promise<{ booking: Stay; refund: any }> => {
   const { data } = await api.post(`/stays/${id}/cancel`, {});
   return (data as ApiOk<{ booking: Stay; refund: any }>).results;
+};
+
+export function isStayShapedBooking(
+  record: Record<string, unknown> | null | undefined,
+): boolean {
+  if (!record) return false;
+  return (
+    record.priceLock != null ||
+    record.fiatTarget != null ||
+    record.creditsTarget != null ||
+    record.tokensTarget != null ||
+    record.fiatPaid != null ||
+    record.creditsPaid != null ||
+    record.tokensStaked != null
+  );
+}
+
+function unwrapStayMutationResult(data: { results?: unknown }): Stay {
+  const r = data?.results as { booking?: Stay } | Stay;
+  if (r && typeof r === 'object' && 'booking' in r && (r as { booking: Stay }).booking) {
+    return (r as { booking: Stay }).booking;
+  }
+  return r as Stay;
+}
+
+export function mapStayQuoteToUpdatedPrices(
+  quote: StayQuoteResponse,
+  duration: number,
+): UpdatedPrices {
+  const pl = quote.priceLock;
+  const dailyTok = pl.dailyRentalToken;
+  const tokenVal = Number(dailyTok?.val ?? 0) * (duration || 1);
+  const payDelta: BookingPaymentDelta = {
+    fiat: {
+      val: quote.delta.fiat.val,
+      cur: quote.delta.fiat.cur as CloserCurrencies.EUR,
+    },
+  };
+  return {
+    rentalFiat: {
+      val: pl.lines.accommodation.val,
+      cur: pl.lines.accommodation.cur as CloserCurrencies.EUR,
+    },
+    rentalToken: {
+      val: tokenVal,
+      cur: dailyTok.cur as CloserCurrencies.TDF,
+    },
+    utilityFiat: {
+      val: pl.lines.utility.val,
+      cur: pl.lines.utility.cur as CloserCurrencies.EUR,
+    },
+    foodFiat: {
+      val: pl.lines.food.val,
+      cur: pl.lines.food.cur as CloserCurrencies.EUR,
+    },
+    eventFiat: {
+      val: pl.lines.event.val,
+      cur: pl.lines.event.cur as CloserCurrencies.EUR,
+    },
+    total: {
+      val: pl.total.val,
+      cur: pl.total.cur as CloserCurrencies.EUR,
+    },
+    paymentDelta: payDelta,
+  };
+}
+
+export const extendStay = async (id: string, payload: { end: string }): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/extend`, payload);
+  return unwrapStayMutationResult(data);
+};
+
+export const approveStayExtension = async (id: string): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/extension/approve`, {});
+  return unwrapStayMutationResult(data);
+};
+
+export const rejectStayExtension = async (id: string): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/extension/reject`, {});
+  return unwrapStayMutationResult(data);
+};
+
+export const upgradeStayListing = async (
+  id: string,
+  payload: { listingId: string },
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/upgrade`, payload);
+  return unwrapStayMutationResult(data);
+};
+
+export const updateStayGuests = async (
+  id: string,
+  payload: {
+    adults: number;
+    children?: number;
+    infants?: number;
+    pets?: number;
+  },
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/guests`, payload);
+  return unwrapStayMutationResult(data);
+};
+
+export const shortenStay = async (id: string, payload: { end: string }): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/shorten`, payload);
+  return unwrapStayMutationResult(data);
+};
+
+export const assignStayBeds = async (
+  id: string,
+  payload: { roomOrBedNumbers?: number[]; auto?: boolean },
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/assign-beds`, payload);
+  return unwrapStayMutationResult(data);
+};
+
+export const setStayStatusApi = async (
+  id: string,
+  payload: { status: string },
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/set-status`, payload);
+  return unwrapStayMutationResult(data);
+};
+
+export const approveStayRequest = async (id: string): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/approve`, {});
+  return unwrapStayMutationResult(data);
+};
+
+export const rejectStayRequest = async (id: string): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/reject`, {});
+  return unwrapStayMutationResult(data);
+};
+
+export const checkInStay = async (id: string): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/check-in`, {});
+  return unwrapStayMutationResult(data);
+};
+
+export const checkOutStay = async (id: string): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/check-out`, {});
+  return unwrapStayMutationResult(data);
 };

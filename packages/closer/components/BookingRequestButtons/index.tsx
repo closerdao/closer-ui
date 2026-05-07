@@ -3,12 +3,16 @@ import Link from 'next/link';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import { useTranslations } from 'next-intl';
+import { twMerge } from 'tailwind-merge';
 
 import { useAuth } from '../../contexts/auth';
-import { IconBanknote, IconCheckCircle, IconCircle, IconXCircle } from '../BookingIcons';
+import { IconBanknote, IconCheckCircle, IconXCircle } from '../BookingIcons';
 import { Button } from '../ui';
 
 dayjs.extend(utc);
+
+const listPreviewButtonCn =
+  '!normal-case !tracking-normal rounded-lg enabled:!border-line enabled:!bg-neutral-light !text-foreground hover:!scale-100 !border-2 !py-2 !text-xs !min-h-8';
 
 interface Props {
   _id: string;
@@ -22,6 +26,7 @@ interface Props {
   isFiatBooking?: boolean;
   openCheckout?: () => void | Promise<void>;
   checkoutLoading?: boolean;
+  listPreview?: boolean;
 }
 
 const BookingRequestButtons = ({
@@ -35,6 +40,7 @@ const BookingRequestButtons = ({
   isFiatBooking = true,
   openCheckout,
   checkoutLoading = false,
+  listPreview = false,
 }: Props) => {
   const t = useTranslations();
   const { user } = useAuth();
@@ -51,172 +57,159 @@ const BookingRequestButtons = ({
     dayjs().isBefore(dayjs(end)) &&
     isFiatBooking;
 
+  const secondaryCn = listPreview ? listPreviewButtonCn : undefined;
+  const size = listPreview ? 'small' : 'medium';
+
+  const CheckoutLabel = listPreview ? (
+    t('booking_card_checkout_button')
+  ) : (
+    <>
+      <IconBanknote className="mr-0 shrink-0" /> {t('booking_card_checkout_button')}
+    </>
+  );
+
+  const stackClass = twMerge(listPreview ? 'mt-2 flex flex-col gap-2' : 'mt-4 flex flex-col gap-4');
+
   return (
-    <div className="mt-4 flex flex-col gap-4">
+    <div className={stackClass}>
+      {status === 'open' &&
+        (openCheckout ? (
+          <Button
+            variant="secondary"
+            size={size}
+            className={secondaryCn}
+            isLoading={checkoutLoading}
+            onClick={() => void openCheckout()}
+          >
+            {CheckoutLabel}
+          </Button>
+        ) : (
+          <Link passHref href={`/bookings/${_id}/summary`}>
+            <Button variant="secondary" size={size} className={secondaryCn}>
+              {CheckoutLabel}
+            </Button>
+          </Link>
+        ))}
+      {status === 'confirmed' &&
+        user &&
+        isOwnBooking &&
+        (openCheckout ? (
+          <Button
+            variant="secondary"
+            size={size}
+            className={secondaryCn}
+            isLoading={checkoutLoading}
+            onClick={() => void openCheckout()}
+          >
+            {CheckoutLabel}
+          </Button>
+        ) : (
+          <Link passHref href={`/bookings/${_id}/checkout`}>
+            <Button variant="secondary" size={size} className={secondaryCn}>
+              {CheckoutLabel}
+            </Button>
+          </Link>
+        ))}
 
-      {/* Hide buttons if start date is in the past: */}
+      {status === 'tokens-staked' &&
+        user &&
+        isOwnBooking &&
+        (openCheckout ? (
+          <Button
+            variant="secondary"
+            size={size}
+            className={secondaryCn}
+            isLoading={checkoutLoading}
+            onClick={() => void openCheckout()}
+          >
+            {CheckoutLabel}
+          </Button>
+        ) : (
+          <Link passHref href={`/bookings/${_id}/checkout`}>
+            <Button variant="secondary" size={size} className={secondaryCn}>
+              {CheckoutLabel}
+            </Button>
+          </Link>
+        ))}
+      {status === 'credits-paid' &&
+        user &&
+        isOwnBooking &&
+        (openCheckout ? (
+          <Button
+            variant="secondary"
+            size={size}
+            className={secondaryCn}
+            isLoading={checkoutLoading}
+            onClick={() => void openCheckout()}
+          >
+            {CheckoutLabel}
+          </Button>
+        ) : (
+          <Link passHref href={`/bookings/${_id}/checkout`}>
+            <Button variant="secondary" size={size} className={secondaryCn}>
+              {CheckoutLabel}
+            </Button>
+          </Link>
+        ))}
+      {status === 'pending-payment' &&
+        user &&
+        isOwnBooking &&
+        (openCheckout ? (
+          <Button
+            variant="secondary"
+            size={size}
+            className={secondaryCn}
+            isLoading={checkoutLoading}
+            onClick={() => void openCheckout()}
+          >
+            {CheckoutLabel}
+          </Button>
+        ) : (
+          <Link passHref href={`/bookings/${_id}/checkout`}>
+            <Button variant="secondary" size={size} className={secondaryCn}>
+              {CheckoutLabel}
+            </Button>
+          </Link>
+        ))}
 
-
-          {/* TODO: add links for checked in and checked out guests */}
-          {/* {status === 'checked-in' && (
-            <Link passHref href="">
-              <Button variant="secondary">
-                {t('booking_card_join_chat_button')}
-              </Button>
-            </Link>
-          )}
-          {status === 'checked-out' && (
-            <Link passHref href="">
-              <Button variant="secondary">
-                {t('booking_card_feedback_button')}
-              </Button>
-            </Link>
-          )} */}
-          {status === 'open' &&
-            (openCheckout ? (
-              <Button
-                variant="secondary"
-                isLoading={checkoutLoading}
-                onClick={() => void openCheckout()}
-              >
-                <>
-                  <IconBanknote className="mr-0 shrink-0" />{' '}
-                  {t('booking_card_checkout_button')}
-                </>
-              </Button>
-            ) : (
-              <Link passHref href={`/bookings/${_id}/summary`}>
-                <Button variant="secondary">
-                  <>
-                    <IconBanknote className="mr-0 shrink-0" />{' '}
-                    {t('booking_card_checkout_button')}
-                  </>
-                </Button>
-              </Link>
-            ))}
-          {status === 'confirmed' &&
-            user &&
-            isOwnBooking &&
-            (openCheckout ? (
-              <Button
-                variant="secondary"
-                isLoading={checkoutLoading}
-                onClick={() => void openCheckout()}
-              >
-                <>
-                  <IconBanknote className="mr-0 shrink-0" />{' '}
-                  {t('booking_card_checkout_button')}
-                </>
-              </Button>
-            ) : (
-              <Link passHref href={`/bookings/${_id}/checkout`}>
-                <Button variant="secondary">
-                  <>
-                    <IconBanknote className="mr-0 shrink-0" />{' '}
-                    {t('booking_card_checkout_button')}
-                  </>
-                </Button>
-              </Link>
-            ))}
-
-          {status === 'tokens-staked' &&
-            user &&
-            isOwnBooking &&
-            (openCheckout ? (
-              <Button
-                variant="secondary"
-                isLoading={checkoutLoading}
-                onClick={() => void openCheckout()}
-              >
-                <>
-                  <IconBanknote className="mr-0 shrink-0" />{' '}
-                  {t('booking_card_checkout_button')}
-                </>
-              </Button>
-            ) : (
-              <Link passHref href={`/bookings/${_id}/checkout`}>
-                <Button variant="secondary">
-                  <>
-                    <IconBanknote className="mr-0 shrink-0" />{' '}
-                    {t('booking_card_checkout_button')}
-                  </>
-                </Button>
-              </Link>
-            ))}
-          {status === 'credits-paid' &&
-            user &&
-            isOwnBooking &&
-            (openCheckout ? (
-              <Button
-                variant="secondary"
-                isLoading={checkoutLoading}
-                onClick={() => void openCheckout()}
-              >
-                <>
-                  <IconBanknote className="mr-0 shrink-0" />{' '}
-                  {t('booking_card_checkout_button')}
-                </>
-              </Button>
-            ) : (
-              <Link passHref href={`/bookings/${_id}/checkout`}>
-                <Button variant="secondary">
-                  <>
-                    <IconBanknote className="mr-0 shrink-0" />{' '}
-                    {t('booking_card_checkout_button')}
-                  </>
-                </Button>
-              </Link>
-            ))}
-          {status === 'pending-payment' &&
-            user &&
-            isOwnBooking &&
-            (openCheckout ? (
-              <Button
-                variant="secondary"
-                isLoading={checkoutLoading}
-                onClick={() => void openCheckout()}
-              >
-                <>
-                  <IconBanknote className="mr-0 shrink-0" />{' '}
-                  {t('booking_card_checkout_button')}
-                </>
-              </Button>
-            ) : (
-              <Link passHref href={`/bookings/${_id}/checkout`}>
-                <Button variant="secondary">
-                  <>
-                    <IconBanknote className="mr-0 shrink-0" />{' '}
-                    {t('booking_card_checkout_button')}
-                  </>
-                </Button>
-              </Link>
-            ))}
-          {user && isBookingCancelable && isOwnBooking && !isSpaceHost && (
-            <Link passHref href={`/bookings/${_id}/cancel`}>
-              <Button variant="secondary" className="  uppercase">
-                <><IconCircle className="mr-0 shrink-0" /> {t('booking_cancel_button')}</>
-              </Button>
-            </Link>
-          )}
-
-
-
+      {user && isBookingCancelable && isOwnBooking && !isSpaceHost && (
+        <Link passHref href={`/bookings/${_id}/cancel`}>
+          <Button variant="secondary" size={size} className={secondaryCn}>
+            {t('booking_cancel_button')}
+          </Button>
+        </Link>
+      )}
 
       {isSpaceHost && Boolean(user && isBookingCancelable && isOwnBooking) && (
         <Link passHref href={`/bookings/${_id}/cancel`}>
-          <Button variant="secondary"><><IconCircle className="mr-0 shrink-0" /> {t('booking_cancel_button')}</></Button>
+          <Button variant="secondary" size={size} className={secondaryCn}>
+            {t('booking_cancel_button')}
+          </Button>
         </Link>
       )}
       {user && user.roles.includes('space-host') && (
         <>
           {status === 'pending' && (
-            <Button variant="secondary" onClick={confirmBooking}>
-              <><IconCheckCircle className="mr-0 shrink-0" /> {t('booking_confirm_button')}</>
+            <Button variant="secondary" size={size} className={secondaryCn} onClick={confirmBooking}>
+              {listPreview ? (
+                t('booking_confirm_button')
+              ) : (
+                <>
+                  <IconCheckCircle className="mr-0 shrink-0" />{' '}
+                  {t('booking_confirm_button')}
+                </>
+              )}
             </Button>
           )}
           {status === 'pending' && (
-            <Button variant="secondary" onClick={rejectBooking}>
-              <><IconXCircle className="mr-0 shrink-0" /> {t('booking_reject_button')}</>
+            <Button variant="secondary" size={size} className={secondaryCn} onClick={rejectBooking}>
+              {listPreview ? (
+                t('booking_reject_button')
+              ) : (
+                <>
+                  <IconXCircle className="mr-0 shrink-0" /> {t('booking_reject_button')}
+                </>
+              )}
             </Button>
           )}
         </>
