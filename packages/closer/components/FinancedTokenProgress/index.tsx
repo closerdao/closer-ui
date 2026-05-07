@@ -1,9 +1,10 @@
-import { FinanceApplication } from '../../types';
+import Link from 'next/link';
 
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
 import { User } from '../../contexts/auth/types';
+import { FinanceApplication } from '../../types';
 import { Charge } from '../../types/booking';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import { Card, Heading } from '../ui';
@@ -15,7 +16,8 @@ interface Props {
 
 const FinancedTokenProgress = ({ member, activeApplications }: Props) => {
   const t = useTranslations();
-  const formatEurAmount = (amount: number) => formatIsoFiatAmount(amount || 0, 'EUR');
+  const formatEurAmount = (amount: number) =>
+    formatIsoFiatAmount(amount || 0, 'EUR');
 
   return (
     <Card className="w-full text-sm gap-2">
@@ -39,22 +41,37 @@ const FinancedTokenProgress = ({ member, activeApplications }: Props) => {
           <p>
             {' '}
             {t('subscriptions_citizen_user_page_total_to_pay')}{' '}
-            <strong>{formatEurAmount(application.totalToPayInFiat || 0)}</strong>
+            <strong>
+              {formatEurAmount(application.totalToPayInFiat || 0)}
+            </strong>
           </p>
           <p>
             {' '}
             {t('subscriptions_citizen_monthly_payment')}{' '}
-            <strong>{formatEurAmount(application.monthlyPaymentAmount || 0)}</strong>
+            <strong>
+              {formatEurAmount(application.monthlyPaymentAmount || 0)}
+            </strong>
           </p>
           <p>
             {t('subscriptions_citizen_user_page_down_payment')}{' '}
-            <strong>{formatEurAmount(application.downPaymentAmount || 0)}</strong>
+            <strong>
+              {formatEurAmount(application.downPaymentAmount || 0)}
+            </strong>
           </p>
 
           <p>
             {t('subscriptions_citizen_user_page_created')}{' '}
             <strong>{dayjs(application.created).format('YYYY-MM-DD')}</strong>
           </p>
+
+          {application._id ? (
+            <Link
+              href={`/token/financed/${encodeURIComponent(application._id)}`}
+              className="text-accent underline font-medium"
+            >
+              {t('token_financed_view_contract')}
+            </Link>
+          ) : null}
 
           {application?.charges && application?.charges?.length > 0 && (
             <div className="space-y-4">

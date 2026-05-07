@@ -1,39 +1,46 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+
+import Wallet from '../../../components/Wallet';
+import {
+  Button,
+  Card,
+  ErrorMessage,
+  Heading,
+  Spinner,
+} from '../../../components/ui';
+import { Badge } from '../../../components/ui/badge';
 
 import { ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import Wallet from '../../../components/Wallet';
-import { Button, Card, ErrorMessage, Heading, Spinner } from '../../../components/ui';
-import { Badge } from '../../../components/ui/badge';
+import { TOKEN_PURCHASE_TERMS_DOC_URL } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
-import { Charge } from '../../../types/booking';
 import { GeneralConfig } from '../../../types';
 import { AccountingEntitiesConfig, TokenSale } from '../../../types/api';
+import { Charge } from '../../../types/booking';
 import { FinanceApplication } from '../../../types/subscriptions';
 import { resolveAccountingEntityFromSale } from '../../../utils/accountingEntityResolve';
 import api, { formatSearch } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
 import {
   formatIsoFiatAmount,
   isIso4217Currency,
 } from '../../../utils/currencyFormat';
-import { resolveDepositTokenSaleForFinanceApplication } from '../../../utils/financeDepositSaleResolve';
 import { getFinancedMonthlyAmountDue } from '../../../utils/financeApplicationMonthlyDue';
+import { resolveDepositTokenSaleForFinanceApplication } from '../../../utils/financeDepositSaleResolve';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import {
   financeApplicationStatusBadgeVariant,
   financeApplicationStatusLabelKey,
   paymentScheduleRowStatusLabelKey,
 } from '../../../utils/orderStatusBadge';
-import { TOKEN_PURCHASE_TERMS_DOC_URL } from '../../../constants';
+import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
 import PageNotFound from '../../not-found';
 
 interface Props {
@@ -53,7 +60,9 @@ const chargeSortEpoch = (charge: Charge) => {
   return Number.isNaN(ms) ? 0 : ms;
 };
 
-const getScheduleEntries = (paymentsScheduled: FinanceApplication['paymentsScheduled']) =>
+const getScheduleEntries = (
+  paymentsScheduled: FinanceApplication['paymentsScheduled'],
+) =>
   Object.entries(paymentsScheduled || {})
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([month, value]) => ({
@@ -69,7 +78,9 @@ const getNextPaymentDueDate = (application: FinanceApplication) => {
   const pendingSorted = schedule.filter(
     (item) => item.status === 'pending' && item.paymentDate,
   );
-  const nextFuture = pendingSorted.find((item) => item.paymentDate && item.paymentDate >= now);
+  const nextFuture = pendingSorted.find(
+    (item) => item.paymentDate && item.paymentDate >= now,
+  );
   return nextFuture?.paymentDate || pendingSorted[0]?.paymentDate || null;
 };
 
@@ -90,16 +101,22 @@ const FinancedTokenApplicationPage = ({
 }: Props) => {
   const t = useTranslations();
   const defaultConfig = useConfig();
-  const platformName = generalConfig?.platformName || defaultConfig.platformName;
+  const platformName =
+    generalConfig?.platformName || defaultConfig.platformName;
   const { user, isLoading: isAuthLoading } = useAuth();
   const { platform } = usePlatform();
   const router = useRouter();
+  const platformRef = useRef(platform);
+  platformRef.current = platform;
+  const detailFetchSeq = useRef(0);
   const { applicationId } = router.query;
   const id = typeof applicationId === 'string' ? applicationId : '';
 
   const [isLoadingApplication, setIsLoadingApplication] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [application, setApplication] = useState<FinanceApplication | null>(null);
+  const [application, setApplication] = useState<FinanceApplication | null>(
+    null,
+  );
   const [depositSale, setDepositSale] = useState<TokenSale | null>(null);
   const [linkedCharges, setLinkedCharges] = useState<Charge[]>([]);
   const [linkedChargesLoading, setLinkedChargesLoading] = useState(false);
@@ -117,11 +134,17 @@ const FinancedTokenApplicationPage = ({
       setIsLoadingApplication(false);
       return;
     }
-    if (!platform?.financeapplication) {
-      setIsLoadingApplication(false);
-      return;
-    }
-    (async () => {
+    const seq = ++detailFetchSeq.current;
+    let cancelled = false;
+
+    const load = async () => {
+      const finance = platformRef.current?.financeapplication;
+      if (!finance) {
+        if (!cancelled && seq === detailFetchSeq.current) {
+          setIsLoadingApplication(false);
+        }
+        return;
+      }
       setError(null);
       setIsLoadingApplication(true);
       try {
@@ -129,26 +152,42 @@ const FinancedTokenApplicationPage = ({
           where: { _id: id, userId: user._id },
           limit: 1,
         };
-        const action = await platform.financeapplication.get(params, {
+        const action = await finance.get(params, {
           force: true,
         });
         const rows = financeApplicationListFromGetAction(action);
         const first = (rows[0] || null) as FinanceApplication | null;
-        if (!first) {
-          setError(t('token_financed_not_found'));
-          return;
+        if (!cancelled && seq === detailFetchSeq.current) {
+          if (!first) {
+            setError(t('token_financed_not_found'));
+            setApplication(null);
+          } else {
+            setApplication(first);
+          }
         }
-        setApplication(first);
       } catch (err: unknown) {
-        setError(parseMessageFromError(err));
+        if (!cancelled && seq === detailFetchSeq.current) {
+          setError(parseMessageFromError(err));
+        }
       } finally {
-        setIsLoadingApplication(false);
+        if (!cancelled && seq === detailFetchSeq.current) {
+          setIsLoadingApplication(false);
+        }
       }
-    })();
-  }, [isAuthLoading, router.isReady, user, id, router, t]);
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthLoading, router.isReady, user?._id, id, router.asPath, t]);
 
   useEffect(() => {
-    if (!application || application.status !== 'pending-payment' || !user?._id) {
+    if (
+      !application ||
+      application.status !== 'pending-payment' ||
+      !user?._id
+    ) {
       setDepositSale(null);
       return;
     }
@@ -242,7 +281,9 @@ const FinancedTokenApplicationPage = ({
   );
   const paidMonths = scheduleRows.filter((row) => row.status === 'paid').length;
   const pendingMonths = scheduleRows.length - paidMonths;
-  const nextPaymentDate = application ? getNextPaymentDueDate(application) : null;
+  const nextPaymentDate = application
+    ? getNextPaymentDueDate(application)
+    : null;
   const paidChargesTotal = (application?.charges || [])
     .filter((charge: { status?: string }) => charge?.status === 'paid')
     .reduce(
@@ -255,7 +296,8 @@ const FinancedTokenApplicationPage = ({
     !!application &&
     depositAmount > 0 &&
     (application.isDownPaymentMade === true ||
-      (application.status !== 'pending-payment' && application.status !== 'pending'));
+      (application.status !== 'pending-payment' &&
+        application.status !== 'pending'));
   const visibleScheduleRows = useMemo(() => {
     if (scheduleExpanded || scheduleRows.length <= COLLAPSED_ITEMS_LIMIT) {
       return scheduleRows;
@@ -340,8 +382,7 @@ const FinancedTokenApplicationPage = ({
     issuerEntity?.iban?.trim() ||
     process.env.NEXT_PUBLIC_CLOSER_IBAN ||
     t('oasa_iban_value');
-  const bankBicDisplay =
-    issuerEntity?.bic?.trim() || t('oasa_bic_value');
+  const bankBicDisplay = issuerEntity?.bic?.trim() || t('oasa_bic_value');
   const bankAddressDisplay =
     issuerEntity?.address?.trim() || t('oasa_address_value');
 
@@ -364,7 +405,9 @@ const FinancedTokenApplicationPage = ({
   return (
     <>
       <Head>
-        <title>{`${t('token_financed_contract_title')} - ${platformName}`}</title>
+        <title>{`${t(
+          'token_financed_contract_title',
+        )} - ${platformName}`}</title>
       </Head>
       <div className="w-full max-w-screen-sm mx-auto py-8 px-4 flex flex-col gap-6">
         <Heading level={1}>{t('token_financed_contract_title')}</Heading>
@@ -387,15 +430,21 @@ const FinancedTokenApplicationPage = ({
                   </div>
                 ) : null}
                 <div className="flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
-                  <span className="card-feature">{t('sale_summary_total')}</span>
+                  <span className="card-feature">
+                    {t('sale_summary_total')}
+                  </span>
                   <span className="text-lg font-semibold tabular-nums">
                     {bankInstructionsFormattedAmount}
                   </span>
                 </div>
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-col gap-0.5">
-                    <span className="card-feature">{t('oasa_beneficiary')}</span>
-                    <span className="text-sm text-gray-900">{bankBeneficiaryDisplay}</span>
+                    <span className="card-feature">
+                      {t('oasa_beneficiary')}
+                    </span>
+                    <span className="text-sm text-gray-900">
+                      {bankBeneficiaryDisplay}
+                    </span>
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <span className="card-feature">{t('oasa_iban')}</span>
@@ -405,7 +454,9 @@ const FinancedTokenApplicationPage = ({
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <span className="card-feature">{t('oasa_bic')}</span>
-                    <span className="text-sm text-gray-900">{bankBicDisplay}</span>
+                    <span className="text-sm text-gray-900">
+                      {bankBicDisplay}
+                    </span>
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <span className="card-feature">{t('oasa_address')}</span>
@@ -464,56 +515,93 @@ const FinancedTokenApplicationPage = ({
 
             <Card className="p-4 flex flex-col gap-3">
               <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">{t('token_sales_dashboard_financed_application_id')}</p>
+                <p className="card-feature">
+                  {t('token_sales_dashboard_financed_application_id')}
+                </p>
                 <p className="text-xs font-mono">{application._id}</p>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">{t('token_sales_dashboard_status')}</p>
-                <Badge variant={financeApplicationStatusBadgeVariant(application.status)}>
+                <p className="card-feature">
+                  {t('token_sales_dashboard_status')}
+                </p>
+                <Badge
+                  variant={financeApplicationStatusBadgeVariant(
+                    application.status,
+                  )}
+                >
                   {t(financeApplicationStatusLabelKey(application.status))}
                 </Badge>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">{t('token_sales_dashboard_financed_next_payment_date')}</p>
+                <p className="card-feature">
+                  {t('token_sales_dashboard_financed_next_payment_date')}
+                </p>
                 <p className="text-sm">{formatDate(nextPaymentDate)}</p>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">{t('token_sales_dashboard_financed_pending_months')}</p>
+                <p className="card-feature">
+                  {t('token_sales_dashboard_financed_pending_months')}
+                </p>
                 <p className="text-sm">{pendingMonths}</p>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">{t('token_sales_dashboard_financed_paid_months')}</p>
+                <p className="card-feature">
+                  {t('token_sales_dashboard_financed_paid_months')}
+                </p>
                 <p className="text-sm">{paidMonths}</p>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">{t('token_sales_dashboard_financed_total_contract_tokens')}</p>
-                <p className="text-sm font-semibold">{application.tokensToFinance || 0}</p>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">{t('token_sales_dashboard_financed_tokens_accrued')}</p>
-                <p className="text-sm">{tokensAccrued}</p>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">{t('token_sales_dashboard_financed_tokens_distributed')}</p>
-                <p className="text-sm">{tokensDistributed}</p>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">{t('token_sales_dashboard_financed_tokens_available_to_distribute')}</p>
-                <p className="text-sm">{tokensAvailable}</p>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">{t('token_sales_dashboard_financed_total_contract_eur')}</p>
+                <p className="card-feature">
+                  {t('token_sales_dashboard_financed_total_contract_tokens')}
+                </p>
                 <p className="text-sm font-semibold">
-                  {formatIsoFiatAmount(application.totalToPayInFiat || 0, 'EUR')}
+                  {application.tokensToFinance || 0}
                 </p>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">{t('token_financed_amount_paid')}</p>
-                <p className="text-sm">{formatIsoFiatAmount(paidChargesTotal, 'EUR')}</p>
+                <p className="card-feature">
+                  {t('token_sales_dashboard_financed_tokens_accrued')}
+                </p>
+                <p className="text-sm">{tokensAccrued}</p>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <p className="card-feature">
+                  {t('token_sales_dashboard_financed_tokens_distributed')}
+                </p>
+                <p className="text-sm">{tokensDistributed}</p>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <p className="card-feature">
+                  {t(
+                    'token_sales_dashboard_financed_tokens_available_to_distribute',
+                  )}
+                </p>
+                <p className="text-sm">{tokensAvailable}</p>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <p className="card-feature">
+                  {t('token_sales_dashboard_financed_total_contract_eur')}
+                </p>
+                <p className="text-sm font-semibold">
+                  {formatIsoFiatAmount(
+                    application.totalToPayInFiat || 0,
+                    'EUR',
+                  )}
+                </p>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <p className="card-feature">
+                  {t('token_financed_amount_paid')}
+                </p>
+                <p className="text-sm">
+                  {formatIsoFiatAmount(paidChargesTotal, 'EUR')}
+                </p>
               </div>
               {isDepositPaid ? (
                 <div className="flex items-center justify-between gap-3">
-                  <p className="card-feature">{t('token_financed_deposit_paid_label')}</p>
+                  <p className="card-feature">
+                    {t('token_financed_deposit_paid_label')}
+                  </p>
                   <p className="text-sm font-semibold">
                     {formatIsoFiatAmount(depositAmount, 'EUR')}
                   </p>
@@ -556,7 +644,9 @@ const FinancedTokenApplicationPage = ({
                             {t('token_sales_dashboard_status')}
                           </p>
                           <Badge
-                            variant={charge.status === 'paid' ? 'default' : 'secondary'}
+                            variant={
+                              charge.status === 'paid' ? 'default' : 'secondary'
+                            }
                           >
                             {chargeStatusLabel(charge.status)}
                           </Badge>
@@ -566,7 +656,10 @@ const FinancedTokenApplicationPage = ({
                             {t('token_sales_dashboard_financed_charge_amount')}
                           </p>
                           <p className="text-sm font-medium tabular-nums">
-                            {formatIsoFiatAmount(charge?.amount?.total?.val || 0, 'EUR')}
+                            {formatIsoFiatAmount(
+                              charge?.amount?.total?.val || 0,
+                              'EUR',
+                            )}
                           </p>
                         </div>
                       </div>
@@ -581,12 +674,20 @@ const FinancedTokenApplicationPage = ({
                     >
                       {chargesExpanded ? (
                         <>
-                          <ChevronUp className="w-3.5 h-3.5 shrink-0" strokeWidth={2} aria-hidden />
+                          <ChevronUp
+                            className="w-3.5 h-3.5 shrink-0"
+                            strokeWidth={2}
+                            aria-hidden
+                          />
                           <span>{t('token_financed_show_less')}</span>
                         </>
                       ) : (
                         <>
-                          <ChevronDown className="w-3.5 h-3.5 shrink-0" strokeWidth={2} aria-hidden />
+                          <ChevronDown
+                            className="w-3.5 h-3.5 shrink-0"
+                            strokeWidth={2}
+                            aria-hidden
+                          />
                           <span>
                             {t('token_financed_show_all_charges', {
                               count: linkedCharges.length,
@@ -607,10 +708,17 @@ const FinancedTokenApplicationPage = ({
                 </Heading>
                 <div className="flex flex-col gap-2">
                   {visibleScheduleRows.map((row) => (
-                    <div key={row.month} className="border border-gray-100 rounded-lg p-3">
+                    <div
+                      key={row.month}
+                      className="border border-gray-100 rounded-lg p-3"
+                    >
                       <div className="flex items-center justify-between gap-3">
                         <p className="text-sm font-medium">{row.month}</p>
-                        <Badge variant={row.status === 'paid' ? 'default' : 'secondary'}>
+                        <Badge
+                          variant={
+                            row.status === 'paid' ? 'default' : 'secondary'
+                          }
+                        >
                           {t(
                             paymentScheduleRowStatusLabelKey(
                               row.status === 'paid' ? 'paid' : 'pending',
@@ -620,13 +728,17 @@ const FinancedTokenApplicationPage = ({
                       </div>
                       <div className="flex items-center justify-between gap-3 mt-1">
                         <p className="text-xs text-gray-500">
-                          {t('token_sales_dashboard_financed_schedule_payment_date')}
+                          {t(
+                            'token_sales_dashboard_financed_schedule_payment_date',
+                          )}
                         </p>
                         <p className="text-xs">{formatDate(row.paymentDate)}</p>
                       </div>
                       <div className="flex items-center justify-between gap-3 mt-1">
                         <p className="text-xs text-gray-500">
-                          {t('token_sales_dashboard_financed_schedule_amount_due')}
+                          {t(
+                            'token_sales_dashboard_financed_schedule_amount_due',
+                          )}
                         </p>
                         <p className="text-xs">
                           {formatIsoFiatAmount(monthlyInstallmentDue, 'EUR')}
@@ -644,12 +756,20 @@ const FinancedTokenApplicationPage = ({
                   >
                     {scheduleExpanded ? (
                       <>
-                        <ChevronUp className="w-3.5 h-3.5 shrink-0" strokeWidth={2} aria-hidden />
+                        <ChevronUp
+                          className="w-3.5 h-3.5 shrink-0"
+                          strokeWidth={2}
+                          aria-hidden
+                        />
                         <span>{t('token_financed_show_less')}</span>
                       </>
                     ) : (
                       <>
-                        <ChevronDown className="w-3.5 h-3.5 shrink-0" strokeWidth={2} aria-hidden />
+                        <ChevronDown
+                          className="w-3.5 h-3.5 shrink-0"
+                          strokeWidth={2}
+                          aria-hidden
+                        />
                         <span>
                           {t('token_financed_show_all_payments', {
                             count: scheduleRows.length,
@@ -663,7 +783,10 @@ const FinancedTokenApplicationPage = ({
             )}
           </>
         )}
-        <Button variant="secondary" onClick={() => router.push('/token/financed')}>
+        <Button
+          variant="secondary"
+          onClick={() => router.push('/token/financed')}
+        >
           {t('token_financed_back_to_list')}
         </Button>
       </div>
@@ -671,7 +794,9 @@ const FinancedTokenApplicationPage = ({
   );
 };
 
-FinancedTokenApplicationPage.getInitialProps = async (context: NextPageContext) => {
+FinancedTokenApplicationPage.getInitialProps = async (
+  context: NextPageContext,
+) => {
   try {
     const [generalRes, entitiesRes, messages] = await Promise.all([
       api.get('/config/general').catch(() => null),
@@ -679,8 +804,7 @@ FinancedTokenApplicationPage.getInitialProps = async (context: NextPageContext) 
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const generalConfig = generalRes?.data?.results?.value;
-    const accountingEntitiesConfig =
-      entitiesRes?.data?.results?.value ?? null;
+    const accountingEntitiesConfig = entitiesRes?.data?.results?.value ?? null;
     return { generalConfig, accountingEntitiesConfig, messages };
   } catch (err: unknown) {
     return {

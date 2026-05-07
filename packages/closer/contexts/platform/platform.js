@@ -342,11 +342,19 @@ export const PlatformProvider = ({ children }) => {
       // Loaders
       getOne: (id, opts = {}) => {
         dispatch({ type: constants.GET_ONE_INIT, model, id });
+<<<<<<< HEAD
         const useCache =
           !opts.force &&
           stateRef.current.getIn([model, 'byId', id, 'receivedAt']) >
             Date.now() - CACHE_DURATION_MS;
         if (useCache) {
+=======
+        if (
+          !opts.force &&
+          state.getIn([model, 'byId', id, 'receivedAt']) >
+            Date.now() - CACHE_DURATION_MS
+        ) {
+>>>>>>> origin/ui-improvements-22
           return new Promise((resolve) =>
             resolve({
               type: constants.GET_ONE_SUCCESS,
@@ -357,7 +365,9 @@ export const PlatformProvider = ({ children }) => {
         }
         return (
           api
-            .get(`/${model}/${id}`)
+            .get(`/${model}/${id}`, {
+              ...(opts.force ? { cache: false } : {}),
+            })
             .then((res) => {
               const results = fromJS(res.data.results);
               if (opts.fetchLinkedObjects && results.count()) {
@@ -400,7 +410,11 @@ export const PlatformProvider = ({ children }) => {
         const filterKey = filterToKey(filter);
         const useCache =
           !opts.force &&
+<<<<<<< HEAD
           stateRef.current.getIn([model, 'byFilter', filterKey, 'receivedAt']) >
+=======
+          state.getIn([model, 'byFilter', filterKey, 'receivedAt']) >
+>>>>>>> origin/ui-improvements-22
             Date.now() - CACHE_DURATION_MS;
         if (useCache) {
           return new Promise((resolve) =>
@@ -426,6 +440,7 @@ export const PlatformProvider = ({ children }) => {
               ...options,
               where: options.where && formatSearch(options.where),
             },
+            ...(opts.force ? { cache: false } : {}),
           })
           .then((res) => {
             const action = {

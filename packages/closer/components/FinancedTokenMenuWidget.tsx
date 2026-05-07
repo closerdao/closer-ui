@@ -8,9 +8,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
 import { FinanceApplication } from '../types/subscriptions';
-import {
-  getFinanceMenuHighlight,
-} from '../utils/financeApplicationScheduleHelpers';
+import { getFinanceMenuHighlight } from '../utils/financeApplicationScheduleHelpers';
 import { financeApplicationListFromGetAction } from '../utils/platformFinanceApplication';
 
 const OPEN_FINANCE_STATUSES: FinanceApplication['status'][] = [
@@ -32,9 +30,12 @@ const FinancedTokenMenuWidget = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!user?._id || !platform?.financeapplication) {
+    if (!user?._id) {
       setApplication(null);
       setIsLoading(false);
+      return;
+    }
+    if (!platform?.financeapplication) {
       return;
     }
     let cancelled = false;
@@ -68,7 +69,7 @@ const FinancedTokenMenuWidget = () => {
     return () => {
       cancelled = true;
     };
-  }, [user?._id]);
+  }, [user?._id, platform?.financeapplication]);
 
   if (
     process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP !== 'true' ||

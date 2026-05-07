@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
 import { Spinner } from '../../../components/ui';
+
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
@@ -43,7 +44,7 @@ function SuccessCitizenPage() {
       }
       router.replace('/token/financed');
     })();
-  }, [isLoading, user, router]);
+  }, [isLoading, user, router, platform?.financeapplication]);
 
   return (
     <div className="w-full max-w-screen-sm mx-auto p-8 flex justify-center">
