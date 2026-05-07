@@ -1,11 +1,15 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
 
 import Hosts from '../../components/Hosts';
 import ListingListPreview from '../../components/ListingListPreview';
 import Reviews from '../../components/Reviews';
+import StaySearchBar, {
+  StaySearchBarParams,
+} from '../../components/StaySearchBar';
 import UpcomingEventsIntro from '../../components/UpcomingEventsIntro';
 import Heading from '../../components/ui/Heading';
 
@@ -47,8 +51,21 @@ const StayPage = ({
   error,
 }: Props) => {
   const t = useTranslations();
+  const router = useRouter();
   const { APP_NAME } = useConfig();
   const config = useConfig();
+
+  const handleStaySearch = (params: StaySearchBarParams) => {
+    const query: Record<string, string> = {
+      start: params.start,
+      end: params.end,
+      adults: String(params.adults),
+    };
+    if (params.children) query.children = String(params.children);
+    if (params.infants) query.infants = String(params.infants);
+    if (params.pets) query.pets = String(params.pets);
+    router.push({ pathname: '/stay/create', query });
+  };
 
   const discounts = {
     daily: bookingSettings?.discountsDaily,
@@ -142,7 +159,7 @@ const StayPage = ({
       {APP_NAME?.toLowerCase() === 'tdf' ? (
         <>
           <section className="bg-gradient-to-br from-accent-light to-accent-alt-light min-h-[50vh] flex items-center">
-            <div className="max-w-6xl mx-auto px-6 py-16">
+            <div className="max-w-6xl mx-auto px-6 py-16 w-full">
               <div className="text-center">
                 <Heading
                   className="text-4xl md:text-6xl mb-6"
@@ -151,18 +168,16 @@ const StayPage = ({
                 >
                   {t('stay_hero_title')}
                 </Heading>
-                <p className="text-xl text-gray-800 max-w-3xl mx-auto leading-relaxed mb-12">
+                <p className="text-xl text-gray-800 max-w-3xl mx-auto leading-relaxed mb-8 md:mb-10">
                   {t('stay_hero_subtitle')}
                 </p>
                 {isBookingEnabled && (
-                  <Link
-                    href="/bookings/create/dates"
-                    className="btn btn-primary text-xl px-8 py-3 inline-block"
-                  >
-                    {user?.roles.includes('member')
-                      ? t('buttons_book_now')
-                      : t('buttons_apply_to_stay')}
-                  </Link>
+                  <div className="max-w-3xl mx-auto">
+                    <StaySearchBar
+                      bookingSettings={bookingSettings}
+                      onSearch={handleStaySearch}
+                    />
+                  </div>
                 )}
               </div>
             </div>
@@ -260,11 +275,20 @@ const StayPage = ({
         </section>
       )}
 
+      {APP_NAME?.toLowerCase() !== 'tdf' && isBookingEnabled && (
+        <section className="max-w-6xl mx-auto px-4 md:px-0 mb-12">
+          <StaySearchBar
+            bookingSettings={bookingSettings}
+            onSearch={handleStaySearch}
+          />
+        </section>
+      )}
+
       {APP_NAME?.toLowerCase() !== 'tdf' && (
         <section className="max-w-6xl mx-auto mb-16 flex align-center">
           {isBookingEnabled && (
             <Link
-              href="/bookings/create/dates"
+              href="/stay/create"
               className="btn btn-primary text-xl px-8 py-3"
             >
               {user?.roles.includes('member')

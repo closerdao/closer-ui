@@ -22,10 +22,9 @@ import { SHARED_ACCOMMODATION_PREFERENCES } from '../../../constants/shared.cons
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
-import { useRedirectPaidBookingToDetail } from '../../../hooks/useRedirectPaidBookingToDetail';
+import { useRedirectPaidBookingToDetail } from '../../../hooks';
 import {
   BaseBookingParams,
-  Booking,
   BookingConfig,
   Question,
   VolunteerConfig,
@@ -38,6 +37,7 @@ import {
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
 import { logMetricIfAuthenticated } from '../../../utils/metrics';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
@@ -51,8 +51,6 @@ const prepareQuestions = (eventQuestions: any) => {
 };
 
 interface Props extends BaseBookingParams {
-  eventQuestions: Question[];
-  booking: Booking | null;
   bookingConfig: BookingConfig | null;
   volunteerConfig: VolunteerConfig | null;
   error?: string;
@@ -60,8 +58,6 @@ interface Props extends BaseBookingParams {
 }
 
 const Questionnaire = ({
-  eventQuestions,
-  booking,
   error: bookingError,
   bookingConfig,
   volunteerConfig,
@@ -69,17 +65,43 @@ const Questionnaire = ({
 }: Props) => {
   const t = useTranslations();
   const router = useRouter();
+  const slugParam = router.query.slug;
+  const slug = typeof slugParam === 'string' ? slugParam : slugParam?.[0];
   const { goBack } = router.query;
 
-  useRedirectPaidBookingToDetail(booking);
-  const { isAuthenticated, user: initialUser, refetchUser } = useAuth();
-  const { APP_NAME } = useConfig();
   const { platform } = usePlatform() as any;
+
+  useEffect(() => {
+    if (!router.isReady || !slug) return;
+    void platform.booking.getOne(slug, { force: true });
+  }, [router.isReady, slug, platform]);
+
+  const booking = slug ? platform.booking.findOne(slug)?.toJS?.() ?? null : null;
+
+  useEffect(() => {
+    if (booking?.eventId) {
+      void platform.event.getOne(booking.eventId);
+    }
+  }, [booking?.eventId, platform]);
+
+  const event = booking?.eventId
+    ? platform.event.findOne(booking.eventId)?.toJS?.() ?? null
+    : null;
+
+  useRedirectPaidBookingToDetail(booking);
+  const {
+    isAuthenticated,
+    user: initialUser,
+    refetchUser,
+    setUser,
+  } = useAuth();
+  const { APP_NAME } = useConfig();
 
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
+  const eventQuestions = event?.fields || [];
   const questions: Question[] = prepareQuestions(eventQuestions);
 
   const hasRequiredQuestions = questions?.some((question) => question.required);
@@ -144,8 +166,14 @@ const Questionnaire = ({
 
       try {
         setHasSaved(false);
-        await platform.user.patch(initialUser?._id, payload);
-        await refetchUser();
+        if (!initialUser?._id) return;
+        await patchUserAndSyncAuthStore({
+          platform,
+          userId: initialUser._id,
+          patchBody: payload,
+          setUser,
+          refetchUser,
+        });
         setPreferencesError(null);
         setHasSaved(true);
         setTimeout(() => setHasSaved(false), 2000);
@@ -158,7 +186,7 @@ const Questionnaire = ({
 
   const handleSubmit = async () => {
     try {
-      await api.patch(`/booking/${booking?._id}`, {
+      await platform.booking.patch(booking?._id, {
         fields: answers,
       });
       void logMetricIfAuthenticated(initialUser, {
@@ -378,31 +406,18 @@ const Questionnaire = ({
 };
 
 Questionnaire.getInitialProps = async (context: NextPageContext) => {
-  const { query } = context;
-
   try {
-    const [bookingRes, messages] = await Promise.all([
-      api.get(`/booking/${query.slug}`).catch((err) => {
-        console.error('Error fetching booking config:', err);
-        return null;
-      }),
+    const [messages] = await Promise.all([
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
-    const booking = bookingRes?.data?.results;
     const bookingConfig = config.booking;
     const web3Config = config.web3;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
     const volunteerConfig = config.volunteering;
 
-    const optionalEvent =
-      booking.eventId && (await api.get(`/event/${booking.eventId}`));
-    const event = optionalEvent?.data?.results;
-
     return {
-      booking,
       bookingConfig,
       volunteerConfig,
-      eventQuestions: event?.fields,
       error: null,
       messages,
       tokenCurrency,
@@ -410,7 +425,6 @@ Questionnaire.getInitialProps = async (context: NextPageContext) => {
   } catch (err) {
     return {
       error: parseMessageFromError(err),
-      booking: null,
       bookingConfig: null,
       volunteerConfig: null,
       questions: null,

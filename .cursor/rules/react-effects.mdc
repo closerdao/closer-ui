@@ -1,0 +1,99 @@
+---
+description: Prevent useEffect infinite loops (especially with React Context values like usePlatform, useAuth, useConfig)
+globs: packages/closer/**/*.{ts,tsx,js,jsx},apps/**/*.{ts,tsx,js,jsx}
+alwaysApply: false
+---
+
+# Avoiding `useEffect` Infinite Loops
+
+A frequent bug in this codebase: a `useEffect` fetches data, calls `setState`, the component re-renders, a dependency gets a new identity, the effect re-fires, fetches again — forever. The browser's network tab shows the same request firing in a tight loop and the page never settles.
+
+## When this happens
+
+- Any unstable object/function/array dependency in React effects.
+- Any context provider whose value is `value={{ ... }}` (a fresh object literal each render). Most of ours are.
+- Any object/function/array passed as a dependency that isn't memoized at the source.
+
+## Rules
+
+### 1. Ensure dependencies are stable at the source
+
+Do not work around unstable context values in leaf pages when you can fix the provider source. `usePlatform()` should expose a stable `platform` object identity from the provider and read current state via refs internally.
+
+```tsx
+// BAD - unstable provider value recreates platform each render
+export const PlatformProvider = ({ children }) => {
+  const [state] = useReducer(reducer, initialState);
+  const platform = { toJS: () => state.toJS() };
+  return <PlatformContext.Provider value={{ platform }}>{children}</PlatformContext.Provider>;
+};
+```
+
+```tsx
+// GOOD - stable platform identity from provider source
+export const PlatformProvider = ({ children }) => {
+  const [state] = useReducer(reducer, initialState);
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const platform = useMemo(() => ({ toJS: () => stateRef.current.toJS() }), []);
+  const value = useMemo(() => ({ platform }), [platform, state]);
+  return <PlatformContext.Provider value={value}>{children}</PlatformContext.Provider>;
+};
+```
+
+```tsx
+// GOOD - consumers can safely depend on stable platform
+useEffect(() => {
+  void loadStay();
+}, [id, platform]);
+```
+
+### 2. Always include a cancellation guard
+
+When a component unmounts mid-fetch (or the effect re-runs), don't call `setState` on stale results.
+
+```tsx
+useEffect(() => {
+  let cancelled = false;
+  (async () => {
+    const data = await fetchSomething(id);
+    if (cancelled) return;
+    setData(data);
+  })();
+  return () => { cancelled = true; };
+}, [id]);
+```
+
+### 3. Trigger fetches from `router.isReady`, not from `router.query`
+
+`router.query` is `{}` on first render in NextJS pages directory. Don't depend on `router.query` in the dep array — depend on `router.isReady` and read the param inside.
+
+```tsx
+// BAD - effect re-fires every time the query object changes identity
+useEffect(() => { fetch(router.query.id); }, [router.query]);
+
+// GOOD
+useEffect(() => {
+  if (!router.isReady) return;
+  const id = typeof router.query.id === 'string' ? router.query.id : router.query.id?.[0];
+  if (!id) return;
+  void load(id);
+}, [router.isReady, router.query.id]);
+```
+
+### 4. Memoize callbacks/objects you do need to depend on
+
+If you must depend on a function or object, wrap it in `useCallback` / `useMemo` at the source.
+
+```tsx
+const reload = useCallback(() => fetchData(id), [id]);
+useEffect(() => { reload(); }, [reload]);
+```
+
+### 5. Always check the network tab after writing a data-loading effect
+
+Open DevTools → Network → filter to the request. Reload. If you see the same request fire more than once for the same id, you have a loop. Fix before shipping.
+
+## Quick smell test
+
+If your effect contains `setState` and a dependency has unstable identity across renders, you almost certainly have a loop. Stabilize the dependency at the provider/source with `useMemo`/`useCallback` (or ref-backed reads in provider internals).

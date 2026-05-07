@@ -268,6 +268,8 @@ export const getSample = (field) => {
       ];
     case 'learnEditor':
       return [];
+    case 'note':
+      return undefined;
     default:
       throw new Error(`Invalid model type:${field.type}`);
   }

@@ -309,12 +309,16 @@ const BookingPage = ({
   const updatedMaxBeds = updatedListing?.beds || 1;
 
   useEffect(() => {
+    if (
+      !_id ||
+      !((canManageBooking || canGuestEditBookingDetails) && isEditMode)
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+
     const fetchUpdatedPrice = async () => {
-      const paymentType = getBookingPaymentType({
-        useCredits,
-        useTokens,
-        rentalFiat,
-      });
       try {
         const res = await api.post('/bookings/calculate-totals', {
           bookingId: _id,
@@ -331,16 +335,22 @@ const BookingPage = ({
           paymentType,
         });
 
+        if (cancelled) return;
         setUpdatedPrices(res.data.results);
       } catch (error) {
-        console.error('Error fetching updated prices:', error);
+        if (!cancelled) {
+          console.error('Error fetching updated prices:', error);
+        }
       }
     };
 
-    if ((canManageBooking || canGuestEditBookingDetails) && isEditMode) {
-      fetchUpdatedPrice();
-    }
+    void fetchUpdatedPrice();
+
+    return () => {
+      cancelled = true;
+    };
   }, [
+    _id,
     updatedAdults,
     updatedChildren,
     updatedInfants,
@@ -348,6 +358,8 @@ const BookingPage = ({
     updatedStartDate,
     updatedEndDate,
     updatedListingId,
+    updatedDuration,
+    paymentType,
     canManageBooking,
     canGuestEditBookingDetails,
     isEditMode,
@@ -511,9 +523,8 @@ const BookingPage = ({
   const persistBookingUpdate = async (): Promise<boolean> => {
     try {
       setIsLoading(true);
-      const res = await api.post('/bookings/update', {
+      const res = await platform.bookings.update(_id, {
         updatedBookingValues,
-        bookingId: _id,
         paymentType,
       });
       return res.status === 200;

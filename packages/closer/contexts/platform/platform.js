@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer } from 'react';
+import { createContext, useContext, useMemo, useReducer, useRef } from 'react';
 
 import { Map, fromJS } from 'immutable';
 
@@ -306,23 +306,26 @@ const reducer = (state, action) => {
 };
 export const PlatformProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const platform = {
-    toJS: () => state.toJS(),
-  };
-  models.forEach((model) => {
-    platform[model] = {
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const platform = useMemo(() => {
+    const nextPlatform = {
+      toJS: () => stateRef.current.toJS(),
+    };
+    models.forEach((model) => {
+      nextPlatform[model] = {
       // Find data in the state
       find: (filter) =>
-        state.getIn([model, 'byFilter', filterToKey(filter), 'data']),
-      findOne: (id) => state.getIn([model, 'byId'].concat(id, 'data')),
+        stateRef.current.getIn([model, 'byFilter', filterToKey(filter), 'data']),
+      findOne: (id) => stateRef.current.getIn([model, 'byId'].concat(id, 'data')),
       findCount: (filter) =>
-        state.getIn([model, 'count', filterToKey(filter), 'data']),
+        stateRef.current.getIn([model, 'count', filterToKey(filter), 'data']),
       findGraph: (filter) =>
-        state.getIn([model, 'graph', filterToKey(filter), 'data']),
+        stateRef.current.getIn([model, 'graph', filterToKey(filter), 'data']),
 
-      isLoading: (id) => state.getIn([model, 'byId', id, 'loading']),
+      isLoading: (id) => stateRef.current.getIn([model, 'byId', id, 'loading']),
       areLoading: (filter) =>
-        state.getIn([model, 'byFilter', filterToKey(filter), 'loading']),
+        stateRef.current.getIn([model, 'byFilter', filterToKey(filter), 'loading']),
 
       // Manually store an object in the store
       set: (object) => {
@@ -339,15 +342,16 @@ export const PlatformProvider = ({ children }) => {
       // Loaders
       getOne: (id, opts = {}) => {
         dispatch({ type: constants.GET_ONE_INIT, model, id });
-        if (
-          state.getIn([model, 'byId', id, 'receivedAt']) >
-          Date.now() - CACHE_DURATION_MS
-        ) {
+        const useCache =
+          !opts.force &&
+          stateRef.current.getIn([model, 'byId', id, 'receivedAt']) >
+            Date.now() - CACHE_DURATION_MS;
+        if (useCache) {
           return new Promise((resolve) =>
             resolve({
               type: constants.GET_ONE_SUCCESS,
               fromCache: true,
-              results: state.getIn([model, 'byId', id]),
+              results: stateRef.current.getIn([model, 'byId', id]),
             }),
           );
         }
@@ -357,7 +361,7 @@ export const PlatformProvider = ({ children }) => {
             .then((res) => {
               const results = fromJS(res.data.results);
               if (opts.fetchLinkedObjects && results.count()) {
-                platform.user.get({
+                nextPlatform.user.get({
                   _id: {
                     $in: results.map((item) =>
                       model === 'user'
@@ -396,21 +400,21 @@ export const PlatformProvider = ({ children }) => {
         const filterKey = filterToKey(filter);
         const useCache =
           !opts.force &&
-          state.getIn([model, 'byFilter', filterKey, 'receivedAt']) >
-          Date.now() - CACHE_DURATION_MS;
+          stateRef.current.getIn([model, 'byFilter', filterKey, 'receivedAt']) >
+            Date.now() - CACHE_DURATION_MS;
         if (useCache) {
           return new Promise((resolve) =>
             resolve({
               filterKey,
               type: constants.GET_SUCCESS,
               fromCache: true,
-              receivedAt: state.getIn([
+              receivedAt: stateRef.current.getIn([
                 model,
                 'byFilter',
                 filterKey,
                 'receivedAt',
               ]),
-              results: state.getIn([model, 'byFilter', filterKey, 'data']),
+              results: stateRef.current.getIn([model, 'byFilter', filterKey, 'data']),
             }),
           );
         }
@@ -450,14 +454,14 @@ export const PlatformProvider = ({ children }) => {
         // }
         dispatch({ type: constants.GET_COUNT_INIT, model, filterKey });
         if (
-          state.getIn([model, 'count', filterKey, 'receivedAt']) >
+          stateRef.current.getIn([model, 'count', filterKey, 'receivedAt']) >
           Date.now() - CACHE_DURATION_MS
         ) {
           return new Promise((resolve) =>
             resolve({
               type: constants.GET_COUNT_SUCCESS,
               fromCache: true,
-              results: state.getIn([model, 'count', filterKey, 'data']),
+              results: stateRef.current.getIn([model, 'count', filterKey, 'data']),
             }),
           );
         }
@@ -487,14 +491,14 @@ export const PlatformProvider = ({ children }) => {
         const filterKey = filterToKey(params);
         dispatch({ type: constants.GET_GRAPH_INIT, model, filterKey });
         if (
-          state.getIn([model, 'graph', filterKey, 'receivedAt']) >
+          stateRef.current.getIn([model, 'graph', filterKey, 'receivedAt']) >
           Date.now() - CACHE_DURATION_MS
         ) {
           return new Promise((resolve) =>
             resolve({
               type: constants.GET_GRAPH_SUCCESS,
               fromCache: true,
-              results: state.getIn([model, 'graph', filterKey, 'data']),
+              results: stateRef.current.getIn([model, 'graph', filterKey, 'data']),
             }),
           );
         }
@@ -574,17 +578,98 @@ export const PlatformProvider = ({ children }) => {
           );
       },
     };
-  });
+    });
 
-  platform.cohousingapplication.getMine = () =>
-    api.get('/my/CohousingApplication').then((res) => res.data);
+    nextPlatform.cohousingapplication.getMine = () =>
+      api.get('/my/CohousingApplication').then((res) => res.data);
 
-  platform.CohousingApplication = platform.cohousingapplication;
+    nextPlatform.CohousingApplication = nextPlatform.cohousingapplication;
 
-  platform.cohousingapplication.create = (data) =>
-    api.post('/CohousingApplication', data).then((res) => res.data);
+    nextPlatform.cohousingapplication.create = (data) =>
+      api.post('/CohousingApplication', data).then((res) => res.data);
 
-  platform.bookings = {
+    nextPlatform.bookings = {
+    complete: (_id) =>
+      api.post(`/bookings/${_id}/complete`, {}).then((res) => {
+        const results = fromJS(res.data.results);
+        const action = {
+          results,
+          _id,
+          model: 'booking',
+          type: constants.PATCH_SUCCESS,
+        };
+        dispatch(action);
+        return res;
+      }),
+    creditPayment: (_id, data) =>
+      api.post(`/bookings/${_id}/credit-payment`, data).then((res) => {
+        const results = fromJS(res.data.results);
+        // #region agent log
+        fetch('http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'871e9b'},body:JSON.stringify({sessionId:'871e9b',runId:'initial',hypothesisId:'H2',location:'platform.js:bookings.creditPayment',message:'credit payment response before store patch',data:{bookingId:_id,responseBookingId:results.get('_id'),status:results.get('status'),useCredits:results.get('useCredits'),creditsDelta:results.getIn(['paymentDelta','credits','val'])??null},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+        const action = {
+          results,
+          _id,
+          model: 'booking',
+          type: constants.PATCH_SUCCESS,
+        };
+        dispatch(action);
+        return res;
+      }),
+    payment: (data) => api.post('/bookings/payment', data),
+    updateFood: (_id, data) =>
+      api.post(`/bookings/${_id}/update-food`, data).then((res) => {
+        const results = fromJS(res.data.results);
+        const action = {
+          results,
+          _id,
+          model: 'booking',
+          type: constants.PATCH_SUCCESS,
+        };
+        dispatch(action);
+        return res;
+      }),
+    updatePayment: (_id, data) =>
+      api.post(`/bookings/${_id}/update-payment`, data).then((res) => {
+        const results = fromJS(res.data.results);
+        const action = {
+          results,
+          _id,
+          model: 'booking',
+          type: constants.PATCH_SUCCESS,
+        };
+        dispatch(action);
+        return res;
+      }),
+    update: (_id, data) =>
+      api
+        .post('/bookings/update', {
+          ...data,
+          bookingId: _id,
+        })
+        .then((res) => {
+          const results = fromJS(res.data.results);
+          const action = {
+            results,
+            _id,
+            model: 'booking',
+            type: constants.PATCH_SUCCESS,
+          };
+          dispatch(action);
+          return res;
+        }),
+    paymentConfirmation: (data) =>
+      api.post('/bookings/payment/confirmation', data).then((res) => {
+        const results = fromJS(res.data.results);
+        const action = {
+          results,
+          _id: results.get('_id'),
+          model: 'booking',
+          type: constants.PATCH_SUCCESS,
+        };
+        dispatch(action);
+        return res;
+      }),
     confirm: (_id) =>
       api.post(`/bookings/${_id}/confirm`).then((res) => {
         const results = fromJS(res.data.results);
@@ -633,9 +718,9 @@ export const PlatformProvider = ({ children }) => {
         dispatch(action);
         return action;
       }),
-  };
+    };
 
-  platform.carrots = {
+    nextPlatform.carrots = {
     getBalance: () =>
       api.get('/carrots/balance').then((res) => {
         const results = fromJS(res.data.results);
@@ -649,11 +734,11 @@ export const PlatformProvider = ({ children }) => {
       }),
 
     findBalance: (filterKey) => {
-      return state.getIn(['balance', filterKey, 'data']);
+      return stateRef.current.getIn(['balance', filterKey, 'data']);
     },
   };
 
-  platform.metrics = {
+    nextPlatform.metrics = {
     getTokenSales: () =>
       api.get('/metrics/token-sales').then((res) => {
         const results = fromJS(res.data.results);
@@ -668,12 +753,15 @@ export const PlatformProvider = ({ children }) => {
       }),
 
     findTokenSales: (filterKey) => {
-      return state.getIn(['tokenSales', filterKey, 'data']);
+      return stateRef.current.getIn(['tokenSales', filterKey, 'data']);
     },
   };
+    return nextPlatform;
+  }, []);
+  const contextValue = useMemo(() => ({ platform }), [platform, state]);
 
   return (
-    <PlatformContext.Provider value={{ platform }}>
+    <PlatformContext.Provider value={contextValue}>
       {children}
     </PlatformContext.Provider>
   );

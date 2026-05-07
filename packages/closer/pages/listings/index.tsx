@@ -38,9 +38,10 @@ const Listings = ({ bookingConfig }: Props) => {
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   const isTeamMember =
-    Boolean(user?.roles.includes('space-host')) ||
-    Boolean(user?.roles.includes('steward')) ||
-    Boolean(user?.roles.includes('land-manager'));
+    Boolean(user?.roles?.includes('admin')) ||
+    Boolean(user?.roles?.includes('space-host')) ||
+    Boolean(user?.roles?.includes('steward')) ||
+    Boolean(user?.roles?.includes('land-manager'));
 
   const listingFilter = {
     where: {},
@@ -79,8 +80,8 @@ const Listings = ({ bookingConfig }: Props) => {
           <div className="w-full">
             <div className="mb-4 flex justify-between items-center flex-col sm:flex-row gap-4">
               <Heading level={2}>{t('listings_edit_title')}</Heading>
-              {(user?.roles.includes('admin') ||
-                user?.roles.includes('space-host')) && (
+              {(user?.roles?.includes('admin') ||
+                user?.roles?.includes('space-host')) && (
                 <Link
                   as="/listings/create"
                   href="/listings/create"

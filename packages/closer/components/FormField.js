@@ -36,6 +36,8 @@ const FormField = ({
   min,
   max,
   step,
+  headingKey,
+  messageKey,
   dynamicField = /** @type {any} */ (null),
   isPrimaryField = false,
   isSecondary = false,
@@ -67,7 +69,7 @@ const FormField = ({
 
   return (
     <div className={`form-field w-full ${fieldWrapperClass} form-type-${type}`} key={name}>
-      {name !== 'start' && name !== 'end' && (
+      {name !== 'start' && name !== 'end' && type !== 'note' && (
         <label className={labelClass}>
           {label} {required && <span className="text-red-500">*</span>}
         </label>
@@ -75,6 +77,14 @@ const FormField = ({
 
       {
         <>
+          {type === 'note' && headingKey && messageKey && (
+            <div className="border-t border-neutral-dark/20 pt-6 mt-2 space-y-2">
+              <p className="uppercase tracking-wide text-gray-700 text-xs font-bold">
+                {t(headingKey)}
+              </p>
+              <p className="text-sm text-gray-600">{t(messageKey)}</p>
+            </div>
+          )}
           {['text', 'email', 'phone', 'hidden', 'number', 'date'].includes(
             type,
           ) && (

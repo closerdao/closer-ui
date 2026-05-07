@@ -43,6 +43,7 @@ interface Props {
   timeZone?: string;
   isDashboard?: boolean;
   durationLabel?: string;
+  hideSelectionSummary?: boolean;
 }
 
 const DateTimePicker = ({
@@ -62,6 +63,7 @@ const DateTimePicker = ({
   isDashboard,
   startCollapsed = false,
   durationLabel,
+  hideSelectionSummary = false,
 }: Props) => {
   const [isExpanded, setIsExpanded] = useState(!startCollapsed);
   // Store the original full dates for timezone conversion
@@ -397,90 +399,105 @@ const DateTimePicker = ({
 
   return (
     <div>
-      <div data-testid="dates" className="w-full flex flex-wrap items-center gap-2 mb-2">
-        <div className="flex flex-wrap gap-2 items-center">
-          {priceDuration !== 'night' && startTime && savedStartDate && (
-            <div className={dateTagClass}>
-              {getDateOnly(savedStartDate)}
-              {isStartTimeSelected &&
-                startTimeOnly !== endTimeOnly &&
-                ` – ${startTimeOnly}–${endTimeOnly}`}
-            </div>
-          )}
-          {priceDuration === 'night' && (
-            <>
-              <div className={`${dateTagClass} flex-col gap-0.5 min-w-0`}>
-                {isAdmin && !showCalendar && (
-                  <span className="text-foreground/60 text-xs">
-                    {t('events_event_start_date')}
-                  </span>
-                )}
-                {dateRange?.from ? (
-                  <>
-                    <span className="md:hidden">
-                      {isAdmin && !showCalendar && startTime
-                        ? dayjs(dateRange.from).format('ddd, MMM D') + ' at ' + startTime
-                        : dayjs(dateRange.from).format('ddd, MMM D')}
-                    </span>
-                    <span className="hidden md:inline">
-                      {isAdmin && !showCalendar && startTime
-                        ? dayjs(dateRange.from).format('ddd, MMM D, YYYY') + ' at ' + startTime
-                        : dayjs(dateRange.from).format('ddd, MMM D, YYYY')}
-                    </span>
-                  </>
-                ) : (
-                  t('listings_book_select_date')
-                )}
+      {!hideSelectionSummary && (
+        <div
+          data-testid="dates"
+          className="w-full flex flex-wrap items-center gap-2 mb-2"
+        >
+          <div className="flex flex-wrap gap-2 items-center">
+            {priceDuration !== 'night' && startTime && savedStartDate && (
+              <div className={dateTagClass}>
+                {getDateOnly(savedStartDate)}
+                {isStartTimeSelected &&
+                  startTimeOnly !== endTimeOnly &&
+                  ` – ${startTimeOnly}–${endTimeOnly}`}
               </div>
-              <div className={`${dateTagClass} flex-col gap-0.5 min-w-0`}>
-                {isAdmin && !showCalendar && (
-                  <span className="text-foreground/60 text-xs">
-                    {t('events_event_end_date')}
-                  </span>
-                )}
-                {dateRange?.to ? (
-                  <>
-                    <span className="md:hidden">
-                      {isAdmin && !showCalendar && endTime
-                        ? dayjs(dateRange.to).format('ddd, MMM D') + ' at ' + endTime
-                        : dayjs(dateRange.to).format('ddd, MMM D')}
+            )}
+            {priceDuration === 'night' && (
+              <>
+                <div className={`${dateTagClass} flex-col gap-0.5 min-w-0`}>
+                  {isAdmin && !showCalendar && (
+                    <span className="text-foreground/60 text-xs">
+                      {t('events_event_start_date')}
                     </span>
-                    <span className="hidden md:inline">
-                      {isAdmin && !showCalendar && endTime
-                        ? dayjs(dateRange.to).format('ddd, MMM D, YYYY') + ' at ' + endTime
-                        : dayjs(dateRange.to).format('ddd, MMM D, YYYY')}
+                  )}
+                  {dateRange?.from ? (
+                    <>
+                      <span className="md:hidden">
+                        {isAdmin && !showCalendar && startTime
+                          ? dayjs(dateRange.from).format('ddd, MMM D') +
+                            ' at ' +
+                            startTime
+                          : dayjs(dateRange.from).format('ddd, MMM D')}
+                      </span>
+                      <span className="hidden md:inline">
+                        {isAdmin && !showCalendar && startTime
+                          ? dayjs(dateRange.from).format('ddd, MMM D, YYYY') +
+                            ' at ' +
+                            startTime
+                          : dayjs(dateRange.from).format('ddd, MMM D, YYYY')}
+                      </span>
+                    </>
+                  ) : (
+                    t('listings_book_select_date')
+                  )}
+                </div>
+                <div className={`${dateTagClass} flex-col gap-0.5 min-w-0`}>
+                  {isAdmin && !showCalendar && (
+                    <span className="text-foreground/60 text-xs">
+                      {t('events_event_end_date')}
                     </span>
-                  </>
-                ) : (
-                  t('listings_book_select_date')
+                  )}
+                  {dateRange?.to ? (
+                    <>
+                      <span className="md:hidden">
+                        {isAdmin && !showCalendar && endTime
+                          ? dayjs(dateRange.to).format('ddd, MMM D') +
+                            ' at ' +
+                            endTime
+                          : dayjs(dateRange.to).format('ddd, MMM D')}
+                      </span>
+                      <span className="hidden md:inline">
+                        {isAdmin && !showCalendar && endTime
+                          ? dayjs(dateRange.to).format('ddd, MMM D, YYYY') +
+                            ' at ' +
+                            endTime
+                          : dayjs(dateRange.to).format('ddd, MMM D, YYYY')}
+                      </span>
+                    </>
+                  ) : (
+                    t('listings_book_select_date')
+                  )}
+                </div>
+                {durationLabel && (
+                  <span className={durationTagClass}>{durationLabel}</span>
                 )}
-              </div>
-              {durationLabel && (
-                <span className={durationTagClass}>{durationLabel}</span>
-              )}
-            </>
+              </>
+            )}
+          </div>
+          {startCollapsed ? (
+            <Button
+              type="button"
+              size="small"
+              isFullWidth={false}
+              className="btn-primary !py-1.5 !px-3 !min-h-0"
+              onClick={() => setIsExpanded(true)}
+            >
+              {hasDates
+                ? t('events_edit_dates') || 'Edit dates'
+                : t('events_set_dates') || 'Set dates'}
+            </Button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleClearDates}
+              className="text-xs text-foreground/60 hover:text-foreground underline py-1 px-1.5 min-w-0"
+            >
+              {t('generic_clear_selection')}
+            </button>
           )}
         </div>
-        {startCollapsed ? (
-          <Button
-            type="button"
-            size="small"
-            isFullWidth={false}
-            className="btn-primary !py-1.5 !px-3 !min-h-0"
-            onClick={() => setIsExpanded(true)}
-          >
-            {hasDates ? (t('events_edit_dates') || 'Edit dates') : (t('events_set_dates') || 'Set dates')}
-          </Button>
-        ) : (
-          <button
-            type="button"
-            onClick={handleClearDates}
-            className="text-xs text-foreground/60 hover:text-foreground underline py-1 px-1.5 min-w-0"
-          >
-            {t('generic_clear_selection')}
-          </button>
-        )}
-      </div>
+      )}
 
       {showCalendar && !startCollapsed && (
         <>

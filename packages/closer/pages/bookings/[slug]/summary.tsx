@@ -4,8 +4,14 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
-import { IconBanknote, IconCheckCircle, IconMail, IconXCircle } from '../../../components/BookingIcons';
+import {
+  IconBanknote,
+  IconCheckCircle,
+  IconMail,
+  IconXCircle,
+} from '../../../components/BookingIcons';
 import Conditions from '../../../components/Conditions';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
@@ -15,58 +21,72 @@ import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import dayjs from 'dayjs';
-import { NextApiRequest, NextPageContext } from 'next';
+import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
-import {
-  BOOKING_STEPS,
-  BOOKING_STEP_TITLE_KEYS,
-} from '../../../constants';
+import config from '../../../configCached';
+import { BOOKING_STEPS, BOOKING_STEP_TITLE_KEYS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
-import { useRedirectPaidBookingToDetail } from '../../../hooks/useRedirectPaidBookingToDetail';
+import { useRedirectPaidBookingToDetail } from '../../../hooks';
 import {
   BaseBookingParams,
-  Booking,
   BookingConfig,
   CloserCurrencies,
-  Event,
-  Listing,
   PaymentConfig,
 } from '../../../types';
-import config from '../../../configCached';
 import api from '../../../utils/api';
-import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import {
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { logMetricIfAuthenticated } from '../../../utils/metrics';
 import { loadLocaleData } from '../../../utils/locale.helpers';
-import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+import { logMetricIfAuthenticated } from '../../../utils/metrics';
 
 interface Props extends BaseBookingParams {
-  listing: Listing | null;
-  booking: Booking | null;
   error?: string;
-  event?: Event;
   bookingConfig: BookingConfig | null;
   paymentConfig: PaymentConfig | null;
   tokenCurrency: string;
 }
 
 const Summary = ({
-  booking,
-  listing,
-  event,
   error,
   bookingConfig,
   paymentConfig,
   tokenCurrency,
 }: Props) => {
+  const router = useRouter();
+  const { platform }: any = usePlatform();
+  const slugParam = router.query.slug;
+  const slug = typeof slugParam === 'string' ? slugParam : slugParam?.[0];
+
+  useEffect(() => {
+    if (!router.isReady || !slug) return;
+    void platform.booking.getOne(slug, { force: true });
+  }, [router.isReady, slug, platform]);
+
+  const booking = slug ? platform.booking.findOne(slug)?.toJS?.() ?? null : null;
+  const listing = booking?.listing
+    ? platform.listing.findOne(booking.listing)?.toJS?.() ?? null
+    : null;
+  const event = booking?.eventId
+    ? platform.event.findOne(booking.eventId)?.toJS?.() ?? null
+    : null;
+
+  useEffect(() => {
+    if (booking?.listing) {
+      void platform.listing.getOne(booking.listing);
+    }
+    if (booking?.eventId) {
+      void platform.event.getOne(booking.eventId);
+    }
+  }, [booking?.listing, booking?.eventId, platform]);
+
   const t = useTranslations();
 
   const cancellationPolicy = bookingConfig
@@ -83,7 +103,6 @@ const Summary = ({
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   const { VISITORS_GUIDE } = useConfig();
-  const router = useRouter();
   const { isAuthenticated, user } = useAuth();
 
   useRedirectPaidBookingToDetail(booking);
@@ -177,8 +196,7 @@ const Summary = ({
   const handleNext = async () => {
     setLoading(true);
     setHandleNextError(null);
-    const metricPoint =
-      Math.round(Number(duration ?? adults ?? 0)) || 0;
+    const metricPoint = Math.round(Number(duration ?? adults ?? 0)) || 0;
     if (booking?.status === 'confirmed') {
       void logMetricIfAuthenticated(user, {
         event: 'booking-summary-to-checkout',
@@ -189,7 +207,7 @@ const Summary = ({
       return router.push(`/bookings/${booking?._id}/checkout`);
     }
     try {
-      const res = await api.post(`/bookings/${booking?._id}/complete`, {});
+      const res = await platform.bookings.complete(booking?._id);
       const status = res.data.results.status;
 
       if (status === 'confirmed') {
@@ -373,9 +391,16 @@ const Summary = ({
   return (
     <div className="w-full max-w-screen-sm mx-auto p-4 md:p-8">
       <div className="relative flex items-center min-h-[2.75rem] mb-6">
-        <BookingBackButton onClick={goBack} name={t('buttons_back')} className="relative z-10" />
+        <BookingBackButton
+          onClick={goBack}
+          name={t('buttons_back')}
+          className="relative z-10"
+        />
         <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
-          <Heading level={1} className="text-2xl md:text-3xl pb-0 mt-0 text-center">
+          <Heading
+            level={1}
+            className="text-2xl md:text-3xl pb-0 mt-0 text-center"
+          >
             <span>{t('bookings_summary_step_title')}</span>
           </Heading>
         </div>
@@ -444,7 +469,11 @@ const Summary = ({
             <summary className="list-none flex flex-wrap items-center justify-between gap-2 px-4 py-3 font-medium cursor-pointer hover:bg-neutral-dark/30">
               <span>{t('bookings_summary_step_costs_title')}</span>
               <Link
-                href={stepUrlParams ? buildBookingAccomodationUrl(stepUrlParams) : '#'}
+                href={
+                  stepUrlParams
+                    ? buildBookingAccomodationUrl(stepUrlParams)
+                    : '#'
+                }
                 className="text-sm text-accent-dark font-medium hover:underline"
               >
                 {t('generic_edit_button')}
@@ -460,7 +489,9 @@ const Summary = ({
                 useTokens={useTokens || false}
                 useCredits={useCredits || false}
                 accomodationCost={useTokens ? rentalToken : rentalFiat}
-                totalToken={rentalToken || { val: 0, cur: CloserCurrencies.EUR }}
+                totalToken={
+                  rentalToken || { val: 0, cur: CloserCurrencies.EUR }
+                }
                 creditsPrice={(dailyRentalToken?.val || 0) * (duration || 0)}
                 totalFiat={total || { val: 0, cur: CloserCurrencies.EUR }}
                 eventCost={eventFiat}
@@ -490,40 +521,16 @@ const Summary = ({
 };
 
 Summary.getInitialProps = async (context: NextPageContext) => {
-  const { query, req } = context;
-
   try {
-    const [bookingRes, messages] = await Promise.all([
-      api
-        .get(`/booking/${query.slug}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        })
-        .catch(() => null),
+    const [messages] = await Promise.all([
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
-    const booking = bookingRes?.data?.results;
     const bookingConfig = config.booking;
     const web3Config = config.web3;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
     const paymentConfig = config.payment;
 
-    const [optionalEvent, optionalListing] = await Promise.all([
-      booking?.eventId &&
-        api.get(`/event/${booking?.eventId}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        }),
-      booking?.listing &&
-        api.get(`/listing/${booking?.listing}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        }),
-    ]);
-    const event = optionalEvent?.data?.results;
-    const listing = optionalListing?.data?.results;
-
     return {
-      booking,
-      listing,
-      event,
       error: null,
       bookingConfig,
       paymentConfig,
@@ -533,8 +540,6 @@ Summary.getInitialProps = async (context: NextPageContext) => {
   } catch (err) {
     return {
       error: parseMessageFromError(err),
-      booking: null,
-      listing: null,
       bookingConfig: null,
       messages: null,
       paymentConfig: null,

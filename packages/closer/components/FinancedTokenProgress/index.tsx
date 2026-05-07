@@ -79,7 +79,7 @@ const FinancedTokenProgress = ({ member, activeApplications }: Props) => {
                         {dayjs(charge.date).format('YYYY-MM-DD HH:mm')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
-                        {formatEurAmount(charge.amount.total.val || 0)}
+                        {formatEurAmount(charge.amount?.total?.val ?? 0)}
                       </td>
                     </tr>
                   ))}
@@ -115,7 +115,7 @@ const FinancedTokenProgress = ({ member, activeApplications }: Props) => {
                         {dayjs(charge.date).format('YYYY-MM-DD HH:mm')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
-                        {formatEurAmount(charge.amount.total.val || 0)}
+                        {formatEurAmount(charge.amount?.total?.val ?? 0)}
                       </td>
                     </tr>
                   ))}

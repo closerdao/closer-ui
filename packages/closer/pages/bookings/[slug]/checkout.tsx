@@ -41,10 +41,11 @@ import {
   MIN_CELO_FOR_GAS,
 } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import { usePlatform } from '../../../contexts/platform';
 import { WalletState } from '../../../contexts/wallet';
 import { useBookingSmartContract } from '../../../hooks/useBookingSmartContract';
 import { useConfig } from '../../../hooks/useConfig';
-import { useRedirectPaidBookingToDetail } from '../../../hooks/useRedirectPaidBookingToDetail';
+import { useRedirectPaidBookingToDetail } from '../../../hooks';
 import {
   BaseBookingParams,
   Booking,
@@ -74,25 +75,49 @@ import { loadLocaleData } from '../../../utils/locale.helpers';
 dayjs.extend(dayOfYear);
 
 interface Props extends BaseBookingParams {
-  listing: Listing | null;
-  booking: Booking | null;
   error?: string;
-  event?: Event | null;
   bookingConfig: BookingConfig | null;
   paymentConfig: PaymentConfig | null;
   tokenCurrency: string;
 }
 
 const Checkout = ({
-  booking,
-  listing,
   error,
-  event,
   bookingConfig,
   paymentConfig,
   tokenCurrency,
 }: Props) => {
+  const router = useRouter();
+  const slugParam = router.query.slug;
+  const slug = typeof slugParam === 'string' ? slugParam : slugParam?.[0];
   const t = useTranslations();
+  const { platform }: any = usePlatform();
+
+  useEffect(() => {
+    if (!router.isReady || !slug) return;
+    void platform.booking.getOne(slug, { force: true });
+  }, [router.isReady, slug]);
+
+  const booking = slug ? platform.booking.findOne(slug)?.toJS?.() : null;
+
+  useEffect(() => {
+    if (booking?.listing) {
+      void platform.listing.getOne(booking.listing);
+    }
+    if (booking?.eventId) {
+      void platform.event.getOne(booking.eventId);
+    }
+  }, [booking?.listing, booking?.eventId]);
+
+  const listing =
+    booking?.listing
+      ? platform.listing.findOne(booking.listing)?.toJS?.() ?? null
+      : null;
+  const event =
+    booking?.eventId
+      ? platform.event.findOne(booking.eventId)?.toJS?.() ?? null
+      : null;
+
   const isHourlyBooking = listing?.priceDuration === 'hour';
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -102,7 +127,6 @@ const Checkout = ({
     null,
   );
 
-  const [updatedBooking, setUpdatedBooking] = useState<Booking | null>(null);
   const {
     utilityFiat,
     foodFiat,
@@ -124,9 +148,9 @@ const Checkout = ({
     adults,
     transactionId,
     createdBy,
-  } = (updatedBooking ?? booking ?? {}) as Booking;
+  } = (booking ?? {}) as Booking;
 
-  useRedirectPaidBookingToDetail(updatedBooking ?? booking);
+  useRedirectPaidBookingToDetail(booking);
 
   const stepUrlParams =
     start && end && booking
@@ -197,8 +221,6 @@ const Checkout = ({
 
   const bookingYear = dayjs(start).year();
   const bookingStartDayOfYear = dayjs(start).dayOfYear();
-  const router = useRouter();
-
   // Check if this is a friend accessing the checkout page
   const isFriend = router.query.isFriend === 'true';
 
@@ -229,13 +251,34 @@ const Checkout = ({
   >(null);
   const [globalBookingsLoading, setGlobalBookingsLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [useCreditsUpdated, setUseCreditsUpdated] = useState(useCredits);
+  const hasCreditsAppliedFromStore = Boolean(
+    useCredits ||
+      status === 'credits-paid' ||
+      (booking?.paymentDelta?.credits &&
+        Math.abs(booking.paymentDelta.credits.val || 0) > 0.005),
+  );
+  useEffect(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'871e9b'},body:JSON.stringify({sessionId:'871e9b',runId:'initial',hypothesisId:'H3',location:'checkout.tsx:hasCreditsAppliedFromStore',message:'credits widget gate evaluation',data:{bookingId:booking?._id,status,useCredits,creditsDelta:booking?.paymentDelta?.credits?.val,hasCreditsAppliedFromStore,canApplyCredits,useTokens,hasVolunteer:Boolean(booking?.volunteerId),hasRentalFiat:Boolean(rentalFiat&&rentalFiat?.val>0),showRedeemCreditsWidget:Boolean(process.env.NEXT_PUBLIC_FEATURE_CARROTS==='true'&&canApplyCredits&&!useTokens&&!booking?.volunteerId&&((rentalFiat&&rentalFiat?.val>0)||hasCreditsAppliedFromStore))},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+  }, [
+    booking?._id,
+    status,
+    useCredits,
+    booking?.paymentDelta?.credits?.val,
+    hasCreditsAppliedFromStore,
+    canApplyCredits,
+    useTokens,
+    booking?.volunteerId,
+    rentalFiat,
+  ]);
   const [creditsBalance, setCreditsBalance] = useState(0);
   const [currency, setCurrency] = useState<CloserCurrencies>(
     useTokens ? CURRENCIES[1] : DEFAULT_CURRENCY,
   );
   const [emailSuccess, setEmailSuccess] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [isApplyingCredits, setIsApplyingCredits] = useState(false);
   const [isListingAvailable, setIsListingAvailable] = useState<boolean | null>(
     null,
   );
@@ -265,7 +308,8 @@ const Checkout = ({
   const [partialPriceInTokens, setPartialPriceInTokens] = useState(0);
 
   const isAdditionalFiatPayment = Boolean(
-    booking?.paymentDelta?.fiat?.val && booking?.paymentDelta?.fiat?.val > 0,
+    booking?.paymentDelta?.fiat?.val &&
+      booking?.paymentDelta?.fiat?.val > 0,
   );
 
   const [paymentType, setPaymentType] = useState<PaymentType>(
@@ -503,8 +547,8 @@ const Checkout = ({
     try {
       setProcessing(true);
       setPaymentError(null);
-      if (useCreditsUpdated && !booking?.paymentDelta?.fiat?.val) {
-        await api.post(`/bookings/${booking?._id}/credit-payment`, {
+      if (hasCreditsAppliedFromStore && !booking?.paymentDelta?.fiat?.val) {
+        await platform.bookings.creditPayment(booking?._id, {
           startDate: start,
           creditsAmount: rentalToken?.val,
         });
@@ -522,7 +566,6 @@ const Checkout = ({
         value: 'booking',
         point: bookingPaymentMetricPoint(),
       });
-      await refetchBooking({ afterFiatPayment: true });
       await router.push(`/bookings/${booking?._id}`);
     } catch (error) {
       void logMetricIfAuthenticated(user, {
@@ -537,7 +580,6 @@ const Checkout = ({
   };
 
   const onSuccess = async () => {
-    await refetchBooking({ afterFiatPayment: true });
     await router.push(
       `/bookings/${_id}/confirmation${eventId ? `?eventId=${eventId}` : ''}`,
     );
@@ -890,20 +932,25 @@ const Checkout = ({
 
   const applyCredits = async () => {
     try {
+      setIsApplyingCredits(true);
       setCreditsError(null);
-      const localUpdatedBooking = await updateBooking({
-        useTokens: false,
-        useCredits: true,
-        paymentType:
-          maxNightsToPayWithCredits > 0 &&
-          maxNightsToPayWithCredits < (duration || 0)
-            ? PaymentType.PARTIAL_CREDITS
-            : PaymentType.FULL_CREDITS,
+      // #region agent log
+      fetch('http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'871e9b'},body:JSON.stringify({sessionId:'871e9b',runId:'initial',hypothesisId:'H1',location:'checkout.tsx:applyCredits:before',message:'starting credit payment',data:{bookingId:booking?._id,startDate:start,creditsAmount:priceInCredits,status,useCredits,creditsDelta:booking?.paymentDelta?.credits?.val},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+      await platform.bookings.creditPayment(booking?._id, {
+        startDate: start,
+        creditsAmount: priceInCredits,
       });
-      setUpdatedBooking(localUpdatedBooking);
-      setUseCreditsUpdated(true);
+      // #region agent log
+      const bookingFromStoreAfterCreditPayment = platform.booking.findOne(
+        booking?._id,
+      );
+      fetch('http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'871e9b'},body:JSON.stringify({sessionId:'871e9b',runId:'initial',hypothesisId:'H2',location:'checkout.tsx:applyCredits:after',message:'credit payment call resolved',data:{bookingId:booking?._id,statusAfterCallDirect:bookingFromStoreAfterCreditPayment?.get('status')??null,useCreditsAfterCallDirect:bookingFromStoreAfterCreditPayment?.get('useCredits')??null,creditsDeltaAfterCallDirect:bookingFromStoreAfterCreditPayment?.getIn(['paymentDelta','credits','val'])??null,statusAfterCallNested:bookingFromStoreAfterCreditPayment?.getIn(['data','status'])??null,rawBooking:bookingFromStoreAfterCreditPayment?.toJS?.()??null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
     } catch (error) {
       setCreditsError(parseMessageFromError(error));
+    } finally {
+      setIsApplyingCredits(false);
     }
   };
 
@@ -929,19 +976,21 @@ const Checkout = ({
         partialTokenPaymentNights,
         partialPriceInTokens,
       });
-      return res.data.results;
+      return (
+        platform.booking.findOne(booking?._id)?.toJS?.() ??
+        booking
+      );
     } catch (error) {
       setPaymentError(parseMessageFromError(error));
     }
   };
 
   const switchToFiat = async (type: PaymentType) => {
-    const localUpdatedBooking = await updateBooking({
+    await updateBooking({
       useTokens: false,
       useCredits,
       paymentType: type,
     });
-    setUpdatedBooking(localUpdatedBooking);
   };
 
   const switchToToken = async (
@@ -949,39 +998,21 @@ const Checkout = ({
     price: number,
     type: PaymentType,
   ) => {
-    const localUpdatedBooking = await updateBooking({
+    await updateBooking({
       useTokens: true,
       useCredits: false,
       partialTokenPaymentNights: nights,
       partialPriceInTokens: price,
       paymentType: type,
     });
-    setUpdatedBooking(localUpdatedBooking);
   };
 
-  const refetchBooking = async (options?: { afterFiatPayment?: boolean }) => {
+  const refetchBooking = async () => {
+    if (!_id) return null;
     try {
-      if (options?.afterFiatPayment) {
-        let latest: Booking | null = null;
-        for (let attempt = 0; attempt < 15; attempt++) {
-          await new Promise((resolve) =>
-            setTimeout(resolve, attempt === 0 ? 250 : 450),
-          );
-          const response = await api.get(`/booking/${_id}`);
-          latest = response.data.results;
-          setUpdatedBooking(latest);
-          if (latest?.status && latest.status !== 'pending-payment') {
-            return latest;
-          }
-        }
-        return latest;
-      }
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      const response = await api.get(`/booking/${_id}`);
-      const updatedBookingData = response.data.results;
-      setUpdatedBooking(updatedBookingData);
-      return updatedBookingData;
-    } catch (error) {
+      await platform.booking.getOne(_id, { force: true });
+      return platform.booking.findOne(_id)?.toJS?.() ?? null;
+    } catch (_error) {
       return null;
     }
   };
@@ -1154,8 +1185,8 @@ const Checkout = ({
                     canApplyCredits &&
                     !useTokens &&
                     !booking?.volunteerId &&
-                    ((rentalFiat && rentalFiat?.val > 0) || useCredits) &&
-                    status !== 'credits-paid' ? (
+                    ((rentalFiat && rentalFiat?.val > 0) ||
+                      hasCreditsAppliedFromStore) ? (
                       <RedeemCredits
                         disabled={
                           availabilityCheckLoading ||
@@ -1166,7 +1197,7 @@ const Checkout = ({
                         }
                         priceInCredits={priceInCredits}
                         maxNightsToPayWithCredits={maxNightsToPayWithCredits}
-                        useCredits={useCredits}
+                        useCredits={hasCreditsAppliedFromStore}
                         rentalFiat={rentalFiat}
                         rentalToken={{
                           val: listing?.private
@@ -1185,10 +1216,9 @@ const Checkout = ({
                           cur: CloserCurrencies.TDF,
                         }}
                         applyCredits={applyCredits}
-                        hasAppliedCredits={
-                          useCredits || status === 'credits-paid'
-                        }
+                        hasAppliedCredits={hasCreditsAppliedFromStore}
                         creditsError={creditsError}
+                        isLoading={isApplyingCredits}
                         className="my-4"
                       />
                     ) : null}
@@ -1370,6 +1400,7 @@ const Checkout = ({
                 {!isFriend && (
                   <Button
                     isEnabled={!processing}
+                    isLoading={processing}
                     onClick={handleFriendsBookingSendToFriend}
                   >
                     <span className="inline-flex items-center gap-2">
@@ -1398,6 +1429,7 @@ const Checkout = ({
           {isFreeBooking && !isFriendsBooking && (
             <Button
               isEnabled={!processing}
+              isLoading={processing}
               className="booking-btn"
               onClick={handleFreeBooking}
             >
@@ -1422,6 +1454,7 @@ const Checkout = ({
                 isEnabled={
                   !processing && !isStaking && hasAgreedToWalletDisclaimer
                 }
+                isLoading={processing || isStaking}
                 className="booking-btn"
                 onClick={handleTokenOnlyBooking}
               >
@@ -1963,37 +1996,17 @@ const Checkout = ({
 };
 
 Checkout.getInitialProps = async (context: NextPageContext) => {
-  const { query, req } = context;
   try {
-    const bookingRes = await api
-      .get(`/booking/${query.slug}`, {
-        headers: getBearerAuthHeaders(req as NextApiRequest),
-      })
-      .catch(() => null);
-    const booking = bookingRes?.data?.results;
     const bookingConfig = config.booking;
     const web3Config = config.web3;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
     const paymentConfig = config.payment;
 
-    const [optionalEvent, optionalListing, messages] = await Promise.all([
-      booking.eventId &&
-        api.get(`/event/${booking.eventId}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        }),
-      booking.listing &&
-        api.get(`/listing/${booking.listing}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        }),
+    const [messages] = await Promise.all([
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
-    const event = optionalEvent?.data?.results;
-    const listing = optionalListing?.data?.results;
 
     return {
-      booking,
-      listing,
-      event,
       error: null,
       bookingConfig,
       paymentConfig,
@@ -2003,9 +2016,7 @@ Checkout.getInitialProps = async (context: NextPageContext) => {
   } catch (err) {
     return {
       error: parseMessageFromError(err),
-      booking: null,
       bookingConfig: null,
-      listing: null,
       messages: null,
       paymentConfig: null,
       tokenCurrency: getBookingTokenCurrency(),

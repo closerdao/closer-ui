@@ -144,6 +144,9 @@ export { default as ReferralsPage } from './pages/settings/referrals';
 export { default as SignUpPage } from './pages/signup';
 export { default as StayPage } from './pages/stay/';
 export { default as ListingPage } from './pages/stay/[slug]';
+export { default as StayCreatePage } from './pages/stay/create';
+export { default as StayCheckoutPage } from './pages/stay/create/[id]';
+export { default as StayConfirmationPage } from './pages/stay/create/[id]/confirmation';
 export { default as SubscriptionsCheckoutPage } from './pages/subscriptions/checkout';
 
 export { default as CitizenshipPage } from './pages/citizenship/index';

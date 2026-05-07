@@ -81,13 +81,15 @@ const EditModel: FC<Props> = ({
   const { isAuthenticated, user } = useAuth();
   const initialModel =
     initialData ||
-    fields.reduce(
-      (acc, field) => ({
+    fields.reduce((acc, field) => {
+      if (field.type === 'note') {
+        return acc;
+      }
+      return {
         ...acc,
         [field.name]: field.default || getSample(field),
-      }),
-      {},
-    );
+      };
+    }, {});
   const [data, setData] = useState(initialModel);
   const [error, setErrors] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -170,6 +172,9 @@ const EditModel: FC<Props> = ({
   const validate = (updatedData: any) => {
     const validationErrors: string[] = [];
     fields.forEach((field) => {
+      if (field.type === 'note') {
+        return;
+      }
       if (field.required && !updatedData[field.name]) {
         validationErrors.push(field.name);
       }
@@ -190,12 +195,19 @@ const EditModel: FC<Props> = ({
         ? transformDataBeforeSave(updatedData)
         : updatedData;
 
+      const payload = { ...dataToSave };
+      fields.forEach((field: any) => {
+        if (field.type === 'note') {
+          delete payload[field.name];
+        }
+      });
+
       const method = id ? 'patch' : 'post';
       const route = id ? `${endpoint}/${id}` : endpoint;
       trackEvent(`EditModel:${endpoint}:${id ? id : 'new'}`, method);
       const {
         data: { results: savedData },
-      } = await api[method](route, dataToSave);
+      } = await api[method](route, payload);
       if (onSave) {
         onSave(savedData);
       }

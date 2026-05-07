@@ -12,20 +12,20 @@ import { PromptGetInTouchProvider } from 'closer/components/PromptGetInTouchCont
 
 import { AuthProvider, ConfigProvider, PlatformProvider } from 'closer';
 import configKeyed from 'closer/configCached';
-import { WalletProvider } from 'closer/contexts/wallet';
 import { blockchainConfig } from 'closer/config_blockchain';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import { NewsletterProvider } from 'closer/contexts/newsletter';
 import { PushNotificationProvider } from 'closer/contexts/push-notifications';
+import { WalletProvider } from 'closer/contexts/wallet';
 import {
   applyCurrencyLocaleFromGeneralConfig,
   mergeGeneralConfigWithDefaults,
   prepareGeneralConfig,
 } from 'closer/utils/app.helpers';
+import { getAppConfigFromEnv } from 'closer/utils/appConfigFromEnv';
 import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
-import { getAppConfigFromEnv } from 'closer/utils/appConfigFromEnv';
 import '../styles/index.css';
 
 interface AppOwnProps extends AppProps {
@@ -98,23 +98,27 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
           <NextIntlClientProvider
             locale={router.locale || 'en'}
             messages={pageProps.messages || {}}
-            timeZone={config?.TIME_ZONE || process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE || getAppConfigFromEnv().DEFAULT_TIMEZONE}
+            timeZone={
+              config?.TIME_ZONE ||
+              process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE ||
+              getAppConfigFromEnv().DEFAULT_TIMEZONE
+            }
           >
             <AuthProvider>
-            <PromptGetInTouchProvider>
-              <PlatformProvider>
-                <WalletProvider>
-                  <PushNotificationProvider>
-                    <Layout>
-                      <GoogleAnalytics trackPageViews />
-                      <NewsletterProvider>
-                        <Component {...pageProps} config={config} />
-                      </NewsletterProvider>
-                    </Layout>
-                    <AcceptCookies />
-                  </PushNotificationProvider>
-                </WalletProvider>
-              </PlatformProvider>
+              <PromptGetInTouchProvider>
+                <PlatformProvider>
+                  <WalletProvider>
+                    <PushNotificationProvider>
+                      <Layout>
+                        <GoogleAnalytics trackPageViews />
+                        <NewsletterProvider>
+                          <Component {...pageProps} config={config} />
+                        </NewsletterProvider>
+                      </Layout>
+                      <AcceptCookies />
+                    </PushNotificationProvider>
+                  </WalletProvider>
+                </PlatformProvider>
               </PromptGetInTouchProvider>
             </AuthProvider>
           </NextIntlClientProvider>

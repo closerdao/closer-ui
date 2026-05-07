@@ -13,7 +13,7 @@ const config = {
     'https://docs.google.com/document/d/198vWYEQCC1lELQa8f76Jcw3l3UDiPcBKt04PGFKnUvg/edit',
   STRIPE_CUSTOMER_PORTAL_URL:
     'https://billing.stripe.com/p/login/test_dR69Cl1Igat5dhK3cc',
-  FACEBOOK_PIXEL_ID: '761004479106346',
+  FACEBOOK_PIXEL_ID: null,
   FAQS_GOOGLE_SHEET_ID: '1dlaVEfLwHAbXCwoiDGzUd3w8d7YYnGl5dbPDINKmRUg',
 };
 

@@ -174,7 +174,9 @@ export const CURRENCY_ISO_SYMBOL = {
 
 export type Iso4217CurrencyCode = keyof typeof CURRENCY_ISO_SYMBOL;
 
-export const ISO_4217_CURRENCY_CODES = Object.keys(CURRENCY_ISO_SYMBOL).sort() as Iso4217CurrencyCode[];
+export const ISO_4217_CURRENCY_CODES = Object.keys(
+  CURRENCY_ISO_SYMBOL,
+).sort() as Iso4217CurrencyCode[];
 
 export const closerConfig = {
   PLATFORM_NAME: 'Closer',
@@ -761,7 +763,7 @@ export const configDescription: ConfigType[] = [
       },
       facebookPixelId: {
         type: 'text',
-        default: '761004479106346',
+        default: '',
       },
       faqsGoogleSheetId: {
         type: 'text',

@@ -11,24 +11,21 @@ import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import dayjs from 'dayjs';
-import { NextApiRequest, NextPageContext } from 'next';
+import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
 import { BOOKING_STEPS, BOOKING_STEP_TITLE_KEYS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
-import { useRedirectPaidBookingToDetail } from '../../../hooks/useRedirectPaidBookingToDetail';
+import { usePlatform } from '../../../contexts/platform';
+import { useRedirectPaidBookingToDetail } from '../../../hooks';
 import {
   BaseBookingParams,
-  Booking,
   BookingConfig,
-  Event,
-  Listing,
 } from '../../../types';
 import { FoodOption } from '../../../types/food';
 import config from '../../../configCached';
 import api, { cdn } from '../../../utils/api';
-import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import {
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
@@ -46,10 +43,7 @@ import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Props extends BaseBookingParams {
-  listing: Listing | null;
-  booking: Booking | null;
   error?: string;
-  event?: Event;
   bookingConfig: BookingConfig | null;
   discountCode?: string;
   foodOptions: FoodOption[];
@@ -118,8 +112,6 @@ const SingleOptionPhotoPreview = ({
 };
 
 const FoodSelectionPage = ({
-  booking,
-  event,
   error,
   bookingConfig,
   discountCode,
@@ -127,6 +119,32 @@ const FoodSelectionPage = ({
   tokenCurrency,
 }: Props) => {
   const t = useTranslations();
+  const router = useRouter();
+  const slugParam = router.query.slug;
+  const slug = typeof slugParam === 'string' ? slugParam : slugParam?.[0];
+  const { platform }: any = usePlatform();
+
+  useEffect(() => {
+    if (!router.isReady || !slug) return;
+    void platform.booking.getOne(slug, { force: true });
+  }, [router.isReady, slug, platform]);
+
+  const booking = slug ? platform.booking.findOne(slug)?.toJS?.() ?? null : null;
+  const event = booking?.eventId
+    ? platform.event.findOne(booking.eventId)?.toJS?.() ?? null
+    : null;
+  const listing = booking?.listing
+    ? platform.listing.findOne(booking.listing)?.toJS?.() ?? null
+    : null;
+
+  useEffect(() => {
+    if (booking?.eventId) {
+      void platform.event.getOne(booking.eventId);
+    }
+    if (booking?.listing) {
+      void platform.listing.getOne(booking.listing);
+    }
+  }, [booking?.eventId, booking?.listing, platform]);
 
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -134,7 +152,6 @@ const FoodSelectionPage = ({
   const { useTokens, start, end, adults, eventId, isFriendsBooking } =
     booking || {};
 
-  const router = useRouter();
   const { isAuthenticated, user } = useAuth();
 
   useRedirectPaidBookingToDetail(booking);
@@ -230,7 +247,7 @@ const FoodSelectionPage = ({
 
     const skipFoodStep = async () => {
       try {
-        await api.post(`/bookings/${booking._id}/update-food`, {
+        await platform.bookings.updateFood(booking._id, {
           foodOption: 'no_food',
           foodOptionId: null,
         });
@@ -261,7 +278,7 @@ const FoodSelectionPage = ({
         foodOption: hasSelection ? 'food_package' : 'no_food',
         foodOptionId: foodOptionIdValue,
       };
-      await api.post(`/bookings/${booking?._id}/update-food`, payload);
+      await platform.bookings.updateFood(booking?._id, payload);
 
       void logMetricIfAuthenticated(user, {
         event: 'booking-food-update-success',
@@ -704,43 +721,21 @@ const FoodSelectionPage = ({
 };
 
 FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
-  const { query, req } = context;
+  const { query } = context;
 
   const discountCode = query?.discountCode;
 
   try {
-    const [bookingRes, foodRes, messages] = await Promise.all([
-      api
-        .get(`/booking/${query.slug}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        })
-        .catch(() => null),
+    const [foodRes, messages] = await Promise.all([
       api.get('/food').catch(() => null),
       loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
-    const booking = bookingRes?.data?.results || null;
     const bookingConfig = config.booking || null;
     const web3Config = config.web3 || null;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
     const foodOptions = foodRes?.data?.results || null;
 
-    const [optionalEvent, optionalListing] = await Promise.all([
-      booking?.eventId &&
-        api.get(`/event/${booking?.eventId}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        }),
-      booking?.listing &&
-        api.get(`/listing/${booking?.listing}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        }),
-    ]);
-    const event = optionalEvent?.data?.results;
-    const listing = optionalListing?.data?.results;
-
     return {
-      booking,
-      listing,
-      event,
       error: null,
       bookingConfig,
       discountCode,
@@ -752,8 +747,6 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
     console.log('Error', err);
     return {
       error: parseMessageFromError(err),
-      booking: null,
-      listing: null,
       bookingConfig: null,
       messages: null,
       foodOptions: null,

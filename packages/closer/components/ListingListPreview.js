@@ -87,14 +87,17 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
             <span className="text-xs font-semibold text-green-600">{t('listing_free')}</span>
           ) : null}
 
-          {user && user.roles.includes('space-host') && isAdminPage && (
-            <Link
-              href={`/listings/${listing.get('slug')}/edit`}
-              className="text-xs text-gray-500 hover:text-accent"
-            >
-              {t('listing_preview_edit')}
-            </Link>
-          )}
+          {user &&
+            isAdminPage &&
+            (user.roles?.includes('space-host') ||
+              user.roles?.includes('admin')) && (
+              <Link
+                href={`/listings/${listing.get('slug')}/edit`}
+                className="inline-flex shrink-0 items-center justify-center px-2.5 py-1 text-xs font-medium rounded-md border border-gray-300 bg-white text-gray-800 hover:border-accent hover:text-accent transition-colors"
+              >
+                {t('listing_preview_edit')}
+              </Link>
+            )}
         </div>
 
         {!isAdminPage && (

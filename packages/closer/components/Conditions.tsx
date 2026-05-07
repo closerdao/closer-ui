@@ -16,12 +16,14 @@ interface Props {
     lastmonth: number;
     default: number;
   } | null;
+  wrapperClassName?: string;
 }
 
 const Conditions = ({
   setComply,
   visitorsGuide,
   cancellationPolicy,
+  wrapperClassName,
 }: Props) => {
   const t = useTranslations();
 
@@ -51,7 +53,7 @@ const Conditions = ({
   };
 
   return (
-    <div className="mt-8" onClick={stopPropagation}>
+    <div className={wrapperClassName ?? 'mt-8'} onClick={stopPropagation}>
       <Checkbox
         isChecked={doesUserAcceptTerms}
         onChange={() => setDoesUserAcceptTerms(!doesUserAcceptTerms)}
@@ -107,6 +109,7 @@ const Conditions = ({
 Conditions.propTypes = {
   setComply: PropTypes.func,
   visitorsGuide: PropTypes.string,
+  wrapperClassName: PropTypes.string,
 };
 
 export default Conditions;
