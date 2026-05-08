@@ -19,6 +19,9 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Conditions from '../../../../components/Conditions';
 import FeatureNotEnabled from '../../../../components/FeatureNotEnabled';
 import PageError from '../../../../components/PageError';
+import BookingSurface, {
+  BookingSurfaceDivider,
+} from '../../../../components/booking/bookingSurface';
 import Modal from '../../../../components/Modal';
 import Switch from '../../../../components/Switch';
 import { ErrorMessage, Information } from '../../../../components/ui';
@@ -1211,9 +1214,12 @@ const StayCheckoutContent = ({
       </div>
 
       {hasPendingExtension && (
-        <div
+        <BookingSurface
+          as="div"
           role="status"
-          className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4"
+          tone="soft"
+          padding="md"
+          className="mb-6 !border-0 !bg-amber-50 shadow-sm !ring-1 !ring-amber-200/80"
         >
           <p className="text-sm text-amber-900">
             {t('stay_create_pending_extension', {
@@ -1222,13 +1228,15 @@ const StayCheckoutContent = ({
               ),
             })}
           </p>
-        </div>
+        </BookingSurface>
       )}
 
       <div className="max-w-3xl mx-auto flex flex-col gap-4 md:gap-6">
-        <section
+        <BookingSurface
+          as="section"
+          tone="elevated"
+          padding="lg"
           aria-labelledby="trip-summary-heading"
-          className="rounded-2xl border border-gray-200 p-4 md:p-5"
         >
           <Heading id="trip-summary-heading" level={2} className="text-lg mb-4">
             {t('stay_create_your_trip')}
@@ -1277,7 +1285,7 @@ const StayCheckoutContent = ({
                 </p>
               </div>
             </div>
-            <div className="mt-5 lg:mt-0 w-full lg:w-auto lg:min-w-[220px] lg:max-w-xs lg:flex-shrink-0 border-t border-gray-100 lg:border-t-0 lg:border-l lg:pl-8 pt-5 lg:pt-0">
+            <div className="mt-5 lg:mt-0 w-full lg:w-auto lg:min-w-[220px] lg:max-w-xs lg:flex-shrink-0 border-t border-foreground/[0.08] lg:border-t-0 lg:border-l lg:border-foreground/[0.08] lg:pl-8 pt-5 lg:pt-0">
               <p className="text-sm font-semibold text-gray-900 mb-3">
                 {t('stay_create_options_title')}
               </p>
@@ -1309,11 +1317,13 @@ const StayCheckoutContent = ({
               </div>
             </div>
           </div>
-        </section>
+        </BookingSurface>
 
-        <section
+        <BookingSurface
+          as="section"
+          tone="elevated"
+          padding="lg"
           aria-labelledby="preferences-heading"
-          className="rounded-2xl border border-gray-200 p-4 md:p-5"
         >
           <Heading id="preferences-heading" level={2} className="text-lg mb-2">
             {t('stay_create_preferences_section_title')}
@@ -1371,12 +1381,14 @@ const StayCheckoutContent = ({
               className="border-2 border-neutral text-complimentary-core text-sm rounded-lg min-h-[88px]"
             />
           </div>
-        </section>
+        </BookingSurface>
 
         {showFoodSection && (
-          <section
+          <BookingSurface
+            as="section"
+            tone="elevated"
+            padding="lg"
             aria-labelledby="stay-food-heading"
-            className="rounded-2xl border border-gray-200 p-4 md:p-5"
           >
             <Heading id="stay-food-heading" level={2} className="text-lg mb-4">
               {t('bookings_food_step_title')}
@@ -1738,12 +1750,14 @@ const StayCheckoutContent = ({
                 </Information>
               )}
             </div>
-          </section>
+          </BookingSurface>
         )}
 
-        <section
+        <BookingSurface
+          as="section"
+          tone="elevated"
+          padding="lg"
           aria-labelledby="summary-heading"
-          className="rounded-2xl border border-gray-200 p-4 md:p-5 bg-white"
         >
           <Heading id="summary-heading" level={2} className="text-lg mb-4">
             {t('stay_create_summary_title')}
@@ -1968,11 +1982,13 @@ const StayCheckoutContent = ({
               </p>
             )}
           </div>
-        </section>
+        </BookingSurface>
 
-        <section
+        <BookingSurface
+          as="section"
+          tone="elevated"
+          padding="lg"
           aria-labelledby="card-heading"
-          className="rounded-2xl border border-gray-200 p-4 md:p-5"
         >
           <Heading id="card-heading" level={2} className="text-lg mb-4">
             {t('stay_create_card_title')}
@@ -2033,7 +2049,7 @@ const StayCheckoutContent = ({
             {t('stay_create_status_label')}:{' '}
             <span className="capitalize">{currentStay.status}</span>
           </p>
-        </section>
+        </BookingSurface>
       </div>
       {isCreditsModalOpen && (
         <Modal closeModal={closeCreditsModal} className="sm:max-w-xl md:w-[560px]">
