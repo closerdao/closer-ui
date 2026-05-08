@@ -1831,19 +1831,23 @@ const StayCheckoutContent = ({
                 value={formatStayMoney(priceLock.subtotal)}
               />
               <Row
-                label={t('stay_create_line_tax')}
-                value={formatStayMoney(
-                  priceLock.vat ?? {
-                    val: 0,
-                    cur: priceLock.total.cur,
-                  },
-                )}
-              />
-              <Row
                 bold
                 label={t('stay_create_line_total')}
                 value={formatStayMoney(priceLock.total)}
               />
+              <div className="flex justify-between items-baseline">
+                <span className="italic text-gray-600">
+                  Including Tax (VAT)
+                </span>
+                <span className="text-gray-900">
+                  {formatStayMoney(
+                    priceLock.vat ?? {
+                      val: 0,
+                      cur: priceLock.total.cur,
+                    },
+                  )}
+                </span>
+              </div>
               {priceLock.appliedCredits.val > 0 && (
                 <Row
                   label={t('stay_create_line_credits_applied')}

@@ -256,6 +256,16 @@ const BookingListPreview = ({
       ) : null}
 
       <div className="flex flex-col gap-2 pt-1">
+        <Link href={`/bookings/${_id}`} passHref>
+          <Button
+            variant="secondary"
+            size="small"
+            className={previewSecondaryCn}
+          >
+            {t('ticket_list_view_booking')}
+          </Button>
+        </Link>
+
         {userInfo?.email && !isOwnBooking && (
           <LinkButton variant="secondary" size="small" className={previewSecondaryCn} href={`mailto:${userInfo.email}`}>
             {t('booking_card_email_user')}
@@ -303,6 +313,8 @@ const BookingListPreview = ({
 
         <BookingRequestButtons
           listPreview
+          hideCheckoutButton
+          hideCancelButton
           _id={_id}
           status={status}
           createdBy={createdBy}

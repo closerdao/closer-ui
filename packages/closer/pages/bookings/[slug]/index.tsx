@@ -6,6 +6,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import BookingRequestButtons from '../../../components/BookingRequestButtons';
 import BookingStatusTag from '../../../components/BookingStatusTag';
+import BookingGuests from '../../../components/BookingGuests';
+import Modal from '../../../components/Modal';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
@@ -16,8 +18,6 @@ import BookingSurface, {
   BookingSurfaceDivider,
 } from '../../../components/booking/bookingSurface';
 import Heading from '../../../components/ui/Heading';
-import Input from '../../../components/ui/Input';
-import Select from '../../../components/ui/Select/Dropdown';
 
 import dayjs from 'dayjs';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
@@ -143,7 +143,7 @@ const BookingPage = ({
   const isSpaceHost = user?.roles.includes('space-host');
   const isAdmin = Boolean(user?.roles.includes('admin'));
   const canManageBooking = isSpaceHost || isAdmin;
-  const isEditMode = true;
+  const isEditMode = false;
 
   const isHourlyBooking = listing?.priceDuration !== 'night';
 
@@ -256,6 +256,25 @@ const BookingPage = ({
   );
 
   const [datesEditorOpen, setDatesEditorOpen] = useState(false);
+  const [isGuestsModalOpen, setIsGuestsModalOpen] = useState(false);
+  const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
+  const [isShortenModalOpen, setIsShortenModalOpen] = useState(false);
+  const [isAccommodationModalOpen, setIsAccommodationModalOpen] = useState(false);
+  const [modalAdults, setModalAdults] = useState(adults);
+  const [modalChildren, setModalChildren] = useState(children ?? 0);
+  const [modalInfants, setModalInfants] = useState(infants ?? 0);
+  const [modalPets, setModalPets] = useState(pets ?? 0);
+  const [modalExtendEndDate, setModalExtendEndDate] = useState(
+    dayjs(bookingEnd).format('YYYY-MM-DD'),
+  );
+  const [modalShortenEndDate, setModalShortenEndDate] = useState(
+    dayjs(bookingEnd).format('YYYY-MM-DD'),
+  );
+  const [modalListingId, setModalListingId] = useState(
+    getBookingListingRefId(booking?.listing as unknown) ?? listing?._id ?? '',
+  );
+  const modalButtonClass =
+    '!normal-case !tracking-normal enabled:!bg-neutral-light enabled:!border-line !text-foreground hover:!scale-100';
 
   const [fiatDeltaBaseline, setFiatDeltaBaseline] = useState(() =>
     Math.abs(booking?.paymentDelta?.fiat.val || 0),
@@ -756,11 +775,6 @@ const BookingPage = ({
       : `/bookings/${_id}/checkout`;
 
   const openBookingCheckout = async () => {
-    if (hasHostBookingEdits) {
-      const ok = await persistBookingUpdate();
-      if (!ok) return;
-      await syncBookingFromServer();
-    }
     await router.push(bookingCheckoutPath);
   };
 
@@ -816,6 +830,74 @@ const BookingPage = ({
   const handleStayCheckOut = async () => {
     await checkOutStay(_id);
     await syncBookingFromServer();
+  };
+
+  const editableStayStatuses = ['confirmed', 'pending-payment', 'paid'];
+  const canUseStayEditActions =
+    stayShaped &&
+    !isHourlyBooking &&
+    (isBookingOwnerEditor || canManageBooking) &&
+    editableStayStatuses.includes(String(status ?? ''));
+
+  const handleEditGuestsSubmit = async () => {
+    try {
+      setIsLoading(true);
+      setStayEditError(null);
+      await updateStayGuests(_id, {
+        adults: Number(modalAdults) || 0,
+        children: Number(modalChildren) || 0,
+        infants: Number(modalInfants) || 0,
+        pets: Number(modalPets) || 0,
+      });
+      setIsGuestsModalOpen(false);
+      await syncBookingFromServer();
+    } catch (error) {
+      setStayEditError(parseMessageFromError(error));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleExtendStaySubmit = async () => {
+    try {
+      setIsLoading(true);
+      setStayEditError(null);
+      await extendStay(_id, { end: dayjs(modalExtendEndDate).toISOString() });
+      setIsExtendModalOpen(false);
+      await syncBookingFromServer();
+    } catch (error) {
+      setStayEditError(parseMessageFromError(error));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleShortenStaySubmit = async () => {
+    try {
+      setIsLoading(true);
+      setStayEditError(null);
+      await shortenStay(_id, { end: dayjs(modalShortenEndDate).toISOString() });
+      setIsShortenModalOpen(false);
+      await syncBookingFromServer();
+    } catch (error) {
+      setStayEditError(parseMessageFromError(error));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpgradeStaySubmit = async () => {
+    try {
+      setIsLoading(true);
+      setStayEditError(null);
+      await upgradeStayListing(_id, { listingId: modalListingId });
+      setIsAccommodationModalOpen(false);
+      await syncBookingFromServer();
+    } catch (error) {
+      setStayEditError(parseMessageFromError(error));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!isBookingEnabled) {
@@ -891,134 +973,6 @@ const BookingPage = ({
           {bookingView?.adminBookingReason && (
             <BookingSurface tone="banner" padding="sm">
               {bookingView.adminBookingReason}
-            </BookingSurface>
-          )}
-
-          {showPaymentLedgerCard && (
-            <BookingSurface
-              tone="inset"
-              padding="md"
-              className="flex flex-col gap-3 text-sm"
-            >
-              <BookingSectionEyebrow>
-                {t('booking_details_payment_ledger_title')}
-              </BookingSectionEyebrow>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="flex flex-col gap-1">
-                  <p className="text-xs font-semibold text-disabled">
-                    {t('booking_details_ledger_fiat')}
-                  </p>
-                  <p>
-                    {t('booking_details_target')}:{' '}
-                    {bv.fiatTarget != null || bv.priceLock != null
-                      ? formatStayMoney(
-                          (bv.fiatTarget ??
-                            (bv.priceLock as { total?: { val: number; cur: string } })
-                              ?.total) as { val: number; cur: string },
-                        )
-                      : priceFormat(total?.val ?? 0, total?.cur ?? CloserCurrencies.EUR)}
-                  </p>
-                  <p>
-                    {t('booking_details_paid')}:{' '}
-                    {bv.fiatPaid != null
-                      ? formatStayMoney(bv.fiatPaid as { val: number; cur: string })
-                      : '—'}
-                  </p>
-                  <p>
-                    {t('booking_details_owed')}:{' '}
-                    {bv.fiatTarget != null || bv.priceLock != null
-                      ? priceFormat(
-                          computeFiatOwed(bookingView as never),
-                          ((bv.fiatTarget as { cur?: string })?.cur ??
-                            (bv.priceLock as { total?: { cur: string } })?.total
-                              ?.cur) as CloserCurrencies,
-                        )
-                      : '—'}
-                  </p>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <p className="text-xs font-semibold text-disabled">
-                    {t('booking_details_ledger_credits')}
-                  </p>
-                  <p>
-                    {t('booking_details_target')}:{' '}
-                    {bv.creditsTarget != null ||
-                    (bv.priceLock as { appliedCredits?: { val: number; cur: string } })
-                      ?.appliedCredits != null
-                      ? formatStayMoney(
-                          (bv.creditsTarget ??
-                            (
-                              bv.priceLock as {
-                                appliedCredits: { val: number; cur: string };
-                              }
-                            ).appliedCredits) as { val: number; cur: string },
-                        )
-                      : '—'}
-                  </p>
-                  <p>
-                    {t('booking_details_paid')}:{' '}
-                    {bv.creditsPaid != null
-                      ? formatStayMoney(bv.creditsPaid as { val: number; cur: string })
-                      : '—'}
-                  </p>
-                  <p>
-                    {t('booking_details_owed')}:{' '}
-                    {bv.creditsTarget != null || bv.creditsPaid != null
-                      ? `${computeCreditsOwed(bookingView as never)}`
-                      : '—'}
-                  </p>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <p className="text-xs font-semibold text-disabled">
-                    {t('booking_details_ledger_tokens')}
-                  </p>
-                  <p>
-                    {t('booking_details_target')}:{' '}
-                    {bv.tokensTarget != null ||
-                    (bv.priceLock as { appliedTokens?: { val: number; cur: string } })
-                      ?.appliedTokens != null
-                      ? formatStayMoney(
-                          (bv.tokensTarget ??
-                            (
-                              bv.priceLock as {
-                                appliedTokens: { val: number; cur: string };
-                              }
-                            ).appliedTokens) as { val: number; cur: string },
-                        )
-                      : '—'}
-                  </p>
-                  <p>
-                    {t('booking_details_paid')}:{' '}
-                    {bv.tokensStaked != null
-                      ? formatStayMoney(bv.tokensStaked as { val: number; cur: string })
-                      : '—'}
-                  </p>
-                  <p>
-                    {t('booking_details_owed')}:{' '}
-                    {bv.tokensTarget != null || bv.tokensStaked != null
-                      ? `${computeTokensOwed(bookingView as never)}`
-                      : '—'}
-                  </p>
-                </div>
-              </div>
-              {stayShaped &&
-                (bv.checkedIn != null || bv.checkedOut != null) && (
-                <div className="flex flex-col gap-2 pt-1 text-xs">
-                  <BookingSurfaceDivider />
-                  {bv.checkedIn != null && String(bv.checkedIn).length > 0 && (
-                    <p>
-                      {t('booking_details_checked_in_at')}:{' '}
-                      {dayjs(String(bv.checkedIn)).format('LLL')}
-                    </p>
-                  )}
-                  {bv.checkedOut != null && String(bv.checkedOut).length > 0 && (
-                    <p>
-                      {t('booking_details_checked_out_at')}:{' '}
-                      {dayjs(String(bv.checkedOut)).format('LLL')}
-                    </p>
-                  )}
-                </div>
-              )}
             </BookingSurface>
           )}
 
@@ -1131,10 +1085,134 @@ const BookingPage = ({
             )}
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             <BookingSectionEyebrow>
-              {t('bookings_summary_step_costs_title')}
+              {t('bookings_checkout_step_payment_title')}
             </BookingSectionEyebrow>
+            {showPaymentLedgerCard && (
+              <BookingSurface
+                tone="inset"
+                padding="md"
+                className="flex flex-col gap-3 text-sm"
+              >
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs font-semibold text-disabled">
+                      {t('booking_details_ledger_fiat')}
+                    </p>
+                    <p>
+                      {t('booking_details_target')}:{' '}
+                      {bv.fiatTarget != null || bv.priceLock != null
+                        ? formatStayMoney(
+                            (bv.fiatTarget ??
+                              (bv.priceLock as { total?: { val: number; cur: string } })
+                                ?.total) as { val: number; cur: string },
+                          )
+                        : priceFormat(total?.val ?? 0, total?.cur ?? CloserCurrencies.EUR)}
+                    </p>
+                    <p>
+                      {t('booking_details_paid')}:{' '}
+                      {bv.fiatPaid != null
+                        ? formatStayMoney(bv.fiatPaid as { val: number; cur: string })
+                        : '—'}
+                    </p>
+                    <p>
+                      {t('booking_details_owed')}:{' '}
+                      {bv.fiatTarget != null || bv.priceLock != null
+                        ? priceFormat(
+                            computeFiatOwed(bookingView as never),
+                            ((bv.fiatTarget as { cur?: string })?.cur ??
+                              (bv.priceLock as { total?: { cur: string } })?.total
+                                ?.cur) as CloserCurrencies,
+                          )
+                        : '—'}
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs font-semibold text-disabled">
+                      {t('booking_details_ledger_credits')}
+                    </p>
+                    <p>
+                      {t('booking_details_target')}:{' '}
+                      {bv.creditsTarget != null ||
+                      (bv.priceLock as { appliedCredits?: { val: number; cur: string } })
+                        ?.appliedCredits != null
+                        ? formatStayMoney(
+                            (bv.creditsTarget ??
+                              (
+                                bv.priceLock as {
+                                  appliedCredits: { val: number; cur: string };
+                                }
+                              ).appliedCredits) as { val: number; cur: string },
+                          )
+                        : '—'}
+                    </p>
+                    <p>
+                      {t('booking_details_paid')}:{' '}
+                      {bv.creditsPaid != null
+                        ? formatStayMoney(bv.creditsPaid as { val: number; cur: string })
+                        : '—'}
+                    </p>
+                    <p>
+                      {t('booking_details_owed')}:{' '}
+                      {bv.creditsTarget != null || bv.creditsPaid != null
+                        ? `${computeCreditsOwed(bookingView as never)}`
+                        : '—'}
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs font-semibold text-disabled">
+                      {t('booking_details_ledger_tokens')}
+                    </p>
+                    <p>
+                      {t('booking_details_target')}:{' '}
+                      {bv.tokensTarget != null ||
+                      (bv.priceLock as { appliedTokens?: { val: number; cur: string } })
+                        ?.appliedTokens != null
+                        ? formatStayMoney(
+                            (bv.tokensTarget ??
+                              (
+                                bv.priceLock as {
+                                  appliedTokens: { val: number; cur: string };
+                                }
+                              ).appliedTokens) as { val: number; cur: string },
+                          )
+                        : '—'}
+                    </p>
+                    <p>
+                      {t('booking_details_paid')}:{' '}
+                      {bv.tokensStaked != null
+                        ? formatStayMoney(bv.tokensStaked as { val: number; cur: string })
+                        : '—'}
+                    </p>
+                    <p>
+                      {t('booking_details_owed')}:{' '}
+                      {bv.tokensTarget != null || bv.tokensStaked != null
+                        ? `${computeTokensOwed(bookingView as never)}`
+                        : '—'}
+                    </p>
+                  </div>
+                </div>
+                {stayShaped &&
+                  (bv.checkedIn != null || bv.checkedOut != null) && (
+                  <div className="flex flex-col gap-2 pt-1 text-xs">
+                    <BookingSurfaceDivider />
+                    {bv.checkedIn != null && String(bv.checkedIn).length > 0 && (
+                      <p>
+                        {t('booking_details_checked_in_at')}:{' '}
+                        {dayjs(String(bv.checkedIn)).format('LLL')}
+                      </p>
+                    )}
+                    {bv.checkedOut != null && String(bv.checkedOut).length > 0 && (
+                      <p>
+                        {t('booking_details_checked_out_at')}:{' '}
+                        {dayjs(String(bv.checkedOut)).format('LLL')}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </BookingSurface>
+            )}
             <SummaryCosts
               hideTitle
               compact
@@ -1204,79 +1282,6 @@ const BookingPage = ({
           </div>
         </BookingSurface>
 
-        {canGuestEditBookingDetails &&
-          hasGuestBookingEdits &&
-          updatedPrices && (
-            <BookingSurface
-              tone="promote"
-              padding="lg"
-              className="flex flex-col gap-4"
-            >
-              <Heading level={4} className="!mt-0 text-lg">
-                {t('booking_details_complete_change')}
-              </Heading>
-              <div className="grid gap-2 sm:grid-cols-3">
-                <BookingSurface
-                  tone="panelTransparent"
-                  padding="sm"
-                  className="flex flex-col gap-0.5"
-                >
-                  <p className="text-xs font-medium uppercase tracking-wide text-disabled">
-                    {t('booking_details_previous_total')}
-                  </p>
-                  <p className="text-lg font-bold text-foreground">
-                    {priceFormat(
-                      previewOriginalTotalVal,
-                      previewFormatCurrency,
-                    )}
-                  </p>
-                </BookingSurface>
-                <BookingSurface
-                  tone="panelTransparent"
-                  padding="sm"
-                  className="flex flex-col gap-0.5"
-                >
-                  <p className="text-xs font-medium uppercase tracking-wide text-disabled">
-                    {t('booking_details_new_total')}
-                  </p>
-                  <p className="text-lg font-bold text-foreground">
-                    {priceFormat(previewNewTotalVal, previewFormatCurrency)}
-                  </p>
-                </BookingSurface>
-                <div
-                  className={`flex flex-col gap-0.5 rounded-lg p-3 ${
-                    previewDeltaVal > 0
-                      ? 'bg-failure/10 text-failure'
-                      : previewDeltaVal < 0
-                        ? 'bg-success/10 text-success'
-                        : 'bg-neutral text-foreground'
-                  }`}
-                >
-                  <p className="text-xs font-medium uppercase tracking-wide">
-                    {t('booking_details_difference')}
-                  </p>
-                  <p className="text-2xl font-bold">
-                    {previewDeltaVal > 0 ? '+' : ''}
-                    {priceFormat(previewDeltaVal, previewFormatCurrency)}
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="primary"
-                isLoading={isLoading}
-                onClick={handleCompleteBookingChange}
-                isEnabled={
-                  hasGuestBookingEdits &&
-                  !isLoading &&
-                  ((stayShaped && !isHourlyBooking) || canEditBooking) &&
-                  Boolean(updatedPrices)
-                }
-              >
-                {t('booking_details_complete_change')}
-              </Button>
-            </BookingSurface>
-          )}
-
         {bookingView?.volunteerInfo && (
           <section className="flex flex-col gap-2">
             {bookingView.volunteerInfo.bookingType === 'volunteer' ? (
@@ -1338,209 +1343,55 @@ const BookingPage = ({
           </section>
         )}
 
-        {canManageBooking && (
+        {canUseStayEditActions && (
           <BookingSurface
             tone="elevated"
             padding="md"
             className="flex flex-col gap-3"
           >
             <Heading level={4} className="!mt-0 text-base font-semibold">
-              {t('booking_details_space_host_heading')}
+              Manage booking changes
             </Heading>
 
-            {stayShaped &&
-              bv.pendingExtension != null &&
-              typeof bv.pendingExtension === 'object' && (
-                <BookingSurface
-                  tone="inset"
-                  padding="md"
-                  className="flex flex-col gap-2 text-sm"
-                >
-                  <p className="font-semibold">
-                    {t('booking_details_extension_pending')}
-                  </p>
-                  <p className="text-xs text-disabled">
-                    {t('listings_book_check_out')}:{' '}
-                    {dayjs(
-                      String(
-                        (bv.pendingExtension as { end: string }).end,
-                      ),
-                    ).format('LL')}
-                  </p>
-                  {canManageBooking && (
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        variant="secondary"
-                        isLoading={isLoading}
-                        isFullWidth={false}
-                        onClick={() => void handleApproveExtension()}
-                      >
-                        {t('booking_details_approve_extension')}
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        isLoading={isLoading}
-                        isFullWidth={false}
-                        onClick={() => void handleRejectExtension()}
-                      >
-                        {t('booking_details_reject_extension')}
-                      </Button>
-                    </div>
-                  )}
-                </BookingSurface>
-              )}
-
-            {(stayShaped ||
-              (bookingView?.roomOrBedNumbers &&
-                bookingView.roomOrBedNumbers.length > 0)) && (
-              <div className="flex flex-col gap-2">
-                {bookingView?.roomOrBedNumbers &&
-                  bookingView.roomOrBedNumbers.length > 0 && (
-                    <p className="text-sm font-semibold text-foreground">
-                      {listing?.private
-                        ? t('booking_card_room_number')
-                        : t('booking_card_bed_numbers')}{' '}
-                      {bookingView.roomOrBedNumbers.join(', ')}
-                    </p>
-                  )}
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs text-disabled" htmlFor="roomNumbers">
-                    {roomOrBedNumbers && roomOrBedNumbers?.length > 0
-                      ? 'Enter new bed numbers (comma delimited, must match updated number of adults):'
-                      : 'Enter new room number:'}
-                  </label>
-                  <Input
-                    onChange={handleUpdateRoomNumbers}
-                    placeholder="Number (s)"
-                    id="roomNumbers"
-                    type="text"
-                    className="max-w-xs bg-white py-1.5 px-2 text-sm"
-                  />
-                </div>
-              </div>
-            )}
-
-            {stayShaped &&
-              status === 'paid' &&
-              !(bv.checkedIn != null && String(bv.checkedIn).length > 0) &&
-              canManageBooking && (
-                <Button
-                  variant="secondary"
-                  isLoading={isLoading}
-                  onClick={() => void handleStayCheckIn()}
-                >
-                  {t('booking_details_check_in_stay')}
-                </Button>
-              )}
-            {stayShaped &&
-              bv.checkedIn != null &&
-              String(bv.checkedIn).length > 0 &&
-              !(bv.checkedOut != null && String(bv.checkedOut).length > 0) &&
-              (canManageBooking || isBookingOwnerEditor) && (
-                <Button
-                  variant="secondary"
-                  isLoading={isLoading}
-                  onClick={() => void handleStayCheckOut()}
-                >
-                  {t('booking_details_check_out_stay')}
-                </Button>
-              )}
-
-            {((stayShaped && isAdmin) || (!stayShaped && canManageBooking)) && (
-              <div className="flex flex-col gap-1.5 pt-1">
-                <BookingSurfaceDivider className="mb-2" />
-                <label className="text-xs font-semibold text-foreground">
-                  {t('booking_card_set_booking_status')}
-                </label>
-                <Select
-                  className="rounded-full border-foreground"
-                  value={updatedStatus}
-                  options={statusOptions}
-                  onChange={(value: string) => setUpdatedStatus(value)}
-                  isRequired
-                  placeholder={t('booking_card_set_booking_status')}
-                />
-              </div>
-            )}
-
-            {previewPaymentDelta?.token?.val &&
-            (paymentType === PaymentType.FULL_TOKENS ||
-              paymentType === PaymentType.PARTIAL_TOKENS) ? (
-              <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                <p className="font-semibold">
-                  {previewPaymentDelta.token.val >= 0
-                    ? t('bookings_amount_due')
-                    : t('bookings_amount_to_refund')}
-                </p>
-                <p className="font-semibold tabular-nums">
-                  {priceFormat(
-                    Math.abs(previewPaymentDelta.token?.val || 0),
-                    previewPaymentDelta.token.cur,
-                  )}
-                </p>
-              </div>
-            ) : null}
-
-            {previewPaymentDelta?.fiat.val ? (
-              <div className="flex flex-col gap-2 pt-1 text-sm">
-                <BookingSurfaceDivider className="mb-2" />
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-semibold">
-                    {previewPaymentDelta.fiat.val >= 0
-                      ? t('bookings_amount_due')
-                      : t('bookings_amount_to_refund')}
-                  </p>
-                  <p className="font-semibold tabular-nums">
-                    {priceFormat(
-                      Math.abs(previewPaymentDelta.fiat.val || 0),
-                      previewPaymentDelta.fiat.cur,
-                    )}
-                  </p>
-                </div>
-                {previewPaymentDelta.fiat.val < 0 &&
-                  latestStripePaymentIntentId && (
-                  <Link
-                    className="text-xs font-semibold underline"
-                    href={`https://dashboard.stripe.com/payments/${latestStripePaymentIntentId}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {t('bookings_go_to_stripe_dashboard')}
-                  </Link>
-                )}
-              </div>
-            ) : null}
-
-            {!canEditBooking && !(stayShaped && !isHourlyBooking) && (
-              <Information className="border-error/30 bg-error/10 text-foreground">
-                WARNING: editing this type of booking is not currently supported.
-                Please handle these operations manually.
-              </Information>
-            )}
-
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Button
+                variant="secondary"
+                isLoading={isLoading}
+                className={modalButtonClass}
+                onClick={() => setIsGuestsModalOpen(true)}
+              >
+                Edit guests
+              </Button>
+              <Button
+                variant="secondary"
+                isLoading={isLoading}
+                className={modalButtonClass}
+                onClick={() => setIsExtendModalOpen(true)}
+              >
+                Extend stay
+              </Button>
+              <Button
+                variant="secondary"
+                isLoading={isLoading}
+                className={modalButtonClass}
+                onClick={() => setIsShortenModalOpen(true)}
+              >
+                Shorten stay
+              </Button>
+              <Button
+                variant="secondary"
+                isLoading={isLoading}
+                className={modalButtonClass}
+                onClick={() => setIsAccommodationModalOpen(true)}
+              >
+                Change accommodation
+              </Button>
+            </div>
             {stayEditError && (
               <Information className="border-error/30 bg-error/10 text-foreground">
                 {stayEditError}
               </Information>
             )}
-
-            <div className="flex flex-col gap-2">
-              <Button
-                isLoading={isLoading}
-                onClick={handleSaveBooking}
-                isEnabled={
-                  hasHostBookingEdits &&
-                  !isLoading &&
-                  ((stayShaped && !isHourlyBooking) ||
-                    (!stayShaped && canEditBooking))
-                }
-              >
-                {t('booking_card_save_booking')}
-              </Button>
-              {hasUpdated && (
-                <Information>{t('booking_card_booking_updated')}</Information>
-              )}
-            </div>
           </BookingSurface>
         )}
 
@@ -1568,6 +1419,114 @@ const BookingPage = ({
           <BookingSurface tone="soft" padding="md" className="text-sm">
             {t('bookings_confirmation')}
           </BookingSurface>
+        )}
+
+        {isGuestsModalOpen && (
+          <Modal closeModal={() => setIsGuestsModalOpen(false)} className="sm:max-w-lg">
+            <div className="flex flex-col gap-4">
+              <Heading level={3}>Edit guests</Heading>
+              <BookingGuests
+                shouldHideTitle
+                adults={modalAdults}
+                kids={modalChildren}
+                infants={modalInfants}
+                pets={modalPets}
+                setAdults={setModalAdults}
+                setKids={setModalChildren}
+                setInfants={setModalInfants}
+                setPets={setModalPets}
+                isPrivate={Boolean(listing?.private)}
+              />
+              <Button
+                variant="secondary"
+                className={modalButtonClass}
+                isLoading={isLoading}
+                onClick={() => void handleEditGuestsSubmit()}
+              >
+                Save guests
+              </Button>
+            </div>
+          </Modal>
+        )}
+
+        {isExtendModalOpen && (
+          <Modal closeModal={() => setIsExtendModalOpen(false)} className="sm:max-w-lg">
+            <div className="flex flex-col gap-4">
+              <Heading level={3}>Extend stay</Heading>
+              <label className="text-sm">
+                New checkout date
+                <input
+                  className="mt-1 w-full rounded-md border border-line px-3 py-2"
+                  type="date"
+                  value={modalExtendEndDate}
+                  onChange={(e) => setModalExtendEndDate(e.target.value)}
+                />
+              </label>
+              <Button
+                variant="secondary"
+                className={modalButtonClass}
+                isLoading={isLoading}
+                onClick={() => void handleExtendStaySubmit()}
+              >
+                Extend
+              </Button>
+            </div>
+          </Modal>
+        )}
+
+        {isShortenModalOpen && (
+          <Modal closeModal={() => setIsShortenModalOpen(false)} className="sm:max-w-lg">
+            <div className="flex flex-col gap-4">
+              <Heading level={3}>Shorten stay</Heading>
+              <label className="text-sm">
+                New checkout date
+                <input
+                  className="mt-1 w-full rounded-md border border-line px-3 py-2"
+                  type="date"
+                  value={modalShortenEndDate}
+                  onChange={(e) => setModalShortenEndDate(e.target.value)}
+                />
+              </label>
+              <Button
+                variant="secondary"
+                className={modalButtonClass}
+                isLoading={isLoading}
+                onClick={() => void handleShortenStaySubmit()}
+              >
+                Shorten
+              </Button>
+            </div>
+          </Modal>
+        )}
+
+        {isAccommodationModalOpen && (
+          <Modal closeModal={() => setIsAccommodationModalOpen(false)} className="sm:max-w-lg">
+            <div className="flex flex-col gap-4">
+              <Heading level={3}>Change accommodation</Heading>
+              <label className="text-sm">
+                Listing
+                <select
+                  className="mt-1 w-full rounded-md border border-line px-3 py-2"
+                  value={modalListingId}
+                  onChange={(e) => setModalListingId(e.target.value)}
+                >
+                  {listings.map((item) => (
+                    <option key={item._id} value={item._id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <Button
+                variant="secondary"
+                className={modalButtonClass}
+                isLoading={isLoading}
+                onClick={() => void handleUpgradeStaySubmit()}
+              >
+                Change
+              </Button>
+            </div>
+          </Modal>
         )}
       </main>
     </>

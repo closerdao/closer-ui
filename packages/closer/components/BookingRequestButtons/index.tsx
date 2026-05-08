@@ -27,6 +27,8 @@ interface Props {
   openCheckout?: () => void | Promise<void>;
   checkoutLoading?: boolean;
   listPreview?: boolean;
+  hideCheckoutButton?: boolean;
+  hideCancelButton?: boolean;
 }
 
 const BookingRequestButtons = ({
@@ -41,6 +43,8 @@ const BookingRequestButtons = ({
   openCheckout,
   checkoutLoading = false,
   listPreview = false,
+  hideCheckoutButton = false,
+  hideCancelButton = false,
 }: Props) => {
   const t = useTranslations();
   const { user } = useAuth();
@@ -72,7 +76,8 @@ const BookingRequestButtons = ({
 
   return (
     <div className={stackClass}>
-      {status === 'open' &&
+      {!hideCheckoutButton &&
+        status === 'open' &&
         (openCheckout ? (
           <Button
             variant="secondary"
@@ -90,7 +95,8 @@ const BookingRequestButtons = ({
             </Button>
           </Link>
         ))}
-      {status === 'confirmed' &&
+      {!hideCheckoutButton &&
+        status === 'confirmed' &&
         user &&
         isOwnBooking &&
         (openCheckout ? (
@@ -111,7 +117,8 @@ const BookingRequestButtons = ({
           </Link>
         ))}
 
-      {status === 'tokens-staked' &&
+      {!hideCheckoutButton &&
+        status === 'tokens-staked' &&
         user &&
         isOwnBooking &&
         (openCheckout ? (
@@ -131,7 +138,8 @@ const BookingRequestButtons = ({
             </Button>
           </Link>
         ))}
-      {status === 'credits-paid' &&
+      {!hideCheckoutButton &&
+        status === 'credits-paid' &&
         user &&
         isOwnBooking &&
         (openCheckout ? (
@@ -151,7 +159,8 @@ const BookingRequestButtons = ({
             </Button>
           </Link>
         ))}
-      {status === 'pending-payment' &&
+      {!hideCheckoutButton &&
+        status === 'pending-payment' &&
         user &&
         isOwnBooking &&
         (openCheckout ? (
@@ -172,7 +181,11 @@ const BookingRequestButtons = ({
           </Link>
         ))}
 
-      {user && isBookingCancelable && isOwnBooking && !isSpaceHost && (
+      {!hideCancelButton &&
+        user &&
+        isBookingCancelable &&
+        isOwnBooking &&
+        !isSpaceHost && (
         <Link passHref href={`/bookings/${_id}/cancel`}>
           <Button variant="secondary" size={size} className={secondaryCn}>
             {t('booking_cancel_button')}
@@ -180,7 +193,9 @@ const BookingRequestButtons = ({
         </Link>
       )}
 
-      {isSpaceHost && Boolean(user && isBookingCancelable && isOwnBooking) && (
+      {!hideCancelButton &&
+        isSpaceHost &&
+        Boolean(user && isBookingCancelable && isOwnBooking) && (
         <Link passHref href={`/bookings/${_id}/cancel`}>
           <Button variant="secondary" size={size} className={secondaryCn}>
             {t('booking_cancel_button')}
