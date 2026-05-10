@@ -15,7 +15,6 @@ import {
 } from '../../components/ui';
 
 import { isValid } from 'iban-ts';
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -28,6 +27,7 @@ import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
 import { TokenSale } from '../../types/api';
 import api from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { formatIntlNumberTwoDecimals } from '../../utils/currencyFormat';
 import { logMetric } from '../../utils/metrics';
@@ -438,23 +438,6 @@ const BankTransferPage = ({ generalConfig }: Props) => {
       </div>
     </>
   );
-};
-
-BankTransferPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const generalRes = await api.get('/config/general').catch(() => null)
-
-    const generalConfig = generalRes?.data?.results?.value;
-
-    return {
-      generalConfig,
-    };
-  } catch (err: unknown) {
-    return {
-      generalConfig: null,
-      error: parseMessageFromError(err),
-      };
-  }
 };
 
 export default BankTransferPage;

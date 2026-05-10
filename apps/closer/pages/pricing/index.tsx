@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useContext } from 'react';
 
 import { PromptGetInTouchContext } from 'closer/components/PromptGetInTouchContext';
-import { GeneralConfig, api } from 'closer';
+import { GeneralConfig, getCachedConfig } from 'closer';
 import { parseMessageFromError } from 'closer/utils/common';
 
 import { NextPageContext } from 'next';
@@ -301,13 +301,7 @@ const PricingPage = ({}: Props) => {
 
 PricingPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalRes] = await Promise.all([
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-    ]);
-
-    const generalConfig = generalRes?.data?.results?.value;
+    const generalConfig = getCachedConfig('general');
 
     return {
       generalConfig,

@@ -1,4 +1,6 @@
 import { useDisconnect } from '@reown/appkit/react';
+
+import WalletDisplay from './display/walletDisplay';
 import { useAuth } from '../contexts/auth';
 import api from '../utils/api';
 
@@ -29,7 +31,7 @@ const ConnectedWallet = () => {
           </button>
         )}
       </div>
-      <p className="text-xs text-gray-600 font-mono break-all">{user?.walletAddress}</p>
+      <WalletDisplay address={user?.walletAddress || ''} />
     </div>
   );
 };

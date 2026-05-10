@@ -196,11 +196,7 @@ export { default as CohousingApplicationsTeamPage } from './pages/cohousing/appl
 export { default as RevenuePage } from './pages/dashboard/revenue';
 export { default as EngagementDashboardPage } from './pages/dashboard/engagement';
 export { default as EngagementOpportunityDetailPage } from './pages/dashboard/engagement/[id]';
-export {
-  default as FundraiserPage,
-  getInvestPageInitialProps,
-  type InvestPageProps,
-} from './pages/fundraiser';
+export { default as FundraiserPage, type InvestPageProps } from './pages/fundraiser';
 export { default as InvestPage } from './pages/fundraiser';
 export { default as DonateBankPage } from './pages/donate/[saleId]/bank';
 export { default as DonateCardPage } from './pages/donate/[saleId]/card';
@@ -228,5 +224,6 @@ export {
   buildMergedConfig,
   mergePaymentValueWithBookingCurrencyFallback,
 } from './utils/config.utils';
+export { getCachedConfig } from './utils/cachedConfig.helpers';
 // Note: blockchain utils import ethers (~500KB) - import directly from 'closer/utils/blockchain' when needed
 export * from './utils/helpers';

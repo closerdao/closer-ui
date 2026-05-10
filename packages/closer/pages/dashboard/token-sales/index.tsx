@@ -9,7 +9,6 @@ import { Card } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 import { Badge } from '../../../components/ui/badge';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import process from 'process';
 
@@ -19,7 +18,7 @@ import { usePlatform } from '../../../contexts/platform';
 import useRBAC from '../../../hooks/useRBAC';
 import { BookingConfig } from '../../../types/api';
 import { FinanceApplication } from '../../../types/subscriptions';
-import api from '../../../utils/api';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
 
@@ -97,11 +96,8 @@ const FinancedStatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-const TokenSalesDashboardPage = ({
-  bookingConfig,
-}: {
-  bookingConfig: BookingConfig;
-}) => {
+const TokenSalesDashboardPage = () => {
+  const bookingConfig = getCachedConfig('booking') as BookingConfig | null;
   const t = useTranslations();
   const { user } = useAuth();
   const { hasAccess } = useRBAC();
@@ -493,25 +489,6 @@ const TokenSalesDashboardPage = ({
       </AdminLayout>
     </>
   );
-};
-
-TokenSalesDashboardPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const bookingConfigRes = await api.get('/config/booking').catch(() => {
-        return null;
-      })
-
-    const bookingConfig = bookingConfigRes?.data?.results?.value;
-
-    return {
-      bookingConfig,
-    };
-  } catch (error) {
-    return {
-      error: parseMessageFromError(error),
-      bookingConfig: null,
-      };
-  }
 };
 
 export default TokenSalesDashboardPage;

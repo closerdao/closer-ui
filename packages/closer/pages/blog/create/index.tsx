@@ -5,11 +5,10 @@ import { useRouter } from 'next/router';
 import BlogEditor from '../../../components/BlogEditor';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../../contexts/auth';
-import api from '../../../utils/api';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import PageNotFound from '../../not-found';
 
 interface BlogConfig {
@@ -61,20 +60,6 @@ const Create = ({ blogConfig }: Props) => {
       </main>
     </>
   );
-};
-
-Create.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const blogRes = await api.get('/config/blog').catch(() => null)
-    const blogConfig = blogRes?.data?.results?.value;
-    return {
-      blogConfig,
-    };
-  } catch (err: unknown) {
-    return {
-      blogConfig: null,
-      };
-  }
 };
 
 export default Create;

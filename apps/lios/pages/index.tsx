@@ -13,7 +13,7 @@ import {
   Card,
   GeneralConfig,
   Heading,
-  api,
+  getCachedConfig,
   useAuth,
   useConfig,
   usePlatform,
@@ -865,18 +865,8 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
 
 HomePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [bookingResponse, generalRes] = await Promise.all([
-      api.get('/config/booking').catch((err) => {
-        console.error('Error fetching booking config:', err);
-        return null;
-      }),
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-    ]);
-
-    const bookingSettings = bookingResponse?.data?.results?.value;
-    const generalConfig = generalRes?.data?.results?.value;
+    const bookingSettings = getCachedConfig('booking');
+    const generalConfig = getCachedConfig('general');
 
     return {
       generalConfig,

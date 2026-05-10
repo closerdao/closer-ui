@@ -16,13 +16,15 @@ import {
   userRolesCanAccessExpenseDashboard,
   userRolesCanCreateExpense,
 } from 'closer/constants/expenseTrackingAccess';
-import { GeneralConfig } from 'closer/types/api';
+import {
+  AccountingEntitiesConfig,
+  GeneralConfig,
+} from 'closer/types/api';
 import {
   ExpenseTrackingChargeRow,
   ExpenseTrackingCombinedEntry,
 } from 'closer/types/expense';
 import { Plus } from 'lucide-react';
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import process from 'process';
 
@@ -31,8 +33,8 @@ import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
 import api from '../../../utils/api';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { getAccessToken } from '../../../utils/authStorage';
-import { parseMessageFromError } from '../../../utils/common';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
 import {
   formatDateForApi,
@@ -66,13 +68,11 @@ const normalizePlatformCount = (
   return Number.isNaN(n) ? 0 : n;
 };
 
-const ExpenseTrackingDashboardPage = ({
-  generalConfig,
-  entitiesConfig,
-}: {
-  generalConfig: GeneralConfig | null;
-  entitiesConfig: any;
-}) => {
+const ExpenseTrackingDashboardPage = () => {
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
+  const entitiesConfig = getCachedConfig(
+    'accounting-entities',
+  ) as AccountingEntitiesConfig | null;
   const t = useTranslations();
   const { user } = useAuth();
   const { platform }: any = usePlatform();
@@ -82,7 +82,7 @@ const ExpenseTrackingDashboardPage = ({
     entitiesConfig?.elements?.map((entity: any) => entity.legalName) || [];
   const uniqueEntities = [...new Set(allEntities)];
 
-  const defaultEntity = entitiesConfig?.elements[0]?.legalName || '';
+  const defaultEntity = entitiesConfig?.elements?.[0]?.legalName || '';
 
   const expenseCategories = generalConfig?.expenseCategories?.split(',');
 
@@ -463,35 +463,6 @@ const ExpenseTrackingDashboardPage = ({
       </AdminLayout>
     </>
   );
-};
-
-ExpenseTrackingDashboardPage.getInitialProps = async (
-  context: NextPageContext,
-) => {
-  try {
-    const [generalConfigRes, entitiesConfigRes] = await Promise.all([
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      api.get('/config/accounting-entities').catch(() => {
-        return null;
-      }),
-    ]);
-
-    const generalConfig = generalConfigRes?.data?.results?.value;
-    const entitiesConfig = entitiesConfigRes?.data?.results?.value;
-
-    return {
-      generalConfig,
-      entitiesConfig,
-    };
-  } catch (error) {
-    return {
-      error: parseMessageFromError(error),
-      entitiesConfig: null,
-      generalConfig: null,
-      };
-  }
 };
 
 export default ExpenseTrackingDashboardPage;

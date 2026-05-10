@@ -10,6 +10,7 @@ import {
   Heading,
   Listing,
   api,
+  getCachedConfig,
   useAuth,
   useConfig,
   usePlatform,
@@ -206,10 +207,7 @@ const CommunityPage = ({ generalConfig, listings, hosts }: Props) => {
 
 CommunityPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalRes, listingsRes, hostsRes] = await Promise.all([
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
+    const [listingsRes, hostsRes] = await Promise.all([
       api
         .get('/listing', {
           params: {
@@ -234,7 +232,7 @@ CommunityPage.getInitialProps = async (context: NextPageContext) => {
         }),
     ]);
 
-    const generalConfig = generalRes?.data?.results?.value;
+    const generalConfig = getCachedConfig('general');
 
     const listings = listingsRes?.data?.results;
     const hosts = hostsRes?.data?.results;

@@ -10,7 +10,6 @@ import Pagination from '../../../components/Pagination';
 import { Heading } from '../../../components/ui';
 
 import dayjs from 'dayjs';
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import process from 'process';
 
@@ -21,7 +20,7 @@ import useRBAC from '../../../hooks/useRBAC';
 import { BookingConfig } from '../../../types/api';
 import { ExpenseTrackingCombinedEntry } from '../../../types/expense';
 import api from '../../../utils/api';
-import { parseMessageFromError } from '../../../utils/common';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
 import {
   filterCombinedEntriesToIncomeFrToconlineDocuments,
@@ -34,7 +33,8 @@ import { getStartAndEndDate } from '../../../utils/performance.utils';
 const ENTRIES_PER_PAGE = 50;
 const CHARGE_DOWNLOAD_LIMIT = 3000;
 
-const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
+const RevenuePage = () => {
+  const bookingConfig = getCachedConfig('booking') as BookingConfig | null;
   const t = useTranslations();
   const { user } = useAuth();
   const { hasAccess } = useRBAC();
@@ -1059,32 +1059,6 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
       </AdminLayout>
     </>
   );
-};
-
-RevenuePage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [generalRes, bookingRes] = await Promise.all([
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-    ]);
-    const generalConfig = generalRes?.data?.results?.value;
-    const bookingConfig = bookingRes?.data?.results?.value;
-
-    return {
-      generalConfig,
-      bookingConfig,
-    };
-  } catch (error) {
-    return {
-      error: parseMessageFromError(error),
-      generalConfig: null,
-      bookingConfig: null,
-      };
-  }
 };
 
 export default RevenuePage;

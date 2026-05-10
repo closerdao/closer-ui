@@ -16,7 +16,6 @@ import {
 } from '../../components/ui';
 
 import { ChevronDown, Lock, Settings } from 'lucide-react';
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { configDescription } from '../../config';
@@ -25,9 +24,6 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { Config } from '../../types';
 import { BookingConfig } from '../../types/api';
-import config from '../../configCached';
-import api from '../../utils/api';
-import { parseMessageFromError } from '../../utils/common';
 import {
   getDefaultConfigValue,
   getEnabledConfigs,
@@ -53,20 +49,21 @@ const FUNDRAISER_CONFIG_KEYS_ORDER = [
 
 const ACCOUNTING_ENTITIES_CONFIG_KEYS_ORDER = ['elements', 'vatByProductType'];
 
-interface Props {
-  error: null | string;
-  bookingConfig: BookingConfig;
-}
+interface Props {}
 
-const ConfigPage = ({ bookingConfig }: Props) => {
+const ConfigPage = () => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
   const { user } = useAuth();
 
+  const [bookingConfig, setBookingConfig] = useState<BookingConfig | null>(
+    null,
+  );
+
   const isBookingAllowedByEnv =
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
   const isBookingEnabled =
-    bookingConfig?.enabled && isBookingAllowedByEnv;
+    Boolean(bookingConfig?.enabled) && isBookingAllowedByEnv;
 
   const isWeb3Enabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
   const isWeb3BookingEnabled =
@@ -274,26 +271,30 @@ const ConfigPage = ({ bookingConfig }: Props) => {
         .toJS()
         .some((config: any) => config.slug === configCategoryToSave);
 
-      let res;
       if (configExists) {
-        res = await api.patch(`/config/${configCategoryToSave}`, {
+        await platform.config.patch(configCategoryToSave, {
           slug: configCategoryToSave,
           value: updatedConfig?.value,
         });
       } else {
-        res = await api.post('/config', {
+        await platform.config.post({
           slug: configCategoryToSave,
           value: updatedConfig?.value,
         });
       }
 
-      setHasConfigUpdated(false);
-      if (res.status === 200) {
-        setHasConfigUpdated(true);
-        setTimeout(() => {
-          setHasConfigUpdated(false);
-        }, 3000);
+      await platform.config.getOne(configCategoryToSave, { force: true });
+
+      if (configCategoryToSave === 'booking') {
+        const bookingDocAfter = platform.config.findOne('booking');
+        setBookingConfig(bookingDocAfter?.get?.('value')?.toJS?.() ?? null);
       }
+
+      setHasConfigUpdated(false);
+      setHasConfigUpdated(true);
+      setTimeout(() => {
+        setHasConfigUpdated(false);
+      }, 3000);
     } catch (error) {
     } finally {
       setIsLoading(false);
@@ -1071,23 +1072,6 @@ const ConfigPage = ({ bookingConfig }: Props) => {
       </AdminLayout>
     </>
   );
-};
-
-ConfigPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-
-    const bookingConfig = config.booking;
-
-    return {
-      bookingConfig,
-      error: null,
-    };
-  } catch (err: unknown) {
-    return {
-      bookingConfig: null,
-      error: parseMessageFromError(err),
-      };
-  }
 };
 
 export default ConfigPage;

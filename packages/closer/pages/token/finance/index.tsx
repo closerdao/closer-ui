@@ -4,10 +4,9 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import CitizenFinanceTokens from '../../../components/CitizenFinanceTokens';
-import PageError from '../../../components/PageError';
 import { BackButton, Heading, ProgressBar } from '../../../components/ui';
 
-import { NextPage, NextPageContext } from 'next';
+import { NextPage } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { SUBSCRIPTION_CITIZEN_STEPS } from '../../../constants';
@@ -21,24 +20,20 @@ import {
   SubscriptionPlan,
 } from '../../../types/subscriptions';
 import api from '../../../utils/api';
-import { parseMessageFromError } from '../../../utils/common';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { financeApplicationIdFromCreateResponse } from '../../../utils/financeApplicationIdFromResponse';
 import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
 import PageNotFound from '../../not-found';
 
-interface Props {
-  subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
-  citizenshipConfig: CitizenshipConfig | null;
-  generalConfig: GeneralConfig | null;
-  error?: string;
-}
+interface Props {}
 
-const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
-  subscriptionsConfig,
-  citizenshipConfig,
-  generalConfig,
-  error,
-}) => {
+const SubscriptionsCitizenApplyPage: NextPage<Props> = () => {
+  const subscriptionsConfig = getCachedConfig('subscriptions') as {
+    enabled: boolean;
+    elements: SubscriptionPlan[];
+  };
+  const citizenshipConfig = getCachedConfig('citizenship') as CitizenshipConfig | null;
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
 
   const MIN_TOKENS_TO_FINANCE = 30;
@@ -99,10 +94,6 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
   const goBack = () => {
     router.push('/citizenship/why');
   };
-
-  if (error) {
-    return <PageError error={error} />;
-  }
 
   if (!areSubscriptionsEnabled) {
     return <PageNotFound error="" />;
@@ -213,41 +204,6 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
       </div>
     </>
   );
-};
-
-SubscriptionsCitizenApplyPage.getInitialProps = async (
-  context: NextPageContext,
-) => {
-  try {
-    const [subscriptionsRes, generalRes, citizenshipRes] =
-      await Promise.all([
-        api.get('/config/subscriptions').catch(() => {
-          return null;
-        }),
-        api.get('/config/general').catch(() => {
-          return null;
-        }),
-        api.get('/config/citizenship').catch(() => {
-          return null;
-        }),
-      ]);
-
-    const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
-    const generalConfig = generalRes?.data?.results?.value;
-    const citizenshipConfig = citizenshipRes?.data?.results?.value;
-    return {
-      subscriptionsConfig,
-      citizenshipConfig,
-      generalConfig,
-    };
-  } catch (err: unknown) {
-    return {
-      subscriptionsConfig: { enabled: false, elements: [] },
-      citizenshipConfig: null,
-      generalConfig: null,
-      error: parseMessageFromError(err),
-      };
-  }
 };
 
 export default SubscriptionsCitizenApplyPage;

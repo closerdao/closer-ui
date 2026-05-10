@@ -11,8 +11,13 @@ import LinkBuilderTool from '../../components/LinkBuilderTool';
 import { Card, Heading, LinkButton } from 'closer/components/ui';
 
 import { Link } from 'lucide-react';
-import { AffiliateConfig, PageNotFound, api, usePlatform } from 'closer';
-import { NextPageContext } from 'next';
+import {
+  AffiliateConfig,
+  PageNotFound,
+  api,
+  getCachedConfig,
+  usePlatform,
+} from 'closer';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../401';
@@ -22,11 +27,8 @@ import { calculateAffiliateRevenue } from '../../utils/affiliate.utils';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import { getStartAndEndDate } from '../../utils/performance.utils';
 
-const AffiliatePage = ({
-  affiliateConfig,
-}: {
-  affiliateConfig: AffiliateConfig;
-}) => {
+const AffiliatePage = () => {
+  const affiliateConfig = getCachedConfig('affiliate') as AffiliateConfig | null;
   const formatEurAmount = (amount: number) => formatIsoFiatAmount(amount || 0, 'EUR');
   const t = useTranslations();
   const { platform }: any = usePlatform() || {};
@@ -429,25 +431,6 @@ const AffiliatePage = ({
       </div>
     </>
   );
-};
-
-AffiliatePage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const affiliateConfigRes = await api.get('/config/affiliate').catch(() => {
-        return null;
-      })
-
-    const affiliateConfig = affiliateConfigRes?.data?.results?.value;
-
-    return {
-      affiliateConfig,
-    };
-  } catch (err: unknown) {
-    console.error('Error in getInitialProps:', err);
-    return {
-      affiliateConfig: null,
-      };
-  }
 };
 
 export default AffiliatePage;

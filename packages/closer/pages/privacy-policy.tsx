@@ -1,24 +1,13 @@
 import Head from 'next/head';
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import Heading from '../components/ui/Heading';
 import { normalizeAccountingProductSlug } from '../constants/accountingEntities.constants';
 import { useConfig } from '../hooks/useConfig';
-import api from '../utils/api';
+import { AccountingEntitiesConfig } from '../types/api';
+import { getCachedConfig } from '../utils/cachedConfig.helpers';
 
 const SITE_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth';
-
-interface AccountingEntity {
-  legalName: string;
-  taxNumber: string;
-  address: string;
-  products: string[];
-}
-
-interface PrivacyPolicyPageProps {
-  accountingEntities?: AccountingEntity[];
-}
 
 const PRODUCT_TYPE_KEYS: Record<string, string> = {
   accommodations: 'privacy_policy_product_accommodations',
@@ -34,7 +23,11 @@ const PRODUCT_TYPE_KEYS: Record<string, string> = {
   'payment-link': 'privacy_policy_product_payment_link',
 };
 
-const PrivacyPolicyPage = ({ accountingEntities }: PrivacyPolicyPageProps) => {
+const PrivacyPolicyPage = () => {
+  const entitiesCfg = getCachedConfig(
+    'accounting-entities',
+  ) as AccountingEntitiesConfig | null;
+  const accountingEntities = entitiesCfg?.elements ?? [];
   const t = useTranslations();
   const config = useConfig();
 
@@ -449,19 +442,3 @@ const PrivacyPolicyPage = ({ accountingEntities }: PrivacyPolicyPageProps) => {
 };
 
 export default PrivacyPolicyPage;
-
-PrivacyPolicyPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const accountingEntitiesRes = await api
-      .get('/config/accounting-entities')
-      .catch(() => null);
-
-    const accountingEntities = accountingEntitiesRes?.data?.results?.value?.elements || [];
-
-    return { 
-      accountingEntities,
-    };
-  } catch (err) {
-    return { error: err, accountingEntities: [] };
-  }
-};

@@ -5,9 +5,8 @@ import { useState } from 'react';
 
 import { Heading, LinkButton } from 'closer/components/ui';
 
-import { PageNotFound, useAuth } from 'closer';
+import { PageNotFound, getCachedConfig, useAuth } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
-import api from 'closer/utils/api';
 import { twitterUrlToHandle } from 'closer/utils/app.helpers';
 import {
   Calendar,
@@ -421,10 +420,8 @@ const AirdropPage = ({ airdropConfig }: Props) => {
 
 AirdropPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const airdropRes = await api.get('/config/airdrop').catch(() => null)
-
     return {
-      airdropConfig: airdropRes?.data?.results?.value || null,
+      airdropConfig: getCachedConfig('airdrop'),
     };
   } catch (err: unknown) {
     return {

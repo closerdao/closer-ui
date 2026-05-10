@@ -15,7 +15,6 @@ import {
   Spinner,
 } from '../../components/ui';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { MIN_CELO_FOR_GAS, TOKEN_SALE_STEPS } from '../../constants';
@@ -27,6 +26,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import { TokenSale } from '../../types/api';
 import api from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import {
   checkoutTokensFromSaleQuantity,
@@ -567,23 +567,6 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
       </div>
     </>
   );
-};
-
-TokenSaleCheckoutPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const generalRes = await api.get('/config/general').catch(() => null)
-
-    const generalConfig = generalRes?.data?.results?.value;
-
-    return {
-      generalConfig,
-    };
-  } catch (err: unknown) {
-    return {
-      generalConfig: null,
-      error: parseMessageFromError(err),
-      };
-  }
 };
 
 export default TokenSaleCheckoutPage;

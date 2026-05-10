@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import PageError from 'closer/components/PageError';
 import { Heading, LinkButton, Button } from 'closer/components/ui';
 
-import { GeneralConfig, api, Role } from 'closer';
+import { GeneralConfig, Role, api, getCachedConfig } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import useRBAC from 'closer/hooks/useRBAC';
 import { useAuth } from 'closer/contexts/auth';
@@ -13,12 +13,12 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 interface Props {
-  generalConfig: GeneralConfig | null;
   roles: Role[];
   error: string | null;
 }
 
-const RolesPage = ({ generalConfig, roles, error }: Props) => {
+const RolesPage = ({ roles, error }: Props) => {
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
   const [initialRenderComplete, setInitialRenderComplete] = useState(false);
 
@@ -188,18 +188,15 @@ const RolesPage = ({ generalConfig, roles, error }: Props) => {
 
 RolesPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalRes, rolesRes] = await Promise.all([
-      api.get('/config/general').catch(() => null),
-      api.get('/role').catch(() => ({ data: { results: [] } })),
-    ]);
+    const rolesRes = await api
+      .get('/role')
+      .catch(() => ({ data: { results: [] } }));
 
-    const generalConfig = generalRes?.data?.results?.value;
     const roles = rolesRes?.data?.results || [];
 
-    return { generalConfig, roles };
+    return { roles };
   } catch (err: unknown) {
     return {
-      generalConfig: null,
       roles: [],
       error: parseMessageFromError(err),
       };

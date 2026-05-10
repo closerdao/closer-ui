@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { BackButton, Button, ErrorMessage, Heading, Spinner } from '../../../components/ui';
@@ -11,15 +10,10 @@ import { DEFAULT_CURRENCY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
 import type { CreateDonationBankResult } from '../../../types/donation';
-import { GeneralConfig } from '../../../types';
 import { pollDonationSaleUntilPaid } from '../../../utils/donation.helpers';
 import { readDonationSession, type StoredDonationBank } from '../../../utils/donationSessionStorage';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { priceFormat } from '../../../utils/helpers';
-import { getDonateInitialProps } from '../getDonateInitialProps';
-
-interface DonateBankPageProps {
-  generalConfig: GeneralConfig | null;
-}
 
 async function copyToClipboard(text: string) {
   try {
@@ -29,13 +23,14 @@ async function copyToClipboard(text: string) {
   }
 }
 
-function DonateBankPage({ generalConfig }: DonateBankPageProps) {
+function DonateBankPage() {
   const t = useTranslations();
   const router = useRouter();
   const { saleId } = router.query;
   const id = typeof saleId === 'string' ? saleId : '';
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const defaultConfig = useConfig();
+  const generalConfig = getCachedConfig('general');
   const platformName = generalConfig?.platformName || defaultConfig.platformName;
 
   const [session, setSession] = useState<StoredDonationBank | null | 'loading' | 'missing'>('loading');
@@ -247,7 +242,5 @@ function DonateBankPage({ generalConfig }: DonateBankPageProps) {
     </>
   );
 }
-
-DonateBankPage.getInitialProps = async (context: NextPageContext) => getDonateInitialProps(context);
 
 export default DonateBankPage;

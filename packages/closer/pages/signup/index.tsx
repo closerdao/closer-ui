@@ -9,7 +9,6 @@ import SignupForm from '../../components/SignupForm';
 import UserAvatarPlaceholder from '../../components/UserAvatarPlaceholder';
 import { Card, ErrorMessage } from '../../components/ui';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
@@ -17,7 +16,6 @@ import { useNewsletter } from '../../contexts/newsletter';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import api, { cdn } from '../../utils/api';
-import { parseMessageFromError } from '../../utils/common';
 
 const Signup = () => {
   const t = useTranslations();
@@ -123,23 +121,6 @@ const Signup = () => {
       </main>
     </>
   );
-};
-
-Signup.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const subscriptionsResponse = await api.get('/config/subscriptions').catch(() => {
-        return null;
-      })
-
-    return {
-      subscriptionsConfig: subscriptionsResponse?.data?.results?.value,
-    };
-  } catch (err: unknown) {
-    return {
-      subscriptionsConfig: [],
-      error: parseMessageFromError(err),
-      };
-  }
 };
 
 export default Signup;

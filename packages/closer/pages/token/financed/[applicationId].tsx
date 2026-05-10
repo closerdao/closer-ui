@@ -14,7 +14,6 @@ import {
 import { Badge } from '../../../components/ui/badge';
 
 import { ChevronDown, ChevronUp, Info } from 'lucide-react';
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { TOKEN_PURCHASE_TERMS_DOC_URL } from '../../../constants';
@@ -27,6 +26,7 @@ import { Charge } from '../../../types/booking';
 import { FinanceApplication } from '../../../types/subscriptions';
 import { resolveAccountingEntityFromSale } from '../../../utils/accountingEntityResolve';
 import api, { formatSearch } from '../../../utils/api';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import {
   formatIsoFiatAmount,
@@ -41,11 +41,6 @@ import {
 } from '../../../utils/orderStatusBadge';
 import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
 import PageNotFound from '../../not-found';
-
-interface Props {
-  generalConfig: GeneralConfig | null;
-  accountingEntitiesConfig: AccountingEntitiesConfig | null;
-}
 
 const COLLAPSED_ITEMS_LIMIT = 3;
 
@@ -94,10 +89,10 @@ const formatDate = (date: Date | string | null | undefined) => {
   });
 };
 
-const FinancedTokenApplicationPage = ({
-  generalConfig,
-  accountingEntitiesConfig,
-}: Props) => {
+const FinancedTokenApplicationPage = () => {
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
+  const accountingEntitiesConfig =
+    getCachedConfig('accounting-entities') as AccountingEntitiesConfig | null;
   const t = useTranslations();
   const defaultConfig = useConfig();
   const platformName =
@@ -791,26 +786,6 @@ const FinancedTokenApplicationPage = ({
       </div>
     </>
   );
-};
-
-FinancedTokenApplicationPage.getInitialProps = async (
-  context: NextPageContext,
-) => {
-  try {
-    const [generalRes, entitiesRes] = await Promise.all([
-      api.get('/config/general').catch(() => null),
-      api.get('/config/accounting-entities').catch(() => null),
-    ]);
-    const generalConfig = generalRes?.data?.results?.value;
-    const accountingEntitiesConfig = entitiesRes?.data?.results?.value ?? null;
-    return { generalConfig, accountingEntitiesConfig };
-  } catch (err: unknown) {
-    return {
-      generalConfig: null,
-      accountingEntitiesConfig: null,
-      error: parseMessageFromError(err),
-      };
-  }
 };
 
 export default FinancedTokenApplicationPage;

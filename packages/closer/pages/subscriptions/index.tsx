@@ -4,38 +4,32 @@ import Link from 'next/link';
 
 import { useEffect, useRef, useState } from 'react';
 
-import PageError from '../../components/PageError';
 import Webinar from '../../components/Webinar';
 import { Heading } from '../../components/ui/';
 
-import { NextPage, NextPageContext } from 'next';
+import { NextPage } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
-import { GeneralConfig, Listing } from '../../types';
+import { GeneralConfig } from '../../types';
 import { SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
-import { parseMessageFromError } from '../../utils/common';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import { parseSubscriptionPerks } from '../../utils/subscriptionPerks';
 import { sanitizeSubscriptionPerkHtml } from '../../utils/sanitizeSubscriptionPerkHtml';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
-interface Props {
-  subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
-  generalConfig: GeneralConfig | null;
-  listings: Listing[];
-  error?: string;
-}
+interface Props {}
 
-const SubscriptionsPage: NextPage<Props> = ({
-  subscriptionsConfig,
-  generalConfig,
-  error,
-}) => {
+const SubscriptionsPage: NextPage<Props> = () => {
+  const subscriptionsConfig = getCachedConfig('subscriptions') as {
+    enabled: boolean;
+    elements: SubscriptionPlan[];
+  };
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
   const { isAuthenticated, isLoading, user } = useAuth();
   const defaultConfig = useConfig();
@@ -175,10 +169,6 @@ const SubscriptionsPage: NextPage<Props> = ({
       }
     }
   };
-
-  if (error) {
-    return <PageError error={error} />;
-  }
 
   if (isLoading) {
     return null;
@@ -334,46 +324,6 @@ const SubscriptionsPage: NextPage<Props> = ({
       <Webinar tags={['subscriptions-page']} analyticsCategory="Subscriptions" />
     </div>
   );
-};
-
-SubscriptionsPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [subscriptionsRes, generalRes, listingRes] =
-      await Promise.all([
-        api.get('/config/subscriptions').catch(() => {
-          return null;
-        }),
-        api.get('/config/general').catch(() => {
-          return null;
-        }),
-        api
-          .get('/listing', {
-            params: {
-              limit: MAX_LISTINGS_TO_FETCH,
-            },
-          })
-          .catch(() => {
-            return null;
-          }),
-      ]);
-
-    const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
-    const generalConfig = generalRes?.data?.results?.value;
-    const listings = listingRes?.data.results;
-
-    return {
-      subscriptionsConfig,
-      generalConfig,
-      listings,
-    };
-  } catch (err: unknown) {
-    return {
-      subscriptionsConfig: { enabled: false, elements: [] },
-      generalConfig: null,
-      listings: [],
-      error: parseMessageFromError(err),
-      };
-  }
 };
 
 export default SubscriptionsPage;

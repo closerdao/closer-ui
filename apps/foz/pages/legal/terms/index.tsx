@@ -1,6 +1,6 @@
 import Head from 'next/head';
 
-import { GeneralConfig, Heading, api, useConfig } from 'closer';
+import { GeneralConfig, Heading, getCachedConfig, useConfig } from 'closer';
 import { parseMessageFromError } from 'closer/utils/common';
 import { NextPageContext } from 'next';
 
@@ -131,11 +131,7 @@ const TermsPage = ({ generalConfig }: Props) => {
 
 TermsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const generalRes = await api.get('/config/general').catch(() => {
-        return null;
-      })
-
-    const generalConfig = generalRes?.data?.results?.value;
+    const generalConfig = getCachedConfig('general');
     return {
       generalConfig,
     };

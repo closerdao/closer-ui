@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl';
 import { DEFAULT_BLOG_IMAGE_ID } from '../../../constants';
 import { Article, Author } from '../../../types/blog';
 import api, { cdn, formatSearch } from '../../../utils/api';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { estimateReadingTime, getCleanString } from '../../../utils/blog.utils';
 import UserAvatarPlaceholder from '../../../components/UserAvatarPlaceholder';
 import { parseMessageFromError } from '../../../utils/common';
@@ -26,10 +27,10 @@ interface Props {
   keyword: string;
   tags: string[];
   authors: Author[];
-  blogConfig: BlogConfig | null;
 }
 
-const Search = ({ articles, keyword, tags, authors, blogConfig }: Props) => {
+const Search = ({ articles, keyword, tags, authors }: Props) => {
+  const blogConfig = getCachedConfig('blog') as BlogConfig | null;
   const t = useTranslations();
 
   const isBlogEnabled = blogConfig?.enabled !== false;
@@ -192,10 +193,9 @@ Search.getInitialProps = async (context: NextPageContext) => {
         ? decodeURIComponent(rawKeyword as string)
         : rawKeyword;
     const search = formatSearch({ tags: { $elemMatch: { $eq: keyword } } });
-    const [tags, articles, blogRes] = await Promise.all([
+    const [tags, articles] = await Promise.all([
       api.get(`/distinct/article/tags?where=${search}`),
       api.get(`/article?where=${search}&limit=50`),
-      api.get('/config/blog').catch(() => null),
     ]);
 
     const authorIds = articles?.data?.results.map(
@@ -207,19 +207,16 @@ Search.getInitialProps = async (context: NextPageContext) => {
     );
 
     const authors = authorsRes.data?.results;
-    const blogConfig = blogRes?.data?.results?.value;
 
     return {
       keyword,
       tags: tags?.data?.results,
       articles: articles?.data?.results,
       authors,
-      blogConfig,
     };
   } catch (error) {
     return {
       error: parseMessageFromError(error),
-      blogConfig: null,
       };
   }
 };

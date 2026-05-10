@@ -17,6 +17,9 @@ import {
 import { useTranslations } from 'next-intl';
 
 import { ACTIONS, USER_ROLE_OPTIONS } from '../../constants';
+import EmailDisplay from '../display/emailDisplay';
+import InlineFormattedSegments from '../display/inlineFormattedSegments';
+import WalletDisplay from '../display/walletDisplay';
 import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
@@ -930,9 +933,23 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                               {dayjs(citizenDate).format('MMM D, YYYY')}
                             </div>
                           )}
-                          <div className="flex items-center gap-1 text-gray-600">
-                            {user.get('email')}
+                          <div className="flex min-w-0 flex-wrap items-center gap-1 text-gray-600">
+                            <EmailDisplay
+                              email={user.get('email')}
+                              className="text-xs font-normal text-gray-600 no-underline hover:underline"
+                            />
                           </div>
+                          {user.get('walletAddress') && (
+                            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-gray-600">
+                              <span className="shrink-0 text-gray-500">
+                                {t('user_data_walletAddress')}
+                              </span>
+                              <WalletDisplay
+                                address={user.get('walletAddress')}
+                                className="text-xs"
+                              />
+                            </div>
+                          )}
                         </div>
 
                         <div className="flex flex-col gap-1.5">
@@ -1034,7 +1051,9 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                                       </div>
                                       {message ? (
                                         <p className="text-gray-600 text-xs italic">
-                                          &ldquo;{message}&rdquo;
+                                          &ldquo;
+                                          <InlineFormattedSegments text={message} />
+                                          &rdquo;
                                         </p>
                                       ) : null}
                                     </div>

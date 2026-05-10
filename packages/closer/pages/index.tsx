@@ -6,14 +6,13 @@ import React from 'react';
 
 import Heading from '../components/ui/Heading';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { event } from 'nextjs-google-analytics';
 
 import { useAuth } from '../contexts/auth';
 import { useConfig } from '../hooks/useConfig';
 import { GeneralConfig } from '../types';
-import api from '../utils/api';
+import { getCachedConfig } from '../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../utils/common';
 
 interface Props {
@@ -68,22 +67,6 @@ const Index = ({ generalConfig }: Props) => {
       </main>
     </>
   );
-};
-
-Index.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const generalRes = await api.get('/config/general').catch(() => null)
-
-    const generalConfig = generalRes?.data?.results?.value;
-    return {
-      generalConfig,
-    };
-  } catch (err: unknown) {
-    return {
-      generalConfig: null,
-      error: parseMessageFromError(err),
-      };
-  }
 };
 
 export default Index;

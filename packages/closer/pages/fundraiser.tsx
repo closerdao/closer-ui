@@ -2,7 +2,6 @@ import Head from 'next/head';
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import GenericYoutubeEmbed from '../components/GenericYoutubeEmbed';
@@ -23,6 +22,7 @@ import {
   TokenStats,
 } from '../types';
 import api from '../utils/api';
+import { getCachedConfig } from '../utils/cachedConfig.helpers';
 import { twitterUrlToHandle } from '../utils/app.helpers';
 import { formatIsoFiatAmount } from '../utils/currencyFormat';
 import {
@@ -36,7 +36,6 @@ import {
 import PageNotFound from './not-found';
 
 export interface InvestPageProps {
-  fundraisingConfig: FundraisingConfig;
   investPageOptions?: InvestPageOptions;
   messages?: unknown;
 }
@@ -60,9 +59,10 @@ const getDefaultInvestPageOptions = (): InvestPageOptions => {
 };
 
 const FundraiserPage = ({
-  fundraisingConfig,
   investPageOptions: optionsOverride,
 }: InvestPageProps) => {
+  const fundraisingConfig = (getCachedConfig('fundraiser') ??
+    {}) as FundraisingConfig;
   const t = useTranslations();
   const config = useConfig();
   const defaults = getDefaultInvestPageOptions();
@@ -268,23 +268,5 @@ const FundraiserPage = ({
     </>
   );
 };
-
-export async function getInvestPageInitialProps(context: NextPageContext) {
-  try {
-    const fundraiserRes = await api.get('/config/fundraiser').catch(() => null)
-    const fundraisingConfig = fundraiserRes?.data?.results?.value;
-
-    return {
-      fundraisingConfig: fundraisingConfig ?? {},
-    };
-  } catch (err) {
-    return {
-      fundraisingConfig: {},
-      error: err,
-    };
-  }
-}
-
-FundraiserPage.getInitialProps = getInvestPageInitialProps;
 
 export default FundraiserPage;

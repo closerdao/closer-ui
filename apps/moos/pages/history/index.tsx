@@ -2,7 +2,7 @@ import Head from 'next/head';
 
 import { Card, Heading, LinkButton } from 'closer/components/ui';
 
-import { GeneralConfig, api, useAuth, useConfig } from 'closer';
+import { GeneralConfig, api, getCachedConfig, useAuth, useConfig } from 'closer';
 import { HOME_PAGE_CATEGORY } from 'closer/constants';
 import { formatSearch } from 'closer/utils/api';
 import { NextPageContext } from 'next';
@@ -73,17 +73,12 @@ const HistoryPage = ({ article, generalConfig }: Props) => {
 HistoryPage.getInitialProps = async (context: NextPageContext) => {
   try {
     const search = formatSearch({ category: { $eq: HOME_PAGE_CATEGORY } });
-    const [articleRes, generalRes] = await Promise.all([
-      api.get(`/article?where=${search}`).catch(() => {
-        return null;
-      }),
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-    ]);
+    const articleRes = await api
+      .get(`/article?where=${search}`)
+      .catch(() => null);
 
     const article = articleRes?.data?.results[0];
-    const generalConfig = generalRes?.data?.results?.value;
+    const generalConfig = getCachedConfig('general');
     return {
       article,
       generalConfig,

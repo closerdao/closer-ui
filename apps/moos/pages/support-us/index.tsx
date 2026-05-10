@@ -4,9 +4,8 @@ import { useState } from 'react';
 
 import { Heading } from 'closer/components/ui';
 
-import { PageNotFound } from 'closer';
+import { PageNotFound, getCachedConfig } from 'closer';
 import { FundraisingConfig } from 'closer/types';
-import api from 'closer/utils/api';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -322,9 +321,7 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
 
 SupportUsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const fundraisingConfigResponse = await api.get('/config/fundraiser').catch(() => null)
-
-    const fundraisingConfig = fundraisingConfigResponse?.data.results.value;
+    const fundraisingConfig = getCachedConfig('fundraiser');
 
     return {
       fundraisingConfig,

@@ -9,20 +9,20 @@ import { Heading } from '../../../components/ui';
 import StaysFunnel from './components/StaysFunnel';
 import TokenSalesFunnel from './components/TokenSalesFunnel';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import process from 'process';
 
 import { useAuth } from '../../../contexts/auth';
 import useRBAC from '../../../hooks/useRBAC';
 import PageNotAllowed from '../../../pages/401';
-import api from '../../../utils/api';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import SubscriptionsFunnel from './components/SubscriptionsFunnel';
 import CitizenshipFunnel from './components/CitizenshipFunnel';
 import { BookingConfig } from '../../../types/api';
 
-const PerformancePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
+const PerformancePage = () => {
+  const bookingConfig = getCachedConfig('booking') as BookingConfig | null;
   const t = useTranslations();
   const { user } = useAuth();
   const { hasAccess } = useRBAC();
@@ -121,32 +121,6 @@ const PerformancePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) =>
       </AdminLayout>
     </>
   );
-};
-
-PerformancePage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [generalRes, bookingRes] = await Promise.all([
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-    ]);
-    const generalConfig = generalRes?.data?.results?.value;
-    const bookingConfig = bookingRes?.data?.results?.value;
-
-    return {
-      generalConfig,
-      bookingConfig,
-    };
-  } catch (error) {
-    return {
-      error: parseMessageFromError(error),
-      generalConfig: null,
-      bookingConfig: null,
-      };
-  }
 };
 
 export default PerformancePage;

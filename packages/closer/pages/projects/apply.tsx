@@ -14,6 +14,7 @@ import { BOOKING_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { GeneralConfig, Project, VolunteerConfig } from '../../types';
 import api from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import {
   default as PageNotAllowed,
@@ -22,18 +23,13 @@ import {
 import { useEffect } from 'react';
 
 interface Props {
-  volunteerConfig: VolunteerConfig | null;
   error: string | null;
-  generalConfig: GeneralConfig | null;
   projects: Project[];
 }
 
-const ProjectApplicationPage = ({
-  volunteerConfig,
-  error,
-  generalConfig,
-  projects,
-}: Props) => {
+const ProjectApplicationPage = ({ error, projects }: Props) => {
+  const volunteerConfig = getCachedConfig('volunteering') as VolunteerConfig | null;
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const PLATFORM_NAME = generalConfig?.platformName || '';
   const t = useTranslations();
 
@@ -90,36 +86,21 @@ const ProjectApplicationPage = ({
 
 ProjectApplicationPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalConfigRes, volunteerConfigRes, projectsRes] =
-      await Promise.all([
-        api.get('/config/general').catch(() => {
-          return null;
-        }),
-        api.get('/config/volunteering').catch(() => {
-          return null;
-        }),
-        api.get('/project').catch(() => {
-          return null;
-        }),
-      ]);
+    const projectsRes = await api.get('/project').catch(() => {
+      return null;
+    });
 
-    const volunteerConfig = volunteerConfigRes?.data?.results?.value || null;
-    const generalConfig = generalConfigRes?.data?.results?.value || null;
     const allProjects = projectsRes?.data?.results || [];
     // Filter out projects with status 'done'
     const projects = allProjects.filter((project: Project) => project.status !== 'done');
 
     return {
-      volunteerConfig,
-      generalConfig,
       projects,
     };
   } catch (err) {
     console.log('Error', err);
     return {
       error: parseMessageFromError(err),
-      volunteerConfig: null,
-      generalConfig: null,
       projects: [],
       };
   }

@@ -4,7 +4,7 @@ import Faqs from 'closer/components/Faqs';
 import Resources from 'closer/components/Resources';
 import { Heading } from 'closer/components/ui';
 
-import { GeneralConfig, PageNotFound, api } from 'closer';
+import { GeneralConfig, PageNotFound, getCachedConfig } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import { useFaqs } from 'closer/hooks/useFaqs';
 import { NextPageContext } from 'next';
@@ -82,11 +82,7 @@ const ResourcesPage = ({ generalConfig }: Props) => {
 
 ResourcesPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const generalRes = await api.get('/config/general').catch(() => {
-        return null;
-      })
-
-    const generalConfig = generalRes?.data?.results?.value;
+    const generalConfig = getCachedConfig('general');
     return {
       generalConfig,
     };

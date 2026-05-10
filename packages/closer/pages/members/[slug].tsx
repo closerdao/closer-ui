@@ -5,6 +5,8 @@ import { useRouter } from 'next/router';
 
 import React, { useEffect, useState } from 'react';
 
+import EmailDisplay from '../../components/display/emailDisplay';
+import WalletDisplay from '../../components/display/walletDisplay';
 import CitizenSubscriptionProgress from '../../components/CitizenSubscriptionProgress';
 import EventsList from '../../components/EventsList';
 import FinancedTokenProgress from '../../components/FinancedTokenProgress';
@@ -38,6 +40,8 @@ import { usePlatform } from '../../contexts/platform';
 import { FinanceApplication } from '../../types';
 import { GeneralConfig } from '../../types/api';
 import api, { cdn } from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { getUrlDisplayString } from '../../utils/display.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import PageNotFound from '../not-found';
 
@@ -52,10 +56,10 @@ const ConnectedWallet =
 interface MemberPageProps {
   member: User;
   loadError: string;
-  generalConfig: GeneralConfig;
 }
 
-const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
+const MemberPage = ({ member, loadError }: MemberPageProps) => {
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
   const {
     user: currentUser,
@@ -539,19 +543,27 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                         return (
                           <li
                             key={link._id}
-                            className="group flex flex-row items-center justify-between py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                            className="group flex min-w-0 flex-row items-center justify-between gap-2 py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors"
                           >
-                            <div className="flex items-center">
-                              <span className="mr-2 w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full">
-                                <IconComponent className="w-4 h-4 text-gray-700" />
+                            <div className="flex min-w-0 flex-1 items-center gap-2">
+                              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-100">
+                                <IconComponent className="h-4 w-4 text-gray-700" />
                               </span>
                               <a
                                 href={link.url}
-                                className="hover:underline"
+                                className="min-w-0 flex-1 hover:underline"
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
-                                {networkName}
+                                <span className="block truncate font-medium">
+                                  {networkName}
+                                </span>
+                                <span
+                                  className="block truncate text-xs text-gray-500"
+                                  title={link.url}
+                                >
+                                  {getUrlDisplayString(link.url)}
+                                </span>
                               </a>
                             </div>
                             {isAuthenticated &&
@@ -606,19 +618,25 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
                     </h4>
                     <Card className="bg-accent-light">
                       {member?.email && (
-                        <p className="mb-2">
-                          <span className="font-medium">
+                        <p className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                          <span className="shrink-0 font-medium">
                             {t('user_data_email')}
-                          </span>{' '}
-                          <span>{member.email}</span>
+                          </span>
+                          <EmailDisplay
+                            email={member.email}
+                            className="min-w-0 flex-1 font-normal"
+                          />
                         </p>
                       )}
                       {member?.walletAddress && (
-                        <p className="mb-2">
-                          <span className="font-medium">
+                        <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <span className="shrink-0 font-medium">
                             {t('user_data_walletAddress')}
-                          </span>{' '}
-                          <span>{member.walletAddress}</span>
+                          </span>
+                          <WalletDisplay
+                            address={member.walletAddress}
+                            className="min-w-0 flex-1"
+                          />
                         </p>
                       )}
                       {member?.phone && (
@@ -1154,33 +1172,23 @@ const MemberPage = ({ member, loadError, generalConfig }: MemberPageProps) => {
 MemberPage.getInitialProps = async (context: NextPageContext) => {
   const { req, query } = context;
   try {
-    const [res, generalRes] = await Promise.all([
-      api.get(`/user/${query.slug}`, {
-        headers: (req as NextApiRequest)?.cookies?.access_token
-          ? {
-              Authorization: `Bearer ${
-                (req as NextApiRequest)?.cookies?.access_token
-              }`,
-            }
-          : {},
-      }),
-
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-    ]);
-    const generalConfig = generalRes?.data?.results?.value;
-
+    const res = await api.get(`/user/${query.slug}`, {
+      headers: (req as NextApiRequest)?.cookies?.access_token
+        ? {
+            Authorization: `Bearer ${
+              (req as NextApiRequest)?.cookies?.access_token
+            }`,
+          }
+        : {},
+    });
     return {
       member: res.data.results,
-      generalConfig,
     };
   } catch (err: unknown) {
     console.log('Error', err);
 
     return {
       loadError: parseMessageFromError(err),
-      generalConfig: null,
 
       };
   }

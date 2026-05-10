@@ -1,7 +1,8 @@
 import Link from 'next/link';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
+import { ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { blockchainConfig } from '../../config_blockchain';
@@ -9,6 +10,8 @@ import { useAuth } from '../../contexts/auth';
 import { TokenSale } from '../../types/api';
 import api, { formatSearch } from '../../utils/api';
 import { formatIsoFiatAmount, parseTokenUnits } from '../../utils/currencyFormat';
+import EmailDisplay from '../display/emailDisplay';
+import WalletDisplay from '../display/walletDisplay';
 import MintSweatModal from './MintSweatModal';
 import Modal from '../Modal';
 import Pagination from '../Pagination';
@@ -97,6 +100,8 @@ const SalesDashboard = ({
   const isSpaceHost = currentUser?.roles?.includes('space-host');
 
   const [isMintSweatModalOpen, setIsMintSweatModalOpen] = useState(false);
+  const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+  const actionsMenuRef = useRef<HTMLDivElement>(null);
 
   // Fetch complete user data including private fields for admin users
   useEffect(() => {
@@ -364,6 +369,38 @@ const SalesDashboard = ({
       sale.quantity,
   );
 
+  const canMintSweatAction = Boolean(isSpaceHost);
+  const canBatchSafeTxAction =
+    statusFilter === 'paid' &&
+    isAdmin &&
+    paidSalesWithWallet.length > 0;
+  const hasHeaderActions = canMintSweatAction || canBatchSafeTxAction;
+
+  useEffect(() => {
+    if (!actionsMenuOpen) {
+      return;
+    }
+    const handlePointerDown = (e: PointerEvent) => {
+      if (
+        actionsMenuRef.current &&
+        !actionsMenuRef.current.contains(e.target as Node)
+      ) {
+        setActionsMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActionsMenuOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [actionsMenuOpen]);
+
   const handleCreateBatchSafeTx = () => {
     const { address: tokenAddress, symbol: tokenSymbol, decimals: tokenDecimals } =
       blockchainConfig.BLOCKCHAIN_DAO_TOKEN;
@@ -440,23 +477,58 @@ const SalesDashboard = ({
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {isSpaceHost && (
-              <Button
-                size="small"
-                onClick={() => setIsMintSweatModalOpen(true)}
-                className="text-xs rounded-full text-background py-1 h-fit"
-              >
-                {t('token_sales_dashboard_mint_sweat_button')}
-              </Button>
-            )}
-            {statusFilter === 'paid' && isAdmin && paidSalesWithWallet.length > 0 && (
-              <Button
-                size="small"
-                onClick={handleCreateBatchSafeTx}
-                className="text-xs rounded-full text-background py-1 h-fit"
-              >
-                {t('token_sales_dashboard_create_batch_safe_tx')}
-              </Button>
+            {hasHeaderActions && (
+              <div className="relative" ref={actionsMenuRef}>
+                <Button
+                  type="button"
+                  size="small"
+                  onClick={() => setActionsMenuOpen((open) => !open)}
+                  className="text-xs rounded-full text-background h-fit gap-1 py-1"
+                  aria-expanded={actionsMenuOpen}
+                  aria-haspopup="menu"
+                >
+                  {t('generic_actions')}
+                  <ChevronDown
+                    className={`h-3.5 w-3.5 shrink-0 transition-transform ${
+                      actionsMenuOpen ? 'rotate-180' : ''
+                    }`}
+                    aria-hidden
+                  />
+                </Button>
+                {actionsMenuOpen && (
+                  <div
+                    role="menu"
+                    className="absolute right-0 z-50 mt-1 min-w-[12rem] rounded-md border border-border bg-background py-1 shadow-md"
+                  >
+                    {canMintSweatAction && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="flex w-full px-3 py-2 text-left text-sm hover:bg-muted"
+                        onClick={() => {
+                          setActionsMenuOpen(false);
+                          setIsMintSweatModalOpen(true);
+                        }}
+                      >
+                        {t('token_sales_dashboard_mint_sweat_button')}
+                      </button>
+                    )}
+                    {canBatchSafeTxAction && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="flex w-full px-3 py-2 text-left text-sm hover:bg-muted"
+                        onClick={() => {
+                          setActionsMenuOpen(false);
+                          handleCreateBatchSafeTx();
+                        }}
+                      >
+                        {t('token_sales_dashboard_create_batch_safe_tx')}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
             <span className="text-sm">{t('token_sales_dashboard_select_status')}</span>
             <Select
@@ -513,15 +585,25 @@ const SalesDashboard = ({
                     >
                       {sale.buyer.screenname}
                     </Link>
-                    <div className="text-sm text-muted-foreground">
-                      {isAdmin && sale.buyer.email
-                        ? sale.buyer.email
-                        : t('token_sales_dashboard_no_email_provided')}
+                    <div className="min-w-0 text-sm text-muted-foreground">
+                      {isAdmin && sale.buyer.email ? (
+                        <EmailDisplay
+                          email={sale.buyer.email}
+                          className="text-sm font-normal text-muted-foreground no-underline hover:underline"
+                        />
+                      ) : (
+                        t('token_sales_dashboard_no_email_provided')
+                      )}
                     </div>
-                    <div className="text-xs text-muted-foreground font-mono break-all">
-                      {isAdmin && sale.buyer.walletAddress
-                        ? sale.buyer.walletAddress
-                        : t('token_sales_dashboard_no_wallet_address')}
+                    <div className="min-w-0 text-xs text-muted-foreground">
+                      {isAdmin && sale.buyer.walletAddress ? (
+                        <WalletDisplay
+                          address={sale.buyer.walletAddress}
+                          className="text-xs"
+                        />
+                      ) : (
+                        t('token_sales_dashboard_no_wallet_address')
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -618,15 +700,25 @@ const SalesDashboard = ({
                             {sale.buyer.screenname}
                           </Link>
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          {isAdmin && sale.buyer.email
-                            ? sale.buyer.email
-                            : t('token_sales_dashboard_no_email_provided')}
+                        <div className="min-w-0 text-sm text-muted-foreground">
+                          {isAdmin && sale.buyer.email ? (
+                            <EmailDisplay
+                              email={sale.buyer.email}
+                              className="text-sm font-normal text-muted-foreground no-underline hover:underline"
+                            />
+                          ) : (
+                            t('token_sales_dashboard_no_email_provided')
+                          )}
                         </div>
-                        <div className="text-xs text-muted-foreground font-mono">
-                          {isAdmin && sale.buyer.walletAddress
-                            ? sale.buyer.walletAddress
-                            : t('token_sales_dashboard_no_wallet_address')}
+                        <div className="min-w-0 text-xs text-muted-foreground">
+                          {isAdmin && sale.buyer.walletAddress ? (
+                            <WalletDisplay
+                              address={sale.buyer.walletAddress}
+                              className="text-xs"
+                            />
+                          ) : (
+                            t('token_sales_dashboard_no_wallet_address')
+                          )}
                         </div>
                       </div>
                     ) : (
@@ -813,8 +905,15 @@ const SalesDashboard = ({
                             </span>
                             {getStatusBadge(sale.status)}
                           </div>
-                          <div className="text-sm truncate">
-                            {sale.buyer?.email ?? '—'}
+                          <div className="min-w-0 text-sm">
+                            {sale.buyer?.email ? (
+                              <EmailDisplay
+                                email={sale.buyer.email}
+                                className="truncate text-sm font-normal text-foreground no-underline hover:underline"
+                              />
+                            ) : (
+                              '—'
+                            )}
                           </div>
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <span>{t('token_sales_dashboard_quantity')}: {sale.createdBy ? (sale.quantity ?? 0) : 'N/A'}</span>
@@ -862,8 +961,15 @@ const SalesDashboard = ({
                               <td className="p-2 font-mono">
                                 {formatPrice(sale.total_price)}
                               </td>
-                              <td className="p-2">
-                                {sale.buyer?.email ?? '—'}
+                              <td className="max-w-[220px] min-w-0 p-2">
+                                {sale.buyer?.email ? (
+                                  <EmailDisplay
+                                    email={sale.buyer.email}
+                                    className="text-sm font-normal text-foreground no-underline hover:underline"
+                                  />
+                                ) : (
+                                  '—'
+                                )}
                               </td>
                               <td className="p-2">
                                 {sale.createdBy ? (sale.quantity ?? 0) : 'N/A'}

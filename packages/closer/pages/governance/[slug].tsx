@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { useContext, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 
+import { proposalMarkdownComponents } from 'closer/components/display';
 import ProposalComments from 'closer/components/Governance/ProposalComments';
 
 import { ErrorMessage, api } from 'closer';
@@ -904,7 +905,9 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                 </div>
               ) : (
                 <div className="markdown">
-                  <ReactMarkdown>{currentProposal.description}</ReactMarkdown>
+                  <ReactMarkdown components={proposalMarkdownComponents}>
+                    {currentProposal.description}
+                  </ReactMarkdown>
                 </div>
               )}
             </div>

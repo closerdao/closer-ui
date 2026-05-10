@@ -7,7 +7,6 @@ import { useContext, useEffect, useState } from 'react';
 import Wallet from '../../components/Wallet';
 import { BackButton, Button, Heading, ProgressBar } from '../../components/ui';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { TOKEN_SALE_STEPS } from '../../constants';
@@ -16,18 +15,16 @@ import { WalletState } from '../../contexts/wallet';
 import { useConfig } from '../../hooks/useConfig';
 import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
-import api from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { logMetric } from '../../utils/metrics';
 import { fetchTokenSaleQuantityForMetric } from '../../utils/tokenSale.helpers';
 import { getReserveTokenDisplay } from '../../utils/config.utils';
-import { parseMessageFromError } from '../../utils/common';
 import PageNotFound from '../not-found';
 
-interface Props {
-  generalConfig: GeneralConfig | null;
-}
+interface Props {}
 
-const ChecklistCryptoPage = ({ generalConfig }: Props) => {
+const ChecklistCryptoPage = () => {
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
   const defaultConfig = useConfig();
   const reserveToken = getReserveTokenDisplay(defaultConfig);
@@ -293,23 +290,6 @@ const ChecklistCryptoPage = ({ generalConfig }: Props) => {
       </div>
     </>
   );
-};
-
-ChecklistCryptoPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const generalRes = await api.get('/config/general').catch(() => null)
-
-    const generalConfig = generalRes?.data?.results?.value;
-
-    return {
-      generalConfig,
-    };
-  } catch (err: unknown) {
-    return {
-      generalConfig: null,
-      error: parseMessageFromError(err),
-      };
-  }
 };
 
 export default ChecklistCryptoPage;

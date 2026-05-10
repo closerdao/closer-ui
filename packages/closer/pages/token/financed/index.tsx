@@ -7,7 +7,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Card, ErrorMessage, Heading, Spinner } from '../../../components/ui';
 import { Badge } from '../../../components/ui/badge';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../../contexts/auth';
@@ -15,7 +14,7 @@ import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
 import { GeneralConfig } from '../../../types';
 import { FinanceApplication } from '../../../types/subscriptions';
-import api from '../../../utils/api';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
 import {
@@ -25,9 +24,7 @@ import {
 import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
 import PageNotFound from '../../not-found';
 
-interface Props {
-  generalConfig: GeneralConfig | null;
-}
+interface Props {}
 
 const getScheduleEntries = (
   paymentsScheduled: FinanceApplication['paymentsScheduled'],
@@ -63,7 +60,8 @@ const formatDate = (date: Date | string | null | undefined) => {
   });
 };
 
-const FinancedTokenApplicationsPage = ({ generalConfig }: Props) => {
+const FinancedTokenApplicationsPage = () => {
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
   const defaultConfig = useConfig();
   const platformName =
@@ -218,21 +216,6 @@ const FinancedTokenApplicationsPage = ({ generalConfig }: Props) => {
       </div>
     </>
   );
-};
-
-FinancedTokenApplicationsPage.getInitialProps = async (
-  context: NextPageContext,
-) => {
-  try {
-    const generalRes = await api.get('/config/general').catch(() => null)
-    const generalConfig = generalRes?.data?.results?.value;
-    return { generalConfig };
-  } catch (err: unknown) {
-    return {
-      generalConfig: null,
-      error: parseMessageFromError(err),
-      };
-  }
 };
 
 export default FinancedTokenApplicationsPage;

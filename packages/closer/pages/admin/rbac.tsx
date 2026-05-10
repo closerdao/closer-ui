@@ -1,36 +1,57 @@
 import Head from 'next/head';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import AdminLayout from '../../components/Dashboard/AdminLayout';
-import { Card, Checkbox, Heading } from '../../components/ui';
+import { Card, Checkbox, Heading, Spinner } from '../../components/ui';
 
 import deepmerge from 'deepmerge';
-import { NextPageContext } from 'next';
 
 import rbacDefaultConfig, {
   PagePermissions,
   RBACConfig,
 } from 'closer/constants/rbac';
 import { useAuth } from '../../contexts/auth';
+import { usePlatform } from '../../contexts/platform';
 import { BookingConfig } from '../../types/api';
-import api from '../../utils/api';
-import { parseMessageFromError } from '../../utils/common';
 import PageNotFound from '../not-found';
 
-interface Props {
-  loadConfig: RBACConfig;
-  bookingConfig: BookingConfig;
-  error?: string;
-}
-
-const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
+const RBACPage = () => {
+  const { platform } = usePlatform() as { platform: any };
   const { user } = useAuth();
-  const [config, setConfig] = useState<RBACConfig>(
-    deepmerge.all(
-      [rbacDefaultConfig, loadConfig].filter(Boolean),
-    ) as RBACConfig,
-  );
+  const [config, setConfig] = useState<RBACConfig>(rbacDefaultConfig);
+  const [bookingConfig, setBookingConfig] = useState<BookingConfig | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        await platform.config.get({ force: true });
+      } catch {
+        return;
+      }
+      await platform.config.getOne('booking', { force: true }).catch(() => {});
+      try {
+        await platform.config.getOne('rbac', { force: true });
+      } catch {
+        // no rbac doc yet — defaults only
+      }
+      if (cancelled) return;
+      const rbacDoc = platform.config.findOne('rbac');
+      const rbacValue = rbacDoc?.get?.('value')?.toJS?.() ?? null;
+      setConfig(
+        deepmerge.all(
+          [rbacDefaultConfig, ...(rbacValue ? [rbacValue] : [])],
+        ) as RBACConfig,
+      );
+      const bookingDoc = platform.config.findOne('booking');
+      const bookingValue = bookingDoc?.get?.('value')?.toJS?.() ?? null;
+      setBookingConfig(bookingValue);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [platform]);
 
   const [pages] = useState([
     'Dashboard',
@@ -80,7 +101,7 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
     'accounting',
     'admin',
   ]);
-  const [, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [hasConfigUpdated, setHasConfigUpdated] = useState(false);
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -108,26 +129,37 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
     saveConfig(newConfig);
   };
 
-  const saveConfig = async (config: object) => {
+  const saveConfig = async (nextConfig: RBACConfig) => {
     try {
-      setIsLoading(true);
+      setIsSaving(true);
 
-      // Save the RBAC configuration to the server
-      const res = await api.put('/config/rbac', {
-        slug: 'rbac',
-        value: config,
-      });
+      const listRaw = platform.config.find()?.toJS?.() ?? [];
+      const rbacExists = Array.isArray(listRaw)
+        ? listRaw.some((c: { slug?: string }) => c.slug === 'rbac')
+        : false;
 
-      if (res.status === 200) {
-        setHasConfigUpdated(true);
-        setTimeout(() => {
-          setHasConfigUpdated(false);
-        }, 3000);
+      if (rbacExists) {
+        await platform.config.patch('rbac', {
+          slug: 'rbac',
+          value: nextConfig,
+        });
+      } else {
+        await platform.config.post({
+          slug: 'rbac',
+          value: nextConfig,
+        });
       }
+
+      await platform.config.getOne('rbac', { force: true });
+
+      setHasConfigUpdated(true);
+      setTimeout(() => {
+        setHasConfigUpdated(false);
+      }, 3000);
     } catch (error) {
       console.error('Error saving RBAC config:', error);
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
@@ -137,16 +169,26 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
         <title>Role Based Access Control</title>
       </Head>
       <AdminLayout>
-        <div className="flex justify-between items-center mb-6">
+        <div className="mb-6">
           <Heading level={1}>Role Based Access Control</Heading>
         </div>
-        {hasConfigUpdated && (
+        {isSaving && (
+          <div
+            className="mb-4 p-3 bg-neutral-light border border-line rounded-md flex items-center gap-3 text-sm text-foreground"
+            role="status"
+            aria-live="polite"
+          >
+            <Spinner />
+            <span>Saving RBAC configuration to the server. Please wait.</span>
+          </div>
+        )}
+        {hasConfigUpdated && !isSaving && (
           <div className="mb-4 p-2 bg-green-100 text-green-800 rounded">
             Configuration updated successfully!
           </div>
         )}
 
-        <Card className="overflow-x-auto">
+        <Card className={`overflow-x-auto relative ${isSaving ? 'opacity-70 pointer-events-none' : ''}`}>
           <table className="min-w-full">
             <thead>
               <tr className="bg-gray-100">
@@ -193,7 +235,7 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
                                 !Boolean(config[role]?.[page]),
                               )
                             }
-                            isEnabled={!isRBACRow}
+                            isEnabled={!isRBACRow && !isSaving}
                           />
                         </div>
                       </td>
@@ -226,31 +268,6 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
       </AdminLayout>
     </>
   );
-};
-
-RBACPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [rbacConfigData, bookingRes] = await Promise.all([
-      api.get('/config/rbac').catch(() => {
-        return null;
-      }),
-      api.get('/config/booking').catch(() => null),
-    ]);
-    // const loadConfig = deepmerge.all([rbacDefaultConfig, rbacConfigData?.data?.results?.value]);
-    const loadConfig = rbacConfigData?.data?.results?.value;
-    const bookingConfig = bookingRes?.data?.results?.value;
-
-    return {
-      loadConfig,
-      bookingConfig,
-    };
-  } catch (error) {
-    return {
-      error: parseMessageFromError(error),
-      generalConfig: null,
-      bookingConfig: null,
-      };
-  }
 };
 
 export default RBACPage;

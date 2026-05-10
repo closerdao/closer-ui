@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 
+import EmailDisplay from 'closer/components/display/emailDisplay';
+import { proposalMarkdownComponents } from 'closer/components/display/proposalMarkdown';
 import { useAuth } from 'closer/contexts/auth';
 import { usePlatform } from 'closer/contexts/platform';
 import { Proposal } from 'closer/types';
@@ -327,18 +329,29 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
           )}
           <div className="min-w-0 flex-1">
             <div className="inline-block rounded-2xl bg-gray-100 px-3 py-1.5">
-              <div className="flex items-baseline gap-2">
-                <span className="text-[13px] font-semibold text-gray-900">
-                  {author?.screenname ||
-                    author?.email ||
-                    t('governance_anonymous')}
-                </span>
+              <div className="flex min-w-0 flex-wrap items-baseline gap-2">
+                {author?.screenname ? (
+                  <span className="truncate text-[13px] font-semibold text-gray-900">
+                    {author.screenname}
+                  </span>
+                ) : author?.email ? (
+                  <EmailDisplay
+                    email={author.email}
+                    className="min-w-0 max-w-full truncate text-[13px] font-semibold text-gray-900"
+                  />
+                ) : (
+                  <span className="text-[13px] font-semibold text-gray-900">
+                    {t('governance_anonymous')}
+                  </span>
+                )}
                 <span className="text-[11px] text-gray-400">
                   {formatDate(comment.created)}
                 </span>
               </div>
-              <div className="markdown break-words text-[13px] text-gray-800">
-                <ReactMarkdown>{comment.content}</ReactMarkdown>
+              <div className="markdown min-w-0 max-w-full break-words text-[13px] text-gray-800">
+                <ReactMarkdown components={proposalMarkdownComponents}>
+                  {comment.content}
+                </ReactMarkdown>
               </div>
             </div>
             {!isReply && (

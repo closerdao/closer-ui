@@ -7,6 +7,8 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import api, { cdn, formatSearch } from '../utils/api';
+import { looksLikePlainSocialPost } from '../utils/display.helpers';
+import FormattedPlainText from './display/formattedPlainText';
 import CreatePost from './CreatePost';
 import ProfilePhoto from './ProfilePhoto';
 import TimeSince from './TimeSince';
@@ -206,14 +208,20 @@ const Post = ({
               )}
             </div>
 
-            {content && (
-              <div
-                className="mt-2 text-foreground whitespace-pre-wrap break-words"
-                dangerouslySetInnerHTML={{
-                  __html: content,
-                }}
-              />
-            )}
+            {content &&
+              (looksLikePlainSocialPost(content) ? (
+                <FormattedPlainText
+                  text={content}
+                  className="mt-2 text-foreground"
+                />
+              ) : (
+                <div
+                  className="mt-2 text-foreground whitespace-pre-wrap break-words"
+                  dangerouslySetInnerHTML={{
+                    __html: content,
+                  }}
+                />
+              ))}
 
             {tags && tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-3">
@@ -395,9 +403,10 @@ const Post = ({
                           loading="lazy"
                         />
                       )}
-                      <p className="mt-1 text-sm text-foreground whitespace-pre-wrap">
-                        {reply.content}
-                      </p>
+                      <FormattedPlainText
+                        text={reply.content}
+                        className="mt-1 text-sm text-foreground"
+                      />
                     </div>
                   </div>
                 );

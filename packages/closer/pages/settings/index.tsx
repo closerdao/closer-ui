@@ -13,7 +13,6 @@ import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select/Dropdown';
 import MultiSelect from '../../components/ui/Select/MultiSelect';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import process from 'process';
 
@@ -25,6 +24,7 @@ import { usePushNotifications } from '../../contexts/push-notifications';
 import { useConfig } from '../../hooks/useConfig';
 import { VolunteerConfig } from '../../types';
 import api from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import PageNotFound from '../not-found';
 
@@ -213,11 +213,8 @@ const DeleteAccountSection = ({ t }: DeleteAccountSectionProps) => {
   );
 };
 
-const SettingsPage = ({
-  volunteerConfig,
-}: {
-  volunteerConfig: VolunteerConfig;
-}) => {
+const SettingsPage = () => {
+  const volunteerConfig = getCachedConfig('volunteering') as VolunteerConfig | null;
   const t = useTranslations() as (key: string) => string;
   const { APP_NAME } = useConfig();
   const router = useRouter();
@@ -992,24 +989,6 @@ const SettingsPage = ({
       </div>
     </>
   );
-};
-
-SettingsPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const volunteerConfigRes = await api.get('/config/volunteering').catch(() => {
-        return null;
-      })
-
-    const volunteerConfig = volunteerConfigRes?.data?.results.value;
-
-    return {
-      volunteerConfig,
-    };
-  } catch (err: unknown) {
-    return {
-      volunteerConfig: null,
-    };
-  }
 };
 
 export default SettingsPage;

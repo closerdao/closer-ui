@@ -29,7 +29,6 @@ import {
   Users,
   Wallet,
 } from 'lucide-react';
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
@@ -38,6 +37,7 @@ import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
 import { CitizenshipConfig } from '../../types/api';
 import api from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { twitterUrlToHandle } from '../../utils/app.helpers';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import PageNotFound from '../not-found';
@@ -50,7 +50,6 @@ interface CitizenshipPageProps {
     citizenTarget?: number;
     apiEndpoint?: string;
   };
-  citizenshipConfig?: CitizenshipConfig;
 }
 
 const citizenFilter = {
@@ -61,9 +60,10 @@ const citizenFilter = {
 
 const CitizenshipPage = ({
   appName,
-  citizenshipConfig = {} as CitizenshipConfig,
   customConfig = {} as { citizenTarget?: number; apiEndpoint?: string },
 }: CitizenshipPageProps) => {
+  const citizenshipConfig = (getCachedConfig('citizenship') ??
+    {}) as CitizenshipConfig;
   const t = useTranslations();
   const config = useConfig();
   const twitterHandle = twitterUrlToHandle(config?.TWITTER_URL);
@@ -742,24 +742,6 @@ const CitizenshipPage = ({
       </section>
     </div>
   );
-};
-
-CitizenshipPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const citizenshipRes = await api.get('/config/citizenship').catch(() => {
-        return null;
-      })
-
-    const citizenshipConfig = citizenshipRes?.data?.results?.value;
-
-    return {
-      citizenshipConfig,
-    };
-  } catch (err: unknown) {
-    return {
-      citizenshipConfig: null,
-    };
-  }
 };
 
 export default CitizenshipPage;

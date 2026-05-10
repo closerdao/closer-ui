@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { BackButton, Button, ErrorMessage, Heading, Spinner } from '../../components/ui';
@@ -17,17 +16,12 @@ import type {
   DonationPaymentMethod,
 } from '../../types/donation';
 import type { SaleInitBody } from '../../types/api';
-import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { logMetricIfAuthenticated } from '../../utils/metrics';
 import { saveDonationSession } from '../../utils/donationSessionStorage';
 import { priceFormat } from '../../utils/helpers';
-import { getDonateInitialProps } from './getDonateInitialProps';
-
-interface DonatePageProps {
-  generalConfig: GeneralConfig | null;
-}
 
 const DONATION_AMOUNTS = [25, 50, 100, 250, 500, 1000];
 const MIN_AMOUNT = 1;
@@ -37,11 +31,12 @@ function clampAmount(value: number) {
   return Math.min(Math.max(MIN_AMOUNT, Math.floor(value)), MAX_AMOUNT);
 }
 
-function DonatePage({ generalConfig }: DonatePageProps) {
+function DonatePage() {
   const t = useTranslations();
   const router = useRouter();
   const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
   const defaultConfig = useConfig();
+  const generalConfig = getCachedConfig('general');
   const platformName = generalConfig?.platformName || defaultConfig.platformName;
 
   const amountFromQuery = Number(router.query.amount);
@@ -385,7 +380,5 @@ function DonatePage({ generalConfig }: DonatePageProps) {
     </>
   );
 }
-
-DonatePage.getInitialProps = async (context: NextPageContext) => getDonateInitialProps(context);
 
 export default DonatePage;

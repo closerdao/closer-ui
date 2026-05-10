@@ -2,7 +2,7 @@ import Head from 'next/head';
 
 import { Heading } from 'closer/components/ui';
 
-import { GeneralConfig, api, useConfig } from 'closer';
+import { GeneralConfig, getCachedConfig, useConfig } from 'closer';
 import { NextPageContext } from 'next';
 
 interface Props {
@@ -37,11 +37,7 @@ const TermsPage = ({ generalConfig }: Props) => {
 
 TermsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const generalRes = await api.get('/config/general').catch(() => {
-        return null;
-      })
-
-    const generalConfig = generalRes?.data?.results?.value;
+    const generalConfig = getCachedConfig('general');
     return {
       generalConfig,
     };

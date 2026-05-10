@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react';
 import TokenBuyWidget from '../../components/TokenBuyWidget';
 import { BackButton, Button, ErrorMessage, Heading, ProgressBar } from '../../components/ui';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { TOKEN_SALE_STEPS } from '../../constants';
@@ -16,6 +15,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { logMetric } from '../../utils/metrics';
 import PageNotFound from '../not-found';
@@ -261,24 +261,6 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
       </div>
     </>
   );
-};
-
-TokenSaleBeforeYouBeginPage.getInitialProps = async (
-  context: NextPageContext,
-) => {
-  try {
-    const generalRes = await api.get('/config/general').catch(() => null)
-
-    const generalConfig = generalRes?.data?.results?.value;
-    return {
-      generalConfig,
-    };
-  } catch (err: unknown) {
-    return {
-      generalConfig: null,
-      error: parseMessageFromError(err),
-      };
-  }
 };
 
 export default TokenSaleBeforeYouBeginPage;

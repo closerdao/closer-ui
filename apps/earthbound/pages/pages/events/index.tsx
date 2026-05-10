@@ -7,6 +7,7 @@ import {
   GeneralConfig,
   Listing,
   api,
+  getCachedConfig,
   useAuth,
   usePlatform,
 } from 'closer';
@@ -417,10 +418,7 @@ const EventsPage = ({ generalConfig, listings, hosts }: Props) => {
 
 EventsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalRes, listingsRes, hostsRes] = await Promise.all([
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
+    const [listingsRes, hostsRes] = await Promise.all([
       api
         .get('/listing', {
           params: {
@@ -445,7 +443,7 @@ EventsPage.getInitialProps = async (context: NextPageContext) => {
         }),
     ]);
 
-    const generalConfig = generalRes?.data?.results?.value;
+    const generalConfig = getCachedConfig('general');
 
     const listings = listingsRes?.data?.results;
     const hosts = hostsRes?.data?.results;

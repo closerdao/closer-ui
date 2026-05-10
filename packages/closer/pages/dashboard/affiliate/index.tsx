@@ -12,7 +12,6 @@ import Heading from '../../../components/ui/Heading';
 import Input from '../../../components/ui/Input';
 import Spinner from '../../../components/ui/Spinner';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import process from 'process';
 
@@ -21,14 +20,12 @@ import { usePlatform } from '../../../contexts/platform';
 import PageNotAllowed from '../../../pages/401';
 import { BookingConfig } from '../../../types/api';
 import api from '../../../utils/api';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
 
-const AffiliateDashboardPage = ({
-  bookingConfig,
-}: {
-  bookingConfig: BookingConfig;
-}) => {
+const AffiliateDashboardPage = () => {
+  const bookingConfig = getCachedConfig('booking') as BookingConfig | null;
   const formatEurAmount = (amount: number) => formatIsoFiatAmount(amount || 0, 'EUR');
   const t = useTranslations();
   const { user } = useAuth();
@@ -381,32 +378,6 @@ const AffiliateDashboardPage = ({
       </AdminLayout>
     </>
   );
-};
-
-AffiliateDashboardPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [generalRes, bookingRes] = await Promise.all([
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-    ]);
-    const generalConfig = generalRes?.data?.results?.value;
-    const bookingConfig = bookingRes?.data?.results?.value;
-
-    return {
-      generalConfig,
-      bookingConfig,
-    };
-  } catch (error) {
-    return {
-      error: parseMessageFromError(error),
-      generalConfig: null,
-      bookingConfig: null,
-      };
-  }
 };
 
 export default AffiliateDashboardPage;

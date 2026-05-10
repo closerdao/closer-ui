@@ -4,6 +4,7 @@ import { useAuth } from 'closer/contexts/auth';
 import { usePresenceToken } from 'closer/hooks/usePresenceToken';
 import { useSweatToken } from 'closer/hooks/useSweatToken';
 import { useVotingWeight } from 'closer/hooks/useVotingWeight';
+import WalletDisplay from '../display/walletDisplay';
 import { useTranslations } from 'next-intl';
 
 interface ConnectWalletProps {
@@ -29,11 +30,6 @@ const ConnectWallet: React.FC<ConnectWalletProps> = ({ className }) => {
     return user?.roles?.includes('member') || false;
   };
   
-  const formatAddress = (address: string): string => {
-    if (!address) return '';
-    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-  };
-
   return (
     <div className={`p-4 border rounded-lg shadow-sm ${className}`}>
       <h2 className="text-xl font-bold mb-4">
@@ -54,9 +50,9 @@ const ConnectWallet: React.FC<ConnectWalletProps> = ({ className }) => {
         </div>
       ) : (
         <div>
-          <div className="flex justify-between items-center mb-3">
-            <span className="font-medium">{t('governance_address')}:</span>
-            <span className="text-sm text-gray-500">{formatAddress(account || '')}</span>
+          <div className="flex min-w-0 flex-row items-center justify-between gap-3 mb-3">
+            <span className="shrink-0 font-medium">{t('governance_address')}:</span>
+            <WalletDisplay address={account || ''} className="justify-end text-sm text-gray-500" />
           </div>
           
           <div className="flex justify-between items-center mb-3">

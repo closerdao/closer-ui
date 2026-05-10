@@ -3,7 +3,7 @@ import Head from 'next/head';
 import { useContext } from 'react';
 
 import { PromptGetInTouchContext } from 'closer/components/PromptGetInTouchContext';
-import { GeneralConfig, api } from 'closer';
+import { GeneralConfig, getCachedConfig } from 'closer';
 import { parseMessageFromError } from 'closer/utils/common';
 
 import { NextPageContext } from 'next';
@@ -475,13 +475,7 @@ const AgentPage = ({}: Props) => {
 
 AgentPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalRes] = await Promise.all([
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-    ]);
-
-    const generalConfig = generalRes?.data?.results?.value;
+    const generalConfig = getCachedConfig('general');
 
     return {
       generalConfig,

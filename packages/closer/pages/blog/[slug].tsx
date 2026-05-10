@@ -23,6 +23,7 @@ import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import { Article, ArticleWithAuthorInfo, Author } from '../../types/blog';
 import api, { cdn, formatSearch } from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { twitterUrlToHandle } from '../../utils/app.helpers';
 import { estimateReadingTime } from '../../utils/blog.utils';
 import { parseMessageFromError } from '../../utils/common';
@@ -37,10 +38,10 @@ interface Props {
   error?: string;
   author: Author;
   relatedArticles: ArticleWithAuthorInfo[];
-  blogConfig: BlogConfig | null;
 }
 
-const ArticlePage = ({ article, author, error, relatedArticles, blogConfig }: Props) => {
+const ArticlePage = ({ article, author, error, relatedArticles }: Props) => {
+  const blogConfig = getCachedConfig('blog') as BlogConfig | null;
   const t = useTranslations();
   const config = useConfig();
   const twitterHandle = twitterUrlToHandle(config?.TWITTER_URL);
@@ -322,17 +323,13 @@ ArticlePage.getInitialProps = async (context: NextPageContext) => {
     const { query, req } = context;
     const slug = req?.url?.replace('/blog/', '') || query?.slug;
 
-    const [articleRes, blogRes] = await Promise.all([
-      api.get(`/article/${slug}`).catch(() => {
+    const articleRes = await api
+      .get(`/article/${slug}`)
+      .catch(() => {
         return null;
-      }),
-      api.get('/config/blog').catch(() => {
-        return null;
-      }),
-    ]);
+      });
 
     const article = articleRes?.data?.results;
-    const blogConfig = blogRes?.data?.results?.value;
     const authorId = article?.createdBy;
 
     const [relatedArticlesRes, authorRes] = await Promise.all([
@@ -358,12 +355,10 @@ ArticlePage.getInitialProps = async (context: NextPageContext) => {
       article,
       author: authorRes?.data?.results[0] || null,
       relatedArticles,
-      blogConfig,
     };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
-      blogConfig: null,
       };
   }
 };

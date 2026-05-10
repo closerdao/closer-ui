@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 import { useConfig } from '../../../hooks/useConfig';
 import { Event, GeneralConfig } from '../../../types';
 import api from '../../../utils/api';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import PageNotFound from '../../not-found';
@@ -17,10 +18,10 @@ interface Props {
   ticket: any;
   event: Event;
   error?: string;
-  generalConfig: GeneralConfig;
 }
 
-const Ticket = ({ ticket, event, error, generalConfig }: Props) => {
+const Ticket = ({ ticket, event, error }: Props) => {
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
   const { PLATFORM_LEGAL_ADDRESS } = useConfig();
 
@@ -75,25 +76,17 @@ Ticket.getInitialProps = async (context: NextPageContext) => {
     const {
       data: { results: ticket },
     } = await api.get(`/ticket/${query.slug}`);
-    const [eventRes, generalRes] = await Promise.all([
-      api.get(`/event/${ticket.event}`),
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-    ]);
-    const generalConfig = generalRes?.data?.results?.value;
+    const eventRes = await api.get(`/event/${ticket.event}`);
 
     return {
       ticket,
       event: eventRes.data?.results,
-      generalConfig,
     };
   } catch (error) {
     return {
       ticket: null,
       event: null,
       error: parseMessageFromError(error),
-      generalConfig: null,
       };
   }
 };

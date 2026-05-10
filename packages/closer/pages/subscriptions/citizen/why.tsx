@@ -5,11 +5,10 @@ import { useContext, useEffect, useRef, useState } from 'react';
 
 import CitizenGoodToBuy from '../../../components/CitizenGoodToBuy';
 import CitizenWhy from '../../../components/CitizenWhy';
-import PageError from '../../../components/PageError';
 import Wallet from '../../../components/Wallet';
 import { Button, Card, Heading, ProgressBar } from '../../../components/ui';
 
-import { NextPage, NextPageContext } from 'next';
+import { NextPage } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { SUBSCRIPTION_CITIZEN_STEPS } from '../../../constants';
@@ -19,7 +18,7 @@ import { WalletState } from '../../../contexts/wallet';
 import { useConfig } from '../../../hooks/useConfig';
 import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
-import { parseMessageFromError } from '../../../utils/common';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import PageNotFound from '../../not-found';
 
 interface PlatformContext {
@@ -29,13 +28,13 @@ interface PlatformContext {
   [key: string]: any;
 }
 
-interface Props {
-  subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
+interface Props {}
 
-  error?: string;
-}
-
-const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
+const CitizenWhyPage: NextPage<Props> = () => {
+  const subscriptionsConfig = getCachedConfig('subscriptions') as {
+    enabled: boolean;
+    elements: SubscriptionPlan[];
+  };
   const t = useTranslations();
   const { isLoading, user, refetchUser } = useAuth();
   const { PLATFORM_NAME } = useConfig();
@@ -277,10 +276,6 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
     return;
   };
 
-  if (error) {
-    return <PageError error={error} />;
-  }
-
   if (!areSubscriptionsEnabled) {
     return <PageNotFound error="" />;
   }
@@ -393,26 +388,6 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
       </div>
     </>
   );
-};
-
-CitizenWhyPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const subscriptionsRes = await api.get('/config/subscriptions').catch(() => {
-        return null;
-      })
-
-    const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
-
-    return {
-      subscriptionsConfig,
-    };
-  } catch (err: unknown) {
-    return {
-      subscriptionsConfig: { enabled: false, elements: [] },
-
-      error: parseMessageFromError(err),
-      };
-  }
 };
 
 export default CitizenWhyPage;

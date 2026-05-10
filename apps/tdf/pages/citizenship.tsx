@@ -5,5 +5,4 @@ const TDFCitizenshipPage = (props: ComponentProps<typeof CitizenshipPage>) => (
   <CitizenshipPage {...props} appName="Traditional Dream Factory" />
 );
 
-TDFCitizenshipPage.getInitialProps = CitizenshipPage.getInitialProps;
 export default TDFCitizenshipPage;

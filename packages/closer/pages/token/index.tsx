@@ -20,10 +20,10 @@ import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
 import { DEFAULT_TOKEN_STATS, GeneralConfig, Listing, TokenStats } from '../../types';
 import api from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { logMetric } from '../../utils/metrics';
 import { getCurrentUnitPrice } from '../../utils/bondingCurve';
 import { getReserveTokenDisplay } from '../../utils/config.utils';
-import { parseMessageFromError } from '../../utils/common';
 import { SALES_CONFIG } from '../../constants/shared.constants';
 
 const ACCOMMODATION_ICONS = ['van.png', 'camping.png', 'hotel.png'];
@@ -33,10 +33,10 @@ const MAX_TOKENS = MAX_TOKENS_PER_TRANSACTION;
 
 interface Props {
   listings: Listing[];
-  generalConfig: GeneralConfig | null;
 }
 
-const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
+const PublicTokenSalePage = ({ listings }: Props) => {
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
   const defaultConfig = useConfig();
   const { getCurrentSupplyWithoutWallet, getSaleHardCapWithoutWallet } = useBuyTokens();
@@ -977,32 +977,21 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
 PublicTokenSalePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [listingRes, generalRes] = await Promise.all([
-      api
-        .get('/listing', {
-          params: {
-            limit: MAX_LISTINGS_TO_FETCH,
-          },
-        })
-        .catch(() => {
-          return null;
-        }),
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-    ]);
+    const listingRes = await api
+      .get('/listing', {
+        params: {
+          limit: MAX_LISTINGS_TO_FETCH,
+        },
+      })
+      .catch(() => null);
 
     const listings = listingRes?.data.results;
-    const generalConfig = generalRes?.data?.results?.value;
     return {
       listings,
-      generalConfig,
     };
   } catch (err: unknown) {
     return {
       listings: [],
-      generalConfig: null,
-      error: parseMessageFromError(err),
       };
   }
 };

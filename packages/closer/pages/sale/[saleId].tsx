@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
 
 import { Info } from 'lucide-react';
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
@@ -23,6 +22,7 @@ import {
 } from '../../types/api';
 import { resolveAccountingEntityFromSale } from '../../utils/accountingEntityResolve';
 import api, { formatSearch } from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import {
   formatIsoFiatAmount,
@@ -36,15 +36,12 @@ import { getTransactionExplorerUrl } from '../../utils/transactionExplorerUrl';
 import { TOKEN_PURCHASE_TERMS_DOC_URL } from '../../constants';
 import PageNotFound from '../not-found';
 
-interface Props {
-  generalConfig: GeneralConfig | null;
-  accountingEntitiesConfig: AccountingEntitiesConfig | null;
-}
+interface Props {}
 
-const SaleSummaryPage = ({
-  generalConfig,
-  accountingEntitiesConfig,
-}: Props) => {
+const SaleSummaryPage = () => {
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
+  const accountingEntitiesConfig =
+    getCachedConfig('accounting-entities') as AccountingEntitiesConfig | null;
   const t = useTranslations();
   const defaultConfig = useConfig();
   const platformName = generalConfig?.platformName || defaultConfig.platformName;
@@ -533,29 +530,6 @@ const SaleSummaryPage = ({
       </div>
     </>
   );
-};
-
-SaleSummaryPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [generalRes, entitiesRes] = await Promise.all([
-      api.get('/config/general').catch(() => null),
-      api.get('/config/accounting-entities').catch(() => null),
-    ]);
-
-    const generalConfig = generalRes?.data?.results?.value;
-    const accountingEntitiesConfig =
-      entitiesRes?.data?.results?.value ?? null;
-    return {
-      generalConfig,
-      accountingEntitiesConfig,
-    };
-  } catch (err: unknown) {
-    return {
-      generalConfig: null,
-      accountingEntitiesConfig: null,
-      error: parseMessageFromError(err),
-      };
-  }
 };
 
 export default SaleSummaryPage;

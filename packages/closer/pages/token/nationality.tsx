@@ -13,7 +13,6 @@ import {
 } from '../../components/ui';
 import Select from '../../components/ui/Select/Dropdown';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { TOKEN_SALE_STEPS } from '../../constants';
@@ -22,6 +21,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { logMetric } from '../../utils/metrics';
 import { fetchTokenSaleQuantityForMetric } from '../../utils/tokenSale.helpers';
@@ -345,23 +345,6 @@ const NationalityPage = ({ generalConfig }: Props) => {
       </div>
     </>
   );
-};
-
-NationalityPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const generalRes = await api.get('/config/general').catch(() => null)
-
-    const generalConfig = generalRes?.data?.results?.value;
-
-    return {
-      generalConfig,
-    };
-  } catch (err: unknown) {
-    return {
-      generalConfig: null,
-      error: parseMessageFromError(err),
-      };
-  }
 };
 
 export default NationalityPage;
