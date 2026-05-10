@@ -478,6 +478,13 @@ const ConfigPage = () => {
             <Heading level={2}>{t('platform_configs')}</Heading>
           </div>
 
+          <div
+            className="rounded-lg border border-line bg-neutral-light px-4 py-3 text-sm text-foreground"
+            role="note"
+          >
+            {t('admin_platform_changes_production_delay')}
+          </div>
+
           {!isGeneralConfigEnabled && (
             <Card className="flex flex-col gap-4">
               <Heading level={4}>

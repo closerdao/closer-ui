@@ -1177,6 +1177,7 @@
   "log_in_redirect_message_page": "page",
   "platform_configs": "Platform settings",
   "platform_configs_initial_settings": "General Settings",
+  "admin_platform_changes_production_delay": "In production, changes you save here can take up to 2 hours to apply for visitors.",
   "config_updated": "Config updated!",
   "config_remove_image": "Remove image",
   "config_reset_to_defaults": "Reset to defaults",

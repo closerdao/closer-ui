@@ -831,6 +831,7 @@
   "log_in_redirect_message_page": "page",
   "platform_configs": "Platform settings",
   "platform_configs_initial_settings": "General Settings",
+  "admin_platform_changes_production_delay": "W produkcji zapisane tutaj zmiany mogą pojawić się u odwiedzających z opóźnieniem do 2 godzin.",
   "config_updated": "Config updated!",
   "config_remove_image": "Usuń obraz",
   "config_reset_to_defaults": "Reset to defaults",

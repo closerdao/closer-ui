@@ -2,6 +2,8 @@ import Head from 'next/head';
 
 import { useEffect, useState } from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import AdminLayout from '../../components/Dashboard/AdminLayout';
 import { Card, Checkbox, Heading, Spinner } from '../../components/ui';
 
@@ -17,6 +19,7 @@ import { BookingConfig } from '../../types/api';
 import PageNotFound from '../not-found';
 
 const RBACPage = () => {
+  const t = useTranslations();
   const { platform } = usePlatform() as { platform: any };
   const { user } = useAuth();
   const [config, setConfig] = useState<RBACConfig>(rbacDefaultConfig);
@@ -159,6 +162,12 @@ const RBACPage = () => {
       <AdminLayout>
         <div className="mb-6">
           <Heading level={1}>Role Based Access Control</Heading>
+        </div>
+        <div
+          className="mb-4 rounded-lg border border-line bg-neutral-light px-4 py-3 text-sm text-foreground"
+          role="note"
+        >
+          {t('admin_platform_changes_production_delay')}
         </div>
         {isSaving && (
           <div

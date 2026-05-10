@@ -1141,6 +1141,7 @@
   "log_in_redirect_message_page": "página",
   "platform_configs": "Definições da plataforma",
   "platform_configs_initial_settings": "Configurações Gerais",
+  "admin_platform_changes_production_delay": "Em produção, as alterações que guardar aqui podem demorar até 2 horas a aplicar-se para os visitantes.",
   "config_updated": "Configuração atualizada!",
   "config_remove_image": "Remover imagem",
   "config_reset_to_defaults": "Repor predefinições",
