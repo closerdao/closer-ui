@@ -23,7 +23,12 @@ import config from '../../../configCached';
 import { useConfig } from '../../../hooks/useConfig';
 import { BookingSettings, GeneralConfig } from '../../../types/api';
 import { Listing } from '../../../types/booking';
-import { cdn } from '../../../utils/api';
+import { FoodOption } from '../../../types/food';
+import api, { cdn } from '../../../utils/api';
+import {
+  getDefaultSelectedFoodOptionId,
+  getFoodOptionsForBookingContext,
+} from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
@@ -33,6 +38,7 @@ import type { CloserCurrencies } from '../../../types/currency';
 interface Props {
   bookingSettings: BookingSettings | null;
   generalConfig: GeneralConfig | null;
+  defaultGuestFoodOptionId?: string | null;
   error?: string;
   messages?: any;
 }
@@ -43,7 +49,12 @@ const PLATFORM_URL =
 const formatDate = (d: Date | string | null) =>
   d ? dayjs(d).format('YYYY-MM-DD') : '';
 
-const StayCreatePage = ({ bookingSettings, generalConfig, error }: Props) => {
+const StayCreatePage = ({
+  bookingSettings,
+  generalConfig,
+  defaultGuestFoodOptionId,
+  error,
+}: Props) => {
   const t = useTranslations();
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
@@ -61,7 +72,15 @@ const StayCreatePage = ({ bookingSettings, generalConfig, error }: Props) => {
     children: savedChildren,
     infants: savedInfants,
     pets: savedPets,
+    listingId: listingIdQuery,
   } = router.query || {};
+
+  const listingId =
+    typeof listingIdQuery === 'string'
+      ? listingIdQuery
+      : Array.isArray(listingIdQuery)
+        ? listingIdQuery[0]
+        : undefined;
 
   const initialAdults = Number(savedAdults) || 1;
   const initialChildren = Number(savedChildren) || 0;
@@ -126,6 +145,7 @@ const StayCreatePage = ({ bookingSettings, generalConfig, error }: Props) => {
     if (params.children) out.children = String(params.children);
     if (params.infants) out.infants = String(params.infants);
     if (params.pets) out.pets = String(params.pets);
+    if (listingId) out.listingId = listingId;
     return out;
   };
 
@@ -143,13 +163,31 @@ const StayCreatePage = ({ bookingSettings, generalConfig, error }: Props) => {
     setActiveParams(params);
     syncUrl(params);
     try {
-      const { results: listings } = await searchStays({
+      const { results: apiResults } = await searchStays({
         start: params.start,
         end: params.end,
         adults: params.adults,
         children: params.children,
       });
-      setResults((listings as Listing[]) || []);
+      let listings = (apiResults as Listing[]) || [];
+      if (listingId) {
+        const match = listings.find((l) => l._id === listingId);
+        if (match) {
+          listings = [match];
+        } else {
+          try {
+            const { data } = await api.get(`/listing/${listingId}`);
+            if (data?.results) {
+              listings = [data.results as Listing];
+            } else {
+              listings = [];
+            }
+          } catch {
+            listings = [];
+          }
+        }
+      }
+      setResults(listings);
       setDidSearchOnce(true);
     } catch (err) {
       setSearchError(parseMessageFromError(err));
@@ -163,8 +201,10 @@ const StayCreatePage = ({ bookingSettings, generalConfig, error }: Props) => {
   const handlePickListing = async (listing: Listing) => {
     if (!activeParams) return;
     if (!isAuthenticated) {
-      const params = new URLSearchParams(buildQueryParams(activeParams));
-      const back = encodeURIComponent(`/stay/create?${params.toString()}`);
+      const qs = new URLSearchParams(
+        buildQueryParams(activeParams) as Record<string, string>,
+      );
+      const back = encodeURIComponent(`/stay/create?${qs.toString()}`);
       router.push(`/signup?back=${back}`);
       return;
     }
@@ -179,6 +219,12 @@ const StayCreatePage = ({ bookingSettings, generalConfig, error }: Props) => {
         children: activeParams.children,
         infants: activeParams.infants,
         pets: activeParams.pets,
+        ...(bookingSettings?.foodOptionEnabled && defaultGuestFoodOptionId
+          ? {
+              foodOption: 'food_package',
+              foodOptionId: defaultGuestFoodOptionId,
+            }
+          : {}),
       });
       router.push(`/stay/create/${stay._id}`);
     } catch (err) {
@@ -189,7 +235,8 @@ const StayCreatePage = ({ bookingSettings, generalConfig, error }: Props) => {
 
   useEffect(() => {
     if (!router.isReady) return;
-    if (savedStart && savedEnd && !didSearchOnce) {
+    if (didSearchOnce) return;
+    if (savedStart && savedEnd) {
       void runSearch({
         start: String(savedStart),
         end: String(savedEnd),
@@ -198,8 +245,19 @@ const StayCreatePage = ({ bookingSettings, generalConfig, error }: Props) => {
         infants: initialInfants,
         pets: initialPets,
       });
+      return;
     }
-  }, [router.isReady]);
+    if (listingId) {
+      void runSearch({
+        start: defaultDateRange.start,
+        end: defaultDateRange.end,
+        adults: initialAdults,
+        children: initialChildren,
+        infants: initialInfants,
+        pets: initialPets,
+      });
+    }
+  }, [router.isReady, listingId, didSearchOnce, savedStart, savedEnd]);
 
   if (error) return <PageError error={error} />;
   if (!isBookingEnabled) return <FeatureNotEnabled feature="booking" />;
@@ -295,10 +353,28 @@ const StayCreatePage = ({ bookingSettings, generalConfig, error }: Props) => {
 
           {!isSearching && results && results.length > 0 && (
             <>
-              <Heading level={2} className="text-xl mb-4 md:mb-6">
-                {t('stay_create_results_title', { count: results.length })}
+              <Heading
+                level={2}
+                className="text-xl mb-4 md:mb-6 text-center md:text-left"
+              >
+                {listingId && results.length === 1
+                  ? t('stay_create_focused_results_heading', {
+                      name: results[0].name,
+                    })
+                  : t('stay_create_results_title', { count: results.length })}
               </Heading>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 list-none p-0">
+              {listingId && results.length === 1 && (
+                <p className="text-gray-600 mb-6 max-w-2xl mx-auto text-center md:text-left">
+                  {t('stay_create_focused_results_intro')}
+                </p>
+              )}
+              <ul
+                className={
+                  listingId && results.length === 1
+                    ? 'max-w-2xl mx-auto flex flex-col gap-6 list-none p-0 w-full'
+                    : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 list-none p-0'
+                }
+              >
                 {results.map((listing) => (
                   <li key={listing._id} className="contents">
                     <ListingResultCard
@@ -306,6 +382,7 @@ const StayCreatePage = ({ bookingSettings, generalConfig, error }: Props) => {
                       nights={nights}
                       onPick={handlePickListing}
                       isCreating={isCreatingDraft === listing._id}
+                      layoutFocused={Boolean(listingId && results.length === 1)}
                     />
                   </li>
                 ))}
@@ -323,6 +400,7 @@ interface ListingResultCardProps {
   nights: number;
   onPick: (listing: Listing) => void;
   isCreating: boolean;
+  layoutFocused?: boolean;
 }
 
 const ListingResultCard = ({
@@ -330,6 +408,7 @@ const ListingResultCard = ({
   nights,
   onPick,
   isCreating,
+  layoutFocused = false,
 }: ListingResultCardProps) => {
   const t = useTranslations();
   const photos = (listing.photos || []).map((id: string) => ({
@@ -344,9 +423,17 @@ const ListingResultCard = ({
   return (
     <article
       aria-labelledby={headingId}
-      className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg focus-within:shadow-lg focus-within:ring-2 focus-within:ring-accent transition-shadow"
+      className={`group flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg focus-within:shadow-lg focus-within:ring-2 focus-within:ring-accent transition-shadow ${
+        layoutFocused ? 'shadow-md md:flex-row md:items-stretch md:max-h-none' : ''
+      }`}
     >
-      <div className="aspect-[4/3] bg-gray-100 overflow-hidden">
+      <div
+        className={`bg-gray-100 overflow-hidden shrink-0 ${
+          layoutFocused
+            ? 'aspect-[16/10] md:w-[min(44%,420px)] md:aspect-auto md:min-h-[280px]'
+            : 'aspect-[4/3]'
+        }`}
+      >
         {photos.length > 0 ? (
           <Slider slides={photos} reverse={false} isListingPreview />
         ) : (
@@ -372,7 +459,11 @@ const ListingResultCard = ({
           </div>
         )}
       </div>
-      <div className="p-4 flex flex-col gap-3 flex-1">
+      <div
+        className={`flex flex-col gap-3 flex-1 ${
+          layoutFocused ? 'p-5 md:p-6 md:justify-center' : 'p-4'
+        }`}
+      >
         <div className="flex items-start justify-between gap-3">
           <h3
             id={headingId}
@@ -430,12 +521,32 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
     );
     const bookingSettings = config.booking as BookingSettings;
     const generalConfig = (config.general || null) as GeneralConfig | null;
-    return { bookingSettings, generalConfig, messages };
+
+    let defaultGuestFoodOptionId: string | null = null;
+    if (bookingSettings?.foodOptionEnabled) {
+      const foodRes = await api.get('/food').catch(() => null);
+      const foodOptions: FoodOption[] = foodRes?.data?.results ?? [];
+      const guestFiltered = getFoodOptionsForBookingContext(
+        foodOptions,
+        'guests',
+      );
+      const pool =
+        guestFiltered.length > 0 ? guestFiltered : foodOptions;
+      defaultGuestFoodOptionId = getDefaultSelectedFoodOptionId(pool);
+    }
+
+    return {
+      bookingSettings,
+      generalConfig,
+      defaultGuestFoodOptionId,
+      messages,
+    };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
       bookingSettings: null,
       generalConfig: null,
+      defaultGuestFoodOptionId: null,
       messages: null,
     };
   }

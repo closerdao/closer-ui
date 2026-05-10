@@ -71,6 +71,13 @@ export const getDashboardLinks = (
       enabled: true,
       roles: ['admin', 'team', 'accounting'],
     },
+    {
+      label: t('navigation_engagement'),
+      url: '/dashboard/engagement',
+      rbacPage: 'Engagement',
+      enabled: true,
+      roles: ['admin', 'community-curator', 'space-host', 'team'],
+    },
   ];
 
   const bookingLinks: DashboardLink[] = [

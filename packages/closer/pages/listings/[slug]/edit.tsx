@@ -72,10 +72,19 @@ const EditListing = ({ bookingConfig, paymentConfig, web3Config }: Props) => {
 
     void (async () => {
       try {
-        await platform.listing.getOne(slug, { force: true });
+        const action = await platform.listing.getOne(slug, { force: true });
         if (cancelled) return;
-        const raw = platform.listing.findOne(slug);
-        const js = raw?.toJS?.() as Listing | undefined;
+        const payload = action?.results;
+        if (!payload) {
+          setListing(null);
+          setListError(t('listings_slug_edit_error'));
+          return;
+        }
+        const js = (
+          typeof payload.toJS === 'function'
+            ? payload.toJS()
+            : payload
+        ) as Listing | undefined;
         if (!js?._id) {
           setListing(null);
           setListError(t('listings_slug_edit_error'));
@@ -169,7 +178,7 @@ const EditListing = ({ bookingConfig, paymentConfig, web3Config }: Props) => {
       <AdminLayout>
         <EditModelPageLayout
           title={`${t('listings_edit_listing')} ${listing.name}`}
-          backHref={`/stay/${listing.slug}`}
+          backHref={`/stay/create?listingId=${listing._id}`}
           isEdit
           fullWidth
         >
@@ -183,7 +192,9 @@ const EditListing = ({ bookingConfig, paymentConfig, web3Config }: Props) => {
               fiatCur: listingFiatCurrency,
               tokenCur: getBookingTokenCurrency(web3Config, bookingConfig),
             }}
-            onSave={(saved) => router.push(`/stay/${saved.slug}`)}
+            onSave={(saved) =>
+              router.push(`/stay/create?listingId=${saved._id}`)
+            }
             onUpdate={(name, value, option, actionType) =>
               onUpdate(name, value, option, actionType)
             }

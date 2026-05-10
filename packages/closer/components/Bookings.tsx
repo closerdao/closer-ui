@@ -25,6 +25,7 @@ interface Props {
   bookingConfig?: BookingConfig;
   hideExportCsv?: boolean;
   previewAsAdmin?: boolean;
+  bookingDetailHrefPrefix?: string;
 }
 
 const MAX_USERS_TO_FETCH = 2000;
@@ -36,6 +37,7 @@ const Bookings = ({
   bookingConfig,
   hideExportCsv = false,
   previewAsAdmin = true,
+  bookingDetailHrefPrefix,
 }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
@@ -287,6 +289,7 @@ const Bookings = ({
                       }
                       link={link}
                       bookingConfig={bookingConfig}
+                      bookingDetailHrefPrefix={bookingDetailHrefPrefix}
                     />
                   );
                 })

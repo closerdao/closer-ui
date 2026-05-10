@@ -16,16 +16,21 @@ import { event as gaEvent } from 'nextjs-google-analytics';
 
 import config from '../../../configCached';
 import { usePlatform } from '../../../contexts/platform';
-import { BaseBookingParams, BookingConfig } from '../../../types';
+import { BaseBookingParams, Booking, BookingConfig } from '../../../types';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 
 interface Props extends BaseBookingParams {
   error?: string;
   bookingConfig: BookingConfig | null;
+  booking?: Booking | null;
 }
 
-const ConfirmationStep = ({ error, bookingConfig }: Props) => {
+const ConfirmationStep = ({
+  error,
+  bookingConfig,
+  booking: bookingProp,
+}: Props) => {
   const t = useTranslations();
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -36,15 +41,32 @@ const ConfirmationStep = ({ error, bookingConfig }: Props) => {
   const slug = typeof slugParam === 'string' ? slugParam : slugParam?.[0];
 
   const [hasRequestedBooking, setHasRequestedBooking] = useState(false);
+  const [fetchedBooking, setFetchedBooking] = useState<Booking | null>(null);
 
   useEffect(() => {
     if (!router.isReady || !slug) return;
     setHasRequestedBooking(true);
-    void platform.booking.getOne(slug);
+    let cancelled = false;
+    void (async () => {
+      const action = await platform.booking.getOne(slug, { force: true });
+      if (cancelled) return;
+      const payload = action?.results;
+      if (!payload) return;
+      const js =
+        typeof payload.toJS === 'function'
+          ? (payload.toJS() as Booking)
+          : (payload as Booking);
+      setFetchedBooking(js);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [router.isReady, slug, platform]);
 
   const platformBooking = slug ? platform.booking.findOne(slug) : null;
-  const resolvedBooking = platformBooking?.toJS?.();
+  const fromPlatform = platformBooking?.toJS?.() as Booking | undefined;
+  const resolvedBooking =
+    fromPlatform ?? fetchedBooking ?? bookingProp ?? undefined;
   const { status, _id, volunteerId, eventId } = resolvedBooking || {};
   const [showCelebration, setShowCelebration] = useState(true);
 
@@ -149,7 +171,7 @@ const ConfirmationStep = ({ error, bookingConfig }: Props) => {
             </p>
           </div>
           <BookingResult
-            booking={resolvedBooking}
+            booking={resolvedBooking ?? null}
             eventName=""
             foodOptionEnabled={bookingConfig?.foodOptionEnabled}
             utilityOptionEnabled={bookingConfig?.utilityOptionEnabled}

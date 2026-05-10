@@ -3,6 +3,28 @@ import Link from 'next/link';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
 import dayjs from 'dayjs';
+
+function buildStayCreateListingHref(params: {
+  listingId: string;
+  startDate: string | Date | null;
+  endDate: string | Date | null;
+  totalGuests: number;
+  kids?: number;
+  infants?: number;
+  pets?: number;
+}) {
+  const q = new URLSearchParams();
+  q.set('listingId', params.listingId);
+  if (params.startDate && params.endDate) {
+    q.set('start', dayjs(params.startDate).format('YYYY-MM-DD'));
+    q.set('end', dayjs(params.endDate).format('YYYY-MM-DD'));
+  }
+  q.set('adults', String(params.totalGuests));
+  if (params.kids) q.set('children', String(params.kids));
+  if (params.infants) q.set('infants', String(params.infants));
+  if (params.pets) q.set('pets', String(params.pets));
+  return `/stay/create?${q.toString()}`;
+}
 import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../hooks/useConfig';
@@ -30,7 +52,6 @@ interface SummaryDatesProps {
   startDate: string | Date | null;
   endDate: string | Date | null;
   listingName: string;
-  listingUrl: string;
   eventName?: string;
   volunteerName?: string;
   ticketOption?: string;
@@ -62,6 +83,8 @@ interface SummaryDatesProps {
   datesEditorOpen?: boolean;
   onToggleDatesEditor?: () => void;
   compact?: boolean;
+  isFriendsBooking?: boolean;
+  eventId?: string;
 }
 
 const SummaryDates = ({
@@ -73,7 +96,6 @@ const SummaryDates = ({
   startDate,
   endDate,
   listingName,
-  listingUrl,
   eventName,
   volunteerName,
   ticketOption,
@@ -94,6 +116,8 @@ const SummaryDates = ({
   datesEditorOpen = false,
   onToggleDatesEditor,
   compact = false,
+  isFriendsBooking = false,
+  eventId,
 }: SummaryDatesProps) => {
   const t = useTranslations();
   const rowY = compact ? 'my-1.5' : 'my-3';
@@ -150,6 +174,8 @@ const SummaryDates = ({
         infants,
         pets,
         useTokens: false,
+        isFriendsBooking,
+        ...(eventId && { eventId }),
       });
 
       return { results, availability };
@@ -170,7 +196,19 @@ const SummaryDates = ({
 
       setHourAvailability(getLocalTimeAvailability(availability, TIME_ZONE));
     })();
-  }, [startDate, endDate]);
+  }, [
+    startDate,
+    endDate,
+    listingId,
+    isFriendsBooking,
+    eventId,
+    isEditMode,
+    isHourlyBooking,
+    totalGuests,
+    kids,
+    infants,
+    pets,
+  ]);
 
   return (
     <div>
@@ -397,7 +435,19 @@ const SummaryDates = ({
             </div>
           ) : (
             <Link
-              href={`/stay/${listingUrl}`}
+              href={
+                listingId
+                  ? buildStayCreateListingHref({
+                      listingId,
+                      startDate,
+                      endDate,
+                      totalGuests,
+                      kids,
+                      infants,
+                      pets,
+                    })
+                  : '/stay/create'
+              }
               className="font-bold uppercase text-right text-accent"
             >
               {listingName} {numSpacesRequired && 'x' + ' ' + numSpacesRequired}

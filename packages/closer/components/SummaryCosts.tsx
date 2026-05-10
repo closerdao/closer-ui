@@ -321,6 +321,7 @@ const SummaryCosts = ({
           <p>{t('bookings_checkout_event_cost')}</p>
           <div className="flex items-center gap-2">
             {isEditMode &&
+              pricingPreviewAvailable &&
               updatedEventTotal?.val !== eventCost?.val &&
               status !== 'cancelled' && (
                 <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
@@ -353,6 +354,7 @@ const SummaryCosts = ({
 
             <div className="flex items-center gap-2">
               {isEditMode &&
+                pricingPreviewAvailable &&
                 accommodationEditDirty &&
                 status !== 'cancelled' && (
                   <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
@@ -396,6 +398,7 @@ const SummaryCosts = ({
                 <p> {t('bookings_summary_step_utility_total')}</p>
                 <div className="flex items-center gap-2">
                   {isEditMode &&
+                    pricingPreviewAvailable &&
                     status !== 'cancelled' &&
                     updatedUtilityTotal?.val !== utilityFiat?.val && (
                       <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
@@ -432,6 +435,7 @@ const SummaryCosts = ({
                 <p> {t('bookings_summary_step_food_total')}</p>
                 <div className="flex items-center gap-2">
                   {isEditMode &&
+                    pricingPreviewAvailable &&
                     updatedFoodTotal?.val !== foodFiat?.val &&
                     status !== 'cancelled' && (
                       <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
@@ -661,6 +665,7 @@ const SummaryCosts = ({
           <p className="font-semibold text-lg">{t('bookings_total')}</p>
         <div className="flex items-center gap-2">
           {isEditMode &&
+            pricingPreviewAvailable &&
             status !== 'cancelled' &&
             (updatedFiatTotal?.val !== totalFiat?.val ||
               updatedAccomodationTotal?.val !== accomodationCost?.val) && (

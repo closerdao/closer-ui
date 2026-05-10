@@ -46,19 +46,6 @@ const RedeemCredits = ({
       (rentalFiat?.val || rentalToken?.val)) ||
     isDemo;
 
-  useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'871e9b'},body:JSON.stringify({sessionId:'871e9b',runId:'initial',hypothesisId:'H4',location:'RedeemCredits:index.tsx:shouldShowCreditsCalculation',message:'redeem credits render branch evaluation',data:{hasAppliedCredits,useCredits,rentalFiatVal:rentalFiat?.val,rentalTokenVal:rentalToken?.val,isDemo,shouldShowCreditsCalculation,isShowingAppliedState:!shouldShowCreditsCalculation},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-  }, [
-    hasAppliedCredits,
-    useCredits,
-    rentalFiat?.val,
-    rentalToken?.val,
-    isDemo,
-    shouldShowCreditsCalculation,
-  ]);
-
   return (
     <div className={`${className ? className : ''}`}>
       {isDemo && (

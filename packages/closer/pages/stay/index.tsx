@@ -127,8 +127,6 @@ const StayPage = ({
 
   const hosts = platform.user.find(hostsFilter);
 
-  console.log('hosts=', hosts?.toJS());
-
   if (!isBookingEnabled) {
     return <FeatureNotEnabled feature="booking" />;
   }

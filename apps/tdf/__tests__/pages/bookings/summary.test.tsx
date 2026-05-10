@@ -67,8 +67,12 @@ describe('BookingSummaryPage', () => {
         paymentConfig={paymentConfig}
       />,
     );
-    expect(screen.getAllByText(/Costs/i).length).toBeGreaterThan(0);
-    const accommodationLabels = screen.getAllByText(/Accommodation:/i);
+    expect(
+      screen.getAllByText(/Costs/i, { hidden: true }).length,
+    ).toBeGreaterThan(0);
+    const accommodationLabels = screen.getAllByText(/Accommodation:/i, {
+      hidden: true,
+    });
     expect(accommodationLabels.length).toBeGreaterThan(0);
   });
 
@@ -82,12 +86,12 @@ describe('BookingSummaryPage', () => {
         paymentConfig={paymentConfig}
       />,
     );
-    const costsLabels = screen.getAllByText(/Costs/i);
+    const costsLabels = screen.getAllByText(/Costs/i, { hidden: true });
     const costsSection = costsLabels
       .map((el) => el.closest('details'))
       .find(Boolean);
     expect(costsSection).toBeInTheDocument();
-    const foodLabel = screen.getByText(/Food:/i);
+    const foodLabel = screen.getByText(/Food:/i, { hidden: true });
     expect(foodLabel.closest('div')).toHaveTextContent(/€0\.00|0,00\s*€|not included/i);
   });
 
@@ -105,7 +109,7 @@ describe('BookingSummaryPage', () => {
         paymentConfig={paymentConfig}
       />,
     );
-    const foodRow = screen.getByText(/Food:/i).closest('div');
+    const foodRow = screen.getByText(/Food:/i, { hidden: true }).closest('div');
     expect(foodRow).toHaveTextContent(/24,00\s*€/);
   });
 
@@ -124,15 +128,23 @@ describe('BookingSummaryPage', () => {
         paymentConfig={paymentConfig}
       />,
     );
-    const costsLabels = screen.getAllByText(/Costs/i);
+    const costsLabels = screen.getAllByText(/Costs/i, { hidden: true });
     const costsSection = costsLabels
       .map((el) => el.closest('details'))
       .find(Boolean);
     expect(costsSection).toBeInTheDocument();
     const withinCosts = within(costsSection as HTMLElement);
-    expect(withinCosts.getByText(/Accommodation:/i).closest('div')).toHaveTextContent(/60,00\s*€/);
-    expect(withinCosts.getByText(/Utilities fee:/i).closest('div')).toHaveTextContent(/20,00\s*€/);
-    expect(withinCosts.getByText(/Food:/i).closest('div')).toHaveTextContent(/24,00\s*€/);
-    expect(withinCosts.getByText(/Total/i).closest('div')).toHaveTextContent(/104,00\s*€/);
+    expect(
+      withinCosts.getByText(/Accommodation:/i, { hidden: true }).closest('div'),
+    ).toHaveTextContent(/60,00\s*€/);
+    expect(
+      withinCosts.getByText(/Utilities fee:/i, { hidden: true }).closest('div'),
+    ).toHaveTextContent(/20,00\s*€/);
+    expect(
+      withinCosts.getByText(/Food:/i, { hidden: true }).closest('div'),
+    ).toHaveTextContent(/24,00\s*€/);
+    expect(
+      withinCosts.getByText(/Total/i, { hidden: true }).closest('div'),
+    ).toHaveTextContent(/104,00\s*€/);
   });
 });

@@ -66,6 +66,7 @@ export { default as SearchPage } from './pages/blog/index';
 export { default as KeywordPage } from './pages/blog/search/[keyword]';
 export { default as BookingCancelPage } from './pages/bookings/[slug]/cancel';
 export { default as BookingCheckoutPage } from './pages/bookings/[slug]/checkout';
+export { default as BookingPaymentDeltaPage } from './pages/bookings/[slug]/payment-delta';
 export { default as BookingConfirmationPage } from './pages/bookings/[slug]/confirmation';
 export { default as FoodSelectionPage } from './pages/bookings/[slug]/food';
 export { default as BookingPage } from './pages/bookings/[slug]/index';
@@ -143,10 +144,15 @@ export { default as CreditsPage } from './pages/settings/credits';
 export { default as ReferralsPage } from './pages/settings/referrals';
 export { default as SignUpPage } from './pages/signup';
 export { default as StayPage } from './pages/stay/';
-export { default as ListingPage } from './pages/stay/[slug]';
+export { default as StayBookingSummaryPage } from './pages/stay/[slug]/index';
+export { default as ListingPage } from './pages/stay/create/stayListingBookPage';
 export { default as StayCreatePage } from './pages/stay/create';
-export { default as StayCheckoutPage } from './pages/stay/create/[id]';
-export { default as StayConfirmationPage } from './pages/stay/create/[id]/confirmation';
+export { default as StayCheckoutPage } from './pages/stay/create/[slug]/index';
+export { default as StayConfirmationPage } from './pages/stay/[slug]/confirmation';
+export { default as StayPendingPage } from './pages/stay/[slug]/pending';
+export { default as StayPaymentPage } from './pages/stay/[slug]/payment';
+export { default as StayUpcomingBookingsPage } from './pages/stay/upcoming';
+export { default as StayPastBookingsPage } from './pages/stay/past';
 export { default as SubscriptionsCheckoutPage } from './pages/subscriptions/checkout';
 
 export { default as CitizenshipPage } from './pages/citizenship/index';
@@ -182,6 +188,8 @@ export { default as CreateVolunteerOportunity } from './pages/volunteer/create';
 export { default as ExpenseTrackingDashboardPage } from './pages/dashboard/expense-tracking';
 
 export { default as RevenuePage } from './pages/dashboard/revenue';
+export { default as EngagementDashboardPage } from './pages/dashboard/engagement';
+export { default as EngagementOpportunityDetailPage } from './pages/dashboard/engagement/[id]';
 export {
   default as FundraiserPage,
   getInvestPageInitialProps,

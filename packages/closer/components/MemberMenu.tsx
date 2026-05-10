@@ -284,7 +284,7 @@ const MemberMenu = ({
             },
             {
               label: t('navigation_my_bookings'),
-              url: '/bookings',
+              url: '/stay/upcoming',
               enabled: isBookingEnabled,
               rbacPage: 'MyBookings',
             },
@@ -720,7 +720,7 @@ const MemberMenu = ({
           },
           {
             label: t('navigation_my_bookings'),
-            url: '/bookings',
+            url: '/stay/upcoming',
             enabled: isBookingEnabled,
             rbacPage: 'MyBookings',
           },

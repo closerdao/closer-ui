@@ -30,7 +30,6 @@ import {
   VolunteerConfig,
 } from '../../../types';
 import config from '../../../configCached';
-import api from '../../../utils/api';
 import {
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,

@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl';
 import { twMerge } from 'tailwind-merge';
 
 import { useAuth } from '../../contexts/auth';
+import { Booking } from '../../types';
+import { getBookingPaymentCheckoutPath } from '../../utils/booking.helpers';
 import { IconBanknote, IconCheckCircle, IconXCircle } from '../BookingIcons';
 import { Button } from '../ui';
 
@@ -29,6 +31,9 @@ interface Props {
   listPreview?: boolean;
   hideCheckoutButton?: boolean;
   hideCancelButton?: boolean;
+  stayShaped?: boolean;
+  paymentDelta?: Booking['paymentDelta'] | null;
+  useTokens?: boolean;
 }
 
 const BookingRequestButtons = ({
@@ -45,6 +50,9 @@ const BookingRequestButtons = ({
   listPreview = false,
   hideCheckoutButton = false,
   hideCancelButton = false,
+  stayShaped = false,
+  paymentDelta,
+  useTokens = false,
 }: Props) => {
   const t = useTranslations();
   const { user } = useAuth();
@@ -74,6 +82,16 @@ const BookingRequestButtons = ({
 
   const stackClass = twMerge(listPreview ? 'mt-2 flex flex-col gap-2' : 'mt-4 flex flex-col gap-4');
 
+  const checkoutHref = getBookingPaymentCheckoutPath({
+    bookingId: _id,
+    stayShaped,
+    status,
+    paymentDelta,
+    useTokens,
+  });
+  const openStepHref = checkoutHref;
+  const paymentCheckoutHref = checkoutHref;
+
   return (
     <div className={stackClass}>
       {!hideCheckoutButton &&
@@ -89,7 +107,7 @@ const BookingRequestButtons = ({
             {CheckoutLabel}
           </Button>
         ) : (
-          <Link passHref href={`/bookings/${_id}/summary`}>
+          <Link passHref href={openStepHref}>
             <Button variant="secondary" size={size} className={secondaryCn}>
               {CheckoutLabel}
             </Button>
@@ -110,7 +128,7 @@ const BookingRequestButtons = ({
             {CheckoutLabel}
           </Button>
         ) : (
-          <Link passHref href={`/bookings/${_id}/checkout`}>
+          <Link passHref href={paymentCheckoutHref}>
             <Button variant="secondary" size={size} className={secondaryCn}>
               {CheckoutLabel}
             </Button>
@@ -132,7 +150,7 @@ const BookingRequestButtons = ({
             {CheckoutLabel}
           </Button>
         ) : (
-          <Link passHref href={`/bookings/${_id}/checkout`}>
+          <Link passHref href={paymentCheckoutHref}>
             <Button variant="secondary" size={size} className={secondaryCn}>
               {CheckoutLabel}
             </Button>
@@ -153,7 +171,7 @@ const BookingRequestButtons = ({
             {CheckoutLabel}
           </Button>
         ) : (
-          <Link passHref href={`/bookings/${_id}/checkout`}>
+          <Link passHref href={paymentCheckoutHref}>
             <Button variant="secondary" size={size} className={secondaryCn}>
               {CheckoutLabel}
             </Button>
@@ -174,7 +192,7 @@ const BookingRequestButtons = ({
             {CheckoutLabel}
           </Button>
         ) : (
-          <Link passHref href={`/bookings/${_id}/checkout`}>
+          <Link passHref href={paymentCheckoutHref}>
             <Button variant="secondary" size={size} className={secondaryCn}>
               {CheckoutLabel}
             </Button>

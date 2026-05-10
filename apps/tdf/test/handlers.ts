@@ -1,4 +1,4 @@
-import { bookingSettings, user } from '@/__tests__/mocks';
+import { bookingSettings, listing, user } from '@/__tests__/mocks';
 
 import { rest } from 'msw';
 
@@ -27,6 +27,29 @@ export const handlers = [
     }
     return res(ctx.status(404), ctx.json({ results: null }));
   }),
+  rest.get('*/config/webinar', (req, res, ctx) =>
+    res(ctx.status(200), ctx.json({ results: {} })),
+  ),
+  rest.get('*/config/general', (req, res, ctx) =>
+    res(ctx.status(200), ctx.json({ results: {} })),
+  ),
+  rest.get('*/config/rbac', (req, res, ctx) =>
+    res(ctx.status(200), ctx.json({ results: {} })),
+  ),
+  rest.get('*/listing/:id', (req, res, ctx) => {
+    const { id } = req.params;
+    const results =
+      id === listing._id
+        ? listing
+        : {
+            _id: id,
+            name: 'Mock listing',
+            slug: 'mock-listing',
+            category: 'van',
+            photos: [],
+          };
+    return res(ctx.status(200), ctx.json({ results }));
+  }),
   rest.get('*/config', (req, res, ctx) =>
     res(
       ctx.status(200),
@@ -41,18 +64,15 @@ export const handlers = [
   rest.get('*/config/booking', (req, res, ctx) =>
     res(ctx.status(200), ctx.json({ results: bookingSettings })),
   ),
-  rest.get('https://api.example.com/config/webinar', (req, res, ctx) =>
-    res(ctx.status(200), ctx.json({ results: {} })),
-  ),
-  rest.get('https://api.example.com/config/general', (req, res, ctx) =>
-    res(ctx.status(200), ctx.json({ results: {} })),
-  ),
   rest.get('*/config/community', (req, res, ctx) =>
     res(ctx.status(200), ctx.json({ results: { value: { enabled: true } } })),
   ),
   rest.options('*/config/community', (req, res, ctx) => res(ctx.status(200))),
-  rest.post('https://api.example.com/metric', (req, res, ctx) =>
+  rest.post('*/metric', (req, res, ctx) =>
     res(ctx.status(200), ctx.json({})),
+  ),
+  rest.get('*/charge', (req, res, ctx) =>
+    res(ctx.status(200), ctx.json({ results: [] })),
   ),
   rest.get('*/meta/countries', (req, res, ctx) =>
     res(

@@ -1,952 +1,1544 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
+import BookingRequestButtons from '../../../components/BookingRequestButtons';
+import BookingStatusTag from '../../../components/BookingStatusTag';
 import BookingGuests from '../../../components/BookingGuests';
-import CurrencySwitcher from '../../../components/CurrencySwitcher';
-import GoogleMaps from '../../../components/GoogleMaps';
-import ListingDateSelector from '../../../components/ListingDateSelector';
-import Slider from '../../../components/Slider';
-import Switch from '../../../components/Switch';
-import {
-  Button,
-  Card,
-  ErrorMessage,
-  Information,
-} from '../../../components/ui';
+import Modal from '../../../components/Modal';
+import PageError from '../../../components/PageError';
+import SummaryCosts from '../../../components/SummaryCosts';
+import SummaryDates from '../../../components/SummaryDates';
+import UserInfoButton from '../../../components/UserInfoButton';
+import { Button, Information } from '../../../components/ui';
+import BookingSurface, {
+  BookingSectionEyebrow,
+} from '../../../components/booking/bookingSurface';
 import Heading from '../../../components/ui/Heading';
 
 import dayjs from 'dayjs';
-import { convert } from 'html-to-text';
-import { NextPage, NextPageContext } from 'next';
+import LocalizedFormat from 'dayjs/plugin/localizedFormat';
+import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import {
-  CURRENCIES,
-  DEFAULT_AVAILABILITY_RANGE_TO_CHECK,
-  DEFAULT_CURRENCY,
-} from '../../../constants';
+import PageNotAllowed from '../../401';
+import { HeadingRow, Tag, useConfig } from '../../..';
+import { MAX_LISTINGS_TO_FETCH } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
-import { useConfig } from '../../../hooks/useConfig';
-import { useOutsideClick } from '../../../hooks/useOutsideClick';
+import { User } from '../../../contexts/auth/types';
+import { usePlatform } from '../../../contexts/platform';
 import {
-  BookingSettings,
+  Booking,
+  BookingConfig,
   CloserCurrencies,
+  Event,
   GeneralConfig,
   Listing,
+  PaymentConfig,
+  PaymentType,
+  Price,
+  Project,
+  UpdatedPrices,
+  VolunteerOpportunity,
 } from '../../../types';
+import type { Stay } from '../../../types/stay';
+import { FoodOption } from '../../../types/food';
 import config from '../../../configCached';
-import api, { cdn } from '../../../utils/api';
+import { useBookingLinkedCharges } from '../../../hooks/useBookingLinkedCharges';
+import api from '../../../utils/api';
+import { mergeBookingLedgerCharges } from '../../../utils/bookingChargesLedger.helpers';
+import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import {
-  getFiatTotal,
-  getFoodTotal,
-  getLocalTimeAvailability,
-  getTimeOnly,
-  getTimeOptions,
-  getUtilityTotal,
+  areNumberArraysEqual,
+  convertToDateString,
+  dateToPropertyTimeZone,
+  ensureEventPriceCurrency,
+  formatCheckinDate,
+  formatCheckoutDate,
+  getBookingListingRefId,
+  getBookingPaymentCheckoutPath,
+  getBookingPaymentType,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import {
-  getBookingRate,
-  getDiscountRate,
-  getMaxBookingHorizon,
-  priceFormat,
-  sendAnalyticsEvent,
-} from '../../../utils/helpers';
-import {
-  formatDate,
-  getBlockedDateRanges,
-} from '../../../utils/listings.helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
+import {
+  approveStayRequest,
+  assignStayBeds,
+  checkInStay,
+  checkOutStay,
+  computeCreditsOwed,
+  computeFiatOwed,
+  computeTokensOwed,
+  extendStay,
+  getStay,
+  isStayShapedBooking,
+  mapStayQuoteToUpdatedPrices,
+  quoteStay,
+  rejectStayRequest,
+  setStayStatusApi,
+  shortenStay,
+  upgradeStayListing,
+  updateStayGuests,
+} from '../../../utils/stays.api';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageNotFound from '../../not-found';
 
-const MAX_DAYS_TO_CHECK_AVAILABILITY = 60;
+dayjs.extend(LocalizedFormat);
+
+const statusOptions = [
+  { label: 'Pending Payment', value: 'pending-payment' },
+  { label: 'Pending', value: 'pending' },
+  { label: 'Pending Refund', value: 'pending-refund' },
+  { label: 'Paid', value: 'paid' },
+  { label: 'Credits Paid', value: 'credits-paid' },
+  { label: 'Tokens Staked', value: 'tokens-staked' },
+  { label: 'Cancelled', value: 'cancelled' },
+  { label: 'Confirmed', value: 'confirmed' },
+];
 
 interface Props {
-  listing: Listing | null;
+  booking: Booking;
   error?: string;
-  settings: BookingSettings | null;
-  descriptionText?: string | null;
-  generalSettings: GeneralConfig | null;
+  listing: Listing;
+  event: Event;
+  volunteer: VolunteerOpportunity;
+  bookingCreatedBy: User;
+  bookingConfig: BookingConfig | null;
+  listings: Listing[];
+  generalConfig: GeneralConfig;
+  paymentConfig: PaymentConfig | null;
+  foodOptions: FoodOption[];
+  projects: Project[];
 }
 
-const ListingPage: NextPage<Props> = ({
+const StayBookingSummaryPage = ({
+  booking,
   listing,
-  settings,
-  generalSettings,
+  event,
+  volunteer,
   error,
-  descriptionText,
-}) => {
-
-
-  console.log('listing=', listing);
+  bookingCreatedBy,
+  bookingConfig,
+  listings,
+  generalConfig,
+  paymentConfig,
+  projects,
+}: Props) => {
   const t = useTranslations();
-  const config = useConfig();
-  const { LOCATION_LAT, LOCATION_LON, PLATFORM_LEGAL_ADDRESS } = config || {};
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
-  const isMember = user && user.roles.includes('member');
+
+  const config = useConfig();
+  const { timeZone } = generalConfig || { timeZone: config.DEFAULT_TIMEZONE };
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+
+  const { platform }: any = usePlatform();
+  const { isAuthenticated, user } = useAuth();
+  const isSpaceHost = user?.roles.includes('space-host');
+  const isAdmin = Boolean(user?.roles.includes('admin'));
+  const canManageBooking = isSpaceHost || isAdmin;
+  const isEditMode = false;
+
+  const isHourlyBooking = listing?.priceDuration !== 'night';
+
+  const [liveBooking, setLiveBooking] = useState<Booking | null>(null);
+
+  useEffect(() => {
+    setLiveBooking(null);
+  }, [booking?._id]);
+
+  const bookingView = liveBooking ?? booking;
+
+  const stayShaped = useMemo(
+    () => isStayShapedBooking(bookingView as unknown as Record<string, unknown>),
+    [bookingView],
+  );
+
   const {
-    start: savedStartDate,
-    end: savedEndDate,
-    adults: savedAdults,
-    kids: savedKids,
-    infants: savedInfants,
-    pets: savedPets,
-    useTokens: savedUseTokens,
-  } = router.query || {};
-  const guestsDropdownRef = useOutsideClick(
-    handleClickOutsideDepartureDropdown,
+    utilityFiat,
+    rentalToken,
+    rentalFiat,
+    useTokens,
+    useCredits,
+    children,
+    pets,
+    infants,
+    start: bookingStart,
+    end: bookingEnd,
+    adults,
+    ticketOption,
+    eventFiat,
+    total,
+    doesNeedSeparateBeds,
+    doesNeedPickup,
+    createdBy,
+    _id,
+    created,
+    foodFiat,
+    roomOrBedNumbers,
+    volunteerInfo,
+  } = bookingView || {};
+
+  const { linkedCharges, refetchCharges } = useBookingLinkedCharges(_id);
+
+  const ledgerChargesForSummary = useMemo(
+    () => mergeBookingLedgerCharges(linkedCharges, bookingView?.charges),
+    [linkedCharges, bookingView?.charges],
   );
-  const timeZone = generalSettings?.timeZone;
-  const { workingHoursStart, workingHoursEnd } = listing || {};
 
-  const timeOptions = getTimeOptions(
-    workingHoursStart,
-    workingHoursEnd,
-    timeZone,
+  const latestStripePaymentIntentId = useMemo(() => {
+    const rows = ledgerChargesForSummary
+      .filter((c) => c.method === 'stripe' && c.meta?.stripePaymentIntentId)
+      .sort((a, b) => dayjs(b.date).valueOf() - dayjs(a.date).valueOf());
+    return rows[0]?.meta?.stripePaymentIntentId;
+  }, [ledgerChargesForSummary]);
+
+  const eventFiatWithCurrency = ensureEventPriceCurrency(
+    bookingView?.priceLock?.lines?.event ?? eventFiat,
+    CloserCurrencies.EUR,
   );
 
-  const [maxHorizon, maxDuration] = getMaxBookingHorizon(settings, isMember);
+  const isFriendBookingForCurrentUser =
+    user?.email && bookingView?.friendEmails?.includes(user?.email);
 
-  const [showGuestsDropdown, setShowGuestsDropdown] = useState(false);
-  const [start, setStartDate] = useState<string | null | Date>(
-    (savedStartDate as string) || null,
+
+  const userInfo = bookingCreatedBy && {
+    name: bookingCreatedBy.screenname,
+    photo: bookingCreatedBy.photo,
+  };
+
+  const [payerInfo, setPayerInfo] = useState<{
+    name: string;
+    photo: string;
+  } | null>(null);
+
+  const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
+  const vatRateFromConfig = Number(paymentConfig?.vatRate);
+  const vatRate = vatRateFromConfig || defaultVatRate;
+
+  const [status, setStatus] = useState(bookingView?.status);
+  const [updatedRoomNumbers, setUpdatedRoomNumbers] =
+    useState(roomOrBedNumbers);
+  const [updatedAdults, setUpdatedAdults] = useState(adults);
+  const [updatedChildren, setUpdatedChildren] = useState(children);
+  const [updatedInfants, setUpdatedInfants] = useState(infants);
+  const [updatedPets, setUpdatedPets] = useState(pets);
+  const [updatedStartDate, setUpdatedStartDate] = useState<
+    string | Date | null
+  >(
+    (timeZone && dateToPropertyTimeZone(timeZone, bookingStart)) ??
+      bookingStart ??
+      null,
   );
-  const [end, setEndDate] = useState<string | null | Date>(
-    (savedEndDate as string) || null,
+
+  const [updatedEndDate, setUpdatedEndDate] = useState<string | Date | null>(
+    (timeZone && dateToPropertyTimeZone(timeZone, bookingEnd)) ??
+      bookingEnd ??
+      null,
   );
-  const durationInDays = dayjs(end).diff(dayjs(start), 'day') || 30;
-  const durationInHours = dayjs(end).diff(dayjs(start), 'hour') || 1;
+  const [updatedListingId, setUpdatedListingId] = useState(
+    getBookingListingRefId(booking?.listing as unknown) ?? listing?._id,
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasUpdated, setHasUpdated] = useState(false);
+  const [stayEditError, setStayEditError] = useState<string | null>(null);
+  const [updatedPrices, setUpdatedPrices] = useState<UpdatedPrices | null>(
+    null,
+  );
+  const [updatedStatus, setUpdatedStatus] = useState<string | undefined>(
+    bookingView?.status,
+  );
 
-  const minDurationRequired = isMember
-    ? Number(settings?.memberMinDuration) || 1
-    : Number(settings?.minDuration) || 1;
-  const isDurationValid = durationInDays >= minDurationRequired;
+  const [datesEditorOpen, setDatesEditorOpen] = useState(false);
+  const [isGuestsModalOpen, setIsGuestsModalOpen] = useState(false);
+  const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
+  const [isShortenModalOpen, setIsShortenModalOpen] = useState(false);
+  const [isAccommodationModalOpen, setIsAccommodationModalOpen] = useState(false);
+  const [modalAdults, setModalAdults] = useState(adults);
+  const [modalChildren, setModalChildren] = useState(children ?? 0);
+  const [modalInfants, setModalInfants] = useState(infants ?? 0);
+  const [modalPets, setModalPets] = useState(pets ?? 0);
+  const [modalExtendEndDate, setModalExtendEndDate] = useState(
+    dayjs(bookingEnd).format('YYYY-MM-DD'),
+  );
+  const [modalShortenEndDate, setModalShortenEndDate] = useState(
+    dayjs(bookingEnd).format('YYYY-MM-DD'),
+  );
+  const [modalListingId, setModalListingId] = useState(
+    getBookingListingRefId(booking?.listing as unknown) ?? listing?._id ?? '',
+  );
+  const modalButtonClass =
+    '!normal-case !tracking-normal enabled:!bg-neutral-light enabled:!border-line !text-foreground hover:!scale-100';
 
-  const [adults, setAdults] = useState<number>(Number(savedAdults) || 1);
-  const [kids, setKids] = useState<number>(Number(savedKids) || 0);
-  const [infants, setInfants] = useState<number>(Number(savedInfants) || 0);
-  const [pets, setPets] = useState<number>(Number(savedPets) || 0);
-  const [doesNeedPickup, setDoesNeedPickup] = useState(false);
-  const [doesNeedSeparateBeds, setDoesNeedSeparateBeds] = useState(false);
-  const [isTeamBooking, setIsTeamBooking] = useState(false);
-  const [hourAvailability, setHourAvailability] = useState<
-    { hour: string; isAvailable: boolean }[] | []
-  >([]);
+  const [fiatDeltaBaseline, setFiatDeltaBaseline] = useState(() =>
+    Math.abs(booking?.paymentDelta?.fiat.val || 0),
+  );
 
-  const isTimeSet =
-    timeOptions?.includes(String(getTimeOnly(start))) &&
-    timeOptions?.includes(String(getTimeOnly(end))) &&
-    String(getTimeOnly(start)) !== String(getTimeOnly(end));
+  const paymentType = getBookingPaymentType({
+    useCredits,
+    useTokens,
+    rentalFiat,
+  });
 
-  const [bookingError, setBookingError] = useState<null | string>(null);
-  const durationRateDays =
-    durationInDays >= 28 ? 30 : durationInDays >= 7 ? 7 : 1;
-  const durationName = getBookingRate(durationInDays);
+  const canEditBooking =
+    paymentType === PaymentType.FULL_TOKENS ||
+    paymentType === PaymentType.PARTIAL_TOKENS ||
+    paymentType === PaymentType.FULL_CREDITS ||
+    paymentType === PaymentType.PARTIAL_CREDITS ||
+    paymentType === 'fiat';
 
-  const discountRate = settings
-    ? 1 - getDiscountRate(durationName, settings)
-    : 0;
+  const isBookingOwnerEditor =
+    user?._id === createdBy || user?._id === bookingView?.paidBy;
 
-  const isHourlyBooking = listing?.priceDuration === 'hour';
+  const stayGuestEditableStatuses = ['confirmed', 'pending-payment', 'paid'];
 
-  let accomodationTotal: number | undefined | false = 0;
+  const canStayGuestEdit =
+    stayShaped &&
+    !isHourlyBooking &&
+    Boolean(isBookingOwnerEditor) &&
+    !canManageBooking &&
+    canEditBooking &&
+    stayGuestEditableStatuses.includes(String(bookingView?.status ?? ''));
+
+  const canGuestEditBookingDetails =
+    canStayGuestEdit ||
+    (!stayShaped &&
+      Boolean(isBookingOwnerEditor) &&
+      !canManageBooking &&
+      canEditBooking);
+
+  const checkInTime = bookingConfig?.checkinTime || 14;
+  const checkOutTime = bookingConfig?.checkoutTime || 11;
+
+  const setters = {
+    setUpdatedAdults,
+    setUpdatedChildren,
+    setUpdatedInfants,
+    setUpdatedPets,
+    setUpdatedEndDate,
+    setUpdatedStartDate,
+    setUpdatedListingId,
+  };
+  const isNotPaid =
+    status !== 'paid' &&
+    status !== 'credits-paid' &&
+    status !== 'tokens-staked' &&
+    status !== 'checked-in' &&
+    status !== 'checked-out' &&
+    status !== 'cancelled' &&
+    status !== 'pending-refund';
+
+  let updatedDuration = 0;
+
+  updatedDuration = Math.ceil(
+    dayjs(updatedEndDate).diff(dayjs(updatedStartDate), 'hour') / 24,
+  );
   if (isHourlyBooking) {
-    accomodationTotal =
-      isTimeSet && (listing?.fiatHourlyPrice?.val || 1) * durationInHours;
-  } else {
-    accomodationTotal = listing
-      ? listing.fiatPrice?.val *
-        (listing.private ? 1 : adults) *
-        durationInDays *
-        discountRate
-      : 0;
+    updatedDuration = dayjs(updatedEndDate).diff(
+      dayjs(updatedStartDate),
+      'hour',
+    );
   }
-  const numPrivateSpacesRequired = listing?.private
-    ? Math.ceil(adults / (listing?.beds || 1))
-    : 1;
-  const accommodationFiatTotal = listing
-    ? listing.fiatPrice?.val *
-      (listing.private ? 1 : adults) *
-      durationInDays *
-      discountRate *
-      numPrivateSpacesRequired
-    : 0;
-  const accommodationTokenTotal = listing
-    ? listing.tokenPrice?.val * (listing.private ? 1 : adults) * durationInDays
-    : 0;
-  const nightlyTotal = listing
-    ? listing.fiatPrice?.val * (listing.private ? 1 : adults) * discountRate
-    : 0;
-  const utilityTotal = getUtilityTotal({
-    utilityFiatVal: settings?.utilityFiatVal,
-    updatedAdults: adults,
-    updatedDuration: durationInDays,
-    discountRate,
-    isTeamBooking,
-    isUtilityOptionEnabled: settings?.utilityOptionEnabled || false,
-  });
 
-  const foodTotal =
-    getFoodTotal({
-      isHourlyBooking,
-      foodPrice: 0, // we do not add food price at this stage of booking
-      adults,
-      durationInDays,
-      isFoodOptionEnabled: settings?.foodOptionEnabled || false,
-      isTeamMember: isTeamBooking || false,
-    }) || 0;
-
-  const [apiError, setApiError] = useState<string | null>(null);
-  const [isSmallScreen, setIsSmallScreen] = useState(false);
-  const [isListingAvailable, setIsListingAvailable] = useState(true);
-  const [isGuestLimit, setIsGuestLimit] = useState(false);
-
-  const [currency, setCurrency] = useState<CloserCurrencies>(
-    savedUseTokens === 'true' ? CURRENCIES[1] : DEFAULT_CURRENCY,
+  const updatedListing = listings?.find(
+    (listing) => listing._id === updatedListingId,
   );
+  const updatedMaxBeds = updatedListing?.beds || 1;
 
-  const [calendarError, setCalendarError] = useState<string | null>(null);
-  const [unavailableDates, setUnavailableDates] = useState<any[]>([]);
-  const [numSpacesAvailable, setNumSpacesAvailable] = useState<number>(0);
-
-  const isWeb3BookingEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
-
-  const photo = listing && listing.photos && listing.photos[0];
-
-  const isTokenPaymentSelected =
-    savedUseTokens === 'true' || currency === CURRENCIES[1];
-  const isTeamMember = user?.roles.some((roles) =>
-    ['space-host', 'steward', 'land-manager', 'team'].includes(roles),
-  );
-
-  const isStartToday = start && dayjs(start).isSame(dayjs(), 'day');
-  const isTodayAndToken = Boolean(isStartToday && isTokenPaymentSelected);
-
-  const isBookingAvailable = Boolean(
-    start &&
-      end &&
-      isListingAvailable &&
-      !calendarError &&
-      (isHourlyBooking ? isTimeSet : true) &&
-      !isTodayAndToken,
-  );
-
-  const fiatTotal = getFiatTotal({
-    isTeamBooking,
-    foodTotal,
-    utilityTotal,
-    accommodationFiatTotal,
-  });
-
-  const getAvailability = async (
-    startDate: Date | string | null,
-    endDate: Date | string | null,
-    listingId?: string | null,
-  ) => {
-    try {
-      const {
-        data: { results, availability },
-      } = await api.post('/bookings/listing/availability', {
-        start: isHourlyBooking ? startDate : formatDate(startDate),
-        end: isHourlyBooking ? endDate : formatDate(endDate),
-        listing: listingId,
-        adults,
-        children: kids,
-        infants,
-        pets,
-        useTokens: isTokenPaymentSelected,
-      });
-
-      setIsGuestLimit(availability[0].reason === 'Guest limit');
-
-      console.log('availability=', availability);
-      return { results, availability, error: null };
-    } catch (error: any) {
+  const displayAccommodationFiat = (bookingView?.priceLock?.lines
+    ?.accommodation ?? rentalFiat) as Price<CloserCurrencies.EUR>;
+  const displayUtilityFiatRow = (bookingView?.priceLock?.lines?.utility ??
+    utilityFiat) as Price<CloserCurrencies.EUR>;
+  const displayFoodFiatRow = (bookingView?.priceLock?.lines?.food ??
+    foodFiat) as Price<CloserCurrencies.EUR>;
+  const displayRentalTokenForCosts = useMemo((): Price<
+    CloserCurrencies.TDF | CloserCurrencies.ETH
+  > => {
+    const pl = bookingView?.priceLock;
+    if (
+      pl?.dailyRentalToken != null &&
+      bookingView?.duration != null &&
+      !Number.isNaN(bookingView.duration)
+    ) {
       return {
-        results: null,
-        availability: null,
-        error: error?.response?.data?.error || 'Unknown error',
+        val: pl.dailyRentalToken.val * bookingView.duration,
+        cur: pl.dailyRentalToken.cur as CloserCurrencies.TDF,
       };
     }
-  };
+    return rentalToken;
+  }, [bookingView?.priceLock, bookingView?.duration, rentalToken]);
+  const displayTotalForCosts = (bookingView?.priceLock?.total ??
+    total) as Price<
+    CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH
+  >;
 
   useEffect(() => {
-    if (savedStartDate) {
-      setStartDate(savedStartDate as string);
-    }
-    if (savedEndDate) {
-      setEndDate(savedEndDate as string);
-    }
-
-    handleDefaultBookingDates();
-  }, [router.query]);
-
-  useEffect(() => {
-    setCalendarError(null);
-
-    const isCalendarSelectionValid = isHourlyBooking
-      ? start && end
-      : end && formatDate(start) !== formatDate(end);
-
-    if (!end) {
-      setCalendarError(t('bookings_incomplete_dates_error'));
-    }
-    if (formatDate(start) === formatDate(end) && !isHourlyBooking) {
-      setCalendarError(t('bookings_date_range_error'));
+    if (
+      !_id ||
+      !((canManageBooking || canGuestEditBookingDetails) && isEditMode)
+    ) {
+      return;
     }
 
-    if (isCalendarSelectionValid) {
-      (async function updatePrices() {
-        setBookingError(null);
-        const { results, availability, error } = await getAvailability(
-          start,
-          end,
-          listing?._id,
-        );
-        if (availability) {
-          setHourAvailability(getLocalTimeAvailability(availability, timeZone));
-          const minNumSpacesAvailable =
-            availability.reduce(
-              (min: number, day: { numSpacesAvailable: number }) =>
-                Math.min(min, day.numSpacesAvailable),
-              Infinity,
-            ) || 0;
-          setNumSpacesAvailable(minNumSpacesAvailable);
+    let cancelled = false;
+
+    const fetchUpdatedPrice = async () => {
+      try {
+        if (stayShaped && !isHourlyBooking) {
+          const origListing =
+            getBookingListingRefId(bookingView.listing as unknown) ??
+            bookingView.listing;
+          const listingIdForQuote =
+            String(updatedListingId ?? '') !== String(origListing ?? '')
+              ? updatedListingId
+              : undefined;
+          const res = await quoteStay(_id, {
+            end: convertToDateString(updatedEndDate),
+            duration: updatedDuration,
+            adults: updatedAdults,
+            children: updatedChildren,
+            infants: updatedInfants,
+            pets: updatedPets,
+            ...(listingIdForQuote ? { listingId: listingIdForQuote } : {}),
+          });
+          if (cancelled) return;
+          setUpdatedPrices(mapStayQuoteToUpdatedPrices(res, updatedDuration));
+          return;
         }
-        setIsListingAvailable(results);
-        setBookingError(error);
-      })();
-    }
-  }, [adults, start, end]);
 
-  useEffect(() => {
-    // Load availability for the entire booking horizon once.
-    (async function loadAvailability() {
-      const { availability } = await getAvailability(
-        dayjs().startOf('day').toDate(),
-        dayjs()
-          .add(DEFAULT_AVAILABILITY_RANGE_TO_CHECK, 'days')
-          .endOf('day')
-          .toDate(),
-        listing?._id,
-      );
-      if (availability) {
-        const dates = availability
-          .map(
-            (day: any) =>
-              !day.available && { day: day.day, reason: day.reason },
-          )
-          .filter((d: { day: string; reason: string }) => {
-            return (
-              d.day &&
-              !['Fully booked', 'Guest limit'].includes(d.reason) &&
-              d.day
-            );
-          })
-          .map((d: { day: string; reason: string }) => new Date(d.day));
+        const res = await api.post('/bookings/calculate-totals', {
+          bookingId: _id,
 
-        setUnavailableDates(dates);
-      }
-    })();
-  }, []);
+          updatedAdults,
+          updatedDuration,
+          updatedChildren,
+          updatedInfants,
+          updatedPets,
+          updatedStart: updatedStartDate,
+          updatedEnd: updatedEndDate,
+          updatedListingId,
+          isBookingEdit: true,
+          paymentType,
+        });
 
-  useEffect(() => {
-    const handleWindowResize = () => {
-      if (window.innerWidth < 640) {
-        setIsSmallScreen(true);
-      } else {
-        setIsSmallScreen(false);
+        if (cancelled) return;
+        setUpdatedPrices(res.data.results);
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Error fetching updated prices:', error);
+        }
       }
     };
-    handleWindowResize();
-    window.addEventListener('resize', handleWindowResize);
+
+    void fetchUpdatedPrice();
+
     return () => {
-      window.removeEventListener('resize', handleWindowResize);
+      cancelled = true;
     };
-  }, []);
+  }, [
+    _id,
+    updatedAdults,
+    updatedChildren,
+    updatedInfants,
+    updatedPets,
+    updatedStartDate,
+    updatedEndDate,
+    updatedListingId,
+    updatedDuration,
+    paymentType,
+    canManageBooking,
+    canGuestEditBookingDetails,
+    isEditMode,
+    stayShaped,
+    isHourlyBooking,
+    bookingView?.listing,
+  ]);
 
-  const handleDefaultBookingDates = async () => {
-    if (listing?.priceDuration !== 'night' && !savedStartDate) {
-      setStartDate(new Date());
-      setEndDate(new Date());
-      return;
-    }
-    const availableStart = new Date();
-    const availableEnd = new Date(
-      new Date(new Date()).setDate(
-        new Date().getDate() + MAX_DAYS_TO_CHECK_AVAILABILITY,
-      ),
-    );
-    const { results: isListingAvailable } = await getAvailability(
-      availableStart,
-      availableEnd,
-      listing?._id,
-    );
+  useEffect(() => {
+    const fetchPayerInfo = async () => {
+      if (!bookingView?.paidBy) {
+        setPayerInfo(null);
+        return;
+      }
 
-    if (!isListingAvailable && !savedStartDate && !savedEndDate) {
-      setStartDate('');
-      setEndDate('');
-    }
-  };
-
-  const getUrlParams = () => {
-    const dateFormat = 'YYYY-MM-DD HH:mm';
-    const params = {
-      start: dayjs(start as string).format(dateFormat),
-      end: dayjs(end as string).format(dateFormat),
-      adults: String(adults),
-      ...(kids && { kids: String(kids) }),
-      ...(infants && { infants: String(infants) }),
-      ...(pets && { pets: String(pets) }),
-      useTokens: String(isTokenPaymentSelected),
+      try {
+        const {
+          data: { results },
+        } = await api.get(`/user/${bookingView.paidBy}`);
+        setPayerInfo({
+          name: results.screenname || results.name || '',
+          photo: results.photo || '',
+        });
+      } catch (error) {
+        console.error('Error fetching payer info:', error);
+        setPayerInfo(null);
+      }
     };
-    const urlParams = new URLSearchParams(params);
 
-    return urlParams;
+    fetchPayerInfo();
+  }, [bookingView?.paidBy]);
+
+  const updatedAccomodationTotal =
+    useTokens || useCredits
+      ? updatedPrices?.rentalToken?.val || 0
+      : updatedPrices?.rentalFiat?.val || 0;
+
+  const updatedRentalFiat = updatedPrices?.rentalFiat || 0;
+  const updatedRentalToken = updatedPrices?.rentalToken || 0;
+  const updatedUtilityTotal = updatedPrices?.utilityFiat?.val || 0;
+  const updatedFoodTotal = updatedPrices?.foodFiat?.val || 0;
+  const updatedEventTotal = updatedPrices?.eventFiat?.val || 0;
+  const updatedFiatTotal = updatedPrices?.total?.val || 0;
+
+  const previewPaymentDelta =
+    updatedPrices != null && updatedPrices.paymentDelta !== undefined
+      ? updatedPrices.paymentDelta
+      : bookingView?.paymentDelta;
+
+  const pendingSaveStart = formatCheckinDate(
+    convertToDateString(updatedStartDate),
+    timeZone,
+    checkInTime,
+  );
+  const pendingSaveEnd = formatCheckoutDate(
+    convertToDateString(updatedEndDate),
+    timeZone,
+    checkOutTime,
+  );
+  const pendingRoomOrBedNumbers =
+    updatedAdults !== adults
+      ? updatedRoomNumbers?.slice(0, updatedAdults)
+      : updatedRoomNumbers;
+
+  const updatedBookingValues = {
+    ...(updatedStatus &&
+      updatedStatus !== bookingView?.status && { overrideStatus: updatedStatus }),
+    ...(Math.abs(bookingView?.paymentDelta?.fiat.val || 0) !== fiatDeltaBaseline && {
+      overridePaymentDelta: {
+        fiat: {
+          val: 0,
+        },
+      },
+    }),
+    adults: updatedAdults,
+    duration: updatedDuration,
+    children: updatedChildren,
+    infants: updatedInfants,
+    pets: updatedPets,
+    roomOrBedNumbers: pendingRoomOrBedNumbers,
+    listing: updatedListingId,
+    start: pendingSaveStart,
+    end: pendingSaveEnd,
   };
 
-  const redirectToNextStep = (bookingId: string) => {
-    if (settings?.foodOptionEnabled) {
-      router.push(
-        `/bookings/${bookingId}/food?back=stay/${
-          listing?.slug
-        }&${getUrlParams()}`,
-      );
-    } else {
-      router.push(
-        `/bookings/${bookingId}/summary?back=stay/${
-          listing?.slug
-        }&${getUrlParams()}`,
-      );
-    }
-  };
+  const hasDateEdits =
+    pendingSaveStart.valueOf() !== dayjs(bookingView?.start).valueOf() ||
+    (pendingSaveEnd?.valueOf() ?? null) !==
+      (bookingView?.end ? dayjs(bookingView.end).valueOf() : null);
 
-  const redirectToSignup = () => {
-    router.push(`/signup?back=stay/${listing?.slug}&${getUrlParams()}`);
-  };
+  const hasGuestBookingEdits =
+    updatedAdults !== adults ||
+    updatedChildren !== children ||
+    updatedInfants !== infants ||
+    updatedPets !== pets ||
+    String(updatedListingId ?? '') !==
+      String(
+        getBookingListingRefId(bookingView?.listing as unknown) ??
+          bookingView?.listing ??
+          '',
+      ) ||
+    hasDateEdits;
 
-  const bookListing = async () => {
-    if (!isAuthenticated) {
-      redirectToSignup();
-      return;
-    }
+  const showPayNowChip =
+    bookingView?.status !== 'pending' &&
+    bookingView?.status !== 'cancelled' &&
+    isNotPaid &&
+    isBookingOwnerEditor;
 
+  const hasHostBookingEdits =
+    updatedStatus !== bookingView?.status ||
+    hasGuestBookingEdits ||
+    !areNumberArraysEqual(pendingRoomOrBedNumbers, roomOrBedNumbers);
+
+  const previewUsesTokenPricing = useTokens || useCredits;
+  const previewOriginalTotalVal = previewUsesTokenPricing
+    ? displayRentalTokenForCosts?.val ?? 0
+    : displayTotalForCosts?.val ?? total?.val ?? 0;
+  const previewNewTotalVal = previewUsesTokenPricing
+    ? updatedPrices?.rentalToken?.val ??
+      displayRentalTokenForCosts?.val ??
+      0
+    : updatedPrices?.total?.val ?? displayTotalForCosts?.val ?? total?.val ?? 0;
+  const previewDeltaVal = previewNewTotalVal - previewOriginalTotalVal;
+  const previewFormatCurrency = previewUsesTokenPricing
+    ? displayRentalTokenForCosts?.cur ?? CloserCurrencies.TDF
+    : displayTotalForCosts?.cur ??
+      rentalFiat?.cur ??
+      CloserCurrencies.EUR;
+
+  const syncBookingFromServer = async () => {
     try {
-      setApiError(null);
-      const {
-        data: { results: newBooking },
-      } = await api.post('/bookings/request', {
-        useTokens: currency === CURRENCIES[1],
-        start: isHourlyBooking ? start : formatDate(start),
-        end: isHourlyBooking ? end : formatDate(end),
-        adults,
-        infants,
-        pets,
-        listing: listing?._id,
-        children: kids,
-        discountCode: '',
-        doesNeedPickup: doesNeedPickup,
-        isTeamBooking: isTeamBooking,
-        doesNeedSeparateBeds: doesNeedSeparateBeds,
-        isHourlyBooking,
-      });
-      sendAnalyticsEvent('Click', 'ListingPage', 'Book');
-      redirectToNextStep(newBooking._id);
-    } catch (err: any) {
-      setApiError(parseMessageFromError(err));
-    } finally {
+      const fresh = await getStay(_id);
+      setLiveBooking(fresh as unknown as Booking);
+      setStatus(fresh.status);
+      setUpdatedStatus(fresh.status);
+      setUpdatedRoomNumbers(fresh.roomOrBedNumbers ?? []);
+      setUpdatedAdults(fresh.adults);
+      setUpdatedChildren(fresh.children);
+      setUpdatedInfants(fresh.infants);
+      setUpdatedPets(fresh.pets);
+      setUpdatedStartDate(
+        (timeZone && dateToPropertyTimeZone(timeZone, fresh.start)) ??
+          fresh.start ??
+          null,
+      );
+      setUpdatedEndDate(
+        (timeZone && dateToPropertyTimeZone(timeZone, fresh.end)) ??
+          fresh.end ??
+          null,
+      );
+      setUpdatedListingId(
+        (getBookingListingRefId(fresh.listing as unknown) ??
+          fresh.listing) as string,
+      );
+      setFiatDeltaBaseline(
+        Math.abs((fresh as unknown as Booking).paymentDelta?.fiat?.val ?? 0),
+      );
+      setUpdatedPrices(null);
+      setStayEditError(null);
+      refetchCharges();
+    } catch (error) {
+      console.error(error);
     }
   };
 
-  function handleClickOutsideDepartureDropdown() {
-    setShowGuestsDropdown(false);
+  const createdFormatted = dayjs(created).format('DD/MM/YYYY HH:mm A');
+
+  const confirmBooking = async () => {
+    await approveStayRequest(_id);
+    await syncBookingFromServer();
+  };
+  const rejectBooking = async () => {
+    await rejectStayRequest(_id);
+    await syncBookingFromServer();
+  };
+
+  const persistStayBookingUpdate = async (): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      setStayEditError(null);
+
+      if (
+        dayjs(pendingSaveStart).startOf('day').valueOf() !==
+        dayjs(bookingView.start).startOf('day').valueOf()
+      ) {
+        setStayEditError(t('booking_details_stay_arrival_change_not_supported'));
+        return false;
+      }
+
+      const origListing = String(
+        getBookingListingRefId(bookingView.listing as unknown) ??
+          bookingView.listing ??
+          '',
+      );
+      const newListing = String(updatedListingId ?? '');
+
+      if (newListing && newListing !== origListing) {
+        await upgradeStayListing(_id, { listingId: newListing });
+      }
+
+      if (
+        updatedAdults !== adults ||
+        updatedChildren !== children ||
+        updatedInfants !== infants ||
+        updatedPets !== pets
+      ) {
+        await updateStayGuests(_id, {
+          adults: updatedAdults,
+          children: updatedChildren,
+          infants: updatedInfants,
+          pets: updatedPets,
+        });
+      }
+
+      const baselineEnd = dayjs(bookingEnd).startOf('day');
+      const targetEnd = dayjs(pendingSaveEnd).startOf('day');
+      if (!baselineEnd.isSame(targetEnd)) {
+        const endIso = dayjs(pendingSaveEnd).toISOString();
+        if (targetEnd.isAfter(baselineEnd)) {
+          await extendStay(_id, { end: endIso });
+        } else {
+          await shortenStay(_id, { end: endIso });
+        }
+      }
+
+      if (canManageBooking) {
+        if (isAdmin && updatedStatus && updatedStatus !== bookingView.status) {
+          await setStayStatusApi(_id, { status: updatedStatus });
+        }
+        if (
+          !areNumberArraysEqual(pendingRoomOrBedNumbers, roomOrBedNumbers)
+        ) {
+          await assignStayBeds(_id, {
+            roomOrBedNumbers: pendingRoomOrBedNumbers ?? [],
+          });
+        }
+      }
+
+      return true;
+    } catch (error) {
+      setStayEditError(parseMessageFromError(error));
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const persistBookingUpdate = async (): Promise<boolean> => {
+    if (stayShaped && !isHourlyBooking) {
+      return persistStayBookingUpdate();
+    }
+    try {
+      setIsLoading(true);
+      setStayEditError(null);
+      const res = await platform.bookings.update(_id, {
+        updatedBookingValues,
+        paymentType,
+      });
+      return res.status === 200;
+    } catch (error) {
+      console.log('error=', error);
+      setStayEditError(parseMessageFromError(error));
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const bookingCheckoutPath = useMemo(() => {
+    const stayLike = bookingView as unknown as Stay;
+    return getBookingPaymentCheckoutPath({
+      bookingId: _id,
+      stayShaped,
+      status: String(status ?? ''),
+      paymentDelta: bookingView?.paymentDelta,
+      useTokens,
+      fiatOwed: stayShaped ? computeFiatOwed(stayLike) : 0,
+      tokensOwed: stayShaped ? computeTokensOwed(stayLike) : 0,
+      creditsOwed: stayShaped ? computeCreditsOwed(stayLike) : 0,
+    });
+  }, [_id, stayShaped, status, bookingView?.paymentDelta, useTokens, bookingView]);
+
+  const openBookingCheckout = async () => {
+    await router.push(bookingCheckoutPath);
+  };
+
+  const handleCompleteBookingChange = async () => {
+    const ok = await persistBookingUpdate();
+    if (ok) {
+      await syncBookingFromServer();
+      await router.push(bookingCheckoutPath);
+    }
+  };
+
+  const handleSaveBooking = async () => {
+    setHasUpdated(false);
+    const ok = await persistBookingUpdate();
+    if (ok) {
+      await syncBookingFromServer();
+      setHasUpdated(true);
+      setTimeout(() => setHasUpdated(false), 3000);
+    }
+  };
+
+  const handleUpdateRoomNumbers = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newRoomNumbers = e.target.value
+      .split(',')
+      .map((num) => parseInt(num.trim(), 10));
+    if (e.target.value) {
+      setUpdatedRoomNumbers(newRoomNumbers);
+    }
+  };
+
+  const bv = bookingView as Record<string, unknown>;
+
+  const handleApproveExtension = async () => {
+    try {
+      setIsLoading(true);
+      setStayEditError(null);
+      await platform.stays.approveExtension(_id);
+      await syncBookingFromServer();
+    } catch (error) {
+      setStayEditError(parseMessageFromError(error));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const handleRejectExtension = async () => {
+    try {
+      setIsLoading(true);
+      setStayEditError(null);
+      await platform.stays.rejectExtension(_id);
+      await syncBookingFromServer();
+    } catch (error) {
+      setStayEditError(parseMessageFromError(error));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const handleStayCheckIn = async () => {
+    await checkInStay(_id);
+    await syncBookingFromServer();
+  };
+  const handleStayCheckOut = async () => {
+    await checkOutStay(_id);
+    await syncBookingFromServer();
+  };
+
+  const editableStayStatuses = ['confirmed', 'pending-payment', 'paid'];
+  const canUseStayEditActions =
+    stayShaped &&
+    !isHourlyBooking &&
+    (isBookingOwnerEditor || canManageBooking) &&
+    editableStayStatuses.includes(String(status ?? ''));
+
+  const handleEditGuestsSubmit = async () => {
+    try {
+      setIsLoading(true);
+      setStayEditError(null);
+      await updateStayGuests(_id, {
+        adults: Number(modalAdults) || 0,
+        children: Number(modalChildren) || 0,
+        infants: Number(modalInfants) || 0,
+        pets: Number(modalPets) || 0,
+      });
+      setIsGuestsModalOpen(false);
+      await syncBookingFromServer();
+    } catch (error) {
+      setStayEditError(parseMessageFromError(error));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleExtendStaySubmit = async () => {
+    try {
+      setIsLoading(true);
+      setStayEditError(null);
+      await extendStay(_id, { end: dayjs(modalExtendEndDate).toISOString() });
+      setIsExtendModalOpen(false);
+      await syncBookingFromServer();
+    } catch (error) {
+      setStayEditError(parseMessageFromError(error));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleShortenStaySubmit = async () => {
+    try {
+      setIsLoading(true);
+      setStayEditError(null);
+      await shortenStay(_id, { end: dayjs(modalShortenEndDate).toISOString() });
+      setIsShortenModalOpen(false);
+      await syncBookingFromServer();
+    } catch (error) {
+      setStayEditError(parseMessageFromError(error));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpgradeStaySubmit = async () => {
+    try {
+      setIsLoading(true);
+      setStayEditError(null);
+      await upgradeStayListing(_id, { listingId: modalListingId });
+      setIsAccommodationModalOpen(false);
+      await syncBookingFromServer();
+    } catch (error) {
+      setStayEditError(parseMessageFromError(error));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!isBookingEnabled) {
+    return <FeatureNotEnabled feature="booking" />;
   }
 
-  if (!listing || error) {
-    return <PageNotFound error={error || 'Network error'} />;
+  if (
+   ( !booking ||
+    (user?._id !== booking.createdBy &&
+      user?._id !== booking.paidBy &&
+        !canManageBooking) )
+      &&
+    !isFriendBookingForCurrentUser
+  ) {
+    return <PageNotFound />;
+  }
+
+  if (!isAuthenticated) {
+    return <PageNotAllowed />;
+  }
+
+  if (error) {
+    return <PageError error={error} />;
   }
 
   return (
     <>
       <Head>
-        <title>{listing.name}</title>
-        <meta name="description" content={descriptionText || `${listing.name} - Book your stay.`} />
-        <meta name="keywords" content={`${listing.name}, accommodation, booking, ${listing.category || ''}, regenerative communities`} />
-        <meta property="og:title" content={listing.name} />
-        <meta property="og:type" content="website" />
-        <meta property="og:description" content={descriptionText || `${listing.name} - Book your stay.`} />
-        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/stay/${listing.slug}`} />
-        {photo && (
-          <meta
-            key="og:image"
-            property="og:image"
-            content={`${cdn}${photo}-max-lg.jpg`}
-          />
-        )}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={listing.name} />
-        <meta name="twitter:description" content={descriptionText || `${listing.name} - Book your stay.`} />
-        {photo && (
-          <meta
-            key="twitter:image"
-            name="twitter:image"
-            content={`${cdn}${photo}-max-lg.jpg`}
-          />
-        )}
-        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/stay/${listing.slug}`} />
+        <title>{`${t('bookings_summary_step_dates_title')}`}</title>
+        <meta
+          name="description"
+          content={`${t('bookings_summary_step_dates_title')}`}
+        />
+        <meta property="og:type" content="booking" />
       </Head>
-      <main className="flex justify-center flex-wrap my-4 ">
-        <div className="flex flex-col gap-8  max-w-4xl">
-          <Heading level={1}>{listing.name}</Heading>
+      <main className="main-content booking mx-auto flex w-full max-w-2xl flex-col gap-6 pb-10 md:gap-8 md:pb-16">
+        <BookingSurface
+          tone="elevated"
+          padding="lg"
+          className="flex flex-col gap-4 md:gap-5"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <Heading level={3} className="!mt-0 max-w-[85%] flex-1 text-xl md:text-2xl">
+              {t(`bookings_title_${status}`)}
+            </Heading>
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+              <BookingStatusTag status={status} />
+              {showPayNowChip && (
+                <Button
+                  variant="inline"
+                  size="small"
+                  isFullWidth={false}
+                  isLoading={isLoading}
+                  className="!min-h-0 shrink-0 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+                  onClick={() => void openBookingCheckout()}
+                >
+                  {t('booking_pay_now')}
+                </Button>
+              )}
+            </div>
+          </div>
 
-          {listing.photos && listing.photos.length > 0 && (
-            <Slider
-              reverse={false}
-              isListing={true}
-              slides={listing.photos.map((id) => ({
-                image: `${cdn}${id}-max-lg.jpg`,
-              }))}
-            />
+          <div className="flex flex-col gap-0.5 text-xs text-disabled">
+            <p>{createdFormatted}</p>
+            <p className="break-all">
+              <span className="font-medium text-foreground">
+                {t('bookings_id')}
+              </span>{' '}
+              {_id}
+            </p>
+          </div>
+
+          {bookingView?.adminBookingReason && (
+            <BookingSurface tone="banner" padding="sm">
+              {bookingView.adminBookingReason}
+            </BookingSurface>
           )}
 
-          <div>
-            <section className="flex justify-left">
-              <div className="max-w-4xl w-full flex flex-col sm:flex-row place-items-start justify-between">
-                <div className="p-2 sm:pr-8 flex flex-col w-full">
-                  <div className="flex flex-col gap-6">
-                    <section className="w-full md:min-w-[450px]">
-                      <div
-                        className="rich-text w-full"
-                        dangerouslySetInnerHTML={{
-                          __html: listing.description,
-                        }}
-                      />
-                    </section>
-                  </div>
-
-                  <div className="my-8 flex flex-col gap-6">
-                    <Heading level={2} className="text-lg uppercase mt-6">
-                      {t('listing_preview_location')}
-                    </Heading>
-                    <Heading level={3} className="text-md font-normal">
-                      {PLATFORM_LEGAL_ADDRESS}
-                    </Heading>
-                    {LOCATION_LAT && LOCATION_LON && (
-                      <GoogleMaps
-                        height={400}
-                        locationLat={LOCATION_LAT}
-                        locationLon={LOCATION_LON}
-                      />
-                    )}
-                  </div>
+          {bookingView?.pendingExtension?.requestedAt && (
+            <BookingSurface tone="banner" padding="md" className="flex flex-col gap-3">
+              <p className="text-sm">
+                {t('stay_create_pending_extension', {
+                  end: dayjs(bookingView.pendingExtension.end).format('LL'),
+                })}
+              </p>
+              {isSpaceHost && stayShaped && (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="secondary"
+                    className={modalButtonClass}
+                    isLoading={isLoading}
+                    onClick={() => void handleApproveExtension()}
+                  >
+                    {t('booking_details_approve_extension')}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className={modalButtonClass}
+                    isLoading={isLoading}
+                    onClick={() => void handleRejectExtension()}
+                  >
+                    {t('booking_details_reject_extension')}
+                  </Button>
                 </div>
+              )}
+            </BookingSurface>
+          )}
 
-                <div className="w-full  sm:w-auto fixed left-0 bottom-0 right-0 sm:sticky">
-                  <Card className="bg-white min-w-[250px]  flex-row sm:flex-col items-center border border-gray-100 pb-4">
-                    <div className="w-1/2 sm:w-full flex flex-col gap-2">
-                      {isWeb3BookingEnabled && (
-                        <CurrencySwitcher
-                          className="hidden sm:block"
-                          selectedCurrency={currency}
-                          onSelect={setCurrency as any}
-                          currencies={CURRENCIES}
-                        />
-                      )}
-
-                      <div className="block sm:hidden">
-                        {currency === CURRENCIES[1] ? (
-                          <div className=" font-bold text-md">
-                            {listing?.tokenPrice &&
-                              priceFormat(
-                                listing.tokenPrice?.val,
-                                listing.tokenPrice?.cur,
-                              )}{' '}
-                            +{' '}
-                            {settings?.utilityFiatVal &&
-                              priceFormat(foodTotal, settings.utilityFiatCur)}
-                          </div>
-                        ) : (
-                          <div>
-                            <b className="text-lg">
-                              {priceFormat(
-                                nightlyTotal * durationRateDays,
-                                settings?.utilityFiatCur,
-                              )}
-                            </b>{' '}
-                            <span className="opacity-70">
-                              {t(`booking_rate_${durationName}`)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <ListingDateSelector
-                          priceDuration={listing?.priceDuration || 'night'}
-                          setStartDate={setStartDate}
-                          setEndDate={setEndDate}
-                          end={end}
-                          start={start}
-                          isSmallScreen={isSmallScreen}
-                          blockedDateRanges={getBlockedDateRanges({
-                            start,
-                            end,
-                            maxHorizon,
-                            maxDuration,
-                            unavailableDates,
-                            isHourlyBooking,
-                          })}
-                          timeOptions={timeOptions}
-                          hourAvailability={hourAvailability}
-                        />
-                      </div>
-
-                      {!isHourlyBooking && (
-                        <div ref={guestsDropdownRef}>
-                          <label className="my-2 hidden sm:block">
-                            {t('bookings_dates_step_guests_title')}
-                          </label>
-                          <Button
-                            onClick={() =>
-                              setShowGuestsDropdown(!showGuestsDropdown)
-                            }
-                            className="bg-white min-h-[20px] font-bold sm:font-normal underline sm:no-underline text-black border-0 sm:border-2 border-black normal-case  w-auto sm:w-full  sm:px-3 sm:p-3 sm:py-2 text-sm py-1 px-0"
-                          >
-                            {adults}{' '}
-                            {adults > 1
-                              ? t(
-                                  'bookings_dates_step_guests_title',
-                                ).toLowerCase()
-                              : t(
-                                  'bookings_dates_step_guest_title',
-                                ).toLowerCase()}
-                          </Button>
-                          {showGuestsDropdown && (
-                            <div className="">
-                              <Card className="absolute border border-gray-100 sm:w-auto z-10 sm:left-auto bottom-[175px] sm:bottom-auto sm:top-auto bg-white shadow-md rounded-md p-3">
-                                <BookingGuests
-                                  shouldHideTitle={true}
-                                  adults={adults}
-                                  kids={kids}
-                                  infants={infants}
-                                  pets={pets}
-                                  setAdults={setAdults}
-                                  setKids={setKids}
-                                  setInfants={setInfants}
-                                  setPets={setPets}
-                                  doesNeedSeparateBeds={doesNeedSeparateBeds}
-                                  setDoesNeedSeparateBeds={
-                                    setDoesNeedSeparateBeds
-                                  }
-                                  isPrivate={listing?.private}
-                                />
-
-                                {settings?.pickUpEnabled && (
-                                  <div className="my-0 flex flex-row justify-between items-start ">
-                                    <label
-                                      htmlFor="separateBeds"
-                                      className="text-sm w-3/4"
-                                    >
-                                      {t('bookings_pickup')}
-                                      <span className="w-full text-xs ml-2 ">
-                                        ({t('bookings_pickup_disclaimer')})
-                                      </span>
-                                    </label>
-                                    <Switch
-                                      disabled={false}
-                                      name="pickup"
-                                      label=""
-                                      onChange={setDoesNeedPickup}
-                                      checked={doesNeedPickup}
-                                    />
-                                  </div>
-                                )}
-
-                                {isTeamMember && (
-                                  <div className="my-0 flex flex-row justify-between flex-wrap">
-                                    <label
-                                      htmlFor="separateBeds"
-                                      className="text-sm"
-                                    >
-                                      Team booking?
-                                    </label>
-                                    <Switch
-                                      disabled={false}
-                                      name="team-booking"
-                                      label=""
-                                      onChange={setIsTeamBooking}
-                                      checked={isTeamBooking}
-                                    />
-                                  </div>
-                                )}
-                              </Card>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col w-1/2 sm:w-full">
-                      <div className="">
-                        {isTodayAndToken && (
-                          <ErrorMessage
-                            error={t('booking_token_same_day_error')}
-                          />
-                        )}
-                        {error && (
-                          <ErrorMessage error={parseMessageFromError(error)} />
-                        )}
-                        {apiError && (
-                          <ErrorMessage error={apiError} />
-                        )}
-                        {calendarError &&
-                          calendarError !== t('bookings_date_range_error') && (
-                            <ErrorMessage
-                              error={parseMessageFromError(calendarError)}
-                            />
-                          )}
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <div className="hidden sm:block">
-                          {listing.quantity === 1
-                            ? `${
-                                start && end
-                                  ? numSpacesAvailable
-                                  : listing?.quantity
-                              } ${t('listing_listings_available_singular')}`
-                            : `${
-                                start && end
-                                  ? numSpacesAvailable
-                                  : listing?.quantity
-                              } ${t('listing_listings_available')}`}
-                        </div>
-                        {isWeb3BookingEnabled && (
-                          <CurrencySwitcher
-                            className="block sm:hidden"
-                            selectedCurrency={currency}
-                            onSelect={setCurrency as any}
-                            currencies={CURRENCIES}
-                          />
-                        )}
-                        {!isSmallScreen && isHourlyBooking && (
-                          <div>
-                            <p className="text-left">
-                              <span className="font-bold">
-                                {priceFormat(
-                                  listing?.fiatHourlyPrice?.val || 0,
-                                  listing.fiatPrice.cur,
-                                )}{' '}
-                              </span>
-                              {t('listing_preview_per_hourly')}
-                            </p>
-                          </div>
-                        )}
-
-                        {!isSmallScreen && !isHourlyBooking && (
-                          <div>
-                            <p className="text-left">
-                              <span className="font-bold">
-                                {priceFormat(
-                                  listing.fiatPrice.val *
-                                    durationRateDays *
-                                    discountRate,
-                                  listing.fiatPrice.cur,
-                                )}{' '}
-                              </span>
-                              {t(`listing_preview_per_${durationName}`)}
-                            </p>
-                          </div>
-                        )}
-
-                        <Button
-                          onClick={bookListing}
-                          isEnabled={isBookingAvailable}
-                          className=" text-lg btn-primary text-center h-[32px] sm:h-auto sm:mt-4"
-                        >
-                          {t('listings_slug_link')}
-                        </Button>
-                      </div>
-                      {!isListingAvailable && (
-                        <div className="block sm:hidden text-xs">
-                          {isGuestLimit
-                            ? t('listing_not_available_guest_limit')
-                            : bookingError || t('listing_not_available')}
-                        </div>
-                      )}
-                    </div>
-
-                    {isHourlyBooking && accomodationTotal && (
-                      <div className="w-full flex justify-between items-center mt-3">
-                        <p>
-                          {t('bookings_checkout_step_total_title')} (
-                          {t('token_sale_checkout_vat')}):
-                        </p>
-                        <div className="font-bold text-right text-xl">
-                          {currency === CURRENCIES[1] && fiatTotal > 0 ? (
-                            <div>
-                              {priceFormat(
-                                listing.tokenPrice && listing.tokenPrice?.val,
-                                listing.tokenPrice?.cur,
-                              )}{' '}
-                              +{' '}
-                            </div>
-                          ) : (
-                            <span>
-                              {priceFormat(
-                                settings && listing && accomodationTotal,
-                                listing.fiatPrice?.cur,
-                              )}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="hidden sm:block w-full">
-                      {isListingAvailable &&
-                      !calendarError &&
-                      !isHourlyBooking &&
-                      isDurationValid ? (
-                        <>
-                          {' '}
-                          <div className="flex justify-between items-center mt-3">
-                            <p>
-                              {t(
-                                'bookings_summary_step_dates_accomodation_type',
-                              )}
-                            </p>
-                            <p>
-                              {currency === CURRENCIES[1]
-                                ? priceFormat(
-                                    accommodationTokenTotal,
-                                    listing.tokenPrice?.cur,
-                                  )
-                                : priceFormat(
-                                    isTeamBooking ? 0 : accommodationFiatTotal,
-                                    listing.fiatPrice?.cur,
-                                  )}
-                            </p>
-                          </div>
-                          {settings?.utilityOptionEnabled && (
-                            <div className="flex justify-between items-center mt-3">
-                              <p>{t('bookings_summary_step_utility_total')}</p>
-                              <p>
-                                {priceFormat(
-                                  isTeamBooking ? 0 : utilityTotal,
-                                  settings?.utilityFiatCur,
-                                )}
-                              </p>
-                            </div>
-                          )}
-                          <div className="flex justify-between items-center mt-3">
-                            <p>
-                              {t('bookings_checkout_step_total_title')} (
-                              {t('token_sale_checkout_vat')}):
-                            </p>
-                            <div className="font-bold text-right text-xl">
-                              {currency === CURRENCIES[1] && fiatTotal > 0 ? (
-                                <div>
-                                  {priceFormat(
-                                    accommodationTokenTotal,
-                                    listing.tokenPrice?.cur,
-                                  )}{' '}
-                                  + {priceFormat(utilityTotal)}
-                                </div>
-                              ) : (
-                                <span>
-                                  {priceFormat(
-                                    settings && listing && fiatTotal,
-                                    listing.fiatPrice?.cur,
-                                  )}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </>
-                      ) : (
-                        (!isListingAvailable ||
-                          !isDurationValid ||
-                          isGuestLimit) && (
-                          <Information>
-                            {!isDurationValid &&
-                              t('bookings_dates_min_duration_error', {
-                                var:
-                                  isMember
-                                    ? settings?.memberMinDuration
-                                    : settings?.minDuration,
-                              })}
-                            {isGuestLimit &&
-                              t('listing_not_available_guest_limit')}
-                            {!isListingAvailable &&
-                              !isGuestLimit &&
-                              isDurationValid &&
-                              t('listing_not_available')}
-                          </Information>
-                        )
-                      )}
-                    </div>
-                  </Card>
-                </div>
-              </div>
-            </section>
+          <div className="flex flex-col gap-2">
+            <BookingSectionEyebrow>
+              {t('bookings_dates_step_title')}
+            </BookingSectionEyebrow>
+            <SummaryDates
+              isDayTicket={bookingView?.isDayTicket}
+              isFriendsBooking={Boolean(bookingView?.isFriendsBooking)}
+              eventId={bookingView?.eventId}
+              totalGuests={
+                canManageBooking || canGuestEditBookingDetails
+                  ? updatedAdults
+                  : adults
+              }
+              kids={
+                canManageBooking || canGuestEditBookingDetails
+                  ? updatedChildren
+                  : children
+              }
+              infants={
+                canManageBooking || canGuestEditBookingDetails
+                  ? updatedInfants
+                  : infants
+              }
+              pets={
+                canManageBooking || canGuestEditBookingDetails
+                  ? updatedPets
+                  : pets
+              }
+              startDate={
+                canManageBooking || canGuestEditBookingDetails
+                  ? updatedStartDate
+                  : bookingStart
+              }
+              endDate={
+                canManageBooking || canGuestEditBookingDetails
+                  ? updatedEndDate
+                  : bookingEnd
+              }
+              listingName={listing?.name}
+              listingId={listing?._id}
+              isVolunteer={volunteerInfo?.bookingType === 'volunteer'}
+              eventName={event?.name}
+              volunteerName={volunteer?.name}
+              ticketOption={ticketOption?.name}
+              doesNeedPickup={doesNeedPickup}
+              doesNeedSeparateBeds={doesNeedSeparateBeds}
+              isEditMode={
+                (canManageBooking || canGuestEditBookingDetails) && isEditMode
+              }
+              setters={setters}
+              updatedListingId={updatedListingId}
+              listings={listings}
+              updatedMaxBeds={updatedMaxBeds}
+              priceDuration={listing?.priceDuration}
+              workingHoursStart={listing?.workingHoursStart}
+              workingHoursEnd={listing?.workingHoursEnd}
+              listingId={updatedListingId ?? listing?._id}
+              showHeading={false}
+              collapseDatesEditor
+              datesEditorOpen={datesEditorOpen}
+              onToggleDatesEditor={() =>
+                setDatesEditorOpen((open) => !open)
+              }
+              compact
+            />
           </div>
-        </div>
+
+          <div className="flex flex-col gap-1.5">
+            <BookingSectionEyebrow>
+              {t('bookings_dates_step_guests_title')}
+            </BookingSectionEyebrow>
+            {(userInfo || payerInfo) && (
+              <div className="flex flex-col gap-1">
+                {bookingView?.paidBy &&
+                payerInfo &&
+                bookingView.paidBy !== createdBy ? (
+                  <>
+                    {userInfo && (
+                      <UserInfoButton
+                        variant="preview"
+                        userInfo={{
+                          ...userInfo,
+                          name:
+                            userInfo.name +
+                            (adults > 1 ? ` +${adults - 1}` : ''),
+                        }}
+                        createdBy={createdBy}
+                      />
+                    )}
+                    <UserInfoButton
+                      variant="preview"
+                      userInfo={payerInfo}
+                      createdBy={bookingView.paidBy}
+                    />
+                  </>
+                ) : (
+                  <UserInfoButton
+                    variant="preview"
+                    userInfo={{
+                      ...(payerInfo || userInfo)!,
+                      name:
+                        (payerInfo || userInfo)!.name +
+                        (adults > 1 ? ` +${adults - 1}` : ''),
+                    }}
+                    createdBy={payerInfo ? bookingView.paidBy || '' : createdBy}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <BookingSectionEyebrow>
+              {t('bookings_checkout_step_payment_title')}
+            </BookingSectionEyebrow>
+            {stayShaped &&
+              (bv.checkedIn != null || bv.checkedOut != null) && (
+              <BookingSurface
+                tone="inset"
+                padding="md"
+                className="flex flex-col gap-2 text-xs"
+              >
+                {bv.checkedIn != null && String(bv.checkedIn).length > 0 && (
+                  <p>
+                    {t('booking_details_checked_in_at')}:{' '}
+                    {dayjs(String(bv.checkedIn)).format('LLL')}
+                  </p>
+                )}
+                {bv.checkedOut != null && String(bv.checkedOut).length > 0 && (
+                  <p>
+                    {t('booking_details_checked_out_at')}:{' '}
+                    {dayjs(String(bv.checkedOut)).format('LLL')}
+                  </p>
+                )}
+              </BookingSurface>
+            )}
+            <SummaryCosts
+              hideTitle
+              compact
+              rentalFiat={displayAccommodationFiat}
+              rentalToken={displayRentalTokenForCosts}
+              isFoodIncluded={Boolean(bookingView?.foodOptionId)}
+              utilityFiat={displayUtilityFiatRow}
+              foodFiat={displayFoodFiatRow}
+              useTokens={useTokens}
+              useCredits={useCredits}
+              accomodationCost={
+                useTokens || useCredits
+                  ? displayRentalTokenForCosts
+                  : displayAccommodationFiat
+              }
+              totalToken={displayRentalTokenForCosts}
+              totalFiat={displayTotalForCosts}
+              foodOptionEnabled={bookingConfig?.foodOptionEnabled}
+              utilityOptionEnabled={bookingConfig?.utilityOptionEnabled}
+              eventCost={eventFiatWithCurrency}
+              eventDefaultCost={
+                ticketOption?.price ? ticketOption.price * adults : undefined
+              }
+              accomodationDefaultCost={listing?.fiatPrice?.val * adults}
+              isNotPaid={isNotPaid}
+              updatedAccomodationTotal={{
+                val: updatedAccomodationTotal,
+                cur: useTokens
+                  ? displayRentalTokenForCosts?.cur
+                  : displayAccommodationFiat?.cur,
+              }}
+              isEditMode={canManageBooking || canGuestEditBookingDetails}
+              updatedUtilityTotal={{
+                val: updatedUtilityTotal,
+                cur: utilityFiat?.cur,
+              }}
+              updatedFoodTotal={{
+                val: updatedFoodTotal,
+                cur: utilityFiat?.cur,
+              }}
+              updatedFiatTotal={{
+                val: updatedFiatTotal,
+                cur: rentalFiat?.cur,
+              }}
+              updatedEventTotal={{
+                val: updatedEventTotal,
+                cur: eventFiatWithCurrency?.cur ?? CloserCurrencies.EUR,
+              }}
+              updatedRentalFiat={
+                updatedRentalFiat || { val: 0, cur: rentalFiat?.cur }
+              }
+              updatedRentalToken={
+                updatedRentalToken || { val: 0, cur: rentalToken?.cur }
+              }
+              priceDuration={listing?.priceDuration}
+              vatRate={vatRate}
+              status={status}
+              charges={ledgerChargesForSummary}
+              paymentDelta={previewPaymentDelta}
+              guestCostsLedger={!canManageBooking}
+              pricingPreviewAvailable={Boolean(updatedPrices)}
+              onBookingCheckout={
+                status !== 'cancelled' && isBookingOwnerEditor
+                  ? openBookingCheckout
+                  : undefined
+              }
+              bookingCheckoutLoading={isLoading}
+            />
+          </div>
+        </BookingSurface>
+
+        {bookingView?.volunteerInfo && (
+          <section className="flex flex-col gap-2">
+            {bookingView.volunteerInfo.bookingType === 'volunteer' ? (
+              <HeadingRow>
+                {t('projects_volunteer_application_title')}
+              </HeadingRow>
+            ) : (
+              <HeadingRow>
+                {t('projects_residence_application_title')}
+              </HeadingRow>
+            )}
+
+            {bookingView?.volunteerInfo?.projectId &&
+              bookingView.volunteerInfo.projectId?.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <Heading level={5}>{t('projects_build_title')}</Heading>
+                  {bookingView.volunteerInfo.projectId?.map((projectId) => (
+                    <p key={projectId}>
+                      <Link
+                        href={`/projects/${
+                          projects?.find((project) => project._id === projectId)
+                            ?.slug ?? projectId
+                        }`}
+                      >
+                        {
+                          projects?.find((project) => project._id === projectId)
+                            ?.name
+                        }
+                      </Link>
+                    </p>
+                  ))}
+                </div>
+              )}
+
+            <Heading level={5}>
+              {t('projects_skills_and_qualifications_title')}
+            </Heading>
+            <div className="flex flex-wrap gap-2">
+              {bookingView.volunteerInfo.skills?.map((skill) => (
+                <Tag color="primary" size="small" key={skill}>
+                  {skill}
+                </Tag>
+              ))}
+            </div>
+            <Heading level={5}>{t('projects_food_title')}</Heading>
+            <div className="flex flex-wrap gap-2">
+              {bookingView.volunteerInfo.diet?.map((diet) => (
+                <Tag color="primary" size="small" key={diet}>
+                  {diet}
+                </Tag>
+              ))}
+            </div>
+            <Heading level={5}>{t('projects_suggestions_title')}</Heading>
+            <p>
+              {!bookingView.volunteerInfo.suggestions
+                ? 'No suggestions'
+                : bookingView.volunteerInfo.suggestions}
+            </p>
+          </section>
+        )}
+
+        {canUseStayEditActions && (
+          <BookingSurface
+            tone="elevated"
+            padding="md"
+            className="flex flex-col gap-3"
+          >
+            <Heading level={4} className="!mt-0 text-base font-semibold">
+              Manage booking changes
+            </Heading>
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Button
+                variant="secondary"
+                isLoading={isLoading}
+                className={modalButtonClass}
+                onClick={() => setIsGuestsModalOpen(true)}
+              >
+                Edit guests
+              </Button>
+              <Button
+                variant="secondary"
+                isLoading={isLoading}
+                className={modalButtonClass}
+                onClick={() => setIsExtendModalOpen(true)}
+              >
+                Extend stay
+              </Button>
+              <Button
+                variant="secondary"
+                isLoading={isLoading}
+                className={modalButtonClass}
+                onClick={() => setIsShortenModalOpen(true)}
+              >
+                Shorten stay
+              </Button>
+              <Button
+                variant="secondary"
+                isLoading={isLoading}
+                className={modalButtonClass}
+                onClick={() => setIsAccommodationModalOpen(true)}
+              >
+                Change accommodation
+              </Button>
+            </div>
+            {stayEditError && (
+              <Information className="border-error/30 bg-error/10 text-foreground">
+                {stayEditError}
+              </Information>
+            )}
+          </BookingSurface>
+        )}
+
+        <section className="flex flex-col gap-3">
+          <BookingRequestButtons
+            isFiatBooking={
+              !bookingView?.useCredits && !bookingView?.useTokens
+            }
+            openCheckout={
+              status !== 'cancelled' && isBookingOwnerEditor
+                ? openBookingCheckout
+                : undefined
+            }
+            checkoutLoading={isLoading}
+            hideCheckoutButton={status === 'cancelled'}
+            stayShaped={stayShaped}
+            paymentDelta={bookingView?.paymentDelta}
+            useTokens={useTokens}
+            _id={_id}
+            status={status}
+            createdBy={createdBy}
+            paidBy={bookingView?.paidBy}
+            end={bookingEnd}
+            start={bookingStart}
+            confirmBooking={confirmBooking}
+            rejectBooking={rejectBooking}
+          />
+        </section>
+
+        {status === 'confirmed' && (
+          <BookingSurface tone="soft" padding="md" className="text-sm">
+            {t('bookings_confirmation')}
+          </BookingSurface>
+        )}
+
+        {isGuestsModalOpen && (
+          <Modal closeModal={() => setIsGuestsModalOpen(false)} className="sm:max-w-lg">
+            <div className="flex flex-col gap-4">
+              <Heading level={3}>Edit guests</Heading>
+              <BookingGuests
+                shouldHideTitle
+                adults={modalAdults}
+                kids={modalChildren}
+                infants={modalInfants}
+                pets={modalPets}
+                setAdults={setModalAdults}
+                setKids={setModalChildren}
+                setInfants={setModalInfants}
+                setPets={setModalPets}
+                isPrivate={Boolean(listing?.private)}
+              />
+              <Button
+                variant="secondary"
+                className={modalButtonClass}
+                isLoading={isLoading}
+                onClick={() => void handleEditGuestsSubmit()}
+              >
+                Save guests
+              </Button>
+            </div>
+          </Modal>
+        )}
+
+        {isExtendModalOpen && (
+          <Modal closeModal={() => setIsExtendModalOpen(false)} className="sm:max-w-lg">
+            <div className="flex flex-col gap-4">
+              <Heading level={3}>Extend stay</Heading>
+              <label className="text-sm">
+                New checkout date
+                <input
+                  className="mt-1 w-full rounded-md border border-line px-3 py-2"
+                  type="date"
+                  value={modalExtendEndDate}
+                  onChange={(e) => setModalExtendEndDate(e.target.value)}
+                />
+              </label>
+              <Button
+                variant="secondary"
+                className={modalButtonClass}
+                isLoading={isLoading}
+                onClick={() => void handleExtendStaySubmit()}
+              >
+                Extend
+              </Button>
+            </div>
+          </Modal>
+        )}
+
+        {isShortenModalOpen && (
+          <Modal closeModal={() => setIsShortenModalOpen(false)} className="sm:max-w-lg">
+            <div className="flex flex-col gap-4">
+              <Heading level={3}>Shorten stay</Heading>
+              <label className="text-sm">
+                New checkout date
+                <input
+                  className="mt-1 w-full rounded-md border border-line px-3 py-2"
+                  type="date"
+                  value={modalShortenEndDate}
+                  onChange={(e) => setModalShortenEndDate(e.target.value)}
+                />
+              </label>
+              <Button
+                variant="secondary"
+                className={modalButtonClass}
+                isLoading={isLoading}
+                onClick={() => void handleShortenStaySubmit()}
+              >
+                Shorten
+              </Button>
+            </div>
+          </Modal>
+        )}
+
+        {isAccommodationModalOpen && (
+          <Modal closeModal={() => setIsAccommodationModalOpen(false)} className="sm:max-w-lg">
+            <div className="flex flex-col gap-4">
+              <Heading level={3}>Change accommodation</Heading>
+              <label className="text-sm">
+                Listing
+                <select
+                  className="mt-1 w-full rounded-md border border-line px-3 py-2"
+                  value={modalListingId}
+                  onChange={(e) => setModalListingId(e.target.value)}
+                >
+                  {listings.map((item) => (
+                    <option key={item._id} value={item._id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <Button
+                variant="secondary"
+                className={modalButtonClass}
+                isLoading={isLoading}
+                onClick={() => void handleUpgradeStaySubmit()}
+              >
+                Change
+              </Button>
+            </div>
+          </Modal>
+        )}
       </main>
     </>
   );
 };
 
-ListingPage.getInitialProps = async (context: NextPageContext) => {
-  const { query } = context;
+StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
+  const { query, req } = context;
   try {
-    const [listing, messages] = await Promise.all([
-      api.get(`/listing/${query.slug}`).catch((err) => {
-        console.error('Error fetching listing:', err);
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const [bookingRes, listingRes, foodRes, projectsRes, messages] =
+      await Promise.all([
+        api
+          .get(`/stays/${query.slug}`, {
+            headers: getBearerAuthHeaders(req as NextApiRequest),
+          })
+          .catch(() => null),
+        api
+          .get('/listing', {
+            params: { limit: MAX_LISTINGS_TO_FETCH },
+          })
+          .catch(() => null),
+        api.get('/food').catch(() => null),
+        api.get('/project').catch(() => null),
+        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+      ]);
+    const booking = bookingRes?.data?.results;
+    const bookingConfig = config.booking;
+    const generalConfig = config.general;
+    const listings = listingRes?.data?.results;
+    const paymentConfig = config.payment;
+    const foodOptions = foodRes?.data?.results;
+    const projects = projectsRes?.data?.results;
 
-    const options = {
-      baseElements: { selectors: ['p', 'h2', 'span'] },
-    };
-    const descriptionText = convert(listing?.data.results.description, options)
-      .trim()
-      .slice(0, 100);
+    const listingRef = booking?.listing;
+    const listingIdForFetch =
+      listingRef &&
+      (getBookingListingRefId(listingRef) ??
+        (typeof listingRef === 'string' ? listingRef : null));
+
+    const [optionalEvent, optionalListing, optionalVolunteer] =
+      await Promise.all([
+        booking?.eventId &&
+          api.get(`/event/${booking.eventId}`, {
+            headers: getBearerAuthHeaders(req as NextApiRequest),
+          }),
+        listingIdForFetch &&
+          api.get(`/listing/${listingIdForFetch}`, {
+            headers: getBearerAuthHeaders(req as NextApiRequest),
+          }),
+        booking?.volunteerId &&
+          api.get(`/volunteer/${booking.volunteerId}`, {
+            headers: getBearerAuthHeaders(req as NextApiRequest),
+          }),
+      ]);
+    const event = optionalEvent?.data?.results;
+    const listing = optionalListing?.data?.results;
+    const volunteer = optionalVolunteer?.data?.results;
+
+    let bookingCreatedBy = null;
+    try {
+      const optionalCreatedBy =
+        booking?.createdBy &&
+        (await api.get(`/user/${booking.createdBy}`, {
+          headers: getBearerAuthHeaders(req as NextApiRequest),
+        }));
+      bookingCreatedBy = optionalCreatedBy?.data?.results;
+    } catch (error) {}
 
     return {
-      listing: listing?.data.results,
-      settings: config.booking as BookingSettings,
-      generalSettings: config.general as GeneralConfig,
-      descriptionText,
+      booking,
+      listing,
+      event,
+      volunteer,
+      error: null,
+      bookingCreatedBy,
+      bookingConfig,
+      generalConfig,
+      listings,
       messages,
+      paymentConfig,
+      foodOptions,
+      projects,
     };
-  } catch (err: unknown) {
-    let messages = null;
-    let error = null;
-
+  } catch (err: any) {
+    let messages: Awaited<ReturnType<typeof loadLocaleData>> | null = null;
     try {
       messages = await loadLocaleData(
         context?.locale,
         process.env.NEXT_PUBLIC_APP_NAME,
       );
-    } catch (err) {
-      error = parseMessageFromError(err);
-      console.error('Error fetching messages:', err);
+    } catch {
+      messages = null;
     }
-
     return {
-      error: error || parseMessageFromError(err),
+      error: parseMessageFromError(err),
+      booking: null,
       listing: null,
-      settings: null,
-      generalSettings: null,
-      descriptionText: null,
+      event: null,
+      volunteer: null,
+      createdBy: null,
+      bookingConfig: null,
+      generalConfig: null,
+      listings: null,
       messages,
+      paymentConfig: null,
+      foodOptions: null,
+      projects: null,
     };
   }
 };
 
-export default ListingPage;
+export default StayBookingSummaryPage;

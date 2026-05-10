@@ -17,8 +17,8 @@ import CurrencySwitcher from '../../../components/CurrencySwitcher';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
-import BookingSurface from '../../../components/booking/bookingSurface';
 import RedeemCredits from '../../../components/RedeemCredits';
+import BookingSurface from '../../../components/booking/bookingSurface';
 import { ErrorMessage } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
 import Checkbox from '../../../components/ui/Checkbox';
@@ -30,10 +30,11 @@ import Row from '../../../components/ui/Row';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import { Contract, utils } from 'ethers';
-import { NextApiRequest, NextPageContext } from 'next';
+import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
+import config from '../../../configCached';
 import {
   BOOKING_STEPS,
   BOOKING_STEP_TITLE_KEYS,
@@ -44,34 +45,34 @@ import {
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { WalletState } from '../../../contexts/wallet';
+import { useRedirectPaidBookingToDetail } from '../../../hooks';
 import { useBookingSmartContract } from '../../../hooks/useBookingSmartContract';
 import { useConfig } from '../../../hooks/useConfig';
-import { useRedirectPaidBookingToDetail } from '../../../hooks';
 import {
   BaseBookingParams,
   Booking,
   BookingConfig,
   CloserCurrencies,
-  Event,
   Listing,
   PaymentConfig,
   PaymentType,
 } from '../../../types';
+import type { Event } from '../../../types/event';
 import api from '../../../utils/api';
-import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import {
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
+  claimBookingAsFriend,
   getBookingTokenCurrency,
   getPaymentType,
   payTokens,
 } from '../../../utils/booking.helpers';
+import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
-import { logMetricIfAuthenticated } from '../../../utils/metrics';
-import config from '../../../configCached';
 import { priceFormat } from '../../../utils/helpers';
 import { formatDate } from '../../../utils/listings.helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
+import { logMetricIfAuthenticated } from '../../../utils/metrics';
 
 dayjs.extend(dayOfYear);
 
@@ -80,6 +81,9 @@ interface Props extends BaseBookingParams {
   bookingConfig: BookingConfig | null;
   paymentConfig: PaymentConfig | null;
   tokenCurrency: string;
+  booking?: Booking | null;
+  listing?: Listing | null;
+  event?: Event | null;
 }
 
 const Checkout = ({
@@ -87,19 +91,39 @@ const Checkout = ({
   bookingConfig,
   paymentConfig,
   tokenCurrency,
+  booking: bookingProp,
+  listing: listingProp,
+  event: eventProp,
 }: Props) => {
   const router = useRouter();
   const slugParam = router.query.slug;
   const slug = typeof slugParam === 'string' ? slugParam : slugParam?.[0];
+  const isFriend = normalizeIsFriendsBooking(router.query.isFriend);
   const t = useTranslations();
   const { platform }: any = usePlatform();
 
   useEffect(() => {
     if (!router.isReady || !slug) return;
-    void platform.booking.getOne(slug, { force: true });
-  }, [router.isReady, slug]);
 
-  const booking = slug ? platform.booking.findOne(slug)?.toJS?.() : null;
+    if (!isFriend) {
+      void platform.booking.getOne(slug, { force: true });
+      return;
+    }
+
+    void (async () => {
+      await platform.booking.getOne(slug, { force: true });
+      if (platform.booking.findOne(slug)) {
+        return;
+      }
+      await claimBookingAsFriend(slug);
+      await platform.booking.getOne(slug, { force: true });
+    })();
+  }, [router.isReady, slug, isFriend, platform]);
+
+  const bookingFromStore = slug
+    ? platform.booking.findOne(slug)?.toJS?.() ?? null
+    : null;
+  const booking = bookingFromStore ?? bookingProp ?? null;
 
   useEffect(() => {
     if (booking?.listing) {
@@ -108,16 +132,16 @@ const Checkout = ({
     if (booking?.eventId) {
       void platform.event.getOne(booking.eventId);
     }
-  }, [booking?.listing, booking?.eventId]);
+  }, [booking?.listing, booking?.eventId, platform]);
 
-  const listing =
-    booking?.listing
-      ? platform.listing.findOne(booking.listing)?.toJS?.() ?? null
-      : null;
-  const event =
-    booking?.eventId
-      ? platform.event.findOne(booking.eventId)?.toJS?.() ?? null
-      : null;
+  const listingFromStore = booking?.listing
+    ? platform.listing.findOne(booking.listing)?.toJS?.() ?? null
+    : null;
+  const listing = listingProp ?? listingFromStore ?? null;
+  const eventFromStore = booking?.eventId
+    ? platform.event.findOne(booking.eventId)?.toJS?.() ?? null
+    : null;
+  const event = eventProp ?? eventFromStore ?? null;
 
   const isHourlyBooking = listing?.priceDuration === 'hour';
   const isBookingEnabled =
@@ -222,8 +246,6 @@ const Checkout = ({
 
   const bookingYear = dayjs(start).year();
   const bookingStartDayOfYear = dayjs(start).dayOfYear();
-  // Check if this is a friend accessing the checkout page
-  const isFriend = router.query.isFriend === 'true';
 
   const isNotEnoughBalance = rentalToken?.val
     ? tokenBalanceAvailable < rentalToken?.val
@@ -258,21 +280,6 @@ const Checkout = ({
       (booking?.paymentDelta?.credits &&
         Math.abs(booking.paymentDelta.credits.val || 0) > 0.005),
   );
-  useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'871e9b'},body:JSON.stringify({sessionId:'871e9b',runId:'initial',hypothesisId:'H3',location:'checkout.tsx:hasCreditsAppliedFromStore',message:'credits widget gate evaluation',data:{bookingId:booking?._id,status,useCredits,creditsDelta:booking?.paymentDelta?.credits?.val,hasCreditsAppliedFromStore,canApplyCredits,useTokens,hasVolunteer:Boolean(booking?.volunteerId),hasRentalFiat:Boolean(rentalFiat&&rentalFiat?.val>0),showRedeemCreditsWidget:Boolean(process.env.NEXT_PUBLIC_FEATURE_CARROTS==='true'&&canApplyCredits&&!useTokens&&!booking?.volunteerId&&((rentalFiat&&rentalFiat?.val>0)||hasCreditsAppliedFromStore))},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-  }, [
-    booking?._id,
-    status,
-    useCredits,
-    booking?.paymentDelta?.credits?.val,
-    hasCreditsAppliedFromStore,
-    canApplyCredits,
-    useTokens,
-    booking?.volunteerId,
-    rentalFiat,
-  ]);
   const [creditsBalance, setCreditsBalance] = useState(0);
   const [currency, setCurrency] = useState<CloserCurrencies>(
     useTokens ? CURRENCIES[1] : DEFAULT_CURRENCY,
@@ -309,8 +316,7 @@ const Checkout = ({
   const [partialPriceInTokens, setPartialPriceInTokens] = useState(0);
 
   const isAdditionalFiatPayment = Boolean(
-    booking?.paymentDelta?.fiat?.val &&
-      booking?.paymentDelta?.fiat?.val > 0,
+    booking?.paymentDelta?.fiat?.val && booking?.paymentDelta?.fiat?.val > 0,
   );
 
   const [paymentType, setPaymentType] = useState<PaymentType>(
@@ -489,7 +495,8 @@ const Checkout = ({
           infants: booking?.infants,
           pets: booking?.pets,
           useTokens: useTokens ?? false,
-          eventId,
+          ...(eventId && { eventId }),
+          isFriendsBooking: Boolean(booking?.isFriendsBooking),
         });
 
         setAvailabilityReason(availabilityReason);
@@ -515,11 +522,13 @@ const Checkout = ({
     booking?.children,
     booking?.infants,
     booking?.pets,
+    booking?.isFriendsBooking,
     start,
     end,
     adults,
     useTokens,
     isHourlyBooking,
+    eventId,
   ]);
 
   useEffect(() => {
@@ -936,7 +945,32 @@ const Checkout = ({
       setIsApplyingCredits(true);
       setCreditsError(null);
       // #region agent log
-      fetch('http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'871e9b'},body:JSON.stringify({sessionId:'871e9b',runId:'initial',hypothesisId:'H1',location:'checkout.tsx:applyCredits:before',message:'starting credit payment',data:{bookingId:booking?._id,startDate:start,creditsAmount:priceInCredits,status,useCredits,creditsDelta:booking?.paymentDelta?.credits?.val},timestamp:Date.now()})}).catch(()=>{});
+      fetch(
+        'http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Debug-Session-Id': '871e9b',
+          },
+          body: JSON.stringify({
+            sessionId: '871e9b',
+            runId: 'initial',
+            hypothesisId: 'H1',
+            location: 'checkout.tsx:applyCredits:before',
+            message: 'starting credit payment',
+            data: {
+              bookingId: booking?._id,
+              startDate: start,
+              creditsAmount: priceInCredits,
+              status,
+              useCredits,
+              creditsDelta: booking?.paymentDelta?.credits?.val,
+            },
+            timestamp: Date.now(),
+          }),
+        },
+      ).catch(() => {});
       // #endregion
       await platform.bookings.creditPayment(booking?._id, {
         startDate: start,
@@ -946,7 +980,41 @@ const Checkout = ({
       const bookingFromStoreAfterCreditPayment = platform.booking.findOne(
         booking?._id,
       );
-      fetch('http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'871e9b'},body:JSON.stringify({sessionId:'871e9b',runId:'initial',hypothesisId:'H2',location:'checkout.tsx:applyCredits:after',message:'credit payment call resolved',data:{bookingId:booking?._id,statusAfterCallDirect:bookingFromStoreAfterCreditPayment?.get('status')??null,useCreditsAfterCallDirect:bookingFromStoreAfterCreditPayment?.get('useCredits')??null,creditsDeltaAfterCallDirect:bookingFromStoreAfterCreditPayment?.getIn(['paymentDelta','credits','val'])??null,statusAfterCallNested:bookingFromStoreAfterCreditPayment?.getIn(['data','status'])??null,rawBooking:bookingFromStoreAfterCreditPayment?.toJS?.()??null},timestamp:Date.now()})}).catch(()=>{});
+      fetch(
+        'http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Debug-Session-Id': '871e9b',
+          },
+          body: JSON.stringify({
+            sessionId: '871e9b',
+            runId: 'initial',
+            hypothesisId: 'H2',
+            location: 'checkout.tsx:applyCredits:after',
+            message: 'credit payment call resolved',
+            data: {
+              bookingId: booking?._id,
+              statusAfterCallDirect:
+                bookingFromStoreAfterCreditPayment?.get('status') ?? null,
+              useCreditsAfterCallDirect:
+                bookingFromStoreAfterCreditPayment?.get('useCredits') ?? null,
+              creditsDeltaAfterCallDirect:
+                bookingFromStoreAfterCreditPayment?.getIn([
+                  'paymentDelta',
+                  'credits',
+                  'val',
+                ]) ?? null,
+              statusAfterCallNested:
+                bookingFromStoreAfterCreditPayment?.getIn(['data', 'status']) ??
+                null,
+              rawBooking: bookingFromStoreAfterCreditPayment?.toJS?.() ?? null,
+            },
+            timestamp: Date.now(),
+          }),
+        },
+      ).catch(() => {});
       // #endregion
     } catch (error) {
       setCreditsError(parseMessageFromError(error));
@@ -977,10 +1045,7 @@ const Checkout = ({
         partialTokenPaymentNights,
         partialPriceInTokens,
       });
-      return (
-        platform.booking.findOne(booking?._id)?.toJS?.() ??
-        booking
-      );
+      return platform.booking.findOne(booking?._id)?.toJS?.() ?? booking;
     } catch (error) {
       setPaymentError(parseMessageFromError(error));
     }
@@ -1300,167 +1365,176 @@ const Checkout = ({
                       />
                     </div>
                     {!isHourlyBooking &&
-                      ((utilityFiat?.val &&
-                        bookingConfig?.utilityOptionEnabled) ||
-                        foodFiat?.val) ? (
-                        <p className="text-right text-xs mt-1 text-foreground/80">
-                          {t('bookings_summary_step_utility_description')}
-                        </p>
-                      ) : null}
+                    ((utilityFiat?.val &&
+                      bookingConfig?.utilityOptionEnabled) ||
+                      foodFiat?.val) ? (
+                      <p className="text-right text-xs mt-1 text-foreground/80">
+                        {t('bookings_summary_step_utility_description')}
+                      </p>
+                    ) : null}
                   </BookingSurface>
                 </div>
               )}
-          <BookingSurface tone="elevated" padding="lg" className="flex flex-col gap-3">
-            {status === 'tokens-staked' && useTokens && rentalToken && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-0">
-                <div className="flex ">
-                  <IconCheckCircle className="text-green-600 mr-2" />
-                  <p className="text-green-800 font-medium text-sm">
-                    {t.rich('bookings_checkout_tokens_staked_message', {
-                      tokens: String(
-                        priceFormat({
-                          val:
-                            paymentType === PaymentType.PARTIAL_TOKENS
-                              ? partialPriceInTokens
-                              : rentalToken.val,
-                          cur: rentalToken.cur,
-                        }),
-                      ),
-                    })}
-                  </p>
-                </div>
-              </div>
-            )}
-            {isStripeBooking && (
-              <>
-                {!availabilityCheckLoading && isListingAvailable === false && (
-                  <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-amber-800 font-medium">
-                      {availabilityReason === 'min_duration_not_met'
-                        ? t(
-                            'checkout_listing_no_longer_available_min_duration_not_met',
-                          )
-                        : t('checkout_listing_no_longer_available')}
-                    </p>
+              <BookingSurface
+                tone="elevated"
+                padding="lg"
+                className="flex flex-col gap-3"
+              >
+                {status === 'tokens-staked' && useTokens && rentalToken && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-0">
+                    <div className="flex ">
+                      <IconCheckCircle className="text-green-600 mr-2" />
+                      <p className="text-green-800 font-medium text-sm">
+                        {t.rich('bookings_checkout_tokens_staked_message', {
+                          tokens: String(
+                            priceFormat({
+                              val:
+                                paymentType === PaymentType.PARTIAL_TOKENS
+                                  ? partialPriceInTokens
+                                  : rentalToken.val,
+                              cur: rentalToken.cur,
+                            }),
+                          ),
+                        })}
+                      </p>
+                    </div>
                   </div>
                 )}
-                <div
-                  className={
-                    availabilityCheckLoading || isListingAvailable === false
-                      ? 'pointer-events-none opacity-60'
-                      : ''
-                  }
+                {isStripeBooking && (
+                  <>
+                    {!availabilityCheckLoading &&
+                      isListingAvailable === false && (
+                        <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                          <p className="text-amber-800 font-medium">
+                            {availabilityReason === 'min_duration_not_met'
+                              ? t(
+                                  'checkout_listing_no_longer_available_min_duration_not_met',
+                                )
+                              : t('checkout_listing_no_longer_available')}
+                          </p>
+                        </div>
+                      )}
+                    <div
+                      className={
+                        availabilityCheckLoading || isListingAvailable === false
+                          ? 'pointer-events-none opacity-60'
+                          : ''
+                      }
+                    >
+                      <CheckoutPayment
+                        cancellationPolicy={cancellationPolicy}
+                        isPartialCreditsPayment={
+                          paymentType === PaymentType.PARTIAL_CREDITS
+                        }
+                        partialPriceInCredits={partialPriceInCredits}
+                        bookingId={booking?._id || ''}
+                        buttonDisabled={
+                          availabilityCheckLoading ||
+                          isListingAvailable === false ||
+                          (useTokens &&
+                            (!hasAgreedToWalletDisclaimer ||
+                              (isNotEnoughBalance &&
+                                booking?.status !== 'tokens-staked'))) ||
+                          false
+                        }
+                        useTokens={useTokens || false}
+                        useCredits={useCredits}
+                        totalToPayInFiat={totalToPayInFiat}
+                        dailyTokenValue={dailyRentalToken?.val || 0}
+                        startDate={start}
+                        endDate={end}
+                        rentalTokenVal={
+                          dailyRentalToken?.val ||
+                          0 * (nightsToPayWithTokens || 0)
+                        }
+                        totalNights={nightsToPayWithTokens}
+                        user={user}
+                        eventId={event?._id}
+                        status={booking?.status}
+                        transactionId={booking?.transactionId}
+                        createdBy={booking?.createdBy}
+                        shouldShowTokenDisclaimer={shouldShowTokenDisclaimer}
+                        hasAgreedToWalletDisclaimer={
+                          hasAgreedToWalletDisclaimer
+                        }
+                        setWalletDisclaimer={setWalletDisclaimer}
+                        refetchBooking={refetchBooking}
+                        isAdditionalFiatPayment={isAdditionalFiatPayment}
+                      />
+                    </div>
+                  </>
+                )}
+              </BookingSurface>
+              {isFriendsBooking && (
+                <div className="space-y-4">
+                  <div className="flex flex-col gap-3">
+                    {!isFriend && (
+                      <Button
+                        isEnabled={!processing}
+                        isLoading={processing}
+                        onClick={handleFriendsBookingSendToFriend}
+                      >
+                        <span className="inline-flex items-center gap-2">
+                          <IconMail className="mr-0 shrink-0" />
+                          {t('friends_booking_send_to_friend')}
+                        </span>
+                      </Button>
+                    )}
+
+                    {emailSuccess && (
+                      <div className="text-green-600 text-sm font-medium inline-flex items-center gap-2">
+                        <IconCheckCircle className="shrink-0 text-green-600" />
+                        {t('friends_booking_checkout_sent')}
+                      </div>
+                    )}
+
+                    {emailError && (
+                      <div className="text-red-600 text-sm font-medium inline-flex items-center gap-2">
+                        <IconXCircle className="shrink-0 text-red-600" />
+                        {emailError}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              {isFreeBooking && !isFriendsBooking && (
+                <Button
+                  isEnabled={!processing}
+                  isLoading={processing}
+                  className="booking-btn"
+                  onClick={handleFreeBooking}
                 >
-                  <CheckoutPayment
-                    cancellationPolicy={cancellationPolicy}
-                    isPartialCreditsPayment={
-                      paymentType === PaymentType.PARTIAL_CREDITS
+                  {user?.roles.includes('member') ||
+                  booking?.status === 'confirmed'
+                    ? t('buttons_confirm_booking')
+                    : t('buttons_booking_request')}
+                </Button>
+              )}
+              {isTokenOnlyBooking && !isFriendsBooking && (
+                <div>
+                  <Checkbox
+                    id="token-staking-disclaimer"
+                    isChecked={hasAgreedToWalletDisclaimer}
+                    onChange={() =>
+                      setWalletDisclaimer(!hasAgreedToWalletDisclaimer)
                     }
-                    partialPriceInCredits={partialPriceInCredits}
-                    bookingId={booking?._id || ''}
-                    buttonDisabled={
-                      availabilityCheckLoading ||
-                      isListingAvailable === false ||
-                      (useTokens &&
-                        (!hasAgreedToWalletDisclaimer ||
-                          (isNotEnoughBalance &&
-                            booking?.status !== 'tokens-staked'))) ||
-                      false
-                    }
-                    useTokens={useTokens || false}
-                    useCredits={useCredits}
-                    totalToPayInFiat={totalToPayInFiat}
-                    dailyTokenValue={dailyRentalToken?.val || 0}
-                    startDate={start}
-                    endDate={end}
-                    rentalTokenVal={
-                      dailyRentalToken?.val || 0 * (nightsToPayWithTokens || 0)
-                    }
-                    totalNights={nightsToPayWithTokens}
-                    user={user}
-                    eventId={event?._id}
-                    status={booking?.status}
-                    transactionId={booking?.transactionId}
-                    createdBy={booking?.createdBy}
-                    shouldShowTokenDisclaimer={shouldShowTokenDisclaimer}
-                    hasAgreedToWalletDisclaimer={hasAgreedToWalletDisclaimer}
-                    setWalletDisclaimer={setWalletDisclaimer}
-                    refetchBooking={refetchBooking}
-                    isAdditionalFiatPayment={isAdditionalFiatPayment}
-                  />
-                </div>
-              </>
-            )}
-          </BookingSurface>
-          {isFriendsBooking && (
-            <div className="space-y-4">
-              <div className="flex flex-col gap-3">
-                {!isFriend && (
-                  <Button
-                    isEnabled={!processing}
-                    isLoading={processing}
-                    onClick={handleFriendsBookingSendToFriend}
+                    className="mt-8"
                   >
-                    <span className="inline-flex items-center gap-2">
-                      <IconMail className="mr-0 shrink-0" />
-                      {t('friends_booking_send_to_friend')}
-                    </span>
+                    {t('bookings_checkout_step_wallet_disclaimer')}
+                  </Checkbox>
+                  <Button
+                    isEnabled={
+                      !processing && !isStaking && hasAgreedToWalletDisclaimer
+                    }
+                    isLoading={processing || isStaking}
+                    className="booking-btn"
+                    onClick={handleTokenOnlyBooking}
+                  >
+                    {renderButtonText()}
                   </Button>
-                )}
-
-                {emailSuccess && (
-                  <div className="text-green-600 text-sm font-medium inline-flex items-center gap-2">
-                    <IconCheckCircle className="shrink-0 text-green-600" />
-                    {t('friends_booking_checkout_sent')}
-                  </div>
-                )}
-
-                {emailError && (
-                  <div className="text-red-600 text-sm font-medium inline-flex items-center gap-2">
-                    <IconXCircle className="shrink-0 text-red-600" />
-                    {emailError}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-          {isFreeBooking && !isFriendsBooking && (
-            <Button
-              isEnabled={!processing}
-              isLoading={processing}
-              className="booking-btn"
-              onClick={handleFreeBooking}
-            >
-              {user?.roles.includes('member') || booking?.status === 'confirmed'
-                ? t('buttons_confirm_booking')
-                : t('buttons_booking_request')}
-            </Button>
-          )}
-          {isTokenOnlyBooking && !isFriendsBooking && (
-            <div>
-              <Checkbox
-                id="token-staking-disclaimer"
-                isChecked={hasAgreedToWalletDisclaimer}
-                onChange={() =>
-                  setWalletDisclaimer(!hasAgreedToWalletDisclaimer)
-                }
-                className="mt-8"
-              >
-                {t('bookings_checkout_step_wallet_disclaimer')}
-              </Checkbox>
-              <Button
-                isEnabled={
-                  !processing && !isStaking && hasAgreedToWalletDisclaimer
-                }
-                isLoading={processing || isStaking}
-                className="booking-btn"
-                onClick={handleTokenOnlyBooking}
-              >
-                {renderButtonText()}
-              </Button>
-            </div>
-          )}
-          </>
+                </div>
+              )}
+            </>
           )}
           {paymentError && paymentError !== 'BLOCKCHAIN_GLOBAL_CONFLICT' && (
             <ErrorMessage error={paymentError} />

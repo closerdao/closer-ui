@@ -33,6 +33,7 @@ export const models = [
   'financeapplication',
   'vote',
   'cohousingapplication',
+  'engagementopportunity',
 ];
 
 const filterToKey = (filter) => JSON.stringify(filter) || '__';
@@ -382,7 +383,6 @@ export const PlatformProvider = ({ children }) => {
               dispatch(action);
               return action;
             })
-            // .then(fetchLinkedObjects(api)((Object.assign({ id, model }, opts))))
             .catch((error) =>
               dispatch({
                 error,
@@ -583,6 +583,88 @@ export const PlatformProvider = ({ children }) => {
     };
     });
 
+    nextPlatform.engagementopportunity.fetchList = (filter, _opts = {}) => {
+      const defaultOptions = { sort_by: '-score' };
+      const options = Object.assign(defaultOptions, filter);
+      const filterKey = filterToKey(filter);
+      dispatch({
+        type: constants.GET_INIT,
+        model: 'engagementopportunity',
+        filterKey,
+      });
+      return api
+        .get('/engagementopportunity', {
+          params: {
+            ...options,
+            where: options.where && formatSearch(options.where),
+          },
+          cache: false,
+        })
+        .then((res) => {
+          const results = fromJS(res.data.results);
+          const total =
+            typeof res.data.total === 'number'
+              ? res.data.total
+              : typeof res.data.count === 'number'
+                ? res.data.count
+                : results.size;
+          const action = {
+            results,
+            receivedAt: Date.now(),
+            filterKey,
+            model: 'engagementopportunity',
+            type: constants.GET_SUCCESS,
+            total,
+          };
+          dispatch(action);
+          return action;
+        })
+        .catch((error) =>
+          dispatch({
+            error,
+            filterKey,
+            model: 'engagementopportunity',
+            type: constants.GET_ERROR,
+          }),
+        );
+    };
+
+    nextPlatform.engagementopportunity.approve = (_id, data = {}) =>
+      api
+        .post(
+          `/engagementopportunity/${encodeURIComponent(_id)}/approve`,
+          data,
+        )
+        .then((res) => {
+        const results = fromJS(res.data.results);
+        dispatch({
+          type: constants.PATCH_SUCCESS,
+          results,
+          _id,
+          model: 'engagementopportunity',
+          data,
+        });
+        return res;
+      });
+
+    nextPlatform.engagementopportunity.dismiss = (_id, data = {}) =>
+      api
+        .post(
+          `/engagementopportunity/${encodeURIComponent(_id)}/dismiss`,
+          data,
+        )
+        .then((res) => {
+        const results = fromJS(res.data.results);
+        dispatch({
+          type: constants.PATCH_SUCCESS,
+          results,
+          _id,
+          model: 'engagementopportunity',
+          data,
+        });
+        return res;
+      });
+
     nextPlatform.cohousingapplication.getMine = () =>
       api.get('/my/CohousingApplication').then((res) => res.data);
 
@@ -721,6 +803,37 @@ export const PlatformProvider = ({ children }) => {
         dispatch(action);
         return action;
       }),
+    };
+
+    nextPlatform.stays = {
+      approveExtension: (_id) =>
+        api
+          .post(`/stays/${encodeURIComponent(_id)}/extension/approve`, {})
+          .then((res) => {
+            const results = fromJS(res.data.results);
+            dispatch({
+              type: constants.PATCH_SUCCESS,
+              results,
+              _id,
+              model: 'stay',
+              data: {},
+            });
+            return res;
+          }),
+      rejectExtension: (_id) =>
+        api
+          .post(`/stays/${encodeURIComponent(_id)}/extension/reject`, {})
+          .then((res) => {
+            const results = fromJS(res.data.results);
+            dispatch({
+              type: constants.PATCH_SUCCESS,
+              results,
+              _id,
+              model: 'stay',
+              data: {},
+            });
+            return res;
+          }),
     };
 
     nextPlatform.carrots = {

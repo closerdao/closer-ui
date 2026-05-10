@@ -20,7 +20,17 @@ import Heading from '../ui/Heading';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
-import { dateToPropertyTimeZone } from '../../utils/booking.helpers';
+import type { Stay } from '../../types/stay';
+import {
+  dateToPropertyTimeZone,
+  getBookingPaymentCheckoutPath,
+} from '../../utils/booking.helpers';
+import {
+  computeCreditsOwed,
+  computeFiatOwed,
+  computeTokensOwed,
+  isStayShapedBooking,
+} from '../../utils/stays.api';
 
 dayjs.extend(isSameOrBefore);
 
@@ -42,6 +52,7 @@ interface Props {
   isHourly?: boolean;
   eventChatLink?: string;
   bookingConfig?: BookingConfig;
+  bookingDetailHrefPrefix?: string;
 }
 
 const BookingListPreview = ({
@@ -56,6 +67,7 @@ const BookingListPreview = ({
   isHourly,
   eventChatLink,
   bookingConfig,
+  bookingDetailHrefPrefix = '/bookings',
 }: Props) => {
   const t = useTranslations();
 
@@ -77,6 +89,9 @@ const BookingListPreview = ({
     roomOrBedNumbers,
     paidBy,
     isFriendsBooking,
+    useTokens,
+    paymentDelta,
+    pendingExtension,
   } = raw;
 
   const router = useRouter();
@@ -94,6 +109,15 @@ const BookingListPreview = ({
   const isSpaceHost = user?.roles.includes('space-host');
   const isOwnBooking =
     createdBy === user?._id || bookingMapItem.get('paidBy') === user?._id;
+
+  const stayShaped = isStayShapedBooking(raw as Record<string, unknown>);
+  const oweds = stayShaped
+    ? {
+        fiatOwed: computeFiatOwed(raw as Stay),
+        tokensOwed: computeTokensOwed(raw as Stay),
+        creditsOwed: computeCreditsOwed(raw as Stay),
+      }
+    : { fiatOwed: 0, tokensOwed: 0, creditsOwed: 0 };
 
   const flagPickup =
     doesNeedPickup && start > new Date(Date.now() - 12 * 60 * 60 * 1000);
@@ -145,6 +169,8 @@ const BookingListPreview = ({
   const detailLine = detailParts.join(' · ');
   const eventVolunteerHref = link && detailParts.length > 0 ? link : undefined;
 
+  const bookingDetailHref = `${bookingDetailHrefPrefix.replace(/\/$/, '')}/${_id}`;
+
   return (
     <BookingSurface
       tone="elevated"
@@ -154,7 +180,7 @@ const BookingListPreview = ({
       <div className="flex flex-wrap items-start justify-between gap-2">
         <Heading level={4} className="!mt-0 max-w-[min(100%,20rem)] flex-1 font-semibold tracking-normal normal-case">
           <Link
-            href={`/bookings/${_id}`}
+            href={bookingDetailHref}
             className="text-foreground outline-none hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 rounded-sm"
           >
             {listingName}
@@ -200,7 +226,7 @@ const BookingListPreview = ({
         <p className="break-all">
           <Link
             className="font-medium text-foreground outline-none hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 rounded-sm"
-            href={`/bookings/${_id}`}
+            href={bookingDetailHref}
           >
             # {_id}
           </Link>
@@ -210,6 +236,12 @@ const BookingListPreview = ({
       {adminBookingReason && (
         <BookingSurface tone="banner" padding="sm" className="text-center text-xs font-semibold">
           {adminBookingReason}
+        </BookingSurface>
+      )}
+
+      {pendingExtension?.requestedAt && (
+        <BookingSurface tone="banner" padding="sm" className="text-xs">
+          {t('booking_details_extension_pending')}
         </BookingSurface>
       )}
 
@@ -256,7 +288,7 @@ const BookingListPreview = ({
       ) : null}
 
       <div className="flex flex-col gap-2 pt-1">
-        <Link href={`/bookings/${_id}`} passHref>
+        <Link href={bookingDetailHref} passHref>
           <Button
             variant="secondary"
             size="small"
@@ -273,7 +305,19 @@ const BookingListPreview = ({
         )}
 
         {isOwnBooking && status === 'confirmed' && (
-          <Link href={`/bookings/${_id}/checkout`} passHref>
+          <Link
+            href={getBookingPaymentCheckoutPath({
+              bookingId: _id,
+              stayShaped,
+              status,
+              paymentDelta,
+              useTokens: Boolean(useTokens),
+              fiatOwed: oweds.fiatOwed,
+              tokensOwed: oweds.tokensOwed,
+              creditsOwed: oweds.creditsOwed,
+            })}
+            passHref
+          >
             <Button
               variant="primary"
               size="small"
@@ -315,6 +359,9 @@ const BookingListPreview = ({
           listPreview
           hideCheckoutButton
           hideCancelButton
+          stayShaped={stayShaped}
+          paymentDelta={paymentDelta}
+          useTokens={Boolean(useTokens)}
           _id={_id}
           status={status}
           createdBy={createdBy}

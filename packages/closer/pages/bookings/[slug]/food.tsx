@@ -22,6 +22,7 @@ import { usePlatform } from '../../../contexts/platform';
 import { useRedirectPaidBookingToDetail } from '../../../hooks';
 import {
   BaseBookingParams,
+  Booking,
   BookingConfig,
 } from '../../../types';
 import { FoodOption } from '../../../types/food';
@@ -49,6 +50,7 @@ interface Props extends BaseBookingParams {
   discountCode?: string;
   foodOptions: FoodOption[];
   tokenCurrency: string;
+  booking?: Booking | null;
 }
 
 const SingleOptionPhotoPreview = ({
@@ -118,6 +120,7 @@ const FoodSelectionPage = ({
   discountCode,
   foodOptions,
   tokenCurrency,
+  booking: bookingProp,
 }: Props) => {
   const t = useTranslations();
   const router = useRouter();
@@ -125,12 +128,40 @@ const FoodSelectionPage = ({
   const slug = typeof slugParam === 'string' ? slugParam : slugParam?.[0];
   const { platform }: any = usePlatform();
 
+  const [fetchedBooking, setFetchedBooking] = useState<Booking | null>(null);
+
   useEffect(() => {
     if (!router.isReady || !slug) return;
-    void platform.booking.getOne(slug, { force: true });
-  }, [router.isReady, slug, platform]);
+    if (bookingProp?._id === slug) {
+      setFetchedBooking(bookingProp);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const action = await platform.booking.getOne(slug, { force: true });
+        if (cancelled) return;
+        const payload = action?.results;
+        if (!payload) return;
+        const js =
+          typeof payload.toJS === 'function'
+            ? (payload.toJS() as Booking)
+            : (payload as Booking);
+        setFetchedBooking(js);
+      } catch {
+        if (!cancelled) setFetchedBooking(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router.isReady, slug, platform, bookingProp]);
 
-  const booking = slug ? platform.booking.findOne(slug)?.toJS?.() ?? null : null;
+  const bookingFromStore = slug
+    ? platform.booking.findOne(slug)?.toJS?.() ?? null
+    : null;
+  const booking =
+    bookingFromStore ?? fetchedBooking ?? bookingProp ?? null;
   const event = booking?.eventId
     ? platform.event.findOne(booking.eventId)?.toJS?.() ?? null
     : null;

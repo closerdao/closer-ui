@@ -34,7 +34,12 @@ const BookingsRequests = ({ bookingConfig }: Props) => {
 
   const defaultWhere = {
     end: { $gte: loadTime },
-    status: 'pending',
+    $or: [
+      { status: 'pending' },
+      {
+        'pendingExtension.requestedAt': { $exists: true, $ne: null },
+      },
+    ],
   };
 
   const [filter] = useState({

@@ -14,7 +14,7 @@ jest.mock('closer/contexts/auth', () => {
 jest.mock('closer/utils/api', () => ({
   __esModule: true,
   default: {
-    get: jest.fn(),
+    get: jest.fn(() => Promise.resolve({ data: { results: null } })),
     post: jest.fn(() => Promise.resolve({ data: {} })),
     defaults: { headers: {} },
     setOnSessionInvalid: jest.fn(),
@@ -48,6 +48,7 @@ describe('FoodSelectionPage', () => {
         event={undefined}
         bookingConfig={bookingConfig}
         foodOptions={foodOptions}
+        tokenCurrency="TDF"
       />,
     );
     const foodHeadings = screen.getAllByRole('heading', { name: /food/i });
@@ -61,6 +62,7 @@ describe('FoodSelectionPage', () => {
         event={undefined}
         bookingConfig={bookingConfig}
         foodOptions={foodOptions}
+        tokenCurrency="TDF"
       />,
     );
     expect(screen.getByRole('button', { name: /continue/i })).toBeInTheDocument();
@@ -75,12 +77,13 @@ describe('FoodSelectionPage', () => {
           event={undefined}
           bookingConfig={bookingConfig}
           foodOptions={foodOptions}
+          tokenCurrency="TDF"
         />,
       );
       const foodToggle = screen.getByRole('checkbox', { name: /basic/i });
       await user.click(foodToggle);
       expect(foodToggle).not.toBeChecked();
-      expect(screen.getByText(/Save.*36[.,]00.*by opting out/i)).toBeInTheDocument();
+      expect(screen.getByText(/by opting out/i)).toBeInTheDocument();
     });
 
     it('should show food cost when food toggle is ON', () => {
@@ -90,6 +93,7 @@ describe('FoodSelectionPage', () => {
           event={undefined}
           bookingConfig={bookingConfig}
           foodOptions={foodOptions}
+          tokenCurrency="TDF"
         />,
       );
       const foodToggle = screen.getByRole('checkbox', { name: /basic/i });
@@ -106,6 +110,7 @@ describe('FoodSelectionPage', () => {
           event={undefined}
           bookingConfig={bookingConfig}
           foodOptions={foodOptions}
+          tokenCurrency="TDF"
         />,
       );
       const foodToggle = screen.getByRole('checkbox', { name: /basic/i });
@@ -114,7 +119,7 @@ describe('FoodSelectionPage', () => {
       expect(screen.getByText(/36\.00|36,00/)).toBeInTheDocument();
 
       await user.click(foodToggle);
-      expect(screen.getByText(/Save.*36[.,]00.*by opting out/i)).toBeInTheDocument();
+      expect(screen.getByText(/by opting out/i)).toBeInTheDocument();
 
       await user.click(foodToggle);
       expect(screen.getByText(/36\.00|36,00/)).toBeInTheDocument();

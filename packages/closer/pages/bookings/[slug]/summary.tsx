@@ -34,25 +34,39 @@ import { useConfig } from '../../../hooks/useConfig';
 import { useRedirectPaidBookingToDetail } from '../../../hooks';
 import {
   BaseBookingParams,
+  Booking,
   BookingConfig,
   CloserCurrencies,
+  Listing,
   PaymentConfig,
 } from '../../../types';
+import type { Event } from '../../../types/event';
+import type { Stay } from '../../../types/stay';
 import api from '../../../utils/api';
 import {
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
+  getBookingPaymentCheckoutPath,
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import { logMetricIfAuthenticated } from '../../../utils/metrics';
+import {
+  computeCreditsOwed,
+  computeFiatOwed,
+  computeTokensOwed,
+  isStayShapedBooking,
+} from '../../../utils/stays.api';
 
 interface Props extends BaseBookingParams {
   error?: string;
   bookingConfig: BookingConfig | null;
   paymentConfig: PaymentConfig | null;
   tokenCurrency: string;
+  booking?: Booking | null;
+  listing?: Listing | null;
+  event?: Event | null;
 }
 
 const Summary = ({
@@ -60,6 +74,9 @@ const Summary = ({
   bookingConfig,
   paymentConfig,
   tokenCurrency,
+  booking: bookingProp,
+  listing: listingProp,
+  event: eventProp,
 }: Props) => {
   const router = useRouter();
   const { platform }: any = usePlatform();
@@ -71,13 +88,18 @@ const Summary = ({
     void platform.booking.getOne(slug, { force: true });
   }, [router.isReady, slug, platform]);
 
-  const booking = slug ? platform.booking.findOne(slug)?.toJS?.() ?? null : null;
-  const listing = booking?.listing
+  const bookingFromStore = slug
+    ? platform.booking.findOne(slug)?.toJS?.() ?? null
+    : null;
+  const booking = bookingFromStore ?? bookingProp ?? null;
+  const listingFromStore = booking?.listing
     ? platform.listing.findOne(booking.listing)?.toJS?.() ?? null
     : null;
-  const event = booking?.eventId
+  const listing = listingProp ?? listingFromStore ?? null;
+  const eventFromStore = booking?.eventId
     ? platform.event.findOne(booking.eventId)?.toJS?.() ?? null
     : null;
+  const event = eventProp ?? eventFromStore ?? null;
 
   useEffect(() => {
     if (booking?.listing) {
@@ -182,6 +204,23 @@ const Summary = ({
 
   const isHourlyBooking = listing?.priceDuration === 'hour';
 
+  const stayShaped = booking
+    ? isStayShapedBooking(booking as Record<string, unknown>)
+    : false;
+  const stayLike = booking as unknown as Stay;
+  const afterSummaryCheckoutPath = booking?._id
+    ? getBookingPaymentCheckoutPath({
+        bookingId: booking._id,
+        stayShaped,
+        status: String(booking.status ?? ''),
+        paymentDelta: booking.paymentDelta,
+        useTokens: Boolean(booking.useTokens),
+        fiatOwed: stayShaped ? computeFiatOwed(stayLike) : 0,
+        tokensOwed: stayShaped ? computeTokensOwed(stayLike) : 0,
+        creditsOwed: stayShaped ? computeCreditsOwed(stayLike) : 0,
+      })
+    : `/bookings/${slug ?? ''}/checkout`;
+
   useEffect(() => {
     if (booking?.status === 'pending' || booking?.status === 'paid') {
       router.push(`/bookings/${booking?._id}`);
@@ -205,7 +244,7 @@ const Summary = ({
         point: metricPoint,
       });
       setLoading(false);
-      return router.push(`/bookings/${booking?._id}/checkout`);
+      return router.push(afterSummaryCheckoutPath);
     }
     try {
       const res = await platform.bookings.complete(booking?._id);
@@ -217,7 +256,7 @@ const Summary = ({
           value: 'booking',
           point: metricPoint,
         });
-        router.push(`/bookings/${booking?._id}/checkout`);
+        router.push(afterSummaryCheckoutPath);
       } else if (status === 'pending') {
         void logMetricIfAuthenticated(user, {
           event: 'booking-summary-pending-success',
@@ -452,8 +491,10 @@ const Summary = ({
                 startDate={start || ''}
                 endDate={end || ''}
                 listingName={listing?.name || ''}
-                listingUrl={listing?.slug || ''}
+                listingId={listing?._id}
                 eventName={event?.name}
+                isFriendsBooking={Boolean(booking?.isFriendsBooking)}
+                eventId={booking?.eventId}
                 ticketOption={ticketOption?.name}
                 priceDuration={listing?.priceDuration}
                 numSpacesRequired={

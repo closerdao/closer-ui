@@ -6,33 +6,33 @@ import { useEffect, useState } from 'react';
 
 import ConfirmationCelebrationOverlay, {
   CONFIRMATION_CELEBRATION_DURATION_MS,
-} from '../../../../components/ConfirmationCelebrationOverlay';
-import FeatureNotEnabled from '../../../../components/FeatureNotEnabled';
-import PageError from '../../../../components/PageError';
-import { ErrorMessage } from '../../../../components/ui';
-import Button from '../../../../components/ui/Button';
-import Heading from '../../../../components/ui/Heading';
-import Spinner from '../../../../components/ui/Spinner';
+} from '../../../components/ConfirmationCelebrationOverlay';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+import PageError from '../../../components/PageError';
+import { ErrorMessage } from '../../../components/ui';
+import Button from '../../../components/ui/Button';
+import Heading from '../../../components/ui/Heading';
+import Spinner from '../../../components/ui/Spinner';
 
 import dayjs from 'dayjs';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import config from '../../../../configCached';
-import { useAuth } from '../../../../contexts/auth';
-import { useConfig } from '../../../../hooks/useConfig';
-import { BookingSettings, GeneralConfig } from '../../../../types/api';
-import { Listing } from '../../../../types/booking';
-import { Stay } from '../../../../types/stay';
-import api, { cdn } from '../../../../utils/api';
-import { parseMessageFromError } from '../../../../utils/common';
-import { loadLocaleData } from '../../../../utils/locale.helpers';
+import config from '../../../configCached';
+import { useAuth } from '../../../contexts/auth';
+import { useConfig } from '../../../hooks/useConfig';
+import { BookingSettings, GeneralConfig } from '../../../types/api';
+import { Listing } from '../../../types/booking';
+import { Stay } from '../../../types/stay';
+import api, { cdn } from '../../../utils/api';
+import { parseMessageFromError } from '../../../utils/common';
+import { loadLocaleData } from '../../../utils/locale.helpers';
 import {
   formatStayMoney,
   getStay,
   isStayPaid,
   isStayTerminal,
-} from '../../../../utils/stays.api';
+} from '../../../utils/stays.api';
 
 interface Props {
   bookingSettings: BookingSettings | null;
@@ -52,7 +52,7 @@ const StayConfirmationPage = ({
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
-  const idParam = router.query.id;
+  const idParam = router.query.slug ?? router.query.id;
   const stayId = typeof idParam === 'string' ? idParam : idParam?.[0];
 
   const isBookingEnabled =
@@ -163,7 +163,27 @@ const StayConfirmationPage = ({
     );
   }
 
-  if (!isStayPaid(stay) && !isStayTerminal(stay) && stay.status !== 'pending') {
+  if (stay.status === 'pending') {
+    if (typeof window !== 'undefined') {
+      router.replace(`/stay/${stay._id}/pending`);
+    }
+    return (
+      <>
+        {SeoHead}
+        <main
+          id="main-content"
+          className="flex justify-center py-24"
+          role="status"
+          aria-label={t('stay_create_loading')}
+        >
+          <Spinner />
+          <span className="sr-only">{t('stay_create_loading')}</span>
+        </main>
+      </>
+    );
+  }
+
+  if (!isStayPaid(stay) && !isStayTerminal(stay)) {
     if (typeof window !== 'undefined') {
       router.replace(`/stay/create/${stay._id}`);
     }
@@ -392,7 +412,7 @@ const StayConfirmationPage = ({
           className="mt-8 flex flex-col sm:flex-row gap-3 justify-center"
         >
           <Link
-            href={`/stay/create/${stay._id}`}
+            href={`/stay/${stay._id}`}
             className="text-center rounded-full px-6 py-3 border-2 border-accent text-accent hover:bg-accent/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 min-h-[44px] inline-flex items-center justify-center"
           >
             {t('stay_create_view_booking')}

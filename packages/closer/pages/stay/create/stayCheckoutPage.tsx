@@ -16,23 +16,21 @@ import { CardElement, Elements, useElements, useStripe } from '@stripe/react-str
 import { loadStripe } from '@stripe/stripe-js';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-import Conditions from '../../../../components/Conditions';
-import FeatureNotEnabled from '../../../../components/FeatureNotEnabled';
-import PageError from '../../../../components/PageError';
-import BookingSurface, {
-  BookingSurfaceDivider,
-} from '../../../../components/booking/bookingSurface';
-import Modal from '../../../../components/Modal';
-import Switch from '../../../../components/Switch';
-import { ErrorMessage, Information } from '../../../../components/ui';
-import BackButton from '../../../../components/ui/BackButton';
-import Button from '../../../../components/ui/Button';
-import Checkbox from '../../../../components/ui/Checkbox';
-import Select from '../../../../components/ui/Select/Dropdown';
-import MultiSelect from '../../../../components/ui/Select/MultiSelect';
-import { Textarea } from '../../../../components/ui/textarea';
-import Heading from '../../../../components/ui/Heading';
-import Spinner from '../../../../components/ui/Spinner';
+import BookingBackButton from '../../../components/BookingBackButton';
+import Conditions from '../../../components/Conditions';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+import PageError from '../../../components/PageError';
+import BookingSurface from '../../../components/booking/bookingSurface';
+import Modal from '../../../components/Modal';
+import Switch from '../../../components/Switch';
+import { ErrorMessage, Information } from '../../../components/ui';
+import Button from '../../../components/ui/Button';
+import Checkbox from '../../../components/ui/Checkbox';
+import Select from '../../../components/ui/Select/Dropdown';
+import MultiSelect from '../../../components/ui/Select/MultiSelect';
+import { Textarea } from '../../../components/ui/textarea';
+import Heading from '../../../components/ui/Heading';
+import Spinner from '../../../components/ui/Spinner';
 
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
@@ -40,40 +38,43 @@ import { utils } from 'ethers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { MIN_CELO_FOR_GAS } from '../../../../constants';
-import { SHARED_ACCOMMODATION_PREFERENCES } from '../../../../constants/shared.constants';
-import config from '../../../../configCached';
-import { useAuth } from '../../../../contexts/auth';
-import { usePlatform } from '../../../../contexts/platform';
-import { WalletDispatch, WalletState } from '../../../../contexts/wallet';
-import { useBookingSmartContract } from '../../../../hooks/useBookingSmartContract';
-import { useConfig } from '../../../../hooks/useConfig';
+import { MIN_CELO_FOR_GAS } from '../../../constants';
+import { SHARED_ACCOMMODATION_PREFERENCES } from '../../../constants/shared.constants';
+import config from '../../../configCached';
+import { useAuth } from '../../../contexts/auth';
+import { usePlatform } from '../../../contexts/platform';
+import { WalletDispatch, WalletState } from '../../../contexts/wallet';
+import { useBookingSmartContract } from '../../../hooks/useBookingSmartContract';
+import { useConfig } from '../../../hooks/useConfig';
 import {
   BookingSettings,
   GeneralConfig,
   VolunteerConfig,
-} from '../../../../types/api';
-import { Listing } from '../../../../types/booking';
-import { Event } from '../../../../types/event';
-import { FoodOption } from '../../../../types/food';
+} from '../../../types/api';
+import { Listing } from '../../../types/booking';
+import { Event } from '../../../types/event';
+import { FoodOption } from '../../../types/food';
 import {
   Stay,
   StayCheckoutResponse,
-} from '../../../../types/stay';
-import api, { cdn } from '../../../../utils/api';
+} from '../../../types/stay';
+import api, { cdn } from '../../../utils/api';
 import {
+  FoodBookingContext,
+  getBookingPaymentCheckoutPath,
   getDefaultSelectedFoodOptionId,
   getFoodOption,
   getFoodOptionsForBookingContext,
-  FoodBookingContext,
-} from '../../../../utils/booking.helpers';
-import { parseMessageFromError } from '../../../../utils/common';
-import { priceFormat } from '../../../../utils/helpers';
-import { patchUserAndSyncAuthStore } from '../../../../utils/platformUserSync';
-import { loadLocaleData } from '../../../../utils/locale.helpers';
+} from '../../../utils/booking.helpers';
+import { parseMessageFromError } from '../../../utils/common';
+import { priceFormat } from '../../../utils/helpers';
+import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
+import { loadLocaleData } from '../../../utils/locale.helpers';
+import { stayRequiresFullCheckoutFlow } from '../../../utils/stayPaymentRouting.helpers';
 import {
   canChangeStayPaymentMethod,
   checkoutStay,
+  computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
   confirmStayCheckout,
@@ -87,7 +88,7 @@ import {
   stakeStayTokens,
   submitStay,
   updateStayOptions,
-} from '../../../../utils/stays.api';
+} from '../../../utils/stays.api';
 
 dayjs.extend(dayOfYear);
 
@@ -187,7 +188,7 @@ const StayCheckoutPage = ({
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
-  const idParam = router.query.id;
+  const idParam = router.query.slug ?? router.query.id;
   const stayId = typeof idParam === 'string' ? idParam : idParam?.[0];
 
   const isBookingEnabled =
@@ -263,10 +264,12 @@ const StayCheckoutPage = ({
         {SeoHead}
         <main
           id="main-content"
-          className="max-w-3xl mx-auto p-4 md:p-6 text-center"
+          className="w-full max-w-screen-sm mx-auto p-4 md:p-6 text-center"
         >
-          <Heading level={1}>{t('stay_create_login_required_title')}</Heading>
-          <p className="mt-3 mb-6 text-gray-600">
+          <Heading level={1} className="text-2xl md:text-3xl">
+            {t('stay_create_login_required_title')}
+          </Heading>
+          <p className="mt-3 mb-6 text-muted-foreground">
             {t('stay_create_login_required_description')}
           </p>
           <Button
@@ -302,7 +305,10 @@ const StayCheckoutPage = ({
     return (
       <>
         {SeoHead}
-        <main id="main-content" className="max-w-3xl mx-auto p-4 md:p-6">
+        <main
+          id="main-content"
+          className="w-full max-w-screen-sm mx-auto p-4 md:p-6"
+        >
           <div role="alert" aria-live="assertive">
             <ErrorMessage error={pageError || t('stay_create_not_found')} />
           </div>
@@ -322,9 +328,14 @@ const StayCheckoutPage = ({
     return (
       <>
         {SeoHead}
-        <main id="main-content" className="max-w-3xl mx-auto p-4 md:p-6">
-          <Heading level={1}>{t(`stay_status_${stay.status}_title`)}</Heading>
-          <p className="mt-3 text-gray-600">
+        <main
+          id="main-content"
+          className="w-full max-w-screen-sm mx-auto p-4 md:p-6"
+        >
+          <Heading level={1} className="text-2xl md:text-3xl">
+            {t(`stay_status_${stay.status}_title`)}
+          </Heading>
+          <p className="mt-3 text-muted-foreground">
             {t(`stay_status_${stay.status}_description`)}
           </p>
         </main>
@@ -414,7 +425,6 @@ const StayCheckoutContent = ({
     tokenAmount: number;
   } | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [submittedToPending, setSubmittedToPending] = useState(false);
   const [isCreditsModalOpen, setIsCreditsModalOpen] = useState(false);
   const [creditsModalError, setCreditsModalError] = useState<string | null>(
     null,
@@ -438,6 +448,11 @@ const StayCheckoutContent = ({
     | { method: 'partial-tokens'; appliedTokens: number }
     | null
   >(null);
+  const draftFoodDefaultAppliedRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    draftFoodDefaultAppliedRef.current = null;
+  }, [stay._id]);
 
   useEffect(() => {
     setCurrentStay(stay);
@@ -480,11 +495,12 @@ const StayCheckoutContent = ({
 
   useEffect(() => {
     if (isStayPaid(currentStay)) {
-      router.replace(`/stay/create/${currentStay._id}/confirmation`);
+      router.replace(`/stay/${currentStay._id}/confirmation`);
     }
   }, [currentStay.status, currentStay._id, router]);
 
   const priceLock = currentStay.priceLock;
+  const isMember = Boolean(authUser?.roles?.includes('member'));
   const isFree =
     !priceLock ||
     (priceLock.total.val === 0 &&
@@ -496,6 +512,7 @@ const StayCheckoutContent = ({
     : 0;
 
   const fiatOwed = computeFiatOwed(currentStay);
+  const showStripeCardInput = isMember && fiatOwed > 0;
   const tokensOwed = computeTokensOwed(currentStay);
 
   const canChangePaymentMethod = canChangeStayPaymentMethod(currentStay);
@@ -504,6 +521,59 @@ const StayCheckoutContent = ({
     () => inferPaymentChoiceFromStay(currentStay, tokenAccommodationVal),
     [currentStay, tokenAccommodationVal],
   );
+
+  const checkoutRouteTarget = useMemo(
+    () =>
+      getBookingPaymentCheckoutPath({
+        bookingId: currentStay._id,
+        stayShaped: true,
+        status: currentStay.status,
+        paymentDelta: currentStay.paymentDelta,
+        useTokens:
+          paymentChoice === 'partial-tokens' ||
+          paymentChoice === 'full-tokens',
+        fiatOwed: computeFiatOwed(currentStay),
+        tokensOwed: computeTokensOwed(currentStay),
+        creditsOwed: computeCreditsOwed(currentStay),
+      }),
+    [
+      currentStay._id,
+      currentStay.status,
+      currentStay.paymentDelta,
+      currentStay,
+      paymentChoice,
+    ],
+  );
+
+  const paymentPageUrl = `/stay/${currentStay._id}/payment`;
+
+  const useCardPaymentPrimaryCta = useMemo(() => {
+    if (
+      currentStay.status === 'draft' ||
+      currentStay.status === 'pending'
+    ) {
+      return false;
+    }
+    return checkoutRouteTarget === paymentPageUrl;
+  }, [
+    checkoutRouteTarget,
+    paymentPageUrl,
+    currentStay.status,
+  ]);
+
+  const showCreditsTokensGuideCta = useMemo(() => {
+    if (
+      currentStay.status === 'draft' ||
+      currentStay.status === 'pending'
+    ) {
+      return false;
+    }
+    return stayRequiresFullCheckoutFlow(
+      currentStay,
+      currentStay.paymentDelta,
+    );
+  }, [currentStay]);
+
   const hasAlternativeAccommodationPayment = paymentChoice !== 'fiat';
 
   const accommodationPriceDetail = useMemo(() => {
@@ -596,6 +666,12 @@ const StayCheckoutContent = ({
     [selectableFoodOptions],
   );
 
+  const defaultFoodIdForDraftAutoSelect = useMemo(() => {
+    const pool =
+      selectableFoodOptions.length > 0 ? selectableFoodOptions : foodOptions;
+    return getDefaultSelectedFoodOptionId(pool);
+  }, [selectableFoodOptions, foodOptions]);
+
   const staySelectedFoodId =
     currentStay.foodOptionId &&
     selectableFoodOptions.some((o) => o._id === currentStay.foodOptionId)
@@ -630,6 +706,11 @@ const StayCheckoutContent = ({
       : activeFoodOption?.price;
 
   const durationNights = currentStay.duration || 0;
+
+  const stayBookingGuestCount =
+    (currentStay.adults ?? 0) +
+    (currentStay.children ?? 0) +
+    (currentStay.infants ?? 0);
 
   const foodTotalForStay =
     (foodPricePerNight ?? 0) * (currentStay.adults ?? 0) * durationNights;
@@ -982,6 +1063,55 @@ const StayCheckoutContent = ({
     currentStay.foodOptionId,
   ]);
 
+  useEffect(() => {
+    if (!showFoodSection || shouldSkipFood) return;
+    if (currentStay.status !== 'draft') return;
+    if (!defaultFoodIdForDraftAutoSelect) return;
+
+    const pool =
+      selectableFoodOptions.length > 0 ? selectableFoodOptions : foodOptions;
+    const hasValidPackage =
+      currentStay.foodOption === 'food_package' &&
+      Boolean(currentStay.foodOptionId) &&
+      pool.some((o) => o._id === currentStay.foodOptionId);
+
+    if (hasValidPackage) {
+      draftFoodDefaultAppliedRef.current = currentStay._id;
+      return;
+    }
+
+    if (draftFoodDefaultAppliedRef.current === currentStay._id) return;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const updated = await updateStayOptions(currentStay._id, {
+          foodOption: 'food_package',
+          foodOptionId: defaultFoodIdForDraftAutoSelect,
+        });
+        if (!cancelled) {
+          setCurrentStay(updated);
+          draftFoodDefaultAppliedRef.current = currentStay._id;
+        }
+      } catch (err) {
+        if (!cancelled) setActionError(parseMessageFromError(err));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    showFoodSection,
+    shouldSkipFood,
+    currentStay.status,
+    currentStay._id,
+    currentStay.foodOption,
+    currentStay.foodOptionId,
+    defaultFoodIdForDraftAutoSelect,
+    selectableFoodOptions,
+    foodOptions,
+  ]);
+
   const patchUserPreference = async (
     attribute: 'diet' | 'sharedAccomodation',
     value: string | string[],
@@ -1095,24 +1225,24 @@ const StayCheckoutContent = ({
       }
 
       if (workingStay.status === 'pending') {
-        setSubmittedToPending(true);
+        router.replace(`/stay/${workingStay._id}/pending`);
         return;
       }
 
       if (isStayPaid(workingStay)) {
-        router.push(`/stay/create/${workingStay._id}/confirmation`);
+        router.push(`/stay/${workingStay._id}/confirmation`);
         return;
       }
 
       const liveFiatOwed = computeFiatOwed(workingStay);
       const card = elements?.getElement(CardElement) ?? null;
-      if (liveFiatOwed > 0 && !card) {
+      if (isMember && liveFiatOwed > 0 && !card) {
         setActionError(t('stay_create_card_required'));
         return;
       }
 
       let stripePaymentMethodId = '';
-      if (liveFiatOwed > 0 && stripe && card) {
+      if (isMember && liveFiatOwed > 0 && stripe && card) {
         const { paymentMethod, error: pmError } =
           await stripe.createPaymentMethod({
             type: 'card',
@@ -1147,7 +1277,7 @@ const StayCheckoutContent = ({
 
       const refreshed = await refetchStay();
       if (refreshed && isStayPaid(refreshed)) {
-        router.push(`/stay/create/${refreshed._id}/confirmation`);
+        router.push(`/stay/${refreshed._id}/confirmation`);
       } else if (refreshed && isStayAwaitingPayment(refreshed)) {
         setActionError(
           t('stay_create_unexpected_status', {
@@ -1173,45 +1303,46 @@ const StayCheckoutContent = ({
       ? `${cdn}${listing.photos[0]}-post-md.jpg`
       : null;
 
-  if (submittedToPending) {
-    return (
-      <main
-        id="main-content"
-        className="max-w-2xl mx-auto px-4 py-12 text-center"
-      >
-        <Heading level={1} className="mb-4">
-          {t('stay_create_pending_title')}
-        </Heading>
-        <p className="text-gray-600 mb-8">
-          {t('stay_create_pending_description')}
-        </p>
-        <Button
-          onClick={() => router.push(`/stay/create/${currentStay._id}`)}
-          isFullWidth={false}
-          className="px-8 min-h-[44px]"
-        >
-          {t('stay_create_view_booking')}
-        </Button>
-      </main>
-    );
-  }
-
   return (
     <main
       id="main-content"
-      className="max-w-5xl mx-auto px-4 md:px-8 py-6 md:py-12 pb-32 lg:pb-12"
+      className="w-full max-w-screen-sm mx-auto p-4 md:p-6 pb-24 md:pb-12"
     >
-      <div className="mb-6 md:mb-8">
-        <BackButton handleClick={() => router.push('/stay/create')}>
-          {t('buttons_back')}
-        </BackButton>
+      <div className="relative flex items-center min-h-[2.75rem] mb-4">
+        <BookingBackButton
+          onClick={() => router.push('/stay/create')}
+          name={t('buttons_back')}
+          className="relative z-10"
+        />
+        <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
+          <Heading
+            level={1}
+            className="text-2xl md:text-3xl pb-0 mt-0 text-center"
+          >
+            <span>
+              {isMember
+                ? t('stay_create_checkout_title')
+                : t('stay_create_checkout_request_title')}
+            </span>
+          </Heading>
+        </div>
       </div>
 
-      <div className="text-center mb-8 md:mb-10">
-        <Heading level={1} className="text-3xl md:text-4xl">
-          {t('stay_create_checkout_title')}
-        </Heading>
-      </div>
+      {showCreditsTokensGuideCta && !useCardPaymentPrimaryCta && (
+        <BookingSurface
+          as="div"
+          tone="soft"
+          padding="md"
+          className="mb-6 border border-foreground/[0.08]"
+        >
+          <p className="text-sm font-semibold text-gray-900 mb-1">
+            {t('stay_checkout_cta_full_checkout_title')}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {t('stay_checkout_cta_full_checkout_body')}
+          </p>
+        </BookingSurface>
+      )}
 
       {hasPendingExtension && (
         <BookingSurface
@@ -1231,7 +1362,7 @@ const StayCheckoutContent = ({
         </BookingSurface>
       )}
 
-      <div className="max-w-3xl mx-auto flex flex-col gap-4 md:gap-6">
+      <div className="mt-6 flex flex-col gap-6">
         <BookingSurface
           as="section"
           tone="elevated"
@@ -1302,18 +1433,21 @@ const StayCheckoutContent = ({
                 >
                   {t('stay_create_option_pickup')}
                 </Checkbox>
-                <Checkbox
-                  isChecked={!!currentStay.doesNeedSeparateBeds}
-                  onChange={() =>
-                    handleToggleOption({
-                      doesNeedSeparateBeds: !currentStay.doesNeedSeparateBeds,
-                    })
-                  }
-                  isEnabled={!isSavingOptions}
-                  id="opt-separate"
-                >
-                  {t('stay_create_option_separate_beds')}
-                </Checkbox>
+                {stayBookingGuestCount >= 2 && (
+                  <Checkbox
+                    isChecked={!!currentStay.doesNeedSeparateBeds}
+                    onChange={() =>
+                      handleToggleOption({
+                        doesNeedSeparateBeds:
+                          !currentStay.doesNeedSeparateBeds,
+                      })
+                    }
+                    isEnabled={!isSavingOptions}
+                    id="opt-separate"
+                  >
+                    {t('stay_create_option_separate_beds')}
+                  </Checkbox>
+                )}
               </div>
             </div>
           </div>
@@ -1995,9 +2129,27 @@ const StayCheckoutContent = ({
           aria-labelledby="card-heading"
         >
           <Heading id="card-heading" level={2} className="text-lg mb-4">
-            {t('stay_create_card_title')}
+            {useCardPaymentPrimaryCta && !isMember
+              ? t('stay_checkout_cta_card_shortcut_title')
+              : showStripeCardInput
+                ? t('stay_create_card_title')
+                : !isMember
+                  ? t('stay_create_request_review_title')
+                  : t('stay_create_card_title')}
           </Heading>
-          {fiatOwed > 0 && (
+          {useCardPaymentPrimaryCta && !isMember ? (
+            <p className="text-sm text-muted-foreground mb-4">
+              {t('stay_checkout_cta_card_shortcut_body')}
+            </p>
+          ) : (
+            !isMember &&
+            fiatOwed > 0 && (
+              <p className="text-sm text-gray-600 mb-4">
+                {t('stay_create_request_no_card_hint')}
+              </p>
+            )
+          )}
+          {showStripeCardInput && (
             <>
               <div className="rounded-xl border border-gray-200 px-4 py-3.5 bg-white">
                 <CardElement
@@ -2037,16 +2189,28 @@ const StayCheckoutContent = ({
           </div>
 
           <div className="mt-4">
-            <Button
-              isEnabled={hasAcceptedTerms && !isProcessing}
-              isLoading={isProcessing}
-              onClick={handleConfirmAndPay}
-              className="min-h-[48px]"
-            >
-              {isFree
-                ? t('stay_create_confirm_button')
-                : t('stay_create_confirm_and_pay_button')}
-            </Button>
+            {useCardPaymentPrimaryCta && !isMember ? (
+              <Button
+                isEnabled={hasAcceptedTerms && !isProcessing}
+                onClick={() => router.push(paymentPageUrl)}
+                className="min-h-[48px]"
+              >
+                {t('stay_checkout_cta_card_shortcut_button')}
+              </Button>
+            ) : (
+              <Button
+                isEnabled={hasAcceptedTerms && !isProcessing}
+                isLoading={isProcessing}
+                onClick={handleConfirmAndPay}
+                className="min-h-[48px]"
+              >
+                {!isMember
+                  ? t('buttons_booking_request')
+                  : isFree
+                    ? t('stay_create_confirm_button')
+                    : t('stay_create_confirm_and_pay_button')}
+              </Button>
+            )}
           </div>
 
           <p className="text-[11px] text-gray-500 mt-3">

@@ -67,6 +67,7 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
     'ExpenseTracking',
     'Roles',
     'Revenue',
+    'Engagement',
 
   ]);
   const [roles] = useState([

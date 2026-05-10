@@ -97,6 +97,12 @@ export type Stay = {
   pendingExtension?: PendingExtension;
   checkedIn?: string;
   checkedOut?: string;
+
+  paymentDelta?: {
+    fiat?: StayMoney;
+    credits?: StayMoney;
+    token?: StayMoney;
+  } | null;
 };
 
 export type StaySearchAvailability = Record<string, string[]>;

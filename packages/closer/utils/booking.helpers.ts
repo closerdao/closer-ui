@@ -1,3 +1,4 @@
+import type { AxiosRequestConfig } from 'axios';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
@@ -10,6 +11,7 @@ import {
 import { User } from '../contexts/auth/types';
 import {
   AccommodationUnit,
+  Booking,
   BookingItem,
   BookingWithUserAndListing,
   CloserCurrencies,
@@ -121,6 +123,38 @@ export const getDisplayTotalFromComponents = ({
     CloserCurrencies.EUR;
   return { val: +(val.toFixed(2)), cur };
 };
+
+export const hasBookingPaymentDeltaDue = (
+  paymentDelta: Booking['paymentDelta'] | null | undefined,
+  useTokens?: boolean,
+): boolean => {
+  if (!paymentDelta) {
+    return false;
+  }
+  if (
+    paymentDelta.fiat &&
+    Math.abs(paymentDelta.fiat.val) > 0.005 &&
+    paymentDelta.fiat.val > 0
+  ) {
+    return true;
+  }
+  if (
+    useTokens &&
+    paymentDelta.token &&
+    paymentDelta.token.val > 0.005
+  ) {
+    return true;
+  }
+  if (paymentDelta.credits && paymentDelta.credits.val > 0.005) {
+    return true;
+  }
+  return false;
+};
+
+export {
+  getBookingPaymentCheckoutPath,
+  stayRequiresFullCheckoutFlow,
+} from './stayPaymentRouting.helpers';
 
 export const getUtilityTotal = ({
   utilityFiatVal,
@@ -1206,4 +1240,19 @@ export function buildBookingAccomodationUrl(
   if (params.discountCode != null && params.discountCode !== '')
     q.set('discountCode', params.discountCode);
   return `/bookings/create/accomodation?${q.toString()}`;
+}
+
+export async function claimBookingAsFriend(
+  bookingId: string,
+  requestConfig?: AxiosRequestConfig,
+): Promise<void> {
+  try {
+    await api.post(
+      `/bookings/${bookingId}/claim-as-friend`,
+      {},
+      requestConfig,
+    );
+  } catch {
+    return;
+  }
 }

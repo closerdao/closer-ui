@@ -13,3 +13,4 @@ export * from './subscriptions';
 export * from './token';
 export * from './volunteer';
 export * from './wallet';
+export * from './engagement';

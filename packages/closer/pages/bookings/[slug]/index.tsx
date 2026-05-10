@@ -6,16 +6,13 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import BookingRequestButtons from '../../../components/BookingRequestButtons';
 import BookingStatusTag from '../../../components/BookingStatusTag';
-import BookingGuests from '../../../components/BookingGuests';
-import Modal from '../../../components/Modal';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
 import UserInfoButton from '../../../components/UserInfoButton';
-import { Button, Information } from '../../../components/ui';
+import { Button } from '../../../components/ui';
 import BookingSurface, {
   BookingSectionEyebrow,
-  BookingSurfaceDivider,
 } from '../../../components/booking/bookingSurface';
 import Heading from '../../../components/ui/Heading';
 
@@ -44,6 +41,7 @@ import {
   UpdatedPrices,
   VolunteerOpportunity,
 } from '../../../types';
+import type { Stay } from '../../../types/stay';
 import { FoodOption } from '../../../types/food';
 import config from '../../../configCached';
 import { useBookingLinkedCharges } from '../../../hooks/useBookingLinkedCharges';
@@ -58,32 +56,16 @@ import {
   formatCheckinDate,
   formatCheckoutDate,
   getBookingListingRefId,
+  getBookingPaymentCheckoutPath,
   getBookingPaymentType,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { priceFormat } from '../../../utils/helpers';
 import { loadLocaleData } from '../../../utils/locale.helpers';
 import {
-  approveStayExtension,
-  approveStayRequest,
-  assignStayBeds,
-  checkInStay,
-  checkOutStay,
   computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
-  extendStay,
-  formatStayMoney,
-  getStay,
   isStayShapedBooking,
-  mapStayQuoteToUpdatedPrices,
-  quoteStay,
-  rejectStayExtension,
-  rejectStayRequest,
-  setStayStatusApi,
-  shortenStay,
-  upgradeStayListing,
-  updateStayGuests,
 } from '../../../utils/stays.api';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageNotFound from '../../not-found';
@@ -155,7 +137,7 @@ const BookingPage = ({
 
   const bookingView = liveBooking ?? booking;
 
-  const stayShaped = useMemo(
+  const hasStayPricingShape = useMemo(
     () => isStayShapedBooking(bookingView as unknown as Record<string, unknown>),
     [bookingView],
   );
@@ -247,7 +229,6 @@ const BookingPage = ({
   );
   const [isLoading, setIsLoading] = useState(false);
   const [hasUpdated, setHasUpdated] = useState(false);
-  const [stayEditError, setStayEditError] = useState<string | null>(null);
   const [updatedPrices, setUpdatedPrices] = useState<UpdatedPrices | null>(
     null,
   );
@@ -256,26 +237,6 @@ const BookingPage = ({
   );
 
   const [datesEditorOpen, setDatesEditorOpen] = useState(false);
-  const [isGuestsModalOpen, setIsGuestsModalOpen] = useState(false);
-  const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
-  const [isShortenModalOpen, setIsShortenModalOpen] = useState(false);
-  const [isAccommodationModalOpen, setIsAccommodationModalOpen] = useState(false);
-  const [modalAdults, setModalAdults] = useState(adults);
-  const [modalChildren, setModalChildren] = useState(children ?? 0);
-  const [modalInfants, setModalInfants] = useState(infants ?? 0);
-  const [modalPets, setModalPets] = useState(pets ?? 0);
-  const [modalExtendEndDate, setModalExtendEndDate] = useState(
-    dayjs(bookingEnd).format('YYYY-MM-DD'),
-  );
-  const [modalShortenEndDate, setModalShortenEndDate] = useState(
-    dayjs(bookingEnd).format('YYYY-MM-DD'),
-  );
-  const [modalListingId, setModalListingId] = useState(
-    getBookingListingRefId(booking?.listing as unknown) ?? listing?._id ?? '',
-  );
-  const modalButtonClass =
-    '!normal-case !tracking-normal enabled:!bg-neutral-light enabled:!border-line !text-foreground hover:!scale-100';
-
   const [fiatDeltaBaseline, setFiatDeltaBaseline] = useState(() =>
     Math.abs(booking?.paymentDelta?.fiat.val || 0),
   );
@@ -296,22 +257,11 @@ const BookingPage = ({
   const isBookingOwnerEditor =
     user?._id === createdBy || user?._id === bookingView?.paidBy;
 
-  const stayGuestEditableStatuses = ['confirmed', 'pending-payment', 'paid'];
-
-  const canStayGuestEdit =
-    stayShaped &&
-    !isHourlyBooking &&
+  const canGuestEditBookingDetails =
     Boolean(isBookingOwnerEditor) &&
     !canManageBooking &&
     canEditBooking &&
-    stayGuestEditableStatuses.includes(String(bookingView?.status ?? ''));
-
-  const canGuestEditBookingDetails =
-    canStayGuestEdit ||
-    (!stayShaped &&
-      Boolean(isBookingOwnerEditor) &&
-      !canManageBooking &&
-      canEditBooking);
+    !hasStayPricingShape;
 
   const checkInTime = bookingConfig?.checkinTime || 14;
   const checkOutTime = bookingConfig?.checkoutTime || 11;
@@ -390,28 +340,6 @@ const BookingPage = ({
 
     const fetchUpdatedPrice = async () => {
       try {
-        if (stayShaped && !isHourlyBooking) {
-          const origListing =
-            getBookingListingRefId(bookingView.listing as unknown) ??
-            bookingView.listing;
-          const listingIdForQuote =
-            String(updatedListingId ?? '') !== String(origListing ?? '')
-              ? updatedListingId
-              : undefined;
-          const res = await quoteStay(_id, {
-            end: convertToDateString(updatedEndDate),
-            duration: updatedDuration,
-            adults: updatedAdults,
-            children: updatedChildren,
-            infants: updatedInfants,
-            pets: updatedPets,
-            ...(listingIdForQuote ? { listingId: listingIdForQuote } : {}),
-          });
-          if (cancelled) return;
-          setUpdatedPrices(mapStayQuoteToUpdatedPrices(res, updatedDuration));
-          return;
-        }
-
         const res = await api.post('/bookings/calculate-totals', {
           bookingId: _id,
 
@@ -455,7 +383,6 @@ const BookingPage = ({
     canManageBooking,
     canGuestEditBookingDetails,
     isEditMode,
-    stayShaped,
     isHourlyBooking,
     bookingView.listing,
   ]);
@@ -557,6 +484,7 @@ const BookingPage = ({
 
   const showPayNowChip =
     bookingView?.status !== 'pending' &&
+    bookingView?.status !== 'cancelled' &&
     isNotPaid &&
     isBookingOwnerEditor;
 
@@ -583,47 +511,6 @@ const BookingPage = ({
 
   const syncBookingFromServer = async () => {
     try {
-      const preferStay = isStayShapedBooking(
-        (liveBooking ?? booking) as unknown as Record<string, unknown>,
-      );
-      if (preferStay) {
-        try {
-          const fresh = await getStay(_id);
-          setLiveBooking(fresh as unknown as Booking);
-          setStatus(fresh.status);
-          setUpdatedStatus(fresh.status);
-          setUpdatedRoomNumbers(fresh.roomOrBedNumbers ?? []);
-          setUpdatedAdults(fresh.adults);
-          setUpdatedChildren(fresh.children);
-          setUpdatedInfants(fresh.infants);
-          setUpdatedPets(fresh.pets);
-          setUpdatedStartDate(
-            (timeZone && dateToPropertyTimeZone(timeZone, fresh.start)) ??
-              fresh.start ??
-              null,
-          );
-          setUpdatedEndDate(
-            (timeZone && dateToPropertyTimeZone(timeZone, fresh.end)) ??
-              fresh.end ??
-              null,
-          );
-          setUpdatedListingId(
-            (getBookingListingRefId(fresh.listing as unknown) ??
-              fresh.listing) as string,
-          );
-          setFiatDeltaBaseline(
-            Math.abs(
-              (fresh as unknown as Booking).paymentDelta?.fiat?.val ?? 0,
-            ),
-          );
-          setUpdatedPrices(null);
-          setStayEditError(null);
-          refetchCharges();
-          return;
-        } catch {
-          // fall through to legacy booking fetch
-        }
-      }
       const {
         data: { results: fresh },
       } = await api.get(`/booking/${_id}`);
@@ -651,7 +538,6 @@ const BookingPage = ({
       );
       setFiatDeltaBaseline(Math.abs(fresh.paymentDelta?.fiat.val || 0));
       setUpdatedPrices(null);
-      setStayEditError(null);
       refetchCharges();
     } catch (error) {
       console.error(error);
@@ -661,100 +547,17 @@ const BookingPage = ({
   const createdFormatted = dayjs(created).format('DD/MM/YYYY HH:mm A');
 
   const confirmBooking = async () => {
-    if (stayShaped) {
-      await approveStayRequest(_id);
-    } else {
-      await platform.bookings.confirm(_id);
-    }
+    await platform.bookings.confirm(_id);
     await syncBookingFromServer();
   };
   const rejectBooking = async () => {
-    if (stayShaped) {
-      await rejectStayRequest(_id);
-    } else {
-      await platform.bookings.reject(_id);
-    }
+    await platform.bookings.reject(_id);
     await syncBookingFromServer();
   };
 
-  const persistStayBookingUpdate = async (): Promise<boolean> => {
-    try {
-      setIsLoading(true);
-      setStayEditError(null);
-
-      if (
-        dayjs(pendingSaveStart).startOf('day').valueOf() !==
-        dayjs(bookingView.start).startOf('day').valueOf()
-      ) {
-        setStayEditError(t('booking_details_stay_arrival_change_not_supported'));
-        return false;
-      }
-
-      const origListing = String(
-        getBookingListingRefId(bookingView.listing as unknown) ??
-          bookingView.listing ??
-          '',
-      );
-      const newListing = String(updatedListingId ?? '');
-
-      if (newListing && newListing !== origListing) {
-        await upgradeStayListing(_id, { listingId: newListing });
-      }
-
-      if (
-        updatedAdults !== adults ||
-        updatedChildren !== children ||
-        updatedInfants !== infants ||
-        updatedPets !== pets
-      ) {
-        await updateStayGuests(_id, {
-          adults: updatedAdults,
-          children: updatedChildren,
-          infants: updatedInfants,
-          pets: updatedPets,
-        });
-      }
-
-      const baselineEnd = dayjs(bookingEnd).startOf('day');
-      const targetEnd = dayjs(pendingSaveEnd).startOf('day');
-      if (!baselineEnd.isSame(targetEnd)) {
-        const endIso = dayjs(pendingSaveEnd).toISOString();
-        if (targetEnd.isAfter(baselineEnd)) {
-          await extendStay(_id, { end: endIso });
-        } else {
-          await shortenStay(_id, { end: endIso });
-        }
-      }
-
-      if (canManageBooking) {
-        if (isAdmin && updatedStatus && updatedStatus !== bookingView.status) {
-          await setStayStatusApi(_id, { status: updatedStatus });
-        }
-        if (
-          !areNumberArraysEqual(pendingRoomOrBedNumbers, roomOrBedNumbers)
-        ) {
-          await assignStayBeds(_id, {
-            roomOrBedNumbers: pendingRoomOrBedNumbers ?? [],
-          });
-        }
-      }
-
-      return true;
-    } catch (error) {
-      setStayEditError(parseMessageFromError(error));
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const persistBookingUpdate = async (): Promise<boolean> => {
-    if (stayShaped && !isHourlyBooking) {
-      return persistStayBookingUpdate();
-    }
     try {
       setIsLoading(true);
-      setStayEditError(null);
       const res = await platform.bookings.update(_id, {
         updatedBookingValues,
         paymentType,
@@ -762,17 +565,32 @@ const BookingPage = ({
       return res.status === 200;
     } catch (error) {
       console.log('error=', error);
-      setStayEditError(parseMessageFromError(error));
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const bookingCheckoutPath =
-    status === 'open'
-      ? `/bookings/${_id}/summary`
-      : `/bookings/${_id}/checkout`;
+  const bookingCheckoutPath = useMemo(() => {
+    const stayLike = bookingView as unknown as Stay;
+    return getBookingPaymentCheckoutPath({
+      bookingId: _id,
+      stayShaped: hasStayPricingShape,
+      status: String(status ?? ''),
+      paymentDelta: bookingView?.paymentDelta,
+      useTokens,
+      fiatOwed: hasStayPricingShape ? computeFiatOwed(stayLike) : 0,
+      tokensOwed: hasStayPricingShape ? computeTokensOwed(stayLike) : 0,
+      creditsOwed: hasStayPricingShape ? computeCreditsOwed(stayLike) : 0,
+    });
+  }, [
+    _id,
+    hasStayPricingShape,
+    status,
+    bookingView?.paymentDelta,
+    useTokens,
+    bookingView,
+  ]);
 
   const openBookingCheckout = async () => {
     await router.push(bookingCheckoutPath);
@@ -806,99 +624,6 @@ const BookingPage = ({
   };
 
   const bv = bookingView as Record<string, unknown>;
-  const showPaymentLedgerCard =
-    stayShaped ||
-    bv?.fiatTarget != null ||
-    bv?.fiatPaid != null ||
-    bv?.creditsTarget != null ||
-    bv?.creditsPaid != null ||
-    bv?.tokensTarget != null ||
-    bv?.tokensStaked != null;
-
-  const handleApproveExtension = async () => {
-    await approveStayExtension(_id);
-    await syncBookingFromServer();
-  };
-  const handleRejectExtension = async () => {
-    await rejectStayExtension(_id);
-    await syncBookingFromServer();
-  };
-  const handleStayCheckIn = async () => {
-    await checkInStay(_id);
-    await syncBookingFromServer();
-  };
-  const handleStayCheckOut = async () => {
-    await checkOutStay(_id);
-    await syncBookingFromServer();
-  };
-
-  const editableStayStatuses = ['confirmed', 'pending-payment', 'paid'];
-  const canUseStayEditActions =
-    stayShaped &&
-    !isHourlyBooking &&
-    (isBookingOwnerEditor || canManageBooking) &&
-    editableStayStatuses.includes(String(status ?? ''));
-
-  const handleEditGuestsSubmit = async () => {
-    try {
-      setIsLoading(true);
-      setStayEditError(null);
-      await updateStayGuests(_id, {
-        adults: Number(modalAdults) || 0,
-        children: Number(modalChildren) || 0,
-        infants: Number(modalInfants) || 0,
-        pets: Number(modalPets) || 0,
-      });
-      setIsGuestsModalOpen(false);
-      await syncBookingFromServer();
-    } catch (error) {
-      setStayEditError(parseMessageFromError(error));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleExtendStaySubmit = async () => {
-    try {
-      setIsLoading(true);
-      setStayEditError(null);
-      await extendStay(_id, { end: dayjs(modalExtendEndDate).toISOString() });
-      setIsExtendModalOpen(false);
-      await syncBookingFromServer();
-    } catch (error) {
-      setStayEditError(parseMessageFromError(error));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleShortenStaySubmit = async () => {
-    try {
-      setIsLoading(true);
-      setStayEditError(null);
-      await shortenStay(_id, { end: dayjs(modalShortenEndDate).toISOString() });
-      setIsShortenModalOpen(false);
-      await syncBookingFromServer();
-    } catch (error) {
-      setStayEditError(parseMessageFromError(error));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUpgradeStaySubmit = async () => {
-    try {
-      setIsLoading(true);
-      setStayEditError(null);
-      await upgradeStayListing(_id, { listingId: modalListingId });
-      setIsAccommodationModalOpen(false);
-      await syncBookingFromServer();
-    } catch (error) {
-      setStayEditError(parseMessageFromError(error));
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   if (!isBookingEnabled) {
     return <FeatureNotEnabled feature="booking" />;
@@ -976,12 +701,32 @@ const BookingPage = ({
             </BookingSurface>
           )}
 
+          {bookingView?.pendingExtension?.requestedAt && (
+            <BookingSurface tone="banner" padding="md" className="flex flex-col gap-3">
+              <p className="text-sm">
+                {t('stay_create_pending_extension', {
+                  end: dayjs(bookingView.pendingExtension.end).format('LL'),
+                })}
+              </p>
+              {isSpaceHost && hasStayPricingShape && (
+                <Link
+                  href={`/stay/${_id}`}
+                  className="text-sm font-medium text-accent underline"
+                >
+                  {t('stay_create_view_booking')}
+                </Link>
+              )}
+            </BookingSurface>
+          )}
+
           <div className="flex flex-col gap-2">
             <BookingSectionEyebrow>
               {t('bookings_dates_step_title')}
             </BookingSectionEyebrow>
             <SummaryDates
               isDayTicket={bookingView?.isDayTicket}
+              isFriendsBooking={Boolean(bookingView?.isFriendsBooking)}
+              eventId={bookingView?.eventId}
               totalGuests={
                 canManageBooking || canGuestEditBookingDetails
                   ? updatedAdults
@@ -1013,7 +758,7 @@ const BookingPage = ({
                   : bookingEnd
               }
               listingName={listing?.name}
-              listingUrl={listing?.slug}
+              listingId={listing?._id}
               isVolunteer={volunteerInfo?.bookingType === 'volunteer'}
               eventName={event?.name}
               volunteerName={volunteer?.name}
@@ -1089,127 +834,24 @@ const BookingPage = ({
             <BookingSectionEyebrow>
               {t('bookings_checkout_step_payment_title')}
             </BookingSectionEyebrow>
-            {showPaymentLedgerCard && (
+            {hasStayPricingShape &&
+              (bv.checkedIn != null || bv.checkedOut != null) && (
               <BookingSurface
                 tone="inset"
                 padding="md"
-                className="flex flex-col gap-3 text-sm"
+                className="flex flex-col gap-2 text-xs"
               >
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="flex flex-col gap-1">
-                    <p className="text-xs font-semibold text-disabled">
-                      {t('booking_details_ledger_fiat')}
-                    </p>
-                    <p>
-                      {t('booking_details_target')}:{' '}
-                      {bv.fiatTarget != null || bv.priceLock != null
-                        ? formatStayMoney(
-                            (bv.fiatTarget ??
-                              (bv.priceLock as { total?: { val: number; cur: string } })
-                                ?.total) as { val: number; cur: string },
-                          )
-                        : priceFormat(total?.val ?? 0, total?.cur ?? CloserCurrencies.EUR)}
-                    </p>
-                    <p>
-                      {t('booking_details_paid')}:{' '}
-                      {bv.fiatPaid != null
-                        ? formatStayMoney(bv.fiatPaid as { val: number; cur: string })
-                        : '—'}
-                    </p>
-                    <p>
-                      {t('booking_details_owed')}:{' '}
-                      {bv.fiatTarget != null || bv.priceLock != null
-                        ? priceFormat(
-                            computeFiatOwed(bookingView as never),
-                            ((bv.fiatTarget as { cur?: string })?.cur ??
-                              (bv.priceLock as { total?: { cur: string } })?.total
-                                ?.cur) as CloserCurrencies,
-                          )
-                        : '—'}
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <p className="text-xs font-semibold text-disabled">
-                      {t('booking_details_ledger_credits')}
-                    </p>
-                    <p>
-                      {t('booking_details_target')}:{' '}
-                      {bv.creditsTarget != null ||
-                      (bv.priceLock as { appliedCredits?: { val: number; cur: string } })
-                        ?.appliedCredits != null
-                        ? formatStayMoney(
-                            (bv.creditsTarget ??
-                              (
-                                bv.priceLock as {
-                                  appliedCredits: { val: number; cur: string };
-                                }
-                              ).appliedCredits) as { val: number; cur: string },
-                          )
-                        : '—'}
-                    </p>
-                    <p>
-                      {t('booking_details_paid')}:{' '}
-                      {bv.creditsPaid != null
-                        ? formatStayMoney(bv.creditsPaid as { val: number; cur: string })
-                        : '—'}
-                    </p>
-                    <p>
-                      {t('booking_details_owed')}:{' '}
-                      {bv.creditsTarget != null || bv.creditsPaid != null
-                        ? `${computeCreditsOwed(bookingView as never)}`
-                        : '—'}
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <p className="text-xs font-semibold text-disabled">
-                      {t('booking_details_ledger_tokens')}
-                    </p>
-                    <p>
-                      {t('booking_details_target')}:{' '}
-                      {bv.tokensTarget != null ||
-                      (bv.priceLock as { appliedTokens?: { val: number; cur: string } })
-                        ?.appliedTokens != null
-                        ? formatStayMoney(
-                            (bv.tokensTarget ??
-                              (
-                                bv.priceLock as {
-                                  appliedTokens: { val: number; cur: string };
-                                }
-                              ).appliedTokens) as { val: number; cur: string },
-                          )
-                        : '—'}
-                    </p>
-                    <p>
-                      {t('booking_details_paid')}:{' '}
-                      {bv.tokensStaked != null
-                        ? formatStayMoney(bv.tokensStaked as { val: number; cur: string })
-                        : '—'}
-                    </p>
-                    <p>
-                      {t('booking_details_owed')}:{' '}
-                      {bv.tokensTarget != null || bv.tokensStaked != null
-                        ? `${computeTokensOwed(bookingView as never)}`
-                        : '—'}
-                    </p>
-                  </div>
-                </div>
-                {stayShaped &&
-                  (bv.checkedIn != null || bv.checkedOut != null) && (
-                  <div className="flex flex-col gap-2 pt-1 text-xs">
-                    <BookingSurfaceDivider />
-                    {bv.checkedIn != null && String(bv.checkedIn).length > 0 && (
-                      <p>
-                        {t('booking_details_checked_in_at')}:{' '}
-                        {dayjs(String(bv.checkedIn)).format('LLL')}
-                      </p>
-                    )}
-                    {bv.checkedOut != null && String(bv.checkedOut).length > 0 && (
-                      <p>
-                        {t('booking_details_checked_out_at')}:{' '}
-                        {dayjs(String(bv.checkedOut)).format('LLL')}
-                      </p>
-                    )}
-                  </div>
+                {bv.checkedIn != null && String(bv.checkedIn).length > 0 && (
+                  <p>
+                    {t('booking_details_checked_in_at')}:{' '}
+                    {dayjs(String(bv.checkedIn)).format('LLL')}
+                  </p>
+                )}
+                {bv.checkedOut != null && String(bv.checkedOut).length > 0 && (
+                  <p>
+                    {t('booking_details_checked_out_at')}:{' '}
+                    {dayjs(String(bv.checkedOut)).format('LLL')}
+                  </p>
                 )}
               </BookingSurface>
             )}
@@ -1275,7 +917,9 @@ const BookingPage = ({
               guestCostsLedger={!canManageBooking}
               pricingPreviewAvailable={Boolean(updatedPrices)}
               onBookingCheckout={
-                isBookingOwnerEditor ? openBookingCheckout : undefined
+                status !== 'cancelled' && isBookingOwnerEditor
+                  ? openBookingCheckout
+                  : undefined
               }
               bookingCheckoutLoading={isLoading}
             />
@@ -1343,67 +987,21 @@ const BookingPage = ({
           </section>
         )}
 
-        {canUseStayEditActions && (
-          <BookingSurface
-            tone="elevated"
-            padding="md"
-            className="flex flex-col gap-3"
-          >
-            <Heading level={4} className="!mt-0 text-base font-semibold">
-              Manage booking changes
-            </Heading>
-
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Button
-                variant="secondary"
-                isLoading={isLoading}
-                className={modalButtonClass}
-                onClick={() => setIsGuestsModalOpen(true)}
-              >
-                Edit guests
-              </Button>
-              <Button
-                variant="secondary"
-                isLoading={isLoading}
-                className={modalButtonClass}
-                onClick={() => setIsExtendModalOpen(true)}
-              >
-                Extend stay
-              </Button>
-              <Button
-                variant="secondary"
-                isLoading={isLoading}
-                className={modalButtonClass}
-                onClick={() => setIsShortenModalOpen(true)}
-              >
-                Shorten stay
-              </Button>
-              <Button
-                variant="secondary"
-                isLoading={isLoading}
-                className={modalButtonClass}
-                onClick={() => setIsAccommodationModalOpen(true)}
-              >
-                Change accommodation
-              </Button>
-            </div>
-            {stayEditError && (
-              <Information className="border-error/30 bg-error/10 text-foreground">
-                {stayEditError}
-              </Information>
-            )}
-          </BookingSurface>
-        )}
-
         <section className="flex flex-col gap-3">
           <BookingRequestButtons
             isFiatBooking={
               !bookingView?.useCredits && !bookingView?.useTokens
             }
             openCheckout={
-              isBookingOwnerEditor ? openBookingCheckout : undefined
+              status !== 'cancelled' && isBookingOwnerEditor
+                ? openBookingCheckout
+                : undefined
             }
             checkoutLoading={isLoading}
+            hideCheckoutButton={status === 'cancelled'}
+            stayShaped={hasStayPricingShape}
+            paymentDelta={bookingView?.paymentDelta}
+            useTokens={useTokens}
             _id={_id}
             status={status}
             createdBy={createdBy}
@@ -1419,114 +1017,6 @@ const BookingPage = ({
           <BookingSurface tone="soft" padding="md" className="text-sm">
             {t('bookings_confirmation')}
           </BookingSurface>
-        )}
-
-        {isGuestsModalOpen && (
-          <Modal closeModal={() => setIsGuestsModalOpen(false)} className="sm:max-w-lg">
-            <div className="flex flex-col gap-4">
-              <Heading level={3}>Edit guests</Heading>
-              <BookingGuests
-                shouldHideTitle
-                adults={modalAdults}
-                kids={modalChildren}
-                infants={modalInfants}
-                pets={modalPets}
-                setAdults={setModalAdults}
-                setKids={setModalChildren}
-                setInfants={setModalInfants}
-                setPets={setModalPets}
-                isPrivate={Boolean(listing?.private)}
-              />
-              <Button
-                variant="secondary"
-                className={modalButtonClass}
-                isLoading={isLoading}
-                onClick={() => void handleEditGuestsSubmit()}
-              >
-                Save guests
-              </Button>
-            </div>
-          </Modal>
-        )}
-
-        {isExtendModalOpen && (
-          <Modal closeModal={() => setIsExtendModalOpen(false)} className="sm:max-w-lg">
-            <div className="flex flex-col gap-4">
-              <Heading level={3}>Extend stay</Heading>
-              <label className="text-sm">
-                New checkout date
-                <input
-                  className="mt-1 w-full rounded-md border border-line px-3 py-2"
-                  type="date"
-                  value={modalExtendEndDate}
-                  onChange={(e) => setModalExtendEndDate(e.target.value)}
-                />
-              </label>
-              <Button
-                variant="secondary"
-                className={modalButtonClass}
-                isLoading={isLoading}
-                onClick={() => void handleExtendStaySubmit()}
-              >
-                Extend
-              </Button>
-            </div>
-          </Modal>
-        )}
-
-        {isShortenModalOpen && (
-          <Modal closeModal={() => setIsShortenModalOpen(false)} className="sm:max-w-lg">
-            <div className="flex flex-col gap-4">
-              <Heading level={3}>Shorten stay</Heading>
-              <label className="text-sm">
-                New checkout date
-                <input
-                  className="mt-1 w-full rounded-md border border-line px-3 py-2"
-                  type="date"
-                  value={modalShortenEndDate}
-                  onChange={(e) => setModalShortenEndDate(e.target.value)}
-                />
-              </label>
-              <Button
-                variant="secondary"
-                className={modalButtonClass}
-                isLoading={isLoading}
-                onClick={() => void handleShortenStaySubmit()}
-              >
-                Shorten
-              </Button>
-            </div>
-          </Modal>
-        )}
-
-        {isAccommodationModalOpen && (
-          <Modal closeModal={() => setIsAccommodationModalOpen(false)} className="sm:max-w-lg">
-            <div className="flex flex-col gap-4">
-              <Heading level={3}>Change accommodation</Heading>
-              <label className="text-sm">
-                Listing
-                <select
-                  className="mt-1 w-full rounded-md border border-line px-3 py-2"
-                  value={modalListingId}
-                  onChange={(e) => setModalListingId(e.target.value)}
-                >
-                  {listings.map((item) => (
-                    <option key={item._id} value={item._id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <Button
-                variant="secondary"
-                className={modalButtonClass}
-                isLoading={isLoading}
-                onClick={() => void handleUpgradeStaySubmit()}
-              >
-                Change
-              </Button>
-            </div>
-          </Modal>
         )}
       </main>
     </>
@@ -1568,7 +1058,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
 
     const [optionalEvent, optionalListing, optionalVolunteer] =
       await Promise.all([
-        booking.eventId &&
+        booking?.eventId &&
           api.get(`/event/${booking.eventId}`, {
             headers: getBearerAuthHeaders(req as NextApiRequest),
           }),
@@ -1576,7 +1066,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
           api.get(`/listing/${listingIdForFetch}`, {
             headers: getBearerAuthHeaders(req as NextApiRequest),
           }),
-        booking.volunteerId &&
+        booking?.volunteerId &&
           api.get(`/volunteer/${booking.volunteerId}`, {
             headers: getBearerAuthHeaders(req as NextApiRequest),
           }),
@@ -1588,7 +1078,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
     let bookingCreatedBy = null;
     try {
       const optionalCreatedBy =
-        booking.createdBy &&
+        booking?.createdBy &&
         (await api.get(`/user/${booking.createdBy}`, {
           headers: getBearerAuthHeaders(req as NextApiRequest),
         }));
@@ -1611,6 +1101,15 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       projects,
     };
   } catch (err: any) {
+    let messages: Awaited<ReturnType<typeof loadLocaleData>> | null = null;
+    try {
+      messages = await loadLocaleData(
+        context?.locale,
+        process.env.NEXT_PUBLIC_APP_NAME,
+      );
+    } catch {
+      messages = null;
+    }
     return {
       error: parseMessageFromError(err),
       booking: null,
@@ -1621,7 +1120,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       bookingConfig: null,
       generalConfig: null,
       listings: null,
-      messages: null,
+      messages,
       paymentConfig: null,
       foodOptions: null,
       projects: null,
