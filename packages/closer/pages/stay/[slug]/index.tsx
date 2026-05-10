@@ -1011,7 +1011,7 @@ const StayBookingSummaryPage = ({
                   : bookingEnd
               }
               listingName={listing?.name}
-              listingId={listing?._id}
+              listingId={updatedListingId ?? listing?._id}
               isVolunteer={volunteerInfo?.bookingType === 'volunteer'}
               eventName={event?.name}
               volunteerName={volunteer?.name}
@@ -1028,7 +1028,6 @@ const StayBookingSummaryPage = ({
               priceDuration={listing?.priceDuration}
               workingHoursStart={listing?.workingHoursStart}
               workingHoursEnd={listing?.workingHoursEnd}
-              listingId={updatedListingId ?? listing?._id}
               showHeading={false}
               collapseDatesEditor
               datesEditorOpen={datesEditorOpen}

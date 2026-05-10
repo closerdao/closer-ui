@@ -758,7 +758,7 @@ const BookingPage = ({
                   : bookingEnd
               }
               listingName={listing?.name}
-              listingId={listing?._id}
+              listingId={updatedListingId ?? listing?._id}
               isVolunteer={volunteerInfo?.bookingType === 'volunteer'}
               eventName={event?.name}
               volunteerName={volunteer?.name}
@@ -775,7 +775,6 @@ const BookingPage = ({
               priceDuration={listing?.priceDuration}
               workingHoursStart={listing?.workingHoursStart}
               workingHoursEnd={listing?.workingHoursEnd}
-              listingId={updatedListingId ?? listing?._id}
               showHeading={false}
               collapseDatesEditor
               datesEditorOpen={datesEditorOpen}
