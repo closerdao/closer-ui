@@ -4,10 +4,21 @@
   "signup_title": "Junte-se aos vybes do MOOS",
   "resources_heading": "Recursos",
   "resources_subheading": "Leia tudo sobre o nosso sonho: a missão, a visão e como chegámos até aqui, com os nossos documentos digitais",
+  "volunteers_page_intro_text": "Olá! Interessado em ser voluntário no MOOS? Estamos sempre à procura de apoio para os nossos vários eventos. Se estiver interessado em participar como voluntário, junte-se ao nosso grupo do Telegram através do link abaixo e faça parte de algo incrível!",
+  "volunteers_page_terms_1": "",
+  "volunteers_page_terms_2": "",
+  "volunteers_page_terms_3": "",
+  "volunteers_page_terms_4": "",
+  "volunteers_page_terms_5": "",
+  "volunteers_page_terms_6": "",
+  "volunteers_page_more_info": "Mais informações em breve.",
+
   "resources_resources_heading": "Ponha a chaleira ao lume e conheça-nos um pouco melhor",
   "resources_resources_subheading": "Leia tudo sobre o nosso sonho: a missão, a visão e como chegámos até aqui, com os nossos documentos digitais",
+
   "resources_faq_heading": "Perguntas frequentes",
   "resources_faq_subheading": "Tem uma pergunta? Somos open source.",
+
   "stay_title": "Reserve uma estadia em",
   "stay_meta_description": "Reserve uma estadia no MOOS, um lugar para colaboração e inovação.",
   "stay_description": "Quer ficar apenas algumas noites? Quer acolher o seu trabalho? Quer co-criar uma residência de um mês?",
@@ -15,14 +26,19 @@
   "stay_meet_your_hosts_description": "Os nossos anfitriões fazem parte da equipa do Y Berlin. Estão aqui para ajudar, sabem muito sobre sustentabilidade e artes, e estão ansiosos por partilhar os seus conhecimentos. Estes anfitriões fazem do MOOS o que é, um lugar para colaboração e inovação desde 2012. Com eles, terá uma verdadeira sensação da nossa comunidade.",
   "stay_chose_accommodation": "Escolha o seu alojamento",
   "stay_chose_accommodation_description": "Temos 20 quartos em dois edifícios e o nosso chef pode combinar a experiência com pequeno-almoço, almoço ou jantar.",
+
   "navigation_stay": "Reservar espaço",
   "navigation_member_login": "Login de membro",
+
+  "signup_form_get_credits": "Receba ✨ <b>1 VYBE</b> por se registar.",
+
   "carrots_heading": "Vybes",
   "carrots_balance": "✨",
   "carrots_subheading": "Troque Vybes por estadias, eventos e muito mais",
   "carrots_subheading_what_are": "O que são Vybes?",
   "carrots_what_are_1": "Vybes são um conceito inovador de timeshare, oferecendo pacotes de vouchers personalizados que permitem formas únicas de participação no MOOS. Vybes são mais do que reservar estadias e espaços para eventos; são um convite para a co-criação de um futuro regenerativo no MOOS.",
   "carrots_what_are_2": "Estamos atualmente a oferecer os primeiros 25.000 Vybes a um preço com desconto de €4 por Vybe (no valor de €5).",
+
   "carrots_subheading_what": "O que fazem os Vybes?",
   "carrots_what_1": "O Y Berlin no MOOS funciona com vybes. Vybes são um mecanismo de timeshare pós-transacional. Vybes podem ser resgatados para uso pessoal, uso organizacional ou doados para apoiar projetos comunitários.",
   "carrots_what_2": "Troque Vybes por descontos diretos nos recursos do MOOS:",
@@ -37,11 +53,15 @@
   "carrots_carrots_to_redeem_singular": "Vybe para resgatar",
   "carrots_how_to_use_1": "No checkout, se os seus Vybes cobrirem o custo da sua reserva, selecione o widget de desconto. Aplique o desconto e está pronto!",
   "carrots_how_to_use_2": "✨ Reserve noites de estadia no Y Berlin no MOOS",
+  "carrots_how_to_use_3": "✨ Reserve eventos e workshops nas ofertas do Y Berlin no Moos",
+  "carrots_how_to_use_4": "✨ Reserve slots para acolhimento de eventos e workshops no nosso espaço acolhedor no sótão, logo abaixo do telhado.",
   "carrots_how_to_use_5": "✨ Reserve slots para usar o nosso salão de eventos principal.",
   "carrots_how_to_use_6": "Múltiplos Vybes podem ser usados para uma reserva. Se no checkout não tiver vouchers suficientes para a reserva, o valor restante será faturado em Euro. Se não usar todos os seus vouchers para uma reserva, os seus vouchers restantes permanecerão válidos.",
+
   "carrots_additional_guidelines_heading": "Informações adicionais sobre Vybes",
   "carrots_success_message": "Vybes serão resgatados! Custo do alojamento atualizado.",
   "carrots_success_message_singular": "Vybe será resgatado! Custo do alojamento atualizado.",
+  "carrots_error_message": "Pagamento de Vybes falhou, por favor, tente novamente.",
   "carrots_additional_guidelines_1": "Validade: Vybes são válidos por um ano (12 meses) a partir da compra.",
   "carrots_additional_guidelines_2": "Resgate: Resgate Vybes na nossa plataforma de reservas para recursos do MOOS. Novos recursos são adicionados regularmente.",
   "carrots_additional_guidelines_3": "Transferibilidade: Atualmente, Vybes não podem ser transferidos. Estamos a desenvolver um Bazar VYBES para futuras partilhas e transferências.",
@@ -50,14 +70,25 @@
   "carrots_additional_guidelines_6": "Valor: Cada VYBE aproxima-se de um dia e noite de brincadeira no MOOS. Esperamos que leve a brincadeira tão a sério quanto nós.",
   "carrots_additional_guidelines_7": "Referências: fique atento aos benefícios de referência e ao próximo Bazar VYBES para opções de partilha expandidas dentro da comunidade MOOS.",
   "carrots_additional_guidelines_8": "Fique atento a desenvolvimentos futuros enquanto melhoramos a experiência VYBES, incluindo potencial integração blockchain.",
+
   "referrals_subheading": "Convide os seus amigos e ganhe ✨ Vybes",
   "referrals_description_text_1": "Convide os seus amigos para se juntarem ao Moos usando o seu link de referência único abaixo e ambos serão recompensados!",
   "referrals_description_text_2": "Receberá ✨ 1 por amigo e eles receberão ✨ 2.",
   "referrals_description_text_3": "Está limitado a um máximo de ✨ 6 por mês - que será atualizado no dia 1 de cada mês.",
   "referrals_credits_link": "Saiba mais sobre ✨ Vybes.",
   "bookings_checkout_step_visitors_guide": "Formulário de Consentimento do Moos",
+
+  "signup_intro_1": "MOOS é uma casa onde a minha história e a sua história se tornam a nossa história.",
+  "signup_intro_2": "Sabia que funcionamos com vybes? ",
+  "signup_intro_3": "Vybes são frequências comunitárias que abrem os portais para a serendipidade. Não alugamos espaços no MOOS. Oferecemos experiências.",
+  "signup_intro_4": "Junte-se a nós. ",
+
   "buttons_apply_to_stay": "Candidatar-se a ficar",
+
   "learn_course_purchase_confirmation_message": "<p>Obrigado pela sua compra! 🌱</p><p>Entraremos em contacto em breve com os detalhes do curso.</p>",
+
+  "support_us_heading": "APOIAR O MOOS",
+
   "home_hero_heading": "Na fronteira do histórico Treptower Park de Berlim, algo belo está a crescer...",
   "home_join_dream_button": "JUNTE-SE AO SONHO",
   "home_download_menu_button": "Descarregue o Nosso Menu",
@@ -65,5 +96,8 @@
   "home_community_intro_1": "Mesmo em frente ao Treptower Park, MOOS — 'Musgo' em inglês—serve como um ponto de encontro onde a criatividade e o espírito comunitário de Berlim convergem. É um espaço acolhedor para diversos caminhos se encontrarem, encorajando uma comunidade inovadora, interdisciplinar e interconectada bem no núcleo da cidade.",
   "home_community_intro_2": "O Y Berlin, um novo laboratório de design comunitário integrado no MOOS, tende à mistura de tecnologia e comunidade, refletindo o objetivo do MOOS de cultivar espaços que promovam conexões mais profundas do que a mera coabitação.",
   "home_community_intro_3": "Agora, pela primeira vez, estamos a abrir as portas do nosso parque infantil comunitário para a co-criação. Estamos a oferecer <i>Vouchers Vybe</i> limitados a indivíduos e organizações que estão interessados em fazer parceria connosco e beneficiar de vantagens especiais de early mover. Torne-se um <i>Criador Vybe</i> hoje e ajude a moldar o futuro da tecnologia comunitária em Berlim. Com a introdução de <a href=\"/settings/credits\" class=\"text-accent font-bold\">Vybes</a>, semeado pelo Y Berlin, pretendemos fertilizar o envolvimento da comunidade com experiências e conexões valorizadas sobre transações. Vybes encoraja cada membro, novo ou antigo, a contribuir com o seu super poder único. Esqueça as transações normais; no MOOS, trata-se de tudo o que sente que deve trazer para a mesa—ideias, workshops, o que quiser. Vybes permite-lhe mergulhar em tudo o que o MOOS tem para oferecer e ser realmente uma parte ativa de um espaço comunitário resiliente e em crescimento.",
+  "home_community_intro_4": "",
+  "home_community_join_vybes": "Junte-se aos Vybes",
   "home_dao_announcement": "Estamos a iniciar um coletivo MOOS DAO. Pode comprar tokens (dando poder de voto) <a href='https://juicebox.money/v2/p/750?tablet=about' class='text-accent font-bold underline'>aqui</a> ou contribuir para o GoFundMe <a href='https://www.gofundme.com/f/save-moos' class='text-accent font-bold underline'>aqui</a>"
 }
+

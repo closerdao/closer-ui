@@ -25,7 +25,23 @@ const EXTRACTION_RES = [
   /\bt\(\s*[\r\n]+\s*['"]([^'"]+)['"]/g,
   /\bt\.rich\(\s*[\r\n]+\s*['"]([^'"]+)['"]/g,
   /\bt\.markup\(\s*[\r\n]+\s*['"]([^'"]+)['"]/g,
+  /\bt\.raw\(\s*[\r\n]+\s*['"]([^'"]+)['"]/g,
 ];
+
+const STATIC_TEMPLATE_RES = [
+  /\bt\(\s*`([^`${]+)`\s*\)/g,
+  /\bt\.rich\(\s*`([^`${]+)`\s*\)/g,
+  /\bt\.markup\(\s*`([^`${]+)`\s*\)/g,
+  /\bt\.raw\(\s*`([^`${]+)`\s*\)/g,
+];
+
+const INDIRECT_UI_PROP_RES =
+  /(?:titleKey|descKey|detailKey|labelKey|valueKey|subKey)\s*:\s*['"]([^'"]+)['"]/g;
+
+const QUOTED_SNAKE_CASE_KEY_RES =
+  /['"]([a-z][a-z0-9]*(?:_[a-z0-9]+)+)['"]/g;
+
+const MIN_QUOTED_SNAKE_LEN = 10;
 
 function walkScanFiles(dir, out) {
   let entries;
@@ -68,6 +84,25 @@ function collectUsedKeysFromSources(scanRoots) {
       while ((m = re.exec(content)) !== null) {
         used.add(m[1]);
       }
+    }
+    for (const re of STATIC_TEMPLATE_RES) {
+      re.lastIndex = 0;
+      let m;
+      while ((m = re.exec(content)) !== null) {
+        const k = m[1].trim();
+        if (k && !k.includes('${')) used.add(k);
+      }
+    }
+    INDIRECT_UI_PROP_RES.lastIndex = 0;
+    let mp;
+    while ((mp = INDIRECT_UI_PROP_RES.exec(content)) !== null) {
+      used.add(mp[1]);
+    }
+    QUOTED_SNAKE_CASE_KEY_RES.lastIndex = 0;
+    let mq;
+    while ((mq = QUOTED_SNAKE_CASE_KEY_RES.exec(content)) !== null) {
+      const k = mq[1];
+      if (k.length >= MIN_QUOTED_SNAKE_LEN) used.add(k);
     }
   }
   return used;
@@ -171,7 +206,9 @@ function main() {
   const scanRoots = [path.join(REPO_ROOT, 'apps'), path.join(REPO_ROOT, 'packages')];
   console.error('[prune-locale-keys] Scanning sources under apps/ and packages/ ...');
   const usedKeys = collectUsedKeysFromSources(scanRoots);
-  console.error(`[prune-locale-keys] Found ${usedKeys.size} distinct t()/t.rich()/… string keys in code.`);
+  console.error(
+    `[prune-locale-keys] Found ${usedKeys.size} distinct candidate keys (t()/t.rich()/t.markup/t.raw, static templates, UI props, quoted snake_case ≥${MIN_QUOTED_SNAKE_LEN} chars).`,
+  );
 
   let totalRemoved = 0;
   for (const abs of absFiles) {
@@ -205,7 +242,7 @@ function main() {
       `[prune-locale-keys] Dry run. ${totalRemoved} unused entries total. Re-run with --write to apply.`,
     );
     console.error(
-      '[prune-locale-keys] Keys built dynamically, emails, or non-.ts/.tsx sources are not detected; review before --write.',
+      '[prune-locale-keys] Not detected (may still be removed incorrectly): t(dynamicVariable), template literals with ${…}, keys only in .md, keys shorter than quoted-snake threshold, keys outside apps|packages scan. Dynamic keys like t(`stay_status_${status}_title`) still need those variants present or manual allowlist; review before --write.',
     );
   }
 
