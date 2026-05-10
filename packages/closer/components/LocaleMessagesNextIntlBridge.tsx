@@ -3,6 +3,7 @@ import { ReactNode, useEffect, useState } from 'react';
 
 import { AbstractIntlMessages, NextIntlClientProvider } from 'next-intl';
 
+import { handleDevMissingLocaleSync } from '../utils/devLocaleSync';
 import { loadLocaleData } from '../utils/locale.helpers';
 
 type Props = {
@@ -38,7 +39,10 @@ export default function LocaleMessagesNextIntlBridge({
       locale={router.locale || 'en'}
       messages={messages}
       timeZone={timeZone}
-      onError={onError}
+      onError={(error) => {
+        handleDevMissingLocaleSync(error as Error & { code?: string });
+        onError?.(error as Error & { code?: string });
+      }}
     >
       {children}
     </NextIntlClientProvider>
