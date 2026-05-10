@@ -1177,5 +1177,15 @@
   "webinar_section_title": "Dołącz do rozmowy. Zadawaj pytania. Poznaj szczegóły.",
   "webinar_section_desc": "Zarejestruj się na nadchodzący webinar, aby dowiedzieć się więcej i połączyć ze społecznością.",
   "webinar_form_submit": "Zarejestruj się",
-  "webinar_form_note": "Zaproszenie w kalendarzu wysłane po rejestracji"
+  "webinar_form_note": "Zaproszenie w kalendarzu wysłane po rejestracji",
+
+  "stripe_connect_title": "Stripe Connect",
+  "stripe_connect_description": "Autoryzuj konto Stripe, aby połączyć je z tą platformą. Po przekierowaniu ze Stripe skopiuj identyfikator konta do konfiguracji środowiska.",
+  "stripe_connect_button": "Połącz ze Stripe",
+  "stripe_connect_success_title": "Identyfikator połączonego konta",
+  "stripe_connect_success_copy_hint": "Ustaw tę wartość jako NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT w pliku .env.",
+  "stripe_connect_error_title": "Połączenie nie powiodło się",
+  "stripe_connect_denied": "Autoryzacja Stripe została odrzucona",
+  "stripe_connect_csrf_error_title": "Weryfikacja sesji nie powiodła się",
+  "stripe_connect_csrf_error_body": "Bezpieczna sesja tego połączenia jest nieobecna lub wygasła. Wróć do Stripe Connect i rozpocznij od nowa."
 }

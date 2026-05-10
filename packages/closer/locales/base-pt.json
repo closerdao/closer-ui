@@ -2196,5 +2196,15 @@
   "token_price_history_note": "Este é o preço da curva de ligação, não valor de mercado.",
   "token_graph_supply_title": "Fornecimento ao Longo do Tempo",
   "token_graph_loading": "A carregar dados do gráfico...",
-  "token_graph_error": "Não foi possível carregar os dados do gráfico"
+  "token_graph_error": "Não foi possível carregar os dados do gráfico",
+
+  "stripe_connect_title": "Stripe Connect",
+  "stripe_connect_description": "Autorize uma conta Stripe a ligar-se a esta plataforma. Depois do redirecionamento do Stripe, copie o ID da conta para a configuração do ambiente.",
+  "stripe_connect_button": "Ligar com Stripe",
+  "stripe_connect_success_title": "ID da conta ligada",
+  "stripe_connect_success_copy_hint": "Defina este valor como NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT no seu ficheiro .env.",
+  "stripe_connect_error_title": "Ligação falhou",
+  "stripe_connect_denied": "A autorização Stripe foi recusada",
+  "stripe_connect_csrf_error_title": "Falha na verificação da sessão",
+  "stripe_connect_csrf_error_body": "A sessão segura desta ligação está em falta ou expirou. Volte ao Stripe Connect e comece de novo."
 }
