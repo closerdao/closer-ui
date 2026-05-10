@@ -59,6 +59,37 @@ const RegenerativeAgriculturePage = () => {
         </div>
       </section>
 
+      <section className="py-16 bg-white border-t border-gray-100">
+        <div className="max-w-6xl mx-auto px-6">
+          <Heading level={2} className="mb-6 text-3xl text-center">
+            {t('regen_ag_philosophy_section_title')}
+          </Heading>
+          <div className="max-w-3xl mx-auto space-y-4 text-gray-700 text-center leading-relaxed">
+            <p>{t('regen_ag_philosophy_p1')}</p>
+            <p>{t('regen_ag_philosophy_p2')}</p>
+            <p>{t('regen_ag_philosophy_p3')}</p>
+          </div>
+          <Heading level={3} className="mt-14 mb-6 text-xl text-center text-gray-900">
+            {t('regen_ag_keywords_section_title')}
+          </Heading>
+          <div className="flex flex-wrap gap-2 justify-center max-w-5xl mx-auto">
+            {t('regen_ag_keywords_blob')
+              .split('\n')
+              .map((line) => line.trim())
+              .filter(Boolean)
+              .map((label, index) => (
+                <Link
+                  key={`${label}-${index}`}
+                  href={`/search?x=${encodeURIComponent(label)}`}
+                  className="bg-accent-light/80 text-gray-800 px-3 py-1.5 rounded-full text-xs sm:text-sm border border-accent/20 hover:border-accent hover:bg-accent-light transition-colors inline-flex items-center"
+                >
+                  {label}
+                </Link>
+              ))}
+          </div>
+        </div>
+      </section>
+
       <section className="py-16 bg-white">
         <div className="max-w-6xl mx-auto px-6">
           <div className="max-w-3xl mx-auto text-center mb-12">

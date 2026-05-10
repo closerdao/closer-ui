@@ -18,7 +18,6 @@
     "@sentry/nextjs": "^8.55.2",
     "@tailwindcss/forms": "^0.4.0",
     "@tailwindcss/line-clamp": "^0.4.4",
-    "api-dev-handlers": "*",
     "closer": "*",
     "gray-matter": "^4.0.3",
     "next": "15.5.15",

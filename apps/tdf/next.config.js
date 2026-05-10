@@ -16,6 +16,10 @@ const withMDX = require('@next/mdx')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    CLOSER_LOCAL_LOCALE_MERGE:
+      process.env.ENVIRONMENT === 'local' ? '1' : '',
+  },
   experimental: {
     largePageDataBytes: 512 * 1024,
   },
@@ -37,7 +41,6 @@ const nextConfig = {
   },
   reactStrictMode: false,
   transpilePackages: [
-    'api-dev-handlers',
     'closer',
     '@reown/appkit',
     '@reown/appkit-adapter-ethers5',
