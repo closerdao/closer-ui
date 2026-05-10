@@ -1,7 +1,6 @@
 import { blockchainConfig } from '../config_blockchain';
 import { CloserCurrencies } from '../types/currency';
 
-
 export const taxExemptionReasons = [
   {
     id: '1',
@@ -259,11 +258,7 @@ export const BOOKING_STEP_TITLE_KEYS = [
   'bookings_progress_step_summary',
   'bookings_progress_step_checkout',
 ];
-export const PRODUCT_SALE_STEPS = [
-  'learn',
-  'checkout',
-  'confirmation',
-];
+export const PRODUCT_SALE_STEPS = ['learn', 'checkout', 'confirmation'];
 
 export const CURRENCIES: CloserCurrencies[] = [
   CloserCurrencies.EUR,
@@ -297,11 +292,7 @@ export const SUBSCRIPTION_STEPS = [
   'success',
 ];
 
-export const SUBSCRIPTION_CITIZEN_STEPS = [
-  'why',
-  'validation',
-  'success',
-];
+export const SUBSCRIPTION_CITIZEN_STEPS = ['why', 'validation', 'success'];
 
 export const TOKEN_SALE_STEPS = [
   'before-you-begin',
@@ -544,6 +535,14 @@ export const dashboardRelevantStatuses = [
   'pending',
   'confirmed',
 ];
+
+// live mode client id
+export const STRIPE_CONNECT_CLIENT_ID = 'ca_UPesCL7IuSF3iEluAgRyYFWomqaiJhxb';
+
+// test mode client id
+// export const STRIPE_CONNECT_CLIENT_ID = 'ca_UPesENlkYRH5AGb5UkKMVppmuPkEqINn';
+
+export const STRIPE_CONNECT_OAUTH_STATE_COOKIE = 'stripe_connect_oauth_state';
 
 export const STRIPE_AMOUNT_MULTIPLIER = 100;
 
