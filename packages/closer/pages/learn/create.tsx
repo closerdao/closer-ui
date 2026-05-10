@@ -9,7 +9,6 @@ import { useTranslations } from 'next-intl';
 import models from '../../models';
 import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 interface Props {
@@ -46,21 +45,15 @@ const CreateLessonPage = ({ learningHubConfig }: Props) => {
 
 CreateLessonPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     const learningHubConfig = config.learningHub || null;
     return {
       learningHubConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       learningHubConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

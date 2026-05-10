@@ -23,7 +23,6 @@ import {
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { financeApplicationIdFromCreateResponse } from '../../../utils/financeApplicationIdFromResponse';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
 import PageNotFound from '../../not-found';
 
@@ -220,7 +219,7 @@ SubscriptionsCitizenApplyPage.getInitialProps = async (
   context: NextPageContext,
 ) => {
   try {
-    const [subscriptionsRes, generalRes, citizenshipRes, messages] =
+    const [subscriptionsRes, generalRes, citizenshipRes] =
       await Promise.all([
         api.get('/config/subscriptions').catch(() => {
           return null;
@@ -231,8 +230,6 @@ SubscriptionsCitizenApplyPage.getInitialProps = async (
         api.get('/config/citizenship').catch(() => {
           return null;
         }),
-
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       ]);
 
     const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
@@ -242,7 +239,6 @@ SubscriptionsCitizenApplyPage.getInitialProps = async (
       subscriptionsConfig,
       citizenshipConfig,
       generalConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
@@ -250,8 +246,7 @@ SubscriptionsCitizenApplyPage.getInitialProps = async (
       citizenshipConfig: null,
       generalConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

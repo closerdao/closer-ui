@@ -37,7 +37,6 @@ import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
 import { logMetricIfAuthenticated } from '../../../utils/metrics';
 import { getMaxBookingHorizon } from '../../../utils/helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import ProjectPreview from '../../../components/ProjectPreview';
 
@@ -738,11 +737,6 @@ DatesSelector.getInitialProps = async (
   try {
     const { query } = context;
     const { eventId, volunteerId, bookingType, isFriendsBooking } = query;
-
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     const bookingSettings = config.booking as BookingSettings;
     const volunteerConfig = config.volunteering as VolunteerConfig;
     if (eventId) {
@@ -757,7 +751,6 @@ DatesSelector.getInitialProps = async (
         ticketOptions: ticketsAvailable?.data?.ticketOptions,
         isFriendsBooking: normalizeIsFriendsBooking(isFriendsBooking),
         event: event?.data?.results,
-        messages,
       };
     }
     if (
@@ -781,7 +774,6 @@ DatesSelector.getInitialProps = async (
         volunteerConfig,
         futureEvents: res?.data?.results,
         isFriendsBooking: normalizeIsFriendsBooking(isFriendsBooking),
-        messages,
       };
     }
 
@@ -804,14 +796,12 @@ DatesSelector.getInitialProps = async (
       bookingSettings,
       volunteerConfig,
       isFriendsBooking: normalizeIsFriendsBooking(isFriendsBooking),
-      messages,
       project,
     };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
       bookingSettings: null,
-      messages: null,
       volunteerConfig: null,
       isFriendsBooking: false,
     };

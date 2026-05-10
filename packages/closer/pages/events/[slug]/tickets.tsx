@@ -20,7 +20,6 @@ import config from '../../../configCached';
 import api from '../../../utils/api';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageNotFound from '../../not-found';
 
@@ -147,22 +146,19 @@ const EventTickets = ({ event, eventsConfig }: Props) => {
 EventTickets.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
   try {
-    const [eventRes, messages] = await Promise.all([
-      api
+    const eventRes = await api
         .get(`/event/${query.slug}`, {
           headers: getBearerAuthHeaders(req as NextApiRequest),
         })
         .catch((err) => {
           console.error('Error fetching event:', err);
           return null;
-        }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+        })
 
     const event = eventRes?.data?.results;
     const eventsConfig = config.events;
 
-    return { event, eventsConfig, messages };
+    return { event, eventsConfig };
   } catch (err) {
     return {
       error: parseMessageFromError(err),

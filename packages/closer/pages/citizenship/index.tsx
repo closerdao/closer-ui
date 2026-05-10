@@ -40,7 +40,6 @@ import { CitizenshipConfig } from '../../types/api';
 import api from '../../utils/api';
 import { twitterUrlToHandle } from '../../utils/app.helpers';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 const CITIZEN_TARGET = 300;
@@ -747,18 +746,14 @@ const CitizenshipPage = ({
 
 CitizenshipPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [citizenshipRes, messages] = await Promise.all([
-      api.get('/config/citizenship').catch(() => {
+    const citizenshipRes = await api.get('/config/citizenship').catch(() => {
         return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+      })
 
     const citizenshipConfig = citizenshipRes?.data?.results?.value;
 
     return {
       citizenshipConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {

@@ -4,7 +4,7 @@
   "private": true,
   "description": "Excluded from root workspaces. Restore: add \"apps/moos\" to workspaces in repo package.json.",
   "scripts": {
-    "prebuild": "node ../../packages/closer/scripts/syncBuildConfig.cjs",
+    "prebuild": "node ../../packages/closer/scripts/syncBuildLocales.cjs && node ../../packages/closer/scripts/syncBuildConfig.cjs",
     "dev": "dotenv -e .env next dev --turbo",
     "build": "next build",
     "start": "next start",

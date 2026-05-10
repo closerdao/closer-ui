@@ -18,7 +18,6 @@ import { Lesson } from '../../types/lesson';
 import api from '../../utils/api';
 import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 interface Props {
   error?: string;
@@ -28,7 +27,6 @@ interface Props {
 
 const LearnCheckout = ({ error, lesson, paymentConfig }: Props) => {
   const t = useTranslations();
-
 
   const { isAuthenticated } = useAuth();
 
@@ -85,7 +83,7 @@ const LearnCheckout = ({ error, lesson, paymentConfig }: Props) => {
 LearnCheckout.getInitialProps = async (context: NextPageContext) => {
   const { query } = context;
   try {
-    const [lessonRes, paymentConfigRes, bookingConfigRes, messages] =
+    const [lessonRes, paymentConfigRes, bookingConfigRes] =
       await Promise.all([
         api.get(`/lesson/${query.lessonId}`).catch(() => {
           return null;
@@ -96,7 +94,6 @@ LearnCheckout.getInitialProps = async (context: NextPageContext) => {
         api.get('/config/booking').catch(() => {
           return null;
         }),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       ]);
 
     const lesson = lessonRes?.data?.results;
@@ -107,7 +104,6 @@ LearnCheckout.getInitialProps = async (context: NextPageContext) => {
     return {
       error: null,
       paymentConfig,
-      messages,
       lesson,
     };
   } catch (err) {
@@ -116,8 +112,7 @@ LearnCheckout.getInitialProps = async (context: NextPageContext) => {
       error: parseMessageFromError(err),
       paymentConfig: null,
       lesson: null,
-      messages: null,
-    };
+      };
   }
 };
 

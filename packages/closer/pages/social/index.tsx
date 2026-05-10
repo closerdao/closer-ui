@@ -14,7 +14,6 @@ import PageNotAllowed from '../401';
 import { useAuth } from '../../contexts/auth';
 import { usePushNotifications } from '../../contexts/push-notifications';
 import config from '../../configCached';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 interface CommunityConfig {
   enabled: boolean;
@@ -120,11 +119,6 @@ Social.getInitialProps = async (context: NextPageContext) => {
       }
     }
 
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
-
     const communityConfig = config.community;
     const bookingConfig = config.booking ?? null;
     const initialChannelSlug = channelSlug;
@@ -133,15 +127,13 @@ Social.getInitialProps = async (context: NextPageContext) => {
       communityConfig,
       bookingConfig,
       initialChannelSlug,
-      messages,
     };
   } catch (err: unknown) {
     return {
       communityConfig: null,
       bookingConfig: null,
       initialChannelSlug: null,
-      messages: null,
-    };
+      };
   }
 };
 

@@ -27,7 +27,6 @@ import { CitizenshipConfig } from '../../../types';
 import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import { reportIssue } from '../../../utils/reporting.utils';
 import PageNotFound from '../../not-found';
 
@@ -283,7 +282,7 @@ const ValidationCitizenPage: NextPage<Props> = ({
 
 ValidationCitizenPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [subscriptionsRes, citizenshipRes, messages] = await Promise.all([
+    const [subscriptionsRes, citizenshipRes] = await Promise.all([
       api.get('/config/subscriptions').catch(() => {
         return null;
       }),
@@ -291,7 +290,6 @@ ValidationCitizenPage.getInitialProps = async (context: NextPageContext) => {
       api.get('/config/citizenship').catch(() => {
         return null;
       }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
@@ -300,15 +298,13 @@ ValidationCitizenPage.getInitialProps = async (context: NextPageContext) => {
     return {
       subscriptionsConfig,
       citizenshipConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       subscriptionsConfig: { enabled: false, elements: [] },
       citizenshipConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

@@ -20,7 +20,6 @@ import { GeneralConfig } from '../../types';
 import { cdn } from '../../utils/api';
 import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 const now = new Date();
 
@@ -438,10 +437,6 @@ const Events = ({ generalConfig, eventsConfig }: Props) => {
 
 Events.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
 
     const generalConfig = config.general;
     const eventsConfig = config.events;
@@ -449,15 +444,13 @@ Events.getInitialProps = async (context: NextPageContext) => {
     return {
       generalConfig,
       eventsConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       eventsConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

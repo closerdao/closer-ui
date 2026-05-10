@@ -20,7 +20,6 @@ import {
 } from 'closer';
 import { useFaqs } from 'closer/hooks/useFaqs';
 import { parseMessageFromError } from 'closer/utils/common';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -866,10 +865,6 @@ const HomePage = ({ generalConfig, bookingSettings }: Props) => {
 
 HomePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     const [bookingResponse, generalRes] = await Promise.all([
       api.get('/config/booking').catch((err) => {
         console.error('Error fetching booking config:', err);
@@ -886,15 +881,13 @@ HomePage.getInitialProps = async (context: NextPageContext) => {
     return {
       generalConfig,
       bookingSettings,
-      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       bookingSettings: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

@@ -26,7 +26,6 @@ import api, { cdn, formatSearch } from '../../utils/api';
 import { twitterUrlToHandle } from '../../utils/app.helpers';
 import { estimateReadingTime } from '../../utils/blog.utils';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 interface BlogConfig {
@@ -323,14 +322,13 @@ ArticlePage.getInitialProps = async (context: NextPageContext) => {
     const { query, req } = context;
     const slug = req?.url?.replace('/blog/', '') || query?.slug;
 
-    const [articleRes, blogRes, messages] = await Promise.all([
+    const [articleRes, blogRes] = await Promise.all([
       api.get(`/article/${slug}`).catch(() => {
         return null;
       }),
       api.get('/config/blog').catch(() => {
         return null;
       }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const article = articleRes?.data?.results;
@@ -361,14 +359,12 @@ ArticlePage.getInitialProps = async (context: NextPageContext) => {
       author: authorRes?.data?.results[0] || null,
       relatedArticles,
       blogConfig,
-      messages,
     };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
       blogConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

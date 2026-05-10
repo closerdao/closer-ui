@@ -17,7 +17,6 @@ import {
 import { User } from 'closer/contexts/auth/types';
 import { Page } from 'closer/types/customPages';
 import { parseMessageFromError } from 'closer/utils/common';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useFaqs } from 'closer/hooks/useFaqs';
 import Faqs from 'closer/components/Faqs';
@@ -207,10 +206,6 @@ const CommunityPage = ({ generalConfig, listings, hosts }: Props) => {
 
 CommunityPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     const [generalRes, listingsRes, hostsRes] = await Promise.all([
       api.get('/config/general').catch(() => {
         return null;
@@ -245,8 +240,6 @@ CommunityPage.getInitialProps = async (context: NextPageContext) => {
     const hosts = hostsRes?.data?.results;
     return {
       generalConfig,
-
-      messages,
       listings,
       hosts,
     };
@@ -255,7 +248,6 @@ CommunityPage.getInitialProps = async (context: NextPageContext) => {
       generalConfig: null,
 
       error: parseMessageFromError(err),
-      messages: null,
       listings: null,
       hosts: null,
     };

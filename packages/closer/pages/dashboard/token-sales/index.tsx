@@ -22,7 +22,6 @@ import { FinanceApplication } from '../../../types/subscriptions';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 
 const SALES_PER_PAGE = 20;
 const FINANCED_PER_PAGE = 20;
@@ -498,25 +497,20 @@ const TokenSalesDashboardPage = ({
 
 TokenSalesDashboardPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [bookingConfigRes, messages] = await Promise.all([
-      api.get('/config/booking').catch(() => {
+    const bookingConfigRes = await api.get('/config/booking').catch(() => {
         return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+      })
 
     const bookingConfig = bookingConfigRes?.data?.results?.value;
 
     return {
       bookingConfig,
-      messages,
     };
   } catch (error) {
     return {
       error: parseMessageFromError(error),
       bookingConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

@@ -42,7 +42,6 @@ import {
   filterCombinedEntriesToExpenseFcToconlineDocuments,
   parseExpenseTrackingCombinedEntriesPayload,
 } from '../../../utils/expenseTracking.helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 
 const EXPENSES_PER_PAGE = 50;
 const CHARGE_DOWNLOAD_LIMIT = 10000;
@@ -470,14 +469,13 @@ ExpenseTrackingDashboardPage.getInitialProps = async (
   context: NextPageContext,
 ) => {
   try {
-    const [generalConfigRes, entitiesConfigRes, messages] = await Promise.all([
+    const [generalConfigRes, entitiesConfigRes] = await Promise.all([
       api.get('/config/general').catch(() => {
         return null;
       }),
       api.get('/config/accounting-entities').catch(() => {
         return null;
       }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const generalConfig = generalConfigRes?.data?.results?.value;
@@ -486,15 +484,13 @@ ExpenseTrackingDashboardPage.getInitialProps = async (
     return {
       generalConfig,
       entitiesConfig,
-      messages,
     };
   } catch (error) {
     return {
       error: parseMessageFromError(error),
       entitiesConfig: null,
       generalConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

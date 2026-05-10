@@ -5,7 +5,6 @@ import { Card, Heading, LinkButton } from 'closer/components/ui';
 import { GeneralConfig, api, useAuth, useConfig } from 'closer';
 import { HOME_PAGE_CATEGORY } from 'closer/constants';
 import { formatSearch } from 'closer/utils/api';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -74,14 +73,13 @@ const HistoryPage = ({ article, generalConfig }: Props) => {
 HistoryPage.getInitialProps = async (context: NextPageContext) => {
   try {
     const search = formatSearch({ category: { $eq: HOME_PAGE_CATEGORY } });
-    const [articleRes, generalRes, messages] = await Promise.all([
+    const [articleRes, generalRes] = await Promise.all([
       api.get(`/article?where=${search}`).catch(() => {
         return null;
       }),
       api.get('/config/general').catch(() => {
         return null;
       }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const article = articleRes?.data?.results[0];
@@ -89,15 +87,13 @@ HistoryPage.getInitialProps = async (context: NextPageContext) => {
     return {
       article,
       generalConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       article: null,
       generalConfig: null,
       error: err,
-      messages: null,
-    };
+      };
   }
 };
 

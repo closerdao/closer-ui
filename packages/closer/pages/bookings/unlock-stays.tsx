@@ -15,7 +15,6 @@ import { SubscriptionPlan } from '../../types/subscriptions';
 import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
 import { getCurrencySymbol } from '../../utils/helpers';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import { parseSubscriptionPerks } from '../../utils/subscriptionPerks';
 import { sanitizeSubscriptionPerkHtml } from '../../utils/sanitizeSubscriptionPerkHtml';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
@@ -150,10 +149,6 @@ const UnlockStaysPage = ({ subscriptionsConfig, bookingConfig }: Props) => {
 
 UnlockStaysPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
 
     const subscriptionsConfig = config.subscriptions;
     const bookingConfig = config.booking;
@@ -161,15 +156,13 @@ UnlockStaysPage.getInitialProps = async (context: NextPageContext) => {
     return {
       subscriptionsConfig,
       bookingConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       subscriptionsConfig: { enabled: false, elements: [] },
       bookingConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

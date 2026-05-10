@@ -18,7 +18,6 @@ import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import api, { cdn } from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 const Signup = () => {
   const t = useTranslations();
@@ -128,23 +127,18 @@ const Signup = () => {
 
 Signup.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [subscriptionsResponse, messages] = await Promise.all([
-      api.get('/config/subscriptions').catch(() => {
+    const subscriptionsResponse = await api.get('/config/subscriptions').catch(() => {
         return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+      })
 
     return {
       subscriptionsConfig: subscriptionsResponse?.data?.results?.value,
-      messages,
     };
   } catch (err: unknown) {
     return {
       subscriptionsConfig: [],
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

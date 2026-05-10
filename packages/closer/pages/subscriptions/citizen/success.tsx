@@ -21,7 +21,6 @@ import { GeneralConfig } from '../../../types';
 import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
 interface Props {
@@ -224,7 +223,7 @@ const SuccessCitizenPage: NextPage<Props> = ({
 
 SuccessCitizenPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [subscriptionsRes, generalRes, messages] = await Promise.all([
+    const [subscriptionsRes, generalRes] = await Promise.all([
       api.get('/config/subscriptions').catch(() => {
         return null;
       }),
@@ -232,7 +231,6 @@ SuccessCitizenPage.getInitialProps = async (context: NextPageContext) => {
       api.get('/config/general').catch(() => {
         return null;
       }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
@@ -241,7 +239,6 @@ SuccessCitizenPage.getInitialProps = async (context: NextPageContext) => {
       subscriptionsConfig,
 
       generalConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
@@ -249,8 +246,7 @@ SuccessCitizenPage.getInitialProps = async (context: NextPageContext) => {
 
       generalConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

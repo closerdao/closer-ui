@@ -18,7 +18,6 @@ import config from '../../../configCached';
 import { usePlatform } from '../../../contexts/platform';
 import { BaseBookingParams, Booking, BookingConfig } from '../../../types';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 
 interface Props extends BaseBookingParams {
   error?: string;
@@ -191,17 +190,13 @@ const ConfirmationStep = ({
 
 ConfirmationStep.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [messages] = await Promise.all([
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
     const bookingConfig = config.booking;
-    return { error: null, bookingConfig, messages };
+    return { error: null, bookingConfig };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
       bookingConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

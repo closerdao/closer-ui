@@ -13,7 +13,6 @@ import { BookingConfig } from '../../../types/api';
 import { EmailTemplate } from '../../../types/emailTemplate';
 import api from '../../../utils/api';
 import config from '../../../configCached';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
 interface Props {
@@ -65,10 +64,7 @@ const EmailsPage = ({ templates, bookingConfig }: Props) => {
 
 EmailsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [emailsRes, messages] = await Promise.all([
-      api.get('/emailtemplates?limit=100'),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const emailsRes = await api.get('/emailtemplates?limit=100')
 
     const templates = emailsRes?.data?.results ?? [];
     const bookingConfig = config.booking;
@@ -76,14 +72,12 @@ EmailsPage.getInitialProps = async (context: NextPageContext) => {
     return {
       templates,
       bookingConfig,
-      messages,
     };
   } catch {
     return {
       templates: [],
       bookingConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

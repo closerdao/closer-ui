@@ -33,7 +33,6 @@ import {
   tokenSaleStatusLabelKey,
 } from '../../utils/orderStatusBadge';
 import { getTransactionExplorerUrl } from '../../utils/transactionExplorerUrl';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import { TOKEN_PURCHASE_TERMS_DOC_URL } from '../../constants';
 import PageNotFound from '../not-found';
 
@@ -538,10 +537,9 @@ const SaleSummaryPage = ({
 
 SaleSummaryPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalRes, entitiesRes, messages] = await Promise.all([
+    const [generalRes, entitiesRes] = await Promise.all([
       api.get('/config/general').catch(() => null),
       api.get('/config/accounting-entities').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const generalConfig = generalRes?.data?.results?.value;
@@ -550,15 +548,13 @@ SaleSummaryPage.getInitialProps = async (context: NextPageContext) => {
     return {
       generalConfig,
       accountingEntitiesConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       accountingEntitiesConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

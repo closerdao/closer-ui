@@ -29,7 +29,6 @@ import {
 import config from '../../configCached';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import PageNotFound from '../not-found';
 import {  LinkButton } from '../../components/ui';
@@ -360,10 +359,7 @@ const StayPage = ({
 
 StayPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [volunteerRes, messages] = await Promise.all([
-      api.get('/volunteer').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const volunteerRes = await api.get('/volunteer').catch(() => null)
     const generalConfig = config.general;
     const bookingSettings = config.booking;
     const bookingRules = config['booking-rules'];
@@ -374,7 +370,6 @@ StayPage.getInitialProps = async (context: NextPageContext) => {
       bookingSettings,
       bookingRules,
       generalConfig,
-      messages,
       opportunities,
       volunteerConfig,
       error: null,
@@ -385,7 +380,6 @@ StayPage.getInitialProps = async (context: NextPageContext) => {
       bookingSettings: null,
       bookingRules: null,
       generalConfig: null,
-      messages: null,
       opportunities: null,
       volunteerConfig: null,
     };

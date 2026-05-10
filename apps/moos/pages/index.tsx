@@ -19,7 +19,6 @@ import {
 import { HOME_PAGE_CATEGORY } from 'closer/constants';
 import { useFaqs } from 'closer/hooks/useFaqs';
 import { formatSearch } from 'closer/utils/api';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -256,14 +255,13 @@ const HomePage = ({ generalConfig }: Props) => {
 HomePage.getInitialProps = async (context: NextPageContext) => {
   try {
     const search = formatSearch({ category: { $eq: HOME_PAGE_CATEGORY } });
-    const [articleRes, generalRes, messages] = await Promise.all([
+    const [articleRes, generalRes] = await Promise.all([
       api.get(`/article?where=${search}`).catch(() => {
         return null;
       }),
       api.get('/config/general').catch(() => {
         return null;
       }),
-      loadLocaleData(context?.locale, 'moos'),
     ]);
 
     const article = articleRes?.data?.results[0];
@@ -271,20 +269,12 @@ HomePage.getInitialProps = async (context: NextPageContext) => {
     return {
       article,
       generalConfig,
-      messages,
     };
   } catch (err: unknown) {
-    let messages = null;
-    try {
-      messages = await loadLocaleData(context?.locale, 'moos');
-    } catch (localeErr) {
-      // If locale loading fails, gracefully degrade with null messages
-    }
     return {
       article: null,
       generalConfig: null,
       error: err,
-      messages,
     };
   }
 };

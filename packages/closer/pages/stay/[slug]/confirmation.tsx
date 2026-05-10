@@ -26,7 +26,6 @@ import { Listing } from '../../../types/booking';
 import { Stay } from '../../../types/stay';
 import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import {
   formatStayMoney,
   getStay,
@@ -432,20 +431,15 @@ const StayConfirmationPage = ({
 
 StayConfirmationPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     const bookingSettings = config.booking as BookingSettings;
     const generalConfig = (config.general || null) as GeneralConfig | null;
-    return { bookingSettings, generalConfig, messages };
+    return { bookingSettings, generalConfig };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
       bookingSettings: null,
       generalConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

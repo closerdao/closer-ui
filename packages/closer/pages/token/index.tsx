@@ -24,7 +24,6 @@ import { logMetric } from '../../utils/metrics';
 import { getCurrentUnitPrice } from '../../utils/bondingCurve';
 import { getReserveTokenDisplay } from '../../utils/config.utils';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import { SALES_CONFIG } from '../../constants/shared.constants';
 
 const ACCOMMODATION_ICONS = ['van.png', 'camping.png', 'hotel.png'];
@@ -639,7 +638,6 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
           </div>
         </section>
 
-
         <section className="py-16">
           <div className="max-w-6xl mx-auto px-6">
             <Heading level={2} className="mb-12 text-3xl text-center">
@@ -979,7 +977,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
 PublicTokenSalePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [listingRes, generalRes, messages] = await Promise.all([
+    const [listingRes, generalRes] = await Promise.all([
       api
         .get('/listing', {
           params: {
@@ -992,7 +990,6 @@ PublicTokenSalePage.getInitialProps = async (context: NextPageContext) => {
       api.get('/config/general').catch(() => {
         return null;
       }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const listings = listingRes?.data.results;
@@ -1000,15 +997,13 @@ PublicTokenSalePage.getInitialProps = async (context: NextPageContext) => {
     return {
       listings,
       generalConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       listings: [],
       generalConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

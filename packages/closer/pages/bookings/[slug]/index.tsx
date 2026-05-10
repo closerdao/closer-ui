@@ -60,7 +60,6 @@ import {
   getBookingPaymentType,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import {
   computeCreditsOwed,
   computeFiatOwed,
@@ -188,7 +187,6 @@ const BookingPage = ({
 
   const isFriendBookingForCurrentUser =
     user?.email && bookingView?.friendEmails?.includes(user?.email);
-
 
   const userInfo = bookingCreatedBy && {
     name: bookingCreatedBy.screenname,
@@ -1025,7 +1023,7 @@ const BookingPage = ({
 BookingPage.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
   try {
-    const [bookingRes, listingRes, foodRes, projectsRes, messages] =
+    const [bookingRes, listingRes, foodRes, projectsRes] =
       await Promise.all([
         api
           .get(`/booking/${query.slug}`, {
@@ -1039,7 +1037,6 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
           .catch(() => null),
         api.get('/food').catch(() => null),
         api.get('/project').catch(() => null),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       ]);
     const booking = bookingRes?.data?.results;
     const bookingConfig = config.booking;
@@ -1094,22 +1091,12 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       bookingConfig,
       generalConfig,
       listings,
-      messages,
       paymentConfig,
       foodOptions,
       projects,
     };
   } catch (err: any) {
-    let messages: Awaited<ReturnType<typeof loadLocaleData>> | null = null;
-    try {
-      messages = await loadLocaleData(
-        context?.locale,
-        process.env.NEXT_PUBLIC_APP_NAME,
-      );
-    } catch {
-      messages = null;
-    }
-    return {
+return {
       error: parseMessageFromError(err),
       booking: null,
       listing: null,
@@ -1119,7 +1106,6 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       bookingConfig: null,
       generalConfig: null,
       listings: null,
-      messages,
       paymentConfig: null,
       foodOptions: null,
       projects: null,

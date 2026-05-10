@@ -15,7 +15,6 @@ import { useAuth } from '../../contexts/auth';
 import { GeneralConfig, VolunteerConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import {
   default as PageNotAllowed,
   default as PageNotFound,
@@ -89,15 +88,13 @@ const VolunteerApplicationPage = ({
 
 VolunteerApplicationPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalConfigRes, volunteerConfigRes, messages] = await Promise.all([
+    const [generalConfigRes, volunteerConfigRes] = await Promise.all([
       api.get('/config/general').catch(() => {
         return null;
       }),
       api.get('/config/volunteering').catch(() => {
         return null;
       }),
-
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const volunteerConfig = volunteerConfigRes?.data?.results?.value || null;
@@ -106,7 +103,6 @@ VolunteerApplicationPage.getInitialProps = async (context: NextPageContext) => {
     return {
       volunteerConfig,
       generalConfig,
-      messages,
     };
   } catch (err) {
     console.error('Error', err);
@@ -114,8 +110,7 @@ VolunteerApplicationPage.getInitialProps = async (context: NextPageContext) => {
       error: parseMessageFromError(err),
       volunteerConfig: null,
       generalConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

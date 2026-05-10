@@ -17,7 +17,6 @@ import { GeneralConfig } from '../../types';
 import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
@@ -145,14 +144,13 @@ const SubscriptionSuccessPage = ({
 
 SubscriptionSuccessPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [subscriptionsRes, generalRes, messages] = await Promise.all([
+    const [subscriptionsRes, generalRes] = await Promise.all([
       api.get('/config/subscriptions').catch(() => {
         return null;
       }),
       api.get('/config/general').catch(() => {
         return null;
       }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
@@ -161,15 +159,13 @@ SubscriptionSuccessPage.getInitialProps = async (context: NextPageContext) => {
     return {
       subscriptionsConfig,
       generalConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       subscriptionsConfig: { enabled: false, elements: [] },
       generalConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

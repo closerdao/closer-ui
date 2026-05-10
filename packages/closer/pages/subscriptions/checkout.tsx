@@ -39,7 +39,6 @@ import {
   getVatInfo,
   priceFormat,
 } from '../../utils/helpers';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
@@ -240,7 +239,7 @@ SubscriptionsCheckoutPage.getInitialProps = async (
   context: NextPageContext,
 ) => {
   try {
-    const [subscriptionsRes, paymentRes, bookingRes, generalRes, messages] =
+    const [subscriptionsRes, paymentRes, bookingRes, generalRes] =
       await Promise.all([
         api.get('/config/subscriptions').catch(() => {
           return null;
@@ -254,7 +253,6 @@ SubscriptionsCheckoutPage.getInitialProps = async (
         api.get('/config/general').catch(() => {
           return null;
         }),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       ]);
 
     const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
@@ -267,7 +265,6 @@ SubscriptionsCheckoutPage.getInitialProps = async (
       subscriptionsConfig,
       paymentConfig,
       generalConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
@@ -275,8 +272,7 @@ SubscriptionsCheckoutPage.getInitialProps = async (
       paymentConfig: null,
       generalConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

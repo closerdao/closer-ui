@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl';
 import { CohousingTeamView } from '../../../components/cohousing/cohousingTeamView';
 import { useAuth } from '../../../contexts/auth';
 import PageNotAllowed from '../../401';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 
 const CohousingApplicationsTeamPage = () => {
   const t = useTranslations();
@@ -36,7 +35,7 @@ export default CohousingApplicationsTeamPage;
 export async function getStaticProps({ locale }: NextPageContext) {
   return {
     props: {
-      messages: await loadLocaleData(locale as string, 'tdf'),
+      
     },
   };
 }

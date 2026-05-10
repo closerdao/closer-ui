@@ -16,7 +16,6 @@ import { usePlatform } from '../../contexts/platform';
 import { BookingConfig } from '../../types';
 import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 interface Props {
   bookingConfig: BookingConfig | null;
@@ -133,15 +132,10 @@ const Listings = ({ bookingConfig }: Props) => {
 
 Listings.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
 
     const bookingConfig = config.booking;
     return {
       bookingConfig,
-      messages,
     };
   } catch (err) {
     return {

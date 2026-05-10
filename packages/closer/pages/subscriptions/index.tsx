@@ -19,7 +19,6 @@ import { SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import { parseSubscriptionPerks } from '../../utils/subscriptionPerks';
 import { sanitizeSubscriptionPerkHtml } from '../../utils/sanitizeSubscriptionPerkHtml';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
@@ -339,7 +338,7 @@ const SubscriptionsPage: NextPage<Props> = ({
 
 SubscriptionsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [subscriptionsRes, generalRes, listingRes, messages] =
+    const [subscriptionsRes, generalRes, listingRes] =
       await Promise.all([
         api.get('/config/subscriptions').catch(() => {
           return null;
@@ -356,7 +355,6 @@ SubscriptionsPage.getInitialProps = async (context: NextPageContext) => {
           .catch(() => {
             return null;
           }),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       ]);
 
     const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
@@ -367,7 +365,6 @@ SubscriptionsPage.getInitialProps = async (context: NextPageContext) => {
       subscriptionsConfig,
       generalConfig,
       listings,
-      messages,
     };
   } catch (err: unknown) {
     return {
@@ -375,8 +372,7 @@ SubscriptionsPage.getInitialProps = async (context: NextPageContext) => {
       generalConfig: null,
       listings: [],
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

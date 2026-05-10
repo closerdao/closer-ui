@@ -1,3 +1,4 @@
+import type { AbstractIntlMessages } from 'next-intl';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -16,13 +17,13 @@ import {
   PlatformProvider,
   api,
 } from 'closer';
+import LocaleMessagesNextIntlBridge from '../components/LocaleMessagesNextIntlBridge';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import {
   applyCurrencyLocaleFromGeneralConfig,
   mergeGeneralConfigWithDefaults,
   prepareGeneralConfig,
 } from 'closer/utils/app.helpers';
-import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import { blockchainConfig } from '../config_blockchain';
@@ -30,9 +31,11 @@ import configKeyed from '../configCached';
 import { NewsletterProvider } from '../contexts/newsletter';
 import { PushNotificationProvider } from '../contexts/push-notifications';
 import { WalletProvider } from '../contexts/wallet';
+import { appGetInitialPropsWithMessages } from '../utils/appLocaleMessages.helpers';
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
+  messages?: AbstractIntlMessages;
 }
 
 const buildStateFromKeyedConfig = (
@@ -51,7 +54,7 @@ const buildStateFromKeyedConfig = (
   };
 };
 
-const MyApp = ({ Component, pageProps }: AppOwnProps) => {
+const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
   const router = useRouter();
   const { query } = router;
   const referral = query.referral;
@@ -118,9 +121,8 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
           ...blockchainConfig,
         }}
       >
-        <NextIntlClientProvider
-          locale={router.locale || 'en'}
-          messages={pageProps.messages || {}}
+        <LocaleMessagesNextIntlBridge
+          initialMessages={messages || {}}
           timeZone={config.timeZone || 'Europe/Lisbon'}
         >
           <AuthProvider>
@@ -140,10 +142,12 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
               </WalletProvider>
             </PlatformProvider>
           </AuthProvider>
-        </NextIntlClientProvider>
+        </LocaleMessagesNextIntlBridge>
       </ConfigProvider>
     </>
   );
 };
+
+MyApp.getInitialProps = appGetInitialPropsWithMessages;
 
 export default MyApp;

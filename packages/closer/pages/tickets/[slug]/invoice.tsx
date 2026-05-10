@@ -11,7 +11,6 @@ import { Event, GeneralConfig } from '../../../types';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
 interface Props {
@@ -76,12 +75,11 @@ Ticket.getInitialProps = async (context: NextPageContext) => {
     const {
       data: { results: ticket },
     } = await api.get(`/ticket/${query.slug}`);
-    const [eventRes, generalRes, messages] = await Promise.all([
+    const [eventRes, generalRes] = await Promise.all([
       api.get(`/event/${ticket.event}`),
       api.get('/config/general').catch(() => {
         return null;
       }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const generalConfig = generalRes?.data?.results?.value;
 
@@ -89,7 +87,6 @@ Ticket.getInitialProps = async (context: NextPageContext) => {
       ticket,
       event: eventRes.data?.results,
       generalConfig,
-      messages,
     };
   } catch (error) {
     return {
@@ -97,8 +94,7 @@ Ticket.getInitialProps = async (context: NextPageContext) => {
       event: null,
       error: parseMessageFromError(error),
       generalConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

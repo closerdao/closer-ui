@@ -10,7 +10,6 @@ import Page401 from '../401';
 import { useAuth } from '../../contexts/auth';
 import { VolunteerConfig } from '../../types';
 import api from '../../utils/api';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 interface Props {
   volunteerConfig: VolunteerConfig;
@@ -45,13 +44,7 @@ const CreateProject = ({ volunteerConfig }: Props) => {
 
 CreateProject.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [messages, volunteerConfigRes] = await Promise.all([
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME).catch(
-        (error) => {
-          console.error('Failed to load locale data:', error);  
-          return null;
-        },
-      ),
+    const [volunteerConfigRes] = await Promise.all([
       api.get('/config/volunteering').catch((error) => {
         console.error('Failed to load volunteer config:', error);
         return null;
@@ -62,12 +55,10 @@ CreateProject.getInitialProps = async (context: NextPageContext) => {
 
     return {
       volunteerConfig,
-      messages,
     };
   } catch (error) {
     console.error(error);
     return {
-      messages: null,
       volunteerConfig: null,
     };
   }

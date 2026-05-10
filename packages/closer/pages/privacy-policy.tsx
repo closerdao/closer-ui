@@ -6,8 +6,6 @@ import Heading from '../components/ui/Heading';
 import { useConfig } from '../hooks/useConfig';
 import api from '../utils/api';
 
-import { loadLocaleData } from '../utils/locale.helpers';
-
 const SITE_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth';
 
 interface AccountingEntity {
@@ -444,18 +442,16 @@ export default PrivacyPolicyPage;
 
 PrivacyPolicyPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [messages, accountingEntitiesRes] = await Promise.all([
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      api.get('/config/accounting-entities').catch(() => null),
-    ]);
+    const accountingEntitiesRes = await api
+      .get('/config/accounting-entities')
+      .catch(() => null);
 
     const accountingEntities = accountingEntitiesRes?.data?.results?.value?.elements || [];
 
     return { 
-      messages,
       accountingEntities,
     };
   } catch (err) {
-    return { error: err, messages: null, accountingEntities: [] };
+    return { error: err, accountingEntities: [] };
   }
 };

@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "prebuild": "node ../../packages/closer/scripts/syncBuildConfig.cjs",
+    "prebuild": "node ../../packages/closer/scripts/syncBuildLocales.cjs && node ../../packages/closer/scripts/syncBuildConfig.cjs",
     "dev": "dotenv -e .env next dev",
     "build": "next build",
     "start": "next start",

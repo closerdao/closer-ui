@@ -20,7 +20,6 @@ import { useConfig } from '../../../hooks/useConfig';
 import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
 interface PlatformContext {
@@ -398,27 +397,21 @@ const CitizenWhyPage: NextPage<Props> = ({ subscriptionsConfig, error }) => {
 
 CitizenWhyPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [subscriptionsRes, messages] = await Promise.all([
-      api.get('/config/subscriptions').catch(() => {
+    const subscriptionsRes = await api.get('/config/subscriptions').catch(() => {
         return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+      })
 
     const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
 
     return {
       subscriptionsConfig,
-
-      messages,
     };
   } catch (err: unknown) {
     return {
       subscriptionsConfig: { enabled: false, elements: [] },
 
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

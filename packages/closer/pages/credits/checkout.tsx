@@ -21,7 +21,6 @@ import api from '../../utils/api';
 import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
 import { parseMessageFromError } from '../../utils/common';
 import { getVatInfo, priceFormat } from '../../utils/helpers';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 const stripePromise = loadStripe(
@@ -153,7 +152,7 @@ const CreditsCheckoutPage: NextPage<Props> = ({
 
 CreditsCheckoutPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [fundraiserRes, paymentRes, bookingRes, generalRes, messages] =
+    const [fundraiserRes, paymentRes, bookingRes, generalRes] =
       await Promise.all([
         api.get('/config/fundraiser').catch(() => {
           return null;
@@ -167,7 +166,6 @@ CreditsCheckoutPage.getInitialProps = async (context: NextPageContext) => {
         api.get('/config/general').catch(() => {
           return null;
         }),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       ]);
 
     const fundraisingConfig = fundraiserRes?.data?.results?.value;
@@ -180,7 +178,6 @@ CreditsCheckoutPage.getInitialProps = async (context: NextPageContext) => {
       fundraisingConfig,
       paymentConfig,
       generalConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
@@ -188,8 +185,7 @@ CreditsCheckoutPage.getInitialProps = async (context: NextPageContext) => {
       paymentConfig: null,
       generalConfig: null,
       apiError: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

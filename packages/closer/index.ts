@@ -217,7 +217,9 @@ export { default as CohousingApplicationsTeamPage } from './pages/cohousing/appl
 // Types
 export * from './types/';
 // Utils
+export { default as LocaleMessagesNextIntlBridge } from './components/LocaleMessagesNextIntlBridge';
 export { default as api, cdn } from './utils/api';
+export { appGetInitialPropsWithMessages } from './utils/appLocaleMessages.helpers';
 export { invalidateConfigCache } from './utils/configCache';
 export { default as configCached } from './configCached';
 export {

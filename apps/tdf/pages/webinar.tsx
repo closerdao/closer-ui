@@ -5,7 +5,6 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { Heading, Webinar } from 'closer';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { CalendarDays, CheckCircle2, ShieldCheck, Users } from 'lucide-react';
 
 const WebinarPage = () => {
@@ -170,7 +169,7 @@ export default WebinarPage;
 export async function getStaticProps({ locale }: NextPageContext) {
   return {
     props: {
-      messages: await loadLocaleData(locale, 'tdf'),
+      
     },
   };
 }

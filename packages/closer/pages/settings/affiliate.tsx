@@ -20,7 +20,6 @@ import { useAuth } from '../../contexts/auth';
 import { User } from '../../contexts/auth/types';
 import { calculateAffiliateRevenue } from '../../utils/affiliate.utils';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import { getStartAndEndDate } from '../../utils/performance.utils';
 
 const AffiliatePage = ({
@@ -434,25 +433,20 @@ const AffiliatePage = ({
 
 AffiliatePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [affiliateConfigRes, messages] = await Promise.all([
-      api.get('/config/affiliate').catch(() => {
+    const affiliateConfigRes = await api.get('/config/affiliate').catch(() => {
         return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+      })
 
     const affiliateConfig = affiliateConfigRes?.data?.results?.value;
 
     return {
       affiliateConfig,
-      messages,
     };
   } catch (err: unknown) {
     console.error('Error in getInitialProps:', err);
     return {
       affiliateConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

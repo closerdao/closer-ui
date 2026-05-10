@@ -36,7 +36,6 @@ import {
   getVatInfo,
   priceFormat,
 } from '../../utils/helpers';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
@@ -250,7 +249,7 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
 
 SubscriptionsSummaryPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [subscriptionsRes, generalRes, paymentRes, bookingRes, messages] =
+    const [subscriptionsRes, generalRes, paymentRes, bookingRes] =
       await Promise.all([
         api.get('/config/subscriptions').catch(() => {
           return null;
@@ -264,7 +263,6 @@ SubscriptionsSummaryPage.getInitialProps = async (context: NextPageContext) => {
         api.get('/config/booking').catch(() => {
           return null;
         }),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       ]);
 
     const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
@@ -277,7 +275,6 @@ SubscriptionsSummaryPage.getInitialProps = async (context: NextPageContext) => {
     return {
       subscriptionsConfig,
       generalConfig,
-      messages,
       paymentConfig,
     };
   } catch (err: unknown) {
@@ -285,7 +282,6 @@ SubscriptionsSummaryPage.getInitialProps = async (context: NextPageContext) => {
       subscriptionsConfig: { enabled: false, elements: [] },
       generalConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
       paymentConfig: null,
     };
   }

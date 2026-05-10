@@ -31,7 +31,6 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import { createStay, searchStays } from '../../../utils/stays.api';
 import type { CloserCurrencies } from '../../../types/currency';
 
@@ -515,10 +514,6 @@ const ListingResultCard = ({
 
 StayCreatePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     const bookingSettings = config.booking as BookingSettings;
     const generalConfig = (config.general || null) as GeneralConfig | null;
 
@@ -539,7 +534,6 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
       bookingSettings,
       generalConfig,
       defaultGuestFoodOptionId,
-      messages,
     };
   } catch (err) {
     return {
@@ -547,8 +541,7 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
       bookingSettings: null,
       generalConfig: null,
       defaultGuestFoodOptionId: null,
-      messages: null,
-    };
+      };
   }
 };
 

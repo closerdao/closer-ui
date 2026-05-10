@@ -3,7 +3,6 @@ import Head from 'next/head';
 import { Heading } from 'closer/components/ui';
 
 import { GeneralConfig, api, useConfig } from 'closer';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 
 interface Props {
@@ -38,24 +37,19 @@ const TermsPage = ({ generalConfig }: Props) => {
 
 TermsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalRes, messages] = await Promise.all([
-      api.get('/config/general').catch(() => {
+    const generalRes = await api.get('/config/general').catch(() => {
         return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+      })
 
     const generalConfig = generalRes?.data?.results?.value;
     return {
       generalConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       error: err,
-      messages: null,
-    };
+      };
   }
 };
 

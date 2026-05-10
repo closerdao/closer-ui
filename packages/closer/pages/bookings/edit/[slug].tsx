@@ -12,7 +12,6 @@ import { BookingConfig, Event } from '../../../types';
 import config from '../../../configCached';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 interface Props {
@@ -74,22 +73,18 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No event');
     }
 
-    const [eventRes, messages] = await Promise.all([
-      api.get(`/event/${query.slug}`),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const eventRes = await api.get(`/event/${query.slug}`)
 
     const event = eventRes?.data.results;
     const bookingConfig = config.booking;
 
-    return { event, bookingConfig, messages };
+    return { event, bookingConfig };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
       bookingConfig: null,
       event: null,
-      messages: null,
-    };
+      };
   }
 };
 

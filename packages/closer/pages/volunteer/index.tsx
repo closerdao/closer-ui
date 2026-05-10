@@ -11,7 +11,6 @@ import { GeneralConfig, PageNotFound, VolunteerConfig, api } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import useRBAC from 'closer/hooks/useRBAC';
 import { parseMessageFromError } from 'closer/utils/common';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -231,8 +230,7 @@ VolunteerOpportunitiesPage.getInitialProps = async (
   context: NextPageContext,
 ) => {
   try {
-    const [messages, generalRes, volunteerConfigRes] = await Promise.all([
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    const [generalRes, volunteerConfigRes] = await Promise.all([
       api.get('/config/general').catch(() => null),
       api.get('/config/volunteering').catch(() => null),
     ]);
@@ -240,12 +238,11 @@ VolunteerOpportunitiesPage.getInitialProps = async (
     const generalConfig = generalRes?.data?.results?.value;
     const volunteerConfig = volunteerConfigRes?.data?.results?.value;
 
-    return { messages, generalConfig, volunteerConfig };
+    return { generalConfig, volunteerConfig };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
       volunteerConfig: null,
     };
   }

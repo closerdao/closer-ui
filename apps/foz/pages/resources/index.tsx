@@ -7,7 +7,6 @@ import { Heading } from 'closer/components/ui';
 import { GeneralConfig, PageNotFound, api } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import { useFaqs } from 'closer/hooks/useFaqs';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -83,24 +82,19 @@ const ResourcesPage = ({ generalConfig }: Props) => {
 
 ResourcesPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalRes, messages] = await Promise.all([
-      api.get('/config/general').catch(() => {
+    const generalRes = await api.get('/config/general').catch(() => {
         return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+      })
 
     const generalConfig = generalRes?.data?.results?.value;
     return {
       generalConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       error: err,
-      messages: null,
-    };
+      };
   }
 };
 

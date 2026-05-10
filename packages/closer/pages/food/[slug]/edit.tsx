@@ -12,7 +12,6 @@ import models from '../../../models';
 import config from '../../../configCached';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 
 interface Props {
   food: any;
@@ -78,15 +77,12 @@ EditFood.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No food slug provided');
     }
 
-    const [foodRes, messages] = await Promise.all([
-      api.get(`/food/${query.slug}`).catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const foodRes = await api.get(`/food/${query.slug}`).catch(() => null)
 
     const food = foodRes?.data?.results;
     const bookingConfig = config.booking;
 
-    return { food, bookingConfig, messages };
+    return { food, bookingConfig };
   } catch (err: unknown) {
     return {
       error: parseMessageFromError(err),

@@ -40,7 +40,6 @@ import {
 import { parseMessageFromError } from '../../../utils/common';
 import { logMetricIfAuthenticated } from '../../../utils/metrics';
 import { priceFormat } from '../../../utils/helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -760,10 +759,7 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
   const discountCode = query?.discountCode;
 
   try {
-    const [foodRes, messages] = await Promise.all([
-      api.get('/food').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const foodRes = await api.get('/food').catch(() => null)
     const bookingConfig = config.booking || null;
     const web3Config = config.web3 || null;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
@@ -773,7 +769,6 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
       error: null,
       bookingConfig,
       discountCode,
-      messages,
       foodOptions,
       tokenCurrency,
     };
@@ -782,7 +777,6 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
     return {
       error: parseMessageFromError(err),
       bookingConfig: null,
-      messages: null,
       foodOptions: null,
       tokenCurrency: getBookingTokenCurrency(),
     };

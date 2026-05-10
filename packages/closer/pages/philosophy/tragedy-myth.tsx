@@ -5,8 +5,6 @@ import { useTranslations } from 'next-intl';
 
 import Heading from '../../components/ui/Heading';
 
-import { loadLocaleData } from '../../utils/locale.helpers';
-
 const SITE_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth';
 
 const TragedyMythPage = () => {
@@ -256,12 +254,8 @@ export default TragedyMythPage;
 
 TragedyMythPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
-    return { messages };
+    return {};
   } catch (err) {
-    return { error: err, messages: null };
+    return { error: err, };
   }
 };

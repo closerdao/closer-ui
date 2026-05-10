@@ -21,7 +21,6 @@ import api from '../../../../utils/api';
 import { parseMessageFromError } from '../../../../utils/common';
 import { formatIsoFiatAmount } from '../../../../utils/currencyFormat';
 import { getFinancedMonthlyAmountDue } from '../../../../utils/financeApplicationMonthlyDue';
-import { loadLocaleData } from '../../../../utils/locale.helpers';
 
 const getScheduleRows = (
   paymentsScheduled: FinanceApplication['paymentsScheduled'],
@@ -407,16 +406,11 @@ const FinancedApplicationDetailPage = () => {
 
 FinancedApplicationDetailPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
-    return { messages };
+    return {};
   } catch (error) {
     return {
       error: parseMessageFromError(error),
-      messages: null,
-    };
+      };
   }
 };
 

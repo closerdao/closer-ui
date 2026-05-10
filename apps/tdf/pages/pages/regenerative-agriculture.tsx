@@ -1,7 +1,6 @@
 import Head from 'next/head';
 
 import { Heading, LinkButton } from 'closer';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { Check, Droplets, ExternalLink, Flame, Sprout, TreeDeciduous } from 'lucide-react';
 import Link from 'next/link';
 import { NextPageContext } from 'next';
@@ -321,7 +320,6 @@ const RegenerativeAgriculturePage = () => {
         </div>
       </section>
 
-
       <section className="py-16 bg-gray-50">
         <div className="max-w-6xl mx-auto px-6">
           <Heading level={2} className="mb-8 text-3xl text-center">
@@ -397,17 +395,11 @@ const RegenerativeAgriculturePage = () => {
 
 RegenerativeAgriculturePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
-      messages,
     };
   } catch (err: unknown) {
     return {
-      messages: null,
-    };
+      };
   }
 };
 

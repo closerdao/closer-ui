@@ -6,7 +6,6 @@ import { useState } from 'react';
 import { Card, Heading, LinkButton } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import { twitterUrlToHandle } from 'closer/utils/app.helpers';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import {
   ArrowRight,
   BookOpen,
@@ -1033,17 +1032,11 @@ const LearnMorePage = () => {
 
 LearnMorePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
-      messages,
     };
   } catch (err) {
     return {
-      messages: null,
-    };
+      };
   }
 };
 

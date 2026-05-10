@@ -36,7 +36,6 @@ import {
   prepareConfigs,
 } from '../../utils/config.utils';
 import { capitalizeFirstLetter } from '../../utils/learn.helpers';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 const BETA_FEATURES = ['community', 'governance'];
@@ -152,7 +151,6 @@ const ConfigPage = ({ bookingConfig }: Props) => {
       }) || [];
 
   const configFormSchema = getValidationSchema(arrayConfigsSchema as any);
-
 
   useEffect(() => {
     loadData();
@@ -1077,24 +1075,18 @@ const ConfigPage = ({ bookingConfig }: Props) => {
 
 ConfigPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
 
     const bookingConfig = config.booking;
 
     return {
       bookingConfig,
       error: null,
-      messages,
     };
   } catch (err: unknown) {
     return {
       bookingConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

@@ -15,7 +15,6 @@ import { estimateReadingTime, getCleanString } from '../../../utils/blog.utils';
 import UserAvatarPlaceholder from '../../../components/UserAvatarPlaceholder';
 import { parseMessageFromError } from '../../../utils/common';
 import { capitalizeFirstLetter } from '../../../utils/learn.helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 
 interface BlogConfig {
   enabled: boolean;
@@ -193,11 +192,10 @@ Search.getInitialProps = async (context: NextPageContext) => {
         ? decodeURIComponent(rawKeyword as string)
         : rawKeyword;
     const search = formatSearch({ tags: { $elemMatch: { $eq: keyword } } });
-    const [tags, articles, blogRes, messages] = await Promise.all([
+    const [tags, articles, blogRes] = await Promise.all([
       api.get(`/distinct/article/tags?where=${search}`),
       api.get(`/article?where=${search}&limit=50`),
       api.get('/config/blog').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const authorIds = articles?.data?.results.map(
@@ -217,14 +215,12 @@ Search.getInitialProps = async (context: NextPageContext) => {
       articles: articles?.data?.results,
       authors,
       blogConfig,
-      messages,
     };
   } catch (error) {
     return {
       error: parseMessageFromError(error),
       blogConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

@@ -30,7 +30,6 @@ StayCreateByStayIdPage.getInitialProps = async (context: NextPageContext) => {
       generalConfig: null,
       volunteerConfig: null,
       foodOptions: null,
-      messages: null,
     };
   }
   const base = await StayCheckoutPage.getInitialProps?.(context);

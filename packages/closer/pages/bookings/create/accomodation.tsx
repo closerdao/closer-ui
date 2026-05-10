@@ -38,7 +38,6 @@ import { parseMessageFromError } from '../../../utils/common';
 import { logMetricIfAuthenticated } from '../../../utils/metrics';
 import config from '../../../configCached';
 import { getBookingRate, getDiscountRate } from '../../../utils/helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
 dayjs.extend(advancedFormat);
@@ -368,8 +367,7 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
     const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
     const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
 
-    const [availabilityRes, messages] = await Promise.all([
-      api
+    const availabilityRes = await api
         .post('/bookings/availability', {
           start,
           end,
@@ -388,9 +386,7 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
             err.response.data.error,
           );
           return { error: err.response.data.error || 'Unknown error' };
-        }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+        })
     const bookingError = (availabilityRes as any)?.error || null;
     const availability = (availabilityRes as any)?.data?.results;
 
@@ -423,7 +419,6 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       friendEmails,
       bookingConfig,
       bookingError,
-      messages,
       foodOption,
       skills,
       diet,
@@ -438,7 +433,6 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
     return {
       error: err.response?.data?.error || err.message,
       bookingConfig: null,
-      messages: null,
       tokenCurrency: getBookingTokenCurrency(),
     };
   }

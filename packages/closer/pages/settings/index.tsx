@@ -26,7 +26,6 @@ import { useConfig } from '../../hooks/useConfig';
 import { VolunteerConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 type UpdateUserFunction = (value: string | string[]) => Promise<void>;
@@ -997,22 +996,17 @@ const SettingsPage = ({
 
 SettingsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [volunteerConfigRes, messages] = await Promise.all([
-      api.get('/config/volunteering').catch(() => {
+    const volunteerConfigRes = await api.get('/config/volunteering').catch(() => {
         return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+      })
 
     const volunteerConfig = volunteerConfigRes?.data?.results.value;
 
     return {
       volunteerConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
-      messages: null,
       volunteerConfig: null,
     };
   }

@@ -14,7 +14,6 @@ import { useAuth } from '../../contexts/auth';
 import useRBAC from '../../hooks/useRBAC';
 import { BookingConfig } from '../../types/api';
 import api from '../../utils/api';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 const ManageUsersPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
@@ -69,20 +68,15 @@ const ManageUsersPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) =>
 
 ManageUsersPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [messages, bookingRes] = await Promise.all([
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      api.get('/config/booking').catch(() => null),
-    ]);
+    const bookingRes = await api.get('/config/booking').catch(() => null);
 
     const bookingConfig = bookingRes?.data?.results?.value;
 
     return {
-      messages,
       bookingConfig,
     };
   } catch (err: unknown) {
     return {
-      messages: null,
       bookingConfig: null,
     };
   }

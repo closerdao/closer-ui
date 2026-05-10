@@ -38,7 +38,6 @@ import {
 import { parseMessageFromError } from '../../../utils/common';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
 import { logMetricIfAuthenticated } from '../../../utils/metrics';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 const prepareQuestions = (eventQuestions: any) => {
@@ -406,9 +405,6 @@ const Questionnaire = ({
 
 Questionnaire.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [messages] = await Promise.all([
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
     const bookingConfig = config.booking;
     const web3Config = config.web3;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
@@ -418,7 +414,6 @@ Questionnaire.getInitialProps = async (context: NextPageContext) => {
       bookingConfig,
       volunteerConfig,
       error: null,
-      messages,
       tokenCurrency,
     };
   } catch (err) {
@@ -427,7 +422,6 @@ Questionnaire.getInitialProps = async (context: NextPageContext) => {
       bookingConfig: null,
       volunteerConfig: null,
       questions: null,
-      messages: null,
       tokenCurrency: getBookingTokenCurrency(),
     };
   }

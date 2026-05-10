@@ -22,7 +22,6 @@ import { Lesson } from '../../../../types/lesson';
 import config from '../../../../configCached';
 import { parseMessageFromError } from '../../../../utils/common';
 import { capitalizeFirstLetter } from '../../../../utils/learn.helpers';
-import { loadLocaleData } from '../../../../utils/locale.helpers';
 import PageNotFound from '../../../not-found';
 
 const LESSONS_PER_PAGE = 10;
@@ -198,25 +197,19 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
 
 LearnCategoryPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     const generalConfig = config.general || null;
     const learningHubConfig = config.learningHub || null;
 
     return {
       generalConfig,
       learningHubConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       learningHubConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

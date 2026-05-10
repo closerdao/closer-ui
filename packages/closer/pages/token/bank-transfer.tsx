@@ -32,7 +32,6 @@ import { parseMessageFromError } from '../../utils/common';
 import { formatIntlNumberTwoDecimals } from '../../utils/currencyFormat';
 import { logMetric } from '../../utils/metrics';
 import { fetchTokenSaleById } from '../../utils/tokenSale.helpers';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 const firstQueryString = (value: string | string[] | undefined): string =>
@@ -443,23 +442,18 @@ const BankTransferPage = ({ generalConfig }: Props) => {
 
 BankTransferPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalRes, messages] = await Promise.all([
-      api.get('/config/general').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const generalRes = await api.get('/config/general').catch(() => null)
 
     const generalConfig = generalRes?.data?.results?.value;
 
     return {
       generalConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

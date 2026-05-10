@@ -10,7 +10,6 @@ import { GeneralConfig, Project, api, useAuth } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import { VolunteerConfig } from 'closer/types/api';
 import { parseMessageFromError } from 'closer/utils/common';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -200,9 +199,8 @@ const ProjectsPage = ({
 
 ProjectsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [messages, generalRes, projectsRes, volunteerConfigRes] =
+    const [generalRes, projectsRes, volunteerConfigRes] =
       await Promise.all([
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
         api.get('/config/general').catch(() => null),
         api.get('/project').catch(() => {
           return null;
@@ -229,12 +227,11 @@ ProjectsPage.getInitialProps = async (context: NextPageContext) => {
         manager: projectManagers[index],
       })) || null;
 
-    return { messages, generalConfig, projects, volunteerConfig };
+    return { generalConfig, projects, volunteerConfig };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
       projects: null,
       volunteerConfig: null,
     };

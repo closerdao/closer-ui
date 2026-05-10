@@ -71,7 +71,6 @@ import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { formatDate } from '../../../utils/listings.helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import { logMetricIfAuthenticated } from '../../../utils/metrics';
 
 dayjs.extend(dayOfYear);
@@ -2076,22 +2075,16 @@ Checkout.getInitialProps = async (context: NextPageContext) => {
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
     const paymentConfig = config.payment;
 
-    const [messages] = await Promise.all([
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-
     return {
       error: null,
       bookingConfig,
       paymentConfig,
-      messages,
       tokenCurrency,
     };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
       bookingConfig: null,
-      messages: null,
       paymentConfig: null,
       tokenCurrency: getBookingTokenCurrency(),
     };

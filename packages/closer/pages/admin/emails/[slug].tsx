@@ -17,7 +17,6 @@ import { BookingConfig } from '../../../types/api';
 import { EmailTemplate } from '../../../types/emailTemplate';
 import config from '../../../configCached';
 import api from '../../../utils/api';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
 interface Props {
@@ -150,14 +149,12 @@ EmailEditorPage.getInitialProps = async (context: NextPageContext) => {
         templates: [],
         templateVariables: [],
         bookingConfig: null,
-        messages: null,
-      };
+        };
     }
 
-    const [emailsRes, varsRes, messages] = await Promise.all([
+    const [emailsRes, varsRes] = await Promise.all([
       api.get('/emailtemplates?limit=100'),
       api.get('/emails/template-variables').catch(() => ({ data: { results: [] } })),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const templates: EmailTemplate[] = emailsRes?.data?.results ?? [];
@@ -170,7 +167,6 @@ EmailEditorPage.getInitialProps = async (context: NextPageContext) => {
       templates,
       templateVariables,
       bookingConfig,
-      messages,
     };
   } catch {
     return {
@@ -178,8 +174,7 @@ EmailEditorPage.getInitialProps = async (context: NextPageContext) => {
       templates: [],
       templateVariables: [],
       bookingConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

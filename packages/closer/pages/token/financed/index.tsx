@@ -18,7 +18,6 @@ import { FinanceApplication } from '../../../types/subscriptions';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import {
   financeApplicationStatusBadgeVariant,
   financeApplicationStatusLabelKey,
@@ -225,18 +224,14 @@ FinancedTokenApplicationsPage.getInitialProps = async (
   context: NextPageContext,
 ) => {
   try {
-    const [generalRes, messages] = await Promise.all([
-      api.get('/config/general').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const generalRes = await api.get('/config/general').catch(() => null)
     const generalConfig = generalRes?.data?.results?.value;
-    return { generalConfig, messages };
+    return { generalConfig };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

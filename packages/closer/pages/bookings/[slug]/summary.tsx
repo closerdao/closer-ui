@@ -50,7 +50,6 @@ import {
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import { logMetricIfAuthenticated } from '../../../utils/metrics';
 import {
   computeCreditsOwed,
@@ -570,9 +569,6 @@ const Summary = ({
 
 Summary.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [messages] = await Promise.all([
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
     const bookingConfig = config.booking;
     const web3Config = config.web3;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
@@ -582,14 +578,12 @@ Summary.getInitialProps = async (context: NextPageContext) => {
       error: null,
       bookingConfig,
       paymentConfig,
-      messages,
       tokenCurrency,
     };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
       bookingConfig: null,
-      messages: null,
       paymentConfig: null,
       tokenCurrency: getBookingTokenCurrency(),
     };

@@ -69,7 +69,6 @@ import {
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import { stayRequiresFullCheckoutFlow } from '../../../utils/stayPaymentRouting.helpers';
 import {
   canChangeStayPaymentMethod,
@@ -170,7 +169,6 @@ interface Props {
   volunteerConfig: VolunteerConfig | null;
   foodOptions: FoodOption[] | null;
   error?: string;
-  messages?: any;
 }
 
 const StayCheckoutPage = ({
@@ -2392,13 +2390,7 @@ const Row = ({ label, value, bold }: RowProps) => (
 
 StayCheckoutPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [messages, foodRes] = await Promise.all([
-      loadLocaleData(
-        context?.locale,
-        process.env.NEXT_PUBLIC_APP_NAME,
-      ),
-      api.get('/food').catch(() => null),
-    ]);
+    const foodRes = await api.get('/food').catch(() => null);
     const bookingSettings = config.booking as BookingSettings;
     const generalConfig = (config.general || null) as GeneralConfig | null;
     const volunteerConfig = (config.volunteering ||
@@ -2409,7 +2401,6 @@ StayCheckoutPage.getInitialProps = async (context: NextPageContext) => {
       generalConfig,
       volunteerConfig,
       foodOptions,
-      messages,
     };
   } catch (err) {
     return {
@@ -2418,8 +2409,7 @@ StayCheckoutPage.getInitialProps = async (context: NextPageContext) => {
       generalConfig: null,
       volunteerConfig: null,
       foodOptions: null,
-      messages: null,
-    };
+      };
   }
 };
 

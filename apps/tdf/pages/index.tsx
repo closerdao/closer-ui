@@ -16,7 +16,6 @@ import {
 } from 'closer/types';
 import api from 'closer/utils/api';
 import { twitterUrlToHandle } from 'closer/utils/app.helpers';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import {
   ArrowRight,
   Check,
@@ -1087,8 +1086,6 @@ export default HomePage;
 
 export async function getStaticProps({ locale }: GetStaticPropsContext) {
   return {
-    props: {
-      messages: await loadLocaleData(locale, 'tdf'),
-    },
+    props: {},
   };
 }

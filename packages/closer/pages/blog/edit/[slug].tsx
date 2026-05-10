@@ -15,7 +15,6 @@ import { HOME_PAGE_CATEGORY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
 interface BlogConfig {
@@ -185,24 +184,21 @@ Article.getInitialProps = async (context: NextPageContext) => {
       (req && req.url && req.url.replace('/blog/edit/', '')) ||
       (query && query.slug);
 
-    const [articleRes, blogRes, messages] = await Promise.all([
+    const [articleRes, blogRes] = await Promise.all([
       api.get(`/article/${slug}`),
       api.get('/config/blog').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const article = articleRes.data?.results;
     const blogConfig = blogRes?.data?.results?.value;
     return {
       article,
       blogConfig,
-      messages,
     };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
       blogConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

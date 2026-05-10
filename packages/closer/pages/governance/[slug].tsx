@@ -18,7 +18,6 @@ import {
   createVoteSignatureHash,
 } from 'closer/utils/crypto';
 import { getBearerAuthHeaders } from 'closer/utils/authHeaders.helpers';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextApiRequest, NextPage, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -26,7 +25,6 @@ interface ProposalDetailPageProps {
   proposal: Proposal | null;
   proposalCreator: any;
   error?: string;
-  messages: any;
 }
 
 const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
@@ -1414,16 +1412,13 @@ ProposalDetailPage.getInitialProps = async (context: NextPageContext) => {
   const slug = Array.isArray(query.slug) ? query.slug[0] : query.slug || '';
 
   try {
-    const [proposal, messages] = await Promise.all([
-      api
+    const proposal = await api
         .get(`/proposal/${slug}`, {
           headers: getBearerAuthHeaders(req as NextApiRequest),
         })
         .catch(() => {
           return null;
-        }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+        })
 
     let proposalCreator = null;
     if (proposal?.data?.results) {
@@ -1442,15 +1437,13 @@ ProposalDetailPage.getInitialProps = async (context: NextPageContext) => {
     return {
       proposal: proposal?.data?.results || null,
       proposalCreator,
-      messages,
     };
   } catch (err: unknown) {
     return {
       proposal: null,
       proposalCreator: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

@@ -10,7 +10,6 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../../contexts/auth';
 import api from '../../../utils/api';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
 interface BlogConfig {
@@ -66,20 +65,15 @@ const Create = ({ blogConfig }: Props) => {
 
 Create.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [blogRes, messages] = await Promise.all([
-      api.get('/config/blog').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const blogRes = await api.get('/config/blog').catch(() => null)
     const blogConfig = blogRes?.data?.results?.value;
     return {
       blogConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       blogConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

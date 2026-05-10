@@ -15,7 +15,6 @@ import { useAuth } from '../../contexts/auth';
 import { GeneralConfig, Project, VolunteerConfig } from '../../types';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import {
   default as PageNotAllowed,
   default as PageNotFound,
@@ -91,7 +90,7 @@ const ProjectApplicationPage = ({
 
 ProjectApplicationPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalConfigRes, volunteerConfigRes, projectsRes, messages] =
+    const [generalConfigRes, volunteerConfigRes, projectsRes] =
       await Promise.all([
         api.get('/config/general').catch(() => {
           return null;
@@ -102,7 +101,6 @@ ProjectApplicationPage.getInitialProps = async (context: NextPageContext) => {
         api.get('/project').catch(() => {
           return null;
         }),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       ]);
 
     const volunteerConfig = volunteerConfigRes?.data?.results?.value || null;
@@ -115,7 +113,6 @@ ProjectApplicationPage.getInitialProps = async (context: NextPageContext) => {
       volunteerConfig,
       generalConfig,
       projects,
-      messages,
     };
   } catch (err) {
     console.log('Error', err);
@@ -124,8 +121,7 @@ ProjectApplicationPage.getInitialProps = async (context: NextPageContext) => {
       volunteerConfig: null,
       generalConfig: null,
       projects: [],
-      messages: null,
-    };
+      };
   }
 };
 

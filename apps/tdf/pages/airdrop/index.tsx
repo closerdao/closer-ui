@@ -9,7 +9,6 @@ import { PageNotFound, useAuth } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import api from 'closer/utils/api';
 import { twitterUrlToHandle } from 'closer/utils/app.helpers';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import {
   Calendar,
   Check,
@@ -422,20 +421,15 @@ const AirdropPage = ({ airdropConfig }: Props) => {
 
 AirdropPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [airdropRes, messages] = await Promise.all([
-      api.get('/config/airdrop').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const airdropRes = await api.get('/config/airdrop').catch(() => null)
 
     return {
       airdropConfig: airdropRes?.data?.results?.value || null,
-      messages,
     };
   } catch (err: unknown) {
     return {
       airdropConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

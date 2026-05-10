@@ -1,6 +1,5 @@
 import Head from 'next/head';
 
-// import { loadLocaleData } from 'closer/utils/locale.helpers';
 import Faqs from 'closer/components/Faqs';
 import PageError from 'closer/components/PageError';
 import Resources from 'closer/components/Resources';
@@ -11,7 +10,6 @@ import { useConfig } from 'closer/hooks/useConfig';
 import { useFaqs } from 'closer/hooks/useFaqs';
 import { parseMessageFromError } from 'closer/utils/common';
 import { twitterUrlToHandle } from 'closer/utils/app.helpers';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -107,18 +105,14 @@ const ResourcesPage = ({ generalConfig, error }: Props) => {
 
 ResourcesPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [messages, generalRes] = await Promise.all([
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      api.get('/config/general').catch(() => null),
-    ]);
+    const generalRes = await api.get('/config/general').catch(() => null);
     const generalConfig = generalRes?.data?.results?.value;
 
-    return { messages, generalConfig };
+    return { generalConfig };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
     };
   }
 };

@@ -10,7 +10,6 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import api from '../../utils/api';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 const ForgotPasswordScreen = () => {
   const t = useTranslations();
@@ -74,17 +73,11 @@ const ForgotPasswordScreen = () => {
 
 ForgotPasswordScreen.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
-      messages,
     };
   } catch (err: unknown) {
     return {
-      messages: null,
-    };
+      };
   }
 };
 

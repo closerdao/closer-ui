@@ -22,7 +22,6 @@ import { useConfig } from '../../hooks/useConfig';
 import { BookingConfig, Listing } from '../../types';
 import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 const BookingsCalendarPage = ({
@@ -291,21 +290,15 @@ const BookingsCalendarPage = ({
 
 BookingsCalendarPage.getInitialProps = async (context: any) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
 
     const bookingConfig = config.booking;
     return {
       bookingConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       bookingConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

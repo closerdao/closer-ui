@@ -9,7 +9,6 @@ import { useConfig } from 'closer/hooks/useConfig';
 import useRBAC from 'closer/hooks/useRBAC';
 import { useAuth } from 'closer/contexts/auth';
 import { parseMessageFromError } from 'closer/utils/common';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -189,8 +188,7 @@ const RolesPage = ({ generalConfig, roles, error }: Props) => {
 
 RolesPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [messages, generalRes, rolesRes] = await Promise.all([
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
+    const [generalRes, rolesRes] = await Promise.all([
       api.get('/config/general').catch(() => null),
       api.get('/role').catch(() => ({ data: { results: [] } })),
     ]);
@@ -198,14 +196,13 @@ RolesPage.getInitialProps = async (context: NextPageContext) => {
     const generalConfig = generalRes?.data?.results?.value;
     const roles = rolesRes?.data?.results || [];
 
-    return { messages, generalConfig, roles };
+    return { generalConfig, roles };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       roles: [],
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

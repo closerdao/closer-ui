@@ -31,7 +31,6 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { logMetricIfAuthenticated } from '../../../utils/metrics';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 interface Props extends BaseBookingParams {
@@ -195,9 +194,6 @@ const BookingRulesPage = ({
 
 BookingRulesPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [messages] = await Promise.all([
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
     const bookingConfig = config.booking || null;
     const web3Config = config.web3 || null;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
@@ -207,7 +203,6 @@ BookingRulesPage.getInitialProps = async (context: NextPageContext) => {
       error: null,
       bookingConfig,
       bookingRules,
-      messages,
       tokenCurrency,
     };
   } catch (err) {
@@ -216,7 +211,6 @@ BookingRulesPage.getInitialProps = async (context: NextPageContext) => {
       error: parseMessageFromError(err),
       bookingConfig: null,
       bookingRules: null,
-      messages: null,
       tokenCurrency: getBookingTokenCurrency(),
     };
   }

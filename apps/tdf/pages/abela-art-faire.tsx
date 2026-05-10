@@ -2,7 +2,6 @@ import Head from 'next/head';
 import Link from 'next/link';
 
 import { Heading } from 'closer';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { event } from 'nextjs-google-analytics';
 
@@ -109,17 +108,11 @@ const ArtFaire = () => {
 
 ArtFaire.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
-      messages,
     };
   } catch (err: unknown) {
     return {
-      messages: null,
-    };
+      };
   }
 };
 

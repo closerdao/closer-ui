@@ -6,7 +6,6 @@ import { useContext } from 'react';
 import { PromptGetInTouchContext } from 'closer/components/PromptGetInTouchContext';
 import { GeneralConfig, api } from 'closer';
 import { parseMessageFromError } from 'closer/utils/common';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 
 import { NextPageContext } from 'next';
 
@@ -302,10 +301,6 @@ const PricingPage = ({}: Props) => {
 
 PricingPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     const [generalRes] = await Promise.all([
       api.get('/config/general').catch(() => {
         return null;
@@ -316,14 +311,12 @@ PricingPage.getInitialProps = async (context: NextPageContext) => {
 
     return {
       generalConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

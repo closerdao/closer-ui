@@ -10,7 +10,6 @@ import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
 import useRBAC from '../../../hooks/useRBAC';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 
 const EngagementOpportunityRedirectPage = () => {
   const router = useRouter();
@@ -37,14 +36,9 @@ EngagementOpportunityRedirectPage.getInitialProps = async (
   context: NextPageContext,
 ) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
-    return { messages };
+    return {};
   } catch (error) {
     return {
-      messages: null,
       error: parseMessageFromError(error),
     };
   }

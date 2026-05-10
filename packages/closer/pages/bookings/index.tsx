@@ -9,7 +9,6 @@ import { useAuth } from '../../contexts/auth';
 import { BookingConfig } from '../../types';
 import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import PageNotFound from '../not-found';
 
@@ -46,22 +45,16 @@ const BookingsDirectory = ({ bookingConfig }: Props) => {
 
 BookingsDirectory.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
 
     const bookingConfig = config.booking;
     return {
       bookingConfig,
-      messages,
     };
   } catch (err) {
     return {
       bookingConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

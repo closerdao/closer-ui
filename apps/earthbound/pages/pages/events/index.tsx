@@ -13,7 +13,6 @@ import {
 import { User } from 'closer/contexts/auth/types';
 import { Page } from 'closer/types/customPages';
 import { parseMessageFromError } from 'closer/utils/common';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 
 const getPage = ({}: {
@@ -117,7 +116,6 @@ Want to host an event at Earthbound Ecovillage, Grimsnäs Herrgaard?            
   <li>Archery equipment (1 target, 3 bows and 20 arrows)</li>
 </ul>
 
-
             `,
 
             imageUrl:
@@ -167,8 +165,6 @@ Food        </h2>
 
 <p>We can arrange pick-ups from/to the station for an extra fee. </p>
 
-
-
             `,
 
             imageUrl:
@@ -191,9 +187,6 @@ Pricing details        </h2>
 
 <p><b>Reach out if you are interested in pricing.</b></p>
 <br/>
-
-
-
 
 <h2 style="text-transform: uppercase;">
 Event contact      </h2>
@@ -424,10 +417,6 @@ const EventsPage = ({ generalConfig, listings, hosts }: Props) => {
 
 EventsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     const [generalRes, listingsRes, hostsRes] = await Promise.all([
       api.get('/config/general').catch(() => {
         return null;
@@ -462,8 +451,6 @@ EventsPage.getInitialProps = async (context: NextPageContext) => {
     const hosts = hostsRes?.data?.results;
     return {
       generalConfig,
-
-      messages,
       listings,
       hosts,
     };
@@ -472,7 +459,6 @@ EventsPage.getInitialProps = async (context: NextPageContext) => {
       generalConfig: null,
 
       error: parseMessageFromError(err),
-      messages: null,
       listings: null,
       hosts: null,
     };

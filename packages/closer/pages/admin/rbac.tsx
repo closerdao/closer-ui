@@ -16,7 +16,6 @@ import { useAuth } from '../../contexts/auth';
 import { BookingConfig } from '../../types/api';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 interface Props {
@@ -231,12 +230,11 @@ const RBACPage = ({ loadConfig, bookingConfig }: Props) => {
 
 RBACPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [rbacConfigData, bookingRes, messages] = await Promise.all([
+    const [rbacConfigData, bookingRes] = await Promise.all([
       api.get('/config/rbac').catch(() => {
         return null;
       }),
       api.get('/config/booking').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     // const loadConfig = deepmerge.all([rbacDefaultConfig, rbacConfigData?.data?.results?.value]);
     const loadConfig = rbacConfigData?.data?.results?.value;
@@ -245,15 +243,13 @@ RBACPage.getInitialProps = async (context: NextPageContext) => {
     return {
       loadConfig,
       bookingConfig,
-      messages,
     };
   } catch (error) {
     return {
       error: parseMessageFromError(error),
       generalConfig: null,
       bookingConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

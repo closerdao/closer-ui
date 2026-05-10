@@ -7,7 +7,6 @@ import { Heading } from 'closer/components/ui';
 import { PageNotFound } from 'closer';
 import { FundraisingConfig } from 'closer/types';
 import api from 'closer/utils/api';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -323,23 +322,18 @@ const SupportUsPage = ({ fundraisingConfig }: Props) => {
 
 SupportUsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [fundraisingConfigResponse, messages] = await Promise.all([
-      api.get('/config/fundraiser').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const fundraisingConfigResponse = await api.get('/config/fundraiser').catch(() => null)
 
     const fundraisingConfig = fundraisingConfigResponse?.data.results.value;
 
     return {
       fundraisingConfig,
-      messages,
     };
   } catch (err) {
     return {
       fundraisingConfig: {},
       error: err,
-      messages: null,
-    };
+      };
   }
 };
 

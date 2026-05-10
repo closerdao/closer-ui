@@ -17,7 +17,6 @@ import config from '../../../configCached';
 import { getBookingPaymentType } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { calculateRefundTotal } from '../../../utils/helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageNotFound from '../../not-found';
 
@@ -119,18 +118,14 @@ const BookingCancelPage = ({ bookingConfig, error }: Props) => {
 
 BookingCancelPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [messages] = await Promise.all([
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
     const bookingConfig = config.booking;
 
-    return { bookingConfig, messages };
+    return { bookingConfig };
   } catch (err) {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

@@ -13,7 +13,6 @@ import {
 import { User } from 'closer/contexts/auth/types';
 import { Page } from 'closer/types/customPages';
 import { parseMessageFromError } from 'closer/utils/common';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 
 const getPage = ({}: {
@@ -187,8 +186,6 @@ const getPage = ({}: {
           },
           content: {
             html: `
-
-
 
             <p>If this sparks your interest, we would love to have a call with you to connect, get to know each other and share more details. </p>
 
@@ -373,10 +370,6 @@ const InvestPage = ({ generalConfig, listings, hosts }: Props) => {
 
 InvestPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     const [generalRes, listingsRes, hostsRes] = await Promise.all([
       api.get('/config/general').catch(() => {
         return null;
@@ -411,8 +404,6 @@ InvestPage.getInitialProps = async (context: NextPageContext) => {
     const hosts = hostsRes?.data?.results;
     return {
       generalConfig,
-
-      messages,
       listings,
       hosts,
     };
@@ -421,7 +412,6 @@ InvestPage.getInitialProps = async (context: NextPageContext) => {
       generalConfig: null,
 
       error: parseMessageFromError(err),
-      messages: null,
       listings: null,
       hosts: null,
     };

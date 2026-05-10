@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl';
 
 import ContractInteraction from '../../components/Dashboard/ContractInteraction';
 import Heading from '../../components/ui/Heading';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import { parseMessageFromError } from '../../utils/common';
 
 const ContractsPage = () => {
@@ -26,16 +25,11 @@ const ContractsPage = () => {
 
 ContractsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
-    return { messages };
+    return {};
   } catch (error) {
     return {
       error: parseMessageFromError(error),
-      messages: null,
-    };
+      };
   }
 };
 

@@ -12,7 +12,6 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 import AdminLayout from '../../components/Dashboard/AdminLayout';
 import config from '../../configCached';
@@ -91,15 +90,10 @@ const FoodPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
 
 FoodPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
 
     const bookingConfig = config.booking;
 
     return {
-      messages,
       bookingConfig,
     };
   } catch (err) {

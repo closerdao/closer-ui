@@ -1,3 +1,4 @@
+import type { AbstractIntlMessages } from 'next-intl';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -9,7 +10,13 @@ import { ErrorBoundary, Layout } from '@/components';
 
 import AcceptCookies from 'closer/components/AcceptCookies';
 
-import { AuthProvider, ConfigProvider, PlatformProvider } from 'closer';
+import {
+  AuthProvider,
+  ConfigProvider,
+  LocaleMessagesNextIntlBridge,
+  PlatformProvider,
+  appGetInitialPropsWithMessages,
+} from 'closer';
 import configKeyed from 'closer/configCached';
 import { WalletProvider } from 'closer/contexts/wallet';
 import { blockchainConfig } from 'closer/config_blockchain';
@@ -21,7 +28,6 @@ import {
   mergeGeneralConfigWithDefaults,
   prepareGeneralConfig,
 } from 'closer/utils/app.helpers';
-import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import { getAppConfigFromEnv } from 'closer/utils/appConfigFromEnv';
@@ -29,9 +35,10 @@ import '../styles/index.css';
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
+  messages?: AbstractIntlMessages;
 }
 
-const MyApp = ({ Component, pageProps }: AppOwnProps) => {
+const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
   const router = useRouter();
   const { query } = router;
   const referral = query.referral;
@@ -90,10 +97,13 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         }}
       >
         <ErrorBoundary>
-          <NextIntlClientProvider
-            locale={router.locale || 'en'}
-            messages={pageProps.messages || {}}
-            timeZone={config?.TIME_ZONE || process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE || getAppConfigFromEnv().DEFAULT_TIMEZONE}
+          <LocaleMessagesNextIntlBridge
+            initialMessages={messages || {}}
+            timeZone={
+              config?.TIME_ZONE ||
+              process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE ||
+              getAppConfigFromEnv().DEFAULT_TIMEZONE
+            }
           >
             <AuthProvider>
               <PlatformProvider>
@@ -110,11 +120,13 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
                 </WalletProvider>
               </PlatformProvider>
             </AuthProvider>
-          </NextIntlClientProvider>
+          </LocaleMessagesNextIntlBridge>
         </ErrorBoundary>
       </ConfigProvider>
     </>
   );
 };
+
+MyApp.getInitialProps = appGetInitialPropsWithMessages;
 
 export default MyApp;

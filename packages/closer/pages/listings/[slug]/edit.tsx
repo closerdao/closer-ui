@@ -17,7 +17,6 @@ import api from '../../../utils/api';
 import { usePlatform } from '../../../contexts/platform';
 import { getBookingTokenCurrency } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 
 interface Props {
   bookingConfig: any;
@@ -210,15 +209,10 @@ const EditListing = ({ bookingConfig, paymentConfig, web3Config }: Props) => {
 
 EditListing.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
       bookingConfig: config.booking,
       paymentConfig: config.payment,
       web3Config: config.web3,
-      messages,
     };
   } catch (err: unknown) {
     return {
@@ -226,8 +220,7 @@ EditListing.getInitialProps = async (context: NextPageContext) => {
       bookingConfig: null,
       paymentConfig: null,
       web3Config: null,
-      messages: null,
-    };
+      };
   }
 };
 

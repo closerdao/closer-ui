@@ -34,7 +34,6 @@ import {
 } from '../../../utils/currencyFormat';
 import { getFinancedMonthlyAmountDue } from '../../../utils/financeApplicationMonthlyDue';
 import { resolveDepositTokenSaleForFinanceApplication } from '../../../utils/financeDepositSaleResolve';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import {
   financeApplicationStatusBadgeVariant,
   financeApplicationStatusLabelKey,
@@ -798,21 +797,19 @@ FinancedTokenApplicationPage.getInitialProps = async (
   context: NextPageContext,
 ) => {
   try {
-    const [generalRes, entitiesRes, messages] = await Promise.all([
+    const [generalRes, entitiesRes] = await Promise.all([
       api.get('/config/general').catch(() => null),
       api.get('/config/accounting-entities').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const generalConfig = generalRes?.data?.results?.value;
     const accountingEntitiesConfig = entitiesRes?.data?.results?.value ?? null;
-    return { generalConfig, accountingEntitiesConfig, messages };
+    return { generalConfig, accountingEntitiesConfig };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       accountingEntitiesConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

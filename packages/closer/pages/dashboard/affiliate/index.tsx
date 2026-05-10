@@ -23,7 +23,6 @@ import { BookingConfig } from '../../../types/api';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 
 const AffiliateDashboardPage = ({
   bookingConfig,
@@ -187,7 +186,6 @@ const AffiliateDashboardPage = ({
                   </th>
                 </tr>
               </thead>
-
 
               {data?.affiliateData?.map((affiliate: any) => {
                 const rowRevenue = Number(affiliate?.totalRevenue) || 0;
@@ -387,14 +385,13 @@ const AffiliateDashboardPage = ({
 
 AffiliateDashboardPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalRes, bookingRes, messages] = await Promise.all([
+    const [generalRes, bookingRes] = await Promise.all([
       api.get('/config/general').catch(() => {
         return null;
       }),
       api.get('/config/booking').catch(() => {
         return null;
       }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const generalConfig = generalRes?.data?.results?.value;
     const bookingConfig = bookingRes?.data?.results?.value;
@@ -402,15 +399,13 @@ AffiliateDashboardPage.getInitialProps = async (context: NextPageContext) => {
     return {
       generalConfig,
       bookingConfig,
-      messages,
     };
   } catch (error) {
     return {
       error: parseMessageFromError(error),
       generalConfig: null,
       bookingConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

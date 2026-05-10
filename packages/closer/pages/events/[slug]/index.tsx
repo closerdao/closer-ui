@@ -36,7 +36,6 @@ import {
   prependHttp,
   priceFormat,
 } from '../../../utils/helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageNotFound from '../../not-found';
 
@@ -837,7 +836,7 @@ const EventPage = ({
 EventPage.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
   try {
-    const [event, listings, messages] = await Promise.all([
+    const [event, listings] = await Promise.all([
       api
         .get(`/event/${query.slug}`, {
           headers: getBearerAuthHeaders(req as NextApiRequest),
@@ -851,7 +850,6 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
           params: { limit: MAX_LISTINGS_TO_FETCH },
         })
         .catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const eventsConfig = config.events;
@@ -887,15 +885,13 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
       listings: listings?.data?.results,
       settings: config.booking,
       eventsConfig,
-      messages,
     };
   } catch (err: unknown) {
     console.log('Error', err);
     return {
       error: parseMessageFromError(err),
       eventsConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

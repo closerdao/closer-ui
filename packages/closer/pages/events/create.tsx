@@ -15,7 +15,6 @@ import config from '../../configCached';
 import api from '../../utils/api';
 import { getBookingTokenCurrency } from '../../utils/booking.helpers';
 import { transformEventFoodBeforeSave } from '../../utils/events.helpers';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 interface EventsConfig {
   enabled: boolean;
@@ -120,13 +119,10 @@ const CreateEvent = ({ foodOptions, eventsConfig, paymentConfig, web3Config }: P
 
 CreateEvent.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [foodRes, messages] = await Promise.all([
-      api.get('/food').catch((err) => {
+    const foodRes = await api.get('/food').catch((err) => {
         console.error('Error fetching food:', err);
         return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+      })
 
     const allFood = foodRes?.data?.results || [];
     const foodOptions = allFood.filter((f: FoodOption) =>
@@ -137,7 +133,6 @@ CreateEvent.getInitialProps = async (context: NextPageContext) => {
     const web3Config = config.web3 ?? null;
 
     return {
-      messages,
       foodOptions,
       eventsConfig,
       paymentConfig,
@@ -145,7 +140,6 @@ CreateEvent.getInitialProps = async (context: NextPageContext) => {
     };
   } catch (err: unknown) {
     return {
-      messages: null,
       foodOptions: null,
       eventsConfig: null,
       paymentConfig: null,

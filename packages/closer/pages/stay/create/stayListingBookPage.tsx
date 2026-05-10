@@ -58,7 +58,6 @@ import {
   formatDate,
   getBlockedDateRanges,
 } from '../../../utils/listings.helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
 const MAX_DAYS_TO_CHECK_AVAILABILITY = 60;
@@ -924,13 +923,10 @@ const ListingPage: NextPage<Props> = ({
 ListingPage.getInitialProps = async (context: NextPageContext) => {
   const { query } = context;
   try {
-    const [listing, messages] = await Promise.all([
-      api.get(`/listing/${query.slug}`).catch((err) => {
+    const listing = await api.get(`/listing/${query.slug}`).catch((err) => {
         console.error('Error fetching listing:', err);
         return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+      })
 
     const options = {
       baseElements: { selectors: ['p', 'h2', 'span'] },
@@ -944,29 +940,14 @@ ListingPage.getInitialProps = async (context: NextPageContext) => {
       settings: config.booking as BookingSettings,
       generalSettings: config.general as GeneralConfig,
       descriptionText,
-      messages,
     };
   } catch (err: unknown) {
-    let messages = null;
-    let error = null;
-
-    try {
-      messages = await loadLocaleData(
-        context?.locale,
-        process.env.NEXT_PUBLIC_APP_NAME,
-      );
-    } catch (err) {
-      error = parseMessageFromError(err);
-      console.error('Error fetching messages:', err);
-    }
-
     return {
-      error: error || parseMessageFromError(err),
+      error: parseMessageFromError(err),
       listing: null,
       settings: null,
       generalSettings: null,
       descriptionText: null,
-      messages,
     };
   }
 };

@@ -13,7 +13,6 @@ import { useAuth } from '../../contexts/auth';
 import { BookingConfig } from '../../types';
 import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 interface Props {
@@ -93,18 +92,13 @@ const StayPastBookingsPage = ({ bookingConfig }: Props) => {
 
 StayPastBookingsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     const bookingConfig = config.booking as BookingConfig;
-    return { bookingConfig, messages };
+    return { bookingConfig };
   } catch (err: unknown) {
     return {
       bookingConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

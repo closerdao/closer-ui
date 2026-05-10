@@ -19,7 +19,9 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch",
-    "cypress:open": "cypress open"
+    "cypress:open": "cypress open",
+    "locale:prune": "node packages/closer/scripts/pruneUnusedLocaleKeys.cjs",
+    "locale:prune:write": "node packages/closer/scripts/pruneUnusedLocaleKeys.cjs --write"
   },
   "devDependencies": {
     "@types/sanitize-html": "^2.16.0",

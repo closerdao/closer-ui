@@ -29,7 +29,6 @@ import {
   userIsEngagementManager,
 } from '../../../utils/engagement.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 
 const LIST_LIMIT = 50;
 
@@ -477,14 +476,9 @@ EngagementDashboardPage.getInitialProps = async (
   context: NextPageContext,
 ) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
-    return { messages };
+    return {};
   } catch (error) {
     return {
-      messages: null,
       error: parseMessageFromError(error),
     };
   }

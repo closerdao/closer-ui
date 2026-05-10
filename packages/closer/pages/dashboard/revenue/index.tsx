@@ -29,7 +29,6 @@ import {
   parseExpenseTrackingCombinedEntriesPayload,
   sortCombinedExpenseEntriesByDateDesc,
 } from '../../../utils/expenseTracking.helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import { getStartAndEndDate } from '../../../utils/performance.utils';
 
 const ENTRIES_PER_PAGE = 50;
@@ -1064,14 +1063,13 @@ const RevenuePage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
 
 RevenuePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalRes, bookingRes, messages] = await Promise.all([
+    const [generalRes, bookingRes] = await Promise.all([
       api.get('/config/general').catch(() => {
         return null;
       }),
       api.get('/config/booking').catch(() => {
         return null;
       }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
     const generalConfig = generalRes?.data?.results?.value;
     const bookingConfig = bookingRes?.data?.results?.value;
@@ -1079,15 +1077,13 @@ RevenuePage.getInitialProps = async (context: NextPageContext) => {
     return {
       generalConfig,
       bookingConfig,
-      messages,
     };
   } catch (error) {
     return {
       error: parseMessageFromError(error),
       generalConfig: null,
       bookingConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

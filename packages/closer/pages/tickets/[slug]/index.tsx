@@ -11,7 +11,6 @@ import { useTranslations } from 'next-intl';
 import { useConfig } from '../../../hooks/useConfig';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
 interface Props {
@@ -65,21 +64,17 @@ Ticket.getInitialProps = async (context: NextPageContext) => {
       data: { results: ticket },
     } = await api.get(`/ticket/${query.slug}`);
 
-    const [eventResponse, messages] = await Promise.all([
-      api.get(`/event/${ticket.event}`),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const eventResponse = await api.get(`/event/${ticket.event}`)
 
     const event = eventResponse.data.results;
 
-    return { ticket, event, messages };
+    return { ticket, event };
   } catch (err) {
     console.log('Error', parseMessageFromError(err));
 
     return {
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

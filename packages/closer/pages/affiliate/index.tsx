@@ -18,7 +18,6 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import { reportIssue } from '../../utils/reporting.utils';
 
 const AffiliateLandingPage = () => {
@@ -427,18 +426,12 @@ const AffiliateLandingPage = () => {
 
 AffiliateLandingPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
 
     return {
-      messages,
     };
   } catch (err: unknown) {
     return {
-      messages: null,
-    };
+      };
   }
 };
 

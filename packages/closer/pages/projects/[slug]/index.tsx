@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl';
 
 import { Project, VolunteerConfig } from '../../../types/api';
 import api from '../../../utils/api';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import NotFoundPage from '../../not-found';
 
 interface Props {
@@ -40,11 +39,10 @@ const ProjectPage = ({ project, descriptionText, volunteerConfig }: Props) => {
 ProjectPage.getInitialProps = async (context: NextPageContext) => {
   try {
     const id = context.query.slug;
-    const [projectResponse, volunteerConfigResponse, messages] =
+    const [projectResponse, volunteerConfigResponse] =
       await Promise.all([
         api.get(`/project/${id}`),
         api.get('/config/volunteering'),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       ]);
     const project = projectResponse?.data?.results;
     const volunteerConfig = volunteerConfigResponse?.data?.results?.value;
@@ -52,14 +50,12 @@ ProjectPage.getInitialProps = async (context: NextPageContext) => {
     return {
       project,
       volunteerConfig,
-      messages,
     };
   } catch (error) {
     console.error(error);
     return {
       project: null,
       descriptionText: null,
-      messages: null,
       volunteerConfig: null,
     };
   }

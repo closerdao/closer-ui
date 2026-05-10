@@ -11,7 +11,6 @@ import { useTranslations } from 'next-intl';
 import models from '../../models';
 import config from '../../configCached';
 import { getBookingTokenCurrency } from '../../utils/booking.helpers';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 interface Props {
   bookingConfig: unknown;
@@ -104,10 +103,6 @@ const CreateListing = ({ bookingConfig, paymentConfig, web3Config }: Props) => {
 
 CreateListing.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     const bookingConfig = config.booking;
     const paymentConfig = config.payment;
     const web3Config = config.web3;
@@ -115,15 +110,13 @@ CreateListing.getInitialProps = async (context: NextPageContext) => {
       bookingConfig,
       paymentConfig,
       web3Config,
-      messages,
     };
   } catch {
     return {
       bookingConfig: null,
       paymentConfig: null,
       web3Config: null,
-      messages: null,
-    };
+      };
   }
 };
 

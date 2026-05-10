@@ -20,7 +20,6 @@ import { Article } from '../../types/blog';
 import api, { cdn, formatSearch } from '../../utils/api';
 import { estimateReadingTime, getFirstSentence } from '../../utils/blog.utils';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 interface BlogConfig {
   enabled: boolean;
@@ -264,7 +263,7 @@ Search.getInitialProps = async (context: NextPageContext) => {
   const search = formatSearch({ category: { $ne: HOME_PAGE_CATEGORY } });
 
   try {
-    const [articles, numArticles, generalRes, blogRes, messages] =
+    const [articles, numArticles, generalRes, blogRes] =
       await Promise.all([
         api
           .get(
@@ -286,7 +285,6 @@ Search.getInitialProps = async (context: NextPageContext) => {
         api.get('/config/blog').catch(() => {
           return null;
         }),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
       ]);
 
     const authorIds = articles?.data?.results.map(
@@ -308,14 +306,12 @@ Search.getInitialProps = async (context: NextPageContext) => {
       generalConfig,
       blogConfig,
       page,
-      messages,
     };
   } catch (error) {
     return {
       error: parseMessageFromError(error),
       generalConfig: null,
       blogConfig: null,
-      messages: null,
       authors: [],
       articles: [],
       page: null,

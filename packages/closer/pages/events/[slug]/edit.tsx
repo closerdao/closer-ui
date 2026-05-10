@@ -18,7 +18,6 @@ import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { getBookingTokenCurrency } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { transformEventFoodBeforeSave } from '../../../utils/events.helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 dayjs.extend(utc);
@@ -186,7 +185,7 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No event');
     }
 
-    const [eventRes, foodRes, messages] = await Promise.all([
+    const [eventRes, foodRes] = await Promise.all([
       api.get(`/event/${query.slug}`, {
         headers: getBearerAuthHeaders(req as NextApiRequest),
       }),
@@ -194,7 +193,6 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
         console.error('Error fetching food:', err);
         return null;
       }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const generalConfig = config.general;
@@ -207,13 +205,12 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
     const paymentConfig = config.payment ?? null;
     const web3Config = config.web3 ?? null;
 
-    return { event, foodOptions, messages, generalConfig, eventsConfig, paymentConfig, web3Config };
+    return { event, foodOptions, generalConfig, eventsConfig, paymentConfig, web3Config };
   } catch (err) {
     console.log(err);
     return {
       error: parseMessageFromError(err),
       generalConfig: null,
-      messages: null,
       foodOptions: null,
       eventsConfig: null,
       paymentConfig: null,

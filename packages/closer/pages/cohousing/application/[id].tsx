@@ -17,7 +17,6 @@ import {
   getCosignerUserId,
   getPrimaryApplicantDisplayName,
 } from '../../../utils/cohousingApplicationFromPlatform';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 
 const unwrapPlatformResults = (raw: unknown): unknown => {
   if (raw == null) {
@@ -335,7 +334,7 @@ export default CohousingApplicationDetailPage;
 export async function getStaticProps({ locale }: NextPageContext) {
   return {
     props: {
-      messages: await loadLocaleData(locale as string, 'tdf'),
+      
     },
   };
 }

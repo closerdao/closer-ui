@@ -33,7 +33,6 @@ import {
   getMilestoneGoal,
   sortMilestonesByStartDate,
 } from '../utils/fundraising.helpers';
-import { loadLocaleData } from '../utils/locale.helpers';
 import PageNotFound from './not-found';
 
 export interface InvestPageProps {
@@ -272,15 +271,11 @@ const FundraiserPage = ({
 
 export async function getInvestPageInitialProps(context: NextPageContext) {
   try {
-    const [fundraiserRes, messages] = await Promise.all([
-      api.get('/config/fundraiser').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const fundraiserRes = await api.get('/config/fundraiser').catch(() => null)
     const fundraisingConfig = fundraiserRes?.data?.results?.value;
 
     return {
       fundraisingConfig: fundraisingConfig ?? {},
-      messages,
     };
   } catch (err) {
     return {
