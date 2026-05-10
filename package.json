@@ -21,7 +21,9 @@
     "test:watch": "turbo run test:watch",
     "cypress:open": "cypress open",
     "locale:prune": "node packages/closer/scripts/pruneUnusedLocaleKeys.cjs",
-    "locale:prune:write": "node packages/closer/scripts/pruneUnusedLocaleKeys.cjs --write"
+    "locale:prune:write": "node packages/closer/scripts/pruneUnusedLocaleKeys.cjs --write",
+    "build:locales": "node packages/closer/scripts/syncBuildLocales.cjs",
+    "build:config": "node packages/closer/scripts/syncBuildConfig.cjs"
   },
   "devDependencies": {
     "@types/sanitize-html": "^2.16.0",

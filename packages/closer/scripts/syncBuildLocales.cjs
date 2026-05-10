@@ -8,7 +8,7 @@ const OUT_ROOT = path.join(__dirname, '..', 'generated', 'locales');
 
 const APP_LOCALES = {
   lios: ['en', 'pl'],
-  tdf: ['en', 'pt', 'pl'],
+  tdf: ['en', 'pt'],
   moos: ['en', 'pt'],
   foz: ['en'],
   'per-auset': ['en'],

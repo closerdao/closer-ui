@@ -18,8 +18,6 @@ export async function loadLocaleData(
         switch (localeKey) {
           case 'pt':
             return import('../generated/locales/tdf/pt.json');
-          case 'pl':
-            return import('../generated/locales/tdf/pl.json');
           case 'en':
           default:
             return import('../generated/locales/tdf/en.json');
