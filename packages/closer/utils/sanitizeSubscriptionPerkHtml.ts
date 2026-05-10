@@ -1,9 +1,13 @@
-import DOMPurify from 'isomorphic-dompurify';
+import sanitizeHtml from 'sanitize-html';
 
 export function sanitizeSubscriptionPerkHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ['a', 'b', 'strong', 'em', 'i', 'u', 'br', 'span'],
-    ALLOWED_ATTR: ['href', 'class', 'target', 'rel', 'title'],
-    ALLOW_DATA_ATTR: false,
+  return sanitizeHtml(html, {
+    allowedTags: ['a', 'b', 'strong', 'em', 'i', 'u', 'br', 'span'],
+    allowedAttributes: {
+      '*': ['class'],
+      a: ['href', 'class', 'target', 'rel', 'title'],
+    },
+    allowedSchemes: ['http', 'https', 'mailto'],
+    allowProtocolRelative: false,
   });
 }
