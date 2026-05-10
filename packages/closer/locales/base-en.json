@@ -3077,5 +3077,15 @@
   "token_price_history_note": "This is the bonding curve price, not market value.",
   "token_graph_supply_title": "Supply Over Time",
   "token_graph_loading": "Loading chart data...",
-  "token_graph_error": "Unable to load chart data"
+  "token_graph_error": "Unable to load chart data",
+
+  "stripe_connect_title": "Set up Stripe Connect",
+  "stripe_connect_description": "Authorize your existing Stripe account to connect to Closer platform.",
+  "stripe_connect_button": "Connect with Stripe",
+  "stripe_connect_success_title": "Connected account ID",
+  "stripe_connect_success_copy_hint": "The connection is successful. You can now use the Closer platform with your Stripe account.",
+  "stripe_connect_error_title": "Connection failed",
+  "stripe_connect_denied": "Stripe authorization was denied",
+  "stripe_connect_csrf_error_title": "Session verification failed",
+  "stripe_connect_csrf_error_body": "The secure session for this connection is missing or expired. Go back to Stripe Connect and start again."
 }
