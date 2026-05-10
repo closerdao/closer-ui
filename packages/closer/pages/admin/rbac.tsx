@@ -5,12 +5,12 @@ import { useEffect, useState } from 'react';
 import AdminLayout from '../../components/Dashboard/AdminLayout';
 import { Card, Checkbox, Heading, Spinner } from '../../components/ui';
 
-import deepmerge from 'deepmerge';
-
 import rbacDefaultConfig, {
   PagePermissions,
   RBACConfig,
 } from 'closer/constants/rbac';
+import deepmerge from 'deepmerge';
+
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { BookingConfig } from '../../types/api';
@@ -20,7 +20,9 @@ const RBACPage = () => {
   const { platform } = usePlatform() as { platform: any };
   const { user } = useAuth();
   const [config, setConfig] = useState<RBACConfig>(rbacDefaultConfig);
-  const [bookingConfig, setBookingConfig] = useState<BookingConfig | null>(null);
+  const [bookingConfig, setBookingConfig] = useState<BookingConfig | null>(
+    null,
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -40,9 +42,10 @@ const RBACPage = () => {
       const rbacDoc = platform.config.findOne('rbac');
       const rbacValue = rbacDoc?.get?.('value')?.toJS?.() ?? null;
       setConfig(
-        deepmerge.all(
-          [rbacDefaultConfig, ...(rbacValue ? [rbacValue] : [])],
-        ) as RBACConfig,
+        deepmerge.all([
+          rbacDefaultConfig,
+          ...(rbacValue ? [rbacValue] : []),
+        ]) as RBACConfig,
       );
       const bookingDoc = platform.config.findOne('booking');
       const bookingValue = bookingDoc?.get?.('value')?.toJS?.() ?? null;
@@ -88,7 +91,6 @@ const RBACPage = () => {
     'Roles',
     'Revenue',
     'Engagement',
-
   ]);
   const [roles] = useState([
     'default',
@@ -133,24 +135,10 @@ const RBACPage = () => {
     try {
       setIsSaving(true);
 
-      const listRaw = platform.config.find()?.toJS?.() ?? [];
-      const rbacExists = Array.isArray(listRaw)
-        ? listRaw.some((c: { slug?: string }) => c.slug === 'rbac')
-        : false;
-
-      if (rbacExists) {
-        await platform.config.patch('rbac', {
-          slug: 'rbac',
-          value: nextConfig,
-        });
-      } else {
-        await platform.config.post({
-          slug: 'rbac',
-          value: nextConfig,
-        });
-      }
-
-      await platform.config.getOne('rbac', { force: true });
+      await platform.config.put('rbac', {
+        slug: 'rbac',
+        value: nextConfig,
+      });
 
       setHasConfigUpdated(true);
       setTimeout(() => {
@@ -188,7 +176,11 @@ const RBACPage = () => {
           </div>
         )}
 
-        <Card className={`overflow-x-auto relative ${isSaving ? 'opacity-70 pointer-events-none' : ''}`}>
+        <Card
+          className={`overflow-x-auto relative ${
+            isSaving ? 'opacity-70 pointer-events-none' : ''
+          }`}
+        >
           <table className="min-w-full">
             <thead>
               <tr className="bg-gray-100">

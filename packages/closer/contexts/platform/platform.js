@@ -78,8 +78,10 @@ const reducer = (state, action) => {
     case constants.POST_INIT:
       return state.set([action.model, 'isPosting'], true);
     case constants.PATCH_INIT:
+    case constants.PUT_INIT:
       return state;
     case constants.PATCH_ERROR:
+    case constants.PUT_ERROR:
       return state;
     case constants.POST_ERROR:
       return state
@@ -144,6 +146,7 @@ const reducer = (state, action) => {
         }
       });
     case constants.PATCH_SUCCESS:
+    case constants.PUT_SUCCESS:
       return state.withMutations((map) => {
         if (action.filterKey && action.resultIndex) {
           map.setIn(
@@ -577,6 +580,32 @@ export const PlatformProvider = ({ children }) => {
               data,
               model,
               type: constants.PATCH_ERROR,
+            }),
+          );
+      },
+      put: (_id, data) => {
+        dispatch({ type: constants.PUT_INIT, model, _id, data });
+        return api
+          .put(`/${model}/${_id}`, data)
+          .then((res) => {
+            const results = fromJS(res.data.results);
+            const action = {
+              results,
+              _id,
+              data,
+              model,
+              type: constants.PUT_SUCCESS,
+            };
+            dispatch(action);
+            return action;
+          })
+          .catch((error) =>
+            dispatch({
+              error,
+              _id,
+              data,
+              model,
+              type: constants.PUT_ERROR,
             }),
           );
       },
