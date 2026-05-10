@@ -1,1 +1,1 @@
-export { default } from '../../../../../packages/closer/pages/api/dev/syncLocales';
+export { default } from 'api-dev-handlers';

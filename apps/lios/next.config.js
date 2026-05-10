@@ -34,6 +34,7 @@ const nextConfig = {
   },
   reactStrictMode: false,
   transpilePackages: [
+    'api-dev-handlers',
     'closer',
     '@reown/appkit',
     '@reown/appkit-adapter-ethers5',
