@@ -148,6 +148,13 @@ export const getDashboardLinks = (
       roles: ['admin'],
     },
     {
+      label: t('navigation_pages'),
+      url: '/dashboard/pages',
+      rbacPage: 'PlatformSettings',
+      enabled: true,
+      roles: ['admin'],
+    },
+    {
       label: t('navigation_rbac'),
       url: '/dashboard/admin/rbac',
       rbacPage: 'RBAC',

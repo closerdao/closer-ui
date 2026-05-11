@@ -10,6 +10,9 @@ import CustomTextCard from './CustomTextCard';
 import UpcomingEventsIntro from '../UpcomingEventsIntro';
 import CustomFaqs from './CustomFaqs';
 import CustomVideoEmbed from './CustomVideoEmbed';
+import CustomTestimonials from './CustomTestimonials';
+import CustomStats from './CustomStats';
+import CustomCTA from './CustomCTA';
 
 const CustomPhotoGallery = dynamic(() => import('./CustomPhotoGallery'), {
   ssr: false,
@@ -25,6 +28,10 @@ const componentRegistry: Record<string, React.ComponentType<any>> = {
   faqs: CustomFaqs,
   richText: CustomRichText,
   videoEmbed: CustomVideoEmbed,
+  features: CustomListing,
+  testimonials: CustomTestimonials,
+  stats: CustomStats,
+  cta: CustomCTA,
 };
 
 const CustomSectionComponent: React.FC<{ type: string; data: any }> = ({

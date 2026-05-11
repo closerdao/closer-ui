@@ -8,6 +8,7 @@ export * from './currency';
 export * from './donation';
 export * from './event';
 export * from './proposal';
+export * from './page';
 export * from './stay';
 export * from './subscriptions';
 export * from './token';

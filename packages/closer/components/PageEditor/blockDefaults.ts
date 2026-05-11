@@ -1,0 +1,184 @@
+import type { PageDoc, PageSection, SectionType } from '../../types/page';
+
+export const newLocalId = () =>
+  `l_${Math.random().toString(36).slice(2, 11)}`;
+
+export const ensureSectionIds = (sections: PageSection[]): PageSection[] =>
+  sections.map((s) => ({
+    ...s,
+    _localId: s._localId ?? newLocalId(),
+  }));
+
+export const stripForApi = (page: PageDoc): Record<string, unknown> => {
+  const sections = (page.sections ?? []).map(({ _localId: _l, ...rest }) => {
+    const { _id, type, data } = rest;
+    const payload: Record<string, unknown> = { type, data };
+    if (_id) payload._id = _id;
+    return payload;
+  });
+  return {
+    _id: page._id,
+    title: page.title,
+    slug: page.slug,
+    description: page.description ?? '',
+    ogImage: page.ogImage ?? '',
+    sections,
+  };
+};
+
+const heroAlignMap = {
+  left: 'bottom-left' as const,
+  right: 'bottom-right' as const,
+  full: 'bottom-left' as const,
+};
+
+export const createSection = (type: SectionType): PageSection => {
+  const _localId = newLocalId();
+  switch (type) {
+    case 'hero':
+      return {
+        _localId,
+        type: 'hero',
+        data: {
+          settings: {
+            alignText: heroAlignMap.left,
+            isInverted: true,
+            isCompact: false,
+          },
+          content: {
+            title: 'Headline',
+            body: '<p>Supporting line.</p>',
+            imageUrl:
+              'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600',
+            cta: { text: 'Learn more', url: '#' },
+          },
+        },
+      };
+    case 'gallery':
+      return {
+        _localId,
+        type: 'gallery',
+        data: {
+          settings: { galleryType: 'masonry', isRandomized: false },
+          content: {
+            title: 'Gallery',
+            items: [
+              {
+                imageUrl:
+                  'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800',
+                width: 800,
+                height: 600,
+                alt: '',
+              },
+              {
+                imageUrl:
+                  'https://images.unsplash.com/photo-1493612276216-ee3925520721?w=800',
+                width: 800,
+                height: 600,
+                alt: '',
+              },
+            ],
+          },
+        },
+      };
+    case 'testimonials':
+      return {
+        _localId,
+        type: 'testimonials',
+        data: {
+          settings: {},
+          content: {
+            eyebrow: '',
+            title: 'What people say',
+            items: [
+              {
+                quote: 'A genuinely wonderful experience.',
+                name: 'Anonymous',
+                role: '',
+                avatar: '',
+              },
+            ],
+          },
+        },
+      };
+    case 'stats':
+      return {
+        _localId,
+        type: 'stats',
+        data: {
+          settings: {},
+          content: {
+            eyebrow: '',
+            title: 'By the numbers',
+            items: [
+              { value: '100', label: 'First metric' },
+              { value: '50%', label: 'Second metric' },
+            ],
+          },
+        },
+      };
+    case 'features':
+      return {
+        _localId,
+        type: 'features',
+        data: {
+          settings: {
+            numColumns: 3,
+            isSmallImage: true,
+            isColorful: false,
+          },
+          content: {
+            title: 'What we offer',
+            description: '',
+            items: [
+              {
+                title: 'First feature',
+                text: '<p>A short description of this feature.</p>',
+                imageUrl: '',
+              },
+              {
+                title: 'Second feature',
+                text: '<p>A short description of this feature.</p>',
+                imageUrl: '',
+              },
+            ],
+          },
+        },
+      };
+    case 'richText':
+      return {
+        _localId,
+        type: 'richText',
+        data: {
+          settings: { isColorful: false },
+          content: { html: '<p>Write your content here.</p>' },
+        },
+      };
+    case 'cta':
+      return {
+        _localId,
+        type: 'cta',
+        data: {
+          settings: { style: 'default' },
+          content: {
+            eyebrow: '',
+            title: 'Take the next step',
+            text: 'A short line that motivates the click.',
+            primaryText: 'Get started',
+            primaryLink: '#',
+            secondaryText: '',
+            secondaryLink: '',
+          },
+        },
+      };
+    default:
+      return {
+        _localId,
+        type: 'richText',
+        data: {
+          settings: { isColorful: false },
+          content: { html: '<p></p>' },
+        },
+      };
+  }
+};

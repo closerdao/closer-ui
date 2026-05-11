@@ -28,6 +28,7 @@ export const models = [
   'lesson',
   'food',
   'metric',
+  'page',
   'charge',
   'sale',
   'financeapplication',

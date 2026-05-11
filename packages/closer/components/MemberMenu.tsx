@@ -316,6 +316,13 @@ const MemberMenu = ({
               rbacPage: 'PlatformSettings',
             },
             {
+              label: t('navigation_pages'),
+              url: '/dashboard/pages',
+              enabled: true,
+              roles: ['admin'],
+              rbacPage: 'PlatformSettings',
+            },
+            {
               label: t('navigation_rbac'),
               url: '/dashboard/admin/rbac',
               enabled: true,
@@ -648,6 +655,13 @@ const MemberMenu = ({
           {
             label: t('navigation_email_templates'),
             url: '/dashboard/admin/emails',
+            enabled: true,
+            roles: ['admin'],
+            rbacPage: 'PlatformSettings',
+          },
+          {
+            label: t('navigation_pages'),
+            url: '/dashboard/pages',
             enabled: true,
             roles: ['admin'],
             rbacPage: 'PlatformSettings',
