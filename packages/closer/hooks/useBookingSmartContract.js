@@ -57,8 +57,6 @@ export const useBookingSmartContract = ({ bookingNights }) => {
     };
   }
 
-  const [[bookingYear]] = bookingNights;
-
   const Diamond = new Contract(
     BLOCKCHAIN_DAO_DIAMOND_ADDRESS,
     BLOCKCHAIN_DIAMOND_ABI,

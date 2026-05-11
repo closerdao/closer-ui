@@ -1,5 +1,6 @@
 import {
   STAY_TERMINAL_STATUSES,
+  buildStayTokenStakePlan,
   canChangeStayPaymentMethod,
   computeCreditsOwed,
   computeFiatOwed,
@@ -144,6 +145,59 @@ describe('compute*Owed', () => {
     expect(computeFiatOwed(stay)).toBe(0);
     expect(computeCreditsOwed(stay)).toBe(0);
     expect(computeTokensOwed(stay)).toBe(0);
+  });
+});
+
+describe('buildStayTokenStakePlan', () => {
+  const priceLockWithDailyToken = (dailyTokenVal: number) => ({
+    lines: {
+      accommodation: money(100),
+      accommodationGross: money(100),
+      food: money(0),
+      utility: money(0),
+      event: money(0),
+    },
+    subtotal: money(100),
+    vat: money(0),
+    platformFee: money(0),
+    affiliateFee: money(0),
+    total: money(100),
+    dailyRentalFiat: money(25),
+    dailyRentalToken: { val: dailyTokenVal, cur: 'TDF' },
+    appliedCredits: { val: 0, cur: 'credits' },
+    appliedTokens: { val: 0, cur: 'TDF' },
+    currency: 'EUR',
+    lockedAt: '2026-05-01',
+  });
+
+  it('returns six nights and six tokens when owed six and daily token is one', () => {
+    const stay = baseStay({
+      duration: 6,
+      start: '2026-05-25',
+      tokensTarget: { val: 6, cur: 'TDF' },
+      tokensStaked: { val: 0, cur: 'TDF' },
+      priceLock: priceLockWithDailyToken(1),
+    });
+    const owed = computeTokensOwed(stay);
+    const plan = buildStayTokenStakePlan(stay, owed);
+    expect(plan?.tokenAmount).toBe(6);
+    expect(plan?.bookingNights.length).toBe(6);
+    expect(plan?.dailyValue).toBe(1);
+  });
+
+  it('caps on-chain stake to accommodation token total when owed exceeds it', () => {
+    const stay = baseStay({
+      duration: 4,
+      start: '2026-06-01',
+      tokensTarget: { val: 20, cur: 'TDF' },
+      tokensStaked: { val: 0, cur: 'TDF' },
+      priceLock: priceLockWithDailyToken(2),
+    });
+    const owed = computeTokensOwed(stay);
+    const plan = buildStayTokenStakePlan(stay, owed);
+    expect(owed).toBe(20);
+    expect(plan?.tokenAmount).toBe(8);
+    expect(plan?.bookingNights.length).toBe(4);
   });
 });
 
