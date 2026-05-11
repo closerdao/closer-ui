@@ -29,7 +29,10 @@ import api from './api';
 import { parseMessageFromError } from './common';
 import { priceFormat } from './helpers';
 import { reportIssue } from './reporting.utils';
-import { inferPaymentChoiceFromStay } from './stays.api';
+import {
+  getStayAccommodationGuestMultiplier,
+  inferPaymentChoiceFromStay,
+} from './stays.api';
 
 const DEFAULT_TIMEZONE = 'Europe/Berlin';
 
@@ -1166,8 +1169,12 @@ export function resolveBookingPreviewFinancials(
     const daily = priceLock.dailyRentalToken;
     const val = Number(daily.val);
     if (Number.isFinite(val)) {
+      const guests = getStayAccommodationGuestMultiplier({
+        adults: Number(raw?.adults),
+        children: Number(raw?.children),
+      });
       rentalToken = {
-        val: val * (duration || 1),
+        val: val * (duration || 1) * guests,
         cur: daily.cur,
       };
     }

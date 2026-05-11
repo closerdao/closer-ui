@@ -1,5 +1,7 @@
+import { BigNumber, utils as ethersUtils } from 'ethers';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
+import utc from 'dayjs/plugin/utc';
 
 import api from './api';
 import { priceFormat } from './helpers';
@@ -20,7 +22,41 @@ import type {
   StayTokenStakePlan,
 } from '../types/stay';
 
+dayjs.extend(utc);
 dayjs.extend(dayOfYear);
+
+const utcCalendarDayFromStayDate = (input: string): dayjs.Dayjs => {
+  const trimmed = input.trim();
+  const dateOnly = /^(\d{4}-\d{2}-\d{2})/.exec(trimmed);
+  if (dateOnly) {
+    return dayjs.utc(dateOnly[1], 'YYYY-MM-DD', true).startOf('day');
+  }
+  return dayjs.utc(trimmed).startOf('day');
+};
+
+const utcCalendarStartOfStay = (stayStart: string): dayjs.Dayjs =>
+  utcCalendarDayFromStayDate(stayStart);
+
+export const getStayAccommodationNightCount = (stay: Stay): number => {
+  if (stay.start && stay.end) {
+    const startDay = utcCalendarDayFromStayDate(stay.start);
+    const endDay = utcCalendarDayFromStayDate(stay.end);
+    if (startDay.isValid() && endDay.isValid()) {
+      const nights = endDay.diff(startDay, 'day');
+      if (Number.isFinite(nights) && nights > 0) return nights;
+    }
+  }
+  return stay.duration || 0;
+};
+
+const TDF_DECIMALS = 18;
+
+const roundHumanTokenAmountForWei = (val: number): string => {
+  if (!Number.isFinite(val) || val <= 0) return '0';
+  const rounded = Math.round(val * 1e6) / 1e6;
+  const s = rounded.toFixed(6).replace(/\.?0+$/, '');
+  return s === '' ? '0' : s;
+};
 
 export const formatStayMoney = (money: StayMoney | undefined | null): string => {
   if (!money) return '';
@@ -73,31 +109,83 @@ export const computeCreditsOwed = (stay: Stay): number => {
 export const computeTokensOwed = (stay: Stay): number => {
   const target = stay.tokensTarget?.val ?? 0;
   const staked = stay.tokensStaked?.val ?? 0;
-  return Math.max(0, target - staked);
+  const raw = Math.max(0, target - staked);
+  if (!Number.isFinite(raw)) return 0;
+  return Math.round(raw * 1e6) / 1e6;
+};
+
+export function getStayAccommodationGuestMultiplier(stay: {
+  adults?: number;
+  children?: number;
+}): number {
+  const adultsRaw = Number(stay.adults ?? 0);
+  const childrenRaw = Number(stay.children ?? 0);
+  const adults = Number.isFinite(adultsRaw) ? adultsRaw : 0;
+  const children = Number.isFinite(childrenRaw) ? childrenRaw : 0;
+  return Math.max(1, adults + children);
+}
+
+export const getStayAccommodationTokenTotal = (stay: Stay): number => {
+  const rentalVal = stay.rentalToken?.val;
+  if (rentalVal != null && Number.isFinite(rentalVal) && rentalVal >= 0) {
+    return rentalVal;
+  }
+  const nights = getStayAccommodationNightCount(stay);
+  const daily = stay.priceLock?.dailyRentalToken?.val ?? 0;
+  const guests = getStayAccommodationGuestMultiplier(stay);
+  if (!nights || !daily) return 0;
+  return nights * daily * guests;
 };
 
 export const buildStayTokenStakePlan = (
   stay: Stay,
   tokensToStakeTotal: number,
 ): StayTokenStakePlan | null => {
-  const startDate = dayjs(stay.start);
-  const duration = stay.duration || 0;
-  const dailyValue = stay.priceLock?.dailyRentalToken?.val || 0;
+  const startUtc = utcCalendarStartOfStay(stay.start);
+  const duration = getStayAccommodationNightCount(stay);
+  const maxTokensForStay = getStayAccommodationTokenTotal(stay);
 
-  if (!startDate.isValid() || duration <= 0 || dailyValue <= 0) return null;
+  if (!startUtc.isValid() || duration <= 0 || maxTokensForStay <= 0) return null;
 
-  const maxTokensForStay = duration * dailyValue;
-  const capped = Math.min(tokensToStakeTotal, maxTokensForStay);
-  const nightsToStake = Math.min(duration, Math.floor(capped / dailyValue));
+  const maxWei = ethersUtils.parseUnits(
+    roundHumanTokenAmountForWei(maxTokensForStay),
+    TDF_DECIMALS,
+  );
+  const cappedWei = ethersUtils.parseUnits(
+    roundHumanTokenAmountForWei(
+      Math.min(tokensToStakeTotal, maxTokensForStay),
+    ),
+    TDF_DECIMALS,
+  );
+  if (cappedWei.isZero()) return null;
+  const durationBn = BigNumber.from(duration);
+  const pricePerNightWei = maxWei.div(durationBn);
+  const nightsToStakeBn = cappedWei
+    .mul(durationBn)
+    .add(maxWei)
+    .sub(1)
+    .div(maxWei);
+  let nightsToStake = nightsToStakeBn.toNumber();
+  if (!Number.isFinite(nightsToStake)) nightsToStake = 0;
+  nightsToStake = Math.min(duration, Math.max(0, nightsToStake));
   if (nightsToStake <= 0) return null;
+
+  const nightsBn = BigNumber.from(nightsToStake);
+  const totalStakeWei = pricePerNightWei.mul(nightsBn);
+  const dailyValue = Number(
+    ethersUtils.formatUnits(pricePerNightWei, TDF_DECIMALS),
+  );
+  const tokenAmount = Number(
+    ethersUtils.formatUnits(totalStakeWei, TDF_DECIMALS),
+  );
 
   return {
     dailyValue,
-    tokenAmount: Number((nightsToStake * dailyValue).toFixed(6)),
-    bookingNights: Array.from({ length: nightsToStake }, (_, i) => [
-      startDate.year(),
-      startDate.dayOfYear() + i,
-    ]),
+    tokenAmount,
+    bookingNights: Array.from({ length: nightsToStake }, (_, i) => {
+      const d = startUtc.add(i, 'day');
+      return [d.year(), d.dayOfYear()];
+    }),
   };
 };
 
@@ -113,10 +201,7 @@ export const inferPaymentChoiceFromStay = (
   totalAccommodationTokens?: number,
 ): StayPaymentMethod => {
   const fullTokenAccommodation =
-    totalAccommodationTokens ??
-    (stay.priceLock?.dailyRentalToken?.val
-      ? stay.priceLock.dailyRentalToken.val * (stay.duration || 1)
-      : 0);
+    totalAccommodationTokens ?? getStayAccommodationTokenTotal(stay);
   const tokensTarget = stay.tokensTarget?.val ?? stay.appliedTokens?.val ?? 0;
   const creditsTarget = stay.creditsTarget?.val ?? stay.appliedCredits?.val ?? 0;
   if (
@@ -328,10 +413,14 @@ function unwrapStayMutationResult(data: { results?: unknown }): Stay {
 export function mapStayQuoteToUpdatedPrices(
   quote: StayQuoteResponse,
   duration: number,
+  guestMultiplier?: number,
 ): UpdatedPrices {
   const pl = quote.priceLock;
   const dailyTok = pl.dailyRentalToken;
-  const tokenVal = Number(dailyTok?.val ?? 0) * (duration || 1);
+  const guests =
+    guestMultiplier != null && guestMultiplier > 0 ? guestMultiplier : 1;
+  const tokenVal =
+    Number(dailyTok?.val ?? 0) * (duration || 1) * guests;
   const payDelta: BookingPaymentDelta = {
     fiat: {
       val: quote.delta.fiat.val,

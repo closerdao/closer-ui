@@ -96,6 +96,10 @@ export type Charge = {
     | 'citizenship'
     | 'affiliatePayout';
   date: Date;
+  lockedStake?: {
+    val: number;
+    cur: CloserCurrencies;
+  };
   amount: {
     total: {
       val: number;

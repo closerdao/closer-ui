@@ -72,6 +72,7 @@ import {
   computeTokensOwed,
   extendStay,
   getStay,
+  getStayAccommodationGuestMultiplier,
   isStayShapedBooking,
   mapStayQuoteToUpdatedPrices,
   quoteStay,
@@ -361,13 +362,23 @@ const StayBookingSummaryPage = ({
       bookingView?.duration != null &&
       !Number.isNaN(bookingView.duration)
     ) {
+      const guests = getStayAccommodationGuestMultiplier({
+        adults: bookingView.adults,
+        children: bookingView.children,
+      });
       return {
-        val: pl.dailyRentalToken.val * bookingView.duration,
+        val: pl.dailyRentalToken.val * bookingView.duration * guests,
         cur: pl.dailyRentalToken.cur as CloserCurrencies.TDF,
       };
     }
     return rentalToken;
-  }, [bookingView?.priceLock, bookingView?.duration, rentalToken]);
+  }, [
+    bookingView?.priceLock,
+    bookingView?.duration,
+    bookingView?.adults,
+    bookingView?.children,
+    rentalToken,
+  ]);
   const displayTotalForCosts = (bookingView?.priceLock?.total ??
     total) as Price<
     CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH
@@ -403,7 +414,16 @@ const StayBookingSummaryPage = ({
             ...(listingIdForQuote ? { listingId: listingIdForQuote } : {}),
           });
           if (cancelled) return;
-          setUpdatedPrices(mapStayQuoteToUpdatedPrices(res, updatedDuration));
+          setUpdatedPrices(
+            mapStayQuoteToUpdatedPrices(
+              res,
+              updatedDuration,
+              getStayAccommodationGuestMultiplier({
+                adults: updatedAdults,
+                children: updatedChildren,
+              }),
+            ),
+          );
           return;
         }
 

@@ -14,6 +14,7 @@ import {
   getBookingPaymentType,
   getDisplayTotalFromComponents,
 } from '../utils/booking.helpers';
+import { formatBookingLedgerChargeDisplay } from '../utils/bookingChargesLedger.helpers';
 import { getVatInfo, priceFormat } from '../utils/helpers';
 import DisplayPrice from './DisplayPrice';
 import { Button } from './ui';
@@ -524,18 +525,7 @@ const SummaryCosts = ({
                 {t('bookings_costs_paid_heading')}
               </p>
               {settledDisplayCharges.map((charge, idx) => {
-                const paidAmount =
-                  charge.status === 'paid'
-                    ? priceFormat(
-                        charge.amount.total?.val,
-                        charge.amount.total?.cur,
-                      )
-                    : priceFormat(
-                        charge.amount.totalRefunded?.val ??
-                          charge.amount.total?.val,
-                        charge.amount.totalRefunded?.cur ??
-                          charge.amount.total?.cur,
-                      );
+                const paidAmount = formatBookingLedgerChargeDisplay(charge);
                 const stripeHref =
                   charge.method === 'stripe' &&
                   charge.meta?.stripePaymentIntentId
@@ -598,10 +588,7 @@ const SummaryCosts = ({
                   <p>{t('bookings_costs_due_label')}</p>
                   <p className="text-right font-bold">
                     <span className="tabular-nums">
-                      {priceFormat(
-                        charge.amount.total.val,
-                        charge.amount.total.cur,
-                      )}
+                      {formatBookingLedgerChargeDisplay(charge)}
                     </span>
                     <span className="font-normal text-failure">
                       {' '}

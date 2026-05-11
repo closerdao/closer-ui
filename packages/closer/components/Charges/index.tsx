@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 
 import { ExternalLink } from 'lucide-react';
 
+import { formatBookingLedgerChargeDisplay } from '../../utils/bookingChargesLedger.helpers';
 import { priceFormat } from '../../utils/helpers';
 import { IconHome } from '../BookingIcons';
 import HeadingRow from '../ui/HeadingRow';
@@ -67,7 +68,7 @@ const ChargesTable = ({
               </Link>
             </div>
           ) : (
-            priceFormat(charge.amount.total.val, charge.amount.total.cur)
+            formatBookingLedgerChargeDisplay(charge)
           )}
         </div>
       </div>
