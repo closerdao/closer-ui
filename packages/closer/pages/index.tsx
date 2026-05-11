@@ -12,8 +12,6 @@ import { event } from 'nextjs-google-analytics';
 import { useAuth } from '../contexts/auth';
 import { useConfig } from '../hooks/useConfig';
 import { GeneralConfig } from '../types';
-import { getCachedConfig } from '../utils/cachedConfig.helpers';
-import { parseMessageFromError } from '../utils/common';
 
 interface Props {
   generalConfig: GeneralConfig | null;

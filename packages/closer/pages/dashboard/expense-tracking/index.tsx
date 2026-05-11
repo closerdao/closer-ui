@@ -26,7 +26,6 @@ import {
 } from 'closer/types/expense';
 import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import process from 'process';
 
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';

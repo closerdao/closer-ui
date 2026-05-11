@@ -18,8 +18,6 @@ import {
 } from '../not-found';
 import { useEffect } from 'react';
 
-interface Props {}
-
 const VolunteerApplicationPage = () => {
   const volunteerConfig = getCachedConfig('volunteering') as VolunteerConfig | null;
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;

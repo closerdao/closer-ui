@@ -22,9 +22,7 @@ import { sanitizeSubscriptionPerkHtml } from '../../utils/sanitizeSubscriptionPe
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
-interface Props {}
-
-const SubscriptionsPage: NextPage<Props> = () => {
+const SubscriptionsPage: NextPage = () => {
   const subscriptionsConfig = getCachedConfig('subscriptions') as {
     enabled: boolean;
     elements: SubscriptionPlan[];

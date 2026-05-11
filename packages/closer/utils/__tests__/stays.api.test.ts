@@ -183,6 +183,8 @@ describe('buildStayTokenStakePlan', () => {
   it('returns six nights and six tokens when owed six and daily token is one', () => {
     const stay = baseStay({
       duration: 6,
+      adults: 1,
+      children: 0,
       start: '2026-05-25',
       end: '2026-05-31',
       tokensTarget: { val: 6, cur: 'TDF' },
@@ -242,6 +244,8 @@ describe('buildStayTokenStakePlan', () => {
   it('derives booking nights from UTC calendar dates of stay.start', () => {
     const stay = baseStay({
       duration: 3,
+      adults: 1,
+      children: 0,
       start: '2026-06-01T15:30:00.000Z',
       end: '2026-06-04T10:00:00.000Z',
       tokensTarget: { val: 3, cur: 'TDF' },

@@ -36,8 +36,6 @@ import { getTransactionExplorerUrl } from '../../utils/transactionExplorerUrl';
 import { TOKEN_PURCHASE_TERMS_DOC_URL } from '../../constants';
 import PageNotFound from '../not-found';
 
-interface Props {}
-
 const SaleSummaryPage = () => {
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const accountingEntitiesConfig =

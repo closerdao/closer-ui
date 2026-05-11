@@ -30,9 +30,7 @@ import { parseMessageFromError } from '../../../utils/common';
 import { reportIssue } from '../../../utils/reporting.utils';
 import PageNotFound from '../../not-found';
 
-interface Props {}
-
-const ValidationCitizenPage: NextPage<Props> = () => {
+const ValidationCitizenPage: NextPage = () => {
   const subscriptionsConfig = getCachedConfig('subscriptions') as {
     enabled: boolean;
     elements: SubscriptionPlan[];
@@ -169,7 +167,7 @@ const ValidationCitizenPage: NextPage<Props> = () => {
 
   if (!user && !isLoading) {
     reportIssue(
-      `Issue with authentication on subscriptions/citizen/validation`,
+      'Issue with authentication on subscriptions/citizen/validation',
       'N/A',
     ).catch((err) => console.error('Failed to report issue:', err));
     return <PageNotFound error="" />;
@@ -177,7 +175,7 @@ const ValidationCitizenPage: NextPage<Props> = () => {
 
   if (process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP !== 'true') {
     reportIssue(
-      `NEXT_PUBLIC_FEATURE_CITIZENSHIP not true in prod on subscriptions/citizen/validation`,
+      'NEXT_PUBLIC_FEATURE_CITIZENSHIP not true in prod on subscriptions/citizen/validation',
       user?.email,
     ).catch((err) => console.error('Failed to report issue:', err));
 

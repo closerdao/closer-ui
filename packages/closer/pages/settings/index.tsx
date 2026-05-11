@@ -14,7 +14,6 @@ import Select from '../../components/ui/Select/Dropdown';
 import MultiSelect from '../../components/ui/Select/MultiSelect';
 
 import { useTranslations } from 'next-intl';
-import process from 'process';
 
 import { SHARED_ACCOMMODATION_PREFERENCES } from '../../constants/shared.constants';
 import { useAuth } from '../../contexts/auth';

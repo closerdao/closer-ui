@@ -28,9 +28,7 @@ interface PlatformContext {
   [key: string]: any;
 }
 
-interface Props {}
-
-const CitizenWhyPage: NextPage<Props> = () => {
+const CitizenWhyPage: NextPage = () => {
   const subscriptionsConfig = getCachedConfig('subscriptions') as {
     enabled: boolean;
     elements: SubscriptionPlan[];

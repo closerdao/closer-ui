@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 
 import { NextPageContext } from 'next';
-import process from 'process';
 
 import AdminLayout from '../../../../components/Dashboard/AdminLayout';
 import { Button, Card, Heading, Input } from '../../../../components/ui';
