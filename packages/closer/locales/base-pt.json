@@ -1053,6 +1053,7 @@
   "payment_schedule_row_pending": "Pendente",
   "payment_schedule_row_paid": "Pago",
   "token_financed_deposit_reminder_intro": "Envie o seu depósito por transferência bancária com a referência e os dados do beneficiário abaixo.",
+  "token_financed_memo_code_payment_note": "Certifique-se de incluir sempre esta referência nos pagamentos relacionados com este plano de financiamento.",
   "cookie_consent_text": "Usamos cookies -",
   "cookie_consent_text_link": "leia a nossa política de privacidade",
   "cookie_consent_button": "OK",

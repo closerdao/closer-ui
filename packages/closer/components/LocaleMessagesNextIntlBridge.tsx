@@ -3,10 +3,6 @@ import { ReactNode, useEffect, useState } from 'react';
 
 import { AbstractIntlMessages, NextIntlClientProvider } from 'next-intl';
 
-import {
-  handleDevMissingLocaleSync,
-  registerDevLocaleBaseMerge,
-} from '../utils/devLocaleSync';
 import { loadLocaleData } from '../utils/locale.helpers';
 
 type Props = {
@@ -37,22 +33,12 @@ export default function LocaleMessagesNextIntlBridge({
     };
   }, [router.locale]);
 
-  useEffect(() => {
-    return registerDevLocaleBaseMerge((merged) => {
-      setMessages((prev) => ({ ...prev, ...merged }));
-    });
-  }, []);
-
   return (
     <NextIntlClientProvider
       locale={router.locale || 'en'}
       messages={messages}
       timeZone={timeZone}
       onError={(error) => {
-        handleDevMissingLocaleSync(
-          error as Error & { code?: string },
-          router.locale || 'en',
-        );
         onError?.(error as Error & { code?: string });
       }}
     >

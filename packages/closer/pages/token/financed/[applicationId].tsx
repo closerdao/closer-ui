@@ -382,6 +382,22 @@ const FinancedTokenApplicationPage = () => {
 
   const showDepositBankReminder = application?.status === 'pending-payment';
 
+  const financedMemoReferenceBlock = depositReminderMemo ? (
+    <div className="flex flex-col gap-2">
+      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-amber-950">
+          {t('sale_summary_bank_transfer_reference_label')}
+        </p>
+        <p className="text-xl font-mono font-semibold text-gray-900 mt-1 tracking-wide">
+          {depositReminderMemo}
+        </p>
+      </div>
+      <p className="text-xs text-gray-600 italic leading-relaxed">
+        {t('token_financed_memo_code_payment_note')}
+      </p>
+    </div>
+  ) : null;
+
   if (process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP !== 'true') {
     return <PageNotFound error="" />;
   }
@@ -413,16 +429,7 @@ const FinancedTokenApplicationPage = () => {
                 <p className="text-sm text-gray-700 leading-relaxed">
                   {t('token_financed_deposit_reminder_intro')}
                 </p>
-                {depositReminderMemo ? (
-                  <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-amber-950">
-                      {t('sale_summary_bank_transfer_reference_label')}
-                    </p>
-                    <p className="text-xl font-mono font-semibold text-gray-900 mt-1 tracking-wide">
-                      {depositReminderMemo}
-                    </p>
-                  </div>
-                ) : null}
+                {financedMemoReferenceBlock}
                 <div className="flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
                   <span className="card-feature">
                     {t('sale_summary_total')}
@@ -514,6 +521,7 @@ const FinancedTokenApplicationPage = () => {
                 </p>
                 <p className="text-xs font-mono">{application._id}</p>
               </div>
+              {!showDepositBankReminder ? financedMemoReferenceBlock : null}
               <div className="flex items-center justify-between gap-3">
                 <p className="card-feature">
                   {t('token_sales_dashboard_status')}

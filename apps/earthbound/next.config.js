@@ -16,10 +16,6 @@ const withMDX = require('@next/mdx')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  env: {
-    CLOSER_LOCAL_LOCALE_MERGE:
-      process.env.ENVIRONMENT === 'local' ? '1' : '',
-  },
   // If set to true, there are some infinite loops occuring with our loadData
   // https://stackoverflow.com/questions/60618844/react-hooks-useeffect-is-called-twice-even-if-an-empty-array-is-used-as-an-ar
   i18n: {

@@ -16,10 +16,6 @@ const withMDX = require('@next/mdx')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  env: {
-    CLOSER_LOCAL_LOCALE_MERGE:
-      process.env.ENVIRONMENT === 'local' ? '1' : '',
-  },
   async redirects() {
     return [
       { source: '/admin/manage-users', destination: '/dashboard/admin/manage-users', permanent: true },

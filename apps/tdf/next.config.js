@@ -16,10 +16,6 @@ const withMDX = require('@next/mdx')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  env: {
-    CLOSER_LOCAL_LOCALE_MERGE:
-      process.env.ENVIRONMENT === 'local' ? '1' : '',
-  },
   experimental: {
     largePageDataBytes: 512 * 1024,
   },

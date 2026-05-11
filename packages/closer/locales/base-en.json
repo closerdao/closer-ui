@@ -1090,6 +1090,7 @@
   "payment_schedule_row_pending": "Pending",
   "payment_schedule_row_paid": "Paid",
   "token_financed_deposit_reminder_intro": "Send your deposit by bank transfer using the reference and beneficiary details below.",
+  "token_financed_memo_code_payment_note": "Make sure to always include this reference on payments relating to this financing plan.",
   "cookie_consent_text": "We use cookies -",
   "cookie_consent_text_link": "read our privacy policy",
   "cookie_consent_button": "OK",
