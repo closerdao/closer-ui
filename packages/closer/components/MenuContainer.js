@@ -7,7 +7,7 @@ const MenuContainer = ({ isOpen, toggleNav, children }) => {
   const menuRef = useRef(null);
 
   const menuClassnames = {
-    container: 'w-full h-full fixed inset-0',
+    container: 'w-full h-full fixed inset-0 z-[110]',
     overlay:
       'w-full h-full duration-500 ease-out transition-all inset-0 absolute bg-gray-900',
     slider:

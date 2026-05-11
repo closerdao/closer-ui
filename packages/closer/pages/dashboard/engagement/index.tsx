@@ -4,7 +4,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import Pagination from '../../../components/Pagination';
-import { Button, Heading, Input, Spinner, Textarea } from '../../../components/ui';
+import {
+  Button,
+  Heading,
+  Input,
+  LinkButton,
+  Spinner,
+  Textarea,
+} from '../../../components/ui';
 
 import { Carrot } from 'lucide-react';
 import { NextPageContext } from 'next';
@@ -14,6 +21,7 @@ import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import useRBAC from '../../../hooks/useRBAC';
+import { EngagementConfig } from '../../../types/api';
 import { EngagementOpportunity } from '../../../types/engagement';
 import {
   buildEngagementListWhere,
@@ -29,6 +37,7 @@ import {
   userIsEngagementManager,
 } from '../../../utils/engagement.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 
 const LIST_LIMIT = 50;
 
@@ -49,6 +58,20 @@ const EngagementDashboardPage = () => {
 
   const isManager = userIsEngagementManager(user);
   const canApproveSend = isManager;
+
+  const engagementConfig = getCachedConfig('engagement') as EngagementConfig | null;
+  const ctaHref =
+    typeof engagementConfig?.ctaLink === 'string'
+      ? engagementConfig.ctaLink.trim()
+      : '';
+  const ctaLabel =
+    typeof engagementConfig?.ctaText === 'string'
+      ? engagementConfig.ctaText.trim()
+      : '';
+  const engagementCtaEnabled = engagementConfig?.enabled !== false;
+  const showEngagementCta =
+    engagementCtaEnabled && Boolean(ctaHref && ctaLabel);
+  const ctaIsExternal = /^https?:\/\//i.test(ctaHref);
 
   const [preset, setPreset] = useState<EngagementListPreset>('active');
   const [page, setPage] = useState(1);
@@ -247,24 +270,43 @@ const EngagementDashboardPage = () => {
               <Heading level={2}>{t('engagement_title')}</Heading>
               <p className="text-sm text-gray-600">{t('engagement_simple_intro')}</p>
             </div>
-            {isManager && (
-              <div className="flex flex-col gap-1 min-w-[200px]">
-                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  {t('engagement_filter_label')}
-                </span>
-                <select
-                  className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white"
-                  value={preset}
-                  onChange={(e) =>
-                    setPreset(e.target.value as EngagementListPreset)
-                  }
-                >
-                  <option value="active">{t('engagement_filter_active')}</option>
-                  <option value="high">{t('engagement_filter_high')}</option>
-                  <option value="all_open">
-                    {t('engagement_filter_all_open')}
-                  </option>
-                </select>
+            {(showEngagementCta || isManager) && (
+              <div className="flex flex-col sm:flex-row sm:items-end gap-3 shrink-0">
+                {showEngagementCta && (
+                  <LinkButton
+                    href={ctaHref}
+                    variant="inline"
+                    isFullWidth={false}
+                    size="small"
+                    className="!normal-case tracking-normal"
+                    target={ctaIsExternal ? '_blank' : undefined}
+                    rel={ctaIsExternal ? 'noopener noreferrer' : undefined}
+                  >
+                    {ctaLabel}
+                  </LinkButton>
+                )}
+                {isManager && (
+                  <div className="flex flex-col gap-1 min-w-[200px]">
+                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      {t('engagement_filter_label')}
+                    </span>
+                    <select
+                      className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white"
+                      value={preset}
+                      onChange={(e) =>
+                        setPreset(e.target.value as EngagementListPreset)
+                      }
+                    >
+                      <option value="active">
+                        {t('engagement_filter_active')}
+                      </option>
+                      <option value="high">{t('engagement_filter_high')}</option>
+                      <option value="all_open">
+                        {t('engagement_filter_all_open')}
+                      </option>
+                    </select>
+                  </div>
+                )}
               </div>
             )}
           </div>
