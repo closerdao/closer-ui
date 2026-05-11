@@ -1370,7 +1370,7 @@ const StayCheckoutContent = ({
           <Heading id="trip-summary-heading" level={2} className="text-lg mb-4">
             {t('stay_create_your_trip')}
           </Heading>
-          <div className="flex flex-col lg:flex-row lg:gap-8 lg:items-start">
+          <div className="flex flex-col gap-5">
             <div className="flex gap-4 flex-1 min-w-0">
               {cover && (
                 <img
@@ -1414,7 +1414,7 @@ const StayCheckoutContent = ({
                 </p>
               </div>
             </div>
-            <div className="mt-5 lg:mt-0 w-full lg:w-auto lg:min-w-[220px] lg:max-w-xs lg:flex-shrink-0 border-t border-foreground/[0.08] lg:border-t-0 lg:border-l lg:border-foreground/[0.08] lg:pl-8 pt-5 lg:pt-0">
+            <div className="w-full border-t border-foreground/[0.08] pt-5">
               <p className="text-sm font-semibold text-gray-900 mb-3">
                 {t('stay_create_options_title')}
               </p>
@@ -2211,10 +2211,6 @@ const StayCheckoutContent = ({
             )}
           </div>
 
-          <p className="text-[11px] text-gray-500 mt-3">
-            {t('stay_create_status_label')}:{' '}
-            <span className="capitalize">{currentStay.status}</span>
-          </p>
         </BookingSurface>
       </div>
       {isCreditsModalOpen && (
