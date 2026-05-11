@@ -71,6 +71,7 @@ import { priceFormat } from '../../../utils/helpers';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
 import { stayRequiresFullCheckoutFlow } from '../../../utils/stayPaymentRouting.helpers';
 import {
+  accommodationTokenTotalFromPriceLock,
   canChangeStayPaymentMethod,
   checkoutStay,
   computeCreditsOwed,
@@ -505,9 +506,15 @@ const StayCheckoutContent = ({
       (currentStay.creditsTarget?.val || 0) === 0 &&
       (currentStay.tokensTarget?.val || 0) === 0);
 
-  const tokenAccommodationVal = priceLock?.dailyRentalToken?.val
-    ? priceLock.dailyRentalToken.val * (currentStay.duration || 1)
-    : 0;
+  const tokenAccommodationVal =
+    priceLock?.dailyRentalToken?.val != null
+      ? accommodationTokenTotalFromPriceLock(
+          priceLock,
+          currentStay.duration || 1,
+          currentStay.adults ?? 1,
+          listing?.private,
+        )
+      : 0;
 
   const fiatOwed = computeFiatOwed(currentStay);
   const showStripeCardInput = isMember && fiatOwed > 0;
@@ -516,8 +523,11 @@ const StayCheckoutContent = ({
   const canChangePaymentMethod = canChangeStayPaymentMethod(currentStay);
 
   const paymentChoice = useMemo(
-    () => inferPaymentChoiceFromStay(currentStay, tokenAccommodationVal),
-    [currentStay, tokenAccommodationVal],
+    () =>
+      inferPaymentChoiceFromStay(currentStay, tokenAccommodationVal, {
+        listingPrivate: listing?.private,
+      }),
+    [currentStay, tokenAccommodationVal, listing?.private],
   );
 
   const checkoutRouteTarget = useMemo(

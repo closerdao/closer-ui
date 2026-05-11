@@ -105,6 +105,7 @@ export { default as TokenSalesDashboardPage } from './pages/dashboard/token-sale
 export { default as FinancedTokenSaleApplicationPage } from './pages/dashboard/token-sales/financed/[applicationId]';
 export { default as DashboardPagesIndex } from './pages/dashboard/pages';
 export { default as DashboardPagesEdit } from './pages/dashboard/pages/[id]';
+export { default as CustomPagePage } from './pages/[slug]';
 export { default as EventsPage } from './pages/events';
 export { default as EventPage } from './pages/events/[slug]';
 export { default as EditEventPage } from './pages/events/[slug]/edit';

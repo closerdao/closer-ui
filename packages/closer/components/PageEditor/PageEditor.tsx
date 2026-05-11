@@ -7,10 +7,17 @@ import { useTranslations } from 'next-intl';
 import AdminLayout from '../Dashboard/AdminLayout';
 
 import BlockPicker from './BlockPicker';
-import { createSection, ensureSectionIds, newLocalId, stripForApi } from './blockDefaults';
+import {
+  createSection,
+  ensureSectionIds,
+  mergeSectionLocalIds,
+  newLocalId,
+  stripForApi,
+} from './blockDefaults';
 import EditorCanvas from './EditorCanvas';
 import Inspector from './Inspector';
 import JsonDrawer from './JsonDrawer';
+import NewPageDialog, { NewPageData } from './NewPageDialog';
 import PagesSidebar from './PagesSidebar';
 
 import { useAuth } from '../../contexts/auth';
@@ -31,11 +38,22 @@ interface Props {
   pages: PageListItem[];
 }
 
+const PAGES_FILTER = {};
+
 function toPlain<T>(x: T): T {
   if (x != null && typeof (x as { toJS?: () => T }).toJS === 'function') {
     return (x as { toJS: () => T }).toJS();
   }
   return x;
+}
+
+function getStorePages(platform: {
+  page: { find: (f: unknown) => unknown };
+}): PageListItem[] | null {
+  const stored = platform.page.find(PAGES_FILTER);
+  if (!stored) return null;
+  const plain = toPlain(stored) as PageListItem[] | undefined;
+  return Array.isArray(plain) ? plain : null;
 }
 
 function normalizePage(raw: Record<string, unknown>): PageDoc {
@@ -75,45 +93,43 @@ const PageEditor = ({ initialPage, pages }: Props) => {
   const [insertAt, setInsertAt] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(false);
+  const [newPageOpen, setNewPageOpen] = useState(false);
+  const [isCreatingPage, setIsCreatingPage] = useState(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pageRef = useRef(page);
   pageRef.current = page;
 
-  useEffect(() => {
-    setPage(normalizePage(initialPage as unknown as Record<string, unknown>));
-    setSelectedLocalId(null);
-    setIsDirty(false);
-    setSaveStatus('saved');
-  }, [initialPage._id]);
-
-  useEffect(
-    () => () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    },
-    [],
-  );
-
-  const selectedSection = useMemo(() => {
-    if (!selectedLocalId) return null;
-    return page.sections.find((s) => s._localId === selectedLocalId) ?? null;
-  }, [page.sections, selectedLocalId]);
-
   const persist = useCallback(
     async (showLoading: boolean) => {
       const current = pageRef.current;
+      const targetId = current._id;
+      if (!targetId) return;
       try {
         if (showLoading) setIsSaving(true);
-        setSaveStatus('saving');
+        if (pageRef.current._id === targetId) setSaveStatus('saving');
         const payload = stripForApi(current);
-        const action = await platform.page.put(current._id, payload);
+        const action = await platform.page.put(targetId, payload);
         const updated = toPlain((action as { results?: unknown })?.results);
-        if (updated && typeof updated === 'object' && (updated as PageDoc)._id) {
-          setPage(normalizePage(updated as unknown as Record<string, unknown>));
+        const stillOnSamePage = pageRef.current._id === targetId;
+        if (
+          stillOnSamePage &&
+          updated &&
+          typeof updated === 'object' &&
+          (updated as PageDoc)._id
+        ) {
+          const prevSections = current.sections;
+          const normalized = normalizePage(updated as unknown as Record<string, unknown>);
+          setPage({
+            ...normalized,
+            sections: mergeSectionLocalIds(prevSections, normalized.sections),
+          });
         }
-        setIsDirty(false);
-        setSaveStatus('saved');
+        if (stillOnSamePage) {
+          setIsDirty(false);
+          setSaveStatus('saved');
+        }
       } catch {
-        setSaveStatus('error');
+        if (pageRef.current._id === targetId) setSaveStatus('error');
       } finally {
         if (showLoading) setIsSaving(false);
       }
@@ -125,6 +141,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     setSaveStatus('unsaved');
     saveTimerRef.current = setTimeout(() => {
+      saveTimerRef.current = null;
       void persist(false);
     }, 1200);
   }, [persist]);
@@ -141,6 +158,40 @@ const PageEditor = ({ initialPage, pages }: Props) => {
     setIsDirty(true);
     scheduleSave();
   }, [scheduleSave]);
+
+  useEffect(() => {
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+      void persist(false);
+    }
+    setPage(normalizePage(initialPage as unknown as Record<string, unknown>));
+    setSelectedLocalId(null);
+    setIsDirty(false);
+    setSaveStatus('saved');
+  }, [initialPage._id, persist]);
+
+  useEffect(() => {
+    void platform.page.get(PAGES_FILTER);
+  }, [platform]);
+
+  useEffect(
+    () => () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = null;
+        void persist(false);
+      }
+    },
+    [persist],
+  );
+
+  const sidebarPages = getStorePages(platform) ?? pages;
+
+  const selectedSection = useMemo(() => {
+    if (!selectedLocalId) return null;
+    return page.sections.find((s) => s._localId === selectedLocalId) ?? null;
+  }, [page.sections, selectedLocalId]);
 
   const reorderSections = (from: number, toIndex: number) => {
     if (from === toIndex) return;
@@ -228,7 +279,8 @@ const PageEditor = ({ initialPage, pages }: Props) => {
     if (!window.confirm(t('pages_editor_delete_page_confirm'))) return;
     try {
       await api.delete(`/page/${page._id}`);
-      const rest = pages.filter((x) => x._id !== page._id);
+      await platform.page.get(PAGES_FILTER, { force: true });
+      const rest = sidebarPages.filter((x) => x._id !== page._id);
       if (rest[0]) await router.replace(`/dashboard/pages/${rest[0]._id}`);
       else await router.replace('/dashboard/pages');
     } catch {
@@ -344,20 +396,11 @@ const PageEditor = ({ initialPage, pages }: Props) => {
             />
           )}
           <PagesSidebar
-            pages={pages}
+            pages={sidebarPages}
             activeId={page._id}
-            onNewPage={async () => {
-              const slug = `/untitled-${Math.floor(Math.random() * 99999)}`;
-              const res = await api.post('/page', {
-                title: 'Untitled',
-                slug,
-                description: '',
-                ogImage: '',
-                sections: [],
-              });
-              const doc = res.data?.results;
-              const id = doc?._id;
-              if (id) await router.push(`/dashboard/pages/${id}`);
+            onNewPage={() => {
+              setSidebarOpen(false);
+              setNewPageOpen(true);
             }}
             saveStatus={saveStatus}
             isOpen={sidebarOpen}
@@ -416,6 +459,35 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         open={jsonOpen}
         onClose={() => setJsonOpen(false)}
         payload={stripForApi(page)}
+      />
+      <NewPageDialog
+        open={newPageOpen}
+        onClose={() => setNewPageOpen(false)}
+        isSubmitting={isCreatingPage}
+        onCreate={async (data: NewPageData) => {
+          try {
+            setIsCreatingPage(true);
+            const action = (await platform.page.post({
+              title: data.title,
+              slug: data.slug,
+              description: data.description,
+              ogImage: '',
+              sections: [],
+            })) as { results?: unknown; error?: unknown } | undefined;
+            if (action?.error) {
+              setSaveStatus('error');
+              return;
+            }
+            const created = toPlain(action?.results) as
+              | { _id?: string }
+              | undefined;
+            const id = created?._id;
+            setNewPageOpen(false);
+            if (id) await router.push(`/dashboard/pages/${id}`);
+          } finally {
+            setIsCreatingPage(false);
+          }
+        }}
       />
     </AdminLayout>
   );

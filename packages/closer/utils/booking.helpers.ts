@@ -29,7 +29,10 @@ import api from './api';
 import { parseMessageFromError } from './common';
 import { priceFormat } from './helpers';
 import { reportIssue } from './reporting.utils';
-import { inferPaymentChoiceFromStay } from './stays.api';
+import {
+  accommodationTokenTotalFromPriceLock,
+  inferPaymentChoiceFromStay,
+} from './stays.api';
 
 const DEFAULT_TIMEZONE = 'Europe/Berlin';
 
@@ -1150,7 +1153,15 @@ export function resolveBookingPreviewFinancials(
   let useTokens = !!raw?.useTokens;
   let useCredits = !!raw?.useCredits;
   if (priceLock) {
-    const choice = inferPaymentChoiceFromStay({ ...raw, duration } as Stay);
+    const listingPrivate =
+      typeof raw?.listing === 'object' && raw?.listing != null
+        ? Boolean((raw.listing as { private?: boolean }).private)
+        : undefined;
+    const choice = inferPaymentChoiceFromStay(
+      { ...raw, duration } as Stay,
+      undefined,
+      { listingPrivate },
+    );
     useTokens =
       choice === 'full-tokens' || choice === 'partial-tokens';
     useCredits =
@@ -1166,8 +1177,20 @@ export function resolveBookingPreviewFinancials(
     const daily = priceLock.dailyRentalToken;
     const val = Number(daily.val);
     if (Number.isFinite(val)) {
+      const adultsRaw = Number(raw?.adults);
+      const adultsForToken =
+        Number.isFinite(adultsRaw) && adultsRaw > 0 ? adultsRaw : 1;
+      const listingPrivate =
+        typeof raw?.listing === 'object' && raw?.listing != null
+          ? Boolean((raw.listing as { private?: boolean }).private)
+          : false;
       rentalToken = {
-        val: val * (duration || 1),
+        val: accommodationTokenTotalFromPriceLock(
+          priceLock,
+          duration,
+          adultsForToken,
+          listingPrivate,
+        ),
         cur: daily.cur,
       };
     }

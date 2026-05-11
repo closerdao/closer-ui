@@ -9,6 +9,30 @@ export const ensureSectionIds = (sections: PageSection[]): PageSection[] =>
     _localId: s._localId ?? newLocalId(),
   }));
 
+export const mergeSectionLocalIds = (
+  prev: PageSection[],
+  next: PageSection[],
+): PageSection[] => {
+  if (prev.length === next.length) {
+    return next.map((s, i) => ({
+      ...s,
+      _localId: prev[i]._localId ?? s._localId ?? newLocalId(),
+    }));
+  }
+  const prevById = new Map(
+    prev.filter((p): p is PageSection & { _id: string } => Boolean(p._id)).map(
+      (p) => [p._id, p],
+    ),
+  );
+  return next.map((s) => {
+    if (s._id) {
+      const hit = prevById.get(s._id);
+      if (hit?._localId) return { ...s, _localId: hit._localId };
+    }
+    return { ...s, _localId: s._localId ?? newLocalId() };
+  });
+};
+
 export const stripForApi = (page: PageDoc): Record<string, unknown> => {
   const sections = (page.sections ?? []).map(({ _localId: _l, ...rest }) => {
     const { _id, type, data } = rest;
@@ -48,8 +72,7 @@ export const createSection = (type: SectionType): PageSection => {
           content: {
             title: 'Headline',
             body: '<p>Supporting line.</p>',
-            imageUrl:
-              'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600',
+            imageUrl: '',
             cta: { text: 'Learn more', url: '#' },
           },
         },
@@ -64,15 +87,13 @@ export const createSection = (type: SectionType): PageSection => {
             title: 'Gallery',
             items: [
               {
-                imageUrl:
-                  'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800',
+                imageUrl: 'https://cdn.oasa.co/tdf/tdf-invest-og.jpg',
                 width: 800,
                 height: 600,
                 alt: '',
               },
               {
-                imageUrl:
-                  'https://images.unsplash.com/photo-1493612276216-ee3925520721?w=800',
+                imageUrl: 'https://cdn.oasa.co/tdf/tdf-invest-og.jpg',
                 width: 800,
                 height: 600,
                 alt: '',

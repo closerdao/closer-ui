@@ -70,6 +70,28 @@ export const computeTokensOwed = (stay: Stay): number => {
   return Math.max(0, target - staked);
 };
 
+export const accommodationTokenTotalFromPriceLock = (
+  priceLock:
+    | { dailyRentalToken?: { val: number } | null }
+    | null
+    | undefined,
+  duration: number,
+  adults: number,
+  listingIsPrivate?: boolean | null,
+): number => {
+  const dailyVal = priceLock?.dailyRentalToken?.val;
+  if (
+    dailyVal == null ||
+    !Number.isFinite(Number(dailyVal)) ||
+    !Number.isFinite(duration) ||
+    duration <= 0
+  ) {
+    return 0;
+  }
+  const guestMult = listingIsPrivate ? 1 : Math.max(1, adults);
+  return Number((Number(dailyVal) * duration * guestMult).toFixed(6));
+};
+
 export const canChangeStayPaymentMethod = (stay: Stay): boolean => {
   if (isStayTerminal(stay)) return false;
   if ((stay.creditsPaid?.val ?? 0) > 0) return false;
@@ -80,11 +102,17 @@ export const canChangeStayPaymentMethod = (stay: Stay): boolean => {
 export const inferPaymentChoiceFromStay = (
   stay: Stay,
   totalAccommodationTokens?: number,
+  opts?: { listingPrivate?: boolean | null },
 ): StayPaymentMethod => {
   const fullTokenAccommodation =
     totalAccommodationTokens ??
     (stay.priceLock?.dailyRentalToken?.val
-      ? stay.priceLock.dailyRentalToken.val * (stay.duration || 1)
+      ? accommodationTokenTotalFromPriceLock(
+          stay.priceLock,
+          stay.duration || 0,
+          stay.adults ?? 1,
+          opts?.listingPrivate,
+        )
       : 0);
   const tokensTarget = stay.tokensTarget?.val ?? stay.appliedTokens?.val ?? 0;
   const creditsTarget = stay.creditsTarget?.val ?? stay.appliedCredits?.val ?? 0;
@@ -297,10 +325,19 @@ function unwrapStayMutationResult(data: { results?: unknown }): Stay {
 export function mapStayQuoteToUpdatedPrices(
   quote: StayQuoteResponse,
   duration: number,
+  tokenGuestOpts?: { adults?: number; listingPrivate?: boolean | null },
 ): UpdatedPrices {
   const pl = quote.priceLock;
   const dailyTok = pl.dailyRentalToken;
-  const tokenVal = Number(dailyTok?.val ?? 0) * (duration || 1);
+  const tokenVal =
+    tokenGuestOpts != null
+      ? accommodationTokenTotalFromPriceLock(
+          pl,
+          duration,
+          tokenGuestOpts.adults ?? 1,
+          tokenGuestOpts.listingPrivate,
+        )
+      : Number(dailyTok?.val ?? 0) * (duration || 1);
   const payDelta: BookingPaymentDelta = {
     fiat: {
       val: quote.delta.fiat.val,

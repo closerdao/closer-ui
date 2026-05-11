@@ -11,6 +11,7 @@ const alignOptions = [
   'top-right',
   'left',
   'right',
+  'center',
 ] as const;
 
 const HeroInspector = ({ data, onChange }: BlockInspectorFormProps) => {
@@ -44,9 +45,10 @@ const HeroInspector = ({ data, onChange }: BlockInspectorFormProps) => {
           ))}
         </select>
       </div>
-      <label className="flex gap-2 items-center text-sm">
+      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
         <input
           type="checkbox"
+          className="w-4 h-4 shrink-0 accent-accent"
           checked={Boolean(settings.isInverted)}
           onChange={(e) =>
             patch({
@@ -55,11 +57,12 @@ const HeroInspector = ({ data, onChange }: BlockInspectorFormProps) => {
             })
           }
         />
-        {t('pages_editor_field_inverted')}
+        <span className="leading-none">{t('pages_editor_field_inverted')}</span>
       </label>
-      <label className="flex gap-2 items-center text-sm">
+      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
         <input
           type="checkbox"
+          className="w-4 h-4 shrink-0 accent-accent"
           checked={Boolean(settings.isCompact)}
           onChange={(e) =>
             patch({
@@ -68,7 +71,7 @@ const HeroInspector = ({ data, onChange }: BlockInspectorFormProps) => {
             })
           }
         />
-        {t('pages_editor_field_compact')}
+        <span className="leading-none">{t('pages_editor_field_compact')}</span>
       </label>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">

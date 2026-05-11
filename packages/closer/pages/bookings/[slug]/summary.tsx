@@ -52,6 +52,7 @@ import {
 import { parseMessageFromError } from '../../../utils/common';
 import { logMetricIfAuthenticated } from '../../../utils/metrics';
 import {
+  accommodationTokenTotalFromPriceLock,
   computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
@@ -539,7 +540,16 @@ const Summary = ({
                 totalToken={
                   rentalToken || { val: 0, cur: CloserCurrencies.EUR }
                 }
-                creditsPrice={(dailyRentalToken?.val || 0) * (duration || 0)}
+                creditsPrice={
+                  booking?.priceLock
+                    ? accommodationTokenTotalFromPriceLock(
+                        booking.priceLock,
+                        duration || 0,
+                        adults || 1,
+                        listing?.private,
+                      )
+                    : (dailyRentalToken?.val || 0) * (duration || 0)
+                }
                 totalFiat={total || { val: 0, cur: CloserCurrencies.EUR }}
                 eventCost={eventFiat}
                 isFoodIncluded={Boolean(booking?.foodOptionId)}

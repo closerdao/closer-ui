@@ -61,6 +61,7 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import {
+  accommodationTokenTotalFromPriceLock,
   computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
@@ -314,13 +315,25 @@ const BookingPage = ({
       bookingView?.duration != null &&
       !Number.isNaN(bookingView.duration)
     ) {
+      const val = accommodationTokenTotalFromPriceLock(
+        pl,
+        bookingView.duration,
+        adults ?? 1,
+        listing?.private,
+      );
       return {
-        val: pl.dailyRentalToken.val * bookingView.duration,
+        val: val > 0 ? val : pl.dailyRentalToken.val * bookingView.duration,
         cur: pl.dailyRentalToken.cur as CloserCurrencies.TDF,
       };
     }
     return rentalToken;
-  }, [bookingView?.priceLock, bookingView?.duration, rentalToken]);
+  }, [
+    bookingView?.priceLock,
+    bookingView?.duration,
+    rentalToken,
+    adults,
+    listing?.private,
+  ]);
   const displayTotalForCosts = (bookingView?.priceLock?.total ??
     total) as Price<
     CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH

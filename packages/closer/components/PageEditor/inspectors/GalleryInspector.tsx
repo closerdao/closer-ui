@@ -35,7 +35,7 @@ const GalleryInspector = ({ data, onChange }: BlockInspectorFormProps) => {
         items: [
           ...items,
           {
-            imageUrl: 'https://images.unsplash.com/photo-1418065460487-3e41a6c84dc5?w=800',
+            imageUrl: 'https://cdn.oasa.co/tdf/tdf-invest-og.jpg',
             width: 800,
             height: 600,
             alt: '',
