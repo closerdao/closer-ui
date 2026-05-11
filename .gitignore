@@ -56,3 +56,5 @@ closer-firebase-key.json
 .pnp.*
 
 /_copy-of-backend-repo/*
+
+.cursor/
