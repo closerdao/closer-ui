@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "prebuild": "node ../../packages/closer/scripts/syncBuildLocales.cjs && node ../../packages/closer/scripts/syncBuildConfig.cjs",
-    "dev": "dotenv -e .env next dev --turbo",
+    "dev": "yarn prebuild && dotenv -e .env.local -e .env next dev --turbo",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
