@@ -1,3 +1,6 @@
+import dayjs from 'dayjs';
+import dayOfYear from 'dayjs/plugin/dayOfYear';
+
 import api from './api';
 import { priceFormat } from './helpers';
 
@@ -14,7 +17,10 @@ import type {
   StayQuoteResponse,
   StaySearchResponse,
   StayStatus,
+  StayTokenStakePlan,
 } from '../types/stay';
+
+dayjs.extend(dayOfYear);
 
 export const formatStayMoney = (money: StayMoney | undefined | null): string => {
   if (!money) return '';
@@ -68,6 +74,31 @@ export const computeTokensOwed = (stay: Stay): number => {
   const target = stay.tokensTarget?.val ?? 0;
   const staked = stay.tokensStaked?.val ?? 0;
   return Math.max(0, target - staked);
+};
+
+export const buildStayTokenStakePlan = (
+  stay: Stay,
+  tokensToStakeTotal: number,
+): StayTokenStakePlan | null => {
+  const startDate = dayjs(stay.start);
+  const duration = stay.duration || 0;
+  const dailyValue = stay.priceLock?.dailyRentalToken?.val || 0;
+
+  if (!startDate.isValid() || duration <= 0 || dailyValue <= 0) return null;
+
+  const maxTokensForStay = duration * dailyValue;
+  const capped = Math.min(tokensToStakeTotal, maxTokensForStay);
+  const nightsToStake = Math.min(duration, Math.floor(capped / dailyValue));
+  if (nightsToStake <= 0) return null;
+
+  return {
+    dailyValue,
+    tokenAmount: Number((nightsToStake * dailyValue).toFixed(6)),
+    bookingNights: Array.from({ length: nightsToStake }, (_, i) => [
+      startDate.year(),
+      startDate.dayOfYear() + i,
+    ]),
+  };
 };
 
 export const canChangeStayPaymentMethod = (stay: Stay): boolean => {

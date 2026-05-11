@@ -382,7 +382,7 @@ const BookingPage = ({
     canGuestEditBookingDetails,
     isEditMode,
     isHourlyBooking,
-    bookingView.listing,
+    bookingView?.listing,
   ]);
 
   useEffect(() => {
