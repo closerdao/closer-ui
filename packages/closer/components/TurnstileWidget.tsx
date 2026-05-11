@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from 'react';
 declare global {
   interface Window {
     turnstile: {
-      ready?: (callback: () => void) => void;
       render: (
         container: string | HTMLElement,
         options: {
@@ -49,12 +48,19 @@ const TurnstileWidget = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const noSiteKeyBypassCalled = useRef(false);
 
+  const onVerifyRef = useRef(onVerify);
+  const onErrorRef = useRef(onError);
+  const onExpireRef = useRef(onExpire);
+  onVerifyRef.current = onVerify;
+  onErrorRef.current = onError;
+  onExpireRef.current = onExpire;
+
   useEffect(() => {
     if (TURNSTILE_SITE_KEY) return;
     if (noSiteKeyBypassCalled.current) return;
     noSiteKeyBypassCalled.current = true;
-    onVerify('unconfigured-client-bypass');
-  }, [onVerify]);
+    onVerifyRef.current('unconfigured-client-bypass');
+  }, []);
 
   useEffect(() => {
     if (!TURNSTILE_SITE_KEY) {
@@ -87,7 +93,7 @@ const TurnstileWidget = ({
           markLoaded();
         } else if (Date.now() - started > SCRIPT_POLL_MAX_MS) {
           clearInterval(checkLoaded);
-          onError?.();
+          onErrorRef.current?.();
         }
       }, SCRIPT_POLL_MS);
       return () => {
@@ -100,9 +106,10 @@ const TurnstileWidget = ({
     script.src =
       'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
     script.async = false;
+    script.defer = true;
     script.onload = markLoaded;
     script.onerror = () => {
-      onError?.();
+      onErrorRef.current?.();
     };
 
     document.head.appendChild(script);
@@ -112,7 +119,7 @@ const TurnstileWidget = ({
       script.onload = null;
       script.onerror = null;
     };
-  }, [onError]);
+  }, []);
 
   useEffect(() => {
     if (!isLoaded || !containerRef.current || !TURNSTILE_SITE_KEY) {
@@ -131,6 +138,7 @@ const TurnstileWidget = ({
           window.turnstile.remove(widgetIdRef.current);
         } catch {
         }
+        widgetIdRef.current = null;
       }
 
       widgetIdRef.current = window.turnstile.render(containerRef.current, {
@@ -138,28 +146,19 @@ const TurnstileWidget = ({
         action,
         size,
         theme: 'auto',
-        callback: onVerify,
+        callback: (token) => {
+          onVerifyRef.current(token);
+        },
         'error-callback': () => {
-          onError?.();
-          const id = widgetIdRef.current;
-          if (id) {
-            try {
-              window.turnstile.reset(id);
-            } catch {
-            }
-          }
+          onErrorRef.current?.();
         },
         'expired-callback': () => {
-          onExpire?.();
+          onExpireRef.current?.();
         },
       });
     };
 
-    if (typeof window.turnstile.ready === 'function') {
-      window.turnstile.ready(runRender);
-    } else {
-      runRender();
-    }
+    runRender();
 
     return () => {
       cancelled = true;
@@ -168,9 +167,10 @@ const TurnstileWidget = ({
           window.turnstile.remove(widgetIdRef.current);
         } catch {
         }
+        widgetIdRef.current = null;
       }
     };
-  }, [isLoaded, action, onVerify, onError, onExpire, size]);
+  }, [isLoaded, action, size]);
 
   if (!TURNSTILE_SITE_KEY) {
     return null;
