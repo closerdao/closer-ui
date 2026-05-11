@@ -2,7 +2,6 @@ import Head from 'next/head';
 import Link from 'next/link';
 
 import { Heading } from 'closer';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import {
   Building2,
   Check,
@@ -520,17 +519,11 @@ const TeamPage = () => {
 
 TeamPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
-      messages,
     };
   } catch (err: unknown) {
     return {
-      messages: null,
-    };
+      };
   }
 };
 

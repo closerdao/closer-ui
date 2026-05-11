@@ -1,7 +1,4 @@
-import { NextPageContext } from 'next';
-
 import {
-  getInvestPageInitialProps,
   FundraiserPage as CloserFundraiserPage,
   type InvestPageProps,
 } from 'closer';
@@ -16,15 +13,15 @@ const TDF_FUNDRAISER_OPTIONS = {
 };
 
 function FundraiserPage(props: InvestPageProps) {
-  return <CloserFundraiserPage {...props} />;
+  return (
+    <CloserFundraiserPage
+      {...props}
+      investPageOptions={{
+        ...TDF_FUNDRAISER_OPTIONS,
+        ...props.investPageOptions,
+      }}
+    />
+  );
 }
-
-FundraiserPage.getInitialProps = async (context: NextPageContext) => {
-  const base = await getInvestPageInitialProps(context);
-  return {
-    ...base,
-    investPageOptions: TDF_FUNDRAISER_OPTIONS,
-  };
-};
 
 export default FundraiserPage;

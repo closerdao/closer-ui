@@ -31,12 +31,12 @@ import { usePlatform } from '../../../contexts/platform';
 import { Event, TicketOption } from '../../../types';
 import { BookingSettings, Project, VolunteerConfig } from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import config from '../../../configCached';
 import api from '../../../utils/api';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
+import { logMetricIfAuthenticated } from '../../../utils/metrics';
 import { getMaxBookingHorizon } from '../../../utils/helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import ProjectPreview from '../../../components/ProjectPreview';
 
@@ -411,6 +411,11 @@ const DatesSelector = ({
     setHandleNextError(null);
 
     if (event?.paid && !selectedTicketOption) {
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-dates-error',
+        value: 'booking',
+        point: adults,
+      });
       setHandleNextError(t('bookings_error_no_ticket_option'));
       return;
     }
@@ -481,6 +486,11 @@ const DatesSelector = ({
           ...(friendEmails && { friendEmails }),
         });
 
+        void logMetricIfAuthenticated(user, {
+          event: 'booking-dates-request-success',
+          value: 'booking',
+          point: adults,
+        });
         router.push(`/bookings/${newBooking._id}/food`);
         return;
       } else {
@@ -491,9 +501,23 @@ const DatesSelector = ({
             ) as [string, string][],
           ),
         );
+        const nights =
+          start && end
+            ? Math.max(0, dayjs(end as string).diff(dayjs(start as string), 'day'))
+            : 0;
+        void logMetricIfAuthenticated(user, {
+          event: 'booking-dates-continue-success',
+          value: 'booking',
+          point: nights || adults,
+        });
         router.push(`/bookings/create/accomodation?${urlParams}`);
       }
     } catch (err: any) {
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-dates-error',
+        value: 'booking',
+        point: adults,
+      });
       setHandleNextError(parseMessageFromError(err));
     }
   };
@@ -713,13 +737,8 @@ DatesSelector.getInitialProps = async (
   try {
     const { query } = context;
     const { eventId, volunteerId, bookingType, isFriendsBooking } = query;
-
-    const [configs, messages] = await Promise.all([
-      getConfig(api),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const bookingSettings = getConfigValueBySlug(configs, 'booking');
-    const volunteerConfig = getConfigValueBySlug(configs, 'volunteering');
+    const bookingSettings = config.booking as BookingSettings;
+    const volunteerConfig = config.volunteering as VolunteerConfig;
     if (eventId) {
       const [ticketsAvailable, event] = await Promise.all([
         api.get(`/bookings/event/${eventId}/availability`).catch(() => null),
@@ -732,7 +751,6 @@ DatesSelector.getInitialProps = async (
         ticketOptions: ticketsAvailable?.data?.ticketOptions,
         isFriendsBooking: normalizeIsFriendsBooking(isFriendsBooking),
         event: event?.data?.results,
-        messages,
       };
     }
     if (
@@ -756,7 +774,6 @@ DatesSelector.getInitialProps = async (
         volunteerConfig,
         futureEvents: res?.data?.results,
         isFriendsBooking: normalizeIsFriendsBooking(isFriendsBooking),
-        messages,
       };
     }
 
@@ -779,14 +796,12 @@ DatesSelector.getInitialProps = async (
       bookingSettings,
       volunteerConfig,
       isFriendsBooking: normalizeIsFriendsBooking(isFriendsBooking),
-      messages,
       project,
     };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
       bookingSettings: null,
-      messages: null,
       volunteerConfig: null,
       isFriendsBooking: false,
     };

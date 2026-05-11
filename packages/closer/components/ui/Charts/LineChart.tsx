@@ -8,7 +8,7 @@ import {
   XAxis,
 } from 'recharts';
 
-import { formatThousands } from '../../../utils/dashboard.helpers';
+import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
 import { CHART_COLORS } from './chartColors';
 
 interface Props {
@@ -83,7 +83,7 @@ const LineCurvedChart = ({ data }: Props) => {
                     fill="#000000"
                     fontSize="12"
                   >
-                    €{formatThousands(Math.floor(Number(value)))}
+                    {formatIsoFiatAmount(Math.floor(Number(value)), 'EUR')}
                   </text>
                 );
               }}

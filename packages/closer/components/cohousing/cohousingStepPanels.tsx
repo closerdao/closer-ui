@@ -2,7 +2,10 @@ import { useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import type { SearchUserHit } from '../../utils/searchUser';
 import Button from '../ui/Button';
+import { CohousingUserSearchInput } from './cohousingUserSearchInput';
+import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import {
   COHOUSING_UNITS,
   type CohousingStepDef,
@@ -34,17 +37,21 @@ export const QuizPanel = ({
 
 export const CosignerPanel = ({
   onSubmit,
+  excludeUserId,
 }: {
   onSubmit: (payload: {
     mode: 'solo' | 'duo';
     invitedName?: string;
     invitedEmail?: string;
+    invitedUserId?: string;
   }) => void;
+  excludeUserId?: string;
 }) => {
   const t = useTranslations();
   const [mode, setMode] = useState<'pick' | 'solo' | 'duo'>('pick');
-  const [coName, setCoName] = useState('');
-  const [coEmail, setCoEmail] = useState('');
+  const [selectedCosigner, setSelectedCosigner] = useState<SearchUserHit | null>(
+    null,
+  );
   const [sent, setSent] = useState(false);
 
   return (
@@ -98,29 +105,21 @@ export const CosignerPanel = ({
       )}
       {mode === 'duo' && !sent && (
         <div className="space-y-3">
-          <label className="block">
+          <div className="block space-y-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
               {t('cohousing_cosigner_name_label')}
             </span>
-            <input
-              className="mt-1 w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm"
-              value={coName}
-              onChange={(e) => setCoName(e.target.value)}
+            <CohousingUserSearchInput
+              selectedUser={selectedCosigner}
+              onSelect={setSelectedCosigner}
+              onClear={() => setSelectedCosigner(null)}
               placeholder={t('cohousing_cosigner_name_ph')}
+              loadingLabel={t('cohousing_cosigner_search_loading')}
+              emptyLabel={t('cohousing_cosigner_search_empty')}
+              noContactLabel={t('cohousing_cosigner_search_no_contact')}
+              excludeUserIds={excludeUserId ? [excludeUserId] : undefined}
             />
-          </label>
-          <label className="block">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
-              {t('cohousing_cosigner_email_label')}
-            </span>
-            <input
-              type="email"
-              className="mt-1 w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm"
-              value={coEmail}
-              onChange={(e) => setCoEmail(e.target.value)}
-              placeholder={t('cohousing_cosigner_email_ph')}
-            />
-          </label>
+          </div>
           <FlowDisclaimer tone="amber">{t('cohousing_cosigner_invite_note')}</FlowDisclaimer>
           <div className="flex justify-end gap-2">
             <Button isFullWidth={false} variant="secondary" size="small" onClick={() => setMode('pick')}>
@@ -129,7 +128,7 @@ export const CosignerPanel = ({
             <Button
               isFullWidth={false}
               size="small"
-              isEnabled={!!(coName && coEmail)}
+              isEnabled={!!selectedCosigner}
               onClick={() => setSent(true)}
             >
               {t('cohousing_cosigner_send')}
@@ -137,10 +136,14 @@ export const CosignerPanel = ({
           </div>
         </div>
       )}
-      {mode === 'duo' && sent && (
+      {mode === 'duo' && sent && selectedCosigner && (
         <div className="space-y-3">
           <FlowDisclaimer tone="green">
-            {t('cohousing_cosigner_sent', { email: coEmail })}
+            {t('cohousing_cosigner_sent', {
+              contact:
+                selectedCosigner.email?.trim() ||
+                selectedCosigner.screenname,
+            })}
           </FlowDisclaimer>
           <div className="text-right">
             <Button
@@ -149,8 +152,9 @@ export const CosignerPanel = ({
               onClick={() =>
                 onSubmit({
                   mode: 'duo',
-                  invitedName: coName,
-                  invitedEmail: coEmail,
+                  invitedName: selectedCosigner.screenname,
+                  invitedEmail: selectedCosigner.email?.trim() || '',
+                  invitedUserId: selectedCosigner._id,
                 })
               }
             >
@@ -252,6 +256,7 @@ export const CommitmentPanel = ({
   onPoolAdd: (n: number) => void;
 }) => {
   const t = useTranslations();
+  const formatEurAmount = (amount: number) => formatIsoFiatAmount(amount || 0, 'EUR');
   const [tier, setTier] = useState<'low' | 'standard' | null>(null);
   const [topup, setTopup] = useState<number | 'custom' | 0>(0);
   const [topupCustom, setTopupCustom] = useState('');
@@ -360,20 +365,20 @@ export const CommitmentPanel = ({
             </span>
             <div className="mt-2 flex justify-between text-sm">
               <span className="text-gray-600">{t('cohousing_commit_reservation_line')}</span>
-              <span className="font-sans tabular-nums font-bold">€{reservation.toLocaleString()}</span>
+              <span className="font-sans tabular-nums font-bold">{formatEurAmount(reservation)}</span>
             </div>
             {topupAmount > 0 && (
               <div className="flex justify-between text-sm mt-1">
                 <span className="text-gray-600">{t('cohousing_commit_topup_line')}</span>
                 <span className="font-sans tabular-nums font-bold">
-                  €{topupAmount.toLocaleString()}
+                  {formatEurAmount(topupAmount)}
                 </span>
               </div>
             )}
             <div className="border-t border-accent/30 my-2" />
             <div className="flex justify-between items-baseline">
               <span className="font-medium text-gray-900">{t('cohousing_commit_total')}</span>
-              <span className="font-sans text-2xl font-black">€{total.toLocaleString()}</span>
+              <span className="font-sans text-2xl font-black">{formatEurAmount(total)}</span>
             </div>
             {financingMode && (
               <p className="text-xs text-gray-500 mt-2">

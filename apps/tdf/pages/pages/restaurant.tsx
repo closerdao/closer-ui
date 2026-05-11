@@ -2,7 +2,6 @@ import Head from 'next/head';
 import Link from 'next/link';
 
 import { Heading, LinkButton } from 'closer';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { ChefHat, Leaf, Users, Coffee, Sprout, Circle, Droplet, Apple } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -285,17 +284,11 @@ const RestaurantPage = () => {
 
 RestaurantPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
-      messages,
     };
   } catch (err: unknown) {
     return {
-      messages: null,
-    };
+      };
   }
 };
 

@@ -1,6 +1,5 @@
 import Head from 'next/head';
 
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -332,17 +331,11 @@ const ArtFaire = () => {
 
 ArtFaire.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
-      messages,
     };
   } catch (err: unknown) {
     return {
-      messages: null,
-    };
+      };
   }
 };
 

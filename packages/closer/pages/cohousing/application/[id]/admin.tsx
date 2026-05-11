@@ -12,7 +12,6 @@ import Spinner from '../../../../components/ui/Spinner';
 import { useAuth } from '../../../../contexts/auth';
 import { usePlatform } from '../../../../contexts/platform';
 import type { CohousingApplication } from '../../../../types/cohousingApplication';
-import { loadLocaleData } from '../../../../utils/locale.helpers';
 import PageNotAllowed from '../../../401';
 
 const clampStep = (n: number) => Math.min(Math.max(Math.floor(n), 1), 14);
@@ -390,7 +389,7 @@ export default CohousingApplicationAdminPage;
 export async function getStaticProps({ locale }: NextPageContext) {
   return {
     props: {
-      messages: await loadLocaleData(locale as string, 'tdf'),
+      
     },
   };
 }

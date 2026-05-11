@@ -14,10 +14,8 @@ import { MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { BookingConfig } from '../../types';
-import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
-import api from '../../utils/api';
+import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 interface Props {
   bookingConfig: BookingConfig | null;
@@ -38,10 +36,11 @@ const Listings = ({ bookingConfig }: Props) => {
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
-  const isTeamMember = false;
-  user?.roles.includes('space-host') ||
-    user?.roles.includes('steward') ||
-    user?.roles.includes('land-manager');
+  const isTeamMember =
+    Boolean(user?.roles?.includes('admin')) ||
+    Boolean(user?.roles?.includes('space-host')) ||
+    Boolean(user?.roles?.includes('steward')) ||
+    Boolean(user?.roles?.includes('land-manager'));
 
   const listingFilter = {
     where: {},
@@ -80,8 +79,8 @@ const Listings = ({ bookingConfig }: Props) => {
           <div className="w-full">
             <div className="mb-4 flex justify-between items-center flex-col sm:flex-row gap-4">
               <Heading level={2}>{t('listings_edit_title')}</Heading>
-              {(user?.roles.includes('admin') ||
-                user?.roles.includes('space-host')) && (
+              {(user?.roles?.includes('admin') ||
+                user?.roles?.includes('space-host')) && (
                 <Link
                   as="/listings/create"
                   href="/listings/create"
@@ -133,15 +132,10 @@ const Listings = ({ bookingConfig }: Props) => {
 
 Listings.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [configs, messages] = await Promise.all([
-      getConfig(api),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
 
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
+    const bookingConfig = config.booking;
     return {
       bookingConfig,
-      messages,
     };
   } catch (err) {
     return {

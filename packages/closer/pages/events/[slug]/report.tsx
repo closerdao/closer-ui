@@ -25,7 +25,6 @@ import api from '../../../utils/api';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import Loading from '../../../components/Loading';
 
 interface Props {
@@ -321,8 +320,7 @@ const EventReport = ({ event, error }: Props) => {
 EventReport.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
   try {
-    const [eventRes, messages] = await Promise.all([
-      api
+    const eventRes = await api
         .get(`/event/${query.slug}`, {
           headers: getBearerAuthHeaders(req as NextApiRequest),
         })
@@ -330,20 +328,16 @@ EventReport.getInitialProps = async (context: NextPageContext) => {
           console.error('Error fetching event:', err);
           const errorMessage = err.response?.data?.message || 'Failed to fetch event data';
           return { data: { results: null, error: errorMessage } };
-        }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+        })
 
     return {
       event: eventRes?.data?.results,
-      messages,
     };
   } catch (err: unknown) {
     console.log('Error', err);
     return {
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

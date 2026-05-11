@@ -10,7 +10,6 @@ import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 const CreditsPage = () => {
@@ -152,17 +151,11 @@ const CreditsPage = () => {
 
 CreditsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
-      messages,
     };
   } catch (err: unknown) {
     return {
-      messages: null,
-    };
+      };
   }
 };
 

@@ -1,5 +1,7 @@
 const OVERLAY_FADE_MS = 500;
 
+export const CONFIRMATION_CELEBRATION_DURATION_MS = 2800;
+
 interface ConfirmationCelebrationOverlayProps {
   show: boolean;
   title: string;

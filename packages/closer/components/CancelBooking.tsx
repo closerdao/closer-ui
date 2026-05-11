@@ -59,7 +59,7 @@ const CancelBooking = ({
   };
 
   const backToBookings = () => {
-    router.push('/bookings');
+    router.push('/stay/upcoming');
   };
 
   return (

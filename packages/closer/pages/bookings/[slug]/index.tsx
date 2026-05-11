@@ -1,18 +1,20 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import BookingRequestButtons from '../../../components/BookingRequestButtons';
-import Charges from '../../../components/Charges';
+import BookingStatusTag from '../../../components/BookingStatusTag';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
 import UserInfoButton from '../../../components/UserInfoButton';
-import { Button, Card, Information } from '../../../components/ui';
+import { Button } from '../../../components/ui';
+import BookingSurface, {
+  BookingSectionEyebrow,
+} from '../../../components/booking/bookingSurface';
 import Heading from '../../../components/ui/Heading';
-import Input from '../../../components/ui/Input';
-import Select from '../../../components/ui/Select/Dropdown';
 
 import dayjs from 'dayjs';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
@@ -21,7 +23,7 @@ import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
 import { HeadingRow, Tag, useConfig } from '../../..';
-import { MAX_LISTINGS_TO_FETCH, STATUS_COLOR } from '../../../constants';
+import { MAX_LISTINGS_TO_FETCH } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
@@ -34,24 +36,36 @@ import {
   Listing,
   PaymentConfig,
   PaymentType,
+  Price,
   Project,
   UpdatedPrices,
   VolunteerOpportunity,
 } from '../../../types';
+import type { Stay } from '../../../types/stay';
 import { FoodOption } from '../../../types/food';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import config from '../../../configCached';
+import { useBookingLinkedCharges } from '../../../hooks/useBookingLinkedCharges';
 import api from '../../../utils/api';
+import { mergeBookingLedgerCharges } from '../../../utils/bookingChargesLedger.helpers';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import {
+  areNumberArraysEqual,
   convertToDateString,
   dateToPropertyTimeZone,
   ensureEventPriceCurrency,
   formatCheckinDate,
   formatCheckoutDate,
+  getBookingListingRefId,
+  getBookingPaymentCheckoutPath,
   getBookingPaymentType,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
+import {
+  computeCreditsOwed,
+  computeFiatOwed,
+  computeTokensOwed,
+  isStayShapedBooking,
+} from '../../../utils/stays.api';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageNotFound from '../../not-found';
 
@@ -97,6 +111,7 @@ const BookingPage = ({
   projects,
 }: Props) => {
   const t = useTranslations();
+  const router = useRouter();
 
   const config = useConfig();
   const { timeZone } = generalConfig || { timeZone: config.DEFAULT_TIMEZONE };
@@ -107,9 +122,24 @@ const BookingPage = ({
   const { platform }: any = usePlatform();
   const { isAuthenticated, user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
-  const isEditMode = true;
+  const isAdmin = Boolean(user?.roles.includes('admin'));
+  const canManageBooking = isSpaceHost || isAdmin;
+  const isEditMode = false;
 
   const isHourlyBooking = listing?.priceDuration !== 'night';
+
+  const [liveBooking, setLiveBooking] = useState<Booking | null>(null);
+
+  useEffect(() => {
+    setLiveBooking(null);
+  }, [booking?._id]);
+
+  const bookingView = liveBooking ?? booking;
+
+  const hasStayPricingShape = useMemo(
+    () => isStayShapedBooking(bookingView as unknown as Record<string, unknown>),
+    [bookingView],
+  );
 
   const {
     utilityFiat,
@@ -134,15 +164,29 @@ const BookingPage = ({
     foodFiat,
     roomOrBedNumbers,
     volunteerInfo,
-  } = booking || {};
+  } = bookingView || {};
+
+  const { linkedCharges, refetchCharges } = useBookingLinkedCharges(_id);
+
+  const ledgerChargesForSummary = useMemo(
+    () => mergeBookingLedgerCharges(linkedCharges, bookingView?.charges),
+    [linkedCharges, bookingView?.charges],
+  );
+
+  const latestStripePaymentIntentId = useMemo(() => {
+    const rows = ledgerChargesForSummary
+      .filter((c) => c.method === 'stripe' && c.meta?.stripePaymentIntentId)
+      .sort((a, b) => dayjs(b.date).valueOf() - dayjs(a.date).valueOf());
+    return rows[0]?.meta?.stripePaymentIntentId;
+  }, [ledgerChargesForSummary]);
 
   const eventFiatWithCurrency = ensureEventPriceCurrency(
-    eventFiat,
+    bookingView?.priceLock?.lines?.event ?? eventFiat,
     CloserCurrencies.EUR,
   );
 
-  const isFriendBookingForCurrentUser = user?.email && booking?.friendEmails?.includes(user?.email);
-
+  const isFriendBookingForCurrentUser =
+    user?.email && bookingView?.friendEmails?.includes(user?.email);
 
   const userInfo = bookingCreatedBy && {
     name: bookingCreatedBy.screenname,
@@ -158,7 +202,7 @@ const BookingPage = ({
   const vatRateFromConfig = Number(paymentConfig?.vatRate);
   const vatRate = vatRateFromConfig || defaultVatRate;
 
-  const [status, setStatus] = useState(booking?.status);
+  const [status, setStatus] = useState(bookingView?.status);
   const [updatedRoomNumbers, setUpdatedRoomNumbers] =
     useState(roomOrBedNumbers);
   const [updatedAdults, setUpdatedAdults] = useState(adults);
@@ -178,16 +222,20 @@ const BookingPage = ({
       bookingEnd ??
       null,
   );
-  const [updatedListingId, setUpdatedListingId] = useState(listing?._id);
+  const [updatedListingId, setUpdatedListingId] = useState(
+    getBookingListingRefId(booking?.listing as unknown) ?? listing?._id,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [hasUpdated, setHasUpdated] = useState(false);
   const [updatedPrices, setUpdatedPrices] = useState<UpdatedPrices | null>(
     null,
   );
   const [updatedStatus, setUpdatedStatus] = useState<string | undefined>(
-    booking?.status,
+    bookingView?.status,
   );
-  const [amountToRefund] = useState<number | undefined>(
+
+  const [datesEditorOpen, setDatesEditorOpen] = useState(false);
+  const [fiatDeltaBaseline, setFiatDeltaBaseline] = useState(() =>
     Math.abs(booking?.paymentDelta?.fiat.val || 0),
   );
 
@@ -203,6 +251,15 @@ const BookingPage = ({
     paymentType === PaymentType.FULL_CREDITS ||
     paymentType === PaymentType.PARTIAL_CREDITS ||
     paymentType === 'fiat';
+
+  const isBookingOwnerEditor =
+    user?._id === createdBy || user?._id === bookingView?.paidBy;
+
+  const canGuestEditBookingDetails =
+    Boolean(isBookingOwnerEditor) &&
+    !canManageBooking &&
+    canEditBooking &&
+    !hasStayPricingShape;
 
   const checkInTime = bookingConfig?.checkinTime || 14;
   const checkOutTime = bookingConfig?.checkoutTime || 11;
@@ -242,16 +299,47 @@ const BookingPage = ({
   );
   const updatedMaxBeds = updatedListing?.beds || 1;
 
+  const displayAccommodationFiat = (bookingView?.priceLock?.lines
+    ?.accommodation ?? rentalFiat) as Price<CloserCurrencies.EUR>;
+  const displayUtilityFiatRow = (bookingView?.priceLock?.lines?.utility ??
+    utilityFiat) as Price<CloserCurrencies.EUR>;
+  const displayFoodFiatRow = (bookingView?.priceLock?.lines?.food ??
+    foodFiat) as Price<CloserCurrencies.EUR>;
+  const displayRentalTokenForCosts = useMemo((): Price<
+    CloserCurrencies.TDF | CloserCurrencies.ETH
+  > => {
+    const pl = bookingView?.priceLock;
+    if (
+      pl?.dailyRentalToken != null &&
+      bookingView?.duration != null &&
+      !Number.isNaN(bookingView.duration)
+    ) {
+      return {
+        val: pl.dailyRentalToken.val * bookingView.duration,
+        cur: pl.dailyRentalToken.cur as CloserCurrencies.TDF,
+      };
+    }
+    return rentalToken;
+  }, [bookingView?.priceLock, bookingView?.duration, rentalToken]);
+  const displayTotalForCosts = (bookingView?.priceLock?.total ??
+    total) as Price<
+    CloserCurrencies.EUR | CloserCurrencies.TDF | CloserCurrencies.ETH
+  >;
+
   useEffect(() => {
+    if (
+      !_id ||
+      !((canManageBooking || canGuestEditBookingDetails) && isEditMode)
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+
     const fetchUpdatedPrice = async () => {
-      const paymentType = getBookingPaymentType({
-        useCredits,
-        useTokens,
-        rentalFiat,
-      });
       try {
         const res = await api.post('/bookings/calculate-totals', {
-          bookingId: booking._id,
+          bookingId: _id,
 
           updatedAdults,
           updatedDuration,
@@ -265,16 +353,22 @@ const BookingPage = ({
           paymentType,
         });
 
+        if (cancelled) return;
         setUpdatedPrices(res.data.results);
       } catch (error) {
-        console.error('Error fetching updated prices:', error);
+        if (!cancelled) {
+          console.error('Error fetching updated prices:', error);
+        }
       }
     };
 
-    if (isSpaceHost && isEditMode) {
-      fetchUpdatedPrice();
-    }
+    void fetchUpdatedPrice();
+
+    return () => {
+      cancelled = true;
+    };
   }, [
+    _id,
     updatedAdults,
     updatedChildren,
     updatedInfants,
@@ -282,13 +376,18 @@ const BookingPage = ({
     updatedStartDate,
     updatedEndDate,
     updatedListingId,
-    isSpaceHost,
+    updatedDuration,
+    paymentType,
+    canManageBooking,
+    canGuestEditBookingDetails,
     isEditMode,
+    isHourlyBooking,
+    bookingView.listing,
   ]);
 
   useEffect(() => {
     const fetchPayerInfo = async () => {
-      if (!booking?.paidBy) {
+      if (!bookingView?.paidBy) {
         setPayerInfo(null);
         return;
       }
@@ -296,7 +395,7 @@ const BookingPage = ({
       try {
         const {
           data: { results },
-        } = await api.get(`/user/${booking.paidBy}`);
+        } = await api.get(`/user/${bookingView.paidBy}`);
         setPayerInfo({
           name: results.screenname || results.name || '',
           photo: results.photo || '',
@@ -308,7 +407,7 @@ const BookingPage = ({
     };
 
     fetchPayerInfo();
-  }, [booking?.paidBy]);
+  }, [bookingView?.paidBy]);
 
   const updatedAccomodationTotal =
     useTokens || useCredits
@@ -322,15 +421,30 @@ const BookingPage = ({
   const updatedEventTotal = updatedPrices?.eventFiat?.val || 0;
   const updatedFiatTotal = updatedPrices?.total?.val || 0;
 
+  const previewPaymentDelta =
+    updatedPrices != null && updatedPrices.paymentDelta !== undefined
+      ? updatedPrices.paymentDelta
+      : bookingView?.paymentDelta;
 
-
-  // TODO:update paymentDelta, dailyrentaltoken, total, rentalfiat !!!!!!!!! don't update rentalfiat
-  // when the price of token booking updated, but payment delta is not zero, rentalFiAt should match paymentdelta
+  const pendingSaveStart = formatCheckinDate(
+    convertToDateString(updatedStartDate),
+    timeZone,
+    checkInTime,
+  );
+  const pendingSaveEnd = formatCheckoutDate(
+    convertToDateString(updatedEndDate),
+    timeZone,
+    checkOutTime,
+  );
+  const pendingRoomOrBedNumbers =
+    updatedAdults !== adults
+      ? updatedRoomNumbers?.slice(0, updatedAdults)
+      : updatedRoomNumbers;
 
   const updatedBookingValues = {
     ...(updatedStatus &&
-      updatedStatus !== booking?.status && { overrideStatus: updatedStatus }),
-    ...(Math.abs(booking?.paymentDelta?.fiat.val || 0) !== amountToRefund && {
+      updatedStatus !== bookingView?.status && { overrideStatus: updatedStatus }),
+    ...(Math.abs(bookingView?.paymentDelta?.fiat.val || 0) !== fiatDeltaBaseline && {
       overridePaymentDelta: {
         fiat: {
           val: 0,
@@ -342,115 +456,159 @@ const BookingPage = ({
     children: updatedChildren,
     infants: updatedInfants,
     pets: updatedPets,
-    roomOrBedNumbers:
-      updatedAdults !== adults
-        ? updatedRoomNumbers?.slice(0, updatedAdults)
-        : updatedRoomNumbers,
+    roomOrBedNumbers: pendingRoomOrBedNumbers,
     listing: updatedListingId,
-    start: formatCheckinDate(
-      convertToDateString(updatedStartDate),
-      timeZone,
-      checkInTime,
-    ),
-    end: formatCheckoutDate(
-      convertToDateString(updatedEndDate),
-      timeZone,
-      checkOutTime,
-    ),
+    start: pendingSaveStart,
+    end: pendingSaveEnd,
   };
 
-  const updatedBooking = {
-    ...booking,
-    ...(updatedStatus !== booking?.status && { overrideStatus: updatedStatus }),
-    ...(Math.abs(booking?.paymentDelta?.fiat.val || 0) !== amountToRefund && {
-      overridePaymentDelta: {
-        fiat: {
-          val: 0,
-        },
-      },
-    }),
-    start: formatCheckinDate(
-      convertToDateString(updatedStartDate),
-      timeZone,
-      checkInTime,
-    ),
-    end: formatCheckoutDate(
-      convertToDateString(updatedEndDate),
-      timeZone,
-      checkOutTime,
-    ),
-    duration: updatedDuration,
-    adults: updatedAdults,
-    children: updatedChildren,
-    pets: updatedPets,
-    infants: updatedInfants,
-    roomOrBedNumbers:
-      updatedAdults !== adults
-        ? updatedRoomNumbers?.slice(0, updatedAdults)
-        : updatedRoomNumbers,
-    utilityFiat: { val: updatedUtilityTotal, cur: rentalFiat?.cur },
-    rentalFiat: updatedRentalFiat,
-    rentalToken:
-      useTokens || useCredits
-        ? { val: updatedRentalToken, cur: rentalToken?.cur }
-        : booking?.rentalToken,
-    ...(eventFiatWithCurrency
-      ? {
-          eventFiat: {
-            val: updatedEventTotal,
-            cur: eventFiatWithCurrency.cur,
-            _id: eventFiatWithCurrency._id,
-          },
-        }
-      : null),
-    dailyRentalToken: updatedRentalToken,
-    listing: updatedListingId,
-    foodFiat: { val: updatedFoodTotal, cur: rentalFiat?.cur },
-    total: { val: updatedFiatTotal, cur: rentalFiat?.cur },
+  const hasDateEdits =
+    pendingSaveStart.valueOf() !== dayjs(bookingView?.start).valueOf() ||
+    (pendingSaveEnd?.valueOf() ?? null) !==
+      (bookingView?.end ? dayjs(bookingView.end).valueOf() : null);
+
+  const hasGuestBookingEdits =
+    updatedAdults !== adults ||
+    updatedChildren !== children ||
+    updatedInfants !== infants ||
+    updatedPets !== pets ||
+    String(updatedListingId ?? '') !==
+      String(
+        getBookingListingRefId(bookingView?.listing as unknown) ??
+          bookingView?.listing ??
+          '',
+      ) ||
+    hasDateEdits;
+
+  const showPayNowChip =
+    bookingView?.status !== 'pending' &&
+    bookingView?.status !== 'cancelled' &&
+    isNotPaid &&
+    isBookingOwnerEditor;
+
+  const hasHostBookingEdits =
+    updatedStatus !== bookingView?.status ||
+    hasGuestBookingEdits ||
+    !areNumberArraysEqual(pendingRoomOrBedNumbers, roomOrBedNumbers);
+
+  const previewUsesTokenPricing = useTokens || useCredits;
+  const previewOriginalTotalVal = previewUsesTokenPricing
+    ? displayRentalTokenForCosts?.val ?? 0
+    : displayTotalForCosts?.val ?? total?.val ?? 0;
+  const previewNewTotalVal = previewUsesTokenPricing
+    ? updatedPrices?.rentalToken?.val ??
+      displayRentalTokenForCosts?.val ??
+      0
+    : updatedPrices?.total?.val ?? displayTotalForCosts?.val ?? total?.val ?? 0;
+  const previewDeltaVal = previewNewTotalVal - previewOriginalTotalVal;
+  const previewFormatCurrency = previewUsesTokenPricing
+    ? displayRentalTokenForCosts?.cur ?? CloserCurrencies.TDF
+    : displayTotalForCosts?.cur ??
+      rentalFiat?.cur ??
+      CloserCurrencies.EUR;
+
+  const syncBookingFromServer = async () => {
+    try {
+      const {
+        data: { results: fresh },
+      } = await api.get(`/booking/${_id}`);
+      setLiveBooking(fresh);
+      setStatus(fresh.status);
+      setUpdatedStatus(fresh.status);
+      setUpdatedRoomNumbers(fresh.roomOrBedNumbers ?? []);
+      setUpdatedAdults(fresh.adults);
+      setUpdatedChildren(fresh.children);
+      setUpdatedInfants(fresh.infants);
+      setUpdatedPets(fresh.pets);
+      setUpdatedStartDate(
+        (timeZone && dateToPropertyTimeZone(timeZone, fresh.start)) ??
+          fresh.start ??
+          null,
+      );
+      setUpdatedEndDate(
+        (timeZone && dateToPropertyTimeZone(timeZone, fresh.end)) ??
+          fresh.end ??
+          null,
+      );
+      setUpdatedListingId(
+        (getBookingListingRefId(fresh.listing as unknown) ??
+          fresh.listing) as string,
+      );
+      setFiatDeltaBaseline(Math.abs(fresh.paymentDelta?.fiat.val || 0));
+      setUpdatedPrices(null);
+      refetchCharges();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  const hasUpdatedBooking =
-    JSON.stringify(booking) !== JSON.stringify(updatedBooking);
-
-  const refetchStatus = async () => {
-    const {
-      data: { results: booking },
-    } = await api.get(`/booking/${_id}`);
-
-    setStatus(booking.status);
-  };
-
-  const createdFormatted = dayjs(created).format('DD/MM/YYYY - HH:mm:A');
+  const createdFormatted = dayjs(created).format('DD/MM/YYYY HH:mm A');
 
   const confirmBooking = async () => {
     await platform.bookings.confirm(_id);
-    await refetchStatus();
+    await syncBookingFromServer();
   };
   const rejectBooking = async () => {
     await platform.bookings.reject(_id);
-    await refetchStatus();
+    await syncBookingFromServer();
+  };
+
+  const persistBookingUpdate = async (): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      const res = await platform.bookings.update(_id, {
+        updatedBookingValues,
+        paymentType,
+      });
+      return res.status === 200;
+    } catch (error) {
+      console.log('error=', error);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const bookingCheckoutPath = useMemo(() => {
+    const stayLike = bookingView as unknown as Stay;
+    return getBookingPaymentCheckoutPath({
+      bookingId: _id,
+      stayShaped: hasStayPricingShape,
+      status: String(status ?? ''),
+      paymentDelta: bookingView?.paymentDelta,
+      useTokens,
+      fiatOwed: hasStayPricingShape ? computeFiatOwed(stayLike) : 0,
+      tokensOwed: hasStayPricingShape ? computeTokensOwed(stayLike) : 0,
+      creditsOwed: hasStayPricingShape ? computeCreditsOwed(stayLike) : 0,
+    });
+  }, [
+    _id,
+    hasStayPricingShape,
+    status,
+    bookingView?.paymentDelta,
+    useTokens,
+    bookingView,
+  ]);
+
+  const openBookingCheckout = async () => {
+    await router.push(bookingCheckoutPath);
+  };
+
+  const handleCompleteBookingChange = async () => {
+    const ok = await persistBookingUpdate();
+    if (ok) {
+      await syncBookingFromServer();
+      await router.push(bookingCheckoutPath);
+    }
   };
 
   const handleSaveBooking = async () => {
-    try {
-      setIsLoading(true);
-      const res = await api.post('/bookings/update', {
-        updatedBookingValues,
-        bookingId: _id,
-        paymentType,
-      });
-      setHasUpdated(false);
-      if (res.status === 200) {
-        setHasUpdated(true);
-        setTimeout(() => {
-          setHasUpdated(false);
-          window.location.reload();
-        }, 3000);
-      }
-    } catch (error) {
-      console.log('error=', error);
-    } finally {
-      setIsLoading(false);
+    setHasUpdated(false);
+    const ok = await persistBookingUpdate();
+    if (ok) {
+      await syncBookingFromServer();
+      setHasUpdated(true);
+      setTimeout(() => setHasUpdated(false), 3000);
     }
   };
 
@@ -463,6 +621,8 @@ const BookingPage = ({
     }
   };
 
+  const bv = bookingView as Record<string, unknown>;
+
   if (!isBookingEnabled) {
     return <FeatureNotEnabled feature="booking" />;
   }
@@ -471,7 +631,7 @@ const BookingPage = ({
    ( !booking ||
     (user?._id !== booking.createdBy &&
       user?._id !== booking.paidBy &&
-        !isSpaceHost) )
+        !canManageBooking) )
       &&
     !isFriendBookingForCurrentUser
   ) {
@@ -496,73 +656,276 @@ const BookingPage = ({
         />
         <meta property="og:type" content="booking" />
       </Head>
-      <main className="main-content max-w-xl booking flex flex-col gap-8">
-        <Heading className="mb-4">
-          {t(`bookings_title_${booking.status}`)}
-        </Heading>
+      <main className="main-content booking mx-auto flex w-full max-w-2xl flex-col gap-6 pb-10 md:gap-8 md:pb-16">
+        <BookingSurface
+          tone="elevated"
+          padding="lg"
+          className="flex flex-col gap-4 md:gap-5"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <Heading level={3} className="!mt-0 max-w-[85%] flex-1 text-xl md:text-2xl">
+              {t(`bookings_title_${status}`)}
+            </Heading>
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+              <BookingStatusTag status={status} />
+              {showPayNowChip && (
+                <Button
+                  variant="inline"
+                  size="small"
+                  isFullWidth={false}
+                  isLoading={isLoading}
+                  className="!min-h-0 shrink-0 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+                  onClick={() => void openBookingCheckout()}
+                >
+                  {t('booking_pay_now')}
+                </Button>
+              )}
+            </div>
+          </div>
 
-        <section className="flex flex-col gap-2 mb-6">
-          <div className="text-sm text-disabled">
+          <div className="flex flex-col gap-0.5 text-xs text-disabled">
             <p>{createdFormatted}</p>
-            <p>
-              {t('bookings_id')} <b>{booking._id}</b>
+            <p className="break-all">
+              <span className="font-medium text-foreground">
+                {t('bookings_id')}
+              </span>{' '}
+              {_id}
             </p>
           </div>
-          {booking?.adminBookingReason && (
-            <Card className="bg-accent text-white my-4 font-bold">
-              {booking?.adminBookingReason}
-            </Card>
+
+          {bookingView?.adminBookingReason && (
+            <BookingSurface tone="banner" padding="sm">
+              {bookingView.adminBookingReason}
+            </BookingSurface>
           )}
 
-          {booking?.status !== 'pending' &&
-          isNotPaid &&
-          (user?._id === createdBy || user?._id === booking?.paidBy) ? (
-            <Link href={`/bookings/${_id}/checkout`} passHref>
-              <Button variant="primary" className="w-full">
-                {t('checkout_complete_payment')}
-              </Button>
-            </Link>
-          ) : (
-            <p
-              className={`bg-${STATUS_COLOR[status]}  mt-2
-              capitalize opacity-100 text-base p-1 text-white text-center rounded-md`}
-            >
-              {status}
-            </p>
-          )}
-        </section>
-
-        {isSpaceHost &&
-          booking.roomOrBedNumbers &&
-          booking.roomOrBedNumbers.length > 0 && (
-            <section className="rounded-md p-4 bg-accent-light">
-              <p className="font-bold">
-                {listing.private
-                  ? t('booking_card_room_number')
-                  : t('booking_card_bed_numbers')}{' '}
-                {booking.roomOrBedNumbers &&
-                  booking.roomOrBedNumbers.toString()}
+          {bookingView?.pendingExtension?.requestedAt && (
+            <BookingSurface tone="banner" padding="md" className="flex flex-col gap-3">
+              <p className="text-sm">
+                {t('stay_create_pending_extension', {
+                  end: dayjs(bookingView.pendingExtension.end).format('LL'),
+                })}
               </p>
-              <div className="flex flex-col gap-2">
-                <label htmlFor="roomNumbers">
-                  {roomOrBedNumbers && roomOrBedNumbers?.length > 0
-                    ? 'Enter new bed numbers (comma delimited, must match updated number of adults):'
-                    : 'Enter new room number:'}
-                </label>
-                <Input
-                  onChange={handleUpdateRoomNumbers}
-                  placeholder="Number (s)"
-                  id="roomNumbers"
-                  type="text"
-                  className="w-[100px] bg-white py-0.5 px-2"
-                />
-              </div>
-            </section>
+              {isSpaceHost && hasStayPricingShape && (
+                <Link
+                  href={`/stay/${_id}`}
+                  className="text-sm font-medium text-accent underline"
+                >
+                  {t('stay_create_view_booking')}
+                </Link>
+              )}
+            </BookingSurface>
           )}
 
-        {booking.volunteerInfo && (
-          <section className="flex flex-col gap-4">
-            {booking.volunteerInfo.bookingType === 'volunteer' ? (
+          <div className="flex flex-col gap-2">
+            <BookingSectionEyebrow>
+              {t('bookings_dates_step_title')}
+            </BookingSectionEyebrow>
+            <SummaryDates
+              isDayTicket={bookingView?.isDayTicket}
+              isFriendsBooking={Boolean(bookingView?.isFriendsBooking)}
+              eventId={bookingView?.eventId}
+              totalGuests={
+                canManageBooking || canGuestEditBookingDetails
+                  ? updatedAdults
+                  : adults
+              }
+              kids={
+                canManageBooking || canGuestEditBookingDetails
+                  ? updatedChildren
+                  : children
+              }
+              infants={
+                canManageBooking || canGuestEditBookingDetails
+                  ? updatedInfants
+                  : infants
+              }
+              pets={
+                canManageBooking || canGuestEditBookingDetails
+                  ? updatedPets
+                  : pets
+              }
+              startDate={
+                canManageBooking || canGuestEditBookingDetails
+                  ? updatedStartDate
+                  : bookingStart
+              }
+              endDate={
+                canManageBooking || canGuestEditBookingDetails
+                  ? updatedEndDate
+                  : bookingEnd
+              }
+              listingName={listing?.name}
+              listingId={updatedListingId ?? listing?._id}
+              isVolunteer={volunteerInfo?.bookingType === 'volunteer'}
+              eventName={event?.name}
+              volunteerName={volunteer?.name}
+              ticketOption={ticketOption?.name}
+              doesNeedPickup={doesNeedPickup}
+              doesNeedSeparateBeds={doesNeedSeparateBeds}
+              isEditMode={
+                (canManageBooking || canGuestEditBookingDetails) && isEditMode
+              }
+              setters={setters}
+              updatedListingId={updatedListingId}
+              listings={listings}
+              updatedMaxBeds={updatedMaxBeds}
+              priceDuration={listing?.priceDuration}
+              workingHoursStart={listing?.workingHoursStart}
+              workingHoursEnd={listing?.workingHoursEnd}
+              showHeading={false}
+              collapseDatesEditor
+              datesEditorOpen={datesEditorOpen}
+              onToggleDatesEditor={() =>
+                setDatesEditorOpen((open) => !open)
+              }
+              compact
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <BookingSectionEyebrow>
+              {t('bookings_dates_step_guests_title')}
+            </BookingSectionEyebrow>
+            {(userInfo || payerInfo) && (
+              <div className="flex flex-col gap-1">
+                {bookingView?.paidBy &&
+                payerInfo &&
+                bookingView.paidBy !== createdBy ? (
+                  <>
+                    {userInfo && (
+                      <UserInfoButton
+                        variant="preview"
+                        userInfo={{
+                          ...userInfo,
+                          name:
+                            userInfo.name +
+                            (adults > 1 ? ` +${adults - 1}` : ''),
+                        }}
+                        createdBy={createdBy}
+                      />
+                    )}
+                    <UserInfoButton
+                      variant="preview"
+                      userInfo={payerInfo}
+                      createdBy={bookingView.paidBy}
+                    />
+                  </>
+                ) : (
+                  <UserInfoButton
+                    variant="preview"
+                    userInfo={{
+                      ...(payerInfo || userInfo)!,
+                      name:
+                        (payerInfo || userInfo)!.name +
+                        (adults > 1 ? ` +${adults - 1}` : ''),
+                    }}
+                    createdBy={payerInfo ? bookingView.paidBy || '' : createdBy}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <BookingSectionEyebrow>
+              {t('bookings_checkout_step_payment_title')}
+            </BookingSectionEyebrow>
+            {hasStayPricingShape &&
+              (bv.checkedIn != null || bv.checkedOut != null) && (
+              <BookingSurface
+                tone="inset"
+                padding="md"
+                className="flex flex-col gap-2 text-xs"
+              >
+                {bv.checkedIn != null && String(bv.checkedIn).length > 0 && (
+                  <p>
+                    {t('booking_details_checked_in_at')}:{' '}
+                    {dayjs(String(bv.checkedIn)).format('LLL')}
+                  </p>
+                )}
+                {bv.checkedOut != null && String(bv.checkedOut).length > 0 && (
+                  <p>
+                    {t('booking_details_checked_out_at')}:{' '}
+                    {dayjs(String(bv.checkedOut)).format('LLL')}
+                  </p>
+                )}
+              </BookingSurface>
+            )}
+            <SummaryCosts
+              hideTitle
+              compact
+              rentalFiat={displayAccommodationFiat}
+              rentalToken={displayRentalTokenForCosts}
+              isFoodIncluded={Boolean(bookingView?.foodOptionId)}
+              utilityFiat={displayUtilityFiatRow}
+              foodFiat={displayFoodFiatRow}
+              useTokens={useTokens}
+              useCredits={useCredits}
+              accomodationCost={
+                useTokens || useCredits
+                  ? displayRentalTokenForCosts
+                  : displayAccommodationFiat
+              }
+              totalToken={displayRentalTokenForCosts}
+              totalFiat={displayTotalForCosts}
+              foodOptionEnabled={bookingConfig?.foodOptionEnabled}
+              utilityOptionEnabled={bookingConfig?.utilityOptionEnabled}
+              eventCost={eventFiatWithCurrency}
+              eventDefaultCost={
+                ticketOption?.price ? ticketOption.price * adults : undefined
+              }
+              accomodationDefaultCost={listing?.fiatPrice?.val * adults}
+              isNotPaid={isNotPaid}
+              updatedAccomodationTotal={{
+                val: updatedAccomodationTotal,
+                cur: useTokens
+                  ? displayRentalTokenForCosts?.cur
+                  : displayAccommodationFiat?.cur,
+              }}
+              isEditMode={canManageBooking || canGuestEditBookingDetails}
+              updatedUtilityTotal={{
+                val: updatedUtilityTotal,
+                cur: utilityFiat?.cur,
+              }}
+              updatedFoodTotal={{
+                val: updatedFoodTotal,
+                cur: utilityFiat?.cur,
+              }}
+              updatedFiatTotal={{
+                val: updatedFiatTotal,
+                cur: rentalFiat?.cur,
+              }}
+              updatedEventTotal={{
+                val: updatedEventTotal,
+                cur: eventFiatWithCurrency?.cur ?? CloserCurrencies.EUR,
+              }}
+              updatedRentalFiat={
+                updatedRentalFiat || { val: 0, cur: rentalFiat?.cur }
+              }
+              updatedRentalToken={
+                updatedRentalToken || { val: 0, cur: rentalToken?.cur }
+              }
+              priceDuration={listing?.priceDuration}
+              vatRate={vatRate}
+              status={status}
+              charges={ledgerChargesForSummary}
+              paymentDelta={previewPaymentDelta}
+              guestCostsLedger={!canManageBooking}
+              pricingPreviewAvailable={Boolean(updatedPrices)}
+              onBookingCheckout={
+                status !== 'cancelled' && isBookingOwnerEditor
+                  ? openBookingCheckout
+                  : undefined
+              }
+              bookingCheckoutLoading={isLoading}
+            />
+          </div>
+        </BookingSurface>
+
+        {bookingView?.volunteerInfo && (
+          <section className="flex flex-col gap-2">
+            {bookingView.volunteerInfo.bookingType === 'volunteer' ? (
               <HeadingRow>
                 {t('projects_volunteer_application_title')}
               </HeadingRow>
@@ -572,11 +935,11 @@ const BookingPage = ({
               </HeadingRow>
             )}
 
-            {booking?.volunteerInfo?.projectId &&
-              booking?.volunteerInfo?.projectId?.length > 0 && (
+            {bookingView?.volunteerInfo?.projectId &&
+              bookingView.volunteerInfo.projectId?.length > 0 && (
                 <div className="flex flex-col gap-2">
                   <Heading level={5}>{t('projects_build_title')}</Heading>
-                  {booking.volunteerInfo.projectId?.map((projectId) => (
+                  {bookingView.volunteerInfo.projectId?.map((projectId) => (
                     <p key={projectId}>
                       <Link
                         href={`/projects/${
@@ -598,7 +961,7 @@ const BookingPage = ({
               {t('projects_skills_and_qualifications_title')}
             </Heading>
             <div className="flex flex-wrap gap-2">
-              {booking.volunteerInfo.skills?.map((skill) => (
+              {bookingView.volunteerInfo.skills?.map((skill) => (
                 <Tag color="primary" size="small" key={skill}>
                   {skill}
                 </Tag>
@@ -606,7 +969,7 @@ const BookingPage = ({
             </div>
             <Heading level={5}>{t('projects_food_title')}</Heading>
             <div className="flex flex-wrap gap-2">
-              {booking.volunteerInfo.diet?.map((diet) => (
+              {bookingView.volunteerInfo.diet?.map((diet) => (
                 <Tag color="primary" size="small" key={diet}>
                   {diet}
                 </Tag>
@@ -614,214 +977,32 @@ const BookingPage = ({
             </div>
             <Heading level={5}>{t('projects_suggestions_title')}</Heading>
             <p>
-              {!booking.volunteerInfo.suggestions
+              {!bookingView.volunteerInfo.suggestions
                 ? 'No suggestions'
-                : booking.volunteerInfo.suggestions}
+                : bookingView.volunteerInfo.suggestions}
             </p>
           </section>
         )}
 
-        <section className="flex flex-col gap-12">
-          <SummaryDates
-            isDayTicket={booking?.isDayTicket}
-            totalGuests={isSpaceHost ? updatedAdults : adults}
-            kids={isSpaceHost ? updatedChildren : children}
-            infants={isSpaceHost ? updatedInfants : infants}
-            pets={isSpaceHost ? updatedPets : pets}
-            startDate={isSpaceHost ? updatedStartDate : bookingStart}
-            endDate={isSpaceHost ? updatedEndDate : bookingEnd}
-            listingName={listing?.name}
-            listingUrl={listing?.slug}
-            isVolunteer={volunteerInfo?.bookingType === 'volunteer'}
-            eventName={event?.name}
-            volunteerName={volunteer?.name}
-            ticketOption={ticketOption?.name}
-            doesNeedPickup={doesNeedPickup}
-            doesNeedSeparateBeds={doesNeedSeparateBeds}
-            isEditMode={isSpaceHost && isEditMode}
-            setters={setters}
-            updatedListingId={updatedListingId}
-            listings={listings}
-            updatedMaxBeds={updatedMaxBeds}
-            priceDuration={listing?.priceDuration}
-            workingHoursStart={listing?.workingHoursStart}
-            workingHoursEnd={listing?.workingHoursEnd}
-            listingId={listing?._id}
-          />
-
-          <div className="flex flex-col gap-4">
-            <Heading level={3}>{t('bookings_dates_step_guests_title')}</Heading>
-            {(payerInfo || userInfo) && (
-              <UserInfoButton
-                userInfo={{
-                  ...(payerInfo || userInfo),
-                  name:
-                    (payerInfo || userInfo)?.name +
-                    (adults > 1 ? ` +${adults - 1}` : ''),
-                }}
-                createdBy={payerInfo ? booking?.paidBy || '' : createdBy}
-                size="md"
-              />
-            )}
-          </div>
-
-          <SummaryCosts
-            rentalFiat={rentalFiat}
-            rentalToken={rentalToken}
-            isFoodIncluded={Boolean(booking?.foodOptionId)}
-            utilityFiat={utilityFiat}
-            foodFiat={foodFiat}
-            useTokens={useTokens}
-            useCredits={useCredits}
-            accomodationCost={
-              useTokens || useCredits ? rentalToken : rentalFiat
-            }
-            totalToken={rentalToken}
-            totalFiat={total}
-            foodOptionEnabled={bookingConfig?.foodOptionEnabled}
-            utilityOptionEnabled={bookingConfig?.utilityOptionEnabled}
-            eventCost={eventFiatWithCurrency}
-            eventDefaultCost={
-              ticketOption?.price ? ticketOption.price * adults : undefined
-            }
-            accomodationDefaultCost={listing?.fiatPrice?.val * adults}
-            isNotPaid={isNotPaid}
-            updatedAccomodationTotal={{
-              val: updatedAccomodationTotal,
-              cur: useTokens ? rentalToken.cur : rentalFiat?.cur,
-            }}
-            isEditMode={isSpaceHost}
-            updatedUtilityTotal={{
-              val: updatedUtilityTotal,
-              cur: utilityFiat?.cur,
-            }}
-            updatedFoodTotal={{
-              val: updatedFoodTotal,
-              cur: utilityFiat?.cur,
-            }}
-            updatedFiatTotal={{
-              val: updatedFiatTotal,
-              cur: rentalFiat?.cur,
-            }}
-            updatedEventTotal={{
-              val: updatedEventTotal,
-              cur: eventFiatWithCurrency?.cur ?? CloserCurrencies.EUR,
-            }}
-            updatedRentalFiat={
-              updatedRentalFiat || { val: 0, cur: rentalFiat?.cur }
-            }
-            updatedRentalToken={
-              updatedRentalToken || { val: 0, cur: rentalToken?.cur }
-            }
-            priceDuration={listing?.priceDuration}
-            vatRate={vatRate}
-            status={status}
-          />
-
-          {isSpaceHost && booking?.charges && booking.charges.length > 0 && (
-            <Charges charges={booking.charges} />
-          )}
-
-          {isSpaceHost && (
-            <div className="bg-accent-light rounded-md p-4 space-y-2">
-              <label className=" font-bold">
-                {t('booking_card_set_booking_status')}
-              </label>
-              <Select
-                className="rounded-full  border-black"
-                value={updatedStatus}
-                options={statusOptions}
-                onChange={(value: string) => setUpdatedStatus(value)}
-                isRequired
-                placeholder={t('booking_card_set_booking_status')}
-              />
-            </div>
-          )}
-
-          {booking.paymentDelta?.token?.val &&
-          (paymentType === PaymentType.FULL_TOKENS ||
-            paymentType === PaymentType.PARTIAL_TOKENS) ? (
-            <div className="flex justify-between gap-2 p-4 bg-accent-light rounded-md">
-              <div className="font-bold space-y-4">
-                <p>
-                  {booking.paymentDelta?.token.val >= 0
-                    ? t('bookings_amount_due')
-                    : t('bookings_amount_to_refund')}
-                </p>
-
-                <div className="flex gap-2 items-center">
-                  <p className="font-bold">
-                    {booking.paymentDelta?.token.cur}
-                    {Math.abs(booking.paymentDelta?.token?.val || 0)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : null}
-
-          {booking.paymentDelta?.fiat.val ? (
-            <div className="flex justify-between gap-2 p-4 bg-accent-light rounded-md">
-              <div className="font-bold space-y-4">
-                <p>
-                  {booking.paymentDelta?.fiat.val >= 0
-                    ? t('bookings_amount_due')
-                    : t('bookings_amount_to_refund')}
-                </p>
-
-                <div className="flex gap-2 items-center">
-                  <div className="font-bold">
-                    {booking.paymentDelta?.fiat.cur}{' '}
-                    {amountToRefund?.toString()}
-                  </div>
-                </div>
-              </div>
-              {booking.paymentDelta?.fiat.val < 0 && (
-                <p>
-                  {' '}
-                  <Link
-                    className="font-bold"
-                    href={`https://dashboard.stripe.com/payments/${
-                      booking.charges?.at(-1)?.meta.stripePaymentIntentId
-                    }`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {t('bookings_go_to_stripe_dashboard')}
-                  </Link>
-                </p>
-              )}
-            </div>
-          ) : null}
-        </section>
-
-        <section>
-          {!canEditBooking && (
-            <div className="bg-yellow-100 rounded-md p-4 space-y-2 font-bold mb-8">
-              WARNING: editing this type of booking is not currently supported.
-              Please handle these operations manually.
-            </div>
-          )}
-
-          {isSpaceHost && (
-            <div className="flex flex-col gap-4">
-              <Button
-                isLoading={isLoading}
-                onClick={handleSaveBooking}
-                isEnabled={hasUpdatedBooking && !isLoading && canEditBooking}
-              >
-                {t('booking_card_save_booking')}
-              </Button>
-              {hasUpdated && (
-                <Information>{t('booking_card_booking_updated')}</Information>
-              )}
-            </div>
-          )}
+        <section className="flex flex-col gap-3">
           <BookingRequestButtons
-            isFiatBooking={!booking.useCredits && !booking.useTokens}
+            isFiatBooking={
+              !bookingView?.useCredits && !bookingView?.useTokens
+            }
+            openCheckout={
+              status !== 'cancelled' && isBookingOwnerEditor
+                ? openBookingCheckout
+                : undefined
+            }
+            checkoutLoading={isLoading}
+            hideCheckoutButton={status === 'cancelled'}
+            stayShaped={hasStayPricingShape}
+            paymentDelta={bookingView?.paymentDelta}
+            useTokens={useTokens}
             _id={_id}
             status={status}
             createdBy={createdBy}
-            paidBy={booking?.paidBy}
+            paidBy={bookingView?.paidBy}
             end={bookingEnd}
             start={bookingStart}
             confirmBooking={confirmBooking}
@@ -829,8 +1010,10 @@ const BookingPage = ({
           />
         </section>
 
-        {booking.status === 'confirmed' && (
-          <section className="mt-3">{t('bookings_confirmation')}</section>
+        {status === 'confirmed' && (
+          <BookingSurface tone="soft" padding="md" className="text-sm">
+            {t('bookings_confirmation')}
+          </BookingSurface>
         )}
       </main>
     </>
@@ -840,49 +1023,46 @@ const BookingPage = ({
 BookingPage.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
   try {
-    const [
-      bookingRes,
-      configs,
-      listingRes,
-      foodRes,
-      projectsRes,
-      messages,
-    ] = await Promise.all([
-      api
-        .get(`/booking/${query.slug}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        })
-        .catch(() => null),
-      getConfig(api),
-      api
-        .get('/listing', {
-          params: { limit: MAX_LISTINGS_TO_FETCH },
-        })
-        .catch(() => null),
-      api.get('/food').catch(() => null),
-      api.get('/project').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const [bookingRes, listingRes, foodRes, projectsRes] =
+      await Promise.all([
+        api
+          .get(`/booking/${query.slug}`, {
+            headers: getBearerAuthHeaders(req as NextApiRequest),
+          })
+          .catch(() => null),
+        api
+          .get('/listing', {
+            params: { limit: MAX_LISTINGS_TO_FETCH },
+          })
+          .catch(() => null),
+        api.get('/food').catch(() => null),
+        api.get('/project').catch(() => null),
+      ]);
     const booking = bookingRes?.data?.results;
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
-    const generalConfig = getConfigValueBySlug(configs, 'general');
+    const bookingConfig = config.booking;
+    const generalConfig = config.general;
     const listings = listingRes?.data?.results;
-    const paymentConfig = getConfigValueBySlug(configs, 'payment');
-
+    const paymentConfig = config.payment;
     const foodOptions = foodRes?.data?.results;
     const projects = projectsRes?.data?.results;
 
+    const listingRef = booking?.listing;
+    const listingIdForFetch =
+      listingRef &&
+      (getBookingListingRefId(listingRef) ??
+        (typeof listingRef === 'string' ? listingRef : null));
+
     const [optionalEvent, optionalListing, optionalVolunteer] =
       await Promise.all([
-        booking.eventId &&
+        booking?.eventId &&
           api.get(`/event/${booking.eventId}`, {
             headers: getBearerAuthHeaders(req as NextApiRequest),
           }),
-        booking.listing &&
-          api.get(`/listing/${booking.listing}`, {
+        listingIdForFetch &&
+          api.get(`/listing/${listingIdForFetch}`, {
             headers: getBearerAuthHeaders(req as NextApiRequest),
           }),
-        booking.volunteerId &&
+        booking?.volunteerId &&
           api.get(`/volunteer/${booking.volunteerId}`, {
             headers: getBearerAuthHeaders(req as NextApiRequest),
           }),
@@ -894,7 +1074,7 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
     let bookingCreatedBy = null;
     try {
       const optionalCreatedBy =
-        booking.createdBy &&
+        booking?.createdBy &&
         (await api.get(`/user/${booking.createdBy}`, {
           headers: getBearerAuthHeaders(req as NextApiRequest),
         }));
@@ -911,13 +1091,12 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       bookingConfig,
       generalConfig,
       listings,
-      messages,
       paymentConfig,
       foodOptions,
       projects,
     };
   } catch (err: any) {
-    return {
+return {
       error: parseMessageFromError(err),
       booking: null,
       listing: null,
@@ -927,7 +1106,6 @@ BookingPage.getInitialProps = async (context: NextPageContext) => {
       bookingConfig: null,
       generalConfig: null,
       listings: null,
-      messages: null,
       paymentConfig: null,
       foodOptions: null,
       projects: null,

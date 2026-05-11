@@ -5,7 +5,6 @@ import { useRouter } from 'next/router';
 import { useContext, useEffect, useState } from 'react';
 
 import CitizenEligibility from '../../../components/CitizenEligibility';
-import PageError from '../../../components/PageError';
 import Wallet from '../../../components/Wallet';
 import {
   BackButton,
@@ -16,7 +15,7 @@ import {
   ProgressBar,
 } from '../../../components/ui';
 
-import { NextPage, NextPageContext } from 'next';
+import { NextPage } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { SUBSCRIPTION_CITIZEN_STEPS } from '../../../constants';
@@ -26,23 +25,20 @@ import { useConfig } from '../../../hooks/useConfig';
 import { CitizenshipConfig } from '../../../types';
 import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import { reportIssue } from '../../../utils/reporting.utils';
 import PageNotFound from '../../not-found';
 
-interface Props {
-  subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
+interface Props {}
 
-  citizenshipConfig: CitizenshipConfig | null;
-  error?: string;
-}
+const ValidationCitizenPage: NextPage<Props> = () => {
+  const subscriptionsConfig = getCachedConfig('subscriptions') as {
+    enabled: boolean;
+    elements: SubscriptionPlan[];
+  };
 
-const ValidationCitizenPage: NextPage<Props> = ({
-  subscriptionsConfig,
-  citizenshipConfig,
-  error,
-}) => {
+  const citizenshipConfig = getCachedConfig('citizenship') as CitizenshipConfig | null;
   const t = useTranslations();
   const { isLoading, user } = useAuth();
 
@@ -137,10 +133,6 @@ const ValidationCitizenPage: NextPage<Props> = ({
     router.push('/citizenship');
   };
 
-  if (error) {
-    return <PageError error={error} />;
-  }
-
   if (!areSubscriptionsEnabled) {
     return <PageNotFound error="" />;
   }
@@ -177,7 +169,7 @@ const ValidationCitizenPage: NextPage<Props> = ({
 
   if (!user && !isLoading) {
     reportIssue(
-      `Issue with authentication on subscriptions/citizen/validation: ${error}`,
+      `Issue with authentication on subscriptions/citizen/validation`,
       'N/A',
     ).catch((err) => console.error('Failed to report issue:', err));
     return <PageNotFound error="" />;
@@ -185,7 +177,7 @@ const ValidationCitizenPage: NextPage<Props> = ({
 
   if (process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP !== 'true') {
     reportIssue(
-      `NEXT_PUBLIC_FEATURE_CITIZENSHIP not true in prod on subscriptions/citizen/validation: ${error}`,
+      `NEXT_PUBLIC_FEATURE_CITIZENSHIP not true in prod on subscriptions/citizen/validation`,
       user?.email,
     ).catch((err) => console.error('Failed to report issue:', err));
 
@@ -279,37 +271,6 @@ const ValidationCitizenPage: NextPage<Props> = ({
       </div>
     </>
   );
-};
-
-ValidationCitizenPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [subscriptionsRes, citizenshipRes, messages] = await Promise.all([
-      api.get('/config/subscriptions').catch(() => {
-        return null;
-      }),
-
-      api.get('/config/citizenship').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-
-    const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
-
-    const citizenshipConfig = citizenshipRes?.data?.results?.value;
-    return {
-      subscriptionsConfig,
-      citizenshipConfig,
-      messages,
-    };
-  } catch (err: unknown) {
-    return {
-      subscriptionsConfig: { enabled: false, elements: [] },
-      citizenshipConfig: null,
-      error: parseMessageFromError(err),
-      messages: null,
-    };
-  }
 };
 
 export default ValidationCitizenPage;

@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
 
 import Counter from '../../components/Counter';
-import PageError from '../../components/PageError';
 import {
   BackButton,
   Button,
@@ -13,7 +12,7 @@ import {
   Row,
 } from '../../components/ui/';
 
-import { NextPage, NextPageContext } from 'next';
+import { NextPage } from 'next';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -30,13 +29,12 @@ import {
 } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
-import { parseMessageFromError } from '../../utils/common';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import {
   calculateSubscriptionPrice,
   getVatInfo,
   priceFormat,
 } from '../../utils/helpers';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
@@ -153,10 +151,6 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
     }
   };
 
-  if (error) {
-    return <PageError error={error} />;
-  }
-
   if (!areSubscriptionsEnabled) {
     return <PageNotFound error="" />;
   }
@@ -246,49 +240,6 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
       </div>
     </>
   );
-};
-
-SubscriptionsSummaryPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [subscriptionsRes, generalRes, paymentRes, bookingRes, messages] =
-      await Promise.all([
-        api.get('/config/subscriptions').catch(() => {
-          return null;
-        }),
-        api.get('/config/general').catch(() => {
-          return null;
-        }),
-        api.get('/config/payment').catch(() => {
-          return null;
-        }),
-        api.get('/config/booking').catch(() => {
-          return null;
-        }),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      ]);
-
-    const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
-    const generalConfig = generalRes?.data?.results?.value;
-    const paymentConfig = (mergePaymentValueWithBookingCurrencyFallback(
-      paymentRes?.data?.results?.value,
-      bookingRes?.data?.results?.value,
-    ) ?? null) as PaymentConfig | null;
-
-    return {
-      subscriptionsConfig,
-      generalConfig,
-      messages,
-      paymentConfig,
-    };
-  } catch (err: unknown) {
-    return {
-      subscriptionsConfig: { enabled: false, elements: [] },
-      generalConfig: null,
-      error: parseMessageFromError(err),
-      messages: null,
-      paymentConfig: null,
-    };
-  }
 };
 
 export default SubscriptionsSummaryPage;

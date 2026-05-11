@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+
 import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../../hooks/useConfig';
@@ -15,6 +17,7 @@ interface Props {
   applyCredits?: () => Promise<void>;
   hasAppliedCredits?: boolean;
   creditsError?: string | null | undefined;
+  isLoading?: boolean;
   isDemo?: boolean;
   disabled?: boolean;
 }
@@ -30,6 +33,7 @@ const RedeemCredits = ({
   applyCredits,
   hasAppliedCredits,
   creditsError,
+  isLoading,
   isDemo,
   disabled,
 }: Props) => {
@@ -87,7 +91,11 @@ const RedeemCredits = ({
             </div>
 
             {!isDemo && (
-              <Button onClick={applyCredits} isEnabled={!disabled}>
+              <Button
+                onClick={applyCredits}
+                isEnabled={!disabled}
+                isLoading={isLoading}
+              >
                 {t('carrots_button_apply_discount')}
               </Button>
             )}

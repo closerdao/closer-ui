@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "dotenv -e .env next dev",
+    "prebuild": "node ../../packages/closer/scripts/syncBuildLocales.cjs && node ../../packages/closer/scripts/syncBuildConfig.cjs",
+    "dev": "yarn prebuild && dotenv -e .env.local -e .env next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

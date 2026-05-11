@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { Heading, Card, LinkButton, Newsletter, Webinar, useAuth } from 'closer';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { BarChart3, Building2, Check, Droplets, FileSpreadsheet, Landmark, Map, MapPin, Rocket, Sprout, Users, Wallet } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -1068,17 +1067,11 @@ const HomePage = () => {
 
 HomePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
-      messages,
     };
   } catch (err: unknown) {
     return {
-      messages: null,
-    };
+      };
   }
 };
 

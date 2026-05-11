@@ -81,6 +81,6 @@ describe('BookingPage (detail/edit)', () => {
       />,
     );
     expect(screen.getByRole('heading', { name: /your booking is pending payment/i })).toBeInTheDocument();
-    expect(screen.getByText(/complete payment/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/pay now/i).length).toBeGreaterThanOrEqual(1);
   });
 });

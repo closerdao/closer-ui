@@ -79,7 +79,7 @@ const TextEditor = ({ onChange, value }) => {
   const onEditorStateChange = (update) => {
     setEditorState(update);
     const html = draftToHtml(convertToRaw(editorState.getCurrentContent()));
-    onEditorStateChange && onChange(html);
+    if (onChange) onChange(html);
   };
 
   return (

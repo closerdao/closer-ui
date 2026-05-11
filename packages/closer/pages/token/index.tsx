@@ -20,10 +20,10 @@ import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
 import { DEFAULT_TOKEN_STATS, GeneralConfig, Listing, TokenStats } from '../../types';
 import api from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { logMetric } from '../../utils/metrics';
 import { getCurrentUnitPrice } from '../../utils/bondingCurve';
 import { getReserveTokenDisplay } from '../../utils/config.utils';
-import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import { SALES_CONFIG } from '../../constants/shared.constants';
 
 const ACCOMMODATION_ICONS = ['van.png', 'camping.png', 'hotel.png'];
@@ -33,15 +33,14 @@ const MAX_TOKENS = MAX_TOKENS_PER_TRANSACTION;
 
 interface Props {
   listings: Listing[];
-  generalConfig: GeneralConfig | null;
 }
 
-const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
+const PublicTokenSalePage = ({ listings }: Props) => {
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
   const defaultConfig = useConfig();
   const { getCurrentSupplyWithoutWallet, getSaleHardCapWithoutWallet } = useBuyTokens();
   const reserveToken = getReserveTokenDisplay(defaultConfig);
-  const hasComponentRendered = useRef(false);
   const heroRef = useRef<HTMLElement | null>(null);
 
   const PLATFORM_NAME =
@@ -81,16 +80,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
   const hasUserAdjustedTokens = useRef(false);
 
   const trackMetric = async (event: string, point = 0) => {
-    try {
-      await api.post('/metric', {
-        event,
-        value: 'token-sale',
-        point,
-        category: 'engagement',
-      });
-    } catch (error) {
-      console.error(`Error tracking metric "${event}":`, error);
-    }
+    await logMetric({ event, value: 'token-sale', point });
   };
 
   useEffect(() => {
@@ -140,15 +130,6 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
   }, [getCurrentSupplyWithoutWallet, getSaleHardCapWithoutWallet]);
 
   useEffect(() => {
-    if (!hasComponentRendered.current) {
-      (async () => {
-        await trackMetric('page-view');
-      })();
-      hasComponentRendered.current = true;
-    }
-  }, []);
-
-  useEffect(() => {
     const onScroll = () => {
       const heroBottom = heroRef.current?.getBoundingClientRect().bottom ?? 0;
       setShowStickyCta(heroBottom < 0);
@@ -159,7 +140,7 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
   }, []);
 
   const handleNext = async () => {
-    await trackMetric('open-flow', selectedTokens);
+    await trackMetric('buy-tokens', selectedTokens);
     router.push(
       `/token/before-you-begin?tokens=${encodeURIComponent(selectedTokens)}`,
     );
@@ -657,7 +638,6 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
           </div>
         </section>
 
-
         <section className="py-16">
           <div className="max-w-6xl mx-auto px-6">
             <Heading level={2} className="mb-12 text-3xl text-center">
@@ -997,36 +977,22 @@ const PublicTokenSalePage = ({ listings, generalConfig }: Props) => {
 
 PublicTokenSalePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [listingRes, generalRes, messages] = await Promise.all([
-      api
-        .get('/listing', {
-          params: {
-            limit: MAX_LISTINGS_TO_FETCH,
-          },
-        })
-        .catch(() => {
-          return null;
-        }),
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const listingRes = await api
+      .get('/listing', {
+        params: {
+          limit: MAX_LISTINGS_TO_FETCH,
+        },
+      })
+      .catch(() => null);
 
     const listings = listingRes?.data.results;
-    const generalConfig = generalRes?.data?.results?.value;
     return {
       listings,
-      generalConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       listings: [],
-      generalConfig: null,
-      error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

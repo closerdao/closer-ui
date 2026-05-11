@@ -1,14 +1,15 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import { useConfig } from '../hooks/useConfig';
 import api from '../utils/api';
-import { getConfig, getConfigValueBySlug } from '../utils/configCache';
+import configCached from '../configCached';
+import { deriveMemberMenuFeatureFlags } from '../utils/memberMenuFeatureFlags';
 import ApiUrlWarning from './ApiUrlWarning';
 import FundraisingWidget from './FundraisingWidget';
 import GuestMenu from './GuestMenu';
@@ -33,7 +34,7 @@ const Navigation = () => {
   const [isLearningHubEnabled, setIsLearningHubEnabled] = useState(false);
   const [isEventsEnabled, setIsEventsEnabled] = useState(false);
   const [isFundraiserEnabled, setIsFundraiserEnabled] = useState(false);
-  const [fundraisingConfig, setFundraisingConfig] = useState(null);
+  const [fundraisingNavProps, setFundraisingNavProps] = useState(null);
 
   const generalConfig = config?.general ?? {};
   const primaryCtaVisitor = generalConfig.primaryCtaVisitor ?? 'login';
@@ -46,17 +47,12 @@ const Navigation = () => {
   );
 
   useEffect(() => {
-    (async () => {
-      try {
-        const configs = await getConfig(api);
-        const bookingConfig = getConfigValueBySlug(configs, 'booking');
-        const learningHubConfig = getConfigValueBySlug(configs, 'learningHub');
-        const eventsConfig = getConfigValueBySlug(configs, 'events');
-        if (bookingConfig?.enabled) setIsBookingEnabled(true);
-        if (learningHubConfig?.enabled) setIsLearningHubEnabled(true);
-        if (eventsConfig?.enabled) setIsEventsEnabled(true);
-      } catch (err) {}
-    })();
+    const bookingConfig = configCached.booking;
+    const learningHubConfig = configCached.learningHub;
+    const eventsConfig = configCached.events;
+    if (bookingConfig?.enabled) setIsBookingEnabled(true);
+    if (learningHubConfig?.enabled) setIsLearningHubEnabled(true);
+    if (eventsConfig?.enabled) setIsEventsEnabled(true);
   }, []);
 
   useEffect(() => {
@@ -66,16 +62,15 @@ const Navigation = () => {
     ) {
       return;
     }
-    (async () => {
-      try {
-        const configs = await getConfig(api);
-        const config = getConfigValueBySlug(configs, 'fundraiser');
-        if (config?.enabled) {
-          setIsFundraiserEnabled(true);
-          setFundraisingConfig(config);
-        }
-      } catch (err) {}
-    })();
+    const fr = configCached.fundraiser;
+    if (fr?.enabled) {
+      setIsFundraiserEnabled(true);
+      setFundraisingNavProps({
+        milestones: fr.milestones ?? [],
+        amountRaisedPreCampaign: fr.amountRaisedPreCampaign,
+        loansCollectedTotal: fr.loansCollectedTotal,
+      });
+    }
   }, [APP_NAME]);
 
   const toggleNav = () => {
@@ -119,6 +114,11 @@ const Navigation = () => {
     // Cleanup interval on unmount
     return () => clearInterval(interval);
   }, [isAuthenticated]);
+
+  const memberMenuFeatureFlags = useMemo(
+    () => deriveMemberMenuFeatureFlags(config),
+    [config],
+  );
 
   return (
     <div className="fixed top-0 left-0 right-0 z-20 flex flex-col">
@@ -342,11 +342,17 @@ const Navigation = () => {
                 }
                 return null;
               })()}
-            {configLoaded && APP_NAME && APP_NAME?.toLowerCase() === 'tdf' && isFundraiserEnabled && (
+            {configLoaded && APP_NAME && APP_NAME?.toLowerCase() === 'tdf' && isFundraiserEnabled && fundraisingNavProps && (
               <div className="w-fit flex-shrink-0">
                 <FundraisingWidget
                   variant="nav"
-                  fundraisingConfig={fundraisingConfig}
+                  milestones={fundraisingNavProps.milestones}
+                  amountRaisedPreCampaign={
+                    fundraisingNavProps.amountRaisedPreCampaign
+                  }
+                  loansCollectedTotal={
+                    fundraisingNavProps.loansCollectedTotal
+                  }
                 />
               </div>
             )}
@@ -364,7 +370,7 @@ const Navigation = () => {
               <Menu isOpen={navOpen} toggleNav={toggleNav}>
                 {configLoaded ? (
                   isAuthenticated ? (
-                    <MemberMenu />
+                    <MemberMenu {...memberMenuFeatureFlags} />
                   ) : (
                     <GuestMenu />
                   )

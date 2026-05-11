@@ -9,12 +9,13 @@ import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 import PropTypes from 'prop-types';
 
+import { usePlatform } from '../contexts/platform';
 import { WalletState } from '../contexts/wallet';
 import { useBookingSmartContract } from '../hooks/useBookingSmartContract';
 import { useConfig } from '../hooks/useConfig';
-import api from '../utils/api';
 import { payTokens } from '../utils/booking.helpers';
 import { parseMessageFromError } from '../utils/common';
+import { logMetricIfAuthenticated } from '../utils/metrics';
 import { reportIssue } from '../utils/reporting.utils';
 import CheckoutForm from './CheckoutForm';
 import Conditions from './Conditions';
@@ -52,6 +53,7 @@ const CheckoutPayment = ({
   createdBy,
 }) => {
   const t = useTranslations();
+  const { platform } = usePlatform();
 
   const { VISITORS_GUIDE } = useConfig() || {};
 
@@ -94,9 +96,14 @@ const CheckoutPayment = ({
 
   const onComply = (isComplete) => setCompliance(isComplete);
 
-  const onSuccess = () => {
+  const onSuccess = async () => {
+    void logMetricIfAuthenticated(user, {
+      event: 'booking-payment-success',
+      value: 'booking',
+      point: Math.round(Number(totalToPayInFiat?.val) || 0),
+    });
     try {
-      router.push(
+      await router.push(
         `/bookings/${bookingId}/confirmation${
           eventId ? `?eventId=${eventId}` : ''
         }`,
@@ -118,7 +125,7 @@ const CheckoutPayment = ({
       const creditsAmount = isPartialCreditsPayment
         ? partialPriceInCredits
         : rentalTokenVal;
-      const res = await api.post(`/bookings/${bookingId}/credit-payment`, {
+      const res = await platform.bookings.creditPayment(bookingId, {
         startDate,
         creditsAmount,
       });
@@ -198,6 +205,10 @@ const CheckoutPayment = ({
           type="booking"
           _id={bookingId}
           onSuccess={onSuccess}
+          metricBookingContext={{
+            user,
+            fiatAmount: totalToPayInFiat?.val,
+          }}
           email={user.email}
           name={user.screenname}
           buttonText={t('bookings_checkout_step_payment_button')}

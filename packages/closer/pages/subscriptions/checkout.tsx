@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
-import PageError from '../../components/PageError';
 import SubscriptionCheckoutForm from '../../components/SubscriptionCheckoutForm';
 import {
   BackButton,
@@ -16,7 +15,7 @@ import {
   Row,
 } from '../../components/ui/';
 
-import { NextPage, NextPageContext } from 'next';
+import { NextPage } from 'next';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -33,13 +32,12 @@ import {
 } from '../../types/subscriptions';
 import api from '../../utils/api';
 import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
-import { parseMessageFromError } from '../../utils/common';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import {
   calculateSubscriptionPrice,
   getVatInfo,
   priceFormat,
 } from '../../utils/helpers';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
@@ -50,19 +48,18 @@ const stripePromise = loadStripe(
   },
 );
 
-interface Props {
-  subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
-  paymentConfig: PaymentConfig | null;
-  generalConfig: GeneralConfig | null;
-  error?: string;
-}
+interface Props {}
 
-const SubscriptionsCheckoutPage: NextPage<Props> = ({
-  subscriptionsConfig,
-  paymentConfig,
-  generalConfig,
-  error,
-}) => {
+const SubscriptionsCheckoutPage: NextPage<Props> = () => {
+  const subscriptionsConfig = getCachedConfig('subscriptions') as {
+    enabled: boolean;
+    elements: SubscriptionPlan[];
+  };
+  const paymentConfig = (mergePaymentValueWithBookingCurrencyFallback(
+    getCachedConfig('payment'),
+    getCachedConfig('booking'),
+  ) ?? null) as PaymentConfig | null;
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
   const isPaymentEnabled = paymentConfig?.enabled || false;
   const areSubscriptionsEnabled =
@@ -142,10 +139,6 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
       `/subscriptions/summary?priceId=${priceId}&monthlyCredits=${monthlyCredits}`,
     );
   };
-
-  if (error) {
-    return <PageError error={error} />;
-  }
 
   if (!areSubscriptionsEnabled) {
     return <PageNotFound error="" />;
@@ -234,50 +227,6 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
       </div>
     </>
   );
-};
-
-SubscriptionsCheckoutPage.getInitialProps = async (
-  context: NextPageContext,
-) => {
-  try {
-    const [subscriptionsRes, paymentRes, bookingRes, generalRes, messages] =
-      await Promise.all([
-        api.get('/config/subscriptions').catch(() => {
-          return null;
-        }),
-        api.get('/config/payment').catch(() => {
-          return null;
-        }),
-        api.get('/config/booking').catch(() => {
-          return null;
-        }),
-        api.get('/config/general').catch(() => {
-          return null;
-        }),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      ]);
-
-    const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
-    const paymentConfig = (mergePaymentValueWithBookingCurrencyFallback(
-      paymentRes?.data?.results?.value,
-      bookingRes?.data?.results?.value,
-    ) ?? null) as PaymentConfig | null;
-    const generalConfig = generalRes?.data?.results?.value;
-    return {
-      subscriptionsConfig,
-      paymentConfig,
-      generalConfig,
-      messages,
-    };
-  } catch (err: unknown) {
-    return {
-      subscriptionsConfig: { enabled: false, elements: [] },
-      paymentConfig: null,
-      generalConfig: null,
-      error: parseMessageFromError(err),
-      messages: null,
-    };
-  }
 };
 
 export default SubscriptionsCheckoutPage;

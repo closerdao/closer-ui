@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { BackButton, Button, ErrorMessage, Heading, Spinner } from '../../components/ui';
@@ -16,16 +15,13 @@ import type {
   CreateDonationCryptoResult,
   DonationPaymentMethod,
 } from '../../types/donation';
-import { GeneralConfig } from '../../types';
+import type { SaleInitBody } from '../../types/api';
 import api from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
+import { logMetricIfAuthenticated } from '../../utils/metrics';
 import { saveDonationSession } from '../../utils/donationSessionStorage';
 import { priceFormat } from '../../utils/helpers';
-import { getDonateInitialProps } from './getDonateInitialProps';
-
-interface DonatePageProps {
-  generalConfig: GeneralConfig | null;
-}
 
 const DONATION_AMOUNTS = [25, 50, 100, 250, 500, 1000];
 const MIN_AMOUNT = 1;
@@ -35,11 +31,12 @@ function clampAmount(value: number) {
   return Math.min(Math.max(MIN_AMOUNT, Math.floor(value)), MAX_AMOUNT);
 }
 
-function DonatePage({ generalConfig }: DonatePageProps) {
+function DonatePage() {
   const t = useTranslations();
   const router = useRouter();
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
   const defaultConfig = useConfig();
+  const generalConfig = getCachedConfig('general');
   const platformName = generalConfig?.platformName || defaultConfig.platformName;
 
   const amountFromQuery = Number(router.query.amount);
@@ -123,11 +120,18 @@ function DonatePage({ generalConfig }: DonatePageProps) {
     setCreateError(null);
     setCreateLoading(true);
     try {
-      const { data } = await api.post('/donations', {
-        price: amount,
+      const msg = optionalMessage.trim();
+      const saleInitBody: SaleInitBody = {
+        type: 'donation',
+        total_price: amount,
+        quantity: 1,
         paymentMethod: method,
-        message: optionalMessage.trim() || undefined,
-      });
+      };
+      if (msg) saleInitBody.message = msg;
+      if (user?.email) saleInitBody.email = user.email;
+      const donorName = user?.screenname?.trim();
+      if (donorName) saleInitBody.name = donorName;
+      const { data } = await api.post('/sale/init', saleInitBody);
       const rawResults = data?.results;
       const results =
         rawResults &&
@@ -137,45 +141,106 @@ function DonatePage({ generalConfig }: DonatePageProps) {
           ? (rawResults as { value: unknown }).value
           : rawResults;
       if (!results || typeof results !== 'object') {
+        void logMetricIfAuthenticated(user, {
+          event: 'donation-init-error',
+          value: 'donation',
+          point: amount,
+        });
         setCreateError(t('donate_create_invalid_response'));
         return;
       }
 
       if (method === 'bank') {
-        const r = results as CreateDonationBankResult;
-        if (!r.saleId || !r.confirmation_code || !r.closerIban) {
+        const raw = results as CreateDonationBankResult & {
+          confirmation_code?: string;
+        };
+        const memoCode =
+          typeof raw.memoCode === 'string' && raw.memoCode.trim()
+            ? raw.memoCode.trim()
+            : typeof raw.confirmation_code === 'string' && raw.confirmation_code.trim()
+              ? raw.confirmation_code.trim()
+              : '';
+        if (!raw.saleId || !memoCode || !raw.closerIban) {
+          void logMetricIfAuthenticated(user, {
+            event: 'donation-init-error',
+            value: 'donation',
+            point: amount,
+          });
           setCreateError(t('donate_create_invalid_response'));
           return;
         }
-        saveDonationSession(r.saleId, { kind: 'bank', amount, result: r });
-        await router.push(`/donate/${encodeURIComponent(r.saleId)}/bank`);
+        const bankResult: CreateDonationBankResult = {
+          saleId: raw.saleId,
+          memoCode,
+          closerIban: raw.closerIban,
+          beneficiary: raw.beneficiary,
+          beneficiaryAddress: raw.beneficiaryAddress,
+          beneficiaryBic: raw.beneficiaryBic,
+        };
+        saveDonationSession(raw.saleId, { kind: 'bank', amount, result: bankResult });
+        void logMetricIfAuthenticated(user, {
+          event: 'donation-init-success-bank',
+          value: 'donation',
+          point: amount,
+        });
+        await router.push(`/donate/${encodeURIComponent(raw.saleId)}/bank`);
         return;
       }
 
       if (method === 'card') {
         const r = results as CreateDonationCardResult;
         if (!r.saleId || !r.clientSecret) {
+          void logMetricIfAuthenticated(user, {
+            event: 'donation-init-error',
+            value: 'donation',
+            point: amount,
+          });
           setCreateError(t('donate_create_invalid_response'));
           return;
         }
         saveDonationSession(r.saleId, { kind: 'card', amount, result: r });
+        void logMetricIfAuthenticated(user, {
+          event: 'donation-init-success-card',
+          value: 'donation',
+          point: amount,
+        });
         await router.push(`/donate/${encodeURIComponent(r.saleId)}/card`);
         return;
       }
 
       const r = results as CreateDonationCryptoResult;
       if (!r.saleId || typeof r.expectedAmount !== 'number') {
+        void logMetricIfAuthenticated(user, {
+          event: 'donation-init-error',
+          value: 'donation',
+          point: amount,
+        });
         setCreateError(t('donate_create_invalid_response'));
         return;
       }
       saveDonationSession(r.saleId, { kind: 'crypto', amount, result: r });
+      void logMetricIfAuthenticated(user, {
+        event: 'donation-init-success-crypto',
+        value: 'donation',
+        point: amount,
+      });
       await router.push(`/donate/${encodeURIComponent(r.saleId)}/crypto`);
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status;
       if (status === 401) {
+        void logMetricIfAuthenticated(user, {
+          event: 'donation-init-error',
+          value: 'donation',
+          point: amount,
+        });
         router.push(`/login?back=${encodeURIComponent(router.asPath)}`);
         return;
       }
+      void logMetricIfAuthenticated(user, {
+        event: 'donation-init-error',
+        value: 'donation',
+        point: amount,
+      });
       setCreateError(parseMessageFromError(err));
     } finally {
       setCreateLoading(false);
@@ -315,7 +380,5 @@ function DonatePage({ generalConfig }: DonatePageProps) {
     </>
   );
 }
-
-DonatePage.getInitialProps = async (context: NextPageContext) => getDonateInitialProps(context);
 
 export default DonatePage;

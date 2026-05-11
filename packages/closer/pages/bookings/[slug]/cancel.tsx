@@ -11,23 +11,21 @@ import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
-import { BaseBookingParams, Booking, BookingConfig, CloserCurrencies, Price } from '../../../types';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
-import api from '../../../utils/api';
+import { usePlatform } from '../../../contexts/platform';
+import { BaseBookingParams, BookingConfig, CloserCurrencies, Price } from '../../../types';
+import config from '../../../configCached';
 import { getBookingPaymentType } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { calculateRefundTotal } from '../../../utils/helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageNotFound from '../../not-found';
 
 interface Props extends BaseBookingParams {
-  booking: Booking | null;
   bookingConfig: BookingConfig | null;
   error?: string;
 }
 
-const BookingCancelPage = ({ booking, bookingConfig, error }: Props) => {
+const BookingCancelPage = ({ bookingConfig, error }: Props) => {
   const t = useTranslations();
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -35,6 +33,15 @@ const BookingCancelPage = ({ booking, bookingConfig, error }: Props) => {
 
   const router = useRouter();
   const bookingId = router.query.slug;
+  const slug = typeof bookingId === 'string' ? bookingId : bookingId?.[0];
+  const { platform }: any = usePlatform();
+  const booking = slug ? platform.booking.findOne(slug)?.toJS?.() ?? null : null;
+
+  useEffect(() => {
+    if (!router.isReady || !slug) return;
+    void platform.booking.getOne(slug, { force: true });
+  }, [router.isReady, slug, platform]);
+
   const bookingPrice = booking?.total;
   const { isAuthenticated, user } = useAuth();
   const isMember = user?.roles.includes('member');
@@ -59,28 +66,16 @@ const BookingCancelPage = ({ booking, bookingConfig, error }: Props) => {
   }) as { fiat: Price<CloserCurrencies>; tokensOrCredits: Price<CloserCurrencies> };
 
   useEffect(() => {
-    const fetchPolicy = async () => {
-      try {
-        setPolicyLoading(true);
-        const configs = await getConfig(api);
-        const bookingConfig = getConfigValueBySlug(configs, 'booking');
-        const policy = {
-          lastday: bookingConfig?.cancellationPolicyLastday,
-          lastweek: bookingConfig?.cancellationPolicyLastweek,
-          lastmonth: bookingConfig?.cancellationPolicyLastmonth,
-          default: bookingConfig?.cancellationPolicyDefault,
-        };
-
-        setPolicy(policy);
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setPolicyLoading(false);
-      }
-    };
-    if (user) {
-      fetchPolicy();
-    }
+    if (!user) return;
+    setPolicyLoading(true);
+    const bookingConfig = config.booking;
+    setPolicy({
+      lastday: bookingConfig?.cancellationPolicyLastday,
+      lastweek: bookingConfig?.cancellationPolicyLastweek,
+      lastmonth: bookingConfig?.cancellationPolicyLastmonth,
+      default: bookingConfig?.cancellationPolicyDefault,
+    });
+    setPolicyLoading(false);
   }, [user]);
 
   if (!isBookingEnabled) {
@@ -123,26 +118,14 @@ const BookingCancelPage = ({ booking, bookingConfig, error }: Props) => {
 
 BookingCancelPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const { query } = context;
-    const [bookingRes, configs, messages] = await Promise.all([
-      api.get(`/booking/${query.slug}`).catch((err) => {
-        console.error('Error fetching booking config:', err);
-        return null;
-      }),
-      getConfig(api),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const booking = bookingRes?.data?.results;
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
+    const bookingConfig = config.booking;
 
-    return { booking, bookingConfig, messages };
+    return { bookingConfig };
   } catch (err) {
     return {
-      booking: null,
       generalConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

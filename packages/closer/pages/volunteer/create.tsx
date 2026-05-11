@@ -8,7 +8,6 @@ import { useTranslations } from 'next-intl';
 
 import Page401 from '../401';
 import { useAuth } from '../../contexts/auth';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 const CreateVolunteerOportunity = () => {
   const t = useTranslations();
@@ -36,17 +35,11 @@ CreateVolunteerOportunity.getInitialProps = async (
   context: NextPageContext,
 ) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
-      messages,
     };
   } catch (err: unknown) {
     return {
-      messages: null,
-    };
+      };
   }
 };
 

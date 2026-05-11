@@ -8,12 +8,12 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import { useBuyTokens } from '../hooks/useBuyTokens';
-import { useConfig } from '../hooks/useConfig';
 import useRBAC from '../hooks/useRBAC';
 import { NavigationLink } from '../types/nav';
 import api, { formatSearch } from '../utils/api';
 import { getCurrentUnitPrice } from '../utils/bondingCurve';
-import { getReserveTokenDisplay } from '../utils/config.utils';
+import type { MemberMenuFeatureFlags } from '../utils/memberMenuFeatureFlags';
+import FinancedTokenMenuWidget from './FinancedTokenMenuWidget';
 import Profile from './Profile';
 import ReportABug from './ReportABug';
 import Wallet from './Wallet';
@@ -25,12 +25,26 @@ interface MenuSection {
   items: NavigationLink[];
 }
 
-const MemberMenu = () => {
+const MemberMenu = ({
+  ready,
+  appName,
+  reserveToken,
+  isBookingEnabled,
+  areSubscriptionsEnabled,
+  isVolunteeringEnabled,
+  isEventsEnabled,
+  isCommunityEnabled,
+  isGovernanceEnabled,
+  isLearningHubEnabled,
+  isBlogEnabled,
+  isCitizenshipEnabled,
+  isRolesEnabled,
+  isFaqEnabled,
+  isAffiliateEnabled,
+}: MemberMenuFeatureFlags) => {
   const t = useTranslations();
-  const config = useConfig();
-  const { APP_NAME } = config || {};
-  const reserveToken = getReserveTokenDisplay(config);
-  const { hasAccess } = useRBAC();
+  const APP_NAME = appName;
+  const { hasAccess, rbacLiveRevision } = useRBAC();
   const router = useRouter();
   const { getCurrentSupplyWithoutWallet } = useBuyTokens();
 
@@ -137,6 +151,11 @@ const MemberMenu = () => {
               url: '/token',
               enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
             },
+            {
+              label: t('navigation_financed_tokens'),
+              url: '/token/financed',
+              enabled: process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true',
+            },
           ],
         },
         {
@@ -175,6 +194,11 @@ const MemberMenu = () => {
               label: t('menu_member_stories'),
               url: '/members',
               enabled: true,
+            },
+            {
+              label: t('navigation_learning_hub'),
+              url: '/learn/category/all',
+              enabled: isLearningHubEnabled,
             },
             {
               label: t('menu_faq'),
@@ -259,6 +283,18 @@ const MemberMenu = () => {
               rbacPage: 'Food',
             },
             {
+              label: t('navigation_my_bookings'),
+              url: '/stay/upcoming',
+              enabled: isBookingEnabled,
+              rbacPage: 'MyBookings',
+            },
+            {
+              label: t('navigation_book_friend'),
+              url: '/bookings/friends',
+              enabled: isBookingEnabled,
+              rbacPage: 'FriendsBooking',
+            },
+            {
               label: t('navigation_user_list'),
               url: '/dashboard/admin/manage-users',
               enabled: true,
@@ -340,6 +376,11 @@ const MemberMenu = () => {
             enabled: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true',
           },
           {
+            label: t('navigation_financed_tokens'),
+            url: '/token/financed',
+            enabled: process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true',
+          },
+          {
             label: 'Become a Citizen',
             url: '/citizenship',
             enabled: isCitizenshipEnabled,
@@ -419,7 +460,6 @@ const MemberMenu = () => {
             label: t('navigation_learning_hub'),
             url: '/learn/category/all',
             enabled: isLearningHubEnabled,
-            rbacPage: 'LearningHub',
           },
         ],
       },
@@ -680,7 +720,7 @@ const MemberMenu = () => {
           },
           {
             label: t('navigation_my_bookings'),
-            url: '/bookings',
+            url: '/stay/upcoming',
             enabled: isBookingEnabled,
             rbacPage: 'MyBookings',
           },
@@ -727,41 +767,7 @@ const MemberMenu = () => {
   };
 
   useEffect(() => {
-    if (!config?._configLoaded) return;
-    const bookingConfig = config.booking;
-    const subscriptionsConfig = config.subscriptions;
-    const volunteerConfig = config.volunteering;
-    const eventsConfig = config.events;
-    const communityConfig = config.community;
-
-    const areSubscriptionsEnabled =
-      subscriptionsConfig?.enabled &&
-      process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
-    const isBookingEnabled =
-      bookingConfig?.enabled &&
-      process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
-    const isVolunteeringEnabled =
-      volunteerConfig?.enabled === true &&
-      process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
-    const isEventsEnabled = eventsConfig?.enabled !== false;
-    const isCommunityEnabled = communityConfig?.enabled === true;
-    const isGovernanceEnabled = config.governance?.enabled === true;
-    const isLearningHubEnabled =
-      config.learningHub?.enabled === true &&
-      process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true';
-    const isBlogEnabled =
-      config.blog?.enabled === true &&
-      process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true';
-    const isCitizenshipEnabled =
-      config.citizenship?.enabled === true &&
-      process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
-    const isRolesEnabled =
-      config.roles?.enabled === true &&
-      process.env.NEXT_PUBLIC_FEATURE_ROLES === 'true';
-    const isFaqEnabled = Boolean(config?.FAQS_GOOGLE_SHEET_ID);
-    const isAffiliateEnabled =
-      config.affiliate?.enabled === true &&
-      process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true';
+    if (!ready) return;
 
     const sections = getMenuSections(
       isBookingEnabled,
@@ -779,7 +785,24 @@ const MemberMenu = () => {
     );
     const filteredSections = filterMenuSections(sections, user?.roles || []);
     setMenuSections(filteredSections);
-  }, [config, user, router.locale]);
+  }, [
+    ready,
+    isBookingEnabled,
+    areSubscriptionsEnabled,
+    isVolunteeringEnabled,
+    isEventsEnabled,
+    isCommunityEnabled,
+    isGovernanceEnabled,
+    isLearningHubEnabled,
+    isBlogEnabled,
+    isCitizenshipEnabled,
+    isRolesEnabled,
+    isFaqEnabled,
+    isAffiliateEnabled,
+    user,
+    router.locale,
+    rbacLiveRevision,
+  ]);
 
   useEffect(() => {
     if (
@@ -975,6 +998,10 @@ const MemberMenu = () => {
             </div>
           </div>
         )}
+
+      {APP_NAME?.toLowerCase() === 'tdf' &&
+        process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true' &&
+        user && <FinancedTokenMenuWidget />}
 
       <ReportABug />
     </nav>

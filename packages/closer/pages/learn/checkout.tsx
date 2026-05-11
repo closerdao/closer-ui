@@ -17,18 +17,20 @@ import { CloserCurrencies, PaymentConfig } from '../../types';
 import { Lesson } from '../../types/lesson';
 import api from '../../utils/api';
 import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 interface Props {
   error?: string;
   lesson: Lesson | null;
-  paymentConfig: PaymentConfig | null;
 }
 
-const LearnCheckout = ({ error, lesson, paymentConfig }: Props) => {
+const LearnCheckout = ({ error, lesson }: Props) => {
+  const paymentConfig = (mergePaymentValueWithBookingCurrencyFallback(
+    getCachedConfig('payment'),
+    getCachedConfig('booking'),
+  ) ?? null) as PaymentConfig | null;
   const t = useTranslations();
-
 
   const { isAuthenticated } = useAuth();
 
@@ -85,39 +87,21 @@ const LearnCheckout = ({ error, lesson, paymentConfig }: Props) => {
 LearnCheckout.getInitialProps = async (context: NextPageContext) => {
   const { query } = context;
   try {
-    const [lessonRes, paymentConfigRes, bookingConfigRes, messages] =
-      await Promise.all([
-        api.get(`/lesson/${query.lessonId}`).catch(() => {
-          return null;
-        }),
-        api.get('/config/payment').catch(() => {
-          return null;
-        }),
-        api.get('/config/booking').catch(() => {
-          return null;
-        }),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      ]);
+    const lessonRes = await api
+      .get(`/lesson/${query.lessonId}`)
+      .catch(() => null);
 
     const lesson = lessonRes?.data?.results;
-    const paymentConfig = (mergePaymentValueWithBookingCurrencyFallback(
-      paymentConfigRes?.data?.results?.value,
-      bookingConfigRes?.data?.results?.value,
-    ) ?? null) as PaymentConfig | null;
     return {
       error: null,
-      paymentConfig,
-      messages,
       lesson,
     };
   } catch (err) {
     console.log(err);
     return {
       error: parseMessageFromError(err),
-      paymentConfig: null,
       lesson: null,
-      messages: null,
-    };
+      };
   }
 };
 

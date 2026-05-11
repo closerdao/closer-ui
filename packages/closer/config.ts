@@ -1,3 +1,4 @@
+import { ACCOUNTING_ENTITY_PRODUCT_SLUGS } from './constants/accountingEntities.constants';
 import { ISO_COUNTRY_CODES_FOR_CONFIG } from './constants/countryLocales';
 import { ConfigType } from './types/config';
 
@@ -173,7 +174,9 @@ export const CURRENCY_ISO_SYMBOL = {
 
 export type Iso4217CurrencyCode = keyof typeof CURRENCY_ISO_SYMBOL;
 
-export const ISO_4217_CURRENCY_CODES = Object.keys(CURRENCY_ISO_SYMBOL).sort() as Iso4217CurrencyCode[];
+export const ISO_4217_CURRENCY_CODES = Object.keys(
+  CURRENCY_ISO_SYMBOL,
+).sort() as Iso4217CurrencyCode[];
 
 export const closerConfig = {
   PLATFORM_NAME: 'Closer',
@@ -376,7 +379,7 @@ export const configDescription: ConfigType[] = [
             tier: 'number',
             monthlyCredits: 'number',
             price: 'number',
-            perks: 'text',
+            perks: 'long-text',
             billingPeriod: 'text',
             available: 'boolean',
             tiersAvailable: 'boolean',
@@ -760,7 +763,7 @@ export const configDescription: ConfigType[] = [
       },
       facebookPixelId: {
         type: 'text',
-        default: '761004479106346',
+        default: '',
       },
       faqsGoogleSheetId: {
         type: 'text',
@@ -976,22 +979,12 @@ export const configDescription: ConfigType[] = [
           {
             legalName: 'text',
             taxNumber: 'text',
+            iban: 'text',
             address: 'text',
             accountingDescription: 'text',
             products: {
               type: 'multiselect',
-              enum: [
-                'accommodations',
-                'events',
-                'subscriptions',
-                'tokens',
-                'food',
-                'products',
-                'payment-link',
-                'terminal',
-                'expenses',
-                'donation',
-              ],
+              enum: [...ACCOUNTING_ENTITY_PRODUCT_SLUGS],
             },
           },
         ],
@@ -999,11 +992,16 @@ export const configDescription: ConfigType[] = [
           {
             legalName: '',
             taxNumber: '',
+            iban: '',
             address: '',
             products: [],
             accountingDescription: 'Formação Profissional',
           },
         ],
+      },
+      vatByProductType: {
+        type: 'vat-by-product-type',
+        default: {},
       },
     },
   },

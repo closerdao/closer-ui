@@ -9,7 +9,7 @@ const DiscountsEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type
   const [options, setOptions] = useState(value);
   const updateOptions = (update) => {
     setOptions(update);
-    onChange && onChange(update);
+    if (onChange) onChange(update);
   };
   const updateOption = (index, option) => {
     const update = options.map((o, i) => (i === index ? option : o));

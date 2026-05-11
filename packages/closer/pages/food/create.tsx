@@ -8,9 +8,7 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import models from '../../models';
-import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
-import api from '../../utils/api';
-import { loadLocaleData } from '../../utils/locale.helpers';
+import config from '../../configCached';
 
 interface Props {
   bookingConfig: any;
@@ -47,20 +45,14 @@ const CreateFood = ({ bookingConfig }: Props) => {
 
 CreateFood.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [configs, messages] = await Promise.all([
-      getConfig(api),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
+    const bookingConfig = config.booking;
     return {
       bookingConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       bookingConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

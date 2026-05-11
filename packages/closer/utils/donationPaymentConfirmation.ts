@@ -3,16 +3,19 @@ import { parseMessageFromError } from './common';
 
 function unwrapDonationResults(data: unknown): {
   status?: string;
+  saleId?: string;
   alreadyPaid?: boolean;
 } | null {
   const d = data as { results?: unknown } | null;
   const raw = d?.results;
   if (!raw || typeof raw !== 'object') return null;
   if ('value' in raw && (raw as { value: unknown }).value !== undefined) {
-    const inner = (raw as { value: { status?: string; alreadyPaid?: boolean } }).value;
+    const inner = (raw as {
+      value: { status?: string; saleId?: string; alreadyPaid?: boolean };
+    }).value;
     return inner && typeof inner === 'object' ? inner : null;
   }
-  return raw as { status?: string; alreadyPaid?: boolean };
+  return raw as { status?: string; saleId?: string; alreadyPaid?: boolean };
 }
 
 function isPaymentNotCompleteMessage(message: string): boolean {
@@ -36,9 +39,8 @@ export async function postDonationPaymentConfirmation(
       await new Promise((resolve) => setTimeout(resolve, backoffMs[attempt]));
     }
     try {
-      const { data } = await api.post('/donations/payment/confirmation', {
+      const { data } = await api.post(`/sale/${saleId}/confirm-card`, {
         paymentId,
-        saleId,
       });
       const results = unwrapDonationResults(data);
       if (results?.status === 'success') {

@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingRules from '../../../components/BookingRules';
@@ -10,44 +10,37 @@ import { Button } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
-import { NextApiRequest, NextPageContext } from 'next';
+import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
 import { BOOKING_STEPS, BOOKING_STEP_TITLE_KEYS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import { usePlatform } from '../../../contexts/platform';
+import { useRedirectPaidBookingToDetail } from '../../../hooks';
 import {
   BaseBookingParams,
-  Booking,
   BookingConfig,
   BookingRulesConfig,
-  Event,
-  Listing,
 } from '../../../types';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
-import api from '../../../utils/api';
-import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
+import config from '../../../configCached';
 import {
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
+import { logMetricIfAuthenticated } from '../../../utils/metrics';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 interface Props extends BaseBookingParams {
-  listing: Listing | null;
-  booking: Booking | null;
   error?: string;
-  event?: Event;
   bookingConfig: BookingConfig | null;
   bookingRules: BookingRulesConfig | null;
   tokenCurrency: string;
 }
 
 const BookingRulesPage = ({
-  booking,
   error,
   bookingConfig,
   bookingRules,
@@ -55,7 +48,19 @@ const BookingRulesPage = ({
 }: Props) => {
   const t = useTranslations();
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const slugParam = router.query.slug;
+  const slug = typeof slugParam === 'string' ? slugParam : slugParam?.[0];
+  const { isAuthenticated, user } = useAuth();
+  const { platform }: any = usePlatform();
+
+  useEffect(() => {
+    if (!router.isReady || !slug) return;
+    void platform.booking.getOne(slug, { force: true });
+  }, [router.isReady, slug, platform]);
+
+  const booking = slug ? platform.booking.findOne(slug)?.toJS?.() ?? null : null;
+
+  useRedirectPaidBookingToDetail(booking);
   const [isLoading, setIsLoading] = useState(false);
   const { start, end, adults, useTokens, isFriendsBooking, _id } =
     booking || {};
@@ -107,14 +112,18 @@ const BookingRulesPage = ({
 
   const handleNext = async () => {
     setIsLoading(true);
-
-    router.push(`/bookings/${booking?._id}/questions`);
-    // if (event?.fields) {
-    //   router.push(`/bookings/${booking?._id}/questions`);
-    //   return;
-    // }
-
-    // router.push(`/bookings/${booking?._id}/summary`);
+    const metricPoint =
+      Math.round(Number(booking?.duration ?? booking?.adults ?? 0)) || 0;
+    void logMetricIfAuthenticated(user, {
+      event: 'booking-rules-continue-success',
+      value: 'booking',
+      point: metricPoint,
+    });
+    try {
+      await router.push(`/bookings/${booking?._id}/questions`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const goBack = () => {
@@ -184,57 +193,24 @@ const BookingRulesPage = ({
 };
 
 BookingRulesPage.getInitialProps = async (context: NextPageContext) => {
-  const { query, req } = context;
-
   try {
-    const [bookingRes, configs, messages] = await Promise.all([
-      api
-        .get(`/booking/${query.slug}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        })
-        .catch(() => null),
-      getConfig(api),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-
-    const booking = bookingRes?.data?.results || null;
-    const bookingConfig = getConfigValueBySlug(configs, 'booking') || null;
-    const web3Config = getConfigValueBySlug(configs, 'web3') || null;
+    const bookingConfig = config.booking || null;
+    const web3Config = config.web3 || null;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
-    const bookingRules = getConfigValueBySlug(configs, 'booking-rules') || null;
-
-    const [optionalEvent, optionalListing] = await Promise.all([
-      booking?.eventId &&
-        api.get(`/event/${booking?.eventId}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        }),
-      booking?.listing &&
-        api.get(`/listing/${booking?.listing}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        }),
-    ]);
-    const event = optionalEvent?.data?.results;
-    const listing = optionalListing?.data?.results;
+    const bookingRules = config['booking-rules'] || null;
 
     return {
-      booking,
-      listing,
-      event,
       error: null,
       bookingConfig,
       bookingRules,
-      messages,
       tokenCurrency,
     };
   } catch (err) {
     console.log('Error', err);
     return {
       error: parseMessageFromError(err),
-      booking: null,
-      listing: null,
       bookingConfig: null,
       bookingRules: null,
-      messages: null,
       tokenCurrency: getBookingTokenCurrency(),
     };
   }

@@ -15,9 +15,8 @@ import { useAuth } from '../../../contexts/auth';
 import useRBAC from '../../../hooks/useRBAC';
 import { BookingConfig } from '../../../types/api';
 import { EmailTemplate } from '../../../types/emailTemplate';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import config from '../../../configCached';
 import api from '../../../utils/api';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
 interface Props {
@@ -150,28 +149,24 @@ EmailEditorPage.getInitialProps = async (context: NextPageContext) => {
         templates: [],
         templateVariables: [],
         bookingConfig: null,
-        messages: null,
-      };
+        };
     }
 
-    const [emailsRes, varsRes, configs, messages] = await Promise.all([
+    const [emailsRes, varsRes] = await Promise.all([
       api.get('/emailtemplates?limit=100'),
       api.get('/emails/template-variables').catch(() => ({ data: { results: [] } })),
-      getConfig(api),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
     const templates: EmailTemplate[] = emailsRes?.data?.results ?? [];
     const template = templates.find((t) => t.slug === slug) ?? null;
     const templateVariables = varsRes?.data?.results ?? [];
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
+    const bookingConfig = config.booking;
 
     return {
       template,
       templates,
       templateVariables,
       bookingConfig,
-      messages,
     };
   } catch {
     return {
@@ -179,8 +174,7 @@ EmailEditorPage.getInitialProps = async (context: NextPageContext) => {
       templates: [],
       templateVariables: [],
       bookingConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

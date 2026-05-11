@@ -1,10 +1,12 @@
+import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import dynamic from 'next/dynamic';
 import React, { useEffect, useState } from 'react';
 
+import EmailDisplay from '../../components/display/emailDisplay';
+import WalletDisplay from '../../components/display/walletDisplay';
 import CitizenSubscriptionProgress from '../../components/CitizenSubscriptionProgress';
 import EventsList from '../../components/EventsList';
 import FinancedTokenProgress from '../../components/FinancedTokenProgress';
@@ -17,8 +19,18 @@ import { Card } from '../../components/ui';
 import Button from '../../components/ui/Button';
 import Heading from '../../components/ui/Heading';
 
-import { Trash2 } from 'lucide-react';
-import { Twitter, Instagram, Facebook, Linkedin, Github, Youtube, Music, Link as LinkIcon, Settings } from 'lucide-react';
+import {
+  Facebook,
+  Github,
+  Instagram,
+  Link as LinkIcon,
+  Linkedin,
+  Music,
+  Settings,
+  Trash2,
+  Twitter,
+  Youtube,
+} from 'lucide-react';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -28,15 +40,15 @@ import { usePlatform } from '../../contexts/platform';
 import { FinanceApplication } from '../../types';
 import { GeneralConfig } from '../../types/api';
 import api, { cdn } from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { getUrlDisplayString } from '../../utils/display.helpers';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 const ConnectedWallet =
   process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true'
     ? dynamic(
-        () =>
-          import('../../components/ConnectedWallet').then((m) => m.default),
+        () => import('../../components/ConnectedWallet').then((m) => m.default),
         { ssr: false },
       )
     : () => null;
@@ -44,16 +56,10 @@ const ConnectedWallet =
 interface MemberPageProps {
   member: User;
   loadError: string;
-  generalConfig: GeneralConfig;
-  financeTokenApplications: FinanceApplication[];
 }
 
-const MemberPage = ({
-  member,
-  loadError,
-  generalConfig,
-  financeTokenApplications,
-}: MemberPageProps) => {
+const MemberPage = ({ member, loadError }: MemberPageProps) => {
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
   const {
     user: currentUser,
@@ -116,19 +122,15 @@ const MemberPage = ({
           },
         });
         const financeApplications = financeApplicationRes?.data?.results;
-
-        console.log('financeApplications===', financeApplications);
-
+        if (!Array.isArray(financeApplications)) {
+          setActiveApplications([]);
+          return;
+        }
         const activeApplications = financeApplications.filter(
           (application: FinanceApplication) =>
             ['pending-payment', 'paid'].includes(application.status),
         );
-
-        console.log('=== activeApplications ===', activeApplications);
-
-        if (financeApplications) {
-          setActiveApplications(activeApplications);
-        }
+        setActiveApplications(activeApplications);
       })();
     }
   }, [currentUser, isLoading]);
@@ -400,7 +402,10 @@ const MemberPage = ({
                         onClick={(e) => {
                           e.preventDefault();
                           // Extract usernames from existing links
-                          const extractUsername = (url: string, pattern: RegExp) => {
+                          const extractUsername = (
+                            url: string,
+                            pattern: RegExp,
+                          ) => {
                             const match = url.match(pattern);
                             return match ? match[1] : '';
                           };
@@ -417,7 +422,10 @@ const MemberPage = ({
 
                           links.forEach((link) => {
                             const url = link.url.toLowerCase();
-                            if (url.includes('twitter.com/') || url.includes('x.com/')) {
+                            if (
+                              url.includes('twitter.com/') ||
+                              url.includes('x.com/')
+                            ) {
                               newFormValues.twitter = extractUsername(
                                 url,
                                 /(?:twitter\.com\/|x\.com\/)([^/?]+)/,
@@ -442,7 +450,10 @@ const MemberPage = ({
                                 url,
                                 /github\.com\/([^/?]+)/,
                               );
-                            } else if (url.includes('youtube.com/c/') || url.includes('youtube.com/@')) {
+                            } else if (
+                              url.includes('youtube.com/c/') ||
+                              url.includes('youtube.com/@')
+                            ) {
                               newFormValues.youtube = extractUsername(
                                 url,
                                 /youtube\.com\/(?:c\/|@)([^/?]+)/,
@@ -478,7 +489,9 @@ const MemberPage = ({
                     {links && links.length > 0 ? (
                       links.map((link) => {
                         // Determine icon based on URL or name
-                        let IconComponent: React.ComponentType<{ className?: string }> = LinkIcon;
+                        let IconComponent: React.ComponentType<{
+                          className?: string;
+                        }> = LinkIcon;
                         let networkName = link.name;
 
                         if (
@@ -530,19 +543,27 @@ const MemberPage = ({
                         return (
                           <li
                             key={link._id}
-                            className="group flex flex-row items-center justify-between py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                            className="group flex min-w-0 flex-row items-center justify-between gap-2 py-2 border-b border-gray-100 hover:bg-gray-50 transition-colors"
                           >
-                            <div className="flex items-center">
-                              <span className="mr-2 w-6 h-6 flex items-center justify-center bg-gray-100 rounded-full">
-                                <IconComponent className="w-4 h-4 text-gray-700" />
+                            <div className="flex min-w-0 flex-1 items-center gap-2">
+                              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-100">
+                                <IconComponent className="h-4 w-4 text-gray-700" />
                               </span>
                               <a
                                 href={link.url}
-                                className="hover:underline"
+                                className="min-w-0 flex-1 hover:underline"
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
-                                {networkName}
+                                <span className="block truncate font-medium">
+                                  {networkName}
+                                </span>
+                                <span
+                                  className="block truncate text-xs text-gray-500"
+                                  title={link.url}
+                                >
+                                  {getUrlDisplayString(link.url)}
+                                </span>
                               </a>
                             </div>
                             {isAuthenticated &&
@@ -597,19 +618,25 @@ const MemberPage = ({
                     </h4>
                     <Card className="bg-accent-light">
                       {member?.email && (
-                        <p className="mb-2">
-                          <span className="font-medium">
+                        <p className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                          <span className="shrink-0 font-medium">
                             {t('user_data_email')}
-                          </span>{' '}
-                          <span>{member.email}</span>
+                          </span>
+                          <EmailDisplay
+                            email={member.email}
+                            className="min-w-0 flex-1 font-normal"
+                          />
                         </p>
                       )}
                       {member?.walletAddress && (
-                        <p className="mb-2">
-                          <span className="font-medium">
+                        <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <span className="shrink-0 font-medium">
                             {t('user_data_walletAddress')}
-                          </span>{' '}
-                          <span>{member.walletAddress}</span>
+                          </span>
+                          <WalletDisplay
+                            address={member.walletAddress}
+                            className="min-w-0 flex-1"
+                          />
                         </p>
                       )}
                       {member?.phone && (
@@ -705,12 +732,8 @@ const MemberPage = ({
                     currentUser?.roles?.includes('admin') ||
                     currentUser?.roles?.includes('community-curator')) && (
                     <div className="bg-white mb-6 space-y-6">
-                    
                       <CitizenSubscriptionProgress member={member} />
 
-                      <div className="text-xs whitespace-pre-wrap">
-                        {JSON.stringify(financeTokenApplications, null, 2)}
-                      </div>
                       {activeApplications?.length > 0 && (
                         <FinancedTokenProgress
                           member={member}
@@ -1149,39 +1172,25 @@ const MemberPage = ({
 MemberPage.getInitialProps = async (context: NextPageContext) => {
   const { req, query } = context;
   try {
-    const [res, generalRes, messages] = await Promise.all([
-      api.get(`/user/${query.slug}`, {
-        headers: (req as NextApiRequest)?.cookies?.access_token
-          ? {
-              Authorization: `Bearer ${
-                (req as NextApiRequest)?.cookies?.access_token
-              }`,
-            }
-          : {},
-      }),
-
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const generalConfig = generalRes?.data?.results?.value;
-
+    const res = await api.get(`/user/${query.slug}`, {
+      headers: (req as NextApiRequest)?.cookies?.access_token
+        ? {
+            Authorization: `Bearer ${
+              (req as NextApiRequest)?.cookies?.access_token
+            }`,
+          }
+        : {},
+    });
     return {
       member: res.data.results,
-      generalConfig,
-
-      messages,
     };
   } catch (err: unknown) {
     console.log('Error', err);
 
     return {
       loadError: parseMessageFromError(err),
-      generalConfig: null,
 
-      messages: null,
-    };
+      };
   }
 };
 

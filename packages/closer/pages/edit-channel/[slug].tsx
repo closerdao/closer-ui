@@ -9,7 +9,6 @@ import { useTranslations } from 'next-intl';
 import models from '../../models';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 interface Props {
   channel: any;
@@ -61,15 +60,12 @@ EditChannel.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No channel');
     }
 
-    const [channelRes, messages] = await Promise.all([
-      api.get(`/channel/${query.slug}`).catch(() => {
+    const channelRes = await api.get(`/channel/${query.slug}`).catch(() => {
         return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+      })
     const channel = channelRes?.data?.results;
 
-    return { channel, messages };
+    return { channel };
   } catch (err) {
     return {
       error: parseMessageFromError(err),

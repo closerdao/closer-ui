@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 
 import { useConfig } from '../../../hooks/useConfig';
-import { formatThousands } from '../../../utils/dashboard.helpers';
+import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
 import { CHART_COLORS } from './chartColors';
 
 interface Props {
@@ -178,7 +178,7 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
                             fill="#000000"
                             fontSize="12"
                           >
-                            €{formatThousands(Number(value))}
+                            {formatIsoFiatAmount(Number(value), 'EUR')}
                           </text>
                         );
                       }}

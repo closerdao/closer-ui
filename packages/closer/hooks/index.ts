@@ -1,3 +1,4 @@
+export { useBookingLinkedCharges } from './useBookingLinkedCharges';
 export { useHasMounted } from './useHasMounted';
 export { useLocalStorage } from './useLocalStorage';
 export { useRBAC } from './useRBAC';
@@ -10,4 +11,5 @@ export { useOutsideClick } from './useOutsideClick';
 export { useDebounce } from './useDebounce';
 export { usePresenceToken } from './usePresenceToken';
 export { useSweatToken } from './useSweatToken';
-export { useVotingWeight } from './useVotingWeight'; 
+export { useVotingWeight } from './useVotingWeight';
+export { useRedirectPaidBookingToDetail } from './useRedirectPaidBookingToDetail';

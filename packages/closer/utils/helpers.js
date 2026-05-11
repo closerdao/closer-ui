@@ -10,7 +10,13 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { blockchainConfig } from '../config_blockchain';
 import { DEFAULT_CURRENCY, REFUND_PERIODS } from '../constants';
 import { PaymentType } from '../types';
-import { formatIsoFiatAmount, isIso4217Currency } from './currencyFormat';
+import {
+  formatIntlNumberTwoDecimals,
+  formatIsoFiatAmount,
+  getDefaultCurrencyLocale,
+  isIso4217Currency,
+  roundToTwoDecimals,
+} from './currencyFormat';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(relativeTime);
@@ -82,57 +88,68 @@ export const getTimeDetails = (eventTime) => {
 };
 
 export const priceFormat = (price, currency = DEFAULT_CURRENCY) => {
+  const loc = getDefaultCurrencyLocale();
   if (currency === 'credits') {
-    return `${price} ${currency}`;
+    const v = roundToTwoDecimals(
+      typeof price === 'number' ? price : Number(price),
+    );
+    return `${formatIntlNumberTwoDecimals(v, loc)} credits`;
   }
   if (price?.cur && price.cur === 'credits') {
-    return `${price.val} ${price.cur}`;
+    const v = roundToTwoDecimals(Number(price.val));
+    return `${formatIntlNumberTwoDecimals(v, loc)} ${price.cur}`;
   }
   if (price?.val === null) {
     const cur = currency || DEFAULT_CURRENCY;
     if (isIso4217Currency(cur)) {
       return formatIsoFiatAmount(0, cur);
     }
-    return parseFloat(0).toLocaleString('en-US', {
+    return new Intl.NumberFormat(loc, {
       style: 'currency',
       currency: cur,
-    });
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(0);
   }
   if (!currency) {
     currency = DEFAULT_CURRENCY;
   }
   if (typeof price === 'number') {
+    const n = roundToTwoDecimals(parseFloat(price));
     if (isIso4217Currency(currency)) {
-      return formatIsoFiatAmount(parseFloat(price), currency);
+      return formatIsoFiatAmount(n, currency);
     }
-    return parseFloat(price).toLocaleString('en-US', {
+    return new Intl.NumberFormat(loc, {
       style: 'currency',
       currency,
-    });
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(n);
   } else if (price?.get && typeof price.get('val') !== 'undefined') {
-    const priceValue = parseFloat(price.get('val'));
+    const priceValue = roundToTwoDecimals(parseFloat(price.get('val')));
     const curFromGet = price.get('cur');
     if (isIso4217Currency(curFromGet)) {
       return formatIsoFiatAmount(priceValue, curFromGet);
     }
-    return priceValue.toLocaleString('en-US', {
+    return new Intl.NumberFormat(loc, {
       style: 'currency',
       currency: curFromGet,
-    });
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(priceValue);
   } else if (typeof price?.val !== 'undefined') {
-    const priceValue = parseFloat(price.val);
+    const priceValue = roundToTwoDecimals(parseFloat(price.val));
     const effectiveCur = price.cur || currency;
     const tokenCurrencies = ['TDF', 'ETH'];
     if (tokenCurrencies.includes(effectiveCur)) {
-      return `${priceValue.toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })} ${effectiveCur}`;
+      return `${formatIntlNumberTwoDecimals(priceValue, loc)} ${effectiveCur}`;
     }
     if (price.cur === BLOCKCHAIN_DAO_TOKEN.symbol) {
-      return new Intl.NumberFormat('en-US', {
+      return new Intl.NumberFormat(loc, {
         style: 'currency',
         currency: BLOCKCHAIN_DAO_TOKEN.symbol,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
       })
         .formatToParts(priceValue)
         .map((v, i) => (i === 0 ? '$' + v.value : v.value))
@@ -141,15 +158,17 @@ export const priceFormat = (price, currency = DEFAULT_CURRENCY) => {
     if (isIso4217Currency(effectiveCur)) {
       return formatIsoFiatAmount(priceValue, effectiveCur);
     }
-    return priceValue.toLocaleString('en-US', {
+    return new Intl.NumberFormat(loc, {
       style: 'currency',
       currency: effectiveCur,
-    });
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(priceValue);
   } else {
     const effectiveCur = price?.cur || currency;
     const tokenCurrencies = ['TDF', 'ETH'];
     if (effectiveCur && tokenCurrencies.includes(effectiveCur)) {
-      return `0.00 ${effectiveCur}`;
+      return `${formatIntlNumberTwoDecimals(0, loc)} ${effectiveCur}`;
     }
     if (price?.cur && isIso4217Currency(price.cur)) {
       return formatIsoFiatAmount(0, price.cur);
@@ -159,11 +178,13 @@ export const priceFormat = (price, currency = DEFAULT_CURRENCY) => {
       return formatIsoFiatAmount(0, fallbackCur);
     }
     return price?.cur
-      ? `0.00 ${price.cur}`
-      : parseFloat(0).toLocaleString('en-US', {
+      ? `${formatIntlNumberTwoDecimals(0, loc)} ${price.cur}`
+      : new Intl.NumberFormat(loc, {
           style: 'currency',
           currency: fallbackCur,
-        });
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(0);
   }
 };
 
@@ -247,6 +268,8 @@ export const getSample = (field) => {
       ];
     case 'learnEditor':
       return [];
+    case 'note':
+      return undefined;
     default:
       throw new Error(`Invalid model type:${field.type}`);
   }

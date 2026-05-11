@@ -3,6 +3,28 @@ import Link from 'next/link';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
 import dayjs from 'dayjs';
+
+function buildStayCreateListingHref(params: {
+  listingId: string;
+  startDate: string | Date | null;
+  endDate: string | Date | null;
+  totalGuests: number;
+  kids?: number;
+  infants?: number;
+  pets?: number;
+}) {
+  const q = new URLSearchParams();
+  q.set('listingId', params.listingId);
+  if (params.startDate && params.endDate) {
+    q.set('start', dayjs(params.startDate).format('YYYY-MM-DD'));
+    q.set('end', dayjs(params.endDate).format('YYYY-MM-DD'));
+  }
+  q.set('adults', String(params.totalGuests));
+  if (params.kids) q.set('children', String(params.kids));
+  if (params.infants) q.set('infants', String(params.infants));
+  if (params.pets) q.set('pets', String(params.pets));
+  return `/stay/create?${q.toString()}`;
+}
 import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../hooks/useConfig';
@@ -17,6 +39,7 @@ import {
 import { formatDate } from '../utils/listings.helpers';
 import Counter from './Counter';
 import ListingDateSelector from './ListingDateSelector';
+import { Button } from './ui';
 import HeadingRow from './ui/HeadingRow';
 import Select from './ui/Select/Dropdown';
 
@@ -29,7 +52,6 @@ interface SummaryDatesProps {
   startDate: string | Date | null;
   endDate: string | Date | null;
   listingName: string;
-  listingUrl: string;
   eventName?: string;
   volunteerName?: string;
   ticketOption?: string;
@@ -56,6 +78,13 @@ interface SummaryDatesProps {
   listingId?: string | undefined;
   numSpacesRequired?: number;
   isVolunteer?: boolean;
+  showHeading?: boolean;
+  collapseDatesEditor?: boolean;
+  datesEditorOpen?: boolean;
+  onToggleDatesEditor?: () => void;
+  compact?: boolean;
+  isFriendsBooking?: boolean;
+  eventId?: string;
 }
 
 const SummaryDates = ({
@@ -67,7 +96,6 @@ const SummaryDates = ({
   startDate,
   endDate,
   listingName,
-  listingUrl,
   eventName,
   volunteerName,
   ticketOption,
@@ -83,8 +111,21 @@ const SummaryDates = ({
   listingId,
   numSpacesRequired,
   isVolunteer,
+  showHeading = true,
+  collapseDatesEditor = false,
+  datesEditorOpen = false,
+  onToggleDatesEditor,
+  compact = false,
+  isFriendsBooking = false,
+  eventId,
 }: SummaryDatesProps) => {
   const t = useTranslations();
+  const rowY = compact ? 'my-1.5' : 'my-3';
+  const rowMt = compact ? 'mt-1.5' : 'mt-3';
+  const gapBetween = compact ? 'gap-8' : 'gap-20';
+  const dateText = compact ? 'text-sm' : 'text-sm md:text-base';
+  const calPad = compact ? 'p-2' : 'p-4';
+  const counterPad = compact ? 'p-1' : 'p-2';
 
   const { TIME_ZONE } = useConfig() || {};
 
@@ -133,6 +174,8 @@ const SummaryDates = ({
         infants,
         pets,
         useTokens: false,
+        isFriendsBooking,
+        ...(eventId && { eventId }),
       });
 
       return { results, availability };
@@ -153,39 +196,56 @@ const SummaryDates = ({
 
       setHourAvailability(getLocalTimeAvailability(availability, TIME_ZONE));
     })();
-  }, [startDate, endDate]);
+  }, [
+    startDate,
+    endDate,
+    listingId,
+    isFriendsBooking,
+    eventId,
+    isEditMode,
+    isHourlyBooking,
+    totalGuests,
+    kids,
+    infants,
+    pets,
+  ]);
 
   return (
     <div>
-      {eventName ? (
-        <HeadingRow>
-          <IconHome className="mr-4" />
-          <span>{t('bookings_summary_step_your_event')}</span>
-        </HeadingRow>
-      ) : (
-        <HeadingRow>
-          <IconHome className="mr-4" />
-          <span>
-            {isHourlyBooking
-              ? t('bookings_summary_step_dates_title_hourly')
-              : t('bookings_dates_step_guests_title')}
-          </span>
-        </HeadingRow>
-      )}
+      {showHeading &&
+        (eventName ? (
+          <HeadingRow>
+            <IconHome className="mr-4" />
+            <span>{t('bookings_summary_step_your_event')}</span>
+          </HeadingRow>
+        ) : (
+          <HeadingRow>
+            <IconHome className="mr-4" />
+            <span>
+              {isHourlyBooking
+                ? t('bookings_summary_step_dates_title_hourly')
+                : t('bookings_dates_step_guests_title')}
+            </span>
+          </HeadingRow>
+        ))}
       {eventName && (
-        <div className="flex justify-between mt-3 gap-20 items-start	">
+        <div
+          className={`flex items-start justify-between ${rowMt} ${gapBetween}`}
+        >
           <p>{t('bookings_summary_step_dates_event')}</p>
           <p className="font-bold text-right">{eventName}</p>
         </div>
       )}
       {volunteerName && (
-        <div className="flex justify-between mt-3 gap-20 items-start	">
+        <div
+          className={`flex items-start justify-between ${rowMt} ${gapBetween}`}
+        >
           <p>{t('bookings_summary_step_volunteer_opportunity')}</p>
           <p className="font-bold text-right">{volunteerName}</p>
         </div>
       )}
       {ticketOption && (
-        <div className="flex justify-between items-start mt-3">
+        <div className={`flex items-start justify-between ${rowMt}`}>
           <p>{t('bookings_summary_step_dates_ticket_option')}</p>
           <p className="font-bold uppercase">
             {ticketOption} X {totalGuests}
@@ -195,11 +255,13 @@ const SummaryDates = ({
 
       {!isHourlyBooking && (
         <>
-          <div className="flex justify-between items-center my-3">
+          <div className={`flex items-center justify-between ${rowY}`}>
             <p>{t('bookings_summary_step_dates_number_of_guests')}</p>
             <div className="font-bold">
               {isEditMode ? (
-                <div className="bg-accent-light p-2 w-[115px] flex justify-end rounded-md">
+                <div
+                  className={`flex w-[115px] justify-end rounded-md bg-accent-light ${counterPad}`}
+                >
                   <Counter
                     value={totalGuests}
                     setFn={setters?.setUpdatedAdults}
@@ -211,11 +273,13 @@ const SummaryDates = ({
               )}
             </div>
           </div>
-          <div className="flex justify-between items-center my-3">
+          <div className={`flex items-center justify-between ${rowY}`}>
             <p>{t('bookings_dates_step_guests_children')}</p>
             <div className="font-bold">
               {isEditMode ? (
-                <div className="bg-accent-light p-2 w-[115px] flex justify-end rounded-md">
+                <div
+                  className={`flex w-[115px] justify-end rounded-md bg-accent-light ${counterPad}`}
+                >
                   <Counter
                     value={kids}
                     setFn={setters?.setUpdatedChildren}
@@ -227,11 +291,13 @@ const SummaryDates = ({
               )}
             </div>
           </div>
-          <div className="flex justify-between items-center my-3">
+          <div className={`flex items-center justify-between ${rowY}`}>
             <p>{t('bookings_dates_step_guests_infants')}</p>
             <div className="font-bold">
               {isEditMode ? (
-                <div className="bg-accent-light p-2 w-[115px] flex justify-end rounded-md">
+                <div
+                  className={`flex w-[115px] justify-end rounded-md bg-accent-light ${counterPad}`}
+                >
                   <Counter
                     value={infants}
                     setFn={setters?.setUpdatedInfants}
@@ -243,11 +309,13 @@ const SummaryDates = ({
               )}
             </div>
           </div>
-          <div className="flex justify-between items-center my-3 ">
+          <div className={`flex items-center justify-between ${rowY}`}>
             <p>{t('bookings_dates_step_guests_pets')}</p>
             <div className="font-bold">
               {isEditMode ? (
-                <div className="bg-accent-light p-2 w-[115px] flex justify-end rounded-md">
+                <div
+                  className={`flex w-[115px] justify-end rounded-md bg-accent-light ${counterPad}`}
+                >
                   <Counter
                     value={pets}
                     setFn={setters?.setUpdatedPets}
@@ -262,7 +330,7 @@ const SummaryDates = ({
         </>
       )}
 
-      <div className="flex justify-between items-start my-3 text-sm md:text-base">
+      <div className={`flex items-start justify-between ${rowY} ${dateText}`}>
         <p>
           {' '}
           {isDayTicket ? t('listings_book_day') : t('listings_book_check_in')}
@@ -285,7 +353,7 @@ const SummaryDates = ({
       </div>
       {!isDayTicket && (
         <>
-          <div className="flex justify-between items-start my-3 text-sm md:text-base">
+          <div className={`flex items-start justify-between ${rowY} ${dateText}`}>
             <p> {t('listings_book_check_out')}</p>
             <p className="font-bold">
               {endDate &&
@@ -304,9 +372,24 @@ const SummaryDates = ({
               {endDate && TIME_ZONE && isHourlyBooking && isEditMode && endDate}
             </p>
           </div>
+          {isEditMode && collapseDatesEditor && onToggleDatesEditor && (
+            <div className={`flex justify-end ${rowMt}`}>
+              <Button
+                variant="inline"
+                size="small"
+                isFullWidth={false}
+                onClick={onToggleDatesEditor}
+                type="button"
+              >
+                {datesEditorOpen ? t('generic_done') : t('events_edit_dates')}
+              </Button>
+            </div>
+          )}
           <div>
-            {isEditMode && (
-              <div className="flex justify-between items-start my-3 rounded-md bg-accent-light p-4">
+            {isEditMode && (!collapseDatesEditor || datesEditorOpen) && (
+              <div
+                className={`flex items-start justify-between ${rowMt} rounded-md bg-accent-light ${calPad}`}
+              >
                 <ListingDateSelector
                   setStartDate={setters?.setUpdatedStartDate}
                   setEndDate={setters?.setUpdatedEndDate}
@@ -324,7 +407,7 @@ const SummaryDates = ({
           </div>
 
           {!isHourlyBooking && (
-            <div className="flex justify-between items-start my-3 text-sm md:text-base">
+            <div className={`flex items-start justify-between ${rowY} ${dateText}`}>
               <p> {t('bookings_stay_duration')}</p>
               <p className="font-bold">{durationInDays || '-'}</p>
             </div>
@@ -333,11 +416,11 @@ const SummaryDates = ({
       )}
 
       {listingName && (
-        <div className="flex justify-between items-center mt-3">
+        <div className={`flex items-center justify-between ${rowMt}`}>
           <p>{t('bookings_summary_step_dates_accomodation_type')}</p>
 
           {isEditMode && setters?.setUpdatedListingId && listingOptions ? (
-            <div className="bg-accent-light rounded-md p-2">
+            <div className={`rounded-md bg-accent-light ${counterPad}`}>
               <Select
                 className="rounded-full  border-black"
                 value={updatedListingId}
@@ -352,7 +435,19 @@ const SummaryDates = ({
             </div>
           ) : (
             <Link
-              href={`/stay/${listingUrl}`}
+              href={
+                listingId
+                  ? buildStayCreateListingHref({
+                      listingId,
+                      startDate,
+                      endDate,
+                      totalGuests,
+                      kids,
+                      infants,
+                      pets,
+                    })
+                  : '/stay/create'
+              }
               className="font-bold uppercase text-right text-accent"
             >
               {listingName} {numSpacesRequired && 'x' + ' ' + numSpacesRequired}
@@ -364,7 +459,7 @@ const SummaryDates = ({
       {!isHourlyBooking && (
         <div>
           {isVolunteer && (
-            <div className="flex justify-between items-start mt-3">
+            <div className={`flex items-start justify-between ${rowMt}`}>
               <p>{t('bookings_summary_step_dates_commitment')}</p>
               <p className="font-bold uppercase">
                 {t('bookings_summary_step_dates_default_commitment')}
@@ -372,7 +467,9 @@ const SummaryDates = ({
             </div>
           )}
           {doesNeedPickup !== undefined && (
-            <div className="flex justify-between mt-3 gap-20 items-start	">
+            <div
+              className={`flex items-start justify-between ${rowMt} ${gapBetween}`}
+            >
               <p>{t('bookings_pickup')}</p>
               <p className="font-bold uppercase text-right">
                 {doesNeedPickup ? t('generic_yes') : t('generic_no')}
@@ -380,7 +477,9 @@ const SummaryDates = ({
             </div>
           )}
           {doesNeedSeparateBeds !== undefined && (
-            <div className="flex justify-between mt-3 gap-20 items-start	">
+            <div
+              className={`flex items-start justify-between ${rowMt} ${gapBetween}`}
+            >
               <p>{t('booking_card_separate_beds_needed')}</p>
               <p className="font-bold uppercase text-right">
                 {doesNeedSeparateBeds ? t('generic_yes') : t('generic_no')}

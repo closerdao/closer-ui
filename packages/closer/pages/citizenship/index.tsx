@@ -29,7 +29,6 @@ import {
   Users,
   Wallet,
 } from 'lucide-react';
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
@@ -38,8 +37,9 @@ import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
 import { CitizenshipConfig } from '../../types/api';
 import api from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { twitterUrlToHandle } from '../../utils/app.helpers';
-import { loadLocaleData } from '../../utils/locale.helpers';
+import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import PageNotFound from '../not-found';
 
 const CITIZEN_TARGET = 300;
@@ -50,7 +50,6 @@ interface CitizenshipPageProps {
     citizenTarget?: number;
     apiEndpoint?: string;
   };
-  citizenshipConfig?: CitizenshipConfig;
 }
 
 const citizenFilter = {
@@ -61,9 +60,10 @@ const citizenFilter = {
 
 const CitizenshipPage = ({
   appName,
-  citizenshipConfig = {} as CitizenshipConfig,
   customConfig = {} as { citizenTarget?: number; apiEndpoint?: string },
 }: CitizenshipPageProps) => {
+  const citizenshipConfig = (getCachedConfig('citizenship') ??
+    {}) as CitizenshipConfig;
   const t = useTranslations();
   const config = useConfig();
   const twitterHandle = twitterUrlToHandle(config?.TWITTER_URL);
@@ -590,7 +590,7 @@ const CitizenshipPage = ({
                       {t('citizenship_from')}
                     </div>
                     <div className="text-4xl font-semibold leading-tight">
-                      €{tokenPlans[0]?.monthlyPayment || 0}
+                      {formatIsoFiatAmount(tokenPlans[0]?.monthlyPayment || 0, 'EUR')}
                       <span className="text-base font-normal">
                         {t('citizenship_per_month')}
                       </span>
@@ -742,28 +742,6 @@ const CitizenshipPage = ({
       </section>
     </div>
   );
-};
-
-CitizenshipPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [citizenshipRes, messages] = await Promise.all([
-      api.get('/config/citizenship').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-
-    const citizenshipConfig = citizenshipRes?.data?.results?.value;
-
-    return {
-      citizenshipConfig,
-      messages,
-    };
-  } catch (err: unknown) {
-    return {
-      citizenshipConfig: null,
-    };
-  }
 };
 
 export default CitizenshipPage;

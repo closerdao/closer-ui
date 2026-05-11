@@ -1,3 +1,4 @@
+import type { AbstractIntlMessages } from 'next-intl';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -12,10 +13,11 @@ import AcceptCookies from 'closer/components/AcceptCookies';
 import {
   AuthProvider,
   ConfigProvider,
+  LocaleMessagesNextIntlBridge,
   PlatformProvider,
-  api,
-  getConfig,
+  appGetInitialPropsWithMessages,
 } from 'closer';
+import configKeyed from 'closer/configCached';
 import { WalletProvider } from 'closer/contexts/wallet';
 import { blockchainConfig } from 'closer/config_blockchain';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
@@ -26,7 +28,6 @@ import {
   mergeGeneralConfigWithDefaults,
   prepareGeneralConfig,
 } from 'closer/utils/app.helpers';
-import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import { getAppConfigFromEnv } from 'closer/utils/appConfigFromEnv';
@@ -34,19 +35,21 @@ import '../styles/index.css';
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
+  messages?: AbstractIntlMessages;
 }
 
-const MyApp = ({ Component, pageProps }: AppOwnProps) => {
+const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
   const router = useRouter();
   const { query } = router;
   const referral = query.referral;
 
-  const [config, setConfig] = useState<any>(() => {
-    const merged = mergeGeneralConfigWithDefaults(null);
-    applyCurrencyLocaleFromGeneralConfig(merged);
+  const [config] = useState<any>(() => {
+    const mergedGeneral = mergeGeneralConfigWithDefaults(configKeyed.general);
+    applyCurrencyLocaleFromGeneralConfig(mergedGeneral);
     return {
-      ...prepareGeneralConfig(merged),
-      _configLoaded: false,
+      ...prepareGeneralConfig(mergedGeneral),
+      ...configKeyed,
+      _configLoaded: true,
     };
   });
 
@@ -57,24 +60,6 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
       localStorage.setItem(REFERRAL_ID_LOCAL_STORAGE_KEY, referral as string);
     }
   }, [referral]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const keyedConfig = await getConfig(api);
-        const mergedGeneral = mergeGeneralConfigWithDefaults(keyedConfig.general);
-        applyCurrencyLocaleFromGeneralConfig(mergedGeneral);
-        setConfig({
-          ...prepareGeneralConfig(mergedGeneral),
-          ...keyedConfig,
-          _configLoaded: true,
-        });
-      } catch (err) {
-        console.error(err);
-        setConfig((prev: any) => ({ ...prev, _configLoaded: true }));
-      }
-    })();
-  }, []);
 
   return (
     <>
@@ -112,10 +97,13 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         }}
       >
         <ErrorBoundary>
-          <NextIntlClientProvider
-            locale={router.locale || 'en'}
-            messages={pageProps.messages || {}}
-            timeZone={config?.TIME_ZONE || process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE || getAppConfigFromEnv().DEFAULT_TIMEZONE}
+          <LocaleMessagesNextIntlBridge
+            initialMessages={messages || {}}
+            timeZone={
+              config?.TIME_ZONE ||
+              process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE ||
+              getAppConfigFromEnv().DEFAULT_TIMEZONE
+            }
           >
             <AuthProvider>
               <PlatformProvider>
@@ -132,11 +120,13 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
                 </WalletProvider>
               </PlatformProvider>
             </AuthProvider>
-          </NextIntlClientProvider>
+          </LocaleMessagesNextIntlBridge>
         </ErrorBoundary>
       </ConfigProvider>
     </>
   );
 };
+
+MyApp.getInitialProps = appGetInitialPropsWithMessages;
 
 export default MyApp;

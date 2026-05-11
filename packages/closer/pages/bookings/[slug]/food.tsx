@@ -5,29 +5,29 @@ import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import BookingBackButton from '../../../components/BookingBackButton';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
+import BookingSurface from '../../../components/booking/bookingSurface';
 import Switch from '../../../components/Switch';
 import { Button, Information } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import dayjs from 'dayjs';
-import { NextApiRequest, NextPageContext } from 'next';
+import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
 import { BOOKING_STEPS, BOOKING_STEP_TITLE_KEYS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import { usePlatform } from '../../../contexts/platform';
+import { useRedirectPaidBookingToDetail } from '../../../hooks';
 import {
   BaseBookingParams,
   Booking,
   BookingConfig,
-  Event,
-  Listing,
 } from '../../../types';
 import { FoodOption } from '../../../types/food';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import config from '../../../configCached';
 import api, { cdn } from '../../../utils/api';
-import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import {
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
@@ -38,20 +38,18 @@ import {
   FoodBookingContext,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { logMetricIfAuthenticated } from '../../../utils/metrics';
 import { priceFormat } from '../../../utils/helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Props extends BaseBookingParams {
-  listing: Listing | null;
-  booking: Booking | null;
   error?: string;
-  event?: Event;
   bookingConfig: BookingConfig | null;
   discountCode?: string;
   foodOptions: FoodOption[];
   tokenCurrency: string;
+  booking?: Booking | null;
 }
 
 const SingleOptionPhotoPreview = ({
@@ -116,15 +114,68 @@ const SingleOptionPhotoPreview = ({
 };
 
 const FoodSelectionPage = ({
-  booking,
-  event,
   error,
   bookingConfig,
   discountCode,
   foodOptions,
   tokenCurrency,
+  booking: bookingProp,
 }: Props) => {
   const t = useTranslations();
+  const router = useRouter();
+  const slugParam = router.query.slug;
+  const slug = typeof slugParam === 'string' ? slugParam : slugParam?.[0];
+  const { platform }: any = usePlatform();
+
+  const [fetchedBooking, setFetchedBooking] = useState<Booking | null>(null);
+
+  useEffect(() => {
+    if (!router.isReady || !slug) return;
+    if (bookingProp?._id === slug) {
+      setFetchedBooking(bookingProp);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const action = await platform.booking.getOne(slug, { force: true });
+        if (cancelled) return;
+        const payload = action?.results;
+        if (!payload) return;
+        const js =
+          typeof payload.toJS === 'function'
+            ? (payload.toJS() as Booking)
+            : (payload as Booking);
+        setFetchedBooking(js);
+      } catch {
+        if (!cancelled) setFetchedBooking(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router.isReady, slug, platform, bookingProp]);
+
+  const bookingFromStore = slug
+    ? platform.booking.findOne(slug)?.toJS?.() ?? null
+    : null;
+  const booking =
+    bookingFromStore ?? fetchedBooking ?? bookingProp ?? null;
+  const event = booking?.eventId
+    ? platform.event.findOne(booking.eventId)?.toJS?.() ?? null
+    : null;
+  const listing = booking?.listing
+    ? platform.listing.findOne(booking.listing)?.toJS?.() ?? null
+    : null;
+
+  useEffect(() => {
+    if (booking?.eventId) {
+      void platform.event.getOne(booking.eventId);
+    }
+    if (booking?.listing) {
+      void platform.listing.getOne(booking.listing);
+    }
+  }, [booking?.eventId, booking?.listing, platform]);
 
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -132,8 +183,9 @@ const FoodSelectionPage = ({
   const { useTokens, start, end, adults, eventId, isFriendsBooking } =
     booking || {};
 
-  const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+
+  useRedirectPaidBookingToDetail(booking);
 
   const eventFoodOptionSet = Boolean(
     event?.foodOption === 'food_package'
@@ -226,7 +278,7 @@ const FoodSelectionPage = ({
 
     const skipFoodStep = async () => {
       try {
-        await api.post(`/bookings/${booking._id}/update-food`, {
+        await platform.bookings.updateFood(booking._id, {
           foodOption: 'no_food',
           foodOptionId: null,
         });
@@ -257,7 +309,13 @@ const FoodSelectionPage = ({
         foodOption: hasSelection ? 'food_package' : 'no_food',
         foodOptionId: foodOptionIdValue,
       };
-      await api.post(`/bookings/${booking?._id}/update-food`, payload);
+      await platform.bookings.updateFood(booking?._id, payload);
+
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-food-update-success',
+        value: 'booking',
+        point: durationNights || adults || 0,
+      });
 
       if (event?.fields) {
         router.push(`/bookings/${booking?._id}/questions`);
@@ -266,6 +324,11 @@ const FoodSelectionPage = ({
 
       router.push(`/bookings/${booking?._id}/rules`);
     } catch (err: any) {
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-food-update-error',
+        value: 'booking',
+        point: durationNights || adults || 0,
+      });
       setApiError(parseMessageFromError(err));
     } finally {
       setIsLoading(false);
@@ -388,9 +451,11 @@ const FoodSelectionPage = ({
                 }));
               };
               return (
-                <div
+                <BookingSurface
                   key={option._id}
-                  className="rounded-lg border border-neutral-dark/30 bg-neutral-light/50 p-4 flex gap-4"
+                  tone="soft"
+                  padding="md"
+                  className="flex gap-4"
                 >
                   <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-neutral-dark/10 relative">
                     {photos.length > 0 ? (
@@ -499,7 +564,7 @@ const FoodSelectionPage = ({
                         </div>
                       )}
                   </div>
-                </div>
+                </BookingSurface>
               );
             })}
           </div>
@@ -509,7 +574,7 @@ const FoodSelectionPage = ({
           foodOption &&
           foodOption?.name !== 'no_food' &&
           eventFoodOptionSet && (
-            <div className="rounded-lg border border-neutral-dark/30 bg-neutral-light/50 p-4 flex gap-4">
+            <BookingSurface tone="soft" padding="md" className="flex gap-4">
               {(foodOption.photos ?? []).length > 0 && (
                 <SingleOptionPhotoPreview
                   option={foodOption}
@@ -579,7 +644,7 @@ const FoodSelectionPage = ({
                     </div>
                   )}
               </div>
-            </div>
+            </BookingSurface>
           )}
 
         {!isGuestSelectMode &&
@@ -587,7 +652,7 @@ const FoodSelectionPage = ({
           !(foodOption && foodOption?.name !== 'no_food' && eventFoodOptionSet) &&
           foodOption &&
           foodOption?.name !== 'no_food' && (
-            <div className="rounded-lg border border-neutral-dark/30 bg-neutral-light/50 p-4 flex gap-4">
+            <BookingSurface tone="soft" padding="md" className="flex gap-4">
               {(foodOption.photos ?? []).length > 0 && (
                 <SingleOptionPhotoPreview
                   option={foodOption}
@@ -661,7 +726,7 @@ const FoodSelectionPage = ({
                     </div>
                   )}
               </div>
-            </div>
+            </BookingSurface>
           )}
 
         {!isFoodAvailable && (
@@ -689,48 +754,21 @@ const FoodSelectionPage = ({
 };
 
 FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
-  const { query, req } = context;
+  const { query } = context;
 
   const discountCode = query?.discountCode;
 
   try {
-    const [bookingRes, configs, foodRes, messages] = await Promise.all([
-      api
-        .get(`/booking/${query.slug}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        })
-        .catch(() => null),
-      getConfig(api),
-      api.get('/food').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const booking = bookingRes?.data?.results || null;
-    const bookingConfig = getConfigValueBySlug(configs, 'booking') || null;
-    const web3Config = getConfigValueBySlug(configs, 'web3') || null;
+    const foodRes = await api.get('/food').catch(() => null)
+    const bookingConfig = config.booking || null;
+    const web3Config = config.web3 || null;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
     const foodOptions = foodRes?.data?.results || null;
 
-    const [optionalEvent, optionalListing] = await Promise.all([
-      booking?.eventId &&
-        api.get(`/event/${booking?.eventId}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        }),
-      booking?.listing &&
-        api.get(`/listing/${booking?.listing}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        }),
-    ]);
-    const event = optionalEvent?.data?.results;
-    const listing = optionalListing?.data?.results;
-
     return {
-      booking,
-      listing,
-      event,
       error: null,
       bookingConfig,
       discountCode,
-      messages,
       foodOptions,
       tokenCurrency,
     };
@@ -738,10 +776,7 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
     console.log('Error', err);
     return {
       error: parseMessageFromError(err),
-      booking: null,
-      listing: null,
       bookingConfig: null,
-      messages: null,
       foodOptions: null,
       tokenCurrency: getBookingTokenCurrency(),
     };

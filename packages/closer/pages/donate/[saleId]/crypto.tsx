@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useState } from 'react';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import Wallet from '../../../components/Wallet';
@@ -12,20 +11,16 @@ import { DEFAULT_CURRENCY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { WalletDispatch, WalletState } from '../../../contexts/wallet';
 import { useConfig } from '../../../hooks/useConfig';
-import { GeneralConfig } from '../../../types';
 import api from '../../../utils/api';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { logMetricIfAuthenticated } from '../../../utils/metrics';
 import {
   resolveDonationStablecoinAddress,
   transferDonationStablecoin,
 } from '../../../utils/donationStablecoinTransfer';
 import { readDonationSession, type StoredDonationCrypto } from '../../../utils/donationSessionStorage';
 import { priceFormat } from '../../../utils/helpers';
-import { getDonateInitialProps } from '../getDonateInitialProps';
-
-interface DonateCryptoPageProps {
-  generalConfig: GeneralConfig | null;
-}
 
 async function copyToClipboard(text: string) {
   try {
@@ -35,13 +30,14 @@ async function copyToClipboard(text: string) {
   }
 }
 
-function DonateCryptoPage({ generalConfig }: DonateCryptoPageProps) {
+function DonateCryptoPage() {
   const t = useTranslations();
   const router = useRouter();
   const { saleId } = router.query;
   const id = typeof saleId === 'string' ? saleId : '';
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
   const config = useConfig();
+  const generalConfig = getCachedConfig('general');
   const platformName = generalConfig?.platformName || config.platformName;
 
   const {
@@ -107,18 +103,24 @@ function DonateCryptoPage({ generalConfig }: DonateCryptoPageProps) {
         to: cryptoBlock.treasuryAddress,
         humanAmount: cryptoBlock.expectedAmount,
       });
-      await api.post(`/donations/${cryptoBlock.saleId}/confirm-crypto`, {
+      await api.post(`/sale/${cryptoBlock.saleId}/confirm-crypto`, {
         txHash,
       });
       if (typeof updateWalletBalance === 'function') {
         updateWalletBalance();
       }
-      router.push(
-        `/donate/success?amount=${amount}&method=crypto&saleId=${encodeURIComponent(
-          cryptoBlock.saleId,
-        )}`,
-      );
+      void logMetricIfAuthenticated(user, {
+        event: 'donation-payment-success',
+        value: 'donation',
+        point: amount,
+      });
+      router.push(`/sale/${encodeURIComponent(cryptoBlock.saleId)}`);
     } catch (err: unknown) {
+      void logMetricIfAuthenticated(user, {
+        event: 'donation-payment-error',
+        value: 'donation',
+        point: amount,
+      });
       setCryptoError(parseMessageFromError(err));
     } finally {
       setCtaLoading(false);
@@ -186,7 +188,6 @@ function DonateCryptoPage({ generalConfig }: DonateCryptoPageProps) {
         <Heading level={1} className="mb-0">
           {t('donate_crypto_head_title')}
         </Heading>
-        <p className="text-sm text-gray-700">{t('donate_crypto_network')}</p>
         <p className="text-sm text-gray-700">
           {t('donate_crypto_send_exact', {
             amount: priceFormat(cryptoBlock.expectedAmount, DEFAULT_CURRENCY),
@@ -247,7 +248,5 @@ function DonateCryptoPage({ generalConfig }: DonateCryptoPageProps) {
     </>
   );
 }
-
-DonateCryptoPage.getInitialProps = async (context: NextPageContext) => getDonateInitialProps(context);
 
 export default DonateCryptoPage;

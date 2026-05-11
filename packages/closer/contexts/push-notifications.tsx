@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 
-import { getConfig, getConfigValueBySlug } from '../utils/configCache';
-import api from '../utils/api';
+import configCached from '../configCached';
 import { useAuth } from './auth';
 import { usePlatform } from './platform';
 
@@ -74,19 +73,8 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
 
   useEffect(() => {
     if (!isSupported) return;
-    let cancelled = false;
-    getConfig(api)
-      .then((configs) => {
-        if (cancelled) return;
-        const communityConfig = getConfigValueBySlug(configs, 'community');
-        setIsCommunityEnabled(communityConfig?.enabled === true);
-      })
-      .catch(() => {
-        if (!cancelled) setIsCommunityEnabled(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+    const communityConfig = configCached.community;
+    setIsCommunityEnabled(communityConfig?.enabled === true);
   }, [isSupported]);
 
   // Sync subscription state from user object

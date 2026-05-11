@@ -2,7 +2,6 @@ import Head from 'next/head';
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import GenericYoutubeEmbed from '../components/GenericYoutubeEmbed';
@@ -23,8 +22,9 @@ import {
   TokenStats,
 } from '../types';
 import api from '../utils/api';
+import { getCachedConfig } from '../utils/cachedConfig.helpers';
 import { twitterUrlToHandle } from '../utils/app.helpers';
-import { getCurrencySymbol } from '../utils/currencyFormat';
+import { formatIsoFiatAmount } from '../utils/currencyFormat';
 import {
   computeMilestoneStates,
   fetchFundraisingBreakdown,
@@ -33,11 +33,9 @@ import {
   getMilestoneGoal,
   sortMilestonesByStartDate,
 } from '../utils/fundraising.helpers';
-import { loadLocaleData } from '../utils/locale.helpers';
 import PageNotFound from './not-found';
 
 export interface InvestPageProps {
-  fundraisingConfig: FundraisingConfig;
   investPageOptions?: InvestPageOptions;
   messages?: unknown;
 }
@@ -61,9 +59,10 @@ const getDefaultInvestPageOptions = (): InvestPageOptions => {
 };
 
 const FundraiserPage = ({
-  fundraisingConfig,
   investPageOptions: optionsOverride,
 }: InvestPageProps) => {
+  const fundraisingConfig = (getCachedConfig('fundraiser') ??
+    {}) as FundraisingConfig;
   const t = useTranslations();
   const config = useConfig();
   const defaults = getDefaultInvestPageOptions();
@@ -106,7 +105,10 @@ const FundraiserPage = ({
   useEffect(() => {
     const load = async () => {
       try {
-        const breakdown = await fetchFundraisingBreakdown(fundraisingConfig);
+        const breakdown = await fetchFundraisingBreakdown({
+          amountRaisedPreCampaign: fundraisingConfig?.amountRaisedPreCampaign,
+          loansCollectedTotal: fundraisingConfig?.loansCollectedTotal,
+        });
         setFundraisingTotal(breakdown.totalRaised);
       } catch (error) {
         console.error('Error fetching fundraising total:', error);
@@ -144,9 +146,7 @@ const FundraiserPage = ({
 
   const formatPrice = (tokens: number) => {
     if (!tokenPrice) return '...';
-    return `${getCurrencySymbol('EUR')}${Math.round(
-      tokens * tokenPrice,
-    ).toLocaleString()}`;
+    return formatIsoFiatAmount(Math.round(tokens * tokenPrice), 'EUR');
   };
 
   const shareUrl = opts.shareUrl || '';
@@ -268,27 +268,5 @@ const FundraiserPage = ({
     </>
   );
 };
-
-export async function getInvestPageInitialProps(context: NextPageContext) {
-  try {
-    const [fundraiserRes, messages] = await Promise.all([
-      api.get('/config/fundraiser').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const fundraisingConfig = fundraiserRes?.data?.results?.value;
-
-    return {
-      fundraisingConfig: fundraisingConfig ?? {},
-      messages,
-    };
-  } catch (err) {
-    return {
-      fundraisingConfig: {},
-      error: err,
-    };
-  }
-}
-
-FundraiserPage.getInitialProps = getInvestPageInitialProps;
 
 export default FundraiserPage;

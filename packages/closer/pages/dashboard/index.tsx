@@ -10,8 +10,6 @@ import DashboardIntro from '../../components/Dashboard/DashboardIntro';
 import RevenueTimeFrameSelector from '../../components/Dashboard/RevenueTimeFrameSelector';
 import { Heading, Spinner } from '../../components/ui';
 
-import { NextPageContext } from 'next';
-
 const DashboardBookings = dynamic(
   () => import('../../components/Dashboard/DashboardBookings'),
   { ssr: false, loading: () => <Spinner /> }
@@ -31,18 +29,12 @@ import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import useRBAC from '../../hooks/useRBAC';
 import { BookingConfig, GeneralConfig } from '../../types';
-import api from '../../utils/api';
-import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import PageNotFound from '../not-found';
 
-interface Props {
-  generalConfig: GeneralConfig;
-  bookingConfig: BookingConfig;
-  error?: string;
-}
-
-const DashboardPage = ({ generalConfig, bookingConfig }: Props) => {
+const DashboardPage = () => {
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
+  const bookingConfig = getCachedConfig('booking') as BookingConfig | null;
   const t = useTranslations();
   const defaultConfig = useConfig();
   const { user } = useAuth();
@@ -152,35 +144,6 @@ const DashboardPage = ({ generalConfig, bookingConfig }: Props) => {
       </AdminLayout>
     </>
   );
-};
-
-DashboardPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [generalRes, bookingRes, messages] = await Promise.all([
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const generalConfig = generalRes?.data?.results?.value;
-    const bookingConfig = bookingRes?.data?.results?.value;
-
-    return {
-      generalConfig,
-      bookingConfig,
-      messages,
-    };
-  } catch (error) {
-    return {
-      error: parseMessageFromError(error),
-      generalConfig: null,
-      bookingConfig: null,
-      messages: null,
-    };
-  }
 };
 
 export default DashboardPage;

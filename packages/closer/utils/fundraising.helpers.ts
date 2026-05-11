@@ -1,5 +1,4 @@
 import {
-  FundraisingConfig,
   FundraisingMilestone,
   MilestoneStatus,
 } from '../types/api';
@@ -176,8 +175,13 @@ export interface FundraisingBreakdown {
   fiatTotal: number;
 }
 
+export type FundraisingTotalsInput = {
+  amountRaisedPreCampaign?: number | string;
+  loansCollectedTotal?: number | string;
+};
+
 export const fetchFundraisingBreakdown = async (
-  fundraisingConfig: FundraisingConfig | undefined,
+  totals?: FundraisingTotalsInput,
 ): Promise<FundraisingBreakdown> => {
   const [cryptoRes, fiatRes] = await Promise.all([
     api
@@ -203,8 +207,8 @@ export const fetchFundraisingBreakdown = async (
   ]);
   const cryptoTotal = Number(cryptoRes?.data?.sum ?? 0);
   const fiatTotal = Number(fiatRes?.data?.sum ?? 0);
-  const preCampaign = Number(fundraisingConfig?.amountRaisedPreCampaign ?? 0);
-  const loans = Number(fundraisingConfig?.loansCollectedTotal ?? 0);
+  const preCampaign = Number(totals?.amountRaisedPreCampaign ?? 0);
+  const loans = Number(totals?.loansCollectedTotal ?? 0);
   const totalRaised =
     preCampaign + loans + cryptoTotal + fiatTotal;
   return { totalRaised, cryptoTotal, fiatTotal };

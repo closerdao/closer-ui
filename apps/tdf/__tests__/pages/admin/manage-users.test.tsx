@@ -12,6 +12,16 @@ jest.mock('js-cookie', () => ({
   get: () => '123456789',
 }));
 
+const mockHasAccess = jest.fn((_page: string) => false);
+
+jest.mock('closer/hooks/useRBAC', () => ({
+  __esModule: true,
+  default: () => ({
+    hasAccess: (page: string) => mockHasAccess(page),
+    rbacLiveRevision: 0,
+  }),
+}));
+
 jest.mock('closer/utils/api', () => ({
   __esModule: true,
   default: {
@@ -51,6 +61,10 @@ const mockBookingConfig: BookingConfig = {
 };
 
 describe('ManageUsersPage', () => {
+  beforeEach(() => {
+    mockHasAccess.mockImplementation(() => false);
+  });
+
   it('should render "Page not found" if user does not have "admin" role', async () => {
     renderWithProviders(
       <AuthContext.Provider value={{ user: user as any, isAuthenticated: true, login: jest.fn(), setAuthentification: jest.fn(), isLoading: false, logout: jest.fn(), signup: jest.fn(), resetPassword: jest.fn(), updateProfile: jest.fn(), deleteAccount: jest.fn(), connectWallet: jest.fn(), disconnectWallet: jest.fn(), isWalletConnected: false, walletAddress: null, nonce: null, verifyWallet: jest.fn() }}>
@@ -62,6 +76,9 @@ describe('ManageUsersPage', () => {
   });
 
   it('should render user list page successfully if user has "admin" role ', async () => {
+    mockHasAccess.mockImplementation(
+      (page: string) => page === 'UserManagement',
+    );
 
     renderWithProviders(
       <AuthContext.Provider value={{ user: adminUser as any, isAuthenticated: true, login: jest.fn(), setAuthentification: jest.fn(), isLoading: false, logout: jest.fn(), signup: jest.fn(), resetPassword: jest.fn(), updateProfile: jest.fn(), deleteAccount: jest.fn(), connectWallet: jest.fn(), disconnectWallet: jest.fn(), isWalletConnected: false, walletAddress: null, nonce: null, verifyWallet: jest.fn() }}>

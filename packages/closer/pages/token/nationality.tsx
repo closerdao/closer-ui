@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useRef, useState } from 'react';
 
 import {
   BackButton,
@@ -13,17 +13,19 @@ import {
 } from '../../components/ui';
 import Select from '../../components/ui/Select/Dropdown';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { TOKEN_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
+import { logMetric } from '../../utils/metrics';
+import { fetchTokenSaleQuantityForMetric } from '../../utils/tokenSale.helpers';
 import { doesAddressMatchPattern, isInputValid } from '../../utils/helpers';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 interface Props {
@@ -33,9 +35,40 @@ interface Props {
 const NationalityPage = ({ generalConfig }: Props) => {
   const router = useRouter();
 
-  const { totalFiat, tokens, tokenSaleType } = router.query;
+  useSalePaidRedirect();
 
-  const { isAuthenticated, isLoading, refetchUser } = useAuth();
+  const { tokenSaleType, saleId } = router.query;
+
+  const { isAuthenticated, isLoading, refetchUser, user } = useAuth();
+
+  const didPrefillFromKyc = useRef(false);
+
+  useEffect(() => {
+    if (didPrefillFromKyc.current || !user) return;
+    const k = user.kycData;
+    if (
+      !k ||
+      (!k.legalName?.trim() &&
+        !k.country?.trim() &&
+        !k.address1?.trim())
+    ) {
+      return;
+    }
+    didPrefillFromKyc.current = true;
+    setFormData({
+      required: {
+        name: k.legalName?.trim() || '',
+        phone: user.phone?.trim() || '',
+        address: k.address1?.trim() || '',
+        postalCode: k.postalCode?.trim() || '',
+        city: k.city?.trim() || '',
+        nationality: k.country?.trim() || '',
+      },
+      optional: {
+        taxNo: k.TIN?.trim() || '',
+      },
+    });
+  }, [user]);
 
   const [formData, setFormData] = useState({
     required: {
@@ -53,7 +86,6 @@ const NationalityPage = ({ generalConfig }: Props) => {
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
   const [canContinue, setCanContinue] = useState(false);
   const [isApiLoading, setApiIsLoading] = useState(false);
-
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -101,14 +133,37 @@ const NationalityPage = ({ generalConfig }: Props) => {
       });
       await refetchUser();
 
+      const sid = String(saleId ?? '').trim();
+      const point = sid ? await fetchTokenSaleQuantityForMetric(sid) : 0;
+
       if (tokenSaleType === 'fiat') {
+        await logMetric({ event: 'kyc-submit-fiat', value: 'token-sale', point });
         router.push(
-          `/token/bank-transfer?tokens=${tokens}&totalFiat=${totalFiat}`,
+          `/token/bank-transfer?saleId=${encodeURIComponent(sid)}`,
         );
       } else if (tokenSaleType === 'crypto') {
-        router.push(`/token/checkout?tokens=${tokens}`);
+        await logMetric({
+          event: 'kyc-submit-crypto',
+          value: 'token-sale',
+          point,
+        });
+        router.push(`/token/checkout?saleId=${encodeURIComponent(sid)}`);
+      } else if (sid) {
+        await logMetric({
+          event: 'kyc-submit-checkout',
+          value: 'token-sale',
+          point,
+        });
+        router.push(`/token/checkout?saleId=${encodeURIComponent(sid)}`);
       }
     } catch (error) {
+      const sid = String(saleId ?? '').trim();
+      const fallbackPoint = sid ? await fetchTokenSaleQuantityForMetric(sid) : 0;
+      void logMetric({
+        event: 'kyc-submit-error',
+        value: 'token-sale',
+        point: fallbackPoint,
+      });
       setErrorMessage(parseMessageFromError(error));
     } finally {
       setApiIsLoading(false);
@@ -196,25 +251,6 @@ const NationalityPage = ({ generalConfig }: Props) => {
         <main className="pt-14 pb-24">
           <div>
             <fieldset className="flex flex-col gap-6 mb-16">
-              <Select
-                label={t('token_sale_label_nationality')}
-                value={formData.required.nationality}
-                options={countries || []}
-                className="h-10"
-                onChange={(value: string) =>
-                  setFormData({
-                    ...formData,
-                    required: { ...formData.required, nationality: value },
-                  })
-                }
-                isRequired
-              />
-              {isRestrictedNationality && (
-                <ErrorMessage
-                  error={t('token_sale_restricted_nationality_warning')}
-                />
-              )}
-
               <Input
                 label={t('token_sale_label_name')}
                 onChange={handleChange}
@@ -275,6 +311,24 @@ const NationalityPage = ({ generalConfig }: Props) => {
                 isRequired={true}
                 
               />
+              <Select
+                label={t('token_sale_label_nationality')}
+                value={formData.required.nationality}
+                options={countries || []}
+                className="h-10"
+                onChange={(value: string) =>
+                  setFormData({
+                    ...formData,
+                    required: { ...formData.required, nationality: value },
+                  })
+                }
+                isRequired
+              />
+              {isRestrictedNationality && (
+                <ErrorMessage
+                  error={t('token_sale_restricted_nationality_warning')}
+                />
+              )}
               {errorMessage && <ErrorMessage error={errorMessage} />}
               {error && <ErrorMessage error={parseMessageFromError(error)} />}
             </fieldset>
@@ -291,28 +345,6 @@ const NationalityPage = ({ generalConfig }: Props) => {
       </div>
     </>
   );
-};
-
-NationalityPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [generalRes, messages] = await Promise.all([
-      api.get('/config/general').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-
-    const generalConfig = generalRes?.data?.results?.value;
-
-    return {
-      generalConfig,
-      messages,
-    };
-  } catch (err: unknown) {
-    return {
-      generalConfig: null,
-      error: parseMessageFromError(err),
-      messages: null,
-    };
-  }
 };
 
 export default NationalityPage;

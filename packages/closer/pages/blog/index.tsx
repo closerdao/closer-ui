@@ -18,9 +18,9 @@ import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import { Article } from '../../types/blog';
 import api, { cdn, formatSearch } from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { estimateReadingTime, getFirstSentence } from '../../utils/blog.utils';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 interface BlogConfig {
   enabled: boolean;
@@ -30,8 +30,6 @@ interface Props {
   articles: Article[];
   numArticles: number;
   authors: User[];
-  generalConfig: GeneralConfig;
-  blogConfig: BlogConfig | null;
   page?: number;
   error?: string;
 }
@@ -41,9 +39,9 @@ const Search = ({
   page,
   numArticles,
   authors,
-  generalConfig,
-  blogConfig,
 }: Props) => {
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
+  const blogConfig = getCachedConfig('blog') as BlogConfig | null;
   const t = useTranslations();
   const router = useRouter();
 
@@ -264,30 +262,22 @@ Search.getInitialProps = async (context: NextPageContext) => {
   const search = formatSearch({ category: { $ne: HOME_PAGE_CATEGORY } });
 
   try {
-    const [articles, numArticles, generalRes, blogRes, messages] =
-      await Promise.all([
-        api
-          .get(
-            `/article?limit=${
-              Number(page) === 1 || !page
-                ? BLOG_POSTS_PER_PAGE + 1
-                : BLOG_POSTS_PER_PAGE
-            }&sort_by=-created&where=${search}&page=${page}`,
-          )
-          .catch(() => {
-            return null;
-          }),
-        api.get('/count/article').catch(() => {
+    const [articles, numArticles] = await Promise.all([
+      api
+        .get(
+          `/article?limit=${
+            Number(page) === 1 || !page
+              ? BLOG_POSTS_PER_PAGE + 1
+              : BLOG_POSTS_PER_PAGE
+          }&sort_by=-created&where=${search}&page=${page}`,
+        )
+        .catch(() => {
           return null;
         }),
-        api.get('/config/general').catch(() => {
-          return null;
-        }),
-        api.get('/config/blog').catch(() => {
-          return null;
-        }),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      ]);
+      api.get('/count/article').catch(() => {
+        return null;
+      }),
+    ]);
 
     const authorIds = articles?.data?.results.map(
       (article: Article) => article.createdBy,
@@ -298,24 +288,16 @@ Search.getInitialProps = async (context: NextPageContext) => {
     );
 
     const authors = authorsRes.data?.results;
-    const generalConfig = generalRes?.data?.results?.value;
-    const blogConfig = blogRes?.data?.results?.value;
 
     return {
       articles: articles?.data?.results,
       numArticles: numArticles?.data?.results,
       authors,
-      generalConfig,
-      blogConfig,
       page,
-      messages,
     };
   } catch (error) {
     return {
       error: parseMessageFromError(error),
-      generalConfig: null,
-      blogConfig: null,
-      messages: null,
       authors: [],
       articles: [],
       page: null,

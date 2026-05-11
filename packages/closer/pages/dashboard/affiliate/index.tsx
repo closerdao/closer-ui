@@ -12,7 +12,6 @@ import Heading from '../../../components/ui/Heading';
 import Input from '../../../components/ui/Input';
 import Spinner from '../../../components/ui/Spinner';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import process from 'process';
 
@@ -21,14 +20,13 @@ import { usePlatform } from '../../../contexts/platform';
 import PageNotAllowed from '../../../pages/401';
 import { BookingConfig } from '../../../types/api';
 import api from '../../../utils/api';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
+import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
 
-const AffiliateDashboardPage = ({
-  bookingConfig,
-}: {
-  bookingConfig: BookingConfig;
-}) => {
+const AffiliateDashboardPage = () => {
+  const bookingConfig = getCachedConfig('booking') as BookingConfig | null;
+  const formatEurAmount = (amount: number) => formatIsoFiatAmount(amount || 0, 'EUR');
   const t = useTranslations();
   const { user } = useAuth();
   const { platform }: any = usePlatform();
@@ -145,11 +143,11 @@ const AffiliateDashboardPage = ({
               />
               <StatsCard
                 title={t('affiliate_dashboard_total_revenue')}
-                value={`€${totalRevenue?.toLocaleString() || '0'} `}
+                value={formatEurAmount(totalRevenue || 0)}
               />
               <StatsCard
                 title={t('affiliate_dashboard_unpaid_balance')}
-                value={`€${totalUnpaidBalance?.toLocaleString() || '0'} `}
+                value={formatEurAmount(totalUnpaidBalance || 0)}
               />
               <StatsCard
                 title={t('affiliate_dashboard_page_views')}
@@ -186,7 +184,6 @@ const AffiliateDashboardPage = ({
                 </tr>
               </thead>
 
-
               {data?.affiliateData?.map((affiliate: any) => {
                 const rowRevenue = Number(affiliate?.totalRevenue) || 0;
                 const rowPaid =
@@ -205,10 +202,10 @@ const AffiliateDashboardPage = ({
                     </td>
                     <td className="px-3 py-2">{affiliate?.user?.email}</td>
                     <td className="px-3 py-2 text-right">
-                      €{rowRevenue.toLocaleString()}
+                      {formatEurAmount(rowRevenue)}
                     </td>
                     <td className="px-3 py-2 text-right">
-                      €{rowUnpaid.toLocaleString()}
+                      {formatEurAmount(rowUnpaid)}
                     </td>
                     <td className="px-3 py-2">
                       {data?.payoutData
@@ -321,12 +318,10 @@ const AffiliateDashboardPage = ({
                                         )}
                                       </p>
                                       <p className="text-right">
-                                        €
-                                        {charge?.amount?.total?.val?.toLocaleString()}
+                                        {formatEurAmount(charge?.amount?.total?.val || 0)}
                                       </p>
                                       <p className="text-right">
-                                        €
-                                        {charge?.affiliateRevenue?.val?.toLocaleString()}
+                                        {formatEurAmount(charge?.affiliateRevenue?.val || 0)}
                                       </p>
                                       <p className="text-right">
                                         {charge?.created?.slice(0, 10)}
@@ -362,8 +357,7 @@ const AffiliateDashboardPage = ({
                                       className="grid grid-cols-2 gap-2 pt-1"
                                     >
                                       <p className="text-right">
-                                        €
-                                        {payout.amount.total.val.toLocaleString()}
+                                        {formatEurAmount(payout.amount.total.val || 0)}
                                       </p>
                                       <p className="text-right">
                                         {payout.created.slice(0, 10)}
@@ -384,35 +378,6 @@ const AffiliateDashboardPage = ({
       </AdminLayout>
     </>
   );
-};
-
-AffiliateDashboardPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [generalRes, bookingRes, messages] = await Promise.all([
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const generalConfig = generalRes?.data?.results?.value;
-    const bookingConfig = bookingRes?.data?.results?.value;
-
-    return {
-      generalConfig,
-      bookingConfig,
-      messages,
-    };
-  } catch (error) {
-    return {
-      error: parseMessageFromError(error),
-      generalConfig: null,
-      bookingConfig: null,
-      messages: null,
-    };
-  }
 };
 
 export default AffiliateDashboardPage;

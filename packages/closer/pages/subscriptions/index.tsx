@@ -1,39 +1,35 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 
 import { useEffect, useRef, useState } from 'react';
 
-import PageError from '../../components/PageError';
-import SubscriptionCards from '../../components/SubscriptionCards';
 import Webinar from '../../components/Webinar';
 import { Heading } from '../../components/ui/';
 
-import { NextPage, NextPageContext } from 'next';
+import { NextPage } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { DEFAULT_CURRENCY, MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
-import { GeneralConfig, Listing } from '../../types';
+import { GeneralConfig } from '../../types';
 import { SubscriptionPlan } from '../../types/subscriptions';
 import api from '../../utils/api';
-import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import { parseSubscriptionPerks } from '../../utils/subscriptionPerks';
+import { sanitizeSubscriptionPerkHtml } from '../../utils/sanitizeSubscriptionPerkHtml';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
-interface Props {
-  subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
-  generalConfig: GeneralConfig | null;
-  listings: Listing[];
-  error?: string;
-}
+interface Props {}
 
-const SubscriptionsPage: NextPage<Props> = ({
-  subscriptionsConfig,
-  generalConfig,
-  error,
-}) => {
+const SubscriptionsPage: NextPage<Props> = () => {
+  const subscriptionsConfig = getCachedConfig('subscriptions') as {
+    enabled: boolean;
+    elements: SubscriptionPlan[];
+  };
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
   const { isAuthenticated, isLoading, user } = useAuth();
   const defaultConfig = useConfig();
@@ -47,6 +43,10 @@ const SubscriptionsPage: NextPage<Props> = ({
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
 
   const plans: any[] = prepareSubscriptions(subscriptionsConfig);
+  const featuredPlan =
+    plans.find((plan) => plan?.available && plan?.slug !== 'citizen') || plans[0];
+  const featuredPlanPerks = parseSubscriptionPerks(featuredPlan?.perks);
+  const formattedPrice = formatIsoFiatAmount(Number(featuredPlan?.price || 0), 'EUR');
 
   const [userActivePlan, setUserActivePlan] = useState<SubscriptionPlan>();
 
@@ -170,10 +170,6 @@ const SubscriptionsPage: NextPage<Props> = ({
     }
   };
 
-  if (error) {
-    return <PageError error={error} />;
-  }
-
   if (isLoading) {
     return null;
   }
@@ -182,8 +178,12 @@ const SubscriptionsPage: NextPage<Props> = ({
     return <PageNotFound error="" />;
   }
 
+  if (!featuredPlan) {
+    return <PageNotFound error="" />;
+  }
+
   return (
-    <div className="max-w-screen-lg mx-auto">
+    <div className="max-w-screen-md mx-auto">
       <Head>
         <title>{`${t('subscriptions_title')} - ${PLATFORM_NAME}`}</title>
         <meta
@@ -200,76 +200,130 @@ const SubscriptionsPage: NextPage<Props> = ({
         <meta name="twitter:description" content={`Join ${PLATFORM_NAME} with a subscription plan.`} />
         <link rel="canonical" href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/subscriptions`} />
       </Head>
-      <main className="pt-12 pb-16 md:flex-row flex-wrap">
-        <div className="flex justify-center">
-          <div className="w-full">
-            <Heading
-              level={1}
-              className="font-extrabold mb-6 uppercase text-center text-3xl"
-            >
-              {t('subscriptions_title')}
-            </Heading>
+      <main className="pt-10 pb-14 flex flex-col gap-6">
+        <div className="w-full text-center text-foreground flex flex-col gap-3">
+          <p className="uppercase tracking-[0.2em] text-xs md:text-sm text-foreground/60">
+            {t('subscriptions_membership_badge')}
+          </p>
+          <Heading level={1} className="text-3xl md:text-5xl">
+            {featuredPlan?.title}
+          </Heading>
+          <p className="text-base md:text-xl text-foreground/80 max-w-xl mx-auto">
+            {featuredPlan?.description}
+          </p>
+        </div>
 
-            <div className="flex justify-center flex-wrap ">
-              <p className="mb-4">{t('subscriptions_intro')}</p>
+        <section className="bg-neutral-light rounded-2xl border border-line p-5 md:p-7 text-foreground flex flex-col md:flex-row gap-5 md:gap-7">
+          <div className="flex-1 flex flex-col gap-4">
+            <span className="inline-flex w-fit rounded-full bg-accent-light px-3 py-1 text-xs font-semibold text-foreground">
+              {t('subscriptions_single_plan_badge')}
+            </span>
+            <p className="text-lg leading-relaxed max-w-2xl">
+              {featuredPlan?.description}
+            </p>
+            <div className="flex flex-col gap-3">
+              {featuredPlanPerks?.map((perk) => (
+                <div key={perk.title} className="flex items-start gap-3">
+                  <span className="w-6 h-6 rounded-full bg-accent-light text-accent-dark flex items-center justify-center mt-1 text-xs">
+                    ✓
+                  </span>
+                  <div className="flex flex-col gap-1">
+                    {perk.title.includes('<') ? (
+                      <span
+                        className="text-base leading-relaxed font-semibold"
+                        dangerouslySetInnerHTML={{
+                          __html: sanitizeSubscriptionPerkHtml(perk.title),
+                        }}
+                      />
+                    ) : (
+                      <p className="text-base leading-relaxed font-semibold">
+                        {perk.title}
+                      </p>
+                    )}
+                    {perk.description ? (
+                      perk.description.includes('<') ? (
+                        <span
+                          className="text-sm text-foreground/75 leading-relaxed"
+                          dangerouslySetInnerHTML={{
+                            __html: sanitizeSubscriptionPerkHtml(perk.description),
+                          }}
+                        />
+                      ) : (
+                        <p className="text-sm text-foreground/75 leading-relaxed">
+                          {perk.description}
+                        </p>
+                      )
+                    ) : null}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
+
+          <div className="w-px bg-line hidden md:block" />
+
+          <div className="md:w-[220px] flex flex-col items-center justify-center gap-3">
+            <p className="text-4xl md:text-5xl font-semibold leading-none">
+              {formattedPrice}
+            </p>
+            <p className="text-base text-center">
+              {t('subscriptions_summary_per_month')}
+            </p>
+            <button
+              className="btn-primary text-sm px-5 py-2 whitespace-nowrap"
+              onClick={() =>
+                handleNext(
+                  featuredPlan.priceId,
+                  featuredPlan.tiersAvailable,
+                  featuredPlan.slug,
+                )
+              }
+            >
+              {!isAuthenticated
+                ? t('subscriptions_create_account_button')
+                : userActivePlan?.priceId !== 'free'
+                  ? t('subscriptions_manage_button')
+                  : t('subscriptions_subscribe_button')}
+            </button>
+            <p className="text-sm text-foreground/70">
+              {t('subscriptions_cancel_anytime')}
+            </p>
+          </div>
+        </section>
+
+        <section className="bg-neutral rounded-2xl border border-line p-5 md:p-6 text-foreground flex flex-col gap-3">
+          <p className="uppercase tracking-[0.2em] text-xs text-foreground/70">
+            {t('subscriptions_why_title')}
+          </p>
+          <p className="text-base leading-relaxed">
+            {t('subscriptions_why_intro', { platformName: PLATFORM_NAME })}
+          </p>
+        </section>
+
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link
+            href="/citizenship"
+            className="btn text-sm px-5 py-2"
+          >
+            {t('subscriptions_become_citizen_button')}
+          </Link>
+          <button
+            className="btn text-sm px-5 py-2"
+            onClick={() =>
+              handleNext(
+                featuredPlan.priceId,
+                featuredPlan.tiersAvailable,
+                featuredPlan.slug,
+              )
+            }
+          >
+            {t('subscriptions_faq_cancel')}
+          </button>
         </div>
-        <SubscriptionCards
-          plans={plans}
-          clickHandler={handleNext}
-          userActivePlan={userActivePlan}
-          validUntil={user?.subscription?.validUntil}
-          cancelledAt={user?.subscription?.cancelledAt}
-          currency={DEFAULT_CURRENCY}
-        />
       </main>
       <Webinar tags={['subscriptions-page']} analyticsCategory="Subscriptions" />
     </div>
   );
-};
-
-SubscriptionsPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [subscriptionsRes, generalRes, listingRes, messages] =
-      await Promise.all([
-        api.get('/config/subscriptions').catch(() => {
-          return null;
-        }),
-        api.get('/config/general').catch(() => {
-          return null;
-        }),
-        api
-          .get('/listing', {
-            params: {
-              limit: MAX_LISTINGS_TO_FETCH,
-            },
-          })
-          .catch(() => {
-            return null;
-          }),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      ]);
-
-    const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
-    const generalConfig = generalRes?.data?.results?.value;
-    const listings = listingRes?.data.results;
-
-    return {
-      subscriptionsConfig,
-      generalConfig,
-      listings,
-      messages,
-    };
-  } catch (err: unknown) {
-    return {
-      subscriptionsConfig: { enabled: false, elements: [] },
-      generalConfig: null,
-      listings: [],
-      error: parseMessageFromError(err),
-      messages: null,
-    };
-  }
 };
 
 export default SubscriptionsPage;

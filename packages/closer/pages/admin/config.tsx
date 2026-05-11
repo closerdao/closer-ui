@@ -2,6 +2,7 @@ import Head from 'next/head';
 
 import { ChangeEvent, useEffect, useState } from 'react';
 
+import AccountingEntitiesVatFields from '../../components/AccountingEntitiesVatFields';
 import ArrayConfig from '../../components/ArrayConfig';
 import ConfigImageUpload from '../../components/ConfigImageUpload';
 import AdminLayout from '../../components/Dashboard/AdminLayout';
@@ -15,7 +16,6 @@ import {
 } from '../../components/ui';
 
 import { ChevronDown, Lock, Settings } from 'lucide-react';
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { configDescription } from '../../config';
@@ -24,9 +24,6 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { Config } from '../../types';
 import { BookingConfig } from '../../types/api';
-import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
-import api from '../../utils/api';
-import { parseMessageFromError } from '../../utils/common';
 import {
   getDefaultConfigValue,
   getEnabledConfigs,
@@ -35,7 +32,6 @@ import {
   prepareConfigs,
 } from '../../utils/config.utils';
 import { capitalizeFirstLetter } from '../../utils/learn.helpers';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 const BETA_FEATURES = ['community', 'governance'];
@@ -51,20 +47,23 @@ const FUNDRAISER_CONFIG_KEYS_ORDER = [
   'packages',
 ];
 
-interface Props {
-  error: null | string;
-  bookingConfig: BookingConfig;
-}
+const ACCOUNTING_ENTITIES_CONFIG_KEYS_ORDER = ['elements', 'vatByProductType'];
 
-const ConfigPage = ({ bookingConfig }: Props) => {
+interface Props {}
+
+const ConfigPage = () => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
   const { user } = useAuth();
 
+  const [bookingConfig, setBookingConfig] = useState<BookingConfig | null>(
+    null,
+  );
+
   const isBookingAllowedByEnv =
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
   const isBookingEnabled =
-    bookingConfig?.enabled && isBookingAllowedByEnv;
+    Boolean(bookingConfig?.enabled) && isBookingAllowedByEnv;
 
   const isWeb3Enabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
   const isWeb3BookingEnabled =
@@ -149,7 +148,6 @@ const ConfigPage = ({ bookingConfig }: Props) => {
       }) || [];
 
   const configFormSchema = getValidationSchema(arrayConfigsSchema as any);
-
 
   useEffect(() => {
     loadData();
@@ -273,26 +271,30 @@ const ConfigPage = ({ bookingConfig }: Props) => {
         .toJS()
         .some((config: any) => config.slug === configCategoryToSave);
 
-      let res;
       if (configExists) {
-        res = await api.patch(`/config/${configCategoryToSave}`, {
+        await platform.config.patch(configCategoryToSave, {
           slug: configCategoryToSave,
           value: updatedConfig?.value,
         });
       } else {
-        res = await api.post('/config', {
+        await platform.config.post({
           slug: configCategoryToSave,
           value: updatedConfig?.value,
         });
       }
 
-      setHasConfigUpdated(false);
-      if (res.status === 200) {
-        setHasConfigUpdated(true);
-        setTimeout(() => {
-          setHasConfigUpdated(false);
-        }, 3000);
+      await platform.config.getOne(configCategoryToSave, { force: true });
+
+      if (configCategoryToSave === 'booking') {
+        const bookingDocAfter = platform.config.findOne('booking');
+        setBookingConfig(bookingDocAfter?.get?.('value')?.toJS?.() ?? null);
       }
+
+      setHasConfigUpdated(false);
+      setHasConfigUpdated(true);
+      setTimeout(() => {
+        setHasConfigUpdated(false);
+      }, 3000);
     } catch (error) {
     } finally {
       setIsLoading(false);
@@ -474,6 +476,13 @@ const ConfigPage = ({ bookingConfig }: Props) => {
               <Settings className="w-5 h-5 text-accent" />
             </div>
             <Heading level={2}>{t('platform_configs')}</Heading>
+          </div>
+
+          <div
+            className="rounded-lg border border-line bg-neutral-light px-4 py-3 text-sm text-foreground"
+            role="note"
+          >
+            {t('admin_platform_changes_production_delay')}
           </div>
 
           {!isGeneralConfigEnabled && (
@@ -698,7 +707,17 @@ const ConfigPage = ({ bookingConfig }: Props) => {
                                   k,
                                 ),
                               ).map((k) => [k, configData.value[k]] as const)
-                            : Object.entries(configData.value)
+                            : configSlug === 'accounting-entities'
+                              ? ACCOUNTING_ENTITIES_CONFIG_KEYS_ORDER.filter(
+                                  (k) =>
+                                    Object.prototype.hasOwnProperty.call(
+                                      configData.value,
+                                      k,
+                                    ),
+                                ).map(
+                                  (k) => [k, configData.value[k]] as const,
+                                )
+                              : Object.entries(configData.value)
                           ).map(
                             ([key, value]) => {
                               const currentValue = configData.value[key];
@@ -748,6 +767,61 @@ const ConfigPage = ({ bookingConfig }: Props) => {
                                 configData.value?.primaryCtaMember !== 'custom'
                               ) {
                                 return null;
+                              }
+
+                              if (
+                                configSlug === 'accounting-entities' &&
+                                key === 'vatByProductType'
+                              ) {
+                                const paymentVal = updatedConfigs.find(
+                                  (c) => c.slug === 'payment',
+                                )?.value;
+                                const defaultVatRate = paymentVal?.vatRate as
+                                  | number
+                                  | undefined;
+                                const vatMap =
+                                  currentValue &&
+                                  typeof currentValue === 'object' &&
+                                  !Array.isArray(currentValue)
+                                    ? (currentValue as Record<
+                                        string,
+                                        number | undefined
+                                      >)
+                                    : {};
+                                return (
+                                  <div
+                                    key={`${configSlug}-${key}`}
+                                    className="flex flex-col gap-2"
+                                  >
+                                    <h4 className="text-sm font-semibold text-gray-800">
+                                      {t('config_section_accounting_vat')}
+                                    </h4>
+                                    <AccountingEntitiesVatFields
+                                      elements={
+                                        Array.isArray(configData.value.elements)
+                                          ? configData.value.elements
+                                          : []
+                                      }
+                                      vatByProductType={vatMap}
+                                      defaultVatRate={defaultVatRate}
+                                      onChange={(next) => {
+                                        setUpdatedConfigs(
+                                          updatedConfigs.map((config) =>
+                                            config.slug === configSlug
+                                              ? {
+                                                  ...config,
+                                                  value: {
+                                                    ...config.value,
+                                                    vatByProductType: next,
+                                                  } as unknown as Config['value'],
+                                                }
+                                              : config,
+                                          ),
+                                        );
+                                      }}
+                                    />
+                                  </div>
+                                );
                               }
 
                               const fundraiserSectionKey =
@@ -1005,29 +1079,6 @@ const ConfigPage = ({ bookingConfig }: Props) => {
       </AdminLayout>
     </>
   );
-};
-
-ConfigPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [configs, messages] = await Promise.all([
-      getConfig(api),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
-
-    return {
-      bookingConfig,
-      error: null,
-      messages,
-    };
-  } catch (err: unknown) {
-    return {
-      bookingConfig: null,
-      error: parseMessageFromError(err),
-      messages: null,
-    };
-  }
 };
 
 export default ConfigPage;

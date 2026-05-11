@@ -1,36 +1,33 @@
 import Head from 'next/head';
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import Heading from '../components/ui/Heading';
+import { normalizeAccountingProductSlug } from '../constants/accountingEntities.constants';
 import { useConfig } from '../hooks/useConfig';
-import api from '../utils/api';
-
-import { loadLocaleData } from '../utils/locale.helpers';
+import { AccountingEntitiesConfig } from '../types/api';
+import { getCachedConfig } from '../utils/cachedConfig.helpers';
 
 const SITE_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth';
 
-interface AccountingEntity {
-  legalName: string;
-  taxNumber: string;
-  address: string;
-  products: string[];
-}
-
-interface PrivacyPolicyPageProps {
-  accountingEntities?: AccountingEntity[];
-}
-
 const PRODUCT_TYPE_KEYS: Record<string, string> = {
   accommodations: 'privacy_policy_product_accommodations',
+  donations: 'privacy_policy_product_donations',
   events: 'privacy_policy_product_events',
-  subscriptions: 'privacy_policy_product_subscriptions',
-  tokens: 'privacy_policy_product_tokens',
+  expenses: 'privacy_policy_product_expenses',
   food: 'privacy_policy_product_food',
+  lessons: 'privacy_policy_product_lessons',
   products: 'privacy_policy_product_products',
+  subscriptions: 'privacy_policy_product_subscriptions',
+  terminal: 'privacy_policy_product_terminal',
+  tokens: 'privacy_policy_product_tokens',
+  'payment-link': 'privacy_policy_product_payment_link',
 };
 
-const PrivacyPolicyPage = ({ accountingEntities }: PrivacyPolicyPageProps) => {
+const PrivacyPolicyPage = () => {
+  const entitiesCfg = getCachedConfig(
+    'accounting-entities',
+  ) as AccountingEntitiesConfig | null;
+  const accountingEntities = entitiesCfg?.elements ?? [];
   const t = useTranslations();
   const config = useConfig();
 
@@ -81,7 +78,11 @@ const PrivacyPolicyPage = ({ accountingEntities }: PrivacyPolicyPageProps) => {
 
   const getProductsDescription = (products: string[]) => {
     if (!products || products.length === 0) return '';
-    const translatedProducts = products.map(p => t(PRODUCT_TYPE_KEYS[p] || p));
+    const translatedProducts = products.map((p) => {
+      const slug = normalizeAccountingProductSlug(p) ?? p;
+      const msgKey = PRODUCT_TYPE_KEYS[slug];
+      return msgKey ? t(msgKey) : slug;
+    });
     if (translatedProducts.length === 1) return translatedProducts[0];
     const last = translatedProducts.pop();
     return `${translatedProducts.join(', ')} ${t('privacy_policy_and')} ${last}`;
@@ -441,21 +442,3 @@ const PrivacyPolicyPage = ({ accountingEntities }: PrivacyPolicyPageProps) => {
 };
 
 export default PrivacyPolicyPage;
-
-PrivacyPolicyPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [messages, accountingEntitiesRes] = await Promise.all([
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      api.get('/config/accounting-entities').catch(() => null),
-    ]);
-
-    const accountingEntities = accountingEntitiesRes?.data?.results?.value?.elements || [];
-
-    return { 
-      messages,
-      accountingEntities,
-    };
-  } catch (err) {
-    return { error: err, messages: null, accountingEntities: [] };
-  }
-};

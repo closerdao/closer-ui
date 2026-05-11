@@ -4,8 +4,10 @@ import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js';
 
 import { useTranslations } from 'next-intl';
 
+import { usePlatform } from '../contexts/platform';
 import api from '../utils/api';
 import { parseMessageFromError } from '../utils/common';
+import { logMetricIfAuthenticated } from '../utils/metrics';
 import { ErrorMessage } from './ui';
 import Button from './ui/Button';
 
@@ -57,8 +59,28 @@ const CheckoutForm = ({
   isAdditionalFiatPayment,
   stakeTokens,
   checkContract,
+  metricBookingContext,
 }) => {
   const t = useTranslations();
+  const { platform } = usePlatform();
+
+  const isSuccessfulResponse = (response) =>
+    Boolean(
+      response &&
+        ((typeof response.status === 'number' &&
+          response.status >= 200 &&
+          response.status < 300) ||
+          response?.data?.results),
+    );
+
+  const logBookingPaymentFailureMetric = () => {
+    if (type !== 'booking') return;
+    void logMetricIfAuthenticated(metricBookingContext?.user, {
+      event: 'booking-payment-error',
+      value: 'booking',
+      point: Math.round(Number(metricBookingContext?.fiatAmount) || 0),
+    });
+  };
 
   const stripe = useStripe();
   const elements = useElements();
@@ -112,6 +134,7 @@ const CheckoutForm = ({
 
         const { error } = res || {};
         if (error) {
+          logBookingPaymentFailureMetric();
           setProcessing(false);
           setError(error);
           return;
@@ -121,6 +144,7 @@ const CheckoutForm = ({
         if (refetchBooking) {
           const updatedBooking = await refetchBooking();
           if (updatedBooking?.status !== 'tokens-staked') {
+            logBookingPaymentFailureMetric();
             setProcessing(false);
             setError('Your tokens have been staked on the blockchain but the booking status could not be verified. Please refresh the page and try again, or contact support if the issue persists.');
             return;
@@ -135,11 +159,13 @@ const CheckoutForm = ({
         elements.getElement(CardElement),
       );
       if (error) {
+        logBookingPaymentFailureMetric();
         setProcessing(false);
         setError(error.message);
         return;
       }
       if (!token) {
+        logBookingPaymentFailureMetric();
         setProcessing(false);
         setError('No token returned from Stripe.');
         return;
@@ -153,30 +179,33 @@ const CheckoutForm = ({
       });
 
       if (createdPaymentMethod?.error) {
+        logBookingPaymentFailureMetric();
         setError(createdPaymentMethod.error || '');
         return;
       }
 
+      const paymentPayload = {
+        token: token.id,
+        type,
+        ticketOption,
+        total,
+        currency,
+        discountCode,
+        _id,
+        email,
+        name,
+        message,
+        fields,
+        volunteer,
+        paymentMethod: createdPaymentMethod?.paymentMethod.id,
+      };
+      const paymentResponse =
+        type === 'booking'
+          ? await platform.bookings.payment(paymentPayload)
+          : await api.post('/payment', paymentPayload);
       const {
         data: { results: payment },
-      } = await api.post(
-        type === 'booking' ? '/bookings/payment' : '/payment',
-        {
-          token: token.id,
-          type,
-          ticketOption,
-          total,
-          currency,
-          discountCode,
-          _id,
-          email,
-          name,
-          message,
-          fields,
-          volunteer,
-          paymentMethod: createdPaymentMethod?.paymentMethod.id,
-        },
-      );
+      } = paymentResponse;
 
       // 3d secure required for this payment
       if (payment.paymentIntent.status === 'requires_action') {
@@ -185,30 +214,29 @@ const CheckoutForm = ({
             payment.paymentIntent.client_secret,
           );
           if (confirmationResult?.error) {
+            logBookingPaymentFailureMetric();
             setError(confirmationResult?.error);
             if (tokenPaymentSuccessful && refetchBooking) {
               await refetchBooking();
             }
           }
           if (confirmationResult?.paymentIntent?.status === 'succeeded') {
-            const confirmationResponse = await api.post(
-              '/bookings/payment/confirmation',
-              {
-                paymentMethod: createdPaymentMethod?.paymentMethod.id,
-                paymentId: payment.paymentIntent.id,
-                bookingId: _id,
-                token: token.id,
-              },
-            );
+            const confirmationResponse = await platform.bookings.paymentConfirmation({
+              paymentMethod: createdPaymentMethod?.paymentMethod.id,
+              paymentId: payment.paymentIntent.id,
+              bookingId: _id,
+              token: token.id,
+            });
 
-            if (confirmationResponse.status === 200) {
+            if (isSuccessfulResponse(confirmationResponse)) {
               if (onSuccess) {
                 setProcessing(false);
-                onSuccess(payment);
+                await onSuccess(payment);
               }
             }
           }
         } catch (err) {
+          logBookingPaymentFailureMetric();
           setError(err);
           if (tokenPaymentSuccessful && refetchBooking) {
             await refetchBooking();
@@ -218,23 +246,21 @@ const CheckoutForm = ({
 
       // 3d secure NOT required for this payment
       if (payment.paymentIntent.status === 'succeeded') {
-        const confirmationResponse = await api.post(
-          '/bookings/payment/confirmation',
-          {
-            paymentMethod: createdPaymentMethod?.paymentMethod.id,
-            paymentId: payment.paymentIntent.id,
-            bookingId: _id,
-            token: token.id,
-          },
-        );
-        if (confirmationResponse.status === 200) {
+        const confirmationResponse = await platform.bookings.paymentConfirmation({
+          paymentMethod: createdPaymentMethod?.paymentMethod.id,
+          paymentId: payment.paymentIntent.id,
+          bookingId: _id,
+          token: token.id,
+        });
+        if (isSuccessfulResponse(confirmationResponse)) {
           if (onSuccess) {
             setProcessing(false);
-            onSuccess(payment);
+            await onSuccess(payment);
           }
         }
       }
     } catch (err) {
+      logBookingPaymentFailureMetric();
       setProcessing(false);
       console.error(err);
       setError(parseMessageFromError(err));

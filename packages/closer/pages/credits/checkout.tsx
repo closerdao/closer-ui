@@ -7,40 +7,33 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
 import CreditsCheckoutForm from '../../components/CreditsCheckoutForm';
-import PageError from '../../components/PageError';
 import { BackButton, ErrorMessage, Heading, Row } from '../../components/ui/';
 
-import { NextPage, NextPageContext } from 'next';
+import { NextPage } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import { FundraisingConfig, GeneralConfig, PaymentConfig } from '../../types';
-import api from '../../utils/api';
 import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
-import { parseMessageFromError } from '../../utils/common';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { getVatInfo, priceFormat } from '../../utils/helpers';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY as string,
 );
 
-interface Props {
-  fundraisingConfig: FundraisingConfig | null;
-  paymentConfig: PaymentConfig | null;
-  generalConfig: GeneralConfig | null;
-  apiError?: string;
-}
+interface Props {}
 
-const CreditsCheckoutPage: NextPage<Props> = ({
-  fundraisingConfig,
-  paymentConfig,
-  generalConfig,
-  apiError,
-}) => {
+const CreditsCheckoutPage: NextPage<Props> = () => {
+  const fundraisingConfig = getCachedConfig('fundraiser') as FundraisingConfig | null;
+  const paymentConfig = (mergePaymentValueWithBookingCurrencyFallback(
+    getCachedConfig('payment'),
+    getCachedConfig('booking'),
+  ) ?? null) as PaymentConfig | null;
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
   const router = useRouter();
 
@@ -87,9 +80,6 @@ const CreditsCheckoutPage: NextPage<Props> = ({
   // if (!CREDIT_PACKAGES.includes(amount as string)) {
   //   return <PageError error="No package available" />;
   // }
-  if (apiError) {
-    return <PageError error={apiError} />;
-  }
 
   return (
     <>
@@ -149,48 +139,6 @@ const CreditsCheckoutPage: NextPage<Props> = ({
       </div>
     </>
   );
-};
-
-CreditsCheckoutPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [fundraiserRes, paymentRes, bookingRes, generalRes, messages] =
-      await Promise.all([
-        api.get('/config/fundraiser').catch(() => {
-          return null;
-        }),
-        api.get('/config/payment').catch(() => {
-          return null;
-        }),
-        api.get('/config/booking').catch(() => {
-          return null;
-        }),
-        api.get('/config/general').catch(() => {
-          return null;
-        }),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      ]);
-
-    const fundraisingConfig = fundraiserRes?.data?.results?.value;
-    const paymentConfig = (mergePaymentValueWithBookingCurrencyFallback(
-      paymentRes?.data?.results?.value,
-      bookingRes?.data?.results?.value,
-    ) ?? null) as PaymentConfig | null;
-    const generalConfig = generalRes?.data?.results?.value;
-    return {
-      fundraisingConfig,
-      paymentConfig,
-      generalConfig,
-      messages,
-    };
-  } catch (err: unknown) {
-    return {
-      fundraisingConfig: null,
-      paymentConfig: null,
-      generalConfig: null,
-      apiError: parseMessageFromError(err),
-      messages: null,
-    };
-  }
 };
 
 export default CreditsCheckoutPage;

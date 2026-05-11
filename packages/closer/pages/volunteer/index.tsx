@@ -4,28 +4,21 @@ import Link from 'next/link';
 
 import { MessageCircle } from 'lucide-react';
 
-import PageError from 'closer/components/PageError';
 import { Heading, LinkButton } from 'closer/components/ui';
 
-import { GeneralConfig, PageNotFound, VolunteerConfig, api } from 'closer';
+import {
+  GeneralConfig,
+  PageNotFound,
+  VolunteerConfig,
+  getCachedConfig,
+} from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import useRBAC from 'closer/hooks/useRBAC';
-import { parseMessageFromError } from 'closer/utils/common';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-interface Props {
-  generalConfig: GeneralConfig | null;
-  volunteerConfig: VolunteerConfig | null;
-  error: string | null;
-}
-
-const VolunteerOpportunitiesPage = ({
-  generalConfig,
-  error,
-  volunteerConfig,
-}: Props) => {
+const VolunteerOpportunitiesPage = () => {
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
+  const volunteerConfig = getCachedConfig('volunteering') as VolunteerConfig | null;
   const t = useTranslations();
 
   const isVolunteerEnabled =
@@ -41,10 +34,6 @@ const VolunteerOpportunitiesPage = ({
 
   if(!isVolunteerEnabled) {
     return <PageNotFound />;
-  }
-
-  if (error) {
-    return <PageError error={error} />;
   }
 
   return (
@@ -225,30 +214,6 @@ const VolunteerOpportunitiesPage = ({
       </main>
     </div>
   );
-};
-
-VolunteerOpportunitiesPage.getInitialProps = async (
-  context: NextPageContext,
-) => {
-  try {
-    const [messages, generalRes, volunteerConfigRes] = await Promise.all([
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      api.get('/config/general').catch(() => null),
-      api.get('/config/volunteering').catch(() => null),
-    ]);
-
-    const generalConfig = generalRes?.data?.results?.value;
-    const volunteerConfig = volunteerConfigRes?.data?.results?.value;
-
-    return { messages, generalConfig, volunteerConfig };
-  } catch (err: unknown) {
-    return {
-      generalConfig: null,
-      error: parseMessageFromError(err),
-      messages: null,
-      volunteerConfig: null,
-    };
-  }
 };
 
 export default VolunteerOpportunitiesPage;

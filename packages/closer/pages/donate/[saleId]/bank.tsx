@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { BackButton, Button, ErrorMessage, Heading, Spinner } from '../../../components/ui';
@@ -11,15 +10,10 @@ import { DEFAULT_CURRENCY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
 import type { CreateDonationBankResult } from '../../../types/donation';
-import { GeneralConfig } from '../../../types';
 import { pollDonationSaleUntilPaid } from '../../../utils/donation.helpers';
 import { readDonationSession, type StoredDonationBank } from '../../../utils/donationSessionStorage';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { priceFormat } from '../../../utils/helpers';
-import { getDonateInitialProps } from '../getDonateInitialProps';
-
-interface DonateBankPageProps {
-  generalConfig: GeneralConfig | null;
-}
 
 async function copyToClipboard(text: string) {
   try {
@@ -29,13 +23,14 @@ async function copyToClipboard(text: string) {
   }
 }
 
-function DonateBankPage({ generalConfig }: DonateBankPageProps) {
+function DonateBankPage() {
   const t = useTranslations();
   const router = useRouter();
   const { saleId } = router.query;
   const id = typeof saleId === 'string' ? saleId : '';
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const defaultConfig = useConfig();
+  const generalConfig = getCachedConfig('general');
   const platformName = generalConfig?.platformName || defaultConfig.platformName;
 
   const [session, setSession] = useState<StoredDonationBank | null | 'loading' | 'missing'>('loading');
@@ -87,9 +82,7 @@ function DonateBankPage({ generalConfig }: DonateBankPageProps) {
         { signal },
       );
       if (mounted && !signal.aborted && paid) {
-        router.push(
-          `/donate/success?amount=${amount}&method=bank&saleId=${encodeURIComponent(sid)}`,
-        );
+        router.push(`/sale/${encodeURIComponent(sid)}`);
       }
     })();
     return () => {
@@ -100,9 +93,7 @@ function DonateBankPage({ generalConfig }: DonateBankPageProps) {
 
   const handleMarkSent = () => {
     if (!bankBlock) return;
-    router.push(
-      `/donate/success?amount=${amount}&method=bank&saleId=${encodeURIComponent(bankBlock.saleId)}`,
-    );
+    router.push(`/sale/${encodeURIComponent(bankBlock.saleId)}`);
   };
 
   if (!router.isReady || isAuthLoading || session === 'loading') {
@@ -128,6 +119,11 @@ function DonateBankPage({ generalConfig }: DonateBankPageProps) {
       </div>
     );
   }
+
+  const memoCode =
+    bankBlock.memoCode?.trim() ||
+    (bankBlock as { confirmation_code?: string }).confirmation_code?.trim() ||
+    '';
 
   return (
     <>
@@ -157,7 +153,7 @@ function DonateBankPage({ generalConfig }: DonateBankPageProps) {
 
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
           <p className="text-sm font-semibold text-amber-950">
-            {t('donate_bank_memo_block', { reference: bankBlock.confirmation_code })}
+            {t('donate_bank_memo_block', { reference: memoCode })}
           </p>
         </div>
 
@@ -219,10 +215,10 @@ function DonateBankPage({ generalConfig }: DonateBankPageProps) {
                 {t('donate_reference_label')}
               </span>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-sm font-mono text-gray-900">{bankBlock.confirmation_code}</span>
+                <span className="text-sm font-mono text-gray-900">{memoCode}</span>
                 <button
                   type="button"
-                  onClick={() => copyToClipboard(bankBlock.confirmation_code)}
+                  onClick={() => copyToClipboard(memoCode)}
                   className="text-xs text-accent font-medium shrink-0"
                 >
                   {t('donate_copy')}
@@ -246,7 +242,5 @@ function DonateBankPage({ generalConfig }: DonateBankPageProps) {
     </>
   );
 }
-
-DonateBankPage.getInitialProps = async (context: NextPageContext) => getDonateInitialProps(context);
 
 export default DonateBankPage;

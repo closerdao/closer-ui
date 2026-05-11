@@ -22,7 +22,7 @@ const Dropdown: FC<DropdownProps> = React.memo(
     }
 
     const handleChange = (option: Item) => {
-      onChange && onChange(option.value);
+      if (onChange) onChange(option.value);
     };
 
     return (

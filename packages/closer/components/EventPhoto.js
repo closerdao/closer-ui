@@ -1,1 +1,1 @@
-module.exports = require('./EventPhoto/EventPhoto').default;
+export { default } from './EventPhoto/EventPhoto';

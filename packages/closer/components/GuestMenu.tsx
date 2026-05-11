@@ -9,10 +9,9 @@ import { useTranslations } from 'next-intl';
 import { useBuyTokens } from '../hooks/useBuyTokens';
 import { useConfig } from '../hooks/useConfig';
 import useRBAC from '../hooks/useRBAC';
-import api from '../utils/api';
+import configCached from '../configCached';
 import { getCurrentUnitPrice } from '../utils/bondingCurve';
 import { getReserveTokenDisplay } from '../utils/config.utils';
-import { getConfig, getConfigValueBySlug } from '../utils/configCache';
 import ReportABug from './ReportABug';
 import NavLink from './ui/NavLink';
 
@@ -33,7 +32,7 @@ const GuestMenu = () => {
   const config = useConfig() || {};
   const { APP_NAME } = config;
   const reserveToken = getReserveTokenDisplay(config);
-  const { hasAccess } = useRBAC();
+  const { hasAccess, rbacLiveRevision } = useRBAC();
   const router = useRouter();
   const { getCurrentSupplyWithoutWallet } = useBuyTokens();
 
@@ -167,6 +166,11 @@ const GuestMenu = () => {
               enabled: true,
             },
             {
+              label: t('navigation_learning_hub'),
+              url: '/learn/category/all',
+              enabled: isLearningHubEnabled,
+            },
+            {
               label: t('menu_faq'),
               url: '/resources',
               enabled: isFaqEnabled,
@@ -259,7 +263,6 @@ const GuestMenu = () => {
             label: t('navigation_learning_hub'),
             url: '/learn/category/all',
             enabled: isLearningHubEnabled,
-            rbacPage: 'LearningHub',
           },
         ],
       },
@@ -443,54 +446,46 @@ const GuestMenu = () => {
   };
 
   useEffect(() => {
-    (async () => {
-      try {
-        const configs = await getConfig(api);
-        const volunteerConfig = getConfigValueBySlug(configs, 'volunteering');
-        const bookingConfig = getConfigValueBySlug(configs, 'booking');
-        const governanceConfig = getConfigValueBySlug(configs, 'governance');
-        const learningHubConfig = getConfigValueBySlug(configs, 'learningHub');
-        const blogConfig = getConfigValueBySlug(configs, 'blog');
-        const citizenshipConfig = getConfigValueBySlug(configs, 'citizenship');
-        const generalConfig = getConfigValueBySlug(configs, 'general');
+    const volunteerConfig = configCached.volunteering;
+    const bookingConfig = configCached.booking;
+    const governanceConfig = configCached.governance;
+    const learningHubConfig = configCached.learningHub;
+    const blogConfig = configCached.blog;
+    const citizenshipConfig = configCached.citizenship;
+    const generalConfig = configCached.general;
 
-        const isVolunteeringEnabled =
-          volunteerConfig?.enabled === true &&
-          process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
-        const isBookingEnabled =
-          bookingConfig?.enabled === true &&
-          process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
-        const isGovernanceEnabled = governanceConfig?.enabled === true;
-        const isLearningHubEnabled =
-          learningHubConfig?.enabled === true &&
-          process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true';
-        const isBlogEnabled =
-          blogConfig?.enabled === true &&
-          process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true';
-        const isCitizenshipEnabled =
-          citizenshipConfig?.enabled === true &&
-          process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
-        const isFaqEnabled = Boolean(generalConfig?.faqsGoogleSheetId);
+    const isVolunteeringEnabled =
+      volunteerConfig?.enabled === true &&
+      process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
+    const isBookingEnabled =
+      bookingConfig?.enabled === true &&
+      process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+    const isGovernanceEnabled = governanceConfig?.enabled === true;
+    const isLearningHubEnabled =
+      learningHubConfig?.enabled === true &&
+      process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true';
+    const isBlogEnabled =
+      blogConfig?.enabled === true &&
+      process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true';
+    const isCitizenshipEnabled =
+      citizenshipConfig?.enabled === true &&
+      process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
+    const isFaqEnabled = Boolean(generalConfig?.faqsGoogleSheetId);
 
-        const sections = getMenuSections(
-          isBookingEnabled,
-          isVolunteeringEnabled,
-          isGovernanceEnabled,
-          isLearningHubEnabled,
-          isBlogEnabled,
-          isCitizenshipEnabled,
-          isFaqEnabled,
-        );
+    const sections = getMenuSections(
+      isBookingEnabled,
+      isVolunteeringEnabled,
+      isGovernanceEnabled,
+      isLearningHubEnabled,
+      isBlogEnabled,
+      isCitizenshipEnabled,
+      isFaqEnabled,
+    );
 
-        // Filter sections based on RBAC permissions
-        const filteredSections = filterMenuSections(sections);
+    const filteredSections = filterMenuSections(sections);
 
-        setMenuSections(filteredSections);
-      } catch (err) {
-        console.log('error');
-      }
-    })();
-  }, [router.locale]);
+    setMenuSections(filteredSections);
+  }, [router.locale, rbacLiveRevision]);
 
   useEffect(() => {
     if (

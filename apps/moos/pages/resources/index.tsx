@@ -4,11 +4,10 @@ import Faqs from 'closer/components/Faqs';
 import Resources from 'closer/components/Resources';
 import { Heading } from 'closer/components/ui';
 
-import { GeneralConfig, api } from 'closer';
+import { GeneralConfig, getCachedConfig } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import { useFaqs } from 'closer/hooks/useFaqs';
 import { parseMessageFromError } from 'closer/utils/common';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -83,24 +82,15 @@ const ResourcesPage = ({ generalConfig }: Props) => {
 
 ResourcesPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalRes, messages] = await Promise.all([
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-
-    const generalConfig = generalRes?.data?.results?.value;
+    const generalConfig = getCachedConfig('general');
     return {
       generalConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

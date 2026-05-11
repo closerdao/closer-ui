@@ -10,7 +10,6 @@ import LinkButton from 'closer/components/ui/LinkButton';
 import { Heading, Card, usePlatform, Newsletter, useAuth } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import { parseMessageFromError } from 'closer/utils/common';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import {
   Check,
   Circle,
@@ -923,7 +922,7 @@ export default CohousingPage;
 export async function getStaticProps({ locale }: NextPageContext) {
   return {
     props: {
-      messages: await loadLocaleData(locale, 'tdf'),
+      
     },
   };
 }

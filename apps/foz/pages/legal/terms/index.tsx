@@ -1,8 +1,7 @@
 import Head from 'next/head';
 
-import { GeneralConfig, Heading, api, useConfig } from 'closer';
+import { GeneralConfig, Heading, getCachedConfig, useConfig } from 'closer';
 import { parseMessageFromError } from 'closer/utils/common';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 
 interface Props {
@@ -132,24 +131,15 @@ const TermsPage = ({ generalConfig }: Props) => {
 
 TermsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalRes, messages] = await Promise.all([
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-
-    const generalConfig = generalRes?.data?.results?.value;
+    const generalConfig = getCachedConfig('general');
     return {
       generalConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

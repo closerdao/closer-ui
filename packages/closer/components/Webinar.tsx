@@ -8,15 +8,15 @@ import utc from 'dayjs/plugin/utc';
 import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
-import { getConfig, getConfigValueBySlug } from '../utils/configCache';
 import api from '../utils/api';
+import configCached from '../configCached';
 import TurnstileWidget from './TurnstileWidget';
 import { Button, ErrorMessage, Heading } from './ui';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-interface WebinarConfig {
+export interface WebinarScheduleConfig {
   enabled?: boolean;
   isDayOfMonth?: boolean;
   dayOfMonth?: number;
@@ -30,9 +30,17 @@ interface Props {
   id?: string;
   tags?: string[];
   analyticsCategory?: string;
+  schedule?: WebinarScheduleConfig | null;
+  generalTimezone?: string;
 }
 
-const Webinar = ({ id, tags = ['webinar'], analyticsCategory = 'Webinar' }: Props) => {
+const Webinar = ({
+  id,
+  tags = ['webinar'],
+  analyticsCategory = 'Webinar',
+  schedule: scheduleProp,
+  generalTimezone: generalTimezoneProp,
+}: Props) => {
   const t = useTranslations();
   const router = useRouter();
 
@@ -41,31 +49,39 @@ const Webinar = ({ id, tags = ['webinar'], analyticsCategory = 'Webinar' }: Prop
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const [webinarConfig, setWebinarConfig] = useState<WebinarConfig | null>(null);
+  const [webinarConfig, setWebinarConfig] =
+    useState<WebinarScheduleConfig | null>(
+      scheduleProp !== undefined ? scheduleProp : null,
+    );
 
   useEffect(() => {
-    const localEmail = typeof localStorage !== 'undefined' ? localStorage.getItem('email') : null;
+    const localEmail =
+      typeof localStorage !== 'undefined'
+        ? localStorage.getItem('email')
+        : null;
     if (localEmail) {
       setEmail(localEmail);
     }
   }, []);
 
-  const [generalTimezone, setGeneralTimezone] = useState<string>('Europe/Lisbon');
+  const [generalTimezone, setGeneralTimezone] = useState<string>(
+    scheduleProp !== undefined
+      ? generalTimezoneProp ?? 'Europe/Lisbon'
+      : 'Europe/Lisbon',
+  );
 
   useEffect(() => {
-    const fetchConfig = async () => {
-      try {
-        const configs = await getConfig(api);
-        const webinar = getConfigValueBySlug(configs, 'webinar');
-        const general = getConfigValueBySlug(configs, 'general');
-        setWebinarConfig(webinar || null);
-        if (general?.timezone) setGeneralTimezone(general.timezone);
-      } catch (err) {
-        setWebinarConfig(null);
-      }
-    };
-    fetchConfig();
-  }, []);
+    if (scheduleProp !== undefined) return;
+    const webinar = configCached.webinar;
+    const general = configCached.general;
+    setWebinarConfig(webinar || null);
+    const tz =
+      (general as { timeZone?: string; timezone?: string } | undefined)
+        ?.timeZone ||
+      (general as { timeZone?: string; timezone?: string } | undefined)
+        ?.timezone;
+    if (tz) setGeneralTimezone(tz);
+  }, [scheduleProp]);
 
   const nextWebinarDate = useMemo(() => {
     if (!webinarConfig) return null;
@@ -79,7 +95,11 @@ const Webinar = ({ id, tags = ['webinar'], analyticsCategory = 'Webinar' }: Prop
     const now = dayjs().tz(timeZone);
 
     const createDateInTimezone = (year: number, month: number, day: number) => {
-      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(
+        day,
+      ).padStart(2, '0')} ${String(hours).padStart(2, '0')}:${String(
+        minutes,
+      ).padStart(2, '0')}:00`;
       return dayjs.tz(dateStr, timeZone);
     };
 
@@ -89,13 +109,25 @@ const Webinar = ({ id, tags = ['webinar'], analyticsCategory = 'Webinar' }: Prop
 
       if (targetDate.isBefore(now)) {
         const nextMonth = now.add(1, 'month');
-        targetDate = createDateInTimezone(nextMonth.year(), nextMonth.month(), targetDay);
+        targetDate = createDateInTimezone(
+          nextMonth.year(),
+          nextMonth.month(),
+          targetDay,
+        );
       }
 
       return targetDate;
     }
 
-    const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const weekDays = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ];
     const weekPositions = ['First', 'Second', 'Third', 'Fourth', 'Last'];
 
     const targetWeekDay = webinarConfig.weekDay || 'Monday';
@@ -105,7 +137,9 @@ const Webinar = ({ id, tags = ['webinar'], analyticsCategory = 'Webinar' }: Prop
     const positionIndex = weekPositions.indexOf(targetPosition);
 
     const findWebinarDateInMonth = (year: number, month: number) => {
-      let candidateDate = dayjs.tz(`${year}-${String(month + 1).padStart(2, '0')}-01`, timeZone).startOf('month');
+      let candidateDate = dayjs
+        .tz(`${year}-${String(month + 1).padStart(2, '0')}-01`, timeZone)
+        .startOf('month');
 
       while (candidateDate.day() !== targetDayIndex) {
         candidateDate = candidateDate.add(1, 'day');
@@ -119,14 +153,21 @@ const Webinar = ({ id, tags = ['webinar'], analyticsCategory = 'Webinar' }: Prop
         candidateDate = candidateDate.add(positionIndex, 'week');
       }
 
-      return createDateInTimezone(candidateDate.year(), candidateDate.month(), candidateDate.date());
+      return createDateInTimezone(
+        candidateDate.year(),
+        candidateDate.month(),
+        candidateDate.date(),
+      );
     };
 
     let candidateDate = findWebinarDateInMonth(now.year(), now.month());
 
     if (candidateDate.isBefore(now)) {
       const nextMonth = now.add(1, 'month');
-      candidateDate = findWebinarDateInMonth(nextMonth.year(), nextMonth.month());
+      candidateDate = findWebinarDateInMonth(
+        nextMonth.year(),
+        nextMonth.month(),
+      );
     }
 
     return candidateDate;
@@ -158,7 +199,10 @@ const Webinar = ({ id, tags = ['webinar'], analyticsCategory = 'Webinar' }: Prop
 
       if (process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true') {
         try {
-          const referrer = typeof localStorage !== 'undefined' ? localStorage.getItem('referrer') : null;
+          const referrer =
+            typeof localStorage !== 'undefined'
+              ? localStorage.getItem('referrer')
+              : null;
           const subscribeTags = [
             ...tags,
             router.asPath,
@@ -184,8 +228,8 @@ const Webinar = ({ id, tags = ['webinar'], analyticsCategory = 'Webinar' }: Prop
       console.error('Error sending webinar invite:', err);
       setError(
         err?.response?.data?.error ||
-        err?.message ||
-        t('webinar_error_generic')
+          err?.message ||
+          t('webinar_error_generic'),
       );
     } finally {
       setIsLoading(false);
@@ -197,17 +241,14 @@ const Webinar = ({ id, tags = ['webinar'], analyticsCategory = 'Webinar' }: Prop
   }
 
   return (
-    <section
-      id={id}
-      className="relative py-12 md:py-16 overflow-hidden"
-    >
-      <div 
+    <section id={id} className="relative py-12 md:py-16 overflow-hidden">
+      <div
         className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 animate-[gradientShift_8s_ease-in-out_infinite]"
         style={{ backgroundSize: '200% 200%' }}
       />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.2),transparent_50%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.15),transparent_50%)]" />
-      
+
       <div className="relative max-w-2xl mx-auto px-6 text-center">
         {nextWebinarDate && (
           <div className="flex justify-center mb-4">
@@ -234,7 +275,11 @@ const Webinar = ({ id, tags = ['webinar'], analyticsCategory = 'Webinar' }: Prop
         <p className="text-[10px] uppercase tracking-wider text-white/80 mb-2 font-medium">
           {t('webinar_section_label')}
         </p>
-        <Heading display level={2} className="mb-3 text-2xl md:text-3xl font-normal text-white tracking-tight">
+        <Heading
+          display
+          level={2}
+          className="mb-3 text-2xl md:text-3xl font-normal text-white tracking-tight"
+        >
           {t('webinar_section_title')}
         </Heading>
         <p className="text-sm text-white/90 mb-6 leading-relaxed max-w-xl mx-auto font-light">

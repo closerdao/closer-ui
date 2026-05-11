@@ -6,7 +6,8 @@ import { CheckCircle2, PartyPopper } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
-import { FundraisingConfig } from '../types/api';
+import type { FundraisingMilestone } from '../types/api';
+import { formatIsoFiatAmount } from '../utils/currencyFormat';
 import {
   computeMilestoneStates,
   fetchFundraisingBreakdown,
@@ -19,7 +20,9 @@ import {
 interface FundraisingWidgetProps {
   variant?: 'nav' | 'hero';
   className?: string;
-  fundraisingConfig?: FundraisingConfig;
+  milestones?: FundraisingMilestone[];
+  amountRaisedPreCampaign?: number | string;
+  loansCollectedTotal?: number | string;
 }
 
 const DEFAULT_END_DATE = '2026-05-31T23:59:59.999Z';
@@ -27,7 +30,9 @@ const DEFAULT_END_DATE = '2026-05-31T23:59:59.999Z';
 const FundraisingWidget = ({
   variant = 'nav',
   className = '',
-  fundraisingConfig,
+  milestones = [],
+  amountRaisedPreCampaign,
+  loansCollectedTotal,
 }: FundraisingWidgetProps) => {
   const t = useTranslations();
   const { user } = useAuth();
@@ -44,12 +49,12 @@ const FundraisingWidget = ({
   const [showBubble, setShowBubble] = useState(false);
 
   const sortedMilestones = useMemo(
-    () => sortMilestonesByStartDate(fundraisingConfig?.milestones ?? []),
-    [fundraisingConfig?.milestones],
+    () => sortMilestonesByStartDate(milestones ?? []),
+    [milestones],
   );
   const activeMilestone = useMemo(
-    () => findActiveMilestone(fundraisingConfig?.milestones),
-    [fundraisingConfig?.milestones],
+    () => findActiveMilestone(milestones),
+    [milestones],
   );
 
   useEffect(() => {
@@ -66,7 +71,10 @@ const FundraisingWidget = ({
   useEffect(() => {
     const load = async () => {
       try {
-        const breakdown = await fetchFundraisingBreakdown(fundraisingConfig);
+        const breakdown = await fetchFundraisingBreakdown({
+          amountRaisedPreCampaign,
+          loansCollectedTotal,
+        });
         setTotalRaised(breakdown.totalRaised);
         setCryptoTotal(breakdown.cryptoTotal);
         setFiatTotal(breakdown.fiatTotal);
@@ -90,7 +98,12 @@ const FundraisingWidget = ({
       }
     };
     load();
-  }, [fundraisingConfig, sortedMilestones, activeMilestone]);
+  }, [
+    amountRaisedPreCampaign,
+    loansCollectedTotal,
+    sortedMilestones,
+    activeMilestone,
+  ]);
 
   useEffect(() => {
     const show = setTimeout(() => setShowSparkle(true), 5000);
@@ -126,7 +139,7 @@ const FundraisingWidget = ({
     totalGoal > 0 ? Math.min(100, (totalRaised / totalGoal) * 100) : 0;
 
   const formatAmount = (amount: number) => {
-    return `€${Math.round(amount)}`;
+    return formatIsoFiatAmount(Math.round(amount), 'EUR');
   };
 
   const milestoneName =
@@ -173,13 +186,13 @@ const FundraisingWidget = ({
             <div className="mt-4 p-3 bg-accent/10 rounded-lg text-xs font-mono">
               <div className="grid grid-cols-2 gap-1 text-gray-700">
                 <span>Crypto Token Sales:</span>
-                <span className="text-right">€{cryptoTotal.toLocaleString()}</span>
+                <span className="text-right">{formatAmount(cryptoTotal)}</span>
                 <span>Fiat Token Sales:</span>
-                <span className="text-right">€{fiatTotal.toLocaleString()}</span>
+                <span className="text-right">{formatAmount(fiatTotal)}</span>
                 <span className="font-bold border-t border-accent/30 pt-1">Total:</span>
-                <span className="text-right font-bold border-t border-accent/30 pt-1">€{totalRaised.toLocaleString()}</span>
+                <span className="text-right font-bold border-t border-accent/30 pt-1">{formatAmount(totalRaised)}</span>
                 <span>Target:</span>
-                <span className="text-right">€{displayGoal.toLocaleString()}</span>
+                <span className="text-right">{formatAmount(displayGoal)}</span>
                 <span>Progress:</span>
                 <span className="text-right">{progressPercent.toFixed(2)}%</span>
               </div>
@@ -219,13 +232,13 @@ const FundraisingWidget = ({
           <div className="mt-4 p-3 bg-gray-100 rounded-lg text-xs font-mono">
             <div className="grid grid-cols-2 gap-1 text-gray-600">
               <span>Crypto Token Sales:</span>
-              <span className="text-right">€{cryptoTotal.toLocaleString()}</span>
+              <span className="text-right">{formatAmount(cryptoTotal)}</span>
               <span>Fiat Token Sales:</span>
-              <span className="text-right">€{fiatTotal.toLocaleString()}</span>
+              <span className="text-right">{formatAmount(fiatTotal)}</span>
               <span className="font-bold border-t border-gray-300 pt-1">Total:</span>
-              <span className="text-right font-bold border-t border-gray-300 pt-1">€{totalRaised.toLocaleString()}</span>
+              <span className="text-right font-bold border-t border-gray-300 pt-1">{formatAmount(totalRaised)}</span>
               <span>Target:</span>
-              <span className="text-right">€{displayGoal.toLocaleString()}</span>
+              <span className="text-right">{formatAmount(displayGoal)}</span>
               <span>Progress:</span>
               <span className="text-right">{progressPercent.toFixed(2)}%</span>
             </div>

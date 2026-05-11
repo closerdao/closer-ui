@@ -14,8 +14,8 @@ import { useTranslations } from 'next-intl';
 import { HOME_PAGE_CATEGORY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import api, { cdn } from '../../../utils/api';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
 interface BlogConfig {
@@ -25,10 +25,10 @@ interface BlogConfig {
 interface Props {
   article: any;
   error?: string;
-  blogConfig: BlogConfig | null;
 }
 
-const Article = ({ article, error, blogConfig }: Props) => {
+const Article = ({ article, error }: Props) => {
+  const blogConfig = getCachedConfig('blog') as BlogConfig | null;
   const t = useTranslations();
   const router = useRouter();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -185,24 +185,15 @@ Article.getInitialProps = async (context: NextPageContext) => {
       (req && req.url && req.url.replace('/blog/edit/', '')) ||
       (query && query.slug);
 
-    const [articleRes, blogRes, messages] = await Promise.all([
-      api.get(`/article/${slug}`),
-      api.get('/config/blog').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const articleRes = await api.get(`/article/${slug}`);
     const article = articleRes.data?.results;
-    const blogConfig = blogRes?.data?.results?.value;
     return {
       article,
-      blogConfig,
-      messages,
     };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
-      blogConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

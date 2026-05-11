@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import DonateCheckoutForm from '../../../components/Donate/DonateCheckoutForm';
@@ -13,14 +12,9 @@ import { BackButton, Button, ErrorMessage, Heading, Row, Spinner } from '../../.
 import { DEFAULT_CURRENCY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
-import { GeneralConfig } from '../../../types';
 import { readDonationSession, type StoredDonationCard } from '../../../utils/donationSessionStorage';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { priceFormat } from '../../../utils/helpers';
-import { getDonateInitialProps } from '../getDonateInitialProps';
-
-interface DonateCardPageProps {
-  generalConfig: GeneralConfig | null;
-}
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY as string,
@@ -29,13 +23,14 @@ const stripePromise = loadStripe(
   },
 );
 
-function DonateCardPage({ generalConfig }: DonateCardPageProps) {
+function DonateCardPage() {
   const t = useTranslations();
   const router = useRouter();
   const { saleId } = router.query;
   const id = typeof saleId === 'string' ? saleId : '';
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const defaultConfig = useConfig();
+  const generalConfig = getCachedConfig('general');
   const platformName = generalConfig?.platformName || defaultConfig.platformName;
 
   const [session, setSession] = useState<StoredDonationCard | null | 'loading' | 'missing'>('loading');
@@ -65,11 +60,7 @@ function DonateCardPage({ generalConfig }: DonateCardPageProps) {
 
   const handlePaid = () => {
     if (!cardPayload) return;
-    router.push(
-      `/donate/success?amount=${amount}&method=card&saleId=${encodeURIComponent(
-        cardPayload.result.saleId,
-      )}`,
-    );
+    router.push(`/sale/${encodeURIComponent(cardPayload.result.saleId)}`);
   };
 
   if (!router.isReady || isAuthLoading || session === 'loading') {
@@ -127,6 +118,8 @@ function DonateCardPage({ generalConfig }: DonateCardPageProps) {
             saleId={cardPayload.result.saleId}
             paymentIntentId={cardPayload.result.paymentIntentId}
             userEmail={user?.email}
+            metricUser={user}
+            metricAmount={amount}
             onPaid={handlePaid}
           />
         </Elements>
@@ -134,7 +127,5 @@ function DonateCardPage({ generalConfig }: DonateCardPageProps) {
     </>
   );
 }
-
-DonateCardPage.getInitialProps = async (context: NextPageContext) => getDonateInitialProps(context);
 
 export default DonateCardPage;

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Check } from 'lucide-react';
 
 import { FundraisingPackage } from '../../types';
-import { getCurrencySymbol } from '../../utils/currencyFormat';
+import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 
 interface InvestRewardsProps {
   packages: FundraisingPackage[];
@@ -22,16 +22,16 @@ const InvestRewards = ({
 }: InvestRewardsProps) => {
   if (packages.length === 0) return null;
 
-  const eur = getCurrencySymbol('EUR');
-
   const getPrice = (pkg: FundraisingPackage) => {
     const tokens = Number(pkg.tokens) || 0;
     const credits = Number(pkg.credits) || 0;
     if (pkg.type === 'tokens') return formatPrice(tokens);
     if (pkg.type === 'loan')
-      return pkg.minAmount ? `${eur}${pkg.minAmount}+` : `${eur}50K+`;
+      return pkg.minAmount
+        ? `${formatIsoFiatAmount(Number(pkg.minAmount), 'EUR')}+`
+        : `${formatIsoFiatAmount(50000, 'EUR')}+`;
     if (pkg.type === 'credits' && credits)
-      return `${eur}${(credits * creditPricePerUnit).toLocaleString()}`;
+      return formatIsoFiatAmount(credits * creditPricePerUnit, 'EUR');
     if (pkg.type === 'subscribe') return '';
     return '';
   };
@@ -40,7 +40,8 @@ const InvestRewards = ({
     const tokens = Number(pkg.tokens) || 0;
     const credits = Number(pkg.credits) || 0;
     if (pkg.ctaUrl && pkg.ctaUrl.trim() !== '') return pkg.ctaUrl;
-    if (pkg.type === 'tokens') return `/token/checkout?tokens=${tokens}`;
+    if (pkg.type === 'tokens')
+      return `/token/before-you-begin?tokens=${tokens}`;
     if (pkg.type === 'loan') return loanPackageHref;
     if (pkg.type === 'credits' && credits)
       return `/credits/checkout?amount=${credits}`;

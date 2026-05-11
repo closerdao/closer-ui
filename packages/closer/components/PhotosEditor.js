@@ -91,13 +91,13 @@ const PhotosEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {a
   const addPhoto = (photo) => {
     const update = (photos || []).concat(photo);
     setPhotos(update);
-    onChange && onChange(update);
+    if (onChange) onChange(update);
   };
 
   const deletePhoto = (photo) => {
     const update = (photos || []).filter((id) => id !== photo);
     setPhotos(update);
-    onChange && onChange(update);
+    if (onChange) onChange(update);
   };
 
   // Handle drag end event
@@ -110,7 +110,7 @@ const PhotosEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {a
         const newIndex = photos.indexOf(over.id);
 
         const updatedPhotos = arrayMove(photos, oldIndex, newIndex);
-        onChange && onChange(updatedPhotos);
+        if (onChange) onChange(updatedPhotos);
         return updatedPhotos;
       });
     }

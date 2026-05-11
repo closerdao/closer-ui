@@ -12,7 +12,6 @@ import { useTranslations } from 'next-intl';
 import PageNotAllowed from '../401';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 const openApplications = { where: { status: 'open' } };
 const approvedApplications = { where: { status: 'approved' } };
@@ -121,17 +120,11 @@ const Applications = () => {
 
 Applications.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
-      messages,
     };
   } catch (err: unknown) {
     return {
-      messages: null,
-    };
+      };
   }
 };
 

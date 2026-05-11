@@ -18,7 +18,7 @@ const TicketOptionsEditor = ({
   const defaultCurrency = fixedCurrency || CURRENCIES_WITH_LABELS[0].value;
   const updateOptions = (update) => {
     setOptions(update);
-    onChange && onChange(update);
+    if (onChange) onChange(update);
   };
   const updateOption = (index, option) => {
     const update = options.map((o, i) => (i === index ? option : o));

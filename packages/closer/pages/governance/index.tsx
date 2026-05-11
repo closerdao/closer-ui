@@ -4,7 +4,6 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { MessageCircle } from 'lucide-react';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { ProposalList } from 'closer/components/Governance';
 import WalletAndVoting from 'closer/components/Governance/WalletAndVoting';
 
@@ -84,14 +83,11 @@ export default GovernancePage;
 
 GovernancePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME);
     return {
-      messages,
     };
   } catch (err) {
     return {
       error: err,
-      messages: null,
-    };
+      };
   }
 };

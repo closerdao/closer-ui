@@ -9,7 +9,6 @@ import Spinner from '../../../components/ui/Spinner';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import type { CohousingApplication } from '../../../types/cohousingApplication';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 
 const CohousingApplicationIndexPage = () => {
   const t = useTranslations();
@@ -134,7 +133,7 @@ export default CohousingApplicationIndexPage;
 export async function getStaticProps({ locale }: NextPageContext) {
   return {
     props: {
-      messages: await loadLocaleData(locale as string, 'tdf'),
+      
     },
   };
 }

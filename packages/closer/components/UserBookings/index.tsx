@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { useAuth } from '../../contexts/auth';
 import { User } from '../../contexts/auth/types';
 import { BookingConfig } from '../../types/api';
 import Bookings from '../Bookings';
@@ -19,29 +18,30 @@ const UserBookingsComponent = ({
   user,
   isSpaceHostView,
   bookingConfig,
+  hideExportCsv = true,
 }: Props) => {
   const t = useTranslations();
   const bookingsToShowLimit = 50;
 
-  const { user: currentUser } = useAuth();
-  console.log('=== currentUser=', currentUser);
+  const [upcomingPage, setUpcomingPage] = useState(1);
+  const [pastPage, setPastPage] = useState(1);
 
-  const [page, setPage] = useState(1);
+  const friendOrSelfOr = [
+    { createdBy: user._id },
+    {
+      $and: [
+        { isFriendsBooking: { $eq: true } },
+        { friendEmails: { $exists: true } },
+        { friendEmails: { $ne: [] } },
+        { friendEmails: { $in: [user.email] } },
+      ],
+    },
+  ];
 
   const filters = {
     myBookings: user && {
       where: {
-        $or: [
-          { createdBy: user._id },
-          {
-            $and: [
-              { isFriendsBooking: { $eq: true } },
-              { friendEmails: { $exists: true } },
-              { friendEmails: { $ne: [] } },
-              { friendEmails: { $in: [user.email] } },
-            ],
-          },
-        ],
+        $or: friendOrSelfOr,
         status: [
           'pending',
           'confirmed',
@@ -59,7 +59,7 @@ const UserBookingsComponent = ({
     },
     pastBookings: user && {
       where: {
-        $or: [{ createdBy: user._id }, { friendEmails: { $in: [user.email] } }],
+        $or: friendOrSelfOr,
         end: { $lt: new Date() },
       },
       limit: bookingsToShowLimit,
@@ -71,17 +71,16 @@ const UserBookingsComponent = ({
       <Tabs
         tabs={[
           {
-            title: isSpaceHostView
-              ? t('bookings_title_user')
-              : t('bookings_title'),
+            title: t('bookings_upcoming_tab'),
             value: 'my-bookings',
             content: (
               <Bookings
-                page={page}
-                setPage={setPage}
+                page={upcomingPage}
+                setPage={setUpcomingPage}
                 filter={filters.myBookings}
                 bookingConfig={bookingConfig}
-                hideExportCsv={true}
+                hideExportCsv={hideExportCsv}
+                previewAsAdmin={Boolean(isSpaceHostView)}
               />
             ),
           },
@@ -90,10 +89,12 @@ const UserBookingsComponent = ({
             value: 'past-bookings',
             content: (
               <Bookings
-                page={page}
-                setPage={setPage}
+                page={pastPage}
+                setPage={setPastPage}
                 filter={filters.pastBookings}
-                hideExportCsv={true}
+                bookingConfig={bookingConfig}
+                hideExportCsv={hideExportCsv}
+                previewAsAdmin={Boolean(isSpaceHostView)}
               />
             ),
           },

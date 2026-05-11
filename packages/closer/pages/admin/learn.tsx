@@ -5,18 +5,14 @@ import { useEffect, useState } from 'react';
 import AdminLayout from '../../components/Dashboard/AdminLayout';
 import Heading from '../../components/ui/Heading';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
-import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
+import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import PageNotFound from '../not-found';
-import api from '../../utils/api';
-import { BookingConfig } from '../../types/api';
 
-const LearnDashboardPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
+const LearnDashboardPage = () => {
   const t = useTranslations();
 
   const { platform }: any = usePlatform();
@@ -24,10 +20,6 @@ const LearnDashboardPage = ({ bookingConfig }: { bookingConfig: BookingConfig })
   const isSpaceHost = user?.roles.includes('space-host');
   const isAdmin = user?.roles.includes('admin');
   const CHARGES_LIMIT = 1000;
-
-  const isBookingEnabled =
-    bookingConfig?.enabled &&
-    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   const [preparedCourseData, setPreparedCourseData] = useState([]);
 
@@ -168,7 +160,7 @@ const LearnDashboardPage = ({ bookingConfig }: { bookingConfig: BookingConfig })
                                   </div>
                                   <div className="sm:w-1/3">{buyer?.email}</div>
                                   <div className="text-left sm:text-right sm:w-1/3 border-b sm:border-b-0">
-                                    €{buyer?.amount}
+                                    {formatIsoFiatAmount(buyer?.amount || 0, 'EUR')}
                                   </div>
                                 </div>
                               );
@@ -184,27 +176,6 @@ const LearnDashboardPage = ({ bookingConfig }: { bookingConfig: BookingConfig })
       </AdminLayout>
     </>
   );
-};
-
-LearnDashboardPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [messages, bookingRes] = await Promise.all([
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      api.get('/config/booking').catch(() => null),
-    ]);
-
-    const bookingConfig = bookingRes?.data?.results?.value;
-
-    return {
-      messages,
-      bookingConfig,
-    };
-  } catch (err) {
-    return {
-      error: parseMessageFromError(err),
-      bookingConfig: null,
-    };
-  }
 };
 
 export default LearnDashboardPage;

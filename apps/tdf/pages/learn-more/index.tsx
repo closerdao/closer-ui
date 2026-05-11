@@ -6,7 +6,6 @@ import { useState } from 'react';
 import { Card, Heading, LinkButton } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import { twitterUrlToHandle } from 'closer/utils/app.helpers';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import {
   ArrowRight,
   BookOpen,
@@ -131,7 +130,7 @@ const LearnMorePage = () => {
         </div>
       </section>
 
-      <nav className="sticky top-20 z-40 bg-white border-b border-gray-200 shadow-sm">
+      <nav className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex gap-1 overflow-x-auto py-3 scrollbar-hide">
             {TOPICS.map((topic) => (
@@ -1033,17 +1032,11 @@ const LearnMorePage = () => {
 
 LearnMorePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
-      messages,
     };
   } catch (err) {
     return {
-      messages: null,
-    };
+      };
   }
 };
 

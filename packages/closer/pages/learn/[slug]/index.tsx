@@ -22,11 +22,10 @@ import { Lesson } from '../../../types/lesson';
 import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import config from '../../../configCached';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { getVideoParams } from '../../../utils/learn.helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import { prepareSubscriptions } from '../../../utils/subscriptions.helpers';
 import PageNotFound from '../../not-found';
 
@@ -391,24 +390,19 @@ const LessonPage = ({
 LessonPage.getInitialProps = async (context: NextPageContext) => {
   const { req, query } = context;
   try {
-    const [configs, lessonRes, messages] = await Promise.all([
-      getConfig(api),
-      api
+    const lessonRes = await api
         .get(`/lesson/${query.slug}`, {
           headers: getBearerAuthHeaders(req as NextApiRequest),
         })
         .catch(() => {
           return null;
-        }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+        })
     const subscriptionsConfig =
-      getConfigValueBySlug(configs, 'subscriptions') ?? {
+      config.subscriptions ?? {
         enabled: false,
         elements: [],
       };
-    const learningHubConfig =
-      getConfigValueBySlug(configs, 'learningHub') || null;
+    const learningHubConfig = config.learningHub || null;
 
     return {
       subscriptionsConfig:
@@ -418,7 +412,6 @@ LessonPage.getInitialProps = async (context: NextPageContext) => {
       lesson: lessonRes?.data?.results || null,
       error: null,
       learningHubConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
@@ -426,8 +419,7 @@ LessonPage.getInitialProps = async (context: NextPageContext) => {
       learningHubConfig: null,
       error: parseMessageFromError(err),
       lesson: null,
-      messages: null,
-    };
+      };
   }
 };
 

@@ -309,6 +309,9 @@ export const TOKEN_SALE_STEPS_BANK_TRANSFER = [
   'success',
 ];
 
+export const TOKEN_PURCHASE_TERMS_DOC_URL =
+  'https://docs.google.com/document/d/1kz4SH1UVWhamniqUW4GWmFOU0nmXyhpAzUJwFTW0ybs/edit?tab=t.0';
+
 export const DEFAULT_CURRENCY = CloserCurrencies.EUR; // EUR
 export const REFERRAL_ID_LOCAL_STORAGE_KEY = 'referredByUserId';
 

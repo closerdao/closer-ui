@@ -1,3 +1,4 @@
+import type { AxiosRequestConfig } from 'axios';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
@@ -10,6 +11,7 @@ import {
 import { User } from '../contexts/auth/types';
 import {
   AccommodationUnit,
+  Booking,
   BookingItem,
   BookingWithUserAndListing,
   CloserCurrencies,
@@ -21,10 +23,13 @@ import {
   UtilityTotalParams,
 } from '../types';
 import { FoodOption } from '../types/food';
+import type { Stay } from '../types/stay';
+
 import api from './api';
 import { parseMessageFromError } from './common';
 import { priceFormat } from './helpers';
 import { reportIssue } from './reporting.utils';
+import { inferPaymentChoiceFromStay } from './stays.api';
 
 const DEFAULT_TIMEZONE = 'Europe/Berlin';
 
@@ -37,6 +42,18 @@ function isTokenPaymentVerified(res: { data?: { verified?: boolean } }): boolean
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
+
+export const areNumberArraysEqual = (
+  a: number[] | undefined,
+  b: number[] | undefined,
+): boolean => {
+  const aa = a ?? [];
+  const bb = b ?? [];
+  if (aa.length !== bb.length) {
+    return false;
+  }
+  return aa.every((value, index) => value === bb[index]);
+};
 
 export const getBookingType = (
   eventId: string | undefined,
@@ -106,6 +123,38 @@ export const getDisplayTotalFromComponents = ({
     CloserCurrencies.EUR;
   return { val: +(val.toFixed(2)), cur };
 };
+
+export const hasBookingPaymentDeltaDue = (
+  paymentDelta: Booking['paymentDelta'] | null | undefined,
+  useTokens?: boolean,
+): boolean => {
+  if (!paymentDelta) {
+    return false;
+  }
+  if (
+    paymentDelta.fiat &&
+    Math.abs(paymentDelta.fiat.val) > 0.005 &&
+    paymentDelta.fiat.val > 0
+  ) {
+    return true;
+  }
+  if (
+    useTokens &&
+    paymentDelta.token &&
+    paymentDelta.token.val > 0.005
+  ) {
+    return true;
+  }
+  if (paymentDelta.credits && paymentDelta.credits.val > 0.005) {
+    return true;
+  }
+  return false;
+};
+
+export {
+  getBookingPaymentCheckoutPath,
+  stayRequiresFullCheckoutFlow,
+} from './stayPaymentRouting.helpers';
 
 export const getUtilityTotal = ({
   utilityFiatVal,
@@ -1003,6 +1052,162 @@ export function buildBookingDatesUrl(params: BookingStepUrlParams): string {
   return `/bookings/create/dates?${q.toString()}`;
 }
 
+export function getBookingListingRefId(listingRef: unknown): string | null {
+  if (listingRef == null) return null;
+  if (typeof listingRef === 'string') return listingRef;
+  if (
+    typeof listingRef === 'object' &&
+    listingRef !== null &&
+    typeof (listingRef as { get?: (k: string) => unknown }).get === 'function'
+  ) {
+    const id = (listingRef as { get: (k: string) => unknown }).get('_id');
+    return typeof id === 'string' ? id : null;
+  }
+  if (
+    typeof listingRef === 'object' &&
+    listingRef !== null &&
+    typeof (listingRef as { _id?: unknown })._id === 'string'
+  ) {
+    return (listingRef as { _id: string })._id;
+  }
+  return null;
+}
+
+export function getBookingListingDisplayName(
+  listingRef: unknown,
+  listingFromStore: { get: (k: string) => unknown } | null | undefined,
+  fallback: string,
+): string {
+  const fromStore = listingFromStore?.get('name');
+  if (fromStore != null && String(fromStore).length > 0) {
+    return String(fromStore);
+  }
+  if (
+    listingRef &&
+    typeof listingRef === 'object' &&
+    typeof (listingRef as { get?: (k: string) => unknown }).get === 'function'
+  ) {
+    const n = (listingRef as { get: (k: string) => unknown }).get('name');
+    if (n != null && String(n).length > 0) return String(n);
+  }
+  if (
+    listingRef &&
+    typeof listingRef === 'object' &&
+    'name' in listingRef &&
+    (listingRef as { name?: unknown }).name != null &&
+    String((listingRef as { name?: unknown }).name).length > 0
+  ) {
+    return String((listingRef as { name: string }).name);
+  }
+  return fallback;
+}
+
+export function getBookingListingEmbedded(
+  listingRef: unknown,
+): { private?: boolean; priceDuration?: string } {
+  if (listingRef == null || typeof listingRef !== 'object') return {};
+  if (typeof (listingRef as { get?: (k: string) => unknown }).get ===
+    'function') {
+    const m = listingRef as { get: (k: string) => unknown };
+    return {
+      private: m.get('private') as boolean | undefined,
+      priceDuration: m.get('priceDuration') as string | undefined,
+    };
+  }
+  const o = listingRef as { private?: boolean; priceDuration?: string };
+  return { private: o.private, priceDuration: o.priceDuration };
+}
+
+export type ResolvedBookingPreviewFinancials = {
+  useTokens: boolean;
+  useCredits: boolean;
+  rentalFiat: { val: number; cur: string } | undefined;
+  rentalToken: { val: number; cur: string } | undefined;
+  utilityFiat: { val: number; cur: string } | undefined;
+  foodFiat: { val: number; cur: string } | undefined;
+  eventFiat: { val: number; cur: string } | undefined | null;
+  duration: number;
+  creditsDisplayVal: number;
+};
+
+export function resolveBookingPreviewFinancials(
+  raw: Record<string, any>,
+): ResolvedBookingPreviewFinancials {
+  const priceLock = raw?.priceLock;
+  const start = raw?.start;
+  const end = raw?.end;
+  const durationFromDates =
+    start && end
+      ? Math.max(
+          0,
+          dayjs(end)
+            .startOf('day')
+            .diff(dayjs(start).startOf('day'), 'day'),
+        )
+      : 0;
+  const duration = Number(raw?.duration ?? durationFromDates) || 0;
+
+  let useTokens = !!raw?.useTokens;
+  let useCredits = !!raw?.useCredits;
+  if (priceLock) {
+    const choice = inferPaymentChoiceFromStay({ ...raw, duration } as Stay);
+    useTokens =
+      choice === 'full-tokens' || choice === 'partial-tokens';
+    useCredits =
+      choice === 'full-credits' || choice === 'partial-credits';
+  }
+
+  const accommodationLine = priceLock?.lines?.accommodation;
+  const rentalFiat =
+    accommodationLine != null ? accommodationLine : raw?.rentalFiat;
+
+  let rentalToken = raw?.rentalToken;
+  if (rentalToken == null && priceLock?.dailyRentalToken != null) {
+    const daily = priceLock.dailyRentalToken;
+    const val = Number(daily.val);
+    if (Number.isFinite(val)) {
+      rentalToken = {
+        val: val * (duration || 1),
+        cur: daily.cur,
+      };
+    }
+  }
+
+  const lockUtility = priceLock?.lines?.utility;
+  const utilityFiat =
+    lockUtility != null && Number(lockUtility.val) > 0
+      ? lockUtility
+      : raw?.utilityFiat;
+
+  const foodFiat =
+    priceLock?.lines?.food != null
+      ? priceLock.lines.food
+      : raw?.foodFiat;
+
+  const lockEvent = priceLock?.lines?.event;
+  const eventFiat =
+    lockEvent != null ? lockEvent : raw?.eventFiat;
+
+  const creditsDisplayVal = Number(
+    raw?.creditsTarget?.val ??
+      priceLock?.appliedCredits?.val ??
+      rentalToken?.val ??
+      0,
+  );
+
+  return {
+    useTokens,
+    useCredits,
+    rentalFiat,
+    rentalToken,
+    utilityFiat,
+    foodFiat,
+    eventFiat,
+    duration,
+    creditsDisplayVal,
+  };
+}
+
 export function buildBookingAccomodationUrl(
   params: BookingStepUrlParams,
 ): string {
@@ -1035,4 +1240,19 @@ export function buildBookingAccomodationUrl(
   if (params.discountCode != null && params.discountCode !== '')
     q.set('discountCode', params.discountCode);
   return `/bookings/create/accomodation?${q.toString()}`;
+}
+
+export async function claimBookingAsFriend(
+  bookingId: string,
+  requestConfig?: AxiosRequestConfig,
+): Promise<void> {
+  try {
+    await api.post(
+      `/bookings/${bookingId}/claim-as-friend`,
+      {},
+      requestConfig,
+    );
+  } catch {
+    return;
+  }
 }

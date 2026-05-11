@@ -1,7 +1,5 @@
 import { NextPageContext } from 'next';
 
-import { loadLocaleData } from '../../utils/locale.helpers';
-
 const CreateChannelRedirect = () => null;
 
 CreateChannelRedirect.getInitialProps = async (context: NextPageContext) => {
@@ -14,17 +12,7 @@ CreateChannelRedirect.getInitialProps = async (context: NextPageContext) => {
     window.location.href = '/social';
   }
 
-  let messages = null;
-  try {
-    messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
-  } catch (err: unknown) {
-    // noop
-  }
-
-  return { messages };
+  return {};
 };
 
 export default CreateChannelRedirect;

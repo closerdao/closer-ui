@@ -12,7 +12,6 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 interface Props {
@@ -198,18 +197,14 @@ const Task = ({ task, error }: Props) => {
 Task.getInitialProps = async (context: NextPageContext) => {
   try {
     const { query } = context;
-    const [taskResponse, messages] = await Promise.all([
-      api.get(`/task/${query.slug}`),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const taskResponse = await api.get(`/task/${query.slug}`)
 
     const task = taskResponse.data.results;
-    return { task, messages };
+    return { task };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

@@ -14,7 +14,6 @@ import { useAuth } from '../../../contexts/auth';
 import { Lesson } from '../../../types/lesson';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 
 interface Props {
   error?: string;
@@ -72,17 +71,13 @@ LearnConfirmation.getInitialProps = async (context: NextPageContext) => {
   const { query } = context;
 
   try {
-    const [lessonRes, messages] = await Promise.all([
-      api.get(`/lesson/${query.slug}`).catch(() => {
+    const lessonRes = await api.get(`/lesson/${query.slug}`).catch(() => {
         return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+      })
 
     const lesson = lessonRes?.data?.results;
     return {
       error: null,
-      messages,
       lesson,
     };
   } catch (err) {
@@ -90,8 +85,7 @@ LearnConfirmation.getInitialProps = async (context: NextPageContext) => {
     return {
       error: parseMessageFromError(err),
       lesson: null,
-      messages: null,
-    };
+      };
   }
 };
 

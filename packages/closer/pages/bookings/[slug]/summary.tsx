@@ -4,67 +4,111 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
-import { IconBanknote, IconCheckCircle, IconMail, IconXCircle } from '../../../components/BookingIcons';
+import {
+  IconBanknote,
+  IconCheckCircle,
+  IconMail,
+  IconXCircle,
+} from '../../../components/BookingIcons';
 import Conditions from '../../../components/Conditions';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
+import BookingSurface from '../../../components/booking/bookingSurface';
 import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import dayjs from 'dayjs';
-import { NextApiRequest, NextPageContext } from 'next';
+import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
-import {
-  BOOKING_STEPS,
-  BOOKING_STEP_TITLE_KEYS,
-} from '../../../constants';
+import config from '../../../configCached';
+import { BOOKING_STEPS, BOOKING_STEP_TITLE_KEYS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
+import { useRedirectPaidBookingToDetail } from '../../../hooks';
 import {
   BaseBookingParams,
   Booking,
   BookingConfig,
   CloserCurrencies,
-  Event,
   Listing,
   PaymentConfig,
 } from '../../../types';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import type { Event } from '../../../types/event';
+import type { Stay } from '../../../types/stay';
 import api from '../../../utils/api';
-import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import {
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
+  getBookingPaymentCheckoutPath,
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
-import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+import { logMetricIfAuthenticated } from '../../../utils/metrics';
+import {
+  computeCreditsOwed,
+  computeFiatOwed,
+  computeTokensOwed,
+  isStayShapedBooking,
+} from '../../../utils/stays.api';
 
 interface Props extends BaseBookingParams {
-  listing: Listing | null;
-  booking: Booking | null;
   error?: string;
-  event?: Event;
   bookingConfig: BookingConfig | null;
   paymentConfig: PaymentConfig | null;
   tokenCurrency: string;
+  booking?: Booking | null;
+  listing?: Listing | null;
+  event?: Event | null;
 }
 
 const Summary = ({
-  booking,
-  listing,
-  event,
   error,
   bookingConfig,
   paymentConfig,
   tokenCurrency,
+  booking: bookingProp,
+  listing: listingProp,
+  event: eventProp,
 }: Props) => {
+  const router = useRouter();
+  const { platform }: any = usePlatform();
+  const slugParam = router.query.slug;
+  const slug = typeof slugParam === 'string' ? slugParam : slugParam?.[0];
+
+  useEffect(() => {
+    if (!router.isReady || !slug) return;
+    void platform.booking.getOne(slug, { force: true });
+  }, [router.isReady, slug, platform]);
+
+  const bookingFromStore = slug
+    ? platform.booking.findOne(slug)?.toJS?.() ?? null
+    : null;
+  const booking = bookingFromStore ?? bookingProp ?? null;
+  const listingFromStore = booking?.listing
+    ? platform.listing.findOne(booking.listing)?.toJS?.() ?? null
+    : null;
+  const listing = listingProp ?? listingFromStore ?? null;
+  const eventFromStore = booking?.eventId
+    ? platform.event.findOne(booking.eventId)?.toJS?.() ?? null
+    : null;
+  const event = eventProp ?? eventFromStore ?? null;
+
+  useEffect(() => {
+    if (booking?.listing) {
+      void platform.listing.getOne(booking.listing);
+    }
+    if (booking?.eventId) {
+      void platform.event.getOne(booking.eventId);
+    }
+  }, [booking?.listing, booking?.eventId, platform]);
+
   const t = useTranslations();
 
   const cancellationPolicy = bookingConfig
@@ -81,8 +125,9 @@ const Summary = ({
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   const { VISITORS_GUIDE } = useConfig();
-  const router = useRouter();
   const { isAuthenticated, user } = useAuth();
+
+  useRedirectPaidBookingToDetail(booking);
 
   const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
   const vatRateFromConfig = Number(paymentConfig?.vatRate);
@@ -158,6 +203,23 @@ const Summary = ({
 
   const isHourlyBooking = listing?.priceDuration === 'hour';
 
+  const stayShaped = booking
+    ? isStayShapedBooking(booking as Record<string, unknown>)
+    : false;
+  const stayLike = booking as unknown as Stay;
+  const afterSummaryCheckoutPath = booking?._id
+    ? getBookingPaymentCheckoutPath({
+        bookingId: booking._id,
+        stayShaped,
+        status: String(booking.status ?? ''),
+        paymentDelta: booking.paymentDelta,
+        useTokens: Boolean(booking.useTokens),
+        fiatOwed: stayShaped ? computeFiatOwed(stayLike) : 0,
+        tokensOwed: stayShaped ? computeTokensOwed(stayLike) : 0,
+        creditsOwed: stayShaped ? computeCreditsOwed(stayLike) : 0,
+      })
+    : `/bookings/${slug ?? ''}/checkout`;
+
   useEffect(() => {
     if (booking?.status === 'pending' || booking?.status === 'paid') {
       router.push(`/bookings/${booking?._id}`);
@@ -173,19 +235,41 @@ const Summary = ({
   const handleNext = async () => {
     setLoading(true);
     setHandleNextError(null);
+    const metricPoint = Math.round(Number(duration ?? adults ?? 0)) || 0;
     if (booking?.status === 'confirmed') {
-      return router.push(`/bookings/${booking?._id}/checkout`);
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-summary-to-checkout',
+        value: 'booking',
+        point: metricPoint,
+      });
+      setLoading(false);
+      return router.push(afterSummaryCheckoutPath);
     }
     try {
-      const res = await api.post(`/bookings/${booking?._id}/complete`, {});
+      const res = await platform.bookings.complete(booking?._id);
       const status = res.data.results.status;
 
       if (status === 'confirmed') {
-        router.push(`/bookings/${booking?._id}/checkout`);
+        void logMetricIfAuthenticated(user, {
+          event: 'booking-summary-complete-success',
+          value: 'booking',
+          point: metricPoint,
+        });
+        router.push(afterSummaryCheckoutPath);
       } else if (status === 'pending') {
+        void logMetricIfAuthenticated(user, {
+          event: 'booking-summary-pending-success',
+          value: 'booking',
+          point: metricPoint,
+        });
         router.push(`/bookings/${booking?._id}`);
       }
     } catch (err) {
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-summary-complete-error',
+        value: 'booking',
+        point: metricPoint,
+      });
       setHandleNextError(parseMessageFromError(err));
     } finally {
       setLoading(false);
@@ -217,12 +301,27 @@ const Summary = ({
       });
 
       if (res.status === 200) {
+        void logMetricIfAuthenticated(user, {
+          event: 'booking-friends-send-success',
+          value: 'booking',
+          point: Math.round(Number(duration ?? adults ?? 0)) || 0,
+        });
         setEmailSuccess(true);
       } else {
+        void logMetricIfAuthenticated(user, {
+          event: 'booking-friends-send-error',
+          value: 'booking',
+          point: Math.round(Number(duration ?? adults ?? 0)) || 0,
+        });
         setEmailSuccess(false);
         setEmailError(res.data.error);
       }
     } catch (error) {
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-friends-send-error',
+        value: 'booking',
+        point: Math.round(Number(duration ?? adults ?? 0)) || 0,
+      });
       setEmailSuccess(false);
       setEmailError(parseMessageFromError(error));
     } finally {
@@ -331,9 +430,16 @@ const Summary = ({
   return (
     <div className="w-full max-w-screen-sm mx-auto p-4 md:p-8">
       <div className="relative flex items-center min-h-[2.75rem] mb-6">
-        <BookingBackButton onClick={goBack} name={t('buttons_back')} className="relative z-10" />
+        <BookingBackButton
+          onClick={goBack}
+          name={t('buttons_back')}
+          className="relative z-10"
+        />
         <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
-          <Heading level={1} className="text-2xl md:text-3xl pb-0 mt-0 text-center">
+          <Heading
+            level={1}
+            className="text-2xl md:text-3xl pb-0 mt-0 text-center"
+          >
             <span>{t('bookings_summary_step_title')}</span>
           </Heading>
         </div>
@@ -359,11 +465,14 @@ const Summary = ({
       />
       {booking && (
         <div className="mt-16 flex flex-col gap-8">
-          <details
-            className="rounded-lg border border-neutral-dark bg-neutral-light overflow-hidden"
+          <BookingSurface
+            as="details"
+            tone="elevated"
+            padding="none"
             open
+            className="overflow-hidden [&>summary]:list-none"
           >
-            <summary className="list-none flex flex-wrap items-center justify-end gap-2 px-4 py-2 font-medium cursor-pointer hover:bg-neutral-dark/30">
+            <summary className="flex flex-wrap items-center justify-end gap-2 px-5 py-3 font-medium text-foreground transition-colors hover:bg-foreground/[0.04] md:px-6">
               <Link
                 href={stepUrlParams ? buildBookingDatesUrl(stepUrlParams) : '#'}
                 className="text-sm text-accent-dark font-medium hover:underline"
@@ -371,7 +480,7 @@ const Summary = ({
                 {t('generic_edit_button')}
               </Link>
             </summary>
-            <div className="px-4 pb-4 pt-0">
+            <div className="px-5 pb-5 pt-0 md:px-6">
               <SummaryDates
                 isDayTicket={booking?.isDayTicket}
                 totalGuests={adults || 0}
@@ -381,8 +490,10 @@ const Summary = ({
                 startDate={start || ''}
                 endDate={end || ''}
                 listingName={listing?.name || ''}
-                listingUrl={listing?.slug || ''}
+                listingId={listing?._id}
                 eventName={event?.name}
+                isFriendsBooking={Boolean(booking?.isFriendsBooking)}
+                eventId={booking?.eventId}
                 ticketOption={ticketOption?.name}
                 priceDuration={listing?.priceDuration}
                 numSpacesRequired={
@@ -393,22 +504,29 @@ const Summary = ({
                 isVolunteer={volunteerInfo?.bookingType === 'volunteer'}
               />
             </div>
-          </details>
+          </BookingSurface>
 
-          <details
-            className="rounded-lg border border-neutral-dark bg-neutral-light overflow-hidden"
+          <BookingSurface
+            as="details"
+            tone="elevated"
+            padding="none"
             open
+            className="overflow-hidden [&>summary]:list-none"
           >
-            <summary className="list-none flex flex-wrap items-center justify-between gap-2 px-4 py-3 font-medium cursor-pointer hover:bg-neutral-dark/30">
+            <summary className="flex flex-wrap items-center justify-between gap-2 px-5 py-3 font-medium text-foreground transition-colors hover:bg-foreground/[0.04] md:px-6">
               <span>{t('bookings_summary_step_costs_title')}</span>
               <Link
-                href={stepUrlParams ? buildBookingAccomodationUrl(stepUrlParams) : '#'}
+                href={
+                  stepUrlParams
+                    ? buildBookingAccomodationUrl(stepUrlParams)
+                    : '#'
+                }
                 className="text-sm text-accent-dark font-medium hover:underline"
               >
                 {t('generic_edit_button')}
               </Link>
             </summary>
-            <div className="px-4 pb-4 pt-0">
+            <div className="px-5 pb-5 pt-0 md:px-6">
               <SummaryCosts
                 hideTitle
                 utilityFiat={utilityFiat}
@@ -418,7 +536,9 @@ const Summary = ({
                 useTokens={useTokens || false}
                 useCredits={useCredits || false}
                 accomodationCost={useTokens ? rentalToken : rentalFiat}
-                totalToken={rentalToken || { val: 0, cur: CloserCurrencies.EUR }}
+                totalToken={
+                  rentalToken || { val: 0, cur: CloserCurrencies.EUR }
+                }
                 creditsPrice={(dailyRentalToken?.val || 0) * (duration || 0)}
                 totalFiat={total || { val: 0, cur: CloserCurrencies.EUR }}
                 eventCost={eventFiat}
@@ -438,7 +558,7 @@ const Summary = ({
                 vatRate={vatRate}
               />
             </div>
-          </details>
+          </BookingSurface>
 
           <div>{buttonContent}</div>
         </div>
@@ -448,54 +568,22 @@ const Summary = ({
 };
 
 Summary.getInitialProps = async (context: NextPageContext) => {
-  const { query, req } = context;
-
   try {
-    const [bookingRes, configs, messages] = await Promise.all([
-      api
-        .get(`/booking/${query.slug}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        })
-        .catch(() => null),
-      getConfig(api),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const booking = bookingRes?.data?.results;
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
-    const web3Config = getConfigValueBySlug(configs, 'web3');
+    const bookingConfig = config.booking;
+    const web3Config = config.web3;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
-    const paymentConfig = getConfigValueBySlug(configs, 'payment');
-
-    const [optionalEvent, optionalListing] = await Promise.all([
-      booking?.eventId &&
-        api.get(`/event/${booking?.eventId}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        }),
-      booking?.listing &&
-        api.get(`/listing/${booking?.listing}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        }),
-    ]);
-    const event = optionalEvent?.data?.results;
-    const listing = optionalListing?.data?.results;
+    const paymentConfig = config.payment;
 
     return {
-      booking,
-      listing,
-      event,
       error: null,
       bookingConfig,
       paymentConfig,
-      messages,
       tokenCurrency,
     };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
-      booking: null,
-      listing: null,
       bookingConfig: null,
-      messages: null,
       paymentConfig: null,
       tokenCurrency: getBookingTokenCurrency(),
     };

@@ -5,7 +5,6 @@ import React from 'react';
 import { TokenInterface } from '../../components/TokenInteraction';
 
 import { useConfig } from 'closer/hooks/useConfig';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { twitterUrlToHandle } from 'closer/utils/app.helpers';
 import { NextPage, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -62,18 +61,12 @@ const TokensPage: NextPage = () => {
 
 TokensPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
-      messages,
     };
   } catch (err) {
     return {
       error: err,
-      messages: null,
-    };
+      };
   }
 };
 

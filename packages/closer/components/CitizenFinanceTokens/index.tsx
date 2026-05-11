@@ -5,6 +5,7 @@ import { useEffect, useState, ChangeEvent } from 'react';
 import { isValid } from 'iban-ts';
 import { useTranslations } from 'next-intl';
 
+import { TOKEN_PURCHASE_TERMS_DOC_URL } from '../../constants';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { FinanceApplicationCreateRequest } from '../../types';
 import { Button, Card, Checkbox, Heading, Input, Spinner } from '../ui';
@@ -310,7 +311,7 @@ const CitizenFinanceTokens = ({
             {t.rich('subscriptions_citizen_agree_to_token_terms', {
               link1: (chunks) => (
                 <a
-                  href="https://docs.google.com/document/d/1kz4SH1UVWhamniqUW4GWmFOU0nmXyhpAzUJwFTW0ybs/edit?tab=t.0"
+                  href={TOKEN_PURCHASE_TERMS_DOC_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ textDecoration: 'underline' }}

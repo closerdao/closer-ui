@@ -18,10 +18,8 @@ import { useRBAC } from '../../hooks/useRBAC';
 import { Event } from '../../types';
 import { GeneralConfig } from '../../types';
 import { cdn } from '../../utils/api';
-import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
-import api from '../../utils/api';
+import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 const now = new Date();
 
@@ -439,26 +437,20 @@ const Events = ({ generalConfig, eventsConfig }: Props) => {
 
 Events.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [configs, messages] = await Promise.all([
-      getConfig(api),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
 
-    const generalConfig = getConfigValueBySlug(configs, 'general');
-    const eventsConfig = getConfigValueBySlug(configs, 'events');
+    const generalConfig = config.general;
+    const eventsConfig = config.events;
 
     return {
       generalConfig,
       eventsConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       eventsConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

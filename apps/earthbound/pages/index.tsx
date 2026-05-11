@@ -8,13 +8,13 @@ import {
   Listing,
   api,
   cdn,
+  getCachedConfig,
   useAuth,
   usePlatform,
 } from 'closer';
 import { User } from 'closer/contexts/auth/types';
 import { Page } from 'closer/types/customPages';
 import { parseMessageFromError } from 'closer/utils/common';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 
 const getPage = ({
@@ -752,14 +752,7 @@ const HomePage = ({ generalConfig, listings, hosts }: Props) => {
 
 HomePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
-    const [generalRes, listingsRes, hostsRes] = await Promise.all([
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
+    const [listingsRes, hostsRes] = await Promise.all([
       api
         .get('/listing', {
           params: {
@@ -784,12 +777,11 @@ HomePage.getInitialProps = async (context: NextPageContext) => {
         }),
     ]);
 
-    const generalConfig = generalRes?.data?.results?.value;
+    const generalConfig = getCachedConfig('general');
     const listings = listingsRes?.data?.results;
     const hosts = hostsRes?.data?.results;
     return {
       generalConfig,
-      messages,
       listings,
       hosts,
     };
@@ -797,7 +789,6 @@ HomePage.getInitialProps = async (context: NextPageContext) => {
     return {
       generalConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
       listings: null,
       hosts: null,
     };

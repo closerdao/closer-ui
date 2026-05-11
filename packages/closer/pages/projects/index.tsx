@@ -1,3 +1,4 @@
+import { convert } from 'html-to-text';
 import Head from 'next/head';
 import Image from 'next/image';
 
@@ -5,27 +6,21 @@ import ProjectCard from '../../components/ProjectCard/ProjectCard';
 import PageError from 'closer/components/PageError';
 import { Heading, LinkButton } from 'closer/components/ui';
 
-import { GeneralConfig, Project, api, useAuth } from 'closer';
+import { GeneralConfig, Project, api, getCachedConfig, useAuth } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
 import { VolunteerConfig } from 'closer/types/api';
 import { parseMessageFromError } from 'closer/utils/common';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 interface Props {
-  generalConfig: GeneralConfig | null;
   error: string | null;
   projects: Project[] | null;
-  volunteerConfig: VolunteerConfig | null;
 }
 
-const ProjectsPage = ({
-  generalConfig,
-  error,
-  projects,
-  volunteerConfig,
-}: Props) => {
+const ProjectsPage = ({ error, projects }: Props) => {
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
+  const volunteerConfig = getCachedConfig('volunteering') as VolunteerConfig | null;
   const t = useTranslations();
 
   const { user } = useAuth();
@@ -198,18 +193,10 @@ const ProjectsPage = ({
 };
 
 ProjectsPage.getInitialProps = async (context: NextPageContext) => {
-  const { convert } = require('html-to-text');
-
   try {
-    const [messages, generalRes, projectsRes, volunteerConfigRes] =
-      await Promise.all([
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-        api.get('/config/general').catch(() => null),
-        api.get('/project').catch(() => {
-          return null;
-        }),
-        api.get('/config/volunteering').catch(() => null),
-      ]);
+    const projectsRes = await api.get('/project').catch(() => {
+      return null;
+    });
     const projectManagerIds = projectsRes?.data?.results?.map(
       (project: Project) => project.createdBy,
     );
@@ -220,8 +207,6 @@ ProjectsPage.getInitialProps = async (context: NextPageContext) => {
 
     const projectManagers = projectManagersRes.map((res) => res?.data?.results);
 
-    const generalConfig = generalRes?.data?.results?.value;
-    const volunteerConfig = volunteerConfigRes?.data?.results?.value;
     const projects =
       projectsRes?.data?.results.map((project: Project, index: number) => ({
         ...project,
@@ -230,14 +215,11 @@ ProjectsPage.getInitialProps = async (context: NextPageContext) => {
         manager: projectManagers[index],
       })) || null;
 
-    return { messages, generalConfig, projects, volunteerConfig };
+    return { projects };
   } catch (err: unknown) {
     return {
-      generalConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
       projects: null,
-      volunteerConfig: null,
     };
   }
 };

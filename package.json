@@ -4,10 +4,15 @@
   "private": true,
   "packageManager": "yarn@1.22.22",
   "workspaces": [
-    "apps/*",
+    "apps/closer",
+    "apps/earthbound",
+    "apps/foz",
+    "apps/lios",
+    "apps/tdf",
     "packages/*"
   ],
   "scripts": {
+    "prepare": "node packages/closer/scripts/ensureBuildConfigSnapshotExists.cjs && node packages/closer/scripts/syncBuildLocales.cjs",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
@@ -15,9 +20,15 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch",
-    "cypress:open": "cypress open"
+    "cypress:open": "cypress open",
+    "locale:prune": "node packages/closer/scripts/pruneUnusedLocaleKeys.cjs",
+    "locale:prune:write": "node packages/closer/scripts/pruneUnusedLocaleKeys.cjs --write",
+    "build:locales": "node packages/closer/scripts/syncBuildLocales.cjs",
+    "dev:locales": "node packages/closer/scripts/watchLocales.cjs",
+    "build:config": "node packages/closer/scripts/syncBuildConfig.cjs"
   },
   "devDependencies": {
+    "@types/sanitize-html": "^2.16.0",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^14.0.0",
     "@testing-library/user-event": "^14.4.3",
@@ -26,7 +37,8 @@
     "msw": "^1.2.1",
     "next-router-mock": "^0.9.3",
     "prettier": "latest",
-    "turbo": "^2.9.6"
+    "turbo": "^2.9.6",
+    "chokidar": "^4.0.3"
   },
   "resolutions": {
     "postcss": "^8.5.10",
@@ -50,7 +62,7 @@
     "minimatch": "^9.0.5",
     "glob": "^11.0.0",
     "rollup": "^4.34.9",
-    "undici": "^6.25.0"
+    "undici": "^7.25.0"
   },
   "dependencies": {
     "@google/genai": "^1.12.0",

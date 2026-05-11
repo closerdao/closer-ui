@@ -32,7 +32,7 @@ const LearnEditor = ({ value = [], onChange, required }: LearnEditorProps) => {
 
   const updateOptions = (update: LearnOption[]) => {
     setOptions(update);
-    onChange && onChange(update);
+    if (onChange) onChange(update);
   };
 
   const updateOption = (index: number, option: LearnOption) => {

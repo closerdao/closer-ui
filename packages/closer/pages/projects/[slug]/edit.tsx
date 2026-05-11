@@ -10,14 +10,14 @@ import { Page401 } from '../../..';
 import { useAuth } from '../../../contexts/auth';
 import { Project, VolunteerConfig } from '../../../types';
 import api from '../../../utils/api';
-import { loadLocaleData } from '../../../utils/locale.helpers';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 
 interface Props {
   project: Project;
-  volunteerConfig: VolunteerConfig;
 }
 
-const EditProject = ({ project, volunteerConfig }: Props) => {
+const EditProject = ({ project }: Props) => {
+  const volunteerConfig = getCachedConfig('volunteering') as VolunteerConfig | null;
   const t = useTranslations();
   const { user } = useAuth();
   const hasStewardRole = user?.roles?.includes('steward');
@@ -51,34 +51,17 @@ const EditProject = ({ project, volunteerConfig }: Props) => {
 EditProject.getInitialProps = async (context: NextPageContext) => {
   try {
     const id = context.query.slug;
-    const [projectRes, messages, volunteerConfigRes] = await Promise.all([
-      api.get(`/project/${id}`).catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME).catch(
-        () => {
-          return null;
-        },
-      ),
-      api.get('/config/volunteering').catch(() => {
-        return null;
-      }),
-    ]);
+    const projectRes = await api.get(`/project/${id}`).catch(() => null);
 
     const project = projectRes?.data?.results;
-    const volunteerConfig = volunteerConfigRes?.data?.results.value;
 
     return {
       project,
-      volunteerConfig,
-      messages,
     };
   } catch (error) {
     console.error(error);
     return {
       project: null,
-      messages: null,
-      volunteerConfig: null,
     };
   }
 };

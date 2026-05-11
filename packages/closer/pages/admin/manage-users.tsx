@@ -7,17 +7,16 @@ import UsersFilter from '../../components/UsersFilter';
 import UsersList from '../../components/UsersList';
 import { Heading } from '../../components/ui';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import useRBAC from '../../hooks/useRBAC';
 import { BookingConfig } from '../../types/api';
-import api from '../../utils/api';
-import { loadLocaleData } from '../../utils/locale.helpers';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import PageNotFound from '../not-found';
 
-const ManageUsersPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) => {
+const ManageUsersPage = () => {
+  const bookingConfig = getCachedConfig('booking') as BookingConfig | null;
   const t = useTranslations();
   const { user } = useAuth();
   const { hasAccess } = useRBAC();
@@ -65,27 +64,6 @@ const ManageUsersPage = ({ bookingConfig }: { bookingConfig: BookingConfig }) =>
       </AdminLayout>
     </>
   );
-};
-
-ManageUsersPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [messages, bookingRes] = await Promise.all([
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      api.get('/config/booking').catch(() => null),
-    ]);
-
-    const bookingConfig = bookingRes?.data?.results?.value;
-
-    return {
-      messages,
-      bookingConfig,
-    };
-  } catch (err: unknown) {
-    return {
-      messages: null,
-      bookingConfig: null,
-    };
-  }
 };
 
 export default ManageUsersPage;

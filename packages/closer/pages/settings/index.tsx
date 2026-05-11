@@ -13,7 +13,6 @@ import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select/Dropdown';
 import MultiSelect from '../../components/ui/Select/MultiSelect';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import process from 'process';
 
@@ -25,8 +24,8 @@ import { usePushNotifications } from '../../contexts/push-notifications';
 import { useConfig } from '../../hooks/useConfig';
 import { VolunteerConfig } from '../../types';
 import api from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import PageNotFound from '../not-found';
 
 type UpdateUserFunction = (value: string | string[]) => Promise<void>;
@@ -214,11 +213,8 @@ const DeleteAccountSection = ({ t }: DeleteAccountSectionProps) => {
   );
 };
 
-const SettingsPage = ({
-  volunteerConfig,
-}: {
-  volunteerConfig: VolunteerConfig;
-}) => {
+const SettingsPage = () => {
+  const volunteerConfig = getCachedConfig('volunteering') as VolunteerConfig | null;
   const t = useTranslations() as (key: string) => string;
   const { APP_NAME } = useConfig();
   const router = useRouter();
@@ -332,7 +328,7 @@ const SettingsPage = ({
         | keyof User['preferences']
         | keyof User
         | keyof User['settings']
-        | keyof User['kycData'],
+        | keyof NonNullable<User['kycData']>,
     ): UpdateUserFunction =>
     async (value: string | string[] | React.ChangeEvent<HTMLInputElement>) => {
       let actualValue: string | string[];
@@ -993,29 +989,6 @@ const SettingsPage = ({
       </div>
     </>
   );
-};
-
-SettingsPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [volunteerConfigRes, messages] = await Promise.all([
-      api.get('/config/volunteering').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-
-    const volunteerConfig = volunteerConfigRes?.data?.results.value;
-
-    return {
-      volunteerConfig,
-      messages,
-    };
-  } catch (err: unknown) {
-    return {
-      messages: null,
-      volunteerConfig: null,
-    };
-  }
 };
 
 export default SettingsPage;

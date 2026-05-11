@@ -3,10 +3,8 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
-import PageError from '../../components/PageError';
 import { BackButton, Button, Heading, ProgressBar } from '../../components/ui/';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
@@ -15,23 +13,17 @@ import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
-import api from '../../utils/api';
-import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
-interface Props {
-  subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
-  generalConfig: GeneralConfig | null;
-
-  error?: string;
-}
-const SubscriptionSuccessPage = ({
-  subscriptionsConfig,
-  generalConfig,
-  error,
-}: Props) => {
+interface Props {}
+const SubscriptionSuccessPage = () => {
+  const subscriptionsConfig = getCachedConfig('subscriptions') as {
+    enabled: boolean;
+    elements: SubscriptionPlan[];
+  };
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
@@ -86,10 +78,6 @@ const SubscriptionSuccessPage = ({
     router.push('/subscriptions');
   };
 
-  if (error) {
-    return <PageError error={error} />;
-  }
-
   if (!areSubscriptionsEnabled) {
     return <PageNotFound error="" />;
   }
@@ -141,36 +129,6 @@ const SubscriptionSuccessPage = ({
       </div>
     </>
   );
-};
-
-SubscriptionSuccessPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [subscriptionsRes, generalRes, messages] = await Promise.all([
-      api.get('/config/subscriptions').catch(() => {
-        return null;
-      }),
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-
-    const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
-    const generalConfig = generalRes?.data?.results?.value;
-
-    return {
-      subscriptionsConfig,
-      generalConfig,
-      messages,
-    };
-  } catch (err: unknown) {
-    return {
-      subscriptionsConfig: { enabled: false, elements: [] },
-      generalConfig: null,
-      error: parseMessageFromError(err),
-      messages: null,
-    };
-  }
 };
 
 export default SubscriptionSuccessPage;

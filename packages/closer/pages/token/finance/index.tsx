@@ -4,14 +4,14 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import CitizenFinanceTokens from '../../../components/CitizenFinanceTokens';
-import PageError from '../../../components/PageError';
 import { BackButton, Heading, ProgressBar } from '../../../components/ui';
 
-import { NextPage, NextPageContext } from 'next';
+import { NextPage } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { SUBSCRIPTION_CITIZEN_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
+import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
 import { CitizenshipConfig, GeneralConfig } from '../../../types';
 import {
@@ -20,23 +20,20 @@ import {
   SubscriptionPlan,
 } from '../../../types/subscriptions';
 import api from '../../../utils/api';
-import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
+import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
+import { financeApplicationIdFromCreateResponse } from '../../../utils/financeApplicationIdFromResponse';
+import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
 import PageNotFound from '../../not-found';
 
-interface Props {
-  subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
-  citizenshipConfig: CitizenshipConfig | null;
-  generalConfig: GeneralConfig | null;
-  error?: string;
-}
+interface Props {}
 
-const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
-  subscriptionsConfig,
-  citizenshipConfig,
-  generalConfig,
-  error,
-}) => {
+const SubscriptionsCitizenApplyPage: NextPage<Props> = () => {
+  const subscriptionsConfig = getCachedConfig('subscriptions') as {
+    enabled: boolean;
+    elements: SubscriptionPlan[];
+  };
+  const citizenshipConfig = getCachedConfig('citizenship') as CitizenshipConfig | null;
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
 
   const MIN_TOKENS_TO_FINANCE = 30;
@@ -46,6 +43,7 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
 
   const { isLoading, user } = useAuth();
+  const { platform } = usePlatform();
   const router = useRouter();
 
   const { citizenApplication } = router.query;
@@ -75,36 +73,27 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
     if (!isLoading && !user) {
       router.push(`/signup?back=${router.asPath}`);
     }
-    if (user && !isLoading) {
+    if (user && !isLoading && platform?.financeapplication) {
       (async () => {
-        const financeApplicationRes = await api.get('/finance-application', {
-          params: {
-            where: {
-              userId: user?._id,
-            },
-          },
+        const params = { where: { userId: user._id } };
+        const action = await platform.financeapplication.get(params, {
+          force: true,
         });
-        const financeApplications = financeApplicationRes?.data?.results;
+        const financeApplications = financeApplicationListFromGetAction(action);
 
         const activeApplications = financeApplications.filter(
           (application: FinanceApplication) =>
             ['pending-payment', 'paid'].includes(application.status),
         );
 
-        if (financeApplications) {
-          setActiveApplications(activeApplications);
-        }
+        setActiveApplications(activeApplications);
       })();
     }
-  }, [user, isLoading]);
+  }, [user, isLoading, router, platform?.financeapplication]);
 
   const goBack = () => {
     router.push('/citizenship/why');
   };
-
-  if (error) {
-    return <PageError error={error} />;
-  }
 
   if (!areSubscriptionsEnabled) {
     return <PageNotFound error="" />;
@@ -129,10 +118,13 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
       } as FinanceApplicationCreateRequest);
 
       if (res.data.status === 'success') {
+        const appId = financeApplicationIdFromCreateResponse(res.data);
+
         return {
           success: true,
           error: null,
           memoCode: res?.data?.memoCode,
+          applicationId: appId,
         };
       }
     } catch (error) {
@@ -149,11 +141,11 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
   const handleNext = async () => {
     const res = await financedTokenApply(isCitizenApplication);
     if (res?.success) {
-      router.push(
-        isCitizenApplication
-          ? '/token/finance/success-citizen?memoCode=' + res?.memoCode
-          : '/token/finance/success?memoCode=' + res?.memoCode,
-      );
+      if (res.applicationId) {
+        router.push(`/token/financed/${encodeURIComponent(res.applicationId)}`);
+        return;
+      }
+      router.push(`/token/financed?afterApply=${Date.now()}`);
     }
   };
 
@@ -182,8 +174,15 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
 
         <main className="pt-14 pb-24 flex flex-col gap-8">
           {activeApplications.length > 0 ? (
-            <div className="bg-yellow-100 py-2 px-3 rounded-md">
-              {t('subscriptions_citizen_active_applications')}
+            <div className="bg-yellow-100 py-2 px-3 rounded-md flex items-center justify-between gap-3">
+              <span>{t('subscriptions_citizen_active_applications')}</span>
+              <button
+                type="button"
+                className="text-sm underline"
+                onClick={() => router.push('/token/financed')}
+              >
+                {t('token_financed_view_contract')}
+              </button>
             </div>
           ) : (
             <CitizenFinanceTokens
@@ -205,45 +204,6 @@ const SubscriptionsCitizenApplyPage: NextPage<Props> = ({
       </div>
     </>
   );
-};
-
-SubscriptionsCitizenApplyPage.getInitialProps = async (
-  context: NextPageContext,
-) => {
-  try {
-    const [subscriptionsRes, generalRes, citizenshipRes, messages] =
-      await Promise.all([
-        api.get('/config/subscriptions').catch(() => {
-          return null;
-        }),
-        api.get('/config/general').catch(() => {
-          return null;
-        }),
-        api.get('/config/citizenship').catch(() => {
-          return null;
-        }),
-
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      ]);
-
-    const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
-    const generalConfig = generalRes?.data?.results?.value;
-    const citizenshipConfig = citizenshipRes?.data?.results?.value;
-    return {
-      subscriptionsConfig,
-      citizenshipConfig,
-      generalConfig,
-      messages,
-    };
-  } catch (err: unknown) {
-    return {
-      subscriptionsConfig: { enabled: false, elements: [] },
-      citizenshipConfig: null,
-      generalConfig: null,
-      error: parseMessageFromError(err),
-      messages: null,
-    };
-  }
 };
 
 export default SubscriptionsCitizenApplyPage;

@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { pollDonationSaleUntilPaid } from '../../utils/donation.helpers';
 import { postDonationPaymentConfirmation } from '../../utils/donationPaymentConfirmation';
 import { parseMessageFromError } from '../../utils/common';
+import { logMetricIfAuthenticated } from '../../utils/metrics';
 import { Button, ErrorMessage } from '../ui';
 
 interface DonateCheckoutFormProps {
@@ -13,6 +14,8 @@ interface DonateCheckoutFormProps {
   saleId: string;
   paymentIntentId?: string;
   userEmail?: string;
+  metricUser?: { _id?: string } | null;
+  metricAmount?: number;
   onPaid: () => void;
 }
 
@@ -40,6 +43,8 @@ function DonateCheckoutForm({
   saleId,
   paymentIntentId,
   userEmail,
+  metricUser,
+  metricAmount = 0,
   onPaid,
 }: DonateCheckoutFormProps) {
   const t = useTranslations();
@@ -90,6 +95,11 @@ function DonateCheckoutForm({
       );
 
       if (stripeError) {
+        void logMetricIfAuthenticated(metricUser, {
+          event: 'donation-payment-error',
+          value: 'donation',
+          point: metricAmount,
+        });
         setError(stripeError.message || t('donate_card_stripe_error'));
         return;
       }
@@ -99,12 +109,22 @@ function DonateCheckoutForm({
         paymentIntent.status !== 'succeeded' &&
         paymentIntent.status !== 'processing'
       ) {
+        void logMetricIfAuthenticated(metricUser, {
+          event: 'donation-payment-error',
+          value: 'donation',
+          point: metricAmount,
+        });
         setError(t('donate_card_stripe_unexpected_status'));
         return;
       }
 
       const piId = paymentIntent?.id || paymentIntentId;
       if (!piId) {
+        void logMetricIfAuthenticated(metricUser, {
+          event: 'donation-payment-error',
+          value: 'donation',
+          point: metricAmount,
+        });
         setError(t('donate_card_stripe_unexpected_status'));
         return;
       }
@@ -112,6 +132,11 @@ function DonateCheckoutForm({
       setPollHint(t('donate_card_finalizing'));
       try {
         await postDonationPaymentConfirmation(piId, saleId);
+        void logMetricIfAuthenticated(metricUser, {
+          event: 'donation-payment-success',
+          value: 'donation',
+          point: metricAmount,
+        });
         onPaid();
         return;
       } catch (confirmErr: unknown) {
@@ -134,15 +159,30 @@ function DonateCheckoutForm({
           }
         }
         if (paid && isMountedRef.current && !ac.signal.aborted) {
+          void logMetricIfAuthenticated(metricUser, {
+            event: 'donation-payment-success',
+            value: 'donation',
+            point: metricAmount,
+          });
           onPaid();
           return;
         }
         if (isMountedRef.current && !ac.signal.aborted) {
+          void logMetricIfAuthenticated(metricUser, {
+            event: 'donation-payment-error',
+            value: 'donation',
+            point: metricAmount,
+          });
           setError(parseMessageFromError(confirmErr));
         }
       }
     } catch (err: unknown) {
       if (isMountedRef.current) {
+        void logMetricIfAuthenticated(metricUser, {
+          event: 'donation-payment-error',
+          value: 'donation',
+          point: metricAmount,
+        });
         setError(parseMessageFromError(err));
       }
     } finally {

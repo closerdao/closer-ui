@@ -35,9 +35,9 @@ import {
 } from '../../../utils/booking.helpers';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import { logMetricIfAuthenticated } from '../../../utils/metrics';
+import config from '../../../configCached';
 import { getBookingRate, getDiscountRate } from '../../../utils/helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
 dayjs.extend(advancedFormat);
@@ -138,6 +138,11 @@ const AccomodationSelector = ({
       setRequestError(null);
 
       if (isPaidEventWithoutTicket) {
+        void logMetricIfAuthenticated(user, {
+          event: 'booking-request-error',
+          value: 'booking',
+          point: Number(adults) || 0,
+        });
         setRequestError(t('bookings_error_no_ticket_option'));
         return;
       }
@@ -181,6 +186,13 @@ const AccomodationSelector = ({
         ...(normalizedIsFriendsBooking && { isFriendsBooking: true }),
         ...(friendEmails && { friendEmails }),
       });
+      const nights =
+        start && end ? Math.max(0, dayjs(end).diff(dayjs(start), 'day')) : 0;
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-request-success',
+        value: 'booking',
+        point: nights || Number(adults) || 0,
+      });
       if (bookingConfig?.foodOptionEnabled) {
         router.push(
           `/bookings/${newBooking._id}/food?discountCode=${discountCode}`,
@@ -190,6 +202,16 @@ const AccomodationSelector = ({
 
       router.push(`/bookings/${newBooking._id}/questions`);
     } catch (err) {
+      void logMetricIfAuthenticated(user, {
+        event: 'booking-request-error',
+        value: 'booking',
+        point:
+          start && end
+            ? Math.max(0, dayjs(end).diff(dayjs(start), 'day')) ||
+              Number(adults) ||
+              0
+            : Number(adults) || 0,
+      });
       setRequestError(parseMessageFromError(err));
     } finally {
     }
@@ -345,8 +367,7 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
     const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
     const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
 
-    const [availabilityRes, configs, messages] = await Promise.all([
-      api
+    const availabilityRes = await api
         .post('/bookings/availability', {
           start,
           end,
@@ -365,15 +386,12 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
             err.response.data.error,
           );
           return { error: err.response.data.error || 'Unknown error' };
-        }),
-      getConfig(api),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+        })
     const bookingError = (availabilityRes as any)?.error || null;
     const availability = (availabilityRes as any)?.data?.results;
 
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
-    const web3Config = getConfigValueBySlug(configs, 'web3');
+    const bookingConfig = config.booking;
+    const web3Config = config.web3;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
 
     let event = null;
@@ -401,7 +419,6 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       friendEmails,
       bookingConfig,
       bookingError,
-      messages,
       foodOption,
       skills,
       diet,
@@ -416,7 +433,6 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
     return {
       error: err.response?.data?.error || err.message,
       bookingConfig: null,
-      messages: null,
       tokenCurrency: getBookingTokenCurrency(),
     };
   }

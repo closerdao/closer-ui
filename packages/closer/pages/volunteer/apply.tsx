@@ -2,37 +2,27 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 
 import BookingBackButton from '../../components/BookingBackButton';
-import PageError from '../../components/PageError';
 import VolunteerOrResidenceApplication from '../../components/VolunteerOrResidenceApplication/VolunteerOrResidenceApplication';
 import Heading from '../../components/ui/Heading';
 import ProgressBar from '../../components/ui/ProgressBar';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { BOOKING_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { GeneralConfig, VolunteerConfig } from '../../types';
-import api from '../../utils/api';
-import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import {
   default as PageNotAllowed,
   default as PageNotFound,
 } from '../not-found';
 import { useEffect } from 'react';
 
-interface Props {
-  volunteerConfig: VolunteerConfig | null;
-  error: string | null;
-  generalConfig: GeneralConfig | null;
-}
+interface Props {}
 
-const VolunteerApplicationPage = ({
-  volunteerConfig,
-  error,
-  generalConfig,
-}: Props) => {
+const VolunteerApplicationPage = () => {
+  const volunteerConfig = getCachedConfig('volunteering') as VolunteerConfig | null;
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const PLATFORM_NAME = generalConfig?.platformName || '';
 
   const t = useTranslations();
@@ -54,10 +44,6 @@ const VolunteerApplicationPage = ({
 
   if (!isVolunteerEnabled) {
     return <PageNotFound />;
-  }
-
-  if (error) {
-    return <PageError error={error} />;
   }
 
   if (!isAuthenticated) {
@@ -85,38 +71,6 @@ const VolunteerApplicationPage = ({
       </div>
     </>
   );
-};
-
-VolunteerApplicationPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [generalConfigRes, volunteerConfigRes, messages] = await Promise.all([
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      api.get('/config/volunteering').catch(() => {
-        return null;
-      }),
-
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-
-    const volunteerConfig = volunteerConfigRes?.data?.results?.value || null;
-    const generalConfig = generalConfigRes?.data?.results?.value || null;
-
-    return {
-      volunteerConfig,
-      generalConfig,
-      messages,
-    };
-  } catch (err) {
-    console.error('Error', err);
-    return {
-      error: parseMessageFromError(err),
-      volunteerConfig: null,
-      generalConfig: null,
-      messages: null,
-    };
-  }
 };
 
 export default VolunteerApplicationPage;

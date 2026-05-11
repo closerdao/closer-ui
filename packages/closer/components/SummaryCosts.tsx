@@ -1,7 +1,14 @@
+import Link from 'next/link';
+
 import { useTranslations } from 'next-intl';
+
+import { ExternalLink } from 'lucide-react';
+
+import dayjs from 'dayjs';
 
 import { useConfig } from '../hooks/useConfig';
 import { IconBanknote } from './BookingIcons';
+import { Charge } from '../types/booking';
 import { CloserCurrencies, Price } from '../types';
 import {
   getBookingPaymentType,
@@ -9,6 +16,7 @@ import {
 } from '../utils/booking.helpers';
 import { getVatInfo, priceFormat } from '../utils/helpers';
 import DisplayPrice from './DisplayPrice';
+import { Button } from './ui';
 import HeadingRow from './ui/HeadingRow';
 
 interface Props {
@@ -42,6 +50,17 @@ interface Props {
   foodOptionEnabled?: boolean;
   utilityOptionEnabled?: boolean;
   hideTitle?: boolean;
+  charges?: Charge[];
+  paymentDelta?: {
+    fiat: { val: number; cur: CloserCurrencies };
+    token?: { val: number; cur: CloserCurrencies };
+    credits?: { val: number; cur: 'credits' };
+  } | null;
+  guestCostsLedger?: boolean;
+  compact?: boolean;
+  pricingPreviewAvailable?: boolean;
+  onBookingCheckout?: () => void | Promise<void>;
+  bookingCheckoutLoading?: boolean;
 }
 
 const SummaryCosts = ({
@@ -73,9 +92,19 @@ const SummaryCosts = ({
   foodOptionEnabled,
   utilityOptionEnabled,
   hideTitle,
+  charges,
+  paymentDelta,
+  guestCostsLedger,
+  compact = false,
+  pricingPreviewAvailable = false,
+  onBookingCheckout,
+  bookingCheckoutLoading = false,
 }: Props) => {
   const t = useTranslations();
   const { APP_NAME } = useConfig();
+  const cr = compact ? 'mt-1.5' : 'mt-3';
+  const descCls = compact ? 'mt-0.5 text-right text-[11px] leading-snug' : 'text-right text-xs';
+  const rowText = compact ? 'text-sm' : '';
 
   const paymentType = getBookingPaymentType({
     useCredits,
@@ -98,6 +127,186 @@ const SummaryCosts = ({
       ? totalFiat
       : calculatedTotalFiat;
 
+  const fiatLedgerCurrency =
+    displayTotalFiat?.cur ??
+    totalFiat?.cur ??
+    rentalFiat?.cur ??
+    CloserCurrencies.EUR;
+
+  const ledgerCharges = charges ?? [];
+
+  const settledDisplayCharges = [...ledgerCharges]
+    .filter((c) => c.status === 'paid' || c.status === 'refunded')
+    .sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf());
+
+  const pendingLedgerCharges = ledgerCharges.filter(
+    (c) => c.status === 'pending-payment',
+  );
+
+  const hasPaymentMovement =
+    Boolean(paymentDelta?.fiat && Math.abs(paymentDelta.fiat.val) > 0.005) ||
+    Boolean(
+      useTokens &&
+        paymentDelta?.token &&
+        Math.abs(paymentDelta.token.val) > 0.005,
+    ) ||
+    Boolean(
+      paymentDelta?.credits &&
+        Math.abs(paymentDelta.credits.val) > 0.005,
+    );
+
+  const showIntegratedFooter =
+    Boolean(guestCostsLedger && !isEditMode) ||
+    ledgerCharges.length > 0 ||
+    hasPaymentMovement ||
+    pendingLedgerCharges.length > 0 ||
+    Boolean(isEditMode && pricingPreviewAvailable);
+
+  const fiatDelta = paymentDelta?.fiat;
+  const hasFiatRefundDue = Boolean(fiatDelta && fiatDelta.val < -0.005);
+
+  const positiveFiatFromDelta =
+    fiatDelta && fiatDelta.val > 0.005 ? fiatDelta : null;
+  const tokenDueFromDelta =
+    paymentDelta?.token && paymentDelta.token.val > 0.005
+      ? paymentDelta.token
+      : null;
+  const creditsDueFromDelta =
+    paymentDelta?.credits && paymentDelta.credits.val > 0.005
+      ? paymentDelta.credits
+      : null;
+
+  const amountDueSummaryParts: string[] = [];
+  if (positiveFiatFromDelta) {
+    amountDueSummaryParts.push(
+      priceFormat(positiveFiatFromDelta.val, positiveFiatFromDelta.cur),
+    );
+  }
+  if (tokenDueFromDelta) {
+    amountDueSummaryParts.push(
+      priceFormat(tokenDueFromDelta.val, tokenDueFromDelta.cur),
+    );
+  }
+  if (creditsDueFromDelta) {
+    amountDueSummaryParts.push(
+      priceFormat({
+        val: creditsDueFromDelta.val,
+        cur: 'credits',
+        app: APP_NAME,
+      }),
+    );
+  }
+  const hasPositivePaymentDeltaDue = amountDueSummaryParts.length > 0;
+
+  const showSubtotalUpdatedChip =
+    Boolean(isEditMode && pricingPreviewAvailable) &&
+    !useTokens &&
+    !useCredits &&
+    updatedFiatTotal != null &&
+    totalFiat?.val != null &&
+    Math.abs((updatedFiatTotal.val ?? 0) - (totalFiat.val ?? 0)) > 0.005 &&
+    status !== 'cancelled';
+
+  const showDueRows = pendingLedgerCharges.length > 0;
+
+  const hideLineUnpaidBadge = showIntegratedFooter;
+
+  const accommodationEditDirty =
+    updatedRentalFiat?.val !== rentalFiat?.val ||
+    (useTokens &&
+      updatedRentalToken != null &&
+      rentalToken != null &&
+      updatedRentalToken.val.toFixed(2) !== rentalToken.val.toFixed(2));
+
+  const renderBookingAmountSummary = ({
+    emphasize,
+    showUnpaidTag,
+  }: {
+    emphasize: boolean;
+    showUnpaidTag: boolean;
+  }) => {
+    const unpaid =
+      showUnpaidTag && isNotPaid ? (
+        <span className="text-failure"> {t('booking_card_unpaid')}</span>
+      ) : null;
+    const cls = emphasize ? 'font-bold text-lg' : 'font-bold';
+
+    if (priceDuration === 'hour') {
+      return (
+        <div className={cls}>
+          {useTokens && (
+            <span>
+              {priceFormat(
+                totalToken ?? {
+                  val: 0,
+                  cur: CloserCurrencies.TDF,
+                },
+              )}
+            </span>
+          )}
+          {useCredits && (
+            <span>
+              {priceFormat({
+                val: totalToken?.val ?? 0,
+                cur: 'credits',
+                app: APP_NAME,
+              })}
+            </span>
+          )}
+          {!useTokens && !useCredits && (
+            <>
+              {priceFormat(displayTotalFiat)}
+              {unpaid}
+            </>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className={cls}>
+        {useTokens && (
+          <>
+            <span>
+              {priceFormat(
+                totalToken ?? {
+                  val: 0,
+                  cur: CloserCurrencies.TDF,
+                },
+              )}
+            </span>
+            {displayTotalFiat.val > 0 && (
+              <>
+                {' '}
+                + <span>{priceFormat(displayTotalFiat)}</span>
+              </>
+            )}
+            {unpaid}
+          </>
+        )}
+        {useCredits && (
+          <>
+            <span>
+              {priceFormat({
+                val: creditsPrice || totalToken?.val,
+                cur: 'credits',
+                app: APP_NAME,
+              })}
+            </span>{' '}
+            + <span>{priceFormat(displayTotalFiat)}</span>
+            {unpaid}
+          </>
+        )}
+        {!useTokens && !useCredits && (
+          <div>
+            {priceFormat(displayTotalFiat)}
+            {unpaid}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div>
       {!hideTitle && (
@@ -108,10 +317,11 @@ const SummaryCosts = ({
       )}
 
       {eventCost ? (
-        <div className="flex justify-between items-center mt-3">
+        <div className={`flex justify-between items-center ${cr} ${rowText}`}>
           <p>{t('bookings_checkout_event_cost')}</p>
           <div className="flex items-center gap-2">
             {isEditMode &&
+              pricingPreviewAvailable &&
               updatedEventTotal?.val !== eventCost?.val &&
               status !== 'cancelled' && (
                 <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
@@ -126,7 +336,7 @@ const SummaryCosts = ({
                 </span>
               )}{' '}
               {priceFormat(eventCost)}
-              {isNotPaid && (
+              {isNotPaid && !hideLineUnpaidBadge && (
                 <span className="text-failure">
                   {' '}
                   {t('booking_card_unpaid')}
@@ -139,14 +349,13 @@ const SummaryCosts = ({
 
       {(priceDuration === 'night' || !priceDuration) && (
         <>
-          <div className="flex justify-between items-center mt-3">
+          <div className={`flex justify-between items-center ${cr} ${rowText}`}>
             <p>{t('bookings_summary_step_dates_accomodation_type')}</p>
 
             <div className="flex items-center gap-2">
               {isEditMode &&
-                (updatedRentalFiat?.val !== rentalFiat?.val ||
-                  updatedRentalToken?.val.toFixed(2) !==
-                    rentalToken?.val.toFixed(2)) &&
+                pricingPreviewAvailable &&
+                accommodationEditDirty &&
                 status !== 'cancelled' && (
                   <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
                     {t('bookings_updated_price')}:{' '}
@@ -170,7 +379,7 @@ const SummaryCosts = ({
                   isAccommodationPrice={true}
                 />
 
-                {isNotPaid && (
+                {isNotPaid && !hideLineUnpaidBadge && (
                   <span className="text-failure">
                     {' '}
                     {t('booking_card_unpaid')}
@@ -179,16 +388,17 @@ const SummaryCosts = ({
               </div>
             </div>
           </div>
-          <p className="text-right text-xs">
+          <p className={descCls}>
             {t('bookings_summary_step_accomodation_type_description')}
           </p>
 
           {utilityOptionEnabled ? (
             <div>
-              <div className="flex justify-between items-center mt-3">
+              <div className={`flex justify-between items-center ${cr} ${rowText}`}>
                 <p> {t('bookings_summary_step_utility_total')}</p>
                 <div className="flex items-center gap-2">
                   {isEditMode &&
+                    pricingPreviewAvailable &&
                     status !== 'cancelled' &&
                     updatedUtilityTotal?.val !== utilityFiat?.val && (
                       <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
@@ -204,7 +414,7 @@ const SummaryCosts = ({
                         cur: totalFiat?.cur ?? CloserCurrencies.EUR,
                       },
                     )}
-                    {isNotPaid && (
+                    {isNotPaid && !hideLineUnpaidBadge && (
                       <span className="text-failure">
                         {' '}
                         {t('booking_card_unpaid')}
@@ -213,7 +423,7 @@ const SummaryCosts = ({
                   </p>
                 </div>
               </div>
-              <p className="text-right text-xs">
+              <p className={descCls}>
                 {t('bookings_summary_step_utility_description')}
               </p>
             </div>
@@ -221,10 +431,11 @@ const SummaryCosts = ({
 
           {foodOptionEnabled ? (
             <div>
-              <div className="flex justify-between items-center mt-3">
+              <div className={`flex justify-between items-center ${cr} ${rowText}`}>
                 <p> {t('bookings_summary_step_food_total')}</p>
                 <div className="flex items-center gap-2">
                   {isEditMode &&
+                    pricingPreviewAvailable &&
                     updatedFoodTotal?.val !== foodFiat?.val &&
                     status !== 'cancelled' && (
                       <div className="bg-accent-light px-2 py-1 rounded-md font-bold">
@@ -241,7 +452,7 @@ const SummaryCosts = ({
                           },
                         )
                       : t('stay_food_not_included')}
-                    {isNotPaid && (
+                    {isNotPaid && !hideLineUnpaidBadge && (
                       <span className="text-failure">
                         {' '}
                         {t('booking_card_unpaid')}
@@ -250,7 +461,7 @@ const SummaryCosts = ({
                   </p>
                 </div>
               </div>
-              <p className="text-right text-xs">
+              <p className={descCls}>
                 {t('bookings_summary_step_utility_description')}
               </p>
             </div>
@@ -258,11 +469,203 @@ const SummaryCosts = ({
         </>
       )}
 
-      <div className="mt-4 pt-4 border-t-2 border-neutral-dark rounded-lg bg-accent-light/10 px-3 py-3">
+      {showIntegratedFooter ? (
+        <div
+          className={`rounded-lg bg-accent-light/10 ${
+            compact
+              ? 'mt-3 flex flex-col gap-2 px-2 py-3 pt-2'
+              : 'mt-4 flex flex-col gap-4 px-3 py-4 pt-3'
+          }`}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2 gap-y-2">
+            <p
+              className={
+                compact ? 'text-base font-semibold' : 'text-lg font-semibold'
+              }
+            >
+              {t('bookings_costs_subtotal')}
+            </p>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {showSubtotalUpdatedChip && updatedFiatTotal ? (
+                <div
+                  className={`rounded-md bg-accent-light px-2 py-1 font-bold ${
+                    compact ? 'text-xs' : 'text-sm'
+                  }`}
+                >
+                  {t('bookings_updated_price')}:{' '}
+                  {priceFormat(updatedFiatTotal.val, updatedFiatTotal.cur)}
+                </div>
+              ) : null}
+              <div
+                className={compact ? 'font-bold text-base' : 'font-bold text-lg'}
+              >
+                {renderBookingAmountSummary({
+                  emphasize: !compact,
+                  showUnpaidTag: false,
+                })}
+              </div>
+            </div>
+          </div>
+          <p
+            className={`text-right ${compact ? 'text-[11px] leading-snug' : 'text-xs'} mt-1 text-disabled`}
+          >
+            {t('bookings_checkout_step_total_description')}{' '}
+            {getVatInfo(displayTotalFiat, vatRate)}
+          </p>
+          {settledDisplayCharges.length > 0 && (
+            <div className="flex flex-col gap-1 pt-2">
+              <p
+                className={
+                  compact
+                    ? 'text-[11px] font-semibold uppercase tracking-wide text-disabled'
+                    : 'text-sm font-semibold text-foreground'
+                }
+              >
+                {t('bookings_costs_paid_heading')}
+              </p>
+              {settledDisplayCharges.map((charge, idx) => {
+                const paidAmount =
+                  charge.status === 'paid'
+                    ? priceFormat(
+                        charge.amount.total?.val,
+                        charge.amount.total?.cur,
+                      )
+                    : priceFormat(
+                        charge.amount.totalRefunded?.val ??
+                          charge.amount.total?.val,
+                        charge.amount.totalRefunded?.cur ??
+                          charge.amount.total?.cur,
+                      );
+                const stripeHref =
+                  charge.method === 'stripe' &&
+                  charge.meta?.stripePaymentIntentId
+                    ? `https://dashboard.stripe.com/payments/${charge.meta.stripePaymentIntentId}`
+                    : null;
+
+                return (
+                  <div
+                    key={String(charge.id ?? charge._id ?? idx)}
+                    className={`flex justify-between items-center gap-2 ${cr} ${rowText}`}
+                  >
+                    <p className="min-w-0 flex-1 leading-snug">
+                      <span className="text-disabled">
+                        {dayjs(charge.date).format('DD/MM/YYYY')}
+                      </span>
+                      <span className="text-disabled"> · </span>
+                      <span className="capitalize">{charge.method}</span>
+                      <span className="text-disabled"> · </span>
+                      <span className="capitalize text-disabled">
+                        {charge.status}
+                      </span>
+                    </p>
+                    <div className="shrink-0 font-bold tabular-nums">
+                      {stripeHref ? (
+                        <Link
+                          href={stripeHref}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-accent no-underline hover:underline"
+                        >
+                          {paidAmount}
+                          <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                        </Link>
+                      ) : (
+                        paidAmount
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {hasFiatRefundDue && fiatDelta && (
+            <div className="pt-3">
+              <p className="text-sm font-semibold text-success">
+                {t('bookings_amount_to_refund')}{' '}
+                {priceFormat(Math.abs(fiatDelta.val), fiatDelta.cur)}
+              </p>
+            </div>
+          )}
+          {showDueRows ? (
+            <div
+              className={`flex flex-col ${compact ? 'gap-1.5 pt-2' : 'gap-2 pt-3'}`}
+            >
+              {pendingLedgerCharges.map((charge, idx) => (
+                <div
+                  key={`pending-${charge.id ?? charge._id ?? idx}`}
+                  className={`flex justify-between items-center gap-2 ${cr} ${rowText}`}
+                >
+                  <p>{t('bookings_costs_due_label')}</p>
+                  <p className="text-right font-bold">
+                    <span className="tabular-nums">
+                      {priceFormat(
+                        charge.amount.total.val,
+                        charge.amount.total.cur,
+                      )}
+                    </span>
+                    <span className="font-normal text-failure">
+                      {' '}
+                      {t('bookings_costs_pending_suffix')}
+                    </span>
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          <div className="flex items-center justify-between gap-3 pt-3">
+            <p
+              className={
+                compact ? 'text-base font-semibold' : 'text-lg font-semibold'
+              }
+            >
+              {hasFiatRefundDue
+                ? t('bookings_costs_balance_due')
+                : t('bookings_amount_due')}
+            </p>
+            <p
+              className={`font-bold text-right ${compact ? 'text-base' : 'text-lg'}`}
+            >
+              {hasPositivePaymentDeltaDue
+                ? amountDueSummaryParts.join(' + ')
+                : hasFiatRefundDue && paymentDelta?.fiat
+                  ? priceFormat(
+                      paymentDelta.fiat.val,
+                      paymentDelta.fiat.cur,
+                    )
+                  : priceFormat(0, fiatLedgerCurrency)}
+            </p>
+          </div>
+          {hasPositivePaymentDeltaDue && onBookingCheckout ? (
+            <div className="flex justify-end pt-2">
+              <Button
+                variant="inline"
+                size="small"
+                isFullWidth={false}
+                isLoading={bookingCheckoutLoading}
+                className="rounded-full px-4 py-1.5 text-sm font-semibold uppercase tracking-wide"
+                onClick={() => void onBookingCheckout()}
+              >
+                {t('booking_pay_now')}
+              </Button>
+            </div>
+          ) : null}
+          {useTokens && displayTotalFiat.val > 0 && (
+            <p className="pt-2 text-xs text-foreground">
+              {t('bookings_summary_hybrid_payment_note')}
+            </p>
+          )}
+        </div>
+      ) : (
+        <div
+          className={`rounded-lg bg-accent-light/10 ${
+            compact ? 'mt-3 px-2 py-2 pt-2' : 'mt-4 px-3 py-3 pt-3'
+          }`}
+        >
         <div className="flex justify-between items-center">
           <p className="font-semibold text-lg">{t('bookings_total')}</p>
         <div className="flex items-center gap-2">
           {isEditMode &&
+            pricingPreviewAvailable &&
             status !== 'cancelled' &&
             (updatedFiatTotal?.val !== totalFiat?.val ||
               updatedAccomodationTotal?.val !== accomodationCost?.val) && (
@@ -408,11 +811,12 @@ const SummaryCosts = ({
           {getVatInfo(displayTotalFiat, vatRate)}
         </p>
         {useTokens && displayTotalFiat.val > 0 && (
-          <p className="text-xs text-foreground mt-2 pt-2 border-t border-neutral-dark">
+          <p className="mt-2 pt-2 text-xs text-foreground">
             {t('bookings_summary_hybrid_payment_note')}
           </p>
         )}
       </div>
+      )}
     </div>
   );
 };

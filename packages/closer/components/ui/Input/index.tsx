@@ -154,7 +154,7 @@ const Input = React.memo(
     };
 
     const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-      onBlur && onBlur(event);
+      if (onBlur) onBlur(event);
       setIsEditing(false);
     };
 

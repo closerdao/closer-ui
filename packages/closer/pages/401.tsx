@@ -8,7 +8,6 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
-import { loadLocaleData } from '../utils/locale.helpers';
 
 const PageNotAllowed = ({ error }: { error?: string }) => {
   const t = useTranslations();
@@ -55,17 +54,11 @@ const PageNotAllowed = ({ error }: { error?: string }) => {
 
 PageNotAllowed.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
-      messages,
     };
   } catch (err: unknown) {
     return {
-      messages: null,
-    };
+      };
   }
 };
 

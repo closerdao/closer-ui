@@ -14,6 +14,7 @@ import Heading from '../../../components/ui/Heading';
 
 import UserAvatarPlaceholder from '../../../components/UserAvatarPlaceholder';
 import dayjs from 'dayjs';
+import { convert } from 'html-to-text';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -24,7 +25,7 @@ import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
 import { CloserCurrencies } from '../../../types/currency';
 import { Event, Listing } from '../../../types';
-import { getConfig, getConfigValueBySlug } from '../../../utils/configCache';
+import config from '../../../configCached';
 import api, { cdn } from '../../../utils/api';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
@@ -35,7 +36,6 @@ import {
   prependHttp,
   priceFormat,
 } from '../../../utils/helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageNotFound from '../../not-found';
 
@@ -835,9 +835,8 @@ const EventPage = ({
 
 EventPage.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
-  const { convert } = require('html-to-text');
   try {
-    const [event, listings, configs, messages] = await Promise.all([
+    const [event, listings] = await Promise.all([
       api
         .get(`/event/${query.slug}`, {
           headers: getBearerAuthHeaders(req as NextApiRequest),
@@ -851,11 +850,9 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
           params: { limit: MAX_LISTINGS_TO_FETCH },
         })
         .catch(() => null),
-      getConfig(api),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
 
-    const eventsConfig = getConfigValueBySlug(configs, 'events');
+    const eventsConfig = config.events;
 
     const options = {
       baseElements: { selectors: ['p', 'h2', 'span'] },
@@ -886,17 +883,15 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
       eventCreator,
       descriptionText,
       listings: listings?.data?.results,
-      settings: getConfigValueBySlug(configs, 'booking'),
+      settings: config.booking,
       eventsConfig,
-      messages,
     };
   } catch (err: unknown) {
     console.log('Error', err);
     return {
       error: parseMessageFromError(err),
       eventsConfig: null,
-      messages: null,
-    };
+      };
   }
 };
 

@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/auth';
 import { WalletState } from '../contexts/wallet';
 import { blockchainConfig } from '../config_blockchain';
 import { userNeedsWalletLinked } from '../utils/auth.helpers';
+import { truncateHexAddress } from '../utils/display.helpers';
 
 const CeloLogo = () => (
   <svg
@@ -61,11 +62,6 @@ const WalletHeader = ({ isInsufficientBalance }) => {
 
   const isHealthy = !isInsufficientBalance && isWalletReady;
 
-  const formatAddress = (addr) => {
-    if (!addr) return '';
-    return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
-  };
-
   return (
     <div className="rounded-lg bg-[#1c1c1c] p-3 text-white">
       <div className="flex items-center justify-between">
@@ -85,7 +81,7 @@ const WalletHeader = ({ isInsufficientBalance }) => {
         <div className="flex items-center gap-2">
           {isWalletReady && account && (
             <span className="text-[11px] font-mono text-gray-400">
-              {formatAddress(account)}
+              {truncateHexAddress(account)}
             </span>
           )}
           <span

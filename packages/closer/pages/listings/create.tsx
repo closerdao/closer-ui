@@ -9,10 +9,8 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import models from '../../models';
-import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
-import api from '../../utils/api';
+import config from '../../configCached';
 import { getBookingTokenCurrency } from '../../utils/booking.helpers';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 interface Props {
   bookingConfig: unknown;
@@ -93,7 +91,9 @@ const CreateListing = ({ bookingConfig, paymentConfig, web3Config }: Props) => {
                 bookingConfig as { utilityTokenCur?: string } | null | undefined,
               ),
             }}
-            onSave={(listing) => router.push(`/stay/${listing.slug}`)}
+            onSave={(listing) =>
+              router.push(`/stay/create?listingId=${listing._id}`)
+            }
           />
         </EditModelPageLayout>
       </AdminLayout>
@@ -103,26 +103,20 @@ const CreateListing = ({ bookingConfig, paymentConfig, web3Config }: Props) => {
 
 CreateListing.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [configs, messages] = await Promise.all([
-      getConfig(api),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const bookingConfig = getConfigValueBySlug(configs, 'booking');
-    const paymentConfig = getConfigValueBySlug(configs, 'payment');
-    const web3Config = getConfigValueBySlug(configs, 'web3');
+    const bookingConfig = config.booking;
+    const paymentConfig = config.payment;
+    const web3Config = config.web3;
     return {
       bookingConfig,
       paymentConfig,
       web3Config,
-      messages,
     };
   } catch {
     return {
       bookingConfig: null,
       paymentConfig: null,
       web3Config: null,
-      messages: null,
-    };
+      };
   }
 };
 

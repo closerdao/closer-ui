@@ -1,3 +1,3 @@
-import { ListingPage } from 'closer';
+import { StayBookingSummaryPage } from 'closer';
 
-export default ListingPage;
+export default StayBookingSummaryPage;

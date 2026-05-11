@@ -11,11 +11,10 @@ import { useTranslations } from 'next-intl';
 
 import models from '../../models';
 import { FoodOption } from '../../types/food';
-import { getConfig, getConfigValueBySlug } from '../../utils/configCache';
+import config from '../../configCached';
 import api from '../../utils/api';
 import { getBookingTokenCurrency } from '../../utils/booking.helpers';
 import { transformEventFoodBeforeSave } from '../../utils/events.helpers';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 interface EventsConfig {
   enabled: boolean;
@@ -120,25 +119,20 @@ const CreateEvent = ({ foodOptions, eventsConfig, paymentConfig, web3Config }: P
 
 CreateEvent.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [foodRes, configs, messages] = await Promise.all([
-      api.get('/food').catch((err) => {
+    const foodRes = await api.get('/food').catch((err) => {
         console.error('Error fetching food:', err);
         return null;
-      }),
-      getConfig(api),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+      })
 
     const allFood = foodRes?.data?.results || [];
     const foodOptions = allFood.filter((f: FoodOption) =>
       f.availableFor?.includes('events'),
     );
-    const eventsConfig = getConfigValueBySlug(configs, 'events');
-    const paymentConfig = getConfigValueBySlug(configs, 'payment') ?? null;
-    const web3Config = getConfigValueBySlug(configs, 'web3') ?? null;
+    const eventsConfig = config.events;
+    const paymentConfig = config.payment ?? null;
+    const web3Config = config.web3 ?? null;
 
     return {
-      messages,
       foodOptions,
       eventsConfig,
       paymentConfig,
@@ -146,7 +140,6 @@ CreateEvent.getInitialProps = async (context: NextPageContext) => {
     };
   } catch (err: unknown) {
     return {
-      messages: null,
       foodOptions: null,
       eventsConfig: null,
       paymentConfig: null,

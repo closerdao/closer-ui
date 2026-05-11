@@ -7,7 +7,6 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import models from '../../models';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 const CreateTask = () => {
   const t = useTranslations();
@@ -34,17 +33,11 @@ const CreateTask = () => {
 
 CreateTask.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
-      messages,
     };
   } catch (err: unknown) {
     return {
-      messages: null,
-    };
+      };
   }
 };
 

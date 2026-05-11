@@ -150,7 +150,7 @@ export const generateTokenSalesFilter = ({
   fromDate: string;
   toDate: string;
   timeFrame: string;
-  event: string;
+  event: string | string[];
 }) => {
   const limit = 10000;
   const { startDate, endDate } = getStartAndEndDate(
@@ -158,12 +158,13 @@ export const generateTokenSalesFilter = ({
     fromDate,
     toDate,
   );
+  const events = Array.isArray(event) ? event : [event];
 
   const filter = {
     where: {
       category: { $in: ['engagement'] },
       value: { $in: ['token-sale'] },
-      event: { $in: [event] },
+      event: { $in: events },
 
       ...(timeFrame !== 'allTime' && {
         created: {

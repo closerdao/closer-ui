@@ -27,7 +27,6 @@ import { WalletDispatch } from '../../contexts/wallet';
 import api from '../../utils/api';
 import { getRedirectUrl } from '../../utils/auth.helpers';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 const SPARKLE_ANIMATION = 'sparkle-fade-move 2.2s ease-in-out infinite';
 
@@ -429,17 +428,11 @@ const Login = () => {
 
 Login.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
-      messages,
     };
   } catch (err: unknown) {
     return {
-      messages: null,
-    };
+      };
   }
 };
 

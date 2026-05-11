@@ -95,9 +95,6 @@ export const CohousingTdfQuiz = ({
     setSubmitting(true);
     try {
       await onSubmit({ score, passed: true, answers });
-      if (typeof window !== 'undefined') {
-        window.localStorage.removeItem(draftStorageKey);
-      }
     } catch {
       setSubmitError('Could not submit your quiz yet. Please try again.');
     } finally {

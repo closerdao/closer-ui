@@ -25,7 +25,6 @@ import { usePlatform } from 'closer/contexts/platform';
 import { WalletState } from 'closer/contexts/wallet';
 import { ProposalReward } from 'closer/types';
 import { slugify } from 'closer/utils/common';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPage, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -641,17 +640,11 @@ export default CreateProposalPage;
 
 CreateProposalPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
-      messages,
     };
   } catch (err) {
     return {
       error: err,
-      messages: null,
-    };
+      };
   }
 };

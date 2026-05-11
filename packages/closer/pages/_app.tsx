@@ -1,3 +1,4 @@
+import type { AbstractIntlMessages } from 'next-intl';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -15,45 +16,51 @@ import {
   ErrorBoundary,
   PlatformProvider,
   api,
-  getConfig,
 } from 'closer';
-import { configDescription } from 'closer/config';
+import LocaleMessagesNextIntlBridge from '../components/LocaleMessagesNextIntlBridge';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import {
   applyCurrencyLocaleFromGeneralConfig,
   mergeGeneralConfigWithDefaults,
   prepareGeneralConfig,
 } from 'closer/utils/app.helpers';
-import { NextIntlClientProvider } from 'next-intl';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import { blockchainConfig } from '../config_blockchain';
+import configKeyed from '../configCached';
 import { NewsletterProvider } from '../contexts/newsletter';
 import { PushNotificationProvider } from '../contexts/push-notifications';
 import { WalletProvider } from '../contexts/wallet';
+import { appGetInitialPropsWithMessages } from '../utils/appLocaleMessages.helpers';
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
+  messages?: AbstractIntlMessages;
 }
 
-const prepareDefaultConfig = () => {
-  const general =
-    configDescription.find((config) => config.slug === 'general')?.value ?? {};
-  const transformedObject = Object.entries(general).reduce((acc, [key]) => {
-    return { ...acc, [key]: '' };
-  }, {});
-  return transformedObject;
+const buildStateFromKeyedConfig = (
+  keyedConfig: Record<string, any>,
+  configLoaded: boolean,
+) => {
+  const mergedGeneral = mergeGeneralConfigWithDefaults({
+    ...keyedConfig.general,
+    rbacConfig: keyedConfig.rbac || {},
+  });
+  applyCurrencyLocaleFromGeneralConfig(mergedGeneral);
+  return {
+    ...prepareGeneralConfig(mergedGeneral),
+    ...keyedConfig,
+    _configLoaded: configLoaded,
+  };
 };
 
-const MyApp = ({ Component, pageProps }: AppOwnProps) => {
-  const defaultGeneralConfig = prepareDefaultConfig();
-
+const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
   const router = useRouter();
   const { query } = router;
   const referral = query.referral;
 
-  const [config, setConfig] = useState<any>(
-    prepareGeneralConfig(defaultGeneralConfig),
+  const [config] = useState<any>(() =>
+    buildStateFromKeyedConfig(configKeyed, true),
   );
 
   const { FACEBOOK_PIXEL_ID } = config || {};
@@ -77,26 +84,6 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
       })();
     }
   }, [referral]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const keyedConfig = await getConfig(api);
-        const mergedGeneral = mergeGeneralConfigWithDefaults({
-          ...keyedConfig.general,
-          rbacConfig: keyedConfig.rbac || {},
-        });
-        applyCurrencyLocaleFromGeneralConfig(mergedGeneral);
-        setConfig({
-          ...prepareGeneralConfig(mergedGeneral),
-          ...keyedConfig,
-          _configLoaded: true,
-        });
-      } catch (err) {
-        console.error(err);
-      }
-    })();
-  }, []);
 
   return (
     <>
@@ -134,9 +121,8 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
           ...blockchainConfig,
         }}
       >
-        <NextIntlClientProvider
-          locale={router.locale || 'en'}
-          messages={pageProps.messages || {}}
+        <LocaleMessagesNextIntlBridge
+          initialMessages={messages || {}}
           timeZone={config.timeZone || 'Europe/Lisbon'}
         >
           <AuthProvider>
@@ -156,10 +142,12 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
               </WalletProvider>
             </PlatformProvider>
           </AuthProvider>
-        </NextIntlClientProvider>
+        </LocaleMessagesNextIntlBridge>
       </ConfigProvider>
     </>
   );
 };
+
+MyApp.getInitialProps = appGetInitialPropsWithMessages;
 
 export default MyApp;

@@ -1,22 +1,23 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import TokenBuyWidget from '../../components/TokenBuyWidget';
-import { BackButton, Button, Heading, ProgressBar } from '../../components/ui';
+import { BackButton, Button, ErrorMessage, Heading, ProgressBar } from '../../components/ui';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { TOKEN_SALE_STEPS } from '../../constants';
 import { SALES_CONFIG } from '../../constants/shared.constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
 import api from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
+import { logMetric } from '../../utils/metrics';
 import PageNotFound from '../not-found';
 
 const DEFAULT_TOKENS = 10;
@@ -32,6 +33,8 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
   const router = useRouter();
+
+  useSalePaidRedirect();
 
   const { isLoading, user } = useAuth();
 
@@ -53,26 +56,8 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
     'fiat' | 'crypto' | 'finance'
   >(isFinanceTokenEnabled ? 'fiat' : 'crypto');
   const [isCalculationPending, setIsCalculationPending] = useState(false);
-
-  const hasComponentRendered = useRef(false);
-
-  useEffect(() => {
-    if (!hasComponentRendered.current) {
-      (async () => {
-        try {
-          await api.post('/metric', {
-            event: 'open-flow',
-            value: 'token-sale',
-            point: 0,
-            category: 'engagement',
-          });
-        } catch (error) {
-          console.error('Error logging page view:', error);
-        }
-      })();
-      hasComponentRendered.current = true;
-    }
-  }, []);
+  const [createSaleError, setCreateSaleError] = useState<string | null>(null);
+  const [isCreateSaleLoading, setIsCreateSaleLoading] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -81,26 +66,85 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
   }, [user, isLoading]);
 
   const handleNext = async () => {
-    if (tokenSaleType === 'fiat') {
-      if (user && user.kycPassed === true) {
-        router.push(
-          `/token/bank-transfer?tokens=${encodeURIComponent(
-            tokensToBuy,
-          )}&totalFiat=${encodeURIComponent(tokensToSpend)}`,
-        );
-      } else {
-        router.push(
-          `/token/nationality?tokenSaleType=fiat&tokens=${encodeURIComponent(
-            tokensToBuy,
-          )}&totalFiat=${encodeURIComponent(tokensToSpend)}`,
-        );
-      }
-    } else if (tokenSaleType === 'crypto') {
-      router.push(
-        `/token/checklist-crypto?tokens=${encodeURIComponent(tokensToBuy)}`,
-      );
-    } else if (tokenSaleType === 'finance') {
+    if (tokenSaleType === 'finance') {
+      void logMetric({
+        event: 'continue-before-you-begin-finance',
+        value: 'token-sale',
+      });
       router.push('/token/finance');
+      return;
+    }
+
+    setCreateSaleError(null);
+    setIsCreateSaleLoading(true);
+
+    let saleId = '';
+
+    try {
+      const paymentMethod = tokenSaleType === 'fiat' ? 'bank' : 'crypto';
+      const { data } = await api.post('/sale/init', {
+        type: 'token',
+        paymentMethod,
+        quantity: tokensToBuy,
+      });
+      const rawResults = data?.results;
+      const results =
+        rawResults &&
+        typeof rawResults === 'object' &&
+        'value' in rawResults &&
+        (rawResults as { value: unknown }).value !== undefined
+          ? (rawResults as { value: unknown }).value
+          : rawResults;
+      saleId = (results as { saleId?: string })?.saleId || '';
+      if (!saleId) {
+        void logMetric({
+          event: 'sale-init-error',
+          value: 'token-sale',
+          point: tokensToBuy,
+        });
+        setCreateSaleError(t('donate_create_invalid_response'));
+        return;
+      }
+    } catch (error: unknown) {
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      if (status === 401) {
+        void logMetric({
+          event: 'sale-init-error',
+          value: 'token-sale',
+          point: tokensToBuy,
+        });
+        router.push(`/signup?back=${encodeURIComponent(router.asPath)}`);
+        return;
+      }
+      void logMetric({
+        event: 'sale-init-error',
+        value: 'token-sale',
+        point: tokensToBuy,
+      });
+      setCreateSaleError(parseMessageFromError(error));
+      return;
+    } finally {
+      setIsCreateSaleLoading(false);
+    }
+
+    if (tokenSaleType === 'fiat') {
+      void logMetric({
+        event: 'continue-before-you-begin-fiat',
+        value: 'token-sale',
+        point: tokensToBuy,
+      });
+      router.push(
+        `/token/nationality?tokenSaleType=fiat&saleId=${encodeURIComponent(saleId)}`,
+      );
+    } else if (tokenSaleType === 'crypto') {
+      void logMetric({
+        event: 'continue-before-you-begin-crypto',
+        value: 'token-sale',
+        point: tokensToBuy,
+      });
+      router.push(
+        `/token/checklist-crypto?saleId=${encodeURIComponent(saleId)}`,
+      );
     }
   };
 
@@ -109,7 +153,7 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
   };
 
   // Check if the form is ready to proceed
-  const isFormReady = tokensToSpend > 0 && !isCalculationPending;
+  const isFormReady = tokensToSpend > 0 && !isCalculationPending && !isCreateSaleLoading;
 
   if (process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE !== 'true') {
     return <PageNotFound />;
@@ -206,38 +250,17 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
             className="mt-12"
             onClick={handleNext}
             isEnabled={isFormReady}
+            isLoading={isCreateSaleLoading}
           >
             {isCalculationPending
               ? t('token_sale_button_calculating') || 'Calculating...'
               : t('token_sale_button_continue')}
           </Button>
+          {createSaleError && <ErrorMessage error={createSaleError} />}
         </main>
       </div>
     </>
   );
-};
-
-TokenSaleBeforeYouBeginPage.getInitialProps = async (
-  context: NextPageContext,
-) => {
-  try {
-    const [generalRes, messages] = await Promise.all([
-      api.get('/config/general').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-
-    const generalConfig = generalRes?.data?.results?.value;
-    return {
-      generalConfig,
-      messages,
-    };
-  } catch (err: unknown) {
-    return {
-      generalConfig: null,
-      error: parseMessageFromError(err),
-      messages: null,
-    };
-  }
 };
 
 export default TokenSaleBeforeYouBeginPage;

@@ -9,7 +9,6 @@ import SignupForm from '../../components/SignupForm';
 import UserAvatarPlaceholder from '../../components/UserAvatarPlaceholder';
 import { Card, ErrorMessage } from '../../components/ui';
 
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
@@ -17,8 +16,6 @@ import { useNewsletter } from '../../contexts/newsletter';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import api, { cdn } from '../../utils/api';
-import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 const Signup = () => {
   const t = useTranslations();
@@ -124,28 +121,6 @@ const Signup = () => {
       </main>
     </>
   );
-};
-
-Signup.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [subscriptionsResponse, messages] = await Promise.all([
-      api.get('/config/subscriptions').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-
-    return {
-      subscriptionsConfig: subscriptionsResponse?.data?.results?.value,
-      messages,
-    };
-  } catch (err: unknown) {
-    return {
-      subscriptionsConfig: [],
-      error: parseMessageFromError(err),
-      messages: null,
-    };
-  }
 };
 
 export default Signup;

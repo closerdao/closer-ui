@@ -11,7 +11,6 @@ import { useAuth } from '../../../contexts/auth';
 import { Role } from '../../../types/api';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 
 interface Props {
   role: Role | null;
@@ -52,19 +51,15 @@ const EditRole = ({ role, error }: Props) => {
 EditRole.getInitialProps = async (context: NextPageContext) => {
   try {
     const { id } = context.query;
-    const [messages, roleRes] = await Promise.all([
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      api.get(`/role/${id}`).catch(() => null),
-    ]);
+    const roleRes = await api.get(`/role/${id}`).catch(() => null);
 
     const role = roleRes?.data?.results;
 
-    return { messages, role };
+    return { role };
   } catch (err: unknown) {
     return {
       role: null,
       error: parseMessageFromError(err),
-      messages: null,
     };
   }
 };
