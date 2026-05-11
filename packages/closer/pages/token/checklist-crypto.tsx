@@ -21,8 +21,6 @@ import { fetchTokenSaleQuantityForMetric } from '../../utils/tokenSale.helpers';
 import { getReserveTokenDisplay } from '../../utils/config.utils';
 import PageNotFound from '../not-found';
 
-interface Props {}
-
 const ChecklistCryptoPage = () => {
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();

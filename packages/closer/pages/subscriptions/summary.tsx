@@ -28,8 +28,6 @@ import {
   SubscriptionPlan, // Tier,
 } from '../../types/subscriptions';
 import api from '../../utils/api';
-import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
-import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import {
   calculateSubscriptionPrice,
   getVatInfo,

@@ -1,6 +1,27 @@
 import { Charge } from '../types/booking';
 import { CloserCurrencies } from '../types';
+import { priceFormat } from './helpers';
 import { roundToTwoDecimals } from './currencyFormat';
+
+export function formatBookingLedgerChargeDisplay(charge: Charge): string {
+  if (charge.status === 'refunded') {
+    return priceFormat(
+      charge.amount.totalRefunded?.val ?? charge.amount.total?.val,
+      charge.amount.totalRefunded?.cur ?? charge.amount.total?.cur,
+    );
+  }
+  if (
+    charge.method === 'tokens' &&
+    charge.lockedStake != null &&
+    Number.isFinite(charge.lockedStake.val)
+  ) {
+    return priceFormat(charge.lockedStake.val, charge.lockedStake.cur);
+  }
+  return priceFormat(
+    charge.amount.total?.val,
+    charge.amount.total?.cur,
+  );
+}
 
 export function mergeBookingLedgerCharges(
   linkedPaidRefunded: Charge[] | undefined,

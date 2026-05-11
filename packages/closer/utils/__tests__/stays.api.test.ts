@@ -6,6 +6,8 @@ import {
   computeFiatOwed,
   computeTokensOwed,
   formatStayMoney,
+  getStayAccommodationNightCount,
+  getStayAccommodationTokenTotal,
   inferPaymentChoiceFromStay,
   isStayAwaitingPayment,
   isStayPaid,
@@ -140,6 +142,14 @@ describe('compute*Owed', () => {
     expect(computeTokensOwed(stay)).toBe(3);
   });
 
+  it('normalizes floating-point noise in tokens owed', () => {
+    const stay = baseStay({
+      tokensTarget: { val: 2, cur: 'TDF' },
+      tokensStaked: { val: 1.6, cur: 'TDF' },
+    });
+    expect(computeTokensOwed(stay)).toBe(0.4);
+  });
+
   it('returns zero when no targets are set', () => {
     const stay = baseStay();
     expect(computeFiatOwed(stay)).toBe(0);
@@ -173,7 +183,10 @@ describe('buildStayTokenStakePlan', () => {
   it('returns six nights and six tokens when owed six and daily token is one', () => {
     const stay = baseStay({
       duration: 6,
+      adults: 1,
+      children: 0,
       start: '2026-05-25',
+      end: '2026-05-31',
       tokensTarget: { val: 6, cur: 'TDF' },
       tokensStaked: { val: 0, cur: 'TDF' },
       priceLock: priceLockWithDailyToken(1),
@@ -196,8 +209,84 @@ describe('buildStayTokenStakePlan', () => {
     const owed = computeTokensOwed(stay);
     const plan = buildStayTokenStakePlan(stay, owed);
     expect(owed).toBe(20);
-    expect(plan?.tokenAmount).toBe(8);
+    expect(plan?.tokenAmount).toBe(16);
     expect(plan?.bookingNights.length).toBe(4);
+  });
+
+  it('prefers booking rentalToken over dailyRentalToken × duration for stake amounts', () => {
+    const stay = baseStay({
+      duration: 4,
+      start: '2026-06-01',
+      tokensTarget: { val: 7.5, cur: 'TDF' },
+      tokensStaked: { val: 0, cur: 'TDF' },
+      rentalToken: { val: 7.5, cur: 'TDF' },
+      priceLock: priceLockWithDailyToken(2),
+    });
+    expect(getStayAccommodationTokenTotal(stay)).toBe(7.5);
+    const owed = computeTokensOwed(stay);
+    const plan = buildStayTokenStakePlan(stay, owed);
+    expect(owed).toBe(7.5);
+    expect(plan?.dailyValue).toBeCloseTo(7.5 / 4, 6);
+    expect(plan?.tokenAmount).toBeCloseTo(7.5, 5);
+    expect(plan?.bookingNights.length).toBe(4);
+  });
+
+  it('multiplies derived accommodation tokens by guest count', () => {
+    const stay = baseStay({
+      duration: 4,
+      adults: 2,
+      children: 1,
+      priceLock: priceLockWithDailyToken(10),
+    });
+    expect(getStayAccommodationTokenTotal(stay)).toBe(120);
+  });
+
+  it('derives booking nights from UTC calendar dates of stay.start', () => {
+    const stay = baseStay({
+      duration: 3,
+      adults: 1,
+      children: 0,
+      start: '2026-06-01T15:30:00.000Z',
+      end: '2026-06-04T10:00:00.000Z',
+      tokensTarget: { val: 3, cur: 'TDF' },
+      tokensStaked: { val: 0, cur: 'TDF' },
+      priceLock: priceLockWithDailyToken(1),
+    });
+    const plan = buildStayTokenStakePlan(stay, 3);
+    expect(plan?.bookingNights).toEqual([
+      [2026, 152],
+      [2026, 153],
+      [2026, 154],
+    ]);
+  });
+
+  it('stakes ceil nights so partial token owed is fully covered (multi-guest)', () => {
+    const stay = baseStay({
+      duration: 4,
+      adults: 2,
+      tokensTarget: { val: 1.6, cur: 'TDF' },
+      tokensStaked: { val: 0, cur: 'TDF' },
+      rentalToken: { val: 1.6, cur: 'TDF' },
+      priceLock: priceLockWithDailyToken(0.2),
+    });
+    const plan = buildStayTokenStakePlan(stay, 1.4);
+    expect(plan?.bookingNights.length).toBe(4);
+    expect(plan?.dailyValue).toBeCloseTo(0.4, 6);
+    expect(plan?.tokenAmount).toBeCloseTo(1.6, 5);
+  });
+});
+
+describe('getStayAccommodationNightCount', () => {
+  it('prefers calendar nights from start/end over inconsistent duration', () => {
+    expect(
+      getStayAccommodationNightCount(
+        baseStay({
+          start: '2026-11-11',
+          end: '2026-11-15',
+          duration: 99,
+        }),
+      ),
+    ).toBe(4);
   });
 });
 
@@ -245,7 +334,7 @@ describe('inferPaymentChoiceFromStay', () => {
   it('returns full-credits when credits cover full token cost', () => {
     const stay = baseStay({
       duration: 4,
-      creditsTarget: { val: 40, cur: 'credits' },
+      creditsTarget: { val: 80, cur: 'credits' },
       priceLock: {
         total: money(0),
         subtotal: money(0),
@@ -254,7 +343,7 @@ describe('inferPaymentChoiceFromStay', () => {
         affiliateFee: money(0),
         dailyRentalFiat: money(50),
         dailyRentalToken: { val: 10, cur: 'TDF' },
-        appliedCredits: { val: 40, cur: 'credits' },
+        appliedCredits: { val: 80, cur: 'credits' },
         appliedTokens: { val: 0, cur: 'TDF' },
         currency: 'EUR',
         lockedAt: '2026-05-01',
@@ -301,7 +390,7 @@ describe('inferPaymentChoiceFromStay', () => {
   it('returns full-tokens when tokens cover full token cost', () => {
     const stay = baseStay({
       duration: 4,
-      tokensTarget: { val: 40, cur: 'TDF' },
+      tokensTarget: { val: 80, cur: 'TDF' },
       priceLock: {
         total: money(0),
         subtotal: money(0),
@@ -311,7 +400,7 @@ describe('inferPaymentChoiceFromStay', () => {
         dailyRentalFiat: money(50),
         dailyRentalToken: { val: 10, cur: 'TDF' },
         appliedCredits: { val: 0, cur: 'credits' },
-        appliedTokens: { val: 40, cur: 'TDF' },
+        appliedTokens: { val: 80, cur: 'TDF' },
         currency: 'EUR',
         lockedAt: '2026-05-01',
         lines: {

@@ -24,8 +24,6 @@ import {
 import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
 import PageNotFound from '../../not-found';
 
-interface Props {}
-
 const getScheduleEntries = (
   paymentsScheduled: FinanceApplication['paymentsScheduled'],
 ) =>

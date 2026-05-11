@@ -25,9 +25,7 @@ import { financeApplicationIdFromCreateResponse } from '../../../utils/financeAp
 import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
 import PageNotFound from '../../not-found';
 
-interface Props {}
-
-const SubscriptionsCitizenApplyPage: NextPage<Props> = () => {
+const SubscriptionsCitizenApplyPage: NextPage = () => {
   const subscriptionsConfig = getCachedConfig('subscriptions') as {
     enabled: boolean;
     elements: SubscriptionPlan[];

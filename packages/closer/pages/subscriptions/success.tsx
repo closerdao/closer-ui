@@ -17,7 +17,6 @@ import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
-interface Props {}
 const SubscriptionSuccessPage = () => {
   const subscriptionsConfig = getCachedConfig('subscriptions') as {
     enabled: boolean;

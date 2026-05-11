@@ -81,6 +81,7 @@ import {
   confirmStayCheckout,
   formatStayMoney,
   getStay,
+  getStayAccommodationTokenTotal,
   inferPaymentChoiceFromStay,
   isStayAwaitingPayment,
   isStayPaid,
@@ -515,9 +516,7 @@ const StayCheckoutContent = ({
       (currentStay.creditsTarget?.val || 0) === 0 &&
       (currentStay.tokensTarget?.val || 0) === 0);
 
-  const tokenAccommodationVal = priceLock?.dailyRentalToken?.val
-    ? priceLock.dailyRentalToken.val * (currentStay.duration || 1)
-    : 0;
+  const tokenAccommodationVal = getStayAccommodationTokenTotal(currentStay);
 
   const fiatOwed = computeFiatOwed(currentStay);
   const showStripeCardInput = isMember && fiatOwed > 0;
@@ -2021,14 +2020,14 @@ const StayCheckoutContent = ({
                     {priceLock.appliedCredits.val > 0 && (
                       <span>
                         {t('stay_create_accommodation_benefit_credits', {
-                          amount: `${priceLock.appliedCredits.val} ${priceLock.appliedCredits.cur}`,
+                          amount: `${formatModalTwoDecimals(priceLock.appliedCredits.val)} ${priceLock.appliedCredits.cur}`,
                         })}
                       </span>
                     )}
                     {priceLock.appliedTokens.val > 0 && (
                       <span>
                         {t('stay_create_accommodation_benefit_tokens', {
-                          amount: `${priceLock.appliedTokens.val} ${priceLock.appliedTokens.cur}`,
+                          amount: `${formatModalTwoDecimals(priceLock.appliedTokens.val)} ${priceLock.appliedTokens.cur}`,
                         })}
                       </span>
                     )}
@@ -2085,13 +2084,13 @@ const StayCheckoutContent = ({
               {priceLock.appliedCredits.val > 0 && (
                 <Row
                   label={t('stay_create_line_credits_applied')}
-                  value={`-${priceLock.appliedCredits.val} ${priceLock.appliedCredits.cur}`}
+                  value={`-${formatModalTwoDecimals(priceLock.appliedCredits.val)} ${priceLock.appliedCredits.cur}`}
                 />
               )}
               {priceLock.appliedTokens.val > 0 && (
                 <Row
                   label={t('stay_create_line_tokens_applied')}
-                  value={`-${priceLock.appliedTokens.val} ${priceLock.appliedTokens.cur}`}
+                  value={`-${formatModalTwoDecimals(priceLock.appliedTokens.val)} ${priceLock.appliedTokens.cur}`}
                 />
               )}
               {tokensOwed > 0 && (
@@ -2112,7 +2111,7 @@ const StayCheckoutContent = ({
                     )}
                   <Row
                     label={t('stay_create_line_tokens_owed')}
-                    value={`${tokensOwed} ${currentStay.tokensTarget?.cur || ''}`}
+                    value={`${formatModalTwoDecimals(tokensOwed)} ${currentStay.tokensTarget?.cur || ''}`}
                   />
                   {accommodationTokenStakePreview &&
                     Math.abs(

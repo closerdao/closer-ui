@@ -48,9 +48,7 @@ const stripePromise = loadStripe(
   },
 );
 
-interface Props {}
-
-const SubscriptionsCheckoutPage: NextPage<Props> = () => {
+const SubscriptionsCheckoutPage: NextPage = () => {
   const subscriptionsConfig = getCachedConfig('subscriptions') as {
     enabled: boolean;
     elements: SubscriptionPlan[];

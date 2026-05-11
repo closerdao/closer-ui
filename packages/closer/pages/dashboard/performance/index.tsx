@@ -16,7 +16,6 @@ import { useAuth } from '../../../contexts/auth';
 import useRBAC from '../../../hooks/useRBAC';
 import PageNotAllowed from '../../../pages/401';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
-import { parseMessageFromError } from '../../../utils/common';
 import SubscriptionsFunnel from './components/SubscriptionsFunnel';
 import CitizenshipFunnel from './components/CitizenshipFunnel';
 import { BookingConfig } from '../../../types/api';

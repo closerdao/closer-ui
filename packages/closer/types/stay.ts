@@ -91,6 +91,7 @@ export type Stay = {
   updated: string;
 
   priceLock?: PriceLock;
+  rentalToken?: StayMoney;
   fiatTarget?: StayMoney;
   creditsTarget?: StayMoney;
   tokensTarget?: StayMoney;
