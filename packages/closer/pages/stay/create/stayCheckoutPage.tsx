@@ -57,6 +57,7 @@ import { FoodOption } from '../../../types/food';
 import {
   Stay,
   StayCheckoutResponse,
+  StayTokenStakePlan,
 } from '../../../types/stay';
 import api, { cdn } from '../../../utils/api';
 import {
@@ -71,6 +72,7 @@ import { priceFormat } from '../../../utils/helpers';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
 import { stayRequiresFullCheckoutFlow } from '../../../utils/stayPaymentRouting.helpers';
 import {
+  buildStayTokenStakePlan,
   canChangeStayPaymentMethod,
   checkoutStay,
   computeCreditsOwed,
@@ -88,6 +90,11 @@ import {
   submitStay,
   updateStayOptions,
 } from '../../../utils/stays.api';
+import {
+  clearPendingStayTokenStake,
+  readPendingStayTokenStake,
+  writePendingStayTokenStake,
+} from '../../../utils/stayTokenStakePendingStorage';
 
 dayjs.extend(dayOfYear);
 
@@ -414,14 +421,13 @@ const StayCheckoutContent = ({
   const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
   const [isVerifyingStake, setIsVerifyingStake] = useState(false);
   const [stakeModalError, setStakeModalError] = useState<string | null>(null);
+  const [tokenStakeSuccessNotice, setTokenStakeSuccessNotice] = useState<
+    string | null
+  >(null);
   const [modalNativeCeloBalance, setModalNativeCeloBalance] = useState<
     number | null
   >(null);
-  const [stakePlan, setStakePlan] = useState<{
-    dailyValue: number;
-    bookingNights: number[][];
-    tokenAmount: number;
-  } | null>(null);
+  const [stakePlan, setStakePlan] = useState<StayTokenStakePlan | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isCreditsModalOpen, setIsCreditsModalOpen] = useState(false);
   const [creditsModalError, setCreditsModalError] = useState<string | null>(
@@ -454,6 +460,10 @@ const StayCheckoutContent = ({
 
   useEffect(() => {
     setCurrentStay(stay);
+  }, [stay._id]);
+
+  useEffect(() => {
+    setTokenStakeSuccessNotice(null);
   }, [stay._id]);
 
   useEffect(() => {
@@ -512,6 +522,11 @@ const StayCheckoutContent = ({
   const fiatOwed = computeFiatOwed(currentStay);
   const showStripeCardInput = isMember && fiatOwed > 0;
   const tokensOwed = computeTokensOwed(currentStay);
+
+  const accommodationTokenStakePreview = useMemo(
+    () => buildStayTokenStakePlan(currentStay, computeTokensOwed(currentStay)),
+    [currentStay],
+  );
 
   const canChangePaymentMethod = canChangeStayPaymentMethod(currentStay);
 
@@ -815,39 +830,10 @@ const StayCheckoutContent = ({
   const nativeCelo = displayedNativeCeloBalance;
   const isLowCeloForStake = nativeCelo < MIN_CELO_FOR_GAS;
 
-  const buildStakePlanFromTokenAmount = (
-    stayToStake: Stay,
-    tokensToStakeTotal: number,
-  ): {
-    dailyValue: number;
-    bookingNights: number[][];
-    tokenAmount: number;
-  } | null => {
-    const startDate = dayjs(stayToStake.start);
-    const duration = stayToStake.duration || 0;
-    const dailyValue = stayToStake.priceLock?.dailyRentalToken?.val || 0;
-
-    if (!startDate.isValid() || duration <= 0 || dailyValue <= 0) return null;
-
-    const maxTokensForStay = duration * dailyValue;
-    const capped = Math.min(tokensToStakeTotal, maxTokensForStay);
-    const nightsToStake = Math.min(duration, Math.floor(capped / dailyValue));
-    if (nightsToStake <= 0) return null;
-
-    return {
-      dailyValue,
-      tokenAmount: Number((nightsToStake * dailyValue).toFixed(6)),
-      bookingNights: Array.from({ length: nightsToStake }, (_, i) => [
-        startDate.year(),
-        startDate.dayOfYear() + i,
-      ]),
-    };
-  };
-
   const buildStakePlan = (stayToStake: Stay) => {
     const owed = computeTokensOwed(stayToStake);
     if (owed <= 0) return null;
-    return buildStakePlanFromTokenAmount(stayToStake, owed);
+    return buildStayTokenStakePlan(stayToStake, owed);
   };
 
   const handleApplyTokens = () => {
@@ -870,7 +856,7 @@ const StayCheckoutContent = ({
         ? tokenAccommodationVal
         : tokenAmountToApply;
 
-    const plan = buildStakePlanFromTokenAmount(currentStay, intentTokens);
+    const plan = buildStayTokenStakePlan(currentStay, intentTokens);
     if (!plan) {
       setActionError(t('stay_create_token_stake_plan_error'));
       return;

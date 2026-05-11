@@ -29,6 +29,12 @@ export type PriceLockLines = {
   event: StayMoney;
 };
 
+export type StayTokenStakePlan = {
+  dailyValue: number;
+  bookingNights: number[][];
+  tokenAmount: number;
+};
+
 export type PriceLock = {
   lines: PriceLockLines;
   subtotal: StayMoney;

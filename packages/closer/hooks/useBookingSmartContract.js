@@ -65,17 +65,23 @@ export const useBookingSmartContract = ({ bookingNights }) => {
     library && library.getUncheckedSigner(),
   );
 
-  const checkContract = async () => {
+  const checkContract = async (bookingNightsOverride) => {
     if (!library || !account || !isWalletReady) {
       return;
     }
 
+    const nights =
+      Array.isArray(bookingNightsOverride) && bookingNightsOverride.length > 0
+        ? bookingNightsOverride
+        : bookingNights;
+    const [[yearForContract]] = nights;
+
     const contractNightsUpdated = await Diamond.getAccommodationBookings(
       account,
-      bookingYear,
+      yearForContract,
     );
     const isBookingMatchContract = checkIfBookingEqBlockchain(
-      bookingNights,
+      nights,
       contractNightsUpdated,
     );
     if (isBookingMatchContract) {
@@ -88,10 +94,15 @@ export const useBookingSmartContract = ({ bookingNights }) => {
     }
   };
 
-  const stakeTokens = async (dailyValue) => {
+  const stakeTokens = async (dailyValue, bookingNightsOverride) => {
     if (!library || !account || !dailyValue || !isWalletReady) {
       return;
     }
+
+    const nights =
+      Array.isArray(bookingNightsOverride) && bookingNightsOverride.length > 0
+        ? bookingNightsOverride
+        : bookingNights;
 
     try {
       setPending(true);
@@ -102,13 +113,13 @@ export const useBookingSmartContract = ({ bookingNights }) => {
       );
 
       const txData = Diamond.interface.encodeFunctionData('bookAccommodation', [
-        bookingNights,
+        nights,
         pricePerNightBigNum,
       ]);
       const txRequest = {
         to: Diamond.address,
         data: txData,
-        bookingNights,
+        bookingNights: nights,
         dailyValue,
         pricePerNightBigNum: pricePerNightBigNum.toString(),
       };
