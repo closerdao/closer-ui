@@ -99,6 +99,7 @@ const ConfigPage = () => {
     ...(isReferralEnabled ? ['referral'] : []),
     ...(isWeb3Enabled ? ['airdrop', 'governance'] : []),
     ...(isWeb3BookingEnabled ? ['web3'] : []),
+    'engagement',
     'newsletter',
     'photo-gallery',
     'accounting-entities',

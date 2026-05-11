@@ -1028,6 +1028,23 @@ export const configDescription: ConfigType[] = [
     },
   },
   {
+    slug: 'engagement',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: true,
+      },
+      ctaLink: {
+        type: 'text',
+        default: '',
+      },
+      ctaText: {
+        type: 'text',
+        default: '',
+      },
+    },
+  },
+  {
     slug: 'airdrop',
     value: {
       enabled: {

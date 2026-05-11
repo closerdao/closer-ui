@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 declare global {
   interface Window {
     turnstile: {
+      ready?: (callback: () => void) => void;
       render: (
         container: string | HTMLElement,
         options: {
@@ -18,11 +19,12 @@ declare global {
       reset: (widgetId: string) => void;
       remove: (widgetId: string) => void;
     };
-    onTurnstileLoad?: () => void;
   }
 }
 
-const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_CLOUDFLARE_KEY || '';
+export const TURNSTILE_SITE_KEY = (
+  process.env.NEXT_PUBLIC_CLOUDFLARE_KEY ?? ''
+).trim();
 
 interface TurnstileWidgetProps {
   action?: string;
@@ -35,8 +37,16 @@ interface TurnstileWidgetProps {
 const isLocalhost = () => {
   if (typeof window === 'undefined') return false;
   const host = window.location.hostname;
-  return host === 'localhost' || host === '127.0.0.1';
+  return (
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    host === '[::1]' ||
+    host === '::1'
+  );
 };
+
+const SCRIPT_POLL_MS = 100;
+const SCRIPT_POLL_MAX_MS = 30000;
 
 const TurnstileWidget = ({
   action = 'submit',
@@ -50,6 +60,7 @@ const TurnstileWidget = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const [skipTurnstile, setSkipTurnstile] = useState(false);
   const localhostBypassCalled = useRef(false);
+  const noSiteKeyBypassCalled = useRef(false);
 
   useEffect(() => {
     setSkipTurnstile(isLocalhost());
@@ -63,71 +74,123 @@ const TurnstileWidget = ({
   }, [skipTurnstile, onVerify]);
 
   useEffect(() => {
+    if (TURNSTILE_SITE_KEY || skipTurnstile) return;
+    if (noSiteKeyBypassCalled.current) return;
+    noSiteKeyBypassCalled.current = true;
+    onVerify('unconfigured-client-bypass');
+  }, [skipTurnstile, onVerify]);
+
+  useEffect(() => {
     if (!TURNSTILE_SITE_KEY || skipTurnstile) {
       return;
     }
 
+    let cancelled = false;
+
+    const markLoaded = () => {
+      if (!cancelled) {
+        setIsLoaded(true);
+      }
+    };
+
     if (window.turnstile) {
-      setIsLoaded(true);
-      return;
+      markLoaded();
+      return () => {
+        cancelled = true;
+      };
     }
 
-    const existingScript = document.querySelector('script[src*="turnstile"]');
+    const existingScript = document.querySelector(
+      'script[src*="challenges.cloudflare.com/turnstile"]',
+    );
     if (existingScript) {
+      const started = Date.now();
       const checkLoaded = setInterval(() => {
         if (window.turnstile) {
-          setIsLoaded(true);
           clearInterval(checkLoaded);
+          markLoaded();
+        } else if (Date.now() - started > SCRIPT_POLL_MAX_MS) {
+          clearInterval(checkLoaded);
+          onError?.();
         }
-      }, 100);
-      return () => clearInterval(checkLoaded);
+      }, SCRIPT_POLL_MS);
+      return () => {
+        cancelled = true;
+        clearInterval(checkLoaded);
+      };
     }
 
     const script = document.createElement('script');
     script.src =
-      'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad';
-    script.async = true;
-
-    window.onTurnstileLoad = () => {
-      setIsLoaded(true);
+      'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    script.defer = true;
+    script.onload = markLoaded;
+    script.onerror = () => {
+      onError?.();
     };
 
     document.head.appendChild(script);
-  }, []);
+
+    return () => {
+      cancelled = true;
+      script.onload = null;
+      script.onerror = null;
+    };
+  }, [skipTurnstile, onError]);
 
   useEffect(() => {
     if (!isLoaded || !containerRef.current || !TURNSTILE_SITE_KEY || skipTurnstile) {
       return;
     }
 
-    if (widgetIdRef.current) {
-      try {
-        window.turnstile.remove(widgetIdRef.current);
-      } catch (e) {
-        // Ignore
+    let cancelled = false;
+
+    const runRender = () => {
+      if (cancelled || !containerRef.current) {
+        return;
       }
-    }
 
-    widgetIdRef.current = window.turnstile.render(containerRef.current, {
-      sitekey: TURNSTILE_SITE_KEY,
-      action,
-      size,
-      theme: 'auto',
-      callback: onVerify,
-      'error-callback': () => {
-        onError?.();
-      },
-      'expired-callback': () => {
-        onExpire?.();
-      },
-    });
-
-    return () => {
       if (widgetIdRef.current) {
         try {
           window.turnstile.remove(widgetIdRef.current);
-        } catch (e) {
-          // Ignore
+        } catch {
+        }
+      }
+
+      widgetIdRef.current = window.turnstile.render(containerRef.current, {
+        sitekey: TURNSTILE_SITE_KEY,
+        action,
+        size,
+        theme: 'auto',
+        callback: onVerify,
+        'error-callback': () => {
+          onError?.();
+          const id = widgetIdRef.current;
+          if (id) {
+            try {
+              window.turnstile.reset(id);
+            } catch {
+            }
+          }
+        },
+        'expired-callback': () => {
+          onExpire?.();
+        },
+      });
+    };
+
+    if (typeof window.turnstile.ready === 'function') {
+      window.turnstile.ready(runRender);
+    } else {
+      runRender();
+    }
+
+    return () => {
+      cancelled = true;
+      if (widgetIdRef.current) {
+        try {
+          window.turnstile.remove(widgetIdRef.current);
+        } catch {
         }
       }
     };

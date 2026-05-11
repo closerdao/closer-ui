@@ -27,7 +27,6 @@ const Navigation = () => {
   const configLoaded = config._configLoaded !== false;
 
   const { isAuthenticated, user } = useAuth();
-  const isMember = user?.roles?.includes('member');
 
   const [navOpen, setNavOpen] = useState(false);
   const [isBookingEnabled, setIsBookingEnabled] = useState(false);
@@ -121,7 +120,11 @@ const Navigation = () => {
   );
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-20 flex flex-col">
+    <div
+      className={`fixed top-0 left-0 right-0 flex flex-col ${
+        navOpen ? 'z-[100]' : 'z-20'
+      }`}
+    >
       <ApiUrlWarning />
       <div className="NavContainer h-20 md:pt-0 bg-dominant shadow">
         <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
@@ -277,16 +280,10 @@ const Navigation = () => {
                   );
                 }
                 if (cta === 'bookings') {
-                  const stayHref =
-                    isAuthenticated &&
-                    isMember &&
-                    APP_NAME?.toLowerCase() === 'tdf'
-                      ? '/bookings/create/dates'
-                      : '/stay';
                   return (
                     <Button
                       key="cta-bookings"
-                      onClick={() => router.push(stayHref)}
+                      onClick={() => router.push('/stay')}
                       size="small"
                       variant="primary"
                       className={buttonClass}

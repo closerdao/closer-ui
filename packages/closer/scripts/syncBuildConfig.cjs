@@ -53,10 +53,15 @@ async function main() {
 
   const base = apiUrl.replace(/\/$/, '');
   const url = `${base}/config?limit=500`;
+  const FETCH_TIMEOUT_MS = 20000;
+  console.log('[sync-build-config] fetching', url);
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   let res;
   try {
-    res = await fetch(url);
+    res = await fetch(url, { signal: controller.signal });
   } catch (err) {
     const cause = err.cause;
     let detail = err.message || 'unknown error';
@@ -70,10 +75,15 @@ async function main() {
             : detail;
       }
     }
+    if (err && err.name === 'AbortError') {
+      detail = `timed out after ${FETCH_TIMEOUT_MS}ms`;
+    }
     console.error(
       `[sync-build-config] Failed to fetch config (${detail}). URL: ${url}`,
     );
     process.exit(1);
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   if (!res.ok) {

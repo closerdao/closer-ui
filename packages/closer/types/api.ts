@@ -170,6 +170,12 @@ export type AffiliateConfig = {
   eventsCommissionPercent: number;
 };
 
+export type EngagementConfig = {
+  enabled: boolean;
+  ctaLink?: string;
+  ctaText?: string;
+};
+
 export type BookingConfig = {
   enabled: boolean;
   minDuration: number;
