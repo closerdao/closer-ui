@@ -58,3 +58,4 @@ closer-firebase-key.json
 /_copy-of-backend-repo/*
 
 .cursor/
+**/.cursor/
