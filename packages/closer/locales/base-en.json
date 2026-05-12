@@ -596,6 +596,8 @@
   "stay_create_apply_credits_button": "Apply credits to this booking",
   "stay_create_apply_credits_disabled_no_balance": "You don't have any credits available to apply.",
   "stay_create_apply_credits_disabled_no_eligible_amount": "Credits only apply to the accommodation amount priced in credits. This booking doesn't include an eligible portion.",
+  "stay_create_cancel_token_payment_link": "Cancel token payment",
+  "stay_create_cancel_token_payment_loading": "Reverting to card payment…",
   "stay_create_payment_modal_eur_discount": "Estimated reduction before card payment: {amount}",
   "stay_create_payment_modal_eur_discount_loading": "Calculating price change…",
   "stay_create_credits_modal_title": "Apply credits to this booking",

@@ -123,6 +123,20 @@ export const canApplyTokenOrCreditsToStay = (
   return s === 'confirmed' || s === 'pending-payment';
 };
 
+export const canShowStayTokenCreditPaymentOptions = (
+  stay: Pick<Stay, 'status'> | null | undefined,
+  isMember: boolean,
+): boolean => {
+  if (!stay) return false;
+  if (isStayCheckoutDraft(stay)) {
+    return Boolean(isMember);
+  }
+  if (!canApplyTokenOrCreditsToStay(stay)) return false;
+  return (
+    Boolean(isMember) || normalizeStayStatusRaw(stay.status) === 'confirmed'
+  );
+};
+
 export const computeFiatOwed = (stay: Stay): number => {
   const target =
     stay.fiatTarget?.val ?? stay.priceLock?.total.val ?? 0;
@@ -238,6 +252,13 @@ export const canChangeStayPaymentMethod = (stay: Stay): boolean => {
   return true;
 };
 
+export const canAugmentTokenOrCreditsPayment = (stay: Stay): boolean => {
+  if (!isStayAwaitingPayment(stay)) return false;
+  return (
+    computeTokensOwed(stay) > 0.005 || computeCreditsOwed(stay) > 0.005
+  );
+};
+
 export const inferPaymentChoiceFromStay = (
   stay: Stay,
   totalAccommodationTokens?: number,
@@ -263,6 +284,13 @@ export const inferPaymentChoiceFromStay = (
   }
   if (creditsTarget > 0) return 'partial-credits';
   return 'fiat';
+};
+
+export const stayUsesTokenAccommodation = (stay: Stay): boolean => {
+  if (stay.useTokens === true) return true;
+  const tokenAccommodationVal = getStayAccommodationTokenTotal(stay);
+  const choice = inferPaymentChoiceFromStay(stay, tokenAccommodationVal);
+  return choice === 'full-tokens' || choice === 'partial-tokens';
 };
 
 type ApiOk<T> = { results: T };

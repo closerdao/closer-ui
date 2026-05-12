@@ -597,6 +597,8 @@
   "stay_create_apply_credits_button": "Aplicar créditos nesta reserva",
   "stay_create_apply_credits_disabled_no_balance": "Não tem créditos disponíveis para aplicar.",
   "stay_create_apply_credits_disabled_no_eligible_amount": "Os créditos só cobrem a parte do alojamento cotada em créditos. Esta reserva não inclui uma quantia elegível.",
+  "stay_create_cancel_token_payment_link": "Cancelar pagamento em tokens",
+  "stay_create_cancel_token_payment_loading": "A reverter para pagamento com cartão…",
   "stay_create_payment_modal_eur_discount": "Redução estimada antes do pagamento com cartão: {amount}",
   "stay_create_payment_modal_eur_discount_loading": "A calcular alteração de preço…",
   "stay_create_credits_modal_title": "Aplicar créditos a esta reserva",
