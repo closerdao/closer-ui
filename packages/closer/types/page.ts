@@ -5,13 +5,26 @@ export type SectionType =
   | 'stats'
   | 'features'
   | 'richText'
-  | 'cta';
+  | 'cta'
+  | 'events'
+  | 'fundraiser'
+  | 'tokenStats'
+  | 'webinar';
+
+export type SectionBackground =
+  | 'transparent'
+  | 'white'
+  | 'neutral-light'
+  | 'accent-light'
+  | 'gray-50'
+  | 'gradient-accent'
+  | 'dark';
 
 export interface PageSection {
   _id?: string;
   _localId?: string;
   type: SectionType;
-  data: Record<string, unknown>;
+  data: Record<string, unknown> & { background?: SectionBackground };
 }
 
 export interface PageDoc {

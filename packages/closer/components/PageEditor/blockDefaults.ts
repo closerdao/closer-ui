@@ -65,8 +65,8 @@ export const createSection = (type: SectionType): PageSection => {
         type: 'hero',
         data: {
           settings: {
-            alignText: heroAlignMap.left,
-            isInverted: true,
+            alignText: 'center' as const,
+            isInverted: false,
             isCompact: false,
           },
           content: {
@@ -190,6 +190,57 @@ export const createSection = (type: SectionType): PageSection => {
             secondaryText: '',
             secondaryLink: '',
           },
+        },
+      };
+    case 'events':
+      return {
+        _localId,
+        type: 'events',
+        data: {
+          settings: {},
+          content: {},
+        },
+      };
+    case 'fundraiser':
+      return {
+        _localId,
+        type: 'fundraiser',
+        data: {
+          settings: { showTitle: true },
+          content: {
+            eyebrow: '',
+            title: '',
+            description: '',
+            ctaText: '',
+            ctaLink: '/fundraiser',
+          },
+        },
+      };
+    case 'tokenStats':
+      return {
+        _localId,
+        type: 'tokenStats',
+        data: {
+          settings: { showCta: true },
+          content: {
+            eyebrow: '',
+            title: '',
+            description: '',
+            ctaText: '',
+            ctaLink: '/token',
+          },
+        },
+      };
+    case 'webinar':
+      return {
+        _localId,
+        type: 'webinar',
+        data: {
+          settings: {
+            tags: ['landing-page', 'investor-webinar'],
+            analyticsCategory: 'CustomPage',
+          },
+          content: {},
         },
       };
     default:

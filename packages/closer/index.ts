@@ -230,3 +230,9 @@ export {
 export { getCachedConfig } from './utils/cachedConfig.helpers';
 // Note: blockchain utils import ethers (~500KB) - import directly from 'closer/utils/blockchain' when needed
 export * from './utils/helpers';
+export {
+  BLOCK_I18N_PREFIX,
+  extractBlockI18nKey,
+  resolveBlockHtml,
+  resolveBlockText,
+} from './utils/blockI18n';

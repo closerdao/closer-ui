@@ -68,7 +68,7 @@ const EditorCanvas = ({
   }
 
   return (
-    <div className="flex flex-col min-h-0 h-full bg-neutral-light">
+    <div className="flex flex-col min-h-0 h-full bg-white">
       <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-gray-200 bg-white/90 backdrop-blur shrink-0">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <strong className="text-sm text-gray-900 truncate max-w-[200px] xl:max-w-xs">
@@ -112,51 +112,55 @@ const EditorCanvas = ({
           </Button>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 min-h-0">
-        <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden min-h-[400px]">
-          {sections.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-4 py-20 px-6 text-center">
-              <h3 className="text-lg font-medium text-gray-700">
-                {t('pages_editor_empty_canvas_title')}
-              </h3>
-              <p className="text-sm text-gray-500">{t('pages_editor_empty_canvas_body')}</p>
-              <Button type="button" size="small" onClick={() => onOpenPickerAt(0)}>
-                {t('pages_editor_add_block')}
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-col">
-              <DropZone
-                toIndex={0}
-                onReorder={onReorder}
-                onOpenPicker={() => onOpenPickerAt(0)}
-                t={t}
-              />
-              {sections.map((section, index) => (
-                <div key={section._localId ?? section._id ?? index}>
-                  <BlockRow
-                    section={section}
-                    index={index}
-                    total={sections.length}
-                    selected={selectedLocalId === section._localId}
-                    onSelect={() => onSelect(section._localId ?? null)}
-                    onMoveUp={() => onMoveBlock(section._localId!, -1)}
-                    onMoveDown={() => onMoveBlock(section._localId!, 1)}
-                    onDuplicate={() => onDuplicate(section._localId!)}
-                    onDelete={() => onDelete(section._localId!)}
-                    t={t}
-                  />
-                  <DropZone
-                    toIndex={index + 1}
-                    onReorder={onReorder}
-                    onOpenPicker={() => onOpenPickerAt(index + 1)}
-                    t={t}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      <div className="flex-1 overflow-y-auto min-h-0">
+        {sections.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-4 py-20 px-6 text-center">
+            <h3 className="text-lg font-medium text-gray-700">
+              {t('pages_editor_empty_canvas_title')}
+            </h3>
+            <p className="text-sm text-gray-500">
+              {t('pages_editor_empty_canvas_body')}
+            </p>
+            <Button
+              type="button"
+              size="small"
+              onClick={() => onOpenPickerAt(0)}
+            >
+              {t('pages_editor_add_block')}
+            </Button>
+          </div>
+        ) : (
+          <div className="flex flex-col">
+            <DropZone
+              toIndex={0}
+              onReorder={onReorder}
+              onOpenPicker={() => onOpenPickerAt(0)}
+              t={t}
+            />
+            {sections.map((section, index) => (
+              <div key={section._localId ?? section._id ?? index}>
+                <BlockRow
+                  section={section}
+                  index={index}
+                  total={sections.length}
+                  selected={selectedLocalId === section._localId}
+                  onSelect={() => onSelect(section._localId ?? null)}
+                  onMoveUp={() => onMoveBlock(section._localId!, -1)}
+                  onMoveDown={() => onMoveBlock(section._localId!, 1)}
+                  onDuplicate={() => onDuplicate(section._localId!)}
+                  onDelete={() => onDelete(section._localId!)}
+                  t={t}
+                />
+                <DropZone
+                  toIndex={index + 1}
+                  onReorder={onReorder}
+                  onOpenPicker={() => onOpenPickerAt(index + 1)}
+                  t={t}
+                />
+              </div>
+            ))}
+          </div>
+        )}
         <p className="sr-only" aria-live="polite">
           {saveStatus === 'saving'
             ? t('pages_editor_saving')
@@ -279,12 +283,35 @@ function BlockRow({
           <Trash2 className="w-4 h-4" />
         </ControlBtn>
       </div>
-      <div className="pointer-events-none [&_*]:pointer-events-auto">
-        <CustomSectionComponent type={section.type} data={section.data} />
-      </div>
+      {PLACEHOLDER_BLOCK_KEYS[section.type] ? (
+        <div className="relative">
+          <div className="absolute inset-0 z-0 flex flex-col items-center justify-center gap-2 py-10 px-6 text-center bg-neutral-light/40 border border-dashed border-gray-200 rounded-md pointer-events-none">
+            <span className="text-xs font-semibold uppercase tracking-wider text-accent">
+              {t(PLACEHOLDER_BLOCK_KEYS[section.type])}
+            </span>
+            <span className="text-xs text-gray-500">
+              {t('pages_editor_block_preview_hidden')}
+            </span>
+          </div>
+          <div className="relative z-10 pointer-events-none [&_*]:pointer-events-auto min-h-[140px]">
+            <CustomSectionComponent type={section.type} data={section.data} />
+          </div>
+        </div>
+      ) : (
+        <div className="pointer-events-none [&_*]:pointer-events-auto">
+          <CustomSectionComponent type={section.type} data={section.data} />
+        </div>
+      )}
     </section>
   );
 }
+
+const PLACEHOLDER_BLOCK_KEYS: Record<string, string> = {
+  events: 'pages_editor_block_events',
+  fundraiser: 'pages_editor_block_fundraiser',
+  tokenStats: 'pages_editor_block_token_stats',
+  webinar: 'pages_editor_block_webinar',
+};
 
 function ControlBtn({
   children,

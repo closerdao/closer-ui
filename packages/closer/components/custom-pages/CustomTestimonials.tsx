@@ -1,6 +1,9 @@
 import React from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import { Heading } from '../ui';
+import { resolveBlockText } from '../../utils/blockI18n';
 
 interface TestimonialItem {
   quote: string;
@@ -19,18 +22,19 @@ interface Props {
 }
 
 const CustomTestimonials = ({ content }: Props) => {
+  const t = useTranslations();
   const items = content?.items ?? [];
   return (
     <section className="py-12 md:py-16 bg-neutral-light">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 flex flex-col gap-10">
         {content?.eyebrow ? (
           <p className="text-center text-xs font-semibold uppercase tracking-widest text-accent">
-            {content.eyebrow}
+            {resolveBlockText(content.eyebrow, t)}
           </p>
         ) : null}
         {content?.title ? (
           <Heading level={2} className="text-center text-3xl font-normal">
-            {content.title}
+            {resolveBlockText(content.title, t)}
           </Heading>
         ) : null}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 md:gap-10">
@@ -44,7 +48,7 @@ const CustomTestimonials = ({ content }: Props) => {
                   <span className="text-accent not-italic text-4xl leading-none mr-1">
                     &ldquo;
                   </span>
-                  {item.quote}
+                  {resolveBlockText(item.quote, t)}
                 </blockquote>
                 <figcaption className="flex items-center gap-3">
                   <div
@@ -54,10 +58,12 @@ const CustomTestimonials = ({ content }: Props) => {
                   />
                   <div>
                     <div className="text-sm font-semibold text-gray-900">
-                      {item.name}
+                      {resolveBlockText(item.name, t)}
                     </div>
                     {item.role ? (
-                      <div className="text-xs text-gray-500">{item.role}</div>
+                      <div className="text-xs text-gray-500">
+                        {resolveBlockText(item.role, t)}
+                      </div>
                     ) : null}
                   </div>
                 </figcaption>

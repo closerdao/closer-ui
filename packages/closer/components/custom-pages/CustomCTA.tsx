@@ -1,8 +1,9 @@
-import Link from 'next/link';
-
 import React from 'react';
 
+import { useTranslations } from 'next-intl';
+
 import { Heading, LinkButton } from '../ui';
+import { resolveBlockText } from '../../utils/blockI18n';
 
 const CustomCTA: React.FC<{
   settings: {
@@ -18,6 +19,7 @@ const CustomCTA: React.FC<{
     secondaryLink?: string;
   };
 }> = ({ content, settings }) => {
+  const t = useTranslations();
   const style = settings?.style ?? 'default';
   const sectionClass =
     style === 'dark'
@@ -37,7 +39,7 @@ const CustomCTA: React.FC<{
           <p
             className={`text-xs font-semibold uppercase tracking-widest ${eyebrowClass}`}
           >
-            {content.eyebrow}
+            {resolveBlockText(content.eyebrow, t)}
           </p>
         ) : null}
         {content?.title ? (
@@ -45,11 +47,13 @@ const CustomCTA: React.FC<{
             level={2}
             className={`text-3xl font-normal ${style === 'dark' ? 'text-white' : ''}`}
           >
-            {content.title}
+            {resolveBlockText(content.title, t)}
           </Heading>
         ) : null}
         {content?.text ? (
-          <p className={`text-base leading-relaxed ${textClass}`}>{content.text}</p>
+          <p className={`text-base leading-relaxed ${textClass}`}>
+            {resolveBlockText(content.text, t)}
+          </p>
         ) : null}
         <div className="flex flex-wrap gap-3 justify-center mt-2">
           {content?.primaryText && content?.primaryLink ? (
@@ -61,20 +65,17 @@ const CustomCTA: React.FC<{
                   : ''
               }
             >
-              {content.primaryText}
+              {resolveBlockText(content.primaryText, t)}
             </LinkButton>
           ) : null}
           {content?.secondaryText && content?.secondaryLink ? (
-            <Link
+            <LinkButton
               href={content.secondaryLink}
-              className={`inline-flex items-center justify-center min-h-[44px] px-5 text-sm font-semibold uppercase tracking-wide border rounded-md transition-colors ${
-                style === 'dark'
-                  ? 'border-white/40 text-white hover:bg-white/10'
-                  : 'border-gray-900 text-gray-900 hover:bg-gray-100'
-              }`}
+              variant="secondary"
+              isFullWidth={false}
             >
-              {content.secondaryText}
-            </Link>
+              {resolveBlockText(content.secondaryText, t)}
+            </LinkButton>
           ) : null}
         </div>
       </div>

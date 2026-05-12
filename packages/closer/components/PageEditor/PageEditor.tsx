@@ -17,7 +17,10 @@ import {
 import EditorCanvas from './EditorCanvas';
 import Inspector from './Inspector';
 import JsonDrawer from './JsonDrawer';
-import NewPageDialog, { NewPageData } from './NewPageDialog';
+import NewPageDialog, {
+  NewPageData,
+  buildNewPagePayload,
+} from './NewPageDialog';
 import PagesSidebar from './PagesSidebar';
 
 import { useAuth } from '../../contexts/auth';
@@ -467,13 +470,10 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         onCreate={async (data: NewPageData) => {
           try {
             setIsCreatingPage(true);
-            const action = (await platform.page.post({
-              title: data.title,
-              slug: data.slug,
-              description: data.description,
-              ogImage: '',
-              sections: [],
-            })) as { results?: unknown; error?: unknown } | undefined;
+            const payload = buildNewPagePayload(data);
+            const action = (await platform.page.post(payload)) as
+              | { results?: unknown; error?: unknown }
+              | undefined;
             if (action?.error) {
               setSaveStatus('error');
               return;

@@ -2,14 +2,19 @@ import { useTranslations } from 'next-intl';
 
 import { Button, Heading, Input, Textarea } from '../ui';
 
+import BackgroundField from './inspectors/BackgroundField';
 import CTAInspector from './inspectors/CTAInspector';
+import CloserBlockInspector from './inspectors/CloserBlockInspector';
+import EventsInspector from './inspectors/EventsInspector';
 import FeaturesInspector from './inspectors/FeaturesInspector';
 import GalleryInspector from './inspectors/GalleryInspector';
 import HeroInspector from './inspectors/HeroInspector';
 import RichTextInspector from './inspectors/RichTextInspector';
 import StatsInspector from './inspectors/StatsInspector';
 import TestimonialsInspector from './inspectors/TestimonialsInspector';
+import WebinarInspector from './inspectors/WebinarInspector';
 
+import type { SectionBackground } from '../custom-pages/sectionBackground';
 import type { PageDoc, PageSection } from '../../types/page';
 
 type Tab = 'block' | 'page' | 'seo';
@@ -52,24 +57,58 @@ const Inspector = ({
       onChange: (next: Record<string, unknown>) =>
         onSectionDataChange(selectedSection._localId!, next),
     };
-    switch (selectedSection.type) {
-      case 'hero':
-        return <HeroInspector {...common} />;
-      case 'gallery':
-        return <GalleryInspector {...common} />;
-      case 'testimonials':
-        return <TestimonialsInspector {...common} />;
-      case 'stats':
-        return <StatsInspector {...common} />;
-      case 'features':
-        return <FeaturesInspector {...common} />;
-      case 'richText':
-        return <RichTextInspector {...common} />;
-      case 'cta':
-        return <CTAInspector {...common} />;
-      default:
-        return null;
-    }
+    const renderTypeForm = () => {
+      switch (selectedSection.type) {
+        case 'hero':
+          return <HeroInspector {...common} />;
+        case 'gallery':
+          return <GalleryInspector {...common} />;
+        case 'testimonials':
+          return <TestimonialsInspector {...common} />;
+        case 'stats':
+          return <StatsInspector {...common} />;
+        case 'features':
+          return <FeaturesInspector {...common} />;
+        case 'richText':
+          return <RichTextInspector {...common} />;
+        case 'cta':
+          return <CTAInspector {...common} />;
+        case 'events':
+          return <EventsInspector {...common} />;
+        case 'fundraiser':
+          return (
+            <CloserBlockInspector
+              {...common}
+              hint={t('pages_editor_fundraiser_hint')}
+            />
+          );
+        case 'tokenStats':
+          return (
+            <CloserBlockInspector
+              {...common}
+              hint={t('pages_editor_token_stats_hint')}
+              showCtaToggle
+            />
+          );
+        case 'webinar':
+          return <WebinarInspector {...common} />;
+        default:
+          return null;
+      }
+    };
+    const handleBgChange = (next: SectionBackground) => {
+      common.onChange({ ...common.data, background: next });
+    };
+    return (
+      <div className="flex flex-col gap-4">
+        <BackgroundField
+          value={(common.data.background as string | undefined) ?? 'transparent'}
+          onChange={handleBgChange}
+        />
+        <div className="h-px bg-gray-100" />
+        {renderTypeForm()}
+      </div>
+    );
   };
 
   return (

@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import NewPageDialog, {
   NewPageData,
+  buildNewPagePayload,
 } from '../../../components/PageEditor/NewPageDialog';
 import { Button, Heading } from '../../../components/ui';
 
@@ -46,13 +47,10 @@ const DashboardPagesIndex = ({ pages }: Props) => {
   const handleCreate = async (data: NewPageData) => {
     try {
       setIsSubmitting(true);
-      const action = (await platform.page.post({
-        title: data.title,
-        slug: data.slug,
-        description: data.description,
-        ogImage: '',
-        sections: [],
-      })) as { results?: unknown; error?: unknown } | undefined;
+      const payload = buildNewPagePayload(data);
+      const action = (await platform.page.post(payload)) as
+        | { results?: unknown; error?: unknown }
+        | undefined;
       if (action?.error) return;
       const created = toPlain(action?.results) as { _id?: string } | undefined;
       const id = created?._id;
