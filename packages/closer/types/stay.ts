@@ -31,6 +31,7 @@ export type PriceLockLines = {
 
 export type StayTokenStakePlan = {
   dailyValue: number;
+  pricePerNightWei: string;
   bookingNights: number[][];
   tokenAmount: number;
 };

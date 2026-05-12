@@ -10,9 +10,10 @@ import { loadStripe } from '@stripe/stripe-js';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingSurface from '../../../components/booking/bookingSurface';
+import { StayPaymentTokenCreditControls } from '../../../components/booking/stayPaymentTokenCreditControls';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageError from '../../../components/PageError';
-import { ErrorMessage } from '../../../components/ui';
+import { ErrorMessage, Information } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
 import Spinner from '../../../components/ui/Spinner';
@@ -28,15 +29,18 @@ import { Listing } from '../../../types/booking';
 import { Stay, StayCheckoutResponse } from '../../../types/stay';
 import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { stayRequiresFullCheckoutFlow } from '../../../utils/stayPaymentRouting.helpers';
 import {
   checkoutStay,
+  computeCreditsOwed,
   computeFiatOwed,
+  computeTokensOwed,
   confirmStayCheckout,
+  getCreditsBalance,
   getStay,
-  isStayAwaitingPayment,
+  isStayAwaitingHostApproval,
   isStayPaid,
   isStayTerminal,
+  canApplyTokenOrCreditsToStay,
   formatStayMoney,
 } from '../../../utils/stays.api';
 
@@ -59,12 +63,14 @@ function StayPaymentInner({
   refetchStay,
   userEmail,
   userName,
+  creditsBalance,
 }: {
   stay: Stay;
   listing: Listing | null;
   refetchStay: () => Promise<Stay | null>;
   userEmail: string;
   userName: string;
+  creditsBalance: number;
 }) {
   const router = useRouter();
   const t = useTranslations();
@@ -77,18 +83,19 @@ function StayPaymentInner({
   const redirectTarget = useMemo(() => {
     if (isStayPaid(stay)) return `/stay/${stay._id}/confirmation` as const;
     if (isStayTerminal(stay)) return `/stay/${stay._id}` as const;
-    if (stay.status === 'pending') return `/stay/${stay._id}/pending` as const;
+    if (isStayAwaitingHostApproval(stay)) return `/stay/${stay._id}/pending` as const;
     if (stay.status === 'draft') return `/stay/create/${stay._id}` as const;
-    if (
-      stayRequiresFullCheckoutFlow(stay, stay.paymentDelta)
-    ) {
-      return `/stay/create/${stay._id}` as const;
-    }
     if (!['confirmed', 'pending-payment'].includes(stay.status)) {
       return `/stay/create/${stay._id}` as const;
     }
-    const fiatOwed = computeFiatOwed(stay);
-    if (fiatOwed <= 0.005) {
+    const fiatOwedCheck = computeFiatOwed(stay);
+    const tokensOwedCheck = computeTokensOwed(stay);
+    const creditsOwedCheck = computeCreditsOwed(stay);
+    if (
+      fiatOwedCheck <= 0.005 &&
+      tokensOwedCheck <= 0.005 &&
+      creditsOwedCheck <= 0.005
+    ) {
       return `/stay/${stay._id}` as const;
     }
     return null;
@@ -106,6 +113,16 @@ function StayPaymentInner({
     val: fiatOwed,
     cur: fiatCur,
   });
+
+  const tokensStakedVal = Number(stay.tokensStaked?.val ?? 0);
+  const showTokensStakedSummary =
+    stay.tokensStaked != null &&
+    Number.isFinite(tokensStakedVal) &&
+    tokensStakedVal > 0;
+
+  const fiatPaidVal = Number(stay.fiatPaid?.val ?? 0);
+  const showFiatPaidRow =
+    Number.isFinite(fiatPaidVal) && fiatPaidVal > 0.005 && Boolean(stay.fiatPaid);
 
   const cover =
     listing?.photos && listing.photos.length > 0
@@ -207,17 +224,12 @@ function StayPaymentInner({
 
       if (checkout.needsTokenStake) {
         await refetchStay();
-        router.replace(`/stay/create/${stay._id}`);
         return;
       }
 
       const refreshed = await refetchStay();
       if (refreshed && isStayPaid(refreshed)) {
         router.replace(`/stay/${refreshed._id}/confirmation`);
-      } else if (refreshed && isStayAwaitingPayment(refreshed)) {
-        router.replace(`/stay/create/${stay._id}`);
-      } else {
-        router.replace(`/stay/${stay._id}`);
       }
     } catch (err) {
       setActionError(parseMessageFromError(err));
@@ -344,6 +356,97 @@ function StayPaymentInner({
 
             <div className="h-px w-full bg-foreground/[0.08]" />
 
+            {stay.priceLock && (
+              <div className="flex flex-col gap-1.5 text-xs text-gray-700 mb-3">
+                <div className="flex justify-between gap-2">
+                  <span>{t('stay_create_line_accommodation')}</span>
+                  <span className="tabular-nums text-gray-900 shrink-0">
+                    {formatStayMoney(stay.priceLock.lines.accommodation)}
+                  </span>
+                </div>
+                {stay.priceLock.lines.utility.val > 0 && (
+                  <div className="flex justify-between gap-2">
+                    <span>{t('stay_create_line_utility')}</span>
+                    <span className="tabular-nums text-gray-900 shrink-0">
+                      {formatStayMoney(stay.priceLock.lines.utility)}
+                    </span>
+                  </div>
+                )}
+                {stay.priceLock.lines.food.val > 0 && (
+                  <div className="flex justify-between gap-2">
+                    <span>{t('stay_create_line_food')}</span>
+                    <span className="tabular-nums text-gray-900 shrink-0">
+                      {formatStayMoney(stay.priceLock.lines.food)}
+                    </span>
+                  </div>
+                )}
+                {stay.priceLock.lines.event.val > 0 && (
+                  <div className="flex justify-between gap-2">
+                    <span>{t('stay_create_line_event')}</span>
+                    <span className="tabular-nums text-gray-900 shrink-0">
+                      {formatStayMoney(stay.priceLock.lines.event)}
+                    </span>
+                  </div>
+                )}
+                {stay.priceLock.platformFee.val > 0 && (
+                  <div className="flex justify-between gap-2">
+                    <span>{t('stay_create_line_platform_fee')}</span>
+                    <span className="tabular-nums text-gray-900 shrink-0">
+                      {formatStayMoney(stay.priceLock.platformFee)}
+                    </span>
+                  </div>
+                )}
+                {stay.priceLock.appliedCredits.val > 0 && (
+                  <div className="flex justify-between gap-2 text-gray-600">
+                    <span>{t('stay_create_line_credits_applied')}</span>
+                    <span className="tabular-nums shrink-0">
+                      −{formatStayMoney(stay.priceLock.appliedCredits)}
+                    </span>
+                  </div>
+                )}
+                {stay.priceLock.appliedTokens.val > 0 && (
+                  <div className="flex justify-between gap-2 text-gray-600">
+                    <span>{t('stay_create_line_tokens_applied')}</span>
+                    <span className="tabular-nums shrink-0">
+                      −{formatStayMoney(stay.priceLock.appliedTokens)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between gap-2 border-t border-foreground/10 pt-1.5 font-medium text-gray-900">
+                  <span>{t('stay_create_line_total')}</span>
+                  <span className="tabular-nums shrink-0">
+                    {formatStayMoney(stay.priceLock.total)}
+                  </span>
+                </div>
+                {showFiatPaidRow && stay.fiatPaid && (
+                  <div className="flex justify-between gap-2 text-gray-600">
+                    <span>{t('stay_payment_page_breakdown_card_paid')}</span>
+                    <span className="tabular-nums shrink-0">
+                      −{formatStayMoney(stay.fiatPaid)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+            {!stay.priceLock && stay.fiatTarget && (
+              <div className="flex flex-col gap-1.5 text-xs text-gray-700 mb-3">
+                <div className="flex justify-between gap-2 font-medium text-gray-900">
+                  <span>{t('stay_create_line_total')}</span>
+                  <span className="tabular-nums shrink-0">
+                    {formatStayMoney(stay.fiatTarget)}
+                  </span>
+                </div>
+                {showFiatPaidRow && stay.fiatPaid && (
+                  <div className="flex justify-between gap-2 text-gray-600">
+                    <span>{t('stay_payment_page_breakdown_card_paid')}</span>
+                    <span className="tabular-nums shrink-0">
+                      −{formatStayMoney(stay.fiatPaid)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div>
               <div className="flex flex-row items-center justify-between gap-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground shrink min-w-0">
@@ -361,6 +464,39 @@ function StayPaymentInner({
             </div>
           </div>
         </BookingSurface>
+
+        {canApplyTokenOrCreditsToStay(stay) && (
+        <BookingSurface tone="elevated" padding="lg" as="section">
+          <Heading level={2} className="text-lg mb-2">
+            {t('stay_payment_page_tokens_credits_title')}
+          </Heading>
+          {!showTokensStakedSummary && (
+            <p className="text-sm text-muted-foreground mb-4">
+              {t('stay_payment_page_tokens_credits_intro')}
+            </p>
+          )}
+          {showTokensStakedSummary && (
+            <div className="mb-4 flex flex-col gap-2">
+              <p className="text-sm text-gray-900">
+                <span className="font-medium text-gray-800">
+                  {t('stay_payment_page_tokens_staked_label')}
+                </span>
+                {': '}
+                {formatStayMoney(stay.tokensStaked)}
+              </p>
+              <Information className="text-sm">
+                {t('stay_payment_page_tokens_staked_success')}
+              </Information>
+            </div>
+          )}
+          <StayPaymentTokenCreditControls
+            stay={stay}
+            creditsBalance={creditsBalance}
+            onStaySynced={refetchStay}
+            setBannerError={setActionError}
+          />
+        </BookingSurface>
+        )}
 
         <BookingSurface tone="elevated" padding="lg" as="section">
           <Heading level={2} className="text-lg mb-4">
@@ -438,6 +574,7 @@ const StayPaymentPage = ({
 
   const [stay, setStay] = useState<Stay | null>(null);
   const [listing, setListing] = useState<Listing | null>(null);
+  const [creditsBalance, setCreditsBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
 
@@ -465,6 +602,12 @@ const StayPaymentPage = ({
           } catch (err) {
             console.warn('Could not load listing', err);
           }
+        }
+        try {
+          const bal = await getCreditsBalance();
+          if (!cancelled) setCreditsBalance(bal);
+        } catch {
+          if (!cancelled) setCreditsBalance(0);
         }
       } catch (err) {
         if (!cancelled) setPageError(parseMessageFromError(err));
@@ -564,6 +707,7 @@ const StayPaymentPage = ({
           refetchStay={refetchStay}
           userEmail={user?.email || ''}
           userName={user?.screenname || ''}
+          creditsBalance={creditsBalance}
         />
       </Elements>
     </>
