@@ -27,6 +27,7 @@ import type { Stay } from '../types/stay';
 
 import api from './api';
 import { parseMessageFromError } from './common';
+import { formatStakeBookingErrorEnglish } from './stakeBookingError.helpers';
 import { priceFormat } from './helpers';
 import { reportIssue } from './reporting.utils';
 import {
@@ -546,7 +547,7 @@ export const dateToPropertyTimeZone = (
 export const payTokens = async (
   bookingId: string | undefined,
   dailyRentalTokenVal: number | undefined,
-  stakeTokens: (dailyValue: number) => Promise<
+  stakeTokens: (dailyValue: number | string) => Promise<
     | {
         error: null;
         success: {
@@ -693,7 +694,10 @@ export const payTokens = async (
       )}, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}`,
       userEmail,
     );
-    return { error: parseMessageFromError(stakingError), success: null };
+    return {
+      error: formatStakeBookingErrorEnglish(stakingError),
+      success: null,
+    };
   }
 
   // If booking already existed on chain (transactionId === 'existing'), use stored tx ID if available
@@ -763,8 +767,7 @@ export const payTokens = async (
     };
   }
 
-  // We have a real transaction ID - call /token-payment to update backend status
-  // Do this BEFORE checkContract - backend will do its own verification
+  // We have a real transaction ID - backend verifies the chain receipt
   if (stakingSuccess?.transactionId) {
     try {
       const res = await api.post(`/bookings/${bookingId}/token-payment`, {

@@ -1,20 +1,26 @@
+import { BigNumber, utils as ethersUtils } from 'ethers';
+
 import {
   STAY_TERMINAL_STATUSES,
   buildStayTokenStakePlan,
+  canApplyTokenOrCreditsToStay,
   canChangeStayPaymentMethod,
   computeCreditsOwed,
+  computeFiatDiscountFromStayQuote,
   computeFiatOwed,
   computeTokensOwed,
   formatStayMoney,
   getStayAccommodationNightCount,
   getStayAccommodationTokenTotal,
   inferPaymentChoiceFromStay,
+  isStayAwaitingHostApproval,
   isStayAwaitingPayment,
+  isStayCheckoutDraft,
   isStayPaid,
   isStayTerminal,
 } from '../stays.api';
 
-import type { Stay, StayMoney } from '../../types/stay';
+import type { Stay, StayMoney, StayQuoteResponse } from '../../types/stay';
 
 const baseStay = (overrides: Partial<Stay> = {}): Stay =>
   ({
@@ -70,6 +76,11 @@ describe('isStayTerminal', () => {
     expect(isStayTerminal(baseStay({ status: 'cancelled' }))).toBe(true);
     expect(isStayTerminal(baseStay({ status: 'paid' }))).toBe(false);
   });
+
+  it('returns false for null or undefined', () => {
+    expect(isStayTerminal(null)).toBe(false);
+    expect(isStayTerminal(undefined)).toBe(false);
+  });
 });
 
 describe('isStayPaid / isStayAwaitingPayment', () => {
@@ -85,6 +96,13 @@ describe('isStayPaid / isStayAwaitingPayment', () => {
     ).toBe(true);
     expect(isStayAwaitingPayment(baseStay({ status: 'paid' }))).toBe(false);
     expect(isStayAwaitingPayment(baseStay({ status: 'draft' }))).toBe(false);
+  });
+
+  it('returns false for null or undefined stay', () => {
+    expect(isStayPaid(null)).toBe(false);
+    expect(isStayPaid(undefined)).toBe(false);
+    expect(isStayAwaitingPayment(null)).toBe(false);
+    expect(isStayAwaitingPayment(undefined)).toBe(false);
   });
 });
 
@@ -158,6 +176,88 @@ describe('compute*Owed', () => {
   });
 });
 
+describe('canApplyTokenOrCreditsToStay', () => {
+  it('returns false for host-pending regardless of casing', () => {
+    expect(canApplyTokenOrCreditsToStay(baseStay({ status: 'pending' }))).toBe(
+      false,
+    );
+    expect(canApplyTokenOrCreditsToStay(baseStay({ status: 'Pending' }))).toBe(
+      false,
+    );
+    expect(
+      canApplyTokenOrCreditsToStay(baseStay({ status: ' PENDING ' })),
+    ).toBe(false);
+  });
+
+  it('returns false for draft regardless of casing', () => {
+    expect(canApplyTokenOrCreditsToStay(baseStay({ status: 'draft' }))).toBe(
+      false,
+    );
+    expect(canApplyTokenOrCreditsToStay(baseStay({ status: 'Draft' }))).toBe(
+      false,
+    );
+  });
+
+  it('returns true only for confirmed and pending-payment', () => {
+    expect(
+      canApplyTokenOrCreditsToStay(baseStay({ status: 'confirmed' })),
+    ).toBe(true);
+    expect(
+      canApplyTokenOrCreditsToStay(baseStay({ status: 'pending-payment' })),
+    ).toBe(true);
+  });
+
+  it('returns false for paid and terminal statuses', () => {
+    expect(canApplyTokenOrCreditsToStay(baseStay({ status: 'paid' }))).toBe(
+      false,
+    );
+    expect(
+      canApplyTokenOrCreditsToStay(baseStay({ status: 'cancelled' })),
+    ).toBe(false);
+  });
+
+  it('detects host pending and draft via helpers', () => {
+    expect(isStayAwaitingHostApproval(baseStay({ status: 'Pending' }))).toBe(
+      true,
+    );
+    expect(isStayCheckoutDraft(baseStay({ status: 'Draft' }))).toBe(true);
+  });
+});
+
+describe('computeFiatDiscountFromStayQuote', () => {
+  it('derives discount from negative delta on amount owed', () => {
+    const stay = baseStay({
+      fiatTarget: { val: 500, cur: 'EUR' },
+      fiatPaid: { val: 0, cur: 'EUR' },
+    });
+    const quote = {
+      priceLock: { total: { val: 400, cur: 'EUR' } },
+      currentTotal: { val: 400, cur: 'EUR' },
+      delta: { fiat: { val: -100, cur: 'EUR' } },
+    } as unknown as StayQuoteResponse;
+    expect(computeFiatDiscountFromStayQuote(stay, quote)).toEqual({
+      amount: 100,
+      cur: 'EUR',
+    });
+  });
+
+  it('uses priceLock total when delta is not finite', () => {
+    const stay = baseStay({
+      fiatTarget: { val: 500, cur: 'EUR' },
+      fiatPaid: { val: 0, cur: 'EUR' },
+    });
+    const quote = {
+      priceLock: { total: { val: 300, cur: 'EUR' } },
+      currentTotal: { val: 300, cur: 'EUR' },
+      delta: { fiat: { val: Number.NaN, cur: 'EUR' } },
+    } as unknown as StayQuoteResponse;
+    expect(computeFiatDiscountFromStayQuote(stay, quote)).toEqual({
+      amount: 200,
+      cur: 'EUR',
+    });
+  });
+});
+
 describe('buildStayTokenStakePlan', () => {
   const priceLockWithDailyToken = (dailyTokenVal: number) => ({
     lines: {
@@ -196,6 +296,9 @@ describe('buildStayTokenStakePlan', () => {
     expect(plan?.tokenAmount).toBe(6);
     expect(plan?.bookingNights.length).toBe(6);
     expect(plan?.dailyValue).toBe(1);
+    expect(plan?.pricePerNightWei).toBe(
+      BigNumber.from(ethersUtils.parseUnits('6', 18)).div(6).toString(),
+    );
   });
 
   it('caps on-chain stake to accommodation token total when owed exceeds it', () => {
@@ -226,7 +329,14 @@ describe('buildStayTokenStakePlan', () => {
     const owed = computeTokensOwed(stay);
     const plan = buildStayTokenStakePlan(stay, owed);
     expect(owed).toBe(7.5);
-    expect(plan?.dailyValue).toBeCloseTo(7.5 / 4, 6);
+    const raw7 = ethersUtils.parseUnits('7.5', 18);
+    const d4 = BigNumber.from(4);
+    const ceilPerNight = raw7.add(d4).sub(1).div(d4);
+    expect(plan?.pricePerNightWei).toBe(ceilPerNight.toString());
+    expect(plan?.dailyValue).toBeCloseTo(
+      Number(ethersUtils.formatUnits(ceilPerNight, 18)),
+      6,
+    );
     expect(plan?.tokenAmount).toBeCloseTo(7.5, 5);
     expect(plan?.bookingNights.length).toBe(4);
   });
@@ -273,6 +383,31 @@ describe('buildStayTokenStakePlan', () => {
     expect(plan?.bookingNights.length).toBe(4);
     expect(plan?.dailyValue).toBeCloseTo(0.4, 6);
     expect(plan?.tokenAmount).toBeCloseTo(1.6, 5);
+  });
+
+  it('aligns wei total so per-night price times staked nights never underpays raw max', () => {
+    const stay = baseStay({
+      duration: 3,
+      adults: 1,
+      children: 0,
+      start: '2026-06-01',
+      end: '2026-06-04',
+      tokensTarget: { val: 1, cur: 'TDF' },
+      tokensStaked: { val: 0, cur: 'TDF' },
+      rentalToken: { val: 1, cur: 'TDF' },
+      priceLock: priceLockWithDailyToken(0),
+    });
+    const plan = buildStayTokenStakePlan(stay, 1);
+    expect(plan).not.toBeNull();
+    const rawMax = ethersUtils.parseUnits('1', 18);
+    const durationBn = BigNumber.from(3);
+    const ceilPrice = rawMax.add(durationBn).sub(1).div(durationBn);
+    const product = BigNumber.from(plan!.pricePerNightWei).mul(
+      plan!.bookingNights.length,
+    );
+    expect(plan!.pricePerNightWei).toBe(ceilPrice.toString());
+    expect(product.gte(rawMax)).toBe(true);
+    expect(product.sub(rawMax).lte(durationBn)).toBe(true);
   });
 });
 

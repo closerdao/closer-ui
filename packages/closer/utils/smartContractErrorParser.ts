@@ -25,8 +25,66 @@ export interface SmartContractError {
  * @param err - The error object from smart contract transactions
  * @returns A clean, user-friendly error message or null if not a smart contract error
  */
+const SOLIDITY_PANIC_OVERFLOW =
+  'The contract reverted with a math overflow or underflow (Solidity panic 0x11). Common causes: wrong wei amounts, overlapping or invalid booking nights, or a mismatch between what the UI sends and what the booking facet expects. Try refreshing; if it keeps happening, contact support.';
+
+const SOLIDITY_PANIC_DIV_ZERO =
+  'The contract reverted with division by zero (Solidity panic 0x12). Try again or contact support.';
+
+const SOLIDITY_PANIC_ASSERT =
+  'The contract reverted with an internal assertion (Solidity panic 0x01). Contact support if this persists.';
+
+const PANIC_SELECTOR = '0x4e487b71';
+
+function readPanicCodeFromObject(obj: any): number | null {
+  if (obj?.errorName === 'Panic' && Array.isArray(obj?.errorArgs) && obj.errorArgs.length > 0) {
+    const a = obj.errorArgs[0];
+    if (a && typeof a === 'object' && 'hex' in a) {
+      const h = String((a as { hex: string }).hex).replace(/^0x/i, '');
+      if (/^[0-9a-f]+$/i.test(h)) return parseInt(h, 16);
+    }
+    if (typeof a === 'number' && Number.isFinite(a)) return a;
+  }
+  const data = typeof obj?.data === 'string' ? obj.data.toLowerCase() : '';
+  if (
+    data.startsWith(PANIC_SELECTOR) &&
+    data.length >= 2 + 8 + 64
+  ) {
+    const argHex = data.slice(10, 10 + 64);
+    if (/^[0-9a-f]+$/.test(argHex)) return parseInt(argHex, 16);
+  }
+  return null;
+}
+
+function parseSolidityPanicUserMessage(err: any): string | null {
+  let code: number | null = null;
+  for (const layer of [err, err?.error]) {
+    if (!layer || typeof layer !== 'object') continue;
+    code = readPanicCodeFromObject(layer);
+    if (code !== null) break;
+  }
+  if (code === null && typeof err?.message === 'string') {
+    const m = err.message.match(/panic code\s+(\d+)/i);
+    if (m) code = parseInt(m[1], 10);
+  }
+  if (code === null) return null;
+  switch (code) {
+    case 0x01:
+      return SOLIDITY_PANIC_ASSERT;
+    case 0x11:
+      return SOLIDITY_PANIC_OVERFLOW;
+    case 0x12:
+      return SOLIDITY_PANIC_DIV_ZERO;
+    default:
+      return `The contract reverted with Solidity panic code ${code} (see https://docs.soliditylang.org/en/latest/control-structures.html#panic-via-assert-and-fail). Contact support if you need help.`;
+  }
+}
+
 export const parseSmartContractError = (err: any): string | null => {
   try {
+    const panicMsg = parseSolidityPanicUserMessage(err);
+    if (panicMsg) return panicMsg;
+
     // Handle ethers.js gas estimation errors
     if (err?.code === 'UNPREDICTABLE_GAS_LIMIT' && err?.reason) {
       return `cannot estimate gas; transaction may fail or may require manual gas limit. Reason: ${err.reason}`;
@@ -85,6 +143,8 @@ export const isSmartContractError = (err: any): boolean => {
   const indicators = [
     'UNPREDICTABLE_GAS_LIMIT',
     'execution reverted',
+    'CALL_EXCEPTION',
+    'panic',
     'ERC20:',
     'User denied transaction',
     'User rejected transaction',

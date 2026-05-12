@@ -507,6 +507,10 @@ export const SALES_CONFIG = {
 
 export const MIN_CELO_FOR_GAS = 1;
 
+export const DEFAULT_BOOK_ACCOMMODATION_GAS_LIMIT = 6_000_000;
+
+export const MAX_BOOK_ACCOMMODATION_GAS_LIMIT = 12_000_000;
+
 export const BOOKING_EXISTS_ERROR =
   'execution reverted: BookingFacet: Booking already exists';
 export const USER_REJECTED_TRANSACTION_ERROR = 'user rejected transaction';

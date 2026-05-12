@@ -80,18 +80,48 @@ export const STAY_TERMINAL_STATUSES: ReadonlyArray<StayStatus> = [
 ];
 
 export const isStayTerminal = (
-  stayOrStatus: Pick<Stay, 'status'> | StayStatus,
+  stayOrStatus: Pick<Stay, 'status'> | StayStatus | null | undefined,
 ): boolean => {
+  if (stayOrStatus == null) return false;
   const status =
     typeof stayOrStatus === 'string' ? stayOrStatus : stayOrStatus.status;
   return STAY_TERMINAL_STATUSES.includes(status);
 };
 
-export const isStayPaid = (stay: Pick<Stay, 'status'>): boolean =>
-  stay.status === 'paid';
+export const isStayPaid = (
+  stay: Pick<Stay, 'status'> | null | undefined,
+): boolean => stay?.status === 'paid';
 
-export const isStayAwaitingPayment = (stay: Pick<Stay, 'status'>): boolean =>
-  stay.status === 'confirmed' || stay.status === 'pending-payment';
+export const isStayAwaitingPayment = (
+  stay: Pick<Stay, 'status'> | null | undefined,
+): boolean =>
+  stay?.status === 'confirmed' || stay?.status === 'pending-payment';
+
+function normalizeStayStatusRaw(
+  status: Stay['status'] | null | undefined,
+): string {
+  if (status == null) return '';
+  if (typeof status !== 'string') return '';
+  return status.trim().toLowerCase();
+}
+
+export const isStayCheckoutDraft = (
+  stay: Pick<Stay, 'status'> | null | undefined,
+): boolean => normalizeStayStatusRaw(stay?.status) === 'draft';
+
+export const isStayAwaitingHostApproval = (
+  stay: Pick<Stay, 'status'> | null | undefined,
+): boolean => normalizeStayStatusRaw(stay?.status) === 'pending';
+
+export const canApplyTokenOrCreditsToStay = (
+  stay: Pick<Stay, 'status'> | null | undefined,
+): boolean => {
+  const s = normalizeStayStatusRaw(stay?.status);
+  if (!s) return false;
+  if (s === 'draft' || s === 'pending' || s === 'paid') return false;
+  if ((STAY_TERMINAL_STATUSES as readonly string[]).includes(s)) return false;
+  return s === 'confirmed' || s === 'pending-payment';
+};
 
 export const computeFiatOwed = (stay: Stay): number => {
   const target =
@@ -147,19 +177,23 @@ export const buildStayTokenStakePlan = (
 
   if (!startUtc.isValid() || duration <= 0 || maxTokensForStay <= 0) return null;
 
-  const maxWei = ethersUtils.parseUnits(
+  const maxWeiRaw = ethersUtils.parseUnits(
     roundHumanTokenAmountForWei(maxTokensForStay),
     TDF_DECIMALS,
   );
-  const cappedWei = ethersUtils.parseUnits(
+  const durationBn = BigNumber.from(duration);
+  const pricePerNightWei = maxWeiRaw.add(durationBn).sub(1).div(durationBn);
+  if (pricePerNightWei.isZero()) return null;
+  const maxWei = pricePerNightWei.mul(durationBn);
+
+  const cappedWeiRaw = ethersUtils.parseUnits(
     roundHumanTokenAmountForWei(
       Math.min(tokensToStakeTotal, maxTokensForStay),
     ),
     TDF_DECIMALS,
   );
+  const cappedWei = cappedWeiRaw.gt(maxWei) ? maxWei : cappedWeiRaw;
   if (cappedWei.isZero()) return null;
-  const durationBn = BigNumber.from(duration);
-  const pricePerNightWei = maxWei.div(durationBn);
   const nightsToStakeBn = cappedWei
     .mul(durationBn)
     .add(maxWei)
@@ -179,13 +213,21 @@ export const buildStayTokenStakePlan = (
     ethersUtils.formatUnits(totalStakeWei, TDF_DECIMALS),
   );
 
+  const bookingNights: number[][] = [];
+  for (let i = 0; i < nightsToStake; i++) {
+    const d = startUtc.add(i, 'day');
+    if (!d.isValid()) return null;
+    const y = d.year();
+    const doy = d.dayOfYear();
+    if (!Number.isFinite(y) || !Number.isFinite(doy) || doy < 1) return null;
+    bookingNights.push([y, doy]);
+  }
+
   return {
     dailyValue,
+    pricePerNightWei: pricePerNightWei.toString(),
     tokenAmount,
-    bookingNights: Array.from({ length: nightsToStake }, (_, i) => {
-      const d = startUtc.add(i, 'day');
-      return [d.year(), d.dayOfYear()];
-    }),
+    bookingNights,
   };
 };
 
@@ -347,6 +389,30 @@ export const quoteStay = async (
   return (data as ApiOk<StayQuoteResponse>).results;
 };
 
+export function computeFiatDiscountFromStayQuote(
+  stay: Stay,
+  quote: StayQuoteResponse,
+): { amount: number; cur: string } {
+  const before = computeFiatOwed(stay);
+  const deltaVal = Number(quote.delta?.fiat?.val ?? NaN);
+  let after: number;
+  if (Number.isFinite(deltaVal)) {
+    after = Math.max(0, before + deltaVal);
+  } else {
+    const paid = stay.fiatPaid?.val ?? 0;
+    const newTotalVal = Number(quote.priceLock?.total?.val ?? NaN);
+    if (!Number.isFinite(newTotalVal)) {
+      return { amount: 0, cur: 'EUR' };
+    }
+    after = Math.max(0, newTotalVal - paid);
+  }
+  const amount = Math.max(0, Math.round((before - after) * 100) / 100);
+  const cur = String(
+    quote.delta?.fiat?.cur ?? quote.priceLock?.total?.cur ?? 'EUR',
+  );
+  return { amount, cur };
+}
+
 export const submitStay = async (id: string): Promise<Stay> => {
   const { data } = await api.post(`/stays/${id}/submit`, {});
   return (data as ApiOk<Stay>).results;
@@ -370,14 +436,28 @@ export const confirmStayCheckout = async (
   return (data as ApiOk<Stay>).results;
 };
 
+export type StakeStayTokensOptions = {
+  syncBookingAlreadyOnChain?: boolean;
+};
+
 export const stakeStayTokens = async (
   id: string,
   transactionId: string,
+  options?: StakeStayTokensOptions,
 ): Promise<{ booking: Stay; verified: boolean }> => {
-  const { data } = await api.post(`/stays/${id}/token-stake`, {
-    transactionId,
-  });
-  return (data as ApiOk<{ booking: Stay; verified: boolean }>).results;
+  const body: Record<string, unknown> =
+    options?.syncBookingAlreadyOnChain === true
+      ? { syncBookingAlreadyOnChain: true }
+      : { transactionId };
+  const { data } = await api.post(`/stays/${id}/token-stake`, body);
+  const results = (
+    data as ApiOk<{ booking?: Stay | null; verified?: boolean }>
+  )?.results;
+  if (results?.booking) {
+    return { booking: results.booking, verified: Boolean(results.verified) };
+  }
+  const booking = await getStay(id);
+  return { booking, verified: Boolean(results?.verified) };
 };
 
 export const cancelStay = async (

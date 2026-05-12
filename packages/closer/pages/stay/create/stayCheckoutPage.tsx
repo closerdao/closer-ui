@@ -21,6 +21,7 @@ import Conditions from '../../../components/Conditions';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageError from '../../../components/PageError';
 import BookingSurface from '../../../components/booking/bookingSurface';
+import { StayQuoteFiatDiscountPreview } from '../../../components/booking/stayQuoteFiatDiscountPreview';
 import Modal from '../../../components/Modal';
 import Switch from '../../../components/Switch';
 import { ErrorMessage, Information } from '../../../components/ui';
@@ -68,11 +69,13 @@ import {
   getFoodOptionsForBookingContext,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { formatStakeBookingErrorForUi } from '../../../utils/stakeBookingError.helpers';
 import { priceFormat } from '../../../utils/helpers';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
 import { stayRequiresFullCheckoutFlow } from '../../../utils/stayPaymentRouting.helpers';
 import {
   buildStayTokenStakePlan,
+  canApplyTokenOrCreditsToStay,
   canChangeStayPaymentMethod,
   checkoutStay,
   computeCreditsOwed,
@@ -83,7 +86,9 @@ import {
   getStay,
   getStayAccommodationTokenTotal,
   inferPaymentChoiceFromStay,
+  isStayAwaitingHostApproval,
   isStayAwaitingPayment,
+  isStayCheckoutDraft,
   isStayPaid,
   isStayTerminal,
   setStayPaymentMethod,
@@ -508,8 +513,24 @@ const StayCheckoutContent = ({
     }
   }, [currentStay.status, currentStay._id, router]);
 
+  useEffect(() => {
+    if (
+      !isStayAwaitingHostApproval(currentStay) &&
+      !isStayCheckoutDraft(currentStay)
+    ) {
+      return;
+    }
+    setIsCreditsModalOpen(false);
+    setIsStakeModalOpen(false);
+    setStakeModalError(null);
+    setStakePlan(null);
+    pendingTokenPaymentPayloadRef.current = null;
+  }, [currentStay.status]);
+
   const priceLock = currentStay.priceLock;
   const isMember = Boolean(authUser?.roles?.includes('member'));
+  const showTokenCreditPaymentOptions =
+    canApplyTokenOrCreditsToStay(currentStay);
   const isFree =
     !priceLock ||
     (priceLock.total.val === 0 &&
@@ -561,8 +582,8 @@ const StayCheckoutContent = ({
 
   const useCardPaymentPrimaryCta = useMemo(() => {
     if (
-      currentStay.status === 'draft' ||
-      currentStay.status === 'pending'
+      isStayCheckoutDraft(currentStay) ||
+      isStayAwaitingHostApproval(currentStay)
     ) {
       return false;
     }
@@ -575,8 +596,8 @@ const StayCheckoutContent = ({
 
   const showCreditsTokensGuideCta = useMemo(() => {
     if (
-      currentStay.status === 'draft' ||
-      currentStay.status === 'pending'
+      isStayCheckoutDraft(currentStay) ||
+      isStayAwaitingHostApproval(currentStay)
     ) {
       return false;
     }
@@ -599,11 +620,16 @@ const StayCheckoutContent = ({
       gross,
       net,
       showBenefitCaption:
+        showTokenCreditPaymentOptions &&
         hasAlternativeAccommodationPayment &&
         (lock.appliedCredits.val > 0 || lock.appliedTokens.val > 0),
       showGrossStrikeThrough,
     };
-  }, [currentStay.priceLock, hasAlternativeAccommodationPayment]);
+  }, [
+    currentStay.priceLock,
+    hasAlternativeAccommodationPayment,
+    showTokenCreditPaymentOptions,
+  ]);
 
   const cancellationPolicyForConditions = useMemo(() => {
     if (!bookingSettings) return null;
@@ -736,6 +762,7 @@ const StayCheckoutContent = ({
 
   const isWeb3Enabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
   const needsTokenStakeCompletion =
+    showTokenCreditPaymentOptions &&
     isWeb3Enabled &&
     tokenAccommodationVal > 0 &&
     (paymentChoice === 'partial-tokens' || paymentChoice === 'full-tokens') &&
@@ -802,7 +829,7 @@ const StayCheckoutContent = ({
     !!currentStay.pendingExtension &&
     !!currentStay.pendingExtension.requestedAt;
 
-  const { stakeTokens, isStaking, checkContract } = useBookingSmartContract({
+  const { stakeTokens, isStaking } = useBookingSmartContract({
     bookingNights: stakePlan?.bookingNights || [],
   });
   useEffect(() => {
@@ -836,6 +863,7 @@ const StayCheckoutContent = ({
   };
 
   const handleApplyTokens = () => {
+    if (!showTokenCreditPaymentOptions) return;
     if (!canChangePaymentMethod) return;
     if (isSameDayTokenBooking) return;
     if (!isWalletConnected || tokenAmountToApply <= 0) return;
@@ -868,6 +896,7 @@ const StayCheckoutContent = ({
   };
 
   const handleResumeTokenStake = () => {
+    if (!showTokenCreditPaymentOptions) return;
     if (isSameDayTokenBooking) return;
     if (!isWalletConnected || tokensOwed <= 0) return;
     setActionError(null);
@@ -935,7 +964,7 @@ const StayCheckoutContent = ({
       const nightsKey = JSON.stringify(planToUse.bookingNights);
 
       const stakingResult = await stakeTokens(
-        planToUse.dailyValue,
+        planToUse.pricePerNightWei,
         planToUse.bookingNights,
       );
       if (!stakingResult) {
@@ -944,7 +973,7 @@ const StayCheckoutContent = ({
       }
       if (stakingResult?.error || !stakingResult?.success?.transactionId) {
         setStakeModalError(
-          parseMessageFromError(stakingResult?.error) ||
+          formatStakeBookingErrorForUi(stakingResult?.error, t) ||
             t('stay_create_token_stake_failed'),
         );
         return;
@@ -978,7 +1007,7 @@ const StayCheckoutContent = ({
             } catch {
               // ignore
             }
-            setStakeModalError(parseMessageFromError(recoverErr));
+            setStakeModalError(formatStakeBookingErrorForUi(recoverErr, t));
             return;
           }
         }
@@ -998,20 +1027,28 @@ const StayCheckoutContent = ({
           setStakeModalError(null);
           return;
         }
-        setStakeModalError(t('stay_create_token_stake_refresh_hint'));
-        return;
+        try {
+          setIsVerifyingStake(true);
+          const stakeResult = await stakeStayTokens(
+            stayForStake._id,
+            '',
+            { syncBookingAlreadyOnChain: true },
+          );
+          clearPendingStayTokenStake(stayForStake._id);
+          setCurrentStay(stakeResult.booking);
+          setTokenStakeSuccessNotice(t('stay_create_token_stake_success'));
+          setIsStakeModalOpen(false);
+          setStakePlan(null);
+          setStakeModalError(null);
+          return;
+        } catch {
+          setStakeModalError(t('stay_create_token_stake_refresh_hint'));
+          return;
+        }
       }
 
       const txHash = stakingResult.success.transactionId;
       writePendingStayTokenStake(stayForStake._id, txHash, nightsKey);
-
-      const onChainCheck = await checkContract(planToUse.bookingNights);
-      if (!onChainCheck?.success) {
-        setStakeModalError(
-          onChainCheck?.error || t('stay_create_token_stake_failed'),
-        );
-        return;
-      }
 
       setIsVerifyingStake(true);
       const stakeResult = await stakeStayTokens(stayForStake._id, txHash);
@@ -1022,7 +1059,7 @@ const StayCheckoutContent = ({
       setStakePlan(null);
       setStakeModalError(null);
     } catch (err) {
-      const msg = parseMessageFromError(err);
+      const msg = formatStakeBookingErrorForUi(err, t);
       const lower = msg.toLowerCase();
       const planSnapshot =
         planForRecovery ||
@@ -1077,6 +1114,7 @@ const StayCheckoutContent = ({
   };
 
   const openCreditsConfirmationModal = () => {
+    if (!showTokenCreditPaymentOptions) return;
     if (!canChangePaymentMethod || creditsAmountToApply <= 0) return;
     if (isStakeModalOpen) return;
     setCreditsModalError(null);
@@ -1089,6 +1127,7 @@ const StayCheckoutContent = ({
   };
 
   const confirmApplyCredits = async () => {
+    if (!showTokenCreditPaymentOptions) return;
     if (!canChangePaymentMethod || creditsAmountToApply <= 0) return;
     setCreditsModalError(null);
     setActionError(null);
@@ -1315,12 +1354,12 @@ const StayCheckoutContent = ({
     setIsProcessing(true);
     try {
       let workingStay = currentStay;
-      if (workingStay.status === 'draft') {
+      if (isStayCheckoutDraft(workingStay)) {
         workingStay = await submitStay(workingStay._id);
         setCurrentStay(workingStay);
       }
 
-      if (workingStay.status === 'pending') {
+      if (isStayAwaitingHostApproval(workingStay)) {
         router.replace(`/stay/${workingStay._id}/pending`);
         return;
       }
@@ -2093,7 +2132,7 @@ const StayCheckoutContent = ({
                   value={`-${formatModalTwoDecimals(priceLock.appliedTokens.val)} ${priceLock.appliedTokens.cur}`}
                 />
               )}
-              {tokensOwed > 0 && (
+              {showTokenCreditPaymentOptions && tokensOwed > 0 && (
                 <>
                   <hr className="my-2 border-gray-200" />
                   {accommodationTokenStakePreview &&
@@ -2132,6 +2171,7 @@ const StayCheckoutContent = ({
               {t('stay_create_no_price_lock')}
             </p>
           )}
+          {showTokenCreditPaymentOptions && (
           <div className="mt-5 flex flex-col gap-3">
             {!hasAlternativeAccommodationPayment ? (
               <>
@@ -2243,6 +2283,7 @@ const StayCheckoutContent = ({
               </p>
             )}
           </div>
+          )}
         </BookingSurface>
 
         <BookingSurface
@@ -2338,7 +2379,7 @@ const StayCheckoutContent = ({
 
         </BookingSurface>
       </div>
-      {isCreditsModalOpen && (
+      {isCreditsModalOpen && showTokenCreditPaymentOptions && (
         <Modal closeModal={closeCreditsModal} className="sm:max-w-xl md:w-[560px]">
           <div className="flex flex-col gap-4">
             <Heading level={2} className="text-xl pr-10">
@@ -2369,6 +2410,10 @@ const StayCheckoutContent = ({
                 </p>
               )}
             </div>
+            <StayQuoteFiatDiscountPreview
+              stay={currentStay}
+              appliedCredits={creditsAmountToApply}
+            />
             {creditsModalError && (
               <div role="alert" aria-live="assertive">
                 <ErrorMessage error={creditsModalError} />
@@ -2399,7 +2444,7 @@ const StayCheckoutContent = ({
           </div>
         </Modal>
       )}
-      {isStakeModalOpen && (
+      {isStakeModalOpen && showTokenCreditPaymentOptions && (
         <Modal closeModal={closeStakeModal} className="sm:max-w-xl md:w-[560px]">
           <div className="flex flex-col gap-4">
             <Heading level={2} className="text-xl pr-10">
@@ -2442,6 +2487,10 @@ const StayCheckoutContent = ({
                 </p>
               )}
             </div>
+            <StayQuoteFiatDiscountPreview
+              stay={currentStay}
+              appliedTokens={stakePlan?.tokenAmount}
+            />
             <div className="rounded-xl border border-gray-200 p-3 text-sm">
               <p className="font-semibold text-gray-900 mb-2">
                 {t('wallet_connected_title')}
