@@ -12,6 +12,7 @@ import Button from '../ui/Button';
 import Heading from '../ui/Heading';
 
 import { WalletDispatch, WalletState } from '../../contexts/wallet';
+import { useAuth } from '../../contexts/auth';
 import { useBookingSmartContract } from '../../hooks/useBookingSmartContract';
 import { useConfig } from '../../hooks/useConfig';
 import type { Stay, StayTokenStakePlan } from '../../types/stay';
@@ -19,8 +20,8 @@ import { parseMessageFromError } from '../../utils/common';
 import { formatStakeBookingErrorForUi } from '../../utils/stakeBookingError.helpers';
 import {
   buildStayTokenStakePlan,
-  canApplyTokenOrCreditsToStay,
   canChangeStayPaymentMethod,
+  canShowStayTokenCreditPaymentOptions,
   computeTokensOwed,
   getStay,
   getStayAccommodationTokenTotal,
@@ -29,6 +30,7 @@ import {
   isStayCheckoutDraft,
   setStayPaymentMethod,
   stakeStayTokens,
+  stayUsesTokenAccommodation,
   submitStay,
 } from '../../utils/stays.api';
 import {
@@ -57,6 +59,8 @@ export function StayPaymentTokenCreditControls({
   setBannerError,
 }: StayPaymentTokenCreditControlsProps) {
   const t = useTranslations();
+  const { user } = useAuth();
+  const isMember = Boolean(user?.roles?.includes('member'));
   const {
     BLOCKCHAIN_DAO_TOKEN,
     BLOCKCHAIN_EXPLORER_URL,
@@ -87,6 +91,8 @@ export function StayPaymentTokenCreditControls({
     null,
   );
   const [isApplyingCredits, setIsApplyingCredits] = useState(false);
+  const [isRevertingTokenPayment, setIsRevertingTokenPayment] =
+    useState(false);
 
   const pendingTokenPaymentPayloadRef = useRef<
     | { method: 'full-tokens' }
@@ -94,13 +100,17 @@ export function StayPaymentTokenCreditControls({
     | null
   >(null);
 
-  const showTokenCreditPaymentOptions = canApplyTokenOrCreditsToStay(stay);
+  const showTokenCreditPaymentOptions = canShowStayTokenCreditPaymentOptions(
+    stay,
+    isMember,
+  );
   const tokenAccommodationVal = getStayAccommodationTokenTotal(stay);
   const tokensOwed = computeTokensOwed(stay);
   const paymentChoice = useMemo(
     () => inferPaymentChoiceFromStay(stay, tokenAccommodationVal),
     [stay, tokenAccommodationVal],
   );
+  const stayUsesTokens = stayUsesTokenAccommodation(stay);
   const canChangePaymentMethod = canChangeStayPaymentMethod(stay);
   const isWeb3Enabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
   const needsTokenStakeCompletion =
@@ -132,6 +142,7 @@ export function StayPaymentTokenCreditControls({
   );
   const isApplyCreditsEnabled =
     canChangePaymentMethod &&
+    !stayUsesTokens &&
     creditsAmountToApply > 0 &&
     !isApplyingCredits &&
     !isStakeModalOpen;
@@ -139,6 +150,9 @@ export function StayPaymentTokenCreditControls({
     creditsAmountToApply >= tokenAccommodationVal && tokenAccommodationVal > 0;
 
   const applyCreditsDisabledExplanation = useMemo(() => {
+    if (stayUsesTokens) {
+      return undefined;
+    }
     if (isApplyCreditsEnabled || isApplyingCredits) {
       return undefined;
     }
@@ -155,6 +169,7 @@ export function StayPaymentTokenCreditControls({
   }, [
     isApplyCreditsEnabled,
     isApplyingCredits,
+    stayUsesTokens,
     canChangePaymentMethod,
     tokenAccommodationVal,
     creditsBalance,
@@ -461,6 +476,7 @@ export function StayPaymentTokenCreditControls({
 
   const openCreditsConfirmationModal = () => {
     if (!showTokenCreditPaymentOptions) return;
+    if (stayUsesTokens) return;
     if (!canChangePaymentMethod || creditsAmountToApply <= 0) return;
     if (isStakeModalOpen) return;
     setCreditsModalError(null);
@@ -474,6 +490,7 @@ export function StayPaymentTokenCreditControls({
 
   const confirmApplyCredits = async () => {
     if (!showTokenCreditPaymentOptions) return;
+    if (stayUsesTokens) return;
     if (!canChangePaymentMethod || creditsAmountToApply <= 0) return;
     setCreditsModalError(null);
     setBannerError(null);
@@ -500,6 +517,30 @@ export function StayPaymentTokenCreditControls({
       setCreditsModalError(parseMessageFromError(err));
     } finally {
       setIsApplyingCredits(false);
+    }
+  };
+
+  const handleCancelTokenPayment = async () => {
+    if (!showTokenCreditPaymentOptions) return;
+    if (!stayUsesTokens) return;
+    if (!canChangePaymentMethod) return;
+    setCreditsModalError(null);
+    setBannerError(null);
+    setIsRevertingTokenPayment(true);
+    try {
+      let editableStay = stay;
+      if (editableStay.status === 'draft') {
+        editableStay = await submitStay(editableStay._id);
+        await onStaySynced();
+        const refetched = await getStay(editableStay._id);
+        if (refetched) editableStay = refetched;
+      }
+      await setStayPaymentMethod(editableStay._id, { method: 'fiat' });
+      await onStaySynced();
+    } catch (err) {
+      setBannerError(parseMessageFromError(err));
+    } finally {
+      setIsRevertingTokenPayment(false);
     }
   };
 
@@ -560,28 +601,49 @@ export function StayPaymentTokenCreditControls({
                 )}
               </>
             )}
-            <div
-              className={
-                applyCreditsDisabledExplanation
-                  ? 'w-full cursor-help'
-                  : 'w-full'
-              }
-              {...(applyCreditsDisabledExplanation
-                ? { title: applyCreditsDisabledExplanation }
-                : {})}
-            >
-              <Button
-                onClick={openCreditsConfirmationModal}
-                variant="secondary"
-                size="small"
-                isFullWidth={false}
-                isEnabled={isApplyCreditsEnabled}
-                isLoading={isApplyingCredits}
-                className={compactPaymentButtonClass}
+            {!stayUsesTokens ? (
+              <div
+                className={
+                  applyCreditsDisabledExplanation
+                    ? 'w-full cursor-help'
+                    : 'w-full'
+                }
+                {...(applyCreditsDisabledExplanation
+                  ? { title: applyCreditsDisabledExplanation }
+                  : {})}
               >
-                {t('stay_create_apply_credits_button')}
-              </Button>
-            </div>
+                <Button
+                  onClick={openCreditsConfirmationModal}
+                  variant="secondary"
+                  size="small"
+                  isFullWidth={false}
+                  isEnabled={isApplyCreditsEnabled}
+                  isLoading={isApplyingCredits}
+                  className={compactPaymentButtonClass}
+                >
+                  {t('stay_create_apply_credits_button')}
+                </Button>
+              </div>
+            ) : (
+              canChangePaymentMethod && (
+                <button
+                  type="button"
+                  onClick={() => void handleCancelTokenPayment()}
+                  disabled={
+                    isRevertingTokenPayment ||
+                    isApplyingCredits ||
+                    isStakeModalOpen ||
+                    isStaking ||
+                    isVerifyingStake
+                  }
+                  className="text-sm text-accent underline text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isRevertingTokenPayment
+                    ? t('stay_create_cancel_token_payment_loading')
+                    : t('stay_create_cancel_token_payment_link')}
+                </button>
+              )
+            )}
           </>
         ) : (
           needsTokenStakeCompletion && (

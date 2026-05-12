@@ -4,6 +4,8 @@ import {
   STAY_TERMINAL_STATUSES,
   buildStayTokenStakePlan,
   canApplyTokenOrCreditsToStay,
+  canAugmentTokenOrCreditsPayment,
+  canShowStayTokenCreditPaymentOptions,
   canChangeStayPaymentMethod,
   computeCreditsOwed,
   computeFiatDiscountFromStayQuote,
@@ -18,6 +20,7 @@ import {
   isStayCheckoutDraft,
   isStayPaid,
   isStayTerminal,
+  stayUsesTokenAccommodation,
 } from '../stays.api';
 
 import type { Stay, StayMoney, StayQuoteResponse } from '../../types/stay';
@@ -103,6 +106,45 @@ describe('isStayPaid / isStayAwaitingPayment', () => {
     expect(isStayPaid(undefined)).toBe(false);
     expect(isStayAwaitingPayment(null)).toBe(false);
     expect(isStayAwaitingPayment(undefined)).toBe(false);
+  });
+});
+
+describe('canAugmentTokenOrCreditsPayment', () => {
+  it('is true on confirmed when tokens or credits are still owed', () => {
+    expect(
+      canAugmentTokenOrCreditsPayment(
+        baseStay({
+          status: 'confirmed',
+          tokensTarget: { val: 10, cur: 'TDF' },
+          tokensStaked: { val: 3, cur: 'TDF' },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      canAugmentTokenOrCreditsPayment(
+        baseStay({
+          status: 'confirmed',
+          creditsTarget: { val: 50, cur: 'credits' },
+          creditsPaid: { val: 10, cur: 'credits' },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it('is false when not awaiting payment or nothing owed', () => {
+    expect(canAugmentTokenOrCreditsPayment(baseStay({ status: 'draft' }))).toBe(
+      false,
+    );
+    expect(
+      canAugmentTokenOrCreditsPayment(
+        baseStay({
+          status: 'confirmed',
+          tokensTarget: { val: 5, cur: 'TDF' },
+          tokensStaked: { val: 5, cur: 'TDF' },
+          creditsTarget: { val: 0, cur: 'credits' },
+        }),
+      ),
+    ).toBe(false);
   });
 });
 
@@ -221,6 +263,73 @@ describe('canApplyTokenOrCreditsToStay', () => {
       true,
     );
     expect(isStayCheckoutDraft(baseStay({ status: 'Draft' }))).toBe(true);
+  });
+});
+
+describe('canShowStayTokenCreditPaymentOptions', () => {
+  it('returns false when stay is missing', () => {
+    expect(canShowStayTokenCreditPaymentOptions(null, true)).toBe(false);
+    expect(canShowStayTokenCreditPaymentOptions(undefined, true)).toBe(false);
+  });
+
+  it('shows for draft when member only', () => {
+    const draft = baseStay({ status: 'draft' });
+    expect(canShowStayTokenCreditPaymentOptions(draft, true)).toBe(true);
+    expect(canShowStayTokenCreditPaymentOptions(draft, false)).toBe(false);
+  });
+
+  it('shows for confirmed when member or non-member', () => {
+    const stay = baseStay({ status: 'confirmed' });
+    expect(canShowStayTokenCreditPaymentOptions(stay, false)).toBe(true);
+    expect(canShowStayTokenCreditPaymentOptions(stay, true)).toBe(true);
+  });
+
+  it('shows for pending-payment when member only', () => {
+    const stay = baseStay({ status: 'pending-payment' });
+    expect(canShowStayTokenCreditPaymentOptions(stay, true)).toBe(true);
+    expect(canShowStayTokenCreditPaymentOptions(stay, false)).toBe(false);
+  });
+
+  it('hides when token or credits cannot be applied', () => {
+    expect(
+      canShowStayTokenCreditPaymentOptions(baseStay({ status: 'pending' }), true),
+    ).toBe(false);
+    expect(
+      canShowStayTokenCreditPaymentOptions(baseStay({ status: 'paid' }), true),
+    ).toBe(false);
+  });
+});
+
+describe('stayUsesTokenAccommodation', () => {
+  it('returns true when booking useTokens flag is set', () => {
+    expect(stayUsesTokenAccommodation(baseStay({ useTokens: true }))).toBe(
+      true,
+    );
+  });
+
+  it('returns true when stay has partial or full token payment choice', () => {
+    const partial = baseStay({
+      status: 'confirmed',
+      rentalToken: { val: 10, cur: 'TDF' },
+      tokensTarget: { val: 3, cur: 'TDF' },
+    });
+    expect(stayUsesTokenAccommodation(partial)).toBe(true);
+
+    const full = baseStay({
+      status: 'confirmed',
+      rentalToken: { val: 4, cur: 'TDF' },
+      tokensTarget: { val: 4, cur: 'TDF' },
+    });
+    expect(stayUsesTokenAccommodation(full)).toBe(true);
+  });
+
+  it('returns false for fiat-only accommodation when useTokens is unset', () => {
+    const stay = baseStay({
+      status: 'confirmed',
+      rentalToken: { val: 10, cur: 'TDF' },
+      tokensTarget: { val: 0, cur: 'TDF' },
+    });
+    expect(stayUsesTokenAccommodation(stay)).toBe(false);
   });
 });
 

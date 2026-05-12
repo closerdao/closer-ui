@@ -30,6 +30,7 @@ import { Stay, StayCheckoutResponse } from '../../../types/stay';
 import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import {
+  canShowStayTokenCreditPaymentOptions,
   checkoutStay,
   computeCreditsOwed,
   computeFiatOwed,
@@ -40,7 +41,6 @@ import {
   isStayAwaitingHostApproval,
   isStayPaid,
   isStayTerminal,
-  canApplyTokenOrCreditsToStay,
   formatStayMoney,
 } from '../../../utils/stays.api';
 
@@ -74,6 +74,8 @@ function StayPaymentInner({
 }) {
   const router = useRouter();
   const t = useTranslations();
+  const { user } = useAuth();
+  const isMember = Boolean(user?.roles?.includes('member'));
   const stripe = useStripe();
   const elements = useElements();
 
@@ -465,7 +467,7 @@ function StayPaymentInner({
           </div>
         </BookingSurface>
 
-        {canApplyTokenOrCreditsToStay(stay) && (
+        {canShowStayTokenCreditPaymentOptions(stay, isMember) && (
         <BookingSurface tone="elevated" padding="lg" as="section">
           <Heading level={2} className="text-lg mb-2">
             {t('stay_payment_page_tokens_credits_title')}
