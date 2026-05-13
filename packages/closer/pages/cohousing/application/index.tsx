@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
@@ -117,12 +118,12 @@ const CohousingApplicationIndexPage = () => {
       </Head>
       <main className="main-content w-full max-w-lg mx-auto px-4 py-16 text-center space-y-4">
         <p className="text-gray-700">{t('cohousing_app_no_application')}</p>
-        <a
+        <Link
           href="/cohousing"
           className="inline-block text-accent font-medium underline"
         >
           {t('cohousing_app_back_cohousing')}
-        </a>
+        </Link>
       </main>
     </>
   );

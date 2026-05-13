@@ -1,13 +1,9 @@
 import Head from 'next/head';
-import { useEffect } from 'react';
-
-import { useRouter } from 'next/router';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import PageEditor from '../../../components/PageEditor/PageEditor';
-import { Button, Heading } from '../../../components/ui';
 
 import { useAuth } from '../../../contexts/auth';
 import useRBAC from '../../../hooks/useRBAC';

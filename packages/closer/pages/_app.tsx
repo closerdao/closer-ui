@@ -15,7 +15,6 @@ import {
   ConfigProvider,
   ErrorBoundary,
   PlatformProvider,
-  api,
 } from 'closer';
 import LocaleMessagesNextIntlBridge from '../components/LocaleMessagesNextIntlBridge';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
