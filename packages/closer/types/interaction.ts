@@ -2,19 +2,17 @@ export type InteractionInitApiResponse = {
   results: { sessionkey: string };
 };
 
-export type InteractionUserRef =
-  | string
-  | {
-      _id?: string;
-      screenname?: string;
-      email?: string;
-      photo?: string;
-      slug?: string;
-      timezone?: string;
-      lastactive?: string;
-    };
+export type InteractionEmbeddedUser = {
+  _id?: string;
+  screenname?: string;
+  email?: string;
+  photo?: string;
+  slug?: string;
+  timezone?: string;
+  lastactive?: string;
+};
 
-export type InteractionEmbeddedUser = Exclude<InteractionUserRef, string>;
+export type InteractionUserRef = string | InteractionEmbeddedUser;
 
 export type InteractionDocument = {
   _id: string;
