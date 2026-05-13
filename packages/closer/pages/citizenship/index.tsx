@@ -36,10 +36,10 @@ import { usePlatform } from '../../contexts/platform';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
 import { CitizenshipConfig } from '../../types/api';
-import api from '../../utils/api';
-import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { twitterUrlToHandle } from '../../utils/app.helpers';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import { logMetric } from '../../utils/metrics';
 import PageNotFound from '../not-found';
 
 const CITIZEN_TARGET = 300;
@@ -81,20 +81,12 @@ const CitizenshipPage = ({
   ]);
   const { getTotalCostWithoutWallet, isConfigReady } = useBuyTokens();
 
-  // Track citizenship page view
   useEffect(() => {
-    (async () => {
-      try {
-        await api.post('/metric', {
-          event: 'page-view',
-          value: 'citizenship',
-          point: 0,
-          category: 'engagement',
-        });
-      } catch (error) {
-        console.error('Error tracking citizenship page view:', error);
-      }
-    })();
+    void logMetric({
+      event: 'page-view',
+      category: 'citizenship',
+      value: 'view',
+    });
   }, []);
   const { platform }: any = usePlatform();
 
@@ -365,17 +357,10 @@ const CitizenshipPage = ({
                 <Link
                   href="/subscriptions/citizen/why"
                   onClick={() => {
-                    api.post('/metric', {
+                    void logMetric({
                       event: 'become-citizen-button-click',
-                      value: 'citizenship',
-                      point: 0,
-                      category: 'engagement',
-                    });
-                    api.post('/metric', {
-                      event: 'subscribe-button-click',
-                      value: 'citizenship',
-                      point: 0,
-                      category: 'engagement',
+                      category: 'citizenship',
+                      value: 'click',
                     });
                   }}
                 >
@@ -590,7 +575,10 @@ const CitizenshipPage = ({
                       {t('citizenship_from')}
                     </div>
                     <div className="text-4xl font-semibold leading-tight">
-                      {formatIsoFiatAmount(tokenPlans[0]?.monthlyPayment || 0, 'EUR')}
+                      {formatIsoFiatAmount(
+                        tokenPlans[0]?.monthlyPayment || 0,
+                        'EUR',
+                      )}
                       <span className="text-base font-normal">
                         {t('citizenship_per_month')}
                       </span>

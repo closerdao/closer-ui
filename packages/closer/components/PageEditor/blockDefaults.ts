@@ -1,4 +1,5 @@
 import type { PageDoc, PageSection, SectionType } from '../../types/page';
+import { sanitizeSection } from './sectionValidation';
 
 export const newLocalId = () =>
   `l_${Math.random().toString(36).slice(2, 11)}`;
@@ -34,8 +35,9 @@ export const mergeSectionLocalIds = (
 };
 
 export const stripForApi = (page: PageDoc): Record<string, unknown> => {
-  const sections = (page.sections ?? []).map(({ _localId: _l, ...rest }) => {
-    const { _id, type, data } = rest;
+  const sections = (page.sections ?? []).map((section) => {
+    const sanitized = sanitizeSection(section);
+    const { _localId: _l, _id, type, data } = sanitized;
     const payload: Record<string, unknown> = { type, data };
     if (_id) payload._id = _id;
     return payload;

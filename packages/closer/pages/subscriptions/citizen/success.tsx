@@ -18,8 +18,8 @@ import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
 import { GeneralConfig } from '../../../types';
 import { SubscriptionPlan } from '../../../types/subscriptions';
-import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
+import { logMetric } from '../../../utils/metrics';
 import PageNotFound from '../../not-found';
 
 interface Props {}
@@ -72,40 +72,30 @@ const SuccessCitizenPage: NextPage<Props> = () => {
   }, [isLoading]);
 
   useEffect(() => {
-    // Track financed token purchase completion
     if (intent === 'finance' && user?.citizenship?.tokensToFinance) {
-      api.post('/metric', {
+      const n = user.citizenship.tokensToFinance;
+      void logMetric({
         event: 'financed-token-purchase-completed',
-        value: 'citizenship',
-        point: user.citizenship.tokensToFinance,
-        category: 'engagement',
+        category: 'citizenship',
+        value: 'finance-complete', point: n,
       });
       if (user.citizenship.tokensToFinance >= 30) {
-        api.post('/metric', {
+        void logMetric({
           event: 'citizen-bought-30-tokens',
-          value: 'citizenship',
-          point: user.citizenship.tokensToFinance,
-          category: 'engagement',
+          category: 'citizenship',
+          value: 'milestone-30', point: n,
         });
       }
     }
   }, [intent, user?.citizenship?.tokensToFinance]);
 
-  // Track when someone becomes a citizen
   useEffect(() => {
     if (user?.citizenship?.status === 'completed' && user?.roles?.includes('citizen')) {
-      (async () => {
-        try {
-          await api.post('/metric', {
-            event: 'citizen-qualified',
-            value: 'citizenship',
-            point: 0,
-            category: 'engagement',
-          });
-        } catch (error) {
-          console.error('Error tracking citizen qualification:', error);
-        }
-      })();
+      void logMetric({
+        event: 'citizen-qualified',
+        category: 'citizenship',
+        value: 'qualified',
+      });
     }
   }, [user?.citizenship?.status, user?.roles]);
 

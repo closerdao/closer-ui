@@ -70,8 +70,8 @@ const ChecklistCryptoPage = () => {
     const point = sid ? await fetchTokenSaleQuantityForMetric(sid) : 0;
     void logMetric({
       event: 'continue-checklist-crypto',
-      value: 'token-sale',
-      point,
+      category: 'token',
+      value: 'checklist-continue', point: point,
     });
     const encodedSaleId = encodeURIComponent(sid);
     router.push(

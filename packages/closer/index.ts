@@ -51,6 +51,7 @@ export * from './contexts/wallet';
 // Hooks
 export * from './hooks/useConfig';
 export * from './hooks/useHasMounted';
+export { useNavigationMetrics } from './hooks/useNavigationMetrics';
 export { useSalePaidRedirect } from './hooks/useSalePaidRedirect';
 export * from './hooks/useRBAC';
 export { default as Page401 } from './pages/401';

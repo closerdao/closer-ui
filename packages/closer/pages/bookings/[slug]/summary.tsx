@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import {
@@ -50,7 +50,7 @@ import {
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { logMetricIfAuthenticated } from '../../../utils/metrics';
+import { logMetric } from '../../../utils/metrics';
 import {
   accommodationTokenTotalFromPriceLock,
   computeCreditsOwed,
@@ -129,6 +129,21 @@ const Summary = ({
   const { isAuthenticated, user } = useAuth();
 
   useRedirectPaidBookingToDetail(booking);
+
+  const summaryViewMetricLoggedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!booking?._id) return;
+    const idKey = String(booking._id);
+    if (summaryViewMetricLoggedRef.current === idKey) return;
+    summaryViewMetricLoggedRef.current = idKey;
+    const pt =
+      Math.round(Number(booking.duration ?? booking.adults ?? 0) || 0) || 1;
+    void logMetric({
+      event: 'booking-summary-view',
+      category: 'booking',
+      value: 'view', point: pt,
+    });
+  }, [booking?._id, booking?.duration, booking?.adults]);
 
   const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
   const vatRateFromConfig = Number(paymentConfig?.vatRate);
@@ -238,10 +253,10 @@ const Summary = ({
     setHandleNextError(null);
     const metricPoint = Math.round(Number(duration ?? adults ?? 0)) || 0;
     if (booking?.status === 'confirmed') {
-      void logMetricIfAuthenticated(user, {
+      void logMetric({
         event: 'booking-summary-to-checkout',
-        value: 'booking',
-        point: metricPoint,
+        category: 'booking',
+        value: 'checkout', point: metricPoint,
       });
       setLoading(false);
       return router.push(afterSummaryCheckoutPath);
@@ -251,25 +266,25 @@ const Summary = ({
       const status = res.data.results.status;
 
       if (status === 'confirmed') {
-        void logMetricIfAuthenticated(user, {
+        void logMetric({
           event: 'booking-summary-complete-success',
-          value: 'booking',
-          point: metricPoint,
+          category: 'booking',
+          value: 'confirmed', point: metricPoint,
         });
         router.push(afterSummaryCheckoutPath);
       } else if (status === 'pending') {
-        void logMetricIfAuthenticated(user, {
+        void logMetric({
           event: 'booking-summary-pending-success',
-          value: 'booking',
-          point: metricPoint,
+          category: 'booking',
+          value: 'pending', point: metricPoint,
         });
         router.push(`/bookings/${booking?._id}`);
       }
     } catch (err) {
-      void logMetricIfAuthenticated(user, {
+      void logMetric({
         event: 'booking-summary-complete-error',
-        value: 'booking',
-        point: metricPoint,
+        category: 'booking',
+        value: 'error', point: metricPoint,
       });
       setHandleNextError(parseMessageFromError(err));
     } finally {
@@ -302,26 +317,29 @@ const Summary = ({
       });
 
       if (res.status === 200) {
-        void logMetricIfAuthenticated(user, {
+        const p = Math.round(Number(duration ?? adults ?? 0)) || 0;
+        void logMetric({
           event: 'booking-friends-send-success',
-          value: 'booking',
-          point: Math.round(Number(duration ?? adults ?? 0)) || 0,
+          category: 'booking',
+          value: 'friends', point: p,
         });
         setEmailSuccess(true);
       } else {
-        void logMetricIfAuthenticated(user, {
+        const p = Math.round(Number(duration ?? adults ?? 0)) || 0;
+        void logMetric({
           event: 'booking-friends-send-error',
-          value: 'booking',
-          point: Math.round(Number(duration ?? adults ?? 0)) || 0,
+          category: 'booking',
+          value: 'friends', point: p,
         });
         setEmailSuccess(false);
         setEmailError(res.data.error);
       }
     } catch (error) {
-      void logMetricIfAuthenticated(user, {
+      const p = Math.round(Number(duration ?? adults ?? 0)) || 0;
+      void logMetric({
         event: 'booking-friends-send-error',
-        value: 'booking',
-        point: Math.round(Number(duration ?? adults ?? 0)) || 0,
+        category: 'booking',
+        value: 'friends', point: p,
       });
       setEmailSuccess(false);
       setEmailError(parseMessageFromError(error));

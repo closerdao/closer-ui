@@ -30,7 +30,6 @@ import {
   SelectedPlan,
   SubscriptionPlan, // Tier,
 } from '../../types/subscriptions';
-import api from '../../utils/api';
 import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import {
@@ -38,6 +37,7 @@ import {
   getVatInfo,
   priceFormat,
 } from '../../utils/helpers';
+import { logMetric } from '../../utils/metrics';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
@@ -88,21 +88,19 @@ const SubscriptionsCheckoutPage: NextPage<Props> = () => {
 
   useEffect(() => {
     if (!hasComponentRendered.current && selectedPlan) {
-      (async () => {
-        try {
-          await api.post('/metric', {
-            event:
-              selectedPlan?.title.toLowerCase() === 'wanderer'
-                ? 'tier-1-checkout'
-                : 'tier-2-checkout',
-            value: 'subscriptions',
-            point: 0,
-            category: 'engagement',
-          });
-        } catch (error) {
-          console.error('Error logging page view:', error);
-        }
-      })();
+      void logMetric({
+        event:
+          selectedPlan?.title.toLowerCase() === 'wanderer'
+            ? 'tier-1-checkout'
+            : 'tier-2-checkout',
+        category: 'subscriptions',
+        value: 'checkout',
+      });
+      void logMetric({
+        event: 'subscription-checkout-started',
+        category: 'subscriptions',
+        value: 'payment',
+      });
       hasComponentRendered.current = true;
     }
   }, [selectedPlan]);

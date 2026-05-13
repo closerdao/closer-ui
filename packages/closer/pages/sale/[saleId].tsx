@@ -23,6 +23,7 @@ import {
 import { resolveAccountingEntityFromSale } from '../../utils/accountingEntityResolve';
 import api, { formatSearch } from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { logMetric } from '../../utils/metrics';
 import { parseMessageFromError } from '../../utils/common';
 import {
   formatIsoFiatAmount,
@@ -156,11 +157,10 @@ const SaleSummaryPage = () => {
     });
     const qty = sale.quantity;
     if (typeof qty === 'number' && Number.isFinite(qty) && qty > 0) {
-      api.post('/metric', {
+      void logMetric({
         event: 'token-sale-success',
-        value: 'token-sale',
-        point: qty,
-        category: 'engagement',
+        category: 'token',
+        value: 'sale', point: qty,
       });
     }
   }, [sale?._id, sale?.product_type]);

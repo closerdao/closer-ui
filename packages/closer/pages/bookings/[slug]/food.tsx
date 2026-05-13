@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
@@ -38,7 +38,7 @@ import {
   FoodBookingContext,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { logMetricIfAuthenticated } from '../../../utils/metrics';
+import { logMetric } from '../../../utils/metrics';
 import { priceFormat } from '../../../utils/helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -185,6 +185,19 @@ const FoodSelectionPage = ({
 
   const { isAuthenticated, user } = useAuth();
 
+  const foodStepMetricLoggedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!booking?._id) return;
+    const idKey = String(booking._id);
+    if (foodStepMetricLoggedRef.current === idKey) return;
+    foodStepMetricLoggedRef.current = idKey;
+    void logMetric({
+      event: 'booking-food-view',
+      category: 'booking',
+      value: 'view',
+    });
+  }, [booking?._id]);
+
   useRedirectPaidBookingToDetail(booking);
 
   const eventFoodOptionSet = Boolean(
@@ -311,10 +324,10 @@ const FoodSelectionPage = ({
       };
       await platform.bookings.updateFood(booking?._id, payload);
 
-      void logMetricIfAuthenticated(user, {
+      const pt = durationNights || adults || 0;
+      void logMetric({
         event: 'booking-food-update-success',
-        value: 'booking',
-        point: durationNights || adults || 0,
+        value: 'food', point: pt,
       });
 
       if (event?.fields) {
@@ -324,10 +337,11 @@ const FoodSelectionPage = ({
 
       router.push(`/bookings/${booking?._id}/rules`);
     } catch (err: any) {
-      void logMetricIfAuthenticated(user, {
+      const pt = durationNights || adults || 0;
+      void logMetric({
         event: 'booking-food-update-error',
-        value: 'booking',
-        point: durationNights || adults || 0,
+        category: 'booking',
+        value: 'food', point: pt,
       });
       setApiError(parseMessageFromError(err));
     } finally {

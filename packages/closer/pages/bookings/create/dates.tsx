@@ -35,7 +35,7 @@ import config from '../../../configCached';
 import api from '../../../utils/api';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
-import { logMetricIfAuthenticated } from '../../../utils/metrics';
+import { logMetric } from '../../../utils/metrics';
 import { getMaxBookingHorizon } from '../../../utils/helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import ProjectPreview from '../../../components/ProjectPreview';
@@ -142,6 +142,20 @@ const DatesSelector = ({
     : '';
   const isResidenceApplication = decodedBookingType === 'residence';
   const isVolunteerApplication = decodedBookingType === 'volunteer';
+
+  useEffect(() => {
+    if (!isBookingEnabled) return;
+    const mode = eventId
+      ? String(eventId)
+      : volunteerId
+        ? 'volunteer'
+        : 'guest';
+    void logMetric({
+      event: 'booking-dates-view',
+      category: 'booking',
+      value: mode,
+    });
+  }, [isBookingEnabled, eventId, volunteerId]);
 
   useEffect(() => {
     if (normalizedIsFriendsBooking && user?._id && !userBookings) {
@@ -411,10 +425,10 @@ const DatesSelector = ({
     setHandleNextError(null);
 
     if (event?.paid && !selectedTicketOption) {
-      void logMetricIfAuthenticated(user, {
+      void logMetric({
         event: 'booking-dates-error',
-        value: 'booking',
-        point: adults,
+        category: 'booking',
+        value: 'ticket', point: adults,
       });
       setHandleNextError(t('bookings_error_no_ticket_option'));
       return;
@@ -486,10 +500,10 @@ const DatesSelector = ({
           ...(friendEmails && { friendEmails }),
         });
 
-        void logMetricIfAuthenticated(user, {
+        void logMetric({
           event: 'booking-dates-request-success',
-          value: 'booking',
-          point: adults,
+          category: 'booking',
+          value: 'day-ticket', point: adults,
         });
         router.push(`/bookings/${newBooking._id}/food`);
         return;
@@ -505,18 +519,19 @@ const DatesSelector = ({
           start && end
             ? Math.max(0, dayjs(end as string).diff(dayjs(start as string), 'day'))
             : 0;
-        void logMetricIfAuthenticated(user, {
+        const pt = nights || adults;
+        void logMetric({
           event: 'booking-dates-continue-success',
-          value: 'booking',
-          point: nights || adults,
+          category: 'booking',
+          value: 'continue', point: pt,
         });
         router.push(`/bookings/create/accomodation?${urlParams}`);
       }
     } catch (err: any) {
-      void logMetricIfAuthenticated(user, {
+      void logMetric({
         event: 'booking-dates-error',
-        value: 'booking',
-        point: adults,
+        category: 'booking',
+        value: 'error', point: adults,
       });
       setHandleNextError(parseMessageFromError(err));
     }

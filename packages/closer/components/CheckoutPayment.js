@@ -15,7 +15,7 @@ import { useBookingSmartContract } from '../hooks/useBookingSmartContract';
 import { useConfig } from '../hooks/useConfig';
 import { payTokens } from '../utils/booking.helpers';
 import { parseMessageFromError } from '../utils/common';
-import { logMetricIfAuthenticated } from '../utils/metrics';
+import { logMetric } from '../utils/metrics';
 import { reportIssue } from '../utils/reporting.utils';
 import CheckoutForm from './CheckoutForm';
 import Conditions from './Conditions';
@@ -97,10 +97,11 @@ const CheckoutPayment = ({
   const onComply = (isComplete) => setCompliance(isComplete);
 
   const onSuccess = async () => {
-    void logMetricIfAuthenticated(user, {
+    const p = Math.round(Number(totalToPayInFiat?.val) || 0);
+    void logMetric({
       event: 'booking-payment-success',
-      value: 'booking',
-      point: Math.round(Number(totalToPayInFiat?.val) || 0),
+      category: 'booking',
+      value: 'success', point: p,
     });
     try {
       await router.push(

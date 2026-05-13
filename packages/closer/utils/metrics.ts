@@ -8,30 +8,15 @@ export type LogMetricInput = {
   number?: number;
 };
 
-export async function logMetricIfAuthenticated(
-  user: { _id?: string } | null | undefined,
-  input: LogMetricInput,
-): Promise<void> {
-  if (!user?._id) {
-    return;
-  }
-  await logMetric(input);
-}
-
 export async function logMetric(input: LogMetricInput): Promise<void> {
-  const {
-    event,
-    value,
-    point = 1,
-    category = 'engagement',
-    number: numberField,
-  } = input;
+  const { event, value, category, number: numberField } = input;
+  const point = input.point ?? 1;
   try {
     await api.post('/metric', {
       event,
       ...(value !== undefined ? { value } : {}),
-      point,
-      category,
+      ...(point !== 1 ? { point } : {}),
+      ...(category !== undefined ? { category } : {}),
       ...(numberField !== undefined ? { number: numberField } : {}),
     });
   } catch (error) {

@@ -6,6 +6,11 @@ import Modal from '../Modal';
 import { Button, Input, Textarea } from '../ui';
 
 import { slugify } from '../../utils/common';
+import {
+  sanitizePageSections,
+  validatePageSections,
+} from './sectionValidation';
+import type { PageSection } from '../../types/page';
 
 export interface NewPageData {
   title: string;
@@ -26,7 +31,11 @@ export const buildNewPagePayload = (
   };
   if (!data.customData) return base;
   const { _id: _ignoredId, ...rest } = data.customData;
-  return { ...base, ...rest };
+  const merged: Record<string, unknown> = { ...base, ...rest };
+  if (Array.isArray(merged.sections)) {
+    merged.sections = sanitizePageSections(merged.sections as PageSection[]);
+  }
+  return merged;
 };
 
 interface Props {
@@ -34,6 +43,8 @@ interface Props {
   onClose: () => void;
   onCreate: (data: NewPageData) => Promise<void> | void;
   isSubmitting?: boolean;
+  submitError?: string | null;
+  onClearSubmitError?: () => void;
 }
 
 const TOP_LEVEL_STRING_FIELDS = ['title', 'description', 'slug', 'ogImage'] as const;
@@ -77,38 +88,29 @@ const validateCustomJson = (raw: string): ValidationResult => {
   }
 
   if ('sections' in obj && obj.sections != null) {
-    if (!Array.isArray(obj.sections)) {
-      return { ok: false, error: '"sections" must be an array.' };
-    }
-    for (let i = 0; i < obj.sections.length; i++) {
-      const s = obj.sections[i];
-      if (typeof s !== 'object' || s === null || Array.isArray(s)) {
-        return { ok: false, error: `sections[${i}] must be an object.` };
-      }
-      const sec = s as Record<string, unknown>;
-      if (typeof sec.type !== 'string' || !sec.type.trim()) {
-        return {
-          ok: false,
-          error: `sections[${i}].type must be a non-empty string.`,
-        };
-      }
-      if (
-        typeof sec.data !== 'object' ||
-        sec.data === null ||
-        Array.isArray(sec.data)
-      ) {
-        return {
-          ok: false,
-          error: `sections[${i}].data must be an object.`,
-        };
-      }
+    const sectionErrors = validatePageSections(obj.sections);
+    if (sectionErrors.length > 0) {
+      return {
+        ok: false,
+        error: sectionErrors
+          .slice(0, 5)
+          .map((e) => e.message)
+          .join('\n'),
+      };
     }
   }
 
   return { ok: true, parsed: obj };
 };
 
-const NewPageDialog = ({ open, onClose, onCreate, isSubmitting }: Props) => {
+const NewPageDialog = ({
+  open,
+  onClose,
+  onCreate,
+  isSubmitting,
+  submitError,
+  onClearSubmitError,
+}: Props) => {
   const t = useTranslations();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -125,7 +127,9 @@ const NewPageDialog = ({ open, onClose, onCreate, isSubmitting }: Props) => {
       setSlugTouched(false);
       setCustomData('');
       setAdvancedOpen(false);
+      onClearSubmitError?.();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   useEffect(() => {
@@ -148,6 +152,7 @@ const NewPageDialog = ({ open, onClose, onCreate, isSubmitting }: Props) => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
+    onClearSubmitError?.();
     const finalSlug = normalizeSlug(slug) || toSlug(title) || '/';
     await onCreate({
       title: title.trim(),
@@ -249,9 +254,10 @@ const NewPageDialog = ({ open, onClose, onCreate, isSubmitting }: Props) => {
                 placeholder='{"sections": [{"type": "richText", "data": {"settings": {}, "content": {"html": "<p>Hello</p>"}}}]}'
               />
               {!validation.ok ? (
-                <span className="text-xs text-red-600 break-words">
-                  {t('pages_editor_new_page_custom_data_invalid')}: {validation.error}
-                </span>
+                <div className="text-xs text-red-600 break-words whitespace-pre-line">
+                  {t('pages_editor_new_page_custom_data_invalid')}:{'\n'}
+                  {validation.error}
+                </div>
               ) : (
                 <span className="text-xs text-gray-500">
                   {t('pages_editor_new_page_custom_data_help')}
@@ -260,6 +266,15 @@ const NewPageDialog = ({ open, onClose, onCreate, isSubmitting }: Props) => {
             </div>
           ) : null}
         </div>
+
+        {submitError ? (
+          <div
+            role="alert"
+            className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 break-words whitespace-pre-line"
+          >
+            {submitError}
+          </div>
+        ) : null}
 
         <div className="flex justify-end gap-2 mt-2">
           <Button

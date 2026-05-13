@@ -22,12 +22,17 @@ import NewPageDialog, {
   buildNewPagePayload,
 } from './NewPageDialog';
 import PagesSidebar from './PagesSidebar';
+import {
+  formatPageSaveError,
+  validatePageSections,
+} from './sectionValidation';
 
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import useRBAC from '../../hooks/useRBAC';
 import type { PageDoc, PageSection, SectionType } from '../../types/page';
 import api from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
 import PageNotFound from '../../pages/not-found';
 
 interface PageListItem {
@@ -98,6 +103,8 @@ const PageEditor = ({ initialPage, pages }: Props) => {
   const [inspectorOpen, setInspectorOpen] = useState(false);
   const [newPageOpen, setNewPageOpen] = useState(false);
   const [isCreatingPage, setIsCreatingPage] = useState(false);
+  const [newPageError, setNewPageError] = useState<string | null>(null);
+  const [saveErrorMessage, setSaveErrorMessage] = useState<string | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pageRef = useRef(page);
   pageRef.current = page;
@@ -111,9 +118,33 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         if (showLoading) setIsSaving(true);
         if (pageRef.current._id === targetId) setSaveStatus('saving');
         const payload = stripForApi(current);
+        const sectionErrors = validatePageSections(
+          (payload as { sections?: unknown }).sections,
+        );
+        if (sectionErrors.length > 0) {
+          if (pageRef.current._id === targetId) {
+            setSaveErrorMessage(
+              sectionErrors
+                .slice(0, 5)
+                .map((e) => e.message)
+                .join('\n'),
+            );
+            setSaveStatus('error');
+          }
+          return;
+        }
         const action = await platform.page.put(targetId, payload);
-        const updated = toPlain((action as { results?: unknown })?.results);
         const stillOnSamePage = pageRef.current._id === targetId;
+        const actionError = (action as { error?: unknown })?.error;
+        if (actionError) {
+          if (stillOnSamePage) {
+            const raw = parseMessageFromError(actionError);
+            setSaveErrorMessage(formatPageSaveError(raw) || raw || null);
+            setSaveStatus('error');
+          }
+          return;
+        }
+        const updated = toPlain((action as { results?: unknown })?.results);
         if (
           stillOnSamePage &&
           updated &&
@@ -130,9 +161,14 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         if (stillOnSamePage) {
           setIsDirty(false);
           setSaveStatus('saved');
+          setSaveErrorMessage(null);
         }
-      } catch {
-        if (pageRef.current._id === targetId) setSaveStatus('error');
+      } catch (err) {
+        if (pageRef.current._id === targetId) {
+          const raw = parseMessageFromError(err);
+          setSaveErrorMessage(formatPageSaveError(raw) || raw || null);
+          setSaveStatus('error');
+        }
       } finally {
         if (showLoading) setIsSaving(false);
       }
@@ -159,6 +195,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
 
   const bumpDirty = useCallback(() => {
     setIsDirty(true);
+    setSaveErrorMessage(null);
     scheduleSave();
   }, [scheduleSave]);
 
@@ -172,6 +209,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
     setSelectedLocalId(null);
     setIsDirty(false);
     setSaveStatus('saved');
+    setSaveErrorMessage(null);
   }, [initialPage._id, persist]);
 
   useEffect(() => {
@@ -432,6 +470,8 @@ const PageEditor = ({ initialPage, pages }: Props) => {
               onSave={handleSaveClick}
               isSaving={isSaving}
               saveStatus={saveStatus}
+              saveErrorMessage={saveErrorMessage}
+              onDismissSaveError={() => setSaveErrorMessage(null)}
             />
           </div>
           <div
@@ -465,25 +505,59 @@ const PageEditor = ({ initialPage, pages }: Props) => {
       />
       <NewPageDialog
         open={newPageOpen}
-        onClose={() => setNewPageOpen(false)}
+        onClose={() => {
+          setNewPageOpen(false);
+          setNewPageError(null);
+        }}
         isSubmitting={isCreatingPage}
+        submitError={newPageError}
+        onClearSubmitError={() => setNewPageError(null)}
         onCreate={async (data: NewPageData) => {
+          setIsCreatingPage(true);
+          setNewPageError(null);
           try {
-            setIsCreatingPage(true);
             const payload = buildNewPagePayload(data);
+            const sectionErrors = validatePageSections(
+              (payload as { sections?: unknown }).sections,
+            );
+            if (sectionErrors.length > 0) {
+              setNewPageError(
+                sectionErrors
+                  .slice(0, 5)
+                  .map((e) => e.message)
+                  .join('\n'),
+              );
+              return;
+            }
             const action = (await platform.page.post(payload)) as
               | { results?: unknown; error?: unknown }
               | undefined;
             if (action?.error) {
-              setSaveStatus('error');
+              const raw = parseMessageFromError(action.error);
+              setNewPageError(
+                formatPageSaveError(raw) ||
+                  raw ||
+                  t('pages_editor_new_page_create_error'),
+              );
               return;
             }
             const created = toPlain(action?.results) as
               | { _id?: string }
               | undefined;
             const id = created?._id;
+            if (!id) {
+              setNewPageError(t('pages_editor_new_page_create_error'));
+              return;
+            }
             setNewPageOpen(false);
-            if (id) await router.push(`/dashboard/pages/${id}`);
+            await router.push(`/dashboard/pages/${id}`);
+          } catch (err) {
+            const raw = parseMessageFromError(err);
+            setNewPageError(
+              formatPageSaveError(raw) ||
+                raw ||
+                t('pages_editor_new_page_create_error'),
+            );
           } finally {
             setIsCreatingPage(false);
           }

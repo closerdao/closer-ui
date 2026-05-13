@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import {
@@ -71,7 +71,7 @@ import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { formatDate } from '../../../utils/listings.helpers';
-import { logMetricIfAuthenticated } from '../../../utils/metrics';
+import { logMetric } from '../../../utils/metrics';
 
 dayjs.extend(dayOfYear);
 
@@ -552,8 +552,32 @@ const Checkout = ({
   const bookingPaymentMetricPoint = () =>
     Math.round(Number(duration ?? adults ?? total?.val ?? 0) || 0);
 
+  const checkoutViewMetricLoggedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!_id) return;
+    const idKey = String(_id);
+    if (checkoutViewMetricLoggedRef.current === idKey) return;
+    checkoutViewMetricLoggedRef.current = idKey;
+    const pt = bookingPaymentMetricPoint() || 1;
+    void logMetric({
+      event: 'booking-checkout-view',
+      category: 'booking',
+      value: 'view', point: pt,
+    });
+  }, [_id, duration, adults, total]);
+
+  const logBookingPaymentStartedMetric = () => {
+    const pt = bookingPaymentMetricPoint() || 1;
+    void logMetric({
+      event: 'booking-payment-started',
+      category: 'booking',
+      value: 'payment', point: pt,
+    });
+  };
+
   const handleFreeBooking = async () => {
     try {
+      logBookingPaymentStartedMetric();
       setProcessing(true);
       setPaymentError(null);
       if (hasCreditsAppliedFromStore && !booking?.paymentDelta?.fiat?.val) {
@@ -570,17 +594,19 @@ const Checkout = ({
         email: user?.email,
         name: user?.screenname,
       });
-      void logMetricIfAuthenticated(user, {
+      const p = bookingPaymentMetricPoint();
+      void logMetric({
         event: 'booking-payment-success',
-        value: 'booking',
-        point: bookingPaymentMetricPoint(),
+        category: 'booking',
+        value: 'success', point: p,
       });
       await router.push(`/bookings/${booking?._id}`);
     } catch (error) {
-      void logMetricIfAuthenticated(user, {
+      const pe = bookingPaymentMetricPoint();
+      void logMetric({
         event: 'booking-payment-error',
-        value: 'booking',
-        point: bookingPaymentMetricPoint(),
+        category: 'booking',
+        value: 'error', point: pe,
       });
       setPaymentError(parseMessageFromError(error));
     } finally {
@@ -802,14 +828,16 @@ const Checkout = ({
   const handleTokenOnlyBooking = async () => {
     const nativeCelo = Number(balanceNativeAvailable ?? 0);
     if (nativeCelo < MIN_CELO_FOR_GAS) {
-      void logMetricIfAuthenticated(user, {
+      const p = bookingPaymentMetricPoint();
+      void logMetric({
         event: 'booking-payment-token-error',
-        value: 'booking',
-        point: bookingPaymentMetricPoint(),
+        category: 'booking',
+        value: 'gas', point: p,
       });
       setPaymentError(t('insufficient_celo_for_gas'));
       return;
     }
+    logBookingPaymentStartedMetric();
     setProcessing(true);
     setPaymentError(null);
     setConflictingBookings(null);
@@ -835,10 +863,11 @@ const Checkout = ({
       debugInfo,
     } = tokenStakingResult || {};
     if (error) {
-      void logMetricIfAuthenticated(user, {
+      const p = bookingPaymentMetricPoint();
+      void logMetric({
         event: 'booking-payment-token-error',
-        value: 'booking',
-        point: bookingPaymentMetricPoint(),
+        category: 'booking',
+        value: 'token', point: p,
       });
       setProcessing(false);
       if (error === 'CONFLICTING_BOOKINGS' && conflicts) {
@@ -881,17 +910,19 @@ const Checkout = ({
         isTokenOnlyBooking: true,
         _id,
       });
-      void logMetricIfAuthenticated(user, {
+      const p = bookingPaymentMetricPoint();
+      void logMetric({
         event: 'booking-payment-success',
-        value: 'booking',
-        point: bookingPaymentMetricPoint(),
+        category: 'booking',
+        value: 'success', point: p,
       });
       await onSuccess();
     } catch (error) {
-      void logMetricIfAuthenticated(user, {
+      const pe = bookingPaymentMetricPoint();
+      void logMetric({
         event: 'booking-payment-error',
-        value: 'booking',
-        point: bookingPaymentMetricPoint(),
+        category: 'booking',
+        value: 'error', point: pe,
       });
       setPaymentError(parseMessageFromError(error));
     } finally {
@@ -911,26 +942,29 @@ const Checkout = ({
       });
 
       if (res.status === 200) {
-        void logMetricIfAuthenticated(user, {
+        const p = bookingPaymentMetricPoint();
+        void logMetric({
           event: 'booking-friends-send-success',
-          value: 'booking',
-          point: bookingPaymentMetricPoint(),
+          category: 'booking',
+          value: 'friends', point: p,
         });
         setEmailSuccess(true);
       } else {
-        void logMetricIfAuthenticated(user, {
+        const p = bookingPaymentMetricPoint();
+        void logMetric({
           event: 'booking-friends-send-error',
-          value: 'booking',
-          point: bookingPaymentMetricPoint(),
+          category: 'booking',
+          value: 'friends', point: p,
         });
         setEmailSuccess(false);
         setEmailError(res.data.error);
       }
     } catch (error) {
-      void logMetricIfAuthenticated(user, {
+      const p = bookingPaymentMetricPoint();
+      void logMetric({
         event: 'booking-friends-send-error',
-        value: 'booking',
-        point: bookingPaymentMetricPoint(),
+        category: 'booking',
+        value: 'friends', point: p,
       });
       setEmailSuccess(false);
       setEmailError(parseMessageFromError(error));

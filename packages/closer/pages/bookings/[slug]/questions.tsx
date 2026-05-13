@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
@@ -37,7 +37,7 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
-import { logMetricIfAuthenticated } from '../../../utils/metrics';
+import { logMetric } from '../../../utils/metrics';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 const prepareQuestions = (eventQuestions: any) => {
@@ -94,6 +94,19 @@ const Questionnaire = ({
     setUser,
   } = useAuth();
   const { APP_NAME } = useConfig();
+
+  const questionsStepMetricLoggedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!booking?._id) return;
+    const idKey = String(booking._id);
+    if (questionsStepMetricLoggedRef.current === idKey) return;
+    questionsStepMetricLoggedRef.current = idKey;
+    void logMetric({
+      event: 'booking-questions-view',
+      category: 'booking',
+      value: 'view',
+    });
+  }, [booking?._id]);
 
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -187,17 +200,19 @@ const Questionnaire = ({
       await platform.booking.patch(booking?._id, {
         fields: answers,
       });
-      void logMetricIfAuthenticated(initialUser, {
+      const pt = Number(booking?.duration ?? booking?.adults ?? 0) || 0;
+      void logMetric({
         event: 'booking-questions-save-success',
-        value: 'booking',
-        point: booking?.duration ?? booking?.adults ?? 0,
+        category: 'booking',
+        value: 'save', point: pt,
       });
       router.push(`/bookings/${booking?._id}/summary`);
     } catch (err) {
-      void logMetricIfAuthenticated(initialUser, {
+      const pt = Number(booking?.duration ?? booking?.adults ?? 0) || 0;
+      void logMetric({
         event: 'booking-questions-save-error',
-        value: 'booking',
-        point: booking?.duration ?? booking?.adults ?? 0,
+        category: 'booking',
+        value: 'save', point: pt,
       });
       console.log(err);
     }

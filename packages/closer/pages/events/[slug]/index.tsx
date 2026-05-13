@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import EventAttendees from '../../../components/EventAttendees';
 import EventDescription from '../../../components/EventDescription';
@@ -29,6 +29,7 @@ import config from '../../../configCached';
 import api, { cdn } from '../../../utils/api';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { logMetric } from '../../../utils/metrics';
 import { getAccommodationPriceRange } from '../../../utils/events.helpers';
 import {
   getBookingRate,
@@ -76,6 +77,19 @@ const EventPage = ({
   const [passwordError] = useState<null | string>(null);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+
+  const eventDetailMetricLoggedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!event?._id) return;
+    const idKey = String(event.slug || event._id);
+    if (eventDetailMetricLoggedRef.current === idKey) return;
+    eventDetailMetricLoggedRef.current = idKey;
+    void logMetric({
+      event: 'event-detail-viewed',
+      category: 'events',
+      value: 'view',
+    });
+  }, [event?._id, event?.slug]);
 
   const canEditEvent = user
     ? user?._id === event?.createdBy || user?.roles.includes('admin')

@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import { logMetric } from '../../utils/metrics';
 import { reportIssue } from '../../utils/reporting.utils';
 import SubscriptionConditions from '../SubscriptionConditions';
 import { Button, ErrorMessage } from '../ui/';
@@ -134,19 +135,13 @@ function SubscriptionCheckoutForm({
 
             if (validationResponse.data.results.status === 'succeeded') {
               await refetchUser();
-              
-              // Track subscription payment
-              try {
-                await api.post('/metric', {
-                  event: tierMetricEvent,
-                  value: 'subscriptions',
-                  point: 0,
-                  category: 'engagement',
-                });
-              } catch (error) {
-                console.error('Error tracking subscription payment:', error);
-              }
-              
+
+              void logMetric({
+                event: tierMetricEvent,
+                category: 'subscriptions',
+                value: 'payment',
+              });
+
               redirect(subscriptionId);
             }
           }
@@ -167,19 +162,13 @@ function SubscriptionCheckoutForm({
 
         if (validationResponse.data.results.status === 'succeeded') {
           await refetchUser();
-          
-          // Track subscription payment
-          try {
-            await api.post('/metric', {
-              event: tierMetricEvent,
-              value: 'subscriptions',
-              point: 0,
-              category: 'engagement',
-            });
-          } catch (error) {
-            console.error('Error tracking subscription payment:', error);
-          }
-          
+
+          void logMetric({
+            event: tierMetricEvent,
+            category: 'subscriptions',
+            value: 'payment',
+          });
+
           redirect(subscriptionId);
         } else {
           await reportIssue(`Error with /subscription/validation without 3d secure: ${parseMessageFromError(validationResponse.data.results.error)}`, userEmail);

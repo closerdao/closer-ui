@@ -20,6 +20,7 @@ import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import { parseSubscriptionPerks } from '../../utils/subscriptionPerks';
 import { sanitizeSubscriptionPerkHtml } from '../../utils/sanitizeSubscriptionPerkHtml';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
+import { logMetric } from '../../utils/metrics';
 import PageNotFound from '../not-found';
 
 interface Props {}
@@ -54,18 +55,11 @@ const SubscriptionsPage: NextPage<Props> = () => {
 
   useEffect(() => {
     if (!hasComponentRendered.current) {
-      (async () => {
-        try {
-          await api.post('/metric', {
-            event: 'page-view',
-            value: 'subscriptions',
-            point: 0,
-            category: 'engagement',
-          });
-        } catch (error) {
-          console.error('Error logging page view:', error);
-        }
-      })();
+      void logMetric({
+        event: 'page-view',
+        category: 'subscriptions',
+        value: 'view',
+      });
       hasComponentRendered.current = true;
     }
   }, []);
@@ -86,18 +80,10 @@ const SubscriptionsPage: NextPage<Props> = () => {
     slug: string,
   ) => {
     if (slug === 'citizen') {
-      // Track become citizen button click
-      api.post('/metric', {
+      void logMetric({
         event: 'become-citizen-button-click',
-        value: 'citizenship',
-        point: 0,
-        category: 'engagement',
-      });
-      api.post('/metric', {
-        event: 'subscribe-button-click',
-        value: 'citizenship',
-        point: 0,
-        category: 'engagement',
+        category: 'citizenship',
+        value: 'become',
       });
       router.push('/subscriptions/citizen/why');
       return;
@@ -106,13 +92,10 @@ const SubscriptionsPage: NextPage<Props> = () => {
       priceId = (priceId as string).split(',')[0];
     }
     if (!isAuthenticated) {
-      // User has no account - must start with creating one.
-      // Track create account button click
-      api.post('/metric', {
+      void logMetric({
         event: 'create-account-button-click',
-        value: 'subscription',
-        point: 0,
-        category: 'engagement',
+        category: 'signup',
+        value: 'subscription-checkout',
       });
       router.push(
         `/signup?back=${encodeURIComponent(
@@ -120,22 +103,17 @@ const SubscriptionsPage: NextPage<Props> = () => {
         )}`,
       );
     } else if (!userActivePlan) {
-      // Track subscribe button click
-      api.post('/metric', {
+      void logMetric({
         event: 'subscribe-button-click',
-        value: 'subscription',
-        point: 0,
-        category: 'engagement',
+        category: 'subscriptions',
+        value: 'subscribe',
       });
       router.push(`/subscriptions/summary?priceId=${priceId}`);
     } else if (userActivePlan?.priceId !== 'free') {
-      // User has a subscription - must be managed in Stripe.
-      // Track manage subscription button click
-      api.post('/metric', {
+      void logMetric({
         event: 'manage-subscription-button-click',
-        value: 'subscription',
-        point: 0,
-        category: 'engagement',
+        category: 'subscriptions',
+        value: 'manage',
       });
 
       const response = await api.get(
@@ -147,23 +125,17 @@ const SubscriptionsPage: NextPage<Props> = () => {
       router.push(portalUrl);
     } else {
       if (hasVariants) {
-        // User does not yet have a subscription and subscription has variants - redirect to variant selection page
-        // Track subscribe button click (for variants)
-        api.post('/metric', {
+        void logMetric({
           event: 'subscribe-button-click',
-          value: 'subscription',
-          point: 0,
-          category: 'engagement',
+          category: 'subscriptions',
+          value: 'subscribe',
         });
         router.push(`/subscriptions/${slug}`);
       } else {
-        // User does not yet have a subscription, we can show the checkout
-        // Track subscribe button click
-        api.post('/metric', {
+        void logMetric({
           event: 'subscribe-button-click',
-          value: 'subscription',
-          point: 0,
-          category: 'engagement',
+          category: 'subscriptions',
+          value: 'subscribe',
         });
         router.push(`/subscriptions/summary?priceId=${priceId}`);
       }

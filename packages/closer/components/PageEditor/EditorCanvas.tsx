@@ -5,6 +5,7 @@ import {
   GripVertical,
   Plus,
   Trash2,
+  X,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -30,6 +31,8 @@ interface Props {
   onSave: () => void;
   isSaving: boolean;
   saveStatus: 'saved' | 'saving' | 'unsaved' | 'error';
+  saveErrorMessage?: string | null;
+  onDismissSaveError?: () => void;
 }
 
 const EditorCanvas = ({
@@ -47,6 +50,8 @@ const EditorCanvas = ({
   onSave,
   isSaving,
   saveStatus,
+  saveErrorMessage,
+  onDismissSaveError,
 }: Props) => {
   const t = useTranslations();
   const sections = page.sections ?? [];
@@ -112,6 +117,29 @@ const EditorCanvas = ({
           </Button>
         </div>
       </div>
+      {saveStatus === 'error' && saveErrorMessage ? (
+        <div
+          role="alert"
+          className="flex items-start gap-3 px-4 py-2 border-b border-red-200 bg-red-50 text-sm text-red-700"
+        >
+          <div className="flex-1 min-w-0">
+            <div className="font-medium">{t('pages_editor_save_error')}</div>
+            <div className="mt-1 whitespace-pre-line break-words text-xs">
+              {saveErrorMessage}
+            </div>
+          </div>
+          {onDismissSaveError ? (
+            <button
+              type="button"
+              className="p-1 rounded hover:bg-red-100 shrink-0"
+              aria-label={t('pages_editor_dismiss')}
+              onClick={onDismissSaveError}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       <div className="flex-1 overflow-y-auto min-h-0">
         {sections.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-4 py-20 px-6 text-center">

@@ -79,8 +79,13 @@ const PublicTokenSalePage = ({ listings }: Props) => {
   const hasFetchedTokenStats = useRef(false);
   const hasUserAdjustedTokens = useRef(false);
 
-  const trackMetric = async (event: string, point = 0) => {
-    await logMetric({ event, value: 'token-sale', point });
+  const trackTokenMetric = (event: string, value: string, point: number) => {
+    void logMetric({
+      event,
+      category: 'token',
+      value,
+      point,
+    });
   };
 
   useEffect(() => {
@@ -140,14 +145,19 @@ const PublicTokenSalePage = ({ listings }: Props) => {
   }, []);
 
   const handleNext = async () => {
-    await trackMetric('buy-tokens', selectedTokens);
+    void trackTokenMetric(
+      'calculator-proceed-to-buy-clicked',
+      'calculator-proceed',
+      selectedTokens,
+    );
+    void trackTokenMetric('buy-tokens', 'buy', selectedTokens);
     router.push(
       `/token/before-you-begin?tokens=${encodeURIComponent(selectedTokens)}`,
     );
   };
 
   const logDownloadWhitepaperAction = async () => {
-    await trackMetric('download-whitepaper', selectedTokens);
+    void trackTokenMetric('download-whitepaper', 'whitepaper', selectedTokens);
   };
 
   const baseUrl =
@@ -259,7 +269,7 @@ const PublicTokenSalePage = ({ listings }: Props) => {
       ? Math.min(MAX_TOKENS, Math.max(MIN_TOKENS, Math.floor(value)))
       : MIN_TOKENS;
     setSelectedTokens(normalized);
-    void trackMetric('use-calculator', normalized);
+    void trackTokenMetric('use-calculator', 'calculator', normalized);
   };
 
   const incrementTokens = () => {
@@ -759,7 +769,7 @@ const PublicTokenSalePage = ({ listings }: Props) => {
                   rel="noopener noreferrer"
                   className="block text-accent hover:underline"
                   onClick={() => {
-                    void trackMetric('use-calculator', selectedTokens);
+                    void trackTokenMetric('use-calculator', 'calculator', selectedTokens);
                   }}
                 >
                   {t('token_explorer_tdf_link')}
@@ -770,7 +780,7 @@ const PublicTokenSalePage = ({ listings }: Props) => {
                   rel="noopener noreferrer"
                   className="block text-accent hover:underline"
                   onClick={() => {
-                    void trackMetric('use-calculator', selectedTokens);
+                    void trackTokenMetric('use-calculator', 'calculator', selectedTokens);
                   }}
                 >
                   {t('token_explorer_holder_chart_link')}
@@ -781,7 +791,7 @@ const PublicTokenSalePage = ({ listings }: Props) => {
                   rel="noopener noreferrer"
                   className="block text-accent hover:underline"
                   onClick={() => {
-                    void trackMetric('use-calculator', selectedTokens);
+                    void trackTokenMetric('use-calculator', 'calculator', selectedTokens);
                   }}
                 >
                   {t('token_explorer_presence_link')}
@@ -803,7 +813,7 @@ const PublicTokenSalePage = ({ listings }: Props) => {
                       href="/legal/terms"
                       className="block text-accent hover:underline"
                       onClick={() => {
-                        void trackMetric('use-calculator', selectedTokens);
+                        void trackTokenMetric('use-calculator', 'calculator', selectedTokens);
                       }}
                     >
                       {t('token_legal_terms_link')}
@@ -822,7 +832,7 @@ const PublicTokenSalePage = ({ listings }: Props) => {
                       href="/dataroom"
                       className="block text-accent hover:underline"
                       onClick={() => {
-                        void trackMetric('use-calculator', selectedTokens);
+                        void trackTokenMetric('use-calculator', 'calculator', selectedTokens);
                       }}
                     >
                       {t('token_legal_dataroom_link')}

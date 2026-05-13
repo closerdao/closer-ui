@@ -27,7 +27,6 @@ import {
   SelectedPlan,
   SubscriptionPlan, // Tier,
 } from '../../types/subscriptions';
-import api from '../../utils/api';
 import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import {
@@ -36,6 +35,7 @@ import {
   priceFormat,
 } from '../../utils/helpers';
 import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
+import { logMetric } from '../../utils/metrics';
 import PageNotFound from '../not-found';
 
 interface Props {
@@ -83,21 +83,12 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
 
   useEffect(() => {
     if (!hasComponentRendered.current && selectedPlan) {
-      (async () => {
-        try {
-          await api.post('/metric', {
-            event:
-              selectedPlan?.title.toLowerCase() === 'wanderer'
-                ? 'tier-1-page-view'
-                : 'tier-2-page-view',
-            value: 'subscriptions',
-            point: 0,
-            category: 'engagement',
-          });
-        } catch (error) {
-          console.error('Error logging page view:', error);
-        }
-      })();
+      const isTier1 = selectedPlan?.title.toLowerCase() === 'wanderer';
+      void logMetric({
+        event: isTier1 ? 'tier-1-page-view' : 'tier-2-page-view',
+        category: 'subscriptions',
+        value: isTier1 ? 'tier-1' : 'tier-2',
+      });
       hasComponentRendered.current = true;
     }
   }, [selectedPlan]);
