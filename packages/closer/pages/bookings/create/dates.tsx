@@ -35,7 +35,7 @@ import config from '../../../configCached';
 import api from '../../../utils/api';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
-import { logMetric } from '../../../utils/metrics';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { getMaxBookingHorizon } from '../../../utils/helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import ProjectPreview from '../../../components/ProjectPreview';
@@ -103,6 +103,8 @@ const DatesSelector = ({
     friendEmails,
   } = router.query || {};
 
+  const queryEventId = Array.isArray(eventId) ? eventId[0] : eventId;
+
   const isHourlyBooking = false;
 
   // Step 2: Initialize state
@@ -154,8 +156,9 @@ const DatesSelector = ({
       event: 'booking-dates-view',
       category: 'booking',
       value: mode,
+      ...linkedMetricFields('Event', queryEventId),
     });
-  }, [isBookingEnabled, eventId, volunteerId]);
+  }, [isBookingEnabled, eventId, volunteerId, queryEventId]);
 
   useEffect(() => {
     if (normalizedIsFriendsBooking && user?._id && !userBookings) {
@@ -429,6 +432,7 @@ const DatesSelector = ({
         event: 'booking-dates-error',
         category: 'booking',
         value: 'ticket', point: adults,
+        ...linkedMetricFields('Event', queryEventId),
       });
       setHandleNextError(t('bookings_error_no_ticket_option'));
       return;
@@ -504,6 +508,7 @@ const DatesSelector = ({
           event: 'booking-dates-request-success',
           category: 'booking',
           value: 'day-ticket', point: adults,
+          ...linkedMetricFields('Booking', newBooking._id),
         });
         router.push(`/bookings/${newBooking._id}/food`);
         return;
@@ -524,6 +529,7 @@ const DatesSelector = ({
           event: 'booking-dates-continue-success',
           category: 'booking',
           value: 'continue', point: pt,
+          ...linkedMetricFields('Event', queryEventId),
         });
         router.push(`/bookings/create/accomodation?${urlParams}`);
       }
@@ -532,6 +538,7 @@ const DatesSelector = ({
         event: 'booking-dates-error',
         category: 'booking',
         value: 'error', point: adults,
+        ...linkedMetricFields('Event', queryEventId),
       });
       setHandleNextError(parseMessageFromError(err));
     }

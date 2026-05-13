@@ -39,7 +39,7 @@ import { CitizenshipConfig } from '../../types/api';
 import { twitterUrlToHandle } from '../../utils/app.helpers';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
-import { logMetric } from '../../utils/metrics';
+import { linkedMetricFields, logMetric } from '../../utils/metrics';
 import PageNotFound from '../not-found';
 
 const CITIZEN_TARGET = 300;
@@ -86,8 +86,9 @@ const CitizenshipPage = ({
       event: 'page-view',
       category: 'citizenship',
       value: 'view',
+      ...linkedMetricFields('User', user?._id),
     });
-  }, []);
+  }, [user?._id]);
   const { platform }: any = usePlatform();
 
   const citizenTarget = customConfig?.citizenTarget || CITIZEN_TARGET;
@@ -361,6 +362,7 @@ const CitizenshipPage = ({
                       event: 'become-citizen-button-click',
                       category: 'citizenship',
                       value: 'click',
+                      ...linkedMetricFields('User', user?._id),
                     });
                   }}
                 >

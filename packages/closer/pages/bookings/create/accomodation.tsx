@@ -35,7 +35,7 @@ import {
 } from '../../../utils/booking.helpers';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
-import { logMetric } from '../../../utils/metrics';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import config from '../../../configCached';
 import { getBookingRate, getDiscountRate } from '../../../utils/helpers';
 import PageNotFound from '../../not-found';
@@ -137,8 +137,9 @@ const AccomodationSelector = ({
       event: 'booking-flow-started',
       category: 'booking',
       value: bookingCategory,
+      ...linkedMetricFields('Event', eventId),
     });
-  }, [bookingCategory]);
+  }, [bookingCategory, eventId]);
 
   useEffect(() => {
     if (filteredListings?.length) {
@@ -152,6 +153,7 @@ const AccomodationSelector = ({
       event: 'booking-no-listings',
       category: 'booking',
       value: 'empty',
+      ...linkedMetricFields('Event', eventId),
     });
   }, [listings, filteredListings, bookingCategory]);
 
@@ -167,6 +169,7 @@ const AccomodationSelector = ({
           event: 'booking-request-error',
           category: 'booking',
           value: 'ticket', point: p,
+          ...linkedMetricFields('Event', eventId),
         });
         setRequestError(t('bookings_error_no_ticket_option'));
         return;
@@ -218,6 +221,7 @@ const AccomodationSelector = ({
         event: 'booking-request-success',
         category: 'booking',
         value: 'success', point: pt,
+        ...linkedMetricFields('Booking', newBooking._id),
       });
       if (bookingConfig?.foodOptionEnabled) {
         router.push(
@@ -238,6 +242,7 @@ const AccomodationSelector = ({
         event: 'booking-request-error',
         category: 'booking',
         value: 'error', point: pt,
+        ...linkedMetricFields('Event', eventId),
       });
       setRequestError(parseMessageFromError(err));
     } finally {

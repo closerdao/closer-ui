@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import {
@@ -50,7 +50,7 @@ import {
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { logMetric } from '../../../utils/metrics';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import {
   accommodationTokenTotalFromPriceLock,
   computeCreditsOwed,
@@ -101,6 +101,11 @@ const Summary = ({
     : null;
   const event = eventProp ?? eventFromStore ?? null;
 
+  const bookingMetricFields = useMemo(
+    () => linkedMetricFields('Booking', booking?._id),
+    [booking?._id],
+  );
+
   useEffect(() => {
     if (booking?.listing) {
       void platform.listing.getOne(booking.listing);
@@ -142,6 +147,7 @@ const Summary = ({
       event: 'booking-summary-view',
       category: 'booking',
       value: 'view', point: pt,
+      ...bookingMetricFields,
     });
   }, [booking?._id, booking?.duration, booking?.adults]);
 
@@ -257,6 +263,7 @@ const Summary = ({
         event: 'booking-summary-to-checkout',
         category: 'booking',
         value: 'checkout', point: metricPoint,
+        ...bookingMetricFields,
       });
       setLoading(false);
       return router.push(afterSummaryCheckoutPath);
@@ -270,6 +277,7 @@ const Summary = ({
           event: 'booking-summary-complete-success',
           category: 'booking',
           value: 'confirmed', point: metricPoint,
+          ...bookingMetricFields,
         });
         router.push(afterSummaryCheckoutPath);
       } else if (status === 'pending') {
@@ -277,6 +285,7 @@ const Summary = ({
           event: 'booking-summary-pending-success',
           category: 'booking',
           value: 'pending', point: metricPoint,
+          ...bookingMetricFields,
         });
         router.push(`/bookings/${booking?._id}`);
       }
@@ -285,6 +294,7 @@ const Summary = ({
         event: 'booking-summary-complete-error',
         category: 'booking',
         value: 'error', point: metricPoint,
+        ...bookingMetricFields,
       });
       setHandleNextError(parseMessageFromError(err));
     } finally {
@@ -322,6 +332,7 @@ const Summary = ({
           event: 'booking-friends-send-success',
           category: 'booking',
           value: 'friends', point: p,
+          ...bookingMetricFields,
         });
         setEmailSuccess(true);
       } else {
@@ -330,6 +341,7 @@ const Summary = ({
           event: 'booking-friends-send-error',
           category: 'booking',
           value: 'friends', point: p,
+          ...bookingMetricFields,
         });
         setEmailSuccess(false);
         setEmailError(res.data.error);
@@ -340,6 +352,7 @@ const Summary = ({
         event: 'booking-friends-send-error',
         category: 'booking',
         value: 'friends', point: p,
+        ...bookingMetricFields,
       });
       setEmailSuccess(false);
       setEmailError(parseMessageFromError(error));

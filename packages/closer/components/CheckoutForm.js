@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 import { usePlatform } from '../contexts/platform';
 import api from '../utils/api';
 import { parseMessageFromError } from '../utils/common';
-import { logMetric } from '../utils/metrics';
+import { linkedMetricFields, logMetric } from '../utils/metrics';
 import { ErrorMessage } from './ui';
 import Button from './ui/Button';
 
@@ -80,6 +80,7 @@ const CheckoutForm = ({
       event: 'booking-payment-error',
       category: 'booking',
       value: 'error', point: p,
+      ...linkedMetricFields('Booking', _id),
     });
   };
 
@@ -103,6 +104,7 @@ const CheckoutForm = ({
         event: 'booking-payment-started',
         category: 'booking',
         value: 'payment', point: p,
+        ...linkedMetricFields('Booking', _id),
       });
     }
 

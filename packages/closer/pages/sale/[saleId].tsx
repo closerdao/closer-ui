@@ -23,7 +23,7 @@ import {
 import { resolveAccountingEntityFromSale } from '../../utils/accountingEntityResolve';
 import api, { formatSearch } from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
-import { logMetric } from '../../utils/metrics';
+import { linkedMetricFields, logMetric } from '../../utils/metrics';
 import { parseMessageFromError } from '../../utils/common';
 import {
   formatIsoFiatAmount,
@@ -159,6 +159,7 @@ const SaleSummaryPage = () => {
         event: 'token-sale-success',
         category: 'token',
         value: 'sale', point: qty,
+        ...linkedMetricFields('TokenSale', sale._id),
       });
     }
   }, [sale?._id, sale?.product_type]);

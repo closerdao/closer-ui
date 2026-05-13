@@ -15,7 +15,7 @@ import { useBookingSmartContract } from '../hooks/useBookingSmartContract';
 import { useConfig } from '../hooks/useConfig';
 import { payTokens } from '../utils/booking.helpers';
 import { parseMessageFromError } from '../utils/common';
-import { logMetric } from '../utils/metrics';
+import { linkedMetricFields, logMetric } from '../utils/metrics';
 import { reportIssue } from '../utils/reporting.utils';
 import CheckoutForm from './CheckoutForm';
 import Conditions from './Conditions';
@@ -102,6 +102,7 @@ const CheckoutPayment = ({
       event: 'booking-payment-success',
       category: 'booking',
       value: 'success', point: p,
+      ...linkedMetricFields('Booking', bookingId),
     });
     try {
       await router.push(

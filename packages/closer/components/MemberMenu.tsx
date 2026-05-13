@@ -255,6 +255,13 @@ const MemberMenu = ({
               rbacPage: 'ExpenseTracking',
             },
             {
+              label: t('navigation_metrics'),
+              url: '/dashboard/metrics',
+              enabled: true,
+              roles: ['admin', 'team', 'space-host'],
+              rbacPage: 'MetricsDashboard',
+            },
+            {
               label: t('navigation_booking_requests'),
               url: '/bookings/requests',
               enabled: isBookingEnabled,
@@ -616,6 +623,13 @@ const MemberMenu = ({
             enabled: true,
             roles: ['admin', 'team', 'accounting'],
             rbacPage: 'ExpenseTracking',
+          },
+          {
+            label: t('navigation_metrics'),
+            url: '/dashboard/metrics',
+            enabled: true,
+            roles: ['admin', 'team', 'space-host'],
+            rbacPage: 'MetricsDashboard',
           },
           {
             label: t('navigation_booking_requests'),

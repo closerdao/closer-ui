@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
@@ -37,7 +37,7 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
-import { logMetric } from '../../../utils/metrics';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 const prepareQuestions = (eventQuestions: any) => {
@@ -76,6 +76,11 @@ const Questionnaire = ({
 
   const booking = slug ? platform.booking.findOne(slug)?.toJS?.() ?? null : null;
 
+  const bookingMetricFields = useMemo(
+    () => linkedMetricFields('Booking', booking?._id),
+    [booking?._id],
+  );
+
   useEffect(() => {
     if (booking?.eventId) {
       void platform.event.getOne(booking.eventId);
@@ -105,6 +110,7 @@ const Questionnaire = ({
       event: 'booking-questions-view',
       category: 'booking',
       value: 'view',
+      ...bookingMetricFields,
     });
   }, [booking?._id]);
 
@@ -205,6 +211,7 @@ const Questionnaire = ({
         event: 'booking-questions-save-success',
         category: 'booking',
         value: 'save', point: pt,
+        ...bookingMetricFields,
       });
       router.push(`/bookings/${booking?._id}/summary`);
     } catch (err) {
@@ -213,6 +220,7 @@ const Questionnaire = ({
         event: 'booking-questions-save-error',
         category: 'booking',
         value: 'save', point: pt,
+        ...bookingMetricFields,
       });
       console.log(err);
     }

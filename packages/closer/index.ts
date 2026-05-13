@@ -163,6 +163,7 @@ export { default as ContractsPage } from './pages/token/contracts';
 
 export { default as CitizenshipPage } from './pages/citizenship/index';
 export { default as ExpenseTrackingDashboardPage } from './pages/dashboard/expense-tracking';
+export { default as MetricsDashboardPage } from './pages/dashboard/metrics';
 export { default as SubscriptionsCitizenSuccessPage } from './pages/subscriptions/citizen/success';
 export { default as SubscriptionsCitizenValidationPage } from './pages/subscriptions/citizen/validation';
 export { default as CitizenWhyPage } from './pages/subscriptions/citizen/why';
@@ -221,6 +222,10 @@ export * from './types/';
 // Utils
 export { default as LocaleMessagesNextIntlBridge } from './components/LocaleMessagesNextIntlBridge';
 export { default as api, cdn } from './utils/api';
+export {
+  clearInteractionSession,
+  ensureInteractionSession,
+} from './utils/interactionSession';
 export { appGetInitialPropsWithMessages } from './utils/appLocaleMessages.helpers';
 export { invalidateConfigCache } from './utils/configCache';
 export { default as configCached } from './configCached';

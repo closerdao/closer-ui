@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useMemo, useRef, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
@@ -38,7 +38,7 @@ import {
   FoodBookingContext,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { logMetric } from '../../../utils/metrics';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { priceFormat } from '../../../utils/helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -161,6 +161,10 @@ const FoodSelectionPage = ({
     : null;
   const booking =
     bookingFromStore ?? fetchedBooking ?? bookingProp ?? null;
+  const bookingMetricFields = useMemo(
+    () => linkedMetricFields('Booking', booking?._id),
+    [booking?._id],
+  );
   const event = booking?.eventId
     ? platform.event.findOne(booking.eventId)?.toJS?.() ?? null
     : null;
@@ -195,6 +199,7 @@ const FoodSelectionPage = ({
       event: 'booking-food-view',
       category: 'booking',
       value: 'view',
+      ...bookingMetricFields,
     });
   }, [booking?._id]);
 
@@ -328,6 +333,7 @@ const FoodSelectionPage = ({
       void logMetric({
         event: 'booking-food-update-success',
         value: 'food', point: pt,
+        ...bookingMetricFields,
       });
 
       if (event?.fields) {
@@ -342,6 +348,7 @@ const FoodSelectionPage = ({
         event: 'booking-food-update-error',
         category: 'booking',
         value: 'food', point: pt,
+        ...bookingMetricFields,
       });
       setApiError(parseMessageFromError(err));
     } finally {

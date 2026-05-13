@@ -232,7 +232,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
           }
         }
 
-        return { result: 'signup' };
+        return { result: 'signup', userId: userData._id };
       } else {
         console.log('Invalid response', userData);
         return { result: null };

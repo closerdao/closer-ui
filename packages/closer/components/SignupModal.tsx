@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import api from '../utils/api';
-import { logMetric } from '../utils/metrics';
+import { linkedMetricFields, logMetric } from '../utils/metrics';
 import TurnstileWidget from './TurnstileWidget';
 import { parseMessageFromError, slugify } from '../utils/common';
 import { isInputValid, validatePassword } from '../utils/helpers';
@@ -50,6 +50,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
       event: 'signup-modal-opened',
       category: 'signup',
       value: 'modal',
+      ...linkedMetricFields('Event', eventId),
     });
   }, [isOpen]);
 
@@ -136,6 +137,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
           event: 'signup-completed',
           category: 'signup',
           value: 'completed',
+          ...linkedMetricFields('User', res.userId),
         });
 
         // If eventId is provided, register the user for the event and send notification

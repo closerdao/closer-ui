@@ -71,7 +71,7 @@ import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { formatDate } from '../../../utils/listings.helpers';
-import { logMetric } from '../../../utils/metrics';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 
 dayjs.extend(dayOfYear);
 
@@ -173,6 +173,11 @@ const Checkout = ({
     transactionId,
     createdBy,
   } = (booking ?? {}) as Booking;
+
+  const bookingMetricFields = useMemo(
+    () => linkedMetricFields('Booking', _id),
+    [_id],
+  );
 
   useRedirectPaidBookingToDetail(booking);
 
@@ -563,6 +568,7 @@ const Checkout = ({
       event: 'booking-checkout-view',
       category: 'booking',
       value: 'view', point: pt,
+      ...bookingMetricFields,
     });
   }, [_id, duration, adults, total]);
 
@@ -572,6 +578,7 @@ const Checkout = ({
       event: 'booking-payment-started',
       category: 'booking',
       value: 'payment', point: pt,
+      ...bookingMetricFields,
     });
   };
 
@@ -599,6 +606,7 @@ const Checkout = ({
         event: 'booking-payment-success',
         category: 'booking',
         value: 'success', point: p,
+        ...bookingMetricFields,
       });
       await router.push(`/bookings/${booking?._id}`);
     } catch (error) {
@@ -607,6 +615,7 @@ const Checkout = ({
         event: 'booking-payment-error',
         category: 'booking',
         value: 'error', point: pe,
+        ...bookingMetricFields,
       });
       setPaymentError(parseMessageFromError(error));
     } finally {
@@ -833,6 +842,7 @@ const Checkout = ({
         event: 'booking-payment-token-error',
         category: 'booking',
         value: 'gas', point: p,
+        ...bookingMetricFields,
       });
       setPaymentError(t('insufficient_celo_for_gas'));
       return;
@@ -868,6 +878,7 @@ const Checkout = ({
         event: 'booking-payment-token-error',
         category: 'booking',
         value: 'token', point: p,
+        ...bookingMetricFields,
       });
       setProcessing(false);
       if (error === 'CONFLICTING_BOOKINGS' && conflicts) {
@@ -915,6 +926,7 @@ const Checkout = ({
         event: 'booking-payment-success',
         category: 'booking',
         value: 'success', point: p,
+        ...bookingMetricFields,
       });
       await onSuccess();
     } catch (error) {
@@ -923,6 +935,7 @@ const Checkout = ({
         event: 'booking-payment-error',
         category: 'booking',
         value: 'error', point: pe,
+        ...bookingMetricFields,
       });
       setPaymentError(parseMessageFromError(error));
     } finally {
@@ -947,6 +960,7 @@ const Checkout = ({
           event: 'booking-friends-send-success',
           category: 'booking',
           value: 'friends', point: p,
+          ...bookingMetricFields,
         });
         setEmailSuccess(true);
       } else {
@@ -955,6 +969,7 @@ const Checkout = ({
           event: 'booking-friends-send-error',
           category: 'booking',
           value: 'friends', point: p,
+          ...bookingMetricFields,
         });
         setEmailSuccess(false);
         setEmailError(res.data.error);
@@ -965,6 +980,7 @@ const Checkout = ({
         event: 'booking-friends-send-error',
         category: 'booking',
         value: 'friends', point: p,
+        ...bookingMetricFields,
       });
       setEmailSuccess(false);
       setEmailError(parseMessageFromError(error));
@@ -977,78 +993,10 @@ const Checkout = ({
     try {
       setIsApplyingCredits(true);
       setCreditsError(null);
-      // #region agent log
-      fetch(
-        'http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Debug-Session-Id': '871e9b',
-          },
-          body: JSON.stringify({
-            sessionId: '871e9b',
-            runId: 'initial',
-            hypothesisId: 'H1',
-            location: 'checkout.tsx:applyCredits:before',
-            message: 'starting credit payment',
-            data: {
-              bookingId: booking?._id,
-              startDate: start,
-              creditsAmount: priceInCredits,
-              status,
-              useCredits,
-              creditsDelta: booking?.paymentDelta?.credits?.val,
-            },
-            timestamp: Date.now(),
-          }),
-        },
-      ).catch(() => {});
-      // #endregion
       await platform.bookings.creditPayment(booking?._id, {
         startDate: start,
         creditsAmount: priceInCredits,
       });
-      // #region agent log
-      const bookingFromStoreAfterCreditPayment = platform.booking.findOne(
-        booking?._id,
-      );
-      fetch(
-        'http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Debug-Session-Id': '871e9b',
-          },
-          body: JSON.stringify({
-            sessionId: '871e9b',
-            runId: 'initial',
-            hypothesisId: 'H2',
-            location: 'checkout.tsx:applyCredits:after',
-            message: 'credit payment call resolved',
-            data: {
-              bookingId: booking?._id,
-              statusAfterCallDirect:
-                bookingFromStoreAfterCreditPayment?.get('status') ?? null,
-              useCreditsAfterCallDirect:
-                bookingFromStoreAfterCreditPayment?.get('useCredits') ?? null,
-              creditsDeltaAfterCallDirect:
-                bookingFromStoreAfterCreditPayment?.getIn([
-                  'paymentDelta',
-                  'credits',
-                  'val',
-                ]) ?? null,
-              statusAfterCallNested:
-                bookingFromStoreAfterCreditPayment?.getIn(['data', 'status']) ??
-                null,
-              rawBooking: bookingFromStoreAfterCreditPayment?.toJS?.() ?? null,
-            },
-            timestamp: Date.now(),
-          }),
-        },
-      ).catch(() => {});
-      // #endregion
     } catch (error) {
       setCreditsError(parseMessageFromError(error));
     } finally {

@@ -78,6 +78,13 @@ export const getDashboardLinks = (
       enabled: true,
       roles: ['admin', 'community-curator', 'space-host', 'team'],
     },
+    {
+      label: t('navigation_metrics'),
+      url: '/dashboard/metrics',
+      rbacPage: 'MetricsDashboard',
+      enabled: true,
+      roles: ['admin', 'team', 'space-host'],
+    },
   ];
 
   const bookingLinks: DashboardLink[] = [

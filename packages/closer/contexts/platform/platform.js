@@ -719,9 +719,6 @@ export const PlatformProvider = ({ children }) => {
     creditPayment: (_id, data) =>
       api.post(`/bookings/${_id}/credit-payment`, data).then((res) => {
         const results = fromJS(res.data.results);
-        // #region agent log
-        fetch('http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'871e9b'},body:JSON.stringify({sessionId:'871e9b',runId:'initial',hypothesisId:'H2',location:'platform.js:bookings.creditPayment',message:'credit payment response before store patch',data:{bookingId:_id,responseBookingId:results.get('_id'),status:results.get('status'),useCredits:results.get('useCredits'),creditsDelta:results.getIn(['paymentDelta','credits','val'])??null},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         const action = {
           results,
           _id,

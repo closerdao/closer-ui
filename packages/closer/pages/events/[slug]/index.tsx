@@ -29,7 +29,7 @@ import config from '../../../configCached';
 import api, { cdn } from '../../../utils/api';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { logMetric } from '../../../utils/metrics';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { getAccommodationPriceRange } from '../../../utils/events.helpers';
 import {
   getBookingRate,
@@ -88,6 +88,7 @@ const EventPage = ({
       event: 'event-detail-viewed',
       category: 'events',
       value: 'view',
+      ...linkedMetricFields('Event', event._id),
     });
   }, [event?._id, event?.slug]);
 

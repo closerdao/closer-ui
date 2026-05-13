@@ -69,7 +69,7 @@ import {
   getFoodOptionsForBookingContext,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { logMetric } from '../../../utils/metrics';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { formatStakeBookingErrorForUi } from '../../../utils/stakeBookingError.helpers';
 import { priceFormat } from '../../../utils/helpers';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
@@ -518,6 +518,11 @@ const StayCheckoutContent = ({
     }
   }, [currentStay.status, currentStay._id, router]);
 
+  const stayMetricFields = useMemo(
+    () => linkedMetricFields('Stay', currentStay?._id),
+    [currentStay?._id],
+  );
+
   const stayCheckoutViewMetricRef = useRef<string | null>(null);
   useEffect(() => {
     if (!currentStay?._id) return;
@@ -532,6 +537,7 @@ const StayCheckoutContent = ({
       event: 'stay-checkout-view',
       category: 'co-housing',
       value: 'view', point: pt,
+      ...stayMetricFields,
     });
   }, [currentStay._id, currentStay.duration, currentStay.adults]);
 
@@ -1423,6 +1429,7 @@ const StayCheckoutContent = ({
       event: 'stay-payment-started',
       category: 'co-housing',
       value: 'payment', point: stayPaymentPoint,
+      ...stayMetricFields,
     });
     try {
       let workingStay = currentStay;
@@ -2460,6 +2467,7 @@ const StayCheckoutContent = ({
                     event: 'stay-payment-page-navigated',
                     category: 'co-housing',
                     value: 'payment', point: pt,
+                    ...stayMetricFields,
                   });
                   router.push(paymentPageUrl);
                 }}

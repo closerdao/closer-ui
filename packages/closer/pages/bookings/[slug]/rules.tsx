@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingRules from '../../../components/BookingRules';
@@ -30,7 +30,7 @@ import {
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { logMetric } from '../../../utils/metrics';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 interface Props extends BaseBookingParams {
@@ -60,6 +60,11 @@ const BookingRulesPage = ({
 
   const booking = slug ? platform.booking.findOne(slug)?.toJS?.() ?? null : null;
 
+  const bookingMetricFields = useMemo(
+    () => linkedMetricFields('Booking', booking?._id),
+    [booking?._id],
+  );
+
   const rulesStepMetricLoggedRef = useRef<string | null>(null);
   useEffect(() => {
     if (!booking?._id) return;
@@ -70,6 +75,7 @@ const BookingRulesPage = ({
       event: 'booking-rules-view',
       category: 'booking',
       value: 'view',
+      ...bookingMetricFields,
     });
   }, [booking?._id]);
 
@@ -131,6 +137,7 @@ const BookingRulesPage = ({
       event: 'booking-rules-continue-success',
       category: 'booking',
       value: 'continue', point: metricPoint,
+      ...bookingMetricFields,
     });
     try {
       await router.push(`/bookings/${booking?._id}/questions`);

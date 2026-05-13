@@ -33,7 +33,7 @@ import { PushNotificationProvider } from '../contexts/push-notifications';
 import { WalletProvider } from '../contexts/wallet';
 import { useNavigationMetrics } from '../hooks/useNavigationMetrics';
 import { appGetInitialPropsWithMessages } from '../utils/appLocaleMessages.helpers';
-import { logMetric } from '../utils/metrics';
+import { linkedMetricFields, logMetric } from '../utils/metrics';
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
@@ -78,6 +78,10 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
         category: 'affiliate',
         value: String(referral),
         number: 1,
+        ...linkedMetricFields(
+          'Affiliate',
+          typeof referral === 'string' ? referral : undefined,
+        ),
       });
     }
   }, [referral]);
