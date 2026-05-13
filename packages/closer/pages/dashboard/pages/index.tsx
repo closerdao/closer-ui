@@ -25,8 +25,11 @@ import {
 import PageNotFound from '../../not-found';
 
 function toPlain<T>(x: T): T {
-  if (x != null && typeof (x as { toJS?: () => T }).toJS === 'function') {
-    return (x as { toJS: () => T }).toJS();
+  if (
+    x != null &&
+    typeof (x as unknown as { toJS?: () => T }).toJS === 'function'
+  ) {
+    return (x as unknown as { toJS: () => T }).toJS();
   }
   return x;
 }

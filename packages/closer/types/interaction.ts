@@ -14,6 +14,8 @@ export type InteractionUserRef =
       lastactive?: string;
     };
 
+export type InteractionEmbeddedUser = Exclude<InteractionUserRef, string>;
+
 export type InteractionDocument = {
   _id: string;
   user?: InteractionUserRef;

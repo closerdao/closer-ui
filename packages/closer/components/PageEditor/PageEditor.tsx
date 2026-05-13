@@ -57,10 +57,8 @@ function toPlain<T>(x: T): T {
   return x;
 }
 
-function getStorePages(platform: {
-  page: { find: (f: unknown) => unknown };
-}): PageListItem[] | null {
-  const stored = platform.page.find(PAGES_FILTER);
+function getStorePages(platform: Record<string, any>): PageListItem[] | null {
+  const stored = platform?.page?.find?.(PAGES_FILTER);
   if (!stored) return null;
   const plain = toPlain(stored) as PageListItem[] | undefined;
   return Array.isArray(plain) ? plain : null;

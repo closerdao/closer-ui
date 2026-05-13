@@ -1,4 +1,7 @@
-import type { InteractionLiveRow, InteractionUserRef } from '../types/interaction';
+import type {
+  InteractionEmbeddedUser,
+  InteractionLiveRow,
+} from '../types/interaction';
 
 export function interactionUserId(row: InteractionLiveRow): string | null {
   const u = row.user;
@@ -14,7 +17,7 @@ export function interactionUserId(row: InteractionLiveRow): string | null {
 
 export function embeddedUserFromInteraction(
   row: InteractionLiveRow,
-): InteractionUserRef | null {
+): InteractionEmbeddedUser | null {
   const u = row.user;
   if (u && typeof u === 'object' && !Array.isArray(u)) {
     const o = u as {
@@ -26,7 +29,7 @@ export function embeddedUserFromInteraction(
       timezone?: string;
       lastactive?: string;
     };
-    if (o.screenname || o.email || o.photo || o.slug) return u as InteractionUserRef;
+    if (o.screenname || o.email || o.photo || o.slug) return u as InteractionEmbeddedUser;
   }
   return null;
 }
