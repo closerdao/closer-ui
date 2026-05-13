@@ -27,8 +27,6 @@ import {
   SelectedPlan,
   SubscriptionPlan, // Tier,
 } from '../../types/subscriptions';
-import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
-import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import {
   calculateSubscriptionPrice,
   getVatInfo,

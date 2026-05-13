@@ -71,6 +71,7 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
   return (
     <>
       <Head>
+        <link rel="preconnect" href="https://challenges.cloudflare.com" />
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0"

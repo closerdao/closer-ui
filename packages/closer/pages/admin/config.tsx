@@ -49,8 +49,6 @@ const FUNDRAISER_CONFIG_KEYS_ORDER = [
 
 const ACCOUNTING_ENTITIES_CONFIG_KEYS_ORDER = ['elements', 'vatByProductType'];
 
-interface Props {}
-
 const ConfigPage = () => {
   const t = useTranslations();
   const { platform }: any = usePlatform();

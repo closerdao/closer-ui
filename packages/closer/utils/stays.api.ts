@@ -1,3 +1,8 @@
+import { BigNumber, utils as ethersUtils } from 'ethers';
+import dayjs from 'dayjs';
+import dayOfYear from 'dayjs/plugin/dayOfYear';
+import utc from 'dayjs/plugin/utc';
+
 import api from './api';
 import { priceFormat } from './helpers';
 
@@ -14,7 +19,44 @@ import type {
   StayQuoteResponse,
   StaySearchResponse,
   StayStatus,
+  StayTokenStakePlan,
 } from '../types/stay';
+
+dayjs.extend(utc);
+dayjs.extend(dayOfYear);
+
+const utcCalendarDayFromStayDate = (input: string): dayjs.Dayjs => {
+  const trimmed = input.trim();
+  const dateOnly = /^(\d{4}-\d{2}-\d{2})/.exec(trimmed);
+  if (dateOnly) {
+    return dayjs.utc(dateOnly[1], 'YYYY-MM-DD', true).startOf('day');
+  }
+  return dayjs.utc(trimmed).startOf('day');
+};
+
+const utcCalendarStartOfStay = (stayStart: string): dayjs.Dayjs =>
+  utcCalendarDayFromStayDate(stayStart);
+
+export const getStayAccommodationNightCount = (stay: Stay): number => {
+  if (stay.start && stay.end) {
+    const startDay = utcCalendarDayFromStayDate(stay.start);
+    const endDay = utcCalendarDayFromStayDate(stay.end);
+    if (startDay.isValid() && endDay.isValid()) {
+      const nights = endDay.diff(startDay, 'day');
+      if (Number.isFinite(nights) && nights > 0) return nights;
+    }
+  }
+  return stay.duration || 0;
+};
+
+const TDF_DECIMALS = 18;
+
+const roundHumanTokenAmountForWei = (val: number): string => {
+  if (!Number.isFinite(val) || val <= 0) return '0';
+  const rounded = Math.round(val * 1e6) / 1e6;
+  const s = rounded.toFixed(6).replace(/\.?0+$/, '');
+  return s === '' ? '0' : s;
+};
 
 export const formatStayMoney = (money: StayMoney | undefined | null): string => {
   if (!money) return '';
@@ -38,18 +80,62 @@ export const STAY_TERMINAL_STATUSES: ReadonlyArray<StayStatus> = [
 ];
 
 export const isStayTerminal = (
-  stayOrStatus: Pick<Stay, 'status'> | StayStatus,
+  stayOrStatus: Pick<Stay, 'status'> | StayStatus | null | undefined,
 ): boolean => {
+  if (stayOrStatus == null) return false;
   const status =
     typeof stayOrStatus === 'string' ? stayOrStatus : stayOrStatus.status;
   return STAY_TERMINAL_STATUSES.includes(status);
 };
 
-export const isStayPaid = (stay: Pick<Stay, 'status'>): boolean =>
-  stay.status === 'paid';
+export const isStayPaid = (
+  stay: Pick<Stay, 'status'> | null | undefined,
+): boolean => stay?.status === 'paid';
 
-export const isStayAwaitingPayment = (stay: Pick<Stay, 'status'>): boolean =>
-  stay.status === 'confirmed' || stay.status === 'pending-payment';
+export const isStayAwaitingPayment = (
+  stay: Pick<Stay, 'status'> | null | undefined,
+): boolean =>
+  stay?.status === 'confirmed' || stay?.status === 'pending-payment';
+
+function normalizeStayStatusRaw(
+  status: Stay['status'] | null | undefined,
+): string {
+  if (status == null) return '';
+  if (typeof status !== 'string') return '';
+  return status.trim().toLowerCase();
+}
+
+export const isStayCheckoutDraft = (
+  stay: Pick<Stay, 'status'> | null | undefined,
+): boolean => normalizeStayStatusRaw(stay?.status) === 'draft';
+
+export const isStayAwaitingHostApproval = (
+  stay: Pick<Stay, 'status'> | null | undefined,
+): boolean => normalizeStayStatusRaw(stay?.status) === 'pending';
+
+export const canApplyTokenOrCreditsToStay = (
+  stay: Pick<Stay, 'status'> | null | undefined,
+): boolean => {
+  const s = normalizeStayStatusRaw(stay?.status);
+  if (!s) return false;
+  if (s === 'draft' || s === 'pending' || s === 'paid') return false;
+  if ((STAY_TERMINAL_STATUSES as readonly string[]).includes(s)) return false;
+  return s === 'confirmed' || s === 'pending-payment';
+};
+
+export const canShowStayTokenCreditPaymentOptions = (
+  stay: Pick<Stay, 'status'> | null | undefined,
+  isMember: boolean,
+): boolean => {
+  if (!stay) return false;
+  if (isStayCheckoutDraft(stay)) {
+    return Boolean(isMember);
+  }
+  if (!canApplyTokenOrCreditsToStay(stay)) return false;
+  return (
+    Boolean(isMember) || normalizeStayStatusRaw(stay.status) === 'confirmed'
+  );
+};
 
 export const computeFiatOwed = (stay: Stay): number => {
   const target =
@@ -67,7 +153,96 @@ export const computeCreditsOwed = (stay: Stay): number => {
 export const computeTokensOwed = (stay: Stay): number => {
   const target = stay.tokensTarget?.val ?? 0;
   const staked = stay.tokensStaked?.val ?? 0;
-  return Math.max(0, target - staked);
+  const raw = Math.max(0, target - staked);
+  if (!Number.isFinite(raw)) return 0;
+  return Math.round(raw * 1e6) / 1e6;
+};
+
+export function getStayAccommodationGuestMultiplier(stay: {
+  adults?: number;
+  children?: number;
+}): number {
+  const adultsRaw = Number(stay.adults ?? 0);
+  const childrenRaw = Number(stay.children ?? 0);
+  const adults = Number.isFinite(adultsRaw) ? adultsRaw : 0;
+  const children = Number.isFinite(childrenRaw) ? childrenRaw : 0;
+  return Math.max(1, adults + children);
+}
+
+export const getStayAccommodationTokenTotal = (stay: Stay): number => {
+  const rentalVal = stay.rentalToken?.val;
+  if (rentalVal != null && Number.isFinite(rentalVal) && rentalVal >= 0) {
+    return rentalVal;
+  }
+  const nights = getStayAccommodationNightCount(stay);
+  const daily = stay.priceLock?.dailyRentalToken?.val ?? 0;
+  const guests = getStayAccommodationGuestMultiplier(stay);
+  if (!nights || !daily) return 0;
+  return nights * daily * guests;
+};
+
+export const buildStayTokenStakePlan = (
+  stay: Stay,
+  tokensToStakeTotal: number,
+): StayTokenStakePlan | null => {
+  const startUtc = utcCalendarStartOfStay(stay.start);
+  const duration = getStayAccommodationNightCount(stay);
+  const maxTokensForStay = getStayAccommodationTokenTotal(stay);
+
+  if (!startUtc.isValid() || duration <= 0 || maxTokensForStay <= 0) return null;
+
+  const maxWeiRaw = ethersUtils.parseUnits(
+    roundHumanTokenAmountForWei(maxTokensForStay),
+    TDF_DECIMALS,
+  );
+  const durationBn = BigNumber.from(duration);
+  const pricePerNightWei = maxWeiRaw.add(durationBn).sub(1).div(durationBn);
+  if (pricePerNightWei.isZero()) return null;
+  const maxWei = pricePerNightWei.mul(durationBn);
+
+  const cappedWeiRaw = ethersUtils.parseUnits(
+    roundHumanTokenAmountForWei(
+      Math.min(tokensToStakeTotal, maxTokensForStay),
+    ),
+    TDF_DECIMALS,
+  );
+  const cappedWei = cappedWeiRaw.gt(maxWei) ? maxWei : cappedWeiRaw;
+  if (cappedWei.isZero()) return null;
+  const nightsToStakeBn = cappedWei
+    .mul(durationBn)
+    .add(maxWei)
+    .sub(1)
+    .div(maxWei);
+  let nightsToStake = nightsToStakeBn.toNumber();
+  if (!Number.isFinite(nightsToStake)) nightsToStake = 0;
+  nightsToStake = Math.min(duration, Math.max(0, nightsToStake));
+  if (nightsToStake <= 0) return null;
+
+  const nightsBn = BigNumber.from(nightsToStake);
+  const totalStakeWei = pricePerNightWei.mul(nightsBn);
+  const dailyValue = Number(
+    ethersUtils.formatUnits(pricePerNightWei, TDF_DECIMALS),
+  );
+  const tokenAmount = Number(
+    ethersUtils.formatUnits(totalStakeWei, TDF_DECIMALS),
+  );
+
+  const bookingNights: number[][] = [];
+  for (let i = 0; i < nightsToStake; i++) {
+    const d = startUtc.add(i, 'day');
+    if (!d.isValid()) return null;
+    const y = d.year();
+    const doy = d.dayOfYear();
+    if (!Number.isFinite(y) || !Number.isFinite(doy) || doy < 1) return null;
+    bookingNights.push([y, doy]);
+  }
+
+  return {
+    dailyValue,
+    pricePerNightWei: pricePerNightWei.toString(),
+    tokenAmount,
+    bookingNights,
+  };
 };
 
 export const accommodationTokenTotalFromPriceLock = (
@@ -97,6 +272,13 @@ export const canChangeStayPaymentMethod = (stay: Stay): boolean => {
   if ((stay.creditsPaid?.val ?? 0) > 0) return false;
   if ((stay.tokensStaked?.val ?? 0) > 0) return false;
   return true;
+};
+
+export const canAugmentTokenOrCreditsPayment = (stay: Stay): boolean => {
+  if (!isStayAwaitingPayment(stay)) return false;
+  return (
+    computeTokensOwed(stay) > 0.005 || computeCreditsOwed(stay) > 0.005
+  );
 };
 
 export const inferPaymentChoiceFromStay = (
@@ -133,6 +315,13 @@ export const inferPaymentChoiceFromStay = (
   }
   if (creditsTarget > 0) return 'partial-credits';
   return 'fiat';
+};
+
+export const stayUsesTokenAccommodation = (stay: Stay): boolean => {
+  if (stay.useTokens === true) return true;
+  const tokenAccommodationVal = getStayAccommodationTokenTotal(stay);
+  const choice = inferPaymentChoiceFromStay(stay, tokenAccommodationVal);
+  return choice === 'full-tokens' || choice === 'partial-tokens';
 };
 
 type ApiOk<T> = { results: T };
@@ -259,6 +448,30 @@ export const quoteStay = async (
   return (data as ApiOk<StayQuoteResponse>).results;
 };
 
+export function computeFiatDiscountFromStayQuote(
+  stay: Stay,
+  quote: StayQuoteResponse,
+): { amount: number; cur: string } {
+  const before = computeFiatOwed(stay);
+  const deltaVal = Number(quote.delta?.fiat?.val ?? NaN);
+  let after: number;
+  if (Number.isFinite(deltaVal)) {
+    after = Math.max(0, before + deltaVal);
+  } else {
+    const paid = stay.fiatPaid?.val ?? 0;
+    const newTotalVal = Number(quote.priceLock?.total?.val ?? NaN);
+    if (!Number.isFinite(newTotalVal)) {
+      return { amount: 0, cur: 'EUR' };
+    }
+    after = Math.max(0, newTotalVal - paid);
+  }
+  const amount = Math.max(0, Math.round((before - after) * 100) / 100);
+  const cur = String(
+    quote.delta?.fiat?.cur ?? quote.priceLock?.total?.cur ?? 'EUR',
+  );
+  return { amount, cur };
+}
+
 export const submitStay = async (id: string): Promise<Stay> => {
   const { data } = await api.post(`/stays/${id}/submit`, {});
   return (data as ApiOk<Stay>).results;
@@ -282,14 +495,28 @@ export const confirmStayCheckout = async (
   return (data as ApiOk<Stay>).results;
 };
 
+export type StakeStayTokensOptions = {
+  syncBookingAlreadyOnChain?: boolean;
+};
+
 export const stakeStayTokens = async (
   id: string,
   transactionId: string,
+  options?: StakeStayTokensOptions,
 ): Promise<{ booking: Stay; verified: boolean }> => {
-  const { data } = await api.post(`/stays/${id}/token-stake`, {
-    transactionId,
-  });
-  return (data as ApiOk<{ booking: Stay; verified: boolean }>).results;
+  const body: Record<string, unknown> =
+    options?.syncBookingAlreadyOnChain === true
+      ? { syncBookingAlreadyOnChain: true }
+      : { transactionId };
+  const { data } = await api.post(`/stays/${id}/token-stake`, body);
+  const results = (
+    data as ApiOk<{ booking?: Stay | null; verified?: boolean }>
+  )?.results;
+  if (results?.booking) {
+    return { booking: results.booking, verified: Boolean(results.verified) };
+  }
+  const booking = await getStay(id);
+  return { booking, verified: Boolean(results?.verified) };
 };
 
 export const cancelStay = async (

@@ -79,10 +79,6 @@ const Login = () => {
   const { back, source, start, end, adults, useTokens, eventId, volunteerId } =
     router.query || {};
 
-  const redirectTo = (url: string) => {
-    router.push(url);
-  };
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isWeb3Loading, setWeb3Loading] = useState(false);
@@ -97,7 +93,8 @@ const Login = () => {
     );
   }, []);
 
-  if (isAuthenticated && !hasSignedUp) {
+  useEffect(() => {
+    if (!isAuthenticated || hasSignedUp) return;
     const redirectUrl = getRedirectUrl({
       back,
       source,
@@ -107,10 +104,23 @@ const Login = () => {
       useTokens,
       eventId,
       volunteerId,
-      hasSubscription: Boolean(user && user?.subscription?.plan),
+      hasSubscription: Boolean(user?.subscription?.plan),
     });
-    redirectTo(redirectUrl);
-  }
+    void router.push(redirectUrl);
+  }, [
+    isAuthenticated,
+    hasSignedUp,
+    back,
+    source,
+    start,
+    end,
+    adults,
+    useTokens,
+    eventId,
+    volunteerId,
+    user,
+    router,
+  ]);
 
   const redirectToSettings = () => {
     if (source) {

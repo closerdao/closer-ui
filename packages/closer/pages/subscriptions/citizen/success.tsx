@@ -22,9 +22,7 @@ import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { logMetric } from '../../../utils/metrics';
 import PageNotFound from '../../not-found';
 
-interface Props {}
-
-const SuccessCitizenPage: NextPage<Props> = () => {
+const SuccessCitizenPage: NextPage = () => {
   const subscriptionsConfig = getCachedConfig('subscriptions') as {
     enabled: boolean;
     elements: SubscriptionPlan[];

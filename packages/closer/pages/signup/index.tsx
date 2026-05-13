@@ -15,7 +15,7 @@ import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
 import { useNewsletter } from '../../contexts/newsletter';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
-import api, { cdn } from '../../utils/api';
+import { cdn } from '../../utils/api';
 
 const Signup = () => {
   const t = useTranslations();

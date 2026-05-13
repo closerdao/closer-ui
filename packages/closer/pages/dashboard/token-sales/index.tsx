@@ -19,7 +19,6 @@ import useRBAC from '../../../hooks/useRBAC';
 import { BookingConfig } from '../../../types/api';
 import { FinanceApplication } from '../../../types/subscriptions';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
-import { parseMessageFromError } from '../../../utils/common';
 import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
 
 const SALES_PER_PAGE = 20;

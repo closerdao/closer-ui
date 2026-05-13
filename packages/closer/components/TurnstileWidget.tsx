@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from 'react';
 declare global {
   interface Window {
     turnstile: {
-      ready?: (callback: () => void) => void;
       render: (
         container: string | HTMLElement,
         options: {
@@ -34,17 +33,6 @@ interface TurnstileWidgetProps {
   size?: 'normal' | 'compact' | 'flexible';
 }
 
-const isLocalhost = () => {
-  if (typeof window === 'undefined') return false;
-  const host = window.location.hostname;
-  return (
-    host === 'localhost' ||
-    host === '127.0.0.1' ||
-    host === '[::1]' ||
-    host === '::1'
-  );
-};
-
 const SCRIPT_POLL_MS = 100;
 const SCRIPT_POLL_MAX_MS = 30000;
 
@@ -58,30 +46,24 @@ const TurnstileWidget = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [skipTurnstile, setSkipTurnstile] = useState(false);
-  const localhostBypassCalled = useRef(false);
   const noSiteKeyBypassCalled = useRef(false);
 
+  const onVerifyRef = useRef(onVerify);
+  const onErrorRef = useRef(onError);
+  const onExpireRef = useRef(onExpire);
+  onVerifyRef.current = onVerify;
+  onErrorRef.current = onError;
+  onExpireRef.current = onExpire;
+
   useEffect(() => {
-    setSkipTurnstile(isLocalhost());
+    if (TURNSTILE_SITE_KEY) return;
+    if (noSiteKeyBypassCalled.current) return;
+    noSiteKeyBypassCalled.current = true;
+    onVerifyRef.current('unconfigured-client-bypass');
   }, []);
 
   useEffect(() => {
-    if (!skipTurnstile) return;
-    if (localhostBypassCalled.current) return;
-    localhostBypassCalled.current = true;
-    onVerify('localhost-bypass');
-  }, [skipTurnstile, onVerify]);
-
-  useEffect(() => {
-    if (TURNSTILE_SITE_KEY || skipTurnstile) return;
-    if (noSiteKeyBypassCalled.current) return;
-    noSiteKeyBypassCalled.current = true;
-    onVerify('unconfigured-client-bypass');
-  }, [skipTurnstile, onVerify]);
-
-  useEffect(() => {
-    if (!TURNSTILE_SITE_KEY || skipTurnstile) {
+    if (!TURNSTILE_SITE_KEY) {
       return;
     }
 
@@ -111,7 +93,7 @@ const TurnstileWidget = ({
           markLoaded();
         } else if (Date.now() - started > SCRIPT_POLL_MAX_MS) {
           clearInterval(checkLoaded);
-          onError?.();
+          onErrorRef.current?.();
         }
       }, SCRIPT_POLL_MS);
       return () => {
@@ -123,10 +105,11 @@ const TurnstileWidget = ({
     const script = document.createElement('script');
     script.src =
       'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    script.async = false;
     script.defer = true;
     script.onload = markLoaded;
     script.onerror = () => {
-      onError?.();
+      onErrorRef.current?.();
     };
 
     document.head.appendChild(script);
@@ -136,10 +119,10 @@ const TurnstileWidget = ({
       script.onload = null;
       script.onerror = null;
     };
-  }, [skipTurnstile, onError]);
+  }, []);
 
   useEffect(() => {
-    if (!isLoaded || !containerRef.current || !TURNSTILE_SITE_KEY || skipTurnstile) {
+    if (!isLoaded || !containerRef.current || !TURNSTILE_SITE_KEY) {
       return;
     }
 
@@ -155,6 +138,7 @@ const TurnstileWidget = ({
           window.turnstile.remove(widgetIdRef.current);
         } catch {
         }
+        widgetIdRef.current = null;
       }
 
       widgetIdRef.current = window.turnstile.render(containerRef.current, {
@@ -162,28 +146,19 @@ const TurnstileWidget = ({
         action,
         size,
         theme: 'auto',
-        callback: onVerify,
+        callback: (token) => {
+          onVerifyRef.current(token);
+        },
         'error-callback': () => {
-          onError?.();
-          const id = widgetIdRef.current;
-          if (id) {
-            try {
-              window.turnstile.reset(id);
-            } catch {
-            }
-          }
+          onErrorRef.current?.();
         },
         'expired-callback': () => {
-          onExpire?.();
+          onExpireRef.current?.();
         },
       });
     };
 
-    if (typeof window.turnstile.ready === 'function') {
-      window.turnstile.ready(runRender);
-    } else {
-      runRender();
-    }
+    runRender();
 
     return () => {
       cancelled = true;
@@ -192,11 +167,12 @@ const TurnstileWidget = ({
           window.turnstile.remove(widgetIdRef.current);
         } catch {
         }
+        widgetIdRef.current = null;
       }
     };
-  }, [isLoaded, action, onVerify, onError, onExpire, size, skipTurnstile]);
+  }, [isLoaded, action, size]);
 
-  if (skipTurnstile || !TURNSTILE_SITE_KEY) {
+  if (!TURNSTILE_SITE_KEY) {
     return null;
   }
 

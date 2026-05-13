@@ -1,5 +1,3 @@
-import { useEffect } from 'react';
-
 import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../../hooks/useConfig';

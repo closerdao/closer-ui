@@ -25,9 +25,7 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY as string,
 );
 
-interface Props {}
-
-const CreditsCheckoutPage: NextPage<Props> = () => {
+const CreditsCheckoutPage: NextPage = () => {
   const fundraisingConfig = getCachedConfig('fundraiser') as FundraisingConfig | null;
   const paymentConfig = (mergePaymentValueWithBookingCurrencyFallback(
     getCachedConfig('payment'),
