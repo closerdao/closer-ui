@@ -7,8 +7,9 @@ import { useTranslations } from 'next-intl';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import NewPageDialog, {
-  NewPageData,
   buildNewPagePayload,
+  buildPostPayloadFromGenerateResult,
+  type NewPageSubmit,
 } from '../../../components/PageEditor/NewPageDialog';
 import { Button, Heading } from '../../../components/ui';
 
@@ -16,6 +17,11 @@ import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import useRBAC from '../../../hooks/useRBAC';
 import api from '../../../utils/api';
+import { parseMessageFromError } from '../../../utils/common';
+import {
+  formatPageSaveError,
+  validatePageSections,
+} from '../../../components/PageEditor/sectionValidation';
 import PageNotFound from '../../not-found';
 
 function toPlain<T>(x: T): T {
@@ -37,6 +43,7 @@ const DashboardPagesIndex = ({ pages }: Props) => {
   const { platform } = usePlatform();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newPageError, setNewPageError] = useState<string | null>(null);
 
   useEffect(() => {
     if (pages?.length > 0) {
@@ -44,18 +51,75 @@ const DashboardPagesIndex = ({ pages }: Props) => {
     }
   }, [pages, router]);
 
-  const handleCreate = async (data: NewPageData) => {
+  const handleCreate = async (submit: NewPageSubmit) => {
+    setIsSubmitting(true);
+    setNewPageError(null);
     try {
-      setIsSubmitting(true);
-      const payload = buildNewPagePayload(data);
+      let payload: Record<string, unknown>;
+      if (submit.mode === 'manual') {
+        payload = buildNewPagePayload(submit.data);
+      } else {
+        const genAction = (await platform.page.generate({
+          prompt: submit.prompt,
+        })) as { results?: unknown; error?: unknown } | undefined;
+        if (genAction?.error) {
+          const raw = parseMessageFromError(genAction.error);
+          setNewPageError(
+            formatPageSaveError(raw) || raw || t('pages_editor_new_page_create_error'),
+          );
+          return;
+        }
+        const generated = toPlain(genAction?.results) as
+          | Record<string, unknown>
+          | undefined;
+        if (!generated || typeof generated !== 'object') {
+          setNewPageError(t('pages_editor_new_page_create_error'));
+          return;
+        }
+        const existingId =
+          typeof generated._id === 'string' ? generated._id : undefined;
+        if (existingId) {
+          setDialogOpen(false);
+          await router.push(`/dashboard/pages/${existingId}`);
+          return;
+        }
+        payload = buildPostPayloadFromGenerateResult(generated);
+      }
+      const sectionErrors = validatePageSections(
+        (payload as { sections?: unknown }).sections,
+      );
+      if (sectionErrors.length > 0) {
+        setNewPageError(
+          sectionErrors
+            .slice(0, 5)
+            .map((e) => e.message)
+            .join('\n'),
+        );
+        return;
+      }
       const action = (await platform.page.post(payload)) as
         | { results?: unknown; error?: unknown }
         | undefined;
-      if (action?.error) return;
+      if (action?.error) {
+        const raw = parseMessageFromError(action.error);
+        setNewPageError(
+          formatPageSaveError(raw) || raw || t('pages_editor_new_page_create_error'),
+        );
+        return;
+      }
       const created = toPlain(action?.results) as { _id?: string } | undefined;
       const id = created?._id;
+      if (!id) {
+        setNewPageError(t('pages_editor_new_page_create_error'));
+        return;
+      }
       setDialogOpen(false);
-      if (id) await router.push(`/dashboard/pages/${id}`);
+      await router.push(`/dashboard/pages/${id}`);
+    } catch (err) {
+      const raw = parseMessageFromError(err);
+      setNewPageError(
+        formatPageSaveError(raw) || raw || t('pages_editor_new_page_create_error'),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -90,8 +154,13 @@ const DashboardPagesIndex = ({ pages }: Props) => {
       </AdminLayout>
       <NewPageDialog
         open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
+        onClose={() => {
+          setDialogOpen(false);
+          setNewPageError(null);
+        }}
         isSubmitting={isSubmitting}
+        submitError={newPageError}
+        onClearSubmitError={() => setNewPageError(null)}
         onCreate={handleCreate}
       />
     </>

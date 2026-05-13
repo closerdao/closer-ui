@@ -62,6 +62,7 @@ import api from '../../../utils/api';
 import {
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
+  bookingGuestNightsMetricPoint,
   claimBookingAsFriend,
   getBookingTokenCurrency,
   getPaymentType,
@@ -555,7 +556,7 @@ const Checkout = ({
   };
 
   const bookingPaymentMetricPoint = () =>
-    Math.round(Number(duration ?? adults ?? total?.val ?? 0) || 0);
+    bookingGuestNightsMetricPoint(duration, adults);
 
   const checkoutViewMetricLoggedRef = useRef<string | null>(null);
   useEffect(() => {
@@ -570,7 +571,7 @@ const Checkout = ({
       value: 'view', point: pt,
       ...bookingMetricFields,
     });
-  }, [_id, duration, adults, total]);
+  }, [_id, duration, adults]);
 
   const logBookingPaymentStartedMetric = () => {
     const pt = bookingPaymentMetricPoint() || 1;

@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl';
 import { Button, Heading, Input, Textarea } from '../ui';
 
 import BackgroundField from './inspectors/BackgroundField';
+import I18nHoverAction from './I18nHoverAction';
 import CTAInspector from './inspectors/CTAInspector';
 import CloserBlockInspector from './inspectors/CloserBlockInspector';
 import EventsInspector from './inspectors/EventsInspector';
@@ -16,6 +17,7 @@ import WebinarInspector from './inspectors/WebinarInspector';
 
 import type { SectionBackground } from '../custom-pages/sectionBackground';
 import type { PageDoc, PageSection } from '../../types/page';
+import { extractBlockI18nKey, resolveBlockText } from '../../utils/blockI18n';
 
 type Tab = 'block' | 'page' | 'seo';
 
@@ -173,6 +175,16 @@ const Inspector = ({
                 value={page.title}
                 onChange={(e) => onPageFieldChange('title', e.target.value)}
               />
+              {extractBlockI18nKey(page.title) ? (
+                <div className="mt-1">
+                  <I18nHoverAction
+                    raw={page.title}
+                    display={resolveBlockText(page.title, t)}
+                    className="w-full items-start text-xs text-gray-500"
+                    textClassName="break-words"
+                  />
+                </div>
+              ) : null}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -206,6 +218,16 @@ const Inspector = ({
                 value={page.description ?? ''}
                 onChange={(e) => onPageFieldChange('description', e.target.value)}
               />
+              {extractBlockI18nKey(page.description) ? (
+                <div className="mt-1">
+                  <I18nHoverAction
+                    raw={page.description}
+                    display={resolveBlockText(page.description, t)}
+                    className="w-full items-start text-xs text-gray-500"
+                    textClassName="break-words whitespace-pre-wrap"
+                  />
+                </div>
+              ) : null}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

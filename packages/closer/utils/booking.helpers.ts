@@ -59,6 +59,15 @@ export const areNumberArraysEqual = (
   return aa.every((value, index) => value === bb[index]);
 };
 
+export function bookingGuestNightsMetricPoint(
+  nights: number | string | undefined | null,
+  adults: number | string | undefined | null,
+): number {
+  const n = Math.round(Number(nights ?? 0)) || 0;
+  const a = Math.round(Number(adults ?? 0)) || 0;
+  return n * a;
+}
+
 export const getBookingType = (
   eventId: string | undefined,
   bookingType: 'volunteer' | 'residence' | undefined,

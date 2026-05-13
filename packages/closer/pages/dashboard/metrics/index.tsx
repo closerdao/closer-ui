@@ -6,6 +6,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
 import MetricsDashboardDailyChart from '../../../components/Dashboard/MetricsDashboardDailyChart';
+import MetricsDashboardFunnels from '../../../components/Dashboard/MetricsDashboardFunnels';
+import MetricsLiveWidget from '../../../components/Dashboard/MetricsLiveWidget';
 import { Button, Heading, Input, Spinner } from '../../../components/ui';
 
 import { userRolesCanAccessMetricsDashboard } from 'closer/constants/metricsDashboardAccess';
@@ -463,20 +465,6 @@ const MetricsDashboardPage = () => {
     );
   }
 
-  const funnelBlock = (title: string, data: Record<string, number>) => (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 flex flex-col gap-2">
-      <Heading level={4}>{title}</Heading>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
-        {Object.entries(data).map(([k, v]) => (
-          <div key={k} className="flex flex-col gap-0.5">
-            <span className="text-gray-500 break-all">{k}</span>
-            <span className="font-semibold text-gray-900">{v}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
   return (
     <>
       <Head>
@@ -485,14 +473,16 @@ const MetricsDashboardPage = () => {
       </Head>
       <AdminLayout>
         <div className="flex flex-col gap-6">
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
-            <div className="flex flex-col gap-1">
-              <Heading level={2}>{t('metrics_dashboard_title')}</Heading>
-              <p className="text-sm text-gray-600 max-w-2xl">
-                {t('metrics_dashboard_description')}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2 items-center">
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_minmax(300px,380px)] gap-6 items-start">
+            <div className="flex flex-col gap-4 min-w-0">
+              <div className="rounded-2xl border border-gray-200/80 bg-gradient-to-br from-white via-white to-gray-50/80 p-5 shadow-sm">
+              <div className="flex flex-col gap-1">
+                <Heading level={2}>{t('metrics_dashboard_title')}</Heading>
+                <p className="text-sm text-gray-600 max-w-2xl">
+                  {t('metrics_dashboard_description')}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2 items-center mt-3">
               <Button
                 variant="secondary"
                 size="small"
@@ -546,9 +536,12 @@ const MetricsDashboardPage = () => {
                 {t('metrics_dashboard_preset_this_month')}
               </Button>
             </div>
+            </div>
+            </div>
+            <MetricsLiveWidget />
           </div>
 
-          <div className="flex flex-col md:flex-row md:flex-wrap gap-4 md:items-end">
+          <div className="flex flex-col md:flex-row md:flex-wrap gap-4 md:items-end rounded-2xl border border-gray-200/70 bg-white/90 p-4 shadow-sm">
             <div className="flex flex-col gap-1 min-w-[140px]">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                 {t('metrics_dashboard_date_from')}
@@ -598,7 +591,7 @@ const MetricsDashboardPage = () => {
             </Button>
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 rounded-2xl border border-gray-200/70 bg-white/90 p-4 shadow-sm">
             <Heading level={4}>{t('metrics_dashboard_categories_heading')}</Heading>
             <div className="flex flex-wrap gap-2">
               <Button
@@ -632,68 +625,73 @@ const MetricsDashboardPage = () => {
             </div>
           )}
 
-          <section className="flex flex-col gap-3">
-            <Heading level={3}>{t('metrics_dashboard_section_summary')}</Heading>
+          <section className="flex flex-col gap-4">
+            <Heading level={3} className="!mb-0">
+              {t('metrics_dashboard_section_summary')}
+            </Heading>
             {byCategory.length === 0 && !loading ? (
               <p className="text-sm text-gray-500">{t('metrics_dashboard_empty')}</p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {byCategory.map((row) => (
                   <div
                     key={row.category}
-                    className="rounded-lg border border-gray-200 bg-white p-4 flex flex-col gap-1"
+                    className="rounded-2xl border border-gray-200/80 bg-gradient-to-br from-white to-gray-50/90 p-4 flex flex-col gap-2 shadow-sm hover:shadow-md hover:border-gray-300/60 transition-all"
                   >
-                    <span className="text-sm font-semibold text-gray-900">
+                    <span className="text-sm font-semibold text-gray-900 capitalize">
                       {row.category}
                     </span>
-                    <span className="text-xs text-gray-500">
-                      {t('metrics_dashboard_rows')}: {row.rows}
+                    <div className="flex flex-col gap-1.5 text-xs text-gray-600">
+                    <span>
+                      {t('metrics_dashboard_rows')}:{' '}
+                      <span className="font-semibold text-gray-900 tabular-nums">{row.rows}</span>
                     </span>
-                    <span className="text-xs text-gray-500">
-                      {t('metrics_dashboard_sum_point')}: {row.sumPoint}
+                    <span>
+                      {t('metrics_dashboard_sum_point')}:{' '}
+                      <span className="font-semibold text-gray-900 tabular-nums">{row.sumPoint}</span>
                     </span>
-                    <span className="text-xs text-gray-500">
-                      {t('metrics_dashboard_event_count')}: {row.eventCount}
+                    <span>
+                      {t('metrics_dashboard_event_count')}:{' '}
+                      <span className="font-semibold text-gray-900 tabular-nums">{row.eventCount}</span>
                     </span>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
           </section>
 
-          <section className="flex flex-col gap-3">
-            <Heading level={3}>{t('metrics_dashboard_section_daily')}</Heading>
+          <section className="flex flex-col gap-4">
+            <Heading level={3} className="!mb-0">
+              {t('metrics_dashboard_section_daily')}
+            </Heading>
             {dailyTrends.length === 0 && !loading ? (
               <p className="text-sm text-gray-500">{t('metrics_dashboard_empty')}</p>
             ) : (
-              <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <div className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm">
                 <MetricsDashboardDailyChart rows={dailyTrends} />
               </div>
             )}
           </section>
 
-          <section className="flex flex-col gap-3">
-            <Heading level={3}>{t('metrics_dashboard_section_funnels')}</Heading>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {funnelBlock('Token', tokenFunnel as unknown as Record<string, number>)}
-              {funnelBlock('Booking', bookingFunnel as unknown as Record<string, number>)}
-              {funnelBlock(
-                'Subscriptions',
-                subscriptionsFunnel as unknown as Record<string, number>,
-              )}
-              {funnelBlock('Citizenship', citizenshipFunnel as unknown as Record<string, number>)}
-              {funnelBlock('Co-housing', coHousingFunnel as unknown as Record<string, number>)}
-              {funnelBlock('Signup', signupFunnel as unknown as Record<string, number>)}
-              {funnelBlock('Fundraiser', fundraiserFunnel as unknown as Record<string, number>)}
-            </div>
-          </section>
+          <MetricsDashboardFunnels
+            tokenFunnel={tokenFunnel}
+            bookingFunnel={bookingFunnel}
+            subscriptionsFunnel={subscriptionsFunnel}
+            citizenshipFunnel={citizenshipFunnel}
+            coHousingFunnel={coHousingFunnel}
+            signupFunnel={signupFunnel}
+            fundraiserFunnel={fundraiserFunnel}
+          />
 
-          <section className="flex flex-col gap-3">
-            <Heading level={3}>{t('metrics_dashboard_section_navigation')}</Heading>
+          <section className="flex flex-col gap-4">
+            <Heading level={3} className="!mb-0">
+              {t('metrics_dashboard_section_navigation')}
+            </Heading>
             {navigationTop.length === 0 && !loading ? (
               <p className="text-sm text-gray-500">{t('metrics_dashboard_empty')}</p>
             ) : (
-              <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+              <div className="overflow-x-auto rounded-2xl border border-gray-200/80 bg-white shadow-sm">
                 <table className="min-w-full text-sm">
                   <thead className="bg-gray-50 text-left">
                     <tr>
@@ -718,9 +716,11 @@ const MetricsDashboardPage = () => {
             )}
           </section>
 
-          <section className="flex flex-col gap-3">
+          <section className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <Heading level={3}>{t('metrics_dashboard_section_kpi')}</Heading>
+              <Heading level={3} className="!mb-0">
+                {t('metrics_dashboard_section_kpi')}
+              </Heading>
               <Button
                 variant="secondary"
                 size="small"
@@ -735,7 +735,7 @@ const MetricsDashboardPage = () => {
             {sortedKpi.length === 0 && !loading ? (
               <p className="text-sm text-gray-500">{t('metrics_dashboard_empty')}</p>
             ) : (
-              <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+              <div className="overflow-x-auto rounded-2xl border border-gray-200/80 bg-white shadow-sm">
                 <table className="min-w-full text-sm">
                   <thead className="bg-gray-50 text-left">
                     <tr>
@@ -801,12 +801,14 @@ const MetricsDashboardPage = () => {
             )}
           </section>
 
-          <section className="flex flex-col gap-3">
-            <Heading level={3}>{t('metrics_dashboard_section_token_sales')}</Heading>
+          <section className="flex flex-col gap-4">
+            <Heading level={3} className="!mb-0">
+              {t('metrics_dashboard_section_token_sales')}
+            </Heading>
             {tokenSales.length === 0 && !loading ? (
               <p className="text-sm text-gray-500">{t('metrics_dashboard_empty')}</p>
             ) : (
-              <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white max-h-[480px] overflow-y-auto">
+              <div className="overflow-x-auto rounded-2xl border border-gray-200/80 bg-white max-h-[480px] overflow-y-auto shadow-sm">
                 <table className="min-w-full text-sm">
                   <thead className="bg-gray-50 text-left sticky top-0">
                     <tr>

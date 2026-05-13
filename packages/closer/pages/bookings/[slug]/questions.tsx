@@ -31,6 +31,7 @@ import {
 } from '../../../types';
 import config from '../../../configCached';
 import {
+  bookingGuestNightsMetricPoint,
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
   getBookingTokenCurrency,
@@ -206,7 +207,10 @@ const Questionnaire = ({
       await platform.booking.patch(booking?._id, {
         fields: answers,
       });
-      const pt = Number(booking?.duration ?? booking?.adults ?? 0) || 0;
+      const pt = bookingGuestNightsMetricPoint(
+        booking?.duration,
+        booking?.adults,
+      );
       void logMetric({
         event: 'booking-questions-save-success',
         category: 'booking',
@@ -215,7 +219,10 @@ const Questionnaire = ({
       });
       router.push(`/bookings/${booking?._id}/summary`);
     } catch (err) {
-      const pt = Number(booking?.duration ?? booking?.adults ?? 0) || 0;
+      const pt = bookingGuestNightsMetricPoint(
+        booking?.duration,
+        booking?.adults,
+      );
       void logMetric({
         event: 'booking-questions-save-error',
         category: 'booking',

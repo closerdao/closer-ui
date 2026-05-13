@@ -1,10 +1,9 @@
-import Image from 'next/image';
-
 import React from 'react';
 import { useTranslations } from 'next-intl';
 
 import { Heading } from 'closer';
 import { resolveBlockHtml, resolveBlockText } from '../../utils/blockI18n';
+import SafeCustomPageImage from './SafeCustomPageImage';
 
 const CustomPromoCard: React.FC<{
   settings: {
@@ -31,8 +30,8 @@ const CustomPromoCard: React.FC<{
         } relative`}
       >
         <div className="relative w-full h-auto md:h-full ">
-          {content?.imageUrl && (
-            <Image
+          {content?.imageUrl?.trim() ? (
+            <SafeCustomPageImage
               src={content.imageUrl}
               alt={resolveBlockText(content.title, t)}
               width={800}
@@ -41,7 +40,7 @@ const CustomPromoCard: React.FC<{
               className="w-full h-auto md:h-full object-contain md:object-cover"
               sizes="(max-width: 768px) 100vw, 40vw"
             />
-          )}
+          ) : null}
         </div>
       </div>
       <div

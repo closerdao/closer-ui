@@ -19,6 +19,10 @@ export interface NewPageData {
   customData?: Record<string, unknown>;
 }
 
+export type NewPageSubmit =
+  | { mode: 'manual'; data: NewPageData }
+  | { mode: 'prompt'; prompt: string };
+
 export const buildNewPagePayload = (
   data: NewPageData,
 ): Record<string, unknown> => {
@@ -38,10 +42,28 @@ export const buildNewPagePayload = (
   return merged;
 };
 
+export const buildPostPayloadFromGenerateResult = (
+  generated: Record<string, unknown>,
+): Record<string, unknown> => {
+  const { _id: _omitId, ...rest } = generated;
+  const merged: Record<string, unknown> = { ...rest };
+  if (typeof merged.title !== 'string') merged.title = String(merged.title ?? '');
+  if (typeof merged.slug !== 'string') merged.slug = String(merged.slug ?? '/');
+  if (merged.description != null && typeof merged.description !== 'string') {
+    merged.description = String(merged.description);
+  }
+  if (merged.ogImage != null && typeof merged.ogImage !== 'string') {
+    merged.ogImage = String(merged.ogImage);
+  }
+  if (!Array.isArray(merged.sections)) merged.sections = [];
+  merged.sections = sanitizePageSections(merged.sections as PageSection[]);
+  return merged;
+};
+
 interface Props {
   open: boolean;
   onClose: () => void;
-  onCreate: (data: NewPageData) => Promise<void> | void;
+  onCreate: (submit: NewPageSubmit) => Promise<void> | void;
   isSubmitting?: boolean;
   submitError?: string | null;
   onClearSubmitError?: () => void;
@@ -112,21 +134,25 @@ const NewPageDialog = ({
   onClearSubmitError,
 }: Props) => {
   const t = useTranslations();
+  const [createMode, setCreateMode] = useState<'manual' | 'prompt'>('manual');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [slug, setSlug] = useState('');
   const [slugTouched, setSlugTouched] = useState(false);
   const [customData, setCustomData] = useState('');
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [prompt, setPrompt] = useState('');
 
   useEffect(() => {
     if (open) {
+      setCreateMode('manual');
       setTitle('');
       setDescription('');
       setSlug('');
       setSlugTouched(false);
       setCustomData('');
       setAdvancedOpen(false);
+      setPrompt('');
       onClearSubmitError?.();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -147,18 +173,28 @@ const NewPageDialog = ({
   if (!open) return null;
 
   const hasTitle = title.trim().length > 0 || jsonTitle.length > 0;
-  const canSubmit = hasTitle && validation.ok && !isSubmitting;
+  const canSubmitManual = hasTitle && validation.ok && !isSubmitting;
+  const canSubmitPrompt = prompt.trim().length > 0 && !isSubmitting;
+  const canSubmit =
+    createMode === 'manual' ? canSubmitManual : canSubmitPrompt;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
     onClearSubmitError?.();
+    if (createMode === 'prompt') {
+      await onCreate({ mode: 'prompt', prompt: prompt.trim() });
+      return;
+    }
     const finalSlug = normalizeSlug(slug) || toSlug(title) || '/';
     await onCreate({
-      title: title.trim(),
-      description: description.trim(),
-      slug: finalSlug,
-      customData: validation.ok && validation.parsed ? validation.parsed : undefined,
+      mode: 'manual',
+      data: {
+        title: title.trim(),
+        description: description.trim(),
+        slug: finalSlug,
+        customData: validation.ok && validation.parsed ? validation.parsed : undefined,
+      },
     });
   };
 
@@ -170,7 +206,11 @@ const NewPageDialog = ({
   return (
     <Modal
       closeModal={handleClose}
-      className={advancedOpen ? 'md:w-[760px] lg:w-[880px]' : undefined}
+      className={
+        advancedOpen || createMode === 'prompt'
+          ? 'md:w-[760px] lg:w-[880px]'
+          : undefined
+      }
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
@@ -178,94 +218,148 @@ const NewPageDialog = ({
             {t('pages_editor_new_page_dialog_title')}
           </h2>
           <p className="text-sm text-gray-500">
-            {t('pages_editor_new_page_dialog_subtitle')}
+            {createMode === 'prompt'
+              ? t('pages_editor_new_page_dialog_subtitle_prompt')
+              : t('pages_editor_new_page_dialog_subtitle')}
           </p>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-700">
-            {t('pages_editor_field_page_title')}
-            <span className="text-red-500"> *</span>
-          </label>
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder={t('pages_editor_new_page_title_placeholder')}
-            autoFocus
-            isRequired={jsonTitle.length === 0}
-          />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-700">
-            {t('pages_editor_field_meta_description')}
-          </label>
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            placeholder={t('pages_editor_new_page_description_placeholder')}
-          />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-700">
-            {t('pages_editor_field_slug')}
-          </label>
-          <Input
-            value={slug}
-            onChange={(e) => {
-              setSlugTouched(true);
-              setSlug(e.target.value);
-            }}
-            placeholder="/my-page"
-          />
-          <span className="text-xs text-gray-500">
-            {t('pages_editor_slug_help')}
-          </span>
-        </div>
-
-        <div className="border border-gray-200 rounded-lg">
+        <div className="flex rounded-lg border border-gray-200 p-0.5 bg-gray-50 gap-0.5">
           <button
             type="button"
-            className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg"
-            onClick={() => setAdvancedOpen((v) => !v)}
-            aria-expanded={advancedOpen}
+            className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              createMode === 'manual'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+            onClick={() => {
+              setCreateMode('manual');
+              onClearSubmitError?.();
+            }}
           >
-            <span>{t('pages_editor_new_page_advanced')}</span>
-            <span
-              className={`transition-transform text-gray-400 ${advancedOpen ? 'rotate-180' : ''}`}
-              aria-hidden
-            >
-              ▾
-            </span>
+            {t('pages_editor_new_page_mode_manual')}
           </button>
-          {advancedOpen ? (
-            <div className="flex flex-col gap-1 px-3 pb-3">
+          <button
+            type="button"
+            className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              createMode === 'prompt'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+            onClick={() => {
+              setCreateMode('prompt');
+              onClearSubmitError?.();
+            }}
+          >
+            {t('pages_editor_new_page_mode_prompt')}
+          </button>
+        </div>
+
+        {createMode === 'prompt' ? (
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">
+              {t('pages_editor_new_page_prompt_label')}
+              <span className="text-red-500"> *</span>
+            </label>
+            <Textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              rows={8}
+              autoFocus
+              placeholder={t('pages_editor_new_page_prompt_placeholder')}
+            />
+            <span className="text-xs text-gray-500">
+              {t('pages_editor_new_page_prompt_help')}
+            </span>
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-gray-700">
-                {t('pages_editor_new_page_custom_data')}
+                {t('pages_editor_field_page_title')}
+                <span className="text-red-500"> *</span>
+              </label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={t('pages_editor_new_page_title_placeholder')}
+                autoFocus
+                isRequired={jsonTitle.length === 0}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">
+                {t('pages_editor_field_meta_description')}
               </label>
               <Textarea
-                value={customData}
-                onChange={(e) => setCustomData(e.target.value)}
-                rows={20}
-                className="font-mono text-xs leading-relaxed resize-y min-h-[320px] max-h-[60vh] whitespace-pre"
-                spellCheck={false}
-                placeholder='{"sections": [{"type": "richText", "data": {"settings": {}, "content": {"html": "<p>Hello</p>"}}}]}'
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                placeholder={t('pages_editor_new_page_description_placeholder')}
               />
-              {!validation.ok ? (
-                <div className="text-xs text-red-600 break-words whitespace-pre-line">
-                  {t('pages_editor_new_page_custom_data_invalid')}:{'\n'}
-                  {validation.error}
-                </div>
-              ) : (
-                <span className="text-xs text-gray-500">
-                  {t('pages_editor_new_page_custom_data_help')}
-                </span>
-              )}
             </div>
-          ) : null}
-        </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">
+                {t('pages_editor_field_slug')}
+              </label>
+              <Input
+                value={slug}
+                onChange={(e) => {
+                  setSlugTouched(true);
+                  setSlug(e.target.value);
+                }}
+                placeholder="/my-page"
+              />
+              <span className="text-xs text-gray-500">
+                {t('pages_editor_slug_help')}
+              </span>
+            </div>
+
+            <div className="border border-gray-200 rounded-lg">
+              <button
+                type="button"
+                className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg"
+                onClick={() => setAdvancedOpen((v) => !v)}
+                aria-expanded={advancedOpen}
+              >
+                <span>{t('pages_editor_new_page_advanced')}</span>
+                <span
+                  className={`transition-transform text-gray-400 ${advancedOpen ? 'rotate-180' : ''}`}
+                  aria-hidden
+                >
+                  ▾
+                </span>
+              </button>
+              {advancedOpen ? (
+                <div className="flex flex-col gap-1 px-3 pb-3">
+                  <label className="text-sm font-medium text-gray-700">
+                    {t('pages_editor_new_page_custom_data')}
+                  </label>
+                  <Textarea
+                    value={customData}
+                    onChange={(e) => setCustomData(e.target.value)}
+                    rows={20}
+                    className="font-mono text-xs leading-relaxed resize-y min-h-[320px] max-h-[60vh] whitespace-pre"
+                    spellCheck={false}
+                    placeholder='{"sections": [{"type": "richText", "data": {"settings": {}, "content": {"html": "<p>Hello</p>"}}}]}'
+                  />
+                  {!validation.ok ? (
+                    <div className="text-xs text-red-600 break-words whitespace-pre-line">
+                      {t('pages_editor_new_page_custom_data_invalid')}:{'\n'}
+                      {validation.error}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-500">
+                      {t('pages_editor_new_page_custom_data_help')}
+                    </span>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          </>
+        )}
 
         {submitError ? (
           <div
@@ -294,7 +388,9 @@ const NewPageDialog = ({
             isLoading={isSubmitting}
             isEnabled={canSubmit}
           >
-            {t('pages_editor_new_page_create')}
+            {createMode === 'prompt'
+              ? t('pages_editor_new_page_create_from_prompt')
+              : t('pages_editor_new_page_create')}
           </Button>
         </div>
       </form>

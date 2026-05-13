@@ -1,12 +1,11 @@
 import type { LinkedMetricObjectType } from '../types/metrics';
-
 import api from './api';
 
 export type LogMetricInput = {
   event: string;
+  category: string;
   value?: string;
   point?: number;
-  category?: string;
   number?: number;
   linkedObjectType?: LinkedMetricObjectType;
   linkedObjectId?: string;
@@ -27,25 +26,16 @@ export function linkedMetricFields(
 }
 
 export async function logMetric(input: LogMetricInput): Promise<void> {
-  const {
-    event,
-    value,
-    category,
-    number: numberField,
-    linkedObjectType,
-    linkedObjectId,
-  } = input;
+  const { event, value, category, linkedObjectType, linkedObjectId } = input;
   const point = input.point ?? 1;
   try {
     await api.post('/metric', {
       event,
-      ...(value !== undefined ? { value } : {}),
-      ...(point !== 1 ? { point } : {}),
-      ...(category !== undefined ? { category } : {}),
-      ...(numberField !== undefined ? { number: numberField } : {}),
-      ...(linkedObjectType !== undefined && linkedObjectId !== undefined
-        ? { linkedObjectType, linkedObjectId }
-        : {}),
+      category,
+      value,
+      point,
+      linkedObjectType,
+      linkedObjectId,
     });
   } catch (error: unknown) {
     const err = error as {

@@ -1,5 +1,3 @@
-import Image from 'next/image';
-
 import React, { useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 import { useTranslations } from 'next-intl';
@@ -7,6 +5,8 @@ import { useTranslations } from 'next-intl';
 import YoutubeEmbed from '../YoutubeEmbed';
 import { Heading, LinkButton } from '../ui';
 import { resolveBlockHtml, resolveBlockText } from '../../utils/blockI18n';
+import { isValidNextImageSrc } from '../../utils/nextImageSrc';
+import SafeCustomPageImage from './SafeCustomPageImage';
 
 const CustomHero: React.FC<{
   settings: {
@@ -85,7 +85,7 @@ const CustomHero: React.FC<{
   const imageUrl = content?.imageUrl?.trim() ?? '';
   const hasVideoEmbed = Boolean(content?.videoEmbedId);
   const hasMobileVideo = Boolean(content?.mobileVideoUrl);
-  const hasImage = Boolean(imageUrl);
+  const hasImage = isValidNextImageSrc(imageUrl);
   const hasMedia = hasVideoEmbed || hasImage || (isClientMobile && hasMobileVideo);
 
   const titleText = resolveBlockText(content.title, t);
@@ -121,7 +121,7 @@ const CustomHero: React.FC<{
 
     if (hasImage) {
       return (
-        <Image
+        <SafeCustomPageImage
           src={imageUrl}
           alt={titleText}
           className="h-full w-full object-cover"

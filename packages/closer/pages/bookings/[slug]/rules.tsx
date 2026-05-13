@@ -25,6 +25,7 @@ import {
 } from '../../../types';
 import config from '../../../configCached';
 import {
+  bookingGuestNightsMetricPoint,
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
   getBookingTokenCurrency,
@@ -131,8 +132,10 @@ const BookingRulesPage = ({
 
   const handleNext = async () => {
     setIsLoading(true);
-    const metricPoint =
-      Math.round(Number(booking?.duration ?? booking?.adults ?? 0)) || 0;
+    const metricPoint = bookingGuestNightsMetricPoint(
+      booking?.duration,
+      booking?.adults,
+    );
     void logMetric({
       event: 'booking-rules-continue-success',
       category: 'booking',

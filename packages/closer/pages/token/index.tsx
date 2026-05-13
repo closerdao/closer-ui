@@ -18,7 +18,13 @@ import { useTranslations } from 'next-intl';
 import { MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
-import { DEFAULT_TOKEN_STATS, GeneralConfig, Listing, TokenStats } from '../../types';
+import {
+  DEFAULT_TOKEN_STATS,
+  GeneralConfig,
+  Listing,
+  TokenStats,
+  Web3Config,
+} from '../../types';
 import api from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { logMetric } from '../../utils/metrics';
@@ -37,6 +43,8 @@ interface Props {
 
 const PublicTokenSalePage = ({ listings }: Props) => {
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
+  const web3Config = getCachedConfig('web3') as Web3Config | null;
+  const initialSaleHardCap = Number(web3Config?.maxSupply) || 0;
   const t = useTranslations();
   const defaultConfig = useConfig();
   const { getCurrentSupplyWithoutWallet, getSaleHardCapWithoutWallet } = useBuyTokens();
@@ -51,6 +59,14 @@ const PublicTokenSalePage = ({ listings }: Props) => {
     () =>
       new Intl.NumberFormat(router.locale || 'en', {
         maximumFractionDigits: 0,
+      }),
+    [router.locale],
+  );
+  const maxSupplyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(router.locale || 'en', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
       }),
     [router.locale],
   );
@@ -71,7 +87,7 @@ const PublicTokenSalePage = ({ listings }: Props) => {
   const [showStickyCta, setShowStickyCta] = useState(false);
   const [animatedTokenPrice, setAnimatedTokenPrice] = useState(0);
   const [networkTokenPrice, setNetworkTokenPrice] = useState<number | null>(null);
-  const [saleHardCap, setSaleHardCap] = useState<number>(18600);
+  const [saleHardCap, setSaleHardCap] = useState<number>(initialSaleHardCap);
   const [animatedSupplyCurrent, setAnimatedSupplyCurrent] = useState(0);
   const [animatedSupplyRemaining, setAnimatedSupplyRemaining] = useState(0);
   const [showBuySparkle, setShowBuySparkle] = useState(false);
@@ -167,6 +183,7 @@ const PublicTokenSalePage = ({ listings }: Props) => {
     .replace(/\/$/, '')
     .replace(/^(?!https?:\/\/)/, 'https://')}/token`;
   const tokenPrice = networkTokenPrice;
+  const formattedMaxSupply = maxSupplyFormatter.format(saleHardCap);
 
   const animateNumber = (
     target: number,
@@ -379,7 +396,7 @@ const PublicTokenSalePage = ({ listings }: Props) => {
                   <div className="rounded-xl border border-accent/20 bg-white/90 p-3 text-center">
                     <div className="mb-1 flex items-center justify-center gap-2">
                       <span className="text-2xl md:text-3xl font-bold text-accent">
-                        {t('token_total_supply_amount')}
+                        {formattedMaxSupply}
                       </span>
                     </div>
                     <div className="text-xs md:text-sm text-gray-600">
@@ -689,10 +706,12 @@ const PublicTokenSalePage = ({ listings }: Props) => {
                 </Heading>
                 <div className="space-y-4">
                   <div className="text-4xl font-bold text-accent mb-2">
-                    {t('token_total_supply_amount')}
+                    {formattedMaxSupply}
                   </div>
                   <p className="text-gray-600">
-                    {t('token_total_supply_description')}
+                    {t('token_total_supply_description', {
+                      amount: formattedMaxSupply,
+                    })}
                   </p>
                   <div className="mt-4 pt-4 border-t space-y-3">
                     <div className="flex justify-between">

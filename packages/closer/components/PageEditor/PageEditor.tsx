@@ -15,11 +15,12 @@ import {
   stripForApi,
 } from './blockDefaults';
 import EditorCanvas from './EditorCanvas';
+import I18nHoverAction from './I18nHoverAction';
 import Inspector from './Inspector';
 import JsonDrawer from './JsonDrawer';
 import NewPageDialog, {
-  NewPageData,
   buildNewPagePayload,
+  buildPostPayloadFromGenerateResult,
 } from './NewPageDialog';
 import PagesSidebar from './PagesSidebar';
 import {
@@ -32,6 +33,7 @@ import { usePlatform } from '../../contexts/platform';
 import useRBAC from '../../hooks/useRBAC';
 import type { PageDoc, PageSection, SectionType } from '../../types/page';
 import api from '../../utils/api';
+import { resolveBlockText } from '../../utils/blockI18n';
 import { parseMessageFromError } from '../../utils/common';
 import PageNotFound from '../../pages/not-found';
 
@@ -50,7 +52,7 @@ const PAGES_FILTER = {};
 
 function toPlain<T>(x: T): T {
   if (x != null && typeof (x as { toJS?: () => T }).toJS === 'function') {
-    return (x as { toJS: () => T }).toJS();
+    return (x as unknown as { toJS: () => T }).toJS();
   }
   return x;
 }
@@ -68,6 +70,12 @@ function normalizePage(raw: Record<string, unknown>): PageDoc {
   const sections = Array.isArray(raw.sections)
     ? ensureSectionIds(raw.sections as PageSection[])
     : [];
+  const aiMeta =
+    raw.aiMeta != null &&
+    typeof raw.aiMeta === 'object' &&
+    !Array.isArray(raw.aiMeta)
+      ? (raw.aiMeta as Record<string, unknown>)
+      : undefined;
   return {
     _id: String(raw._id ?? ''),
     title: String(raw.title ?? ''),
@@ -75,6 +83,7 @@ function normalizePage(raw: Record<string, unknown>): PageDoc {
     description: raw.description != null ? String(raw.description) : '',
     ogImage: raw.ogImage != null ? String(raw.ogImage) : '',
     sections,
+    ...(aiMeta !== undefined ? { aiMeta } : {}),
   };
 }
 
@@ -412,9 +421,15 @@ const PageEditor = ({ initialPage, pages }: Props) => {
           >
             <Menu className="w-5 h-5" />
           </button>
-          <span className="flex-1 text-center text-sm font-medium truncate">
-            {page.title || t('pages_editor_untitled')}
-          </span>
+          <I18nHoverAction
+            raw={page.title?.trim() || null}
+            display={
+              (page.title?.trim() && resolveBlockText(page.title, t)) ||
+              t('pages_editor_untitled')
+            }
+            className="flex min-w-0 flex-1 justify-center text-center text-sm font-medium"
+            textClassName="truncate text-sm font-medium"
+          />
           <button
             type="button"
             className="p-2 rounded-lg border border-gray-200"
@@ -512,11 +527,42 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         isSubmitting={isCreatingPage}
         submitError={newPageError}
         onClearSubmitError={() => setNewPageError(null)}
-        onCreate={async (data: NewPageData) => {
+        onCreate={async (submit) => {
           setIsCreatingPage(true);
           setNewPageError(null);
           try {
-            const payload = buildNewPagePayload(data);
+            let payload: Record<string, unknown>;
+            if (submit.mode === 'manual') {
+              payload = buildNewPagePayload(submit.data);
+            } else {
+              const genAction = (await platform.page.generate({
+                prompt: submit.prompt,
+              })) as { results?: unknown; error?: unknown } | undefined;
+              if (genAction?.error) {
+                const raw = parseMessageFromError(genAction.error);
+                setNewPageError(
+                  formatPageSaveError(raw) ||
+                    raw ||
+                    t('pages_editor_new_page_create_error'),
+                );
+                return;
+              }
+              const generated = toPlain(genAction?.results) as
+                | Record<string, unknown>
+                | undefined;
+              if (!generated || typeof generated !== 'object') {
+                setNewPageError(t('pages_editor_new_page_create_error'));
+                return;
+              }
+              const existingId =
+                typeof generated._id === 'string' ? generated._id : undefined;
+              if (existingId) {
+                setNewPageOpen(false);
+                await router.push(`/dashboard/pages/${existingId}`);
+                return;
+              }
+              payload = buildPostPayloadFromGenerateResult(generated);
+            }
             const sectionErrors = validatePageSections(
               (payload as { sections?: unknown }).sections,
             );

@@ -5,6 +5,9 @@ import { useTranslations } from 'next-intl';
 
 import { Heading } from '../ui';
 
+import I18nHoverAction from './I18nHoverAction';
+import { resolveBlockText } from '../../utils/blockI18n';
+
 export interface PageListItem {
   _id: string;
   title?: string;
@@ -82,7 +85,18 @@ const PagesSidebar = ({
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
             >
-              <span className="font-medium block truncate">{p.title || t('pages_editor_untitled')}</span>
+              <span className="block min-w-0 w-full font-medium">
+                <I18nHoverAction
+                  raw={p.title?.trim() || null}
+                  display={
+                    (p.title?.trim() && resolveBlockText(p.title, t)) ||
+                    t('pages_editor_untitled')
+                  }
+                  className="w-full font-medium"
+                  textClassName="truncate font-medium"
+                  stopLinkNavigation
+                />
+              </span>
               <span className="block text-xs text-gray-500 font-mono truncate">
                 {p.slug || '/'}
               </span>

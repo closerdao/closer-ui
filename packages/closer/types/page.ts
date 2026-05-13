@@ -34,4 +34,5 @@ export interface PageDoc {
   description?: string;
   ogImage?: string;
   sections: PageSection[];
+  aiMeta?: Record<string, unknown>;
 }

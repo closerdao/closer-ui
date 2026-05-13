@@ -42,7 +42,7 @@ export const stripForApi = (page: PageDoc): Record<string, unknown> => {
     if (_id) payload._id = _id;
     return payload;
   });
-  return {
+  const out: Record<string, unknown> = {
     _id: page._id,
     title: page.title,
     slug: page.slug,
@@ -50,6 +50,8 @@ export const stripForApi = (page: PageDoc): Record<string, unknown> => {
     ogImage: page.ogImage ?? '',
     sections,
   };
+  if (page.aiMeta !== undefined) out.aiMeta = page.aiMeta;
+  return out;
 };
 
 const heroAlignMap = {

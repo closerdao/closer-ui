@@ -33,6 +33,7 @@ import { BookingSettings, Project, VolunteerConfig } from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
 import config from '../../../configCached';
 import api from '../../../utils/api';
+import { bookingGuestNightsMetricPoint } from '../../../utils/booking.helpers';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
@@ -427,11 +428,19 @@ const DatesSelector = ({
   const handleNext = async () => {
     setHandleNextError(null);
 
+    const nightsForMetric =
+      start && end
+        ? Math.max(
+            0,
+            dayjs(end as string).diff(dayjs(start as string), 'day'),
+          )
+        : 0;
+
     if (event?.paid && !selectedTicketOption) {
       void logMetric({
         event: 'booking-dates-error',
         category: 'booking',
-        value: 'ticket', point: adults,
+        value: 'ticket', point: bookingGuestNightsMetricPoint(nightsForMetric, adults),
         ...linkedMetricFields('Event', queryEventId),
       });
       setHandleNextError(t('bookings_error_no_ticket_option'));
@@ -507,7 +516,7 @@ const DatesSelector = ({
         void logMetric({
           event: 'booking-dates-request-success',
           category: 'booking',
-          value: 'day-ticket', point: adults,
+          value: 'day-ticket', point: bookingGuestNightsMetricPoint(1, adults),
           ...linkedMetricFields('Booking', newBooking._id),
         });
         router.push(`/bookings/${newBooking._id}/food`);
@@ -520,15 +529,10 @@ const DatesSelector = ({
             ) as [string, string][],
           ),
         );
-        const nights =
-          start && end
-            ? Math.max(0, dayjs(end as string).diff(dayjs(start as string), 'day'))
-            : 0;
-        const pt = nights || adults;
         void logMetric({
           event: 'booking-dates-continue-success',
           category: 'booking',
-          value: 'continue', point: pt,
+          value: 'continue', point: bookingGuestNightsMetricPoint(nightsForMetric, adults),
           ...linkedMetricFields('Event', queryEventId),
         });
         router.push(`/bookings/create/accomodation?${urlParams}`);
@@ -537,7 +541,7 @@ const DatesSelector = ({
       void logMetric({
         event: 'booking-dates-error',
         category: 'booking',
-        value: 'error', point: adults,
+        value: 'error', point: bookingGuestNightsMetricPoint(nightsForMetric, adults),
         ...linkedMetricFields('Event', queryEventId),
       });
       setHandleNextError(parseMessageFromError(err));

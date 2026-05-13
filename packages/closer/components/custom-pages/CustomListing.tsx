@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Link from 'next/link';
 
 import React, { useEffect, useState } from 'react';
@@ -8,6 +7,7 @@ import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 import { useTranslations } from 'next-intl';
 
 import { resolveBlockHtml, resolveBlockText } from '../../utils/blockI18n';
+import SafeCustomPageImage from './SafeCustomPageImage';
 
 const CustomListing: React.FC<{
   settings: {
@@ -89,9 +89,9 @@ const CustomListing: React.FC<{
               }}
             >
               <div className="flex-1 flex flex-col gap-6">
-                {item?.imageUrl && (
+                {item.imageUrl?.trim() ? (
                   <div className={settings?.isSmallImage ? 'px-10' : ''}>
-                    <Image
+                    <SafeCustomPageImage
                       src={item.imageUrl}
                       alt={resolveBlockText(item.title, t)}
                       width={400}
@@ -102,12 +102,12 @@ const CustomListing: React.FC<{
                       sizes="(max-width: 768px) 100vw, 40vw"
                     />
                   </div>
-                )}
-                {!item.imageUrl && settings.isSmallImage && (
+                ) : null}
+                {!item.imageUrl?.trim() && settings.isSmallImage ? (
                   <div className="flex justify-center py-4">
                     <UserAvatarPlaceholder size="5xl" />
                   </div>
-                )}
+                ) : null}
                 <Heading
                   display={false}
                   level={3}

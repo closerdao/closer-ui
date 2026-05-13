@@ -12,9 +12,12 @@ import { useTranslations } from 'next-intl';
 import CustomSectionComponent from '../custom-pages/CustomSectionComponent';
 import { Button } from '../ui';
 
+import I18nHoverAction from './I18nHoverAction';
+
 import type { ReactNode } from 'react';
 
 import type { PageDoc, PageSection } from '../../types/page';
+import { resolveBlockText } from '../../utils/blockI18n';
 
 interface Props {
   page: PageDoc;
@@ -76,9 +79,15 @@ const EditorCanvas = ({
     <div className="flex flex-col min-h-0 h-full bg-white">
       <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-gray-200 bg-white/90 backdrop-blur shrink-0">
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <strong className="text-sm text-gray-900 truncate max-w-[200px] xl:max-w-xs">
-            {page.title || t('pages_editor_untitled')}
-          </strong>
+          <I18nHoverAction
+            raw={page.title?.trim() || null}
+            display={
+              (page.title?.trim() && resolveBlockText(page.title, t)) ||
+              t('pages_editor_untitled')
+            }
+            className="max-w-[200px] min-w-0 flex-1 xl:max-w-xs"
+            textClassName="truncate text-sm font-semibold text-gray-900"
+          />
           <span className="text-gray-300" aria-hidden>
             &middot;
           </span>

@@ -1,11 +1,10 @@
-import Image from 'next/image';
-
 import React, { useEffect, useState } from 'react';
 
 import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { resolveBlockHtml, resolveBlockText } from '../../utils/blockI18n';
+import SafeCustomPageImage from './SafeCustomPageImage';
 
 interface GalleryImage {
   src: string;
@@ -139,7 +138,7 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
               )}`}
               onClick={() => openModal(index)}
             >
-              <Image
+              <SafeCustomPageImage
                 src={image.src}
                 alt={resolveBlockText(image.alt, t) || 'Gallery image'}
                 fill
@@ -214,7 +213,7 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
             className="relative max-w-7xl max-h-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <Image
+            <SafeCustomPageImage
               src={images[selectedIndex].src}
               alt={
                 resolveBlockText(images[selectedIndex].alt, t) ||

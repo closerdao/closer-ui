@@ -46,6 +46,7 @@ import api from '../../../utils/api';
 import {
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
+  bookingGuestNightsMetricPoint,
   getBookingPaymentCheckoutPath,
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
@@ -142,7 +143,7 @@ const Summary = ({
     if (summaryViewMetricLoggedRef.current === idKey) return;
     summaryViewMetricLoggedRef.current = idKey;
     const pt =
-      Math.round(Number(booking.duration ?? booking.adults ?? 0) || 0) || 1;
+      bookingGuestNightsMetricPoint(booking?.duration, booking?.adults) || 1;
     void logMetric({
       event: 'booking-summary-view',
       category: 'booking',
@@ -257,7 +258,7 @@ const Summary = ({
   const handleNext = async () => {
     setLoading(true);
     setHandleNextError(null);
-    const metricPoint = Math.round(Number(duration ?? adults ?? 0)) || 0;
+    const metricPoint = bookingGuestNightsMetricPoint(duration, adults);
     if (booking?.status === 'confirmed') {
       void logMetric({
         event: 'booking-summary-to-checkout',
@@ -327,7 +328,7 @@ const Summary = ({
       });
 
       if (res.status === 200) {
-        const p = Math.round(Number(duration ?? adults ?? 0)) || 0;
+        const p = bookingGuestNightsMetricPoint(duration, adults);
         void logMetric({
           event: 'booking-friends-send-success',
           category: 'booking',
@@ -336,7 +337,7 @@ const Summary = ({
         });
         setEmailSuccess(true);
       } else {
-        const p = Math.round(Number(duration ?? adults ?? 0)) || 0;
+        const p = bookingGuestNightsMetricPoint(duration, adults);
         void logMetric({
           event: 'booking-friends-send-error',
           category: 'booking',
@@ -347,7 +348,7 @@ const Summary = ({
         setEmailError(res.data.error);
       }
     } catch (error) {
-      const p = Math.round(Number(duration ?? adults ?? 0)) || 0;
+      const p = bookingGuestNightsMetricPoint(duration, adults);
       void logMetric({
         event: 'booking-friends-send-error',
         category: 'booking',

@@ -28,6 +28,7 @@ import {
 } from '../../../types';
 import api from '../../../utils/api';
 import {
+  bookingGuestNightsMetricPoint,
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
   getBookingTokenCurrency,
@@ -164,7 +165,11 @@ const AccomodationSelector = ({
       setRequestError(null);
 
       if (isPaidEventWithoutTicket) {
-        const p = Number(adults) || 0;
+        const nights =
+          start && end
+            ? Math.max(0, dayjs(end).diff(dayjs(start), 'day'))
+            : 0;
+        const p = bookingGuestNightsMetricPoint(nights, adults);
         void logMetric({
           event: 'booking-request-error',
           category: 'booking',
@@ -216,7 +221,7 @@ const AccomodationSelector = ({
       });
       const nights =
         start && end ? Math.max(0, dayjs(end).diff(dayjs(start), 'day')) : 0;
-      const pt = nights || Number(adults) || 0;
+      const pt = bookingGuestNightsMetricPoint(nights, adults);
       void logMetric({
         event: 'booking-request-success',
         category: 'booking',
@@ -232,12 +237,11 @@ const AccomodationSelector = ({
 
       router.push(`/bookings/${newBooking._id}/questions`);
     } catch (err) {
-      const pt =
+      const nights =
         start && end
-          ? Math.max(0, dayjs(end).diff(dayjs(start), 'day')) ||
-            Number(adults) ||
-            0
-          : Number(adults) || 0;
+          ? Math.max(0, dayjs(end).diff(dayjs(start), 'day'))
+          : 0;
+      const pt = bookingGuestNightsMetricPoint(nights, adults);
       void logMetric({
         event: 'booking-request-error',
         category: 'booking',
