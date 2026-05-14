@@ -13,3 +13,4 @@ export { usePresenceToken } from './usePresenceToken';
 export { useSweatToken } from './useSweatToken';
 export { useVotingWeight } from './useVotingWeight';
 export { useRedirectPaidBookingToDetail } from './useRedirectPaidBookingToDetail';
+export { useNavigationMetrics } from './useNavigationMetrics';

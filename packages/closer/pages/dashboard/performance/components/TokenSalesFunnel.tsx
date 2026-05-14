@@ -78,13 +78,17 @@ const TokenSalesFunnel = ({
         fromDate,
         toDate,
         timeFrame,
-        event: ['buy-tokens', 'open-flow'],
+        event: [
+          'buy-tokens',
+          'open-flow',
+          'calculator-proceed-to-buy-clicked',
+        ],
       }),
       checkoutFilter: generateTokenSalesFilter({
         fromDate,
         toDate,
         timeFrame,
-        event: 'checkout',
+        event: ['checkout', 'token-checkout-viewed'],
       }),
       approveFilter: generateTokenSalesFilter({
         fromDate,
@@ -94,7 +98,23 @@ const TokenSalesFunnel = ({
       }),
       successFilter: {
         where: {
-          event: { $in: ['token-sale'] },
+          $or: [
+            {
+              category: 'token',
+              value: 'sale',
+              event: 'purchase-complete-crypto',
+            },
+            {
+              category: 'token',
+              value: 'sale',
+              event: 'token-sale-success',
+            },
+            {
+              category: 'engagement',
+              value: 'token-sale',
+              event: 'token-sale',
+            },
+          ],
           ...(timeFrame !== 'allTime' && {
             created: {
               $gte: startDate,
@@ -140,14 +160,14 @@ const TokenSalesFunnel = ({
     // Calculate total tokens sold from basket data
     const tokenBasketData = platform.metric.find(filters.tokenBasketFilter);
     const totalTokensSold = tokenBasketData?.toJS().reduce((sum: number, item: any) => {
-      return sum + (item.point || 0);
+      return sum + (item.point ?? 1);
     }, 0) || 0;
     
     // Calculate financed token metrics
     const financedTokenStartedCount = platform.metric.findCount(filters.financedTokenStartedFilter) || 0;
     const financedTokenBasketData = platform.metric.find(filters.financedTokenBasketFilter);
     const totalFinancedTokensSold = financedTokenBasketData?.toJS().reduce((sum: number, item: any) => {
-      return sum + (item.point || 0);
+      return sum + (item.point ?? 1);
     }, 0) || 0;
     
     return {

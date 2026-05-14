@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 import { usePlatform } from '../contexts/platform';
 import api from '../utils/api';
 import { parseMessageFromError } from '../utils/common';
-import { logMetricIfAuthenticated } from '../utils/metrics';
+import { linkedMetricFields, logMetric } from '../utils/metrics';
 import { ErrorMessage } from './ui';
 import Button from './ui/Button';
 
@@ -75,10 +75,12 @@ const CheckoutForm = ({
 
   const logBookingPaymentFailureMetric = () => {
     if (type !== 'booking') return;
-    void logMetricIfAuthenticated(metricBookingContext?.user, {
+    const p = Math.round(Number(metricBookingContext?.fiatAmount) || 0);
+    void logMetric({
       event: 'booking-payment-error',
-      value: 'booking',
-      point: Math.round(Number(metricBookingContext?.fiatAmount) || 0),
+      category: 'booking',
+      value: 'error', point: p,
+      ...linkedMetricFields('Booking', _id),
     });
   };
 
@@ -95,6 +97,16 @@ const CheckoutForm = ({
     setError(null);
 
     let tokenPaymentSuccessful = false;
+
+    if (type === 'booking') {
+      const p = Math.round(Number(metricBookingContext?.fiatAmount) || 0) || 1;
+      void logMetric({
+        event: 'booking-payment-started',
+        category: 'booking',
+        value: 'payment', point: p,
+        ...linkedMetricFields('Booking', _id),
+      });
+    }
 
     if (useCredits && !isAdditionalFiatPayment) {
       try {

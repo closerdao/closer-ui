@@ -19,7 +19,7 @@ import type { SaleInitBody } from '../../types/api';
 import api from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
-import { logMetricIfAuthenticated } from '../../utils/metrics';
+import { logMetric } from '../../utils/metrics';
 import { saveDonationSession } from '../../utils/donationSessionStorage';
 import { priceFormat } from '../../utils/helpers';
 
@@ -141,10 +141,10 @@ function DonatePage() {
           ? (rawResults as { value: unknown }).value
           : rawResults;
       if (!results || typeof results !== 'object') {
-        void logMetricIfAuthenticated(user, {
+        void logMetric({
           event: 'donation-init-error',
-          value: 'donation',
-          point: amount,
+          category: 'fundraiser',
+          value: 'error', point: amount,
         });
         setCreateError(t('donate_create_invalid_response'));
         return;
@@ -161,10 +161,10 @@ function DonatePage() {
               ? raw.confirmation_code.trim()
               : '';
         if (!raw.saleId || !memoCode || !raw.closerIban) {
-          void logMetricIfAuthenticated(user, {
+          void logMetric({
             event: 'donation-init-error',
-            value: 'donation',
-            point: amount,
+            category: 'fundraiser',
+            value: 'error', point: amount,
           });
           setCreateError(t('donate_create_invalid_response'));
           return;
@@ -178,10 +178,10 @@ function DonatePage() {
           beneficiaryBic: raw.beneficiaryBic,
         };
         saveDonationSession(raw.saleId, { kind: 'bank', amount, result: bankResult });
-        void logMetricIfAuthenticated(user, {
+        void logMetric({
           event: 'donation-init-success-bank',
-          value: 'donation',
-          point: amount,
+          category: 'fundraiser',
+          value: 'bank', point: amount,
         });
         await router.push(`/donate/${encodeURIComponent(raw.saleId)}/bank`);
         return;
@@ -190,19 +190,19 @@ function DonatePage() {
       if (method === 'card') {
         const r = results as CreateDonationCardResult;
         if (!r.saleId || !r.clientSecret) {
-          void logMetricIfAuthenticated(user, {
+          void logMetric({
             event: 'donation-init-error',
-            value: 'donation',
-            point: amount,
+            category: 'fundraiser',
+            value: 'error', point: amount,
           });
           setCreateError(t('donate_create_invalid_response'));
           return;
         }
         saveDonationSession(r.saleId, { kind: 'card', amount, result: r });
-        void logMetricIfAuthenticated(user, {
+        void logMetric({
           event: 'donation-init-success-card',
-          value: 'donation',
-          point: amount,
+          category: 'fundraiser',
+          value: 'card', point: amount,
         });
         await router.push(`/donate/${encodeURIComponent(r.saleId)}/card`);
         return;
@@ -210,36 +210,36 @@ function DonatePage() {
 
       const r = results as CreateDonationCryptoResult;
       if (!r.saleId || typeof r.expectedAmount !== 'number') {
-        void logMetricIfAuthenticated(user, {
+        void logMetric({
           event: 'donation-init-error',
-          value: 'donation',
-          point: amount,
+          category: 'fundraiser',
+          value: 'error', point: amount,
         });
         setCreateError(t('donate_create_invalid_response'));
         return;
       }
       saveDonationSession(r.saleId, { kind: 'crypto', amount, result: r });
-      void logMetricIfAuthenticated(user, {
+      void logMetric({
         event: 'donation-init-success-crypto',
-        value: 'donation',
-        point: amount,
+        category: 'fundraiser',
+        value: 'crypto', point: amount,
       });
       await router.push(`/donate/${encodeURIComponent(r.saleId)}/crypto`);
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status;
       if (status === 401) {
-        void logMetricIfAuthenticated(user, {
+        void logMetric({
           event: 'donation-init-error',
-          value: 'donation',
-          point: amount,
+          category: 'fundraiser',
+          value: 'auth', point: amount,
         });
         router.push(`/login?back=${encodeURIComponent(router.asPath)}`);
         return;
       }
-      void logMetricIfAuthenticated(user, {
+      void logMetric({
         event: 'donation-init-error',
-        value: 'donation',
-        point: amount,
+        category: 'fundraiser',
+        value: 'error', point: amount,
       });
       setCreateError(parseMessageFromError(err));
     } finally {

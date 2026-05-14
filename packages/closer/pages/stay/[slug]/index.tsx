@@ -63,6 +63,7 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import {
+  accommodationTokenTotalFromPriceLock,
   approveStayRequest,
   assignStayBeds,
   checkInStay,
@@ -72,7 +73,6 @@ import {
   computeTokensOwed,
   extendStay,
   getStay,
-  getStayAccommodationGuestMultiplier,
   isStayShapedBooking,
   mapStayQuoteToUpdatedPrices,
   quoteStay,
@@ -362,12 +362,14 @@ const StayBookingSummaryPage = ({
       bookingView?.duration != null &&
       !Number.isNaN(bookingView.duration)
     ) {
-      const guests = getStayAccommodationGuestMultiplier({
-        adults: bookingView.adults,
-        children: bookingView.children,
-      });
+      const val = accommodationTokenTotalFromPriceLock(
+        pl,
+        bookingView.duration,
+        adults ?? 1,
+        listing?.private,
+      );
       return {
-        val: pl.dailyRentalToken.val * bookingView.duration * guests,
+        val: val > 0 ? val : pl.dailyRentalToken.val * bookingView.duration,
         cur: pl.dailyRentalToken.cur as CloserCurrencies.TDF,
       };
     }
@@ -375,9 +377,9 @@ const StayBookingSummaryPage = ({
   }, [
     bookingView?.priceLock,
     bookingView?.duration,
-    bookingView?.adults,
-    bookingView?.children,
     rentalToken,
+    adults,
+    listing?.private,
   ]);
   const displayTotalForCosts = (bookingView?.priceLock?.total ??
     total) as Price<
@@ -415,14 +417,10 @@ const StayBookingSummaryPage = ({
           });
           if (cancelled) return;
           setUpdatedPrices(
-            mapStayQuoteToUpdatedPrices(
-              res,
-              updatedDuration,
-              getStayAccommodationGuestMultiplier({
-                adults: updatedAdults,
-                children: updatedChildren,
-              }),
-            ),
+            mapStayQuoteToUpdatedPrices(res, updatedDuration, {
+              adults: updatedAdults,
+              listingPrivate: listing?.private,
+            }),
           );
           return;
         }

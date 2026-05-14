@@ -122,6 +122,11 @@ module.exports = {
   				'25%': { opacity: '1', transform: 'translateY(-4px)' },
   				'75%': { opacity: '0.6', transform: 'translateY(-10px)' },
   				'100%': { opacity: '0', transform: 'translateY(-14px)' }
+  			},
+  			'live-pop': {
+  				'0%': { opacity: '0', transform: 'scale(0.94) translateY(10px)' },
+  				'55%': { opacity: '1', transform: 'scale(1.03) translateY(0)' },
+  				'100%': { opacity: '1', transform: 'scale(1) translateY(0)' }
   			}
   		},
   		animation: {
@@ -132,7 +137,8 @@ module.exports = {
   			'wallet-ready': 'wallet-ready 2s ease-in-out infinite',
   			sparkle: 'sparkle 1.8s ease-in-out infinite',
   			'sparkle-dot': 'sparkle-dot 1.5s ease-in-out infinite',
-  			'sparkle-float': 'sparkle-float 2.2s ease-in-out infinite'
+  			'sparkle-float': 'sparkle-float 2.2s ease-in-out infinite',
+  			'live-pop': 'live-pop 0.7s ease-out forwards'
   		}
   	}
   },

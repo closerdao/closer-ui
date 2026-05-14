@@ -90,6 +90,7 @@ export type Stay = {
   createdBy: string;
   created: string;
   updated: string;
+  useTokens?: boolean;
 
   priceLock?: PriceLock;
   rentalToken?: StayMoney;

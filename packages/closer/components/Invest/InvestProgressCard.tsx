@@ -14,6 +14,7 @@ import {
   formatIsoFiatAmount,
 } from '../../utils/currencyFormat';
 import { getMilestoneGoal } from '../../utils/fundraising.helpers';
+import { logMetric } from '../../utils/metrics';
 import { FundraisingMilestone } from '../../types';
 
 interface InvestProgressCardProps {
@@ -72,6 +73,11 @@ const InvestProgressCard = ({
   };
 
   const handleParticipationSelect = (type: 'tokens' | 'donation' | 'subscription' | 'lender') => {
+    void logMetric({
+      event: 'fundraiser-participation-select',
+      category: 'fundraiser',
+      value: type,
+    });
     if (type === 'tokens') {
       goTo('/token');
       return;
@@ -88,6 +94,12 @@ const InvestProgressCard = ({
   };
 
   const handleDonationCheckout = () => {
+    void logMetric({
+      event: 'fundraiser-donation-continue',
+      category: 'fundraiser',
+      value: String(donationAmount),
+      point: donationAmount,
+    });
     goTo(`${donationHref || '/donate'}?amount=${donationAmount}`);
   };
 
@@ -131,7 +143,14 @@ const InvestProgressCard = ({
       {step === 'idle' && (
         <button
           type="button"
-          onClick={() => setStep('choose')}
+          onClick={() => {
+            void logMetric({
+              event: 'fundraiser-back-project-open',
+              category: 'fundraiser',
+              value: 'choose',
+            });
+            setStep('choose');
+          }}
           className="block w-full py-3 bg-accent border-2 border-accent text-white text-center rounded-full font-semibold uppercase tracking-wide transition-all hover:bg-accent-dark hover:border-accent-dark"
         >
           {t('invest_cta_back_project')}
@@ -188,7 +207,15 @@ const InvestProgressCard = ({
                   <button
                     key={amount}
                     type="button"
-                    onClick={() => setDonationAmount(amount)}
+                    onClick={() => {
+                      void logMetric({
+                        event: 'fundraiser-donation-preset-select',
+                        category: 'fundraiser',
+                        value: String(amount),
+                        point: amount,
+                      });
+                      setDonationAmount(amount);
+                    }}
                     className={`w-full px-2 py-2 rounded-xl text-sm border transition-colors ${
                       donationAmount === amount
                         ? 'border-accent bg-accent text-white'
@@ -211,7 +238,14 @@ const InvestProgressCard = ({
 
           <button
             type="button"
-            onClick={resetFlow}
+            onClick={() => {
+              void logMetric({
+                event: 'fundraiser-flow-cancel',
+                category: 'fundraiser',
+                value: step,
+              });
+              resetFlow();
+            }}
             className="w-full py-2 text-xs text-gray-500 hover:text-gray-700 uppercase tracking-wide"
           >
             {t('buttons_cancel')}
@@ -222,6 +256,13 @@ const InvestProgressCard = ({
       {step === 'idle' && dataroomHref && (
         <Link
           href={dataroomHref}
+          onClick={() => {
+            void logMetric({
+              event: 'fundraiser-dataroom-click',
+              category: 'fundraiser',
+              value: dataroomHref,
+            });
+          }}
           className="block w-full py-3 mt-2.5 text-center text-accent border-2 border-accent rounded-full font-semibold uppercase tracking-wide transition-colors hover:bg-accent hover:text-white"
         >
           {t('invest_cta_dataroom')}
@@ -235,22 +276,59 @@ const InvestProgressCard = ({
             title={t('invest_share_text')}
             url={shareUrl}
             related={twitterHandle ? [twitterHandle] : []}
+            beforeOnClick={() => {
+              void logMetric({
+                event: 'fundraiser-share-click',
+                category: 'fundraiser',
+                value: 'twitter',
+              });
+            }}
           >
             <div className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors text-xs text-gray-600">
               X
             </div>
           </TwitterShareButton>
-          <LinkedinShareButton title={t('invest_share_text')} url={shareUrl}>
+          <LinkedinShareButton
+            title={t('invest_share_text')}
+            url={shareUrl}
+            beforeOnClick={() => {
+              void logMetric({
+                event: 'fundraiser-share-click',
+                category: 'fundraiser',
+                value: 'linkedin',
+              });
+            }}
+          >
             <div className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors text-xs text-gray-600">
               in
             </div>
           </LinkedinShareButton>
-          <WhatsappShareButton title={t('invest_share_text')} url={shareUrl}>
+          <WhatsappShareButton
+            title={t('invest_share_text')}
+            url={shareUrl}
+            beforeOnClick={() => {
+              void logMetric({
+                event: 'fundraiser-share-click',
+                category: 'fundraiser',
+                value: 'whatsapp',
+              });
+            }}
+          >
             <div className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors text-xs text-gray-600">
               wa
             </div>
           </WhatsappShareButton>
-          <TelegramShareButton title={t('invest_share_text')} url={shareUrl}>
+          <TelegramShareButton
+            title={t('invest_share_text')}
+            url={shareUrl}
+            beforeOnClick={() => {
+              void logMetric({
+                event: 'fundraiser-share-click',
+                category: 'fundraiser',
+                value: 'telegram',
+              });
+            }}
+          >
             <div className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors text-xs text-gray-600">
               tg
             </div>

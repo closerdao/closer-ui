@@ -162,8 +162,10 @@ export const generateTokenSalesFilter = ({
 
   const filter = {
     where: {
-      category: { $in: ['engagement'] },
-      value: { $in: ['token-sale'] },
+      $or: [
+        { category: 'token' },
+        { category: 'engagement', value: 'token-sale' },
+      ],
       event: { $in: events },
 
       ...(timeFrame !== 'allTime' && {
@@ -199,8 +201,10 @@ export const generateSubscriptionsFilter = ({
 
   const filter = {
     where: {
-      category: { $in: ['engagement'] },
-      value: { $in: ['subscriptions'] },
+      $or: [
+        { category: 'subscriptions' },
+        { category: 'engagement', value: 'subscriptions' },
+      ],
       event: { $in: [event] },
 
       ...(timeFrame !== 'allTime' && {
@@ -236,8 +240,10 @@ export const generateCitizenshipFilter = ({
 
   const filter = {
     where: {
-      category: { $in: ['engagement'] },
-      value: { $in: ['citizenship'] },
+      $or: [
+        { category: 'citizenship' },
+        { category: 'engagement', value: 'citizenship' },
+      ],
       event: { $in: [event] },
 
       ...(timeFrame !== 'allTime' && {
@@ -273,9 +279,13 @@ export const generatePageViewFilter = ({
 
   const filter = {
     where: {
-      category: { $in: ['engagement'] },
-      value: { $in: [page] },
       event: { $in: ['page-view'] },
+      $or: [
+        { category: 'engagement', value: page },
+        ...(page === 'stay'
+          ? [{ category: 'co-housing', value: 'stay' }]
+          : []),
+      ],
 
       ...(timeFrame !== 'allTime' && {
         created: {
@@ -310,9 +320,22 @@ export const generateButtonClickFilter = ({
 
   const filter = {
     where: {
-      category: { $in: ['engagement'] },
-      value: { $in: [buttonType] },
-      event: { $in: ['subscribe-button-click'] },
+      $or: [
+        {
+          event: 'subscribe-button-click',
+          category: 'citizenship',
+          value: 'cta',
+        },
+        {
+          event: 'subscribe-button-click',
+          category: 'engagement',
+          value: buttonType,
+        },
+        {
+          event: 'become-citizen-button-click',
+          category: 'citizenship',
+        },
+      ],
 
       ...(timeFrame !== 'allTime' && {
         created: {
@@ -345,9 +368,11 @@ export const generateTokenBasketFilter = ({
 
   const filter = {
     where: {
-      category: { $in: ['engagement'] },
-      value: { $in: ['token-sale'] },
-      event: { $in: ['token-sale-success'] },
+      $or: [
+        { category: 'token', value: 'sale' },
+        { category: 'engagement', value: 'token-sale' },
+      ],
+      event: { $in: ['token-sale-success', 'purchase-complete-crypto'] },
 
       ...(timeFrame !== 'allTime' && {
         created: {
@@ -380,8 +405,10 @@ export const generateFinancedTokenStartedFilter = ({
 
   const filter = {
     where: {
-      category: { $in: ['engagement'] },
-      value: { $in: ['citizenship'] },
+      $or: [
+        { category: 'citizenship' },
+        { category: 'engagement', value: 'citizenship' },
+      ],
       event: { $in: ['financed-token-purchase-started'] },
 
       ...(timeFrame !== 'allTime' && {
@@ -415,8 +442,10 @@ export const generateFinancedTokenBasketFilter = ({
 
   const filter = {
     where: {
-      category: { $in: ['engagement'] },
-      value: { $in: ['citizenship'] },
+      $or: [
+        { category: 'citizenship' },
+        { category: 'engagement', value: 'citizenship' },
+      ],
       event: { $in: ['financed-token-purchase-completed'] },
 
       ...(timeFrame !== 'allTime' && {
@@ -450,9 +479,11 @@ export const generateSubscribeButtonClickFilter = ({
 
   const filter = {
     where: {
-      category: { $in: ['engagement'] },
-      value: { $in: ['subscription'] },
       event: { $in: ['subscribe-button-click'] },
+      $or: [
+        { category: 'subscriptions' },
+        { category: 'engagement', value: 'subscription' },
+      ],
 
       ...(timeFrame !== 'allTime' && {
         created: {
@@ -485,9 +516,11 @@ export const generateManageSubscriptionButtonClickFilter = ({
 
   const filter = {
     where: {
-      category: { $in: ['engagement'] },
-      value: { $in: ['subscription'] },
       event: { $in: ['manage-subscription-button-click'] },
+      $or: [
+        { category: 'subscriptions' },
+        { category: 'engagement', value: 'subscription' },
+      ],
 
       ...(timeFrame !== 'allTime' && {
         created: {
@@ -520,9 +553,12 @@ export const generateCreateAccountButtonClickFilter = ({
 
   const filter = {
     where: {
-      category: { $in: ['engagement'] },
-      value: { $in: ['subscription'] },
       event: { $in: ['create-account-button-click'] },
+      $or: [
+        { category: 'subscriptions' },
+        { category: 'signup' },
+        { category: 'engagement', value: 'subscription' },
+      ],
 
       ...(timeFrame !== 'allTime' && {
         created: {

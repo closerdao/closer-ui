@@ -14,7 +14,7 @@ import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
 import { getReserveTokenDisplay } from '../../utils/config.utils';
 import { getTotalPrice } from '../../utils/bondingCurve';
-import api from '../../utils/api';
+import { logMetric } from '../../utils/metrics';
 
 const { MAX_TOKENS_PER_TRANSACTION, MAX_WALLET_BALANCE } = SALES_CONFIG;
 
@@ -75,19 +75,11 @@ const TokenCounterSimple = ({ tokensToBuy, setTokensToBuy }: Props) => {
     setTokensToBuy(possibleAmount);
     setTokensToSpend(priceForTotalAmount);
 
-    // Track calculator usage
-    (async () => {
-      try {
-        await api.post('/metric', {
-          event: 'use-calculator',
-          value: 'token-sale',
-          point: 0,
-          category: 'engagement',
-        });
-      } catch (error) {
-        console.error('Error logging calculator usage:', error);
-      }
-    })();
+    void logMetric({
+      event: 'use-calculator',
+      category: 'token',
+      value: 'calculator', point: possibleAmount,
+    });
   };
 
   const handleTokensToBuyChange = (
@@ -102,19 +94,11 @@ const TokenCounterSimple = ({ tokensToBuy, setTokensToBuy }: Props) => {
     setTokensToBuy(possibleAmount);
     setTokensToSpend(priceForTotalAmount);
 
-    // Track calculator usage
-    (async () => {
-      try {
-        await api.post('/metric', {
-          event: 'use-calculator',
-          value: 'token-sale',
-          point: 0,
-          category: 'engagement',
-        });
-      } catch (error) {
-        console.error('Error logging calculator usage:', error);
-      }
-    })();
+    void logMetric({
+      event: 'use-calculator',
+      category: 'token',
+      value: 'calculator', point: possibleAmount,
+    });
   };
 
   return (

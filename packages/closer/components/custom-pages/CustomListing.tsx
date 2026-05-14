@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Link from 'next/link';
 
 import React, { useEffect, useState } from 'react';
@@ -6,6 +5,9 @@ import React, { useEffect, useState } from 'react';
 import { Button, Heading, priceFormat } from 'closer';
 import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 import { useTranslations } from 'next-intl';
+
+import { resolveBlockHtml, resolveBlockText } from '../../utils/blockI18n';
+import SafeCustomPageImage from './SafeCustomPageImage';
 
 const CustomListing: React.FC<{
   settings: {
@@ -63,14 +65,16 @@ const CustomListing: React.FC<{
             level={2}
             className={`${settings?.isColorful ? 'text-accent' : ''}  text-3xl`}
           >
-            {content?.title}
+            {resolveBlockText(content?.title, t)}
           </Heading>
-          <p className="text-foreground text-md">{content?.description}</p>
+          <p className="text-foreground text-md">
+            {resolveBlockText(content?.description, t)}
+          </p>
         </div>
         <div className="flex flex-wrap justify-center gap-6  gap-y-[50px]">
-          {content?.items?.map((item) => (
+          {content?.items?.map((item, itemIndex) => (
             <div
-              key={item.title}
+              key={`${itemIndex}-${item.title}`}
               className={`flex flex-col  gap-6 text-center ${
                 settings?.hasBorder ? 'border shadow-sm rounded-md p-3' : ''
               }`}
@@ -85,11 +89,11 @@ const CustomListing: React.FC<{
               }}
             >
               <div className="flex-1 flex flex-col gap-6">
-                {item?.imageUrl && (
+                {item.imageUrl?.trim() ? (
                   <div className={settings?.isSmallImage ? 'px-10' : ''}>
-                    <Image
+                    <SafeCustomPageImage
                       src={item.imageUrl}
-                      alt={item.title}
+                      alt={resolveBlockText(item.title, t)}
                       width={400}
                       height={500}
                       className={`${
@@ -98,27 +102,29 @@ const CustomListing: React.FC<{
                       sizes="(max-width: 768px) 100vw, 40vw"
                     />
                   </div>
-                )}
-                {!item.imageUrl && settings.isSmallImage && (
+                ) : null}
+                {!item.imageUrl?.trim() && settings.isSmallImage ? (
                   <div className="flex justify-center py-4">
                     <UserAvatarPlaceholder size="5xl" />
                   </div>
-                )}
+                ) : null}
                 <Heading
                   display={false}
                   level={3}
                   className="font-bold text-md"
                 >
-                  {item.title}
+                  {resolveBlockText(item.title, t)}
                 </Heading>
                 {settings?.isAccommodations ? (
                   <div className="text-md leading-normal flex-1">
-                    {getFirstParagraph(item.text)}
+                    {getFirstParagraph(resolveBlockText(item.text, t))}
                   </div>
                 ) : (
                   <div
                     className="rich-text text-md leading-normal flex-1"
-                    dangerouslySetInnerHTML={{ __html: item.text }}
+                    dangerouslySetInnerHTML={{
+                      __html: resolveBlockHtml(item.text, t),
+                    }}
                   />
                 )}
               </div>
@@ -136,7 +142,9 @@ const CustomListing: React.FC<{
                         : ''
                     } w-full`}
                   >
-                    <Link href={item.cta.url}>{item.cta.text}</Link>
+                    <Link href={item.cta.url}>
+                      {resolveBlockText(item.cta.text, t)}
+                    </Link>
                   </Button>
                 </div>
               )}

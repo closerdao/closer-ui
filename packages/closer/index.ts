@@ -51,6 +51,7 @@ export * from './contexts/wallet';
 // Hooks
 export * from './hooks/useConfig';
 export * from './hooks/useHasMounted';
+export { useNavigationMetrics } from './hooks/useNavigationMetrics';
 export { useSalePaidRedirect } from './hooks/useSalePaidRedirect';
 export * from './hooks/useRBAC';
 export { default as Page401 } from './pages/401';
@@ -103,6 +104,9 @@ export { default as AffiliateDashboardPage } from './pages/dashboard/affiliate';
 export { default as PerformancePage } from './pages/dashboard/performance/index';
 export { default as TokenSalesDashboardPage } from './pages/dashboard/token-sales';
 export { default as FinancedTokenSaleApplicationPage } from './pages/dashboard/token-sales/financed/[applicationId]';
+export { default as DashboardPagesIndex } from './pages/dashboard/pages';
+export { default as DashboardPagesEdit } from './pages/dashboard/pages/[id]';
+export { default as CustomPagePage } from './pages/[slug]';
 export { default as EventsPage } from './pages/events';
 export { default as EventPage } from './pages/events/[slug]';
 export { default as EditEventPage } from './pages/events/[slug]/edit';
@@ -159,6 +163,7 @@ export { default as ContractsPage } from './pages/token/contracts';
 
 export { default as CitizenshipPage } from './pages/citizenship/index';
 export { default as ExpenseTrackingDashboardPage } from './pages/dashboard/expense-tracking';
+export { default as MetricsDashboardPage } from './pages/dashboard/metrics';
 export { default as SubscriptionsCitizenSuccessPage } from './pages/subscriptions/citizen/success';
 export { default as SubscriptionsCitizenValidationPage } from './pages/subscriptions/citizen/validation';
 export { default as CitizenWhyPage } from './pages/subscriptions/citizen/why';
@@ -217,6 +222,10 @@ export * from './types/';
 // Utils
 export { default as LocaleMessagesNextIntlBridge } from './components/LocaleMessagesNextIntlBridge';
 export { default as api, cdn } from './utils/api';
+export {
+  clearInteractionSession,
+  ensureInteractionSession,
+} from './utils/interactionSession';
 export { appGetInitialPropsWithMessages } from './utils/appLocaleMessages.helpers';
 export { invalidateConfigCache } from './utils/configCache';
 export { default as configCached } from './configCached';
@@ -227,3 +236,9 @@ export {
 export { getCachedConfig } from './utils/cachedConfig.helpers';
 // Note: blockchain utils import ethers (~500KB) - import directly from 'closer/utils/blockchain' when needed
 export * from './utils/helpers';
+export {
+  BLOCK_I18N_PREFIX,
+  extractBlockI18nKey,
+  resolveBlockHtml,
+  resolveBlockText,
+} from './utils/blockI18n';

@@ -69,14 +69,16 @@ import {
   getFoodOptionsForBookingContext,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { formatStakeBookingErrorForUi } from '../../../utils/stakeBookingError.helpers';
 import { priceFormat } from '../../../utils/helpers';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
 import { stayRequiresFullCheckoutFlow } from '../../../utils/stayPaymentRouting.helpers';
 import {
   buildStayTokenStakePlan,
-  canApplyTokenOrCreditsToStay,
+  canAugmentTokenOrCreditsPayment,
   canChangeStayPaymentMethod,
+  canShowStayTokenCreditPaymentOptions,
   checkoutStay,
   computeCreditsOwed,
   computeFiatOwed,
@@ -93,6 +95,7 @@ import {
   isStayTerminal,
   setStayPaymentMethod,
   stakeStayTokens,
+  stayUsesTokenAccommodation,
   submitStay,
   updateStayOptions,
 } from '../../../utils/stays.api';
@@ -440,6 +443,8 @@ const StayCheckoutContent = ({
     null,
   );
   const [isApplyingCredits, setIsApplyingCredits] = useState(false);
+  const [isRevertingTokenPayment, setIsRevertingTokenPayment] =
+    useState(false);
   const [preferencesError, setPreferencesError] = useState<string | null>(null);
   const [isSavingPreferences, setIsSavingPreferences] = useState(false);
   const [isSavingStayMessage, setIsSavingStayMessage] = useState(false);
@@ -513,6 +518,29 @@ const StayCheckoutContent = ({
     }
   }, [currentStay.status, currentStay._id, router]);
 
+  const stayMetricFields = useMemo(
+    () => linkedMetricFields('Stay', currentStay?._id),
+    [currentStay?._id],
+  );
+
+  const stayCheckoutViewMetricRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!currentStay?._id) return;
+    const idKey = String(currentStay._id);
+    if (stayCheckoutViewMetricRef.current === idKey) return;
+    stayCheckoutViewMetricRef.current = idKey;
+    const pt =
+      Math.round(
+        Number(currentStay.duration ?? currentStay.adults ?? 0) || 0,
+      ) || 1;
+    void logMetric({
+      event: 'stay-checkout-view',
+      category: 'co-housing',
+      value: 'view', point: pt,
+      ...stayMetricFields,
+    });
+  }, [currentStay._id, currentStay.duration, currentStay.adults]);
+
   useEffect(() => {
     if (
       !isStayAwaitingHostApproval(currentStay) &&
@@ -529,8 +557,10 @@ const StayCheckoutContent = ({
 
   const priceLock = currentStay.priceLock;
   const isMember = Boolean(authUser?.roles?.includes('member'));
-  const showTokenCreditPaymentOptions =
-    canApplyTokenOrCreditsToStay(currentStay);
+  const showTokenCreditPaymentOptions = canShowStayTokenCreditPaymentOptions(
+    currentStay,
+    isMember,
+  );
   const isFree =
     !priceLock ||
     (priceLock.total.val === 0 &&
@@ -549,11 +579,16 @@ const StayCheckoutContent = ({
   );
 
   const canChangePaymentMethod = canChangeStayPaymentMethod(currentStay);
+  const canAugmentTokenOrCredits =
+    canAugmentTokenOrCreditsPayment(currentStay);
+  const canUseTokenCreditUiActions =
+    canChangePaymentMethod || canAugmentTokenOrCredits;
 
   const paymentChoice = useMemo(
     () => inferPaymentChoiceFromStay(currentStay, tokenAccommodationVal),
     [currentStay, tokenAccommodationVal],
   );
+  const stayUsesTokens = stayUsesTokenAccommodation(currentStay);
 
   const checkoutRouteTarget = useMemo(
     () =>
@@ -608,6 +643,9 @@ const StayCheckoutContent = ({
   }, [currentStay]);
 
   const hasAlternativeAccommodationPayment = paymentChoice !== 'fiat';
+  const isAwaitingStayPayment = isStayAwaitingPayment(currentStay);
+  const showFullTokenCreditControls =
+    !hasAlternativeAccommodationPayment || isAwaitingStayPayment;
 
   const accommodationPriceDetail = useMemo(() => {
     const lock = currentStay.priceLock;
@@ -790,7 +828,8 @@ const StayCheckoutContent = ({
   );
 
   const isApplyCreditsEnabled =
-    canChangePaymentMethod &&
+    canUseTokenCreditUiActions &&
+    !stayUsesTokens &&
     creditsAmountToApply > 0 &&
     !isApplyingCredits &&
     !isStakeModalOpen;
@@ -802,10 +841,13 @@ const StayCheckoutContent = ({
     '!normal-case tracking-normal min-h-[36px] text-sm';
 
   const applyCreditsDisabledExplanation = useMemo(() => {
+    if (stayUsesTokens) {
+      return undefined;
+    }
     if (isApplyCreditsEnabled || isApplyingCredits) {
       return undefined;
     }
-    if (!canChangePaymentMethod) {
+    if (!canUseTokenCreditUiActions) {
       return t('stay_create_payment_method_locked');
     }
     if (tokenAccommodationVal <= 0) {
@@ -818,7 +860,8 @@ const StayCheckoutContent = ({
   }, [
     isApplyCreditsEnabled,
     isApplyingCredits,
-    canChangePaymentMethod,
+    canUseTokenCreditUiActions,
+    stayUsesTokens,
     tokenAccommodationVal,
     creditsBalance,
     isStakeModalOpen,
@@ -864,7 +907,7 @@ const StayCheckoutContent = ({
 
   const handleApplyTokens = () => {
     if (!showTokenCreditPaymentOptions) return;
-    if (!canChangePaymentMethod) return;
+    if (!canUseTokenCreditUiActions) return;
     if (isSameDayTokenBooking) return;
     if (!isWalletConnected || tokenAmountToApply <= 0) return;
     if (isCreditsModalOpen) return;
@@ -1115,7 +1158,8 @@ const StayCheckoutContent = ({
 
   const openCreditsConfirmationModal = () => {
     if (!showTokenCreditPaymentOptions) return;
-    if (!canChangePaymentMethod || creditsAmountToApply <= 0) return;
+    if (stayUsesTokens) return;
+    if (!canUseTokenCreditUiActions || creditsAmountToApply <= 0) return;
     if (isStakeModalOpen) return;
     setCreditsModalError(null);
     setIsCreditsModalOpen(true);
@@ -1128,7 +1172,8 @@ const StayCheckoutContent = ({
 
   const confirmApplyCredits = async () => {
     if (!showTokenCreditPaymentOptions) return;
-    if (!canChangePaymentMethod || creditsAmountToApply <= 0) return;
+    if (stayUsesTokens) return;
+    if (!canUseTokenCreditUiActions || creditsAmountToApply <= 0) return;
     setCreditsModalError(null);
     setActionError(null);
     setIsApplyingCredits(true);
@@ -1152,6 +1197,30 @@ const StayCheckoutContent = ({
       setCreditsModalError(parseMessageFromError(err));
     } finally {
       setIsApplyingCredits(false);
+    }
+  };
+
+  const handleCancelTokenPayment = async () => {
+    if (!showTokenCreditPaymentOptions) return;
+    if (!stayUsesTokens) return;
+    if (!canChangePaymentMethod) return;
+    setCreditsModalError(null);
+    setActionError(null);
+    setIsRevertingTokenPayment(true);
+    try {
+      let editableStay = currentStay;
+      if (editableStay.status === 'draft') {
+        editableStay = await submitStay(editableStay._id);
+        setCurrentStay(editableStay);
+      }
+      const updated = await setStayPaymentMethod(editableStay._id, {
+        method: 'fiat',
+      });
+      setCurrentStay(updated);
+    } catch (err) {
+      setActionError(parseMessageFromError(err));
+    } finally {
+      setIsRevertingTokenPayment(false);
     }
   };
 
@@ -1352,6 +1421,16 @@ const StayCheckoutContent = ({
   const handleConfirmAndPay = async () => {
     setActionError(null);
     setIsProcessing(true);
+    const stayPaymentPoint =
+      Math.round(
+        Number(currentStay.duration ?? currentStay.adults ?? 0) || 0,
+      ) || 1;
+    void logMetric({
+      event: 'stay-payment-started',
+      category: 'co-housing',
+      value: 'payment', point: stayPaymentPoint,
+      ...stayMetricFields,
+    });
     try {
       let workingStay = currentStay;
       if (isStayCheckoutDraft(workingStay)) {
@@ -2173,7 +2252,7 @@ const StayCheckoutContent = ({
           )}
           {showTokenCreditPaymentOptions && (
           <div className="mt-5 flex flex-col gap-3">
-            {!hasAlternativeAccommodationPayment ? (
+            {showFullTokenCreditControls ? (
               <>
                 {isWeb3Enabled && tokenAccommodationVal > 0 && (
                   <>
@@ -2190,7 +2269,7 @@ const StayCheckoutContent = ({
                           size="small"
                           isFullWidth={false}
                           isEnabled={
-                            canChangePaymentMethod &&
+                            canUseTokenCreditUiActions &&
                             tokenAmountToApply > 0 &&
                             !isSameDayTokenBooking &&
                             !isCreditsModalOpen &&
@@ -2216,28 +2295,49 @@ const StayCheckoutContent = ({
                     )}
                   </>
                 )}
-                <div
-                  className={
-                    applyCreditsDisabledExplanation
-                      ? 'w-full cursor-help'
-                      : 'w-full'
-                  }
-                  {...(applyCreditsDisabledExplanation
-                    ? { title: applyCreditsDisabledExplanation }
-                    : {})}
-                >
-                  <Button
-                    onClick={openCreditsConfirmationModal}
-                    variant="secondary"
-                    size="small"
-                    isFullWidth={false}
-                    isEnabled={isApplyCreditsEnabled}
-                    isLoading={isApplyingCredits}
-                    className={compactPaymentButtonClass}
+                {!stayUsesTokens ? (
+                  <div
+                    className={
+                      applyCreditsDisabledExplanation
+                        ? 'w-full cursor-help'
+                        : 'w-full'
+                    }
+                    {...(applyCreditsDisabledExplanation
+                      ? { title: applyCreditsDisabledExplanation }
+                      : {})}
                   >
-                    {t('stay_create_apply_credits_button')}
-                  </Button>
-                </div>
+                    <Button
+                      onClick={openCreditsConfirmationModal}
+                      variant="secondary"
+                      size="small"
+                      isFullWidth={false}
+                      isEnabled={isApplyCreditsEnabled}
+                      isLoading={isApplyingCredits}
+                      className={compactPaymentButtonClass}
+                    >
+                      {t('stay_create_apply_credits_button')}
+                    </Button>
+                  </div>
+                ) : (
+                  canChangePaymentMethod && (
+                    <button
+                      type="button"
+                      onClick={handleCancelTokenPayment}
+                      disabled={
+                        isRevertingTokenPayment ||
+                        isApplyingCredits ||
+                        isStakeModalOpen ||
+                        isStaking ||
+                        isVerifyingStake
+                      }
+                      className="text-sm text-accent underline text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isRevertingTokenPayment
+                        ? t('stay_create_cancel_token_payment_loading')
+                        : t('stay_create_cancel_token_payment_link')}
+                    </button>
+                  )
+                )}
               </>
             ) : (
               needsTokenStakeCompletion && (
@@ -2277,7 +2377,7 @@ const StayCheckoutContent = ({
                 </>
               )
             )}
-            {!canChangePaymentMethod && (
+            {!canUseTokenCreditUiActions && (
               <p className="text-xs text-gray-500">
                 {t('stay_create_payment_method_locked')}
               </p>
@@ -2356,7 +2456,21 @@ const StayCheckoutContent = ({
             {useCardPaymentPrimaryCta && !isMember ? (
               <Button
                 isEnabled={hasAcceptedTerms && !isProcessing}
-                onClick={() => router.push(paymentPageUrl)}
+                onClick={() => {
+                  const pt =
+                    Math.round(
+                      Number(
+                        currentStay.duration ?? currentStay.adults ?? 0,
+                      ) || 0,
+                    ) || 1;
+                  void logMetric({
+                    event: 'stay-payment-page-navigated',
+                    category: 'co-housing',
+                    value: 'payment', point: pt,
+                    ...stayMetricFields,
+                  });
+                  router.push(paymentPageUrl);
+                }}
                 className="min-h-[48px]"
               >
                 {t('stay_checkout_cta_card_shortcut_button')}

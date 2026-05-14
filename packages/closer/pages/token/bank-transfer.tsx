@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { ChangeEvent, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   BackButton,
@@ -70,6 +70,22 @@ const BankTransferPage = ({ generalConfig }: Props) => {
   const [isTokenTermsAccepted, setIsTokenTermsAccepted] = useState(false);
   const [existingCharges, setExistingCharges] = useState<any[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const fiatCheckoutViewMetricRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!router.isReady || !hasValidSaleId || saleLoading || !sale) return;
+    const sid = resolvedSaleId.trim();
+    if (!sid || fiatCheckoutViewMetricRef.current === sid) return;
+    fiatCheckoutViewMetricRef.current = sid;
+    const rawQty = sale?.quantity;
+    const pt =
+      typeof rawQty === 'number' && Number.isFinite(rawQty) ? rawQty : 0;
+    void logMetric({
+      event: 'token-fiat-checkout-viewed',
+      category: 'token',
+      value: 'fiat-checkout-view', point: pt,
+    });
+  }, [router.isReady, hasValidSaleId, saleLoading, sale, resolvedSaleId]);
 
   const validateIban = (iban: string) => {
     if (!iban.trim()) {
@@ -233,16 +249,16 @@ const BankTransferPage = ({ generalConfig }: Props) => {
         if (!sid) {
           void logMetric({
             event: 'apply-error',
-            value: 'token-sale-fiat',
-            point,
+            category: 'token',
+            value: 'bank-error', point: point,
           });
           setError(t('token_sale_bank_transfer_missing_sale_id'));
           return;
         }
-        await logMetric({
+        void logMetric({
           event: 'apply',
-          value: 'token-sale-fiat',
-          point,
+          category: 'token',
+          value: 'bank-submit', point: point,
         });
         const tf = String(sale.total_price ?? '');
         const qs = new URLSearchParams({
@@ -255,8 +271,8 @@ const BankTransferPage = ({ generalConfig }: Props) => {
       } else {
         void logMetric({
           event: 'apply-error',
-          value: 'token-sale-fiat',
-          point,
+          category: 'token',
+          value: 'bank-error', point: point,
         });
       }
     } catch (error) {
@@ -265,10 +281,11 @@ const BankTransferPage = ({ generalConfig }: Props) => {
         typeof rawQty === 'number' && Number.isFinite(rawQty)
           ? rawQty
           : parseInt(String(rawQty ?? ''), 10);
+      const errPoint = Number.isFinite(tokenQty) ? tokenQty : 1;
       void logMetric({
         event: 'apply-error',
-        value: 'token-sale-fiat',
-        point: Number.isFinite(tokenQty) ? tokenQty : 0,
+        category: 'token',
+        value: 'bank-error', point: errPoint,
       });
       setError(parseMessageFromError(error));
       console.error('error with bank transfer:', error);

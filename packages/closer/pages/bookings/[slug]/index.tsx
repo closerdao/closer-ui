@@ -61,10 +61,10 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import {
+  accommodationTokenTotalFromPriceLock,
   computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
-  getStayAccommodationGuestMultiplier,
   isStayShapedBooking,
 } from '../../../utils/stays.api';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
@@ -315,12 +315,14 @@ const BookingPage = ({
       bookingView?.duration != null &&
       !Number.isNaN(bookingView.duration)
     ) {
-      const guests = getStayAccommodationGuestMultiplier({
-        adults: bookingView.adults,
-        children: bookingView.children,
-      });
+      const val = accommodationTokenTotalFromPriceLock(
+        pl,
+        bookingView.duration,
+        adults ?? 1,
+        listing?.private,
+      );
       return {
-        val: pl.dailyRentalToken.val * bookingView.duration * guests,
+        val: val > 0 ? val : pl.dailyRentalToken.val * bookingView.duration,
         cur: pl.dailyRentalToken.cur as CloserCurrencies.TDF,
       };
     }
@@ -328,9 +330,9 @@ const BookingPage = ({
   }, [
     bookingView?.priceLock,
     bookingView?.duration,
-    bookingView?.adults,
-    bookingView?.children,
     rentalToken,
+    adults,
+    listing?.private,
   ]);
   const displayTotalForCosts = (bookingView?.priceLock?.total ??
     total) as Price<

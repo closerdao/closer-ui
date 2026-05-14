@@ -15,7 +15,6 @@ import {
   ConfigProvider,
   ErrorBoundary,
   PlatformProvider,
-  api,
 } from 'closer';
 import LocaleMessagesNextIntlBridge from '../components/LocaleMessagesNextIntlBridge';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
@@ -31,7 +30,9 @@ import configKeyed from '../configCached';
 import { NewsletterProvider } from '../contexts/newsletter';
 import { PushNotificationProvider } from '../contexts/push-notifications';
 import { WalletProvider } from '../contexts/wallet';
+import { useNavigationMetrics } from '../hooks/useNavigationMetrics';
 import { appGetInitialPropsWithMessages } from '../utils/appLocaleMessages.helpers';
+import { linkedMetricFields, logMetric } from '../utils/metrics';
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
@@ -65,23 +66,22 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
 
   const { FACEBOOK_PIXEL_ID } = config || {};
 
+  useNavigationMetrics();
+
   useEffect(() => {
     if (referral) {
       localStorage.setItem(REFERRAL_ID_LOCAL_STORAGE_KEY, referral as string);
 
-      (async () => {
-        try {
-          await api.post('/metric', {
-            event: 'referral-view',
-            value: referral,
-            number: 1,
-            point: 1,
-            category: 'engagement',
-          });
-        } catch (error) {
-          console.error('Error tracking referral view:', error);
-        }
-      })();
+      void logMetric({
+        event: 'referral-view',
+        category: 'affiliate',
+        value: String(referral),
+        number: 1,
+        ...linkedMetricFields(
+          'Affiliate',
+          typeof referral === 'string' ? referral : undefined,
+        ),
+      });
     }
   }, [referral]);
 
