@@ -17,6 +17,7 @@ import {
 import { formatBookingLedgerChargeDisplay } from '../utils/bookingChargesLedger.helpers';
 import { getVatInfo, priceFormat } from '../utils/helpers';
 import DisplayPrice from './DisplayPrice';
+import BookingUnitsNote from './booking/bookingUnitsNote';
 import { Button } from './ui';
 import HeadingRow from './ui/HeadingRow';
 
@@ -62,6 +63,10 @@ interface Props {
   pricingPreviewAvailable?: boolean;
   onBookingCheckout?: () => void | Promise<void>;
   bookingCheckoutLoading?: boolean;
+  numberOfUnits?: number | null;
+  listingPrivate?: boolean;
+  bookingAdults?: number | null;
+  bookingChildren?: number | null;
 }
 
 const SummaryCosts = ({
@@ -100,6 +105,10 @@ const SummaryCosts = ({
   pricingPreviewAvailable = false,
   onBookingCheckout,
   bookingCheckoutLoading = false,
+  numberOfUnits,
+  listingPrivate,
+  bookingAdults,
+  bookingChildren,
 }: Props) => {
   const t = useTranslations();
   const { APP_NAME } = useConfig();
@@ -467,6 +476,17 @@ const SummaryCosts = ({
               </p>
             </div>
           ) : null}
+          <BookingUnitsNote
+            numberOfUnits={numberOfUnits}
+            listingPrivate={listingPrivate}
+            adults={bookingAdults}
+            children={bookingChildren}
+            className={
+              compact
+                ? `${descCls} mt-1`
+                : 'text-right text-xs text-gray-600 mt-3'
+            }
+          />
         </>
       )}
 

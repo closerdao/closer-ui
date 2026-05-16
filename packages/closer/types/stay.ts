@@ -106,6 +106,7 @@ export type Stay = {
   pendingExtension?: PendingExtension;
   checkedIn?: string;
   checkedOut?: string;
+  numberOfUnits?: number;
 
   paymentDelta?: {
     fiat?: StayMoney;

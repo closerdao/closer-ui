@@ -20,6 +20,8 @@ export type DurationDiscountScope = {
 export type StaySearchListing = Listing & {
   rentalFiat?: Price<CloserCurrencies.EUR>;
   total?: Price<CloserCurrencies.EUR>;
+  numberOfUnitsRequired?: number;
+  maxUnits?: number;
   bookingRate?: BookingRate;
   discount?: number;
   discounts?: DurationDiscounts;

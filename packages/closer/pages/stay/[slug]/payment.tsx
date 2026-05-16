@@ -10,6 +10,7 @@ import { loadStripe } from '@stripe/stripe-js';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingSurface from '../../../components/booking/bookingSurface';
+import BookingUnitsNote from '../../../components/booking/bookingUnitsNote';
 import { StayPaymentTokenCreditControls } from '../../../components/booking/stayPaymentTokenCreditControls';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageError from '../../../components/PageError';
@@ -430,6 +431,13 @@ function StayPaymentInner({
                 )}
               </div>
             )}
+            <BookingUnitsNote
+              numberOfUnits={stay.numberOfUnits}
+              listingPrivate={listing?.private}
+              adults={stay.adults}
+              children={stay.children}
+              className="text-xs text-gray-600 mb-3"
+            />
             {!stay.priceLock && stay.fiatTarget && (
               <div className="flex flex-col gap-1.5 text-xs text-gray-700 mb-3">
                 <div className="flex justify-between gap-2 font-medium text-gray-900">
