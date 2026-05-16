@@ -73,7 +73,7 @@ A part-time engineering team of 3–4 people cannot afford to serialize this wor
 | R2 | Signup creates a `LandProject` record (using PR #290 schema) with `claimStatus=pending` linked to a new `ProjectApi` record with `status=active` | PR #290, #330 | A |
 | R3 | Orchestrator state machine drives the provision: `pending → infra-provisioning → app-deploying → dns-verifying → seeding → active` (or `failed` with rollback) | Status-quo gap | A |
 | R4 | Terraform module provisions a DigitalOcean droplet of the requested `serverTier` (`mini`/`medium`/`large` per PR #290 `ProjectApi.serverTier`) with cloud-init that installs Node 22, PM2, nginx, certbot, and `closer-api` | Status-quo gap | B |
-| R5 | Mongo Atlas API provisions a per-tenant database and user; connection string flows into the droplet via secrets injection | Status-quo gap | B, D |
+| R5 | Provisioner creates a per-tenant database + scoped `readWrite` user on the existing shared MongoDB server; connection string flows into the droplet via secrets injection | Status-quo gap (matches production topology) | B, D |
 | R6 | DNS records for `<slug>.closer.earth` and `api.<slug>.closer.earth` are created via the DigitalOcean DNS helper already in PR #330 (`closer-api/utils/digitalocean-dns.js`) | PR #330 | B |
 | R7 | `closer-ui` runs as a single configurable build that resolves tenant identity from the request host (no per-tenant `apps/` folder required for new communities) | Status-quo gap | C |
 | R8 | Per-tenant branding (logo, colors, copy overrides) loads at runtime from the CDN, addressed by tenant slug | Status-quo gap | C |
@@ -100,9 +100,13 @@ Adding a new `routes/control-plane.js` namespace to `closer-api` (running on the
 
 `closer-ui` adds a new `apps/federation-host` app (or refactors `apps/closer`) that reads `req.headers.host`, looks up the tenant config from `api.closer.earth/v4/tenants/by-host?host=<host>`, and renders. This is one Vercel project serving all new communities via a wildcard `*.closer.earth` domain. Per-tenant assets (logo, theme JSON) load from a CDN keyed by slug. Existing per-app deployments (`apps/tdf`, `apps/moos`, etc.) keep working unchanged; this plan does not migrate them.
 
-### KTD4: Mongo Atlas, not Mongo on droplet
+### KTD4: Shared MongoDB server with per-tenant databases (matches current production)
 
-The existing TDF deployment uses MongoDB Atlas; new communities follow suit. Atlas gives us a documented provisioning API, managed backups, automated failover, and a cleaner per-tenant boundary. Running Mongo on the same droplet as the API is operationally simpler but cuts off the automation path and adds an ops burden that scales linearly with community count.
+Production today runs a **shared MongoDB server hosting a separate database per community** (per founder confirmation). Provisioning a new community means creating a new database + a scoped `readWrite` user on the existing shared server and returning the connection string — not standing up new infrastructure. This is materially simpler than Atlas-per-tenant or per-tenant Mongo VMs, matches the team's existing operational muscle, and keeps the v1 work focused on droplet + DNS + integration automation rather than introducing a new managed database vendor.
+
+**Honest framing of the trade-off.** "Federated isolation" is the right label for the API/UI/payments layers — each community gets its own droplet, API process, Stripe Connect account, and domain — but at the **storage layer** the shared Mongo server is a common backbone. Database-level isolation is enforced by Mongo user permissions, not by separate clusters. A misconfigured grant or a server-level outage affects all communities. The plan accepts this trade-off because it matches production reality and lowers v1 ops surface; revisiting (moving heavy tenants to dedicated Mongo, or to Atlas) is a documented follow-up under Scope Boundaries.
+
+**What the provisioning step does instead of "create Atlas cluster":** connect to the shared Mongo as an admin, `db.createUser({ user: 'closer_<slug>', roles: [{ role: 'readWrite', db: 'closer_<slug>' }] })`, write the connection string into the tenant secrets bundle. No new VM, no Atlas API, no new vendor account.
 
 ### KTD5: Secrets in DigitalOcean App Platform encrypted env vars (no separate vault — yet)
 
@@ -136,7 +140,7 @@ sequenceDiagram
     participant Orch as orchestrator job
     participant TF as Terraform (closer-infra)
     participant DO as DigitalOcean API
-    participant Atlas as Mongo Atlas API
+    participant Mongo as shared MongoDB server
     participant DNS as DigitalOcean DNS
     participant Vercel as Vercel API
     participant Stripe as Stripe Connect
@@ -152,13 +156,13 @@ sequenceDiagram
 
     Orch->>TF: terraform apply -var slug=<slug>
     TF->>DO: Create droplet (server_tier)
-    TF->>Atlas: Create database + user
+    TF->>Mongo: createUser + new database
     TF->>DNS: Create A + CNAME records
     TF->>Vercel: Add domain to federation-host project
     TF-->>Orch: outputs (droplet_ip, mongo_uri, ...)
     Orch->>API: Update ProjectApi.technical with outputs
     Orch->>Droplet: SSH + cloud-init waits, runs seed-new-tenant.js
-    Droplet->>Atlas: Connect, seed default config + admin user
+    Droplet->>Mongo: Connect to new DB, seed default config + admin user
     Orch->>Mailgun: Create subdomain, get DKIM/SPF
     Orch->>DNS: Add Mailgun TXT records
     Orch->>Stripe: Create Connect Express account
@@ -181,7 +185,7 @@ graph LR
     subgraph "Track B: IaC & Provisioning"
         B1[Terraform droplet module]
         B2[Cloud-init bootstrap]
-        B3[Mongo Atlas provisioner]
+        B3[Tenant DB+user provisioner]
         B4[Provisioner CLI]
     end
     subgraph "Track C: Runtime Multi-Tenancy"
@@ -257,7 +261,7 @@ closer-infra/                           # NEW REPO
 ├── terraform/
 │   ├── modules/
 │   │   ├── droplet/                    # DO droplet + cloud-init
-│   │   ├── mongo-atlas/                # Atlas DB + user
+│   │   ├── mongo-tenant/               # createUser + new DB on shared Mongo
 │   │   └── dns/                        # DO DNS records
 │   └── environments/
 │       └── production/
@@ -480,31 +484,33 @@ The tree above is a scope declaration. Implementers may adjust layout if discove
 
 **Verification:** Engineer can run `terraform apply` from a clean machine and reach a working `closer-api` instance over HTTPS within 5 minutes.
 
-#### U15. Mongo Atlas provisioner module
+#### U15. Tenant database + user provisioner (against shared Mongo)
 
-**Goal:** Terraform module that uses the Mongo Atlas API to create a per-tenant database, a database user with scoped permissions, and outputs the connection string.
+**Goal:** Terraform module (or thin script wrapped by Terraform's `null_resource`) that connects to the existing shared MongoDB server as an admin and creates a per-tenant database + a `readWrite`-scoped user, then outputs the connection string.
 
 **Requirements:** R5
 
-**Dependencies:** none
+**Dependencies:** none — depends on the existing shared Mongo server already being reachable from wherever Terraform runs
 
 **Files:** (all `closer-infra`)
-- `terraform/modules/mongo-atlas/main.tf`
-- `terraform/modules/mongo-atlas/variables.tf`
-- `terraform/modules/mongo-atlas/outputs.tf`
+- `terraform/modules/mongo-tenant/main.tf`
+- `terraform/modules/mongo-tenant/variables.tf`
+- `terraform/modules/mongo-tenant/outputs.tf`
+- `terraform/modules/mongo-tenant/scripts/create-tenant-db.sh` (or `.js`) — wraps `mongosh` for the actual createUser call
 
-**Approach:** Use the `mongodb/mongodbatlas` Terraform provider. Each tenant gets a database named `closer_<slug>` within a shared M0/M10 cluster (the team chooses the cluster tier; M10+ is required for production SLAs). The database user gets `readWrite` only on that database. Connection string is output (sensitive). IP allowlist includes the tenant's droplet IP (passed in as a variable from the orchestrator).
+**Approach:** Each tenant gets a database named `closer_<slug>` and a user `closer_<slug>` with `roles: [{ role: 'readWrite', db: 'closer_<slug>' }]` only on that database. Password generated per tenant and written to the secrets bundle. Connection string is output as `mongodb://closer_<slug>:<pw>@<shared-mongo-host>:27017/closer_<slug>` (or `+srv` form if appropriate). The shared Mongo admin credentials are themselves a sensitive Terraform input held in the central secrets store, not committed.
 
-**Patterns to follow:** Existing `closer-api/utils/db.js` connection style; existing `DATABASE_URL` shape in `closer-api/.env.sample`.
+**Patterns to follow:** Existing `closer-api/utils/db.js` connection style and `DATABASE_URL` shape in `closer-api/.env.sample`; existing per-tenant database naming (confirm with the team what existing tenant DBs are named so the convention matches — e.g., `closer_tdf`, `closer_moos`).
 
 **Test scenarios:**
-- Apply creates a database and user; `mongosh "$(terraform output -raw connection_string)"` connects.
-- User scope: the created user cannot read or write a different tenant's database.
-- IP allowlist: connection from the droplet IP succeeds; connection from a random IP is blocked.
-- Destroy: removes the user and (optionally per a retention flag) the database.
-- Idempotency: re-running apply with the same slug does not create a duplicate user.
+- Apply creates the DB and user; `mongosh "$(terraform output -raw connection_string)"` connects and `db.runCommand({connectionStatus: 1})` reports the right authenticated user.
+- User scope: the created user cannot `db.adminCommand({listDatabases: 1})` and cannot read another tenant's database.
+- Destroy: removes the user. Whether the database itself is dropped is governed by a `retain_database_on_destroy` variable (default `true` for safety; explicit `false` for test environments).
+- Idempotency: re-running apply with the same slug does not error; the user already exists, the password is either rotated (if `rotate_password=true`) or preserved.
+- Name collision: applying with a slug whose DB already exists from a prior bespoke setup (e.g., `tdf`) fails fast with a clear error before creating any state.
+- Connection-string format matches what `closer-api/utils/db.js` expects (no surprises at runtime).
 
-**Verification:** From a fresh apply, the orchestrator can connect, list collections (empty), and the existing `closer-api/test-db-connection.js` reports success.
+**Verification:** From a fresh apply on a staging shared-Mongo instance, the orchestrator can connect from the newly provisioned droplet, list collections (empty), and the existing `closer-api/test-db-connection.js` reports success.
 
 #### U16. DNS records module (extends PR #330)
 
@@ -798,7 +804,7 @@ The tree above is a scope declaration. Implementers may adjust layout if discove
 | Founders / stewards | New self-serve flow at `closer.earth/start`. New status dashboard at `closer.earth/dashboard/<slug>`. |
 | Central team operations | Receives webhook/email on provision failures (instead of running deploy by hand for happy paths). Manual runbook becomes the fallback for exceptional cases. |
 | DigitalOcean account | Many more droplets; needs a billing review. |
-| MongoDB Atlas account | New cluster strategy (M10+ shared or per-tenant); needs a billing review. |
+| Shared MongoDB server | Many more databases on the same server. Need to confirm current capacity headroom, backup-job runtime impact, and the connection-count ceiling on the existing Mongo process. Capacity review at 25/50/100 communities. |
 | DNS zone `closer.earth` | Many more records; DO DNS limits should be checked (~10k records per zone). |
 | Vercel `closer-ui` project list | One new project (`federation-host`); per-tenant project creation only if KTD3 is revised to per-project. |
 | Stripe account | Many more Connect Express accounts; needs review of platform-level Stripe agreement and per-account fee impact. |
@@ -812,6 +818,7 @@ The tree above is a scope declaration. Implementers may adjust layout if discove
 
 - Migrate the existing `apps/tdf`, `apps/moos`, `apps/lios`, `apps/foz`, `apps/earthbound`, `apps/per-auset`, `apps/closer` deployments onto `federation-host`. The plan keeps both paths working; migration is a separate, lower-urgency PR per app.
 - Replace DigitalOcean App Platform secrets with a proper vault (HashiCorp Vault, Doppler, AWS Secrets Manager). Track D U24 acknowledges this and lays the schema groundwork.
+- Move heavy tenants off the shared MongoDB server onto dedicated Mongo instances (or MongoDB Atlas) once the shared server hits capacity or a single community's compliance posture requires hard storage-level isolation. Trigger: connection-count headroom drops below 30%, p99 query latency degrades meaningfully, or a tenant explicitly contracts for dedicated infra.
 - Build a self-serve UI for the founder to upload a custom logo, set theme colors, or pick a custom domain during signup. v1 uses a default Closer logo and theme; admin UI is the customization path.
 - Build observability into the provisioning pipeline (Datadog/Grafana dashboard for provision latency, failure rates, droplet health). v1 ships with structured logs from the orchestrator and event-log table queryable in Mongo.
 - Replace PM2 with systemd on the droplet. Acceptable to ship v1 with PM2 to match `closer-api/deploy.fish` conventions, but track for follow-up.
@@ -838,7 +845,9 @@ The tree above is a scope declaration. Implementers may adjust layout if discove
 | PR #330 has unaddressed security issues that surface in production once federation register is open to the world | High | Track 0 is committed; do not start Track A/B/D dependencies until U1 is merged and a security review re-runs. |
 | Partial provisioning leaves orphan droplets, MongoDB clusters, or Stripe accounts | High | Orchestrator's `failed` transition triggers decommission for all partial infra. U13 test scenario covers it. Manual cleanup script (`scripts/decommission-tenant.js`) for residual cases. |
 | Stripe Connect KYC takes days; founder's instance is stuck in "integrations-pending" | Medium | The `active` state proceeds without Stripe being complete; the dashboard shows Stripe as a separate "awaiting verification" badge. Payments simply don't work until Stripe is done. |
-| Mongo Atlas hits cluster-tier limits as community count grows | Medium | Start on M10+ shared cluster. Migration to per-tenant M0 dedicated clusters is a follow-up. Plan capacity at 50, 100, 500 communities. |
+| Shared MongoDB server becomes a single point of failure for all communities | High | Document the trade-off in KTD4. Mitigations: backups for the whole server with per-DB restore tested in staging; capacity-tier upsize playbook; named threshold for moving heavy tenants off-shared. The strategy doc's sovereignty language is honest about API/payments/domain sovereignty; storage-layer sharing is acknowledged in the plan. |
+| Shared Mongo capacity (connections, disk, RAM) exhausts as community count grows | Medium | Track headroom from day one (alerts at 70%/85%/95%). Upsize the Mongo VM as needed; move heavy tenants off-shared at a documented threshold. |
+| Mongo admin credentials used by the provisioner are themselves a high-value secret | High | Held only in the central secrets store; rotated on a schedule; provisioner runs server-side, never on engineer laptops. Audit log on every createUser. |
 | Wildcard DNS or wildcard SSL is a security/blast-radius risk | Medium | Use per-subdomain certificates via Vercel + Let's Encrypt; the only "wildcard" is the wildcard DNS A record pointing at Vercel's wildcard infra. |
 | Vercel domain-limit on a single project | Medium | Vercel currently allows ~100 domains per project on Pro. Verify with Vercel; consider Enterprise or per-tenant projects if hit. Document in U9. |
 | Secrets leakage through orchestrator logs or `ProjectApi.technical` field | High | U24 explicitly bans plaintext secrets in central Mongo; orchestrator log scrubbing tested in U13. |
@@ -852,7 +861,7 @@ The tree above is a scope declaration. Implementers may adjust layout if discove
 
 **External services and accounts needed before Track B can start:**
 - DigitalOcean account with API token (already exists; need to confirm rate limits and droplet quota).
-- MongoDB Atlas account with API key.
+- Admin credentials for the existing shared MongoDB server, held in the central secrets store (not on engineer laptops). Confirm the server's network reachability from wherever the orchestrator runs.
 - Vercel team account with API token.
 - Stripe platform account with Connect enabled (already exists per `MIGRATE_PLATFORM_STRIPE_ACCOUNT.md`).
 - Mailgun account with API key and ability to add many subdomains.
@@ -876,7 +885,7 @@ The tree above is a scope declaration. Implementers may adjust layout if discove
 | ID | Question | Owner | Resolution path |
 |----|----------|-------|-----------------|
 | Q1 | Should `federation-host` be a single Vercel project with wildcard domain, or one Vercel project per tenant created via API? | Track C lead + ops | Test wildcard on a Pro account; check Vercel domain-limit; decide before U9. |
-| Q2 | Mongo Atlas tier: shared M10 with per-tenant DB, or per-tenant M0 dedicated clusters? | Track B lead + ops | Cost modeling at 25/50/100 communities; lean shared-M10 initially. |
+| Q2 | What is the current shared MongoDB server's spec, headroom, and connection-count ceiling? At what community count do we need to upsize or shard, and which heavy tenants are first candidates to peel off onto dedicated storage? | Track B lead + founder/ops | Inspect production Mongo; record baseline; define alert thresholds before first new community provisions. |
 | Q3 | Does the central team want to embed Stripe Connect Express's hosted onboarding in an iframe in the dashboard, or send the link via email only? | Track A + Track D | Founder UX test; email-only is simpler v1. |
 | Q4 | Where does the closer.earth marketing site live today, and does the federation-host apex page need to subsume it? | Central team | Confirm with the closerearth team; if there's an existing marketing site to preserve, the apex tenant in U6 forwards to it. |
 | Q5 | Should the founder get a real user account on their new instance automatically (passwordless email link), or just an invite they accept? | Track D + product | UX decision; lean magic-link auto-login on first visit. |
