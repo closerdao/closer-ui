@@ -598,6 +598,10 @@ const Summary = ({
                 }
                 priceDuration={listing?.priceDuration}
                 vatRate={vatRate}
+                numberOfUnits={booking?.numberOfUnits}
+                listingPrivate={listing?.private}
+                bookingAdults={booking?.adults}
+                bookingChildren={booking?.children}
               />
             </div>
           </BookingSurface>

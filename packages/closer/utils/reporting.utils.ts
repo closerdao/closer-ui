@@ -50,6 +50,23 @@ export const formatMessage = (message: any) => {
   }
 };
 
+export const formatErrorForReport = (err: unknown): string => {
+  const axiosErr = err as { response?: { status?: number; data?: unknown } };
+  const status = axiosErr.response?.status;
+  const message = parseMessageFromError(err);
+  if (status == null) {
+    return message;
+  }
+  let result = `${message} (HTTP ${status})`;
+  const data = axiosErr.response?.data;
+  if (data != null && message === 'Something went wrong') {
+    try {
+      result += ` — ${JSON.stringify(data)}`;
+    } catch {}
+  }
+  return result;
+};
+
 export const reportIssue = async (
   message: string,
   userEmail: string | null | undefined,

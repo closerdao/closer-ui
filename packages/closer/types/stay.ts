@@ -106,6 +106,7 @@ export type Stay = {
   pendingExtension?: PendingExtension;
   checkedIn?: string;
   checkedOut?: string;
+  numberOfUnits?: number;
 
   paymentDelta?: {
     fiat?: StayMoney;
@@ -114,12 +115,7 @@ export type Stay = {
   } | null;
 };
 
-export type StaySearchAvailability = Record<string, string[]>;
-
-export type StaySearchResponse = {
-  results: any[];
-  availability: StaySearchAvailability;
-};
+export type { StaySearchResponse } from './durationDiscount';
 
 export type StayCheckoutResponse = {
   paymentIntent: {

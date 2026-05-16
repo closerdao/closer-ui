@@ -21,6 +21,7 @@ import Conditions from '../../../components/Conditions';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageError from '../../../components/PageError';
 import BookingSurface from '../../../components/booking/bookingSurface';
+import BookingUnitsNote from '../../../components/booking/bookingUnitsNote';
 import { StayQuoteFiatDiscountPreview } from '../../../components/booking/stayQuoteFiatDiscountPreview';
 import Modal from '../../../components/Modal';
 import Switch from '../../../components/Switch';
@@ -2250,6 +2251,13 @@ const StayCheckoutContent = ({
               {t('stay_create_no_price_lock')}
             </p>
           )}
+          <BookingUnitsNote
+            numberOfUnits={currentStay.numberOfUnits}
+            listingPrivate={listing?.private}
+            adults={currentStay.adults}
+            children={currentStay.children}
+            className="text-sm text-gray-600 mt-3"
+          />
           {showTokenCreditPaymentOptions && (
           <div className="mt-5 flex flex-col gap-3">
             {showFullTokenCreditControls ? (

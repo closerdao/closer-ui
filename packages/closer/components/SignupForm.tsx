@@ -15,7 +15,10 @@ import TurnstileWidget from './TurnstileWidget';
 import { getRedirectUrl } from '../utils/auth.helpers';
 import { parseMessageFromError, slugify } from '../utils/common';
 import { isInputValid, validatePassword } from '../utils/helpers';
-import { reportIssue } from '../utils/reporting.utils';
+import {
+  formatErrorForReport,
+  reportIssue,
+} from '../utils/reporting.utils';
 import GoogleButton from './GoogleButton';
 import { Button, Card, Checkbox, ErrorMessage, Input } from './ui';
 import Heading from './ui/Heading';
@@ -201,7 +204,10 @@ const SignupForm = ({ app }: Props) => {
           });
         } catch (error) {
           console.error('error with subscribe:', error);
-          await reportIssue(`error with subscription: ${error}`, user?.email);
+          await reportIssue(
+            `Error with /subscribe during signup: ${formatErrorForReport(error)} (signupEmail: ${email})`,
+            user?.email ?? email,
+          );
         }
       }
 
