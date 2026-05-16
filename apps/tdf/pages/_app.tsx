@@ -17,6 +17,7 @@ import {
   LocaleMessagesNextIntlBridge,
   PlatformProvider,
   appGetInitialPropsWithMessages,
+  useNavigationMetrics,
 } from 'closer';
 import { blockchainConfig } from 'closer/config_blockchain';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
@@ -58,6 +59,8 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
   );
 
   const { FACEBOOK_PIXEL_ID } = config || {};
+
+  useNavigationMetrics();
 
   useEffect(() => {
     if (referral) {

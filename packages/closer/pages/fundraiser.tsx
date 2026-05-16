@@ -1,6 +1,6 @@
 import Head from 'next/head';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
@@ -33,6 +33,7 @@ import {
   getMilestoneGoal,
   sortMilestonesByStartDate,
 } from '../utils/fundraising.helpers';
+import { logMetric } from '../utils/metrics';
 import PageNotFound from './not-found';
 
 export interface InvestPageProps {
@@ -75,6 +76,7 @@ const FundraiserPage = ({
     Boolean(fundraisingConfig?.enabled);
 
   const { getTotalCostWithoutWallet } = useBuyTokens();
+  const fundraiserViewLoggedRef = useRef(false);
   const [tokenPrice, setTokenPrice] = useState<number>(0);
   const [fundraisingTotal, setFundraisingTotal] = useState<number>(0);
   const [isLoadingFunds, setIsLoadingFunds] = useState(true);
@@ -143,6 +145,16 @@ const FundraiserPage = ({
       })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!isFundraiserEnabled || fundraiserViewLoggedRef.current) return;
+    fundraiserViewLoggedRef.current = true;
+    void logMetric({
+      event: 'fundraiser-page-viewed',
+      category: 'fundraiser',
+      value: 'view',
+    });
+  }, [isFundraiserEnabled]);
 
   const formatPrice = (tokens: number) => {
     if (!tokenPrice) return '...';

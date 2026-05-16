@@ -10,6 +10,7 @@ import { loadStripe } from '@stripe/stripe-js';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingSurface from '../../../components/booking/bookingSurface';
+import BookingUnitsNote from '../../../components/booking/bookingUnitsNote';
 import { StayPaymentTokenCreditControls } from '../../../components/booking/stayPaymentTokenCreditControls';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageError from '../../../components/PageError';
@@ -30,6 +31,7 @@ import { Stay, StayCheckoutResponse } from '../../../types/stay';
 import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
 import {
+  canShowStayTokenCreditPaymentOptions,
   checkoutStay,
   computeCreditsOwed,
   computeFiatOwed,
@@ -40,7 +42,6 @@ import {
   isStayAwaitingHostApproval,
   isStayPaid,
   isStayTerminal,
-  canApplyTokenOrCreditsToStay,
   formatStayMoney,
 } from '../../../utils/stays.api';
 
@@ -74,6 +75,8 @@ function StayPaymentInner({
 }) {
   const router = useRouter();
   const t = useTranslations();
+  const { user } = useAuth();
+  const isMember = Boolean(user?.roles?.includes('member'));
   const stripe = useStripe();
   const elements = useElements();
 
@@ -428,6 +431,13 @@ function StayPaymentInner({
                 )}
               </div>
             )}
+            <BookingUnitsNote
+              numberOfUnits={stay.numberOfUnits}
+              listingPrivate={listing?.private}
+              adults={stay.adults}
+              children={stay.children}
+              className="text-xs text-gray-600 mb-3"
+            />
             {!stay.priceLock && stay.fiatTarget && (
               <div className="flex flex-col gap-1.5 text-xs text-gray-700 mb-3">
                 <div className="flex justify-between gap-2 font-medium text-gray-900">
@@ -465,7 +475,7 @@ function StayPaymentInner({
           </div>
         </BookingSurface>
 
-        {canApplyTokenOrCreditsToStay(stay) && (
+        {canShowStayTokenCreditPaymentOptions(stay, isMember) && (
         <BookingSurface tone="elevated" padding="lg" as="section">
           <Heading level={2} className="text-lg mb-2">
             {t('stay_payment_page_tokens_credits_title')}

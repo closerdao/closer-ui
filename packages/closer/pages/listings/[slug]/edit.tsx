@@ -177,7 +177,7 @@ const EditListing = ({ bookingConfig, paymentConfig, web3Config }: Props) => {
       <AdminLayout>
         <EditModelPageLayout
           title={`${t('listings_edit_listing')} ${listing.name}`}
-          backHref={`/stay/create?listingId=${listing._id}`}
+          backHref="/listings"
           isEdit
           fullWidth
         >

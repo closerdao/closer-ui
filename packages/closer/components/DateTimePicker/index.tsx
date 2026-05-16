@@ -44,6 +44,7 @@ interface Props {
   isDashboard?: boolean;
   durationLabel?: string;
   hideSelectionSummary?: boolean;
+  compactCalendar?: boolean;
 }
 
 const DateTimePicker = ({
@@ -64,6 +65,7 @@ const DateTimePicker = ({
   startCollapsed = false,
   durationLabel,
   hideSelectionSummary = false,
+  compactCalendar = false,
 }: Props) => {
   const [isExpanded, setIsExpanded] = useState(!startCollapsed);
   // Store the original full dates for timezone conversion
@@ -501,7 +503,13 @@ const DateTimePicker = ({
 
       {showCalendar && !startCollapsed && (
         <>
-          <div className="mt-2">
+          <div
+            className={
+              compactCalendar
+                ? 'w-fit max-w-full [&_.rdp]:p-0 [&_.rdp-months]:gap-3 [&_.rdp-month]:m-0'
+                : 'mt-2'
+            }
+          >
             <DayPicker
               disabled={normalizeBlockedDateRangesForDayPicker(blockedDateRanges)}
               mode="range"

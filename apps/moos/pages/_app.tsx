@@ -16,6 +16,7 @@ import {
   LocaleMessagesNextIntlBridge,
   PlatformProvider,
   appGetInitialPropsWithMessages,
+  useNavigationMetrics,
 } from 'closer';
 import configKeyed from 'closer/configCached';
 import { WalletProvider } from 'closer/contexts/wallet';
@@ -54,6 +55,8 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
   });
 
   const { FACEBOOK_PIXEL_ID } = config || {};
+
+  useNavigationMetrics();
 
   useEffect(() => {
     if (referral) {

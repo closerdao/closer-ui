@@ -22,17 +22,17 @@ import { useAuth } from '../../../contexts/auth';
 import config from '../../../configCached';
 import { useConfig } from '../../../hooks/useConfig';
 import { BookingSettings, GeneralConfig } from '../../../types/api';
-import { Listing } from '../../../types/booking';
 import { FoodOption } from '../../../types/food';
+import type { StaySearchListing } from '../../../types/durationDiscount';
 import api, { cdn } from '../../../utils/api';
+import StayListingAccommodationPrice from '../../../components/booking/stayListingAccommodationPrice';
+import StayListingUnitsCard from '../../../components/booking/stayListingUnitsCard';
 import {
   getDefaultSelectedFoodOptionId,
   getFoodOptionsForBookingContext,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { priceFormat } from '../../../utils/helpers';
 import { createStay, searchStays } from '../../../utils/stays.api';
-import type { CloserCurrencies } from '../../../types/currency';
 
 interface Props {
   bookingSettings: BookingSettings | null;
@@ -121,17 +121,11 @@ const StayCreatePage = ({
     },
   );
 
-  const nights = useMemo(() => {
-    if (!activeParams) return 0;
-    return Math.max(
-      0,
-      dayjs(activeParams.end).diff(dayjs(activeParams.start), 'day'),
-    );
-  }, [activeParams]);
+  const [searchDuration, setSearchDuration] = useState(0);
 
   const [isSearching, setIsSearching] = useState(false);
   const [isCreatingDraft, setIsCreatingDraft] = useState<string | null>(null);
-  const [results, setResults] = useState<Listing[] | null>(null);
+  const [results, setResults] = useState<StaySearchListing[] | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [didSearchOnce, setDidSearchOnce] = useState(false);
 
@@ -162,13 +156,15 @@ const StayCreatePage = ({
     setActiveParams(params);
     syncUrl(params);
     try {
-      const { results: apiResults } = await searchStays({
+      const searchResponse = await searchStays({
         start: params.start,
         end: params.end,
         adults: params.adults,
         children: params.children,
       });
-      let listings = (apiResults as Listing[]) || [];
+      const apiDuration = Number(searchResponse.duration) || 0;
+      setSearchDuration(apiDuration);
+      let listings = searchResponse.results || [];
       if (listingId) {
         const match = listings.find((l) => l._id === listingId);
         if (match) {
@@ -177,7 +173,7 @@ const StayCreatePage = ({
           try {
             const { data } = await api.get(`/listing/${listingId}`);
             if (data?.results) {
-              listings = [data.results as Listing];
+              listings = [data.results as StaySearchListing];
             } else {
               listings = [];
             }
@@ -190,6 +186,7 @@ const StayCreatePage = ({
       setDidSearchOnce(true);
     } catch (err) {
       setSearchError(parseMessageFromError(err));
+      setSearchDuration(0);
       setResults([]);
       setDidSearchOnce(true);
     } finally {
@@ -197,8 +194,9 @@ const StayCreatePage = ({
     }
   };
 
-  const handlePickListing = async (listing: Listing) => {
+  const handlePickListing = async (listing: StaySearchListing) => {
     if (!activeParams) return;
+    if (listing.available === false) return;
     if (!isAuthenticated) {
       const qs = new URLSearchParams(
         buildQueryParams(activeParams) as Record<string, string>,
@@ -352,16 +350,16 @@ const StayCreatePage = ({
 
           {!isSearching && results && results.length > 0 && (
             <>
-              <Heading
-                level={2}
-                className="text-xl mb-4 md:mb-6 text-center md:text-left"
-              >
-                {listingId && results.length === 1
-                  ? t('stay_create_focused_results_heading', {
-                      name: results[0].name,
-                    })
-                  : t('stay_create_results_title', { count: results.length })}
-              </Heading>
+              {listingId && results.length === 1 && (
+                <Heading
+                  level={2}
+                  className="text-xl mb-4 md:mb-6 text-center md:text-left"
+                >
+                  {t('stay_create_focused_results_heading', {
+                    name: results[0].name,
+                  })}
+                </Heading>
+              )}
               {listingId && results.length === 1 && (
                 <p className="text-gray-600 mb-6 max-w-2xl mx-auto text-center md:text-left">
                   {t('stay_create_focused_results_intro')}
@@ -378,7 +376,7 @@ const StayCreatePage = ({
                   <li key={listing._id} className="contents">
                     <ListingResultCard
                       listing={listing}
-                      nights={nights}
+                      duration={searchDuration}
                       onPick={handlePickListing}
                       isCreating={isCreatingDraft === listing._id}
                       layoutFocused={Boolean(listingId && results.length === 1)}
@@ -394,17 +392,20 @@ const StayCreatePage = ({
   );
 };
 
+const stripHtml = (html: string): string =>
+  html?.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() || '';
+
 interface ListingResultCardProps {
-  listing: Listing;
-  nights: number;
-  onPick: (listing: Listing) => void;
+  listing: StaySearchListing;
+  duration: number;
+  onPick: (listing: StaySearchListing) => void;
   isCreating: boolean;
   layoutFocused?: boolean;
 }
 
 const ListingResultCard = ({
   listing,
-  nights,
+  duration,
   onPick,
   isCreating,
   layoutFocused = false,
@@ -414,17 +415,18 @@ const ListingResultCard = ({
     image: `${cdn}${id}-post-md.jpg`,
   }));
 
-  const dailyPrice = listing.fiatPrice?.val || 0;
-  const totalEstimate = dailyPrice * Math.max(nights, 1);
-  const currency = listing.fiatPrice?.cur as CloserCurrencies | undefined;
   const headingId = `listing-${listing._id}-name`;
+  const descriptionPreview = listing.description
+    ? stripHtml(listing.description).slice(0, 140)
+    : '';
+  const isUnavailable = listing.available === false;
 
   return (
     <article
       aria-labelledby={headingId}
       className={`group flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg focus-within:shadow-lg focus-within:ring-2 focus-within:ring-accent transition-shadow ${
         layoutFocused ? 'shadow-md md:flex-row md:items-stretch md:max-h-none' : ''
-      }`}
+      } ${isUnavailable ? 'opacity-75' : ''}`}
     >
       <div
         className={`bg-gray-100 overflow-hidden shrink-0 ${
@@ -466,45 +468,31 @@ const ListingResultCard = ({
         <div className="flex items-start justify-between gap-3">
           <h3
             id={headingId}
-            className="text-base font-semibold text-gray-900 line-clamp-1"
+            className="text-base font-semibold text-gray-900 line-clamp-2 leading-snug min-w-0 flex-1"
           >
             {listing.name}
           </h3>
-          <p className="text-sm font-semibold text-gray-900 whitespace-nowrap">
-            {priceFormat(dailyPrice, currency)}
-            <span className="text-gray-500 text-xs font-normal">
-              {' '}
-              / {t('listing_preview_night')}
-            </span>
-          </p>
+          <StayListingUnitsCard listing={listing} />
         </div>
 
-        {listing.description && (
-          <p
-            className="text-sm text-gray-600 line-clamp-2"
-            dangerouslySetInnerHTML={{
-              __html: listing.description.slice(0, 140),
-            }}
-          />
-        )}
-
-        {nights > 0 && (
-          <p className="text-sm text-gray-600">
-            {t('stay_create_listing_total_estimate', {
-              total: priceFormat(totalEstimate, currency),
-              nights,
-            })}
+        {descriptionPreview && (
+          <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+            {descriptionPreview}
           </p>
         )}
+
+        <StayListingAccommodationPrice listing={listing} duration={duration} />
 
         <div className="mt-auto pt-2">
           <Button
             onClick={() => onPick(listing)}
             isLoading={isCreating}
-            isEnabled={!isCreating}
+            isEnabled={!isCreating && !isUnavailable}
             className="min-h-[44px]"
           >
-            {t('stay_create_reserve_button')}
+            {isUnavailable
+              ? t('listing_preview_not_available')
+              : t('stay_create_reserve_button')}
           </Button>
         </div>
       </div>

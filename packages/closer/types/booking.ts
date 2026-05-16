@@ -221,6 +221,7 @@ export type Booking = {
   pendingExtension?: PendingExtension;
   checkedIn?: string;
   checkedOut?: string;
+  numberOfUnits?: number;
 };
 
 export interface StatusColor {

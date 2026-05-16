@@ -31,7 +31,7 @@ import { formatStakeBookingErrorEnglish } from './stakeBookingError.helpers';
 import { priceFormat } from './helpers';
 import { reportIssue } from './reporting.utils';
 import {
-  getStayAccommodationGuestMultiplier,
+  accommodationTokenTotalFromPriceLock,
   inferPaymentChoiceFromStay,
 } from './stays.api';
 
@@ -1165,7 +1165,15 @@ export function resolveBookingPreviewFinancials(
   let useTokens = !!raw?.useTokens;
   let useCredits = !!raw?.useCredits;
   if (priceLock) {
-    const choice = inferPaymentChoiceFromStay({ ...raw, duration } as Stay);
+    const listingPrivate =
+      typeof raw?.listing === 'object' && raw?.listing != null
+        ? Boolean((raw.listing as { private?: boolean }).private)
+        : undefined;
+    const choice = inferPaymentChoiceFromStay(
+      { ...raw, duration } as Stay,
+      undefined,
+      { listingPrivate },
+    );
     useTokens =
       choice === 'full-tokens' || choice === 'partial-tokens';
     useCredits =
@@ -1181,12 +1189,20 @@ export function resolveBookingPreviewFinancials(
     const daily = priceLock.dailyRentalToken;
     const val = Number(daily.val);
     if (Number.isFinite(val)) {
-      const guests = getStayAccommodationGuestMultiplier({
-        adults: Number(raw?.adults),
-        children: Number(raw?.children),
-      });
+      const adultsRaw = Number(raw?.adults);
+      const adultsForToken =
+        Number.isFinite(adultsRaw) && adultsRaw > 0 ? adultsRaw : 1;
+      const listingPrivate =
+        typeof raw?.listing === 'object' && raw?.listing != null
+          ? Boolean((raw.listing as { private?: boolean }).private)
+          : false;
       rentalToken = {
-        val: val * (duration || 1) * guests,
+        val: accommodationTokenTotalFromPriceLock(
+          priceLock,
+          duration,
+          adultsForToken,
+          listingPrivate,
+        ),
         cur: daily.cur,
       };
     }

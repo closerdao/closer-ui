@@ -255,6 +255,13 @@ const MemberMenu = ({
               rbacPage: 'ExpenseTracking',
             },
             {
+              label: t('navigation_metrics'),
+              url: '/dashboard/metrics',
+              enabled: true,
+              roles: ['admin', 'team', 'space-host'],
+              rbacPage: 'MetricsDashboard',
+            },
+            {
               label: t('navigation_booking_requests'),
               url: '/bookings/requests',
               enabled: isBookingEnabled,
@@ -311,6 +318,13 @@ const MemberMenu = ({
             {
               label: t('navigation_email_templates'),
               url: '/dashboard/admin/emails',
+              enabled: true,
+              roles: ['admin'],
+              rbacPage: 'PlatformSettings',
+            },
+            {
+              label: t('navigation_pages'),
+              url: '/dashboard/pages',
               enabled: true,
               roles: ['admin'],
               rbacPage: 'PlatformSettings',
@@ -611,6 +625,13 @@ const MemberMenu = ({
             rbacPage: 'ExpenseTracking',
           },
           {
+            label: t('navigation_metrics'),
+            url: '/dashboard/metrics',
+            enabled: true,
+            roles: ['admin', 'team', 'space-host'],
+            rbacPage: 'MetricsDashboard',
+          },
+          {
             label: t('navigation_booking_requests'),
             url: '/bookings/requests',
             enabled: true,
@@ -648,6 +669,13 @@ const MemberMenu = ({
           {
             label: t('navigation_email_templates'),
             url: '/dashboard/admin/emails',
+            enabled: true,
+            roles: ['admin'],
+            rbacPage: 'PlatformSettings',
+          },
+          {
+            label: t('navigation_pages'),
+            url: '/dashboard/pages',
             enabled: true,
             roles: ['admin'],
             rbacPage: 'PlatformSettings',

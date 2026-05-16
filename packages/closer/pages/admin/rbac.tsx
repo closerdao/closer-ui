@@ -94,6 +94,7 @@ const RBACPage = () => {
     'Roles',
     'Revenue',
     'Engagement',
+    'MetricsDashboard',
   ]);
   const [roles] = useState([
     'default',

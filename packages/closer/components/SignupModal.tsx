@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import api from '../utils/api';
+import { linkedMetricFields, logMetric } from '../utils/metrics';
 import TurnstileWidget from './TurnstileWidget';
 import { parseMessageFromError, slugify } from '../utils/common';
 import { isInputValid, validatePassword } from '../utils/helpers';
@@ -42,6 +43,16 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
     fields: {},
   });
   const [isEmailConsent, setIsEmailConsent] = useState(true);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    void logMetric({
+      event: 'signup-modal-opened',
+      category: 'signup',
+      value: 'modal',
+      ...linkedMetricFields('Event', eventId),
+    });
+  }, [isOpen]);
 
   const updateApplication = (update: any) => {
     setApplication((prevState) => ({ ...prevState, ...update }));
@@ -122,6 +133,12 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
 
       if (res && res.result === 'signup') {
         setRegistrationSuccess(true);
+        void logMetric({
+          event: 'signup-completed',
+          category: 'signup',
+          value: 'completed',
+          ...linkedMetricFields('User', res.userId),
+        });
 
         // If eventId is provided, register the user for the event and send notification
         if (eventId) {

@@ -11,13 +11,13 @@ import type {
   BookingPaymentDelta,
   UpdatedPrices,
 } from '../types/booking';
+import type { StaySearchResponse } from '../types/durationDiscount';
 import type {
   Stay,
   StayCheckoutResponse,
   StayMoney,
   StayPaymentMethod,
   StayQuoteResponse,
-  StaySearchResponse,
   StayStatus,
   StayTokenStakePlan,
 } from '../types/stay';
@@ -121,6 +121,20 @@ export const canApplyTokenOrCreditsToStay = (
   if (s === 'draft' || s === 'pending' || s === 'paid') return false;
   if ((STAY_TERMINAL_STATUSES as readonly string[]).includes(s)) return false;
   return s === 'confirmed' || s === 'pending-payment';
+};
+
+export const canShowStayTokenCreditPaymentOptions = (
+  stay: Pick<Stay, 'status'> | null | undefined,
+  isMember: boolean,
+): boolean => {
+  if (!stay) return false;
+  if (isStayCheckoutDraft(stay)) {
+    return Boolean(isMember);
+  }
+  if (!canApplyTokenOrCreditsToStay(stay)) return false;
+  return (
+    Boolean(isMember) || normalizeStayStatusRaw(stay.status) === 'confirmed'
+  );
 };
 
 export const computeFiatOwed = (stay: Stay): number => {
@@ -231,6 +245,28 @@ export const buildStayTokenStakePlan = (
   };
 };
 
+export const accommodationTokenTotalFromPriceLock = (
+  priceLock:
+    | { dailyRentalToken?: { val: number } | null }
+    | null
+    | undefined,
+  duration: number,
+  adults: number,
+  listingIsPrivate?: boolean | null,
+): number => {
+  const dailyVal = priceLock?.dailyRentalToken?.val;
+  if (
+    dailyVal == null ||
+    !Number.isFinite(Number(dailyVal)) ||
+    !Number.isFinite(duration) ||
+    duration <= 0
+  ) {
+    return 0;
+  }
+  const guestMult = listingIsPrivate ? 1 : Math.max(1, adults);
+  return Number((Number(dailyVal) * duration * guestMult).toFixed(6));
+};
+
 export const canChangeStayPaymentMethod = (stay: Stay): boolean => {
   if (isStayTerminal(stay)) return false;
   if ((stay.creditsPaid?.val ?? 0) > 0) return false;
@@ -238,12 +274,28 @@ export const canChangeStayPaymentMethod = (stay: Stay): boolean => {
   return true;
 };
 
+export const canAugmentTokenOrCreditsPayment = (stay: Stay): boolean => {
+  if (!isStayAwaitingPayment(stay)) return false;
+  return (
+    computeTokensOwed(stay) > 0.005 || computeCreditsOwed(stay) > 0.005
+  );
+};
+
 export const inferPaymentChoiceFromStay = (
   stay: Stay,
   totalAccommodationTokens?: number,
+  opts?: { listingPrivate?: boolean | null },
 ): StayPaymentMethod => {
   const fullTokenAccommodation =
-    totalAccommodationTokens ?? getStayAccommodationTokenTotal(stay);
+    totalAccommodationTokens ??
+    (stay.priceLock?.dailyRentalToken?.val
+      ? accommodationTokenTotalFromPriceLock(
+          stay.priceLock,
+          stay.duration || 0,
+          stay.adults ?? 1,
+          opts?.listingPrivate,
+        )
+      : 0);
   const tokensTarget = stay.tokensTarget?.val ?? stay.appliedTokens?.val ?? 0;
   const creditsTarget = stay.creditsTarget?.val ?? stay.appliedCredits?.val ?? 0;
   if (
@@ -263,6 +315,13 @@ export const inferPaymentChoiceFromStay = (
   }
   if (creditsTarget > 0) return 'partial-credits';
   return 'fiat';
+};
+
+export const stayUsesTokenAccommodation = (stay: Stay): boolean => {
+  if (stay.useTokens === true) return true;
+  const tokenAccommodationVal = getStayAccommodationTokenTotal(stay);
+  const choice = inferPaymentChoiceFromStay(stay, tokenAccommodationVal);
+  return choice === 'full-tokens' || choice === 'partial-tokens';
 };
 
 type ApiOk<T> = { results: T };
@@ -493,14 +552,19 @@ function unwrapStayMutationResult(data: { results?: unknown }): Stay {
 export function mapStayQuoteToUpdatedPrices(
   quote: StayQuoteResponse,
   duration: number,
-  guestMultiplier?: number,
+  tokenGuestOpts?: { adults?: number; listingPrivate?: boolean | null },
 ): UpdatedPrices {
   const pl = quote.priceLock;
   const dailyTok = pl.dailyRentalToken;
-  const guests =
-    guestMultiplier != null && guestMultiplier > 0 ? guestMultiplier : 1;
   const tokenVal =
-    Number(dailyTok?.val ?? 0) * (duration || 1) * guests;
+    tokenGuestOpts != null
+      ? accommodationTokenTotalFromPriceLock(
+          pl,
+          duration,
+          tokenGuestOpts.adults ?? 1,
+          tokenGuestOpts.listingPrivate,
+        )
+      : Number(dailyTok?.val ?? 0) * (duration || 1);
   const payDelta: BookingPaymentDelta = {
     fiat: {
       val: quote.delta.fiat.val,

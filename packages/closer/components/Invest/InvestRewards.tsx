@@ -4,6 +4,7 @@ import { Check } from 'lucide-react';
 
 import { FundraisingPackage } from '../../types';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import { logMetric } from '../../utils/metrics';
 
 interface InvestRewardsProps {
   packages: FundraisingPackage[];
@@ -142,6 +143,13 @@ const InvestRewards = ({
                 href={href}
                 target={isExternal(pkg) ? '_blank' : undefined}
                 rel={isExternal(pkg) ? 'noopener noreferrer' : undefined}
+                onClick={() => {
+                  void logMetric({
+                    event: 'fundraiser-package-cta',
+                    category: 'fundraiser',
+                    value: `${pkg.type}-${idx}`,
+                  });
+                }}
                 className={`block text-center py-3 rounded-xl text-sm font-semibold transition-all ${
                   popular
                     ? 'bg-accent text-white hover:bg-accent-dark'

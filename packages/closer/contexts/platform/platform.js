@@ -27,7 +27,9 @@ export const models = [
   'volunteer',
   'lesson',
   'food',
+  'interaction',
   'metric',
+  'page',
   'charge',
   'sale',
   'financeapplication',
@@ -89,19 +91,22 @@ const reducer = (state, action) => {
         .set([action.model, 'postError'], action.error);
     case constants.POST_SUCCESS:
       return state.withMutations((map) => {
-        map.set([action.model, 'isPosting'], false).mergeIn(
-          [action.model, 'byId', action.id],
-          Map({
-            data: action.results,
-            loading: false,
-            error: null,
-            receivedAt: Date.now(),
-          }),
-        );
+        map.set([action.model, 'isPosting'], false);
+        const hasId = action.id != null && action.id !== '';
+        if (hasId) {
+          map.mergeIn(
+            [action.model, 'byId', action.id],
+            Map({
+              data: action.results,
+              loading: false,
+              error: null,
+              receivedAt: Date.now(),
+            }),
+          );
+        }
 
-        // Also update all filter caches that match the new item
         const byFilterMap = map.getIn([action.model, 'byFilter']);
-        if (byFilterMap) {
+        if (hasId && byFilterMap) {
           byFilterMap.forEach((filterData, filterKey) => {
             const data = filterData.get('data');
             if (data) {
@@ -109,10 +114,8 @@ const reducer = (state, action) => {
                 const newItem = action.results;
                 const currentFilter = JSON.parse(filterKey);
 
-                // Check if the new item matches this filter
                 let matches = true;
 
-                // If filter has a where clause, check all conditions
                 if (currentFilter.where) {
                   Object.keys(currentFilter.where).forEach((key) => {
                     const filterValue = currentFilter.where[key];
@@ -121,17 +124,12 @@ const reducer = (state, action) => {
                       matches = false;
                     }
                   });
-                }
-                // If filter is empty (like {} for "all items"), it matches everything
-                else if (Object.keys(currentFilter).length === 0) {
+                } else if (Object.keys(currentFilter).length === 0) {
                   matches = true;
-                }
-                // If filter has other properties but no where clause, skip for now
-                else {
+                } else {
                   matches = false;
                 }
 
-                // If the new item matches this filter, add it to the beginning (newest first)
                 if (matches) {
                   map.setIn(
                     [action.model, 'byFilter', filterKey, 'data'],
@@ -612,6 +610,34 @@ export const PlatformProvider = ({ children }) => {
     };
     });
 
+    nextPlatform.page.generate = (data) => {
+      const filterKey = filterToKey(data);
+      dispatch({ type: constants.POST_INIT, model: 'page', filterKey });
+      return api
+        .post('/pages/generate', data)
+        .then((res) => {
+          const results = fromJS(res.data.results);
+          const action = {
+            results,
+            id: results.get('_id'),
+            filterKey,
+            model: 'page',
+            type: constants.POST_SUCCESS,
+          };
+          dispatch(action);
+          return action;
+        })
+        .catch((error) =>
+          dispatch({
+            error,
+            data,
+            filterKey,
+            model: 'page',
+            type: constants.POST_ERROR,
+          }),
+        );
+    };
+
     nextPlatform.engagementopportunity.fetchList = (filter, _opts = {}) => {
       const defaultOptions = { sort_by: '-score' };
       const options = Object.assign(defaultOptions, filter);
@@ -718,9 +744,6 @@ export const PlatformProvider = ({ children }) => {
     creditPayment: (_id, data) =>
       api.post(`/bookings/${_id}/credit-payment`, data).then((res) => {
         const results = fromJS(res.data.results);
-        // #region agent log
-        fetch('http://127.0.0.1:7263/ingest/72e0e0bd-d68c-438d-9c13-d9d55e54313e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'871e9b'},body:JSON.stringify({sessionId:'871e9b',runId:'initial',hypothesisId:'H2',location:'platform.js:bookings.creditPayment',message:'credit payment response before store patch',data:{bookingId:_id,responseBookingId:results.get('_id'),status:results.get('status'),useCredits:results.get('useCredits'),creditsDelta:results.getIn(['paymentDelta','credits','val'])??null},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         const action = {
           results,
           _id,

@@ -35,7 +35,7 @@ interface InputProps extends VariantProps<typeof inputStyles> {
   value?: string;
   onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
-  type?: 'text' | 'password' | 'time' | 'number';
+  type?: 'text' | 'password' | 'time' | 'number' | 'date';
   isRequired?: boolean;
   placeholder?: string;
   successMessage?: string;
@@ -50,6 +50,8 @@ interface InputProps extends VariantProps<typeof inputStyles> {
   additionalInfo?: string;
   maxLength?: number;
   customValidationError?: string;
+  min?: number | string;
+  max?: number | string;
 }
 
 const Input = React.memo(
@@ -74,6 +76,8 @@ const Input = React.memo(
     additionalInfo,
     maxLength,
     customValidationError,
+    min,
+    max,
   }: InputProps) => {
     const t = useTranslations();
 
@@ -191,6 +195,8 @@ const Input = React.memo(
         <div>
           <input
             maxLength={maxLength}
+            min={min}
+            max={max}
             id={id}
             type={type}
             value={isInstantSave ? localValue : value}

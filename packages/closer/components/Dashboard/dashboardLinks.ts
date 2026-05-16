@@ -78,6 +78,13 @@ export const getDashboardLinks = (
       enabled: true,
       roles: ['admin', 'community-curator', 'space-host', 'team'],
     },
+    {
+      label: t('navigation_metrics'),
+      url: '/dashboard/metrics',
+      rbacPage: 'MetricsDashboard',
+      enabled: true,
+      roles: ['admin', 'team', 'space-host'],
+    },
   ];
 
   const bookingLinks: DashboardLink[] = [
@@ -143,6 +150,13 @@ export const getDashboardLinks = (
     {
       label: t('navigation_email_templates'),
       url: '/dashboard/admin/emails',
+      rbacPage: 'PlatformSettings',
+      enabled: true,
+      roles: ['admin'],
+    },
+    {
+      label: t('navigation_pages'),
+      url: '/dashboard/pages',
       rbacPage: 'PlatformSettings',
       enabled: true,
       roles: ['admin'],
