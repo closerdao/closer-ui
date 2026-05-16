@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingRules from '../../../components/BookingRules';
@@ -25,12 +25,13 @@ import {
 } from '../../../types';
 import config from '../../../configCached';
 import {
+  bookingGuestNightsMetricPoint,
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { logMetricIfAuthenticated } from '../../../utils/metrics';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 interface Props extends BaseBookingParams {
@@ -59,6 +60,25 @@ const BookingRulesPage = ({
   }, [router.isReady, slug, platform]);
 
   const booking = slug ? platform.booking.findOne(slug)?.toJS?.() ?? null : null;
+
+  const bookingMetricFields = useMemo(
+    () => linkedMetricFields('Booking', booking?._id),
+    [booking?._id],
+  );
+
+  const rulesStepMetricLoggedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!booking?._id) return;
+    const idKey = String(booking._id);
+    if (rulesStepMetricLoggedRef.current === idKey) return;
+    rulesStepMetricLoggedRef.current = idKey;
+    void logMetric({
+      event: 'booking-rules-view',
+      category: 'booking',
+      value: 'view',
+      ...bookingMetricFields,
+    });
+  }, [booking?._id]);
 
   useRedirectPaidBookingToDetail(booking);
   const [isLoading, setIsLoading] = useState(false);
@@ -112,12 +132,15 @@ const BookingRulesPage = ({
 
   const handleNext = async () => {
     setIsLoading(true);
-    const metricPoint =
-      Math.round(Number(booking?.duration ?? booking?.adults ?? 0)) || 0;
-    void logMetricIfAuthenticated(user, {
+    const metricPoint = bookingGuestNightsMetricPoint(
+      booking?.duration,
+      booking?.adults,
+    );
+    void logMetric({
       event: 'booking-rules-continue-success',
-      value: 'booking',
-      point: metricPoint,
+      category: 'booking',
+      value: 'continue', point: metricPoint,
+      ...bookingMetricFields,
     });
     try {
       await router.push(`/bookings/${booking?._id}/questions`);

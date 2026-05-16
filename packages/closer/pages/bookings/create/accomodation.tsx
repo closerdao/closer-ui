@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingStepsInfo from '../../../components/BookingStepsInfo';
@@ -28,6 +28,7 @@ import {
 } from '../../../types';
 import api from '../../../utils/api';
 import {
+  bookingGuestNightsMetricPoint,
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
   getBookingTokenCurrency,
@@ -35,7 +36,7 @@ import {
 } from '../../../utils/booking.helpers';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
-import { logMetricIfAuthenticated } from '../../../utils/metrics';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import config from '../../../configCached';
 import { getBookingRate, getDiscountRate } from '../../../utils/helpers';
 import PageNotFound from '../../not-found';
@@ -130,6 +131,32 @@ const AccomodationSelector = ({
   const bookingCategory = getBookingType(eventId, bookingType, volunteerId);
 
   const [requestError, setRequestError] = useState<string | null>(null);
+  const noListingsMetricLoggedRef = useRef(false);
+
+  useEffect(() => {
+    void logMetric({
+      event: 'booking-flow-started',
+      category: 'booking',
+      value: bookingCategory,
+      ...linkedMetricFields('Event', eventId),
+    });
+  }, [bookingCategory, eventId]);
+
+  useEffect(() => {
+    if (filteredListings?.length) {
+      noListingsMetricLoggedRef.current = false;
+      return;
+    }
+    if (!listings?.length) return;
+    if (noListingsMetricLoggedRef.current) return;
+    noListingsMetricLoggedRef.current = true;
+    void logMetric({
+      event: 'booking-no-listings',
+      category: 'booking',
+      value: 'empty',
+      ...linkedMetricFields('Event', eventId),
+    });
+  }, [listings, filteredListings, bookingCategory]);
 
   const isPaidEventWithoutTicket = Boolean(event?.paid && !ticketOption);
 
@@ -138,10 +165,16 @@ const AccomodationSelector = ({
       setRequestError(null);
 
       if (isPaidEventWithoutTicket) {
-        void logMetricIfAuthenticated(user, {
+        const nights =
+          start && end
+            ? Math.max(0, dayjs(end).diff(dayjs(start), 'day'))
+            : 0;
+        const p = bookingGuestNightsMetricPoint(nights, adults);
+        void logMetric({
           event: 'booking-request-error',
-          value: 'booking',
-          point: Number(adults) || 0,
+          category: 'booking',
+          value: 'ticket', point: p,
+          ...linkedMetricFields('Event', eventId),
         });
         setRequestError(t('bookings_error_no_ticket_option'));
         return;
@@ -188,10 +221,12 @@ const AccomodationSelector = ({
       });
       const nights =
         start && end ? Math.max(0, dayjs(end).diff(dayjs(start), 'day')) : 0;
-      void logMetricIfAuthenticated(user, {
+      const pt = bookingGuestNightsMetricPoint(nights, adults);
+      void logMetric({
         event: 'booking-request-success',
-        value: 'booking',
-        point: nights || Number(adults) || 0,
+        category: 'booking',
+        value: 'success', point: pt,
+        ...linkedMetricFields('Booking', newBooking._id),
       });
       if (bookingConfig?.foodOptionEnabled) {
         router.push(
@@ -202,15 +237,16 @@ const AccomodationSelector = ({
 
       router.push(`/bookings/${newBooking._id}/questions`);
     } catch (err) {
-      void logMetricIfAuthenticated(user, {
+      const nights =
+        start && end
+          ? Math.max(0, dayjs(end).diff(dayjs(start), 'day'))
+          : 0;
+      const pt = bookingGuestNightsMetricPoint(nights, adults);
+      void logMetric({
         event: 'booking-request-error',
-        value: 'booking',
-        point:
-          start && end
-            ? Math.max(0, dayjs(end).diff(dayjs(start), 'day')) ||
-              Number(adults) ||
-              0
-            : Number(adults) || 0,
+        category: 'booking',
+        value: 'error', point: pt,
+        ...linkedMetricFields('Event', eventId),
       });
       setRequestError(parseMessageFromError(err));
     } finally {

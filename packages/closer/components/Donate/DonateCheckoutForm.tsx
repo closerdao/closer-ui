@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { pollDonationSaleUntilPaid } from '../../utils/donation.helpers';
 import { postDonationPaymentConfirmation } from '../../utils/donationPaymentConfirmation';
 import { parseMessageFromError } from '../../utils/common';
-import { logMetricIfAuthenticated } from '../../utils/metrics';
+import { logMetric } from '../../utils/metrics';
 import { Button, ErrorMessage } from '../ui';
 
 interface DonateCheckoutFormProps {
@@ -14,7 +14,6 @@ interface DonateCheckoutFormProps {
   saleId: string;
   paymentIntentId?: string;
   userEmail?: string;
-  metricUser?: { _id?: string } | null;
   metricAmount?: number;
   onPaid: () => void;
 }
@@ -43,7 +42,6 @@ function DonateCheckoutForm({
   saleId,
   paymentIntentId,
   userEmail,
-  metricUser,
   metricAmount = 0,
   onPaid,
 }: DonateCheckoutFormProps) {
@@ -95,10 +93,10 @@ function DonateCheckoutForm({
       );
 
       if (stripeError) {
-        void logMetricIfAuthenticated(metricUser, {
+        void logMetric({
           event: 'donation-payment-error',
-          value: 'donation',
-          point: metricAmount,
+          category: 'fundraiser',
+          value: 'error', point: metricAmount,
         });
         setError(stripeError.message || t('donate_card_stripe_error'));
         return;
@@ -109,10 +107,10 @@ function DonateCheckoutForm({
         paymentIntent.status !== 'succeeded' &&
         paymentIntent.status !== 'processing'
       ) {
-        void logMetricIfAuthenticated(metricUser, {
+        void logMetric({
           event: 'donation-payment-error',
-          value: 'donation',
-          point: metricAmount,
+          category: 'fundraiser',
+          value: 'error', point: metricAmount,
         });
         setError(t('donate_card_stripe_unexpected_status'));
         return;
@@ -120,10 +118,10 @@ function DonateCheckoutForm({
 
       const piId = paymentIntent?.id || paymentIntentId;
       if (!piId) {
-        void logMetricIfAuthenticated(metricUser, {
+        void logMetric({
           event: 'donation-payment-error',
-          value: 'donation',
-          point: metricAmount,
+          category: 'fundraiser',
+          value: 'error', point: metricAmount,
         });
         setError(t('donate_card_stripe_unexpected_status'));
         return;
@@ -132,10 +130,10 @@ function DonateCheckoutForm({
       setPollHint(t('donate_card_finalizing'));
       try {
         await postDonationPaymentConfirmation(piId, saleId);
-        void logMetricIfAuthenticated(metricUser, {
+        void logMetric({
           event: 'donation-payment-success',
-          value: 'donation',
-          point: metricAmount,
+          category: 'fundraiser',
+          value: 'success', point: metricAmount,
         });
         onPaid();
         return;
@@ -159,29 +157,29 @@ function DonateCheckoutForm({
           }
         }
         if (paid && isMountedRef.current && !ac.signal.aborted) {
-          void logMetricIfAuthenticated(metricUser, {
+          void logMetric({
             event: 'donation-payment-success',
-            value: 'donation',
-            point: metricAmount,
+            category: 'fundraiser',
+            value: 'success', point: metricAmount,
           });
           onPaid();
           return;
         }
         if (isMountedRef.current && !ac.signal.aborted) {
-          void logMetricIfAuthenticated(metricUser, {
+          void logMetric({
             event: 'donation-payment-error',
-            value: 'donation',
-            point: metricAmount,
+            category: 'fundraiser',
+            value: 'error', point: metricAmount,
           });
           setError(parseMessageFromError(confirmErr));
         }
       }
     } catch (err: unknown) {
       if (isMountedRef.current) {
-        void logMetricIfAuthenticated(metricUser, {
+        void logMetric({
           event: 'donation-payment-error',
-          value: 'donation',
-          point: metricAmount,
+          category: 'fundraiser',
+          value: 'error', point: metricAmount,
         });
         setError(parseMessageFromError(err));
       }
