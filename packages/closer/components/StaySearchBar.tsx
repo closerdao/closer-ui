@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../contexts/auth';
 import { BookingSettings } from '../types/api';
 import { getMaxBookingHorizon } from '../utils/helpers';
+import StayDurationDiscountHints from './booking/stayDurationDiscountHints';
 import BookingGuests from './BookingGuests';
 import DateTimePicker from './DateTimePicker';
 import Button from './ui/Button';
@@ -248,35 +249,34 @@ const StaySearchBar = ({
               ref={panelRef}
               id="stay-search-bar-panel"
               role="presentation"
-              className="absolute left-0 right-0 top-full z-40 mt-2 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg max-h-[min(75vh,640px)] sm:max-h-[min(70vh,560px)]"
+              className={`absolute top-full z-40 mt-2 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg max-h-[min(75vh,640px)] sm:max-h-[min(70vh,560px)] ${
+                openPopover === 'dates'
+                  ? 'left-0 w-max max-w-[calc(100vw-2rem)]'
+                  : 'left-0 right-0 w-full max-w-full sm:left-auto sm:right-0 sm:w-72 sm:max-w-[calc(100vw-2rem)]'
+              }`}
             >
-              <div
-                className={`flex w-[200%] min-h-0 transition-[transform] duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] motion-reduce:transition-none ${
-                  openPopover === 'guests'
-                    ? '-translate-x-1/2'
-                    : 'translate-x-0'
-                }`}
-              >
+              {openPopover === 'dates' ? (
                 <div
-                  className="flex w-1/2 min-h-0 min-w-[50%] flex-col overflow-y-auto overscroll-contain p-4"
+                  className="flex w-max max-w-full min-h-0 flex-col overflow-y-auto overscroll-contain px-3 py-3"
                   role="dialog"
                   aria-label={t('stay_search_bar_dates_dialog_label')}
-                  aria-hidden={openPopover !== 'dates'}
                 >
                   <DateTimePicker
                     hideSelectionSummary
+                    compactCalendar
                     setStartDate={setStart}
                     setEndDate={setEnd}
                     blockedDateRanges={blockedDateRanges}
                     savedStartDate={start as string | Date | null}
                     savedEndDate={end as string | Date | null}
                   />
+                  <StayDurationDiscountHints bookingSettings={bookingSettings} />
                 </div>
+              ) : (
                 <div
-                  className="flex w-1/2 min-h-0 min-w-[50%] flex-col overflow-y-auto overscroll-contain p-4"
+                  className="flex w-full min-h-0 flex-col overflow-y-auto overscroll-contain px-3 py-3 sm:w-72"
                   role="dialog"
                   aria-label={t('stay_search_bar_guests_dialog_label')}
-                  aria-hidden={openPopover !== 'guests'}
                 >
                   <BookingGuests
                     shouldHideTitle
@@ -290,7 +290,7 @@ const StaySearchBar = ({
                     setPets={setPets}
                   />
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>

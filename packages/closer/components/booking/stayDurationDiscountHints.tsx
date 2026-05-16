@@ -17,27 +17,29 @@ const StayDurationDiscountHints = ({
   const discounts = resolveDurationDiscountsFromSettings(bookingSettings);
   const weeklyPercent = durationDiscountPercent(discounts.weekly);
   const monthlyPercent = durationDiscountPercent(discounts.monthly);
-  const hints: string[] = [];
 
-  if (weeklyPercent > 0) {
-    hints.push(
-      t('stay_duration_discount_hint_weekly', { percent: weeklyPercent }),
-    );
-  }
-  if (monthlyPercent > 0) {
-    hints.push(
-      t('stay_duration_discount_hint_monthly', { percent: monthlyPercent }),
-    );
+  let hint: string | null = null;
+  if (weeklyPercent > 0 && monthlyPercent > 0) {
+    hint = t('stay_duration_discount_hint_combined', {
+      weeklyPercent,
+      monthlyPercent,
+    });
+  } else if (weeklyPercent > 0) {
+    hint = t('stay_duration_discount_hint_weekly_only', {
+      percent: weeklyPercent,
+    });
+  } else if (monthlyPercent > 0) {
+    hint = t('stay_duration_discount_hint_monthly_only', {
+      percent: monthlyPercent,
+    });
   }
 
-  if (hints.length === 0) return null;
+  if (!hint) return null;
 
   return (
-    <ul className="mt-3 text-sm text-gray-600 space-y-1 list-none p-0">
-      {hints.map((hint) => (
-        <li key={hint}>{hint}</li>
-      ))}
-    </ul>
+    <p className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-600">
+      {hint}
+    </p>
   );
 };
 

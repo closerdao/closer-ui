@@ -25,7 +25,6 @@ import { BookingSettings, GeneralConfig } from '../../../types/api';
 import { FoodOption } from '../../../types/food';
 import type { StaySearchListing } from '../../../types/durationDiscount';
 import api, { cdn } from '../../../utils/api';
-import StayDurationDiscountHints from '../../../components/booking/stayDurationDiscountHints';
 import StayListingAccommodationPrice from '../../../components/booking/stayListingAccommodationPrice';
 import {
   getDefaultSelectedFoodOptionId,
@@ -317,7 +316,6 @@ const StayCreatePage = ({
             externalError={searchError}
             onSearch={runSearch}
           />
-          <StayDurationDiscountHints bookingSettings={bookingSettings} />
         </div>
 
         <section
