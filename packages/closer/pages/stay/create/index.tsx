@@ -22,9 +22,11 @@ import { useAuth } from '../../../contexts/auth';
 import config from '../../../configCached';
 import { useConfig } from '../../../hooks/useConfig';
 import { BookingSettings, GeneralConfig } from '../../../types/api';
-import { Listing } from '../../../types/booking';
 import { FoodOption } from '../../../types/food';
+import type { StaySearchListing } from '../../../types/durationDiscount';
 import api, { cdn } from '../../../utils/api';
+import StayDurationDiscountHints from '../../../components/booking/stayDurationDiscountHints';
+import StayListingAccommodationPrice from '../../../components/booking/stayListingAccommodationPrice';
 import {
   getDefaultSelectedFoodOptionId,
   getFoodOptionsForBookingContext,
@@ -121,17 +123,11 @@ const StayCreatePage = ({
     },
   );
 
-  const nights = useMemo(() => {
-    if (!activeParams) return 0;
-    return Math.max(
-      0,
-      dayjs(activeParams.end).diff(dayjs(activeParams.start), 'day'),
-    );
-  }, [activeParams]);
+  const [searchDuration, setSearchDuration] = useState(0);
 
   const [isSearching, setIsSearching] = useState(false);
   const [isCreatingDraft, setIsCreatingDraft] = useState<string | null>(null);
-  const [results, setResults] = useState<Listing[] | null>(null);
+  const [results, setResults] = useState<StaySearchListing[] | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [didSearchOnce, setDidSearchOnce] = useState(false);
 
@@ -162,13 +158,15 @@ const StayCreatePage = ({
     setActiveParams(params);
     syncUrl(params);
     try {
-      const { results: apiResults } = await searchStays({
+      const searchResponse = await searchStays({
         start: params.start,
         end: params.end,
         adults: params.adults,
         children: params.children,
       });
-      let listings = (apiResults as Listing[]) || [];
+      const apiDuration = Number(searchResponse.duration) || 0;
+      setSearchDuration(apiDuration);
+      let listings = searchResponse.results || [];
       if (listingId) {
         const match = listings.find((l) => l._id === listingId);
         if (match) {
@@ -177,7 +175,7 @@ const StayCreatePage = ({
           try {
             const { data } = await api.get(`/listing/${listingId}`);
             if (data?.results) {
-              listings = [data.results as Listing];
+              listings = [data.results as StaySearchListing];
             } else {
               listings = [];
             }
@@ -190,6 +188,7 @@ const StayCreatePage = ({
       setDidSearchOnce(true);
     } catch (err) {
       setSearchError(parseMessageFromError(err));
+      setSearchDuration(0);
       setResults([]);
       setDidSearchOnce(true);
     } finally {
@@ -197,7 +196,7 @@ const StayCreatePage = ({
     }
   };
 
-  const handlePickListing = async (listing: Listing) => {
+  const handlePickListing = async (listing: StaySearchListing) => {
     if (!activeParams) return;
     if (!isAuthenticated) {
       const qs = new URLSearchParams(
@@ -318,6 +317,7 @@ const StayCreatePage = ({
             externalError={searchError}
             onSearch={runSearch}
           />
+          <StayDurationDiscountHints bookingSettings={bookingSettings} />
         </div>
 
         <section
@@ -378,7 +378,7 @@ const StayCreatePage = ({
                   <li key={listing._id} className="contents">
                     <ListingResultCard
                       listing={listing}
-                      nights={nights}
+                      duration={searchDuration}
                       onPick={handlePickListing}
                       isCreating={isCreatingDraft === listing._id}
                       layoutFocused={Boolean(listingId && results.length === 1)}
@@ -395,16 +395,16 @@ const StayCreatePage = ({
 };
 
 interface ListingResultCardProps {
-  listing: Listing;
-  nights: number;
-  onPick: (listing: Listing) => void;
+  listing: StaySearchListing;
+  duration: number;
+  onPick: (listing: StaySearchListing) => void;
   isCreating: boolean;
   layoutFocused?: boolean;
 }
 
 const ListingResultCard = ({
   listing,
-  nights,
+  duration,
   onPick,
   isCreating,
   layoutFocused = false,
@@ -415,7 +415,6 @@ const ListingResultCard = ({
   }));
 
   const dailyPrice = listing.fiatPrice?.val || 0;
-  const totalEstimate = dailyPrice * Math.max(nights, 1);
   const currency = listing.fiatPrice?.cur as CloserCurrencies | undefined;
   const headingId = `listing-${listing._id}-name`;
 
@@ -470,13 +469,15 @@ const ListingResultCard = ({
           >
             {listing.name}
           </h3>
-          <p className="text-sm font-semibold text-gray-900 whitespace-nowrap">
-            {priceFormat(dailyPrice, currency)}
-            <span className="text-gray-500 text-xs font-normal">
-              {' '}
-              / {t('listing_preview_night')}
-            </span>
-          </p>
+          {duration <= 0 && dailyPrice > 0 && (
+            <p className="text-sm font-semibold text-gray-900 whitespace-nowrap">
+              {priceFormat(dailyPrice, currency)}
+              <span className="text-gray-500 text-xs font-normal">
+                {' '}
+                / {t('listing_preview_night')}
+              </span>
+            </p>
+          )}
         </div>
 
         {listing.description && (
@@ -488,14 +489,7 @@ const ListingResultCard = ({
           />
         )}
 
-        {nights > 0 && (
-          <p className="text-sm text-gray-600">
-            {t('stay_create_listing_total_estimate', {
-              total: priceFormat(totalEstimate, currency),
-              nights,
-            })}
-          </p>
-        )}
+        <StayListingAccommodationPrice listing={listing} duration={duration} />
 
         <div className="mt-auto pt-2">
           <Button

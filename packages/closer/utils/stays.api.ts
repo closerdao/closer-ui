@@ -11,13 +11,13 @@ import type {
   BookingPaymentDelta,
   UpdatedPrices,
 } from '../types/booking';
+import type { StaySearchResponse } from '../types/durationDiscount';
 import type {
   Stay,
   StayCheckoutResponse,
   StayMoney,
   StayPaymentMethod,
   StayQuoteResponse,
-  StaySearchResponse,
   StayStatus,
   StayTokenStakePlan,
 } from '../types/stay';

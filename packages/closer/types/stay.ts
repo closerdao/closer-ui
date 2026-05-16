@@ -114,12 +114,7 @@ export type Stay = {
   } | null;
 };
 
-export type StaySearchAvailability = Record<string, string[]>;
-
-export type StaySearchResponse = {
-  results: any[];
-  availability: StaySearchAvailability;
-};
+export type { StaySearchResponse } from './durationDiscount';
 
 export type StayCheckoutResponse = {
   paymentIntent: {
