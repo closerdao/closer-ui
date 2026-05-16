@@ -930,6 +930,10 @@ const BookingPage = ({
                   : undefined
               }
               bookingCheckoutLoading={isLoading}
+              numberOfUnits={bookingView?.numberOfUnits}
+              listingPrivate={listing?.private}
+              bookingAdults={adults}
+              bookingChildren={children}
             />
           </div>
         </BookingSurface>

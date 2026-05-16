@@ -22,7 +22,6 @@ const StayListingAccommodationPrice = ({
   duration,
 }: StayListingAccommodationPriceProps) => {
   const t = useTranslations();
-  const nightlyVal = listing.fiatPrice?.val;
   const currency =
     listing.rentalFiat?.cur ??
     listing.fiatPrice?.cur ??
@@ -38,27 +37,23 @@ const StayListingAccommodationPrice = ({
     Number.isFinite(rentalFiat.val) &&
     duration > 0;
 
-  if (!showTotal && (nightlyVal == null || !Number.isFinite(nightlyVal))) {
+  if (!showTotal && !(hasDiscount && listing.bookingRate)) {
     return null;
   }
 
+  const formattedCurrency = currency as CloserCurrencies;
+
   return (
     <div className="flex flex-col gap-1 text-sm">
-      {nightlyVal != null && Number.isFinite(nightlyVal) && nightlyVal > 0 && (
-        <p className="text-gray-500 text-xs">
-          {priceFormat(nightlyVal, currency as CloserCurrencies)}
-          <span> / {t('listing_preview_night')}</span>
-        </p>
-      )}
       {showTotal && (
         <p className="text-gray-900">
           {grossVal != null && (
-            <span className="text-gray-400 line-through font-normal mr-1.5">
-              {priceFormat(grossVal, currency as CloserCurrencies)}
+            <span className="text-gray-400 line-through font-normal mr-1.5 tabular-nums">
+              {priceFormat(grossVal, formattedCurrency)}
             </span>
           )}
-          <span className="font-semibold">
-            {priceFormat(rentalFiat!.val, currency as CloserCurrencies)}
+          <span className="font-semibold tabular-nums">
+            {priceFormat(rentalFiat!.val, formattedCurrency)}
           </span>
           <span className="text-gray-600 font-normal">
             {' '}

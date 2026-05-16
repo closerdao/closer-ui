@@ -26,14 +26,13 @@ import { FoodOption } from '../../../types/food';
 import type { StaySearchListing } from '../../../types/durationDiscount';
 import api, { cdn } from '../../../utils/api';
 import StayListingAccommodationPrice from '../../../components/booking/stayListingAccommodationPrice';
+import StayListingUnitsCard from '../../../components/booking/stayListingUnitsCard';
 import {
   getDefaultSelectedFoodOptionId,
   getFoodOptionsForBookingContext,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { priceFormat } from '../../../utils/helpers';
 import { createStay, searchStays } from '../../../utils/stays.api';
-import type { CloserCurrencies } from '../../../types/currency';
 
 interface Props {
   bookingSettings: BookingSettings | null;
@@ -197,6 +196,7 @@ const StayCreatePage = ({
 
   const handlePickListing = async (listing: StaySearchListing) => {
     if (!activeParams) return;
+    if (listing.available === false) return;
     if (!isAuthenticated) {
       const qs = new URLSearchParams(
         buildQueryParams(activeParams) as Record<string, string>,
@@ -350,16 +350,16 @@ const StayCreatePage = ({
 
           {!isSearching && results && results.length > 0 && (
             <>
-              <Heading
-                level={2}
-                className="text-xl mb-4 md:mb-6 text-center md:text-left"
-              >
-                {listingId && results.length === 1
-                  ? t('stay_create_focused_results_heading', {
-                      name: results[0].name,
-                    })
-                  : t('stay_create_results_title', { count: results.length })}
-              </Heading>
+              {listingId && results.length === 1 && (
+                <Heading
+                  level={2}
+                  className="text-xl mb-4 md:mb-6 text-center md:text-left"
+                >
+                  {t('stay_create_focused_results_heading', {
+                    name: results[0].name,
+                  })}
+                </Heading>
+              )}
               {listingId && results.length === 1 && (
                 <p className="text-gray-600 mb-6 max-w-2xl mx-auto text-center md:text-left">
                   {t('stay_create_focused_results_intro')}
@@ -392,6 +392,9 @@ const StayCreatePage = ({
   );
 };
 
+const stripHtml = (html: string): string =>
+  html?.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() || '';
+
 interface ListingResultCardProps {
   listing: StaySearchListing;
   duration: number;
@@ -412,16 +415,18 @@ const ListingResultCard = ({
     image: `${cdn}${id}-post-md.jpg`,
   }));
 
-  const dailyPrice = listing.fiatPrice?.val || 0;
-  const currency = listing.fiatPrice?.cur as CloserCurrencies | undefined;
   const headingId = `listing-${listing._id}-name`;
+  const descriptionPreview = listing.description
+    ? stripHtml(listing.description).slice(0, 140)
+    : '';
+  const isUnavailable = listing.available === false;
 
   return (
     <article
       aria-labelledby={headingId}
       className={`group flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg focus-within:shadow-lg focus-within:ring-2 focus-within:ring-accent transition-shadow ${
         layoutFocused ? 'shadow-md md:flex-row md:items-stretch md:max-h-none' : ''
-      }`}
+      } ${isUnavailable ? 'opacity-75' : ''}`}
     >
       <div
         className={`bg-gray-100 overflow-hidden shrink-0 ${
@@ -463,28 +468,17 @@ const ListingResultCard = ({
         <div className="flex items-start justify-between gap-3">
           <h3
             id={headingId}
-            className="text-base font-semibold text-gray-900 line-clamp-1"
+            className="text-base font-semibold text-gray-900 line-clamp-2 leading-snug min-w-0 flex-1"
           >
             {listing.name}
           </h3>
-          {duration <= 0 && dailyPrice > 0 && (
-            <p className="text-sm font-semibold text-gray-900 whitespace-nowrap">
-              {priceFormat(dailyPrice, currency)}
-              <span className="text-gray-500 text-xs font-normal">
-                {' '}
-                / {t('listing_preview_night')}
-              </span>
-            </p>
-          )}
+          <StayListingUnitsCard listing={listing} />
         </div>
 
-        {listing.description && (
-          <p
-            className="text-sm text-gray-600 line-clamp-2"
-            dangerouslySetInnerHTML={{
-              __html: listing.description.slice(0, 140),
-            }}
-          />
+        {descriptionPreview && (
+          <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+            {descriptionPreview}
+          </p>
         )}
 
         <StayListingAccommodationPrice listing={listing} duration={duration} />
@@ -493,10 +487,12 @@ const ListingResultCard = ({
           <Button
             onClick={() => onPick(listing)}
             isLoading={isCreating}
-            isEnabled={!isCreating}
+            isEnabled={!isCreating && !isUnavailable}
             className="min-h-[44px]"
           >
-            {t('stay_create_reserve_button')}
+            {isUnavailable
+              ? t('listing_preview_not_available')
+              : t('stay_create_reserve_button')}
           </Button>
         </div>
       </div>
