@@ -1,928 +1,317 @@
 ---
 name: one-click-community-deployments
-description: Federated-isolation one-click deployment of new Closer community instances (droplet + Mongo + Vercel + Stripe + DNS) parallelized across 4 part-time engineer tracks
-status: active
+description: Alignment document for the Sprint 1 Pillar 1 work — self-service deployment of new Closer villages. Captures current architecture for sign-off, defines goals, prerequisites, non-goals, and the medium-grain technical decisions before track-level breakdown.
+status: draft-for-alignment
 created: 2026-05-16
-depth: deep
+last_updated: 2026-05-17
 type: feat
-target_repos: closer-ui, closer-api, new closer-infra repo
+target_repos: closer-ui, closer-api, plus new infra repo(s) TBD
 origin_documents:
+  - "Closer v4 Scaling Roadmap (Sam Delesque, Feb 2026) — Pillar 1"
+  - "Closer platform features — scalability assessment"
   - closer-ui/STRATEGY.md (Track 1 "One-click deployments") via PR #887 branch ui-improvements-27
   - closer-api PR #290 "Add land projects + projectapis"
   - closer-api PR #330 "V4: Add federation, passports, land-projects, project-apis"
-deepened: 2026-05-16
 ---
 
-# feat: One-Click Community Deployments (Strategy Track 1)
+# feat: One-Click Community Deployments
 
-> **Target repos.** This plan spans `closer-ui` (the document's home), `closer-api`, and a new `closer-infra` repo that does not yet exist. Each `**Files:**` block is prefixed with the repo it lives in. Where a path is unprefixed it means `closer-ui` (this repo).
-
-> **Status quo on which this plan builds.** Federated isolation: each community runs on its own DigitalOcean droplet, its own MongoDB, its own Vercel app, its own Stripe Connect account, its own subdomain. Today this is a 15-step manual runbook reconstructed from `closer-api/deploy.fish`, `closer-api/SETUP.md`, `closer-ui/MIGRATE_PLATFORM_STRIPE_ACCOUNT.md`, and the `apps/<community>/` folders in `closer-ui` (`tdf`, `earthbound`, `moos`, `lios`, `foz`, `per-auset`, `closer`). The goal is to keep federated isolation as the topology while replacing the runbook with an orchestrated, self-serve flow that takes minutes instead of days.
+> **Status of this document.** This is an **alignment doc**, not an implementation plan. The goal is to lock in (a) a shared understanding of the current architecture, (b) the goals and non-goals of this work, (c) the medium-grain technical decisions, and (d) the open questions the team needs to answer together. A follow-up plan will break the work into engineer-level units once direction is signed off.
 
 ---
 
-## Summary
+## 1. Summary
 
-Build the federated-isolation one-click deployment pipeline so any prospective land-project steward can sign up on `closer.earth`, answer a structured form, and receive a fully provisioned Closer instance (FE + API + DB + DNS + payments rails + seed data) at `<slug>.closer.earth` within ~20 minutes, with no manual ops work for the central team.
+The Closer v4 Scaling Roadmap (Pillar 1) commits to removing the biggest growth bottleneck: **each new village currently requires ~half a day of developer time and ~€1,000 to deploy.** Sprint 1 targets self-service deploys live by Month 4 (June 2026) and 20+ villages by Month 6 (August 2026).
 
-The deliverable is a **control plane** at `closer.earth` that orchestrates provisioning, **infrastructure-as-code** modules for the underlying droplet/Mongo/DNS layer, **runtime multi-tenancy** in `closer-ui` so a single deployable image can be configured per host rather than rebuilt per community, and **per-tenant integration automation** (Stripe Connect, Mailgun subdomain, secrets injection, seed data). PR #290 and PR #330 on `closer-api` already deliver the registry models (`LandProject`, `ProjectApi`), Lamport-signed instance identity, and DNS provisioning via DigitalOcean — this plan consumes those primitives and adds the missing 60%.
+This document proposes the medium-grain technical direction for that work: a self-serve signup at `closer.earth` that auto-provisions a new village's subdomain, database, application instances, and payment rails — replacing the manual runbook the central team executes today. The current architecture (shared MongoDB server with per-village databases, per-village droplet hosting `closer-api`, per-village Vercel app per `closer-ui/apps/<village>/`, per-village Stripe Connect account, ~68 env vars per village) is documented in Section 3 so the team can sign off on the baseline before discussing change.
 
-Sequencing is structured as one prerequisite track (Track 0: PR hardening) followed by four maximally parallel tracks (A: Control Plane & Signup, B: IaC & Provisioning, C: Runtime Multi-Tenancy, D: Per-Tenant Integrations). Each track has a single owner among 3–4 part-time engineers and hard interface contracts so engineers can ship without waiting on others.
+Two deployment tiers are described in the roadmap (shared-DB at €50/mo, self-hosted at €100+/mo); this doc proposes shipping the shared-DB tier first (because it most closely matches production today) and treating the self-hosted tier as a documented Phase 2 path. The team should validate or override that call in Section 9.
 
----
-
-## Problem Frame
-
-Today every new Closer community deployment is a bespoke, multi-day effort that the core team performs by hand. The cost is high enough that adding a community is treated as a project. The strategy doc commits to federation as the operating model — communities running their own sovereign instances on a shared protocol — but the federation cannot grow if onboarding is gated by central-team capacity. STRATEGY.md Track 1 is the explicit commitment to fix this in the next 0–6 months.
-
-The current state spans four interlocking forms of friction:
-
-1. **Infrastructure is hand-provisioned.** DigitalOcean droplet, MongoDB, DNS, SSL, Vercel project, secrets — all created by humans clicking dashboards. `closer-api/deploy.fish` is 3 lines of rsync to a hardcoded `crocodile` host. No Terraform, Ansible, Pulumi, Docker, or CI-driven deploy exists.
-2. **The FE assumes one app per tenant.** `closer-ui` is a Turborepo with a folder per community (`apps/tdf`, `apps/moos`, etc.) and ~68 `NEXT_PUBLIC_*` env vars baked into each build, including 17 feature flags. Adding a community means adding a folder, populating env vars, and standing up a Vercel project.
-3. **Per-tenant integrations are not API-driven.** Each community needs a Stripe Connect account (the 14-step `MIGRATE_PLATFORM_STRIPE_ACCOUNT.md` shows the pain), a Firebase project, a Mailgun domain, Twilio credentials, web3 keys. None of this is automated.
-4. **Federation primitives exist but are unmerged.** PR #290 (LandProject + ProjectApi registry) and PR #330 (Passport, Lamport signing, DigitalOcean DNS, instance self-registration) provide the data model and identity layer the orchestrator needs to consume — but they have known security issues (HMAC vuln, NoSQL injection risk, /tmp key index, hardcoded credentials) and are not merged.
-
-A part-time engineering team of 3–4 people cannot afford to serialize this work. The plan must allow each engineer to take a track and ship without waiting.
+This doc deliberately omits per-engineer track breakdown, implementation units, and file-level changes. Once Sections 3–8 are signed off, a separate detailed plan will produce those.
 
 ---
 
-## Goals
+## 2. Glossary
 
-- A founding steward can complete signup on `closer.earth` and reach a working Closer instance (FE loads, admin can log in, listings page renders) at `<slug>.closer.earth` in ≤30 minutes wall-clock, with zero manual ops touchpoints during the happy path.
-- Adding a new community requires **no code changes** to `closer-ui` or `closer-api` — it is purely a configuration record in the registry plus orchestrated provisioning.
-- The orchestrator is observable, resumable, and rollback-safe: any failed provision leaves no orphan infrastructure and surfaces a clear error to both the steward and the central team.
-- Federated isolation is preserved: every community gets its own droplet, its own MongoDB database, and its own Stripe Connect account. No data plane sharing.
-- Three engineers can work on independent tracks for two weeks without blocking each other on interface decisions.
+A handful of terms have specific meaning in this doc; quick reference:
 
-## Non-goals
-
-- Migrating existing communities (TDF, MOOS, LIOS, FOZ, EARTHBOUND, PER-AUSET) off their current per-app deployments. That is a separate migration plan, sequenced after this work proves stable on new sign-ups.
-- Replacing the per-tenant database model with a shared multi-tenant database. STRATEGY.md and the federation PRs both commit to sovereign per-instance data.
-- Building cross-community analytics / reporting beyond what PR #290's daily `sync-project-stats.js` pull already provides.
-- Building a self-serve UI for the steward to fully customize branding, themes, copy, or feature flag combinations post-provision. The provision sets sensible defaults; further customization happens through the existing admin UI in `packages/closer/pages/dashboard/admin/`.
-- Onboarding flows for *individual users* of a community (citizen signup, booking flow, etc.) — these already exist.
-- Automating the Stripe Connect KYC review itself. Stripe owns that; the flow surfaces the Stripe-hosted onboarding link and waits.
+- **Village** — a single Closer community / land project. Synonymous with "tenant", "community", or "instance" in earlier drafts. Aligned with the roadmap's preferred term.
+- **Hub** — a federation coordinator (per Token Model doc: "any community can become a hub"). `api.closer.earth` is the first hub today.
+- **`ProjectApi`** — a record (introduced by closer-api PRs #290 + #330) in the central registry that maps a village to its running instance (API URL, app URL, status, server tier).
+- **`LandProject`** — the curated, geolocated catalog record for a village. Distinct from `ProjectApi`: a village can exist as a catalog entry before it is deployed.
+- **Per-village vs shared resource** — "per-village" means each village has its own instance of the resource (own droplet, own Stripe account, own DB). "Shared" means one resource serves many villages (shared MongoDB server, shared `api.closer.earth` hub).
 
 ---
 
-## Requirements
+## 3. Current Architecture
 
-| ID | Requirement | Origin | Track |
-|----|-------------|--------|-------|
-| R1 | Public signup form at `closer.earth/start` collects: community name, slug, country, founder email, language, feature-flag preset, intended currency | STRATEGY.md Track 1 | A |
-| R2 | Signup creates a `LandProject` record (using PR #290 schema) with `claimStatus=pending` linked to a new `ProjectApi` record with `status=active` | PR #290, #330 | A |
-| R3 | Orchestrator state machine drives the provision: `pending → infra-provisioning → app-deploying → dns-verifying → seeding → active` (or `failed` with rollback) | Status-quo gap | A |
-| R4 | Terraform module provisions a DigitalOcean droplet of the requested `serverTier` (`mini`/`medium`/`large` per PR #290 `ProjectApi.serverTier`) with cloud-init that installs Node 22, PM2, nginx, certbot, and `closer-api` | Status-quo gap | B |
-| R5 | Provisioner creates a per-tenant database + scoped `readWrite` user on the existing shared MongoDB server; connection string flows into the droplet via secrets injection | Status-quo gap (matches production topology) | B, D |
-| R6 | DNS records for `<slug>.closer.earth` and `api.<slug>.closer.earth` are created via the DigitalOcean DNS helper already in PR #330 (`closer-api/utils/digitalocean-dns.js`) | PR #330 | B |
-| R7 | `closer-ui` runs as a single configurable build that resolves tenant identity from the request host (no per-tenant `apps/` folder required for new communities) | Status-quo gap | C |
-| R8 | Per-tenant branding (logo, colors, copy overrides) loads at runtime from the CDN, addressed by tenant slug | Status-quo gap | C |
-| R9 | Founder is emailed a Stripe Connect Express onboarding link during provisioning; once they complete it, the Connect account ID is written back to the tenant's `ProjectApi.technical` and webhook is registered | `MIGRATE_PLATFORM_STRIPE_ACCOUNT.md`, status-quo gap | D |
-| R10 | A generic seed script replaces the per-community `closer-api/jobs/<community>/init.js` files and creates default roles, an admin user (the founder), default config entries, and example listings | `closer-api/jobs/tdf/init.js` pattern | D |
-| R11 | Mailgun subdomain `mail.<slug>.closer.earth` is created via Mailgun API, DKIM/SPF records added to DNS, credentials injected into droplet | Status-quo gap | D |
-| R12 | The 8 Copilot-flagged issues in PR #330 are resolved before the orchestrator depends on `ProjectApi` self-registration or DNS provisioning | PR #330 review | 0 |
-| R13 | Founder sees a status page at `closer.earth/dashboard/<slug>` with real-time provision progress and a clear error state if any step fails | Status-quo gap | A |
-| R14 | Decommissioning is supported: setting `ProjectApi.status='cancelled'` triggers droplet destroy, DB retention per policy, DNS removal | Status-quo gap | B |
+> **What we believe is true about how Closer deploys today.** This section exists for sign-off — please flag anything that is inaccurate before reading further. The proposals in Sections 5–8 assume this baseline.
 
----
+### 3.1 Live villages and traction
 
-## Key Technical Decisions
+- **6 villages live**: TDF (Traditional Dream Factory, Portugal), MOOS, LIOS, FOZ, EARTHBOUND, PER-AUSET. Confirmed by the Scaling Roadmap.
+- **280+ TDF token holders**, **3,000+ guests hosted over 5 years**, **€1.25M+ raised through TDF token sales**.
+- **~€1,000 and ~half a day of developer time** to deploy each new village today.
+- **100+ platform features** already in production (full list in "Closer platform features" doc).
 
-### KTD1: Build on PR #290 + #330 as merged prerequisites (not parallel rework)
+### 3.2 Repos and code layout
 
-PR #290 and PR #330 together deliver the `LandProject` and `ProjectApi` data models, Lamport-signed federated instance identity, DigitalOcean DNS provisioning code (`closer-api/utils/digitalocean-dns.js`), instance self-registration (`POST /federation/project-apis/register`), pull-based daily stats sync (`closer-api/jobs/sync-project-stats.js`), 4 federation guide docs, and seed scripts. Reinventing this in parallel would be ~15k LOC of duplicate work. Track 0 is committed to landing them with the known issues resolved.
+- **`closerdao/closer-ui`** — Turborepo monorepo. One Next.js app per village in `apps/<village>/`: `apps/closer` (official/generic), `apps/tdf`, `apps/earthbound`, `apps/moos`, `apps/lios`, `apps/foz`, `apps/per-auset`. All apps consume a shared `packages/closer` package containing ~95% of components, pages, hooks, contexts. Per-village customization happens via env vars, per-app `public/images/` assets, and occasional per-app pages.
+- **`closerdao/closer-api`** — Single Node/Koa codebase. One deployment per village. Deploy script is 3 lines: `rsync` to a hardcoded `crocodile` host + `pm2 restart`. No tenancy primitives in models (no `tenantId`/`communityId` field). Background jobs include per-village folders (`jobs/tdf/`, `jobs/foz/`, `jobs/moos/`).
+- **Federation work in flight**: closer-api PR #290 adds `LandProject` + `ProjectApi` registry models. PR #330 (a superset) adds federated identity (`Passport`), Lamport quantum-safe signing for instance authentication, DigitalOcean DNS provisioning helper, and instance self-registration. Both PRs are open and currently unmerged on `develop`.
 
-### KTD2: Control plane is a new closer-api route group, not a separate service
+### 3.3 Runtime topology per village
 
-Adding a new `routes/control-plane.js` namespace to `closer-api` (running on the central `api.closer.earth` instance, which is itself one of the federated nodes) keeps the auth, model, and deploy surface a single team already maintains. A separate service would double the ops burden and force the team to learn a new deploy pipeline before they have one for `closer-api`. The orchestrator's state machine runs as a `closer-api/jobs/orchestrator.js` background worker.
+| Resource | Per-village or shared? | Notes |
+|---|---|---|
+| Frontend (Next.js `closer-ui`) | **Per-village** | One Vercel project per village; built from `apps/<village>/`; ~68 `NEXT_PUBLIC_*` env vars baked in at build, including 17 feature flags |
+| API (`closer-api`) | **Per-village** | One DigitalOcean droplet per village; runs `closer-api` via PM2 |
+| Database (MongoDB) | **Hybrid** — shared server, per-village database | Single shared MongoDB server with a separate logical DB per village (e.g., `closer_tdf`, `closer_moos`). Isolation is by Mongo user permissions, not separate clusters |
+| Stripe Connect account | **Per-village** | One Connect account per village; ~14-step manual onboarding documented in `closer-ui/MIGRATE_PLATFORM_STRIPE_ACCOUNT.md` |
+| Firebase project (auth) | **Per-village** | One Firebase project per village; manual GCP console setup |
+| Email (Mailgun) | **Per-village** | One Mailgun subdomain per village; manual DKIM/SPF setup |
+| DNS (`<village>.closer.earth`) | **Per-village record on shared zone** | Manual record creation in the registrar |
+| Background jobs | **Per-village** | Village-specific code in `closer-api/jobs/<village>/init.js`, `jobs/tdf/`, etc. |
+| Federation hub | **Shared** | `api.closer.earth` is the first hub (per Token Model doc); future hubs supported by PR #330 architecture |
+| CDN / Spaces storage | **Shared** | Single DigitalOcean Spaces bucket; per-village paths |
 
-### KTD3: Runtime multi-tenancy via host-based config resolution, not per-app builds
+### 3.4 What blocks scaling today (from the "Closer platform features" doc)
 
-`closer-ui` adds a new `apps/federation-host` app (or refactors `apps/closer`) that reads `req.headers.host`, looks up the tenant config from `api.closer.earth/v4/tenants/by-host?host=<host>`, and renders. This is one Vercel project serving all new communities via a wildcard `*.closer.earth` domain. Per-tenant assets (logo, theme JSON) load from a CDN keyed by slug. Existing per-app deployments (`apps/tdf`, `apps/moos`, etc.) keep working unchanged; this plan does not migrate them.
+The scalability assessment in the supplementary doc categorizes each feature by what it depends on. The recurring blockers, in roughly descending order of how often they show up:
 
-### KTD4: Shared MongoDB server with per-tenant databases (matches current production)
+1. **Property-specific FE code or env vars** — page layouts, brand colors, fonts, logo, token bookings, token sale, site copy. Each village needs a build-time deploy to change.
+2. **Hardcoded backend code or env vars** — emails (defaults baked in), payment settings (some hardcoded variables), separate utility/food price (logic is TDF-specific).
+3. **Manual / no-code steps** — Stripe account connection, refunds, deployment itself.
+4. **Partial config-driven** — most features are *partly* config-driven and *partly* hardcoded. The transition is in flight but incomplete.
+5. **Site copy and i18n** — partly in JSON files, partly hardcoded text fragments throughout `packages/closer`. Adding a language requires code changes.
+6. **Database and backend** — the doc explicitly flags "shared database can cut setup/cloud/maintenance costs" and same for "shared app". The team has already considered tier-based deployment.
 
-Production today runs a **shared MongoDB server hosting a separate database per community** (per founder confirmation). Provisioning a new community means creating a new database + a scoped `readWrite` user on the existing shared server and returning the connection string — not standing up new infrastructure. This is materially simpler than Atlas-per-tenant or per-tenant Mongo VMs, matches the team's existing operational muscle, and keeps the v1 work focused on droplet + DNS + integration automation rather than introducing a new managed database vendor.
+### 3.5 What the "manual half-day" actually consists of
 
-**Honest framing of the trade-off.** "Federated isolation" is the right label for the API/UI/payments layers — each community gets its own droplet, API process, Stripe Connect account, and domain — but at the **storage layer** the shared Mongo server is a common backbone. Database-level isolation is enforced by Mongo user permissions, not by separate clusters. A misconfigured grant or a server-level outage affects all communities. The plan accepts this trade-off because it matches production reality and lowers v1 ops surface; revisiting (moving heavy tenants to dedicated Mongo, or to Atlas) is a documented follow-up under Scope Boundaries.
+Reconstructed from `closer-api/SETUP.md`, `closer-ui/MIGRATE_PLATFORM_STRIPE_ACCOUNT.md`, `closer-api/deploy.fish`, `closer-api/jobs/tdf/init.js`, and the `apps/<village>/.env.sample` files:
 
-**What the provisioning step does instead of "create Atlas cluster":** connect to the shared Mongo as an admin, `db.createUser({ user: 'closer_<slug>', roles: [{ role: 'readWrite', db: 'closer_<slug>' }] })`, write the connection string into the tenant secrets bundle. No new VM, no Atlas API, no new vendor account.
+1. Create new Vercel project; link to `closer-ui` repo; populate ~68 env vars by hand.
+2. Copy `apps/tdf/` → `apps/<new-village>/` template; adjust branding assets, env vars, custom pages.
+3. Provision a DigitalOcean droplet; SSH in; install Node 22, MongoDB connection, PM2.
+4. Add a new database on the shared MongoDB server with a scoped user.
+5. Populate ~80 API env vars on the droplet.
+6. Create a Stripe Connect account; complete the 14-step manual process in `MIGRATE_PLATFORM_STRIPE_ACCOUNT.md`; configure webhook endpoint.
+7. Create a Firebase project; generate service account key; populate Firebase config.
+8. Create a Mailgun subdomain; generate API keys; configure DKIM/SPF in DNS.
+9. Generate web push VAPID keys; populate Twilio if needed; populate web3 keys.
+10. Create DNS A and CNAME records for `<village>.closer.earth` and `api.<village>.closer.earth`.
+11. Hand-write a `jobs/<village>/init.js` seed script (or copy + edit from TDF); run it to populate default config, roles, founder admin user, example listings.
+12. Configure Stripe webhook endpoint to point at the new API host.
+13. Verify SSL, test booking flow, test token flow if applicable, verify email delivery.
+14. Hand off credentials to the village founder.
 
-### KTD5: Secrets in DigitalOcean App Platform encrypted env vars (no separate vault — yet)
+### 3.6 What the central team owns vs the village team
 
-For the first version, per-tenant secrets (Mongo URI, JWT secret, Stripe Connect ID, Mailgun key, etc.) are injected at droplet provision time via DigitalOcean's encrypted env vars and never leave the droplet's filesystem. A proper vault (HashiCorp Vault, Doppler, AWS Secrets Manager) is deferred to follow-up — it adds a third infra dependency that is overkill at small N.
+- **Central team owns:** the entire deployment process above, the federation hub (`api.closer.earth`), shared Mongo, the CDN, the deploy pipeline (such as it is), all per-village secrets.
+- **Village team owns:** content (via existing admin UI in `packages/closer/pages/dashboard/admin/`), bookings/listings/events configuration, member management, and operations.
 
-### KTD6: Stripe Connect Express, not Standard
-
-Express accounts allow Stripe to handle KYC and dashboard hosting, which removes most of the 14 steps in `MIGRATE_PLATFORM_STRIPE_ACCOUNT.md`. The trade-off (less direct customization for the community) is acceptable for the simplest path to "communities can take payments." Standard remains available for communities that outgrow Express.
-
-### KTD7: Generic seed in place of per-community `jobs/<community>/init.js`
-
-The existing `closer-api/jobs/tdf/init.js`, `jobs/foz/`, `jobs/moos/` pattern is incompatible with self-serve. The plan introduces `closer-api/scripts/seed-new-tenant.js` driven by the signup-form payload. The legacy per-community jobs are preserved for the existing instances; they are not in scope to refactor.
-
-### KTD8: closer.earth signup is the single new public surface (don't reuse existing apps)
-
-There is no `apps/closer-earth` in the repo. The signup form is a new route in the new `apps/federation-host` app (or a sibling `apps/closer-earth` if the team prefers separation). It is the only piece of UI that lives at the apex domain. Building it as part of `federation-host` is simplest because that app already needs to handle the apex host case for the marketing site.
-
----
-
-## High-Level Technical Design
-
-> This illustrates the intended approach and is directional guidance for review, not implementation specification. The implementing agent should treat it as context, not code to reproduce.
-
-### Provisioning lifecycle
-
-```mermaid
-sequenceDiagram
-    participant Steward
-    participant SignupUI as closer.earth signup
-    participant API as control-plane API (closer-api)
-    participant Orch as orchestrator job
-    participant TF as Terraform (closer-infra)
-    participant DO as DigitalOcean API
-    participant Mongo as shared MongoDB server
-    participant DNS as DigitalOcean DNS
-    participant Vercel as Vercel API
-    participant Stripe as Stripe Connect
-    participant Mailgun as Mailgun API
-    participant Droplet as new droplet
-
-    Steward->>SignupUI: Fill form (name, slug, country, email, ...)
-    SignupUI->>API: POST /v4/control-plane/communities
-    API->>API: Create LandProject + ProjectApi (status=active, provision=pending)
-    API->>Orch: Enqueue ProvisionJob(projectApiId)
-    API-->>SignupUI: 202 Accepted + /dashboard/<slug>
-    SignupUI-->>Steward: Show status page
-
-    Orch->>TF: terraform apply -var slug=<slug>
-    TF->>DO: Create droplet (server_tier)
-    TF->>Mongo: createUser + new database
-    TF->>DNS: Create A + CNAME records
-    TF->>Vercel: Add domain to federation-host project
-    TF-->>Orch: outputs (droplet_ip, mongo_uri, ...)
-    Orch->>API: Update ProjectApi.technical with outputs
-    Orch->>Droplet: SSH + cloud-init waits, runs seed-new-tenant.js
-    Droplet->>Mongo: Connect to new DB, seed default config + admin user
-    Orch->>Mailgun: Create subdomain, get DKIM/SPF
-    Orch->>DNS: Add Mailgun TXT records
-    Orch->>Stripe: Create Connect Express account
-    Orch->>API: Trigger founder email with Stripe onboarding link
-    Orch->>API: Update ProjectApi.status (active), provision=active
-    Note over Steward,Stripe: Founder clicks Stripe link later, completes KYC out-of-band
-    Stripe-->>API: Webhook account.updated → write connect_id
-```
-
-### Track interfaces and ownership
-
-```mermaid
-graph LR
-    subgraph "Track A: Control Plane & Signup"
-        A1[Signup UI]
-        A2[Control-plane API]
-        A3[Orchestrator state machine]
-        A4[Status dashboard]
-    end
-    subgraph "Track B: IaC & Provisioning"
-        B1[Terraform droplet module]
-        B2[Cloud-init bootstrap]
-        B3[Tenant DB+user provisioner]
-        B4[Provisioner CLI]
-    end
-    subgraph "Track C: Runtime Multi-Tenancy"
-        C1[federation-host app]
-        C2[Host->tenant resolver]
-        C3[Runtime branding loader]
-        C4[Wildcard Vercel project]
-    end
-    subgraph "Track D: Per-Tenant Integrations"
-        D1[Stripe Connect Express flow]
-        D2[Mailgun subdomain automation]
-        D3[Generic seed script]
-        D4[Secrets injection]
-    end
-    A3 -->|Contract 1: invoke| B4
-    A3 -->|Contract 2: write tenant config| C2
-    A3 -->|Contract 3: trigger integrations| D1
-    A3 -->|Contract 3: trigger integrations| D2
-    A3 -->|Contract 3: trigger integrations| D3
-    B4 -->|Contract 4: read secrets schema| D4
-    C1 -->|Contract 5: read /v4/tenants/by-host| A2
-```
-
-### Interface contracts (frozen at plan time)
-
-| # | Contract | Owner | Consumer | Shape |
-|---|----------|-------|----------|-------|
-| 1 | `provision(slug, tier, region, secrets) → {droplet_ip, mongo_uri, dns_records, vercel_domain}` | Track B | Track A | CLI: `closer-infra/bin/provision --slug X --tier mini --region fra1 --secrets-file ...` |
-| 2 | `GET /v4/tenants/by-host?host=<host>` returns `{slug, projectApiId, theme, featureFlags, apiUrl}` | Track A | Track C | JSON over HTTPS; cached at the edge for 60s |
-| 3 | `POST /v4/control-plane/integrations/<kind>` where `kind ∈ {stripe, mailgun, seed}`, body `{projectApiId, params}` | Track A | Track D | Async; writes back to `ProjectApi.technical` on success |
-| 4 | `closer-infra/secrets.schema.json` defines the per-tenant env-var contract | Track D | Track B | JSON Schema; Terraform reads it, injects into DO droplet env |
-| 5 | `GET /v4/tenants/by-host` is the single source of truth for runtime tenant resolution | Track A | Track C | Documented in this plan and `closer-api/docs/federation/` |
+**The gap this work addresses:** every village currently waits on the central team for the first 12 of the 14 steps above. That is the bottleneck.
 
 ---
 
-## Output Structure
+## 4. Problem Frame
 
-This plan introduces files across three repos. New top-level additions only — existing structure not shown.
+The Scaling Roadmap is direct: *"Each new village requires ~half a day of developer time and ~€1,000 to deploy. … This is the #1 bottleneck — eliminating it is the gating factor for all growth."*
 
-```
-closer-ui/
-├── apps/
-│   └── federation-host/                # NEW: single deployable app for all new tenants
-│       ├── pages/
-│       │   ├── start/                  # closer.earth/start signup flow
-│       │   └── dashboard/[slug].tsx    # provision status page
-│       ├── next.config.js
-│       └── .env.sample
-├── packages/
-│   └── closer/
-│       ├── contexts/
-│       │   └── tenant.tsx              # NEW: runtime tenant resolver
-│       └── utils/
-│           └── runtimeBranding.ts      # NEW: CDN-loaded branding fetcher
-└── docs/plans/
-    └── 2026-05-16-001-feat-one-click-community-deployments-plan.md  # this file
+Three downstream effects compound from this:
 
-closer-api/
-├── routes/
-│   └── control-plane.js                # NEW: signup, status, integration triggers
-├── jobs/
-│   └── orchestrator.js                 # NEW: state machine worker
-├── scripts/
-│   ├── seed-new-tenant.js              # NEW: generic seed, replaces jobs/<community>/init.js
-│   └── decommission-tenant.js          # NEW: teardown
-├── utils/
-│   ├── stripe-connect-express.js       # NEW: Connect Express onboarding helper
-│   └── mailgun-provisioner.js          # NEW: subdomain + DKIM/SPF
-└── models/
-    └── tenant-provision-event.js       # NEW: audit log for orchestrator state transitions
+1. **Growth is capped by central-team capacity.** With 6 villages today and a goal of 20+ by Aug 2026 and 50 by mid-2027, the runbook does not scale even at one new village per week.
+2. **Village teams cannot iterate without escalating.** Most platform changes for a village (branding, emails, payment settings) require developer time on the central team rather than the village team self-serving via the admin UI. This is partly a deployment problem and partly a configurability problem (Pillar 2) — they reinforce each other.
+3. **Network effects stall.** Pillar 3 (passport, cross-village portability) and Pillar 4 (AI village operations) only deliver compounding value once there are enough villages. Pillar 1 is the gate.
 
-closer-infra/                           # NEW REPO
-├── terraform/
-│   ├── modules/
-│   │   ├── droplet/                    # DO droplet + cloud-init
-│   │   ├── mongo-tenant/               # createUser + new DB on shared Mongo
-│   │   └── dns/                        # DO DNS records
-│   └── environments/
-│       └── production/
-├── bin/
-│   ├── provision                       # orchestrator-facing CLI
-│   └── decommission
-├── cloud-init/
-│   └── closer-api-droplet.yaml         # bootstrap script
-├── secrets.schema.json                 # per-tenant env-var contract
-└── README.md
-```
-
-The tree above is a scope declaration. Implementers may adjust layout if discovery reveals a better structure; per-unit `**Files:**` blocks remain authoritative.
+Closer's strategic framing — "communities own the ground they live on and govern the intelligence that mediates it" (STRATEGY.md) and "any community can become a hub" (Token Model) — also makes hand-built deployments off-brand: a federation operationalized by hand-deploy is, at scale, just a central platform.
 
 ---
 
-## Implementation Units
+## 5. Goals
 
-> Units are organized by track. U-IDs are stable: never renumbered on reorder or split. Each track has a single owner. Contracts between tracks (see High-Level Technical Design) are frozen at plan time so each engineer can ship independently.
+### 5.1 Primary goals (Sprint 1, by August 2026)
 
-### Track 0 — PR #330 Hardening (Prerequisite)
+1. **Self-serve onboarding live.** A founding steward can complete signup at `closer.earth`, choose a subdomain, and reach a working village instance within ≤30 minutes wall-clock without central-team intervention on the happy path.
+2. **Zero per-village code changes for new villages.** Adding a new village requires only configuration records and orchestrated provisioning. No new `apps/<village>/` folder, no new `jobs/<village>/` directory.
+3. **20+ villages live by end of Sprint 1.** Aligned with the roadmap target. Implies the system must support >2× the current village count without degrading central-team or shared-infrastructure capacity.
+4. **First deploy tier shipped: shared-DB / per-village app.** Matches current production topology and the roadmap's €50/mo tier. The €100+/mo self-hosted tier is documented as a Phase 2 path (see KTD3).
+5. **Existing villages continue to work unchanged.** TDF, MOOS, LIOS, FOZ, EARTHBOUND, PER-AUSET keep their current deployments. Migration is out of scope for this work.
 
-> **Owner:** the engineer landing #330 (likely closerearth). Must complete before Track A/B/D depend on `ProjectApi` self-registration or DigitalOcean DNS. Roughly 2-4 days of focused work.
+### 5.2 Quality bar
 
-#### U1. Resolve PR #330 Copilot-flagged security issues
-
-**Goal:** Eliminate the 8 known issues in PR #330 so the federation primitives are production-safe to build on.
-
-**Requirements:** R12
-
-**Dependencies:** none
-
-**Files:** (all `closer-api`)
-- `closer-api/utils/passport.js` — fix HMAC signature to actually include secret
-- `closer-api/utils/instance-keys.js` — move Lamport key index out of `/tmp` into Mongo (persistent across restarts)
-- `closer-api/config.js` — move hardcoded `DO_SPACE_KEY` and `DO_SPACE_SECRET` to env
-- `closer-api/utils/federationSync.js` — add proper `AbortController`-based fetch timeouts (Node `fetch` ignores `timeout` option silently)
-- `closer-api/routes/stats.js` — gate `/api/stats` behind auth or significantly reduce surface
-- `closer-api/utils/passportBenefits.js` — fix `spaceConfig = projectId` variable assignment bug (line ~89)
-- `closer-api/routes/passport.js`, `routes/project-api-federation.js` — add input schema validation for NoSQL-injection-prone query and body params
-- `closer-api/models/user.js` — handle timezone migration for existing users (script + default-only-on-new-users)
-
-**Approach:** Treat as 8 small commits or one PR atop #330. Each fix has a narrow blast radius; verify against #330's existing tests where they exist and add tests where they don't.
-
-**Patterns to follow:** existing `closer-api/utils/middleware.js` patterns for auth gating; existing `__tests__/` patterns for unit coverage.
-
-**Test scenarios:**
-- HMAC signature: rejecting a forged payload signed with wrong secret returns 401.
-- Lamport key index: process restart resumes from persisted index, not 0.
-- Fetch timeout: hitting a hung instance during sync aborts after configured ms.
-- `/api/stats` returns 401 to anonymous request; 200 to authenticated admin.
-- `passportBenefits` returns non-empty array when a matching benefit exists (regression for the variable bug).
-- NoSQL injection: POSTing `{ emailHash: { $ne: null } }` returns 400 instead of dumping passports.
-- Timezone migration script: dry-run on snapshot shows the diff; existing user timezones preserved; new users default to Europe/Lisbon.
-
-**Verification:** All 8 Copilot review items either resolved or have a documented "won't fix" decision with rationale; CI green on the hardening branch; manual smoke test of federation register + passport lookup against a staging instance.
+- Provisioning is **observable** — the founder sees real-time progress at every phase.
+- Provisioning is **resumable and rollback-safe** — a failure leaves no orphan infrastructure and a clear error path for the central team.
+- The federation primitives from PRs #290 and #330 are used **as designed** — this work consumes them rather than reinventing the registry, identity, or DNS layers.
+- Secrets management is **acceptable for v1 even if not ideal long-term** — explicit follow-up for a proper vault.
 
 ---
 
-### Track A — Control Plane & Signup
+## 6. Prerequisites
 
-> **Owner:** Engineer A. Spans `closer-ui` (signup + status pages) and `closer-api` (control-plane routes + orchestrator). Hardest single track because it owns 4 of the 5 cross-track contracts.
+### 6.1 Code prerequisites
 
-#### U2. Signup form at closer.earth/start
+- **closer-api PR #290 merged.** Provides the `LandProject` + `ProjectApi` registry models, geospatial search, and the pull-based daily stats sync job that this work consumes.
+- **closer-api PR #330 merged, with its known issues resolved first.** Provides `Passport`, Lamport-signed instance identity, DigitalOcean DNS provisioning helper, and instance self-registration. The Copilot review surfaced 8 issues that need fixing before production federation traffic depends on this code:
+  1. HMAC signature implementation missing the secret (forgery risk).
+  2. Lamport key index persisted in `/tmp` (lost on restart, risks key reuse).
+  3. Hardcoded DigitalOcean Spaces credentials in `closer-api/config.js`.
+  4. `fetch` timeout silently ignored (hung requests not aborted).
+  5. `/api/stats` endpoint missing auth (information leakage).
+  6. Variable assignment bug in `closer-api/utils/passportBenefits.js` (benefits always empty).
+  7. Inconsistent input sanitization on federation payloads (NoSQL injection risk).
+  8. Timezone default changed without migration for existing users.
+- **closer-api payment-correctness PRs #355, #360, #362, #363, #365 merged.** These fix Stripe intent binding, dedup token claims, and stay-slug ambiguity. Not strict-blocking for the *code* of this plan, but blocking for inviting real founders onto new villages (the bugs would scale with village count).
 
-**Goal:** Public form that collects the minimal data needed to provision: community name, slug, country, founder email, language, feature-flag preset, intended currency. Validates slug uniqueness against `ProjectApi` registry. POSTs to control-plane API.
+### 6.2 Operational prerequisites
 
-**Requirements:** R1
+- **Inventory of the shared MongoDB server's current spec, headroom, and connection-count ceiling.** Capacity at 25/50/100 villages must be understood before opening signup.
+- **Admin credentials for the shared MongoDB server stored in a secret store the orchestrator can access** (not on engineer laptops).
+- **DigitalOcean account API token with droplet-creation rights and a confirmed quota** that comfortably exceeds the 20-village target.
+- **Vercel team account API token** with project-creation rights.
+- **Stripe platform account with Connect enabled** (already exists per `MIGRATE_PLATFORM_STRIPE_ACCOUNT.md`).
+- **Mailgun account** with capacity for many sending subdomains.
 
-**Dependencies:** U6 (federation-host app shell from Track C must exist), U10 (control-plane API endpoint from this track)
+### 6.3 Team prerequisites
 
-**Files:**
-- `apps/federation-host/pages/start/index.tsx` — multi-step form (~5 steps)
-- `apps/federation-host/pages/start/success.tsx` — handoff to dashboard
-- `packages/closer/components/SignupWizard/` — extractable wizard primitive
-- `packages/closer/__tests__/components/SignupWizard.test.tsx`
-
-**Approach:** Server-validated slug uniqueness on each step transition (avoid the dead-end where someone fills 5 steps and the slug is taken). Feature-flag preset is a single dropdown: "Booking-focused", "Token/governance-focused", "Education", "Custom (admin will configure later)" mapping to a known set of `NEXT_PUBLIC_FEATURE_*` defaults. Country drives currency default and timezone.
-
-**Patterns to follow:** Existing `packages/closer/components/Onboarding/` flow shape; existing form/validation patterns in `packages/closer/pages/signup.tsx`.
-
-**Test scenarios:**
-- Happy path: completing all steps with valid data POSTs to control plane and redirects to `/dashboard/<slug>`.
-- Slug collision: typing a slug that exists shows inline error within 500ms of debounce.
-- Email validation: invalid email format blocks step advance.
-- Country dropdown: selecting Portugal pre-fills EUR + Europe/Lisbon timezone.
-- Step navigation: back button preserves entered values; forward without required field is blocked.
-- Network failure on submit: clear error state, retry button, no double-submit.
-- Accessibility: form is keyboard-navigable; screen reader announces validation errors.
-
-**Verification:** A reviewer can run the local dev server, sign up a test community, and see a 202 response + redirect to status page.
-
-#### U3. Status dashboard at closer.earth/dashboard/[slug]
-
-**Goal:** Real-time provisioning status page the steward bookmarks after signup. Shows each phase, current state, errors with actionable next step, and a working link to the live instance when complete.
-
-**Requirements:** R13
-
-**Dependencies:** U10 (control-plane API), U13 (orchestrator emits status events)
-
-**Files:**
-- `apps/federation-host/pages/dashboard/[slug].tsx`
-- `packages/closer/components/ProvisionStatus/` — phase indicators
-- `packages/closer/hooks/useTenantProvision.ts` — polls or subscribes to status
-
-**Approach:** Initial implementation polls `GET /v4/control-plane/communities/<slug>/status` every 5s. Future enhancement: server-sent events. Each phase has its own icon + estimated time + on-error help text. When `provision=active`, show the live instance link prominently.
-
-**Patterns to follow:** `packages/closer/components/booking/BookingStatus.tsx` for phase visualization.
-
-**Test scenarios:**
-- Initial state: page loads with all phases in "pending" state immediately after signup.
-- Progress: as orchestrator advances, phase indicators update without a full page reload.
-- Failure: a phase marked `failed` shows the error message and a "Contact support" link prefilled with diagnostic context.
-- Resume: refreshing the page mid-provision restores the correct current state from the API.
-- Completion: when `active`, the live instance link is clickable and opens the new community.
-- Unknown slug: visiting `/dashboard/nonexistent` shows a 404, not a hung loading state.
-
-**Verification:** Steward can watch a provision happen end-to-end in the dashboard with no console errors.
-
-#### U10. Control-plane API routes
-
-**Goal:** New `routes/control-plane.js` in `closer-api` exposing the signup, status, and integration trigger endpoints. Lives on the central `api.closer.earth` instance.
-
-**Requirements:** R1, R2, R3, R13
-
-**Dependencies:** U1 (Track 0 hardening), PR #290 and #330 merged
-
-**Files:** (all `closer-api`)
-- `routes/control-plane.js` — endpoints listed below
-- `routes/mount.js` — register new route group
-- `models/tenant-provision-event.js` — append-only audit log
-- `__tests__/routes/control-plane.test.js`
-
-**Approach:** Endpoints:
-- `POST /v4/control-plane/communities` — body matches signup form; creates `LandProject` (PR #290 schema) with `claimStatus=pending`, creates linked `ProjectApi` with `status=active`/`provisionState=pending`, enqueues `ProvisionJob`, returns `202 { slug, statusUrl }`
-- `GET /v4/control-plane/communities/:slug/status` — returns current `provisionState`, phase history from `tenant-provision-event`, error if any
-- `POST /v4/control-plane/integrations/:kind` — internal-only (signed by orchestrator) trigger for integration steps (`stripe`, `mailgun`, `seed`)
-- `GET /v4/tenants/by-host?host=<host>` — Contract 5; returns `{slug, projectApiId, theme, featureFlags, apiUrl}` for runtime FE resolution
-- `POST /v4/control-plane/communities/:slug/cancel` — sets `ProjectApi.status=cancelled` and triggers decommission orchestration
-
-**Patterns to follow:** Existing `closer-api/routes/auth.js` for route registration; existing `closer-api/models/_model.js` base patterns for the new event model.
-
-**Test scenarios:**
-- POST happy path: valid signup creates LandProject + ProjectApi, enqueues job, returns 202 with `Location: /v4/control-plane/communities/<slug>/status`.
-- Slug collision: POST with existing slug returns 409 and does not create records.
-- Slug normalization: `My Community!` is rejected with 400; only `[a-z0-9-]+` accepted.
-- Status: GET returns the current state with full phase history.
-- Status: GET for unknown slug returns 404, not 500.
-- by-host: returns 200 with tenant config for a known host; returns 404 for unknown host.
-- by-host caching: response includes `Cache-Control: public, max-age=60`.
-- Integration trigger: unsigned POST to `/integrations/stripe` returns 403; signed POST from orchestrator returns 200.
-- Cancel: cancelling an active community sets status, enqueues decommission, returns 202.
-- Concurrency: two simultaneous POSTs with the same slug result in exactly one creation (DB uniqueness or transaction-level guard).
-
-**Verification:** `curl` smoke against staging; integration test that creates a community, polls status, asserts state transitions.
-
-#### U13. Orchestrator state machine worker
-
-**Goal:** Background job in `closer-api/jobs/orchestrator.js` that picks up `ProvisionJob`s, walks the state machine, invokes `closer-infra/bin/provision`, calls per-tenant integrations, and emits events to `tenant-provision-event`.
-
-**Requirements:** R3, R14
-
-**Dependencies:** U10 (jobs are enqueued from there), U17 (Track B CLI to call), U21+U22+U23 (Track D integration endpoints)
-
-**Files:** (all `closer-api`)
-- `jobs/orchestrator.js` — main worker
-- `jobs/index.js` — register orchestrator
-- `utils/state-machine.js` — small SM helper (or use `xstate` if dependency cost is acceptable)
-- `__tests__/jobs/orchestrator.test.js`
-
-**Execution note:** Test-first. The state machine is the highest-risk single piece in the plan; failure modes (partial provision, infra orphans, retries) are easier to reason about with tests written first.
-
-**Approach:** States: `pending → infra-provisioning → app-deploying → dns-verifying → seeding → integrations-pending → active`. Each transition emits a `tenant-provision-event`. Failure transitions to `failed` and triggers `decommission` for any partial infra. Resumability: on restart, the worker reads `ProjectApi.provisionState` and the latest event to resume in-place (idempotent steps required). Use exponential backoff for retryable steps (infra calls); give up after 3 failed attempts and surface for human intervention.
-
-**Patterns to follow:** Existing `closer-api/jobs/index.js` for scheduling/registration; existing `closer-api/utils/middleware.js` for structured logging.
-
-**Test scenarios:**
-- Happy path: pending → active in expected sequence, all events written.
-- Terraform failure: infra-provisioning fails, state transitions to failed, decommission triggered, no orphan droplet visible in DO API mock.
-- Mongo provisioning timeout: retries 3x with backoff, then fails and rolls back the droplet.
-- Resumability: kill the worker mid-provision; on restart, state machine picks up at the last successful transition.
-- Integration partial failure: Stripe step fails but Mailgun succeeds; community lands in `integrations-pending` with the Stripe step flagged retryable.
-- Decommission: cancellation request mid-provision aborts gracefully (no Terraform race).
-- Idempotency: running the same step twice (e.g., after a crash) does not create duplicate Mailgun subdomains.
-- Audit: every transition writes a `tenant-provision-event` with timestamp, before/after state, and any error.
-
-**Verification:** Local end-to-end with mocked Terraform/Stripe/Mailgun adapters completes happy path and at least one failure-and-rollback scenario in under 2 minutes.
+- **Protocol Engineer hired** (per the roadmap's Month 1 milestone — €4K/mo for 6 months).
+- **Sam (Product), Vlad (full-stack on-demand), Protocol Engineer, and one contractor** identified as the working group for Pillar 1.
+- **Alignment on this doc** completed before per-engineer track breakdown begins.
 
 ---
 
-### Track B — Infrastructure-as-Code & Provisioning
+## 7. Non-Goals
 
-> **Owner:** Engineer B. Net-new repo `closer-infra`. Smallest dependency on the other tracks because the CLI is a black box from the orchestrator's perspective. Most parallelizable.
+The following are explicitly **out of scope for Sprint 1 Pillar 1**. Several are downstream priorities in their own right; calling them out here keeps the scope honest.
 
-#### U14. Terraform droplet module
-
-**Goal:** Provision a DigitalOcean droplet sized per `serverTier`, with cloud-init that installs Node 22, PM2, nginx, and certbot, and clones `closer-api` from a pinned tag.
-
-**Requirements:** R4
-
-**Dependencies:** none
-
-**Files:** (all in new `closer-infra` repo)
-- `terraform/modules/droplet/main.tf`
-- `terraform/modules/droplet/variables.tf`
-- `terraform/modules/droplet/outputs.tf`
-- `cloud-init/closer-api-droplet.yaml`
-
-**Approach:** Server tier mapping: `mini → s-1vcpu-1gb`, `medium → s-2vcpu-4gb`, `large → s-4vcpu-8gb`. Cloud-init runs `mise install` (matches `closer-api/mise.toml`), clones `closer-api` at a pinned tag, writes a systemd unit (preferred over PM2 long-term; PM2 acceptable for v1 to match existing `closer-api/deploy.fish` muscle memory), runs `npm ci`, starts the API on port 8080, configures nginx as a reverse proxy on 443, requests certbot certificate. Droplet boots with secrets injected via cloud-init's `write_files` (encrypted env file).
-
-**Patterns to follow:** existing `closer-api/deploy.fish` for the deploy shape; standard Terraform DO provider patterns.
-
-**Test scenarios:**
-- `terraform plan` against a valid input set produces the expected resources (droplet, firewall, optional DNS) and no drift.
-- `terraform apply` on a free-tier test creates a droplet that responds to `curl https://<ip>/health` (a stub closer-api health endpoint) within 5 minutes of boot.
-- Server tier mapping: `tier=large` provisions an s-4vcpu-8gb droplet, not a mini.
-- Tag pinning: applying with `closer_api_tag=v1.2.3` clones that tag; applying with `closer_api_tag=missing` fails fast in cloud-init with a clear error.
-- Destroy: `terraform destroy` removes the droplet and frees the floating IP / volume.
-- Cloud-init failure surfaces: a syntax error in the cloud-init yaml causes `terraform apply` to surface the error rather than silently producing a non-functional droplet.
-
-**Verification:** Engineer can run `terraform apply` from a clean machine and reach a working `closer-api` instance over HTTPS within 5 minutes.
-
-#### U15. Tenant database + user provisioner (against shared Mongo)
-
-**Goal:** Terraform module (or thin script wrapped by Terraform's `null_resource`) that connects to the existing shared MongoDB server as an admin and creates a per-tenant database + a `readWrite`-scoped user, then outputs the connection string.
-
-**Requirements:** R5
-
-**Dependencies:** none — depends on the existing shared Mongo server already being reachable from wherever Terraform runs
-
-**Files:** (all `closer-infra`)
-- `terraform/modules/mongo-tenant/main.tf`
-- `terraform/modules/mongo-tenant/variables.tf`
-- `terraform/modules/mongo-tenant/outputs.tf`
-- `terraform/modules/mongo-tenant/scripts/create-tenant-db.sh` (or `.js`) — wraps `mongosh` for the actual createUser call
-
-**Approach:** Each tenant gets a database named `closer_<slug>` and a user `closer_<slug>` with `roles: [{ role: 'readWrite', db: 'closer_<slug>' }]` only on that database. Password generated per tenant and written to the secrets bundle. Connection string is output as `mongodb://closer_<slug>:<pw>@<shared-mongo-host>:27017/closer_<slug>` (or `+srv` form if appropriate). The shared Mongo admin credentials are themselves a sensitive Terraform input held in the central secrets store, not committed.
-
-**Patterns to follow:** Existing `closer-api/utils/db.js` connection style and `DATABASE_URL` shape in `closer-api/.env.sample`; existing per-tenant database naming (confirm with the team what existing tenant DBs are named so the convention matches — e.g., `closer_tdf`, `closer_moos`).
-
-**Test scenarios:**
-- Apply creates the DB and user; `mongosh "$(terraform output -raw connection_string)"` connects and `db.runCommand({connectionStatus: 1})` reports the right authenticated user.
-- User scope: the created user cannot `db.adminCommand({listDatabases: 1})` and cannot read another tenant's database.
-- Destroy: removes the user. Whether the database itself is dropped is governed by a `retain_database_on_destroy` variable (default `true` for safety; explicit `false` for test environments).
-- Idempotency: re-running apply with the same slug does not error; the user already exists, the password is either rotated (if `rotate_password=true`) or preserved.
-- Name collision: applying with a slug whose DB already exists from a prior bespoke setup (e.g., `tdf`) fails fast with a clear error before creating any state.
-- Connection-string format matches what `closer-api/utils/db.js` expects (no surprises at runtime).
-
-**Verification:** From a fresh apply on a staging shared-Mongo instance, the orchestrator can connect from the newly provisioned droplet, list collections (empty), and the existing `closer-api/test-db-connection.js` reports success.
-
-#### U16. DNS records module (extends PR #330)
-
-**Goal:** Terraform module that creates the `<slug>.closer.earth` and `api.<slug>.closer.earth` records, plus Mailgun TXT records when Track D provides them. Reuses the DigitalOcean DNS helper from PR #330 where possible.
-
-**Requirements:** R6
-
-**Dependencies:** Track 0 (PR #330 merged with hardening)
-
-**Files:** (all `closer-infra`)
-- `terraform/modules/dns/main.tf`
-- `terraform/modules/dns/variables.tf`
-
-**Approach:** The Terraform-managed DNS records are: A record `api.<slug>` → droplet IP; CNAME `<slug>` → Vercel; TXT for Mailgun DKIM/SPF (when provided). PR #330's `closer-api/utils/digitalocean-dns.js` handles DNS calls from the API path (for ProjectApi-driven custom domains); Terraform handles the initial provisioning. Document the boundary: Terraform owns the "born" record set, runtime owns custom-domain additions.
-
-**Test scenarios:**
-- Apply creates the two expected records; `dig <slug>.closer.earth` and `dig api.<slug>.closer.earth` resolve within 5 minutes (DO propagation is fast).
-- Records have appropriate TTL (300s during provisioning, raise to 3600s once stable).
-- Mailgun TXT records propagate and pass `mailgun-validate-domain` API check.
-- Destroy removes only the Terraform-managed records, not any custom-domain records added at runtime by PR #330's helper.
-
-**Verification:** A new community's hostnames resolve and serve traffic to the right destinations within 10 minutes of apply.
-
-#### U17. Provisioner CLI
-
-**Goal:** A single command — `closer-infra/bin/provision --slug X --tier mini --region fra1 --secrets-file /path/to/secrets.json` — that wraps the three Terraform modules, Vercel domain attachment, and returns a JSON document with all outputs. This is Contract 1 with Track A.
-
-**Requirements:** R3 (the orchestrator calls this)
-
-**Dependencies:** U14, U15, U16
-
-**Files:** (all `closer-infra`)
-- `bin/provision` (Node or Bash; Node likely better for JSON handling)
-- `bin/decommission` (mirror, for teardown)
-- `bin/lib/terraform-wrapper.js`
-- `bin/lib/vercel-api.js`
-- `terraform/environments/production/main.tf`
-
-**Approach:** CLI parses args, validates against `secrets.schema.json`, runs `terraform apply` in a per-tenant workspace (so concurrent provisions don't collide on state), captures outputs, calls Vercel API to add the new domain to the `federation-host` Vercel project, returns a structured JSON document with all outputs. Errors are JSON-shaped (`{ok: false, phase: "infra-provisioning", error: "..."}`). Exit codes encode phase (so the orchestrator can map exit code → state). Logs are written to stderr (structured JSON), JSON output to stdout.
-
-**Patterns to follow:** Existing `closer-api/scripts/` for CLI shape conventions.
-
-**Test scenarios:**
-- Happy path: provision a test tenant; stdout is valid JSON with all expected outputs.
-- Vercel failure: domain addition fails; CLI exits non-zero with `phase: "app-deploying"` and Terraform changes rolled back.
-- Workspace isolation: two concurrent `provision` calls with different slugs do not collide on Terraform state.
-- Secrets schema mismatch: passing a secrets file missing a required key exits with `phase: "validation"` and a clear field-level error.
-- Decommission: removes all infrastructure and Vercel domain attachment.
-- Re-run: re-running `provision` for an already-provisioned slug is a no-op (returns same outputs).
-
-**Verification:** Orchestrator (Track A) can shell out to this CLI in a test environment, parse the JSON, and store outputs without any custom parsing logic.
+1. **Migrating the existing 6 villages off their per-app deployments.** They keep working as-is. Migration is a separate follow-up plan, sequenced after the new system has proven stable on fresh sign-ups.
+2. **The €100+/mo self-hosted tier.** Architecturally allowed for as Phase 2, but v1 ships the shared-DB tier only. See KTD3.
+3. **Pillar 2 (Platform Configurability) work.** The WYSIWYG page builder, theme system, and admin-driven feature flag management are their own pillar. This plan assumes the *current* configurability and only addresses the deployment bottleneck. The two pillars reinforce each other but can be sequenced.
+4. **Pillar 3 (Integrated Passport) extensions.** PR #330's existing passport primitives are consumed; no new federation features are built here.
+5. **Pillar 4 (AI Village Operations).** Out of Sprint 1 scope per roadmap.
+6. **Custom domain support beyond `<village>.closer.earth`.** PR #330's DNS helper already supports custom domains; surfacing it as a self-serve flow is a Phase 2 polish.
+7. **Self-serve UI for granular branding** (logo upload, theme color picker, copy editing) during signup. v1 uses sensible defaults; the village admin UI handles post-provision customization.
+8. **A proper secrets vault** (HashiCorp Vault, Doppler, AWS Secrets Manager). v1 uses cloud-init-injected encrypted env vars; vault is a documented follow-up.
+9. **Replacing PM2 with systemd, Kubernetes, or other orchestration on the droplet.** v1 matches `closer-api/deploy.fish` conventions.
+10. **Cross-village analytics, billing, or multi-instance moderation tools** beyond what PR #290's daily `sync-project-stats.js` already provides.
+11. **Replacing the shared MongoDB server with Atlas or per-village dedicated Mongo.** Documented follow-up; trigger is capacity-driven (KTD3 and Open Question 4).
+12. **Replacing per-village Firebase projects with shared-project + tenant IDs.** Out of scope for v1; manual Firebase remains the documented gap. See Open Question 5.
 
 ---
 
-### Track C — Runtime Multi-Tenancy in closer-ui
+## 8. Key Technical Decisions
 
-> **Owner:** Engineer C. Lives entirely in `closer-ui`. Refactor the existing per-tenant-app model into a single host-resolved app. Risk: existing apps must continue to work unchanged.
+> Medium-grain technical direction. Each KTD is a call this doc is asking the team to ratify or push back on. Implementation detail (which files, which functions, which test cases) is intentionally omitted — it belongs in the follow-up plan.
 
-#### U6. New `apps/federation-host` Next.js app shell
+### KTD1 — Topology: per-village app instances on shared infrastructure (matches today)
 
-**Goal:** A new Next.js app in `apps/federation-host/` that becomes the single deployable artifact serving all new tenant subdomains plus the `closer.earth` apex domain. Initially empty shell with host resolution wired up.
+**Decision.** Each new village gets its own droplet, its own Vercel project, its own Stripe Connect account, its own Firebase project, its own Mailgun subdomain, and its own logical database on the **shared** MongoDB server. This matches the current production topology and the roadmap's €50/mo shared-DB tier.
 
-**Requirements:** R7
+**Why.** Three reasons. First, it's what production already does — building automation around the known pattern is lower-risk than refactoring to a new one. Second, it preserves the per-village sovereignty that STRATEGY.md commits to at the application layer (own API process, own payments rails, own domain) while keeping storage cost down. Third, it leaves the door open for a Phase 2 "self-hosted" tier where heavy villages get dedicated Mongo without re-architecting v1.
 
-**Dependencies:** none (existing `packages/closer` provides everything)
+**Trade-off.** "Federated isolation" is the right label for the API/UI/payments/domain layers, but the shared Mongo is a single backbone — a misconfigured user grant or a server-level outage affects all villages on the shared tier. The plan accepts this trade-off for v1; revisiting (Atlas or per-village dedicated Mongo) is in the follow-up scope.
 
-**Files:**
-- `apps/federation-host/package.json` (copied from `apps/closer/package.json`, adjusted)
-- `apps/federation-host/next.config.js`
-- `apps/federation-host/pages/_app.tsx`
-- `apps/federation-host/pages/_document.tsx`
-- `apps/federation-host/middleware.ts` — resolves host → tenant
-- `apps/federation-host/public/` — apex-domain default assets only (per-tenant assets load at runtime)
-- `apps/federation-host/.env.sample`
+### KTD2 — Build on closer-api PRs #290 and #330 as merged prerequisites
 
-**Approach:** The middleware reads `req.headers.host`, calls the `/v4/tenants/by-host` endpoint (Contract 5), and stores the tenant config in a request-scoped context that the rest of the app reads. Apex-domain requests (`closer.earth`) get a special tenant (`__apex`) that renders the marketing/signup site. Unknown hosts get a 404 page with a "looking for a community? browse here" CTA. App-level env vars are minimal (just `NEXT_PUBLIC_API_URL` pointing at `api.closer.earth`); tenant-specific config comes from the API.
+**Decision.** Treat `ProjectApi`, `LandProject`, Lamport signing, instance self-registration, and the DigitalOcean DNS helper from PRs #290 and #330 as the foundation. This work consumes those primitives; it does not reinvent them.
 
-**Patterns to follow:** Existing `apps/tdf/` for app structure; existing `middleware.ts` at repo root for middleware patterns.
+**Why.** Together those PRs already deliver ~60% of the federation registry and identity layer needed for self-serve provisioning. Building a parallel registry would be ~15k LOC of duplicate work and would conflict at merge. The roadmap's Month 2 milestone ("Architecture locked") implicitly assumes these PRs are the architecture.
 
-**Test scenarios:**
-- Local dev: requests with `Host: tdf.localhost` resolve to the tdf tenant config and render the home page.
-- Unknown host: `Host: doesnotexist.closer.earth` renders the 404 page with the browse CTA, not a generic Next 404.
-- Apex: `Host: closer.earth` renders the apex marketing page.
-- Caching: middleware caches host-resolution results in-memory per request (no double-fetch within a single render).
-- Edge runtime: middleware works in Vercel's edge runtime (no Node-only APIs).
-- Fallback: if `/v4/tenants/by-host` returns 5xx, the middleware serves a "temporary maintenance" page rather than crashing the request.
+**Trade-off.** This plan is blocked on PR #290 and #330 merging (and on the 8 Copilot-flagged issues in #330 being resolved first). Mitigation: Track 0 in the follow-up plan is dedicated to landing #330 cleanly before anything depends on it.
 
-**Verification:** Hitting the local dev server with three different `Host` headers renders three different brands/content sets correctly.
+### KTD3 — Ship the shared-DB tier first; self-hosted tier is Phase 2
 
-#### U7. Tenant context + `useTenant` hook
+**Decision.** v1 ships only the shared-DB (€50/mo) tier described in the Scaling Roadmap. The self-hosted (€100+/mo) tier — where a village gets a dedicated Mongo cluster (likely Atlas or a dedicated VM) — is a documented Phase 2 path. The architecture leaves room for it but does not build it.
 
-**Goal:** A React context that surfaces the resolved tenant to every component, plus a `useTenant()` hook. Replaces hardcoded `NEXT_PUBLIC_APP_NAME` lookups in `packages/closer` for the federation-host case.
+**Why.** Shipping both tiers in v1 doubles the surface area of the work without doubling the value: the bottleneck is the *first* tier of automation, not the choice between tiers. Most early adopter villages will be small enough that shared-DB is the right default; villages that outgrow it are a good problem to have. Building the self-hosted tier first would also require provisioning a new database vendor account, which the team has not done yet.
 
-**Requirements:** R7, R8
+**Trade-off.** Villages with strong sovereignty requirements (e.g., regulatory pressure to hold their own data) cannot self-serve in v1 — they need to wait for Phase 2 or stay on the manual path. Acceptable for v1.
 
-**Dependencies:** U6
+### KTD4 — Runtime multi-tenancy in the FE (single deployable, host-resolved tenant)
 
-**Files:**
-- `packages/closer/contexts/tenant.tsx`
-- `packages/closer/hooks/useTenant.ts`
-- `packages/closer/__tests__/contexts/tenant.test.tsx`
+**Decision.** A new `apps/federation-host` Next.js app (or refactor of `apps/closer`) becomes the single deployable artifact serving all new village subdomains plus the `closer.earth` apex domain. It reads the incoming `Host` header, resolves the village via a new `GET /v4/tenants/by-host` endpoint, and renders. Per-village branding (logo, theme JSON, copy overrides) loads from the CDN at runtime, keyed by village slug. **Existing per-village apps (`apps/tdf`, `apps/moos`, etc.) continue to work unchanged.**
 
-**Approach:** Context is populated from the host-resolution result (passed via `_app.tsx` props). Existing per-tenant lookups in `packages/closer/utils/appConfigFromEnv.ts` get an alternate `appConfigFromTenant.ts` that the federation-host app uses; existing apps continue to use the env-based path so they don't break.
+**Why.** The current "one app folder per village" pattern is fundamentally incompatible with self-serve — every new village would need a code change, a new build, and a new Vercel project. Runtime resolution decouples village count from build count. The "Closer platform features" scalability assessment explicitly flags this ("Private app deployments — shared app can cut setup, cloud and maintenance costs"). The existing apps stay on their existing path so this work does not block on a risky migration.
 
-**Patterns to follow:** Existing `packages/closer/contexts/config.tsx` for context shape.
+**Trade-off.** A single shared FE deploy means a bad release affects all new villages at once. Mitigation: the new app starts with one village, then onboards more gradually. Old apps remain insulated.
 
-**Test scenarios:**
-- `useTenant()` returns the expected slug/config in a federation-host render.
-- `useTenant()` in an existing app (e.g., tdf) returns a synthesized tenant built from env vars (back-compat shim).
-- Tenant config change between requests does not leak server-side cached state into a new request.
-- Missing tenant in context throws a clear developer-friendly error.
+### KTD5 — Control plane lives as new routes in `closer-api`, not a separate service
 
-**Verification:** Render `packages/closer/pages/index.tsx` under both federation-host and a legacy app; both work and read the right config.
+**Decision.** Add a new `routes/control-plane.js` route group to `closer-api` (running on the central `api.closer.earth` instance, which is itself one of the federated nodes). The orchestration worker runs as a `closer-api` background job. No new service.
 
-#### U8. Runtime branding loader
+**Why.** Adding a new service doubles the ops burden, requires its own deploy pipeline (which doesn't exist for `closer-api` either), and forces the team to learn a second codebase before they've automated the first. Putting the control plane in `closer-api` keeps the auth, model, and ops surface a single team already maintains.
 
-**Goal:** Per-tenant logo, theme colors, copy overrides load from a CDN URL keyed by tenant slug at runtime, replacing the static `apps/<community>/public/images/logo.png` pattern for new tenants.
+**Trade-off.** The central API instance becomes a slightly larger blast radius. Mitigation: the control plane endpoints are well-isolated; the orchestrator state machine is a separate job; nothing the control plane does is in the per-request hot path for normal API traffic.
 
-**Requirements:** R8
+### KTD6 — Stripe Connect Express (not Standard)
 
-**Dependencies:** U7
+**Decision.** Programmatically create a Stripe Connect Express account per village; email the founder a Stripe-hosted onboarding link; listen for the `account.updated` webhook to write the Connect account ID back to `ProjectApi.technical`.
 
-**Files:**
-- `packages/closer/utils/runtimeBranding.ts`
-- `packages/closer/components/Branding/Logo.tsx` — falls back to runtime URL if no static asset
-- `packages/closer/__tests__/utils/runtimeBranding.test.ts`
+**Why.** Express accounts let Stripe handle KYC and dashboard hosting, removing most of the 14 steps in `MIGRATE_PLATFORM_STRIPE_ACCOUNT.md`. The trade-off (less direct customization) is acceptable for the simplest path to "villages can take payments."
 
-**Approach:** `runtimeBranding(slug, asset)` returns a CDN URL: `https://cdn.closer.earth/tenants/<slug>/<asset>`. The CDN bucket is populated at provisioning time by the seed script (Track D U22) using a default logo if the founder didn't upload one (they can replace via admin UI later). Theme colors live in a per-tenant JSON file at `https://cdn.closer.earth/tenants/<slug>/theme.json` loaded by the tenant context at app boot.
+**Trade-off.** Villages that outgrow Express can be migrated to Standard later; the migration runbook already exists.
 
-**Patterns to follow:** Existing `packages/closer/components/Logo.tsx` (if present) or static-asset usages in `packages/closer/components/header/`.
+### KTD7 — Replace per-village `jobs/<village>/init.js` with a generic seed script
 
-**Test scenarios:**
-- Logo component renders the runtime URL for a federation-host tenant.
-- Logo component renders the static asset for a legacy app (back-compat).
-- Theme JSON missing → falls back to default Closer theme.
-- Theme JSON malformed → logs a warning, falls back, does not crash render.
-- Logo URL returns 404 → fallback to a generic glyph, no broken-image icon.
+**Decision.** A single `scripts/seed-new-tenant.js` in `closer-api` is parameterized by the signup form (slug, founder email, language, currency, feature-flag preset). It creates default roles, founder admin user, default config, default email templates, and one example listing. The existing per-village init scripts are preserved for the existing villages; they are not refactored.
 
-**Verification:** Manually swap a tenant's `theme.json` on the CDN and confirm the live federation-host app picks up the change on next page load.
+**Why.** The current per-village pattern (`jobs/tdf/init.js`, `jobs/foz/`, `jobs/moos/`) is fundamentally incompatible with self-serve. A generic script keeps the seeding logic in one place and removes the need for a developer to write village-specific code per signup.
 
-#### U9. Wildcard Vercel project setup
+**Trade-off.** Some villages may want non-default seed data (extra roles, custom listings). v1 handles this via the existing admin UI after provision; richer onboarding presets are a follow-up.
 
-**Goal:** The `federation-host` Vercel project has a wildcard `*.closer.earth` domain attached so adding a new community is just a DNS record + an API call to attach the specific subdomain.
+### KTD8 — Secrets via DigitalOcean App Platform encrypted env vars in v1; vault deferred
 
-**Requirements:** R7
+**Decision.** Per-village secrets (Mongo URI, JWT secret, Stripe Connect ID, Mailgun key, etc.) are injected at droplet provision time via DigitalOcean's encrypted env-var mechanism (or cloud-init `write_files`). No central plaintext storage; the central `ProjectApi.technical` field stores IDs/references, not raw secrets. A proper vault is deferred.
 
-**Dependencies:** U6, U7
+**Why.** Adding a vault adds a third infra dependency, a new failure mode, and an ops surface for a team that does not currently run one. v1 needs to ship, not be a vault project. Encrypted env vars on DO are a known, supported pattern.
 
-**Files:**
-- `apps/federation-host/vercel.json` — function config
-- `apps/federation-host/README.md` — Vercel setup runbook (one-time team setup, not per-tenant)
-
-**Approach:** Vercel supports wildcard domains on Enterprise; on Pro it requires per-subdomain attachment via API (this is what Track B's `bin/provision` does). Document the chosen plan. For v1, assume per-subdomain attachment via Vercel API since it's the more portable path. The team's existing Vercel team account is used.
-
-**Patterns to follow:** Existing `apps/tdf/vercel.json` for function config shape.
-
-**Test scenarios:**
-- Vercel API add-domain call succeeds for a new subdomain.
-- Request to `https://<new-slug>.closer.earth` reaches the federation-host app within 60s of DNS propagation.
-- Removing a subdomain (decommission) returns 410 to subsequent requests.
-
-**Verification:** Add a test subdomain via Vercel API, hit it, see the federation-host app render.
+**Trade-off.** Secrets rotation is harder without a vault (each rotation is a manual re-deploy step). v1 documents the rotation runbook; the follow-up replaces it with a vault when the village count justifies it.
 
 ---
 
-### Track D — Per-Tenant Integration Automation
+## 9. Open Questions
 
-> **Owner:** Engineer D. Lives mostly in `closer-api` plus a few new utility modules. Most "glue code" of the four tracks; many small integrations rather than one large piece.
+> Questions the team needs to answer together before the detailed plan is written. **Please add to this list** — it is expected to grow during review.
 
-#### U21. Stripe Connect Express onboarding helper
-
-**Goal:** Programmatically create a Stripe Connect Express account for a new community, generate an account-link onboarding URL, send it to the founder, and listen for the `account.updated` webhook to write the Connect account ID into `ProjectApi.technical`.
-
-**Requirements:** R9
-
-**Dependencies:** U10 (control-plane API exposes the trigger endpoint)
-
-**Files:** (all `closer-api`)
-- `utils/stripe-connect-express.js` — create account, generate link
-- `routes/control-plane.js` — `POST /v4/control-plane/integrations/stripe` handler (extends U10)
-- `routes/stripe-webhooks.js` — handle `account.updated`
-- `utils/email/templates/stripe-onboarding.hbs` — founder email
-- `__tests__/utils/stripe-connect-express.test.js`
-
-**Approach:** On trigger, create an Express account with `country` and `email` from the signup form; generate an account-link with `refresh_url` and `return_url` pointing at the status dashboard. Email the founder. The webhook handler completes the loop by writing `account_id` and `charges_enabled` to `ProjectApi.technical.stripeConnectId` and `ProjectApi.technical.stripeOnboardingComplete`.
-
-**Patterns to follow:** Existing `closer-api/utils/stripe.js` for Stripe client usage; existing `closer-api/routes/payments.js` for webhook signature verification.
-
-**Test scenarios:**
-- Trigger creates an Express account in Stripe test mode and returns the onboarding link.
-- Email is sent with the correct link, founder name, and community context.
-- Webhook with valid signature writes account ID to `ProjectApi.technical`.
-- Webhook with invalid signature returns 400 and writes nothing.
-- Webhook arrives before the trigger completes (race): the handler is idempotent.
-- Account creation failure: the orchestrator can retry without creating duplicate accounts (use idempotency key based on slug).
-- KYC incomplete: dashboard shows "Awaiting Stripe verification" and a re-send link option.
-
-**Verification:** In Stripe test mode, run end-to-end and complete the test KYC; confirm `ProjectApi.technical` is updated.
-
-#### U22. Generic tenant seed script
-
-**Goal:** `scripts/seed-new-tenant.js` that takes the signup form payload and creates the initial state for a fresh community: roles, founder admin user, default `Config` entries (per `closer-api/models/config.js` schema), example listing, default email templates. Replaces the per-community `jobs/tdf/init.js`, `jobs/foz/`, `jobs/moos/` pattern for new tenants.
-
-**Requirements:** R10
-
-**Dependencies:** U10 (control-plane invokes this), U14 (droplet must exist for it to run on)
-
-**Files:** (all `closer-api`)
-- `scripts/seed-new-tenant.js`
-- `scripts/seed/defaults/roles.json`
-- `scripts/seed/defaults/email-templates.json`
-- `scripts/seed/defaults/config.json`
-- `__tests__/scripts/seed-new-tenant.test.js`
-
-**Approach:** The script runs on the new droplet immediately after `closer-api` boots, against the new tenant's Mongo. Reads parameters from env vars set by cloud-init (slug, founder email, language, currency, feature-flag preset). Idempotent: re-running on an already-seeded DB is a no-op. Uses existing model schemas — no schema changes to `closer-api/models/`.
-
-**Patterns to follow:** Existing `closer-api/jobs/tdf/init.js` as the closest analog; extract its generic parts into the new script.
-
-**Test scenarios:**
-- Fresh DB: script creates roles, founder admin user, default config, one example listing, default email templates.
-- Re-run on seeded DB: no duplicates, no errors.
-- Founder email becomes the admin user with the appropriate role attached.
-- Feature-flag preset "Booking-focused" sets the right `Config` flags vs. "Token/governance-focused".
-- Localization: `language=pt` populates Portuguese email templates.
-- Missing required env var (slug): script exits non-zero with clear message before touching the DB.
-
-**Verification:** Run on a fresh Mongo; log into the admin UI as the founder; confirm an example listing exists and the admin can edit config.
-
-#### U23. Mailgun subdomain provisioner
-
-**Goal:** Programmatically create `mail.<slug>.closer.earth` as a Mailgun domain, fetch the DKIM/SPF records, hand them to Track B's DNS module for creation, write the credentials into the tenant's secrets bundle.
-
-**Requirements:** R11
-
-**Dependencies:** U10 (control-plane trigger), U16 (DNS module accepts records to add)
-
-**Files:** (all `closer-api`)
-- `utils/mailgun-provisioner.js`
-- `routes/control-plane.js` — `POST /v4/control-plane/integrations/mailgun` handler (extends U10)
-- `__tests__/utils/mailgun-provisioner.test.js`
-
-**Approach:** Call Mailgun's `POST /v3/domains` with `name=mail.<slug>.closer.earth`; capture the returned sending API key, SMTP password, and DNS records (DKIM, SPF, MX). Pass DNS records to the orchestrator, which calls Terraform's DNS module to create them. Wait (poll) until Mailgun's domain-verification API confirms the records, then mark the integration complete.
-
-**Patterns to follow:** Existing email-sending in `closer-api/utils/email/` (probably uses Mailgun already in some form) for client patterns.
-
-**Test scenarios:**
-- Fresh slug: domain is created in Mailgun and DNS records are returned.
-- Verification polling: succeeds once DNS propagates; times out after 10 minutes with a clear error.
-- Duplicate (idempotent): re-running for an already-provisioned slug returns the existing domain without error.
-- Sending test: after verification, sending a test email through the new domain succeeds.
-- Domain limits hit: Mailgun rejects with quota error; the orchestrator surfaces this as a manual-intervention state.
-
-**Verification:** A test email sent from the new tenant arrives in an inbox with proper DKIM/SPF pass.
-
-#### U24. Per-tenant secrets injection
-
-**Goal:** A canonical secrets bundle (matching `closer-infra/secrets.schema.json`) is generated per tenant from the integration outputs and injected into the droplet's encrypted env-var store. Centralizes the "what env vars does a tenant need" knowledge currently scattered across `closer-api/.env.sample` and `closer-ui/apps/tdf/.env.sample`.
-
-**Requirements:** R4 (cloud-init reads injected secrets), R5 (Mongo URI is one of them)
-
-**Dependencies:** U14, U15, U21, U23
-
-**Files:**
-- `closer-infra/secrets.schema.json` — Contract 4
-- `closer-api/utils/tenant-secrets.js` — assembles the bundle from integration outputs
-- `closer-api/scripts/inject-tenant-secrets.js` — pushes bundle to droplet via cloud-init or DO API
-
-**Approach:** `secrets.schema.json` is the single source of truth for the env-var contract — both `closer-api` and Terraform read it. Required keys split into "platform-provided" (Mongo URI, droplet IP, DNS, Stripe Connect ID, Mailgun creds, Firebase, JWT secret) and "tenant-default" (VAT rate, feature flags, language). Injection happens during the `infra-provisioning` phase via cloud-init's `write_files`. No secrets stored in the central `ProjectApi.technical` field in plaintext — only references / IDs.
-
-**Patterns to follow:** Existing `closer-api/.env.sample` for the env-var name conventions.
-
-**Test scenarios:**
-- Bundle schema: all required keys present for a typical tenant.
-- Schema violation: missing key produces a clear `phase: "validation"` error at provision time.
-- Secrets not echoed in logs: orchestrator logging never prints secret values.
-- Re-injection (key rotation): updating a tenant's Mongo password and re-injecting works without recreating the droplet.
-- Plaintext check: `ProjectApi.technical` field in Mongo does not contain raw secret values, only IDs/references.
-
-**Verification:** Manual review of the central API's Mongo confirms no raw secrets; new droplet boots successfully with the injected bundle.
+| # | Question | Why it matters | Who decides |
+|---|----------|----------------|-------------|
+| Q1 | Is the topology in KTD1 the right call, or should v1 default to a "fully shared" tier (multiple villages sharing one droplet + shared Mongo)? | A fully-shared tier would cost ~€10–20/mo per village instead of ~€50, but loses per-village API process isolation. The roadmap mentions €50/mo as the shared-DB minimum, which implies per-village droplet. | Sam + Protocol Engineer |
+| Q2 | Should v1 also ship the self-hosted (€100+/mo) tier, or strictly defer to Phase 2? | Some early-adopter villages may have sovereignty requirements that only the self-hosted tier satisfies. Shipping both v1 doubles the work. | Sam + commercial lead (Lewis) |
+| Q3 | Vercel hosting strategy — wildcard `*.closer.earth` on one Vercel project, or one Vercel project per village created via API? | Wildcard requires Vercel Enterprise (or per-subdomain attachment via API on Pro). Per-project hits Vercel domain limits at ~100 villages. Decision affects KTD4 implementation. | Protocol Engineer + ops |
+| Q4 | Shared MongoDB server capacity — what is the current spec, connection-count headroom, and at what village count do we need to upsize or shard? | Capacity is currently unknown. Without baseline, we cannot set the alert thresholds or know when to escalate to Phase 2. | Vlad + Sam |
+| Q5 | Firebase strategy — per-village project (manual, status quo) or shared project with Firebase tenant IDs (requires research + refactor)? | Per-village Firebase is the only currently-manual step left if KTD6 + KTD7 land. Shared Firebase eliminates that step but is a bigger change. | Protocol Engineer |
+| Q6 | DigitalOcean droplet region — village-chosen at signup, or fixed (e.g., `fra1`)? | Village UX vs. ops simplicity. Default `fra1` (EU) is reasonable; some villages may want US/Asia. | Sam + Protocol Engineer |
+| Q7 | How do we backfill the 6 existing villages into the new `ProjectApi` registry so they appear in the federation directory? | Without backfill, the existing villages are invisible to the federation hub. Backfill is small but should be sequenced. | Vlad + Sam |
+| Q8 | What's the right founder-account UX — passwordless email-link auto-login on first visit, or invite-accept flow? | UX decision that affects time-to-first-value. Lean magic-link, but worth confirming. | Sam + design |
+| Q9 | Does the v1 signup form support choosing a feature-flag preset (Booking-focused / Token-focused / Education / Custom)? | Affects seed-script complexity and onboarding clarity. v1 could ship with one default preset and add more later. | Sam |
+| Q10 | What is the upgrade path from "village deployed on shared tier" to "village migrated to self-hosted tier"? | Even if Phase 2 is deferred, the v1 architecture should not make this migration impossible. | Protocol Engineer |
+| Q11 | How does this work coordinate with Pillar 2 (Platform Configurability — custom pages, theme system)? | Pillars 1 and 2 overlap in the "config-driven branding and copy" space. Risk of duplicating work or building incompatible abstractions. | Sam + Protocol Engineer |
+| Q12 | What's the right interplay between this work and the federation hub (`api.closer.earth`)? Is `api.closer.earth` also where the control plane lives, or is it a separate central service? | KTD5 assumes same instance; needs explicit confirmation from whoever owns federation hub design. | Sam |
+| _add yours_ | | | |
 
 ---
 
-## System-Wide Impact
+## 10. What's Not in This Document
 
-| Surface | Change |
-|---------|--------|
-| `closer-api` central instance (`api.closer.earth`) | Gains the control plane, orchestrator job, integration helpers, new audit log model. Becomes the only instance that handles signup/provisioning. |
-| `closer-api` tenant instances | No code-level changes beyond consuming PR #290 + #330 primitives; receive secrets via cloud-init; run the generic seed script at boot. |
-| `closer-ui` existing apps (`tdf`, `moos`, etc.) | No changes. Continue to work as today. The new `federation-host` app coexists. |
-| `closer-ui` new tenants | Run on `federation-host`. No new `apps/<slug>/` folder is created. |
-| Founders / stewards | New self-serve flow at `closer.earth/start`. New status dashboard at `closer.earth/dashboard/<slug>`. |
-| Central team operations | Receives webhook/email on provision failures (instead of running deploy by hand for happy paths). Manual runbook becomes the fallback for exceptional cases. |
-| DigitalOcean account | Many more droplets; needs a billing review. |
-| Shared MongoDB server | Many more databases on the same server. Need to confirm current capacity headroom, backup-job runtime impact, and the connection-count ceiling on the existing Mongo process. Capacity review at 25/50/100 communities. |
-| DNS zone `closer.earth` | Many more records; DO DNS limits should be checked (~10k records per zone). |
-| Vercel `closer-ui` project list | One new project (`federation-host`); per-tenant project creation only if KTD3 is revised to per-project. |
-| Stripe account | Many more Connect Express accounts; needs review of platform-level Stripe agreement and per-account fee impact. |
-| Mailgun account | Many more sending subdomains; needs domain-limit review. |
+To keep this an alignment doc and not an implementation plan, the following are deliberately omitted and will land in a follow-up plan once Sections 3–8 are signed off:
+
+- Per-engineer track breakdown
+- Implementation units (file-level changes, functions, test cases)
+- Interface contracts between tracks
+- Mermaid sequence diagrams of the provisioning lifecycle
+- The specific shape of the Terraform modules / cloud-init / CLI
+- Test scenarios for individual units
+- Risk register at the implementation level
+
+These existed in an earlier draft (git history of this file) and will be regenerated against the signed-off direction.
 
 ---
 
-## Scope Boundaries
+## 11. Decision Log
 
-### Deferred to Follow-Up Work
-
-- Migrate the existing `apps/tdf`, `apps/moos`, `apps/lios`, `apps/foz`, `apps/earthbound`, `apps/per-auset`, `apps/closer` deployments onto `federation-host`. The plan keeps both paths working; migration is a separate, lower-urgency PR per app.
-- Replace DigitalOcean App Platform secrets with a proper vault (HashiCorp Vault, Doppler, AWS Secrets Manager). Track D U24 acknowledges this and lays the schema groundwork.
-- Move heavy tenants off the shared MongoDB server onto dedicated Mongo instances (or MongoDB Atlas) once the shared server hits capacity or a single community's compliance posture requires hard storage-level isolation. Trigger: connection-count headroom drops below 30%, p99 query latency degrades meaningfully, or a tenant explicitly contracts for dedicated infra.
-- Build a self-serve UI for the founder to upload a custom logo, set theme colors, or pick a custom domain during signup. v1 uses a default Closer logo and theme; admin UI is the customization path.
-- Build observability into the provisioning pipeline (Datadog/Grafana dashboard for provision latency, failure rates, droplet health). v1 ships with structured logs from the orchestrator and event-log table queryable in Mongo.
-- Replace PM2 with systemd on the droplet. Acceptable to ship v1 with PM2 to match `closer-api/deploy.fish` conventions, but track for follow-up.
-- Implement key rotation for Lamport signing seeds across the federation (acknowledged in PR #330's roadmap; out of scope here).
-- Replace the per-tenant Firebase project model with shared-project + per-tenant Firebase tenant ID. Currently each new tenant needs a Firebase project, which is manual; this can be revisited once a Firebase-Admin-SDK automation is built.
-- Build cross-community admin features (centralized billing, multi-instance moderation, etc.).
-
-### Deferred for Later (Strategy Tracks 2 & 3)
-
-- Cross-village portability and Passport-based identity flows beyond what PR #330 ships. STRATEGY.md Track 2.
-- Lifecycle progression and learning loops (visitor → member → contributor → steward telemetry). STRATEGY.md Track 3.
-
-### Outside this Product's Identity
-
-- A general-purpose PaaS for any web app. This is one-click deployment specifically for `closer-api` + `closer-ui` with the federation protocol — not a `vercel deploy` clone.
-- A marketplace for renting Closer instances or reselling droplets to non-Closer apps.
-
----
-
-## Risks & Mitigations
-
-| Risk | Severity | Mitigation |
-|------|----------|------------|
-| PR #330 has unaddressed security issues that surface in production once federation register is open to the world | High | Track 0 is committed; do not start Track A/B/D dependencies until U1 is merged and a security review re-runs. |
-| Partial provisioning leaves orphan droplets, MongoDB clusters, or Stripe accounts | High | Orchestrator's `failed` transition triggers decommission for all partial infra. U13 test scenario covers it. Manual cleanup script (`scripts/decommission-tenant.js`) for residual cases. |
-| Stripe Connect KYC takes days; founder's instance is stuck in "integrations-pending" | Medium | The `active` state proceeds without Stripe being complete; the dashboard shows Stripe as a separate "awaiting verification" badge. Payments simply don't work until Stripe is done. |
-| Shared MongoDB server becomes a single point of failure for all communities | High | Document the trade-off in KTD4. Mitigations: backups for the whole server with per-DB restore tested in staging; capacity-tier upsize playbook; named threshold for moving heavy tenants off-shared. The strategy doc's sovereignty language is honest about API/payments/domain sovereignty; storage-layer sharing is acknowledged in the plan. |
-| Shared Mongo capacity (connections, disk, RAM) exhausts as community count grows | Medium | Track headroom from day one (alerts at 70%/85%/95%). Upsize the Mongo VM as needed; move heavy tenants off-shared at a documented threshold. |
-| Mongo admin credentials used by the provisioner are themselves a high-value secret | High | Held only in the central secrets store; rotated on a schedule; provisioner runs server-side, never on engineer laptops. Audit log on every createUser. |
-| Wildcard DNS or wildcard SSL is a security/blast-radius risk | Medium | Use per-subdomain certificates via Vercel + Let's Encrypt; the only "wildcard" is the wildcard DNS A record pointing at Vercel's wildcard infra. |
-| Vercel domain-limit on a single project | Medium | Vercel currently allows ~100 domains per project on Pro. Verify with Vercel; consider Enterprise or per-tenant projects if hit. Document in U9. |
-| Secrets leakage through orchestrator logs or `ProjectApi.technical` field | High | U24 explicitly bans plaintext secrets in central Mongo; orchestrator log scrubbing tested in U13. |
-| Communities want custom domains (not `<slug>.closer.earth`) before v1 is ready | Medium | PR #330 already provides custom-domain TXT verification; expose it as an admin-UI action post-provision. v1 ships subdomain-only. |
-| Concurrent provisions for the same slug race to claim it | Low | Mongo unique index on slug; U10 test scenario covers it. |
-| Cloud-init failures are hard to debug remotely | Medium | Cloud-init logs persisted on droplet; orchestrator polls a `/health` endpoint and surfaces cloud-init phase. Provide a doc on SSH'ing in for forensics. |
-
----
-
-## Dependencies & Prerequisites
-
-**External services and accounts needed before Track B can start:**
-- DigitalOcean account with API token (already exists; need to confirm rate limits and droplet quota).
-- Admin credentials for the existing shared MongoDB server, held in the central secrets store (not on engineer laptops). Confirm the server's network reachability from wherever the orchestrator runs.
-- Vercel team account with API token.
-- Stripe platform account with Connect enabled (already exists per `MIGRATE_PLATFORM_STRIPE_ACCOUNT.md`).
-- Mailgun account with API key and ability to add many subdomains.
-- New GitHub repo `closerdao/closer-infra` for Terraform.
-
-**PRs that must merge first:**
-- `closerdao/closer-api#290` (LandProject + ProjectApi registry) — required for U10, U13.
-- `closerdao/closer-api#330` (Passport, federation, DNS) — required for U10, U13, U16; **must include U1 hardening fixes**.
-- Payment-correctness PRs `#355, #360, #362, #363, #365` should merge before any new community goes live (not strict-blocking for this plan's code, but blocking for inviting real founders).
-
-**Engineer team setup:**
-- 4 engineers, one per track (A, B, C, D).
-- Track 0 owned by the engineer landing PR #330.
-- Daily 15-min standup for the first 2 weeks while interface contracts are validated under real use.
-- Shared Slack channel for cross-track decisions that affect contracts.
-
----
-
-## Open Questions
-
-| ID | Question | Owner | Resolution path |
-|----|----------|-------|-----------------|
-| Q1 | Should `federation-host` be a single Vercel project with wildcard domain, or one Vercel project per tenant created via API? | Track C lead + ops | Test wildcard on a Pro account; check Vercel domain-limit; decide before U9. |
-| Q2 | What is the current shared MongoDB server's spec, headroom, and connection-count ceiling? At what community count do we need to upsize or shard, and which heavy tenants are first candidates to peel off onto dedicated storage? | Track B lead + founder/ops | Inspect production Mongo; record baseline; define alert thresholds before first new community provisions. |
-| Q3 | Does the central team want to embed Stripe Connect Express's hosted onboarding in an iframe in the dashboard, or send the link via email only? | Track A + Track D | Founder UX test; email-only is simpler v1. |
-| Q4 | Where does the closer.earth marketing site live today, and does the federation-host apex page need to subsume it? | Central team | Confirm with the closerearth team; if there's an existing marketing site to preserve, the apex tenant in U6 forwards to it. |
-| Q5 | Should the founder get a real user account on their new instance automatically (passwordless email link), or just an invite they accept? | Track D + product | UX decision; lean magic-link auto-login on first visit. |
-| Q6 | What's the right Firebase strategy — per-tenant project (manual) or shared project with Firebase tenant IDs (requires more research)? | Track D | Spike of 1-2 days. Until decided, manual Firebase per-tenant is the documented gap. |
-| Q7 | DigitalOcean droplet region: tenant-chosen or fixed (e.g., `fra1`)? | Track B + product | Founder UX vs. ops simplicity; default `fra1` (EU) with an override is reasonable. |
-| Q8 | How are existing communities (TDF et al.) registered in the new `ProjectApi` table? | Central team | Backfill script that creates `ProjectApi` records for the 6 existing apps so they appear in the directory; separate from this plan. |
-
----
-
-## Verification
-
-The plan is delivered when:
-
-- [ ] A founder can sign up at `closer.earth/start` and reach a live, working instance at `<slug>.closer.earth` in ≤30 minutes wall-clock, no central-team intervention required.
-- [ ] The provision is fully observable in the status dashboard at every phase; a failed provision shows a clear error and leaves no orphan infra.
-- [ ] At least three test communities have been provisioned end-to-end on staging without ops intervention.
-- [ ] All 8 PR #330 Copilot-flagged issues are closed (or have documented "won't fix" rationale).
-- [ ] Existing apps (`apps/tdf`, `apps/moos`, etc.) continue to deploy and serve unchanged.
-- [ ] Decommissioning a community removes all infrastructure cleanly.
-- [ ] The 4 tracks shipped in parallel; no track had to wait on another for more than 1 working day across the project lifetime.
-
----
-
-## Alternative Approaches Considered
-
-### Alt 1 — Multi-tenant single API (rejected)
-
-Refactor `closer-api` to be a single shared deployment serving many communities, scoped by `tenantId` on every model and route. One Vercel app with runtime host-based theming. Smallest infra cost per new community; largest refactor of existing code.
-
-**Why rejected:** Loses federated isolation, which STRATEGY.md commits to and PR #330 (passports, Lamport signing per instance, ProjectApi federation registry) actively builds for. Would require adding `tenantId` scoping to every model and route in `closer-api` — a high-risk refactor for a part-time team. Also conflicts with sovereignty messaging in the strategy ("communities own the ground they live on") which a shared API undercuts.
-
-### Alt 2 — Hybrid (rejected)
-
-Multi-tenant API + FE; per-tenant Stripe Connect + custom domain. Single shared deployment; only payments and branding stay per-tenant.
-
-**Why rejected:** Same model-refactor cost as Alt 1, plus the awkward boundary of "some things per-tenant, some shared" makes failure modes ambiguous. The federation primitives in PR #330 are explicit about per-instance identity (Lamport keys, ProjectApi self-registration); hybrid would partially obviate that work.
-
-### Alt 3 — Federated isolation (chosen)
-
-This plan. Automate the existing per-tenant infrastructure pattern rather than refactoring it away. Higher infra cost per community, lowest blast radius, smallest code refactor, full alignment with STRATEGY.md and PR #290/#330.
+| Date | Change | Reason |
+|------|--------|--------|
+| 2026-05-16 | Initial draft with per-track implementation units | First pass before supplementary docs landed |
+| 2026-05-17 | Corrected Mongo topology to shared server with per-tenant DBs | Founder confirmed production reality |
+| 2026-05-17 | Restructured to alignment-first shape; dropped track and unit detail; added Current Architecture section for sign-off | Team direction: lock medium-grain alignment before implementation detail |
