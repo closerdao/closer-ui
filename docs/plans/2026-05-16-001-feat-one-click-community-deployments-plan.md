@@ -42,6 +42,10 @@ A handful of terms have specific meaning in this doc; quick reference:
 - **`ProjectApi`** — a record (introduced by closer-api PRs #290 + #330) in the central registry that maps a village to its running instance (API URL, app URL, status, server tier).
 - **`LandProject`** — the curated, geolocated catalog record for a village. Distinct from `ProjectApi`: a village can exist as a catalog entry before it is deployed.
 - **Per-village vs shared resource** — "per-village" means each village has its own instance of the resource (own droplet, own Stripe account, own DB). "Shared" means one resource serves many villages (shared MongoDB server, shared `api.closer.earth` hub).
+- **Template** — the single monorepo app code base that all villages deploy from. Replaces the current `apps/<village>/` folder pattern. May be split into multiple tier-specific templates (see "Tier").
+- **Tier** — a coarse-grained variant of the template, scoping out unused capability (e.g., a non-web3 tier that strips token/wallet code for villages that don't need it). Distinct from "deployment tier" (€50/mo shared-DB vs €100+/mo self-hosted) — see KTD3.
+- **Compiled config** — per-village configuration values baked into a minified JSON file at build time, so the FE has access to logo, brand elements, feature flags, and other config during initial page load without an API round-trip. Sam introduced this pattern in a recent open PR (exact PR TBD — see Q20); the pattern is load-bearing for KTD4 and KTD12.
+- **Procurement app** — the central team's internal tool for managing the customer pipeline (leads, contracts, what was sold). The contract record is the source of truth for what gets provisioned (which template version, which features, which tier). Sam built a prototype called **Yoda** previously, to be evaluated as a starting point.
 
 ---
 
@@ -58,7 +62,7 @@ A handful of terms have specific meaning in this doc; quick reference:
 
 ### 3.2 Repos and code layout
 
-- **`closerdao/closer-ui`** — Turborepo monorepo. One Next.js app per village in `apps/<village>/`: `apps/closer` (official/generic), `apps/tdf`, `apps/earthbound`, `apps/moos`, `apps/lios`, `apps/foz`, `apps/per-auset`. All apps consume a shared `packages/closer` package containing ~95% of components, pages, hooks, contexts. Per-village customization happens via env vars, per-app `public/images/` assets, and occasional per-app pages.
+- **`closerdao/closer-ui`** — Turborepo monorepo. One Next.js app per village in `apps/<village>/`: `apps/closer` (official/generic), `apps/tdf`, `apps/earthbound`, `apps/moos`, `apps/lios`, `apps/foz`, `apps/per-auset`. All apps consume a shared `packages/closer` package containing ~95% of components, pages, hooks, contexts. Per-village customization happens via env vars, per-app `public/images/` assets, and occasional per-app pages. **Per founder assessment, the per-village delta is small: "all the code is already shared and usable by any village (except a handful of static pages)."** The custom code that does exist is concentrated in a few areas — see 3.4 for the inventory.
 - **`closerdao/closer-api`** — Single Node/Koa codebase. One deployment per village. Deploy script is 3 lines: `rsync` to a hardcoded `crocodile` host + `pm2 restart`. No tenancy primitives in models (no `tenantId`/`communityId` field). Background jobs include per-village folders (`jobs/tdf/`, `jobs/foz/`, `jobs/moos/`).
 - **Federation work in flight**: closer-api PR #290 adds `LandProject` + `ProjectApi` registry models. PR #330 (a superset) adds federated identity (`Passport`), Lamport quantum-safe signing for instance authentication, DigitalOcean DNS provisioning helper, and instance self-registration. Both PRs are open and currently unmerged on `develop`.
 
@@ -88,7 +92,20 @@ The scalability assessment in the supplementary doc categorizes each feature by 
 5. **Site copy and i18n** — partly in JSON files, partly hardcoded text fragments throughout `packages/closer`. Adding a language requires code changes.
 6. **Database and backend** — the doc explicitly flags "shared database can cut setup/cloud/maintenance costs" and same for "shared app". The team has already considered tier-based deployment.
 
-### 3.5 What the "manual half-day" actually consists of
+### 3.5 Per-village custom code inventory (what the template must absorb or accept as exceptions)
+
+Based on 3.4 and the founder's framing ("handful of static pages" + scaling-assessment hotspots), the per-village custom code today is concentrated in:
+
+- **TDF-specific token code paths**: token bookings and token sale logic in `packages/closer` carries TDF-specific branches.
+- **TDF-specific pricing logic**: separate utility and food price calculations contain TDF-specific assumptions.
+- **Per-app static pages**: each `apps/<village>/` folder has a small number of village-specific pages, copy snippets, or layout overrides.
+- **Per-app brand assets**: logo, colors, fonts currently live as static files under `apps/<village>/public/images/` and as env vars.
+- **Per-app feature flag combinations**: each village has its own set of `NEXT_PUBLIC_FEATURE_*` values in `.env`.
+- **Per-app email template overrides**: some transactional email defaults are baked in on the backend, with hardcoded snippets that don't easily move to config.
+
+Goal 5.1 #4 (no custom code in the template) hinges on either absorbing these into the config + style + template-tier surfaces or accepting them as named exceptions for specific existing villages (e.g., TDF). KTD13 makes the call.
+
+### 3.6 What the "manual half-day" actually consists of
 
 Reconstructed from `closer-api/SETUP.md`, `closer-ui/MIGRATE_PLATFORM_STRIPE_ACCOUNT.md`, `closer-api/deploy.fish`, `closer-api/jobs/tdf/init.js`, and the `apps/<village>/.env.sample` files:
 
@@ -107,7 +124,7 @@ Reconstructed from `closer-api/SETUP.md`, `closer-ui/MIGRATE_PLATFORM_STRIPE_ACC
 13. Verify SSL, test booking flow, test token flow if applicable, verify email delivery.
 14. Hand off credentials to the village founder.
 
-### 3.6 What the central team owns vs the village team
+### 3.7 What the central team owns vs the village team
 
 - **Central team owns:** the entire deployment process above, the federation hub (`api.closer.earth`), shared Mongo, the CDN, the deploy pipeline (such as it is), all per-village secrets.
 - **Village team owns:** content (via existing admin UI in `packages/closer/pages/dashboard/admin/`), bookings/listings/events configuration, member management, and operations.
@@ -134,18 +151,25 @@ Closer's strategic framing — "communities own the ground they live on and gove
 
 ### 5.1 Primary goals
 
-1. **Self-serve onboarding live.** A founding steward can complete signup at `closer.earth` and reach a working village instance within ≤30 minutes wall-clock without central-team intervention on the happy path.
-2. **Zero per-village code changes for new villages.** Adding a new village requires only configuration records and orchestrated provisioning. No new `apps/<village>/` folder, no new `jobs/<village>/` directory.
+1. **Self-serve onboarding live.** A founding steward can complete signup at `closer.earth` and reach a working village instance within ≤30 minutes wall-clock on the happy path. (The path includes a contract step that may involve human-in-the-loop on the central-team side via the procurement app — see KTD11. "No central-team intervention" applies to the technical provisioning, not necessarily contract review.)
+2. **Zero per-village code changes for new villages.** Adding a new village requires only configuration records, compiled config/styles, and orchestrated provisioning. No new `apps/<village>/` folder, no new `jobs/<village>/` directory, no village-specific branches in shared code.
 3. **Custom domains supported in v1.** A village can be deployed onto either a `<slug>.closer.earth` subdomain or its own custom apex/subdomain (e.g., `earthbound.eco`). The concrete success test: **we could redeploy Earthbound as a customer onto the new system with its existing `earthbound.eco` domain, without bespoke central-team work.** Migration of other existing villages remains out of scope, but the system must be capable of receiving them.
-4. **Capacity to grow village count by an order of magnitude** without degrading central-team capacity or shared-infrastructure performance. No hard count attached to v1; the gating constraint is that growth is no longer rate-limited by manual deploy work.
-5. **First deploy tier shipped: shared-DB / per-village app.** Matches current production topology and the roadmap's €50/mo tier. The €100+/mo self-hosted tier is a documented follow-up (see KTD3).
-6. **Existing villages continue to work unchanged.** TDF, MOOS, LIOS, FOZ, EARTHBOUND, PER-AUSET keep their current deployments. Migration is out of scope for this work, with the Earthbound-as-customer test (goal 3) being the closest the work gets to migration — it is a redeploy onto the new system, not an in-place migration of the existing instance.
+4. **No custom code paths in the template** (or in shared `packages/closer`) for the villages the template serves. TDF-specific token/pricing branches, hardcoded site copy, hardcoded email snippets, and similar are either absorbed into the config/style/template-tier surfaces or accepted as named exceptions for specific existing villages (TDF most likely). The user-visible test: a new village deploy never requires a developer to touch the codebase.
+5. **Procurement app and customer pipeline surface live.** The central team can manage leads, contracts, and what each customer has paid for from a single tool. The provisioning script reads from the contract to determine which template version, tier, and feature set to deploy. The procurement app may be a fresh build or may start from Sam's prior **Yoda** prototype (KTD11).
+6. **Capacity to grow village count by an order of magnitude** without degrading central-team capacity or shared-infrastructure performance. No hard count attached to v1; the gating constraint is that growth is no longer rate-limited by manual deploy work.
+7. **First deployment tier shipped: shared-DB / per-village app.** Matches current production topology and the roadmap's €50/mo tier. The €100+/mo self-hosted tier is a documented follow-up (see KTD3).
+8. **Existing villages continue to work unchanged.** TDF, MOOS, LIOS, FOZ, EARTHBOUND, PER-AUSET keep their current deployments. Migration is out of scope for this work, with the Earthbound-as-customer test (goal 3) being the closest the work gets to migration — it is a redeploy onto the new system, not an in-place migration of the existing instance.
 
-### 5.2 Quality bar
+### 5.2 What "v1" means in scope terms
+
+Per the founder: launch a basic version to real customers even with limited customization options; collect feedback; iterate. v1 is intentionally minimal — enough to provision a village end-to-end, including custom domain and contract-driven feature set, but without admin-self-service for branding/styling beyond what the compiled config + uploaded style file allows. Richer post-provision customization (WYSIWYG page builder, theme picker) is Pillar 2 work.
+
+### 5.3 Quality bar
 
 - Provisioning is **observable** — the founder sees real-time progress at every phase.
 - Provisioning is **resumable and rollback-safe** — a failure leaves no orphan infrastructure and a clear error path for the central team.
 - The federation primitives from PRs #290 and #330 are used **as designed** — this work consumes them rather than reinventing the registry, identity, or DNS layers.
+- The compiled config + style pattern from Sam's recent open PR is used **as designed** — this work consumes it rather than re-litigating the build-time-config approach.
 - Secrets management is **acceptable for v1 even if not ideal long-term** — explicit follow-up for a proper vault.
 
 ---
@@ -180,7 +204,7 @@ Closer's strategic framing — "communities own the ground they live on and gove
 The working group for this work:
 
 - **Avi** — primary owner of the one-click deployment work end-to-end (control plane, orchestration, integration automation).
-- **Vlad** — primary owner of `closer-ui` (including the runtime multi-tenancy refactor implied by KTD4).
+- **Vlad** — primary owner of `closer-ui` (including the template extraction and custom-code-removal work implied by KTD4 and KTD13).
 - **Sam** — CTO; technical direction and decisions on KTDs and Open Questions.
 - **Paul** — Operations and technical support; signoff on the operational prerequisites in 6.2, owner of the runbook for failure modes that surface to humans.
 
@@ -234,13 +258,60 @@ The following are explicitly **out of scope for v1 of Pillar 1**. Several are do
 
 **Trade-off.** Villages with strong sovereignty requirements (e.g., regulatory pressure to hold their own data) cannot self-serve in v1 — they need to wait for the follow-up or stay on the manual path. Acceptable for v1.
 
-### KTD4 — Runtime multi-tenancy in the FE (single deployable, host-resolved tenant)
+### KTD4 — One template, deployed per-village with compiled config + style files (not runtime multi-tenancy)
 
-**Decision.** A new `apps/federation-host` Next.js app (or refactor of `apps/closer`) becomes the single deployable artifact serving all new village subdomains plus the `closer.earth` apex domain. It reads the incoming `Host` header, resolves the village via a new `GET /v4/tenants/by-host` endpoint, and renders. Per-village branding (logo, theme JSON, copy overrides) loads from the CDN at runtime, keyed by village slug. **Existing per-village apps (`apps/tdf`, `apps/moos`, etc.) continue to work unchanged.**
+**Decision.** A single monorepo app template replaces the current `apps/<village>/` folder pattern. Each new village gets its own Vercel project, built from the template, with per-village values injected at build time as **compiled config + style files** (a minified JSON config and an uploaded Tailwind/style file, baked into the build). Each village is still a separate deployment; one template feeds them all. The template may be split into a small number of tier variants (e.g., web3-enabled vs non-web3-stripped) — see KTD10.
 
-**Why.** The current "one app folder per village" pattern is fundamentally incompatible with self-serve — every new village would need a code change, a new build, and a new Vercel project. Runtime resolution decouples village count from build count. The "Closer platform features" scalability assessment explicitly flags this ("Private app deployments — shared app can cut setup, cloud and maintenance costs"). The existing apps stay on their existing path so this work does not block on a risky migration.
+**Why.** The founder explicitly pushed back on running all villages on a single shared FE instance: *"I don't think we can run all villages on a single instance without running into issues with load times / style issues / security."* Per-village deploys preserve isolation at the FE layer (matching what KTD1 preserves at the API/payments layers) and let each village's bundle be sized to just what that village needs (especially relevant if tiers strip out unused code). The compiled-config pattern (in Sam's recent open PR) also gives the FE access to logo and other config elements during initial page load without an API round-trip, which both improves perceived performance and removes a class of "config not loaded yet" rendering bugs.
 
-**Trade-off.** A single shared FE deploy means a bad release affects all new villages at once. Mitigation: the new app starts with one village, then onboards more gradually. Old apps remain insulated.
+**The shape of the per-village build.** When a new village is provisioned:
+1. The provisioning script (KTD7 / KTD11) reads the customer's contract from the procurement app: tier, feature set, app version, slug, custom domain, branding.
+2. It generates a compiled config JSON (matches the format from Sam's recent open PR) and a compiled style file (the customer's uploaded Tailwind config, or the default).
+3. It creates a Vercel project, pushes the template at the contracted version, and injects the compiled files as part of the build.
+4. Vercel builds and deploys. The bundle contains only the code paths the tier enables; the config and style files are part of the bundle, not a runtime fetch.
+
+**Trade-off and follow-ups.** Per-village builds mean N Vercel projects (one per village) — sets us up for needing Vercel API automation for project creation (formerly Q3, now mostly answered: per-project, not wildcard). Style edits made by an admin require a re-deploy (build-time pattern), not a runtime hot-swap; KTD12 makes that explicit. Tier splits compound the build matrix; KTD10 discusses the threshold.
+
+**Explicitly out of scope under this KTD.** The earlier draft of this KTD called for a `federation-host` app, host-header tenant resolution, wildcard Vercel, and CDN-loaded runtime branding. All of that is dropped per founder direction.
+
+### KTD10 — Template tiers (likely starting with one, splitting if needed)
+
+**Decision.** v1 starts with a single template that supports the full feature set behind feature flags. If bundle size, build complexity, or security surface for non-web3 villages becomes a concrete problem, the template is split into tier variants (e.g., `template-web3` and `template-core`). The split is deferred until there is evidence it is needed; the architecture leaves the door open.
+
+**Why.** The founder framed this as an "if needed" — *"maybe per tier so we can scope out web3 code to non web3 communities"*. Splitting prematurely doubles the maintenance surface. Splitting later, once the shapes are clear, is cheaper than getting the boundaries wrong now. Feature flags in v1 give us a path to "no web3 surface visible to a non-web3 village" without requiring a separate template.
+
+**Trade-off.** Single template means non-web3 villages still ship the web3 code in their bundle (dead weight). For v1's first cohort of villages, this is acceptable; if the wallet/contract libraries balloon the bundle meaningfully, a tier split becomes high-priority.
+
+### KTD11 — Procurement app (Yoda or successor) is the source of truth for what gets provisioned
+
+**Decision.** The central team uses a procurement app to manage the customer pipeline (leads, conversations, contracts). The contract record specifies: village name, slug, custom domain or `<slug>.closer.earth`, tier, feature set, template version, pricing, billing terms, and any village-specific exceptions. The provisioning script reads from the procurement app — it does not have its own source-of-truth for what to deploy. The public signup form at `closer.earth` is the **front end** of the pipeline (creates a lead); the procurement app is the **back end** (where contracts are signed and provisioning is triggered). Sam's prior **Yoda** prototype is evaluated first as a starting point; if useful, extend it; if not, build fresh.
+
+**Why.** Sam's framing: *"UI to handle customer pipeline and customer contracts, and interact with procurement app via closer.earth"* and *"Provisioning script would also set which app version to deploy, with which features enabled (based on the contract the customer signed with us)."* This makes the "what does this customer get?" decision contract-driven rather than form-driven — appropriate because real customers will negotiate, have edge cases, and commit to specific feature sets at specific prices.
+
+**Trade-off.** A procurement app is a meaningful addition to v1 scope (vs. just a public signup form). It is the right addition because without it, the provisioning script needs to encode the contract-decision logic itself, and the central team has nowhere clean to manage pipeline. Open Question Q17 (next section) decides whether Yoda is the basis or a clean build.
+
+### KTD12 — Per-village styles via admin upload, compiled at deploy time (not runtime)
+
+**Decision.** Each village can upload a Tailwind config (or equivalent style file) via the admin UI. The file is stored centrally (CDN or DB) and consumed by the next per-village build, producing a new deploy. Style changes are build-time, not runtime. Same pattern as Sam's compiled config from his recent PR.
+
+**Why.** Sam: *"all config & styles editable by admin (even if styles is just upload your tailwind config), automatic vercel deploy"* and *"Next step would be to have a style editor in admin configs which would get stored into a file available on load on that instance."* Build-time compilation matches the compiled-config pattern, gives the FE access to styles during initial page load, and avoids a runtime style-loading shimmer.
+
+**Trade-off.** Admin style edits require a re-deploy (~minutes via Vercel API). Acceptable for v1; richer WYSIWYG/live-preview style editing is Pillar 2 work.
+
+### KTD13 — Custom code removal: absorb into template surfaces; accept named exceptions only for existing villages
+
+**Decision.** TDF-specific token/pricing branches, hardcoded site copy, hardcoded email snippets, and per-village static pages identified in Section 3.5 are addressed in v1 by one of two paths:
+- **Absorb into the template's config / style / template-tier surface.** Preferred path for everything that generalises (e.g., token-feature flag controls all token UI; pricing rules become per-village config; email snippets become per-village config strings).
+- **Accept as a named exception**, scoped to a specific existing village (TDF most likely). Exceptions live behind a slug check and are explicitly listed in the template's docs. New villages cannot use exceptions — the audit gate ensures no new village pulls a developer in.
+
+**Why.** Per Paul: *"we need to include the work of making sure that there isn't any custom code in the app code."* Per Sam: *"all the code is already shared and usable by any village (except a handful of static pages)."* Both point to the same conclusion — the per-village delta is small enough that v1 can absorb it, with TDF as the only likely holdout. Without this work, "no custom code per village" (Goal 5.1 #4) is unmeetable.
+
+**Concrete shape.** v1 deliverable includes:
+1. A documented audit of every TDF-specific branch and hardcoded text fragment in `packages/closer` and the per-app folders (the scaling assessment is the starting point).
+2. For each item: a decision (absorb / except / defer) recorded in the template's docs.
+3. A CI check or lint rule that prevents new `if (slug === 'foo')` branches from landing in shared code.
+
+**Trade-off.** The audit + absorb work is a meaningful chunk of work that the earlier draft of this doc did not include. The user (Paul) explicitly flagged it as required. It is now part of v1 scope.
 
 ### KTD5 — Control plane lives as new routes in `closer-api`, not a separate service
 
@@ -294,7 +365,7 @@ The following are explicitly **out of scope for v1 of Pillar 1**. Several are do
 |---|----------|----------------|-------------|
 | Q1 | Is the topology in KTD1 the right call, or should v1 default to a "fully shared" tier (multiple villages sharing one droplet + shared Mongo)? | A fully-shared tier would cost ~€10–20/mo per village instead of ~€50, but loses per-village API process isolation. The roadmap mentions €50/mo as the shared-DB minimum, which implies per-village droplet. | Sam + Avi |
 | Q2 | Should v1 also ship the self-hosted (€100+/mo) tier, or strictly defer as a follow-up? | Some early-adopter villages may have sovereignty requirements that only the self-hosted tier satisfies. Shipping both in v1 doubles the work. | Sam |
-| Q3 | Vercel hosting strategy — wildcard `*.closer.earth` on one Vercel project, or one Vercel project per village created via API? | Wildcard requires Vercel Enterprise (or per-subdomain attachment via API on Pro). Per-project hits Vercel domain limits at ~100 villages. The decision is also coupled with KTD9: custom domains (e.g., `earthbound.eco`) sit outside the wildcard and must be attached individually regardless of which path we pick for subdomains. | Avi + Paul |
+| Q3 | ~~Vercel hosting strategy — wildcard vs per-project?~~ **Mostly answered by KTD4**: per-project (one Vercel project per village, created via API). Remaining sub-question: at what village count do Vercel API rate limits or project-count limits become a constraint, and what's the migration path then? | Avi + Paul |
 | Q4 | Shared MongoDB server capacity — what is the current spec, connection-count headroom, and at what village count do we need to upsize or shard? | Capacity is currently unknown. Without baseline, we cannot set the alert thresholds or know when to trigger the follow-up self-hosted tier. | Vlad + Paul |
 | Q5 | Firebase strategy — per-village project (manual, status quo) or shared project with Firebase tenant IDs (requires research + refactor)? | Per-village Firebase is the only currently-manual step left if KTD6 + KTD7 land. Shared Firebase eliminates that step but is a bigger change. | Avi |
 | Q6 | DigitalOcean droplet region — village-chosen at signup, or fixed (e.g., `fra1`)? | Village UX vs. ops simplicity. Default `fra1` (EU) is reasonable; some villages may want US/Asia. | Sam + Avi |
@@ -307,6 +378,11 @@ The following are explicitly **out of scope for v1 of Pillar 1**. Several are do
 | Q13 | Custom domain onboarding UX — does the founder configure DNS during signup (blocking provision until they're done) or post-signup from the admin UI (provision finishes on `<slug>.closer.earth`, custom domain is a separate step later)? | Affects orchestrator state machine, signup UX, and what "30 minutes to working instance" actually means for custom-domain villages. Lean post-signup, but worth confirming. | Sam + Avi |
 | Q14 | For the Earthbound-as-customer test (goal 5.1 #3), do we treat it as a *fresh* deploy with manual data import after, or do we build any import tooling as part of v1? | Affects scope. Lean fresh deploy + manual data ops handled by Paul, with import tooling as a follow-up. | Sam + Paul |
 | Q15 | When custom domains are in play, does the email sender domain (Mailgun) follow the custom domain (`mail.earthbound.eco`), follow the closer.earth subdomain (`mail.<slug>.closer.earth`), or is it founder-configurable? | Affects Mailgun automation, DKIM/SPF, and what the founder sees in their inbox. Each path has trade-offs in branding vs deliverability vs setup complexity. | Sam + Paul |
+| Q16 | Tier strategy (KTD10): start with one template + feature flags, or split into web3-enabled / non-web3-stripped from day one? | Single template is faster to ship and easier to maintain; tier split reduces bundle size for villages that don't need web3 and shrinks the security surface for them. Sam's framing was "maybe per tier"; this question crystallises the call. | Sam + Avi |
+| Q17 | Procurement app: evaluate Sam's prior **Yoda** prototype and decide — extend Yoda, build fresh, or use an off-the-shelf CRM (Hubspot/Pipedrive/Attio) and integrate? | Off-the-shelf is fastest to a working pipeline but introduces an external dependency and weaker integration with the provisioning script. Yoda or fresh build keeps everything in-house and tightly integrated but is more work. | Sam + Paul |
+| Q18 | KTD13 audit: do we accept any TDF-specific code paths as named exceptions in v1, or strictly eliminate (forcing TDF migration to the template now)? | Named exceptions keep TDF working unchanged but introduce a "second-class" pattern in shared code that future developers may copy. Strict elimination forces an early TDF migration that may not be ready. Pragmatic call: name exceptions, document them, set a sunset target — but the team should explicitly decide. | Sam + Vlad |
+| Q19 | Where in the admin UI does the style upload live, and what's the UX when an upload triggers a re-deploy (the village is briefly serving the old style)? | Affects KTD12 implementation. Could be: simple "upload tailwind config, deploy on save" with a banner; or a more polished "preview, confirm, deploy" flow. Lean simple for v1. | Vlad + Sam |
+| Q20 | Sam's recent open PR on the compiled-config conversion — which PR exactly, what's its merge status, and does this work depend on it landing first? | Compiled config is a load-bearing primitive for KTD4 and KTD12. We should pin down the PR and add it to Prerequisites if needed. | Sam |
 | _add yours_ | | | |
 
 ---
@@ -335,3 +411,4 @@ These existed in an earlier draft (git history of this file) and will be regener
 | 2026-05-17 | Corrected Mongo topology to shared server with per-tenant DBs | Founder confirmed production reality |
 | 2026-05-17 | Restructured to alignment-first shape; dropped track and unit detail; added Current Architecture section for sign-off | Team direction: lock medium-grain alignment before implementation detail |
 | 2026-05-17 | Removed all hard-deadline language; added custom domains as in-scope (KTD9) anchored to the Earthbound-as-customer test; replaced team-prerequisites placeholder with the actual working group (Avi, Vlad, Sam, Paul); added Q13–Q15 for custom-domain UX/import/email questions | Document should be time-agnostic; custom domains are required for the v1 sign-off test; team composition is confirmed |
+| 2026-05-17 | Major restructure based on founder feedback: rewrote KTD4 to template-based per-village deploys with compiled config + styles (dropped runtime multi-tenancy); added KTD10 (tiers), KTD11 (procurement app / Yoda), KTD12 (style editor), KTD13 (custom code removal); added Goals 5.1 #4 (no custom code paths) and #5 (procurement app live); added Section 3.5 inventorying per-village custom code; added Glossary entries for template / tier / compiled config / procurement app; added Q16–Q20 | Sam: "I don't think we can run all villages on a single instance"; Sam: "all config & styles editable by admin (even if styles is just upload your tailwind config)"; Paul: "include the work of making sure that there isn't any custom code in the app code"; Sam wants procurement app + customer pipeline as part of v1 |
