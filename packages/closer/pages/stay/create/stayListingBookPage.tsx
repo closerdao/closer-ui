@@ -47,6 +47,7 @@ import {
   getUtilityTotal,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { buildStayCreateListingBackPath } from '../../../utils/stayRouting.helpers';
 import {
   getBookingRate,
   getDiscountRate,
@@ -406,17 +407,24 @@ const ListingPage: NextPage<Props> = ({
   };
 
   const redirectToNextStep = (bookingId: string) => {
+    const backPath = encodeURIComponent(
+      buildStayCreateListingBackPath({
+        listingId: listing?._id ?? '',
+        startDate: start,
+        endDate: end,
+        totalGuests: adults,
+        kids,
+        infants,
+        pets,
+      }),
+    );
     if (settings?.foodOptionEnabled) {
       router.push(
-        `/bookings/${bookingId}/food?back=stay/${
-          listing?.slug
-        }&${getUrlParams()}`,
+        `/bookings/${bookingId}/food?back=${backPath}&${getUrlParams()}`,
       );
     } else {
       router.push(
-        `/bookings/${bookingId}/summary?back=stay/${
-          listing?.slug
-        }&${getUrlParams()}`,
+        `/bookings/${bookingId}/summary?back=${backPath}&${getUrlParams()}`,
       );
     }
   };

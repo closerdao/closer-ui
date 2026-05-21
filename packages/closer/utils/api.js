@@ -9,6 +9,7 @@ import {
 } from './authStorage';
 import { invalidateConfigCache } from './configCache';
 import {
+  applyInteractionIsHumanFromResponse,
   ensureInteractionSession,
   getStoredInteractionSessionKey,
 } from './interactionSession';
@@ -255,8 +256,28 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
+const INTERACTION_HUMAN_RESPONSE_PATHS = [
+  '/webinar',
+  '/signup',
+  '/login',
+  '/subscribe',
+];
+
+function shouldApplyInteractionIsHuman(url) {
+  if (typeof url !== 'string') return false;
+  return INTERACTION_HUMAN_RESPONSE_PATHS.some(
+    (path) => url === path || url.endsWith(path),
+  );
+}
+
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const url = response?.config?.url ?? '';
+    if (shouldApplyInteractionIsHuman(url)) {
+      applyInteractionIsHumanFromResponse(response?.data);
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error?.config;
     if (

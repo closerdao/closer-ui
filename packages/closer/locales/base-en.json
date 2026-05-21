@@ -2791,5 +2791,20 @@
   "config_label_volunteerCommitment": "Volunteer commitment",
   "config_label_volunteeringMinStay": "Volunteering minimum stay (nights)",
   "config_label_weekDay": "Weekday",
-  "config_label_weekPosition": "Week position"
+  "config_label_weekPosition": "Week position",
+  "agent_chat_page_title": "Agent chat",
+  "agent_chat_page_meta_description": "Ask questions about the community catalog and get grounded answers.",
+  "agent_chat_heading": "Agent chat",
+  "agent_chat_subheading": "Ask about bookings, tokens, events, and other catalog topics.",
+  "agent_chat_new_conversation": "New chat",
+  "agent_chat_placeholder": "Ask a question…",
+  "agent_chat_send": "Send",
+  "agent_chat_typing": "Thinking…",
+  "agent_chat_empty_state": "Send a message to start. Answers use the knowledge catalog.",
+  "agent_chat_sources": "{count, plural, one {# source} other {# sources}}",
+  "agent_chat_invalid_room": "This conversation could not be resumed. Start a new chat.",
+  "agent_chat_error_send": "Could not send your message. Try again.",
+  "agent_chat_no_history": "No conversations yet. Start a new chat.",
+  "agent_chat_untitled": "Untitled chat",
+  "agent_chat_back_to_history": "Back to conversations"
 }

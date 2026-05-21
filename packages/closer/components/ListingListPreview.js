@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useAuth } from '../contexts/auth';
 import { cdn } from '../utils/api';
 import { priceFormat } from '../utils/helpers';
+import { buildStayCreateListingHref } from '../utils/stayRouting.helpers';
 import Slider from './Slider';
 import { useTranslations } from 'next-intl';
 
@@ -21,13 +22,16 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
   };
 
   const weeklyPrice = getWeeklyPrice();
+  const listingBookHref = buildStayCreateListingHref({
+    listingId: listing.get('_id'),
+  });
 
   return (
     <div className="flex flex-col bg-white rounded-lg border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
       <div className="aspect-[4/3] overflow-hidden bg-gray-100">
         {listing.get('photos') && listing.get('photos').count() > 0 ? (
           <Slider
-            link={`/stay/${listing.get('slug')}`}
+            link={listingBookHref}
             isListingPreview={true}
             slides={listing
               .get('photos')
@@ -38,7 +42,7 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
           />
         ) : (
           <Link
-            href={`/stay/${listing.get('slug')}`}
+            href={listingBookHref}
             className="w-full h-full flex items-center justify-center"
           >
             <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,7 +54,7 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
       
       <div className="p-3 flex flex-col gap-2 flex-1">
         <Link
-          href={`/stay/${listing.get('slug')}`}
+          href={listingBookHref}
           className="text-sm font-semibold text-gray-900 hover:text-accent line-clamp-1"
         >
           {listing.get('name')}
@@ -102,7 +106,7 @@ const ListingListPreview = ({ listing, isAdminPage, discounts }) => {
 
         {!isAdminPage && (
           <Link
-            href={`/stay/${listing.get('slug')}`}
+            href={listingBookHref}
             className="mt-2 text-xs font-medium text-center py-1.5 text-accent border border-accent rounded hover:bg-accent hover:text-white transition-colors"
           >
             {t('listing_preview_book')}

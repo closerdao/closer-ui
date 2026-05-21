@@ -2734,5 +2734,20 @@
   "config_label_volunteerCommitment": "Compromisso de voluntariado",
   "config_label_volunteeringMinStay": "Estadia mínima de voluntariado (noites)",
   "config_label_weekDay": "Dia da semana",
-  "config_label_weekPosition": "Posição na semana"
+  "config_label_weekPosition": "Posição na semana",
+  "agent_chat_page_title": "Chat do agente",
+  "agent_chat_page_meta_description": "Faça perguntas sobre o catálogo da comunidade e obtenha respostas fundamentadas.",
+  "agent_chat_heading": "Chat do agente",
+  "agent_chat_subheading": "Pergunte sobre reservas, tokens, eventos e outros tópicos do catálogo.",
+  "agent_chat_new_conversation": "Nova conversa",
+  "agent_chat_placeholder": "Faça uma pergunta…",
+  "agent_chat_send": "Enviar",
+  "agent_chat_typing": "A pensar…",
+  "agent_chat_empty_state": "Envie uma mensagem para começar. As respostas usam o catálogo de conhecimento.",
+  "agent_chat_sources": "{count, plural, one {# fonte} other {# fontes}}",
+  "agent_chat_invalid_room": "Não foi possível retomar esta conversa. Inicie um novo chat.",
+  "agent_chat_error_send": "Não foi possível enviar a mensagem. Tente novamente.",
+  "agent_chat_no_history": "Ainda sem conversas. Inicie um novo chat.",
+  "agent_chat_untitled": "Conversa sem título",
+  "agent_chat_back_to_history": "Voltar às conversas"
 }

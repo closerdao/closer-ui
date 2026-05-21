@@ -13,6 +13,8 @@ import {
 
 import GoogleButton from '../../components/GoogleButton';
 import TurnstileWidget from '../../components/TurnstileWidget';
+import { useInteractionIsHuman } from '../../hooks/useInteractionIsHuman';
+import { isTurnstileSubmitEnabled } from '../../utils/turnstile.helpers';
 import { Card, ErrorMessage, Heading, Input } from '../../components/ui';
 import Button from '../../components/ui/Button';
 
@@ -52,6 +54,7 @@ const Login = () => {
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
   const { signMessage, connectWallet } = useContext(WalletDispatch);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const isHuman = useInteractionIsHuman();
 
   // Safely use newsletter context
   let setHideFooterNewsletter: ((hide: boolean) => void) | undefined;
@@ -319,13 +322,17 @@ const Login = () => {
                   placeholder={t('login_password_placeholder')}
                 />
 
-                <TurnstileWidget action="login" onVerify={setTurnstileToken} />
+                {!isHuman && (
+                  <TurnstileWidget action="login" onVerify={setTurnstileToken} />
+                )}
 
                 <div className="flex flex-col justify-between items-center gap-3 sm:flex-row">
                   <div className="flex flex-col gap-3 w-full sm:flex-row py-2">
                     <Button
                       isEnabled={
-                        !isWeb3Loading && !isLoading && !!turnstileToken
+                        !isWeb3Loading &&
+                        !isLoading &&
+                        isTurnstileSubmitEnabled(isHuman, turnstileToken)
                       }
                       isLoading={isLoading}
                       className="justify-center normal-case"

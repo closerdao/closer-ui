@@ -63,6 +63,10 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import {
+  isStayMongoId,
+  resolveLegacyListingStaySlugRedirect,
+} from '../../../utils/stayRouting.helpers';
+import {
   accommodationTokenTotalFromPriceLock,
   approveStayRequest,
   assignStayBeds,
@@ -1457,11 +1461,43 @@ const StayBookingSummaryPage = ({
 
 StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
+  const rawSlug = query.slug;
+  const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
+
+  if (typeof slug === 'string' && !isStayMongoId(slug)) {
+    const legacyRedirect = await resolveLegacyListingStaySlugRedirect(slug);
+    if (legacyRedirect) {
+      return {
+        redirect: {
+          destination: legacyRedirect,
+          permanent: false,
+        },
+      };
+    }
+    if (context.res) {
+      context.res.statusCode = 404;
+    }
+    return {
+      error: 'Booking not found',
+      booking: null,
+      bookingConfig: null,
+      generalConfig: null,
+      listings: null,
+      paymentConfig: null,
+      foodOptions: null,
+      projects: null,
+      event: null,
+      listing: null,
+      volunteer: null,
+      bookingCreatedBy: null,
+    };
+  }
+
   try {
     const [bookingRes, listingRes, foodRes, projectsRes] =
       await Promise.all([
         api
-          .get(`/stays/${query.slug}`, {
+          .get(`/stays/${slug}`, {
             headers: getBearerAuthHeaders(req as NextApiRequest),
           })
           .catch(() => null),
