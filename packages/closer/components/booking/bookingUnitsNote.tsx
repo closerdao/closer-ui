@@ -10,7 +10,7 @@ interface BookingUnitsNoteProps {
   numberOfUnits?: number | null;
   listingPrivate?: boolean;
   adults?: number | null;
-  children?: number | null;
+  childCount?: number | null;
   className?: string;
 }
 
@@ -18,7 +18,7 @@ const BookingUnitsNote = ({
   numberOfUnits,
   listingPrivate = false,
   adults,
-  children,
+  childCount,
   className = 'text-xs text-gray-600',
 }: BookingUnitsNoteProps) => {
   const t = useTranslations();
@@ -28,7 +28,7 @@ const BookingUnitsNote = ({
   }
 
   const count = Number(numberOfUnits);
-  const guests = bookingGuestCount(adults, children);
+  const guests = bookingGuestCount(adults, childCount);
   const unitSummary = t(listingUnitsCountTranslationKey(listingPrivate), {
     count,
   });

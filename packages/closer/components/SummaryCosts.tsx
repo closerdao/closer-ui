@@ -480,7 +480,7 @@ const SummaryCosts = ({
             numberOfUnits={numberOfUnits}
             listingPrivate={listingPrivate}
             adults={bookingAdults}
-            children={bookingChildren}
+            childCount={bookingChildren}
             className={
               compact
                 ? `${descCls} mt-1`

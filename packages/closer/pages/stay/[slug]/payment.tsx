@@ -436,7 +436,7 @@ function StayPaymentInner({
               numberOfUnits={stay.numberOfUnits}
               listingPrivate={listing?.private}
               adults={stay.adults}
-              children={stay.children}
+              childCount={stay.children}
               className="text-xs text-gray-600 mb-3"
             />
             {!stay.priceLock && stay.fiatTarget && (

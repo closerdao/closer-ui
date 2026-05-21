@@ -1,6 +1,6 @@
 import { useTranslations } from 'next-intl';
 
-import { Input, Textarea } from '../../ui';
+import { Input } from '../../ui';
 import BlockImageUpload from '../BlockImageUpload';
 
 import type { BlockInspectorFormProps } from './types';
