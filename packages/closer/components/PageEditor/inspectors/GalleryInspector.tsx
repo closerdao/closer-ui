@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 
 import { Button, Input } from '../../ui';
+import BlockImageUpload from '../BlockImageUpload';
 
 import type { BlockInspectorFormProps } from './types';
 
@@ -11,11 +12,14 @@ type GalleryItem = {
   alt: string;
 };
 
+type GallerySize = 'standard' | 'large' | 'featured';
+
 const GalleryInspector = ({ data, onChange }: BlockInspectorFormProps) => {
   const t = useTranslations();
   const settings = (data.settings as Record<string, unknown>) ?? {};
   const content = (data.content as Record<string, unknown>) ?? {};
   const items = (content.items as GalleryItem[]) ?? [];
+  const size = (settings.size as GallerySize) ?? 'standard';
 
   const patch = (next: Record<string, unknown>) => onChange({ ...data, ...next });
 
@@ -35,7 +39,7 @@ const GalleryInspector = ({ data, onChange }: BlockInspectorFormProps) => {
         items: [
           ...items,
           {
-            imageUrl: 'https://cdn.oasa.co/tdf/tdf-invest-og.jpg',
+            imageUrl: '',
             width: 800,
             height: 600,
             alt: '',
@@ -72,19 +76,25 @@ const GalleryInspector = ({ data, onChange }: BlockInspectorFormProps) => {
           }
         />
       </div>
-      <label className="flex gap-2 items-center text-sm">
-        <input
-          type="checkbox"
-          checked={Boolean(settings.isRandomized)}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          {t('pages_editor_field_gallery_size')}
+        </label>
+        <select
+          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"
+          value={size}
           onChange={(e) =>
             patch({
-              settings: { ...settings, isRandomized: e.target.checked },
+              settings: { ...settings, size: e.target.value },
               content,
             })
           }
-        />
-        {t('pages_editor_field_randomize')}
-      </label>
+        >
+          <option value="standard">{t('pages_editor_gallery_size_standard')}</option>
+          <option value="large">{t('pages_editor_gallery_size_large')}</option>
+          <option value="featured">{t('pages_editor_gallery_size_featured')}</option>
+        </select>
+      </div>
       <div className="flex flex-col gap-3">
         <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
           {t('pages_editor_field_images')}
@@ -109,34 +119,13 @@ const GalleryInspector = ({ data, onChange }: BlockInspectorFormProps) => {
                 {t('pages_editor_remove')}
               </Button>
             </div>
-            <Input
+            <BlockImageUpload
               value={item.imageUrl}
-              onChange={(e) => updateItem(idx, { imageUrl: e.target.value })}
+              onChange={(url) => updateItem(idx, { imageUrl: url })}
             />
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">W</label>
-                <Input
-                  type="number"
-                  value={String(item.width)}
-                  onChange={(e) =>
-                    updateItem(idx, { width: Number(e.target.value) || 800 })
-                  }
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">H</label>
-                <Input
-                  type="number"
-                  value={String(item.height)}
-                  onChange={(e) =>
-                    updateItem(idx, { height: Number(e.target.value) || 600 })
-                  }
-                />
-              </div>
-            </div>
             <Input
               value={item.alt}
+              placeholder={t('pages_editor_field_image_alt')}
               onChange={(e) => updateItem(idx, { alt: e.target.value })}
             />
           </div>

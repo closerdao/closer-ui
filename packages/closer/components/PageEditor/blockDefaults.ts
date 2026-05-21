@@ -86,7 +86,7 @@ export const createSection = (type: SectionType): PageSection => {
         _localId,
         type: 'gallery',
         data: {
-          settings: { galleryType: 'masonry', isRandomized: false },
+          settings: { size: 'standard' as const },
           content: {
             title: 'Gallery',
             items: [
@@ -160,11 +160,13 @@ export const createSection = (type: SectionType): PageSection => {
                 title: 'First feature',
                 text: '<p>A short description of this feature.</p>',
                 imageUrl: '',
+                visualType: 'none' as const,
               },
               {
                 title: 'Second feature',
                 text: '<p>A short description of this feature.</p>',
                 imageUrl: '',
+                visualType: 'none' as const,
               },
             ],
           },
@@ -177,6 +179,46 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: { isColorful: false },
           content: { html: '<p>Write your content here.</p>' },
+        },
+      };
+    case 'media':
+      return {
+        _localId,
+        type: 'media',
+        data: {
+          settings: { mediaType: 'image' as const },
+          content: {
+            imageUrl: '',
+            videoEmbedId: '',
+            alt: '',
+            caption: '',
+          },
+        },
+      };
+    case 'textBlock':
+      return {
+        _localId,
+        type: 'textBlock',
+        data: {
+          settings: { imagePosition: 'left' as const },
+          content: {
+            title: 'Section title',
+            body: 'Write your text here.\n\n- First point\n- Second point\n\nUse **bold** or *italic* for emphasis.',
+            imageUrl: '',
+            imageAlt: '',
+          },
+        },
+      };
+    case 'staySearch':
+      return {
+        _localId,
+        type: 'staySearch',
+        data: {
+          settings: {},
+          content: {
+            title: 'Book your stay',
+            subtitle: 'Find available dates and accommodations.',
+          },
         },
       };
     case 'cta':

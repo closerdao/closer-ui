@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react';
+
 import { useTranslations } from 'next-intl';
 
 import {
@@ -21,6 +23,26 @@ const BG_PREVIEW: Record<SectionBackground, string> = {
   dark: 'bg-gray-900',
 };
 
+const BG_INLINE: Record<SectionBackground, CSSProperties> = {
+  transparent: {
+    backgroundImage:
+      'linear-gradient(45deg,#f3f4f6 25%,transparent 25%,transparent 75%,#f3f4f6 75%,#f3f4f6),linear-gradient(45deg,#f3f4f6 25%,white 25%,white 75%,#f3f4f6 75%,#f3f4f6)',
+    backgroundSize: '10px 10px',
+    backgroundPosition: '0 0, 5px 5px',
+  },
+  white: { backgroundColor: '#ffffff' },
+  'neutral-light': { backgroundColor: '#FDF9FB' },
+  'accent-light': { backgroundColor: '#FFC8E9' },
+  'gray-50': { backgroundColor: '#f9fafb' },
+  'gradient-accent': {
+    backgroundImage: 'linear-gradient(to bottom right, #FFC8E9, #42CC93)',
+  },
+  dark: { backgroundColor: '#111827' },
+};
+
+const bgLabelKey = (bg: SectionBackground) =>
+  `pages_editor_bg_${bg.replace(/-/g, '_')}` as const;
+
 const BackgroundField = ({ value, onChange }: Props) => {
   const t = useTranslations();
   const current = (value as SectionBackground) || 'transparent';
@@ -36,12 +58,12 @@ const BackgroundField = ({ value, onChange }: Props) => {
             <button
               key={bg}
               type="button"
-              title={t(`pages_editor_bg_${bg.replace('-', '_')}`)}
-              aria-label={t(`pages_editor_bg_${bg.replace('-', '_')}`)}
+              title={t(bgLabelKey(bg))}
+              aria-label={t(bgLabelKey(bg))}
+              aria-pressed={isActive}
               onClick={() => onChange(bg)}
-              className={`w-8 h-8 rounded-md border transition-all ${
-                BG_PREVIEW[bg]
-              } ${
+              style={BG_INLINE[bg]}
+              className={`w-8 h-8 rounded-md border transition-all ${BG_PREVIEW[bg]} ${
                 isActive
                   ? 'ring-2 ring-accent ring-offset-2 border-accent'
                   : 'border-gray-300 hover:border-gray-400'
@@ -50,6 +72,7 @@ const BackgroundField = ({ value, onChange }: Props) => {
           );
         })}
       </div>
+      <p className="mt-2 text-xs text-gray-500">{t(bgLabelKey(current))}</p>
     </div>
   );
 };

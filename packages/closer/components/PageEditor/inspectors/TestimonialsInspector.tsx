@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 
 import { Button, Input, Textarea } from '../../ui';
+import BlockImageUpload from '../BlockImageUpload';
 
 import type { BlockInspectorFormProps } from './types';
 
@@ -90,10 +91,15 @@ const TestimonialsInspector = ({ data, onChange }: BlockInspectorFormProps) => {
               value={item.role}
               onChange={(e) => updateItem(idx, { role: e.target.value })}
             />
-            <Input
-              value={item.avatar}
-              onChange={(e) => updateItem(idx, { avatar: e.target.value })}
-            />
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                {t('pages_editor_field_avatar')}
+              </label>
+              <BlockImageUpload
+                value={item.avatar}
+                onChange={(url) => updateItem(idx, { avatar: url })}
+              />
+            </div>
           </div>
         ))}
         <Button

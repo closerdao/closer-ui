@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 
 import { Textarea } from '../../ui';
+import PageEditorCheckbox from '../PageEditorCheckbox';
 
 import type { BlockInspectorFormProps } from './types';
 
@@ -13,19 +14,17 @@ const RichTextInspector = ({ data, onChange }: BlockInspectorFormProps) => {
 
   return (
     <div className="flex flex-col gap-4">
-      <label className="flex gap-2 items-center text-sm">
-        <input
-          type="checkbox"
-          checked={Boolean(settings.isColorful)}
-          onChange={(e) =>
-            patch({
-              settings: { ...settings, isColorful: e.target.checked },
-              content,
-            })
-          }
-        />
+      <PageEditorCheckbox
+        checked={Boolean(settings.isColorful)}
+        onChange={(checked) =>
+          patch({
+            settings: { ...settings, isColorful: checked },
+            content,
+          })
+        }
+      >
         {t('pages_editor_field_colorful')}
-      </label>
+      </PageEditorCheckbox>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           {t('pages_editor_field_html')}

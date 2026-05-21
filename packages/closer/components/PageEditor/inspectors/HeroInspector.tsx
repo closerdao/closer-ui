@@ -1,6 +1,8 @@
 import { useTranslations } from 'next-intl';
 
 import { Input, Textarea } from '../../ui';
+import BlockImageUpload from '../BlockImageUpload';
+import PageEditorCheckbox from '../PageEditorCheckbox';
 
 import type { BlockInspectorFormProps } from './types';
 
@@ -45,34 +47,28 @@ const HeroInspector = ({ data, onChange }: BlockInspectorFormProps) => {
           ))}
         </select>
       </div>
-      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
-        <input
-          type="checkbox"
-          className="w-4 h-4 shrink-0 accent-accent"
-          checked={Boolean(settings.isInverted)}
-          onChange={(e) =>
-            patch({
-              settings: { ...settings, isInverted: e.target.checked },
-              content,
-            })
-          }
-        />
-        <span className="leading-none">{t('pages_editor_field_inverted')}</span>
-      </label>
-      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
-        <input
-          type="checkbox"
-          className="w-4 h-4 shrink-0 accent-accent"
-          checked={Boolean(settings.isCompact)}
-          onChange={(e) =>
-            patch({
-              settings: { ...settings, isCompact: e.target.checked },
-              content,
-            })
-          }
-        />
-        <span className="leading-none">{t('pages_editor_field_compact')}</span>
-      </label>
+      <PageEditorCheckbox
+        checked={Boolean(settings.isInverted)}
+        onChange={(checked) =>
+          patch({
+            settings: { ...settings, isInverted: checked },
+            content,
+          })
+        }
+      >
+        {t('pages_editor_field_inverted')}
+      </PageEditorCheckbox>
+      <PageEditorCheckbox
+        checked={Boolean(settings.isCompact)}
+        onChange={(checked) =>
+          patch({
+            settings: { ...settings, isCompact: checked },
+            content,
+          })
+        }
+      >
+        {t('pages_editor_field_compact')}
+      </PageEditorCheckbox>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           {t('pages_editor_field_title')}
@@ -106,12 +102,12 @@ const HeroInspector = ({ data, onChange }: BlockInspectorFormProps) => {
         <label className="block text-sm font-medium text-gray-700 mb-1">
           {t('pages_editor_field_image_url')}
         </label>
-        <Input
+        <BlockImageUpload
           value={String(content.imageUrl ?? '')}
-          onChange={(e) =>
+          onChange={(url) =>
             patch({
               settings,
-              content: { ...content, imageUrl: e.target.value },
+              content: { ...content, imageUrl: url },
             })
           }
         />

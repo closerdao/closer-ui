@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 
 import { Input, Textarea } from '../../ui';
+import PageEditorCheckbox from '../PageEditorCheckbox';
 
 import type { BlockInspectorFormProps } from './types';
 
@@ -77,22 +78,17 @@ const CloserBlockInspector = ({
         />
       </div>
       {showCtaToggle ? (
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
-          <input
-            type="checkbox"
-            className="w-4 h-4 shrink-0 accent-accent"
-            checked={settings.showCta !== false}
-            onChange={(e) =>
-              patch({
-                settings: { ...settings, showCta: e.target.checked },
-                content,
-              })
-            }
-          />
-          <span className="leading-none">
-            {t('pages_editor_field_show_cta')}
-          </span>
-        </label>
+        <PageEditorCheckbox
+          checked={settings.showCta !== false}
+          onChange={(checked) =>
+            patch({
+              settings: { ...settings, showCta: checked },
+              content,
+            })
+          }
+        >
+          {t('pages_editor_field_show_cta')}
+        </PageEditorCheckbox>
       ) : null}
     </div>
   );

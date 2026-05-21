@@ -25,7 +25,7 @@ const CustomTestimonials = ({ content }: Props) => {
   const t = useTranslations();
   const items = content?.items ?? [];
   return (
-    <section className="py-12 md:py-16 bg-neutral-light">
+    <section className="py-12 md:py-16">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 flex flex-col gap-10">
         {content?.eyebrow ? (
           <p className="text-center text-xs font-semibold uppercase tracking-widest text-accent">
