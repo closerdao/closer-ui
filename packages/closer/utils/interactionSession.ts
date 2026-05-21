@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-import { INTERACTION_SESSION_LOCAL_STORAGE_KEY } from '../constants';
+import {
+  INTERACTION_IS_HUMAN_EVENT,
+  INTERACTION_IS_HUMAN_LOCAL_STORAGE_KEY,
+  INTERACTION_SESSION_LOCAL_STORAGE_KEY,
+} from '../constants';
 import type { InteractionInitApiResponse } from '../types/interaction';
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL;
@@ -42,6 +46,38 @@ function buildInitBody(): Record<string, unknown> {
     if (utm) body.utm = utm;
   }
   return body;
+}
+
+export function getStoredInteractionIsHuman(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem(INTERACTION_IS_HUMAN_LOCAL_STORAGE_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function setStoredInteractionIsHuman(value: boolean): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (value) {
+      localStorage.setItem(INTERACTION_IS_HUMAN_LOCAL_STORAGE_KEY, 'true');
+    } else {
+      localStorage.removeItem(INTERACTION_IS_HUMAN_LOCAL_STORAGE_KEY);
+    }
+  } catch {
+    //
+  }
+}
+
+export function applyInteractionIsHumanFromResponse(data: unknown): void {
+  if (!data || typeof data !== 'object') return;
+  if ((data as { isHuman?: boolean }).isHuman !== true) return;
+  if (getStoredInteractionIsHuman()) return;
+  setStoredInteractionIsHuman(true);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(INTERACTION_IS_HUMAN_EVENT));
+  }
 }
 
 export function getStoredInteractionSessionKey(): string | null {
@@ -107,6 +143,7 @@ export function clearInteractionSession(): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.removeItem(INTERACTION_SESSION_LOCAL_STORAGE_KEY);
+    localStorage.removeItem(INTERACTION_IS_HUMAN_LOCAL_STORAGE_KEY);
   } catch {
     //
   }

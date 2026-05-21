@@ -61,13 +61,14 @@ const EditorCanvas = ({
 
   if (isPreview) {
     return (
-      <div className="min-h-0 flex flex-col bg-white">
-        <div className="flex-1 overflow-y-auto">
+      <div className="min-h-0 h-full flex flex-col bg-white overflow-hidden">
+        <div className="flex-1 overflow-y-auto min-h-0">
           {sections.map((s) => (
             <CustomSectionComponent
               key={s._localId ?? s._id}
               type={s.type}
               data={s.data}
+              embedded
             />
           ))}
         </div>
@@ -277,7 +278,9 @@ function BlockRow({
   return (
     <section
       className={`group/block relative border-2 rounded-md transition-colors ${
-        selected ? 'border-accent ring-2 ring-accent/15' : 'border-transparent hover:border-gray-200'
+        selected
+          ? 'border-accent ring-2 ring-accent/15 z-30'
+          : 'border-transparent hover:border-gray-200 z-0'
       }`}
       draggable
       onDragStart={(e) => {
@@ -290,8 +293,8 @@ function BlockRow({
       }}
     >
       <div
-        className={`absolute top-2 right-2 z-20 flex gap-0.5 p-1 rounded-md bg-white/95 shadow border border-gray-100 opacity-0 ${
-          selected ? 'opacity-100' : 'group-hover/block:opacity-100'
+        className={`absolute top-2 right-2 flex gap-0.5 p-1 rounded-md bg-white/95 shadow border border-gray-100 opacity-0 ${
+          selected ? 'opacity-100 z-50' : 'z-20 group-hover/block:opacity-100'
         }`}
         data-controls
         onClick={(e) => e.stopPropagation()}
@@ -321,7 +324,7 @@ function BlockRow({
         </ControlBtn>
       </div>
       {PLACEHOLDER_BLOCK_KEYS[section.type] ? (
-        <div className="relative">
+        <div className="relative overflow-hidden rounded-md">
           <div className="absolute inset-0 z-0 flex flex-col items-center justify-center gap-2 py-10 px-6 text-center bg-neutral-light/40 border border-dashed border-gray-200 rounded-md pointer-events-none">
             <span className="text-xs font-semibold uppercase tracking-wider text-accent">
               {t(PLACEHOLDER_BLOCK_KEYS[section.type])}
@@ -331,12 +334,20 @@ function BlockRow({
             </span>
           </div>
           <div className="relative z-10 pointer-events-none [&_*]:pointer-events-auto min-h-[140px]">
-            <CustomSectionComponent type={section.type} data={section.data} />
+            <CustomSectionComponent
+              type={section.type}
+              data={section.data}
+              embedded
+            />
           </div>
         </div>
       ) : (
-        <div className="pointer-events-none [&_*]:pointer-events-auto">
-          <CustomSectionComponent type={section.type} data={section.data} />
+        <div className="overflow-hidden rounded-md pointer-events-none [&_*]:pointer-events-auto">
+          <CustomSectionComponent
+            type={section.type}
+            data={section.data}
+            embedded
+          />
         </div>
       )}
     </section>

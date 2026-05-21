@@ -79,6 +79,13 @@ export const getDashboardLinks = (
       roles: ['admin', 'community-curator', 'space-host', 'team'],
     },
     {
+      label: t('navigation_cohousing'),
+      url: '/dashboard/cohousing',
+      rbacPage: 'Dashboard',
+      enabled: true,
+      roles: ['admin', 'community-curator', 'team'],
+    },
+    {
       label: t('navigation_metrics'),
       url: '/dashboard/metrics',
       rbacPage: 'MetricsDashboard',

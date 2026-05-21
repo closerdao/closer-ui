@@ -13,10 +13,12 @@ interface GalleryImage {
   alt?: string;
 }
 
+type GallerySize = 'standard' | 'large' | 'featured';
+
 interface PhotoGalleryProps {
   settings: {
     galleryType?: 'masonry' | 'grid';
-    isRandomized?: boolean;
+    size?: GallerySize;
   };
   content: {
     title?: string;
@@ -29,20 +31,20 @@ interface PhotoGalleryProps {
   };
 }
 
-const shuffleArray = <T,>(array: T[]): T[] => {
-  const arr = [...array];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+const getTileClass = (
+  index: number,
+  total: number,
+  size: GallerySize,
+): string => {
+  if (size === 'featured' && total > 4) {
+    const isLast = index === total - 1;
+    const isFirst = index === 0;
+    if (isFirst || isLast) {
+      return 'col-span-2 row-span-2 aspect-square md:aspect-auto md:h-[500px]';
+    }
   }
-  return arr;
-};
-
-const getTileClass = (index: number, total: number): string => {
-  const isLast = total > 4 && index === total - 1;
-  const isFirst = total > 4 && index === 0;
-  if (isFirst || isLast) {
-    return 'col-span-2 row-span-2 aspect-square md:aspect-auto md:h-[500px]';
+  if (size === 'large') {
+    return 'col-span-1 row-span-1 aspect-square md:aspect-auto md:h-[360px]';
   }
   return 'col-span-1 row-span-1 aspect-square md:aspect-auto md:h-[245px]';
 };
@@ -52,24 +54,15 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
   settings,
 }) => {
   const t = useTranslations();
-  const initialImages: GalleryImage[] = (content?.items ?? []).map((item) => ({
+  const size: GallerySize = settings?.size ?? 'standard';
+  const images: GalleryImage[] = (content?.items ?? []).map((item) => ({
     src: item.imageUrl,
     width: item.width,
     height: item.height,
     alt: item.alt,
   }));
 
-  const [images, setImages] = useState<GalleryImage[]>(initialImages);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (settings?.isRandomized) {
-      setImages(shuffleArray(initialImages));
-    } else {
-      setImages(initialImages);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [content?.items, settings?.isRandomized]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -135,6 +128,7 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
               className={`relative overflow-hidden rounded-lg cursor-pointer group ${getTileClass(
                 index,
                 images.length,
+                size,
               )}`}
               onClick={() => openModal(index)}
             >

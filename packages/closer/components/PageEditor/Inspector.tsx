@@ -2,24 +2,29 @@ import { useTranslations } from 'next-intl';
 
 import { Button, Heading, Input, Textarea } from '../ui';
 
+import BlockImageUpload from './BlockImageUpload';
 import BackgroundField from './inspectors/BackgroundField';
 import I18nHoverAction from './I18nHoverAction';
+import { isDynamicBlockType } from '../../constants/dynamicBlockTypes';
 import CTAInspector from './inspectors/CTAInspector';
 import CloserBlockInspector from './inspectors/CloserBlockInspector';
 import EventsInspector from './inspectors/EventsInspector';
 import FeaturesInspector from './inspectors/FeaturesInspector';
 import GalleryInspector from './inspectors/GalleryInspector';
 import HeroInspector from './inspectors/HeroInspector';
+import MediaInspector from './inspectors/MediaInspector';
 import RichTextInspector from './inspectors/RichTextInspector';
 import StatsInspector from './inspectors/StatsInspector';
+import StaySearchInspector from './inspectors/StaySearchInspector';
 import TestimonialsInspector from './inspectors/TestimonialsInspector';
+import TextBlockInspector from './inspectors/TextBlockInspector';
 import WebinarInspector from './inspectors/WebinarInspector';
 
 import type { SectionBackground } from '../custom-pages/sectionBackground';
 import type { PageDoc, PageSection } from '../../types/page';
 import { extractBlockI18nKey, resolveBlockText } from '../../utils/blockI18n';
 
-type Tab = 'block' | 'page' | 'seo';
+type Tab = 'block' | 'page';
 
 interface Props {
   tab: Tab;
@@ -73,6 +78,12 @@ const Inspector = ({
           return <FeaturesInspector {...common} />;
         case 'richText':
           return <RichTextInspector {...common} />;
+        case 'media':
+          return <MediaInspector {...common} />;
+        case 'textBlock':
+          return <TextBlockInspector {...common} />;
+        case 'staySearch':
+          return <StaySearchInspector {...common} />;
         case 'cta':
           return <CTAInspector {...common} />;
         case 'events':
@@ -101,13 +112,18 @@ const Inspector = ({
     const handleBgChange = (next: SectionBackground) => {
       common.onChange({ ...common.data, background: next });
     };
+    const showBackground = !isDynamicBlockType(selectedSection.type);
     return (
       <div className="flex flex-col gap-4">
-        <BackgroundField
-          value={(common.data.background as string | undefined) ?? 'transparent'}
-          onChange={handleBgChange}
-        />
-        <div className="h-px bg-gray-100" />
+        {showBackground ? (
+          <>
+            <BackgroundField
+              value={(common.data.background as string | undefined) ?? 'transparent'}
+              onChange={handleBgChange}
+            />
+            <div className="h-px bg-gray-100" />
+          </>
+        ) : null}
         {renderTypeForm()}
       </div>
     );
@@ -122,18 +138,14 @@ const Inspector = ({
               ? selectedSection
                 ? selectedSection.type
                 : t('pages_editor_tab_block')
-              : tab === 'page'
-                ? t('pages_editor_tab_page')
-                : t('pages_editor_tab_seo')}
+              : t('pages_editor_tab_page')}
           </Heading>
           <p className="text-xs text-gray-500 mt-1 uppercase tracking-wide">
             {tab === 'block'
               ? selectedSection
                 ? t('pages_editor_block_settings')
                 : t('pages_editor_nothing_selected')
-              : tab === 'page'
-                ? t('pages_editor_page_identity')
-                : t('pages_editor_seo_sub')}
+              : t('pages_editor_page_identity')}
           </p>
         </div>
         {showClose && onClose ? (
@@ -148,7 +160,7 @@ const Inspector = ({
         ) : null}
       </div>
       <div className="flex border-b border-gray-100 px-2 gap-0 shrink-0">
-        {(['block', 'page', 'seo'] as Tab[]).map((tKey) => (
+        {(['block', 'page'] as Tab[]).map((tKey) => (
           <button
             key={tKey}
             type="button"
@@ -196,19 +208,7 @@ const Inspector = ({
               />
               <p className="text-xs text-gray-500 mt-1">{t('pages_editor_slug_help')}</p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                ID
-              </label>
-              <Input value={page._id} isDisabled />
-            </div>
-            <Button variant="secondary" type="button" onClick={onDeletePage}>
-              {t('pages_editor_delete_page')}
-            </Button>
-          </div>
-        )}
-        {tab === 'seo' && (
-          <div className="flex flex-col gap-4">
+            <div className="h-px bg-gray-100" />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t('pages_editor_field_meta_description')}
@@ -233,11 +233,15 @@ const Inspector = ({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t('pages_editor_field_og_image')}
               </label>
-              <Input
+              <BlockImageUpload
                 value={page.ogImage ?? ''}
-                onChange={(e) => onPageFieldChange('ogImage', e.target.value)}
+                onChange={(url) => onPageFieldChange('ogImage', url)}
+                urlLabel={t('pages_editor_field_og_image')}
               />
             </div>
+            <Button variant="secondary" type="button" onClick={onDeletePage}>
+              {t('pages_editor_delete_page')}
+            </Button>
           </div>
         )}
       </div>

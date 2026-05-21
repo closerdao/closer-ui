@@ -6,8 +6,13 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
+import { useInteractionIsHuman } from '../hooks/useInteractionIsHuman';
 import api from '../utils/api';
 import { linkedMetricFields, logMetric } from '../utils/metrics';
+import {
+  isTurnstileSubmitEnabled,
+  turnstileTokenForRequest,
+} from '../utils/turnstile.helpers';
 import TurnstileWidget from './TurnstileWidget';
 import { parseMessageFromError, slugify } from '../utils/common';
 import { isInputValid, validatePassword } from '../utils/helpers';
@@ -28,6 +33,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
   const router = useRouter();
   const { signup, error, user, refetchUser } = useAuth();
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const isHuman = useInteractionIsHuman();
 
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
@@ -67,7 +73,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
     try {
       const res = await api.post('/check-user-exists', {
         email,
-        turnstileToken,
+        turnstileToken: turnstileTokenForRequest(isHuman, turnstileToken),
       });
       const doesUserExist = res?.data?.doesUserExist;
 
@@ -85,7 +91,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
           email,
           screenname: '',
           tags,
-          turnstileToken,
+          turnstileToken: turnstileTokenForRequest(isHuman, turnstileToken),
         });
       }
 
@@ -253,10 +259,12 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
                 {t('signup_form_email_consent')}
               </Checkbox>
 
-              <TurnstileWidget
-                action="signup_email"
-                onVerify={setTurnstileToken}
-              />
+              {!isHuman && (
+                <TurnstileWidget
+                  action="signup_email"
+                  onVerify={setTurnstileToken}
+                />
+              )}
 
               <Button
                 isEnabled={
@@ -264,7 +272,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
                   isInputValid(email, 'email') &&
                   !newsletterSuccess &&
                   isEmailConsent &&
-                  !!turnstileToken
+                  isTurnstileSubmitEnabled(isHuman, turnstileToken)
                 }
                 isLoading={false}
                 type="submit"
@@ -323,17 +331,19 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
                 <ErrorMessage error={localError || error} />
               )}
 
-              <TurnstileWidget
-                action="signup"
-                onVerify={setTurnstileToken}
-              />
+              {!isHuman && (
+                <TurnstileWidget
+                  action="signup"
+                  onVerify={setTurnstileToken}
+                />
+              )}
 
               <Button
                 isEnabled={
                   !!application.screenname &&
                   !!application.password &&
                   !isSignupLoading &&
-                  !!turnstileToken
+                  isTurnstileSubmitEnabled(isHuman, turnstileToken)
                 }
                 isLoading={isSignupLoading}
               >

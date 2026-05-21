@@ -9,6 +9,7 @@ import {
 } from './authStorage';
 import { invalidateConfigCache } from './configCache';
 import {
+  applyInteractionIsHumanFromResponse,
   ensureInteractionSession,
   getStoredInteractionSessionKey,
 } from './interactionSession';
@@ -255,8 +256,48 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
+const INTERACTION_HUMAN_RESPONSE_PATHS = [
+  '/webinar',
+  '/signup',
+  '/login',
+  '/subscribe',
+];
+
+function normalizeRequestPathname(url) {
+  if (typeof url !== 'string' || !url.length) return null;
+  let pathname;
+  try {
+    if (/^https?:\/\//i.test(url)) {
+      pathname = new URL(url).pathname;
+    } else {
+      const withoutQuery = url.split('?')[0];
+      pathname = withoutQuery.startsWith('/')
+        ? withoutQuery
+        : `/${withoutQuery}`;
+    }
+  } catch {
+    return null;
+  }
+  if (pathname.length > 1 && pathname.endsWith('/')) {
+    return pathname.slice(0, -1);
+  }
+  return pathname;
+}
+
+function shouldApplyInteractionIsHuman(url) {
+  const pathname = normalizeRequestPathname(url);
+  if (!pathname) return false;
+  return INTERACTION_HUMAN_RESPONSE_PATHS.includes(pathname);
+}
+
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const url = response?.config?.url ?? '';
+    if (shouldApplyInteractionIsHuman(url)) {
+      applyInteractionIsHumanFromResponse(response?.data);
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error?.config;
     if (

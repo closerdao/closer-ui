@@ -53,6 +53,12 @@ import {
 import { parseMessageFromError } from '../../../utils/common';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import {
+  buildStayCreateListingHref,
+  decodeBookingFlowBackParam,
+  isStayMongoId,
+  resolveBookingFlowBackUrl,
+} from '../../../utils/stayRouting.helpers';
+import {
   accommodationTokenTotalFromPriceLock,
   computeCreditsOwed,
   computeFiatOwed,
@@ -305,17 +311,49 @@ const Summary = ({
 
   const goBack = () => {
     const dateFormat = 'YYYY-MM-DD';
-    if (router.query.back) {
-      router.push(
-        `/${router.query.back}?start=${dayjs(start).format(
-          dateFormat,
-        )}&end=${dayjs(end).format(
-          dateFormat,
-        )}&adults=${adults}&useTokens=${useTokens}`,
-      );
-    } else {
-      router.push(`/bookings/${booking?._id}/questions?goBack=true`);
+    const overrides = new URLSearchParams();
+    if (start) {
+      overrides.set('start', dayjs(start).format(dateFormat));
     }
+    if (end) {
+      overrides.set('end', dayjs(end).format(dateFormat));
+    }
+    if (adults != null) {
+      overrides.set('adults', String(adults));
+    }
+    overrides.set('useTokens', String(useTokens));
+
+    const back = router.query.back;
+    const decodedBack = decodeBookingFlowBackParam(back);
+    if (decodedBack) {
+      const legacyListingSlugMatch = /^stay\/([^?]+)/.exec(decodedBack);
+      if (
+        legacyListingSlugMatch &&
+        !isStayMongoId(legacyListingSlugMatch[1]) &&
+        listing?._id
+      ) {
+        router.push(
+          buildStayCreateListingHref({
+            listingId: listing._id,
+            startDate: start,
+            endDate: end,
+            totalGuests: adults,
+            kids: children,
+            infants,
+            pets,
+          }),
+        );
+        return;
+      }
+      if (typeof back === 'string' && back) {
+        const url = resolveBookingFlowBackUrl(back, overrides);
+        if (url) {
+          router.push(url);
+          return;
+        }
+      }
+    }
+    router.push(`/bookings/${booking?._id}/questions?goBack=true`);
   };
 
   const handleSendToFriends = async () => {

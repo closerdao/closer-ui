@@ -174,7 +174,6 @@ export const FinancingPanel = ({
 }) => {
   const t = useTranslations();
   const [choice, setChoice] = useState<string | null>(null);
-  const slotsLeft = 3;
 
   return (
     <div className="p-4 sm:p-5 bg-gray-50 rounded-xl border border-gray-200 space-y-3">
@@ -184,7 +183,7 @@ export const FinancingPanel = ({
           onClick={() => setChoice('cash')}
           className={`text-left p-4 rounded-xl border transition-colors ${
             choice === 'cash'
-              ? 'border-accent bg-accent/10'
+              ? 'border-accent bg-white'
               : 'border-gray-200 bg-white'
           }`}
         >
@@ -200,7 +199,7 @@ export const FinancingPanel = ({
           onClick={() => setChoice('financed')}
           className={`text-left p-4 rounded-xl border transition-colors ${
             choice === 'financed'
-              ? 'border-accent bg-accent/10'
+              ? 'border-accent bg-white'
               : 'border-gray-200 bg-white'
           }`}
         >
@@ -208,7 +207,7 @@ export const FinancingPanel = ({
             {t('cohousing_finance_financed_title')}
           </div>
           <div className="text-xs text-gray-600 mt-1">
-            {t('cohousing_finance_financed_sub', { slots: slotsLeft })}
+            {t('cohousing_finance_financed_sub')}
           </div>
         </button>
       </div>
@@ -217,10 +216,15 @@ export const FinancingPanel = ({
       )}
       {choice === 'financed' && (
         <>
-          <FlowDisclaimer tone="amber">
-            {t('cohousing_finance_financed_note')}
-          </FlowDisclaimer>
           <FlowDisclaimer tone="red">{t('cohousing_finance_financed_risk')}</FlowDisclaimer>
+          <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-2">
+            <p className="text-sm font-medium text-gray-900">
+              {t('cohousing_finance_financed_how_title')}
+            </p>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              {t('cohousing_finance_financed_how_body')}
+            </p>
+          </div>
         </>
       )}
       {choice && (
@@ -246,31 +250,39 @@ export const CommitmentPanel = ({
   onPoolAdd,
 }: {
   onSubmit: (payload: {
-    tier: 'low' | 'standard';
+    tier: 'low' | 'standard' | 'existing';
     topupAmount: number;
     topupRate: number;
     total: number;
     signed: boolean;
+    documentsAcknowledged: boolean;
   }) => void;
   financingMode: string | null;
   onPoolAdd: (n: number) => void;
 }) => {
   const t = useTranslations();
   const formatEurAmount = (amount: number) => formatIsoFiatAmount(amount || 0, 'EUR');
-  const [tier, setTier] = useState<'low' | 'standard' | null>(null);
+  const [tier, setTier] = useState<'low' | 'standard' | 'existing' | null>(null);
   const [topup, setTopup] = useState<number | 'custom' | 0>(0);
   const [topupCustom, setTopupCustom] = useState('');
   const [topupRate, setTopupRate] = useState(3);
   const [signed, setSigned] = useState(false);
+  const [documentsAcknowledged, setDocumentsAcknowledged] = useState(false);
 
-  const reservation = tier === 'low' ? 25000 : tier === 'standard' ? 50000 : 0;
+  const reservation =
+    tier === 'low' ? 25000 : tier === 'standard' ? 50000 : tier === 'existing' ? 0 : 0;
   const topupAmount =
-    topup === 'custom'
-      ? parseInt(topupCustom, 10) || 0
-      : typeof topup === 'number'
-        ? topup
-        : 0;
+    tier === 'existing'
+      ? 0
+      : topup === 'custom'
+        ? parseInt(topupCustom, 10) || 0
+        : typeof topup === 'number'
+          ? topup
+          : 0;
   const total = reservation + topupAmount;
+
+  const selectedCardClass = (active: boolean) =>
+    active ? 'border-accent bg-white' : 'border-gray-200 bg-white';
 
   return (
     <div className="p-4 sm:p-5 bg-gray-50 rounded-xl border border-gray-200 space-y-4">
@@ -278,13 +290,11 @@ export const CommitmentPanel = ({
         <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
           {t('cohousing_commit_reservation')}
         </span>
-        <div className="grid sm:grid-cols-2 gap-2.5 mt-2">
+        <div className="grid sm:grid-cols-3 gap-2.5 mt-2">
           <button
             type="button"
             onClick={() => setTier('standard')}
-            className={`text-left p-3 rounded-xl border ${
-              tier === 'standard' ? 'border-accent bg-accent/10' : 'border-gray-200'
-            }`}
+            className={`text-left p-3 rounded-xl border ${selectedCardClass(tier === 'standard')}`}
           >
             <div className="font-sans font-black text-sm uppercase text-gray-900">
               {t('cohousing_commit_tier_standard')}
@@ -294,116 +304,192 @@ export const CommitmentPanel = ({
           <button
             type="button"
             onClick={() => setTier('low')}
-            className={`text-left p-3 rounded-xl border ${
-              tier === 'low' ? 'border-accent bg-accent/10' : 'border-gray-200'
-            }`}
+            className={`text-left p-3 rounded-xl border ${selectedCardClass(tier === 'low')}`}
           >
             <div className="font-sans font-black text-sm uppercase text-gray-900">
               {t('cohousing_commit_tier_low')}
             </div>
             <div className="text-xs text-gray-600">{t('cohousing_commit_tier_low_sub')}</div>
           </button>
+          <button
+            type="button"
+            onClick={() => setTier('existing')}
+            className={`text-left p-3 rounded-xl border ${selectedCardClass(tier === 'existing')}`}
+          >
+            <div className="font-sans font-black text-sm uppercase text-gray-900">
+              {t('cohousing_commit_tier_existing')}
+            </div>
+            <div className="text-xs text-gray-600">{t('cohousing_commit_tier_existing_sub')}</div>
+          </button>
         </div>
       </div>
 
       {tier && (
         <>
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
-              {t('cohousing_commit_topup')}
-            </span>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
-              {([0, 50000, 100000, 'custom'] as const).map((v) => (
-                <button
-                  key={String(v)}
-                  type="button"
-                  onClick={() => setTopup(v)}
-                  className={`text-left p-2.5 rounded-lg border text-xs ${
-                    topup === v ? 'border-accent bg-accent/10' : 'border-gray-200'
-                  }`}
-                >
-                  <div className="font-sans font-black uppercase">
-                    {v === 0
-                      ? t('cohousing_commit_topup_none')
-                      : v === 'custom'
-                        ? t('cohousing_commit_topup_custom')
-                        : `+€${(v as number) / 1000}k`}
-                  </div>
-                </button>
-              ))}
-            </div>
-            {topup === 'custom' && (
-              <input
-                type="number"
-                className="mt-2 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                placeholder={t('cohousing_commit_topup_custom_ph')}
-                value={topupCustom}
-                onChange={(e) => setTopupCustom(e.target.value)}
-              />
-            )}
-            {topupAmount > 0 && (
-              <div className="mt-3 flex items-center gap-3">
-                <input
-                  type="range"
-                  min={1}
-                  max={5}
-                  step={0.25}
-                  value={topupRate}
-                  onChange={(e) => setTopupRate(parseFloat(e.target.value))}
-                  className="flex-1 accent-accent"
-                />
-                <span className="text-sm font-sans tabular-nums font-bold bg-accent text-white px-3 py-1 rounded-full min-w-[4rem] text-center">
-                  {topupRate.toFixed(2)}%
-                </span>
-              </div>
-            )}
-          </div>
-
-          <div className="p-4 rounded-xl border-2 border-accent bg-accent/5">
-            <span className="text-[10px] font-bold uppercase text-gray-500">
-              {t('cohousing_commit_summary')}
-            </span>
-            <div className="mt-2 flex justify-between text-sm">
-              <span className="text-gray-600">{t('cohousing_commit_reservation_line')}</span>
-              <span className="font-sans tabular-nums font-bold">{formatEurAmount(reservation)}</span>
-            </div>
-            {topupAmount > 0 && (
-              <div className="flex justify-between text-sm mt-1">
-                <span className="text-gray-600">{t('cohousing_commit_topup_line')}</span>
-                <span className="font-sans tabular-nums font-bold">
-                  {formatEurAmount(topupAmount)}
-                </span>
-              </div>
-            )}
-            <div className="border-t border-accent/30 my-2" />
-            <div className="flex justify-between items-baseline">
-              <span className="font-medium text-gray-900">{t('cohousing_commit_total')}</span>
-              <span className="font-sans text-2xl font-black">{formatEurAmount(total)}</span>
-            </div>
-            {financingMode && (
-              <p className="text-xs text-gray-500 mt-2">
-                {t('cohousing_commit_mode_note', { mode: financingMode })}
+          {tier === 'existing' && (
+            <div className="rounded-xl border border-gray-200 bg-white p-4">
+              <p className="text-sm text-gray-700 leading-relaxed">
+                {t('cohousing_commit_tier_existing_note')}
               </p>
-            )}
-          </div>
+            </div>
+          )}
 
-          <FlowDisclaimer tone="amber">{t('cohousing_commit_mail_note')}</FlowDisclaimer>
+          {tier !== 'existing' && (
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                {t('cohousing_commit_topup')}
+              </span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+                {([0, 50000, 100000, 'custom'] as const).map((v) => (
+                  <button
+                    key={String(v)}
+                    type="button"
+                    onClick={() => setTopup(v)}
+                    className={`text-left p-2.5 rounded-lg border text-xs ${selectedCardClass(topup === v)}`}
+                  >
+                    <div className="font-sans font-black uppercase">
+                      {v === 0
+                        ? t('cohousing_commit_topup_none')
+                        : v === 'custom'
+                          ? t('cohousing_commit_topup_custom')
+                          : `+€${(v as number) / 1000}k`}
+                    </div>
+                  </button>
+                ))}
+              </div>
+              {topup === 'custom' && (
+                <input
+                  type="number"
+                  className="mt-2 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                  placeholder={t('cohousing_commit_topup_custom_ph')}
+                  value={topupCustom}
+                  onChange={(e) => setTopupCustom(e.target.value)}
+                />
+              )}
+              {topupAmount > 0 && (
+                <div className="mt-3 flex items-center gap-3">
+                  <input
+                    type="range"
+                    min={1}
+                    max={5}
+                    step={0.25}
+                    value={topupRate}
+                    onChange={(e) => setTopupRate(parseFloat(e.target.value))}
+                    className="flex-1 accent-accent"
+                  />
+                  <span className="text-sm font-sans tabular-nums font-bold bg-accent text-white px-3 py-1 rounded-full min-w-[4rem] text-center">
+                    {topupRate.toFixed(2)}%
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
 
-          <label className="flex items-start gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              className="mt-1"
-              checked={signed}
-              onChange={(e) => setSigned(e.target.checked)}
-            />
+          {tier !== 'existing' && (
+            <div className="p-4 rounded-xl border border-gray-200 bg-white">
+              <span className="text-[10px] font-bold uppercase text-gray-500">
+                {t('cohousing_commit_summary')}
+              </span>
+              <div className="mt-2 flex justify-between text-sm">
+                <span className="text-gray-600">{t('cohousing_commit_reservation_line')}</span>
+                <span className="font-sans tabular-nums font-bold">{formatEurAmount(reservation)}</span>
+              </div>
+              {topupAmount > 0 && (
+                <div className="flex justify-between text-sm mt-1">
+                  <span className="text-gray-600">{t('cohousing_commit_topup_line')}</span>
+                  <span className="font-sans tabular-nums font-bold">
+                    {formatEurAmount(topupAmount)}
+                  </span>
+                </div>
+              )}
+              <div className="border-t border-gray-200 my-2" />
+              <div className="flex justify-between items-baseline">
+                <span className="font-medium text-gray-900">{t('cohousing_commit_total')}</span>
+                <span className="font-sans text-2xl font-black">{formatEurAmount(total)}</span>
+              </div>
+              {financingMode && (
+                <p className="text-xs text-gray-500 mt-2">
+                  {t('cohousing_commit_mode_note', { mode: financingMode })}
+                </p>
+              )}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setDocumentsAcknowledged((v) => !v)}
+            className={`w-full text-left rounded-xl border p-4 flex gap-3 items-start transition-colors ${
+              documentsAcknowledged
+                ? 'border-accent ring-1 ring-accent/30 bg-white'
+                : 'border-gray-200 bg-white hover:border-gray-300'
+            }`}
+          >
+            <span
+              className={`mt-0.5 w-5 h-5 shrink-0 rounded border flex items-center justify-center ${
+                documentsAcknowledged
+                  ? 'border-accent bg-accent text-white'
+                  : 'border-gray-300 bg-white'
+              }`}
+              aria-hidden
+            >
+              {documentsAcknowledged && (
+                <svg viewBox="0 0 12 12" className="w-3 h-3" fill="none">
+                  <path
+                    d="M2 6l3 3 5-5"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
+            </span>
+            <span className="text-sm text-gray-700 leading-relaxed">
+              {financingMode === 'financed'
+                ? t('cohousing_finance_docs_acknowledge_financed')
+                : financingMode === 'cash'
+                  ? t('cohousing_finance_docs_acknowledge_cash')
+                  : t('cohousing_finance_docs_acknowledge')}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSigned((v) => !v)}
+            className={`w-full text-left rounded-xl border p-4 flex gap-3 items-start transition-colors ${
+              signed
+                ? 'border-accent ring-1 ring-accent/30 bg-white'
+                : 'border-gray-200 bg-white hover:border-gray-300'
+            }`}
+          >
+            <span
+              className={`mt-0.5 w-5 h-5 shrink-0 rounded border flex items-center justify-center ${
+                signed
+                  ? 'border-accent bg-accent text-white'
+                  : 'border-gray-300 bg-white'
+              }`}
+              aria-hidden
+            >
+              {signed && (
+                <svg viewBox="0 0 12 12" className="w-3 h-3" fill="none">
+                  <path
+                    d="M2 6l3 3 5-5"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
+            </span>
             <span className="text-sm text-gray-700">{t('cohousing_commit_signed_confirm')}</span>
-          </label>
+          </button>
 
           <div className="text-right">
             <Button
               isFullWidth={false}
               size="small"
-              isEnabled={signed}
+              isEnabled={signed && documentsAcknowledged}
               onClick={() => {
                 onPoolAdd(total);
                 if (!tier) {
@@ -415,6 +501,7 @@ export const CommitmentPanel = ({
                   topupRate,
                   total,
                   signed,
+                  documentsAcknowledged: true,
                 });
               }}
             >

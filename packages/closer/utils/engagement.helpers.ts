@@ -1,8 +1,29 @@
 import { User } from '../contexts/auth/types';
 
-import { EngagementOpportunity } from '../types/engagement';
+import {
+  EngagementOpportunity,
+  EngagementOpportunityStatus,
+} from '../types/engagement';
 
 export const ENGAGEMENT_MANAGER_ROLES = ['admin', 'community-curator'] as const;
+
+export const ENGAGEMENT_OPEN_STATUSES: EngagementOpportunityStatus[] = [
+  'queued',
+  'assigned',
+  'host_notified',
+  'approved',
+];
+
+export const ENGAGEMENT_HOST_STATUSES: EngagementOpportunityStatus[] = [
+  'assigned',
+  'host_notified',
+  'approved',
+];
+
+export const ENGAGEMENT_FOLLOW_UP_STATUSES: EngagementOpportunityStatus[] = [
+  ...ENGAGEMENT_OPEN_STATUSES,
+  'contacted',
+];
 
 export type EngagementListPreset = 'active' | 'high' | 'all_open';
 
@@ -20,22 +41,37 @@ export function buildEngagementListWhere(
     return {
       $and: [
         { managedBy: { $in: [userId] } },
-        { status: 'assigned' },
+        { status: { $in: ENGAGEMENT_HOST_STATUSES } },
       ],
     };
   }
 
-  if (preset === 'active') {
-    return { status: 'assigned' };
-  }
-
   if (preset === 'high') {
     return {
-      $and: [{ status: 'assigned' }, { priority: 'high' }],
+      $and: [
+        { status: { $in: ENGAGEMENT_OPEN_STATUSES } },
+        { priority: 'high' },
+      ],
     };
   }
 
-  return { status: 'assigned' };
+  if (preset === 'all_open') {
+    return { status: { $in: ENGAGEMENT_FOLLOW_UP_STATUSES } };
+  }
+
+  return { status: { $in: ENGAGEMENT_OPEN_STATUSES } };
+}
+
+export function opportunityEnrichmentPending(
+  opp: EngagementOpportunity,
+): boolean {
+  const subject = outreachSubject(opp).trim();
+  return !subject && !opp.enrichmentCompletedAt;
+}
+
+export function copyProviderKey(provider: string | undefined): string {
+  if (provider === 'anthropic') return 'engagement_copy_provider_anthropic';
+  return 'engagement_copy_provider_deterministic';
 }
 
 export function managedByDisplayLines(
@@ -127,4 +163,61 @@ export function outreachSubject(opp: EngagementOpportunity): string {
 
 export function outreachBody(opp: EngagementOpportunity): string {
   return opp.body ?? opp.outreachDraft?.body ?? '';
+}
+
+export function outreachCtaLink(opp: EngagementOpportunity): string {
+  return opp.ctaLink ?? '';
+}
+
+export function outreachCtaText(opp: EngagementOpportunity): string {
+  return opp.ctaText ?? '';
+}
+
+export function hostBriefText(opp: EngagementOpportunity): string {
+  if (typeof opp.hostBrief === 'string') return opp.hostBrief;
+  if (
+    opp.hostBrief &&
+    typeof opp.hostBrief === 'object' &&
+    'summary' in opp.hostBrief
+  ) {
+    return (opp.hostBrief as { summary?: string }).summary ?? '';
+  }
+  return '';
+}
+
+export function draftFieldsFromOpportunity(
+  opp: EngagementOpportunity,
+): {
+  subject: string;
+  body: string;
+  ctaLink: string;
+  ctaText: string;
+  hostBrief: string;
+} {
+  return {
+    subject: outreachSubject(opp),
+    body: outreachBody(opp),
+    ctaLink: outreachCtaLink(opp),
+    ctaText: outreachCtaText(opp),
+    hostBrief: hostBriefText(opp),
+  };
+}
+
+export function buildDraftPatchPayload(
+  draft: {
+    subject: string;
+    body: string;
+    ctaLink: string;
+    ctaText: string;
+    hostBrief: string;
+  },
+): Record<string, string> {
+  const payload: Record<string, string> = {
+    subject: draft.subject,
+    body: draft.body,
+  };
+  if (draft.ctaLink.trim()) payload.ctaLink = draft.ctaLink.trim();
+  if (draft.ctaText.trim()) payload.ctaText = draft.ctaText.trim();
+  if (draft.hostBrief.trim()) payload.hostBrief = draft.hostBrief.trim();
+  return payload;
 }

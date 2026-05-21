@@ -1,5 +1,6 @@
 export { useBookingLinkedCharges } from './useBookingLinkedCharges';
 export { useHasMounted } from './useHasMounted';
+export { useInteractionIsHuman } from './useInteractionIsHuman';
 export { useLocalStorage } from './useLocalStorage';
 export { useRBAC } from './useRBAC';
 export { useBookingSmartContract } from './useBookingSmartContract';
@@ -13,4 +14,5 @@ export { usePresenceToken } from './usePresenceToken';
 export { useSweatToken } from './useSweatToken';
 export { useVotingWeight } from './useVotingWeight';
 export { useRedirectPaidBookingToDetail } from './useRedirectPaidBookingToDetail';
+export { useRedirectLegacyListingStayRoute } from './useRedirectLegacyListingStayRoute';
 export { useNavigationMetrics } from './useNavigationMetrics';

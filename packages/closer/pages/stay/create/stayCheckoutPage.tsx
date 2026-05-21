@@ -2255,7 +2255,7 @@ const StayCheckoutContent = ({
             numberOfUnits={currentStay.numberOfUnits}
             listingPrivate={listing?.private}
             adults={currentStay.adults}
-            children={currentStay.children}
+            childCount={currentStay.children}
             className="text-sm text-gray-600 mt-3"
           />
           {showTokenCreditPaymentOptions && (

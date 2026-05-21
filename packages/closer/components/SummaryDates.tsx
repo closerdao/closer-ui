@@ -3,29 +3,9 @@ import Link from 'next/link';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
 import dayjs from 'dayjs';
-
-function buildStayCreateListingHref(params: {
-  listingId: string;
-  startDate: string | Date | null;
-  endDate: string | Date | null;
-  totalGuests: number;
-  kids?: number;
-  infants?: number;
-  pets?: number;
-}) {
-  const q = new URLSearchParams();
-  q.set('listingId', params.listingId);
-  if (params.startDate && params.endDate) {
-    q.set('start', dayjs(params.startDate).format('YYYY-MM-DD'));
-    q.set('end', dayjs(params.endDate).format('YYYY-MM-DD'));
-  }
-  q.set('adults', String(params.totalGuests));
-  if (params.kids) q.set('children', String(params.kids));
-  if (params.infants) q.set('infants', String(params.infants));
-  if (params.pets) q.set('pets', String(params.pets));
-  return `/stay/create?${q.toString()}`;
-}
 import { useTranslations } from 'next-intl';
+
+import { buildStayCreateListingHref } from '../utils/stayRouting.helpers';
 
 import { useConfig } from '../hooks/useConfig';
 import { Listing } from '../types';

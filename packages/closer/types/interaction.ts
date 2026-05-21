@@ -37,6 +37,7 @@ export type InteractionDocument = {
   signals?: Record<string, unknown>;
   createdBy?: string;
   sessionkey?: string;
+  isHuman?: boolean;
   path?: string;
   url?: string;
   page?: string;

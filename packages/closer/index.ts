@@ -51,6 +51,7 @@ export * from './contexts/wallet';
 // Hooks
 export * from './hooks/useConfig';
 export * from './hooks/useHasMounted';
+export { useInteractionIsHuman } from './hooks/useInteractionIsHuman';
 export { useNavigationMetrics } from './hooks/useNavigationMetrics';
 export { useSalePaidRedirect } from './hooks/useSalePaidRedirect';
 export * from './hooks/useRBAC';
@@ -59,6 +60,7 @@ export {
   default as Page404,
   getStaticProps as getStaticProps404,
 } from './pages/404';
+export { default as AgentChatPage } from './pages/chat';
 export { default as ApplicationsPage } from './pages/applications';
 export { default as ArticlePage } from './pages/blog/[slug]';
 export { default as ArticleCreatePage } from './pages/blog/create';
@@ -198,6 +200,8 @@ export { default as CohousingApplicationDetailPage } from './pages/cohousing/app
 export { default as CohousingApplicationAdminPage } from './pages/cohousing/application/[id]/admin';
 export { default as CohousingApplicationIndexPage } from './pages/cohousing/application/index';
 export { default as CohousingApplicationsTeamPage } from './pages/cohousing/applications/index';
+export { default as CohousingDashboardPage } from './pages/dashboard/cohousing/index';
+export { default as CohousingDashboardDetailPage } from './pages/dashboard/cohousing/[id]';
 export { default as RevenuePage } from './pages/dashboard/revenue';
 export { default as EngagementDashboardPage } from './pages/dashboard/engagement';
 export { default as EngagementOpportunityDetailPage } from './pages/dashboard/engagement/[id]';
@@ -225,7 +229,12 @@ export { default as api, cdn } from './utils/api';
 export {
   clearInteractionSession,
   ensureInteractionSession,
+  getStoredInteractionIsHuman,
 } from './utils/interactionSession';
+export {
+  isTurnstileSubmitEnabled,
+  turnstileTokenForRequest,
+} from './utils/turnstile.helpers';
 export { appGetInitialPropsWithMessages } from './utils/appLocaleMessages.helpers';
 export { invalidateConfigCache } from './utils/configCache';
 export { default as configCached } from './configCached';

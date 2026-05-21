@@ -147,6 +147,25 @@ export const handlers = [
       }),
     );
   }),
+  rest.post('*/admin/cohousingapplication', async (req, res, ctx) => {
+    const body = (await req.json().catch(() => ({}))) as {
+      status?: string;
+      isDraft?: boolean;
+      createdBy?: string;
+    };
+    return res(
+      ctx.status(200),
+      ctx.json({
+        results: {
+          _id: 'cohousing-new-mock',
+          createdBy: body.createdBy || user._id,
+          currentStep: 1,
+          status: body.status || 'active',
+          isDraft: body.isDraft !== false,
+        },
+      }),
+    );
+  }),
   rest.patch('*/cohousingapplication/:id', (req, res, ctx) => {
     const { id } = req.params;
     return res(

@@ -34,3 +34,6 @@ export const getSectionBackgroundClass = (
       return '';
   }
 };
+
+export const hasSectionBackground = (bg?: string | null): boolean =>
+  Boolean(getSectionBackgroundClass(bg));

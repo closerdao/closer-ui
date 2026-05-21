@@ -96,7 +96,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
     normalizePage(initialPage as unknown as Record<string, unknown>),
   );
   const [selectedLocalId, setSelectedLocalId] = useState<string | null>(null);
-  const [tab, setTab] = useState<'block' | 'page' | 'seo'>('block');
+  const [tab, setTab] = useState<'block' | 'page'>('block');
   const [isDirty, setIsDirty] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved' | 'error'>(
     'saved',
@@ -336,7 +336,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
     }
   };
 
-  const handleTabChange = (next: 'block' | 'page' | 'seo') => {
+  const handleTabChange = (next: 'block' | 'page') => {
     setTab(next);
     if (next !== 'block') setSelectedLocalId(null);
   };
@@ -377,7 +377,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
   if (isPreview) {
     return (
       <AdminLayout>
-        <div className="relative min-h-[calc(100vh-6rem)] flex flex-col">
+        <div className="relative h-[calc(100vh-6rem)] overflow-hidden flex flex-col min-h-0">
           <button
             type="button"
             className="fixed top-20 right-4 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-gray-900 text-white text-sm shadow-lg"
@@ -409,7 +409,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
 
   return (
     <AdminLayout>
-      <div className="flex flex-col gap-0 min-h-[calc(100vh-4rem)] lg:min-h-[calc(100vh-2rem)]">
+      <div className="flex flex-col gap-0 h-[calc(100vh-4rem)] lg:h-[calc(100vh-2rem)] overflow-hidden min-h-0">
         <div className="flex items-center gap-2 px-2 py-2 border-b border-gray-200 bg-white lg:hidden shrink-0">
           <button
             type="button"

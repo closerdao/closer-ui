@@ -52,10 +52,28 @@ const BLOCK_TYPES: BlockTypeDef[] = [
     category: 'layout',
   },
   {
+    type: 'media',
+    labelKey: 'pages_editor_block_media',
+    descKey: 'pages_editor_block_media_desc',
+    category: 'layout',
+  },
+  {
+    type: 'textBlock',
+    labelKey: 'pages_editor_block_text',
+    descKey: 'pages_editor_block_text_desc',
+    category: 'layout',
+  },
+  {
     type: 'cta',
     labelKey: 'pages_editor_block_cta',
     descKey: 'pages_editor_block_cta_desc',
     category: 'layout',
+  },
+  {
+    type: 'staySearch',
+    labelKey: 'pages_editor_block_stay_search',
+    descKey: 'pages_editor_block_stay_search_desc',
+    category: 'closer',
   },
   {
     type: 'events',

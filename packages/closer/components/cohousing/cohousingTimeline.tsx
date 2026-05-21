@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { useTranslations } from 'next-intl';
 
@@ -252,7 +252,6 @@ export const CohousingVerticalTimeline = ({
   quizInitialAnswers,
   applicantUserId,
   maxStepInclusive,
-  footerBelowSteps,
   readOnly = false,
 }: {
   currentStep: number;
@@ -266,7 +265,6 @@ export const CohousingVerticalTimeline = ({
   quizInitialAnswers?: Record<string, string>;
   applicantUserId?: string;
   maxStepInclusive?: number;
-  footerBelowSteps?: ReactNode;
   readOnly?: boolean;
 }) => {
   const t = useTranslations();
@@ -361,9 +359,7 @@ export const CohousingVerticalTimeline = ({
         );
       })}
 
-      {footerBelowSteps}
-
-      {!footerBelowSteps && (
+      {maxStepInclusive == null && (
       <div className="flex gap-5 items-center pl-[22px] mt-6">
         <div
           className={`w-5 h-5 rounded-full border-[3px] border-white shrink-0 shadow-[0_0_0_2px] ${

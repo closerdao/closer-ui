@@ -16,6 +16,7 @@ import {
 import { User } from 'closer/contexts/auth/types';
 import { Page } from 'closer/types/customPages';
 import { parseMessageFromError } from 'closer/utils/common';
+import { buildStayCreateListingHref } from 'closer/utils/stayRouting.helpers';
 import { NextPageContext } from 'next';
 
 const getPage = ({
@@ -173,7 +174,7 @@ const getPage = ({
               })[0],
               cta: {
                 text: 'Book now',
-                url: `/stay/${listing.slug}`,
+                url: buildStayCreateListingHref({ listingId: listing._id }),
               },
             })),
           },

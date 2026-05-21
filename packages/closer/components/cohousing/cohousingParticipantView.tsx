@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl';
 import { COHOUSING_STEP_BY_N } from '../../constants/cohousingFlow';
 import type { CohousingApplication } from '../../types/cohousingApplication';
 import { buildClearParticipantStepPatch } from '../../utils/cohousingResetStep';
+import { getQuizAnswersFromApplication } from '../../utils/cohousingQuiz.helpers';
+import { parseMessageFromError } from '../../utils/common';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import { CohousingAgreementModal } from './cohousingAgreementModal';
@@ -22,33 +24,6 @@ const getEffectiveStep = (application: CohousingApplication) => {
     return 1;
   }
   return clampStep(application.currentStep ?? 1);
-};
-
-const getQuizAnswersFromApplication = (
-  application: CohousingApplication,
-): Record<string, string> | undefined => {
-  const q = application.quiz as Record<string, unknown> | undefined;
-  if (!q) {
-    return undefined;
-  }
-  const direct = q.answers;
-  if (
-    direct &&
-    typeof direct === 'object' &&
-    !Array.isArray(direct)
-  ) {
-    return direct as Record<string, string>;
-  }
-  const nested = q.quiz as Record<string, unknown> | undefined;
-  const nestedAnswers = nested?.answers;
-  if (
-    nestedAnswers &&
-    typeof nestedAnswers === 'object' &&
-    !Array.isArray(nestedAnswers)
-  ) {
-    return nestedAnswers as Record<string, string>;
-  }
-  return undefined;
 };
 
 const SHARED_FLOW_STEP_CAP = 3;
@@ -73,6 +48,7 @@ export const CohousingParticipantView = ({
   const [agreementOpen, setAgreementOpen] = useState(false);
   const [committed, setCommitted] = useState(COHOUSING_DEFAULT_COMMITTED);
   const [adminClearing, setAdminClearing] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [mode, setMode] = useState<string | null>(
     application.financingMode ?? null,
   );
@@ -106,7 +82,12 @@ export const CohousingParticipantView = ({
 
   const handlePersist = useCallback(
     async (data: Record<string, unknown>) => {
-      await onPersist(data);
+      setSaveError(null);
+      try {
+        await onPersist(data);
+      } catch (err) {
+        setSaveError(parseMessageFromError(err));
+      }
     },
     [onPersist],
   );
@@ -213,6 +194,10 @@ export const CohousingParticipantView = ({
         },
         commitment: {
           tier: payload.tier,
+          financingDocumentsAcknowledged: Boolean(payload.documentsAcknowledged),
+          financingDocumentsAcknowledgedAt: payload.documentsAcknowledged
+            ? now
+            : undefined,
         },
         unit: {
           ...(application.unit || {}),
@@ -314,6 +299,36 @@ export const CohousingParticipantView = ({
         return;
       }
 
+      if (step === 4) {
+        await handlePersist({
+          financingMode: payload.mode,
+          financingModeChosenAt: now,
+          currentStep: 5,
+          stepHistory: [
+            ...stepHistoryPayload,
+            {
+              step: 4,
+              event: 'team_approved_step',
+              at: now,
+              by: 'auto',
+            },
+          ],
+        });
+        return;
+      }
+
+      if (step === 5) {
+        await handlePersist({
+          tier: payload.tier,
+          financingDocumentsAcknowledged: Boolean(payload.documentsAcknowledged),
+          financingDocumentsAcknowledgedAt: payload.documentsAcknowledged
+            ? now
+            : undefined,
+          stepHistory: stepHistoryPayload,
+        });
+        return;
+      }
+
       await handlePersist({
         ...(panelData || {}),
         stepHistory: stepHistoryPayload,
@@ -362,7 +377,12 @@ export const CohousingParticipantView = ({
           {t('cohousing_view_only_banner')}
         </div>
       )}
-      <div className="sticky top-0 z-20 bg-white border-b border-gray-200 py-3.5 mb-8 -mx-4 px-4 sm:mx-0 sm:px-0">
+      {saveError && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {saveError}
+        </div>
+      )}
+      <div className="sticky top-20 z-10 bg-white border-b border-gray-200 py-3.5 mb-8 -mx-4 px-4 sm:mx-0 sm:px-0">
         <div className="max-w-[860px] mx-auto flex flex-wrap justify-between items-center gap-3">
           <div className="flex gap-2 items-center">
             {!readOnly && (
@@ -432,10 +452,20 @@ export const CohousingParticipantView = ({
         maxStepInclusive={
           sharedLeadApplication ? SHARED_FLOW_STEP_CAP : undefined
         }
-        footerBelowSteps={
-          sharedLeadApplication ? (
-            <Card className="p-5 mt-2 border border-accent/30 bg-accent/5">
-              <p className="text-sm text-gray-700 mb-4">
+      />
+
+      {sharedLeadApplication && (
+        <section
+          className="max-w-[860px] mx-auto mt-10 pt-8 border-t border-gray-200"
+          aria-labelledby="cohousing-shared-application-heading"
+        >
+          <div className="flex gap-5 items-start">
+            <div className="w-5 shrink-0 ml-[22px]" aria-hidden />
+            <Card className="flex-1 min-w-0 p-5 border border-accent/30 bg-accent/5">
+              <p
+                id="cohousing-shared-application-heading"
+                className="text-sm text-gray-700 mb-4"
+              >
                 {t('cohousing_cosigner_shared_application_body')}
               </p>
               <Link
@@ -449,9 +479,9 @@ export const CohousingParticipantView = ({
                 })}
               </Link>
             </Card>
-          ) : undefined
-        }
-      />
+          </div>
+        </section>
+      )}
 
       <CohousingAgreementModal
         open={agreementOpen}
