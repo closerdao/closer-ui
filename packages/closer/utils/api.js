@@ -263,11 +263,31 @@ const INTERACTION_HUMAN_RESPONSE_PATHS = [
   '/subscribe',
 ];
 
+function normalizeRequestPathname(url) {
+  if (typeof url !== 'string' || !url.length) return null;
+  let pathname;
+  try {
+    if (/^https?:\/\//i.test(url)) {
+      pathname = new URL(url).pathname;
+    } else {
+      const withoutQuery = url.split('?')[0];
+      pathname = withoutQuery.startsWith('/')
+        ? withoutQuery
+        : `/${withoutQuery}`;
+    }
+  } catch {
+    return null;
+  }
+  if (pathname.length > 1 && pathname.endsWith('/')) {
+    return pathname.slice(0, -1);
+  }
+  return pathname;
+}
+
 function shouldApplyInteractionIsHuman(url) {
-  if (typeof url !== 'string') return false;
-  return INTERACTION_HUMAN_RESPONSE_PATHS.some(
-    (path) => url === path || url.endsWith(path),
-  );
+  const pathname = normalizeRequestPathname(url);
+  if (!pathname) return false;
+  return INTERACTION_HUMAN_RESPONSE_PATHS.includes(pathname);
 }
 
 api.interceptors.response.use(

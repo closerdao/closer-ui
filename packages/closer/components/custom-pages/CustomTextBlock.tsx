@@ -26,7 +26,7 @@ const CustomTextBlock: React.FC<{
   const title = content?.title?.trim()
     ? resolveBlockText(content.title, t)
     : '';
-  const body = content?.body ?? '';
+  const body = resolveBlockText(content?.body, t);
 
   const imageNode = hasImage ? (
     <div className="w-full md:w-[42%] shrink-0">

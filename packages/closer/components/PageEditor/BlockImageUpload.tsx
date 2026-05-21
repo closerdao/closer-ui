@@ -17,6 +17,7 @@ const BlockImageUpload = ({
   showUrlField = true,
 }: Props) => {
   const t = useTranslations();
+  const imageUrlLabel = urlLabel ?? t('pages_editor_field_image_url');
 
   return (
     <div className="flex flex-col gap-2">
@@ -25,7 +26,8 @@ const BlockImageUpload = ({
         <Input
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={urlLabel ?? t('pages_editor_field_image_url')}
+          placeholder={imageUrlLabel}
+          ariaLabel={imageUrlLabel}
         />
       ) : null}
     </div>

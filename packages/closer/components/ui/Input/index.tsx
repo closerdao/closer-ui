@@ -32,6 +32,7 @@ const inputStyles = cva('new-input px-4 py-3 rounded-lg', {
 interface InputProps extends VariantProps<typeof inputStyles> {
   id?: string;
   label?: string;
+  ariaLabel?: string;
   value?: string;
   onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
@@ -58,6 +59,7 @@ const Input = React.memo(
   ({
     id,
     label,
+    ariaLabel,
     value,
     onChange,
     type = 'text',
@@ -210,7 +212,7 @@ const Input = React.memo(
             `}
             data-testid={dataTestId}
             autoFocus={autoFocus}
-            aria-label={label}
+            aria-label={ariaLabel ?? label}
             aria-required={isRequired}
             aria-invalid={!isValidValue(localValue)}
             ref={inputRef}
