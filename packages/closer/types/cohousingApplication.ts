@@ -232,6 +232,8 @@ export interface CohousingApplication {
   readiness?: CohousingReadiness;
   financingMode?: string;
   financingModeChosenAt?: string;
+  financingDocumentsAcknowledged?: boolean;
+  financingDocumentsAcknowledgedAt?: string;
   tier?: string;
   reservationLoan?: LoanTerms;
   topupLoan?: LoanTerms;

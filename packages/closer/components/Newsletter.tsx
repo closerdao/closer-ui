@@ -49,7 +49,7 @@ const Newsletter = forwardRef<HTMLDivElement, Props>(
         email: string;
         screenname: string;
         tags: string[];
-        turnstileToken: string | null;
+        turnstileToken?: string | null;
       },
     ) => {
       try {

@@ -200,6 +200,8 @@ export { default as CohousingApplicationDetailPage } from './pages/cohousing/app
 export { default as CohousingApplicationAdminPage } from './pages/cohousing/application/[id]/admin';
 export { default as CohousingApplicationIndexPage } from './pages/cohousing/application/index';
 export { default as CohousingApplicationsTeamPage } from './pages/cohousing/applications/index';
+export { default as CohousingDashboardPage } from './pages/dashboard/cohousing/index';
+export { default as CohousingDashboardDetailPage } from './pages/dashboard/cohousing/[id]';
 export { default as RevenuePage } from './pages/dashboard/revenue';
 export { default as EngagementDashboardPage } from './pages/dashboard/engagement';
 export { default as EngagementOpportunityDetailPage } from './pages/dashboard/engagement/[id]';

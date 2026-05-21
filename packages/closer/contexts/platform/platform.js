@@ -720,6 +720,19 @@ export const PlatformProvider = ({ children }) => {
         return res;
       });
 
+    nextPlatform.engagementopportunity.sampleEmail = (data = {}) =>
+      api
+        .post('/engagement-opportunities/sample-email', data)
+        .then((res) => res.data);
+
+    nextPlatform.engagementopportunity.appendHistory = (_id, data = {}) =>
+      api
+        .post(
+          `/engagement-opportunities/${encodeURIComponent(_id)}/history`,
+          data,
+        )
+        .then((res) => res.data);
+
     nextPlatform.cohousingapplication.getMine = () =>
       api.get('/my/CohousingApplication').then((res) => res.data);
 
