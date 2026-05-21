@@ -185,12 +185,13 @@ const EngagementDashboardPage = () => {
     setDrafts((prev) => ({
       ...prev,
       [id]: {
-        subject: '',
-        body: '',
-        ctaLink: '',
-        ctaText: '',
-        hostBrief: '',
-        ...prev[id],
+        ...(prev[id] ?? {
+          subject: '',
+          body: '',
+          ctaLink: '',
+          ctaText: '',
+          hostBrief: '',
+        }),
         [field]: value,
       },
     }));
