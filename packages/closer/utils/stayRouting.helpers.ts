@@ -54,16 +54,45 @@ export function buildStayBookingHref(bookingId: string): string {
   return `/stay/${bookingId}`;
 }
 
-export function resolveBookingFlowBackUrl(
+export function decodeBookingFlowBackParam(
   back: string | string[] | undefined,
-  overrides: URLSearchParams,
 ): string | null {
   if (!back || Array.isArray(back)) {
     return null;
   }
-  const decoded = decodeURIComponent(back);
+  try {
+    return decodeURIComponent(back);
+  } catch {
+    return null;
+  }
+}
+
+function normalizeBookingFlowBackPath(path: string): string | null {
+  const trimmed = path.trim();
+  if (!trimmed || trimmed.includes('://')) {
+    return null;
+  }
+  const withoutLeading = trimmed.replace(/^\/+/, '');
+  if (!withoutLeading) {
+    return null;
+  }
+  return withoutLeading;
+}
+
+export function resolveBookingFlowBackUrl(
+  back: string | string[] | undefined,
+  overrides: URLSearchParams,
+): string | null {
+  const decoded = decodeBookingFlowBackParam(back);
+  if (!decoded) {
+    return null;
+  }
   const qIndex = decoded.indexOf('?');
-  const path = qIndex >= 0 ? decoded.slice(0, qIndex) : decoded;
+  const rawPath = qIndex >= 0 ? decoded.slice(0, qIndex) : decoded;
+  const path = normalizeBookingFlowBackPath(rawPath);
+  if (!path) {
+    return null;
+  }
   const existing = qIndex >= 0 ? decoded.slice(qIndex + 1) : '';
   const merged = new URLSearchParams(existing);
   overrides.forEach((value, key) => {

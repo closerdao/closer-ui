@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { usePlatform } from '../../contexts/platform';
 import api, { formatSearch } from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import Modal from '../Modal';
@@ -197,11 +196,6 @@ const CohousingAddParticipantModal = ({
   existingApplicantUserIds,
 }: CohousingAddParticipantModalProps) => {
   const t = useTranslations();
-  const { platform } = usePlatform() as {
-    platform: {
-      cohousingapplication: { create: (d: unknown) => Promise<unknown> };
-    };
-  };
   const [selectedUser, setSelectedUser] =
     useState<CohousingAddParticipantUser | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -229,7 +223,7 @@ const CohousingAddParticipantModal = ({
     setSubmitting(true);
     setFormError(null);
     try {
-      const out = (await platform.cohousingapplication.create({
+      const { data: out } = await api.post('/admin/cohousingapplication', {
         isDraft: false,
         status: 'active',
         currentStep: 1,
@@ -239,8 +233,8 @@ const CohousingAddParticipantModal = ({
           fullName: selectedUser.screenname,
           email: selectedUser.email?.trim() || '',
         },
-      })) as { results?: unknown };
-      const newId = getCreatedApplicationId(out);
+      });
+      const newId = getCreatedApplicationId(out as { results?: unknown });
       if (!newId) {
         setFormError(t('cohousing_intake_error_generic'));
         return;

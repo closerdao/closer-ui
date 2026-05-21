@@ -54,6 +54,7 @@ import { parseMessageFromError } from '../../../utils/common';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import {
   buildStayCreateListingHref,
+  decodeBookingFlowBackParam,
   isStayMongoId,
   resolveBookingFlowBackUrl,
 } from '../../../utils/stayRouting.helpers';
@@ -323,10 +324,9 @@ const Summary = ({
     overrides.set('useTokens', String(useTokens));
 
     const back = router.query.back;
-    if (typeof back === 'string' && back) {
-      const legacyListingSlugMatch = /^stay\/([^?]+)/.exec(
-        decodeURIComponent(back),
-      );
+    const decodedBack = decodeBookingFlowBackParam(back);
+    if (decodedBack) {
+      const legacyListingSlugMatch = /^stay\/([^?]+)/.exec(decodedBack);
       if (
         legacyListingSlugMatch &&
         !isStayMongoId(legacyListingSlugMatch[1]) &&
@@ -345,10 +345,12 @@ const Summary = ({
         );
         return;
       }
-      const url = resolveBookingFlowBackUrl(back, overrides);
-      if (url) {
-        router.push(url);
-        return;
+      if (typeof back === 'string' && back) {
+        const url = resolveBookingFlowBackUrl(back, overrides);
+        if (url) {
+          router.push(url);
+          return;
+        }
       }
     }
     router.push(`/bookings/${booking?._id}/questions?goBack=true`);
