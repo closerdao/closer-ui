@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 import { useEffect, useMemo, useState } from 'react';
 
@@ -35,6 +36,8 @@ const FundraisingWidget = ({
   loansCollectedTotal,
 }: FundraisingWidgetProps) => {
   const t = useTranslations();
+  const router = useRouter();
+  const intlLocale = router.locale || undefined;
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('admin');
   const [totalRaised, setTotalRaised] = useState(0);
@@ -139,7 +142,7 @@ const FundraisingWidget = ({
     totalGoal > 0 ? Math.min(100, (totalRaised / totalGoal) * 100) : 0;
 
   const formatAmount = (amount: number) => {
-    return formatIsoFiatAmount(Math.round(amount), 'EUR');
+    return formatIsoFiatAmount(Math.round(amount), 'EUR', intlLocale);
   };
 
   const milestoneName =

@@ -49,6 +49,7 @@ const InvestProgressCard = ({
   t,
 }: InvestProgressCardProps) => {
   const router = useRouter();
+  const intlLocale = router.locale || undefined;
   const goal = totalGoal || (activeMilestone ? getMilestoneGoal(activeMilestone) : 0);
   const progress = goal > 0 ? Math.min(100, (fundraisingTotal / goal) * 100) : 0;
   const [step, setStep] = useState<'idle' | 'choose' | 'donation'>('idle');
@@ -58,8 +59,8 @@ const InvestProgressCard = ({
 
   const formatAmount = (amount: number) => {
     return amount >= 1000
-      ? formatCompactCurrencyAmount(amount, 'EUR')
-      : formatIsoFiatAmount(amount, 'EUR');
+      ? formatCompactCurrencyAmount(amount, 'EUR', intlLocale)
+      : formatIsoFiatAmount(amount, 'EUR', intlLocale);
   };
 
   const resetFlow = () => {
@@ -222,7 +223,7 @@ const InvestProgressCard = ({
                         : 'border-gray-200 bg-white text-gray-700 hover:border-accent'
                     }`}
                   >
-                    {formatIsoFiatAmount(amount, 'EUR')}
+                    {formatIsoFiatAmount(amount, 'EUR', intlLocale)}
                   </button>
                 ))}
               </div>
