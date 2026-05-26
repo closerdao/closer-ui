@@ -17,8 +17,11 @@ function configPayloadToSlugMap(data) {
   return out;
 }
 
-function loadEnvFromDir(dir) {
-  for (const name of ['.env.local', '.env']) {
+function loadEnvFromDir(dir, { override = false } = {}) {
+  const names = override
+    ? ['.env', '.env.local']
+    : ['.env.local', '.env'];
+  for (const name of names) {
     const filePath = path.join(dir, name);
     if (!fs.existsSync(filePath)) continue;
     const lines = fs.readFileSync(filePath, 'utf8').split(/\r?\n/);
@@ -35,13 +38,15 @@ function loadEnvFromDir(dir) {
       ) {
         val = val.slice(1, -1);
       }
-      if (process.env[key] === undefined) process.env[key] = val;
+      if (override || process.env[key] === undefined) process.env[key] = val;
     }
   }
 }
 
 async function main() {
-  loadEnvFromDir(process.cwd());
+  const packageRoot = path.join(__dirname, '..');
+  loadEnvFromDir(packageRoot);
+  loadEnvFromDir(process.cwd(), { override: true });
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   if (!apiUrl) {

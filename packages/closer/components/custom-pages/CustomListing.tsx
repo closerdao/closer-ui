@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Link from 'next/link';
 
 import React, { useEffect, useState } from 'react';
@@ -6,6 +5,11 @@ import React, { useEffect, useState } from 'react';
 import { Button, Heading, priceFormat } from 'closer';
 import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 import { useTranslations } from 'next-intl';
+
+import { resolveFeatureVisualType } from '../../constants/featureBlockIcons';
+import { resolveBlockHtml, resolveBlockText } from '../../utils/blockI18n';
+import FeatureBlockIcon from './FeatureBlockIcon';
+import SafeCustomPageImage from './SafeCustomPageImage';
 
 const CustomListing: React.FC<{
   settings: {
@@ -23,6 +27,9 @@ const CustomListing: React.FC<{
       title: string;
       text: string;
       imageUrl: string;
+      visualType?: 'photo' | 'icon' | 'emoji' | 'none';
+      iconId?: string;
+      emoji?: string;
       price: number;
       cta: {
         text: string;
@@ -63,14 +70,16 @@ const CustomListing: React.FC<{
             level={2}
             className={`${settings?.isColorful ? 'text-accent' : ''}  text-3xl`}
           >
-            {content?.title}
+            {resolveBlockText(content?.title, t)}
           </Heading>
-          <p className="text-foreground text-md">{content?.description}</p>
+          <p className="text-foreground text-md">
+            {resolveBlockText(content?.description, t)}
+          </p>
         </div>
         <div className="flex flex-wrap justify-center gap-6  gap-y-[50px]">
-          {content?.items?.map((item) => (
+          {content?.items?.map((item, itemIndex) => (
             <div
-              key={item.title}
+              key={`${itemIndex}-${item.title}`}
               className={`flex flex-col  gap-6 text-center ${
                 settings?.hasBorder ? 'border shadow-sm rounded-md p-3' : ''
               }`}
@@ -85,40 +94,96 @@ const CustomListing: React.FC<{
               }}
             >
               <div className="flex-1 flex flex-col gap-6">
-                {item?.imageUrl && (
-                  <div className={settings?.isSmallImage ? 'px-10' : ''}>
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.title}
-                      width={400}
-                      height={500}
-                      className={`${
-                        settings?.isSmallImage ? 'rounded-full' : ''
-                      }  w-full h-auto object-contain`}
-                      sizes="(max-width: 768px) 100vw, 40vw"
-                    />
-                  </div>
-                )}
-                {!item.imageUrl && settings.isSmallImage && (
-                  <div className="flex justify-center py-4">
-                    <UserAvatarPlaceholder size="5xl" />
-                  </div>
-                )}
+                {(() => {
+                  const visualType = resolveFeatureVisualType(item);
+                  const isSmall = Boolean(settings?.isSmallImage);
+                  const smallCircleClass =
+                    'mx-auto w-20 h-20 shrink-0 rounded-full overflow-hidden';
+
+                  if (visualType === 'photo' && item.imageUrl?.trim()) {
+                    if (isSmall) {
+                      return (
+                        <div className="flex justify-center">
+                          <div className={`relative ${smallCircleClass}`}>
+                            <SafeCustomPageImage
+                              src={item.imageUrl}
+                              alt={resolveBlockText(item.title, t)}
+                              fill
+                              className="object-cover"
+                              sizes="80px"
+                            />
+                          </div>
+                        </div>
+                      );
+                    }
+                    return (
+                      <SafeCustomPageImage
+                        src={item.imageUrl}
+                        alt={resolveBlockText(item.title, t)}
+                        width={400}
+                        height={500}
+                        className="w-full h-auto object-contain"
+                        sizes="(max-width: 768px) 100vw, 40vw"
+                      />
+                    );
+                  }
+                  if (visualType === 'icon' && item.iconId) {
+                    return (
+                      <div
+                        className={`flex justify-center ${
+                          isSmall
+                            ? `${smallCircleClass} bg-accent-light/40 items-center flex`
+                            : 'py-2'
+                        }`}
+                      >
+                        <FeatureBlockIcon
+                          iconId={item.iconId}
+                          className={
+                            isSmall ? 'w-8 h-8 text-accent' : 'w-12 h-12 text-accent'
+                          }
+                        />
+                      </div>
+                    );
+                  }
+                  if (visualType === 'emoji' && item.emoji?.trim()) {
+                    return (
+                      <div
+                        className={`flex justify-center ${
+                          isSmall
+                            ? `${smallCircleClass} bg-accent-light/40 items-center text-3xl flex`
+                            : 'text-5xl py-2'
+                        }`}
+                      >
+                        {item.emoji}
+                      </div>
+                    );
+                  }
+                  if (isSmall && visualType !== 'none') {
+                    return (
+                      <div className="flex justify-center">
+                        <UserAvatarPlaceholder size="3xl" />
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
                 <Heading
                   display={false}
                   level={3}
                   className="font-bold text-md"
                 >
-                  {item.title}
+                  {resolveBlockText(item.title, t)}
                 </Heading>
                 {settings?.isAccommodations ? (
                   <div className="text-md leading-normal flex-1">
-                    {getFirstParagraph(item.text)}
+                    {getFirstParagraph(resolveBlockText(item.text, t))}
                   </div>
                 ) : (
                   <div
                     className="rich-text text-md leading-normal flex-1"
-                    dangerouslySetInnerHTML={{ __html: item.text }}
+                    dangerouslySetInnerHTML={{
+                      __html: resolveBlockHtml(item.text, t),
+                    }}
                   />
                 )}
               </div>
@@ -136,7 +201,9 @@ const CustomListing: React.FC<{
                         : ''
                     } w-full`}
                   >
-                    <Link href={item.cta.url}>{item.cta.text}</Link>
+                    <Link href={item.cta.url}>
+                      {resolveBlockText(item.cta.text, t)}
+                    </Link>
                   </Button>
                 </div>
               )}

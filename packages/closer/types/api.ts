@@ -220,6 +220,14 @@ export type PaymentConfig = {
   vatRate: number;
 };
 
+export type Web3Config = {
+  enabled: boolean;
+  reserveToken?: string;
+  gasToken?: string;
+  bookingToken?: string;
+  maxSupply?: number | string;
+};
+
 export type VolunteerConfig = {
   enabled: boolean;
   volunteeringMinStay: number;

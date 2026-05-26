@@ -33,9 +33,10 @@ import { BookingSettings, Project, VolunteerConfig } from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
 import config from '../../../configCached';
 import api from '../../../utils/api';
+import { bookingGuestNightsMetricPoint } from '../../../utils/booking.helpers';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
-import { logMetricIfAuthenticated } from '../../../utils/metrics';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { getMaxBookingHorizon } from '../../../utils/helpers';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import ProjectPreview from '../../../components/ProjectPreview';
@@ -103,6 +104,8 @@ const DatesSelector = ({
     friendEmails,
   } = router.query || {};
 
+  const queryEventId = Array.isArray(eventId) ? eventId[0] : eventId;
+
   const isHourlyBooking = false;
 
   // Step 2: Initialize state
@@ -142,6 +145,21 @@ const DatesSelector = ({
     : '';
   const isResidenceApplication = decodedBookingType === 'residence';
   const isVolunteerApplication = decodedBookingType === 'volunteer';
+
+  useEffect(() => {
+    if (!isBookingEnabled) return;
+    const mode = eventId
+      ? String(eventId)
+      : volunteerId
+        ? 'volunteer'
+        : 'guest';
+    void logMetric({
+      event: 'booking-dates-view',
+      category: 'booking',
+      value: mode,
+      ...linkedMetricFields('Event', queryEventId),
+    });
+  }, [isBookingEnabled, eventId, volunteerId, queryEventId]);
 
   useEffect(() => {
     if (normalizedIsFriendsBooking && user?._id && !userBookings) {
@@ -410,11 +428,20 @@ const DatesSelector = ({
   const handleNext = async () => {
     setHandleNextError(null);
 
+    const nightsForMetric =
+      start && end
+        ? Math.max(
+            0,
+            dayjs(end as string).diff(dayjs(start as string), 'day'),
+          )
+        : 0;
+
     if (event?.paid && !selectedTicketOption) {
-      void logMetricIfAuthenticated(user, {
+      void logMetric({
         event: 'booking-dates-error',
-        value: 'booking',
-        point: adults,
+        category: 'booking',
+        value: 'ticket', point: bookingGuestNightsMetricPoint(nightsForMetric, adults),
+        ...linkedMetricFields('Event', queryEventId),
       });
       setHandleNextError(t('bookings_error_no_ticket_option'));
       return;
@@ -486,10 +513,11 @@ const DatesSelector = ({
           ...(friendEmails && { friendEmails }),
         });
 
-        void logMetricIfAuthenticated(user, {
+        void logMetric({
           event: 'booking-dates-request-success',
-          value: 'booking',
-          point: adults,
+          category: 'booking',
+          value: 'day-ticket', point: bookingGuestNightsMetricPoint(1, adults),
+          ...linkedMetricFields('Booking', newBooking._id),
         });
         router.push(`/bookings/${newBooking._id}/food`);
         return;
@@ -501,22 +529,20 @@ const DatesSelector = ({
             ) as [string, string][],
           ),
         );
-        const nights =
-          start && end
-            ? Math.max(0, dayjs(end as string).diff(dayjs(start as string), 'day'))
-            : 0;
-        void logMetricIfAuthenticated(user, {
+        void logMetric({
           event: 'booking-dates-continue-success',
-          value: 'booking',
-          point: nights || adults,
+          category: 'booking',
+          value: 'continue', point: bookingGuestNightsMetricPoint(nightsForMetric, adults),
+          ...linkedMetricFields('Event', queryEventId),
         });
         router.push(`/bookings/create/accomodation?${urlParams}`);
       }
     } catch (err: any) {
-      void logMetricIfAuthenticated(user, {
+      void logMetric({
         event: 'booking-dates-error',
-        value: 'booking',
-        point: adults,
+        category: 'booking',
+        value: 'error', point: bookingGuestNightsMetricPoint(nightsForMetric, adults),
+        ...linkedMetricFields('Event', queryEventId),
       });
       setHandleNextError(parseMessageFromError(err));
     }

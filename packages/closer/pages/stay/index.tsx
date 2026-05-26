@@ -28,6 +28,7 @@ import {
 } from '../../types';
 import config from '../../configCached';
 import api from '../../utils/api';
+import { logMetric } from '../../utils/metrics';
 import { parseMessageFromError } from '../../utils/common';
 import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import PageNotFound from '../not-found';
@@ -114,11 +115,10 @@ const StayPage = ({
   }, [isTeamMember]);
 
   useEffect(() => {
-    api.post('/metric', {
+    void logMetric({
       event: 'page-view',
+      category: 'co-housing',
       value: 'stay',
-      point: 0,
-      category: 'engagement',
     });
   }, []);
 

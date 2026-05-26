@@ -3,7 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { z } from 'zod';
 
+import { useInteractionIsHuman } from '../hooks/useInteractionIsHuman';
 import api from '../utils/api';
+import {
+  isTurnstileSubmitEnabled,
+  turnstileTokenForRequest,
+} from '../utils/turnstile.helpers';
 import TurnstileWidget from './TurnstileWidget';
 import { Button, Heading, Input } from './ui';
 
@@ -24,6 +29,7 @@ const JoinWebinarPrompt = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const isHuman = useInteractionIsHuman();
 
   useEffect(() => {
     const localEmail = localStorage.getItem('email');
@@ -42,7 +48,7 @@ const JoinWebinarPrompt = ({
       await api.post('/webinar', {
         email,
         tags: (tags?.length ? tags : ['webinar']),
-        turnstileToken,
+        turnstileToken: turnstileTokenForRequest(isHuman, turnstileToken),
       });
       setIsSuccess(true);
     } catch (error) {
@@ -90,17 +96,21 @@ const JoinWebinarPrompt = ({
                   className="w-[200px]"
                 />
                 <Button
-                  isEnabled={!isLoading && !!turnstileToken}
+                  isEnabled={
+                    !isLoading && isTurnstileSubmitEnabled(isHuman, turnstileToken)
+                  }
                   onClick={sendInvite}
                   className="w-fit"
                 >
                   Join webinar
                 </Button>
               </div>
-              <TurnstileWidget
-                action="webinar_signup"
-                onVerify={setTurnstileToken}
-              />
+              {!isHuman && (
+                <TurnstileWidget
+                  action="webinar_signup"
+                  onVerify={setTurnstileToken}
+                />
+              )}
               {isSuccess && (
                 <p className="text-green-500 text-sm">
                   Webinar invite sent! Please check your inbox.

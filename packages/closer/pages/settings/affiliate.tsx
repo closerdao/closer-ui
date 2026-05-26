@@ -14,7 +14,6 @@ import { Link } from 'lucide-react';
 import {
   AffiliateConfig,
   PageNotFound,
-  api,
   getCachedConfig,
   usePlatform,
 } from 'closer';
@@ -25,6 +24,7 @@ import { useAuth } from '../../contexts/auth';
 import { User } from '../../contexts/auth/types';
 import { calculateAffiliateRevenue } from '../../utils/affiliate.utils';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import { logMetric } from '../../utils/metrics';
 import { getStartAndEndDate } from '../../utils/performance.utils';
 
 const AffiliatePage = () => {
@@ -232,14 +232,12 @@ const AffiliatePage = () => {
           <LinkBuilderTool
             userId={user?._id || ''}
             onLinkGenerated={() => {
-              // Track link generation
-              api.post('/metric', {
+              void logMetric({
                 event: 'affiliate-link-generated',
-                value: user?._id,
+                category: 'affiliate',
+                value: 'link-generated',
                 number: 1,
-                point: 1,
-                category: 'engagement',
-              }).catch(error => console.error('Error tracking link generation:', error));
+              });
             }}
           />
           <div className="flex flex-col gap-4">

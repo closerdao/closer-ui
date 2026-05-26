@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import Wallet from '../../components/Wallet';
 import {
@@ -115,6 +115,20 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
 
   const [isMetamaskLoading, setIsMetamaskLoading] = useState(false);
 
+  const tokenCheckoutViewMetricRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!router.isReady || !saleIdTrimmed || saleLoading || !sale) return;
+    if (tokenCheckoutViewMetricRef.current === saleIdTrimmed) return;
+    tokenCheckoutViewMetricRef.current = saleIdTrimmed;
+    const qty = tokensForCheckout ? parseInt(tokensForCheckout, 10) : 0;
+    const pt = Number.isFinite(qty) ? qty : 0;
+    void logMetric({
+      event: 'token-checkout-viewed',
+      category: 'token',
+      value: 'checkout-view', point: pt,
+    });
+  }, [router.isReady, saleIdTrimmed, saleLoading, sale, tokensForCheckout]);
+
   const formattedUnitPrice = useMemo(() => {
     const qty = tokensForCheckout ? parseInt(tokensForCheckout, 10) : 0;
     const n = qty > 0 ? total / qty : 0;
@@ -208,15 +222,25 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     const purchaseQty = parseInt(tokensForCheckout, 10);
     const tokenPoint = Number.isFinite(purchaseQty) ? purchaseQty : 0;
 
+    void logMetric({
+      event: 'token-approval-started',
+      category: 'token',
+      value: 'approval-started', point: tokenPoint,
+    });
+
     const { success, errorCode, userMessage } = await approveCeur(total);
     if (success) {
       setIsApproved(true);
-      void logMetric({ event: 'approve', value: 'token-sale', point: tokenPoint });
+      void logMetric({
+        event: 'approve',
+        category: 'token',
+        value: 'approve', point: tokenPoint,
+      });
     } else {
       void logMetric({
         event: 'approve-error',
-        value: 'token-sale',
-        point: tokenPoint,
+        category: 'token',
+        value: 'approval-error', point: tokenPoint,
       });
       if (userMessage) {
         setWeb3Error(
@@ -242,11 +266,17 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     const purchaseQty = parseInt(tokensForCheckout, 10);
     const tokenPoint = Number.isFinite(purchaseQty) ? purchaseQty : 0;
 
+    void logMetric({
+      event: 'token-crypto-payment-started',
+      category: 'token',
+      value: 'payment-started', point: tokenPoint,
+    });
+
     if (!normalizedSaleId) {
       void logMetric({
         event: 'purchase-error',
-        value: 'token-sale',
-        point: tokenPoint,
+        category: 'token',
+        value: 'error', point: tokenPoint,
       });
       setApiError(t('donate_create_invalid_response'));
       setIsMetamaskLoading(false);
@@ -265,8 +295,8 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
       } catch (error: unknown) {
         void logMetric({
           event: 'purchase-validation-error',
-          value: 'token-sale',
-          point: tokenPoint,
+          category: 'token',
+          value: 'validation-error', point: tokenPoint,
         });
         setPendingValidationTxHash(txHash || null);
         setApiError(
@@ -279,17 +309,17 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
       }
 
       await waitForTokenSalePaidStatus(normalizedSaleId);
-      await logMetric({
+      void logMetric({
         event: 'purchase-complete-crypto',
-        value: 'token-sale',
-        point: tokenPoint,
+        category: 'token',
+        value: 'sale', point: tokenPoint,
       });
       router.push(`/sale/${encodeURIComponent(normalizedSaleId)}`);
     } else {
       void logMetric({
         event: 'purchase-error',
-        value: 'token-sale',
-        point: tokenPoint,
+        category: 'token',
+        value: 'error', point: tokenPoint,
       });
       if (errorCode === 'MAX_SUPPLY') {
         setWeb3Error(t('token_sale_buy_error_max_supply'));
@@ -324,8 +354,8 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     if (!normalizedSaleId || !pendingValidationTxHash) {
       void logMetric({
         event: 'purchase-validation-error',
-        value: 'token-sale',
-        point: retryTokenPoint,
+        category: 'token',
+        value: 'validation-error', point: retryTokenPoint,
       });
       setApiError(t('donate_create_invalid_response'));
       setIsMetamaskLoading(false);
@@ -338,17 +368,17 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
       });
       setPendingValidationTxHash(null);
       await waitForTokenSalePaidStatus(normalizedSaleId);
-      await logMetric({
+      void logMetric({
         event: 'purchase-complete-crypto',
-        value: 'token-sale',
-        point: retryTokenPoint,
+        category: 'token',
+        value: 'sale', point: retryTokenPoint,
       });
       router.push(`/sale/${encodeURIComponent(normalizedSaleId)}`);
     } catch (error: unknown) {
       void logMetric({
         event: 'purchase-validation-error',
-        value: 'token-sale',
-        point: retryTokenPoint,
+        category: 'token',
+        value: 'validation-error', point: retryTokenPoint,
       });
       setApiError(
         t('token_sale_validation_failed_error', {

@@ -5,11 +5,18 @@ export function buildClearParticipantStepPatch(
   stepNumber: number,
 ): Record<string, unknown> {
   const filteredHistory = (application.stepHistory || []).filter(
-    (entry) =>
-      !(
-        entry?.event === 'participant_submitted' &&
-        Number(entry?.step) === stepNumber
-      ),
+    (entry) => {
+      if (Number(entry?.step) !== stepNumber) {
+        return true;
+      }
+      if (entry?.event === 'participant_submitted') {
+        return false;
+      }
+      if (stepNumber === 4 && entry?.event === 'team_approved_step') {
+        return false;
+      }
+      return true;
+    },
   );
 
   const patch: Record<string, unknown> = {
@@ -30,6 +37,8 @@ export function buildClearParticipantStepPatch(
       break;
     case 5:
       patch.tier = null;
+      patch.financingDocumentsAcknowledged = null;
+      patch.financingDocumentsAcknowledgedAt = null;
       break;
     case 7:
       patch.citizenshipAttestation = {};

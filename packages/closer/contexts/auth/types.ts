@@ -146,7 +146,10 @@ export type AuthenticationContext = {
   isLoading: boolean;
   logout: () => void;
   error: string | null;
-  signup: (data: unknown, options?: { turnstileToken?: string | null }) => Promise<{ result: string | null }>;
+  signup: (
+    data: unknown,
+    options?: { turnstileToken?: string | null },
+  ) => Promise<{ result: 'signup'; userId: string } | { result: null }>;
   completeRegistration: (
     signup_token: string,
     data: unknown,

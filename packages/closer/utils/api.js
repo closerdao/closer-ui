@@ -8,6 +8,11 @@ import {
   setTokens,
 } from './authStorage';
 import { invalidateConfigCache } from './configCache';
+import {
+  applyInteractionIsHumanFromResponse,
+  ensureInteractionSession,
+  getStoredInteractionSessionKey,
+} from './interactionSession';
 
 export const formatSearch = (where) =>
   encodeURIComponent(JSON.stringify(where));
@@ -207,8 +212,14 @@ export async function refreshTokensProactively() {
   }
 }
 
-api.interceptors.request.use((config) => {
+api.interceptors.request.use(async (config) => {
   if (isRefreshRequest(config)) return config;
+
+  if (typeof window !== 'undefined') {
+    if (!getStoredInteractionSessionKey()) {
+      await ensureInteractionSession();
+    }
+  }
 
   // Protect against Axios 1.x default paramsSerializer serializing nested JSON
   // objects into bracket notation (e.g. where[date][$gte]=...).
@@ -224,21 +235,69 @@ api.interceptors.request.use((config) => {
     };
   }
 
+  const headers = config.headers ?? {};
   const token = getAccessToken();
   if (token) {
-    const headers = config.headers ?? {};
     if (typeof headers.set === 'function') {
       headers.set('Authorization', `Bearer ${token}`);
     } else {
       headers.Authorization = `Bearer ${token}`;
     }
-    config.headers = headers;
   }
+  const sessionKey = getStoredInteractionSessionKey();
+  if (sessionKey) {
+    if (typeof headers.set === 'function') {
+      headers.set('X-Interaction-Session', sessionKey);
+    } else {
+      headers['X-Interaction-Session'] = sessionKey;
+    }
+  }
+  config.headers = headers;
   return config;
 });
 
+const INTERACTION_HUMAN_RESPONSE_PATHS = [
+  '/webinar',
+  '/signup',
+  '/login',
+  '/subscribe',
+];
+
+function normalizeRequestPathname(url) {
+  if (typeof url !== 'string' || !url.length) return null;
+  let pathname;
+  try {
+    if (/^https?:\/\//i.test(url)) {
+      pathname = new URL(url).pathname;
+    } else {
+      const withoutQuery = url.split('?')[0];
+      pathname = withoutQuery.startsWith('/')
+        ? withoutQuery
+        : `/${withoutQuery}`;
+    }
+  } catch {
+    return null;
+  }
+  if (pathname.length > 1 && pathname.endsWith('/')) {
+    return pathname.slice(0, -1);
+  }
+  return pathname;
+}
+
+function shouldApplyInteractionIsHuman(url) {
+  const pathname = normalizeRequestPathname(url);
+  if (!pathname) return false;
+  return INTERACTION_HUMAN_RESPONSE_PATHS.includes(pathname);
+}
+
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const url = response?.config?.url ?? '';
+    if (shouldApplyInteractionIsHuman(url)) {
+      applyInteractionIsHumanFromResponse(response?.data);
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error?.config;
     if (

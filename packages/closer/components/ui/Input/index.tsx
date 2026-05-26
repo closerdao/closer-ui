@@ -32,10 +32,11 @@ const inputStyles = cva('new-input px-4 py-3 rounded-lg', {
 interface InputProps extends VariantProps<typeof inputStyles> {
   id?: string;
   label?: string;
+  ariaLabel?: string;
   value?: string;
   onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
-  type?: 'text' | 'password' | 'time' | 'number';
+  type?: 'text' | 'password' | 'time' | 'number' | 'date';
   isRequired?: boolean;
   placeholder?: string;
   successMessage?: string;
@@ -50,12 +51,15 @@ interface InputProps extends VariantProps<typeof inputStyles> {
   additionalInfo?: string;
   maxLength?: number;
   customValidationError?: string;
+  min?: number | string;
+  max?: number | string;
 }
 
 const Input = React.memo(
   ({
     id,
     label,
+    ariaLabel,
     value,
     onChange,
     type = 'text',
@@ -74,6 +78,8 @@ const Input = React.memo(
     additionalInfo,
     maxLength,
     customValidationError,
+    min,
+    max,
   }: InputProps) => {
     const t = useTranslations();
 
@@ -191,6 +197,8 @@ const Input = React.memo(
         <div>
           <input
             maxLength={maxLength}
+            min={min}
+            max={max}
             id={id}
             type={type}
             value={isInstantSave ? localValue : value}
@@ -204,7 +212,7 @@ const Input = React.memo(
             `}
             data-testid={dataTestId}
             autoFocus={autoFocus}
-            aria-label={label}
+            aria-label={ariaLabel ?? label}
             aria-required={isRequired}
             aria-invalid={!isValidValue(localValue)}
             ref={inputRef}

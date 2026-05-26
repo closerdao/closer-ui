@@ -41,6 +41,23 @@ const NationalityPage = ({ generalConfig }: Props) => {
   const { isAuthenticated, isLoading, refetchUser, user } = useAuth();
 
   const didPrefillFromKyc = useRef(false);
+  const kycPageMetricLoggedRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    const sid = String(saleId ?? '').trim();
+    const typeKey = Array.isArray(tokenSaleType)
+      ? tokenSaleType[0]
+      : String(tokenSaleType ?? '');
+    const dedupeKey = `${sid}:${typeKey}`;
+    if (!sid || kycPageMetricLoggedRef.current === dedupeKey) return;
+    kycPageMetricLoggedRef.current = dedupeKey;
+    void logMetric({
+      event: 'token-kyc-page-viewed',
+      category: 'token',
+      value: 'kyc-view',
+    });
+  }, [router.isReady, saleId, tokenSaleType]);
 
   useEffect(() => {
     if (didPrefillFromKyc.current || !user) return;
@@ -136,22 +153,26 @@ const NationalityPage = ({ generalConfig }: Props) => {
       const point = sid ? await fetchTokenSaleQuantityForMetric(sid) : 0;
 
       if (tokenSaleType === 'fiat') {
-        await logMetric({ event: 'kyc-submit-fiat', value: 'token-sale', point });
+        void logMetric({
+          event: 'kyc-submit-fiat',
+          category: 'token',
+          value: 'kyc-fiat', point: point,
+        });
         router.push(
           `/token/bank-transfer?saleId=${encodeURIComponent(sid)}`,
         );
       } else if (tokenSaleType === 'crypto') {
-        await logMetric({
+        void logMetric({
           event: 'kyc-submit-crypto',
-          value: 'token-sale',
-          point,
+          category: 'token',
+          value: 'kyc-crypto', point: point,
         });
         router.push(`/token/checkout?saleId=${encodeURIComponent(sid)}`);
       } else if (sid) {
-        await logMetric({
+        void logMetric({
           event: 'kyc-submit-checkout',
-          value: 'token-sale',
-          point,
+          category: 'token',
+          value: 'kyc-checkout', point: point,
         });
         router.push(`/token/checkout?saleId=${encodeURIComponent(sid)}`);
       }
@@ -160,8 +181,8 @@ const NationalityPage = ({ generalConfig }: Props) => {
       const fallbackPoint = sid ? await fetchTokenSaleQuantityForMetric(sid) : 0;
       void logMetric({
         event: 'kyc-submit-error',
-        value: 'token-sale',
-        point: fallbackPoint,
+        category: 'token',
+        value: 'error', point: fallbackPoint,
       });
       setErrorMessage(parseMessageFromError(error));
     } finally {

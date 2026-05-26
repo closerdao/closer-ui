@@ -2,6 +2,7 @@ import { BigNumber, utils as ethersUtils } from 'ethers';
 
 import {
   STAY_TERMINAL_STATUSES,
+  accommodationTokenTotalFromPriceLock,
   buildStayTokenStakePlan,
   canApplyTokenOrCreditsToStay,
   canAugmentTokenOrCreditsPayment,
@@ -215,6 +216,20 @@ describe('compute*Owed', () => {
     expect(computeFiatOwed(stay)).toBe(0);
     expect(computeCreditsOwed(stay)).toBe(0);
     expect(computeTokensOwed(stay)).toBe(0);
+  });
+});
+
+describe('accommodationTokenTotalFromPriceLock', () => {
+  const pl = (daily: number) => ({
+    dailyRentalToken: { val: daily, cur: 'TDF' },
+  });
+
+  it('multiplies by adults for shared listings', () => {
+    expect(accommodationTokenTotalFromPriceLock(pl(1), 6, 2, false)).toBe(12);
+  });
+
+  it('does not multiply by adults for private listings', () => {
+    expect(accommodationTokenTotalFromPriceLock(pl(1), 6, 2, true)).toBe(6);
   });
 });
 
@@ -577,6 +592,7 @@ describe('inferPaymentChoiceFromStay', () => {
 
   it('returns full-credits when credits cover full token cost', () => {
     const stay = baseStay({
+      adults: 1,
       duration: 4,
       creditsTarget: { val: 80, cur: 'credits' },
       priceLock: {
@@ -605,6 +621,7 @@ describe('inferPaymentChoiceFromStay', () => {
 
   it('returns partial-credits when credits are below full cost', () => {
     const stay = baseStay({
+      adults: 1,
       duration: 4,
       creditsTarget: { val: 10, cur: 'credits' },
       priceLock: {
@@ -633,6 +650,7 @@ describe('inferPaymentChoiceFromStay', () => {
 
   it('returns full-tokens when tokens cover full token cost', () => {
     const stay = baseStay({
+      adults: 1,
       duration: 4,
       tokensTarget: { val: 80, cur: 'TDF' },
       priceLock: {
@@ -661,6 +679,7 @@ describe('inferPaymentChoiceFromStay', () => {
 
   it('returns partial-tokens when tokens are below full cost', () => {
     const stay = baseStay({
+      adults: 1,
       duration: 4,
       tokensTarget: { val: 5, cur: 'TDF' },
       priceLock: {
@@ -694,6 +713,35 @@ describe('inferPaymentChoiceFromStay', () => {
       tokensTarget: { val: 5, cur: 'TDF' },
     });
     expect(inferPaymentChoiceFromStay(stay)).toBe('partial-tokens');
+  });
+
+  it('returns full-tokens when guest-weighted accommodation matches tokens target', () => {
+    const stay = baseStay({
+      adults: 2,
+      duration: 6,
+      tokensTarget: { val: 12, cur: 'TDF' },
+      priceLock: {
+        total: money(0),
+        subtotal: money(0),
+        vat: money(0),
+        platformFee: money(0),
+        affiliateFee: money(0),
+        dailyRentalFiat: money(50),
+        dailyRentalToken: { val: 1, cur: 'TDF' },
+        appliedCredits: { val: 0, cur: 'credits' },
+        appliedTokens: { val: 12, cur: 'TDF' },
+        currency: 'EUR',
+        lockedAt: '2026-05-01',
+        lines: {
+          accommodation: money(0),
+          accommodationGross: money(200),
+          food: money(0),
+          utility: money(0),
+          event: money(0),
+        },
+      },
+    });
+    expect(inferPaymentChoiceFromStay(stay)).toBe('full-tokens');
   });
 
   it('respects an explicit totalAccommodationTokens override', () => {

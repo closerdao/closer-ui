@@ -10,6 +10,8 @@ export type EngagementOpportunityStatus =
 
 export type EngagementOpportunityPriority = 'high' | 'medium' | 'low' | string;
 
+export type EngagementAiProvider = 'deterministic' | 'anthropic' | string;
+
 export interface EngagementHostMatchReason {
   hostId?: string;
   hostEmail?: string;
@@ -39,7 +41,8 @@ export interface EngagementHostBriefLegacy {
 }
 
 export interface EngagementAiMeta {
-  provider?: string;
+  phase?: string;
+  provider?: EngagementAiProvider;
   model?: string;
   subjectOptions?: string[];
   recommendedTone?: string;
@@ -93,13 +96,38 @@ export interface EngagementOpportunity {
   outreachDraft?: EngagementOutreachDraft;
   subject?: string;
   body?: string;
+  ctaLink?: string;
+  ctaText?: string;
   hostBrief?: string | EngagementHostBriefLegacy;
   aiMeta?: EngagementAiMeta;
   cooldown?: Record<string, unknown>;
   lastEvaluatedAt?: string;
   nextEligibleAt?: string;
+  enrichmentCompletedAt?: string;
   hostNotifiedAt?: string;
   approvedAt?: string;
   contactedAt?: string;
   engagementHistory?: EngagementHistoryEntry[];
+}
+
+export interface EngagementSampleEmailResults {
+  subject?: string;
+  body?: string;
+  ctaLink?: string;
+  ctaText?: string;
+  hostBrief?: string;
+  html?: string;
+  aiMeta?: EngagementAiMeta;
+}
+
+export interface EngagementSampleEmailResponse {
+  results?: EngagementSampleEmailResults;
+}
+
+export interface EngagementDraftFields {
+  subject: string;
+  body: string;
+  ctaLink: string;
+  ctaText: string;
+  hostBrief: string;
 }

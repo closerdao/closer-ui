@@ -13,11 +13,12 @@ import {
   CardTitle,
 } from '../../components/ui/shadcn-card';
 
-import { PageNotFound, api, useAuth, usePlatform } from 'closer';
+import { PageNotFound, useAuth, usePlatform } from 'closer';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { parseMessageFromError } from '../../utils/common';
+import { logMetric } from '../../utils/metrics';
 import { reportIssue } from '../../utils/reporting.utils';
 
 const AffiliateLandingPage = () => {
@@ -30,23 +31,13 @@ const AffiliateLandingPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // Track affiliate page view
   useEffect(() => {
-    const trackAffiliatePageView = async () => {
-      try {
-        await api.post('/metric', {
-          event: 'affiliate-page-view',
-          value: user?._id || 'anonymous',
-          number: 1,
-          point: 1,
-          category: 'engagement',
-        });
-      } catch (error) {
-        console.error('Error tracking affiliate page view:', error);
-      }
-    };
-
-    trackAffiliatePageView();
+    void logMetric({
+      event: 'affiliate-page-view',
+      category: 'affiliate',
+      value: 'view',
+      number: 1,
+    });
   }, [user?._id]);
 
   const faqs = [
@@ -99,22 +90,12 @@ const AffiliateLandingPage = () => {
 
       await refetchUser();
 
-      // Track affiliate signup
-      try {
-        await api.post('/metric', {
-          event: 'affiliate-signup',
-          value: user?._id,
-          number: 1,
-          point: 1,
-          category: 'engagement',
-        });
-      } catch (error) {
-        console.error('Error tracking affiliate signup:', error);
-        reportIssue(
-          `Error tracking affiliate signup: ${user?._id}`,
-          user?.email,
-        );
-      }
+      void logMetric({
+        event: 'affiliate-signup',
+        category: 'affiliate',
+        value: 'signup',
+        number: 1,
+      });
 
       setSuccess(true);
 
@@ -352,18 +333,13 @@ const AffiliateLandingPage = () => {
             target="_blank"
             className="mx-auto mt-6 px-4 bg-white text-accent   w-fit"
             href="https://drive.google.com/drive/folders/11i6UBGqEyC8aw0ufJybnbjueSpE3s8f-"
-            onClick={async () => {
-              try {
-                await api.post('/metric', {
-                  event: 'affiliate-promo-materials-click',
-                  value: user?._id || 'anonymous',
-                  number: 1,
-                  point: 1,
-                  category: 'engagement',
-                });
-              } catch (error) {
-                console.error('Error tracking promo materials click:', error);
-              }
+            onClick={() => {
+              void logMetric({
+                event: 'affiliate-promo-materials-click',
+                category: 'affiliate',
+                value: 'promo-materials',
+                number: 1,
+              });
             }}
           >
             {t('dashboard_affiliate_promo_materials')}

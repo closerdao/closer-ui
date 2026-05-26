@@ -76,7 +76,11 @@ const CohousingApplicationDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [sharedLeadApplication, setSharedLeadApplication] =
     useState<CohousingApplication | null>(null);
-  const isTeamUser = Boolean(user?.roles?.includes('team'));
+  const isCohousingAdmin = Boolean(
+    user?.roles?.includes('admin') ||
+      user?.roles?.includes('community-curator') ||
+      user?.roles?.includes('team'),
+  );
 
   const load = useCallback(async () => {
     if (!id || typeof id !== 'string') {
@@ -205,9 +209,9 @@ const CohousingApplicationDetailPage = () => {
           <title>{t('cohousing_app_page_title')}</title>
         </Head>
         <main className="main-content w-full max-w-2xl mx-auto px-4 py-16 text-center text-gray-700">
-          {isTeamUser && typeof id === 'string' && (
+          {isCohousingAdmin && typeof id === 'string' && (
             <p className="mb-4">
-              <Link href={`/cohousing/application/${id}/admin`} className="text-accent underline font-medium">
+              <Link href={`/dashboard/cohousing/${id}`} className="text-accent underline font-medium">
                 {t('cohousing_app_admin_link')}
               </Link>
             </p>
@@ -236,9 +240,9 @@ const CohousingApplicationDetailPage = () => {
           <title>{t('cohousing_app_page_title')}</title>
         </Head>
         <main className="main-content w-full max-w-lg mx-auto px-4 py-16 text-center text-gray-700">
-          {typeof id === 'string' && isTeamUser && (
+          {typeof id === 'string' && isCohousingAdmin && (
             <p className="mb-4">
-              <Link href={`/cohousing/application/${id}/admin`} className="text-accent underline font-medium">
+              <Link href={`/dashboard/cohousing/${id}`} className="text-accent underline font-medium">
                 {t('cohousing_app_admin_link')}
               </Link>
             </p>
@@ -256,9 +260,9 @@ const CohousingApplicationDetailPage = () => {
           <title>{t('cohousing_app_page_title')}</title>
         </Head>
         <main className="main-content w-full max-w-2xl mx-auto px-4 py-16 text-center">
-          {typeof id === 'string' && isTeamUser && (
+          {isCohousingAdmin && typeof id === 'string' && (
             <p className="mb-4">
-              <Link href={`/cohousing/application/${id}/admin`} className="text-accent underline font-medium">
+              <Link href={`/dashboard/cohousing/${id}`} className="text-accent underline font-medium">
                 {t('cohousing_app_admin_link')}
               </Link>
             </p>
@@ -303,9 +307,9 @@ const CohousingApplicationDetailPage = () => {
         <title>{t('cohousing_app_page_title')}</title>
       </Head>
       <div className="main-content w-full max-w-4xl mx-auto px-4 sm:px-6 py-8">
-        {typeof id === 'string' && isTeamUser && (
+        {typeof id === 'string' && isCohousingAdmin && (
           <div className="mb-5">
-            <Link href={`/cohousing/application/${id}/admin`} className="text-accent underline font-medium">
+            <Link href={`/dashboard/cohousing/${id}`} className="text-accent underline font-medium">
               {t('cohousing_app_admin_link')}
             </Link>
           </div>

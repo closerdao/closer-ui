@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import TokenBuyWidget from '../../components/TokenBuyWidget';
 import { BackButton, Button, ErrorMessage, Heading, ProgressBar } from '../../components/ui';
@@ -58,6 +58,17 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
   const [createSaleError, setCreateSaleError] = useState<string | null>(null);
   const [isCreateSaleLoading, setIsCreateSaleLoading] = useState(false);
 
+  const tokenSaleEntryMetricLoggedRef = useRef(false);
+  useEffect(() => {
+    if (tokenSaleEntryMetricLoggedRef.current) return;
+    tokenSaleEntryMetricLoggedRef.current = true;
+    void logMetric({
+      event: 'token-sale-flow-started',
+      category: 'token',
+      value: 'flow-entry',
+    });
+  }, []);
+
   useEffect(() => {
     if (!isLoading && !user) {
       router.push(`/signup?back=${encodeURIComponent(router.asPath)}`);
@@ -68,7 +79,8 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
     if (tokenSaleType === 'finance') {
       void logMetric({
         event: 'continue-before-you-begin-finance',
-        value: 'token-sale',
+        category: 'token',
+        value: 'finance',
       });
       router.push('/token/finance');
       return;
@@ -98,8 +110,8 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
       if (!saleId) {
         void logMetric({
           event: 'sale-init-error',
-          value: 'token-sale',
-          point: tokensToBuy,
+          category: 'token',
+          value: 'sale-init', point: tokensToBuy,
         });
         setCreateSaleError(t('donate_create_invalid_response'));
         return;
@@ -109,16 +121,16 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
       if (status === 401) {
         void logMetric({
           event: 'sale-init-error',
-          value: 'token-sale',
-          point: tokensToBuy,
+          category: 'token',
+          value: 'auth', point: tokensToBuy,
         });
         router.push(`/signup?back=${encodeURIComponent(router.asPath)}`);
         return;
       }
       void logMetric({
         event: 'sale-init-error',
-        value: 'token-sale',
-        point: tokensToBuy,
+        category: 'token',
+        value: 'sale-init', point: tokensToBuy,
       });
       setCreateSaleError(parseMessageFromError(error));
       return;
@@ -129,8 +141,8 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
     if (tokenSaleType === 'fiat') {
       void logMetric({
         event: 'continue-before-you-begin-fiat',
-        value: 'token-sale',
-        point: tokensToBuy,
+        category: 'token',
+        value: 'fiat', point: tokensToBuy,
       });
       router.push(
         `/token/nationality?tokenSaleType=fiat&saleId=${encodeURIComponent(saleId)}`,
@@ -138,8 +150,8 @@ const TokenSaleBeforeYouBeginPage = ({ generalConfig }: Props) => {
     } else if (tokenSaleType === 'crypto') {
       void logMetric({
         event: 'continue-before-you-begin-crypto',
-        value: 'token-sale',
-        point: tokensToBuy,
+        category: 'token',
+        value: 'crypto', point: tokensToBuy,
       });
       router.push(
         `/token/checklist-crypto?saleId=${encodeURIComponent(saleId)}`,

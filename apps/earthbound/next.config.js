@@ -40,12 +40,8 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        hostname: 'cdn.oasa.co',
-        pathname: '/**',
-      },
-      {
-        hostname: 'oasa.fra1.digitaloceanspaces.com',
-        pathname: '/**',
+        protocol: 'https',
+        hostname: '*',
       },
     ],
   },

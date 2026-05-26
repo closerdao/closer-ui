@@ -1,10 +1,17 @@
-import Image from 'next/image';
-
 import React, { useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
+import { useTranslations } from 'next-intl';
 
 import YoutubeEmbed from '../YoutubeEmbed';
 import { Heading, LinkButton } from '../ui';
+import { resolveBlockHtml, resolveBlockText } from '../../utils/blockI18n';
+import { isValidNextImageSrc } from '../../utils/nextImageSrc';
+import SafeCustomPageImage from './SafeCustomPageImage';
+import {
+  getSectionBackgroundClass,
+  hasSectionBackground,
+} from './sectionBackground';
+import type { SectionBackground } from '../../types/page';
 
 const CustomHero: React.FC<{
   settings: {
@@ -14,35 +21,89 @@ const CustomHero: React.FC<{
       | 'top-left'
       | 'top-right'
       | 'bottom-left'
-      | 'bottom-right';
+      | 'bottom-right'
+      | 'center';
     isInverted?: boolean;
     isCompact?: boolean;
   };
   content: {
     title: string;
     body: string;
-    imageUrl: string;
+    imageUrl?: string;
     videoEmbedId?: string;
     mobileVideoUrl?: string;
-    cta: {
-      text: string;
-      url: string;
+    cta?: {
+      text?: string;
+      url?: string;
     };
   };
-}> = ({ content, settings }) => {
-  const getTextStyle = () => {
-    switch (settings.alignText) {
+  embedded?: boolean;
+  background?: SectionBackground;
+}> = ({ content, settings, embedded, background }) => {
+  const t = useTranslations();
+  const getAlignment = (
+    value: string,
+  ): { outer: string; inner: string } => {
+    switch (value) {
       case 'top-left':
-        return 'pt-[calc(5vh)] md:pt-[calc(8vh)]';
+        return {
+          outer: 'items-start justify-start',
+          inner: 'items-start text-left',
+        };
+      case 'top-right':
+        return {
+          outer: 'items-start justify-end',
+          inner: 'items-end text-right',
+        };
+      case 'bottom-right':
+        return {
+          outer: 'items-end justify-end',
+          inner: 'items-end text-right',
+        };
+      case 'left':
+        return {
+          outer: 'items-center justify-start',
+          inner: 'items-start text-left',
+        };
+      case 'right':
+        return {
+          outer: 'items-center justify-end',
+          inner: 'items-end text-right',
+        };
+      case 'center':
+        return {
+          outer: 'items-center justify-center',
+          inner: 'items-center text-center',
+        };
       case 'bottom-left':
-        return 'absolute bottom-[calc(5vh)] md:bottom-[calc(20vh)] w-full sm:w-[300px]';
       default:
-        return '';
+        return {
+          outer: 'items-end justify-start',
+          inner: 'items-start text-left',
+        };
     }
   };
 
-  const textStyle = getTextStyle();
+  const { outer: outerAlign, inner: innerAlign } = getAlignment(
+    settings.alignText,
+  );
   const [isClientMobile, setIsClientMobile] = useState(false);
+
+  const imageUrl = content?.imageUrl?.trim() ?? '';
+  const hasVideoEmbed = Boolean(content?.videoEmbedId);
+  const hasMobileVideo = Boolean(content?.mobileVideoUrl);
+  const hasImage = isValidNextImageSrc(imageUrl);
+  const hasMedia = hasVideoEmbed || hasImage || (isClientMobile && hasMobileVideo);
+
+  const titleText = resolveBlockText(content.title, t);
+  const bodyHtml = resolveBlockHtml(content.body, t);
+  const ctaTextRaw = content.cta?.text?.trim() ?? '';
+  const ctaText = resolveBlockText(ctaTextRaw || undefined, t);
+  const ctaUrl = content.cta?.url ?? '';
+  const showCta = ctaText.length > 0;
+  const sectionBgClass = getSectionBackgroundClass(background);
+  const useSectionBackground = hasSectionBackground(background);
+  const useLightText = Boolean(settings?.isInverted || background === 'dark');
 
   const renderHeaderMedia = () => {
     if (isClientMobile && content?.mobileVideoUrl) {
@@ -68,57 +129,102 @@ const CustomHero: React.FC<{
       );
     }
 
+    if (hasImage) {
+      return (
+        <SafeCustomPageImage
+          src={imageUrl}
+          alt={titleText}
+          className="h-full w-full object-cover"
+          fill
+        />
+      );
+    }
+
     return (
-      <Image
-        src={content.imageUrl}
-        alt={content.title}
-        className="h-full w-full object-cover"
-        fill
+      <div
+        className={`h-full w-full ${
+          settings?.isInverted
+            ? 'bg-gradient-to-br from-complimentary to-complimentary-medium'
+            : 'bg-gradient-to-br from-accent-light to-accent-alt-light'
+        }`}
+        aria-hidden
       />
     );
+  };
+
+  const renderBackgroundLayer = () => {
+    if (hasVideoEmbed || hasImage || (isClientMobile && hasMobileVideo)) {
+      return <div className="absolute inset-0">{renderHeaderMedia()}</div>;
+    }
+    if (useSectionBackground) {
+      return null;
+    }
+    return <div className="absolute inset-0">{renderHeaderMedia()}</div>;
   };
 
   useEffect(() => {
     setIsClientMobile(isMobile);
   }, []);
 
-  return (
-    <section className="relative top-[-32px] h-[calc(100vh-75px)] w-[100vw] left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] overflow-hidden">
-      <div className="absolute inset-0 ">{renderHeaderMedia()}</div>
+  const sectionClass = hasMedia
+    ? embedded
+      ? 'relative w-full overflow-hidden aspect-[16/9] min-h-[220px] max-h-[480px]'
+      : 'relative h-[calc(100vh-75px)] w-[100vw] left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] overflow-hidden'
+    : embedded
+      ? 'relative w-full min-h-[280px] md:min-h-[320px] overflow-hidden'
+      : 'relative w-full min-h-[50vh] md:min-h-[60vh] overflow-hidden';
 
-      <div className="relative h-full sm:w-full flex px-4 w-[280px] sm:px-6 lg:px-8 max-w-6xl mx-auto">
-        <div className={`max-w-5xl flex flex-col gap-2 ${textStyle}`}>
+  const innerShellClass = hasMedia
+    ? `relative z-10 h-full w-full flex max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 ${outerAlign}`
+    : embedded
+      ? `relative z-10 flex min-h-[280px] md:min-h-[320px] w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 ${outerAlign}`
+      : `relative z-10 flex min-h-[50vh] md:min-h-[60vh] w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 ${outerAlign}`;
+
+  return (
+    <section className={`${sectionClass} ${sectionBgClass}`.trim()}>
+      {renderBackgroundLayer()}
+      {hasImage ? (
+        <div
+          className={`absolute inset-0 z-[1] ${
+            settings?.isInverted ? 'bg-black/40' : 'bg-white/40'
+          }`}
+          aria-hidden
+        />
+      ) : null}
+
+      <div className={innerShellClass}>
+        <div className={`max-w-2xl flex flex-col gap-2 ${innerAlign}`}>
           <Heading
             level={1}
             className={`${
-              settings?.isInverted ? 'text-dominant' : 'text-black'
+              useLightText ? 'text-dominant' : 'text-black'
             } ${
               settings?.isCompact ? 'text-xl sm:text-2xl max-w-xl' : 'text-4xl'
             }`}
           >
-            {content.title}
+            {titleText}
           </Heading>
 
           <div
             className={`${
               settings?.isCompact ? 'text-sm sm:text-lg max-w-xl' : 'text-2xl'
             } rich-text ${
-              settings?.isInverted ? 'text-accent-light' : 'text-black'
+              useLightText ? 'text-accent-light' : 'text-black'
             }`}
-            dangerouslySetInnerHTML={{ __html: content.body }}
+            dangerouslySetInnerHTML={{ __html: bodyHtml }}
           />
 
-          {content.cta && (
+          {showCta && (
             <div className="mt-4">
               <LinkButton
-                href={content.cta.url}
+                href={ctaUrl}
                 className={`${
-                  settings?.isInverted
+                  useLightText
                     ? 'text-dominant border-accent-alt bg-accent-alt'
                     : ''
                 } w-fit px-5`}
               >
-                {content.cta.text}
+                {ctaText}
               </LinkButton>
             </div>
           )}

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import {
@@ -46,12 +46,20 @@ import api from '../../../utils/api';
 import {
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
+  bookingGuestNightsMetricPoint,
   getBookingPaymentCheckoutPath,
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { logMetricIfAuthenticated } from '../../../utils/metrics';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import {
+  buildStayCreateListingHref,
+  decodeBookingFlowBackParam,
+  isStayMongoId,
+  resolveBookingFlowBackUrl,
+} from '../../../utils/stayRouting.helpers';
+import {
+  accommodationTokenTotalFromPriceLock,
   computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
@@ -100,6 +108,11 @@ const Summary = ({
     : null;
   const event = eventProp ?? eventFromStore ?? null;
 
+  const bookingMetricFields = useMemo(
+    () => linkedMetricFields('Booking', booking?._id),
+    [booking?._id],
+  );
+
   useEffect(() => {
     if (booking?.listing) {
       void platform.listing.getOne(booking.listing);
@@ -128,6 +141,22 @@ const Summary = ({
   const { isAuthenticated, user } = useAuth();
 
   useRedirectPaidBookingToDetail(booking);
+
+  const summaryViewMetricLoggedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!booking?._id) return;
+    const idKey = String(booking._id);
+    if (summaryViewMetricLoggedRef.current === idKey) return;
+    summaryViewMetricLoggedRef.current = idKey;
+    const pt =
+      bookingGuestNightsMetricPoint(booking?.duration, booking?.adults) || 1;
+    void logMetric({
+      event: 'booking-summary-view',
+      category: 'booking',
+      value: 'view', point: pt,
+      ...bookingMetricFields,
+    });
+  }, [booking?._id, booking?.duration, booking?.adults]);
 
   const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
   const vatRateFromConfig = Number(paymentConfig?.vatRate);
@@ -235,12 +264,13 @@ const Summary = ({
   const handleNext = async () => {
     setLoading(true);
     setHandleNextError(null);
-    const metricPoint = Math.round(Number(duration ?? adults ?? 0)) || 0;
+    const metricPoint = bookingGuestNightsMetricPoint(duration, adults);
     if (booking?.status === 'confirmed') {
-      void logMetricIfAuthenticated(user, {
+      void logMetric({
         event: 'booking-summary-to-checkout',
-        value: 'booking',
-        point: metricPoint,
+        category: 'booking',
+        value: 'checkout', point: metricPoint,
+        ...bookingMetricFields,
       });
       setLoading(false);
       return router.push(afterSummaryCheckoutPath);
@@ -250,25 +280,28 @@ const Summary = ({
       const status = res.data.results.status;
 
       if (status === 'confirmed') {
-        void logMetricIfAuthenticated(user, {
+        void logMetric({
           event: 'booking-summary-complete-success',
-          value: 'booking',
-          point: metricPoint,
+          category: 'booking',
+          value: 'confirmed', point: metricPoint,
+          ...bookingMetricFields,
         });
         router.push(afterSummaryCheckoutPath);
       } else if (status === 'pending') {
-        void logMetricIfAuthenticated(user, {
+        void logMetric({
           event: 'booking-summary-pending-success',
-          value: 'booking',
-          point: metricPoint,
+          category: 'booking',
+          value: 'pending', point: metricPoint,
+          ...bookingMetricFields,
         });
         router.push(`/bookings/${booking?._id}`);
       }
     } catch (err) {
-      void logMetricIfAuthenticated(user, {
+      void logMetric({
         event: 'booking-summary-complete-error',
-        value: 'booking',
-        point: metricPoint,
+        category: 'booking',
+        value: 'error', point: metricPoint,
+        ...bookingMetricFields,
       });
       setHandleNextError(parseMessageFromError(err));
     } finally {
@@ -278,17 +311,49 @@ const Summary = ({
 
   const goBack = () => {
     const dateFormat = 'YYYY-MM-DD';
-    if (router.query.back) {
-      router.push(
-        `/${router.query.back}?start=${dayjs(start).format(
-          dateFormat,
-        )}&end=${dayjs(end).format(
-          dateFormat,
-        )}&adults=${adults}&useTokens=${useTokens}`,
-      );
-    } else {
-      router.push(`/bookings/${booking?._id}/questions?goBack=true`);
+    const overrides = new URLSearchParams();
+    if (start) {
+      overrides.set('start', dayjs(start).format(dateFormat));
     }
+    if (end) {
+      overrides.set('end', dayjs(end).format(dateFormat));
+    }
+    if (adults != null) {
+      overrides.set('adults', String(adults));
+    }
+    overrides.set('useTokens', String(useTokens));
+
+    const back = router.query.back;
+    const decodedBack = decodeBookingFlowBackParam(back);
+    if (decodedBack) {
+      const legacyListingSlugMatch = /^stay\/([^?]+)/.exec(decodedBack);
+      if (
+        legacyListingSlugMatch &&
+        !isStayMongoId(legacyListingSlugMatch[1]) &&
+        listing?._id
+      ) {
+        router.push(
+          buildStayCreateListingHref({
+            listingId: listing._id,
+            startDate: start,
+            endDate: end,
+            totalGuests: adults,
+            kids: children,
+            infants,
+            pets,
+          }),
+        );
+        return;
+      }
+      if (typeof back === 'string' && back) {
+        const url = resolveBookingFlowBackUrl(back, overrides);
+        if (url) {
+          router.push(url);
+          return;
+        }
+      }
+    }
+    router.push(`/bookings/${booking?._id}/questions?goBack=true`);
   };
 
   const handleSendToFriends = async () => {
@@ -301,26 +366,32 @@ const Summary = ({
       });
 
       if (res.status === 200) {
-        void logMetricIfAuthenticated(user, {
+        const p = bookingGuestNightsMetricPoint(duration, adults);
+        void logMetric({
           event: 'booking-friends-send-success',
-          value: 'booking',
-          point: Math.round(Number(duration ?? adults ?? 0)) || 0,
+          category: 'booking',
+          value: 'friends', point: p,
+          ...bookingMetricFields,
         });
         setEmailSuccess(true);
       } else {
-        void logMetricIfAuthenticated(user, {
+        const p = bookingGuestNightsMetricPoint(duration, adults);
+        void logMetric({
           event: 'booking-friends-send-error',
-          value: 'booking',
-          point: Math.round(Number(duration ?? adults ?? 0)) || 0,
+          category: 'booking',
+          value: 'friends', point: p,
+          ...bookingMetricFields,
         });
         setEmailSuccess(false);
         setEmailError(res.data.error);
       }
     } catch (error) {
-      void logMetricIfAuthenticated(user, {
+      const p = bookingGuestNightsMetricPoint(duration, adults);
+      void logMetric({
         event: 'booking-friends-send-error',
-        value: 'booking',
-        point: Math.round(Number(duration ?? adults ?? 0)) || 0,
+        category: 'booking',
+        value: 'friends', point: p,
+        ...bookingMetricFields,
       });
       setEmailSuccess(false);
       setEmailError(parseMessageFromError(error));
@@ -539,7 +610,16 @@ const Summary = ({
                 totalToken={
                   rentalToken || { val: 0, cur: CloserCurrencies.EUR }
                 }
-                creditsPrice={(dailyRentalToken?.val || 0) * (duration || 0)}
+                creditsPrice={
+                  booking?.priceLock
+                    ? accommodationTokenTotalFromPriceLock(
+                        booking.priceLock,
+                        duration || 0,
+                        adults || 1,
+                        listing?.private,
+                      )
+                    : (dailyRentalToken?.val || 0) * (duration || 0)
+                }
                 totalFiat={total || { val: 0, cur: CloserCurrencies.EUR }}
                 eventCost={eventFiat}
                 isFoodIncluded={Boolean(booking?.foodOptionId)}

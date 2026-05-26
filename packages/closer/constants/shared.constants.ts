@@ -314,6 +314,9 @@ export const TOKEN_PURCHASE_TERMS_DOC_URL =
 
 export const DEFAULT_CURRENCY = CloserCurrencies.EUR; // EUR
 export const REFERRAL_ID_LOCAL_STORAGE_KEY = 'referredByUserId';
+export const INTERACTION_SESSION_LOCAL_STORAGE_KEY = 'closerInteractionSessionKey';
+export const INTERACTION_IS_HUMAN_LOCAL_STORAGE_KEY = 'closerInteractionIsHuman';
+export const INTERACTION_IS_HUMAN_EVENT = 'closer-interaction-is-human';
 
 export const BOOKING_STATUS_OPTIONS = [
   { label: 'Any', value: 'any' },

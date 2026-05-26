@@ -25,7 +25,9 @@ import {
   getRefreshToken,
   setTokens,
 } from '../../utils/authStorage';
+import { getStoredInteractionIsHuman } from '../../utils/interactionSession';
 import { parseMessageFromError } from '../../utils/common';
+import { turnstileTokenForRequest } from '../../utils/turnstile.helpers';
 import { AuthenticationContext, User } from './types';
 
 export const AuthContext = createContext<AuthenticationContext | null>(null);
@@ -130,7 +132,10 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
           email,
           isGoogle,
           idToken,
-          turnstileToken,
+          turnstileToken: turnstileTokenForRequest(
+            getStoredInteractionIsHuman(),
+            turnstileToken,
+          ),
         });
         accessToken = data?.access_token ?? data?.token;
         refreshToken = data?.refresh_token ?? data?.refreshToken;
@@ -140,7 +145,10 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         const { data } = await api.post('/login', {
           email,
           password,
-          turnstileToken,
+          turnstileToken: turnstileTokenForRequest(
+            getStoredInteractionIsHuman(),
+            turnstileToken,
+          ),
         });
         accessToken = data?.access_token ?? data?.token;
         refreshToken = data?.refresh_token ?? data?.refreshToken;
@@ -189,7 +197,10 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       setHasSignedUp(false);
       const { data: resData } = await api.post('/signup', {
         ...data,
-        turnstileToken: options?.turnstileToken,
+        turnstileToken: turnstileTokenForRequest(
+          getStoredInteractionIsHuman(),
+          options?.turnstileToken,
+        ),
       });
       const accessToken = resData?.access_token ?? resData?.token;
       const refreshToken = resData?.refresh_token ?? resData?.refreshToken;
@@ -222,7 +233,10 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
               email: data.email,
               screenname: data.screenname || '',
               tags,
-              turnstileToken: options?.turnstileToken,
+              turnstileToken: turnstileTokenForRequest(
+                getStoredInteractionIsHuman(),
+                options?.turnstileToken,
+              ),
             });
           } catch (subscribeErr) {
             console.error(
@@ -232,7 +246,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
           }
         }
 
-        return { result: 'signup' };
+        return { result: 'signup' as const, userId: userData._id as string };
       } else {
         console.log('Invalid response', userData);
         return { result: null };

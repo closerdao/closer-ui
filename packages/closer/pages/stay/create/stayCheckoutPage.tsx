@@ -70,13 +70,13 @@ import {
   getFoodOptionsForBookingContext,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { formatStakeBookingErrorForUi } from '../../../utils/stakeBookingError.helpers';
 import { priceFormat } from '../../../utils/helpers';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
 import { stayRequiresFullCheckoutFlow } from '../../../utils/stayPaymentRouting.helpers';
 import {
   buildStayTokenStakePlan,
-  canApplyTokenOrCreditsToStay,
   canAugmentTokenOrCreditsPayment,
   canChangeStayPaymentMethod,
   canShowStayTokenCreditPaymentOptions,
@@ -518,6 +518,29 @@ const StayCheckoutContent = ({
       router.replace(`/stay/${currentStay._id}/confirmation`);
     }
   }, [currentStay.status, currentStay._id, router]);
+
+  const stayMetricFields = useMemo(
+    () => linkedMetricFields('Stay', currentStay?._id),
+    [currentStay?._id],
+  );
+
+  const stayCheckoutViewMetricRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!currentStay?._id) return;
+    const idKey = String(currentStay._id);
+    if (stayCheckoutViewMetricRef.current === idKey) return;
+    stayCheckoutViewMetricRef.current = idKey;
+    const pt =
+      Math.round(
+        Number(currentStay.duration ?? currentStay.adults ?? 0) || 0,
+      ) || 1;
+    void logMetric({
+      event: 'stay-checkout-view',
+      category: 'co-housing',
+      value: 'view', point: pt,
+      ...stayMetricFields,
+    });
+  }, [currentStay._id, currentStay.duration, currentStay.adults]);
 
   useEffect(() => {
     if (
@@ -1399,6 +1422,16 @@ const StayCheckoutContent = ({
   const handleConfirmAndPay = async () => {
     setActionError(null);
     setIsProcessing(true);
+    const stayPaymentPoint =
+      Math.round(
+        Number(currentStay.duration ?? currentStay.adults ?? 0) || 0,
+      ) || 1;
+    void logMetric({
+      event: 'stay-payment-started',
+      category: 'co-housing',
+      value: 'payment', point: stayPaymentPoint,
+      ...stayMetricFields,
+    });
     try {
       let workingStay = currentStay;
       if (isStayCheckoutDraft(workingStay)) {
@@ -2222,7 +2255,7 @@ const StayCheckoutContent = ({
             numberOfUnits={currentStay.numberOfUnits}
             listingPrivate={listing?.private}
             adults={currentStay.adults}
-            children={currentStay.children}
+            childCount={currentStay.children}
             className="text-sm text-gray-600 mt-3"
           />
           {showTokenCreditPaymentOptions && (
@@ -2431,7 +2464,21 @@ const StayCheckoutContent = ({
             {useCardPaymentPrimaryCta && !isMember ? (
               <Button
                 isEnabled={hasAcceptedTerms && !isProcessing}
-                onClick={() => router.push(paymentPageUrl)}
+                onClick={() => {
+                  const pt =
+                    Math.round(
+                      Number(
+                        currentStay.duration ?? currentStay.adults ?? 0,
+                      ) || 0,
+                    ) || 1;
+                  void logMetric({
+                    event: 'stay-payment-page-navigated',
+                    category: 'co-housing',
+                    value: 'payment', point: pt,
+                    ...stayMetricFields,
+                  });
+                  router.push(paymentPageUrl);
+                }}
                 className="min-h-[48px]"
               >
                 {t('stay_checkout_cta_card_shortcut_button')}

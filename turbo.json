@@ -2,8 +2,21 @@
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["**/.env.*local"],
   "tasks": {
+    "build:locales": {
+      "inputs": [
+        "locales/**",
+        "scripts/syncBuildLocales.cjs",
+        "scripts/ensureBuildLocalesExist.cjs"
+      ],
+      "outputs": ["generated/locales/**"]
+    },
+    "build:config": {
+      "inputs": ["scripts/syncBuildConfig.cjs", "scripts/ensureBuildConfigSnapshotExists.cjs"],
+      "outputs": ["generated/appConfig.snapshot.json"],
+      "env": ["NEXT_PUBLIC_API_URL"]
+    },
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "^build:locales", "^build:config"],
       "outputs": [".next/**"],
       "env": [
         "NEXT_PUBLIC_CDN_URL",
@@ -53,7 +66,8 @@
         "NEXT_PUBLIC_DEBUG_EMAIL",
         "NEXT_PUBLIC_BENEFICIARY",
         "NEXT_PUBLIC_CLOUDFLARE_KEY",
-        "ENVIRONMENT"
+        "ENVIRONMENT",
+        "SHARP_IGNORE_GLOBAL_LIBVIPS"
       ]
     },
     "lint": {

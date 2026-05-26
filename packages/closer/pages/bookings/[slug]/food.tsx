@@ -1,47 +1,51 @@
 import { useRouter } from 'next/router';
 
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import {
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
-import BookingSurface from '../../../components/booking/bookingSurface';
 import Switch from '../../../components/Switch';
+import BookingSurface from '../../../components/booking/bookingSurface';
 import { Button, Information } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
 import dayjs from 'dayjs';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
+import config from '../../../configCached';
 import { BOOKING_STEPS, BOOKING_STEP_TITLE_KEYS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { useRedirectPaidBookingToDetail } from '../../../hooks';
-import {
-  BaseBookingParams,
-  Booking,
-  BookingConfig,
-} from '../../../types';
+import { BaseBookingParams, Booking, BookingConfig } from '../../../types';
 import { FoodOption } from '../../../types/food';
-import config from '../../../configCached';
 import api, { cdn } from '../../../utils/api';
 import {
+  FoodBookingContext,
+  bookingGuestNightsMetricPoint,
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
   getBookingTokenCurrency,
+  getDefaultSelectedFoodOptionId,
   getFoodOption,
   getFoodOptionsForBookingContext,
-  getDefaultSelectedFoodOptionId,
-  FoodBookingContext,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { logMetricIfAuthenticated } from '../../../utils/metrics';
 import { priceFormat } from '../../../utils/helpers';
-import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 
 interface Props extends BaseBookingParams {
   error?: string;
@@ -60,9 +64,7 @@ const SingleOptionPhotoPreview = ({
 }: {
   option: FoodOption;
   photoSlideByOptionId: Record<string, number>;
-  setPhotoSlideByOptionId: Dispatch<
-    SetStateAction<Record<string, number>>
-  >;
+  setPhotoSlideByOptionId: Dispatch<SetStateAction<Record<string, number>>>;
   cdnUrl: string | undefined;
 }) => {
   const photos = option.photos ?? [];
@@ -86,7 +88,9 @@ const SingleOptionPhotoPreview = ({
             onClick={(e) => {
               e.preventDefault();
               setCurrentPhotoIndex(
-                currentPhotoIndex === 0 ? photos.length - 1 : currentPhotoIndex - 1,
+                currentPhotoIndex === 0
+                  ? photos.length - 1
+                  : currentPhotoIndex - 1,
               );
             }}
           >
@@ -98,7 +102,9 @@ const SingleOptionPhotoPreview = ({
             onClick={(e) => {
               e.preventDefault();
               setCurrentPhotoIndex(
-                currentPhotoIndex >= photos.length - 1 ? 0 : currentPhotoIndex + 1,
+                currentPhotoIndex >= photos.length - 1
+                  ? 0
+                  : currentPhotoIndex + 1,
               );
             }}
           >
@@ -159,8 +165,11 @@ const FoodSelectionPage = ({
   const bookingFromStore = slug
     ? platform.booking.findOne(slug)?.toJS?.() ?? null
     : null;
-  const booking =
-    bookingFromStore ?? fetchedBooking ?? bookingProp ?? null;
+  const booking = bookingFromStore ?? fetchedBooking ?? bookingProp ?? null;
+  const bookingMetricFields = useMemo(
+    () => linkedMetricFields('Booking', booking?._id),
+    [booking?._id],
+  );
   const event = booking?.eventId
     ? platform.event.findOne(booking.eventId)?.toJS?.() ?? null
     : null;
@@ -185,6 +194,20 @@ const FoodSelectionPage = ({
 
   const { isAuthenticated, user } = useAuth();
 
+  const foodStepMetricLoggedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!booking?._id) return;
+    const idKey = String(booking._id);
+    if (foodStepMetricLoggedRef.current === idKey) return;
+    foodStepMetricLoggedRef.current = idKey;
+    void logMetric({
+      event: 'booking-food-view',
+      category: 'booking',
+      value: 'view',
+      ...bookingMetricFields,
+    });
+  }, [booking?._id]);
+
   useRedirectPaidBookingToDetail(booking);
 
   const eventFoodOptionSet = Boolean(
@@ -201,13 +224,13 @@ const FoodSelectionPage = ({
     eventId && event?.foodOption === 'default'
       ? 'guests'
       : eventId
-        ? 'events'
-        : booking?.volunteerInfo?.bookingType === 'volunteer' ||
-            booking?.volunteerInfo?.bookingType === 'residence'
-          ? 'volunteer'
-          : booking?.isTeamBooking
-            ? 'team'
-            : 'guests';
+      ? 'events'
+      : booking?.volunteerInfo?.bookingType === 'volunteer' ||
+        booking?.volunteerInfo?.bookingType === 'residence'
+      ? 'volunteer'
+      : booking?.isTeamBooking
+      ? 'team'
+      : 'guests';
 
   const selectableFoodOptions = getFoodOptionsForBookingContext(
     foodOptions || [],
@@ -259,9 +282,7 @@ const FoodSelectionPage = ({
     booking?.volunteerInfo?.bookingType === 'residence' ? 0 : foodOption?.price;
 
   const durationNights =
-    start && end
-      ? Math.max(0, dayjs(end).diff(dayjs(start), 'day'))
-      : 0;
+    start && end ? Math.max(0, dayjs(end).diff(dayjs(start), 'day')) : 0;
   const foodTotalForStay =
     (foodPricePerNight ?? 0) * (adults ?? 0) * durationNights;
 
@@ -311,10 +332,13 @@ const FoodSelectionPage = ({
       };
       await platform.bookings.updateFood(booking?._id, payload);
 
-      void logMetricIfAuthenticated(user, {
+      const pt = bookingGuestNightsMetricPoint(durationNights, adults);
+      void logMetric({
         event: 'booking-food-update-success',
-        value: 'booking',
-        point: durationNights || adults || 0,
+        category: 'booking',
+        value: 'food',
+        point: pt,
+        ...bookingMetricFields,
       });
 
       if (event?.fields) {
@@ -324,10 +348,13 @@ const FoodSelectionPage = ({
 
       router.push(`/bookings/${booking?._id}/rules`);
     } catch (err: any) {
-      void logMetricIfAuthenticated(user, {
+      const pt = bookingGuestNightsMetricPoint(durationNights, adults);
+      void logMetric({
         event: 'booking-food-update-error',
-        value: 'booking',
-        point: durationNights || adults || 0,
+        category: 'booking',
+        value: 'food',
+        point: pt,
+        ...bookingMetricFields,
       });
       setApiError(parseMessageFromError(err));
     } finally {
@@ -396,9 +423,16 @@ const FoodSelectionPage = ({
   return (
     <div className="w-full max-w-screen-sm mx-auto p-4 md:p-8">
       <div className="relative flex items-center min-h-[2.75rem] mb-6">
-        <BookingBackButton onClick={goBack} name={t('buttons_back')} className="relative z-10" />
+        <BookingBackButton
+          onClick={goBack}
+          name={t('buttons_back')}
+          className="relative z-10"
+        />
         <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
-          <Heading level={1} className="text-2xl md:text-3xl pb-0 mt-0 text-center">
+          <Heading
+            level={1}
+            className="text-2xl md:text-3xl pb-0 mt-0 text-center"
+          >
             <span>{t('bookings_food_step_title')}</span>
           </Heading>
         </div>
@@ -442,8 +476,7 @@ const FoodSelectionPage = ({
               const optionTotal =
                 optionPricePerNight * (adults ?? 0) * durationNights;
               const photos = option.photos ?? [];
-              const currentPhotoIndex =
-                photoSlideByOptionId[option._id] ?? 0;
+              const currentPhotoIndex = photoSlideByOptionId[option._id] ?? 0;
               const setCurrentPhotoIndex = (next: number) => {
                 setPhotoSlideByOptionId((prev) => ({
                   ...prev,
@@ -649,7 +682,11 @@ const FoodSelectionPage = ({
 
         {!isGuestSelectMode &&
           isFoodAvailable &&
-          !(foodOption && foodOption?.name !== 'no_food' && eventFoodOptionSet) &&
+          !(
+            foodOption &&
+            foodOption?.name !== 'no_food' &&
+            eventFoodOptionSet
+          ) &&
           foodOption &&
           foodOption?.name !== 'no_food' && (
             <BookingSurface tone="soft" padding="md" className="flex gap-4">
@@ -699,15 +736,13 @@ const FoodSelectionPage = ({
                     />
                   </div>
                 </div>
-                {!isFood &&
-                  foodTotalForStay > 0 &&
-                  !booking?.isTeamBooking && (
-                    <p className="text-sm text-foreground">
-                      {t('bookings_food_save_by_opting_out', {
-                        amount: priceFormat(foodTotalForStay),
-                      })}
-                    </p>
-                  )}
+                {!isFood && foodTotalForStay > 0 && !booking?.isTeamBooking && (
+                  <p className="text-sm text-foreground">
+                    {t('bookings_food_save_by_opting_out', {
+                      amount: priceFormat(foodTotalForStay),
+                    })}
+                  </p>
+                )}
                 {isFood &&
                   durationNights > 0 &&
                   !booking?.isTeamBooking &&
@@ -759,7 +794,7 @@ FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
   const discountCode = query?.discountCode;
 
   try {
-    const foodRes = await api.get('/food').catch(() => null)
+    const foodRes = await api.get('/food').catch(() => null);
     const bookingConfig = config.booking || null;
     const web3Config = config.web3 || null;
     const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);

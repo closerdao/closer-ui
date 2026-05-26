@@ -1,3 +1,5 @@
+import { logMetric } from '../../utils/metrics';
+
 interface InvestTrustBarProps {
   t: (key: string) => string;
 }
@@ -35,6 +37,13 @@ const InvestTrustBar = ({ t }: InvestTrustBarProps) => {
               href={url}
               target="_blank"
               rel="nofollow noopener noreferrer"
+              onClick={() => {
+                void logMetric({
+                  event: 'fundraiser-press-link-click',
+                  category: 'fundraiser',
+                  value: name,
+                });
+              }}
               className="text-sm font-semibold text-gray-400 hover:text-gray-600 transition-colors"
             >
               {name}

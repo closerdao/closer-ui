@@ -1,41 +1,46 @@
-import Head from 'next/head';
+import { useRouter } from 'next/router';
+
+import { useEffect } from 'react';
 
 import { NextPageContext } from 'next';
-import { useTranslations } from 'next-intl';
 
-import { CohousingTeamView } from '../../../components/cohousing/cohousingTeamView';
-import { useAuth } from '../../../contexts/auth';
 import PageNotAllowed from '../../401';
+import { useAuth } from '../../../contexts/auth';
+import Spinner from '../../../components/ui/Spinner';
 
-const CohousingApplicationsTeamPage = () => {
-  const t = useTranslations();
+const isCohousingAdminRole = (roles: string[] | undefined) =>
+  Boolean(
+    roles?.includes('admin') ||
+      roles?.includes('community-curator') ||
+      roles?.includes('team'),
+  );
+
+const CohousingApplicationsRedirectPage = () => {
+  const router = useRouter();
   const { user } = useAuth();
 
-  if (
-    !user ||
-    (!user.roles?.includes('community-curator') &&
-      !user.roles?.includes('admin') &&
-      !user.roles?.includes('team'))
-  ) {
+  useEffect(() => {
+    if (!router.isReady) {
+      return;
+    }
+    void router.replace('/dashboard/cohousing');
+  }, [router, router.isReady]);
+
+  if (!user || !isCohousingAdminRole(user.roles)) {
     return <PageNotAllowed />;
   }
 
   return (
-    <>
-      <Head>
-        <title>{t('cohousing_team_page_title')}</title>
-      </Head>
-      <CohousingTeamView />
-    </>
+    <div className="flex justify-center py-24">
+      <Spinner />
+    </div>
   );
 };
 
-export default CohousingApplicationsTeamPage;
+export default CohousingApplicationsRedirectPage;
 
 export async function getStaticProps({ locale }: NextPageContext) {
   return {
-    props: {
-      
-    },
+    props: {},
   };
 }

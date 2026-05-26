@@ -21,6 +21,7 @@ import { useTranslations } from 'next-intl';
 import config from '../../../configCached';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
+import { useRedirectLegacyListingStayRoute } from '../../../hooks/useRedirectLegacyListingStayRoute';
 import { BookingSettings, GeneralConfig } from '../../../types/api';
 import { Listing } from '../../../types/booking';
 import { Stay } from '../../../types/stay';
@@ -53,6 +54,8 @@ const StayConfirmationPage = ({
     generalConfig?.platformName || defaultConfig.platformName;
   const idParam = router.query.slug ?? router.query.id;
   const stayId = typeof idParam === 'string' ? idParam : idParam?.[0];
+
+  useRedirectLegacyListingStayRoute(stayId);
 
   const isBookingEnabled =
     !!bookingSettings && process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';

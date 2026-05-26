@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
@@ -31,13 +31,14 @@ import {
 } from '../../../types';
 import config from '../../../configCached';
 import {
+  bookingGuestNightsMetricPoint,
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
-import { logMetricIfAuthenticated } from '../../../utils/metrics';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 const prepareQuestions = (eventQuestions: any) => {
@@ -76,6 +77,11 @@ const Questionnaire = ({
 
   const booking = slug ? platform.booking.findOne(slug)?.toJS?.() ?? null : null;
 
+  const bookingMetricFields = useMemo(
+    () => linkedMetricFields('Booking', booking?._id),
+    [booking?._id],
+  );
+
   useEffect(() => {
     if (booking?.eventId) {
       void platform.event.getOne(booking.eventId);
@@ -94,6 +100,20 @@ const Questionnaire = ({
     setUser,
   } = useAuth();
   const { APP_NAME } = useConfig();
+
+  const questionsStepMetricLoggedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!booking?._id) return;
+    const idKey = String(booking._id);
+    if (questionsStepMetricLoggedRef.current === idKey) return;
+    questionsStepMetricLoggedRef.current = idKey;
+    void logMetric({
+      event: 'booking-questions-view',
+      category: 'booking',
+      value: 'view',
+      ...bookingMetricFields,
+    });
+  }, [booking?._id]);
 
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -187,17 +207,27 @@ const Questionnaire = ({
       await platform.booking.patch(booking?._id, {
         fields: answers,
       });
-      void logMetricIfAuthenticated(initialUser, {
+      const pt = bookingGuestNightsMetricPoint(
+        booking?.duration,
+        booking?.adults,
+      );
+      void logMetric({
         event: 'booking-questions-save-success',
-        value: 'booking',
-        point: booking?.duration ?? booking?.adults ?? 0,
+        category: 'booking',
+        value: 'save', point: pt,
+        ...bookingMetricFields,
       });
       router.push(`/bookings/${booking?._id}/summary`);
     } catch (err) {
-      void logMetricIfAuthenticated(initialUser, {
+      const pt = bookingGuestNightsMetricPoint(
+        booking?.duration,
+        booking?.adults,
+      );
+      void logMetric({
         event: 'booking-questions-save-error',
-        value: 'booking',
-        point: booking?.duration ?? booking?.adults ?? 0,
+        category: 'booking',
+        value: 'save', point: pt,
+        ...bookingMetricFields,
       });
       console.log(err);
     }

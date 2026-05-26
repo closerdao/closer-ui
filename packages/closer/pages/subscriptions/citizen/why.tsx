@@ -19,6 +19,7 @@ import { useConfig } from '../../../hooks/useConfig';
 import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
+import { logMetric } from '../../../utils/metrics';
 import PageNotFound from '../../not-found';
 
 interface PlatformContext {
@@ -243,17 +244,11 @@ const CitizenWhyPage: NextPage = () => {
         },
       });
 
-      // Track citizen application
-      try {
-        await api.post('/metric', {
-          event: 'citizen-applied',
-          value: 'citizenship',
-          point: 0,
-          category: 'engagement',
-        });
-      } catch (error) {
-        console.error('Error tracking citizen application:', error);
-      }
+      void logMetric({
+        event: 'citizen-applied',
+        category: 'citizenship',
+        value: 'applied',
+      });
     } catch (error) {
       console.error('error with citizen application:', error);
     }
