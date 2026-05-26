@@ -1,3 +1,5 @@
+import { useRouter } from 'next/router';
+
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 import { FundraisingMilestone, MilestoneStatus } from '../../types';
@@ -27,12 +29,15 @@ const InvestMilestones = ({
   isLoadingFunds,
   t,
 }: InvestMilestonesProps) => {
+  const router = useRouter();
+  const intlLocale = router.locale || undefined;
+
   if (milestones.length === 0) return null;
 
   const formatAmount = (amount: number, currency: string) => {
     return amount >= 1000
-      ? formatCompactCurrencyAmount(amount, currency)
-      : formatIsoFiatAmount(amount, currency);
+      ? formatCompactCurrencyAmount(amount, currency, intlLocale)
+      : formatIsoFiatAmount(amount, currency, intlLocale);
   };
 
   const getBadgeLabel = (index: number, state: MilestoneState) => {

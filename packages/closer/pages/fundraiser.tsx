@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -65,6 +66,8 @@ const FundraiserPage = ({
   const fundraisingConfig = (getCachedConfig('fundraiser') ??
     {}) as FundraisingConfig;
   const t = useTranslations();
+  const router = useRouter();
+  const intlLocale = router.locale || undefined;
   const config = useConfig();
   const defaults = getDefaultInvestPageOptions();
   const opts = { ...defaults, ...optionsOverride };
@@ -158,7 +161,7 @@ const FundraiserPage = ({
 
   const formatPrice = (tokens: number) => {
     if (!tokenPrice) return '...';
-    return formatIsoFiatAmount(Math.round(tokens * tokenPrice), 'EUR');
+    return formatIsoFiatAmount(Math.round(tokens * tokenPrice), 'EUR', intlLocale);
   };
 
   const shareUrl = opts.shareUrl || '';
