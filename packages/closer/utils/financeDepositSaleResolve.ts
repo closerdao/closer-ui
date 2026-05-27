@@ -18,16 +18,18 @@ export function resolveDepositTokenSaleForFinanceApplication(
       return byMemo;
     }
   }
-  const byAttr = pendingSales.find((s) =>
-    Array.isArray(s.attributes)
-      ? s.attributes.some((a: Record<string, unknown>) => {
-          const v =
-            (a as { financeApplicationId?: string }).financeApplicationId ??
-            (a as { financeApplication?: string }).financeApplication;
-          return v === appId;
-        })
-      : false,
-  );
+  const byAttr = pendingSales.find((s) => {
+    if (!Array.isArray(s.attributes)) return false;
+    return s.attributes.some((a) => {
+      if (!a || typeof a !== 'object') return false;
+      const attr = a as {
+        financeApplicationId?: string;
+        financeApplication?: string;
+      };
+      const v = attr.financeApplicationId ?? attr.financeApplication;
+      return v === appId;
+    });
+  });
   if (byAttr) {
     return byAttr;
   }

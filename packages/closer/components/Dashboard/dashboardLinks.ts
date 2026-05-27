@@ -58,8 +58,8 @@ export const getDashboardLinks = (
       roles: ['member'],
     },
     {
-      label: t('navigation_token_sales'),
-      url: '/dashboard/token-sales',
+      label: t('navigation_sales'),
+      url: '/dashboard/sales',
       rbacPage: 'TokenSales',
       enabled: isTokenEnabled,
       roles: ['admin', 'team'],

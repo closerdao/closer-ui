@@ -9,37 +9,30 @@ import {
   WhatsappShareButton,
 } from 'react-share';
 
-import {
-  formatCompactCurrencyAmount,
-  formatIsoFiatAmount,
-} from '../../utils/currencyFormat';
-import { getMilestoneGoal } from '../../utils/fundraising.helpers';
+import { useAnimatedNumber } from '../../hooks/useAnimatedNumber';
+import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import { formatFundraiserAmount } from '../../utils/fundraising.helpers';
 import { logMetric } from '../../utils/metrics';
-import { FundraisingMilestone } from '../../types';
 
 interface InvestProgressCardProps {
-  fundraisingTotal: number;
+  raisedAmount: number;
+  goalAmount: number;
   isLoadingFunds: boolean;
-  activeMilestone: FundraisingMilestone | null;
-  totalGoal: number;
-  backerCount?: number;
-  tokenHolderCount?: number;
+  donorCount?: number;
   daysLeft?: number;
   shareUrl: string;
   dataroomHref?: string;
   subscriptionHref?: string;
   donationHref?: string;
   twitterHandle?: string;
-  t: (key: string) => string;
+  t: (key: string, values?: Record<string, string | number>) => string;
 }
 
 const InvestProgressCard = ({
-  fundraisingTotal,
+  raisedAmount,
+  goalAmount,
   isLoadingFunds,
-  activeMilestone,
-  totalGoal,
-  backerCount,
-  tokenHolderCount,
+  donorCount,
   daysLeft,
   shareUrl,
   dataroomHref,
@@ -50,18 +43,15 @@ const InvestProgressCard = ({
 }: InvestProgressCardProps) => {
   const router = useRouter();
   const intlLocale = router.locale || undefined;
-  const goal = totalGoal || (activeMilestone ? getMilestoneGoal(activeMilestone) : 0);
-  const progress = goal > 0 ? Math.min(100, (fundraisingTotal / goal) * 100) : 0;
+  const progress =
+    goalAmount > 0 ? Math.min(100, (raisedAmount / goalAmount) * 100) : 0;
+  const { displayValue: animatedRaised } = useAnimatedNumber(raisedAmount, {
+    enabled: !isLoadingFunds,
+  });
   const [step, setStep] = useState<'idle' | 'choose' | 'donation'>('idle');
   const [donationAmount, setDonationAmount] = useState<number>(100);
 
   const donationPresets = [25, 50, 100, 250, 500, 1000];
-
-  const formatAmount = (amount: number) => {
-    return amount >= 1000
-      ? formatCompactCurrencyAmount(amount, 'EUR', intlLocale)
-      : formatIsoFiatAmount(amount, 'EUR', intlLocale);
-  };
 
   const resetFlow = () => {
     setStep('idle');
@@ -109,10 +99,12 @@ const InvestProgressCard = ({
       {!isLoadingFunds && (
         <>
           <div className="text-4xl font-bold text-gray-900 leading-tight">
-            {formatAmount(fundraisingTotal)}
+            {formatFundraiserAmount(Math.round(animatedRaised), intlLocale)}
           </div>
           <div className="text-sm text-gray-500 mb-4">
-            {t('invest_progress_raised')} {t('invest_progress_goal')}: {formatAmount(goal)}
+            {t('invest_progress_raised')}{' '}
+            {t('invest_progress_of')}{' '}
+            {formatFundraiserAmount(goalAmount, intlLocale)}
           </div>
           <div className="bg-gray-100 rounded-full h-2.5 overflow-hidden mb-3">
             <div
@@ -129,11 +121,11 @@ const InvestProgressCard = ({
                 </div>
               </div>
             )}
-            {tokenHolderCount !== undefined && (
+            {donorCount !== undefined && (
               <div className="py-3">
-                <div className="text-xl font-bold text-gray-900">{tokenHolderCount}</div>
+                <div className="text-xl font-bold text-gray-900">{donorCount}</div>
                 <div className="text-xs text-gray-500 uppercase tracking-wide">
-                  {t('invest_stat_holders')}
+                  {t('invest_stat_donors')}
                 </div>
               </div>
             )}

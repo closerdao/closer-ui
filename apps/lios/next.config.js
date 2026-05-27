@@ -24,6 +24,8 @@ const nextConfig = {
       { source: '/admin/learn', destination: '/dashboard/admin/learn', permanent: true },
       { source: '/admin/emails', destination: '/dashboard/admin/emails', permanent: true },
       { source: '/admin/emails/:slug', destination: '/dashboard/admin/emails/:slug', permanent: true },
+      { source: '/dashboard/token-sales', destination: '/dashboard/sales/financed', permanent: true },
+      { source: '/dashboard/token-sales/financed/:applicationId', destination: '/dashboard/sales/financed/:applicationId', permanent: true },
     ];
   },
   // If set to true, there are some infinite loops occuring with our loadData

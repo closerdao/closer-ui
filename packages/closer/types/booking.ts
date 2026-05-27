@@ -93,6 +93,7 @@ export type Charge = {
     | 'tokenSale'
     | 'fiatTokenSale'
     | 'financedToken'
+    | 'donation'
     | 'citizenship'
     | 'affiliatePayout';
   date: Date;
