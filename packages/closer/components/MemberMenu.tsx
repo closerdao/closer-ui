@@ -241,8 +241,8 @@ const MemberMenu = ({
               rbacPage: 'Governance',
             },
             {
-              label: t('navigation_token_sales'),
-              url: '/dashboard/token-sales',
+              label: t('navigation_sales'),
+              url: '/dashboard/sales',
               enabled: isWalletEnabled,
               roles: ['admin', 'team'],
               rbacPage: 'TokenSales',
@@ -611,8 +611,8 @@ const MemberMenu = ({
             rbacPage: 'Governance',
           },
           {
-            label: t('navigation_token_sales'),
-            url: '/dashboard/token-sales',
+            label: t('navigation_sales'),
+            url: '/dashboard/sales',
             enabled: true,
             roles: ['admin', 'team'],
             rbacPage: 'TokenSales',

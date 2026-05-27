@@ -61,7 +61,10 @@ const Navigation = () => {
     ) {
       return;
     }
-    const fr = configCached.fundraiser;
+    const fr = {
+      ...configCached.fundraiser,
+      ...config?.fundraiser,
+    };
     if (fr?.enabled) {
       setIsFundraiserEnabled(true);
       setFundraisingNavProps({
@@ -70,7 +73,7 @@ const Navigation = () => {
         loansCollectedTotal: fr.loansCollectedTotal,
       });
     }
-  }, [APP_NAME]);
+  }, [APP_NAME, config?.fundraiser]);
 
   const toggleNav = () => {
     setNavOpen((isOpen) => !isOpen);
