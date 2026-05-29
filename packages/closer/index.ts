@@ -104,8 +104,14 @@ export { default as CreditCheckoutPage } from './pages/credits/checkout';
 export { default as DashboardPage } from './pages/dashboard';
 export { default as AffiliateDashboardPage } from './pages/dashboard/affiliate';
 export { default as PerformancePage } from './pages/dashboard/performance/index';
-export { default as TokenSalesDashboardPage } from './pages/dashboard/token-sales';
-export { default as FinancedTokenSaleApplicationPage } from './pages/dashboard/token-sales/financed/[applicationId]';
+export {
+  default as SalesDashboardIndexPage,
+  getServerSideProps as getSalesDashboardIndexServerSideProps,
+} from './pages/dashboard/sales/index';
+export { default as SalesDashboardPage } from './pages/dashboard/sales/[tab]';
+export { default as TokenSalesDashboardPage } from './pages/dashboard/sales/[tab]';
+export { default as FinancedTokenSaleApplicationPage } from './pages/dashboard/sales/financed/[applicationId]';
+export { default as FinancedSaleApplicationPage } from './pages/dashboard/sales/financed/[applicationId]';
 export { default as DashboardPagesIndex } from './pages/dashboard/pages';
 export { default as DashboardPagesEdit } from './pages/dashboard/pages/[id]';
 export { default as CustomPagePage } from './pages/[slug]';

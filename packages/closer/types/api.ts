@@ -340,36 +340,79 @@ export type SaleInitBody = {
   message?: string;
 };
 
-export type TokenSale = {
+export type SaleChargeMeta = {
+  senderName?: string;
+  userEmail?: string;
+  userName?: string;
+  productType?: string;
+  memoCode?: string;
+  [key: string]: unknown;
+};
+
+export type SaleCharge = {
+  _id?: string;
+  type?: string;
+  method?: string;
+  status?: string;
+  amount?: {
+    total?: {
+      val?: number;
+      cur?: string;
+    };
+  };
+  meta?: SaleChargeMeta;
+};
+
+export type SaleMeta = {
+  userName?: string;
+  normalizedSenderIban?: string;
+  [key: string]: unknown;
+};
+
+export type SaleBuyer = {
+  email: string;
+  screenname: string;
+  walletAddress: string;
+  _id: string;
+};
+
+export type SaleStatus =
+  | 'pending-payment'
+  | 'completed'
+  | 'paid'
+  | 'cancelled'
+  | 'matched';
+
+export type Sale = {
   name: string;
   total_price: number;
+  price?: number;
   currency?: string;
-  product_type: 'token';
+  email?: string;
+  message?: string;
+  product_type: string;
   quantity?: number;
   entity?: string;
   memoCode?: string;
   paymentMethod?: 'bank' | 'card' | 'crypto';
-  charge?: string;
+  charge?: SaleCharge;
   chargeId?: string;
   charges?: string[];
   tx_hash?: string;
-  meta?: {
-    normalizedSenderIban?: string;
-    [key: string]: any;
-  };
+  meta?: SaleMeta;
   visibility: 'public' | 'private';
   visibleBy: string[];
-  createdBy: string;
+  createdBy?: string;
   updated: string;
   created: string;
-  attributes: any[];
+  attributes: unknown[];
   managedBy: string[];
   _id: string;
-  status: 'pending-payment' | 'completed' | 'paid' | 'cancelled' | 'matched';
-  buyer?: {
-    email: string;
-    screenname: string;
-    walletAddress: string;
-    _id: string;
-  } | null;
+  status: SaleStatus;
+  buyer?: SaleBuyer | null;
+};
+
+export type TokenSale = Sale & {
+  product_type: 'token';
+  createdBy: string;
 };

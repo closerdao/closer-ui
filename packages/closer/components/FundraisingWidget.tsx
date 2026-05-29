@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 import { useEffect, useMemo, useState } from 'react';
 
@@ -6,13 +7,15 @@ import { CheckCircle2, PartyPopper } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
+import { useAnimatedNumber } from '../hooks/useAnimatedNumber';
 import type { FundraisingMilestone } from '../types/api';
-import { formatIsoFiatAmount } from '../utils/currencyFormat';
 import {
-  computeMilestoneStates,
   fetchFundraisingBreakdown,
   findActiveMilestone,
-  getMilestoneEnd,
+  findFundingMilestone,
+  formatFundraiserAmount,
+  getMilestoneDaysLeft,
+  getMilestoneDisplayRaised,
   getMilestoneGoal,
   sortMilestonesByStartDate,
 } from '../utils/fundraising.helpers';
@@ -25,8 +28,6 @@ interface FundraisingWidgetProps {
   loansCollectedTotal?: number | string;
 }
 
-const DEFAULT_END_DATE = '2026-05-31T23:59:59.999Z';
-
 const FundraisingWidget = ({
   variant = 'nav',
   className = '',
@@ -35,14 +36,13 @@ const FundraisingWidget = ({
   loansCollectedTotal,
 }: FundraisingWidgetProps) => {
   const t = useTranslations();
+  const router = useRouter();
+  const intlLocale = router.locale || undefined;
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes('admin');
   const [totalRaised, setTotalRaised] = useState(0);
   const [cryptoTotal, setCryptoTotal] = useState(0);
   const [fiatTotal, setFiatTotal] = useState(0);
-  const [activeRaised, setActiveRaised] = useState(0);
-  const [goalAmount, setGoalAmount] = useState(0);
-  const [progressPercent, setProgressPercent] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [daysLeft, setDaysLeft] = useState(0);
   const [showSparkle, setShowSparkle] = useState(false);
@@ -58,14 +58,7 @@ const FundraisingWidget = ({
   );
 
   useEffect(() => {
-    const endRaw = activeMilestone
-      ? getMilestoneEnd(activeMilestone)
-      : null;
-    const endDate = endRaw ? new Date(endRaw) : new Date(DEFAULT_END_DATE);
-    const now = new Date();
-    const diffTime = endDate.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    setDaysLeft(Math.max(0, diffDays));
+    setDaysLeft(getMilestoneDaysLeft(activeMilestone));
   }, [activeMilestone]);
 
   useEffect(() => {
@@ -74,23 +67,11 @@ const FundraisingWidget = ({
         const breakdown = await fetchFundraisingBreakdown({
           amountRaisedPreCampaign,
           loansCollectedTotal,
+          milestones,
         });
         setTotalRaised(breakdown.totalRaised);
         setCryptoTotal(breakdown.cryptoTotal);
         setFiatTotal(breakdown.fiatTotal);
-        const states = computeMilestoneStates(
-          sortedMilestones,
-          breakdown.totalRaised,
-        );
-        const goal = activeMilestone
-          ? getMilestoneGoal(activeMilestone)
-          : 0;
-        const state = activeMilestone
-          ? states[activeMilestone.id]
-          : null;
-        setGoalAmount(goal);
-        setActiveRaised(state?.raised ?? 0);
-        setProgressPercent(state?.progress ?? 0);
       } catch (error) {
         console.error('Error fetching fundraising breakdown:', error);
       } finally {
@@ -101,8 +82,7 @@ const FundraisingWidget = ({
   }, [
     amountRaisedPreCampaign,
     loansCollectedTotal,
-    sortedMilestones,
-    activeMilestone,
+    milestones,
   ]);
 
   useEffect(() => {
@@ -128,8 +108,26 @@ const FundraisingWidget = ({
     };
   }, []);
 
-  const displayRaised = activeMilestone ? activeRaised : totalRaised;
-  const displayGoal = activeMilestone ? goalAmount : 0;
+  const fundingMilestone = useMemo(
+    () => findFundingMilestone(sortedMilestones, totalRaised),
+    [sortedMilestones, totalRaised],
+  );
+
+  const displayMilestone = fundingMilestone ?? activeMilestone;
+
+  const displayRaised = useMemo(() => {
+    if (!displayMilestone) return totalRaised;
+    return getMilestoneDisplayRaised(
+      sortedMilestones,
+      displayMilestone,
+      totalRaised,
+    );
+  }, [sortedMilestones, displayMilestone, totalRaised]);
+
+  const displayGoal = displayMilestone ? getMilestoneGoal(displayMilestone) : 0;
+
+  const progressPercent =
+    displayGoal > 0 ? Math.min(100, (displayRaised / displayGoal) * 100) : 0;
 
   const totalGoal = useMemo(
     () => sortedMilestones.reduce((sum, m) => sum + getMilestoneGoal(m), 0),
@@ -138,13 +136,17 @@ const FundraisingWidget = ({
   const totalProgress =
     totalGoal > 0 ? Math.min(100, (totalRaised / totalGoal) * 100) : 0;
 
-  const formatAmount = (amount: number) => {
-    return formatIsoFiatAmount(Math.round(amount), 'EUR');
-  };
+  const formatAmount = (amount: number) =>
+    formatFundraiserAmount(amount, intlLocale);
+
+  const { displayValue: animatedDisplayRaised } = useAnimatedNumber(
+    displayRaised,
+    { enabled: !isLoading && variant === 'hero' },
+  );
 
   const milestoneName =
-    activeMilestone?.title ??
-    activeMilestone?.name ??
+    displayMilestone?.title ??
+    displayMilestone?.name ??
     t('invest_progress_milestone_default');
   const isGoalReached = !isLoading && displayGoal > 0 && displayRaised >= displayGoal;
 
@@ -167,10 +169,11 @@ const FundraisingWidget = ({
           
           <div className="flex items-center justify-between mb-3">
             <span className="text-lg font-bold text-accent">
-              {formatAmount(displayRaised)} {t('invest_progress_raised')}
+              {formatAmount(Math.round(animatedDisplayRaised))}{' '}
+              {t('invest_progress_raised')}
             </span>
             <span className="text-sm font-medium text-gray-500 line-through opacity-70">
-              {formatAmount(displayGoal)} {t('invest_progress_goal')}
+              {t('invest_progress_of')} {formatAmount(displayGoal)}
             </span>
           </div>
           
@@ -208,11 +211,13 @@ const FundraisingWidget = ({
         <p className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">{milestoneName}</p>
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm text-gray-600 font-medium">
-            {isLoading ? '...' : formatAmount(displayRaised)}{' '}
+            {isLoading
+              ? '...'
+              : formatAmount(Math.round(animatedDisplayRaised))}{' '}
             {t('invest_progress_raised')}
           </span>
           <span className="text-sm font-semibold text-gray-900">
-            {formatAmount(displayGoal)} {t('invest_progress_goal')}
+            {t('invest_progress_of')} {formatAmount(displayGoal)}
           </span>
         </div>
         <div className="w-full rounded-full bg-gray-200 overflow-hidden h-3 mb-3">

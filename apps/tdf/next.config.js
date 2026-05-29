@@ -29,6 +29,8 @@ const nextConfig = {
       { source: '/admin/emails/:slug', destination: '/dashboard/admin/emails/:slug', permanent: true },
       { source: '/cohousing/application/:id/admin', destination: '/dashboard/cohousing/:id', permanent: true },
       { source: '/cohousing/applications', destination: '/dashboard/cohousing', permanent: true },
+      { source: '/dashboard/token-sales', destination: '/dashboard/sales/financed', permanent: true },
+      { source: '/dashboard/token-sales/financed/:applicationId', destination: '/dashboard/sales/financed/:applicationId', permanent: true },
     ];
   },
   // If set to true, there are some infinite loops occuring with our loadData

@@ -81,6 +81,8 @@ const nextConfig = {
         destination: '/pages/community',
         permanent: true, 
       },
+      { source: '/dashboard/token-sales', destination: '/dashboard/sales/financed', permanent: true },
+      { source: '/dashboard/token-sales/financed/:applicationId', destination: '/dashboard/sales/financed/:applicationId', permanent: true },
     ]
   },
 };

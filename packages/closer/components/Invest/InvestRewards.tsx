@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 import { Check } from 'lucide-react';
 
@@ -21,6 +22,9 @@ const InvestRewards = ({
   loanPackageHref,
   t,
 }: InvestRewardsProps) => {
+  const router = useRouter();
+  const intlLocale = router.locale || undefined;
+
   if (packages.length === 0) return null;
 
   const getPrice = (pkg: FundraisingPackage) => {
@@ -29,10 +33,10 @@ const InvestRewards = ({
     if (pkg.type === 'tokens') return formatPrice(tokens);
     if (pkg.type === 'loan')
       return pkg.minAmount
-        ? `${formatIsoFiatAmount(Number(pkg.minAmount), 'EUR')}+`
-        : `${formatIsoFiatAmount(50000, 'EUR')}+`;
+        ? `${formatIsoFiatAmount(Number(pkg.minAmount), 'EUR', intlLocale)}+`
+        : `${formatIsoFiatAmount(50000, 'EUR', intlLocale)}+`;
     if (pkg.type === 'credits' && credits)
-      return formatIsoFiatAmount(credits * creditPricePerUnit, 'EUR');
+      return formatIsoFiatAmount(credits * creditPricePerUnit, 'EUR', intlLocale);
     if (pkg.type === 'subscribe') return '';
     return '';
   };

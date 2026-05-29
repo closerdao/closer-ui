@@ -1,11 +1,13 @@
+import { useRouter } from 'next/router';
+
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 import { FundraisingMilestone, MilestoneStatus } from '../../types';
 import {
-  formatCompactCurrencyAmount,
-  formatIsoFiatAmount,
-} from '../../utils/currencyFormat';
-import { getMilestoneGoal } from '../../utils/fundraising.helpers';
+  formatFundraiserAmount,
+  formatMilestoneDateRange,
+  getMilestoneGoal,
+} from '../../utils/fundraising.helpers';
 
 interface MilestoneState {
   status: MilestoneStatus;
@@ -27,13 +29,13 @@ const InvestMilestones = ({
   isLoadingFunds,
   t,
 }: InvestMilestonesProps) => {
+  const router = useRouter();
+  const intlLocale = router.locale || undefined;
+
   if (milestones.length === 0) return null;
 
-  const formatAmount = (amount: number, currency: string) => {
-    return amount >= 1000
-      ? formatCompactCurrencyAmount(amount, currency)
-      : formatIsoFiatAmount(amount, currency);
-  };
+  const formatAmount = (amount: number) =>
+    formatFundraiserAmount(amount, intlLocale);
 
   const getBadgeLabel = (index: number, state: MilestoneState) => {
     if (state.status === 'completed') return t('invest_phase_completed');
@@ -69,7 +71,7 @@ const InvestMilestones = ({
           const title = milestone.title || milestone.name;
           const description = milestone.description || '';
           const goal = getMilestoneGoal(milestone);
-          const currency = milestone.currency || 'EUR';
+          const dateRange = formatMilestoneDateRange(milestone, intlLocale);
           const isLast = index === milestones.length - 1;
 
           return (
@@ -120,11 +122,15 @@ const InvestMilestones = ({
                     {getBadgeLabel(index, state)}
                   </span>
                   <span className="text-xl font-bold text-gray-900">
-                    {formatAmount(goal, currency)}
+                    {formatAmount(goal)}
                   </span>
                 </div>
 
                 <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
+
+                {dateRange && (
+                  <p className="text-xs text-gray-500 mb-2">{dateRange}</p>
+                )}
 
                 {description && (
                   <p className="text-sm text-gray-600 leading-relaxed mb-4">
@@ -136,10 +142,10 @@ const InvestMilestones = ({
                   <div className="mt-3">
                     <div className="flex justify-between text-xs mb-1.5">
                       <span className="font-semibold text-accent">
-                        {formatAmount(state.raised, currency)} {t('invest_progress_raised')}
+                        {formatAmount(state.raised)} {t('invest_progress_raised')}
                       </span>
                       <span className="text-gray-500">
-                        {formatAmount(goal, currency)} {t('invest_progress_goal')}
+                        {formatAmount(goal)} {t('invest_progress_goal')}
                       </span>
                     </div>
                     <div className="bg-gray-100 rounded-full h-1.5 overflow-hidden">

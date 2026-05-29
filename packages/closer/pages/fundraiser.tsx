@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -15,13 +16,7 @@ import Webinar from '../components/Webinar';
 import { Heading } from '../components/ui';
 import { useBuyTokens } from '../hooks/useBuyTokens';
 import { useConfig } from '../hooks/useConfig';
-import {
-  DEFAULT_TOKEN_STATS,
-  FundraisingConfig,
-  InvestPageOptions,
-  TokenStats,
-} from '../types';
-import api from '../utils/api';
+import { FundraisingConfig, InvestPageOptions } from '../types';
 import { getCachedConfig } from '../utils/cachedConfig.helpers';
 import { twitterUrlToHandle } from '../utils/app.helpers';
 import { formatIsoFiatAmount } from '../utils/currencyFormat';
@@ -29,7 +24,9 @@ import {
   computeMilestoneStates,
   fetchFundraisingBreakdown,
   findActiveMilestone,
-  getMilestoneEnd,
+  findFundingMilestone,
+  getMilestoneDaysLeft,
+  getMilestoneDisplayRaised,
   getMilestoneGoal,
   sortMilestonesByStartDate,
 } from '../utils/fundraising.helpers';
@@ -62,9 +59,18 @@ const getDefaultInvestPageOptions = (): InvestPageOptions => {
 const FundraiserPage = ({
   investPageOptions: optionsOverride,
 }: InvestPageProps) => {
-  const fundraisingConfig = (getCachedConfig('fundraiser') ??
+  const cachedFundraiserConfig = (getCachedConfig('fundraiser') ??
     {}) as FundraisingConfig;
+  const liveFundraiserConfig = useConfig()?.fundraiser as
+    | FundraisingConfig
+    | undefined;
+  const fundraisingConfig = {
+    ...cachedFundraiserConfig,
+    ...liveFundraiserConfig,
+  } as FundraisingConfig;
   const t = useTranslations();
+  const router = useRouter();
+  const intlLocale = router.locale || undefined;
   const config = useConfig();
   const defaults = getDefaultInvestPageOptions();
   const opts = { ...defaults, ...optionsOverride };
@@ -79,8 +85,8 @@ const FundraiserPage = ({
   const fundraiserViewLoggedRef = useRef(false);
   const [tokenPrice, setTokenPrice] = useState<number>(0);
   const [fundraisingTotal, setFundraisingTotal] = useState<number>(0);
+  const [donorCount, setDonorCount] = useState<number>(0);
   const [isLoadingFunds, setIsLoadingFunds] = useState(true);
-  const [tokenStats, setTokenStats] = useState<TokenStats>(DEFAULT_TOKEN_STATS);
 
   const activeMilestone = useMemo(() => {
     return findActiveMilestone(fundraisingConfig?.milestones);
@@ -91,18 +97,10 @@ const FundraiserPage = ({
     [fundraisingConfig?.milestones],
   );
 
-  const totalGoal = useMemo(
-    () => milestones.reduce((sum, m) => sum + getMilestoneGoal(m), 0),
-    [milestones],
+  const daysLeft = useMemo(
+    () => getMilestoneDaysLeft(activeMilestone),
+    [activeMilestone],
   );
-
-  const daysLeft = useMemo(() => {
-    const DEFAULT_END = '2026-05-31T23:59:59.999Z';
-    const endRaw = activeMilestone ? getMilestoneEnd(activeMilestone) : null;
-    const endDate = endRaw ? new Date(endRaw) : new Date(DEFAULT_END);
-    const diff = endDate.getTime() - Date.now();
-    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-  }, [activeMilestone]);
 
   useEffect(() => {
     const load = async () => {
@@ -110,8 +108,10 @@ const FundraiserPage = ({
         const breakdown = await fetchFundraisingBreakdown({
           amountRaisedPreCampaign: fundraisingConfig?.amountRaisedPreCampaign,
           loansCollectedTotal: fundraisingConfig?.loansCollectedTotal,
+          milestones,
         });
         setFundraisingTotal(breakdown.totalRaised);
+        setDonorCount(breakdown.donorCount);
       } catch (error) {
         console.error('Error fetching fundraising total:', error);
       } finally {
@@ -119,11 +119,34 @@ const FundraiserPage = ({
       }
     };
     load();
-  }, [fundraisingConfig]);
+  }, [
+    fundraisingConfig?.amountRaisedPreCampaign,
+    fundraisingConfig?.loansCollectedTotal,
+    milestones,
+  ]);
 
   const milestoneStates = useMemo(() => {
     return computeMilestoneStates(milestones, fundraisingTotal);
   }, [milestones, fundraisingTotal]);
+
+  const fundingMilestone = useMemo(
+    () => findFundingMilestone(milestones, fundraisingTotal),
+    [milestones, fundraisingTotal],
+  );
+
+  const displayRaised = useMemo(() => {
+    if (!fundingMilestone) return fundraisingTotal;
+    return getMilestoneDisplayRaised(
+      milestones,
+      fundingMilestone,
+      fundraisingTotal,
+    );
+  }, [milestones, fundingMilestone, fundraisingTotal]);
+
+  const displayGoal = useMemo(() => {
+    if (!fundingMilestone) return 0;
+    return getMilestoneGoal(fundingMilestone);
+  }, [fundingMilestone]);
 
   useEffect(() => {
     (async () => {
@@ -138,15 +161,6 @@ const FundraiserPage = ({
   }, []);
 
   useEffect(() => {
-    api
-      .get('/token/stats')
-      .then((res) => {
-        if (res?.data) setTokenStats(res.data);
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
     if (!isFundraiserEnabled || fundraiserViewLoggedRef.current) return;
     fundraiserViewLoggedRef.current = true;
     void logMetric({
@@ -158,7 +172,7 @@ const FundraiserPage = ({
 
   const formatPrice = (tokens: number) => {
     if (!tokenPrice) return '...';
-    return formatIsoFiatAmount(Math.round(tokens * tokenPrice), 'EUR');
+    return formatIsoFiatAmount(Math.round(tokens * tokenPrice), 'EUR', intlLocale);
   };
 
   const shareUrl = opts.shareUrl || '';
@@ -227,11 +241,10 @@ const FundraiserPage = ({
             </div>
 
             <InvestProgressCard
-              fundraisingTotal={fundraisingTotal}
+              raisedAmount={displayRaised}
+              goalAmount={displayGoal}
               isLoadingFunds={isLoadingFunds}
-              activeMilestone={activeMilestone}
-              totalGoal={totalGoal}
-              tokenHolderCount={tokenStats.tokenHolders}
+              donorCount={donorCount}
               daysLeft={daysLeft}
               shareUrl={shareUrl}
               dataroomHref={opts.dataroomHref}
