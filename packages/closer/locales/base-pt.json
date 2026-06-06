@@ -743,6 +743,7 @@
   "events_slug_checkout_discount_success": "Código de desconto aplicado",
   "events_slug_checkout_discount_success_message": "Receberá",
   "events_slug_checkout_discount_success_message_part_2": "de desconto no preço do evento.",
+  "events_slug_checkout_discount_ticket_mismatch": "Este código de desconto aplica-se apenas a bilhetes \"{ticketName}\", não ao bilhete selecionado.",
   "events_slug_edit_error": "Evento não encontrado",
   "events_slug_edit_title": "Editar",
   "events_slug_edit_link": "Editar evento:",

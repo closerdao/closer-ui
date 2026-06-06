@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
@@ -17,6 +17,8 @@ interface Props {
 
 interface DiscountResult {
   status: string;
+  reason?: string;
+  applicableTicketName?: string;
   discountType: string;
   discountVal: number;
   discountPercent: number;
@@ -30,6 +32,11 @@ const DiscountCode = ({
 }: Props) => {
   const t = useTranslations();
   const [discountResult, setDiscountResult] = useState<DiscountResult>();
+
+  useEffect(() => {
+    setDiscountResult(undefined);
+  }, [selectedTicketOption?.name, discountCode]);
+
   const handleApplyDiscountCode = async () => {
     const res = await api.post('/bookings/validate-discount-code', {
       discountCode,
@@ -79,11 +86,20 @@ const DiscountCode = ({
             {t('events_slug_checkout_discount_success_message_part_2')}
           </p>
         )}
-        {discountResult && discountResult.status === 'fail' && (
-          <p className="rounded-md bg-red-50 text-red-500 px-4 py-2 mt-6">
-            {t('listings_slug_checkout_discount_error')}
-          </p>
-        )}
+        {discountResult?.status === 'fail' &&
+          discountResult.reason === 'ticket_mismatch' && (
+            <p className="rounded-md bg-red-50 text-red-500 px-4 py-2 mt-6">
+              {t('events_slug_checkout_discount_ticket_mismatch', {
+                ticketName: discountResult.applicableTicketName || '',
+              })}
+            </p>
+          )}
+        {discountResult?.status === 'fail' &&
+          discountResult.reason !== 'ticket_mismatch' && (
+            <p className="rounded-md bg-red-50 text-red-500 px-4 py-2 mt-6">
+              {t('listings_slug_checkout_discount_error')}
+            </p>
+          )}
       </div>
     </div>
   );
