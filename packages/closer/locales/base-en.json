@@ -865,6 +865,7 @@
   "stay_create_options_title": "Options",
   "stay_create_option_pickup": "I need a pickup from the nearest transport hub",
   "stay_create_option_separate_beds": "Please assign separate beds for our group",
+  "stay_create_option_team_booking": "Team booking?",
   "stay_create_payment_method_locked": "Payment method is locked because credits or tokens have already been spent on this stay.",
   "stay_create_request_review_title": "Review and submit",
   "stay_create_request_no_card_hint": "You will not be charged now. A space host will review your request first.",

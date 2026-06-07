@@ -10,7 +10,24 @@ import {
   getPaymentDelta,
   getPaymentType,
   getUtilityTotal,
+  userCanCreateTeamBooking,
 } from '../booking.helpers';
+
+describe('userCanCreateTeamBooking', () => {
+  it('returns true for staff roles that may create team bookings', () => {
+    expect(userCanCreateTeamBooking(['member', 'space-host'])).toBe(true);
+    expect(userCanCreateTeamBooking(['steward'])).toBe(true);
+    expect(userCanCreateTeamBooking(['land-manager'])).toBe(true);
+    expect(userCanCreateTeamBooking(['team'])).toBe(true);
+  });
+
+  it('returns false for guests, members without staff roles, and admins', () => {
+    expect(userCanCreateTeamBooking(undefined)).toBe(false);
+    expect(userCanCreateTeamBooking([])).toBe(false);
+    expect(userCanCreateTeamBooking(['member'])).toBe(false);
+    expect(userCanCreateTeamBooking(['admin'])).toBe(false);
+  });
+});
 
 describe('getFiatTotal', () => {
   it('returns 0 for team booking', () => {

@@ -398,6 +398,7 @@ export type StayOptionsPayload = Partial<{
   foodOptionId: string | null;
   doesNeedPickup: boolean;
   doesNeedSeparateBeds: boolean;
+  isTeamBooking: boolean;
   message: string;
   gift: string;
   about: string;

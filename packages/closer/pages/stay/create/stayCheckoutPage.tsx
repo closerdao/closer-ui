@@ -68,6 +68,7 @@ import {
   getDefaultSelectedFoodOptionId,
   getFoodOption,
   getFoodOptionsForBookingContext,
+  userCanCreateTeamBooking,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
@@ -424,6 +425,8 @@ const StayCheckoutContent = ({
   const { user: authUser, refetchUser, setUser } = useAuth();
   const { platform }: any = usePlatform();
 
+  const canCreateTeamBooking = userCanCreateTeamBooking(authUser?.roles);
+
   const [currentStay, setCurrentStay] = useState<Stay>(stay);
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const [isSavingOptions, setIsSavingOptions] = useState(false);
@@ -469,6 +472,10 @@ const StayCheckoutContent = ({
   useEffect(() => {
     draftFoodDefaultAppliedRef.current = null;
   }, [stay._id]);
+
+  useEffect(() => {
+    draftFoodDefaultAppliedRef.current = null;
+  }, [currentStay.isTeamBooking]);
 
   useEffect(() => {
     setCurrentStay(stay);
@@ -1662,6 +1669,25 @@ const StayCheckoutContent = ({
                   >
                     {t('stay_create_option_separate_beds')}
                   </Checkbox>
+                )}
+                {canCreateTeamBooking && isStayCheckoutDraft(currentStay) && (
+                  <div className="flex flex-row justify-between items-center gap-3">
+                    <span id="opt-team-booking-label" className="text-sm">
+                      {t('stay_create_option_team_booking')}
+                    </span>
+                    <Switch
+                      disabled={isSavingOptions}
+                      name="team-booking"
+                      label=""
+                      labelledBy="opt-team-booking-label"
+                      onChange={() =>
+                        void handleToggleOption({
+                          isTeamBooking: !currentStay.isTeamBooking,
+                        })
+                      }
+                      checked={!!currentStay.isTeamBooking}
+                    />
+                  </div>
                 )}
               </div>
             </div>

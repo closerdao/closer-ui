@@ -47,6 +47,20 @@ function isTokenPaymentVerified(res: { data?: { verified?: boolean } }): boolean
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+const TEAM_BOOKING_CREATOR_ROLES = [
+  'space-host',
+  'steward',
+  'land-manager',
+  'team',
+] as const;
+
+export const userCanCreateTeamBooking = (
+  roles: string[] | undefined,
+): boolean =>
+  (roles ?? []).some((role) =>
+    (TEAM_BOOKING_CREATOR_ROLES as readonly string[]).includes(role),
+  );
+
 export const areNumberArraysEqual = (
   a: number[] | undefined,
   b: number[] | undefined,

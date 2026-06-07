@@ -866,6 +866,7 @@
   "stay_create_options_title": "Opções",
   "stay_create_option_pickup": "Preciso de transporte do ponto de chegada mais próximo",
   "stay_create_option_separate_beds": "Por favor atribua camas separadas para o nosso grupo",
+  "stay_create_option_team_booking": "Reserva de equipa?",
   "stay_create_payment_method_locked": "O método de pagamento está bloqueado porque já foram usados créditos ou tokens nesta estadia.",
   "stay_create_request_review_title": "Rever e enviar",
   "stay_create_request_no_card_hint": "Não será cobrado agora. Um anfitrião irá rever o seu pedido primeiro.",

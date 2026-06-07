@@ -9,6 +9,7 @@ import Slider from '../../../components/Slider';
 import StaySearchBar, {
   StaySearchBarParams,
 } from '../../../components/StaySearchBar';
+import Switch from '../../../components/Switch';
 import BackButton from '../../../components/ui/BackButton';
 import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
@@ -30,6 +31,7 @@ import StayListingUnitsCard from '../../../components/booking/stayListingUnitsCa
 import {
   getDefaultSelectedFoodOptionId,
   getFoodOptionsForBookingContext,
+  userCanCreateTeamBooking,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { createStay, searchStays } from '../../../utils/stays.api';
@@ -128,6 +130,9 @@ const StayCreatePage = ({
   const [results, setResults] = useState<StaySearchListing[] | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [didSearchOnce, setDidSearchOnce] = useState(false);
+  const [isTeamBooking, setIsTeamBooking] = useState(false);
+
+  const canCreateTeamBooking = userCanCreateTeamBooking(user?.roles);
 
   const buildQueryParams = (params: StaySearchBarParams) => {
     const out: Record<string, string> = {
@@ -222,6 +227,7 @@ const StayCreatePage = ({
               foodOptionId: defaultGuestFoodOptionId,
             }
           : {}),
+        ...(isTeamBooking ? { isTeamBooking: true } : {}),
       });
       router.push(`/stay/create/${stay._id}`);
     } catch (err) {
@@ -301,7 +307,7 @@ const StayCreatePage = ({
           </p>
         </div>
 
-        <div className="mb-8 md:mb-10">
+        <div className="mb-8 md:mb-10 flex flex-col gap-4">
           <StaySearchBar
             bookingSettings={bookingSettings}
             initialStart={
@@ -316,6 +322,21 @@ const StayCreatePage = ({
             externalError={searchError}
             onSearch={runSearch}
           />
+          {canCreateTeamBooking && (
+            <div className="flex flex-row justify-between items-center max-w-xl mx-auto w-full px-1">
+              <span id="stay-create-team-booking-label" className="text-sm">
+                {t('stay_create_option_team_booking')}
+              </span>
+              <Switch
+                disabled={false}
+                name="team-booking"
+                label=""
+                labelledBy="stay-create-team-booking-label"
+                onChange={setIsTeamBooking}
+                checked={isTeamBooking}
+              />
+            </div>
+          )}
         </div>
 
         <section
