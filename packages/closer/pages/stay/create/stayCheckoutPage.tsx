@@ -87,6 +87,7 @@ import {
   computeTokensOwed,
   confirmStayCheckout,
   formatStayMoney,
+  applyOptimisticTeamBookingToStay,
   getStay,
   getStayAccommodationTokenTotal,
   inferPaymentChoiceFromStay,
@@ -468,9 +469,12 @@ const StayCheckoutContent = ({
     | null
   >(null);
   const draftFoodDefaultAppliedRef = useRef<string | null>(null);
+  const preTeamPriceLockRef = useRef<Stay['priceLock'] | null>(null);
+  const [isSavingTeamBooking, setIsSavingTeamBooking] = useState(false);
 
   useEffect(() => {
     draftFoodDefaultAppliedRef.current = null;
+    preTeamPriceLockRef.current = null;
   }, [stay._id]);
 
   useEffect(() => {
@@ -1247,6 +1251,40 @@ const StayCheckoutContent = ({
     }
   };
 
+  const handleTeamBookingToggle = async (nextValue: boolean) => {
+    if (isSavingTeamBooking) return;
+
+    const previousStay = currentStay;
+    if (!preTeamPriceLockRef.current && !previousStay.isTeamBooking) {
+      preTeamPriceLockRef.current = previousStay.priceLock ?? null;
+    }
+
+    setActionError(null);
+    setIsSavingTeamBooking(true);
+    setCurrentStay(
+      applyOptimisticTeamBookingToStay(
+        previousStay,
+        nextValue,
+        preTeamPriceLockRef.current,
+      ),
+    );
+
+    try {
+      const updated = await updateStayOptions(previousStay._id, {
+        isTeamBooking: nextValue,
+      });
+      setCurrentStay(updated);
+      if (!updated.isTeamBooking) {
+        preTeamPriceLockRef.current = null;
+      }
+    } catch (err) {
+      setCurrentStay(previousStay);
+      setActionError(parseMessageFromError(err));
+    } finally {
+      setIsSavingTeamBooking(false);
+    }
+  };
+
   useEffect(() => {
     if (!shouldSkipFood || !currentStay._id) return;
     const alreadyNoFood =
@@ -1671,20 +1709,18 @@ const StayCheckoutContent = ({
                   </Checkbox>
                 )}
                 {canCreateTeamBooking && isStayCheckoutDraft(currentStay) && (
-                  <div className="flex flex-row justify-between items-center gap-3">
+                  <div className="flex flex-row justify-between items-center gap-3 [&_.switch]:mb-0">
                     <span id="opt-team-booking-label" className="text-sm">
                       {t('stay_create_option_team_booking')}
                     </span>
                     <Switch
-                      disabled={isSavingOptions}
-                      name="team-booking"
+                      disabled={isSavingTeamBooking}
+                      name="stay-checkout-team-booking"
                       label=""
                       labelledBy="opt-team-booking-label"
-                      onChange={() =>
-                        void handleToggleOption({
-                          isTeamBooking: !currentStay.isTeamBooking,
-                        })
-                      }
+                      onChange={(nextValue) => {
+                        void handleTeamBookingToggle(nextValue);
+                      }}
                       checked={!!currentStay.isTeamBooking}
                     />
                   </div>

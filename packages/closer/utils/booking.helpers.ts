@@ -52,6 +52,7 @@ const TEAM_BOOKING_CREATOR_ROLES = [
   'steward',
   'land-manager',
   'team',
+  'admin',
 ] as const;
 
 export const userCanCreateTeamBooking = (

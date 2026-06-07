@@ -13,6 +13,7 @@ import type {
 } from '../types/booking';
 import type { StaySearchResponse } from '../types/durationDiscount';
 import type {
+  PriceLock,
   Stay,
   StayCheckoutResponse,
   StayMoney,
@@ -391,6 +392,66 @@ export const createStay = async (payload: CreateStayPayload): Promise<Stay> => {
 export const getStay = async (id: string): Promise<Stay> => {
   const { data } = await api.get(`/stays/${id}`, { cache: false } as any);
   return (data as ApiOk<Stay>).results;
+};
+
+const zeroStayMoney = (money: StayMoney): StayMoney => ({
+  val: 0,
+  cur: money.cur,
+});
+
+export const applyOptimisticTeamBookingToStay = (
+  stay: Stay,
+  isTeamBooking: boolean,
+  previousPriceLock?: PriceLock | null,
+): Stay => {
+  if (!isTeamBooking) {
+    if (!previousPriceLock) {
+      return { ...stay, isTeamBooking: false };
+    }
+    return {
+      ...stay,
+      isTeamBooking: false,
+      priceLock: previousPriceLock,
+      fiatTarget: {
+        val: previousPriceLock.total.val,
+        cur: previousPriceLock.total.cur,
+      },
+    };
+  }
+
+  if (!stay.priceLock) {
+    return { ...stay, isTeamBooking: true };
+  }
+
+  const priceLock = stay.priceLock;
+  const waived =
+    priceLock.lines.accommodation.val +
+    priceLock.lines.food.val +
+    priceLock.lines.utility.val;
+  const newSubtotal = Math.max(0, +(priceLock.subtotal.val - waived).toFixed(2));
+  const newTotal = Math.max(0, +(priceLock.total.val - waived).toFixed(2));
+
+  return {
+    ...stay,
+    isTeamBooking: true,
+    priceLock: {
+      ...priceLock,
+      lines: {
+        ...priceLock.lines,
+        accommodation: zeroStayMoney(priceLock.lines.accommodation),
+        accommodationGross: zeroStayMoney(
+          priceLock.lines.accommodationGross ?? priceLock.lines.accommodation,
+        ),
+        food: zeroStayMoney(priceLock.lines.food),
+        utility: zeroStayMoney(priceLock.lines.utility),
+      },
+      subtotal: { ...priceLock.subtotal, val: newSubtotal },
+      total: { ...priceLock.total, val: newTotal },
+    },
+    fiatTarget: stay.fiatTarget
+      ? { ...stay.fiatTarget, val: newTotal }
+      : { val: newTotal, cur: priceLock.total.cur },
+  };
 };
 
 export type StayOptionsPayload = Partial<{

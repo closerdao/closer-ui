@@ -21,11 +21,14 @@ describe('userCanCreateTeamBooking', () => {
     expect(userCanCreateTeamBooking(['team'])).toBe(true);
   });
 
-  it('returns false for guests, members without staff roles, and admins', () => {
+  it('returns true for admin', () => {
+    expect(userCanCreateTeamBooking(['admin'])).toBe(true);
+  });
+
+  it('returns false for guests and members without staff roles', () => {
     expect(userCanCreateTeamBooking(undefined)).toBe(false);
     expect(userCanCreateTeamBooking([])).toBe(false);
     expect(userCanCreateTeamBooking(['member'])).toBe(false);
-    expect(userCanCreateTeamBooking(['admin'])).toBe(false);
   });
 });
 
