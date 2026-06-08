@@ -6,10 +6,12 @@ Ship `apps/village-app` as a deployable, brand-editable Closer instance that can
 
 ## V1 Tickets
 
-- [ ] Create Village App shell
+- [x] Create Village App shell
   - Add `apps/village-app` to workspaces.
   - Keep the app close to the Earthbound shape for v1.
   - Preserve existing Village apps unchanged.
+  - Verified with `yarn workspaces info --silent`.
+  - Verified with `yarn workspace village-app lint`.
 
 - [x] Replace Earthbound homepage with CMS-or-Coming-Soon
   - Fetch the homepage from the existing `/page` API with `slug: '/'`.
