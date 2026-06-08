@@ -29,11 +29,12 @@ Ship `apps/village-app` as a deployable, brand-editable Closer instance that can
   - Verified with `rg "earthbound|Earthbound|EARTHBOUND|Grimsn|Zuzanna|dicte@|earthbound\\.eco|traditionaldreamfactory|©" apps/village-app -n`.
   - Verified with `yarn workspace village-app lint`.
 
-- [ ] Document minimal provisioning contract
+- [x] Document minimal provisioning contract
   - Define deployable state.
   - Define launch-ready state.
   - List required brand/config fields.
   - List homepage page fields and section expectations.
+  - Contract written in `docs/village-app-provisioning-contract.md`.
 
 - [ ] Verify empty deployment path
   - Build or document build blockers with concrete next steps.
