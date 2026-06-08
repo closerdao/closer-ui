@@ -15,6 +15,11 @@ A Village Deployment is deployable when the frontend has:
 
 The backend may have no homepage content. In that case `/` renders the Coming Soon State and marks it `noindex,nofollow`.
 
+The app-level env contract is enforced with `@t3-oss/env-nextjs` and exported
+from `apps/village-app/env.js` as `villageAppEnvSchema`. The same module exports
+the required, optional, and defaulted provisioning key lists for future CI drift
+checks and SDK sharing.
+
 ## Launch-Ready State
 
 A Village is launch-ready when it has valid brand configuration and either:
@@ -33,6 +38,11 @@ The backend `general` config should provide:
 - `semanticUrl`: canonical public URL or domain.
 - `teamEmail`: public contact email.
 - `timeZone`: Village timezone.
+
+The app-level runtime config contract is exported from
+`apps/village-app/config.js` as `villageRuntimeConfigSchema`. It describes the
+minimal config shape expected by the Village App, including defaultable
+`general` fields and optional feature config buckets.
 
 ## Optional Brand Config
 

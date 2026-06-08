@@ -1,7 +1,6 @@
 import { api } from 'closer';
 
-const platformUrl =
-  process.env.NEXT_PUBLIC_PLATFORM_URL || process.env.NEXT_PUBLIC_PLATFORM || '';
+import { platformUrl } from '../env';
 
 const normalizeBaseUrl = (url) => url.replace(/\/$/, '');
 

@@ -16,6 +16,7 @@
     "@mdx-js/react": "^2.3.0",
     "@next/mdx": "15.5.15",
     "@sentry/nextjs": "^8.55.2",
+    "@t3-oss/env-nextjs": "^0.13.11",
     "@tailwindcss/forms": "^0.4.0",
     "@tailwindcss/line-clamp": "^0.4.4",
     "closer": "*",
@@ -25,7 +26,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-ga": "^3.3.1",
-    "ui": "*"
+    "ui": "*",
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",
