@@ -21,10 +21,13 @@ Ship `apps/village-app` as a deployable, brand-editable Closer instance that can
   - Remove Earthbound homepage copy and media from the Village App homepage.
   - Verified with `../../node_modules/.bin/next lint` from `apps/village-app`.
 
-- [ ] Neutralize public branding defaults
+- [x] Neutralize public branding defaults
   - Replace copied Earthbound footer defaults with neutral/config-derived defaults.
   - Remove Earthbound-specific public metadata and attribution from generic public surfaces.
   - Keep deeper copied route behavior for v1 unless it leaks Earthbound branding.
+  - Replaced copied static marketing pages with CMS-backed routes.
+  - Verified with `rg "earthbound|Earthbound|EARTHBOUND|Grimsn|Zuzanna|dicte@|earthbound\\.eco|traditionaldreamfactory|©" apps/village-app -n`.
+  - Verified with `yarn workspace village-app lint`.
 
 - [ ] Document minimal provisioning contract
   - Define deployable state.

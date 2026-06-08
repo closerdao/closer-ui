@@ -62,24 +62,9 @@ const nextConfig = {
       { source: '/admin/emails', destination: '/dashboard/admin/emails', permanent: true },
       { source: '/admin/emails/:slug', destination: '/dashboard/admin/emails/:slug', permanent: true },
       {
-        source: '/invest',
-        destination: '/pages/invest',
-        permanent: true,
-      },
-      {
-        source: '/community',
-        destination: '/pages/community',
-        permanent: true,
-      },
-      {
         source: '/visit',
         destination: '/stay',
         permanent: true,
-      },
-      {
-        source: '/flyer',
-        destination: '/pages/community',
-        permanent: true, 
       },
       { source: '/dashboard/token-sales', destination: '/dashboard/sales/financed', permanent: true },
       { source: '/dashboard/token-sales/financed/:applicationId', destination: '/dashboard/sales/financed/:applicationId', permanent: true },
