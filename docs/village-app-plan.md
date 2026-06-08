@@ -36,11 +36,17 @@ Ship `apps/village-app` as a deployable, brand-editable Closer instance that can
   - List homepage page fields and section expectations.
   - Contract written in `docs/village-app-provisioning-contract.md`.
 
-- [ ] Verify empty deployment path
+- [x] Verify empty deployment path
   - Build or document build blockers with concrete next steps.
   - Start the app locally.
   - Confirm `/` renders Coming Soon without homepage backend data.
   - Confirm existing shared routes still resolve through copied/exported pages.
+  - Fixed the app-local React JSX compatibility shim needed for `next build`.
+  - Verified with `yarn install --frozen-lockfile`.
+  - Verified with `yarn workspace village-app build`.
+  - Verified with `PORT=3105 yarn workspace village-app start`.
+  - Verified `/` returns Coming Soon and `noindex,nofollow` with no `NEXT_PUBLIC_API_URL`.
+  - Verified `/stay` returns `200` from the built app.
 
 ## V2 Track
 
