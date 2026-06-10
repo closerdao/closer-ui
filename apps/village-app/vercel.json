@@ -1,0 +1,10 @@
+{
+  "build": {
+    "env": {
+      "SHARP_IGNORE_GLOBAL_LIBVIPS": "1"
+    }
+  },
+  "installCommand": "yarn install --frozen-lockfile",
+  "buildCommand": "cd ../.. && turbo run build:locales build:config --filter=closer && turbo run build --filter=village-app",
+  "ignoreCommand": "npx turbo-ignore village-app"
+}
