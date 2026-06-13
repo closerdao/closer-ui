@@ -1,6 +1,6 @@
 import { configDescription } from '../config';
-import { syncCurrencyLocaleFromCountryCode } from './currencyFormat';
 import { getDefaultConfigValue } from './config.utils';
+import { syncCurrencyLocaleFromCountryCode } from './currencyFormat';
 
 interface InputObject {
   [key: string]: {

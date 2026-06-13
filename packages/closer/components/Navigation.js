@@ -5,10 +5,10 @@ import { useContext, useEffect, useMemo, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import configCached from '../configCached';
 import { useAuth } from '../contexts/auth';
 import { useConfig } from '../hooks/useConfig';
 import api from '../utils/api';
-import configCached from '../configCached';
 import { deriveMemberMenuFeatureFlags } from '../utils/memberMenuFeatureFlags';
 import ApiUrlWarning from './ApiUrlWarning';
 import FundraisingWidget from './FundraisingWidget';
@@ -152,6 +152,9 @@ const Navigation = () => {
                       <Link href="/pages/invest">{t('header_nav_invest')}</Link>
                     </li>
                     <li>
+                      <Link href="/stay">{t('header_nav_stay')}</Link>
+                    </li>
+                    <li>
                       <Link href="/pages/community">
                         {t('header_nav_community')}
                       </Link>
@@ -261,12 +264,15 @@ const Navigation = () => {
               !APP_NAME?.toLowerCase().includes('earthbound') &&
               APP_NAME?.toLowerCase() !== 'closer' &&
               (() => {
-                const cta = isAuthenticated ? primaryCtaMember : primaryCtaVisitor;
+                const cta = isAuthenticated
+                  ? primaryCtaMember
+                  : primaryCtaVisitor;
                 if (cta === 'none') return null;
                 if (cta === 'bookings' && !isBookingEnabled) return null;
                 if (cta === 'learningHub' && !isLearningHubEnabled) return null;
                 if (cta === 'events' && !isEventsEnabled) return null;
-                if (cta === 'custom' && !primaryCtaCustomUrl?.trim()) return null;
+                if (cta === 'custom' && !primaryCtaCustomUrl?.trim())
+                  return null;
                 const buttonClass =
                   router?.locales?.length > 1 ? 'hidden sm:block' : '';
                 if (cta === 'login') {
@@ -323,7 +329,8 @@ const Navigation = () => {
                 }
                 if (cta === 'custom') {
                   const href = primaryCtaCustomUrl.trim();
-                  const text = primaryCtaCustomText?.trim() || t('navigation_stay');
+                  const text =
+                    primaryCtaCustomText?.trim() || t('navigation_stay');
                   return (
                     <Button
                       key="cta-custom"
@@ -342,20 +349,24 @@ const Navigation = () => {
                 }
                 return null;
               })()}
-            {configLoaded && APP_NAME && APP_NAME?.toLowerCase() === 'tdf' && isFundraiserEnabled && fundraisingNavProps && (
-              <div className="w-fit flex-shrink-0">
-                <FundraisingWidget
-                  variant="nav"
-                  milestones={fundraisingNavProps.milestones}
-                  amountRaisedPreCampaign={
-                    fundraisingNavProps.amountRaisedPreCampaign
-                  }
-                  loansCollectedTotal={
-                    fundraisingNavProps.loansCollectedTotal
-                  }
-                />
-              </div>
-            )}
+            {configLoaded &&
+              APP_NAME &&
+              APP_NAME?.toLowerCase() === 'tdf' &&
+              isFundraiserEnabled &&
+              fundraisingNavProps && (
+                <div className="w-fit flex-shrink-0">
+                  <FundraisingWidget
+                    variant="nav"
+                    milestones={fundraisingNavProps.milestones}
+                    amountRaisedPreCampaign={
+                      fundraisingNavProps.amountRaisedPreCampaign
+                    }
+                    loansCollectedTotal={
+                      fundraisingNavProps.loansCollectedTotal
+                    }
+                  />
+                </div>
+              )}
             {configLoaded && isAuthenticated && (
               <Link
                 href={`/members/${user?.slug}`}
