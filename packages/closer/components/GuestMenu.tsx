@@ -6,10 +6,10 @@ import { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import configCached from '../configCached';
 import { useBuyTokens } from '../hooks/useBuyTokens';
 import { useConfig } from '../hooks/useConfig';
 import useRBAC from '../hooks/useRBAC';
-import configCached from '../configCached';
 import { getCurrentUnitPrice } from '../utils/bondingCurve';
 import { getReserveTokenDisplay } from '../utils/config.utils';
 import ReportABug from './ReportABug';
@@ -116,6 +116,11 @@ const GuestMenu = () => {
               url: '/events',
               enabled: true,
               rbacPage: 'Events',
+            },
+            {
+              label: t('menu_artists_in_residence'),
+              url: '/artists',
+              enabled: true,
             },
           ],
         },

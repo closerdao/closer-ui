@@ -18,7 +18,6 @@ import Profile from './Profile';
 import ReportABug from './ReportABug';
 import Wallet from './Wallet';
 
-
 interface MenuSection {
   label: string;
   isOpen: boolean;
@@ -129,6 +128,11 @@ const MemberMenu = ({
               url: '/events',
               enabled: isEventsEnabled,
               rbacPage: 'Events',
+            },
+            {
+              label: t('menu_artists_in_residence'),
+              url: '/artists',
+              enabled: true,
             },
           ],
         },
