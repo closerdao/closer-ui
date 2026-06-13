@@ -377,7 +377,6 @@ const GuestMenu = () => {
                   label: t('header_nav_invest'),
                   url: '/pages/invest',
                   enabled: true,
-                  rbacPage: 'Invest',
                 },
                 {
                   label: t('header_nav_stay'),
@@ -388,13 +387,11 @@ const GuestMenu = () => {
                   label: t('header_nav_community'),
                   url: '/pages/community',
                   enabled: true,
-                  rbacPage: 'Community',
                 },
                 {
                   label: t('header_nav_events'),
                   url: '/pages/events',
                   enabled: true,
-                  rbacPage: 'Events',
                 },
               ]
             : []),
