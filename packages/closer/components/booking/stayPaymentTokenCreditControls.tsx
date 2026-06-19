@@ -297,21 +297,26 @@ export function StayPaymentTokenCreditControls({
     try {
       const pendingPayload = pendingTokenPaymentPayloadRef.current;
       if (pendingPayload) {
-        let editableStay = stay;
-        if (editableStay.status === 'draft') {
-          editableStay = await submitStay(editableStay._id);
-          await onStaySynced();
-          stayForStake = (await getStay(editableStay._id)) ?? editableStay;
-        } else {
-          stayForStake = editableStay;
-        }
+        const targetStay = stay;
         const updated = await setStayPaymentMethod(
-          editableStay._id,
+          targetStay._id,
           pendingPayload,
         );
         pendingTokenPaymentPayloadRef.current = null;
         await onStaySynced();
         stayForStake = updated;
+
+        if (targetStay.status === 'draft') {
+          const submitted = await submitStay(updated._id);
+          await onStaySynced();
+          stayForStake = (await getStay(submitted._id)) ?? submitted;
+
+          if (isStayAwaitingHostApproval(stayForStake)) {
+            setIsStakeModalOpen(false);
+            setStakePlan(null);
+            return;
+          }
+        }
       }
 
       const planToUse = buildStayTokenStakePlan(
@@ -496,13 +501,6 @@ export function StayPaymentTokenCreditControls({
     setBannerError(null);
     setIsApplyingCredits(true);
     try {
-      let editableStay = stay;
-      if (editableStay.status === 'draft') {
-        editableStay = await submitStay(editableStay._id);
-        await onStaySynced();
-        const refetched = await getStay(editableStay._id);
-        if (refetched) editableStay = refetched;
-      }
       const payload =
         creditsAmountToApply >= tokenAccommodationVal
           ? { method: 'full-credits' as const }
@@ -510,7 +508,10 @@ export function StayPaymentTokenCreditControls({
               method: 'partial-credits' as const,
               appliedCredits: creditsAmountToApply,
             };
-      await setStayPaymentMethod(editableStay._id, payload);
+      const updated = await setStayPaymentMethod(stay._id, payload);
+      if (stay.status === 'draft') {
+        await submitStay(updated._id);
+      }
       await onStaySynced();
       setIsCreditsModalOpen(false);
     } catch (err) {
@@ -528,14 +529,10 @@ export function StayPaymentTokenCreditControls({
     setBannerError(null);
     setIsRevertingTokenPayment(true);
     try {
-      let editableStay = stay;
-      if (editableStay.status === 'draft') {
-        editableStay = await submitStay(editableStay._id);
-        await onStaySynced();
-        const refetched = await getStay(editableStay._id);
-        if (refetched) editableStay = refetched;
+      const updated = await setStayPaymentMethod(stay._id, { method: 'fiat' });
+      if (stay.status === 'draft') {
+        await submitStay(updated._id);
       }
-      await setStayPaymentMethod(editableStay._id, { method: 'fiat' });
       await onStaySynced();
     } catch (err) {
       setBannerError(parseMessageFromError(err));

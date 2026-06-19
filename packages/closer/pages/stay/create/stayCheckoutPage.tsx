@@ -991,19 +991,27 @@ const StayCheckoutContent = ({
     try {
       const pendingPayload = pendingTokenPaymentPayloadRef.current;
       if (pendingPayload) {
-        let editableStay = currentStay;
-        if (editableStay.status === 'draft') {
-          editableStay = await submitStay(editableStay._id);
-          setCurrentStay(editableStay);
-          stayForStake = editableStay;
-        }
+        const targetStay = currentStay;
         const updated = await setStayPaymentMethod(
-          editableStay._id,
+          targetStay._id,
           pendingPayload,
         );
         pendingTokenPaymentPayloadRef.current = null;
         setCurrentStay(updated);
         stayForStake = updated;
+
+        if (targetStay.status === 'draft') {
+          const submitted = await submitStay(updated._id);
+          setCurrentStay(submitted);
+          stayForStake = submitted;
+
+          if (isStayAwaitingHostApproval(submitted)) {
+            setIsStakeModalOpen(false);
+            setStakePlan(null);
+            router.replace(`/stay/${submitted._id}/pending`);
+            return;
+          }
+        }
       }
 
       const planToUse = buildStayTokenStakePlan(
@@ -1190,11 +1198,6 @@ const StayCheckoutContent = ({
     setActionError(null);
     setIsApplyingCredits(true);
     try {
-      let editableStay = currentStay;
-      if (editableStay.status === 'draft') {
-        editableStay = await submitStay(editableStay._id);
-        setCurrentStay(editableStay);
-      }
       const payload =
         creditsAmountToApply >= tokenAccommodationVal
           ? { method: 'full-credits' as const }
@@ -1202,8 +1205,18 @@ const StayCheckoutContent = ({
               method: 'partial-credits' as const,
               appliedCredits: creditsAmountToApply,
             };
+      let editableStay = currentStay;
       const updated = await setStayPaymentMethod(editableStay._id, payload);
-      setCurrentStay(updated);
+      editableStay = updated;
+
+      if (currentStay.status === 'draft') {
+        editableStay = await submitStay(updated._id);
+      }
+
+      setCurrentStay(editableStay);
+      if (isStayAwaitingHostApproval(editableStay)) {
+        router.replace(`/stay/${editableStay._id}/pending`);
+      }
       setIsCreditsModalOpen(false);
     } catch (err) {
       setCreditsModalError(parseMessageFromError(err));
@@ -1220,15 +1233,20 @@ const StayCheckoutContent = ({
     setActionError(null);
     setIsRevertingTokenPayment(true);
     try {
-      let editableStay = currentStay;
-      if (editableStay.status === 'draft') {
-        editableStay = await submitStay(editableStay._id);
-        setCurrentStay(editableStay);
-      }
-      const updated = await setStayPaymentMethod(editableStay._id, {
+      const targetStay = currentStay;
+      const updated = await setStayPaymentMethod(targetStay._id, {
         method: 'fiat',
       });
-      setCurrentStay(updated);
+      let editableStay = updated;
+
+      if (targetStay.status === 'draft') {
+        editableStay = await submitStay(updated._id);
+      }
+
+      setCurrentStay(editableStay);
+      if (isStayAwaitingHostApproval(editableStay)) {
+        router.replace(`/stay/${editableStay._id}/pending`);
+      }
     } catch (err) {
       setActionError(parseMessageFromError(err));
     } finally {
