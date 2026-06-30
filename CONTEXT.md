@@ -28,6 +28,22 @@ _Avoid_: Hardcoded pages, app-specific content
 The editable identity settings for a Village, including name, logos, colors, approved font choice, navigation, primary calls to action, footer links, contact, social, and legal basics.
 _Avoid_: Custom CSS, app-specific React components, arbitrary theme code
 
+**Reference Village App**:
+An existing bespoke Village-facing app used as source material for identifying configuration needed by the generic Village App.
+_Avoid_: Migration target, source of truth, client fork
+
+**Village App Deployment Config**:
+The per-Village configuration needed to run one Village Deployment, split between deploy-time environment and editable backend configuration.
+_Avoid_: App-village config, whitelabel settings, tenant settings
+
+**Platform Capability Gate**:
+A deploy-time switch that determines whether a capability is available to a Village Deployment at all.
+_Avoid_: Village preference, brand setting, content setting
+
+**Village Feature Config**:
+An editable backend configuration value that determines whether an available capability is enabled for one Village.
+_Avoid_: Feature flag, env flag, platform capability
+
 ## Decisions
 
 **Village Deployability vs Launch Readiness**:
