@@ -8,6 +8,8 @@ Five homes:
 
 > This is a **review**, not a build plan. Nothing gets coded until it reads `accepted`.
 
+> ⚖️ **Open decision, not a settled goal:** whether we should be able to *spin up a new village without touching env vars* is **still a discussion** — not something this deck assumes or commits to. Env vars stay in play until that discussion lands.
+
 ---
 
 ## 1 — Scope
