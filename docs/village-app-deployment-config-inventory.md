@@ -1,12 +1,20 @@
-# Review Village App deployment config
+# 🏘️ Village App Deploy Config — Review Deck
 
-This document inventories the config needed to deploy the generic Village App. Use it to decide what stays in environment variables, what moves to backend database config, what belongs in the Village content management system, and what stays in product code.
+**Every row asks one question: where does this config live?**
 
-This is a review document, not an implementation plan.
+Five homes:
 
-## Decision scope
+`env` · `build snapshot` · `runtime DB` · `CMS` · `code`
 
-Use the smaller Reference Village Apps as the first baseline:
+> This is a **review**, not a build plan. Nothing gets coded until it reads `accepted`.
+
+---
+
+## 1 — Scope
+
+**Small apps first. TDF later.**
+
+Baseline (the small Reference Village Apps):
 
 - `apps/earthbound`
 - `apps/closer`
@@ -15,44 +23,56 @@ Use the smaller Reference Village Apps as the first baseline:
 - `apps/per-auset`
 - `apps/lios`
 
-Exclude `apps/tdf` from this pass. TDF has a larger config footprint and should stress-test the model after this baseline review.
+Skip `apps/tdf` this pass. It is big. Use it to stress-test the model *after* this baseline lands.
 
-## Review legend
+Reference apps are **sources to learn from**, not things we migrate.
 
-| Value | Meaning |
+---
+
+## 2 — The five homes
+
+| Home | Holds |
 | --- | --- |
-| `accepted` | Agreed unless new evidence appears |
-| `proposed` | Likely direction, needs review |
-| `needs discussion` | Do not code yet |
-| `✓` | Required or true |
-| `✗` | Not required or false |
-| `feature` | Required only when that feature launches |
-| `web3` | Required only for web3 deployments |
-| `page` | Required only when that page launches |
+| **Deploy-time env** | Values the app needs *before* it can fetch backend config |
+| **Build snapshot** | Backend `/config` frozen at prebuild → `appConfig.snapshot.json` |
+| **Runtime DB config** | Knobs each village turns itself (product + policy) |
+| **Village CMS** | Pages, homepage sections, media, nav, public copy |
+| **Code** | Routes, shared behavior, flows, product mechanics |
 
-## Agreed rules
+---
 
-- Reference apps are sources for the inventory, not migration targets
-- The first pass combines all smaller Reference Village Apps except TDF
-- Hardcoded village content should move to Village CMS, not database config
-- Public provider keys stay in deploy-time env by default
-- `NEXT_PUBLIC_PLATFORM_URL` is the deployment URL source of truth
-- `general.semanticUrl` should match the deployment URL before launch
-- Feature availability has two layers: env capability gates and per-village database config
+## 3 — How to read the tables
 
-## Target categories
-
-| Target | Use for |
+| Status | Means |
 | --- | --- |
-| Deploy-time env | Values needed before the app can fetch backend config |
-| Build snapshot | Backend `/config` fetched during prebuild |
-| Runtime DB config | Editable per-village product and policy settings |
-| Village CMS | Pages, homepage sections, media, navigation, and public copy |
-| Code | Routes, shared behavior, flows, and product mechanics |
+| `accepted` | Agreed. Move on unless new evidence. |
+| `proposed` | Probably right. Needs a look. |
+| `needs discussion` | **Do not code yet.** |
 
-## Deploy-time env
+| Flag | Means |
+| --- | --- |
+| `✓` / `✗` | Required / not required |
+| `feature` | Only when that feature launches |
+| `web3` | Only for web3 deployments |
+| `page` | Only when that page launches |
 
-These values should stay in environment variables unless review finds a stronger reason to move them.
+---
+
+## 4 — House rules
+
+- Hardcoded village content → **CMS**, not DB config
+- Public provider keys → **stay in env** by default
+- `NEXT_PUBLIC_PLATFORM_URL` = the one true deployment URL
+- `general.semanticUrl` must match that URL before launch
+- Feature availability has **two switches**: env capability gate + per-village DB config
+
+---
+
+## 5 — 🌐 Deploy-time env
+
+**The stuff the app needs before it can even phone home.**
+
+Keep these in env vars unless review finds a strong reason to move them.
 
 | Env var | Source | Target | Secret | Deploy | Launch | Status |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -71,24 +91,28 @@ These values should stay in environment variables unless review finds a stronger
 | `NEXT_PUBLIC_SENTRY_DSN` | code refs | env | mixed | ✗ | ✗ | proposed |
 | Public provider keys | shared | env | ✗ | feature | feature | accepted |
 
-Notes:
+**Why each stays put:**
 
-- `NEXT_PUBLIC_API_URL`: required before the app can fetch backend config
-- `NEXT_PUBLIC_PLATFORM_URL`: canonical public deployment URL
-- `NEXT_PUBLIC_PLATFORM`: legacy identifier or fallback; keep only if shared code still needs it
-- `NEXT_PUBLIC_CDN_URL`: keep in env until media ownership is clearer
-- `NEXT_PUBLIC_LOG_REQUESTS`: debug logging switch, not village config
-- `NEXT_PUBLIC_NETWORK`: environment-owned blockchain network selector
-- `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID`: public WalletConnect project key
-- `NEXT_PUBLIC_TOKEN_SALE_DATE`: likely campaign config; inspect usage before adding a DB field
-- `NEXT_PUBLIC_DEFAULT_TIMEZONE`: fallback only; `general.timeZone` should win after config loads
-- `NEXT_PUBLIC_FEATURE_CARROTS` and `NEXT_PUBLIC_FEATURE_SUPPORT_US`: env gates availability; DB config enables each village
-- Sentry values: deployment observability, not village config
-- Public provider keys: Firebase, Google Maps, Stripe publishable keys, WalletConnect, analytics
+- `NEXT_PUBLIC_API_URL` — needed before the app can fetch backend config
+- `NEXT_PUBLIC_PLATFORM_URL` — canonical public deployment URL
+- `NEXT_PUBLIC_PLATFORM` — legacy id / fallback; keep only if shared code still needs it
+- `NEXT_PUBLIC_CDN_URL` — stays in env until media ownership is clearer
+- `NEXT_PUBLIC_LOG_REQUESTS` — debug switch, not village config
+- `NEXT_PUBLIC_NETWORK` — env-owned blockchain network selector
+- `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID` — public WalletConnect key
+- `NEXT_PUBLIC_TOKEN_SALE_DATE` — smells like campaign config; check usage before adding a DB field
+- `NEXT_PUBLIC_DEFAULT_TIMEZONE` — fallback only; `general.timeZone` wins once config loads
+- `NEXT_PUBLIC_FEATURE_*` — env gates the capability; DB config enables each village
+- Sentry values — deployment observability, not village config
+- Public provider keys — Firebase, Google Maps, Stripe publishable, WalletConnect, analytics
 
-## Build-time DB snapshot
+---
 
-The prebuild flow fetches backend `/config` and writes `packages/closer/generated/appConfig.snapshot.json`.
+## 6 — 📦 Build-time DB snapshot
+
+**Config frozen at build time.**
+
+Prebuild fetches backend `/config` → writes `packages/closer/generated/appConfig.snapshot.json`.
 
 | Concern | Source | Target | Secret | Deploy | Launch | Status |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -96,15 +120,17 @@ The prebuild flow fetches backend `/config` and writes `packages/closer/generate
 | `general` snapshot | shared + village + refs | snapshot | ✗ | ✓ | ✓ | accepted |
 | `booking` snapshot | `apps/lios` | snapshot | ✗ | ✗ | maybe | needs discussion |
 
-Notes:
+- `/config` rows — pick the required bucket subset after row-level review
+- `general` snapshot — seeds identity, locale, currency, timezone, footer, page metadata
+- `booking` snapshot — split booking policy from homepage content before coding
 
-- `/config` rows: decide the required bucket subset after row-level review
-- `general` snapshot: seeds identity, locale, currency, timezone, footer, and page metadata
-- `booking` snapshot: separate booking policy from homepage content before coding
+---
 
-## Runtime DB config
+## 7 — 🎛️ Runtime DB config
 
-These values should be editable per village through backend config.
+**Knobs each village turns itself.**
+
+Editable per village through backend config.
 
 | Concern | Source | Target | Secret | Deploy | Launch | Status |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -115,18 +141,18 @@ These values should be editable per village through backend config.
 | Support settings | `apps/moos` | `fundraiser` | ✗ | ✗ | support | proposed |
 | Page metadata | refs | `general` + CMS | ✗ | ✗ | page | proposed |
 
-Notes:
+- Village identity — public name, app id, canonical URL, contact, timezone
+- Footer social/contact — part of the Village Brand Kit
+- FAQ sheet id — prefer CMS FAQ blocks if they can replace Google Sheets
+- Feature enablement — booking, volunteering, citizenship, learning hub, affiliate, fundraiser flags
+- Support settings — `apps/moos` uses fundraiser config for support-page availability + credit price
+- Page metadata — identity stays in `general`; page bodies go to CMS
 
-- Village identity: public name, app id, canonical URL, contact details, and timezone
-- Footer social/contact: part of the Village Brand Kit
-- FAQ sheet id: prefer CMS FAQ blocks if they can replace Google Sheets
-- Feature enablement: includes booking, volunteering, citizenship, learning hub, affiliate, and fundraiser flags
-- Support settings: `apps/moos` uses fundraiser config for support page availability and credit price display
-- Page metadata: keep identity in `general`; move page bodies to CMS
+---
 
-## Code or CMS, not DB config
+## 8 — 📝 Code or CMS — NOT DB config
 
-These concerns should not become database config by default.
+**Content and behavior. Not database rows.**
 
 | Concern | Source | Target | Secret | Deploy | Launch | Status |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -139,26 +165,28 @@ These concerns should not become database config by default.
 | Footer/layout shell | refs | code + config | ✗ | ✓ | ✓ | proposed |
 | Shared behavior | shared | code | ✗ | ✓ | ✓ | accepted |
 
-Notes:
+- Homepages — sections, copy, images, FAQs, CTAs → CMS
+- Nested public pages — `apps/earthbound` needs custom slugs + section rendering
+- Informational pages — split reusable product pages from village editorial pages
+- Image assets — logos → Brand Kit; content images → CMS media
+- PDFs — split public docs from structured legal config
+- App routes — code owns routes; feature config + nav decide visibility
+- Footer/layout shell — code owns layout; CMS / Brand Kit owns content
+- Shared behavior — stays in code unless it is a per-village policy
 
-- Homepages: move sections, copy, images, FAQs, and calls to action to CMS
-- Nested public pages: `apps/earthbound` needs custom slugs and section rendering
-- Informational pages: split reusable product pages from village-owned editorial pages
-- Image assets: logos belong in Brand Kit; content images belong in CMS media
-- PDFs: separate public documents from structured legal config
-- App routes: code owns routes; feature config and navigation decide visibility
-- Footer/layout shell: code owns layout; CMS or Brand Kit owns content
-- Shared behavior: keep in code unless it is a per-village policy
+---
 
-## Do not migrate
+## 9 — 🚫 Never migrate these
 
-- Secrets must not move to public env or editable DB config
-- Deployment infrastructure values should not become Village Brand Kit fields
-- Bespoke page content should move to Village CMS, not runtime DB config
+- **Secrets** → never public env, never editable DB config
+- **Deployment infra values** → never Brand Kit fields
+- **Bespoke page content** → CMS, never runtime DB config
 
-## Open questions
+---
 
-- Which config buckets are mandatory for deployment, and which are only launch readiness?
-- Should FAQ content move fully into CMS, or keep Google Sheet support?
-- Which informational pages are reusable product routes versus village-owned CMS pages?
+## 10 — 🔥 Still fighting about these
+
+- Which config buckets are **mandatory for deploy** vs just launch-readiness?
+- FAQ: move fully into CMS, or keep Google Sheet support?
+- Which informational pages are reusable product routes vs village-owned CMS pages?
 - Which public documents need structured config instead of CMS file links?
