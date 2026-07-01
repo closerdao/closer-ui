@@ -64,7 +64,9 @@ Reference apps are **sources to learn from**, not things we migrate.
 - Public provider keys → **stay in env** by default
 - `NEXT_PUBLIC_PLATFORM_URL` = the one true deployment URL
 - `general.semanticUrl` must match that URL before launch
-- Feature availability has **two switches**: env capability gate + per-village DB config
+- Feature availability has **two switches — both must be on:**
+  - **env gate** (`NEXT_PUBLIC_FEATURE_*`) — compiled per deployment. If not `true`, the code path is dead: route 404s, nav item hidden. This is the *capability* switch, read from `process.env` at build/server time.
+  - **DB config** — per-village `enabled` flag (e.g. `fundraiser.enabled`). This is the *per-village* switch.
 
 ---
 
@@ -102,7 +104,7 @@ Keep these in env vars unless review finds a strong reason to move them.
 - `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID` — public WalletConnect key
 - `NEXT_PUBLIC_TOKEN_SALE_DATE` — smells like campaign config; check usage before adding a DB field
 - `NEXT_PUBLIC_DEFAULT_TIMEZONE` — fallback only; `general.timeZone` wins once config loads
-- `NEXT_PUBLIC_FEATURE_*` — env gates the capability; DB config enables each village
+- `NEXT_PUBLIC_FEATURE_*` — env is **only** the capability gate: it gates whole routes + nav from `process.env` at build/server time, so it can't become pure DB config. The per-village on/off already lives in DB (`fundraiser.enabled`, feature buckets), not env.
 - Sentry values — deployment observability, not village config
 - Public provider keys — Firebase, Google Maps, Stripe publishable, WalletConnect, analytics
 
