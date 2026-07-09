@@ -13,8 +13,6 @@ import {
 
 import GoogleButton from '../../components/GoogleButton';
 import TurnstileWidget from '../../components/TurnstileWidget';
-import { useInteractionIsHuman } from '../../hooks/useInteractionIsHuman';
-import { isTurnstileSubmitEnabled } from '../../utils/turnstile.helpers';
 import { Card, ErrorMessage, Heading, Input } from '../../components/ui';
 import Button from '../../components/ui/Button';
 
@@ -29,6 +27,7 @@ import { WalletDispatch } from '../../contexts/wallet';
 import api from '../../utils/api';
 import { getRedirectUrl } from '../../utils/auth.helpers';
 import { parseMessageFromError } from '../../utils/common';
+import { isLoginTurnstileSubmitEnabled } from '../../utils/turnstile.helpers';
 
 const SPARKLE_ANIMATION = 'sparkle-fade-move 2.2s ease-in-out infinite';
 
@@ -54,7 +53,6 @@ const Login = () => {
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
   const { signMessage, connectWallet } = useContext(WalletDispatch);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const isHuman = useInteractionIsHuman();
 
   // Safely use newsletter context
   let setHideFooterNewsletter: ((hide: boolean) => void) | undefined;
@@ -254,7 +252,7 @@ const Login = () => {
   };
 
   const authUserWithGoogle = async () => {
-    const authRes = await authGoogle();
+    const authRes = await authGoogle({ turnstileToken });
     if (authRes.result === 'signup') {
       gaEvent('sign_up', {
         category: 'signing',
@@ -322,9 +320,12 @@ const Login = () => {
                   placeholder={t('login_password_placeholder')}
                 />
 
-                {!isHuman && (
-                  <TurnstileWidget action="login" onVerify={setTurnstileToken} />
-                )}
+                <TurnstileWidget
+                  action="login"
+                  onVerify={setTurnstileToken}
+                  onExpire={() => setTurnstileToken(null)}
+                  onError={() => setTurnstileToken(null)}
+                />
 
                 <div className="flex flex-col justify-between items-center gap-3 sm:flex-row">
                   <div className="flex flex-col gap-3 w-full sm:flex-row py-2">
@@ -332,7 +333,7 @@ const Login = () => {
                       isEnabled={
                         !isWeb3Loading &&
                         !isLoading &&
-                        isTurnstileSubmitEnabled(isHuman, turnstileToken)
+                        isLoginTurnstileSubmitEnabled(turnstileToken)
                       }
                       isLoading={isLoading}
                       className="justify-center normal-case"
@@ -412,6 +413,7 @@ const Login = () => {
               {process.env.NEXT_PUBLIC_FIREBASE_CONFIG && (
                 <GoogleButton
                   isLoading={isGoogleLoading}
+                  isEnabled={isLoginTurnstileSubmitEnabled(turnstileToken)}
                   onClick={authUserWithGoogle}
                 />
               )}
@@ -445,11 +447,9 @@ const Login = () => {
 
 Login.getInitialProps = async (context: NextPageContext) => {
   try {
-    return {
-    };
+    return {};
   } catch (err: unknown) {
-    return {
-      };
+    return {};
   }
 };
 

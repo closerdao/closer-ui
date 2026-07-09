@@ -15,3 +15,9 @@ export function turnstileTokenForRequest(
   if (isHuman) return undefined;
   return turnstileToken ?? undefined;
 }
+
+export function isLoginTurnstileSubmitEnabled(
+  turnstileToken: string | null,
+): boolean {
+  return isTurnstileSubmitEnabled(false, turnstileToken);
+}

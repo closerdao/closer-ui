@@ -25,8 +25,11 @@ import {
   getRefreshToken,
   setTokens,
 } from '../../utils/authStorage';
-import { getStoredInteractionIsHuman } from '../../utils/interactionSession';
 import { parseMessageFromError } from '../../utils/common';
+import {
+  clearInteractionSession,
+  getStoredInteractionIsHuman,
+} from '../../utils/interactionSession';
 import { turnstileTokenForRequest } from '../../utils/turnstile.helpers';
 import { AuthenticationContext, User } from './types';
 
@@ -132,10 +135,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
           email,
           isGoogle,
           idToken,
-          turnstileToken: turnstileTokenForRequest(
-            getStoredInteractionIsHuman(),
-            turnstileToken,
-          ),
+          turnstileToken,
         });
         accessToken = data?.access_token ?? data?.token;
         refreshToken = data?.refresh_token ?? data?.refreshToken;
@@ -145,10 +145,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
         const { data } = await api.post('/login', {
           email,
           password,
-          turnstileToken: turnstileTokenForRequest(
-            getStoredInteractionIsHuman(),
-            turnstileToken,
-          ),
+          turnstileToken,
         });
         accessToken = data?.access_token ?? data?.token;
         refreshToken = data?.refresh_token ?? data?.refreshToken;
@@ -166,7 +163,11 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
           setError(t('auth_error_401_message'));
           return;
         }
-        setError(err.response?.data?.error || err.message);
+        const errorMessage = err.response?.data?.error || err.message;
+        if (/turnstile/i.test(String(errorMessage))) {
+          clearInteractionSession();
+        }
+        setError(errorMessage);
       } else {
         setError((err as Error).message);
       }
@@ -317,6 +318,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const logout = async () => {
     clearTokens();
+    clearInteractionSession();
     setUser(null);
 
     await logOutGoogle();
@@ -337,7 +339,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     }
   }, [setError]);
 
-  const authGoogle = async () => {
+  const authGoogle = async (options?: { turnstileToken?: string | null }) => {
     try {
       setIsGoogleLoading(true);
       setError('');
@@ -354,6 +356,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
           email: googleRes.email as string,
           idToken: googleRes.idToken,
           isGoogle: true,
+          turnstileToken: options?.turnstileToken,
         });
         return { result: 'login' };
       }
@@ -364,13 +367,16 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
           return { result: null };
         }
         try {
-          const signupRes = await signup({
-            isGoogle: true,
-            idToken: googleRes.idToken,
-            email: googleRes.email,
-            screenname: googleRes.displayName,
-            ...(referredBy && { referredBy }),
-          });
+          const signupRes = await signup(
+            {
+              isGoogle: true,
+              idToken: googleRes.idToken,
+              email: googleRes.email,
+              screenname: googleRes.displayName,
+              ...(referredBy && { referredBy }),
+            },
+            { turnstileToken: options?.turnstileToken },
+          );
           return signupRes;
         } catch (err: unknown) {
           setError(parseMessageFromError(err));
