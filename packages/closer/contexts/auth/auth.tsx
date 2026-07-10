@@ -26,11 +26,7 @@ import {
   setTokens,
 } from '../../utils/authStorage';
 import { parseMessageFromError } from '../../utils/common';
-import {
-  clearInteractionSession,
-  getStoredInteractionIsHuman,
-} from '../../utils/interactionSession';
-import { turnstileTokenForRequest } from '../../utils/turnstile.helpers';
+import { clearInteractionSession } from '../../utils/interactionSession';
 import { AuthenticationContext, User } from './types';
 
 export const AuthContext = createContext<AuthenticationContext | null>(null);
@@ -198,10 +194,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       setHasSignedUp(false);
       const { data: resData } = await api.post('/signup', {
         ...data,
-        turnstileToken: turnstileTokenForRequest(
-          getStoredInteractionIsHuman(),
-          options?.turnstileToken,
-        ),
+        turnstileToken: options?.turnstileToken,
       });
       const accessToken = resData?.access_token ?? resData?.token;
       const refreshToken = resData?.refresh_token ?? resData?.refreshToken;
@@ -234,10 +227,7 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
               email: data.email,
               screenname: data.screenname || '',
               tags,
-              turnstileToken: turnstileTokenForRequest(
-                getStoredInteractionIsHuman(),
-                options?.turnstileToken,
-              ),
+              turnstileToken: options?.turnstileToken,
             });
           } catch (subscribeErr) {
             console.error(
@@ -254,7 +244,11 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
       }
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.error || err.message);
+        const errorMessage = err.response?.data?.error || err.message;
+        if (/turnstile/i.test(String(errorMessage))) {
+          clearInteractionSession();
+        }
+        setError(errorMessage);
       } else {
         setError((err as Error).message);
       }

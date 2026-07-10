@@ -27,7 +27,10 @@ import { WalletDispatch } from '../../contexts/wallet';
 import api from '../../utils/api';
 import { getRedirectUrl } from '../../utils/auth.helpers';
 import { parseMessageFromError } from '../../utils/common';
-import { isLoginTurnstileSubmitEnabled } from '../../utils/turnstile.helpers';
+import {
+  createTurnstileHandlers,
+  isTurnstileSubmitEnabled,
+} from '../../utils/turnstile.helpers';
 
 const SPARKLE_ANIMATION = 'sparkle-fade-move 2.2s ease-in-out infinite';
 
@@ -322,9 +325,7 @@ const Login = () => {
 
                 <TurnstileWidget
                   action="login"
-                  onVerify={setTurnstileToken}
-                  onExpire={() => setTurnstileToken(null)}
-                  onError={() => setTurnstileToken(null)}
+                  {...createTurnstileHandlers(setTurnstileToken)}
                 />
 
                 <div className="flex flex-col justify-between items-center gap-3 sm:flex-row">
@@ -333,7 +334,7 @@ const Login = () => {
                       isEnabled={
                         !isWeb3Loading &&
                         !isLoading &&
-                        isLoginTurnstileSubmitEnabled(turnstileToken)
+                        isTurnstileSubmitEnabled(turnstileToken)
                       }
                       isLoading={isLoading}
                       className="justify-center normal-case"
@@ -413,7 +414,7 @@ const Login = () => {
               {process.env.NEXT_PUBLIC_FIREBASE_CONFIG && (
                 <GoogleButton
                   isLoading={isGoogleLoading}
-                  isEnabled={isLoginTurnstileSubmitEnabled(turnstileToken)}
+                  isEnabled={isTurnstileSubmitEnabled(turnstileToken)}
                   onClick={authUserWithGoogle}
                 />
               )}

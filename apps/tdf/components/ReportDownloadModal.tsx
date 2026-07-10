@@ -1,7 +1,6 @@
 import { MouseEvent, useState } from 'react';
 
-import { Heading, Modal, Newsletter, Button } from 'closer';
-import { useConfig, useAuth } from 'closer';
+import { Button, Heading, Modal, Newsletter, useAuth, useConfig } from 'closer';
 import { useTranslations } from 'next-intl';
 
 interface ReportDownloadModalProps {
@@ -30,7 +29,7 @@ const ReportDownloadModal = ({
   };
 
   return (
-    <Modal closeModal={closeModal} className='!h-[440px] pb-8'>
+    <Modal closeModal={closeModal} className="!h-[440px] pb-8">
       <div className="flex flex-col gap-4 py-2">
         <img
           src={LOGO_HEADER}
@@ -46,25 +45,31 @@ const ReportDownloadModal = ({
         {isAuthenticated ? (
           <>
             <p className=" max-w-md">
-              {t('report_download_modal_authenticated_message', { year: reportYear })}
+              {t('report_download_modal_authenticated_message', {
+                year: reportYear,
+              })}
             </p>
-            <Button
-              onClick={handleDirectDownload}
-              className="w-full"
-            >
+            <Button onClick={handleDirectDownload} className="w-full">
               {t('report_download_modal_download_button', { year: reportYear })}
             </Button>
           </>
         ) : (
           <>
             <p className=" max-w-md">
-              {t('report_download_modal_subscription_message', { year: reportYear })}
+              {t('report_download_modal_subscription_message', {
+                year: reportYear,
+              })}
             </p>
             <Newsletter
               placement={`Report${reportYear}Download`}
-              ctaText={hasSubscribed ? t('report_download_modal_thanks_subscribing') : t('report_download_modal_get_report')}
+              ctaText={
+                hasSubscribed
+                  ? t('report_download_modal_thanks_subscribing')
+                  : t('report_download_modal_get_report')
+              }
               onSuccess={handleSubscriptionSuccess}
               className="px-0 py-4"
+              requireTurnstile
             />
           </>
         )}
