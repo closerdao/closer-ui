@@ -44,7 +44,6 @@ import {
   computeTokensOwed,
   confirmStayCheckout,
   formatStayMoney,
-  getCreditsBalance,
   getStay,
   isStayAwaitingHostApproval,
   isStayCollectingRemainingFiat,
@@ -72,14 +71,12 @@ function StayPaymentInner({
   refetchStay,
   userEmail,
   userName,
-  creditsBalance,
 }: {
   stay: Stay;
   listing: Listing | null;
   refetchStay: () => Promise<Stay | null>;
   userEmail: string;
   userName: string;
-  creditsBalance: number;
 }) {
   const router = useRouter();
   const t = useTranslations();
@@ -515,7 +512,6 @@ function StayPaymentInner({
             )}
             <StayPaymentTokenCreditControls
               stay={stay}
-              creditsBalance={creditsBalance}
               onStaySynced={refetchStay}
               setBannerError={setActionError}
             />
@@ -596,7 +592,6 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
 
   const [stay, setStay] = useState<Stay | null>(null);
   const [listing, setListing] = useState<Listing | null>(null);
-  const [creditsBalance, setCreditsBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
 
@@ -624,12 +619,6 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
           } catch (err) {
             console.warn('Could not load listing', err);
           }
-        }
-        try {
-          const bal = await getCreditsBalance();
-          if (!cancelled) setCreditsBalance(bal);
-        } catch {
-          if (!cancelled) setCreditsBalance(0);
         }
       } catch (err) {
         if (!cancelled) setPageError(parseMessageFromError(err));
@@ -729,7 +718,6 @@ const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
           refetchStay={refetchStay}
           userEmail={user?.email || ''}
           userName={user?.screenname || ''}
-          creditsBalance={creditsBalance}
         />
       </Elements>
     </>

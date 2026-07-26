@@ -896,6 +896,7 @@
   "stay_create_connect_wallet_link": "Conecte a carteira para usar tokens $TDF",
   "stay_create_apply_credits_button": "Aplicar créditos nesta reserva",
   "stay_create_apply_credits_disabled_no_balance": "Não tem créditos disponíveis para aplicar.",
+  "stay_create_apply_credits_disabled_not_valid_at_checkin": "Não tem créditos válidos para a data de check-in desta estadia.",
   "stay_create_apply_credits_disabled_no_eligible_amount": "Os créditos só cobrem a parte do alojamento cotada em créditos. Esta reserva não inclui uma quantia elegível.",
   "stay_create_cancel_token_payment_link": "Cancelar pagamento em tokens",
   "stay_create_cancel_token_payment_loading": "A reverter para pagamento com cartão…",

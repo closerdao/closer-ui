@@ -73,6 +73,40 @@ export const getCreditsBalance = async (): Promise<number> => {
   }
 };
 
+export const checkCarrotsAvailability = async ({
+  startDate,
+  creditsAmount,
+  minCreditsAmount,
+}: {
+  startDate: string | Date;
+  creditsAmount: number;
+  minCreditsAmount: number;
+}): Promise<boolean> => {
+  try {
+    const { data } = await api.post('/carrots/availability', {
+      startDate,
+      creditsAmount,
+      minCreditsAmount,
+    });
+    return Boolean(data?.results);
+  } catch {
+    return false;
+  }
+};
+
+export const getStayTokenPricePerNight = (stay: Stay): number => {
+  const daily = stay.priceLock?.dailyRentalToken?.val;
+  if (daily != null && Number.isFinite(daily) && daily > 0) {
+    return daily;
+  }
+  const nights = getStayAccommodationNightCount(stay);
+  const total = getStayAccommodationTokenTotal(stay);
+  if (!nights || !total) {
+    return 0;
+  }
+  return total / nights;
+};
+
 export const STAY_TERMINAL_STATUSES: ReadonlyArray<StayStatus> = [
   'cancelled',
   'rejected',
