@@ -4,21 +4,26 @@ import { useRouter } from 'next/router';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { CardElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js';
-import dayjs from 'dayjs';
+import {
+  CardElement,
+  Elements,
+  useElements,
+  useStripe,
+} from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
 import BookingBackButton from '../../../components/BookingBackButton';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+import PageError from '../../../components/PageError';
 import BookingSurface from '../../../components/booking/bookingSurface';
 import BookingUnitsNote from '../../../components/booking/bookingUnitsNote';
 import { StayPaymentTokenCreditControls } from '../../../components/booking/stayPaymentTokenCreditControls';
-import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
-import PageError from '../../../components/PageError';
 import { ErrorMessage, Information } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
 import Spinner from '../../../components/ui/Spinner';
 
+import dayjs from 'dayjs';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -38,12 +43,14 @@ import {
   computeFiatOwed,
   computeTokensOwed,
   confirmStayCheckout,
+  formatStayMoney,
   getCreditsBalance,
   getStay,
   isStayAwaitingHostApproval,
+  isStayCollectingRemainingFiat,
   isStayPaid,
+  isStayShapedBooking,
   isStayTerminal,
-  formatStayMoney,
 } from '../../../utils/stays.api';
 
 const stripePromise = process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY
@@ -87,9 +94,13 @@ function StayPaymentInner({
   const redirectTarget = useMemo(() => {
     if (isStayPaid(stay)) return `/stay/${stay._id}/confirmation` as const;
     if (isStayTerminal(stay)) return `/stay/${stay._id}` as const;
-    if (isStayAwaitingHostApproval(stay)) return `/stay/${stay._id}/pending` as const;
+    if (isStayAwaitingHostApproval(stay))
+      return `/stay/${stay._id}/pending` as const;
     if (stay.status === 'draft') return `/stay/create/${stay._id}` as const;
-    if (!['confirmed', 'pending-payment'].includes(stay.status)) {
+    if (!isStayShapedBooking(stay as unknown as Record<string, unknown>)) {
+      return `/bookings/${stay._id}/checkout` as const;
+    }
+    if (!isStayCollectingRemainingFiat(stay)) {
       return `/stay/create/${stay._id}` as const;
     }
     const fiatOwedCheck = computeFiatOwed(stay);
@@ -111,8 +122,7 @@ function StayPaymentInner({
   }, [redirectTarget, router]);
 
   const fiatOwed = computeFiatOwed(stay);
-  const fiatCur =
-    stay.priceLock?.total.cur || stay.fiatTarget?.cur || 'EUR';
+  const fiatCur = stay.priceLock?.total.cur || stay.fiatTarget?.cur || 'EUR';
   const amountLabel = formatStayMoney({
     val: fiatOwed,
     cur: fiatCur,
@@ -126,7 +136,9 @@ function StayPaymentInner({
 
   const fiatPaidVal = Number(stay.fiatPaid?.val ?? 0);
   const showFiatPaidRow =
-    Number.isFinite(fiatPaidVal) && fiatPaidVal > 0.005 && Boolean(stay.fiatPaid);
+    Number.isFinite(fiatPaidVal) &&
+    fiatPaidVal > 0.005 &&
+    Boolean(stay.fiatPaid);
 
   const cover =
     listing?.photos && listing.photos.length > 0
@@ -209,11 +221,12 @@ function StayPaymentInner({
         return;
       }
 
-      const { paymentMethod, error: pmError } = await stripe.createPaymentMethod({
-        type: 'card',
-        card,
-        billing_details: { email: userEmail, name: userName },
-      });
+      const { paymentMethod, error: pmError } =
+        await stripe.createPaymentMethod({
+          type: 'card',
+          card,
+          billing_details: { email: userEmail, name: userName },
+        });
       if (pmError || !paymentMethod) {
         setActionError(pmError?.message || t('stay_create_card_error'));
         return;
@@ -477,36 +490,36 @@ function StayPaymentInner({
         </BookingSurface>
 
         {canShowStayTokenCreditPaymentOptions(stay, isMember) && (
-        <BookingSurface tone="elevated" padding="lg" as="section">
-          <Heading level={2} className="text-lg mb-2">
-            {t('stay_payment_page_tokens_credits_title')}
-          </Heading>
-          {!showTokensStakedSummary && (
-            <p className="text-sm text-muted-foreground mb-4">
-              {t('stay_payment_page_tokens_credits_intro')}
-            </p>
-          )}
-          {showTokensStakedSummary && (
-            <div className="mb-4 flex flex-col gap-2">
-              <p className="text-sm text-gray-900">
-                <span className="font-medium text-gray-800">
-                  {t('stay_payment_page_tokens_staked_label')}
-                </span>
-                {': '}
-                {formatStayMoney(stay.tokensStaked)}
+          <BookingSurface tone="elevated" padding="lg" as="section">
+            <Heading level={2} className="text-lg mb-2">
+              {t('stay_payment_page_tokens_credits_title')}
+            </Heading>
+            {!showTokensStakedSummary && (
+              <p className="text-sm text-muted-foreground mb-4">
+                {t('stay_payment_page_tokens_credits_intro')}
               </p>
-              <Information className="text-sm">
-                {t('stay_payment_page_tokens_staked_success')}
-              </Information>
-            </div>
-          )}
-          <StayPaymentTokenCreditControls
-            stay={stay}
-            creditsBalance={creditsBalance}
-            onStaySynced={refetchStay}
-            setBannerError={setActionError}
-          />
-        </BookingSurface>
+            )}
+            {showTokensStakedSummary && (
+              <div className="mb-4 flex flex-col gap-2">
+                <p className="text-sm text-gray-900">
+                  <span className="font-medium text-gray-800">
+                    {t('stay_payment_page_tokens_staked_label')}
+                  </span>
+                  {': '}
+                  {formatStayMoney(stay.tokensStaked)}
+                </p>
+                <Information className="text-sm">
+                  {t('stay_payment_page_tokens_staked_success')}
+                </Information>
+              </div>
+            )}
+            <StayPaymentTokenCreditControls
+              stay={stay}
+              creditsBalance={creditsBalance}
+              onStaySynced={refetchStay}
+              setBannerError={setActionError}
+            />
+          </BookingSurface>
         )}
 
         <BookingSurface tone="elevated" padding="lg" as="section">
@@ -565,11 +578,7 @@ function StayPaymentInner({
   );
 }
 
-const StayPaymentPage = ({
-  bookingSettings,
-  generalConfig,
-  error,
-}: Props) => {
+const StayPaymentPage = ({ bookingSettings, generalConfig, error }: Props) => {
   const router = useRouter();
   const t = useTranslations();
   const { user, isAuthenticated } = useAuth();
@@ -737,7 +746,7 @@ StayPaymentPage.getInitialProps = async (context: NextPageContext) => {
       error: parseMessageFromError(err),
       bookingSettings: null,
       generalConfig: null,
-      };
+    };
   }
 };
 

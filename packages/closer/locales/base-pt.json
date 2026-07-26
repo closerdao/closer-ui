@@ -96,6 +96,8 @@
   "bookings_checkout_step_payment_button": "Pagar",
   "bookings_checkout_step_wallet_disclaimer": "Reconheço que: (1) os meus tokens serão colocados em staking por 1 ano após o pagamento, (2) o reembolso de tokens não está atualmente disponível.",
   "bookings_checkout_tokens_staked_message": "Fez staking de {tokens} para esta reserva, agora por favor faça o pagamento em fiat.",
+  "bookings_checkout_accommodation_paid_in_tokens_residual": "O alojamento está coberto pelos seus tokens em staking. Só deve {amount} por utilidades, alimentação e taxas do evento.",
+  "bookings_checkout_unsynced_token_stake_blocked": "Os seus tokens estão em staking na blockchain, mas esta reserva ainda não foi atualizada. Atualize a página e tente novamente.",
   "bookings_summary_step_title": "Resumo",
   "bookings_food_step_title": "Pacote de comida",
   "bookings_progress_step_dates": "Datas",

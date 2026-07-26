@@ -1,16 +1,10 @@
-import { BigNumber, utils as ethersUtils } from 'ethers';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import utc from 'dayjs/plugin/utc';
+import { BigNumber, utils as ethersUtils } from 'ethers';
 
-import api from './api';
-import { priceFormat } from './helpers';
-
+import type { BookingPaymentDelta, UpdatedPrices } from '../types/booking';
 import { CloserCurrencies } from '../types/currency';
-import type {
-  BookingPaymentDelta,
-  UpdatedPrices,
-} from '../types/booking';
 import type { StaySearchResponse } from '../types/durationDiscount';
 import type {
   PriceLock,
@@ -22,6 +16,8 @@ import type {
   StayStatus,
   StayTokenStakePlan,
 } from '../types/stay';
+import api from './api';
+import { priceFormat } from './helpers';
 
 dayjs.extend(utc);
 dayjs.extend(dayOfYear);
@@ -59,7 +55,9 @@ const roundHumanTokenAmountForWei = (val: number): string => {
   return s === '' ? '0' : s;
 };
 
-export const formatStayMoney = (money: StayMoney | undefined | null): string => {
+export const formatStayMoney = (
+  money: StayMoney | undefined | null,
+): string => {
   if (!money) return '';
   return priceFormat(money.val, money.cur as CloserCurrencies);
 };
@@ -97,6 +95,18 @@ export const isStayAwaitingPayment = (
   stay: Pick<Stay, 'status'> | null | undefined,
 ): boolean =>
   stay?.status === 'confirmed' || stay?.status === 'pending-payment';
+
+export const isStayCollectingRemainingFiat = (
+  stay: Pick<Stay, 'status'> | null | undefined,
+): boolean => {
+  const status = stay?.status;
+  return (
+    status === 'confirmed' ||
+    status === 'pending-payment' ||
+    status === 'tokens-staked' ||
+    status === 'credits-paid'
+  );
+};
 
 function normalizeStayStatusRaw(
   status: Stay['status'] | null | undefined,
@@ -139,8 +149,7 @@ export const canShowStayTokenCreditPaymentOptions = (
 };
 
 export const computeFiatOwed = (stay: Stay): number => {
-  const target =
-    stay.fiatTarget?.val ?? stay.priceLock?.total.val ?? 0;
+  const target = stay.fiatTarget?.val ?? stay.priceLock?.total.val ?? 0;
   const paid = stay.fiatPaid?.val ?? 0;
   return Math.max(0, target - paid);
 };
@@ -190,7 +199,8 @@ export const buildStayTokenStakePlan = (
   const duration = getStayAccommodationNightCount(stay);
   const maxTokensForStay = getStayAccommodationTokenTotal(stay);
 
-  if (!startUtc.isValid() || duration <= 0 || maxTokensForStay <= 0) return null;
+  if (!startUtc.isValid() || duration <= 0 || maxTokensForStay <= 0)
+    return null;
 
   const maxWeiRaw = ethersUtils.parseUnits(
     roundHumanTokenAmountForWei(maxTokensForStay),
@@ -202,9 +212,7 @@ export const buildStayTokenStakePlan = (
   const maxWei = pricePerNightWei.mul(durationBn);
 
   const cappedWeiRaw = ethersUtils.parseUnits(
-    roundHumanTokenAmountForWei(
-      Math.min(tokensToStakeTotal, maxTokensForStay),
-    ),
+    roundHumanTokenAmountForWei(Math.min(tokensToStakeTotal, maxTokensForStay)),
     TDF_DECIMALS,
   );
   const cappedWei = cappedWeiRaw.gt(maxWei) ? maxWei : cappedWeiRaw;
@@ -247,10 +255,7 @@ export const buildStayTokenStakePlan = (
 };
 
 export const accommodationTokenTotalFromPriceLock = (
-  priceLock:
-    | { dailyRentalToken?: { val: number } | null }
-    | null
-    | undefined,
+  priceLock: { dailyRentalToken?: { val: number } | null } | null | undefined,
   duration: number,
   adults: number,
   listingIsPrivate?: boolean | null,
@@ -277,9 +282,7 @@ export const canChangeStayPaymentMethod = (stay: Stay): boolean => {
 
 export const canAugmentTokenOrCreditsPayment = (stay: Stay): boolean => {
   if (!isStayAwaitingPayment(stay)) return false;
-  return (
-    computeTokensOwed(stay) > 0.005 || computeCreditsOwed(stay) > 0.005
-  );
+  return computeTokensOwed(stay) > 0.005 || computeCreditsOwed(stay) > 0.005;
 };
 
 export const inferPaymentChoiceFromStay = (
@@ -298,7 +301,8 @@ export const inferPaymentChoiceFromStay = (
         )
       : 0);
   const tokensTarget = stay.tokensTarget?.val ?? stay.appliedTokens?.val ?? 0;
-  const creditsTarget = stay.creditsTarget?.val ?? stay.appliedCredits?.val ?? 0;
+  const creditsTarget =
+    stay.creditsTarget?.val ?? stay.appliedCredits?.val ?? 0;
   if (
     fullTokenAccommodation > 0 &&
     tokensTarget > 0 &&
@@ -428,7 +432,10 @@ export const applyOptimisticTeamBookingToStay = (
     priceLock.lines.accommodation.val +
     priceLock.lines.food.val +
     priceLock.lines.utility.val;
-  const newSubtotal = Math.max(0, +(priceLock.subtotal.val - waived).toFixed(2));
+  const newSubtotal = Math.max(
+    0,
+    +(priceLock.subtotal.val - waived).toFixed(2),
+  );
   const newTotal = Math.max(0, +(priceLock.total.val - waived).toFixed(2));
 
   return {
@@ -571,9 +578,8 @@ export const stakeStayTokens = async (
       ? { syncBookingAlreadyOnChain: true }
       : { transactionId };
   const { data } = await api.post(`/stays/${id}/token-stake`, body);
-  const results = (
-    data as ApiOk<{ booking?: Stay | null; verified?: boolean }>
-  )?.results;
+  const results = (data as ApiOk<{ booking?: Stay | null; verified?: boolean }>)
+    ?.results;
   if (results?.booking) {
     return { booking: results.booking, verified: Boolean(results.verified) };
   }
@@ -605,7 +611,12 @@ export function isStayShapedBooking(
 
 function unwrapStayMutationResult(data: { results?: unknown }): Stay {
   const r = data?.results as { booking?: Stay } | Stay;
-  if (r && typeof r === 'object' && 'booking' in r && (r as { booking: Stay }).booking) {
+  if (
+    r &&
+    typeof r === 'object' &&
+    'booking' in r &&
+    (r as { booking: Stay }).booking
+  ) {
     return (r as { booking: Stay }).booking;
   }
   return r as Stay;
@@ -662,7 +673,10 @@ export function mapStayQuoteToUpdatedPrices(
   };
 }
 
-export const extendStay = async (id: string, payload: { end: string }): Promise<Stay> => {
+export const extendStay = async (
+  id: string,
+  payload: { end: string },
+): Promise<Stay> => {
   const { data } = await api.post(`/stays/${id}/extend`, payload);
   return unwrapStayMutationResult(data);
 };
@@ -698,7 +712,10 @@ export const updateStayGuests = async (
   return unwrapStayMutationResult(data);
 };
 
-export const shortenStay = async (id: string, payload: { end: string }): Promise<Stay> => {
+export const shortenStay = async (
+  id: string,
+  payload: { end: string },
+): Promise<Stay> => {
   const { data } = await api.post(`/stays/${id}/shorten`, payload);
   return unwrapStayMutationResult(data);
 };
