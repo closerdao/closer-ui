@@ -128,7 +128,9 @@ const Bookings = ({
       { label: 'Guests', key: 'guests' },
       { label: 'Volunteer', key: 'volunteer' },
       { label: 'Arrival', key: 'arrival' },
-      { label: 'Pickup', key: 'pickup' },
+      ...(bookingConfig?.pickUpEnabled
+        ? [{ label: 'Pickup', key: 'pickup' }]
+        : []),
       { label: 'Total', key: 'total' },
     ];
     const data = bookings
@@ -151,7 +153,9 @@ const Bookings = ({
           guests: booking.get('adults'),
           volunteer: booking.get('volunteerId'),
           arrival: booking.get('start'),
-          pickup: booking.get('doesNeedPickup'),
+          ...(bookingConfig?.pickUpEnabled
+            ? { pickup: booking.get('doesNeedPickup') }
+            : {}),
           total:
             booking.getIn(['total', 'val']) ??
             booking.getIn(['priceLock', 'total', 'val']) ??
@@ -175,7 +179,7 @@ const Bookings = ({
     link.download = `bookings-${dayjs().format('YYYY-MM-DD.HH:mm')}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
-  }, [bookings, platform]);
+  }, [bookings, platform, bookingConfig]);
 
   if (error) {
     return <div className="validation-error">{JSON.stringify(error)}</div>;
