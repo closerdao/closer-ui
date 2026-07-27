@@ -29,7 +29,7 @@ const AllBookingsRequestsPage = ({ bookingConfig }: Props) => {
   const { user } = useAuth();
 
   const defaultWhere = {
-    status: { $ne: 'open' },
+    status: { $nin: ['open', 'draft'] },
   };
 
   const [filter, setFilter] = useState({
