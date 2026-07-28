@@ -4,14 +4,15 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import Bookings from '../../components/Bookings';
+import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import FeatureNotEnabled from '../../components/FeatureNotEnabled';
-import { useAuth } from '../../contexts/auth';
-import { BookingConfig } from '../../types';
 import config from '../../configCached';
+import { useAuth } from '../../contexts/auth';
+import { useLiveBookingConfig } from '../../hooks/useLiveBookingConfig';
+import { BookingConfig } from '../../types';
 import { parseMessageFromError } from '../../utils/common';
 import PageNotFound from '../not-found';
 
@@ -21,8 +22,11 @@ interface Props {
 
 const bookingsToShowLimit = 50;
 
-const StayUpcomingBookingsPage = ({ bookingConfig }: Props) => {
+const StayUpcomingBookingsPage = ({
+  bookingConfig: cachedBookingConfig,
+}: Props) => {
   const t = useTranslations();
+  const bookingConfig = useLiveBookingConfig(cachedBookingConfig);
   const { user } = useAuth();
   const [page, setPage] = useState(1);
 
@@ -81,7 +85,9 @@ const StayUpcomingBookingsPage = ({ bookingConfig }: Props) => {
       </Head>
       <div className="mx-auto flex max-w-screen-lg flex-col gap-6 px-4 py-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold">{t('bookings_upcoming_tab')}</h1>
+          <h1 className="text-2xl font-semibold">
+            {t('bookings_upcoming_tab')}
+          </h1>
           <Link href="/stay/past" className="text-sm text-accent underline">
             {t('past_bookings_title')}
           </Link>
@@ -109,7 +115,7 @@ StayUpcomingBookingsPage.getInitialProps = async (context: NextPageContext) => {
     return {
       bookingConfig: null,
       error: parseMessageFromError(err),
-      };
+    };
   }
 };
 

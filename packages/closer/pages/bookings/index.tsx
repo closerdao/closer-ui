@@ -1,23 +1,25 @@
 import Head from 'next/head';
 
+import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import UserBookings from '../../components/UserBookings';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { useAuth } from '../../contexts/auth';
-import { BookingConfig } from '../../types';
 import config from '../../configCached';
+import { useAuth } from '../../contexts/auth';
+import { useLiveBookingConfig } from '../../hooks/useLiveBookingConfig';
+import { BookingConfig } from '../../types';
 import { parseMessageFromError } from '../../utils/common';
-import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import PageNotFound from '../not-found';
 
 interface Props {
   bookingConfig: BookingConfig;
 }
 
-const BookingsDirectory = ({ bookingConfig }: Props) => {
+const BookingsDirectory = ({ bookingConfig: cachedBookingConfig }: Props) => {
   const t = useTranslations();
+  const bookingConfig = useLiveBookingConfig(cachedBookingConfig);
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -38,14 +40,17 @@ const BookingsDirectory = ({ bookingConfig }: Props) => {
         <meta name="robots" content="noindex, nofollow" />
       </Head>
 
-      <UserBookings user={user} bookingConfig={bookingConfig} hideExportCsv={true} />
+      <UserBookings
+        user={user}
+        bookingConfig={bookingConfig}
+        hideExportCsv={true}
+      />
     </>
   );
 };
 
 BookingsDirectory.getInitialProps = async (context: NextPageContext) => {
   try {
-
     const bookingConfig = config.booking;
     return {
       bookingConfig,
@@ -54,7 +59,7 @@ BookingsDirectory.getInitialProps = async (context: NextPageContext) => {
     return {
       bookingConfig: null,
       error: parseMessageFromError(err),
-      };
+    };
   }
 };
 

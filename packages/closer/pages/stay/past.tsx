@@ -4,14 +4,15 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import Bookings from '../../components/Bookings';
+import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import FeatureNotEnabled from '../../components/FeatureNotEnabled';
-import { useAuth } from '../../contexts/auth';
-import { BookingConfig } from '../../types';
 import config from '../../configCached';
+import { useAuth } from '../../contexts/auth';
+import { useLiveBookingConfig } from '../../hooks/useLiveBookingConfig';
+import { BookingConfig } from '../../types';
 import { parseMessageFromError } from '../../utils/common';
 import PageNotFound from '../not-found';
 
@@ -21,8 +22,11 @@ interface Props {
 
 const bookingsToShowLimit = 50;
 
-const StayPastBookingsPage = ({ bookingConfig }: Props) => {
+const StayPastBookingsPage = ({
+  bookingConfig: cachedBookingConfig,
+}: Props) => {
   const t = useTranslations();
+  const bookingConfig = useLiveBookingConfig(cachedBookingConfig);
   const { user } = useAuth();
   const [page, setPage] = useState(1);
 
@@ -98,7 +102,7 @@ StayPastBookingsPage.getInitialProps = async (context: NextPageContext) => {
     return {
       bookingConfig: null,
       error: parseMessageFromError(err),
-      };
+    };
   }
 };
 

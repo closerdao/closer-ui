@@ -174,6 +174,29 @@ describe('useLiveBookingConfig', () => {
       await waitFor(() => expect(result.current.checkinTime).not.toBe(18));
     });
 
+    it('reads the doc from the wrapper on a cache hit', async () => {
+      // `getOne`'s cache path resolves with the store wrapper
+      // (`{data, loading, error, receivedAt}`) rather than the document, so the
+      // value sits one level down. Unreachable while `force: true` is passed,
+      // but pinned so dropping that flag cannot silently disable the feature.
+      mockPlatform.config.getOne = jest.fn().mockResolvedValue({
+        type: 'GET_ONE_SUCCESS',
+        fromCache: true,
+        results: fromJS({
+          data: {
+            _id: 'booking',
+            slug: 'booking',
+            value: { pickUpEnabled: false },
+          },
+          loading: false,
+        }),
+      });
+
+      const { result } = renderHook(() => useLiveBookingConfig(SNAPSHOT));
+
+      await waitFor(() => expect(result.current.pickUpEnabled).toBe(false));
+    });
+
     it('forces the request past the platform cache', async () => {
       renderHook(() => useLiveBookingConfig(SNAPSHOT));
       await waitFor(() =>

@@ -70,8 +70,17 @@ export const readBookingConfigFromAction = (action: any): unknown => {
   try {
     const results = action?.results;
     if (results == null) return null;
-    const value =
-      typeof results.get === 'function' ? results.get('value') : results.value;
+    const read = (source: any, key: string) =>
+      typeof source?.get === 'function' ? source.get(key) : source?.[key];
+
+    // `results` is the document itself on the network path
+    // (`fromJS(res.data.results)`), but on the cache-hit path it is the store
+    // *wrapper* — `{ data, loading, error, receivedAt }` — so the document sits
+    // one level down under `data`. Passing `force: true` means the cache path is
+    // unreachable today; handling it anyway keeps this from silently returning
+    // null if that flag is ever dropped as an optimisation.
+    const doc = action?.fromCache ? read(results, 'data') : results;
+    const value = read(doc, 'value');
     if (value == null) return null;
     return typeof value?.toJS === 'function' ? value.toJS() : value;
   } catch {
