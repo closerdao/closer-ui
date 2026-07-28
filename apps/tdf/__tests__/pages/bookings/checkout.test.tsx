@@ -100,6 +100,39 @@ describe('BookingCheckoutPage', () => {
     expect(screen.getByText(/token refund is not currently available/i)).toBeInTheDocument();
   });
 
+  it('shows only the remaining fiat payment after tokens are already staked', () => {
+    const tokenBookingWithFiatDue = {
+      ...bookingWithTokens,
+      total: { val: 24, cur: 'EUR' as const },
+      rentalToken: { cur: 'TDF' as const, val: 6 },
+      dailyRentalToken: { cur: 'TDF' as const, val: 1 },
+      paymentDelta: {
+        fiat: { val: 24, cur: 'EUR' as const },
+        token: { val: 0, cur: 'TDF' as const },
+      },
+    };
+
+    renderWithProviders(
+      <BookingCheckoutPage
+        booking={tokenBookingWithFiatDue}
+        listing={listing}
+        bookingConfig={bookingConfig}
+        paymentConfig={paymentConfig}
+        event={null}
+        tokenCurrency="TDF"
+      />,
+    );
+
+    expect(screen.getByText(/you staked/i)).toBeInTheDocument();
+    expect(
+      screen.queryByRole('checkbox', { name: /tokens are being staked/i }),
+    ).not.toBeInTheDocument();
+
+    const totalSection = screen.getByText(/Total:/i).closest('div');
+    expect(totalSection).toHaveTextContent(/24[.,]00\s*€/);
+    expect(totalSection).not.toHaveTextContent('TDF');
+  });
+
   it(
     'enables pay button only after token staking checkbox is checked',
     async () => {

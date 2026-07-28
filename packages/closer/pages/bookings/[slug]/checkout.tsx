@@ -323,6 +323,9 @@ const Checkout = ({
   const isAdditionalFiatPayment = Boolean(
     booking?.paymentDelta?.fiat?.val && booking?.paymentDelta?.fiat?.val > 0,
   );
+  const hasTokenStakeRecorded = status === 'tokens-staked' && Boolean(useTokens);
+  const shouldCollectTokenStake =
+    Boolean(useTokens) && !hasTokenStakeRecorded && !isAdditionalFiatPayment;
 
   const [paymentType, setPaymentType] = useState<PaymentType>(
     getPaymentType({
@@ -366,7 +369,7 @@ const Checkout = ({
     process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' &&
     rentalToken &&
     rentalToken?.val > 0 &&
-    useTokens;
+    shouldCollectTokenStake;
 
   useEffect(() => {
     const type = getPaymentType({
@@ -375,6 +378,7 @@ const Checkout = ({
       currency,
       maxNightsToPayWithTokens,
       maxNightsToPayWithCredits,
+      isAdditionalFiatPayment: isAdditionalFiatPayment || hasTokenStakeRecorded,
     });
 
     setPaymentType(type);
@@ -420,12 +424,12 @@ const Checkout = ({
 
       case PaymentType.FULL_CREDITS:
       case PaymentType.PARTIAL_CREDITS:
-        if (useTokens) {
+        if (useTokens && !hasTokenStakeRecorded && !isAdditionalFiatPayment) {
           switchToFiat(type);
         }
         break;
       case PaymentType.FIAT:
-        if (useTokens) {
+        if (useTokens && !hasTokenStakeRecorded && !isAdditionalFiatPayment) {
           switchToFiat(type);
         }
         break;
@@ -441,6 +445,8 @@ const Checkout = ({
     duration,
     rentalToken?.val,
     partialPriceInCredits,
+    isAdditionalFiatPayment,
+    hasTokenStakeRecorded,
   ]);
 
   const isFreeBooking = total && total.val === 0 && !useTokens;
@@ -1336,7 +1342,7 @@ const Checkout = ({
                             ? booking?.paymentDelta?.fiat
                             : total
                         }
-                        useTokens={useTokens || false}
+                        useTokens={shouldCollectTokenStake}
                         useCredits={
                           (useCredits && status !== 'credits-paid') || false
                         }
@@ -1382,6 +1388,17 @@ const Checkout = ({
                     </div>
                   </div>
                 )}
+                {isAdditionalFiatPayment && (
+                  <CheckoutTotal
+                    total={booking?.paymentDelta?.fiat}
+                    useTokens={false}
+                    useCredits={false}
+                    rentalToken={rentalToken}
+                    vatRate={vatRate}
+                    priceInCredits={priceInCredits}
+                    compact
+                  />
+                )}
                 {isStripeBooking && (
                   <>
                     {!availabilityCheckLoading &&
@@ -1413,13 +1430,13 @@ const Checkout = ({
                         buttonDisabled={
                           availabilityCheckLoading ||
                           isListingAvailable === false ||
-                          (useTokens &&
+                          (shouldCollectTokenStake &&
                             (!hasAgreedToWalletDisclaimer ||
                               (isNotEnoughBalance &&
                                 booking?.status !== 'tokens-staked'))) ||
                           false
                         }
-                        useTokens={useTokens || false}
+                        useTokens={shouldCollectTokenStake}
                         useCredits={useCredits}
                         totalToPayInFiat={totalToPayInFiat}
                         dailyTokenValue={dailyRentalToken?.val || 0}
