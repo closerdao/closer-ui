@@ -54,11 +54,24 @@ export const mergeLiveBookingConfig = <T>(
   return { ...defaults, ...liveValue } as T;
 };
 
-/** Reads the booking doc out of the platform store, unwrapping Immutable. */
-export const readBookingConfigFromPlatform = (platform: any): unknown => {
+/**
+ * Reads the booking value out of the action `getOne` resolves with.
+ *
+ * It must come from the action, NOT from `platform.config.findOne`. `findOne`
+ * reads `stateRef.current` (`contexts/platform/platform.js:322`), which the
+ * provider assigns in its *render body* (`:311-312`), while `getOne` dispatches
+ * `GET_ONE_SUCCESS` inside a `.then()` (`:384`). The await continuation here is
+ * a microtask and React's re-render is a macrotask, so a store read immediately
+ * after awaiting is guaranteed to miss and this hook would silently never apply
+ * the live value. `getOne` returns the dispatched action (`:377-385`), so the
+ * data is already in hand and no re-render has to have happened.
+ */
+export const readBookingConfigFromAction = (action: any): unknown => {
   try {
-    const doc = platform?.config?.findOne?.(BOOKING_CONFIG_SLUG);
-    const value = doc?.get?.('value');
+    const results = action?.results;
+    if (results == null) return null;
+    const value =
+      typeof results.get === 'function' ? results.get('value') : results.value;
     if (value == null) return null;
     return typeof value?.toJS === 'function' ? value.toJS() : value;
   } catch {
@@ -80,14 +93,17 @@ export const useLiveBookingConfig = <T>(cachedConfig: T): T => {
     if (!isAuthenticated) return;
     let cancelled = false;
     (async () => {
+      let action: unknown;
       try {
-        await platform?.config?.getOne?.(BOOKING_CONFIG_SLUG, { force: true });
+        action = await platform?.config?.getOne?.(BOOKING_CONFIG_SLUG, {
+          force: true,
+        });
       } catch {
         // Keep the snapshot — a config outage must not change what renders.
         return;
       }
       if (cancelled) return;
-      const raw = readBookingConfigFromPlatform(platform);
+      const raw = readBookingConfigFromAction(action);
       if (isNonEmptyObject(raw)) setLiveValue(raw);
     })();
     return () => {

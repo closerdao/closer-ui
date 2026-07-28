@@ -25,9 +25,18 @@ const SNAPSHOT = {
   minDuration: 1,
 };
 
-/** What the platform store holds: the *raw* API doc, wrapped in Immutable. */
-const immutableDoc = (value: Record<string, unknown>) =>
-  fromJS({ slug: 'booking', value });
+/**
+ * What `getOne` resolves with: the dispatched `GET_ONE_SUCCESS` action, whose
+ * `results` is the *raw* API doc wrapped in Immutable. The hook reads the value
+ * from here rather than from the store — see the note in the hook for why a
+ * store read can never work on the awaited continuation.
+ */
+const successAction = (value: Record<string, unknown>) => ({
+  type: 'GET_ONE_SUCCESS',
+  id: 'booking',
+  model: 'config',
+  results: fromJS({ _id: 'booking', slug: 'booking', value }),
+});
 
 describe('useLiveBookingConfig', () => {
   beforeEach(() => {
@@ -53,8 +62,8 @@ describe('useLiveBookingConfig', () => {
       expect(mockPlatform.config.findOne).not.toHaveBeenCalled();
     });
 
-    it('keeps the snapshot when the fetch succeeds but no doc lands in the store', async () => {
-      mockPlatform.config.findOne = jest.fn().mockReturnValue(undefined);
+    it('keeps the snapshot when the fetch resolves without an action', async () => {
+      mockPlatform.config.getOne = jest.fn().mockResolvedValue(undefined);
 
       const { result } = renderHook(() => useLiveBookingConfig(SNAPSHOT));
 
@@ -65,7 +74,9 @@ describe('useLiveBookingConfig', () => {
     });
 
     it('keeps the snapshot when the live doc has an empty value', async () => {
-      mockPlatform.config.findOne = jest.fn().mockReturnValue(immutableDoc({}));
+      mockPlatform.config.getOne = jest
+        .fn()
+        .mockResolvedValue(successAction({}));
 
       const { result } = renderHook(() => useLiveBookingConfig(SNAPSHOT));
 
@@ -77,9 +88,13 @@ describe('useLiveBookingConfig', () => {
       expect(result.current).toEqual(SNAPSHOT);
     });
 
-    it('keeps the snapshot when reading the store throws', async () => {
-      mockPlatform.config.findOne = jest.fn(() => {
-        throw new Error('store shape changed');
+    it('keeps the snapshot when unwrapping the action throws', async () => {
+      mockPlatform.config.getOne = jest.fn().mockResolvedValue({
+        results: {
+          get: () => {
+            throw new Error('action shape changed');
+          },
+        },
       });
 
       const { result } = renderHook(() => useLiveBookingConfig(SNAPSHOT));
@@ -128,15 +143,13 @@ describe('useLiveBookingConfig', () => {
 
   describe('applying the live value', () => {
     it('overlays the live doc and reflects a flipped toggle', async () => {
-      mockPlatform.config.findOne = jest
-        .fn()
-        .mockReturnValue(
-          immutableDoc({
-            enabled: true,
-            pickUpEnabled: false,
-            minDuration: 10,
-          }),
-        );
+      mockPlatform.config.getOne = jest.fn().mockResolvedValue(
+        successAction({
+          enabled: true,
+          pickUpEnabled: false,
+          minDuration: 10,
+        }),
+      );
 
       const { result } = renderHook(() => useLiveBookingConfig(SNAPSHOT));
 
@@ -149,14 +162,14 @@ describe('useLiveBookingConfig', () => {
     it('fills unset keys from the config defaults, not from the stale snapshot', async () => {
       // `checkinTime` is absent from the live doc; the defaults-merge must
       // supply it rather than leaving the snapshot's value in place.
-      mockPlatform.config.findOne = jest
+      mockPlatform.config.getOne = jest
         .fn()
-        .mockReturnValue(immutableDoc({ enabled: true }));
+        .mockResolvedValue(successAction({ enabled: true }));
 
       const { result } = renderHook(() => useLiveBookingConfig(SNAPSHOT));
 
       await waitFor(() =>
-        expect(mockPlatform.config.findOne).toHaveBeenCalled(),
+        expect(mockPlatform.config.getOne).toHaveBeenCalled(),
       );
       await waitFor(() => expect(result.current.checkinTime).not.toBe(18));
     });
