@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import config from '../../configCached';
+import { useLiveBookingConfig } from '../../hooks/useLiveBookingConfig';
 import { parseMessageFromError } from '../../utils/common';
 import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import PageNotFound from '../not-found';
@@ -20,8 +21,11 @@ interface Props {
   bookingConfig: any;
 }
 
-const AllBookingsRequestsPage = ({ bookingConfig }: Props) => {
+const AllBookingsRequestsPage = ({
+  bookingConfig: cachedBookingConfig,
+}: Props) => {
   const t = useTranslations();
+  const bookingConfig = useLiveBookingConfig(cachedBookingConfig);
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';

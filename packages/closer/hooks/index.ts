@@ -6,6 +6,7 @@ export { useDebounce } from './useDebounce';
 export { useFaqs } from './useFaqs';
 export { useHasMounted } from './useHasMounted';
 export { useInteractionIsHuman } from './useInteractionIsHuman';
+export { useLiveBookingConfig } from './useLiveBookingConfig';
 export { useLocalStorage } from './useLocalStorage';
 export { useNavigationMetrics } from './useNavigationMetrics';
 export { useOutsideClick } from './useOutsideClick';

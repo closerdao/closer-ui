@@ -53,6 +53,7 @@ import { usePlatform } from '../../../contexts/platform';
 import { WalletDispatch, WalletState } from '../../../contexts/wallet';
 import { useBookingSmartContract } from '../../../hooks/useBookingSmartContract';
 import { useConfig } from '../../../hooks/useConfig';
+import { useLiveBookingConfig } from '../../../hooks/useLiveBookingConfig';
 import { useStayCreditsEligibility } from '../../../hooks/useStayCreditsEligibility';
 import {
   BookingSettings,
@@ -197,7 +198,7 @@ interface Props {
 }
 
 const StayCheckoutPage = ({
-  bookingSettings,
+  bookingSettings: cachedBookingSettings,
   generalConfig,
   volunteerConfig,
   foodOptions,
@@ -205,6 +206,7 @@ const StayCheckoutPage = ({
 }: Props) => {
   const router = useRouter();
   const t = useTranslations();
+  const bookingSettings = useLiveBookingConfig(cachedBookingSettings);
   const { user, isAuthenticated } = useAuth();
   const defaultConfig = useConfig();
   const PLATFORM_NAME =

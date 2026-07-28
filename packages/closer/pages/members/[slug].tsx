@@ -41,6 +41,7 @@ import { FinanceApplication } from '../../types';
 import { BookingConfig } from '../../types/api';
 import { GeneralConfig } from '../../types/api';
 import config from '../../configCached';
+import { useLiveBookingConfig } from '../../hooks/useLiveBookingConfig';
 import api, { cdn } from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { getUrlDisplayString } from '../../utils/display.helpers';
@@ -61,7 +62,12 @@ interface MemberPageProps {
   bookingConfig: BookingConfig | null;
 }
 
-const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
+const MemberPage = ({
+  member,
+  loadError,
+  bookingConfig: cachedBookingConfig,
+}: MemberPageProps) => {
+  const bookingConfig = useLiveBookingConfig(cachedBookingConfig);
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
   const {

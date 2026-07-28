@@ -19,6 +19,7 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import config from '../../../configCached';
+import { useLiveBookingConfig } from '../../../hooks/useLiveBookingConfig';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
 import { useRedirectLegacyListingStayRoute } from '../../../hooks/useRedirectLegacyListingStayRoute';
@@ -42,12 +43,13 @@ interface Props {
 }
 
 const StayConfirmationPage = ({
-  bookingSettings,
+  bookingSettings: cachedBookingSettings,
   generalConfig,
   error,
 }: Props) => {
   const router = useRouter();
   const t = useTranslations();
+  const bookingSettings = useLiveBookingConfig(cachedBookingSettings);
   const { user, isAuthenticated } = useAuth();
   const defaultConfig = useConfig();
   const PLATFORM_NAME =

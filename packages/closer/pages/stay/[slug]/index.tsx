@@ -46,6 +46,7 @@ import {
 import type { Stay } from '../../../types/stay';
 import { FoodOption } from '../../../types/food';
 import config from '../../../configCached';
+import { useLiveBookingConfig } from '../../../hooks/useLiveBookingConfig';
 import { useBookingLinkedCharges } from '../../../hooks/useBookingLinkedCharges';
 import api from '../../../utils/api';
 import { mergeBookingLedgerCharges } from '../../../utils/bookingChargesLedger.helpers';
@@ -124,7 +125,7 @@ const StayBookingSummaryPage = ({
   volunteer,
   error,
   bookingCreatedBy,
-  bookingConfig,
+  bookingConfig: cachedBookingConfig,
   listings,
   generalConfig,
   paymentConfig,
@@ -133,6 +134,7 @@ const StayBookingSummaryPage = ({
   const t = useTranslations();
   const router = useRouter();
 
+  const bookingConfig = useLiveBookingConfig(cachedBookingConfig);
   const config = useConfig();
   const { timeZone } = generalConfig || { timeZone: config.DEFAULT_TIMEZONE };
   const isBookingEnabled =
