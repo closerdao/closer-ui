@@ -102,7 +102,7 @@ const artistsData: Record<string, ArtistData> = {
   'ivan-zema': {
     slug: 'ivan-zema',
     name: 'Ivan Zema',
-    country: 'Ukraine',
+    country: 'Russia',
     roleKey: 'artist_ivan_role',
     bioKey: 'artist_ivan_bio',
     image: '/images/landing/art-faire.png',

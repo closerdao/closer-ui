@@ -52,7 +52,7 @@ const artists: Artist[] = [
   {
     slug: 'ivan-zema',
     name: 'Ivan Zema',
-    country: 'UA',
+    country: 'RU',
     role: 'Sculptor & Land Artist',
     image: '/images/landing/art-faire.png',
     shortBio: 'artist_ivan_short_bio',

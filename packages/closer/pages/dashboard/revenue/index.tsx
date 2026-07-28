@@ -39,7 +39,7 @@ const RevenuePage = () => {
   const { user } = useAuth();
   const { hasAccess } = useRBAC();
   const router = useRouter();
-  const { time_frame } = router.query;
+  const { time_frame, from_date, to_date } = router.query;
 
   const isBookingEnabled =
     bookingConfig?.enabled &&
@@ -48,8 +48,12 @@ const RevenuePage = () => {
   const [timeFrame, setTimeFrame] = useState<string>(() =>
     typeof time_frame === 'string' ? time_frame : 'currentMonth',
   );
-  const [fromDate, setFromDate] = useState<string>('');
-  const [toDate, setToDate] = useState<string>('');
+  const [fromDate, setFromDate] = useState<string>(() =>
+    typeof from_date === 'string' ? from_date : '',
+  );
+  const [toDate, setToDate] = useState<string>(() =>
+    typeof to_date === 'string' ? to_date : '',
+  );
 
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [combinedEntries, setCombinedEntries] = useState<
@@ -94,6 +98,7 @@ const RevenuePage = () => {
 
   const entriesDebounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const sumsDebounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasHydratedQueryRef = useRef(false);
 
   const loadCombinedEntries = useCallback(async () => {
     setIsLoading(true);
@@ -524,16 +529,53 @@ const RevenuePage = () => {
   ) => {
     const newTimeFrame = typeof value === 'function' ? value(timeFrame) : value;
     setTimeFrame(newTimeFrame);
-
-    router.replace(
-      {
-        pathname: '/dashboard/revenue',
-        query: { time_frame: newTimeFrame },
-      },
-      undefined,
-      { shallow: true },
-    );
   };
+
+  useEffect(() => {
+    if (!router.isReady) return;
+
+    const urlTimeFrame =
+      typeof router.query.time_frame === 'string'
+        ? router.query.time_frame
+        : 'currentMonth';
+    const urlFromDate =
+      typeof router.query.from_date === 'string' ? router.query.from_date : '';
+    const urlToDate =
+      typeof router.query.to_date === 'string' ? router.query.to_date : '';
+
+    if (!hasHydratedQueryRef.current) {
+      hasHydratedQueryRef.current = true;
+      setTimeFrame(urlTimeFrame);
+      setFromDate(urlFromDate);
+      setToDate(urlToDate);
+      return;
+    }
+
+    const query: Record<string, string> = {
+      time_frame: timeFrame,
+    };
+
+    if (timeFrame === 'custom' && fromDate && toDate) {
+      query.from_date = fromDate;
+      query.to_date = toDate;
+    }
+
+    const isSame =
+      urlTimeFrame === query.time_frame &&
+      (query.from_date ?? '') === urlFromDate &&
+      (query.to_date ?? '') === urlToDate;
+
+    if (!isSame) {
+      router.replace(
+        {
+          pathname: '/dashboard/revenue',
+          query,
+        },
+        undefined,
+        { shallow: true },
+      );
+    }
+  }, [router.isReady, timeFrame, fromDate, toDate]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

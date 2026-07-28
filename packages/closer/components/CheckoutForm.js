@@ -6,6 +6,12 @@ import { useTranslations } from 'next-intl';
 
 import { usePlatform } from '../contexts/platform';
 import api from '../utils/api';
+import {
+  getResidualFiatAfterFullTokenStake,
+  isUnsyncedOnChainTokenStakeError,
+  reconcileOnChainTokenStakeSync,
+  resolveCheckoutFiatTotal,
+} from '../utils/booking.helpers';
 import { parseMessageFromError } from '../utils/common';
 import { linkedMetricFields, logMetric } from '../utils/metrics';
 import { ErrorMessage } from './ui';
@@ -60,6 +66,12 @@ const CheckoutForm = ({
   stakeTokens,
   checkContract,
   metricBookingContext,
+  fiatPaymentBlocked,
+  onFiatPaymentBlocked,
+  useTokens,
+  listingPrivate,
+  listingBeds,
+  isHourlyBooking,
 }) => {
   const t = useTranslations();
   const { platform } = usePlatform();
@@ -79,7 +91,8 @@ const CheckoutForm = ({
     void logMetric({
       event: 'booking-payment-error',
       category: 'booking',
-      value: 'error', point: p,
+      value: 'error',
+      point: p,
       ...linkedMetricFields('Booking', _id),
     });
   };
@@ -96,6 +109,7 @@ const CheckoutForm = ({
     setProcessing(true);
     setError(null);
 
+    let bookingAfterTokenStake = null;
     let tokenPaymentSuccessful = false;
 
     if (type === 'booking') {
@@ -103,7 +117,8 @@ const CheckoutForm = ({
       void logMetric({
         event: 'booking-payment-started',
         category: 'booking',
-        value: 'payment', point: p,
+        value: 'payment',
+        point: p,
         ...linkedMetricFields('Booking', _id),
       });
     }
@@ -122,17 +137,15 @@ const CheckoutForm = ({
       status !== 'tokens-staked' &&
       !isAdditionalFiatPayment
     ) {
-      // If we're about to attempt token payment and we have a refetch function,
-      // refetch the booking first to get the latest status
       let currentStatus = status;
       if (refetchBooking) {
         const updatedBooking = await refetchBooking();
         if (updatedBooking) {
           currentStatus = updatedBooking.status;
+          bookingAfterTokenStake = updatedBooking;
         }
       }
 
-      // Check if the status is now 'tokens-staked' after refetching
       if (currentStatus === 'tokens-staked') {
         tokenPaymentSuccessful = true;
       } else {
@@ -144,26 +157,91 @@ const CheckoutForm = ({
           currentStatus,
         );
 
-        const { error } = res || {};
+        const { error, booking: syncedBooking } = res || {};
         if (error) {
           logBookingPaymentFailureMetric();
           setProcessing(false);
           setError(error);
           return;
         }
-        
-        // After token payment succeeds, refetch booking to verify status was updated
+
         if (refetchBooking) {
           const updatedBooking = await refetchBooking();
-          if (updatedBooking?.status !== 'tokens-staked') {
+          const statusAfterSync =
+            syncedBooking?.status || updatedBooking?.status;
+          bookingAfterTokenStake = updatedBooking || syncedBooking;
+          if (statusAfterSync !== 'tokens-staked') {
             logBookingPaymentFailureMetric();
             setProcessing(false);
-            setError('Your tokens have been staked on the blockchain but the booking status could not be verified. Please refresh the page and try again, or contact support if the issue persists.');
+            setError(
+              'Your tokens have been staked on the blockchain but the booking status could not be verified. Please refresh the page and try again, or contact support if the issue persists.',
+            );
             return;
           }
+        } else if (syncedBooking) {
+          bookingAfterTokenStake = syncedBooking;
         }
         tokenPaymentSuccessful = true;
       }
+    }
+
+    if (
+      type === 'booking' &&
+      status === 'confirmed' &&
+      dailyTokenValue > 0 &&
+      !isAdditionalFiatPayment &&
+      !tokenPaymentSuccessful &&
+      (useTokens || prePayInTokens)
+    ) {
+      const outcome = await reconcileOnChainTokenStakeSync({
+        bookingId: _id,
+        checkContract,
+        refetchBooking,
+      });
+      if (outcome === 'blocked') {
+        onFiatPaymentBlocked?.();
+        logBookingPaymentFailureMetric();
+        setProcessing(false);
+        setError(t('bookings_checkout_unsynced_token_stake_blocked'));
+        return;
+      }
+      if (outcome === 'synced' && refetchBooking) {
+        bookingAfterTokenStake = await refetchBooking();
+        tokenPaymentSuccessful = true;
+      }
+    }
+
+    if (fiatPaymentBlocked && !tokenPaymentSuccessful) {
+      logBookingPaymentFailureMetric();
+      setProcessing(false);
+      setError(t('bookings_checkout_unsynced_token_stake_blocked'));
+      return;
+    }
+
+    let fiatTotalToCharge = total;
+    if (tokenPaymentSuccessful && bookingAfterTokenStake) {
+      const residual = getResidualFiatAfterFullTokenStake({
+        status: bookingAfterTokenStake.status || 'tokens-staked',
+        useCredits: bookingAfterTokenStake.useCredits,
+        rentalFiat: bookingAfterTokenStake.rentalFiat,
+        utilityFiat: bookingAfterTokenStake.utilityFiat,
+        foodFiat: bookingAfterTokenStake.foodFiat,
+        eventFiat: bookingAfterTokenStake.eventFiat,
+        total: bookingAfterTokenStake.total,
+        tokensStaked: bookingAfterTokenStake.tokensStaked,
+        duration: bookingAfterTokenStake.duration,
+        adults: bookingAfterTokenStake.adults,
+        dailyRentalToken: bookingAfterTokenStake.dailyRentalToken,
+        listingPrivate,
+        listingBeds,
+        isHourlyBooking,
+      });
+      const resolved = resolveCheckoutFiatTotal({
+        residualFiatAfterTokenStake: residual,
+        paymentDeltaFiat: bookingAfterTokenStake.paymentDelta?.fiat,
+        total: bookingAfterTokenStake.total,
+      });
+      fiatTotalToCharge = resolved.val;
     }
 
     try {
@@ -200,7 +278,7 @@ const CheckoutForm = ({
         token: token.id,
         type,
         ticketOption,
-        total,
+        total: fiatTotalToCharge,
         currency,
         discountCode,
         _id,
@@ -233,12 +311,13 @@ const CheckoutForm = ({
             }
           }
           if (confirmationResult?.paymentIntent?.status === 'succeeded') {
-            const confirmationResponse = await platform.bookings.paymentConfirmation({
-              paymentMethod: createdPaymentMethod?.paymentMethod.id,
-              paymentId: payment.paymentIntent.id,
-              bookingId: _id,
-              token: token.id,
-            });
+            const confirmationResponse =
+              await platform.bookings.paymentConfirmation({
+                paymentMethod: createdPaymentMethod?.paymentMethod.id,
+                paymentId: payment.paymentIntent.id,
+                bookingId: _id,
+                token: token.id,
+              });
 
             if (isSuccessfulResponse(confirmationResponse)) {
               if (onSuccess) {
@@ -258,12 +337,13 @@ const CheckoutForm = ({
 
       // 3d secure NOT required for this payment
       if (payment.paymentIntent.status === 'succeeded') {
-        const confirmationResponse = await platform.bookings.paymentConfirmation({
-          paymentMethod: createdPaymentMethod?.paymentMethod.id,
-          paymentId: payment.paymentIntent.id,
-          bookingId: _id,
-          token: token.id,
-        });
+        const confirmationResponse =
+          await platform.bookings.paymentConfirmation({
+            paymentMethod: createdPaymentMethod?.paymentMethod.id,
+            paymentId: payment.paymentIntent.id,
+            bookingId: _id,
+            token: token.id,
+          });
         if (isSuccessfulResponse(confirmationResponse)) {
           if (onSuccess) {
             setProcessing(false);
@@ -275,7 +355,11 @@ const CheckoutForm = ({
       logBookingPaymentFailureMetric();
       setProcessing(false);
       console.error(err);
-      setError(parseMessageFromError(err));
+      const message = parseMessageFromError(err);
+      if (isUnsyncedOnChainTokenStakeError(message)) {
+        onFiatPaymentBlocked?.();
+      }
+      setError(message);
       if (tokenPaymentSuccessful && refetchBooking) {
         await refetchBooking();
       }
