@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import { renderWithNextIntl } from '../../test/utils';
 
 import BookingsFilter from './index';
@@ -38,5 +38,45 @@ describe('BookingsFilter', () => {
     expect(newestFirstButton).toBeInTheDocument();
     expect(departureButton).toBeEnabled();
     expect(datesButton).toBeInTheDocument();
+  });
+
+  it('should apply the default where clause when no status is selected', () => {
+    const setFilter = jest.fn();
+    const defaultWhere = { status: { $nin: ['open', 'draft'] } };
+
+    renderWithNextIntl(
+      <BookingsFilter
+        setPage={jest.fn()}
+        page={1}
+        defaultWhere={defaultWhere}
+        setFilter={setFilter}
+      />,
+    );
+
+    expect(setFilter).toHaveBeenCalledWith(
+      expect.objectContaining({ where: defaultWhere }),
+    );
+  });
+
+  it('should override the default where clause when drafts are selected', () => {
+    const setFilter = jest.fn();
+    const defaultWhere = { status: { $nin: ['open', 'draft'] } };
+
+    renderWithNextIntl(
+      <BookingsFilter
+        setPage={jest.fn()}
+        page={1}
+        defaultWhere={defaultWhere}
+        setFilter={setFilter}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /filters/i }));
+    fireEvent.change(screen.getAllByRole('combobox')[0], {
+      target: { value: 'draft' },
+    });
+
+    const lastFilter = setFilter.mock.calls[setFilter.mock.calls.length - 1][0];
+    expect(lastFilter.where).toEqual({ status: ['draft'] });
   });
 });
