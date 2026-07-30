@@ -29,7 +29,7 @@ dayjs.extend(isSameOrBefore);
 
 const MAX_USERS_TO_FETCH = 2000;
 
-const CurrentBooking = ({ leftAfter, arriveBefore }) => {
+const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
   const t = useTranslations();
 
   const { platform } = usePlatform();
@@ -286,7 +286,9 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                 <TableHead>{t('current_booking_table_duration')}</TableHead>
                 <TableHead>{t('current_booking_table_status')}</TableHead>
                 <TableHead>{t('current_booking_table_total')}</TableHead>
-                <TableHead>{t('current_booking_table_pickup')}</TableHead>
+                {bookingConfig?.pickUpEnabled && (
+                  <TableHead>{t('current_booking_table_pickup')}</TableHead>
+                )}
                 <TableHead>
                   {t('current_booking_table_separate_beds')}
                 </TableHead>
@@ -425,15 +427,17 @@ const CurrentBooking = ({ leftAfter, arriveBefore }) => {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <div className="text-center">
-                        {b.doesNeedPickup ? (
-                          <span className="text-red-600">🚗</span>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </div>
-                    </TableCell>
+                    {bookingConfig?.pickUpEnabled && (
+                      <TableCell className="whitespace-nowrap">
+                        <div className="text-center">
+                          {b.doesNeedPickup ? (
+                            <span className="text-red-600">🚗</span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </div>
+                      </TableCell>
+                    )}
                     <TableCell className="whitespace-nowrap">
                       <div className="text-center">
                         {b.doesNeedSeparateBeds ? (

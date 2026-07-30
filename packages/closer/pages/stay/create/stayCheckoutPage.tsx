@@ -1631,40 +1631,45 @@ const StayCheckoutContent = ({
                 </p>
               </div>
             </div>
-            <div className="w-full border-t border-foreground/[0.08] pt-5">
-              <p className="text-sm font-semibold text-gray-900 mb-3">
-                {t('stay_create_options_title')}
-              </p>
-              <div className="flex flex-col gap-3">
-                <Checkbox
-                  isChecked={!!currentStay.doesNeedPickup}
-                  onChange={() =>
-                    handleToggleOption({
-                      doesNeedPickup: !currentStay.doesNeedPickup,
-                    })
-                  }
-                  isEnabled={!isSavingOptions}
-                  id="opt-pickup"
-                >
-                  {t('stay_create_option_pickup')}
-                </Checkbox>
-                {stayBookingGuestCount >= 2 && (
-                  <Checkbox
-                    isChecked={!!currentStay.doesNeedSeparateBeds}
-                    onChange={() =>
-                      handleToggleOption({
-                        doesNeedSeparateBeds:
-                          !currentStay.doesNeedSeparateBeds,
-                      })
-                    }
-                    isEnabled={!isSavingOptions}
-                    id="opt-separate"
-                  >
-                    {t('stay_create_option_separate_beds')}
-                  </Checkbox>
-                )}
+            {(bookingSettings?.pickUpEnabled ||
+              stayBookingGuestCount >= 2) && (
+              <div className="w-full border-t border-foreground/[0.08] pt-5">
+                <p className="text-sm font-semibold text-gray-900 mb-3">
+                  {t('stay_create_options_title')}
+                </p>
+                <div className="flex flex-col gap-3">
+                  {bookingSettings?.pickUpEnabled && (
+                    <Checkbox
+                      isChecked={!!currentStay.doesNeedPickup}
+                      onChange={() =>
+                        handleToggleOption({
+                          doesNeedPickup: !currentStay.doesNeedPickup,
+                        })
+                      }
+                      isEnabled={!isSavingOptions}
+                      id="opt-pickup"
+                    >
+                      {t('stay_create_option_pickup')}
+                    </Checkbox>
+                  )}
+                  {stayBookingGuestCount >= 2 && (
+                    <Checkbox
+                      isChecked={!!currentStay.doesNeedSeparateBeds}
+                      onChange={() =>
+                        handleToggleOption({
+                          doesNeedSeparateBeds:
+                            !currentStay.doesNeedSeparateBeds,
+                        })
+                      }
+                      isEnabled={!isSavingOptions}
+                      id="opt-separate"
+                    >
+                      {t('stay_create_option_separate_beds')}
+                    </Checkbox>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </BookingSurface>
 

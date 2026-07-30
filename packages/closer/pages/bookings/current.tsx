@@ -47,7 +47,11 @@ const CurrentBookings = ({ bookingConfig }: Props) => {
         <div className="max-w-screen-xl flex flex-col gap-10">
           <Heading level={1}>{t('current_bookings_title')}</Heading>
 
-          <CurrentBooking leftAfter={threeDaysAgo} arriveBefore={inSevenDays} />
+          <CurrentBooking
+            leftAfter={threeDaysAgo}
+            arriveBefore={inSevenDays}
+            bookingConfig={bookingConfig}
+          />
         </div>
       </AdminLayout>
     </>

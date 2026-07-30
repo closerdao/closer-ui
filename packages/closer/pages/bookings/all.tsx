@@ -59,7 +59,12 @@ const AllBookingsRequestsPage = ({ bookingConfig }: Props) => {
           setPage={setPage}
           defaultWhere={defaultWhere}
         />
-        <Bookings filter={filter} setPage={setPage} page={page} />
+        <Bookings
+          filter={filter}
+          setPage={setPage}
+          page={page}
+          bookingConfig={bookingConfig}
+        />
       </AdminLayout>
     </>
   );

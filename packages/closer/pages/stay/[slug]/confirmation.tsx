@@ -211,7 +211,9 @@ const StayConfirmationPage = ({
       : null;
 
   const options = [
-    stay.doesNeedPickup ? t('stay_create_option_pickup') : null,
+    bookingSettings?.pickUpEnabled && stay.doesNeedPickup
+      ? t('stay_create_option_pickup')
+      : null,
     stay.doesNeedSeparateBeds ? t('stay_create_option_separate_beds') : null,
   ].filter(Boolean);
 
