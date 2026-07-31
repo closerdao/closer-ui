@@ -4,9 +4,10 @@ import { useRouter } from 'next/router';
 import { useContext, useEffect, useRef, useState } from 'react';
 
 import CitizenGoodToBuy from '../../../components/CitizenGoodToBuy';
+import CitizenQuests from '../../../components/CitizenQuests';
 import CitizenWhy from '../../../components/CitizenWhy';
 import Wallet from '../../../components/Wallet';
-import { Button, Card, Heading, ProgressBar } from '../../../components/ui';
+import { Button, Heading, ProgressBar } from '../../../components/ui';
 
 import { NextPage } from 'next';
 import { useTranslations } from 'next-intl';
@@ -16,6 +17,7 @@ import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { WalletState } from '../../../contexts/wallet';
 import { useConfig } from '../../../hooks/useConfig';
+import { CitizenshipConfig } from '../../../types';
 import { SubscriptionPlan } from '../../../types/subscriptions';
 import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
@@ -34,6 +36,9 @@ const CitizenWhyPage: NextPage = () => {
     enabled: boolean;
     elements: SubscriptionPlan[];
   };
+  const citizenshipConfig = getCachedConfig(
+    'citizenship',
+  ) as CitizenshipConfig | null;
   const t = useTranslations();
   const { isLoading, user, refetchUser } = useAuth();
   const { PLATFORM_NAME } = useConfig();
@@ -59,13 +64,15 @@ const CitizenWhyPage: NextPage = () => {
 
   const citizenshipStatus = user?.citizenship?.status;
 
-  console.log('citizenshipStatus=', citizenshipStatus);
-
   const userCitizenshipWhy = user?.citizenship?.why;
 
-  // const currentCitizenshipStatus = user?.citizenship?.status;
+  const minVouches = citizenshipConfig?.minVouches || 3;
+  const isSpaceHostVouchRequired = citizenshipConfig?.isSpaceHostVouchRequired;
+  const vouchCount = user?.vouched?.length || 0;
 
   const [eligibility, setEligibility] = useState<null | string>(null);
+  const [hasStayedForMinDuration, setHasStayedForMinDuration] = useState(false);
+  const [isVouched, setIsVouched] = useState(false);
   const stampedCitizenshipAppliedAtForUserIdRef = useRef<string | null>(null);
   const [application, setApplication] = useState<{
     owns30Tokens: boolean;
@@ -143,10 +150,14 @@ const CitizenWhyPage: NextPage = () => {
         const hasStayedForMinDurationLocal =
           hasStayedRes?.data?.hasStayedForMinDuration;
 
+        setHasStayedForMinDuration(Boolean(hasStayedForMinDurationLocal));
+
         const isVouchedRes = await api.get(
           '/subscription/citizen/check-is-vouched',
         );
         const isVouchedLocal = isVouchedRes?.data?.isVouched;
+
+        setIsVouched(Boolean(isVouchedLocal));
 
         if (
           (isVouchedLocal && hasStayedForMinDurationLocal && owns30Tokens) ||
@@ -220,6 +231,15 @@ const CitizenWhyPage: NextPage = () => {
       }));
     }
   }, [userCitizenshipWhy]);
+
+  // A financed or in-progress token purchase settles the token quest, so users
+  // who chose a payment plan are not locked out of vouching.
+  const isTokensComplete =
+    owns30Tokens ||
+    Boolean(application?.intent?.iWantToBuyTokens) ||
+    Boolean(application?.intent?.iWantToFinanceTokens);
+
+  const tokensProgress = Math.min(1, (balanceTotal || 0) / 30);
 
   const updateApplication = (
     key: string,
@@ -318,7 +338,6 @@ const CitizenWhyPage: NextPage = () => {
           {/* TODO: add a message if the user has a pending payment */}
           {!citizenshipStatus && (
             <>
-              <p>{t('subscriptions_citizen_good_to_go_intro')}</p>
               <section className="mb-10 space-y-6">
                 {isMember && (
                   <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
@@ -338,22 +357,34 @@ const CitizenWhyPage: NextPage = () => {
                 />
               )}
 
-              <Card>
-                {isWalletConnected &&
-                  isCorrectNetwork &&
-                  hasSameConnectedAccount && (
-                    <>
-                      {t('subscriptions_citizen_you_hold', {
-                        var: balanceTotal,
-                      })}
-                    </>
-                  )}
-                <CitizenGoodToBuy
-                  updateApplication={updateApplication}
-                  application={application}
-                  balanceTotal={balanceTotal}
-                />
-              </Card>
+              <CitizenQuests
+                hasStayedForMinDuration={hasStayedForMinDuration}
+                isTokensComplete={isTokensComplete}
+                isVouched={isVouched}
+                vouchCount={vouchCount}
+                minVouches={minVouches}
+                isSpaceHostVouchRequired={isSpaceHostVouchRequired}
+                tokensProgress={tokensProgress}
+                showEligibilityQuests={!isMember}
+                tokensCard={
+                  <>
+                    {isWalletConnected &&
+                      isCorrectNetwork &&
+                      hasSameConnectedAccount && (
+                        <p className="mb-3 text-sm font-bold">
+                          {t('subscriptions_citizen_you_hold', {
+                            var: balanceTotal,
+                          })}
+                        </p>
+                      )}
+                    <CitizenGoodToBuy
+                      updateApplication={updateApplication}
+                      application={application}
+                      balanceTotal={balanceTotal}
+                    />
+                  </>
+                }
+              />
               {isWalletEnabled &&
               (eligibility === 'buy_more' || eligibility === 'not_eligible') ? (
                 <div className="my-8 space-y-6">
@@ -374,6 +405,11 @@ const CitizenWhyPage: NextPage = () => {
                 >
                   {getCtaButtonText()}
                 </Button>
+                {!isMember && (
+                  <p className="mt-4 text-center text-sm text-gray-500">
+                    {t('subscriptions_citizen_hero_fineprint')}
+                  </p>
+                )}
               </div>
             </>
           )}
