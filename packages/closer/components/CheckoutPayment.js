@@ -51,6 +51,11 @@ const CheckoutPayment = ({
   isAdditionalFiatPayment,
   transactionId,
   createdBy,
+  fiatPaymentBlocked,
+  onFiatPaymentBlocked,
+  listingPrivate,
+  listingBeds,
+  isHourlyBooking,
 }) => {
   const t = useTranslations();
   const { platform } = usePlatform();
@@ -101,7 +106,8 @@ const CheckoutPayment = ({
     void logMetric({
       event: 'booking-payment-success',
       category: 'booking',
-      value: 'success', point: p,
+      value: 'success',
+      point: p,
       ...linkedMetricFields('Booking', bookingId),
     });
     try {
@@ -149,6 +155,7 @@ const CheckoutPayment = ({
     dailyTokenValue,
     stakeTokens,
     checkContract,
+    bookingStatusOverride,
   ) => {
     try {
       const result = await payTokens(
@@ -157,7 +164,7 @@ const CheckoutPayment = ({
         stakeTokens,
         checkContract,
         user?.email,
-        status,
+        bookingStatusOverride ?? status,
         transactionId,
         { start: startDate, end: endDate, createdBy },
       );
@@ -229,8 +236,14 @@ const CheckoutPayment = ({
           status={status}
           refetchBooking={refetchBooking}
           isAdditionalFiatPayment={isAdditionalFiatPayment}
+          fiatPaymentBlocked={fiatPaymentBlocked}
+          onFiatPaymentBlocked={onFiatPaymentBlocked}
+          useTokens={useTokens}
           stakeTokens={stakeTokens}
           checkContract={checkContract}
+          listingPrivate={listingPrivate}
+          listingBeds={listingBeds}
+          isHourlyBooking={isHourlyBooking}
         >
           <Conditions
             cancellationPolicy={cancellationPolicy}

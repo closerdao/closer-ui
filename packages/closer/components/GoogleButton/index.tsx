@@ -7,16 +7,17 @@ import { Spinner } from '../ui';
 interface Props {
   onClick: () => void;
   isLoading: boolean;
+  isEnabled?: boolean;
 }
 
-const GoogleButton = ({ onClick, isLoading }: Props) => {
+const GoogleButton = ({ onClick, isLoading, isEnabled = true }: Props) => {
   const t = useTranslations();
   return (
     <Button
       className="group justify-center gap-2 border-[#747775] text-[#1F1F1F] normal-case"
       variant="secondary"
       onClick={onClick}
-      isEnabled={!isLoading}
+      isEnabled={!isLoading && isEnabled}
     >
       <svg
         aria-label="Google"

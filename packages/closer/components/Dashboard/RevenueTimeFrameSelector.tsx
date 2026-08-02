@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
 import dayjs from 'dayjs';
 import { X } from 'lucide-react';
@@ -38,6 +38,12 @@ const RevenueTimeFrameSelector = ({
 
   const [showDropdown, setShowDropdown] = useState(false);
 
+  useEffect(() => {
+    if (fromDate && toDate && timeFrame !== 'custom') {
+      setTimeFrame('custom');
+    }
+  }, [fromDate, toDate, timeFrame]);
+
   function handleClickOutsideDropdown() {
     setShowDropdown(false);
   }
@@ -47,12 +53,12 @@ const RevenueTimeFrameSelector = ({
     setToDate('');
   };
 
-  const handleDateChange = (startDate: string, endDate: string) => {
-    setFromDate(startDate);
-    setToDate(endDate);
-    if (startDate && endDate) {
-      setTimeFrame('custom');
-    }
+  const handleFromDateChange = (date: string | null | Date) => {
+    setFromDate(date ? dayjs(date).format('YYYY-MM-DD') : '');
+  };
+
+  const handleToDateChange = (date: string | null | Date) => {
+    setToDate(date ? dayjs(date).format('YYYY-MM-DD') : '');
   };
 
   const handleTimeFrameClick = (frame: string) => {
@@ -93,7 +99,9 @@ const RevenueTimeFrameSelector = ({
           }`}
         >
           {fromDate && toDate
-            ? `${dayjs(fromDate).format('DD/MM')} - ${dayjs(toDate).format('DD/MM')}`
+            ? `${dayjs(fromDate).format('DD/MM')} - ${dayjs(toDate).format(
+                'DD/MM',
+              )}`
             : t('bookings_select_dates_button')}
         </button>
         {showDropdown && (
@@ -104,7 +112,9 @@ const RevenueTimeFrameSelector = ({
             />
             <div className="fixed inset-4 z-50 bg-white rounded-lg shadow-xl flex flex-col md:absolute md:inset-auto md:z-10 md:right-0 md:top-full md:mt-2 md:shadow-lg md:border md:border-gray-200">
               <div className="flex items-center justify-between p-4 border-b md:hidden">
-                <span className="font-medium">{t('bookings_select_dates_button')}</span>
+                <span className="font-medium">
+                  {t('bookings_select_dates_button')}
+                </span>
                 <button
                   onClick={() => setShowDropdown(false)}
                   className="p-1 hover:bg-gray-100 rounded"
@@ -114,18 +124,8 @@ const RevenueTimeFrameSelector = ({
               </div>
               <div className="flex-1 overflow-auto p-4 flex flex-col items-center justify-center">
                 <DateTimePicker
-                  setStartDate={(date) =>
-                    handleDateChange(
-                      date ? dayjs(date).format('YYYY-MM-DD') : '',
-                      toDate,
-                    )
-                  }
-                  setEndDate={(date) =>
-                    handleDateChange(
-                      fromDate,
-                      date ? dayjs(date).format('YYYY-MM-DD') : '',
-                    )
-                  }
+                  setStartDate={handleFromDateChange}
+                  setEndDate={handleToDateChange}
                   savedStartDate={fromDate}
                   savedEndDate={toDate}
                   defaultMonth={new Date()}

@@ -65,6 +65,17 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   useEffect(() => {
+    if (selectedIndex === null) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [selectedIndex]);
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (selectedIndex === null) return;
       if (e.key === 'ArrowRight') {
@@ -73,9 +84,7 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
         );
       } else if (e.key === 'ArrowLeft') {
         setSelectedIndex((prev) =>
-          prev !== null
-            ? (prev + images.length - 1) % images.length
-            : null,
+          prev !== null ? (prev + images.length - 1) % images.length : null,
         );
       } else if (e.key === 'Escape') {
         setSelectedIndex(null);
@@ -87,12 +96,10 @@ const CustomPhotoGallery: React.FC<PhotoGalleryProps> = ({
 
   const openModal = (index: number) => {
     setSelectedIndex(index);
-    document.body.style.overflow = 'hidden';
   };
 
   const closeModal = () => {
     setSelectedIndex(null);
-    document.body.style.overflow = 'auto';
   };
 
   const navigateImage = (direction: 'next' | 'prev') => {

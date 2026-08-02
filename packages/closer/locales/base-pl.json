@@ -360,6 +360,7 @@
   "events_slug_checkout_discount_success": "Discount code applied",
   "events_slug_checkout_discount_success_message": "You'll receive",
   "events_slug_checkout_discount_success_message_part_2": "discount on the event price.",
+  "events_slug_checkout_discount_ticket_mismatch": "This discount code only applies to \"{ticketName}\" tickets, not your selected ticket.",
   "events_slug_edit_error": "Event not found",
   "events_slug_edit_title": "Edit",
   "events_slug_edit_link": "Edit event:",

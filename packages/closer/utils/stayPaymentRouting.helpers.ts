@@ -1,10 +1,6 @@
 import type { Booking } from '../types/booking';
 import type { Stay } from '../types/stay';
-
-import {
-  computeCreditsOwed,
-  computeTokensOwed,
-} from './stays.api';
+import { computeCreditsOwed, computeTokensOwed } from './stays.api';
 
 type PaymentDeltaInput =
   | Booking['paymentDelta']
@@ -14,7 +10,6 @@ type PaymentDeltaInput =
 
 function stayPaymentDeltaHasPayableDue(
   paymentDelta: PaymentDeltaInput,
-  useTokens: boolean,
 ): boolean {
   if (!paymentDelta) return false;
   if (
@@ -80,7 +75,17 @@ export function getBookingPaymentCheckoutPath(
     return `/stay/create/${bookingId}`;
   }
 
-  if (stayPaymentDeltaHasPayableDue(paymentDelta, useTokens)) {
+  if (status === 'tokens-staked' || status === 'credits-paid') {
+    const fiatDue =
+      fiatOwed > 0.005 ||
+      (paymentDelta?.fiat != null && paymentDelta.fiat.val > 0.005);
+    if (fiatDue) {
+      return `/stay/${bookingId}/payment`;
+    }
+    return `/stay/create/${bookingId}`;
+  }
+
+  if (stayPaymentDeltaHasPayableDue(paymentDelta)) {
     const pd = paymentDelta;
     if (pd?.credits && pd.credits.val > 0.005) {
       return `/stay/create/${bookingId}`;
