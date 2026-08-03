@@ -213,6 +213,7 @@ module.exports = {
   configPayloadToSlugMap,
   fetchWithRetry,
   resolveConfigApiUrl,
+  FETCH_TIMEOUT_MS,
   MAX_ATTEMPTS,
   RETRY_DELAYS_MS,
 };

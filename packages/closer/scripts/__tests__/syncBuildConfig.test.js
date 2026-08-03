@@ -1,6 +1,7 @@
 const {
   fetchWithRetry,
   resolveConfigApiUrl,
+  FETCH_TIMEOUT_MS,
   MAX_ATTEMPTS,
   RETRY_DELAYS_MS,
 } = require('../syncBuildConfig.cjs');
@@ -62,6 +63,45 @@ describe('fetchWithRetry', () => {
     expect(res.ok).toBe(true);
     expect(fetchImpl).toHaveBeenCalledTimes(3);
     expect(instantSleep.mock.calls.map(([ms]) => ms)).toEqual([2000, 4000]);
+  });
+
+  it('retries timeouts (AbortError) like other network errors and reports the timeout duration', async () => {
+    const abortError = () => {
+      const err = new Error('This operation was aborted');
+      err.name = 'AbortError';
+      return err;
+    };
+    const fetchImpl = jest
+      .fn()
+      .mockRejectedValueOnce(abortError())
+      .mockRejectedValueOnce(abortError())
+      .mockResolvedValue(okResponse());
+    const res = await fetchWithRetry(URL, {
+      fetchImpl,
+      sleep: instantSleep,
+      log: silentLog,
+    });
+    expect(res.ok).toBe(true);
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+    expect(instantSleep.mock.calls.map(([ms]) => ms)).toEqual([2000, 4000]);
+    expect(silentLog.warn.mock.calls[0][0]).toContain(
+      `timed out after ${FETCH_TIMEOUT_MS}ms`,
+    );
+  });
+
+  it('reports the timeout in the final error when every attempt aborts', async () => {
+    const fetchImpl = jest.fn().mockImplementation(() => {
+      const err = new Error('This operation was aborted');
+      err.name = 'AbortError';
+      return Promise.reject(err);
+    });
+    await expect(
+      fetchWithRetry(URL, { fetchImpl, sleep: instantSleep, log: silentLog }),
+    ).rejects.toThrow(
+      `Config API unreachable after ${MAX_ATTEMPTS} attempts (timed out after ${FETCH_TIMEOUT_MS}ms)`,
+    );
+    expect(fetchImpl).toHaveBeenCalledTimes(MAX_ATTEMPTS);
+    expect(instantSleep.mock.calls.map(([ms]) => ms)).toEqual(RETRY_DELAYS_MS);
   });
 
   it('retries non-200 responses and succeeds', async () => {
