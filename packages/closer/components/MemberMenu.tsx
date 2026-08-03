@@ -18,7 +18,6 @@ import Profile from './Profile';
 import ReportABug from './ReportABug';
 import Wallet from './Wallet';
 
-
 interface MenuSection {
   label: string;
   isOpen: boolean;
@@ -129,6 +128,11 @@ const MemberMenu = ({
               url: '/events',
               enabled: isEventsEnabled,
               rbacPage: 'Events',
+            },
+            {
+              label: t('menu_artists_in_residence'),
+              url: '/artists',
+              enabled: true,
             },
           ],
         },
@@ -407,31 +411,35 @@ const MemberMenu = ({
           },
         ],
       },
-      // Stay section (open by default)
-      {
-        label: t('menu_section_stay'),
-        isOpen: true,
-        items: [
-          {
-            label: t('navigation_stay'),
-            url: '/stay',
-            enabled: isBookingEnabled,
-            rbacPage: 'Stay',
-          },
-          {
-            label: t('navigation_volunteer'),
-            url: '/volunteer',
-            enabled: isVolunteeringEnabled,
-            rbacPage: 'Volunteer',
-          },
-          {
-            label: t('navigation_residence'),
-            url: '/projects',
-            enabled: isVolunteeringEnabled && APP_NAME?.toLowerCase() === 'tdf',
-            rbacPage: 'Residence',
-          },
-        ],
-      },
+      ...(APP_NAME?.toLowerCase().includes('earthbound')
+        ? []
+        : [
+            {
+              label: t('menu_section_stay'),
+              isOpen: true,
+              items: [
+                {
+                  label: t('navigation_stay'),
+                  url: '/stay',
+                  enabled: isBookingEnabled,
+                  rbacPage: 'Stay',
+                },
+                {
+                  label: t('navigation_volunteer'),
+                  url: '/volunteer',
+                  enabled: isVolunteeringEnabled,
+                  rbacPage: 'Volunteer',
+                },
+                {
+                  label: t('navigation_residence'),
+                  url: '/projects',
+                  enabled:
+                    isVolunteeringEnabled && APP_NAME?.toLowerCase() === 'tdf',
+                  rbacPage: 'Residence',
+                },
+              ],
+            },
+          ]),
 
       // Events section
       {
@@ -551,18 +559,22 @@ const MemberMenu = ({
           ]
         : []),
 
-      {
-        label: t('navigation_faq'),
-        isOpen: false,
-        items: [
-          {
-            label: t('navigation_faq'),
-            url: '/resources',
-            enabled: isFaqEnabled,
-            rbacPage: 'Resources',
-          },
-        ],
-      },
+      ...(APP_NAME?.toLowerCase().includes('earthbound')
+        ? []
+        : [
+            {
+              label: t('navigation_faq'),
+              isOpen: false,
+              items: [
+                {
+                  label: t('navigation_faq'),
+                  url: '/resources',
+                  enabled: isFaqEnabled,
+                  rbacPage: 'Resources',
+                },
+              ],
+            },
+          ]),
       {
         label: t('menu_section_other'),
         isOpen: false,

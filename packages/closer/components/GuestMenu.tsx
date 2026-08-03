@@ -6,10 +6,10 @@ import { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import configCached from '../configCached';
 import { useBuyTokens } from '../hooks/useBuyTokens';
 import { useConfig } from '../hooks/useConfig';
 import useRBAC from '../hooks/useRBAC';
-import configCached from '../configCached';
 import { getCurrentUnitPrice } from '../utils/bondingCurve';
 import { getReserveTokenDisplay } from '../utils/config.utils';
 import ReportABug from './ReportABug';
@@ -117,6 +117,11 @@ const GuestMenu = () => {
               enabled: true,
               rbacPage: 'Events',
             },
+            {
+              label: t('menu_artists_in_residence'),
+              url: '/artists',
+              enabled: true,
+            },
           ],
         },
         {
@@ -183,31 +188,35 @@ const GuestMenu = () => {
 
     // Create all menu sections with their items for other apps
     const sections: MenuSection[] = [
-      // Stay section (open by default)
-      {
-        label: t('menu_section_stay'),
-        isOpen: true,
-        items: [
-          {
-            label: t('navigation_stay'),
-            url: '/stay',
-            enabled: isBookingEnabled,
-            rbacPage: 'Stay',
-          },
-          {
-            label: t('navigation_volunteer'),
-            url: '/volunteer',
-            enabled: isVolunteeringEnabled,
-            rbacPage: 'Volunteer',
-          },
-          {
-            label: t('navigation_residence'),
-            url: '/projects',
-            enabled: isVolunteeringEnabled && APP_NAME?.toLowerCase() === 'tdf',
-            rbacPage: 'Residence',
-          },
-        ],
-      },
+      ...(APP_NAME?.toLowerCase().includes('earthbound')
+        ? []
+        : [
+            {
+              label: t('menu_section_stay'),
+              isOpen: true,
+              items: [
+                {
+                  label: t('navigation_stay'),
+                  url: '/stay',
+                  enabled: isBookingEnabled,
+                  rbacPage: 'Stay',
+                },
+                {
+                  label: t('navigation_volunteer'),
+                  url: '/volunteer',
+                  enabled: isVolunteeringEnabled,
+                  rbacPage: 'Volunteer',
+                },
+                {
+                  label: t('navigation_residence'),
+                  url: '/projects',
+                  enabled:
+                    isVolunteeringEnabled && APP_NAME?.toLowerCase() === 'tdf',
+                  rbacPage: 'Residence',
+                },
+              ],
+            },
+          ]),
 
       // Subscriptions section (standalone)
       {
@@ -368,7 +377,6 @@ const GuestMenu = () => {
                   label: t('header_nav_invest'),
                   url: '/pages/invest',
                   enabled: true,
-                  rbacPage: 'Invest',
                 },
                 {
                   label: t('header_nav_stay'),
@@ -379,13 +387,11 @@ const GuestMenu = () => {
                   label: t('header_nav_community'),
                   url: '/pages/community',
                   enabled: true,
-                  rbacPage: 'Community',
                 },
                 {
                   label: t('header_nav_events'),
                   url: '/pages/events',
                   enabled: true,
-                  rbacPage: 'Events',
                 },
               ]
             : []),
@@ -403,19 +409,22 @@ const GuestMenu = () => {
         ],
       },
 
-      // FAQ section (lowest item)
-      {
-        label: t('navigation_faq'),
-        isOpen: false,
-        items: [
-          {
-            label: t('navigation_faq'),
-            url: '/resources',
-            enabled: isFaqEnabled,
-            rbacPage: 'Resources',
-          },
-        ],
-      },
+      ...(APP_NAME?.toLowerCase().includes('earthbound')
+        ? []
+        : [
+            {
+              label: t('navigation_faq'),
+              isOpen: false,
+              items: [
+                {
+                  label: t('navigation_faq'),
+                  url: '/resources',
+                  enabled: isFaqEnabled,
+                  rbacPage: 'Resources',
+                },
+              ],
+            },
+          ]),
     ];
 
     return sections;

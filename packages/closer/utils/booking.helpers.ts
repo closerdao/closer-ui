@@ -24,12 +24,11 @@ import {
 } from '../types';
 import { FoodOption } from '../types/food';
 import type { Stay } from '../types/stay';
-
 import api from './api';
 import { parseMessageFromError } from './common';
-import { formatStakeBookingErrorEnglish } from './stakeBookingError.helpers';
 import { priceFormat } from './helpers';
 import { reportIssue } from './reporting.utils';
+import { formatStakeBookingErrorEnglish } from './stakeBookingError.helpers';
 import {
   accommodationTokenTotalFromPriceLock,
   inferPaymentChoiceFromStay,
@@ -40,12 +39,200 @@ const DEFAULT_TIMEZONE = 'Europe/Berlin';
 const STAKING_VERIFICATION_FAILED_MESSAGE =
   'Token staking could not be verified. Please try again or contact support if the issue persists.';
 
-function isTokenPaymentVerified(res: { data?: { verified?: boolean } }): boolean {
-  return res?.data?.verified !== false;
+export const ON_CHAIN_SYNC_TRANSACTION_ID = 'existing';
+
+export const UNSYNCED_ON_CHAIN_TOKEN_STAKE_MESSAGE =
+  'Your tokens are staked on the blockchain but this booking is not updated yet. Please refresh the page and try again.';
+
+const ACCOMMODATION_EPSILON = 0.005;
+
+type TokenPaymentApiResponse = {
+  data?: {
+    verified?: boolean | { ok?: boolean };
+    results?: { status?: string };
+  };
+};
+
+export function isTokenPaymentVerified(res: TokenPaymentApiResponse): boolean {
+  const verified = res?.data?.verified;
+  if (verified === true) {
+    return true;
+  }
+  if (verified && typeof verified === 'object' && verified.ok === true) {
+    return true;
+  }
+  return false;
 }
+
+type TokenPaymentSyncResult =
+  | {
+      success: true;
+      error: null;
+      booking?: { status?: string };
+    }
+  | {
+      success: null;
+      error: string;
+      booking?: undefined;
+    };
+
+async function confirmTokenPaymentWithServer(
+  bookingId: string,
+  transactionId: string,
+): Promise<TokenPaymentSyncResult> {
+  try {
+    const res = await api.post(`/bookings/${bookingId}/token-payment`, {
+      transactionId,
+    });
+    if (!isTokenPaymentVerified(res)) {
+      return {
+        success: null,
+        error: STAKING_VERIFICATION_FAILED_MESSAGE,
+      };
+    }
+    return {
+      success: true,
+      error: null,
+      booking: res?.data?.results,
+    };
+  } catch (err) {
+    const message = parseMessageFromError(err);
+    return {
+      success: null,
+      error: message || 'Failed to confirm token payment with server',
+    };
+  }
+}
+
+export async function syncTokenPaymentFromChain(
+  bookingId: string,
+): Promise<TokenPaymentSyncResult> {
+  return confirmTokenPaymentWithServer(bookingId, ON_CHAIN_SYNC_TRANSACTION_ID);
+}
+
+type OnChainContractCheck = () => Promise<{ success?: boolean } | undefined>;
+
+export async function hasOnChainAccommodationStake(
+  checkContract?: OnChainContractCheck,
+): Promise<boolean> {
+  if (!checkContract) {
+    return false;
+  }
+  const onChain = await checkContract();
+  return Boolean(onChain?.success);
+}
+
+export type OnChainTokenStakeSyncOutcome = 'synced' | 'blocked' | 'unchanged';
+
+export async function reconcileOnChainTokenStakeSync({
+  bookingId,
+  checkContract,
+  refetchBooking,
+}: {
+  bookingId: string;
+  checkContract?: OnChainContractCheck;
+  refetchBooking?: () => Promise<{ status?: string } | undefined>;
+}): Promise<OnChainTokenStakeSyncOutcome> {
+  const syncResult = await syncTokenPaymentFromChain(bookingId);
+  if (syncResult.success) {
+    if (refetchBooking) {
+      await refetchBooking();
+    }
+    return 'synced';
+  }
+
+  if (isUnsyncedOnChainTokenStakeError(syncResult.error || '')) {
+    return 'blocked';
+  }
+
+  let statusAfterSync: string | undefined;
+  if (refetchBooking) {
+    const updatedBooking = await refetchBooking();
+    statusAfterSync = updatedBooking?.status;
+  }
+
+  if (statusAfterSync === 'tokens-staked') {
+    return 'synced';
+  }
+
+  if (statusAfterSync && statusAfterSync !== 'confirmed') {
+    return 'unchanged';
+  }
+
+  if (!checkContract) {
+    return 'unchanged';
+  }
+
+  const onChain = await checkContract();
+  if (onChain?.success) {
+    return 'blocked';
+  }
+
+  return 'unchanged';
+}
+
+export function isUnsyncedOnChainTokenStakeError(message: string): boolean {
+  return (
+    message === UNSYNCED_ON_CHAIN_TOKEN_STAKE_MESSAGE ||
+    message.includes('staked on the blockchain but this booking') ||
+    message.includes('charge record could not be created')
+  );
+}
+
+export const resolveCheckoutFiatTotal = ({
+  residualFiatAfterTokenStake,
+  paymentDeltaFiat,
+  total,
+  fallbackCur = CloserCurrencies.EUR,
+}: {
+  residualFiatAfterTokenStake?: { val: number; cur: CloserCurrencies } | null;
+  paymentDeltaFiat?: { val?: number; cur?: string };
+  total?: { val?: number; cur?: string };
+  fallbackCur?: CloserCurrencies;
+}): { val: number; cur: CloserCurrencies } => {
+  if (residualFiatAfterTokenStake != null) {
+    const residualVal = Number(residualFiatAfterTokenStake.val) || 0;
+    const deltaVal = Number(paymentDeltaFiat?.val) || 0;
+    if (residualVal > ACCOMMODATION_EPSILON) {
+      return residualFiatAfterTokenStake;
+    }
+    if (deltaVal > ACCOMMODATION_EPSILON && paymentDeltaFiat) {
+      return {
+        val: deltaVal,
+        cur: (paymentDeltaFiat.cur as CloserCurrencies) || fallbackCur,
+      };
+    }
+    return residualFiatAfterTokenStake;
+  }
+  if (paymentDeltaFiat) {
+    return {
+      val: Number(paymentDeltaFiat.val) || 0,
+      cur: (paymentDeltaFiat.cur as CloserCurrencies) || fallbackCur,
+    };
+  }
+  return {
+    val: Number(total?.val) || 0,
+    cur: (total?.cur as CloserCurrencies) || fallbackCur,
+  };
+};
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
+
+const TEAM_BOOKING_CREATOR_ROLES = [
+  'space-host',
+  'steward',
+  'land-manager',
+  'team',
+  'admin',
+] as const;
+
+export const userCanCreateTeamBooking = (
+  roles: string[] | undefined,
+): boolean =>
+  (roles ?? []).some((role) =>
+    (TEAM_BOOKING_CREATOR_ROLES as readonly string[]).includes(role),
+  );
 
 export const areNumberArraysEqual = (
   a: number[] | undefined,
@@ -124,8 +311,8 @@ export const getDisplayTotalFromComponents = ({
 }) => {
   const val =
     (rentalFiat?.val ?? 0) +
-    (utilityOptionEnabled !== false ? (utilityFiat?.val ?? 0) : 0) +
-    (foodOptionEnabled !== false ? (foodFiat?.val ?? 0) : 0) +
+    (utilityOptionEnabled !== false ? utilityFiat?.val ?? 0 : 0) +
+    (foodOptionEnabled !== false ? foodFiat?.val ?? 0 : 0) +
     (eventFiat?.val ?? 0);
   const cur =
     rentalFiat?.cur ??
@@ -134,7 +321,7 @@ export const getDisplayTotalFromComponents = ({
     eventFiat?.cur ??
     fallbackCur ??
     CloserCurrencies.EUR;
-  return { val: +(val.toFixed(2)), cur };
+  return { val: +val.toFixed(2), cur };
 };
 
 export const hasBookingPaymentDeltaDue = (
@@ -151,11 +338,7 @@ export const hasBookingPaymentDeltaDue = (
   ) {
     return true;
   }
-  if (
-    useTokens &&
-    paymentDelta.token &&
-    paymentDelta.token.val > 0.005
-  ) {
+  if (useTokens && paymentDelta.token && paymentDelta.token.val > 0.005) {
     return true;
   }
   if (paymentDelta.credits && paymentDelta.credits.val > 0.005) {
@@ -168,6 +351,212 @@ export {
   getBookingPaymentCheckoutPath,
   stayRequiresFullCheckoutFlow,
 } from './stayPaymentRouting.helpers';
+
+export const fullAccommodationTokenThreshold = ({
+  duration = 0,
+  adults = 1,
+  dailyRentalToken,
+  listingPrivate = false,
+  listingBeds = 1,
+  isHourlyBooking = false,
+}: {
+  duration?: number;
+  adults?: number;
+  dailyRentalToken?: { val?: number };
+  listingPrivate?: boolean | null;
+  listingBeds?: number | null;
+  isHourlyBooking?: boolean;
+}): number => {
+  const daily = Number(dailyRentalToken?.val ?? 0);
+  const dur = Number(duration) || 0;
+  const adv = Number(adults) || 1;
+
+  if (!Number.isFinite(daily) || daily <= 0 || dur <= 0) {
+    return 0;
+  }
+
+  if (isHourlyBooking) {
+    return Math.round(daily * dur * 100) / 100;
+  }
+
+  const spaces = listingPrivate
+    ? Math.ceil(adv / Math.max(Number(listingBeds) || 1, 1))
+    : adv;
+  return Math.round(daily * dur * spaces * 100) / 100;
+};
+
+export const isFullAccommodationCoveredByTokens = ({
+  rentalFiat,
+  tokensStaked,
+  duration,
+  adults,
+  dailyRentalToken,
+  listingPrivate,
+  listingBeds,
+  isHourlyBooking,
+}: {
+  rentalFiat?: { val?: number };
+  tokensStaked?: { val?: number } | number;
+  duration?: number;
+  adults?: number;
+  dailyRentalToken?: { val?: number };
+  listingPrivate?: boolean | null;
+  listingBeds?: number | null;
+  isHourlyBooking?: boolean;
+}): boolean => {
+  const staked =
+    typeof tokensStaked === 'number'
+      ? tokensStaked
+      : Number(tokensStaked?.val ?? 0);
+  if (!Number.isFinite(staked) || staked <= ACCOMMODATION_EPSILON) {
+    return false;
+  }
+
+  const full = fullAccommodationTokenThreshold({
+    duration,
+    adults,
+    dailyRentalToken,
+    listingPrivate,
+    listingBeds,
+    isHourlyBooking,
+  });
+  if (full <= ACCOMMODATION_EPSILON) {
+    return false;
+  }
+
+  const rentalFiatVal = Number(rentalFiat?.val);
+  if (
+    Number.isFinite(rentalFiatVal) &&
+    rentalFiatVal > ACCOMMODATION_EPSILON &&
+    staked + ACCOMMODATION_EPSILON < full
+  ) {
+    return false;
+  }
+
+  return staked + ACCOMMODATION_EPSILON >= full;
+};
+
+export const resolveTokensStakedVal = ({
+  tokensStaked,
+  charges,
+  rentalToken,
+}: {
+  tokensStaked?: { val?: number } | number | null;
+  charges?: Array<{
+    method?: string;
+    status?: string;
+    lockedStake?: { val?: number };
+  }> | null;
+  rentalToken?: { val?: number } | null;
+}): number => {
+  if (typeof tokensStaked === 'number' && Number.isFinite(tokensStaked)) {
+    return tokensStaked;
+  }
+  const fromField = Number(
+    tokensStaked && typeof tokensStaked === 'object'
+      ? tokensStaked.val
+      : undefined,
+  );
+  if (Number.isFinite(fromField) && fromField > ACCOMMODATION_EPSILON) {
+    return fromField;
+  }
+
+  const fromCharges = (charges ?? []).reduce((sum, charge) => {
+    if (charge?.method !== 'tokens') {
+      return sum;
+    }
+    if (charge.status && charge.status !== 'paid') {
+      return sum;
+    }
+    const locked = Number(charge.lockedStake?.val);
+    return sum + (Number.isFinite(locked) ? locked : 0);
+  }, 0);
+  if (fromCharges > ACCOMMODATION_EPSILON) {
+    return fromCharges;
+  }
+
+  const fromRentalToken = Number(rentalToken?.val);
+  if (
+    Number.isFinite(fromRentalToken) &&
+    fromRentalToken > ACCOMMODATION_EPSILON
+  ) {
+    return fromRentalToken;
+  }
+
+  return 0;
+};
+
+export const getResidualFiatAfterFullTokenStake = ({
+  status,
+  useCredits,
+  rentalFiat,
+  utilityFiat,
+  foodFiat,
+  eventFiat,
+  total,
+  tokensStaked,
+  duration,
+  adults,
+  dailyRentalToken,
+  listingPrivate,
+  listingBeds,
+  isHourlyBooking,
+}: {
+  status?: string;
+  useCredits?: boolean;
+  rentalFiat?: { val?: number; cur?: string };
+  utilityFiat?: { val?: number; cur?: string };
+  foodFiat?: { val?: number; cur?: string };
+  eventFiat?: { val?: number; cur?: string };
+  total?: { val?: number; cur?: string };
+  tokensStaked?: { val?: number } | number;
+  duration?: number;
+  adults?: number;
+  dailyRentalToken?: { val?: number };
+  listingPrivate?: boolean | null;
+  listingBeds?: number | null;
+  isHourlyBooking?: boolean;
+}): { val: number; cur: CloserCurrencies } | null => {
+  const rentalFiatVal = Number(rentalFiat?.val);
+  const accommodationFiatOutstanding =
+    Number.isFinite(rentalFiatVal) && rentalFiatVal > ACCOMMODATION_EPSILON;
+
+  if (status === 'tokens-staked') {
+    const fullyCovered =
+      !accommodationFiatOutstanding ||
+      isFullAccommodationCoveredByTokens({
+        rentalFiat,
+        tokensStaked,
+        duration,
+        adults,
+        dailyRentalToken,
+        listingPrivate,
+        listingBeds,
+        isHourlyBooking,
+      });
+    if (!fullyCovered) {
+      return null;
+    }
+  } else if (status === 'credits-paid' && useCredits) {
+    if (accommodationFiatOutstanding) {
+      return null;
+    }
+  } else {
+    return null;
+  }
+
+  const val =
+    Math.round(
+      ((Number(utilityFiat?.val) || 0) +
+        (Number(foodFiat?.val) || 0) +
+        (Number(eventFiat?.val) || 0)) *
+        100,
+    ) / 100;
+  return {
+    val,
+    cur: (total?.cur as CloserCurrencies) || CloserCurrencies.EUR,
+  };
+};
 
 export const getUtilityTotal = ({
   utilityFiatVal,
@@ -630,22 +1019,21 @@ export const payTokens = async (
       return { error: 'User rejected transaction', success: null };
     }
     if (stakingError?.reason?.trim() === BOOKING_EXISTS_ERROR) {
-      // Booking already exists on chain - use stored transaction ID if available
       if (existingTransactionId) {
-        try {
-          const res = await api.post(`/bookings/${bookingId}/token-payment`, {
-            transactionId: existingTransactionId,
-          });
-          if (!isTokenPaymentVerified(res)) {
-            return { error: STAKING_VERIFICATION_FAILED_MESSAGE, success: null };
-          }
-          return { success: true, error: null };
-        } catch (apiError) {
-          return {
-            error: 'Booking exists on chain but could not verify. Please contact support.',
-            success: null,
-          };
+        const syncResult = await confirmTokenPaymentWithServer(
+          bookingId,
+          existingTransactionId,
+        );
+        if (syncResult.success) {
+          return syncResult;
         }
+      }
+      const onChainSyncResult = await confirmTokenPaymentWithServer(
+        bookingId,
+        ON_CHAIN_SYNC_TRANSACTION_ID,
+      );
+      if (onChainSyncResult.success) {
+        return onChainSyncResult;
       }
       // No stored transaction ID - check if another booking exists with OVERLAPPING dates
       // Date overlap condition: booking.start < requested.end AND booking.end > requested.start
@@ -662,16 +1050,17 @@ export const payTokens = async (
               }),
             },
           });
-          const overlappingBookings = overlappingBookingsRes?.data?.results || [];
+          const overlappingBookings =
+            overlappingBookingsRes?.data?.results || [];
           const sameUserBookings = overlappingBookings.filter(
-            (b: any) => b.createdBy === bookingDates.createdBy
+            (b: any) => b.createdBy === bookingDates.createdBy,
           );
           const otherUserBookings = overlappingBookings.filter(
-            (b: any) => b.createdBy !== bookingDates.createdBy
+            (b: any) => b.createdBy !== bookingDates.createdBy,
           );
-          
+
           if (overlappingBookings.length > 0) {
-            return { 
+            return {
               error: 'CONFLICTING_BOOKINGS',
               success: null,
               conflictingBookings: overlappingBookings,
@@ -683,18 +1072,19 @@ export const payTokens = async (
           // Ignore query errors, fall through to generic message
         }
       }
-      return { 
+      return {
         error: 'BLOCKCHAIN_GLOBAL_CONFLICT',
         success: null,
         debugInfo: {
-          message: 'A booking already exists on the blockchain for these dates, but no matching booking was found in the database.',
+          message:
+            'A booking already exists on the blockchain for these dates, but no matching booking was found in the database.',
           possibleCauses: [
             'Another wallet (not yours) has staked tokens for these exact dates - the smart contract may enforce global date uniqueness',
             'A booking was made on-chain but the database record was deleted or not synced',
-            'The dates overlap with an existing on-chain booking from a different wallet'
+            'The dates overlap with an existing on-chain booking from a different wallet',
           ],
           dates: { start: bookingDates?.start, end: bookingDates?.end },
-        }
+        },
       };
     }
     await reportIssue(
@@ -710,22 +1100,22 @@ export const payTokens = async (
   }
 
   // If booking already existed on chain (transactionId === 'existing'), use stored tx ID if available
-  if (stakingSuccess?.transactionId === 'existing') {
+  if (stakingSuccess?.transactionId === ON_CHAIN_SYNC_TRANSACTION_ID) {
     if (existingTransactionId) {
-      try {
-        const res = await api.post(`/bookings/${bookingId}/token-payment`, {
-          transactionId: existingTransactionId,
-        });
-        if (!isTokenPaymentVerified(res)) {
-          return { error: STAKING_VERIFICATION_FAILED_MESSAGE, success: null };
-        }
-        return { success: true, error: null };
-      } catch (apiError) {
-        return {
-          error: 'Booking exists on chain but could not verify. Please contact support.',
-          success: null,
-        };
+      const syncResult = await confirmTokenPaymentWithServer(
+        bookingId,
+        existingTransactionId,
+      );
+      if (syncResult.success) {
+        return syncResult;
       }
+    }
+    const onChainSyncResult = await confirmTokenPaymentWithServer(
+      bookingId,
+      ON_CHAIN_SYNC_TRANSACTION_ID,
+    );
+    if (onChainSyncResult.success) {
+      return onChainSyncResult;
     }
     // Check if another booking exists with OVERLAPPING dates (from any user)
     if (bookingDates?.start && bookingDates?.end) {
@@ -742,14 +1132,14 @@ export const payTokens = async (
         });
         const overlappingBookings = overlappingBookingsRes?.data?.results || [];
         const sameUserBookings = overlappingBookings.filter(
-          (b: any) => b.createdBy === bookingDates.createdBy
+          (b: any) => b.createdBy === bookingDates.createdBy,
         );
         const otherUserBookings = overlappingBookings.filter(
-          (b: any) => b.createdBy !== bookingDates.createdBy
+          (b: any) => b.createdBy !== bookingDates.createdBy,
         );
-        
+
         if (overlappingBookings.length > 0) {
-          return { 
+          return {
             error: 'CONFLICTING_BOOKINGS',
             success: null,
             conflictingBookings: overlappingBookings,
@@ -761,45 +1151,39 @@ export const payTokens = async (
         // Ignore query errors, fall through to generic message
       }
     }
-    return { 
+    return {
       error: 'BLOCKCHAIN_GLOBAL_CONFLICT',
       success: null,
       debugInfo: {
-        message: 'A booking already exists on the blockchain for these dates, but no matching booking was found in the database.',
+        message:
+          'A booking already exists on the blockchain for these dates, but no matching booking was found in the database.',
         possibleCauses: [
           'Another wallet (not yours) has staked tokens for these exact dates - the smart contract may enforce global date uniqueness',
           'A booking was made on-chain but the database record was deleted or not synced',
-          'The dates overlap with an existing on-chain booking from a different wallet'
+          'The dates overlap with an existing on-chain booking from a different wallet',
         ],
         dates: { start: bookingDates?.start, end: bookingDates?.end },
-      }
+      },
     };
   }
 
   // We have a real transaction ID - backend verifies the chain receipt
   if (stakingSuccess?.transactionId) {
-    try {
-      const res = await api.post(`/bookings/${bookingId}/token-payment`, {
-        transactionId: stakingSuccess.transactionId,
-      });
-      if (!isTokenPaymentVerified(res)) {
-        return { error: STAKING_VERIFICATION_FAILED_MESSAGE, success: null };
-      }
-      return { success: true, error: null };
-    } catch (apiError) {
+    const syncResult = await confirmTokenPaymentWithServer(
+      bookingId,
+      stakingSuccess.transactionId,
+    );
+    if (!syncResult.success) {
       await reportIssue(
-        `TOKEN_PAYMENT_API_ERROR: bookingId=${bookingId}, error=${JSON.stringify(
-          apiError,
-        )}, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}, transactionId=${
-          stakingSuccess.transactionId
-        }`,
+        `TOKEN_PAYMENT_API_ERROR: bookingId=${bookingId}, error=${syncResult.error}, dailyRentalTokenVal=${dailyRentalTokenVal}, bookingStatus=${bookingStatus}, transactionId=${stakingSuccess.transactionId}`,
         userEmail,
       );
       return {
-        error: 'Failed to confirm token payment with server',
+        error: syncResult.error,
         success: null,
       };
     }
+    return syncResult;
   }
 
   return { error: 'Token staking failed', success: null };
@@ -1003,11 +1387,7 @@ export function getBookingTokenCurrency(
   web3Config?: { bookingToken?: string } | null,
   bookingConfig?: { utilityTokenCur?: string } | null,
 ): string {
-  return (
-    web3Config?.bookingToken ??
-    bookingConfig?.utilityTokenCur ??
-    'TDF'
-  );
+  return web3Config?.bookingToken ?? bookingConfig?.utilityTokenCur ?? 'TDF';
 }
 
 export interface BookingStepUrlParams {
@@ -1117,12 +1497,14 @@ export function getBookingListingDisplayName(
   return fallback;
 }
 
-export function getBookingListingEmbedded(
-  listingRef: unknown,
-): { private?: boolean; priceDuration?: string } {
+export function getBookingListingEmbedded(listingRef: unknown): {
+  private?: boolean;
+  priceDuration?: string;
+} {
   if (listingRef == null || typeof listingRef !== 'object') return {};
-  if (typeof (listingRef as { get?: (k: string) => unknown }).get ===
-    'function') {
+  if (
+    typeof (listingRef as { get?: (k: string) => unknown }).get === 'function'
+  ) {
     const m = listingRef as { get: (k: string) => unknown };
     return {
       private: m.get('private') as boolean | undefined,
@@ -1155,9 +1537,7 @@ export function resolveBookingPreviewFinancials(
     start && end
       ? Math.max(
           0,
-          dayjs(end)
-            .startOf('day')
-            .diff(dayjs(start).startOf('day'), 'day'),
+          dayjs(end).startOf('day').diff(dayjs(start).startOf('day'), 'day'),
         )
       : 0;
   const duration = Number(raw?.duration ?? durationFromDates) || 0;
@@ -1174,10 +1554,8 @@ export function resolveBookingPreviewFinancials(
       undefined,
       { listingPrivate },
     );
-    useTokens =
-      choice === 'full-tokens' || choice === 'partial-tokens';
-    useCredits =
-      choice === 'full-credits' || choice === 'partial-credits';
+    useTokens = choice === 'full-tokens' || choice === 'partial-tokens';
+    useCredits = choice === 'full-credits' || choice === 'partial-credits';
   }
 
   const accommodationLine = priceLock?.lines?.accommodation;
@@ -1215,13 +1593,10 @@ export function resolveBookingPreviewFinancials(
       : raw?.utilityFiat;
 
   const foodFiat =
-    priceLock?.lines?.food != null
-      ? priceLock.lines.food
-      : raw?.foodFiat;
+    priceLock?.lines?.food != null ? priceLock.lines.food : raw?.foodFiat;
 
   const lockEvent = priceLock?.lines?.event;
-  const eventFiat =
-    lockEvent != null ? lockEvent : raw?.eventFiat;
+  const eventFiat = lockEvent != null ? lockEvent : raw?.eventFiat;
 
   const creditsDisplayVal = Number(
     raw?.creditsTarget?.val ??
@@ -1282,11 +1657,7 @@ export async function claimBookingAsFriend(
   requestConfig?: AxiosRequestConfig,
 ): Promise<void> {
   try {
-    await api.post(
-      `/bookings/${bookingId}/claim-as-friend`,
-      {},
-      requestConfig,
-    );
+    await api.post(`/bookings/${bookingId}/claim-as-friend`, {}, requestConfig);
   } catch {
     return;
   }

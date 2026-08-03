@@ -10,21 +10,18 @@ import { event as gaEvent } from 'nextjs-google-analytics';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../constants';
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
-import { useInteractionIsHuman } from '../hooks/useInteractionIsHuman';
 import api from '../utils/api';
-import {
-  isTurnstileSubmitEnabled,
-  turnstileTokenForRequest,
-} from '../utils/turnstile.helpers';
-import TurnstileWidget from './TurnstileWidget';
 import { getRedirectUrl } from '../utils/auth.helpers';
 import { parseMessageFromError, slugify } from '../utils/common';
 import { isInputValid, validatePassword } from '../utils/helpers';
+import { clearInteractionSession } from '../utils/interactionSession';
+import { formatErrorForReport, reportIssue } from '../utils/reporting.utils';
 import {
-  formatErrorForReport,
-  reportIssue,
-} from '../utils/reporting.utils';
+  createTurnstileHandlers,
+  isTurnstileSubmitEnabled,
+} from '../utils/turnstile.helpers';
 import GoogleButton from './GoogleButton';
+import TurnstileWidget from './TurnstileWidget';
 import { Button, Card, Checkbox, ErrorMessage, Input } from './ui';
 import Heading from './ui/Heading';
 
@@ -37,7 +34,6 @@ const SignupForm = ({ app }: Props) => {
   const router = useRouter();
   const { platform } = usePlatform() as any;
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const isHuman = useInteractionIsHuman();
   const { back, source, start, end, adults, useTokens, eventId, volunteerId } =
     router.query || {};
 
@@ -188,7 +184,7 @@ const SignupForm = ({ app }: Props) => {
     try {
       const res = await api.post('/check-user-exists', {
         email,
-        turnstileToken: turnstileTokenForRequest(isHuman, turnstileToken),
+        turnstileToken,
       });
       const doesUserExist = res?.data?.doesUserExist;
 
@@ -206,12 +202,14 @@ const SignupForm = ({ app }: Props) => {
             email,
             screenname: '',
             tags: ['signup'],
-            turnstileToken: turnstileTokenForRequest(isHuman, turnstileToken),
+            turnstileToken,
           });
         } catch (error) {
           console.error('error with subscribe:', error);
           await reportIssue(
-            `Error with /subscribe during signup: ${formatErrorForReport(error)} (signupEmail: ${email})`,
+            `Error with /subscribe during signup: ${formatErrorForReport(
+              error,
+            )} (signupEmail: ${email})`,
             user?.email ?? email,
           );
         }
@@ -223,14 +221,19 @@ const SignupForm = ({ app }: Props) => {
       localStorage.setItem('email', email);
       localStorage.setItem('signupCompleted', 'true');
       setTimeout(() => {
+        setTurnstileToken(null);
         setStep(2);
         sessionStorage.setItem('signup_step', '2');
       }, 1000);
     } catch (err: any) {
-      setNewsletterError(
+      const errorMessage =
         (err.response && err.response.data && err.response.data.error) ||
-          err.message,
-      );
+        err.message;
+      if (/turnstile/i.test(String(errorMessage))) {
+        clearInteractionSession();
+        setTurnstileToken(null);
+      }
+      setNewsletterError(errorMessage);
     }
   };
 
@@ -323,7 +326,7 @@ const SignupForm = ({ app }: Props) => {
 
   const authUserWithGoogle = async () => {
     setIsLogin(false);
-    const authRes = await authGoogle();
+    const authRes = await authGoogle({ turnstileToken });
     if (authRes.result === 'login') {
       setIsLogin(true);
     }
@@ -381,14 +384,12 @@ const SignupForm = ({ app }: Props) => {
             {t('signup_form_email_consent')}
           </Checkbox>
 
-          {email.length > 0 && !isHuman && (
-            <div className="animate-[fadeIn_0.3s_ease-in-out]">
-              <TurnstileWidget
-                action="signup_email"
-                onVerify={setTurnstileToken}
-              />
-            </div>
-          )}
+          <div className="animate-[fadeIn_0.3s_ease-in-out]">
+            <TurnstileWidget
+              action="signup_email"
+              {...createTurnstileHandlers(setTurnstileToken)}
+            />
+          </div>
 
           <div className="w-full flex flex-col gap-4">
             <Button
@@ -397,7 +398,7 @@ const SignupForm = ({ app }: Props) => {
                 isInputValid(email, 'email') &&
                 !newsletterSuccess &&
                 isEmailConsent &&
-                isTurnstileSubmitEnabled(isHuman, turnstileToken)
+                isTurnstileSubmitEnabled(turnstileToken)
               }
               isLoading={false}
               type="submit"
@@ -408,6 +409,7 @@ const SignupForm = ({ app }: Props) => {
             {process.env.NEXT_PUBLIC_FIREBASE_CONFIG && (
               <GoogleButton
                 isLoading={isGoogleLoading}
+                isEnabled={isTurnstileSubmitEnabled(turnstileToken)}
                 onClick={authUserWithGoogle}
               />
             )}
@@ -467,14 +469,10 @@ const SignupForm = ({ app }: Props) => {
             <ErrorMessage error={localError || authError} />
           )}
 
-          {application.screenname.length > 0 && !isHuman && (
-            <div className="animate-[fadeIn_0.3s_ease-in-out]">
-              <TurnstileWidget
-                action="signup"
-                onVerify={setTurnstileToken}
-              />
-            </div>
-          )}
+          <TurnstileWidget
+            action="signup"
+            {...createTurnstileHandlers(setTurnstileToken)}
+          />
 
           <div className="w-full my-4 flex flex-col gap-6">
             <Button
@@ -482,7 +480,7 @@ const SignupForm = ({ app }: Props) => {
                 !!application.screenname &&
                 !!application.password &&
                 !isSignupLoading &&
-                isTurnstileSubmitEnabled(isHuman, turnstileToken)
+                isTurnstileSubmitEnabled(turnstileToken)
               }
               isLoading={isSignupLoading}
             >
