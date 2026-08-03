@@ -1,5 +1,6 @@
 const {
   fetchWithRetry,
+  resolveConfigApiUrl,
   MAX_ATTEMPTS,
   RETRY_DELAYS_MS,
 } = require('../syncBuildConfig.cjs');
@@ -91,13 +92,37 @@ describe('fetchWithRetry', () => {
   it('reports the HTTP status when every attempt gets a non-200', async () => {
     const fetchImpl = jest
       .fn()
-      .mockResolvedValue(errorResponse(502, 'Bad Gateway', 'upstream down'));
+      .mockResolvedValue(
+        errorResponse(502, 'Bad Gateway', 'secret upstream detail'),
+      );
     await expect(
       fetchWithRetry(URL, { fetchImpl, sleep: instantSleep, log: silentLog }),
     ).rejects.toThrow(
-      `Config request failed after ${MAX_ATTEMPTS} attempts: HTTP 502 Bad Gateway`,
+      `Config request failed after ${MAX_ATTEMPTS} attempts: HTTP 502 Bad Gateway. URL: ${URL}`,
     );
     expect(fetchImpl).toHaveBeenCalledTimes(MAX_ATTEMPTS);
+  });
+
+  it('never includes the response body in the thrown error or logs', async () => {
+    const fetchImpl = jest
+      .fn()
+      .mockResolvedValue(
+        errorResponse(500, 'Internal Server Error', 'db password leaked'),
+      );
+    let thrown;
+    try {
+      await fetchWithRetry(URL, {
+        fetchImpl,
+        sleep: instantSleep,
+        log: silentLog,
+      });
+    } catch (err) {
+      thrown = err;
+    }
+    expect(thrown.message).not.toContain('db password leaked');
+    for (const [msg] of silentLog.warn.mock.calls) {
+      expect(msg).not.toContain('db password leaked');
+    }
   });
 
   it('classifies the failure by the last attempt (network error after HTTP errors)', async () => {
@@ -116,5 +141,46 @@ describe('fetchWithRetry', () => {
     const total = RETRY_DELAYS_MS.reduce((a, b) => a + b, 0);
     expect(total).toBeLessThanOrEqual(35000);
     expect(MAX_ATTEMPTS).toBe(5);
+  });
+});
+
+describe('resolveConfigApiUrl', () => {
+  it('prefers CONFIG_BUILD_API_URL over NEXT_PUBLIC_API_URL', () => {
+    expect(
+      resolveConfigApiUrl({
+        CONFIG_BUILD_API_URL: 'https://app.ondigitalocean.app',
+        NEXT_PUBLIC_API_URL: 'https://api.example.closer.earth',
+      }),
+    ).toEqual({ apiUrl: 'https://app.ondigitalocean.app', isOverride: true });
+  });
+
+  it('falls back to NEXT_PUBLIC_API_URL when no override is set', () => {
+    expect(
+      resolveConfigApiUrl({
+        NEXT_PUBLIC_API_URL: 'https://api.example.closer.earth',
+      }),
+    ).toEqual({
+      apiUrl: 'https://api.example.closer.earth',
+      isOverride: false,
+    });
+  });
+
+  it('returns null when neither variable is set', () => {
+    expect(resolveConfigApiUrl({})).toEqual({
+      apiUrl: null,
+      isOverride: false,
+    });
+  });
+
+  it('ignores an empty-string override', () => {
+    expect(
+      resolveConfigApiUrl({
+        CONFIG_BUILD_API_URL: '',
+        NEXT_PUBLIC_API_URL: 'https://api.example.closer.earth',
+      }),
+    ).toEqual({
+      apiUrl: 'https://api.example.closer.earth',
+      isOverride: false,
+    });
   });
 });

@@ -120,19 +120,8 @@ async function fetchWithRetry(
 
     if (res) {
       if (res.ok) return res;
-      let bodyHint = '';
-      try {
-        const text = await res.text();
-        if (text) bodyHint = ` Response: ${text.slice(0, 500)}`;
-      } catch {
-        /* ignore */
-      }
       lastNetworkDetail = null;
-      lastHttpFailure = {
-        status: res.status,
-        statusText: res.statusText,
-        bodyHint,
-      };
+      lastHttpFailure = { status: res.status, statusText: res.statusText };
       log.warn(
         `[sync-build-config] Attempt ${attempt}/${MAX_ATTEMPTS} got HTTP ${res.status} ${res.statusText}. URL: ${url}`,
       );
@@ -147,7 +136,7 @@ async function fetchWithRetry(
 
   if (lastHttpFailure) {
     throw new Error(
-      `Config request failed after ${MAX_ATTEMPTS} attempts: HTTP ${lastHttpFailure.status} ${lastHttpFailure.statusText}. URL: ${url}.${lastHttpFailure.bodyHint}`,
+      `Config request failed after ${MAX_ATTEMPTS} attempts: HTTP ${lastHttpFailure.status} ${lastHttpFailure.statusText}. URL: ${url}`,
     );
   }
   throw new Error(
@@ -155,20 +144,30 @@ async function fetchWithRetry(
   );
 }
 
+/**
+ * Pick the API base URL for the build-time config fetch:
+ * CONFIG_BUILD_API_URL wins over NEXT_PUBLIC_API_URL; null when neither is
+ * set. Returns { apiUrl, isOverride }.
+ */
+function resolveConfigApiUrl(env) {
+  const overrideUrl = env.CONFIG_BUILD_API_URL;
+  const apiUrl = overrideUrl || env.NEXT_PUBLIC_API_URL || null;
+  return { apiUrl, isOverride: Boolean(overrideUrl) };
+}
+
 async function main() {
   const packageRoot = path.join(__dirname, '..');
   loadEnvFromDir(packageRoot);
   loadEnvFromDir(process.cwd(), { override: true });
 
-  const overrideUrl = process.env.CONFIG_BUILD_API_URL;
-  const apiUrl = overrideUrl || process.env.NEXT_PUBLIC_API_URL;
+  const { apiUrl, isOverride } = resolveConfigApiUrl(process.env);
   if (!apiUrl) {
     console.warn(
       '[sync-build-config] Neither CONFIG_BUILD_API_URL nor NEXT_PUBLIC_API_URL is set; keeping existing snapshot.',
     );
     process.exit(0);
   }
-  if (overrideUrl) {
+  if (isOverride) {
     console.log(
       '[sync-build-config] Using CONFIG_BUILD_API_URL override instead of NEXT_PUBLIC_API_URL.',
     );
@@ -213,6 +212,7 @@ if (require.main === module) {
 module.exports = {
   configPayloadToSlugMap,
   fetchWithRetry,
+  resolveConfigApiUrl,
   MAX_ATTEMPTS,
   RETRY_DELAYS_MS,
 };
