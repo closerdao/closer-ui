@@ -102,11 +102,6 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
     const dateFromObj = new Date(filterValues.dateFrom);
     dateFromObj.setDate(dateFromObj.getDate() - 1);
 
-    const isDefaultFilter =
-      !filterValues.dateTo &&
-      !filterValues.dateFrom &&
-      filterValues.status === 'any';
-
     const getFilter = {
       where: {
         ...(filterValues.type === 'event' && { eventId: { $exists: true } }),
@@ -123,7 +118,7 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
         }),
         ...(filterValues.status !== 'any'
           ? { status: [bookingStatus] }
-          : { status: { $ne: 'open' } }),
+          : defaultWhere),
         ...(filterValues.bookingId !== '' && { _id: filterValues.bookingId }),
         ...(filterValues.selectedEvent.label !== 'any' && {
           eventId: filterValues.selectedEvent.value,
@@ -135,7 +130,6 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
               $gte: dateFromObj,
             },
           }),
-        ...(isDefaultFilter && defaultWhere),
       },
       limit: BOOKINGS_PER_PAGE,
       sort_by: filterValues.sortBy,

@@ -120,7 +120,9 @@ const BookingListPreview = ({
     : { fiatOwed: 0, tokensOwed: 0, creditsOwed: 0 };
 
   const flagPickup =
-    doesNeedPickup && start > new Date(Date.now() - 12 * 60 * 60 * 1000);
+    bookingConfig?.pickUpEnabled &&
+    doesNeedPickup &&
+    start > new Date(Date.now() - 12 * 60 * 60 * 1000);
   const startFormatted = dayjs(start).format('DD/MM/YYYY');
 
   const endFormatted = dayjs(end).format('DD/MM/YYYY');

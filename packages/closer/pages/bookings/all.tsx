@@ -29,7 +29,7 @@ const AllBookingsRequestsPage = ({ bookingConfig }: Props) => {
   const { user } = useAuth();
 
   const defaultWhere = {
-    status: { $ne: 'open' },
+    status: { $nin: ['open', 'draft'] },
   };
 
   const [filter, setFilter] = useState({
@@ -59,7 +59,12 @@ const AllBookingsRequestsPage = ({ bookingConfig }: Props) => {
           setPage={setPage}
           defaultWhere={defaultWhere}
         />
-        <Bookings filter={filter} setPage={setPage} page={page} />
+        <Bookings
+          filter={filter}
+          setPage={setPage}
+          page={page}
+          bookingConfig={bookingConfig}
+        />
       </AdminLayout>
     </>
   );

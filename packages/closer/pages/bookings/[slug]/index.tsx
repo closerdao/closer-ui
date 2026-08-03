@@ -774,7 +774,9 @@ const BookingPage = ({
               eventName={event?.name}
               volunteerName={volunteer?.name}
               ticketOption={ticketOption?.name}
-              doesNeedPickup={doesNeedPickup}
+              doesNeedPickup={
+                bookingConfig?.pickUpEnabled ? doesNeedPickup : undefined
+              }
               doesNeedSeparateBeds={doesNeedSeparateBeds}
               isEditMode={
                 (canManageBooking || canGuestEditBookingDetails) && isEditMode

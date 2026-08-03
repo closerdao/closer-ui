@@ -64,7 +64,12 @@ const BookingsRequests = ({ bookingConfig }: Props) => {
         <div className="max-w-screen-xl flex flex-col gap-10">
           <Heading level={1}>{t('booking_requests_title')}</Heading>
 
-          <Bookings filter={filter} setPage={setPage} page={page} />
+          <Bookings
+            filter={filter}
+            setPage={setPage}
+            page={page}
+            bookingConfig={bookingConfig}
+          />
         </div>
       </AdminLayout>
     </>

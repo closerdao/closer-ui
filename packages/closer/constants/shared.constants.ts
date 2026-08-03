@@ -321,6 +321,7 @@ export const INTERACTION_IS_HUMAN_EVENT = 'closer-interaction-is-human';
 export const BOOKING_STATUS_OPTIONS = [
   { label: 'Any', value: 'any' },
   { label: 'Open', value: 'open' },
+  { label: 'Draft', value: 'draft' },
   { label: 'Pending', value: 'pending' },
   { label: 'Confirmed', value: 'confirmed' },
   { label: 'Paid', value: 'paid' },

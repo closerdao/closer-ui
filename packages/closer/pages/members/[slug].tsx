@@ -38,7 +38,9 @@ import { useAuth } from '../../contexts/auth';
 import { User, UserLink } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
 import { FinanceApplication } from '../../types';
+import { BookingConfig } from '../../types/api';
 import { GeneralConfig } from '../../types/api';
+import config from '../../configCached';
 import api, { cdn } from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { getUrlDisplayString } from '../../utils/display.helpers';
@@ -56,9 +58,10 @@ const ConnectedWallet =
 interface MemberPageProps {
   member: User;
   loadError: string;
+  bookingConfig: BookingConfig | null;
 }
 
-const MemberPage = ({ member, loadError }: MemberPageProps) => {
+const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
   const {
@@ -751,7 +754,11 @@ const MemberPage = ({ member, loadError }: MemberPageProps) => {
                       <h4 className="font-medium text-xl mb-4">
                         {t('members_slug_bookings')}
                       </h4>
-                      <UserBookings user={member} isSpaceHostView={true} />
+                      <UserBookings
+                        user={member}
+                        isSpaceHostView={true}
+                        bookingConfig={bookingConfig ?? undefined}
+                      />
                     </div>
                   )}
 
@@ -1183,13 +1190,14 @@ MemberPage.getInitialProps = async (context: NextPageContext) => {
     });
     return {
       member: res.data.results,
+      bookingConfig: config.booking,
     };
   } catch (err: unknown) {
     console.log('Error', err);
 
     return {
       loadError: parseMessageFromError(err),
-
+      bookingConfig: null,
       };
   }
 };
