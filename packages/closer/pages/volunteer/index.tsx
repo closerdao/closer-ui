@@ -28,6 +28,7 @@ const VolunteerOpportunitiesPage = () => {
   const { hasAccess } = useRBAC();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
+  const minStayWeeks = Math.round((volunteerConfig?.volunteeringMinStay ?? 28) / 7);
 
   // Check if user has permission to create volunteers
   const canCreateVolunteer = hasAccess('VolunteerCreation');
@@ -105,7 +106,7 @@ const VolunteerOpportunitiesPage = () => {
                       <strong className="uppercase">
                         {t('volunteers_requirements_label')}
                       </strong>{' '}
-                      {t('volunteers_requirements_value')}
+                      {t('volunteers_requirements_value', { var: minStayWeeks })}
                     </p>
                     <p>
                       <strong className="uppercase">
@@ -152,7 +153,7 @@ const VolunteerOpportunitiesPage = () => {
                         {t('volunteers_skill_others_value')}
                       </li>
                     </ul>
-                    <p>{t('volunteers_commitment')}</p>
+                    <p>{t('volunteers_commitment', { var: minStayWeeks })}</p>
                     <p>{t('volunteers_expectation')}</p>
                     <p>
                       {t('volunteers_recommend_read')}{' '}

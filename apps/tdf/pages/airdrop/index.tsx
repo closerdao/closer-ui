@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Heading, LinkButton } from 'closer/components/ui';
 
 import { PageNotFound, getCachedConfig, useAuth } from 'closer';
+import { VolunteerConfig } from 'closer/types/api';
 import { useConfig } from 'closer/hooks/useConfig';
 import { twitterUrlToHandle } from 'closer/utils/app.helpers';
 import {
@@ -27,6 +28,7 @@ interface AirdropConfig {
 
 interface Props {
   airdropConfig: AirdropConfig | null;
+  volunteerConfig: VolunteerConfig | null;
 }
 
 const DEFAULT_AIRDROP_CONFIG: AirdropConfig = {
@@ -35,12 +37,13 @@ const DEFAULT_AIRDROP_CONFIG: AirdropConfig = {
     'Reward community members with token airdrops for participation.',
 };
 
-const AirdropPage = ({ airdropConfig }: Props) => {
+const AirdropPage = ({ airdropConfig, volunteerConfig }: Props) => {
   const t = useTranslations();
   const appConfig = useConfig();
   const twitterHandle = twitterUrlToHandle(appConfig?.TWITTER_URL);
   const { user } = useAuth();
   const [showHistoricDetails, setShowHistoricDetails] = useState(false);
+  const minStayWeeks = Math.round((volunteerConfig?.volunteeringMinStay ?? 28) / 7);
 
   const config = airdropConfig || DEFAULT_AIRDROP_CONFIG;
   const isWeb3Enabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
@@ -195,7 +198,7 @@ const AirdropPage = ({ airdropConfig }: Props) => {
                   {t('airdrop_volunteer_title')}
                 </h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  {t('airdrop_volunteer_desc')}
+                  {t('airdrop_volunteer_desc', { var: minStayWeeks })}
                 </p>
                 <LinkButton href="/volunteer" variant="secondary" size="small">
                   {t('airdrop_apply_volunteer')}
@@ -422,10 +425,12 @@ AirdropPage.getInitialProps = async (context: NextPageContext) => {
   try {
     return {
       airdropConfig: getCachedConfig('airdrop'),
+      volunteerConfig: getCachedConfig('volunteering') as VolunteerConfig | null,
     };
   } catch (err: unknown) {
     return {
       airdropConfig: null,
+      volunteerConfig: null,
       };
   }
 };
