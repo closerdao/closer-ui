@@ -48,6 +48,7 @@ function normalizeSearchUserResponse(data: unknown): SearchUserHit[] {
 
 export async function fetchUsersBySearchQuery(
   query: string,
+  limit = 10,
 ): Promise<SearchUserHit[]> {
   const trimmed = query.trim();
   if (trimmed.length < 2) {
@@ -57,7 +58,7 @@ export async function fetchUsersBySearchQuery(
     params: {
       where: formatSearch({ _search: trimmed }),
       sort_by: '-created',
-      limit: 10,
+      limit,
     },
   });
   return normalizeSearchUserResponse(data);

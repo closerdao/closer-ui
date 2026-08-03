@@ -1,4 +1,5 @@
 export { useBookingLinkedCharges } from './useBookingLinkedCharges';
+export { useBookingSearchWhere } from './useBookingSearchWhere';
 export { useBookingSmartContract } from './useBookingSmartContract';
 export { useBuyTokens } from './useBuyTokens';
 export { useConfig } from './useConfig';

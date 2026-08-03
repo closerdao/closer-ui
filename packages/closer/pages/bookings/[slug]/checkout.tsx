@@ -699,7 +699,7 @@ const Checkout = ({
   useEffect(() => {
     if (booking?.status === 'paid') {
       if (router) {
-        router.push(`/bookings/${booking?._id}`);
+        router.push(`/stay/${booking?._id}`);
       }
     }
   }, [router]);
@@ -772,7 +772,7 @@ const Checkout = ({
         point: p,
         ...bookingMetricFields,
       });
-      await router.push(`/bookings/${booking?._id}`);
+      await router.push(`/stay/${booking?._id}`);
     } catch (error) {
       const pe = bookingPaymentMetricPoint();
       void logMetric({
@@ -1937,7 +1937,7 @@ const Checkout = ({
                           </code>
                         </p>
                         <a
-                          href={`/bookings/${b._id}`}
+                          href={`/stay/${b._id}`}
                           className="text-blue-600 underline hover:text-blue-800"
                           target="_blank"
                           rel="noopener noreferrer"
@@ -2200,7 +2200,7 @@ const Checkout = ({
                                 </p>
                               )}
                               <a
-                                href={`/bookings/${b._id}`}
+                                href={`/stay/${b._id}`}
                                 className="text-blue-600 underline hover:text-blue-800 text-xs"
                                 target="_blank"
                                 rel="noopener noreferrer"

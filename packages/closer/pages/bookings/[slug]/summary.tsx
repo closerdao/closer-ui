@@ -256,7 +256,7 @@ const Summary = ({
 
   useEffect(() => {
     if (booking?.status === 'pending' || booking?.status === 'paid') {
-      router.push(`/bookings/${booking?._id}`);
+      router.push(`/stay/${booking?._id}`);
     }
   }, [booking?.status]);
 
@@ -310,7 +310,7 @@ const Summary = ({
           point: metricPoint,
           ...bookingMetricFields,
         });
-        router.push(`/bookings/${booking?._id}`);
+        router.push(`/stay/${booking?._id}`);
       }
     } catch (err) {
       void logMetric({

@@ -76,7 +76,7 @@ const TicketListPreview = ({ ticket }) => {
           {t('ticket_list_view_ticket')}
         </Link>
         <Link
-          href={`/bookings/${ticket.get('booking')}`}
+          href={`/stay/${ticket.get('booking')}`}
           className="flex-1 sm:flex-initial text-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
         >
           {t('ticket_list_view_booking')}

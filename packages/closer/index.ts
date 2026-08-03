@@ -70,7 +70,6 @@ export { default as BookingCancelPage } from './pages/bookings/[slug]/cancel';
 export { default as BookingCheckoutPage } from './pages/bookings/[slug]/checkout';
 export { default as BookingConfirmationPage } from './pages/bookings/[slug]/confirmation';
 export { default as FoodSelectionPage } from './pages/bookings/[slug]/food';
-export { default as BookingPage } from './pages/bookings/[slug]/index';
 export { default as BookingPaymentDeltaPage } from './pages/bookings/[slug]/payment-delta';
 export { default as BookingQuestionsPage } from './pages/bookings/[slug]/questions';
 export { default as BookingRulesPage } from './pages/bookings/[slug]/rules';
