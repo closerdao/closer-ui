@@ -21,6 +21,7 @@
       "env": [
         "NEXT_PUBLIC_CDN_URL",
         "NEXT_PUBLIC_API_URL",
+        "CONFIG_BUILD_API_URL",
         "NEXT_PUBLIC_PLATFORM",
         "NEXT_PUBLIC_PLATFORM_URL",
         "NEXT_PUBLIC_LOG_REQUESTS",
