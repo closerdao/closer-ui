@@ -9,7 +9,8 @@ import FundraisingWidget from 'closer/components/FundraisingWidget';
 import UpcomingEventsIntro from 'closer/components/UpcomingEventsIntro';
 import LinkButton from 'closer/components/ui/LinkButton';
 
-import { Heading, Webinar } from 'closer';
+import { Heading, Webinar, getCachedConfig } from 'closer';
+import { VolunteerConfig } from 'closer/types/api';
 import {
   DEFAULT_TOKEN_STATS,
   TokenStats,
@@ -40,6 +41,8 @@ import config from '../configCached';
 const HomePage = () => {
   const t = useTranslations();
   const twitterHandle = twitterUrlToHandle(config.general.twitterUrl);
+  const volunteerConfig = getCachedConfig('volunteering') as VolunteerConfig | null;
+  const minStayWeeks = Math.round((volunteerConfig?.volunteeringMinStay ?? 28) / 7);
 
   const [selectedReport, setSelectedReport] = useState<{
     year: string;
@@ -305,7 +308,7 @@ const HomePage = () => {
 
           <div className="mt-10 pt-8 border-t border-gray-200">
             <p className="text-sm text-gray-600 mb-3">
-              {t('home_community_cta_volunteer_intro')}
+              {t('home_community_cta_volunteer_intro', { var: minStayWeeks })}
             </p>
             <div className="flex flex-wrap gap-3 items-center">
               <Link
