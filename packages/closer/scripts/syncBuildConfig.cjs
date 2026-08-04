@@ -86,6 +86,22 @@ function describeFetchError(err) {
   return detail;
 }
 
+/**
+ * Strip userinfo (user:pass@) from a URL before logging so credentials
+ * embedded in CONFIG_BUILD_API_URL / NEXT_PUBLIC_API_URL never reach
+ * build logs or error output.
+ */
+function redactUrl(url) {
+  try {
+    const parsed = new URL(url);
+    parsed.username = '';
+    parsed.password = '';
+    return parsed.toString();
+  } catch {
+    return String(url).replace(/\/\/[^@/]*@/, '//');
+  }
+}
+
 const defaultSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
@@ -111,7 +127,7 @@ async function fetchWithRetry(
       lastNetworkDetail = describeFetchError(err);
       lastHttpFailure = null;
       log.warn(
-        `[sync-build-config] Attempt ${attempt}/${MAX_ATTEMPTS} failed (${lastNetworkDetail}). URL: ${url}`,
+        `[sync-build-config] Attempt ${attempt}/${MAX_ATTEMPTS} failed (${lastNetworkDetail}). URL: ${redactUrl(url)}`,
       );
       res = null;
     } finally {
@@ -123,7 +139,7 @@ async function fetchWithRetry(
       lastNetworkDetail = null;
       lastHttpFailure = { status: res.status, statusText: res.statusText };
       log.warn(
-        `[sync-build-config] Attempt ${attempt}/${MAX_ATTEMPTS} got HTTP ${res.status} ${res.statusText}. URL: ${url}`,
+        `[sync-build-config] Attempt ${attempt}/${MAX_ATTEMPTS} got HTTP ${res.status} ${res.statusText}. URL: ${redactUrl(url)}`,
       );
     }
 
@@ -136,11 +152,11 @@ async function fetchWithRetry(
 
   if (lastHttpFailure) {
     throw new Error(
-      `Config request failed after ${MAX_ATTEMPTS} attempts: HTTP ${lastHttpFailure.status} ${lastHttpFailure.statusText}. URL: ${url}`,
+      `Config request failed after ${MAX_ATTEMPTS} attempts: HTTP ${lastHttpFailure.status} ${lastHttpFailure.statusText}. URL: ${redactUrl(url)}`,
     );
   }
   throw new Error(
-    `Config API unreachable after ${MAX_ATTEMPTS} attempts (${lastNetworkDetail}). URL: ${url}`,
+    `Config API unreachable after ${MAX_ATTEMPTS} attempts (${lastNetworkDetail}). URL: ${redactUrl(url)}`,
   );
 }
 
@@ -175,7 +191,7 @@ async function main() {
 
   const base = apiUrl.replace(/\/$/, '');
   const url = `${base}/config?limit=500`;
-  console.log('[sync-build-config] fetching', url);
+  console.log('[sync-build-config] fetching', redactUrl(url));
 
   let res;
   try {
@@ -190,7 +206,7 @@ async function main() {
     data = await res.json();
   } catch (err) {
     console.error(
-      `[sync-build-config] Config response was not valid JSON. URL: ${url}. ${err.message}`,
+      `[sync-build-config] Config response was not valid JSON. URL: ${redactUrl(url)}. ${err.message}`,
     );
     process.exit(1);
   }
@@ -212,6 +228,7 @@ if (require.main === module) {
 module.exports = {
   configPayloadToSlugMap,
   fetchWithRetry,
+  redactUrl,
   resolveConfigApiUrl,
   FETCH_TIMEOUT_MS,
   MAX_ATTEMPTS,

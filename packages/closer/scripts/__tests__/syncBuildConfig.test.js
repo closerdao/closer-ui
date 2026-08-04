@@ -1,5 +1,6 @@
 const {
   fetchWithRetry,
+  redactUrl,
   resolveConfigApiUrl,
   FETCH_TIMEOUT_MS,
   MAX_ATTEMPTS,
@@ -181,6 +182,69 @@ describe('fetchWithRetry', () => {
     const total = RETRY_DELAYS_MS.reduce((a, b) => a + b, 0);
     expect(total).toBeLessThanOrEqual(35000);
     expect(MAX_ATTEMPTS).toBe(5);
+  });
+});
+
+describe('redactUrl', () => {
+  it('strips userinfo credentials from a URL', () => {
+    expect(redactUrl('https://user:s3cret@api.example.com/config?limit=500')).toBe(
+      'https://api.example.com/config?limit=500',
+    );
+  });
+
+  it('leaves credential-free URLs unchanged', () => {
+    expect(redactUrl(URL)).toBe(URL);
+  });
+
+  it('strips userinfo even from unparseable URL-like strings', () => {
+    expect(redactUrl('notaurl//user:pass@host/path')).not.toContain('s3cret');
+    expect(redactUrl('http://user:pass@[bad')).not.toContain('pass');
+  });
+});
+
+describe('fetchWithRetry URL redaction', () => {
+  const CRED_URL = 'https://builder:s3cret@api.example.com/config?limit=500';
+
+  it('never emits URL credentials in warnings or the thrown error', async () => {
+    const fetchImpl = jest
+      .fn()
+      .mockRejectedValue(networkError('ENETUNREACH'));
+    let thrown;
+    try {
+      await fetchWithRetry(CRED_URL, {
+        fetchImpl,
+        sleep: instantSleep,
+        log: silentLog,
+      });
+    } catch (err) {
+      thrown = err;
+    }
+    expect(thrown.message).not.toContain('s3cret');
+    expect(thrown.message).not.toContain('builder:');
+    for (const [msg] of silentLog.warn.mock.calls) {
+      expect(msg).not.toContain('s3cret');
+    }
+    expect(fetchImpl).toHaveBeenCalledWith(CRED_URL, expect.anything());
+  });
+
+  it('never emits URL credentials on HTTP-failure exhaustion', async () => {
+    const fetchImpl = jest
+      .fn()
+      .mockResolvedValue(errorResponse(502, 'Bad Gateway'));
+    let thrown;
+    try {
+      await fetchWithRetry(CRED_URL, {
+        fetchImpl,
+        sleep: instantSleep,
+        log: silentLog,
+      });
+    } catch (err) {
+      thrown = err;
+    }
+    expect(thrown.message).not.toContain('s3cret');
+    for (const [msg] of silentLog.warn.mock.calls) {
+      expect(msg).not.toContain('s3cret');
+    }
   });
 });
 
