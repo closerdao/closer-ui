@@ -52,7 +52,7 @@ export async function loadLocaleData(
         console.warn(
           `Unsupported app: ${appKey}, falling back to base English locale`,
         );
-        return import('../generated/locales/closer/en.json');
+        return import('../generated/locales/village/en.json');
     }
   }
 

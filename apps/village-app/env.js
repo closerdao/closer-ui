@@ -12,11 +12,12 @@ export const villageAppEnvShape = {
   NEXT_PUBLIC_PLATFORM_URL: optionalUrl.describe(
     'Canonical public URL for the deployed village app.',
   ),
-  NEXT_PUBLIC_PLATFORM: optionalUrl.describe(
-    'Legacy canonical public URL fallback.',
-  ),
-  NEXT_PUBLIC_APP_NAME: optionalString.default('closer'),
-  NEXT_PUBLIC_PLATFORM_NAME: optionalString.default('This village'),
+  NEXT_PUBLIC_APP_NAME: z
+    .string()
+    .min(1)
+    .describe(
+      'Village slug supplied at provisioning. Feature discriminator and locale lookup key — not a display name.',
+    ),
   NEXT_PUBLIC_DEFAULT_TIMEZONE: optionalString.default('Europe/Lisbon'),
   NEXT_PUBLIC_CDN_URL: optionalUrl,
   NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL: optionalUrl,
@@ -47,6 +48,7 @@ export const villageAppEnvSchema = z.object(villageAppEnvShape);
 
 export const requiredProvisioningEnvKeys = [
   'NEXT_PUBLIC_API_URL',
+  'NEXT_PUBLIC_APP_NAME',
   'NEXT_PUBLIC_PLATFORM_URL',
 ];
 
@@ -61,9 +63,7 @@ export const optionalProvisioningEnvKeys = [
 ];
 
 export const defaultedProvisioningEnvKeys = [
-  'NEXT_PUBLIC_APP_NAME',
   'NEXT_PUBLIC_DEFAULT_TIMEZONE',
-  'NEXT_PUBLIC_PLATFORM_NAME',
   'NEXT_PUBLIC_FEATURE_AFFILIATE',
   'NEXT_PUBLIC_FEATURE_BLOG',
   'NEXT_PUBLIC_FEATURE_BOOKING',
@@ -93,5 +93,4 @@ export const appConfigFromEnv = {
   STRIPE_CUSTOMER_PORTAL_URL: env.NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL,
 };
 
-export const platformUrl =
-  env.NEXT_PUBLIC_PLATFORM_URL || env.NEXT_PUBLIC_PLATFORM || '';
+export const platformUrl = env.NEXT_PUBLIC_PLATFORM_URL || '';
