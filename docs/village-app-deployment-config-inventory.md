@@ -128,6 +128,8 @@ Prebuild fetches backend `/config` → writes `packages/closer/generated/appConf
 - `general` snapshot — seeds identity, locale, currency, timezone, footer, page metadata
 - `booking` snapshot — split booking policy from homepage content before coding
 
+**Which API the prebuild fetches from.** The prebuild reads `CONFIG_BUILD_API_URL` if set, falling back to `NEXT_PUBLIC_API_URL` (#942). Provisioned villages set it to the DigitalOcean ingress, because at build time the branded API domain may not resolve yet (closer-procurement#546). The fetch retries with backoff and **fails the build** if the API answers with an error — a village never ships a silently stale snapshot. Two paths still degrade quietly and matter for row decisions: neither URL set at all skips the fetch and keeps whatever snapshot the build started with, and a missing snapshot file is bootstrapped to `{}`, leaving pages on schema defaults.
+
 ---
 
 ## 7 — 🎛️ Runtime DB config
