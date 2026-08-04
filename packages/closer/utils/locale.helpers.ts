@@ -60,7 +60,7 @@ export async function loadLocaleData(
 
   if (!appName) {
     console.warn('appName is undefined, falling back to base English locale');
-    const res = await import('../generated/locales/closer/en.json');
+    const res = await import('../generated/locales/village/en.json');
     return (res.default || {}) as AbstractIntlMessages;
   }
 
