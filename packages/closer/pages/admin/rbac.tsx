@@ -83,7 +83,6 @@ const RBACPage = () => {
     'Referrals',
     'Governance',
     'EventCreation',
-    'VolunteerCreation',
     'RoleCreation',
     'Resources',
     'SupportUs',

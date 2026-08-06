@@ -2,6 +2,7 @@ import { BookingConfig } from './api';
 import { CloserCurrencies, Price } from './currency';
 import { Discount, TicketOption } from './event';
 import type { PendingExtension, PriceLock, StayMoney } from './stay';
+import type { VolunteerApplication } from './volunteerApplication';
 
 // we set those as url params on
 // - /bookings/create/dates
@@ -148,6 +149,11 @@ export type VolunteerInfo = {
   projectId?: string[];
   suggestions?: string;
   bookingType?: 'volunteer' | 'residence' | undefined;
+  /**
+   * Long-form volunteer application (about you, experience, health, agreement).
+   * `volunteerInfo` is a Mixed field server-side, so the FE owns its shape.
+   */
+  application?: VolunteerApplication;
 };
 
 export type Booking = {

@@ -111,7 +111,7 @@ const ConfirmationStep = ({
   }, [_id, status]);
 
   const viewBooking = (id: string) => {
-    router.push(`/bookings/${id}`);
+    router.push(`/stay/${id}`);
   };
   // const startNewBooking = () => {
   //   router.push('/bookings/create');

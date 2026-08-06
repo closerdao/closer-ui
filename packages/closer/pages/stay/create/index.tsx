@@ -21,10 +21,19 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../../contexts/auth';
 import config from '../../../configCached';
 import { useConfig } from '../../../hooks/useConfig';
-import { BookingSettings, GeneralConfig } from '../../../types/api';
+import {
+  BookingSettings,
+  GeneralConfig,
+  VolunteerConfig,
+} from '../../../types/api';
 import { FoodOption } from '../../../types/food';
 import type { StaySearchListing } from '../../../types/durationDiscount';
 import api, { cdn } from '../../../utils/api';
+import { buildVolunteerInfo } from '../../../utils/volunteerApplication.helpers';
+import {
+  clearVolunteerApplicationDraft,
+  readVolunteerApplicationDraft,
+} from '../../../utils/volunteerApplicationDraft';
 import StayListingAccommodationPrice from '../../../components/booking/stayListingAccommodationPrice';
 import StayListingUnitsCard from '../../../components/booking/stayListingUnitsCard';
 import {
@@ -37,6 +46,7 @@ import { createStay, searchStays } from '../../../utils/stays.api';
 interface Props {
   bookingSettings: BookingSettings | null;
   generalConfig: GeneralConfig | null;
+  volunteerConfig: VolunteerConfig | null;
   defaultGuestFoodOptionId?: string | null;
   error?: string;
   messages?: any;
@@ -51,6 +61,7 @@ const formatDate = (d: Date | string | null) =>
 const StayCreatePage = ({
   bookingSettings,
   generalConfig,
+  volunteerConfig,
   defaultGuestFoodOptionId,
   error,
 }: Props) => {
@@ -72,14 +83,24 @@ const StayCreatePage = ({
     infants: savedInfants,
     pets: savedPets,
     listingId: listingIdQuery,
+    bookingType: bookingTypeQuery,
   } = router.query || {};
 
-  const listingId =
-    typeof listingIdQuery === 'string'
-      ? listingIdQuery
-      : Array.isArray(listingIdQuery)
-        ? listingIdQuery[0]
+  const readParam = (value: string | string[] | undefined) =>
+    typeof value === 'string'
+      ? value
+      : Array.isArray(value)
+        ? value[0]
         : undefined;
+
+  const listingId = readParam(listingIdQuery);
+  const bookingType =
+    readParam(bookingTypeQuery) === 'residence'
+      ? 'residence'
+      : readParam(bookingTypeQuery) === 'volunteer'
+        ? 'volunteer'
+        : undefined;
+  const isVolunteerApplication = Boolean(bookingType);
 
   const initialAdults = Number(savedAdults) || 1;
   const initialChildren = Number(savedChildren) || 0;
@@ -87,12 +108,20 @@ const StayCreatePage = ({
   const initialPets = Number(savedPets) || 0;
 
   const isMember = !!user?.roles?.includes('member');
+  const volunteerMinNights = useMemo(() => {
+    if (!isVolunteerApplication) return null;
+    return bookingType === 'residence'
+      ? volunteerConfig?.residenceMinStay || null
+      : volunteerConfig?.volunteeringMinStay || null;
+  }, [isVolunteerApplication, bookingType, volunteerConfig]);
+
   const minNights = useMemo(() => {
+    if (volunteerMinNights) return volunteerMinNights;
     if (!bookingSettings) return 1;
     return isMember
       ? bookingSettings.memberMinDuration || 1
       : bookingSettings.minDuration || 1;
-  }, [bookingSettings, isMember]);
+  }, [bookingSettings, isMember, volunteerMinNights]);
 
   const defaultDateRange = useMemo(() => {
     const start = dayjs().add(14, 'day').startOf('day');
@@ -139,6 +168,7 @@ const StayCreatePage = ({
     if (params.infants) out.infants = String(params.infants);
     if (params.pets) out.pets = String(params.pets);
     if (listingId) out.listingId = listingId;
+    if (bookingType) out.bookingType = bookingType;
     return out;
   };
 
@@ -161,6 +191,9 @@ const StayCreatePage = ({
         end: params.end,
         adults: params.adults,
         children: params.children,
+        // Classifies the stay and restricts results to listings whose
+        // availableFor covers it; also prices accommodation at 0.
+        ...(bookingType ? { bookingType } : {}),
       });
       const apiDuration = Number(searchResponse.duration) || 0;
       setSearchDuration(apiDuration);
@@ -205,6 +238,26 @@ const StayCreatePage = ({
       router.push(`/signup?back=${back}`);
       return;
     }
+    // volunteerInfo.bookingType is what classifies the stay server-side.
+    let volunteerPayload = {};
+    if (isVolunteerApplication) {
+      const draft = readVolunteerApplicationDraft(user?._id, bookingType);
+      if (!draft?.volunteerInfo?.application?.agreement?.acceptedAt) {
+        router.push(`/volunteer/apply?bookingType=${bookingType}`);
+        return;
+      }
+      volunteerPayload = {
+        volunteerInfo: buildVolunteerInfo({
+          bookingType: bookingType as 'volunteer' | 'residence',
+          skills: draft.volunteerInfo.skills,
+          diet: draft.volunteerInfo.diet,
+          suggestions: draft.volunteerInfo.suggestions,
+          projectId: draft.volunteerInfo.projectId,
+          application: draft.volunteerInfo.application,
+        }),
+      };
+    }
+
     setIsCreatingDraft(listing._id);
     setSearchError(null);
     try {
@@ -216,13 +269,19 @@ const StayCreatePage = ({
         children: activeParams.children,
         infants: activeParams.infants,
         pets: activeParams.pets,
-        ...(bookingSettings?.foodOptionEnabled && defaultGuestFoodOptionId
+        ...volunteerPayload,
+        ...(bookingSettings?.foodOptionEnabled &&
+        defaultGuestFoodOptionId &&
+        !isVolunteerApplication
           ? {
               foodOption: 'food_package',
               foodOptionId: defaultGuestFoodOptionId,
             }
           : {}),
       });
+      if (isVolunteerApplication) {
+        clearVolunteerApplicationDraft(user?._id, bookingType);
+      }
       router.push(`/stay/create/${stay._id}`);
     } catch (err) {
       setSearchError(parseMessageFromError(err));
@@ -287,17 +346,29 @@ const StayCreatePage = ({
         className="max-w-5xl mx-auto px-4 md:px-8 py-6 md:py-12"
       >
         <div className="flex items-center justify-between mb-6 md:mb-8">
-          <BackButton handleClick={() => router.push('/stay')}>
+          <BackButton
+            handleClick={() =>
+              router.push(
+                isVolunteerApplication
+                  ? `/volunteer/apply?bookingType=${bookingType}`
+                  : '/stay',
+              )
+            }
+          >
             {t('buttons_back')}
           </BackButton>
         </div>
 
         <div className="text-center mb-6 md:mb-8">
           <Heading level={1} className="text-3xl md:text-5xl mb-3">
-            {t('stay_create_title')}
+            {isVolunteerApplication
+              ? t('volunteer_application_accommodation_title')
+              : t('stay_create_title')}
           </Heading>
           <p className="text-base md:text-lg text-gray-600 max-w-xl mx-auto">
-            {t('stay_create_subtitle')}
+            {isVolunteerApplication
+              ? t('volunteer_application_accommodation_subtitle')
+              : t('stay_create_subtitle')}
           </p>
         </div>
 
@@ -315,6 +386,17 @@ const StayCreatePage = ({
             isSearching={isSearching}
             externalError={searchError}
             onSearch={runSearch}
+            minNightsOverride={volunteerMinNights}
+            minNightsErrorMessage={
+              volunteerMinNights
+                ? t(
+                    bookingType === 'residence'
+                      ? 'bookings_dates_min_residence_stay_error'
+                      : 'bookings_dates_min_volunteering_stay_error',
+                    { var: volunteerMinNights },
+                  )
+                : undefined
+            }
           />
         </div>
 
@@ -504,6 +586,8 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
   try {
     const bookingSettings = config.booking as BookingSettings;
     const generalConfig = (config.general || null) as GeneralConfig | null;
+    const volunteerConfig = (config.volunteering ||
+      null) as VolunteerConfig | null;
 
     let defaultGuestFoodOptionId: string | null = null;
     if (bookingSettings?.foodOptionEnabled) {
@@ -521,6 +605,7 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
     return {
       bookingSettings,
       generalConfig,
+      volunteerConfig,
       defaultGuestFoodOptionId,
     };
   } catch (err) {
@@ -528,8 +613,9 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
       error: parseMessageFromError(err),
       bookingSettings: null,
       generalConfig: null,
+      volunteerConfig: null,
       defaultGuestFoodOptionId: null,
-      };
+    };
   }
 };
 

@@ -3,7 +3,11 @@ import dayOfYear from 'dayjs/plugin/dayOfYear';
 import utc from 'dayjs/plugin/utc';
 import { BigNumber, utils as ethersUtils } from 'ethers';
 
-import type { BookingPaymentDelta, UpdatedPrices } from '../types/booking';
+import type {
+  BookingPaymentDelta,
+  UpdatedPrices,
+  VolunteerInfo,
+} from '../types/booking';
 import { CloserCurrencies } from '../types/currency';
 import type { StaySearchResponse } from '../types/durationDiscount';
 import type {
@@ -168,11 +172,21 @@ export const canApplyTokenOrCreditsToStay = (
   return s === 'confirmed' || s === 'pending-payment';
 };
 
+export const isVolunteerStay = (
+  stay: Pick<Stay, 'volunteerInfo'> | null | undefined,
+): boolean => {
+  const bookingType = stay?.volunteerInfo?.bookingType;
+  return bookingType === 'volunteer' || bookingType === 'residence';
+};
+
 export const canShowStayTokenCreditPaymentOptions = (
-  stay: Pick<Stay, 'status'> | null | undefined,
+  stay: Pick<Stay, 'status' | 'volunteerInfo'> | null | undefined,
   isMember: boolean,
 ): boolean => {
   if (!stay) return false;
+  // Accommodation is already 0 on a volunteer/residence stay, but the server
+  // still stakes tokens/credits off the listing price — so never offer them.
+  if (isVolunteerStay(stay)) return false;
   if (isStayCheckoutDraft(stay)) {
     return Boolean(isMember);
   }
@@ -365,13 +379,20 @@ export const stayUsesTokenAccommodation = (stay: Stay): boolean => {
 
 type ApiOk<T> = { results: T };
 
+export type StayBookingType = 'volunteer' | 'residence';
+
 export type StaySearchPayload = {
   start: string;
   end: string;
   adults: number;
   children?: number;
   eventId?: string | null;
-  volunteerId?: string | null;
+  /**
+   * Classifies the stay server-side (stored as volunteerInfo.bookingType) and
+   * restricts results to listings whose availableFor covers it. Replaces the
+   * deprecated volunteerId.
+   */
+  bookingType?: StayBookingType | null;
   isFriendsBooking?: boolean;
 };
 
@@ -384,7 +405,17 @@ export const searchStays = async (
 
 export const checkStayListingAvailability = async (
   listingId: string,
-  payload: { start: string; end: string; adults: number },
+  payload: {
+    start: string;
+    end: string;
+    adults: number;
+    /**
+     * Required for volunteer stays: without it the calendar greys out days that
+     * POST /stays accepts, because volunteer stays ignore event calendar blocks
+     * and use the volunteering minimum stay.
+     */
+    bookingType?: StayBookingType | null;
+  },
 ): Promise<{
   results: boolean;
   availability: any[];
@@ -410,8 +441,12 @@ export type CreateStayPayload = {
   isFriendsBooking?: boolean;
   friendEmails?: string;
   eventId?: string | null;
-  volunteerId?: string | null;
-  volunteerInfo?: { bookingType: 'volunteer' | 'residence' };
+  /**
+   * Shorthand the server folds into volunteerInfo when there are no application
+   * details to send. Prefer the full volunteerInfo when there are.
+   */
+  bookingType?: StayBookingType | null;
+  volunteerInfo?: VolunteerInfo;
   isTeamBooking?: boolean;
   ticketOption?: string | null;
   eventDiscount?: string | null;
@@ -504,7 +539,7 @@ export type StayOptionsPayload = Partial<{
   message: string;
   gift: string;
   about: string;
-  volunteerInfo: { bookingType: 'volunteer' | 'residence' };
+  volunteerInfo: VolunteerInfo;
 }>;
 
 export const updateStayOptions = async (

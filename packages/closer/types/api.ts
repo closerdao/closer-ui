@@ -35,6 +35,8 @@ export type VolunteerOpportunity = {
   description: string;
   start: string;
   end: string;
+  /** Drives bookingType: residence when true, volunteer otherwise. */
+  residency?: boolean;
   visibleBy: any[];
   createdBy: string;
   updated: string;

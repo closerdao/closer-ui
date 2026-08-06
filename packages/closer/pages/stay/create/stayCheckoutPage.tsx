@@ -103,6 +103,7 @@ import {
   getStayAccommodationTokenTotal,
   inferPaymentChoiceFromStay,
   isStayAwaitingHostApproval,
+  isVolunteerStay,
   isStayAwaitingPayment,
   isStayCheckoutDraft,
   isStayPaid,
@@ -569,6 +570,7 @@ const StayCheckoutContent = ({
 
   const priceLock = currentStay.priceLock;
   const isMember = Boolean(authUser?.roles?.includes('member'));
+  const isVolunteerApplication = isVolunteerStay(currentStay);
   const showTokenCreditPaymentOptions = canShowStayTokenCreditPaymentOptions(
     currentStay,
     isMember,
@@ -1752,69 +1754,73 @@ const StayCheckoutContent = ({
           </div>
         </BookingSurface>
 
-        <BookingSurface
-          as="section"
-          tone="elevated"
-          padding="lg"
-          aria-labelledby="preferences-heading"
-        >
-          <Heading id="preferences-heading" level={2} className="text-lg mb-2">
-            {t('stay_create_preferences_section_title')}
-          </Heading>
-          <p className="text-sm text-gray-600 mb-4">
-            {t('stay_create_preferences_section_intro')}
-          </p>
-          {preferencesError && (
-            <div className="mb-4">
-              <ErrorMessage error={preferencesError} />
-            </div>
-          )}
-          <MultiSelect
-            label={t('settings_dietary_preferences')}
-            values={userPreferences.diet}
-            onChange={(value) => {
-              setUserPreferences((prev) => ({ ...prev, diet: value }));
-              void patchUserPreference('diet', value);
-            }}
-            options={dietOptions}
-            placeholder={t('settings_pick_or_create_yours')}
-            className="mb-4"
-          />
-          {APP_NAME && APP_NAME?.toLowerCase() !== 'moos' && (
-            <Select
-              label={t('settings_shared_accommodation_preference')}
-              value={userPreferences.sharedAccomodation}
-              options={SHARED_ACCOMMODATION_PREFERENCES}
-              className="mb-4"
+        {/* Volunteers already gave diet and host notes in the application
+            form, so re-asking here would collect the same answers twice. */}
+        {!isVolunteerApplication && (
+          <BookingSurface
+            as="section"
+            tone="elevated"
+            padding="lg"
+            aria-labelledby="preferences-heading"
+          >
+            <Heading id="preferences-heading" level={2} className="text-lg mb-2">
+              {t('stay_create_preferences_section_title')}
+            </Heading>
+            <p className="text-sm text-gray-600 mb-4">
+              {t('stay_create_preferences_section_intro')}
+            </p>
+            {preferencesError && (
+              <div className="mb-4">
+                <ErrorMessage error={preferencesError} />
+              </div>
+            )}
+            <MultiSelect
+              label={t('settings_dietary_preferences')}
+              values={userPreferences.diet}
               onChange={(value) => {
-                setUserPreferences((prev) => ({
-                  ...prev,
-                  sharedAccomodation: value,
-                }));
-                void patchUserPreference('sharedAccomodation', value);
+                setUserPreferences((prev) => ({ ...prev, diet: value }));
+                void patchUserPreference('diet', value);
               }}
-              isRequired
-              isDisabled={isSavingPreferences}
+              options={dietOptions}
+              placeholder={t('settings_pick_or_create_yours')}
+              className="mb-4"
             />
-          )}
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="stay-host-notes"
-              className="font-medium text-complimentary-light text-sm"
-            >
-              {t('stay_create_preferences_host_notes_label')}
-            </label>
-            <Textarea
-              id="stay-host-notes"
-              value={stayMessage}
-              onChange={(e) => setStayMessage(e.target.value)}
-              onBlur={() => void handleStayMessageBlur()}
-              placeholder={t('stay_create_preferences_host_notes_placeholder')}
-              disabled={isSavingStayMessage || isSavingOptions}
-              className="border-2 border-neutral text-complimentary-core text-sm rounded-lg min-h-[88px]"
-            />
-          </div>
-        </BookingSurface>
+            {APP_NAME && APP_NAME?.toLowerCase() !== 'moos' && (
+              <Select
+                label={t('settings_shared_accommodation_preference')}
+                value={userPreferences.sharedAccomodation}
+                options={SHARED_ACCOMMODATION_PREFERENCES}
+                className="mb-4"
+                onChange={(value) => {
+                  setUserPreferences((prev) => ({
+                    ...prev,
+                    sharedAccomodation: value,
+                  }));
+                  void patchUserPreference('sharedAccomodation', value);
+                }}
+                isRequired
+                isDisabled={isSavingPreferences}
+              />
+            )}
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="stay-host-notes"
+                className="font-medium text-complimentary-light text-sm"
+              >
+                {t('stay_create_preferences_host_notes_label')}
+              </label>
+              <Textarea
+                id="stay-host-notes"
+                value={stayMessage}
+                onChange={(e) => setStayMessage(e.target.value)}
+                onBlur={() => void handleStayMessageBlur()}
+                placeholder={t('stay_create_preferences_host_notes_placeholder')}
+                disabled={isSavingStayMessage || isSavingOptions}
+                className="border-2 border-neutral text-complimentary-core text-sm rounded-lg min-h-[88px]"
+              />
+            </div>
+          </BookingSurface>
+        )}
 
         {showFoodSection && (
           <BookingSurface
@@ -2265,12 +2271,8 @@ const StayCheckoutContent = ({
                   value={formatStayMoney(priceLock.lines.event)}
                 />
               )}
-              {priceLock.platformFee.val > 0 && (
-                <Row
-                  label={t('stay_create_line_platform_fee')}
-                  value={formatStayMoney(priceLock.platformFee)}
-                />
-              )}
+              {/* platformFee is carved out of the lines above, not added on top
+                  of them — its own row read as an extra charge. */}
               <hr className="my-2 border-gray-200" />
               <Row
                 label={t('stay_create_line_subtotal')}

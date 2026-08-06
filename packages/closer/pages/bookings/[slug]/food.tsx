@@ -290,7 +290,7 @@ const FoodSelectionPage = ({
 
   useEffect(() => {
     if (booking?.status === 'pending' || booking?.status === 'paid') {
-      router.push(`/bookings/${booking?._id}`);
+      router.push(`/stay/${booking?._id}`);
     }
   }, [booking?.status]);
 
