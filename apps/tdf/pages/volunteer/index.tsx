@@ -304,10 +304,11 @@ VolunteerOpportunitiesPage.getInitialProps = async (
       foodOptions,
       'volunteer',
     );
-    const pool =
-      volunteerFoodOptions.length > 0 ? volunteerFoodOptions : foodOptions;
-    const defaultFoodId = getDefaultSelectedFoodOptionId(pool);
-    const defaultFood = pool.find((option) => option._id === defaultFoodId);
+    const defaultFoodId =
+      getDefaultSelectedFoodOptionId(volunteerFoodOptions);
+    const defaultFood = volunteerFoodOptions.find(
+      (option) => option._id === defaultFoodId,
+    );
     const volunteerFoodPrice =
       typeof defaultFood?.price === 'number' ? defaultFood.price : null;
 
