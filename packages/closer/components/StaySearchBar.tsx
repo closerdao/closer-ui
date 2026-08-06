@@ -34,6 +34,13 @@ interface Props {
   externalError?: string | null;
   onSearch: (params: StaySearchBarParams) => void;
   className?: string;
+  /**
+   * Overrides the guest/member minimum — /stays/search validates against
+   * bookingSettings, not the volunteering minimum, so volunteer flows have to
+   * enforce it here or POST /stays rejects the booking later.
+   */
+  minNightsOverride?: number | null;
+  minNightsErrorMessage?: string;
 }
 
 const formatDate = (d: Date | string | null) =>
@@ -51,6 +58,8 @@ const StaySearchBar = ({
   externalError,
   onSearch,
   className = '',
+  minNightsOverride,
+  minNightsErrorMessage,
 }: Props) => {
   const t = useTranslations();
   const { user } = useAuth();
@@ -58,9 +67,12 @@ const StaySearchBar = ({
   const isMember = !!user?.roles?.includes('member');
   const [maxHorizon] = getMaxBookingHorizon(bookingSettings, isMember);
 
-  const minDuration = isMember
-    ? bookingSettings?.memberMinDuration || 1
-    : bookingSettings?.minDuration || 1;
+  const minDuration =
+    minNightsOverride && minNightsOverride > 0
+      ? minNightsOverride
+      : isMember
+        ? bookingSettings?.memberMinDuration || 1
+        : bookingSettings?.minDuration || 1;
 
   const defaultSearchStart = useMemo(
     () => dayjs().add(14, 'day').startOf('day'),
@@ -154,7 +166,8 @@ const StaySearchBar = ({
 
   const validationError =
     start && end && nights < minDuration
-      ? t('bookings_dates_min_duration_error', { var: minDuration })
+      ? minNightsErrorMessage ||
+        t('bookings_dates_min_duration_error', { var: minDuration })
       : null;
 
   const canSearch =

@@ -1,6 +1,6 @@
 // Components
 export { default as CreateRoleView } from './components/CreateRoleView/';
-export { default as CreateVolunteerView } from './components/CreateVolunteerView/';
+export { default as EditVolunteerView } from './components/EditVolunteerView/';
 export { default as CustomSectionComponent } from './components/custom-pages/CustomSectionComponent';
 export { default as CustomSections } from './components/custom-pages/CustomSections';
 export { default as ChargesTable } from './components/Dashboard/ChargesTable';
@@ -205,7 +205,6 @@ export { default as VolunteerOpportunitiesPage } from './pages/volunteer/';
 export { default as VolunteerPage } from './pages/volunteer/[slug]/';
 export { default as EditVolunteerOportunity } from './pages/volunteer/[slug]/edit';
 export { default as VolunteerApplicationPage } from './pages/volunteer/apply';
-export { default as CreateVolunteerOportunity } from './pages/volunteer/create';
 
 export { default as CohousingApplicationDetailPage } from './pages/cohousing/application/[id]';
 export { default as CohousingApplicationAdminPage } from './pages/cohousing/application/[id]/admin';

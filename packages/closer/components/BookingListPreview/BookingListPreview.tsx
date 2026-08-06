@@ -7,7 +7,7 @@ import { BookingConfig } from '../../types/api';
 
 import dayjs from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
-import { MessageSquareMore } from 'lucide-react';
+import { Flag, MessageSquareMore } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import BookingRequestButtons from '../BookingRequestButtons';
@@ -31,6 +31,7 @@ import {
   computeTokensOwed,
   isStayShapedBooking,
 } from '../../utils/stays.api';
+import { hasFlaggedHealthAnswers } from '../../utils/volunteerApplication.helpers';
 
 dayjs.extend(isSameOrBefore);
 
@@ -123,6 +124,9 @@ const BookingListPreview = ({
     bookingConfig?.pickUpEnabled &&
     doesNeedPickup &&
     start > new Date(Date.now() - 12 * 60 * 60 * 1000);
+
+  // "Read this one carefully" signal for hosts, not an automatic rejection.
+  const flagHealthDisclosure = hasFlaggedHealthAnswers(raw?.volunteerInfo);
   const startFormatted = dayjs(start).format('DD/MM/YYYY');
 
   const endFormatted = dayjs(end).format('DD/MM/YYYY');
@@ -195,6 +199,15 @@ const BookingListPreview = ({
             </span>
           )}
           <BookingStatusTag status={status} label={statusTagLabel} />
+          {isSpaceHost && flagHealthDisclosure && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full bg-accent-light px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-accent"
+              title={t('volunteer_application_health_flag_hint')}
+            >
+              <Flag className="h-3 w-3" aria-hidden="true" />
+              {t('volunteer_application_health_flag')}
+            </span>
+          )}
           {isFriendsBooking && (
             <span className="inline-flex items-center rounded-full bg-accent px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
               {t('friends_booking_title')}

@@ -1,6 +1,6 @@
 import Head from 'next/head';
 
-import CreateVolunteerView from '../../../components/CreateVolunteerView';
+import EditVolunteerView from '../../../components/EditVolunteerView';
 import { EditModelPageLayout } from '../../../components/EditModel';
 
 import { NextPageContext } from 'next';
@@ -31,7 +31,7 @@ const EditVolunteerOportunity = ({ volunteer }: Props) => {
         backHref={`/volunteer/${volunteer.slug}`}
         isEdit
       >
-        <CreateVolunteerView isEditMode={true} data={volunteer} />
+        <EditVolunteerView data={volunteer} />
       </EditModelPageLayout>
     </>
   );

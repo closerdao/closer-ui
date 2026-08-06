@@ -15,6 +15,7 @@ export * from './stay';
 export * from './subscriptions';
 export * from './token';
 export * from './volunteer';
+export * from './volunteerApplication';
 export * from './wallet';
 export * from './engagement';
 export * from './interaction';
