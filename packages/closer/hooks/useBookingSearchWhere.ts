@@ -4,6 +4,8 @@ import {
   BOOKING_SEARCH_MIN_LENGTH,
   buildBookingSearchWhere,
   isBookingIdSearch,
+  isPartialBookingIdSearch,
+  parseBookingSearchDate,
 } from '../utils/bookingSearch.helpers';
 import { fetchUsersBySearchQuery } from '../utils/searchUser';
 import { useDebounce } from './useDebounce';
@@ -17,6 +19,11 @@ const GUEST_SEARCH_USER_LIMIT = 100;
 const needsGuestLookup = (term: string) =>
   term.length >= BOOKING_SEARCH_MIN_LENGTH && !isBookingIdSearch(term);
 
+const hasNonGuestSearchClause = (term: string) =>
+  isBookingIdSearch(term) ||
+  isPartialBookingIdSearch(term) ||
+  parseBookingSearchDate(term) != null;
+
 interface BookingSearchWhere {
   /** `where` fragment to merge into the booking filter, or null when inactive. */
   searchWhere: Record<string, any> | null;
@@ -28,8 +35,8 @@ interface BookingSearchWhere {
  * Debounces a booking search term and resolves the guest names in it to user
  * ids, so the caller can filter bookings server-side.
  *
- * While a term is resolving `searchWhere` stays null, which keeps the list
- * showing its previous contents rather than flashing empty between keystrokes.
+ * While guests are resolving, id/date clauses still apply; name-only terms keep
+ * `searchWhere` null so the list does not flash empty between keystrokes.
  */
 export function useBookingSearchWhere(
   term: string,
@@ -74,9 +81,20 @@ export function useBookingSearchWhere(
     needsGuestLookup(debouncedTerm) && resolved?.term !== debouncedTerm;
 
   const searchWhere = useMemo(() => {
-    if (!debouncedTerm || isResolvingGuests) {
+    if (!debouncedTerm) {
       return null;
     }
+
+    if (isResolvingGuests) {
+      if (!hasNonGuestSearchClause(debouncedTerm)) {
+        return null;
+      }
+      return buildBookingSearchWhere({
+        term: debouncedTerm,
+        userIds: null,
+      });
+    }
+
     return buildBookingSearchWhere({
       term: debouncedTerm,
       userIds: resolved?.term === debouncedTerm ? resolved.userIds : null,

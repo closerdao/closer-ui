@@ -3,12 +3,14 @@ import dayjs from 'dayjs';
 import {
   buildBookingSearchWhere,
   isBookingIdSearch,
+  isPartialBookingIdSearch,
   matchesBookingSearchTerm,
   mergeBookingSearchWhere,
   parseBookingSearchDate,
 } from '../bookingSearch.helpers';
 
 const BOOKING_ID = '63fc8e8910354e3f945e249a';
+const PARTIAL_BOOKING_ID = '63fc8e89';
 
 describe('isBookingIdSearch', () => {
   it('recognises a mongo id', () => {
@@ -18,7 +20,20 @@ describe('isBookingIdSearch', () => {
 
   it('rejects names and partial ids', () => {
     expect(isBookingIdSearch('Ana Silva')).toBe(false);
-    expect(isBookingIdSearch('63fc8e89')).toBe(false);
+    expect(isBookingIdSearch(PARTIAL_BOOKING_ID)).toBe(false);
+  });
+});
+
+describe('isPartialBookingIdSearch', () => {
+  it('recognises a hex prefix of a mongo id', () => {
+    expect(isPartialBookingIdSearch(PARTIAL_BOOKING_ID)).toBe(true);
+    expect(isPartialBookingIdSearch(` ${PARTIAL_BOOKING_ID} `)).toBe(true);
+  });
+
+  it('rejects full ids, short noise and names', () => {
+    expect(isPartialBookingIdSearch(BOOKING_ID)).toBe(false);
+    expect(isPartialBookingIdSearch('a')).toBe(false);
+    expect(isPartialBookingIdSearch('Ana Silva')).toBe(false);
   });
 });
 
@@ -79,6 +94,25 @@ describe('buildBookingSearchWhere', () => {
     expect(buildBookingSearchWhere({ term: BOOKING_ID, userIds: null })).toEqual({
       $or: [{ _id: BOOKING_ID }],
     });
+  });
+
+  it('matches a partial booking id by prefix range', () => {
+    expect(
+      buildBookingSearchWhere({ term: PARTIAL_BOOKING_ID, userIds: [] }),
+    ).toEqual({
+      $or: [
+        {
+          _id: {
+            $gte: '63fc8e890000000000000000',
+            $lte: '63fc8e89ffffffffffffffff',
+          },
+        },
+      ],
+    });
+  });
+
+  it('stays inactive for short terms when guest lookup was skipped', () => {
+    expect(buildBookingSearchWhere({ term: 'a', userIds: null })).toBeNull();
   });
 
   it('matches bookings overlapping a searched date', () => {

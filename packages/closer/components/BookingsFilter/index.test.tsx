@@ -184,6 +184,38 @@ describe('BookingsFilter', () => {
       expect(fetchUsersBySearchQuery).not.toHaveBeenCalled();
     });
 
+    it('matches a partial booking id instead of returning an empty list', async () => {
+      const partialId = '63fc8e89';
+      const { setFilter } = renderFilter();
+
+      typeSearch(partialId);
+
+      await waitFor(() => {
+        expect(lastWhere(setFilter)).toEqual({
+          ...defaultWhere,
+          $or: [
+            {
+              _id: {
+                $gte: '63fc8e890000000000000000',
+                $lte: '63fc8e89ffffffffffffffff',
+              },
+            },
+          ],
+        });
+      });
+    });
+
+    it('keeps the list unfiltered for terms shorter than the guest minimum', async () => {
+      const { setFilter } = renderFilter();
+
+      typeSearch('a');
+
+      await waitFor(() => {
+        expect(lastWhere(setFilter)).toEqual(defaultWhere);
+      });
+      expect(fetchUsersBySearchQuery).not.toHaveBeenCalled();
+    });
+
     it('matches bookings that span a searched date', async () => {
       const { setFilter } = renderFilter();
 

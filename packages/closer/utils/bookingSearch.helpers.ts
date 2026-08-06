@@ -4,6 +4,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 dayjs.extend(customParseFormat);
 
 const MONGO_ID_REGEX = /^[a-f\d]{24}$/i;
+const PARTIAL_MONGO_ID_REGEX = /^[a-f\d]+$/i;
 
 /**
  * Below this length a term is too noisy to resolve guests for — an "a" would
@@ -42,6 +43,29 @@ export interface BookingSearchRow {
 
 export function isBookingIdSearch(term: string): boolean {
   return MONGO_ID_REGEX.test(term.trim());
+}
+
+/**
+ * Hex strings shorter than a full ObjectId are treated as booking-id prefixes
+ * (e.g. the first 8 chars a host copies from a link).
+ */
+export function isPartialBookingIdSearch(term: string): boolean {
+  const trimmed = term.trim();
+  return (
+    trimmed.length >= BOOKING_SEARCH_MIN_LENGTH &&
+    trimmed.length < 24 &&
+    PARTIAL_MONGO_ID_REGEX.test(trimmed)
+  );
+}
+
+function buildPartialBookingIdClause(term: string): Record<string, any> {
+  const prefix = term.trim().toLowerCase();
+  return {
+    _id: {
+      $gte: prefix.padEnd(24, '0'),
+      $lte: prefix.padEnd(24, 'f'),
+    },
+  };
 }
 
 /**
@@ -85,6 +109,10 @@ export function parseBookingSearchDate(
  * collection, so `userIds` must already be resolved by the caller; a term that
  * resolves to nothing at all yields a clause that matches no bookings, so an
  * unmatched search shows an empty list rather than silently showing everything.
+ *
+ * `userIds: null` means guest lookup was not attempted (too short / not needed).
+ * In that case, with no id or date clause either, the search stays inactive
+ * instead of collapsing the list to zero rows.
  */
 export function buildBookingSearchWhere({
   term,
@@ -102,6 +130,8 @@ export function buildBookingSearchWhere({
 
   if (isBookingIdSearch(trimmed)) {
     clauses.push({ _id: trimmed });
+  } else if (isPartialBookingIdSearch(trimmed)) {
+    clauses.push(buildPartialBookingIdClause(trimmed));
   }
 
   if (userIds && userIds.length > 0) {
@@ -120,6 +150,9 @@ export function buildBookingSearchWhere({
   }
 
   if (clauses.length === 0) {
+    if (userIds == null) {
+      return null;
+    }
     return { _id: { $in: [] } };
   }
 
