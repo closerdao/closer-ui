@@ -7,6 +7,7 @@ export * from './cohousingApplication';
 export * from './currency';
 export * from './donation';
 export * from './event';
+export * from './food';
 export * from './metrics';
 export * from './metricsDashboard';
 export * from './proposal';

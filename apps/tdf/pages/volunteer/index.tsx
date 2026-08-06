@@ -3,14 +3,23 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import {
+  BookingConfig,
+  FoodOption,
   GeneralConfig,
   PageNotFound,
   VolunteerConfig,
+  api,
   getCachedConfig,
 } from 'closer';
 import { LinkButton } from 'closer/components/ui';
 import { useConfig } from 'closer/hooks/useConfig';
+import {
+  getDefaultSelectedFoodOptionId,
+  getFoodOptionsForBookingContext,
+} from 'closer/utils/booking.helpers';
+import { parseMessageFromError } from 'closer/utils/common';
 import { CalendarDays } from 'lucide-react';
+import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 const PINK_PAPER_URL =
@@ -67,6 +76,13 @@ const SKILLS = [
 const linkClass =
   'text-accent-dark font-semibold border-b border-current hover:text-foreground';
 
+const formatRate = (value: number) =>
+  Number.isInteger(value) ? String(value) : String(value);
+
+interface Props {
+  volunteerFoodPrice: number | null;
+}
+
 const ApplyButton = ({ label }: { label: string }) => (
   <LinkButton
     href={APPLY_HREF}
@@ -77,12 +93,15 @@ const ApplyButton = ({ label }: { label: string }) => (
   </LinkButton>
 );
 
-const VolunteerOpportunitiesPage = () => {
+const VolunteerOpportunitiesPage = ({
+  volunteerFoodPrice = null,
+}: Props) => {
   const t = useTranslations();
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const volunteerConfig = getCachedConfig(
     'volunteering',
   ) as VolunteerConfig | null;
+  const bookingConfig = getCachedConfig('booking') as BookingConfig | null;
   const defaultConfig = useConfig();
 
   const PLATFORM_NAME =
@@ -92,6 +111,33 @@ const VolunteerOpportunitiesPage = () => {
   if (!isVolunteerEnabled) {
     return <PageNotFound />;
   }
+
+  const volunteeringMinStay = volunteerConfig?.volunteeringMinStay ?? 14;
+  const utilityRate = bookingConfig?.utilityFiatVal;
+  const foodRate =
+    volunteerFoodPrice ?? bookingConfig?.foodPriceBasic ?? null;
+  const dailyTotal =
+    foodRate != null && utilityRate != null ? foodRate + utilityRate : null;
+
+  const minStayValues = { var: volunteeringMinStay };
+  const dailyValues =
+    foodRate != null && utilityRate != null && dailyTotal != null
+      ? {
+          food: formatRate(foodRate),
+          utilities: formatRate(utilityRate),
+          total: formatRate(dailyTotal),
+        }
+      : undefined;
+
+  const knowValuesFor = (id: string) => {
+    if (id === 'minstay' || id === 'resident') {
+      return minStayValues;
+    }
+    if (id === 'daily') {
+      return dailyValues;
+    }
+    return undefined;
+  };
 
   const pageTitle = `${t('tdf_volunteers_title')} — ${PLATFORM_NAME}`;
 
@@ -156,32 +202,37 @@ const VolunteerOpportunitiesPage = () => {
         </h2>
 
         <div className="border-b border-gray-200">
-          {THINGS_TO_KNOW.map((item) => (
-            <div key={item.id} className="border-t border-gray-200 py-6">
-              <div
-                className={item.isFlagged ? 'border-l-4 border-accent pl-5' : ''}
-              >
-                <h3 className="mb-2 font-black text-[19px]">
-                  {t(`tdf_volunteers_know_${item.id}_title`)}
-                </h3>
-                <p className="m-0 max-w-[68ch] text-gray-600">
-                  {t(`tdf_volunteers_know_${item.id}_body`)}
-                </p>
-                {item.tagKeys && (
-                  <div className="flex flex-wrap gap-2.5 mt-4">
-                    {item.tagKeys.map((tagKey) => (
-                      <span
-                        key={tagKey}
-                        className="rounded-full bg-accent-light px-3.5 py-1.5 text-sm font-semibold text-accent-dark"
-                      >
-                        {t(tagKey)}
-                      </span>
-                    ))}
-                  </div>
-                )}
+          {THINGS_TO_KNOW.map((item) => {
+            const values = knowValuesFor(item.id);
+            return (
+              <div key={item.id} className="border-t border-gray-200 py-6">
+                <div
+                  className={
+                    item.isFlagged ? 'border-l-4 border-accent pl-5' : ''
+                  }
+                >
+                  <h3 className="mb-2 font-black text-[19px]">
+                    {t(`tdf_volunteers_know_${item.id}_title`, values)}
+                  </h3>
+                  <p className="m-0 max-w-[68ch] text-gray-600">
+                    {t(`tdf_volunteers_know_${item.id}_body`, values)}
+                  </p>
+                  {item.tagKeys && dailyValues && (
+                    <div className="flex flex-wrap gap-2.5 mt-4">
+                      {item.tagKeys.map((tagKey) => (
+                        <span
+                          key={tagKey}
+                          className="rounded-full bg-accent-light px-3.5 py-1.5 text-sm font-semibold text-accent-dark"
+                        >
+                          {t(tagKey, dailyValues)}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <h2 className="mt-14 mb-5 font-black text-[26px] tracking-[-0.01em]">
@@ -241,6 +292,32 @@ const VolunteerOpportunitiesPage = () => {
       </main>
     </div>
   );
+};
+
+VolunteerOpportunitiesPage.getInitialProps = async (
+  _context: NextPageContext,
+) => {
+  try {
+    const foodRes = await api.get('/food').catch(() => null);
+    const foodOptions: FoodOption[] = foodRes?.data?.results ?? [];
+    const volunteerFoodOptions = getFoodOptionsForBookingContext(
+      foodOptions,
+      'volunteer',
+    );
+    const pool =
+      volunteerFoodOptions.length > 0 ? volunteerFoodOptions : foodOptions;
+    const defaultFoodId = getDefaultSelectedFoodOptionId(pool);
+    const defaultFood = pool.find((option) => option._id === defaultFoodId);
+    const volunteerFoodPrice =
+      typeof defaultFood?.price === 'number' ? defaultFood.price : null;
+
+    return { volunteerFoodPrice };
+  } catch (err) {
+    return {
+      volunteerFoodPrice: null,
+      error: parseMessageFromError(err),
+    };
+  }
 };
 
 export default VolunteerOpportunitiesPage;

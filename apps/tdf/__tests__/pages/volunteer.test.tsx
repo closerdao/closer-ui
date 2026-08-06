@@ -28,4 +28,17 @@ describe('Volunteer', () => {
       expect(link).toHaveAttribute('href', '/volunteer/apply');
     });
   });
+
+  it('should interpolate min stay and daily rates from config', () => {
+    renderWithProviders(<VolunteerPage />);
+
+    expect(
+      screen.getByRole('heading', { name: /Minimum stay of 28 days/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('12 euros per day, food')).toBeInTheDocument();
+    expect(screen.getByText('2 euros per day, utilities')).toBeInTheDocument();
+    expect(
+      screen.getByText('14 euros per day total, VAT included'),
+    ).toBeInTheDocument();
+  });
 });
