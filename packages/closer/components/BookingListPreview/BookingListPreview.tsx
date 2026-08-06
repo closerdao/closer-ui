@@ -108,6 +108,8 @@ const BookingListPreview = ({
     status === 'tokens-staked';
 
   const isSpaceHost = user?.roles.includes('space-host');
+  const isAdmin = Boolean(user?.roles.includes('admin'));
+  const canManageBooking = Boolean(isSpaceHost || isAdmin);
   const isOwnBooking =
     createdBy === user?._id || bookingMapItem.get('paidBy') === user?._id;
 
@@ -199,7 +201,7 @@ const BookingListPreview = ({
             </span>
           )}
           <BookingStatusTag status={status} label={statusTagLabel} />
-          {isSpaceHost && flagHealthDisclosure && (
+          {canManageBooking && flagHealthDisclosure && (
             <span
               className="inline-flex items-center gap-1 rounded-full bg-accent-light px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-accent"
               title={t('volunteer_application_health_flag_hint')}
