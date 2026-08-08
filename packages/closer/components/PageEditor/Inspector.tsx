@@ -3,12 +3,16 @@ import { useTranslations } from 'next-intl';
 import { Button, Heading, Input, Textarea } from '../ui';
 
 import BlockImageUpload from './BlockImageUpload';
+import PageEditorCheckbox from './PageEditorCheckbox';
+import { commitHydratedSectionEdit, hydrateSectionData } from './blockDefaults';
 import BackgroundField from './inspectors/BackgroundField';
 import I18nHoverAction from './I18nHoverAction';
 import { isDynamicBlockType } from '../../constants/dynamicBlockTypes';
 import CTAInspector from './inspectors/CTAInspector';
 import CloserBlockInspector from './inspectors/CloserBlockInspector';
-import EventsInspector from './inspectors/EventsInspector';
+import ContentListInspector from './inspectors/ContentListInspector';
+import { BLOCK_INSPECTOR_CONFIGS } from './inspectors/blockInspectorConfigs';
+import DailyContributionInspector from './inspectors/DailyContributionInspector';
 import FeaturesInspector from './inspectors/FeaturesInspector';
 import GalleryInspector from './inspectors/GalleryInspector';
 import HeroInspector from './inspectors/HeroInspector';
@@ -22,7 +26,11 @@ import WebinarInspector from './inspectors/WebinarInspector';
 
 import type { SectionBackground } from '../custom-pages/sectionBackground';
 import type { PageDoc, PageSection } from '../../types/page';
-import { extractBlockI18nKey, resolveBlockText } from '../../utils/blockI18n';
+import {
+  extractBlockI18nKey,
+  resolveBlockText,
+} from '../../utils/blockI18n';
+import { blockTypeLabelKey } from './blockLabels';
 
 type Tab = 'block' | 'page';
 
@@ -30,12 +38,15 @@ interface Props {
   tab: Tab;
   onTabChange: (tab: Tab) => void;
   page: PageDoc;
-  onPageFieldChange: (field: keyof PageDoc, value: string) => void;
+  onPageFieldChange: (field: keyof PageDoc, value: string | boolean) => void;
   selectedSection: PageSection | null;
   onSectionDataChange: (localId: string, data: Record<string, unknown>) => void;
   onDeletePage: () => void;
+  onResetToDefault?: () => void;
   onClose?: () => void;
   showClose?: boolean;
+  isStandardPage?: boolean;
+  menuSections?: string[];
 }
 
 const Inspector = ({
@@ -46,8 +57,11 @@ const Inspector = ({
   selectedSection,
   onSectionDataChange,
   onDeletePage,
+  onResetToDefault,
   onClose,
   showClose,
+  isStandardPage,
+  menuSections = [],
 }: Props) => {
   const t = useTranslations();
 
@@ -60,11 +74,24 @@ const Inspector = ({
       );
     }
     const common = {
-      data: selectedSection.data as Record<string, unknown>,
+      data: hydrateSectionData(selectedSection),
       onChange: (next: Record<string, unknown>) =>
-        onSectionDataChange(selectedSection._localId!, next),
+        onSectionDataChange(
+          selectedSection._localId!,
+          commitHydratedSectionEdit(selectedSection, next),
+        ),
     };
+    const configured =
+      selectedSection.type === 'dailyContribution'
+        ? undefined
+        : BLOCK_INSPECTOR_CONFIGS[selectedSection.type];
     const renderTypeForm = () => {
+      if (selectedSection.type === 'dailyContribution') {
+        return <DailyContributionInspector {...common} />;
+      }
+      if (configured) {
+        return <ContentListInspector {...common} config={configured} />;
+      }
       switch (selectedSection.type) {
         case 'hero':
           return <HeroInspector {...common} />;
@@ -83,18 +110,10 @@ const Inspector = ({
         case 'textBlock':
           return <TextBlockInspector {...common} />;
         case 'staySearch':
+        case 'bookAStay':
           return <StaySearchInspector {...common} />;
         case 'cta':
           return <CTAInspector {...common} />;
-        case 'events':
-          return <EventsInspector {...common} />;
-        case 'fundraiser':
-          return (
-            <CloserBlockInspector
-              {...common}
-              hint={t('pages_editor_fundraiser_hint')}
-            />
-          );
         case 'tokenStats':
           return (
             <CloserBlockInspector
@@ -136,7 +155,7 @@ const Inspector = ({
           <Heading level={4} className="text-base">
             {tab === 'block'
               ? selectedSection
-                ? selectedSection.type
+                ? t(blockTypeLabelKey(selectedSection.type))
                 : t('pages_editor_tab_block')
               : t('pages_editor_tab_page')}
           </Heading>
@@ -152,7 +171,7 @@ const Inspector = ({
           <button
             type="button"
             className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 lg:hidden"
-            aria-label="Close"
+            aria-label={t('pages_editor_close')}
             onClick={onClose}
           >
             &times;
@@ -204,9 +223,73 @@ const Inspector = ({
               </label>
               <Input
                 value={page.slug}
+                isDisabled={Boolean(isStandardPage)}
                 onChange={(e) => onPageFieldChange('slug', e.target.value)}
               />
-              <p className="text-xs text-gray-500 mt-1">{t('pages_editor_slug_help')}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {isStandardPage
+                  ? t('pages_editor_slug_locked')
+                  : t('pages_editor_slug_help')}
+              </p>
+            </div>
+            <div className="h-px bg-gray-100" />
+            <div className="flex flex-col gap-2">
+              <PageEditorCheckbox
+                id="page-show-in-menu"
+                checked={page.showInMenu === true}
+                onChange={(checked) => onPageFieldChange('showInMenu', checked)}
+              >
+                {t('pages_editor_field_show_in_menu')}
+              </PageEditorCheckbox>
+              <p className="text-xs text-gray-500">
+                {t('pages_editor_show_in_menu_help')}
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t('pages_editor_field_menu_label')}
+              </label>
+              <Input
+                value={page.menuLabel ?? ''}
+                placeholder={resolveBlockText(page.title, t)}
+                onChange={(e) => onPageFieldChange('menuLabel', e.target.value)}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {t('pages_editor_menu_label_help')}
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t('pages_editor_field_menu_section')}
+              </label>
+              <Input
+                value={page.menuSection ?? ''}
+                placeholder={t('pages_editor_section_unsectioned')}
+                onChange={(e) =>
+                  onPageFieldChange('menuSection', e.target.value)
+                }
+              />
+              {menuSections.length > 0 ? (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {menuSections.map((section) => (
+                    <button
+                      key={section}
+                      type="button"
+                      className={`px-2 py-1 rounded-full border text-xs ${
+                        (page.menuSection ?? '') === section
+                          ? 'border-accent bg-accent-light text-accent-dark'
+                          : 'border-gray-200 text-gray-600 hover:border-accent'
+                      }`}
+                      onClick={() => onPageFieldChange('menuSection', section)}
+                    >
+                      {section}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              <p className="text-xs text-gray-500 mt-1">
+                {t('pages_editor_menu_section_help')}
+              </p>
             </div>
             <div className="h-px bg-gray-100" />
             <div>
@@ -239,9 +322,20 @@ const Inspector = ({
                 urlLabel={t('pages_editor_field_og_image')}
               />
             </div>
-            <Button variant="secondary" type="button" onClick={onDeletePage}>
-              {t('pages_editor_delete_page')}
-            </Button>
+            {isStandardPage ? (
+              <Button
+                variant="secondary"
+                type="button"
+                isEnabled={Boolean(onResetToDefault)}
+                onClick={onResetToDefault}
+              >
+                {t('pages_editor_reset_to_default')}
+              </Button>
+            ) : (
+              <Button variant="secondary" type="button" onClick={onDeletePage}>
+                {t('pages_editor_delete_page')}
+              </Button>
+            )}
           </div>
         )}
       </div>

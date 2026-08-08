@@ -138,7 +138,7 @@ const Navigation = () => {
     <>
       <div
         className={`fixed top-0 left-0 right-0 flex flex-col ${
-          navOpen ? 'z-[100]' : 'z-20'
+          navOpen ? 'z-[100]' : 'z-50'
         }`}
       >
         <ApiUrlWarning />

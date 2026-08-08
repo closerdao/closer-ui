@@ -8,10 +8,12 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import { useBuyTokens } from '../hooks/useBuyTokens';
+import { usePageMenuSections } from '../hooks/usePageMenuSections';
 import useRBAC from '../hooks/useRBAC';
 import { NavigationLink } from '../types/nav';
 import api, { formatSearch } from '../utils/api';
 import { getCurrentUnitPrice } from '../utils/bondingCurve';
+import { toNavigationSections } from '../utils/pageMenu';
 import type { MemberMenuFeatureFlags } from '../utils/memberMenuFeatureFlags';
 import FinancedTokenMenuWidget from './FinancedTokenMenuWidget';
 import Profile from './Profile';
@@ -22,6 +24,12 @@ interface MenuSection {
   label: string;
   isOpen: boolean;
   items: NavigationLink[];
+  /**
+   * `account` sections (dashboard, bookings, admin) are always rendered.
+   * `content` sections describe the website itself and are replaced by the
+   * page-driven menu as soon as any page is flagged with `showInMenu`.
+   */
+  kind?: 'content' | 'account';
 }
 
 const MemberMenu = ({
@@ -40,12 +48,14 @@ const MemberMenu = ({
   isRolesEnabled,
   isFaqEnabled,
   isAffiliateEnabled,
+  isCohousingEnabled,
 }: MemberMenuFeatureFlags) => {
   const t = useTranslations();
   const APP_NAME = appName;
   const { hasAccess, rbacLiveRevision } = useRBAC();
   const router = useRouter();
   const { getCurrentSupplyWithoutWallet } = useBuyTokens();
+  const pageMenuSections = usePageMenuSections();
 
   const { user, logout } = useAuth();
   const [menuSections, setMenuSections] = useState<MenuSection[]>([]);
@@ -78,6 +88,7 @@ const MemberMenu = ({
     isRolesEnabled: boolean,
     isFaqEnabled: boolean,
     isAffiliateEnabled: boolean,
+    isCohousingEnabled: boolean,
   ): MenuSection[] => {
     // TDF-specific navigation structure
     if (APP_NAME?.toLowerCase() === 'tdf') {
@@ -105,7 +116,7 @@ const MemberMenu = ({
             {
               label: t('menu_cohousing'),
               url: '/cohousing',
-              enabled: true,
+              enabled: isCohousingEnabled,
             },
             {
               label: t('menu_regenerative_agriculture'),
@@ -214,6 +225,7 @@ const MemberMenu = ({
         },
         {
           label: t('menu_section_dashboard'),
+          kind: 'account' as const,
           isOpen: false,
           items: [
             {
@@ -503,6 +515,7 @@ const MemberMenu = ({
           ]),
       {
         label: t('menu_section_other'),
+        kind: 'account' as const,
         isOpen: false,
         items: [
           ...(isAffiliateEnabled && user?.affiliate
@@ -518,6 +531,7 @@ const MemberMenu = ({
       },
       {
         label: t('menu_section_dashboard'),
+        kind: 'account' as const,
         isOpen: false,
         items: [
           {
@@ -640,6 +654,7 @@ const MemberMenu = ({
     if (isBookingEnabled) {
       sections.push({
         label: t('menu_section_bookings'),
+        kind: 'account' as const,
         isOpen: false,
         items: [
           {
@@ -735,7 +750,7 @@ const MemberMenu = ({
   useEffect(() => {
     if (!ready) return;
 
-    const sections = getMenuSections(
+    const builtInSections = getMenuSections(
       isBookingEnabled,
       areSubscriptionsEnabled,
       isVolunteeringEnabled,
@@ -748,10 +763,23 @@ const MemberMenu = ({
       isRolesEnabled,
       isFaqEnabled,
       isAffiliateEnabled,
+      isCohousingEnabled,
     );
+    // Pages flagged with `showInMenu` replace the hand-written content
+    // sections; dashboard and booking sections always stay.
+    const sections =
+      pageMenuSections.length > 0
+        ? [
+            ...toNavigationSections(pageMenuSections),
+            ...builtInSections.filter(
+              (section) => section.kind === 'account',
+            ),
+          ]
+        : builtInSections;
     const filteredSections = filterMenuSections(sections, user?.roles || []);
     setMenuSections(filteredSections);
   }, [
+    pageMenuSections,
     ready,
     isBookingEnabled,
     areSubscriptionsEnabled,
@@ -765,6 +793,7 @@ const MemberMenu = ({
     isRolesEnabled,
     isFaqEnabled,
     isAffiliateEnabled,
+    isCohousingEnabled,
     user,
     router.locale,
     rbacLiveRevision,

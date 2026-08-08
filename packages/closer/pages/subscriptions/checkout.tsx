@@ -38,7 +38,7 @@ import {
   priceFormat,
 } from '../../utils/helpers';
 import { logMetric } from '../../utils/metrics';
-import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
+import { getPaidSubscriptionPlans } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
 const stripePromise = loadStripe(
@@ -64,7 +64,9 @@ const SubscriptionsCheckoutPage: NextPage = () => {
     subscriptionsConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
 
-  const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
+  const subscriptionPlans = getPaidSubscriptionPlans(subscriptionsConfig, {
+    availableOnly: false,
+  });
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId, monthlyCredits, source } = router.query;

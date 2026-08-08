@@ -4,7 +4,7 @@ import { renderWithProviders } from '@/test/utils';
 import { screen } from '@testing-library/react';
 import { rest } from 'msw';
 
-import Events from '../../../pages/events/index';
+import Events from '../../../pages/legacy/events';
 import eventsMock from './events.json';
 
 // Mock the entire closer module to avoid all dependency issues
@@ -58,7 +58,7 @@ jest.mock('closer', () => ({
 }));
 
 // Mock the Events component directly
-jest.mock('../../../pages/events/index', () => {
+jest.mock('../../../pages/legacy/events', () => {
   return function MockEvents() {
     return (
       <div>

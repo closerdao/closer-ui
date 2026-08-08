@@ -32,7 +32,7 @@ import {
   getVatInfo,
   priceFormat,
 } from '../../utils/helpers';
-import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
+import { getPaidSubscriptionPlans } from '../../utils/subscriptions.helpers';
 import { logMetric } from '../../utils/metrics';
 import PageNotFound from '../not-found';
 
@@ -65,7 +65,9 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
-  const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
+  const subscriptionPlans = getPaidSubscriptionPlans(subscriptionsConfig, {
+    availableOnly: false,
+  });
 
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
 

@@ -1,0 +1,226 @@
+{
+  "title": "_i18n_impact_map_title",
+  "slug": "/impact-map",
+  "description": "_i18n_impact_map_meta_description",
+  "ogImage": "",
+  "sections": [
+    {
+      "type": "hero",
+      "data": {
+        "settings": {
+          "alignText": "center",
+          "isInverted": false,
+          "isCompact": true
+        },
+        "content": {
+          "title": "_i18n_impact_map_heading",
+          "body": "_i18n_impact_map_subtitle",
+          "imageUrl": "",
+          "cta": {
+            "text": "",
+            "url": ""
+          }
+        }
+      }
+    },
+    {
+      "type": "textBlock",
+      "data": {
+        "settings": {
+          "imagePosition": "none"
+        },
+        "content": {
+          "title": "_i18n_impact_map_note_label",
+          "body": "_i18n_impact_map_note_text",
+          "imageUrl": "",
+          "imageAlt": ""
+        },
+        "background": "accent-light"
+      }
+    },
+    {
+      "type": "stats",
+      "data": {
+        "settings": {},
+        "content": {
+          "eyebrow": "",
+          "title": "",
+          "items": [
+            {
+              "value": "25",
+              "label": "_i18n_impact_stat_hectares"
+            },
+            {
+              "value": "4,000+",
+              "label": "_i18n_impact_stat_trees"
+            },
+            {
+              "value": "280+",
+              "label": "_i18n_impact_stat_holders"
+            },
+            {
+              "value": "1000",
+              "label": "_i18n_impact_stat_horizon"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "features",
+      "data": {
+        "settings": {
+          "numColumns": 2,
+          "isSmallImage": true,
+          "isColorful": false,
+          "hasBorder": true
+        },
+        "content": {
+          "title": "_i18n_impact_pillar_sustainability",
+          "description": "",
+          "items": [
+            {
+              "title": "_i18n_impact_domain_water_title",
+              "text": "<p>_i18n_impact_water_action_1</p><p>_i18n_impact_water_action_2</p><p>_i18n_impact_water_action_3</p>",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "leaf",
+              "cta": {
+                "text": "",
+                "url": "/pages/ecology"
+              }
+            },
+            {
+              "title": "_i18n_impact_domain_food_title",
+              "text": "<p>_i18n_impact_food_action_1</p><p>_i18n_impact_food_action_2</p><p>_i18n_impact_food_action_3</p>",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "utensils",
+              "cta": {
+                "text": "",
+                "url": "/pages/regenerative-agriculture"
+              }
+            },
+            {
+              "title": "_i18n_impact_domain_land_title",
+              "text": "<p>_i18n_impact_land_action_1</p><p>_i18n_impact_land_action_2</p><p>_i18n_impact_land_action_3</p>",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "leaf",
+              "cta": {
+                "text": "",
+                "url": "/pages/ecology"
+              }
+            },
+            {
+              "title": "_i18n_impact_domain_transport_title",
+              "text": "<p>_i18n_impact_transport_action_1</p><p>_i18n_impact_transport_action_2</p>",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "zap"
+            },
+            {
+              "title": "_i18n_impact_domain_waste_title",
+              "text": "<p>_i18n_impact_waste_action_1</p><p>_i18n_impact_waste_action_2</p><p>_i18n_impact_waste_action_3</p>",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "leaf"
+            },
+            {
+              "title": "_i18n_impact_domain_materials_title",
+              "text": "<p>_i18n_impact_materials_action_1</p><p>_i18n_impact_materials_action_2</p><p>_i18n_impact_materials_action_3</p>",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "home"
+            },
+            {
+              "title": "_i18n_impact_domain_energy_title",
+              "text": "<p>_i18n_impact_energy_action_1</p><p>_i18n_impact_energy_action_2</p><p>_i18n_impact_energy_action_3</p>",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "sun"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "features",
+      "data": {
+        "settings": {
+          "numColumns": 2,
+          "isSmallImage": true,
+          "isColorful": false,
+          "hasBorder": true
+        },
+        "content": {
+          "title": "_i18n_impact_pillar_culture",
+          "description": "",
+          "items": [
+            {
+              "title": "_i18n_impact_domain_health_title",
+              "text": "<p>_i18n_impact_health_action_1</p><p>_i18n_impact_health_action_2</p>",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "heart"
+            },
+            {
+              "title": "_i18n_impact_domain_community_title",
+              "text": "<p>_i18n_impact_community_action_1</p><p>_i18n_impact_community_action_2</p><p>_i18n_impact_community_action_3</p>",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "users",
+              "cta": {
+                "text": "",
+                "url": "/citizenship"
+              }
+            },
+            {
+              "title": "_i18n_impact_domain_equity_title",
+              "text": "<p>_i18n_impact_equity_action_1</p><p>_i18n_impact_equity_action_2</p><p>_i18n_impact_equity_action_3</p>",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "star"
+            },
+            {
+              "title": "_i18n_impact_domain_governance_title",
+              "text": "<p>_i18n_impact_governance_action_1</p><p>_i18n_impact_governance_action_2</p><p>_i18n_impact_governance_action_3</p>",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "shield",
+              "cta": {
+                "text": "",
+                "url": "/governance"
+              }
+            },
+            {
+              "title": "_i18n_impact_domain_transparency_title",
+              "text": "<p>_i18n_impact_transparency_action_1</p><p>_i18n_impact_transparency_action_2</p><p>_i18n_impact_transparency_action_3</p>",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "calendar",
+              "cta": {
+                "text": "",
+                "url": "/dataroom"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "textBlock",
+      "data": {
+        "settings": {
+          "imagePosition": "none"
+        },
+        "content": {
+          "title": "_i18n_impact_how_we_deliver_title",
+          "body": "_i18n_impact_section_ecology_desc",
+          "imageUrl": "",
+          "imageAlt": ""
+        }
+      }
+    }
+  ]
+}

@@ -4,14 +4,9 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
+import CollapsibleFaq from '../../components/CollapsibleFaq';
 import { Button, Heading, LinkButton } from '../../components/ui';
 import ErrorMessage from '../../components/ui/ErrorMessage';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '../../components/ui/shadcn-card';
 
 import { PageNotFound, useAuth, usePlatform } from 'closer';
 import { NextPageContext } from 'next';
@@ -42,24 +37,25 @@ const AffiliateLandingPage = () => {
 
   const faqs = [
     {
-      q: 'How do I create a tracking link?',
-      a: 'Use the link builder in your Affiliate Dashboard, or contact us if you need help.',
+      question: 'How do I create a tracking link?',
+      answer:
+        'Use the link builder in your Affiliate Dashboard, or contact us if you need help.',
     },
     {
-      q: 'How long do I earn commission after someone signs up?',
-      a: '12 months after their first click on your affiliate link.',
+      question: 'How long do I earn commission after someone signs up?',
+      answer: '12 months after their first click on your affiliate link.',
     },
     {
-      q: 'When do I get paid?',
-      a: 'On the 15th of each month, once you reach €100 in commissions.',
+      question: 'When do I get paid?',
+      answer: 'On the 15th of each month, once you reach €100 in commissions.',
     },
     {
-      q: 'Can I offer my audience a discount code?',
-      a: 'Yes, affiliates can request personalized coupon codes.',
+      question: 'Can I offer my audience a discount code?',
+      answer: 'Yes, affiliates can request personalized coupon codes.',
     },
     {
-      q: 'Who do I contact with questions?',
-      a: 'Email affiliate@traditionaldreamfactory.com',
+      question: 'Who do I contact with questions?',
+      answer: 'Email affiliate@traditionaldreamfactory.com',
     },
   ];
 
@@ -316,17 +312,8 @@ const AffiliateLandingPage = () => {
             FAQs:
           </Heading>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            {faqs.map((f) => (
-              <Card key={f.q} className="rounded-2xl">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">{f.q}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-foreground">{f.a}</p>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="mt-6">
+            <CollapsibleFaq items={faqs} />
           </div>
 
           <LinkButton

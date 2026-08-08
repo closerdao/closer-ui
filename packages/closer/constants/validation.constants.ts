@@ -88,15 +88,21 @@ export const configFormSchema = z.object({
   residenceMinStay: numberRequired,
 });
 
+const pricePositive = z
+  .string()
+  .min(1, { message: 'This field is required' })
+  .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+    message: 'Must be a number greater than 0',
+  });
+
 const subscriptionValidationRules = {
   title: stringRequired,
   description: stringRequired,
   billingPeriod: stringRequired,
   slug: stringRequired,
-  priceId: stringRequired,
   tier: numberOptional,
-  monthlyCredits: numberRequired,
-  price: numberRequired,
+  monthlyCredits: numberOptional,
+  price: pricePositive,
   perks: stringRequired,
   name: stringRequired,
   subject: stringRequired,

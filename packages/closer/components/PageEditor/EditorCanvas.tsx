@@ -12,12 +12,15 @@ import { useTranslations } from 'next-intl';
 import CustomSectionComponent from '../custom-pages/CustomSectionComponent';
 import { Button } from '../ui';
 
-import I18nHoverAction from './I18nHoverAction';
+import {
+  hydrateSectionData,
+  isEmptySectionContent,
+} from './blockDefaults';
 
 import type { ReactNode } from 'react';
 
 import type { PageDoc, PageSection } from '../../types/page';
-import { resolveBlockText } from '../../utils/blockI18n';
+import { materializeI18nValue } from '../../utils/blockI18n';
 
 interface Props {
   page: PageDoc;
@@ -67,7 +70,12 @@ const EditorCanvas = ({
             <CustomSectionComponent
               key={s._localId ?? s._id}
               type={s.type}
-              data={s.data}
+              data={
+                materializeI18nValue(hydrateSectionData(s), t) as Record<
+                  string,
+                  unknown
+                >
+              }
               embedded
             />
           ))}
@@ -78,30 +86,27 @@ const EditorCanvas = ({
 
   return (
     <div className="flex flex-col min-h-0 h-full bg-white">
-      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-gray-200 bg-white/90 backdrop-blur shrink-0">
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <I18nHoverAction
-            raw={page.title?.trim() || null}
-            display={
-              (page.title?.trim() && resolveBlockText(page.title, t)) ||
-              t('pages_editor_untitled')
-            }
-            className="max-w-[200px] min-w-0 flex-1 xl:max-w-xs"
-            textClassName="truncate text-sm font-semibold text-gray-900"
-          />
-          <span className="text-gray-300" aria-hidden>
-            &middot;
-          </span>
-          <code className="text-xs text-gray-500 truncate hidden sm:inline">
-            {page.slug}
-          </code>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
+      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-2 px-3 py-2 border-b border-gray-200 bg-white/90 backdrop-blur shrink-0">
+        <code className="text-xs text-gray-600 font-mono truncate min-w-0 flex-1">
+          {page.slug || '/'}
+        </code>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {page.slug ? (
+            <a
+              href={page.slug.startsWith('/') ? page.slug : `/${page.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center rounded-full border border-accent text-accent bg-transparent text-xs min-h-[28px] px-2.5 py-0.5 hover:bg-accent-light"
+            >
+              {t('pages_editor_view_live')}
+            </a>
+          ) : null}
           <Button
             type="button"
             variant="secondary"
             size="small"
             isFullWidth={false}
+            className="!text-xs !min-h-[28px] !px-2.5 !py-0.5 !normal-case !tracking-normal"
             onClick={onToggleJson}
           >
             {t('pages_editor_json')}
@@ -111,6 +116,7 @@ const EditorCanvas = ({
             variant="secondary"
             size="small"
             isFullWidth={false}
+            className="!text-xs !min-h-[28px] !px-2.5 !py-0.5 !normal-case !tracking-normal"
             onClick={onTogglePreview}
           >
             {t('pages_editor_preview')}
@@ -121,9 +127,16 @@ const EditorCanvas = ({
             isFullWidth={false}
             isLoading={isSaving}
             isEnabled={!isSaving}
+            className={`!text-xs !min-h-[28px] !px-2.5 !py-0.5 !normal-case !tracking-normal ${
+              saveStatus === 'unsaved' || saveStatus === 'error'
+                ? '!ring-2 !ring-amber-400'
+                : ''
+            }`}
             onClick={onSave}
           >
-            {t('pages_editor_save')}
+            {saveStatus === 'unsaved'
+              ? t('pages_editor_save_unsaved')
+              : t('pages_editor_save')}
           </Button>
         </div>
       </div>
@@ -242,7 +255,7 @@ function DropZone({
       <div className="absolute inset-x-[15%] top-1/2 h-px bg-transparent group-hover/dz:bg-gray-200 pointer-events-none" />
       <button
         type="button"
-        className="relative z-[1] w-9 h-9 rounded-full border border-gray-200 bg-white text-gray-500 opacity-0 group-hover/dz:opacity-100 hover:border-accent hover:text-accent transition-opacity flex items-center justify-center"
+        className="relative z-[1] w-9 h-9 rounded-full border border-gray-200 bg-white text-gray-500 opacity-100 md:opacity-0 md:group-hover/dz:opacity-100 hover:border-accent hover:text-accent transition-opacity flex items-center justify-center"
         aria-label={t('pages_editor_add_block')}
         onClick={onOpenPicker}
       >
@@ -275,11 +288,25 @@ function BlockRow({
   onDelete: () => void;
   t: (k: string) => string;
 }) {
+  const previewData = materializeI18nValue(
+    hydrateSectionData(section),
+    t,
+  ) as Record<string, unknown>;
+  const placeholderKey = PLACEHOLDER_BLOCK_KEYS[section.type];
+  const showPlaceholder =
+    Boolean(placeholderKey) &&
+    isEmptySectionContent(
+      (section.data as Record<string, unknown> | undefined)?.content,
+    ) &&
+    isEmptySectionContent(
+      (previewData as Record<string, unknown> | undefined)?.content,
+    );
+
   return (
     <section
       className={`group/block relative border-2 rounded-md transition-colors ${
         selected
-          ? 'border-accent ring-2 ring-accent/15 z-30'
+          ? 'border-accent ring-2 ring-accent/15 z-10'
           : 'border-transparent hover:border-gray-200 z-0'
       }`}
       draggable
@@ -293,8 +320,10 @@ function BlockRow({
       }}
     >
       <div
-        className={`absolute top-2 right-2 flex gap-0.5 p-1 rounded-md bg-white/95 shadow border border-gray-100 opacity-0 ${
-          selected ? 'opacity-100 z-50' : 'z-20 group-hover/block:opacity-100'
+        className={`absolute top-2 right-2 flex gap-0.5 p-1 rounded-md bg-white/95 shadow border border-gray-100 pointer-events-auto ${
+          selected
+            ? 'opacity-100 z-50'
+            : 'opacity-100 z-50 md:opacity-0 md:group-hover/block:opacity-100'
         }`}
         data-controls
         onClick={(e) => e.stopPropagation()}
@@ -323,29 +352,20 @@ function BlockRow({
           <Trash2 className="w-4 h-4" />
         </ControlBtn>
       </div>
-      {PLACEHOLDER_BLOCK_KEYS[section.type] ? (
-        <div className="relative overflow-hidden rounded-md">
-          <div className="absolute inset-0 z-0 flex flex-col items-center justify-center gap-2 py-10 px-6 text-center bg-neutral-light/40 border border-dashed border-gray-200 rounded-md pointer-events-none">
-            <span className="text-xs font-semibold uppercase tracking-wider text-accent">
-              {t(PLACEHOLDER_BLOCK_KEYS[section.type])}
-            </span>
-            <span className="text-xs text-gray-500">
-              {t('pages_editor_block_preview_hidden')}
-            </span>
-          </div>
-          <div className="relative z-10 pointer-events-none [&_*]:pointer-events-auto min-h-[140px]">
-            <CustomSectionComponent
-              type={section.type}
-              data={section.data}
-              embedded
-            />
-          </div>
+      {showPlaceholder ? (
+        <div className="flex flex-col items-center justify-center gap-2 py-10 px-6 text-center bg-neutral-light/40 border border-dashed border-gray-200 rounded-md min-h-[140px]">
+          <span className="text-xs font-semibold uppercase tracking-wider text-accent">
+            {t(placeholderKey)}
+          </span>
+          <span className="text-xs text-gray-500">
+            {t('pages_editor_block_preview_hidden')}
+          </span>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-md pointer-events-none [&_*]:pointer-events-auto">
+        <div className="overflow-hidden rounded-md pointer-events-none relative z-0">
           <CustomSectionComponent
             type={section.type}
-            data={section.data}
+            data={previewData}
             embedded
           />
         </div>
@@ -355,10 +375,22 @@ function BlockRow({
 }
 
 const PLACEHOLDER_BLOCK_KEYS: Record<string, string> = {
-  events: 'pages_editor_block_events',
-  fundraiser: 'pages_editor_block_fundraiser',
-  tokenStats: 'pages_editor_block_token_stats',
+  events: 'pages_editor_block_upcoming_events',
+  upcomingEvents: 'pages_editor_block_upcoming_events',
+  pastEvents: 'pages_editor_block_past_events',
+  eventsCalendar: 'pages_editor_block_events_calendar',
+  fundraiserProgress: 'pages_editor_block_fundraiser_progress',
+  fundraiserMilestones: 'pages_editor_block_fundraiser_milestones',
+  fundraiserRewards: 'pages_editor_block_fundraiser_rewards',
+  supplyGraph: 'pages_editor_block_supply_graph',
+  priceHistory: 'pages_editor_block_price_history',
   webinar: 'pages_editor_block_webinar',
+  listingsPreviews: 'pages_editor_block_listings_previews',
+  reviews: 'pages_editor_block_reviews',
+  subscriptionPlans: 'pages_editor_block_subscription_plans',
+  bookAStay: 'pages_editor_block_book_a_stay',
+  staySearch: 'pages_editor_block_book_a_stay',
+  citizenProgressBar: 'pages_editor_block_citizen_progress',
 };
 
 function ControlBtn({

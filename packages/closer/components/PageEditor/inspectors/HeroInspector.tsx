@@ -16,6 +16,12 @@ const alignOptions = [
   'center',
 ] as const;
 
+const toPlainDescription = (value: unknown): string =>
+  String(value ?? '')
+    .replace(/<\/p>\s*<p>/gi, '\n\n')
+    .replace(/<\/?p[^>]*>/gi, '')
+    .replace(/<br\s*\/?>/gi, '\n');
+
 const HeroInspector = ({ data, onChange }: BlockInspectorFormProps) => {
   const t = useTranslations();
   const settings = (data.settings as Record<string, unknown>) ?? {};
@@ -42,7 +48,7 @@ const HeroInspector = ({ data, onChange }: BlockInspectorFormProps) => {
         >
           {alignOptions.map((opt) => (
             <option key={opt} value={opt}>
-              {opt}
+              {t(`pages_editor_align_${opt.replace('-', '_')}`)}
             </option>
           ))}
         </select>
@@ -71,6 +77,20 @@ const HeroInspector = ({ data, onChange }: BlockInspectorFormProps) => {
       </PageEditorCheckbox>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
+          {t('pages_editor_field_eyebrow')}
+        </label>
+        <Input
+          value={String(content.eyebrow ?? '')}
+          onChange={(e) =>
+            patch({
+              settings,
+              content: { ...content, eyebrow: e.target.value },
+            })
+          }
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
           {t('pages_editor_field_title')}
         </label>
         <Input
@@ -85,11 +105,11 @@ const HeroInspector = ({ data, onChange }: BlockInspectorFormProps) => {
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          {t('pages_editor_field_body_html')}
+          {t('pages_editor_field_description')}
         </label>
         <Textarea
           rows={4}
-          value={String(content.body ?? '')}
+          value={toPlainDescription(content.body)}
           onChange={(e) =>
             patch({
               settings,
@@ -169,6 +189,50 @@ const HeroInspector = ({ data, onChange }: BlockInspectorFormProps) => {
               content: {
                 ...content,
                 cta: { ...cta, url: e.target.value },
+              },
+            })
+          }
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          {t('pages_editor_field_secondary_label')}
+        </label>
+        <Input
+          value={String(
+            (content.secondaryCta as { text?: string } | undefined)?.text ?? '',
+          )}
+          onChange={(e) =>
+            patch({
+              settings,
+              content: {
+                ...content,
+                secondaryCta: {
+                  ...((content.secondaryCta as Record<string, string>) ?? {}),
+                  text: e.target.value,
+                },
+              },
+            })
+          }
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          {t('pages_editor_field_secondary_link')}
+        </label>
+        <Input
+          value={String(
+            (content.secondaryCta as { url?: string } | undefined)?.url ?? '',
+          )}
+          onChange={(e) =>
+            patch({
+              settings,
+              content: {
+                ...content,
+                secondaryCta: {
+                  ...((content.secondaryCta as Record<string, string>) ?? {}),
+                  url: e.target.value,
+                },
               },
             })
           }

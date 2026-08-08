@@ -1,0 +1,286 @@
+import Head from 'next/head';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+
+import { useEffect, useMemo, useRef, useState } from 'react';
+
+import SubscriptionComparisonTable from '../../components/SubscriptionComparisonTable';
+import SubscriptionEditorial from '../../components/SubscriptionEditorial';
+import Webinar from '../../components/Webinar';
+import { Heading } from '../../components/ui';
+
+import { NextPage, NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
+import { useAuth } from '../../contexts/auth';
+import { useConfig } from '../../hooks/useConfig';
+import { GeneralConfig } from '../../types';
+import { PageMetaOverride } from '../../types/page';
+import { SubscriptionPlan, SubscriptionsConfig } from '../../types/subscriptions';
+import api from '../../utils/api';
+import { resolveBlockText } from '../../utils/blockI18n';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { getPaidSubscriptionPlans } from '../../utils/subscriptions.helpers';
+import { logMetric } from '../../utils/metrics';
+import {
+  fetchPageMetaOverride,
+  resolvePageMeta,
+} from '../../utils/standardPages';
+import PageNotFound from '../not-found';
+
+interface Props {
+  pageMeta?: PageMetaOverride | null;
+}
+
+const SubscriptionsPage: NextPage<Props> = ({ pageMeta }) => {
+  const subscriptionsConfig = getCachedConfig('subscriptions') as
+    | SubscriptionsConfig
+    | null;
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
+  const paymentConfig = getCachedConfig('payment') as {
+    fiatCur?: string;
+    utilityFiatCur?: string;
+  } | null;
+  const t = useTranslations();
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const defaultConfig = useConfig();
+  const PLATFORM_NAME =
+    generalConfig?.platformName || defaultConfig.platformName;
+  const currency =
+    paymentConfig?.fiatCur || paymentConfig?.utilityFiatCur || 'EUR';
+
+  const router = useRouter();
+
+  const meta = resolvePageMeta(pageMeta, {
+    title: `${t('subscriptions_title')} - ${PLATFORM_NAME}`,
+    description: `Join ${PLATFORM_NAME} with a subscription plan. Support our community and get access to exclusive benefits and features.`,
+  });
+  const title = resolveBlockText(meta.title, t);
+  const description = resolveBlockText(meta.description, t);
+
+  const areSubscriptionsEnabled =
+    subscriptionsConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
+
+  const plans = useMemo(
+    () => getPaidSubscriptionPlans(subscriptionsConfig),
+    [subscriptionsConfig],
+  );
+  const [userActivePlan, setUserActivePlan] = useState<SubscriptionPlan>();
+  const hasComponentRendered = useRef(false);
+
+  useEffect(() => {
+    if (!hasComponentRendered.current) {
+      void logMetric({
+        event: 'page-view',
+        category: 'subscriptions',
+        value: 'view',
+      });
+      hasComponentRendered.current = true;
+    }
+  }, []);
+
+  useEffect(() => {
+    const isSubscriber =
+      user?.subscription?.plan &&
+      user?.subscription?.priceId &&
+      user.subscription.priceId !== 'free' &&
+      new Date(user?.subscription?.validUntil || '') > new Date();
+
+    if (!isSubscriber) {
+      setUserActivePlan(undefined);
+      return;
+    }
+
+    const selectedSubscription = plans.find(
+      (plan) =>
+        plan.priceId === user?.subscription?.priceId ||
+        plan.priceId?.includes(user?.subscription?.priceId || ''),
+    );
+    setUserActivePlan(selectedSubscription);
+  }, [user, plans]);
+
+  const openCustomerPortal = async () => {
+    void logMetric({
+      event: 'manage-subscription-button-click',
+      category: 'subscriptions',
+      value: 'manage',
+    });
+
+    const response = await api.get(
+      '/stripe/create-customer-portal?email=' +
+        encodeURIComponent(user?.email || ''),
+    );
+    const portalUrl = response.data.sessionUrl;
+    router.push(portalUrl);
+  };
+
+  const handleSubscribe = async (plan: SubscriptionPlan) => {
+    let priceId = plan.priceId;
+    if (priceId?.includes(',')) {
+      priceId = priceId.split(',')[0];
+    }
+
+    if (!isAuthenticated) {
+      void logMetric({
+        event: 'create-account-button-click',
+        category: 'signup',
+        value: 'subscription-checkout',
+      });
+      router.push(
+        `/signup?back=${encodeURIComponent(
+          `/subscriptions/summary?priceId=${priceId}`,
+        )}`,
+      );
+      return;
+    }
+
+    if (userActivePlan?.priceId && userActivePlan.priceId === priceId) {
+      await openCustomerPortal();
+      return;
+    }
+
+    if (userActivePlan?.priceId) {
+      await openCustomerPortal();
+      return;
+    }
+
+    void logMetric({
+      event: 'subscribe-button-click',
+      category: 'subscriptions',
+      value: 'subscribe',
+    });
+    router.push(`/subscriptions/summary?priceId=${priceId}`);
+  };
+
+  const getCtaLabel = (plan: SubscriptionPlan) => {
+    if (!isAuthenticated) {
+      return t('subscriptions_create_account_button');
+    }
+    if (userActivePlan?.priceId === plan.priceId) {
+      return t('subscriptions_manage_button');
+    }
+    if (userActivePlan?.priceId) {
+      return t('subscriptions_manage_button');
+    }
+    return t('subscriptions_subscribe_button');
+  };
+
+  if (isLoading) {
+    return null;
+  }
+
+  if (!areSubscriptionsEnabled) {
+    return <PageNotFound error="" />;
+  }
+
+  if (!plans.length) {
+    return <PageNotFound error="" />;
+  }
+
+  const singlePlan = plans.length === 1 ? plans[0] : null;
+
+  return (
+    <div className="max-w-screen-lg mx-auto">
+      <Head>
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        <meta
+          name="keywords"
+          content={`${PLATFORM_NAME}, subscriptions, membership, community membership, regenerative communities`}
+        />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:type" content="website" />
+        <meta
+          property="og:url"
+          content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/subscriptions`}
+        />
+        {meta.ogImage ? (
+          <meta property="og:image" content={meta.ogImage} />
+        ) : null}
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        {meta.ogImage ? (
+          <meta name="twitter:image" content={meta.ogImage} />
+        ) : null}
+        <link
+          rel="canonical"
+          href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/subscriptions`}
+        />
+      </Head>
+      <main className="pt-10 pb-14 flex flex-col gap-6">
+        <div className="w-full text-center text-foreground flex flex-col gap-3">
+          <p className="uppercase tracking-[0.2em] text-xs md:text-sm text-foreground/60">
+            {t('subscriptions_membership_badge')}
+          </p>
+          <Heading level={1} className="text-3xl md:text-5xl">
+            {singlePlan
+              ? singlePlan.title
+              : t('subscriptions_compare_heading')}
+          </Heading>
+          <p className="text-base md:text-xl text-foreground/80 max-w-xl mx-auto">
+            {singlePlan
+              ? singlePlan.description
+              : t('subscriptions_compare_intro')}
+          </p>
+        </div>
+
+        {singlePlan ? (
+          <SubscriptionEditorial
+            plan={singlePlan}
+            currency={currency}
+            ctaLabel={getCtaLabel(singlePlan)}
+            onSubscribe={handleSubscribe}
+          />
+        ) : (
+          <SubscriptionComparisonTable
+            plans={plans}
+            currency={currency}
+            activePriceId={userActivePlan?.priceId}
+            getCtaLabel={getCtaLabel}
+            onSubscribe={handleSubscribe}
+          />
+        )}
+
+        <section className="bg-neutral rounded-2xl border border-line p-5 md:p-6 text-foreground flex flex-col gap-3">
+          <p className="uppercase tracking-[0.2em] text-xs text-foreground/70">
+            {t('subscriptions_why_title')}
+          </p>
+          <p className="text-base leading-relaxed">
+            {t('subscriptions_why_intro', { platformName: PLATFORM_NAME })}
+          </p>
+        </section>
+
+        <div className="flex flex-wrap justify-center gap-3">
+          {process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true' && (
+            <Link href="/citizenship" className="btn text-sm px-5 py-2">
+              {t('subscriptions_become_citizen_button')}
+            </Link>
+          )}
+          {userActivePlan?.priceId ? (
+            <button
+              className="btn text-sm px-5 py-2"
+              onClick={() => void openCustomerPortal()}
+            >
+              {t('subscriptions_faq_cancel')}
+            </button>
+          ) : (
+            <p className="text-sm text-foreground/70 self-center">
+              {t('subscriptions_cancel_help')}
+            </p>
+          )}
+        </div>
+      </main>
+      <Webinar tags={['subscriptions-page']} analyticsCategory="Subscriptions" />
+    </div>
+  );
+};
+
+SubscriptionsPage.getInitialProps = async (_context: NextPageContext) => {
+  const pageMeta = await fetchPageMetaOverride('/subscriptions');
+  return { pageMeta };
+};
+
+export default SubscriptionsPage;

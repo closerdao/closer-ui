@@ -14,7 +14,7 @@ import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import { SelectedPlan, SubscriptionPlan } from '../../types/subscriptions';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
-import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
+import { getPaidSubscriptionPlans } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
 const SubscriptionSuccessPage = () => {
@@ -32,7 +32,9 @@ const SubscriptionSuccessPage = () => {
     subscriptionsConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
 
-  const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
+  const subscriptionPlans = getPaidSubscriptionPlans(subscriptionsConfig, {
+    availableOnly: false,
+  });
 
   const { isAuthenticated, isLoading } = useAuth();
 

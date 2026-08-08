@@ -333,7 +333,7 @@ const EditModel: FC<Props> = ({
   })();
 
   return (
-    <div className="card rounded-lg p-4 shadow-sm border border-neutral-dark/20">
+    <div className="card rounded-2xl p-5 sm:p-6 shadow-sm border border-gray-200">
       <form
         action="#"
         onSubmit={(e) => {
@@ -406,7 +406,7 @@ const EditModel: FC<Props> = ({
                     {isGeneralEvent ? (
                       <>
                         {titleOnly.map(renderField)}
-                        {datePickerEl}
+                        <div className="mb-5">{datePickerEl}</div>
                         {restFields.map(renderField)}
                       </>
                     ) : (
@@ -450,7 +450,7 @@ const EditModel: FC<Props> = ({
           </div>
         )}
 
-        <div className="pt-6 mt-6 flex items-center justify-between border-t border-neutral-dark/20 gap-4 flex-wrap">
+        <div className="pt-3 mt-2 flex items-center justify-between border-t border-gray-100 gap-4 flex-wrap">
           <button
             type="submit"
             className="btn-primary min-h-[44px] px-6 inline-flex items-center justify-center"

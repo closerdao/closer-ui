@@ -61,7 +61,8 @@ const CustomTokenStats = ({ settings, content }: Props) => {
     t('home_token_section_subtitle'),
   );
   const ctaText = pick(content?.ctaText, t('home_token_buy_cta'));
-  const ctaLink = content?.ctaLink ?? '/token';
+  const ctaLink =
+    content?.ctaLink?.trim() || '/token/before-you-begin';
   const showCta = settings?.showCta !== false;
 
   return (
