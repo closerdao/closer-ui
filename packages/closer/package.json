@@ -13,14 +13,11 @@
     "build:locales": "node scripts/syncBuildLocales.cjs",
     "build:config": "node scripts/syncBuildConfig.cjs",
     "sync-build-config": "node scripts/syncBuildConfig.cjs",
-    "dev": "dotenv -e .env next dev",
     "lint": "next lint",
     "lint-fix": "next lint --fix",
-    "start": "next start",
     "format": "prettier --write .",
     "test": "jest",
-    "test:watch": "jest --watch",
-    "analyze": "ANALYZE=true next build"
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

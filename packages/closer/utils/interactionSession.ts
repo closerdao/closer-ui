@@ -80,11 +80,38 @@ export function applyInteractionIsHumanFromResponse(data: unknown): void {
   }
 }
 
+// Re-init this long before the token actually expires, so a request never goes
+// out with a key the API is about to reject.
+const SESSION_EXPIRY_BUFFER_MS = 60 * 1000;
+
+/**
+ * The session key is a JWT signed by the API. Read its `exp` so we can treat an
+ * expired (or unparseable) key as absent instead of sending one the API will
+ * reject — an anonymous POST with a stale key gets a 401.
+ */
+function getSessionKeyExpiryMs(token: string): number | null {
+  const payload = token.split('.')[1];
+  if (!payload) return null;
+  try {
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const decoded = JSON.parse(atob(base64)) as { exp?: number };
+    if (typeof decoded.exp !== 'number') return null;
+    return decoded.exp * 1000;
+  } catch {
+    return null;
+  }
+}
+
 export function getStoredInteractionSessionKey(): string | null {
   if (typeof window === 'undefined') return null;
   try {
     const v = localStorage.getItem(INTERACTION_SESSION_LOCAL_STORAGE_KEY);
-    return v && v.length > 0 ? v : null;
+    if (!v || v.length === 0) return null;
+    const expiryMs = getSessionKeyExpiryMs(v);
+    // A key we cannot parse is not one the API will accept either.
+    if (expiryMs === null) return null;
+    if (expiryMs <= Date.now() + SESSION_EXPIRY_BUFFER_MS) return null;
+    return v;
   } catch {
     return null;
   }
@@ -137,6 +164,21 @@ export async function ensureInteractionSession(): Promise<void> {
     });
   }
   await inflightInit;
+}
+
+/**
+ * Drop the current key and get a new one. Used when the API rejects a request
+ * that should have been allowed by the interaction session, so an anonymous
+ * visitor can recover without reloading or clearing storage by hand.
+ */
+export async function refreshInteractionSession(): Promise<void> {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(INTERACTION_SESSION_LOCAL_STORAGE_KEY);
+  } catch {
+    //
+  }
+  await ensureInteractionSession();
 }
 
 export function clearInteractionSession(): void {

@@ -11,6 +11,7 @@ import { useConfig } from '../hooks/useConfig';
 import api from '../utils/api';
 import { deriveMemberMenuFeatureFlags } from '../utils/memberMenuFeatureFlags';
 import ApiUrlWarning from './ApiUrlWarning';
+import ApplicationModal from './ApplicationModal';
 import FundraisingWidget from './FundraisingWidget';
 import GuestMenu from './GuestMenu';
 import Logo from './Logo';
@@ -32,6 +33,8 @@ const Navigation = () => {
   const [isBookingEnabled, setIsBookingEnabled] = useState(false);
   const [isLearningHubEnabled, setIsLearningHubEnabled] = useState(false);
   const [isEventsEnabled, setIsEventsEnabled] = useState(false);
+  const [isApplicationsEnabled, setIsApplicationsEnabled] = useState(false);
+  const [applicationsCtaText, setApplicationsCtaText] = useState('');
   const [isFundraiserEnabled, setIsFundraiserEnabled] = useState(false);
   const [fundraisingNavProps, setFundraisingNavProps] = useState(null);
 
@@ -53,6 +56,15 @@ const Navigation = () => {
     if (learningHubConfig?.enabled) setIsLearningHubEnabled(true);
     if (eventsConfig?.enabled) setIsEventsEnabled(true);
   }, []);
+
+  useEffect(() => {
+    const applicationsConfig = {
+      ...configCached.applications,
+      ...config?.applications,
+    };
+    setIsApplicationsEnabled(applicationsConfig?.enabled === true);
+    setApplicationsCtaText(applicationsConfig?.ctaText?.trim() || '');
+  }, [config?.applications]);
 
   useEffect(() => {
     if (
@@ -123,279 +135,287 @@ const Navigation = () => {
   );
 
   return (
-    <div
-      className={`fixed top-0 left-0 right-0 flex flex-col ${
-        navOpen ? 'z-[100]' : 'z-20'
-      }`}
-    >
-      <ApiUrlWarning />
-      <div className="NavContainer h-20 md:pt-0 bg-dominant shadow">
-        <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
-          <Logo />
+    <>
+      <div
+        className={`fixed top-0 left-0 right-0 flex flex-col ${
+          navOpen ? 'z-[100]' : 'z-20'
+        }`}
+      >
+        <ApiUrlWarning />
+        <div className="NavContainer h-20 md:pt-0 bg-dominant shadow">
+          <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
+            <Logo />
 
-          <div
-            className={`${
-              configLoaded && APP_NAME === 'closer'
-                ? ' w-full justify-between'
-                : 'w-auto justify-center'
-            } flex gap-2  items-center`}
-          >
-            {configLoaded &&
-              APP_NAME &&
-              APP_NAME?.toLowerCase().includes('earthbound') && (
-                <div className="flex gap-3 items-center">
-                  <ul className="gap-4 hidden sm:flex">
-                    <li>
-                      <Link href="/">{t('header_nav_home')}</Link>
-                    </li>
-                    <li>
-                      <Link href="/pages/invest">{t('header_nav_invest')}</Link>
-                    </li>
-                    <li>
-                      <Link href="/stay">{t('header_nav_stay')}</Link>
-                    </li>
-                    <li>
-                      <Link href="/pages/community">
-                        {t('header_nav_community')}
-                      </Link>
-                    </li>
-                    <li>
-                      <Link href="/pages/events" className="whitespace-nowrap">
-                        {t('header_nav_events')}
-                      </Link>
-                    </li>
-                  </ul>
-                  <Button
-                    size="small"
-                    variant="primary"
-                    className={' bg-accent-alt border-accent-alt'}
-                  >
-                    <Link href="/#how-to-join">{t('header_nav_join_us')}</Link>
-                  </Button>
-                </div>
-              )}
-            {configLoaded &&
-              APP_NAME &&
-              APP_NAME?.toLowerCase() === 'closer' && (
-                <div className="flex gap-3 items-center  w-full justify-between">
-                  <div className="w-full flex justify-center">
-                    <ul className="gap-4 text-sm md:text-md hidden md:flex font-medium">
+            <div
+              className={`${
+                configLoaded && APP_NAME === 'closer'
+                  ? ' w-full justify-between'
+                  : 'w-auto justify-center'
+              } flex gap-2  items-center`}
+            >
+              {configLoaded &&
+                APP_NAME &&
+                APP_NAME?.toLowerCase().includes('earthbound') && (
+                  <div className="flex gap-3 items-center">
+                    <ul className="gap-4 hidden sm:flex">
                       <li>
-                        <Link href="/#features">
-                          {t('header_nav_features')}
+                        <Link href="/">{t('header_nav_home')}</Link>
+                      </li>
+                      <li>
+                        <Link href="/pages/invest">
+                          {t('header_nav_invest')}
                         </Link>
                       </li>
                       <li>
-                        <Link href="/#communities">
-                          {t('header_nav_communities')}
+                        <Link href="/stay">{t('header_nav_stay')}</Link>
+                      </li>
+                      <li>
+                        <Link href="/pages/community">
+                          {t('header_nav_community')}
                         </Link>
                       </li>
-                      <li>
-                        <Link href="/#governance" className="whitespace-nowrap">
-                          {t('header_nav_governance')}
-                        </Link>
-                      </li>
-                      <li>
-                        <Link href="/agent">{t('header_nav_agent')}</Link>
-                      </li>
-                      <li>
-                        <Link href="/pricing">{t('header_nav_pricing')}</Link>
-                      </li>
-                      {process.env.NEXT_PUBLIC_FEATURE_ROLES === 'true' && (
-                        <li>
-                          <Link href="/roles">
-                            {t('header_nav_work_with_us')}
-                          </Link>
-                        </li>
-                      )}
                       <li>
                         <Link
-                          href="https://closer.gitbook.io/documentation"
-                          target="_blank"
+                          href="/pages/events"
+                          className="whitespace-nowrap"
                         >
-                          {t('header_nav_docs')}
+                          {t('header_nav_events')}
                         </Link>
                       </li>
                     </ul>
-                  </div>
-                  <Button
-                    onClick={() => {
-                      setPromptGetInTouchOpen(true);
-                    }}
-                    size="small"
-                    variant="primary"
-                    className={
-                      'hidden sm:block w-fit  bg-accent text-background border-foreground'
-                    }
-                  >
-                    {t('header_nav_schedule_a_demo')}
-                  </Button>
-                </div>
-              )}
-
-            {configLoaded &&
-            router.locales?.length > 1 &&
-            process.env.NEXT_PUBLIC_FEATURE_LOCALE_SWITCH === 'true' ? (
-              <ul className="flex">
-                {router.locales.map((locale) => {
-                  return (
-                    <li
-                      className="uppercase  border-r border-gray-200 last:border-r-0 px-1"
-                      key={locale}
+                    <Button
+                      size="small"
+                      variant="primary"
+                      className={' bg-accent-alt border-accent-alt'}
                     >
-                      <Link
-                        className={`${
-                          router.locale === locale
-                            ? 'text-accent cursor-default'
-                            : 'text-gray-600 '
-                        } font-accent`}
-                        href={router.locale === locale ? '#' : router.asPath}
-                        locale={locale}
-                      >
-                        {locale}
+                      <Link href="/#how-to-join">
+                        {t('header_nav_join_us')}
                       </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : null}
-            {configLoaded &&
-              APP_NAME &&
-              !APP_NAME?.toLowerCase().includes('earthbound') &&
-              APP_NAME?.toLowerCase() !== 'closer' &&
-              (() => {
-                const cta = isAuthenticated
-                  ? primaryCtaMember
-                  : primaryCtaVisitor;
-                if (cta === 'none') return null;
-                if (cta === 'bookings' && !isBookingEnabled) return null;
-                if (cta === 'learningHub' && !isLearningHubEnabled) return null;
-                if (cta === 'events' && !isEventsEnabled) return null;
-                if (cta === 'custom' && !primaryCtaCustomUrl?.trim())
-                  return null;
-                const buttonClass =
-                  router?.locales?.length > 1 ? 'hidden sm:block' : '';
-                if (cta === 'login') {
-                  return (
-                    <Button
-                      key="cta-login"
-                      onClick={() => router.push('/login')}
-                      size="small"
-                      variant="primary"
-                      className={buttonClass}
-                    >
-                      {t('navigation_member_login')}
                     </Button>
-                  );
-                }
-                if (cta === 'bookings') {
-                  return (
-                    <Button
-                      key="cta-bookings"
-                      onClick={() => router.push('/stay')}
-                      size="small"
-                      variant="primary"
-                      className={buttonClass}
-                    >
-                      {t('navigation_stay')}
-                    </Button>
-                  );
-                }
-                if (cta === 'learningHub') {
-                  return (
-                    <Button
-                      key="cta-learningHub"
-                      onClick={() => router.push('/learn/category/all')}
-                      size="small"
-                      variant="primary"
-                      className={buttonClass}
-                    >
-                      {t('navigation_see_courses')}
-                    </Button>
-                  );
-                }
-                if (cta === 'events') {
-                  return (
-                    <Button
-                      key="cta-events"
-                      onClick={() => router.push('/events')}
-                      size="small"
-                      variant="primary"
-                      className={buttonClass}
-                    >
-                      {t('navigation_see_events')}
-                    </Button>
-                  );
-                }
-                if (cta === 'custom') {
-                  const href = primaryCtaCustomUrl.trim();
-                  const text =
-                    primaryCtaCustomText?.trim() || t('navigation_stay');
-                  return (
-                    <Button
-                      key="cta-custom"
-                      onClick={() =>
-                        href.startsWith('http')
-                          ? window.open(href, '_blank')
-                          : router.push(href)
-                      }
-                      size="small"
-                      variant="primary"
-                      className={buttonClass}
-                    >
-                      {text}
-                    </Button>
-                  );
-                }
-                return null;
-              })()}
-            {configLoaded &&
-              APP_NAME &&
-              APP_NAME?.toLowerCase() === 'tdf' &&
-              isFundraiserEnabled &&
-              fundraisingNavProps && (
-                <div className="w-fit flex-shrink-0">
-                  <FundraisingWidget
-                    variant="nav"
-                    milestones={fundraisingNavProps.milestones}
-                    amountRaisedPreCampaign={
-                      fundraisingNavProps.amountRaisedPreCampaign
-                    }
-                    loansCollectedTotal={
-                      fundraisingNavProps.loansCollectedTotal
-                    }
-                  />
-                </div>
-              )}
-            {configLoaded && isAuthenticated && (
-              <Link
-                href={`/members/${user?.slug}`}
-                passHref
-                title="View profile"
-                className="hidden md:flex md:flex-row items-center z-0"
-              >
-                <ProfilePhoto user={user} size="10" />
-              </Link>
-            )}
-            <div className="ml-4 pr-4 flex-shrink-0">
-              <Menu isOpen={navOpen} toggleNav={toggleNav}>
-                {configLoaded ? (
-                  isAuthenticated ? (
-                    <MemberMenu {...memberMenuFeatureFlags} />
-                  ) : (
-                    <GuestMenu />
-                  )
-                ) : (
-                  <div className="flex items-center justify-center py-8 text-gray-500 text-sm">
-                    <span className="animate-pulse">Loading…</span>
                   </div>
                 )}
-              </Menu>
+              {configLoaded &&
+                APP_NAME &&
+                APP_NAME?.toLowerCase() === 'closer' && (
+                  <div className="flex gap-3 items-center  w-full justify-between">
+                    <div className="w-full flex justify-center">
+                      <ul className="gap-6 text-sm md:text-md hidden md:flex font-medium">
+                        <li>
+                          <Link href="/#why">{t('header_nav_why')}</Link>
+                        </li>
+                        <li>
+                          <Link href="/#how" className="whitespace-nowrap">
+                            {t('header_nav_how_it_works')}
+                          </Link>
+                        </li>
+                        <li>
+                          <Link href="/#fund" className="whitespace-nowrap">
+                            {t('header_nav_village_fund')}
+                          </Link>
+                        </li>
+                        <li>
+                          <Link href="/#faq">{t('header_nav_faq')}</Link>
+                        </li>
+                      </ul>
+                    </div>
+                    <Button
+                      onClick={() => {
+                        setPromptGetInTouchOpen(true);
+                      }}
+                      size="small"
+                      variant="primary"
+                      className="hidden sm:block w-fit rounded-xl border-transparent px-6 font-semibold normal-case tracking-normal shadow-[0_6px_20px_rgba(62,224,143,0.35)]"
+                    >
+                      {t('header_nav_launch_your_community')}
+                    </Button>
+                  </div>
+                )}
+
+              {configLoaded &&
+              router.locales?.length > 1 &&
+              process.env.NEXT_PUBLIC_FEATURE_LOCALE_SWITCH === 'true' ? (
+                <ul className="flex">
+                  {router.locales.map((locale) => {
+                    return (
+                      <li
+                        className="uppercase  border-r border-gray-200 last:border-r-0 px-1"
+                        key={locale}
+                      >
+                        <Link
+                          className={`${
+                            router.locale === locale
+                              ? 'text-accent cursor-default'
+                              : 'text-gray-600 '
+                          } font-accent`}
+                          href={router.locale === locale ? '#' : router.asPath}
+                          locale={locale}
+                        >
+                          {locale}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : null}
+              {configLoaded &&
+                APP_NAME &&
+                !APP_NAME?.toLowerCase().includes('earthbound') &&
+                APP_NAME?.toLowerCase() !== 'closer' &&
+                (() => {
+                  const cta = isAuthenticated
+                    ? primaryCtaMember
+                    : primaryCtaVisitor;
+                  if (cta === 'none') return null;
+                  if (cta === 'bookings' && !isBookingEnabled) return null;
+                  if (cta === 'learningHub' && !isLearningHubEnabled)
+                    return null;
+                  if (cta === 'events' && !isEventsEnabled) return null;
+                  if (cta === 'application' && !isApplicationsEnabled)
+                    return null;
+                  if (cta === 'custom' && !primaryCtaCustomUrl?.trim())
+                    return null;
+                  const buttonClass =
+                    router?.locales?.length > 1 ? 'hidden sm:block' : '';
+                  if (cta === 'login') {
+                    return (
+                      <Button
+                        key="cta-login"
+                        onClick={() => router.push('/login')}
+                        size="small"
+                        variant="primary"
+                        className={buttonClass}
+                      >
+                        {t('navigation_member_login')}
+                      </Button>
+                    );
+                  }
+                  if (cta === 'bookings') {
+                    return (
+                      <Button
+                        key="cta-bookings"
+                        onClick={() => router.push('/stay')}
+                        size="small"
+                        variant="primary"
+                        className={buttonClass}
+                      >
+                        {t('navigation_stay')}
+                      </Button>
+                    );
+                  }
+                  if (cta === 'learningHub') {
+                    return (
+                      <Button
+                        key="cta-learningHub"
+                        onClick={() => router.push('/learn/category/all')}
+                        size="small"
+                        variant="primary"
+                        className={buttonClass}
+                      >
+                        {t('navigation_see_courses')}
+                      </Button>
+                    );
+                  }
+                  if (cta === 'events') {
+                    return (
+                      <Button
+                        key="cta-events"
+                        onClick={() => router.push('/events')}
+                        size="small"
+                        variant="primary"
+                        className={buttonClass}
+                      >
+                        {t('navigation_see_events')}
+                      </Button>
+                    );
+                  }
+                  if (cta === 'application') {
+                    return (
+                      <Button
+                        key="cta-application"
+                        onClick={() => setPromptGetInTouchOpen(true)}
+                        size="small"
+                        variant="primary"
+                        className={buttonClass}
+                      >
+                        {applicationsCtaText || t('navigation_apply_now')}
+                      </Button>
+                    );
+                  }
+                  if (cta === 'custom') {
+                    const href = primaryCtaCustomUrl.trim();
+                    const text =
+                      primaryCtaCustomText?.trim() || t('navigation_stay');
+                    return (
+                      <Button
+                        key="cta-custom"
+                        onClick={() =>
+                          href.startsWith('http')
+                            ? window.open(href, '_blank')
+                            : router.push(href)
+                        }
+                        size="small"
+                        variant="primary"
+                        className={buttonClass}
+                      >
+                        {text}
+                      </Button>
+                    );
+                  }
+                  return null;
+                })()}
+              {configLoaded &&
+                APP_NAME &&
+                APP_NAME?.toLowerCase() === 'tdf' &&
+                isFundraiserEnabled &&
+                fundraisingNavProps && (
+                  <div className="w-fit flex-shrink-0">
+                    <FundraisingWidget
+                      variant="nav"
+                      milestones={fundraisingNavProps.milestones}
+                      amountRaisedPreCampaign={
+                        fundraisingNavProps.amountRaisedPreCampaign
+                      }
+                      loansCollectedTotal={
+                        fundraisingNavProps.loansCollectedTotal
+                      }
+                    />
+                  </div>
+                )}
+              {configLoaded && isAuthenticated && (
+                <Link
+                  href={`/members/${user?.slug}`}
+                  passHref
+                  title="View profile"
+                  className="hidden md:flex md:flex-row items-center z-0"
+                >
+                  <ProfilePhoto user={user} size="10" />
+                </Link>
+              )}
+              <div className="ml-4 pr-4 flex-shrink-0">
+                <Menu isOpen={navOpen} toggleNav={toggleNav}>
+                  {configLoaded ? (
+                    isAuthenticated ? (
+                      <MemberMenu {...memberMenuFeatureFlags} />
+                    ) : (
+                      <GuestMenu />
+                    )
+                  ) : (
+                    <div className="flex items-center justify-center py-8 text-gray-500 text-sm">
+                      <span className="animate-pulse">Loading…</span>
+                    </div>
+                  )}
+                </Menu>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+      {/* Outside the nav's stacking context so the overlay covers the page.
+        The closer app ships its own bespoke collector in its Layout. */}
+      {isApplicationsEnabled && APP_NAME?.toLowerCase() !== 'closer' && (
+        <ApplicationModal />
+      )}
+    </>
   );
 };
 

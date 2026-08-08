@@ -3,6 +3,8 @@ module.exports = {
     colors: {
       'accent-core': '#FE4FB7',
       accent: '#79FAC1',
+      // Text/icons on an accent fill. Apps whose accent is light override this.
+      'accent-foreground': '#FFFFFF',
       'accent-light': '#FFC8E9',
       primary: '#e4427d',
       'primary-light': '#FFEDF8',
