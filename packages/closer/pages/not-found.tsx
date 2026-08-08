@@ -4,58 +4,40 @@ import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
 
-import Heading from '../components/ui/Heading';
-
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import ErrorPage from '../components/ErrorPage';
 import { useAuth } from '../contexts/auth';
 
 const PageNotFound = ({ error, back }: { error?: string; back?: string }) => {
   const t = useTranslations();
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
+
   useEffect(() => {
     if ((!isAuthenticated || !user) && back) {
-      redirectToLogin();
+      router.push(`/login?back=${back}`);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
-
-  const redirectToLogin = () => {
-    router.push(`/login?back=${back}`);
-  };
 
   return (
     <>
       <Head>
         <title>{t('404_title')}</title>
       </Head>
-      <main className="main-content about intro page-not-found max-w-prose h-full flex flex-col flex-1 justify-center gap-4">
-        <Heading>{t('404_title')}</Heading>
-        {error && (
-          <Heading level={2} className="font-light italic my-4">
-            {' '}
-            {error}
-          </Heading>
-        )}
-        <p>
-          <Link href="/" className="btn text-center">
-            {t('404_go_back')}
-          </Link>
-        </p>
-      </main>
+      <ErrorPage code="404" title={t('404_title')} error={error}>
+        <Link href="/" className="btn-primary">
+          {t('404_go_back')}
+        </Link>
+      </ErrorPage>
     </>
   );
 };
 
 PageNotFound.getInitialProps = async (context: NextPageContext) => {
-  try {
-    return {
-    };
-  } catch (err: unknown) {
-    return {
-      };
-  }
+  return {};
 };
 
 export default PageNotFound;

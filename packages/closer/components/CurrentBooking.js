@@ -8,8 +8,11 @@ import { useTranslations } from 'next-intl';
 import { BOOKINGS_PER_PAGE, MAX_LISTINGS_TO_FETCH } from '../constants';
 import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
+import { useDebounce } from '../hooks/useDebounce';
 import { cdn } from '../utils/api';
+import { matchesBookingSearchTerm } from '../utils/bookingSearch.helpers';
 import { priceFormat } from '../utils/helpers';
+import BookingsSearchBar from './BookingsSearchBar';
 import Pagination from './Pagination';
 import SpaceHostNotesDialog from './SpaceHostNotesDialog';
 import {
@@ -41,6 +44,8 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
   const [justLeftPage, setJustLeftPage] = useState(1);
   const [loadingBookings, setLoadingBookings] = useState({});
   const [users, setUsers] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm.trim(), 300);
   const filter = {
     where: {
       status: { $in: ['paid', 'checked-in', 'checked-out'] },
@@ -95,6 +100,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
             const isListingPrivate = listing?.get('private') || true;
 
             const userId = b.get('createdBy');
+            const guest = users?.find((u) => u._id?.toString() === userId);
 
             // let user =
             //   allUsers && allUsers.find((user) => user.get('_id') === userId);
@@ -140,6 +146,8 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
               listingName,
               // userInfo,
               userId,
+              guestName: guest?.screenname,
+              guestEmail: guest?.email,
               // paidBy,
               doesNeedPickup,
               doesNeedSeparateBeds,
@@ -157,12 +165,14 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
           .toJS()
       : [];
 
+  const searched = booked.filter((b) =>
+    matchesBookingSearchTerm(b, debouncedSearchTerm),
+  );
+
   const current = new Date();
-  const justLeft = booked ? booked.filter((b) => b.end < current) : [];
-  const isHere = booked
-    ? booked.filter((b) => b.end >= current && b.start <= current)
-    : [];
-  const willArrive = booked ? booked.filter((b) => b.start > current) : [];
+  const justLeft = searched.filter((b) => b.end < current);
+  const isHere = searched.filter((b) => b.end >= current && b.start <= current);
+  const willArrive = searched.filter((b) => b.start > current);
 
   const loadData = async () => {
     try {
@@ -218,6 +228,13 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
   useEffect(() => {
     loadData();
   }, [leftAfter, arriveBefore]);
+
+  // A narrowed result set can be shorter than the page the user was on.
+  useEffect(() => {
+    setIsHerePage(1);
+    setWillArrivePage(1);
+    setJustLeftPage(1);
+  }, [debouncedSearchTerm]);
 
   const formatDate = (date) => {
     return dayjs(date).format('DD/MM/YYYY');
@@ -453,7 +470,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                           className="text-xs py-1 px-1 w-fit border-none enabled:bg-transparent bg-transparent"
                           variant="secondary"
                           size="small"
-                          href={`/bookings/${b._id}`}
+                          href={`/stay/${b._id}`}
                           target="_blank"
                         >
                           <ExternalLink size={16} />
@@ -557,6 +574,13 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
 
   return (
     <section className="min-h-[100vh]">
+      <BookingsSearchBar
+        value={searchTerm}
+        onChange={setSearchTerm}
+        isSearching={searchTerm.trim() !== debouncedSearchTerm}
+        className="max-w-md mb-8"
+      />
+
       {isLoading ? (
         <div className="my-16 flex items-center gap-1">
           <Spinner /> {t('generic_loading')}

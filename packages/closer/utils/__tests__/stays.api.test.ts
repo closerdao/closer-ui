@@ -9,6 +9,7 @@ import {
   canAugmentTokenOrCreditsPayment,
   canChangeStayPaymentMethod,
   canShowStayTokenCreditPaymentOptions,
+  isVolunteerStay,
   computeCreditsOwed,
   computeFiatDiscountFromStayQuote,
   computeFiatOwed,
@@ -344,6 +345,42 @@ describe('canShowStayTokenCreditPaymentOptions', () => {
     expect(
       canShowStayTokenCreditPaymentOptions(baseStay({ status: 'paid' }), true),
     ).toBe(false);
+  });
+
+  it('never offers tokens or credits on a volunteer or residence stay', () => {
+    // Accommodation is 0, but the server would still stake off the listing
+    // price and strand the stay in pending-payment.
+    expect(
+      canShowStayTokenCreditPaymentOptions(
+        {
+          ...baseStay({ status: 'confirmed' }),
+          volunteerInfo: { bookingType: 'volunteer' },
+        },
+        true,
+      ),
+    ).toBe(false);
+    expect(
+      canShowStayTokenCreditPaymentOptions(
+        {
+          ...baseStay({ status: 'draft' }),
+          volunteerInfo: { bookingType: 'residence' },
+        },
+        true,
+      ),
+    ).toBe(false);
+  });
+});
+
+describe('isVolunteerStay', () => {
+  it('matches volunteer and residence booking types only', () => {
+    expect(isVolunteerStay({ volunteerInfo: { bookingType: 'volunteer' } })).toBe(
+      true,
+    );
+    expect(isVolunteerStay({ volunteerInfo: { bookingType: 'residence' } })).toBe(
+      true,
+    );
+    expect(isVolunteerStay({ volunteerInfo: {} })).toBe(false);
+    expect(isVolunteerStay(null)).toBe(false);
   });
 });
 

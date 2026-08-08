@@ -452,8 +452,7 @@ const MemberMenu = ({
             enabled:
               isEventsEnabled &&
               APP_NAME?.toLowerCase() !== 'lios' &&
-              APP_NAME?.toLowerCase() !== 'earthbound' &&
-              APP_NAME?.toLowerCase() !== 'closer',
+              APP_NAME?.toLowerCase() !== 'earthbound',
             rbacPage: 'Events',
           },
         ],
@@ -485,79 +484,6 @@ const MemberMenu = ({
           },
         ],
       },
-
-      // Closer app navigation items (top-level buttons)
-      ...(APP_NAME && APP_NAME?.toLowerCase() === 'closer'
-        ? [
-            {
-              label: t('header_nav_features'),
-              isOpen: false,
-              items: [
-                {
-                  label: t('header_nav_features'),
-                  url: '/#features',
-                  enabled: true,
-                },
-              ],
-            },
-            {
-              label: t('header_nav_communities'),
-              isOpen: false,
-              items: [
-                {
-                  label: t('header_nav_communities'),
-                  url: '/#communities',
-                  enabled: true,
-                },
-              ],
-            },
-            {
-              label: t('header_nav_governance'),
-              isOpen: false,
-              items: [
-                {
-                  label: t('header_nav_governance'),
-                  url: '/#governance',
-                  enabled: isGovernanceEnabled,
-                },
-              ],
-            },
-            {
-              label: t('header_nav_agent'),
-              isOpen: false,
-              items: [
-                {
-                  label: t('header_nav_agent'),
-                  url: '/agent',
-                  enabled: true,
-                },
-              ],
-            },
-            {
-              label: t('header_nav_pricing'),
-              isOpen: false,
-              items: [
-                {
-                  label: t('header_nav_pricing'),
-                  url: '/pricing',
-                  enabled: true,
-                },
-              ],
-            },
-            {
-              label: t('header_nav_docs'),
-              isOpen: false,
-              items: [
-                {
-                  label: t('header_nav_docs'),
-                  url: 'https://closer.gitbook.io/documentation',
-                  target: '_blank',
-                  enabled: true,
-                },
-              ],
-            },
-          ]
-        : []),
 
       ...(APP_NAME?.toLowerCase().includes('earthbound')
         ? []

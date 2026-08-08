@@ -402,14 +402,8 @@ function StayPaymentInner({
                     </span>
                   </div>
                 )}
-                {stay.priceLock.platformFee.val > 0 && (
-                  <div className="flex justify-between gap-2">
-                    <span>{t('stay_create_line_platform_fee')}</span>
-                    <span className="tabular-nums text-gray-900 shrink-0">
-                      {formatStayMoney(stay.priceLock.platformFee)}
-                    </span>
-                  </div>
-                )}
+                {/* platformFee is carved out of the lines above, not added on
+                    top of them — showing it as its own row read as an extra charge. */}
                 {stay.priceLock.appliedCredits.val > 0 && (
                   <div className="flex justify-between gap-2 text-gray-600">
                     <span>{t('stay_create_line_credits_applied')}</span>

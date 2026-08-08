@@ -8,6 +8,16 @@ import { useTranslations } from 'next-intl';
 const COOKIE_CONSENT_KEY = 'CookieConsent';
 const BODY_CLASS = 'has-cookie-bar';
 
+/**
+ * Every app mounts this banner as a sibling of <Layout>, but the next/font CSS
+ * variables (--font-inter and friends) are declared on a wrapper *inside*
+ * Layout. `font-sans` therefore resolves to an undefined variable here and the
+ * text falls back to the browser default, which is a serif. Pin a standard
+ * sans stack so the banner renders consistently in every app.
+ */
+const SYSTEM_SANS =
+  'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+
 const AcceptCookies = () => {
   const t = useTranslations();
   const [isVisible, setIsVisible] = useState(false);
@@ -34,7 +44,10 @@ const AcceptCookies = () => {
   }
 
   return (
-    <div className="fixed top-20 left-0 right-0 z-10 bg-background border-b border-gray-200 font-sans">
+    <div
+      className="fixed top-20 left-0 right-0 z-10 bg-background border-b border-gray-200"
+      style={{ fontFamily: SYSTEM_SANS }}
+    >
       <div className="flex items-center justify-center gap-3 px-4 py-2">
         <p className="text-sm text-foreground/70">
           {t('cookie_consent_text')}{' '}

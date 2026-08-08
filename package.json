@@ -63,7 +63,8 @@
     "minimatch": "^9.0.5",
     "glob": "^11.0.0",
     "rollup": "^4.34.9",
-    "undici": "^7.25.0"
+    "undici": "^7.25.0",
+    "zod": "^3.25.76"
   },
   "dependencies": {
     "@google/genai": "^1.12.0",

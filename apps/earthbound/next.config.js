@@ -61,6 +61,7 @@ const nextConfig = {
       { source: '/admin/learn', destination: '/dashboard/admin/learn', permanent: true },
       { source: '/admin/emails', destination: '/dashboard/admin/emails', permanent: true },
       { source: '/admin/emails/:slug', destination: '/dashboard/admin/emails/:slug', permanent: true },
+      { source: '/bookings/:slug([0-9a-fA-F]{24})', destination: '/stay/:slug', permanent: true },
       {
         source: '/invest',
         destination: '/pages/invest',

@@ -14,6 +14,7 @@ interface DashboardLinksConfig {
   isLearningHubEnabled?: boolean;
   isAffiliateEnabled?: boolean;
   isTokenEnabled?: boolean;
+  isApplicationsEnabled?: boolean;
 }
 
 export const getDashboardLinks = (
@@ -26,6 +27,7 @@ export const getDashboardLinks = (
     isLearningHubEnabled = true,
     isAffiliateEnabled = process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true',
     isTokenEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true',
+    isApplicationsEnabled = false,
   } = config;
 
   const baseLinks: DashboardLink[] = [
@@ -77,6 +79,13 @@ export const getDashboardLinks = (
       rbacPage: 'Engagement',
       enabled: true,
       roles: ['admin', 'community-curator', 'space-host', 'team'],
+    },
+    {
+      label: t('navigation_applications'),
+      url: '/dashboard/applications',
+      rbacPage: 'Applications',
+      enabled: isApplicationsEnabled,
+      roles: ['admin', 'community-curator', 'team'],
     },
     {
       label: t('navigation_cohousing'),

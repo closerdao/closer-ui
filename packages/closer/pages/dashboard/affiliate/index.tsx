@@ -309,7 +309,7 @@ const AffiliateDashboardPage = () => {
                                       <p>
                                         {charge.type === 'booking' ? (
                                           <Link
-                                            href={`/bookings/${charge?.bookingId}`}
+                                            href={`/stay/${charge?.bookingId}`}
                                           >
                                             {charge.type}
                                           </Link>

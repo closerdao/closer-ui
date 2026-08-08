@@ -25,6 +25,7 @@ import { usePlatform } from '../../contexts/platform';
 import { Config } from '../../types';
 import { BookingConfig } from '../../types/api';
 import {
+  getArrayConfigsSchema,
   getDefaultConfigValue,
   getEnabledConfigs,
   getPreparedInputValue,
@@ -49,8 +50,38 @@ const FUNDRAISER_CONFIG_KEYS_ORDER = [
 
 const ACCOUNTING_ENTITIES_CONFIG_KEYS_ORDER = ['elements', 'vatByProductType'];
 
+/**
+ * `config_label_*` messages are generated from the config.ts schema, but the
+ * rendered keys come from the stored config document, which can also hold
+ * legacy or hand-added fields. Fall back to a readable version of the key
+ * instead of blowing up the whole page.
+ */
+const humanizeConfigKey = (key: string) =>
+  key
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .replace(/^./, (char) => char.toUpperCase());
+
+/**
+ * Stored configs still carry the pre-flattening nested shapes (`utilityFiat:
+ * {val, cur}`, `seasons.high`, `discounts`, `cancellationPolicy`,
+ * `conditions`), which the schema replaced with flat fields like
+ * `utilityFiatVal` and `seasonsHighStart`. Nothing reads them any more, and the
+ * flat editor renders them as an unlabelled `[object Object]` text input, so
+ * only offer keys the schema still describes. They stay in `configData.value`,
+ * so saving round-trips them untouched rather than silently deleting them.
+ */
+const isEditableConfigKey = (
+  key: string,
+  description: Record<string, any> | undefined,
+) => Boolean(description) && Object.prototype.hasOwnProperty.call(description, key);
+
 const ConfigPage = () => {
   const t = useTranslations();
+  const configLabel = (key: string) =>
+    t.has(`config_label_${key}`)
+      ? t(`config_label_${key}`)
+      : humanizeConfigKey(key);
   const { platform }: any = usePlatform();
   const { user } = useAuth();
 
@@ -85,6 +116,7 @@ const ConfigPage = () => {
   const effectiveAllowedConfigs = [
     'general',
     'events',
+    'applications',
     ...(isBookingAllowedByEnv ? ['booking', 'booking-rules', 'payment'] : []),
     ...(isVolunteeringEnabled ? ['volunteering'] : []),
     ...(isSubscriptionsEnabled ? ['subscriptions'] : []),
@@ -135,18 +167,9 @@ const ConfigPage = () => {
     [key: string]: string | null | undefined | any;
   }>({});
 
-  const arrayConfigsSchema =
-    updatedConfigs
-      .filter((config) => config.value.elements)
-      .map((config) => {
-        if (!Array.isArray(config.value.elements)) {
-          return;
-        }
-        const elements = config.value.elements;
-        return { len: elements.length, names: Object.keys(elements[0]) };
-      }) || [];
+  const arrayConfigsSchema = getArrayConfigsSchema(updatedConfigs);
 
-  const configFormSchema = getValidationSchema(arrayConfigsSchema as any);
+  const configFormSchema = getValidationSchema(arrayConfigsSchema);
 
   useEffect(() => {
     loadData();
@@ -513,12 +536,16 @@ const ConfigPage = () => {
                     (key === 'primaryCtaVisitor' ||
                       key === 'primaryCtaMember')
                   ) {
+                    const application = enabledConfigs?.includes('applications')
+                      ? ['application']
+                      : [];
                     const baseVisitor = [
                       'none',
                       'login',
                       ...(isBookingEnabled ? ['bookings'] : []),
                       ...(isCoursesEnabled ? ['learningHub'] : []),
                       'events',
+                      ...application,
                       'custom',
                     ];
                     const baseMember = [
@@ -526,6 +553,7 @@ const ConfigPage = () => {
                       ...(isBookingEnabled ? ['bookings'] : []),
                       ...(isCoursesEnabled ? ['learningHub'] : []),
                       'events',
+                      ...application,
                       'custom',
                     ];
                     selectOptions =
@@ -535,6 +563,7 @@ const ConfigPage = () => {
                   const isImage = inputType === 'image';
 
                   if (key === 'enabled') return null;
+                  if (!isEditableConfigKey(key, description)) return null;
                   if (
                     (key === 'primaryCtaCustomUrl' ||
                       key === 'primaryCtaCustomText') &&
@@ -545,7 +574,7 @@ const ConfigPage = () => {
                   }
                   return (
                     <div key={key} className="flex flex-col gap-1">
-                      <label className="text-sm font-medium text-gray-700">{t(`config_label_${key}`)}</label>
+                      <label className="text-sm font-medium text-gray-700">{configLabel(key)}</label>
 
                       {isImage && (
                         <ConfigImageUpload
@@ -599,6 +628,7 @@ const ConfigPage = () => {
                                   'bookings',
                                   'learningHub',
                                   'events',
+                                  'application',
                                   'custom',
                                 ].includes(option)
                                   ? t(`config_option_cta_${option}`)
@@ -716,7 +746,9 @@ const ConfigPage = () => {
                                 ).map(
                                   (k) => [k, configData.value[k]] as const,
                                 )
-                              : Object.entries(configData.value)
+                              : Object.entries(configData.value).filter(
+                                  ([key]) => isEditableConfigKey(key, description),
+                                )
                           ).map(
                             ([key, value]) => {
                               const currentValue = configData.value[key];
@@ -731,6 +763,11 @@ const ConfigPage = () => {
                                 (key === 'primaryCtaVisitor' ||
                                   key === 'primaryCtaMember')
                               ) {
+                                const application = enabledConfigs?.includes(
+                                  'applications',
+                                )
+                                  ? ['application']
+                                  : [];
                                 const baseVisitor = [
                                   'none',
                                   'login',
@@ -739,6 +776,7 @@ const ConfigPage = () => {
                                   ...(enabledConfigs?.includes('events')
                                     ? ['events']
                                     : []),
+                                  ...application,
                                   'custom',
                                 ];
                                 const baseMember = [
@@ -748,6 +786,7 @@ const ConfigPage = () => {
                                   ...(enabledConfigs?.includes('events')
                                     ? ['events']
                                     : []),
+                                  ...application,
                                   'custom',
                                 ];
                                 selectOptions =
@@ -842,7 +881,7 @@ const ConfigPage = () => {
                                     </h4>
                                   )}
                                   <label className="text-sm font-medium text-gray-700">
-                                    {t(`config_label_${key}`)}
+                                    {configLabel(key)}
                                   </label>
                                   {isImage ? (
                                     <ConfigImageUpload
@@ -991,6 +1030,7 @@ const ConfigPage = () => {
                                                   'bookings',
                                                   'learningHub',
                                                   'events',
+                                                  'application',
                                                   'custom',
                                                 ].includes(option)
                                                   ? t(

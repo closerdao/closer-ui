@@ -13,7 +13,6 @@ import {
   getCachedConfig,
 } from 'closer';
 import { useConfig } from 'closer/hooks/useConfig';
-import useRBAC from 'closer/hooks/useRBAC';
 import { useTranslations } from 'next-intl';
 
 const VolunteerOpportunitiesPage = () => {
@@ -25,13 +24,9 @@ const VolunteerOpportunitiesPage = () => {
     volunteerConfig && volunteerConfig?.enabled === true;
 
   const defaultConfig = useConfig();
-  const { hasAccess } = useRBAC();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
   const minStayWeeks = Math.round((volunteerConfig?.volunteeringMinStay ?? 28) / 7);
-
-  // Check if user has permission to create volunteers
-  const canCreateVolunteer = hasAccess('VolunteerCreation');
 
   if(!isVolunteerEnabled) {
     return <PageNotFound />;
@@ -84,13 +79,6 @@ const VolunteerOpportunitiesPage = () => {
                       {t('volunteers_open_call_title')}
                     </Heading>
                     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                      {canCreateVolunteer && (
-                        <div className="w-full sm:w-[250px]">
-                          <LinkButton href="/volunteer/create">
-                            {t('volunteers_create_volunteer_button')}
-                          </LinkButton>
-                        </div>
-                      )}
                       <div className="w-full sm:w-[250px]">
                         <LinkButton href="/volunteer/apply">
                           {t('apply_submit_button')}
