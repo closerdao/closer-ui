@@ -25,6 +25,31 @@ export const getEnabledConfigs = (configs: any, allConfigs: string[]) => {
   return enabledConfigs;
 };
 
+/**
+ * Describes the `elements` arrays across configs so the config form can build
+ * per-index validation rules (`price-0`, `price-1`, …).
+ *
+ * Stored configs can hold an `elements` key that is an empty array, or that
+ * holds non-object entries, once an admin removes every element. `[]` is
+ * truthy, so a naive truthiness filter lets it through and `elements[0]` is
+ * `undefined` — reading keys off that throws during render and takes the whole
+ * config page down. Skip anything that cannot describe a shape.
+ */
+export const getArrayConfigsSchema = (
+  configs: { value?: Record<string, any> }[],
+): { len: number; names: string[] }[] =>
+  (configs || []).flatMap((config) => {
+    const elements = config?.value?.elements;
+    if (!Array.isArray(elements)) {
+      return [];
+    }
+    const firstElement = elements[0];
+    if (!firstElement || typeof firstElement !== 'object') {
+      return [];
+    }
+    return [{ len: elements.length, names: Object.keys(firstElement) }];
+  });
+
 export const getPreparedInputValue = (value: string) => {
   if (value === '') {
     return '';
