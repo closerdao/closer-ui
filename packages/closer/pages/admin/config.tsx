@@ -25,6 +25,7 @@ import { usePlatform } from '../../contexts/platform';
 import { Config } from '../../types';
 import { BookingConfig } from '../../types/api';
 import {
+  getArrayConfigsSchema,
   getDefaultConfigValue,
   getEnabledConfigs,
   getPreparedInputValue,
@@ -166,18 +167,9 @@ const ConfigPage = () => {
     [key: string]: string | null | undefined | any;
   }>({});
 
-  const arrayConfigsSchema =
-    updatedConfigs
-      .filter((config) => config.value.elements)
-      .map((config) => {
-        if (!Array.isArray(config.value.elements)) {
-          return;
-        }
-        const elements = config.value.elements;
-        return { len: elements.length, names: Object.keys(elements[0]) };
-      }) || [];
+  const arrayConfigsSchema = getArrayConfigsSchema(updatedConfigs);
 
-  const configFormSchema = getValidationSchema(arrayConfigsSchema as any);
+  const configFormSchema = getValidationSchema(arrayConfigsSchema);
 
   useEffect(() => {
     loadData();
