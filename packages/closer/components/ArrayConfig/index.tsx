@@ -36,6 +36,16 @@ const ArrayConfig = ({
   const t = useTranslations();
   const isSubscriptionsConfig = slug === 'subscriptions';
 
+  /**
+   * Inner keys are generic (`name`, `type`, `label`), so the same key means
+   * different things per config. Prefer a slug scoped message when one exists.
+   */
+  const innerLabel = (innerKey: string) => {
+    const scopedKey = `config_label_${slug}_${innerKey}`;
+    if (t.has(scopedKey)) return t(scopedKey);
+    return t(`config_label_${innerKey}`);
+  };
+
   return (
     <div className="flex flex-col gap-4">
       {Array.isArray(currentValue) &&
@@ -43,7 +53,9 @@ const ArrayConfig = ({
           if (!element || typeof element !== 'object') {
             return null;
           }
-          const elementType = description?.[elementsKey]?.type?.[0] || description?.elements?.type?.[0];
+          const elementType =
+            description?.[elementsKey]?.type?.[0] ||
+            description?.elements?.type?.[0];
           if (!elementType) {
             return null;
           }
@@ -54,144 +66,150 @@ const ArrayConfig = ({
                 const fieldValue = currentValue[index]?.[innerKey];
 
                 return (
-                <div
-                  key={`${innerKey}-${index}`}
-                  className="flex flex-col gap-1"
-                >
-                  <>
-                        <label>{t(`config_label_${innerKey}`)}:</label>
-                        {inputType === 'boolean' && (
-                          <div className="flex gap-3">
-                            <label className="flex gap-1 items-center">
-                              <input
-                                type="radio"
-                                name={`${innerKey}-${index}`}
-                                value="true"
-                                checked={fieldValue === true}
-                                onChange={(event) =>
-                                  handleChange(event, elementsKey, index)
-                                }
-                              />
-                              {t('config_true')}
-                            </label>
-                            <label className="flex gap-1 items-center">
-                              <input
-                                type="radio"
-                                name={`${innerKey}-${index}`}
-                                value="false"
-                                checked={fieldValue === false}
-                                onChange={(event) =>
-                                  handleChange(event, elementsKey, index)
-                                }
-                              />
-                              {t('config_false')}
-                            </label>
-                          </div>
-                        )}
-                        {(inputType === 'text' || inputType === 'number') && (
-                          <input
-                            className="bg-neutral rounded-md p-1"
-                            name={`${innerKey}-${index}`}
-                            onChange={(event) =>
-                              handleChange(event, elementsKey, index)
-                            }
-                            type="text"
-                            value={String(fieldValue ?? '')}
-                            autoComplete="off"
-                            data-lpignore="true"
-                          />
-                        )}
-                        {inputType === 'long-text' && (
-                          <textarea
-                            className="bg-neutral rounded-md p-1"
-                            name={innerKey}
-                            onChange={(event) =>
-                              handleChange(event, elementsKey, index)
-                            }
-                            rows={innerKey === 'body' ? 16 : 2}
-                            value={String(fieldValue ?? '')}
-                            autoComplete="off"
-                            data-lpignore="true"
-                          />
-                        )}
-                        {inputType?.type === 'select' && (
-                          <select
-                            className="px-2 py-1"
-                            value={String(fieldValue ?? '')}
-                            onChange={(event) =>
-                              handleChange(event, elementsKey, index)
-                            }
-                            name={`${innerKey}-${index}`}
-                            autoComplete="off"
-                            data-lpignore="true"
-                          >
-                            {inputType.enum.map((option: string) => {
-                              return (
-                                <option value={option} key={option}>
-                                  {option}
-                                </option>
-                              );
-                            })}
-                          </select>
-                        )}
-                        {inputType?.type === 'multiselect' && (
-                          <div className="flex flex-wrap gap-2">
-                            {inputType.enum.map((option: string) => {
-                              const currentValues = Array.isArray(fieldValue)
-                                ? fieldValue
-                                : [];
-                              const isChecked = currentValues.includes(option);
-                              return (
-                                <label
-                                  key={option}
-                                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm cursor-pointer transition-colors ${
-                                    isChecked
-                                      ? 'bg-accent text-white'
-                                      : 'bg-neutral hover:bg-neutral-dark'
-                                  }`}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    name={`${innerKey}-${index}`}
-                                    value={option}
-                                    checked={isChecked}
-                                    onChange={() => {
-                                      const newValues = isChecked
-                                        ? currentValues.filter((v: string) => v !== option)
-                                        : [...currentValues, option];
-                                      const syntheticEvent = {
-                                        target: {
-                                          name: `${innerKey}-${index}`,
-                                          value: JSON.stringify(newValues),
-                                        },
-                                      } as ChangeEvent<HTMLInputElement>;
-                                      handleChange(syntheticEvent, elementsKey, index);
-                                    }}
-                                    className="sr-only"
-                                  />
-                                  {t(`config_product_${option}`)}
-                                </label>
-                              );
-                            })}
-                          </div>
-                        )}
-                        {Object.keys(errors).length > 0 &&
-                          errors[
-                            `${innerKey}-${index}` as keyof typeof errors
-                          ] !== null &&
-                          errors[
-                            `${innerKey}-${index}` as keyof typeof errors
-                          ] && (
-                            <ErrorMessage
-                              error={
-                                errors[
-                                  `${innerKey}-${index}` as keyof typeof errors
-                                ]?.toString() || ''
+                  <div
+                    key={`${innerKey}-${index}`}
+                    className="flex flex-col gap-1"
+                  >
+                    <>
+                      <label>{innerLabel(innerKey)}:</label>
+                      {inputType === 'boolean' && (
+                        <div className="flex gap-3">
+                          <label className="flex gap-1 items-center">
+                            <input
+                              type="radio"
+                              name={`${innerKey}-${index}`}
+                              value="true"
+                              checked={fieldValue === true}
+                              onChange={(event) =>
+                                handleChange(event, elementsKey, index)
                               }
-                            ></ErrorMessage>
-                          )}
-                  </>
-                </div>
+                            />
+                            {t('config_true')}
+                          </label>
+                          <label className="flex gap-1 items-center">
+                            <input
+                              type="radio"
+                              name={`${innerKey}-${index}`}
+                              value="false"
+                              checked={fieldValue === false}
+                              onChange={(event) =>
+                                handleChange(event, elementsKey, index)
+                              }
+                            />
+                            {t('config_false')}
+                          </label>
+                        </div>
+                      )}
+                      {(inputType === 'text' || inputType === 'number') && (
+                        <input
+                          className="bg-neutral rounded-md p-1"
+                          name={`${innerKey}-${index}`}
+                          onChange={(event) =>
+                            handleChange(event, elementsKey, index)
+                          }
+                          type="text"
+                          value={String(fieldValue ?? '')}
+                          autoComplete="off"
+                          data-lpignore="true"
+                        />
+                      )}
+                      {inputType === 'long-text' && (
+                        <textarea
+                          className="bg-neutral rounded-md p-1"
+                          name={innerKey}
+                          onChange={(event) =>
+                            handleChange(event, elementsKey, index)
+                          }
+                          rows={innerKey === 'body' ? 16 : 2}
+                          value={String(fieldValue ?? '')}
+                          autoComplete="off"
+                          data-lpignore="true"
+                        />
+                      )}
+                      {inputType?.type === 'select' && (
+                        <select
+                          className="px-2 py-1"
+                          value={String(fieldValue ?? '')}
+                          onChange={(event) =>
+                            handleChange(event, elementsKey, index)
+                          }
+                          name={`${innerKey}-${index}`}
+                          autoComplete="off"
+                          data-lpignore="true"
+                        >
+                          {inputType.enum.map((option: string) => {
+                            return (
+                              <option value={option} key={option}>
+                                {option}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      )}
+                      {inputType?.type === 'multiselect' && (
+                        <div className="flex flex-wrap gap-2">
+                          {inputType.enum.map((option: string) => {
+                            const currentValues = Array.isArray(fieldValue)
+                              ? fieldValue
+                              : [];
+                            const isChecked = currentValues.includes(option);
+                            return (
+                              <label
+                                key={option}
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm cursor-pointer transition-colors ${
+                                  isChecked
+                                    ? 'bg-accent text-white'
+                                    : 'bg-neutral hover:bg-neutral-dark'
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  name={`${innerKey}-${index}`}
+                                  value={option}
+                                  checked={isChecked}
+                                  onChange={() => {
+                                    const newValues = isChecked
+                                      ? currentValues.filter(
+                                          (v: string) => v !== option,
+                                        )
+                                      : [...currentValues, option];
+                                    const syntheticEvent = {
+                                      target: {
+                                        name: `${innerKey}-${index}`,
+                                        value: JSON.stringify(newValues),
+                                      },
+                                    } as ChangeEvent<HTMLInputElement>;
+                                    handleChange(
+                                      syntheticEvent,
+                                      elementsKey,
+                                      index,
+                                    );
+                                  }}
+                                  className="sr-only"
+                                />
+                                {t(`config_product_${option}`)}
+                              </label>
+                            );
+                          })}
+                        </div>
+                      )}
+                      {Object.keys(errors).length > 0 &&
+                        errors[
+                          `${innerKey}-${index}` as keyof typeof errors
+                        ] !== null &&
+                        errors[
+                          `${innerKey}-${index}` as keyof typeof errors
+                        ] && (
+                          <ErrorMessage
+                            error={
+                              errors[
+                                `${innerKey}-${index}` as keyof typeof errors
+                              ]?.toString() || ''
+                            }
+                          ></ErrorMessage>
+                        )}
+                    </>
+                  </div>
                 );
               })}
 

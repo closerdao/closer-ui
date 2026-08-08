@@ -12,6 +12,7 @@ import {
   applyInteractionIsHumanFromResponse,
   ensureInteractionSession,
   getStoredInteractionSessionKey,
+  refreshInteractionSession,
 } from './interactionSession';
 
 export const formatSearch = (where) =>
@@ -141,6 +142,16 @@ export function setOnSessionInvalid(fn) {
 function isRefreshRequest(config) {
   const url = config?.url ?? '';
   return typeof url === 'string' && url.includes('/auth/refresh');
+}
+
+// Endpoints where a 401 means "wrong credentials", not "no interaction
+// session". Retrying these would silently double every failed login attempt.
+const CREDENTIAL_PATHS = ['/login', '/auth/'];
+
+function isCredentialRequest(config) {
+  const url = config?.url ?? '';
+  if (typeof url !== 'string') return false;
+  return CREDENTIAL_PATHS.some((path) => url.includes(path));
 }
 
 function notifySessionInvalid() {
@@ -310,6 +321,21 @@ api.interceptors.response.use(
     if (isRefreshRequest(originalRequest)) {
       notifySessionInvalid();
       return Promise.reject(error);
+    }
+    // Anonymous requests (public form submissions) are authorised by the
+    // interaction session rather than a bearer token. A 401 here means the
+    // session key was stale or never sent, so get a fresh one and retry once.
+    if (
+      typeof window !== 'undefined' &&
+      !getAccessToken() &&
+      !isCredentialRequest(originalRequest) &&
+      !originalRequest._interactionRetry
+    ) {
+      originalRequest._interactionRetry = true;
+      await refreshInteractionSession();
+      if (getStoredInteractionSessionKey()) {
+        return api(originalRequest);
+      }
     }
     try {
       await doRefresh();

@@ -13,7 +13,7 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
       <div className={`${inter.variable} ${instrumentSerif.variable} font-sans`}>
         <CloserEmailCollector />
         <Navigation />
-        <div className="pt-8 px-4">{children}</div>
+        <div>{children}</div>
         <Footer />
       </div>
     </div>

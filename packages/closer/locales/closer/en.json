@@ -45,9 +45,13 @@
   "header_nav_communities": "Communities",
   "header_nav_governance": "Governance",
   "header_nav_agent": "Agent",
-  "header_nav_pricing": "Pricing",
   "header_nav_work_with_us": "Work with us",
   "header_nav_docs": "Docs",
+  "header_nav_why": "Why",
+  "header_nav_how_it_works": "How it works",
+  "header_nav_village_fund": "Village Fund",
+  "header_nav_faq": "FAQ",
   "header_nav_schedule_a_demo": "Schedule a demo",
+  "header_nav_launch_your_community": "Launch your community",
   "dashboard_performance_subscriptions_funnel": "Subscriptions funnel"
 }

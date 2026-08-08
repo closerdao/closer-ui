@@ -1,7 +1,6 @@
 import { User } from 'closer/contexts/auth/types';
 
 import type { AccountingEntityProductSlug } from '../constants/accountingEntities.constants';
-
 import { CloserCurrencies, Price } from './currency';
 
 export type FileUploadResult = {
@@ -154,6 +153,41 @@ export type GeneralConfig = {
   primaryCtaCustomUrl?: string;
   primaryCtaCustomText?: string;
 };
+export type ApplicationFieldType =
+  | 'text'
+  | 'longtext'
+  | 'email'
+  | 'phone'
+  | 'number'
+  | 'url'
+  | 'date'
+  | 'select'
+  | 'country';
+
+export type ApplicationField = {
+  /** Key the answer is stored under, e.g. `communitySize`. */
+  name: string;
+  label: string;
+  type: ApplicationFieldType;
+  /** Comma separated choices, only used by `select` fields. */
+  options?: string;
+  placeholder?: string;
+  required?: boolean;
+};
+
+export type ApplicationsConfig = {
+  enabled: boolean;
+  ctaText?: string;
+  eyebrow?: string;
+  title?: string;
+  description?: string;
+  submitButtonText?: string;
+  disclaimer?: string;
+  successTitle?: string;
+  successMessage?: string;
+  fields?: ApplicationField[];
+};
+
 export type CitizenshipConfig = {
   enabled: boolean;
   isSpaceHostVouchRequired: boolean;
@@ -322,9 +356,7 @@ export type AccountingEntityElement = {
 export type AccountingEntitiesConfig = {
   enabled?: boolean;
   elements?: AccountingEntityElement[];
-  vatByProductType?: Partial<
-    Record<AccountingEntityProductSlug, number>
-  >;
+  vatByProductType?: Partial<Record<AccountingEntityProductSlug, number>>;
 };
 
 export type SaleInitPaymentMethod = 'bank' | 'card' | 'crypto';

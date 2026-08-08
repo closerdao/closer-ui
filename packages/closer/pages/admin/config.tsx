@@ -115,6 +115,7 @@ const ConfigPage = () => {
   const effectiveAllowedConfigs = [
     'general',
     'events',
+    'applications',
     ...(isBookingAllowedByEnv ? ['booking', 'booking-rules', 'payment'] : []),
     ...(isVolunteeringEnabled ? ['volunteering'] : []),
     ...(isSubscriptionsEnabled ? ['subscriptions'] : []),
@@ -543,12 +544,16 @@ const ConfigPage = () => {
                     (key === 'primaryCtaVisitor' ||
                       key === 'primaryCtaMember')
                   ) {
+                    const application = enabledConfigs?.includes('applications')
+                      ? ['application']
+                      : [];
                     const baseVisitor = [
                       'none',
                       'login',
                       ...(isBookingEnabled ? ['bookings'] : []),
                       ...(isCoursesEnabled ? ['learningHub'] : []),
                       'events',
+                      ...application,
                       'custom',
                     ];
                     const baseMember = [
@@ -556,6 +561,7 @@ const ConfigPage = () => {
                       ...(isBookingEnabled ? ['bookings'] : []),
                       ...(isCoursesEnabled ? ['learningHub'] : []),
                       'events',
+                      ...application,
                       'custom',
                     ];
                     selectOptions =
@@ -630,6 +636,7 @@ const ConfigPage = () => {
                                   'bookings',
                                   'learningHub',
                                   'events',
+                                  'application',
                                   'custom',
                                 ].includes(option)
                                   ? t(`config_option_cta_${option}`)
@@ -764,6 +771,11 @@ const ConfigPage = () => {
                                 (key === 'primaryCtaVisitor' ||
                                   key === 'primaryCtaMember')
                               ) {
+                                const application = enabledConfigs?.includes(
+                                  'applications',
+                                )
+                                  ? ['application']
+                                  : [];
                                 const baseVisitor = [
                                   'none',
                                   'login',
@@ -772,6 +784,7 @@ const ConfigPage = () => {
                                   ...(enabledConfigs?.includes('events')
                                     ? ['events']
                                     : []),
+                                  ...application,
                                   'custom',
                                 ];
                                 const baseMember = [
@@ -781,6 +794,7 @@ const ConfigPage = () => {
                                   ...(enabledConfigs?.includes('events')
                                     ? ['events']
                                     : []),
+                                  ...application,
                                   'custom',
                                 ];
                                 selectOptions =
@@ -1024,6 +1038,7 @@ const ConfigPage = () => {
                                                   'bookings',
                                                   'learningHub',
                                                   'events',
+                                                  'application',
                                                   'custom',
                                                 ].includes(option)
                                                   ? t(

@@ -22,7 +22,7 @@ const buttonStyles = cva(
     variants: {
       color: {
         accent:
-          'bg-accent border-accent text-white hover:enabled:bg-accent-dark hover:enabled:border-accent-dark', // default pink button
+          'bg-accent border-accent text-accent-foreground hover:enabled:bg-accent-dark hover:enabled:border-accent-dark', // default pink button
         'dominant-accent':
           'bg-dominant border-accent text-accent hover:enabled:bg-accent-light', //white with pink border
         // 'dominant-complimentary': 'bg-dominant text-complimentary border-complimentary hover:bg-neutral', //white with black text
@@ -39,12 +39,12 @@ const buttonStyles = cva(
         false: '!w-auto',
       },
       variant: {
-        primary: 'w-full py-2 bg-accent border-accent text-white',
+        primary: 'w-full py-2 bg-accent border-accent text-accent-foreground',
         secondary: 'w-full enabled:bg-white border-accent text-accent py-2 ',
         instantSave:
-          'w-auto absolute right-2 top-[45px] text-md pl-4 pr-5 py-0.5 bg-accent text-white',
+          'w-auto absolute right-2 top-[45px] text-md pl-4 pr-5 py-0.5 bg-accent text-accent-foreground',
         inline:
-          '!w-auto !inline border-accent text-md pl-4 pr-5 py-1.5 bg-accent text-white',
+          '!w-auto !inline border-accent text-md pl-4 pr-5 py-1.5 bg-accent text-accent-foreground',
         empty: '', // remove empty prop after all buttons are refactored
         default: 'py-2 h-12 ',
       }, //deprecate type, because it does not relate directly to design system

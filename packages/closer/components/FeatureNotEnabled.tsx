@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import Heading from './ui/Heading';
+import ErrorPage from './ErrorPage';
 
 import { useTranslations } from 'next-intl';
 
@@ -48,17 +48,28 @@ const FeatureNotEnabled = ({ feature = 'generic' }: Props) => {
       <Head>
         <title>{t('feature_not_enabled_title')}</title>
       </Head>
-      <main className="main-content about intro page-not-found max-w-prose h-full flex flex-col flex-1 justify-center gap-4">
-        <Heading>{t('feature_not_enabled_title')}</Heading>
-        <Heading level={2} className="font-light italic my-4">
-          {getFeatureMessage()}
-        </Heading>
-        <p>
-          <Link href="/" className="btn text-center">
-            {t('feature_not_enabled_go_home')}
-          </Link>
-        </p>
-      </main>
+      <ErrorPage
+        code={
+          <svg
+            className="w-20 h-20 sm:w-24 sm:h-24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="4" y="10.5" width="16" height="10" rx="2.5" />
+            <path d="M8 10.5V7a4 4 0 1 1 8 0v3.5" />
+          </svg>
+        }
+        title={t('feature_not_enabled_title')}
+        message={getFeatureMessage()}
+      >
+        <Link href="/" className="btn-primary">
+          {t('feature_not_enabled_go_home')}
+        </Link>
+      </ErrorPage>
     </>
   );
 };

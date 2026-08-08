@@ -20,7 +20,6 @@ const Footer: FC = () => {
 
   const config = useConfig();
   const {
-    APP_NAME,
     DISCORD_URL,
     FACEBOOK_URL,
     INSTAGRAM_URL,
@@ -31,50 +30,9 @@ const Footer: FC = () => {
     config?.learningHub?.enabled === true &&
     process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true';
 
-  const isCloserApp = APP_NAME?.toLowerCase() === 'closer';
-
   return (
     <div>
       <footer className="flex flex-col items-center p-4 main-content text-center">
-        {isCloserApp && (
-          <div className="w-full border-t border-divider pt-8 mb-8">
-            <div className="max-w-4xl mx-auto">
-              <p className="text-sm text-foreground/60 mb-6 italic">
-                {t('footer_philosophy_tagline')}
-              </p>
-              <div className="flex flex-wrap justify-center gap-4 text-sm">
-                <Link
-                  href="/philosophy"
-                  className="text-accent hover:underline"
-                >
-                  {t('philosophy_title')}
-                </Link>
-                <span className="text-foreground/30">·</span>
-                <Link
-                  href="/philosophy/commons-governance"
-                  className="text-foreground/70 hover:text-accent"
-                >
-                  {t('philosophy_commons_governance_title')}
-                </Link>
-                <span className="text-foreground/30">·</span>
-                <Link
-                  href="/philosophy/commons-exclosure"
-                  className="text-foreground/70 hover:text-accent"
-                >
-                  {t('philosophy_commons_exclosure_title')}
-                </Link>
-                <span className="text-foreground/30">·</span>
-                <Link
-                  href="/philosophy/digital-commons"
-                  className="text-foreground/70 hover:text-accent"
-                >
-                  {t('philosophy_digital_commons_title')}
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-
         <div className="flex flex-col md:flex-row py-2 items-center w-full justify-between">
           <div className="flex flex-col items-center md:items-start">
             <div className="flex flex-row mb-8 md:mb-1">

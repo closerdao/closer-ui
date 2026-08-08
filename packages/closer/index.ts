@@ -7,6 +7,7 @@ export { default as ChargesTable } from './components/Dashboard/ChargesTable';
 export { ErrorBoundary } from './components/ErrorBoundary';
 export { default as EventPreview } from './components/EventPreview';
 export { default as EventsList } from './components/EventsList';
+export { default as ApplicationModal } from './components/ApplicationModal';
 export { default as Footer } from './components/Footer';
 export { default as JoinCommunityCTA } from './components/JoinCommunityCTA';
 export { default as Metatags } from './components/Metatags/';
@@ -212,6 +213,7 @@ export { default as CohousingApplicationIndexPage } from './pages/cohousing/appl
 export { default as CohousingApplicationsTeamPage } from './pages/cohousing/applications/index';
 export { default as CohousingDashboardDetailPage } from './pages/dashboard/cohousing/[id]';
 export { default as CohousingDashboardPage } from './pages/dashboard/cohousing/index';
+export { default as ApplicationsDashboardPage } from './pages/dashboard/applications';
 export { default as EngagementDashboardPage } from './pages/dashboard/engagement';
 export { default as EngagementOpportunityDetailPage } from './pages/dashboard/engagement/[id]';
 export { default as RevenuePage } from './pages/dashboard/revenue';
@@ -251,6 +253,7 @@ export {
   clearInteractionSession,
   ensureInteractionSession,
   getStoredInteractionIsHuman,
+  refreshInteractionSession,
 } from './utils/interactionSession';
 export {
   createTurnstileHandlers,
