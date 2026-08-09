@@ -163,7 +163,7 @@ export const fetchPageBySlug = async (
       const res = await api.get('/page', {
         params: { where: { slug: candidate }, limit: 1 },
         cache: false,
-      });
+      } as any);
       const list = res?.data?.results;
       if (Array.isArray(list) && list[0]) {
         return toPageDoc(list[0] as Record<string, unknown>, {
@@ -180,7 +180,7 @@ export const fetchPageBySlug = async (
     const res = await api.get('/page', {
       params: { limit: 200 },
       cache: false,
-    });
+    } as any);
     const list = res?.data?.results;
     if (Array.isArray(list)) {
       const hit = list.find(
@@ -217,7 +217,7 @@ export const resolveStandardOrDbPage = async (
   const looksLikeObjectId = /^[a-f\d]{24}$/i.test(slugOrId);
   if (looksLikeObjectId) {
     try {
-      const res = await api.get(`/page/${slugOrId}`, { cache: false });
+      const res = await api.get(`/page/${slugOrId}`, { cache: false } as any);
       const raw = res?.data?.results;
       if (raw) {
         return upgradeStandardPageFromDefaults(

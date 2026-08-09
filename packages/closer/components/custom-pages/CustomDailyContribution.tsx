@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { Heading } from '../ui';
-import type { BookingConfig, FoodOption } from '../../types';
+import type { BookingConfig, CloserCurrencies, FoodOption } from '../../types';
 import api from '../../utils/api';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
@@ -29,7 +29,7 @@ interface Props {
 
 const formatAmount = (value: number, currency: string) => {
   try {
-    return priceFormat(value, currency);
+    return priceFormat(value, currency as CloserCurrencies);
   } catch {
     return `${value} ${currency}`;
   }
@@ -155,16 +155,15 @@ const CustomDailyContribution = ({ settings, content }: Props) => {
     });
   }
 
-  const canTotal =
+  const total =
     !isLoadingFood &&
     !rates.isFoodSelection &&
     rates.foodRate != null &&
-    rates.utilityRate != null;
-  const total = canTotal
-    ? rates.foodRate +
-      rates.utilityRate +
-      (showAccommodation ? rates.accommodationRate : 0)
-    : null;
+    rates.utilityRate != null
+      ? rates.foodRate +
+        rates.utilityRate +
+        (showAccommodation ? rates.accommodationRate : 0)
+      : null;
   const fromTotal =
     !isLoadingFood &&
     rates.isFoodSelection &&

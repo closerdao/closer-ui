@@ -6,7 +6,11 @@ import { useTranslations } from 'next-intl';
 
 import { Input, Textarea } from '../../ui';
 import PageEditorCheckbox from '../PageEditorCheckbox';
-import type { BookingConfig, FoodOption } from '../../../types';
+import type {
+  BookingConfig,
+  CloserCurrencies,
+  FoodOption,
+} from '../../../types';
 import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { resolveVolunteerDailyRates } from '../../../utils/dailyContribution.helpers';
@@ -16,7 +20,7 @@ import type { BlockInspectorFormProps } from './types';
 
 const formatAmount = (value: number, currency: string) => {
   try {
-    return priceFormat(value, currency);
+    return priceFormat(value, currency as CloserCurrencies);
   } catch {
     return `${value} ${currency}`;
   }

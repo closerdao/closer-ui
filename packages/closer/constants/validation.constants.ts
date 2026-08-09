@@ -88,11 +88,12 @@ export const configFormSchema = z.object({
   residenceMinStay: numberRequired,
 });
 
-const pricePositive = z
+// Allows 0 so free plans (e.g. citizen/free tiers) can be saved
+const priceNonNegative = z
   .string()
   .min(1, { message: 'This field is required' })
-  .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-    message: 'Must be a number greater than 0',
+  .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+    message: 'Must be a number greater than or equal to 0',
   });
 
 const subscriptionValidationRules = {
@@ -102,7 +103,7 @@ const subscriptionValidationRules = {
   slug: stringRequired,
   tier: numberOptional,
   monthlyCredits: numberOptional,
-  price: pricePositive,
+  price: priceNonNegative,
   perks: stringRequired,
   name: stringRequired,
   subject: stringRequired,

@@ -22,7 +22,7 @@ import { configDescription } from '../../config';
 import { getValidationSchema } from '../../constants/validation.constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
-import { Config } from '../../types';
+import { Config, SubscriptionPlan } from '../../types';
 import { BookingConfig } from '../../types/api';
 import {
   getArrayConfigsSchema,
@@ -310,7 +310,7 @@ const ConfigPage = () => {
           paymentFromPlatform?.utilityFiatCur ||
           'EUR';
         const filteredElements = filterCitizenAndFreeFromElements(
-          updatedConfig.value.elements || [],
+          (updatedConfig.value.elements as unknown as SubscriptionPlan[]) || [],
         );
         const syncedElements = await syncSubscriptionPlansWithStripe(
           filteredElements,
@@ -319,7 +319,7 @@ const ConfigPage = () => {
         const syncedValue = {
           ...updatedConfig.value,
           elements: syncedElements,
-        };
+        } as unknown as Config['value'];
         configsToSave = configsToSave.map((config) =>
           config.slug === 'subscriptions'
             ? { ...config, value: syncedValue }

@@ -36,7 +36,7 @@ interface InputProps extends VariantProps<typeof inputStyles> {
   value?: string;
   onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
-  type?: 'text' | 'password' | 'time' | 'number' | 'date';
+  type?: 'text' | 'password' | 'time' | 'number' | 'date' | 'url';
   isRequired?: boolean;
   placeholder?: string;
   successMessage?: string;

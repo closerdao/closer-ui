@@ -9,6 +9,7 @@ export type ContentFieldType =
   | 'text'
   | 'textarea'
   | 'url'
+  | 'number'
   | 'checkbox'
   | 'select';
 
@@ -326,7 +327,7 @@ const ContentListInspector = ({ data, onChange, config }: Props) => {
                   {t('pages_editor_remove')}
                 </Button>
               </div>
-              {config.listItemFields.map((field) =>
+              {(config.listItemFields ?? []).map((field) =>
                 renderField(
                   field,
                   field.type === 'checkbox'

@@ -1,4 +1,6 @@
-import { NextPageContext } from 'next';
+import { NextPage, NextPageContext } from 'next';
+
+import { ComponentProps } from 'react';
 
 import {
   CustomPageView,
@@ -8,7 +10,8 @@ import {
 
 export { createFixedSlugCustomPage, loadCustomPageProps };
 
-const CustomPagePage = CustomPageView;
+const CustomPagePage: NextPage<ComponentProps<typeof CustomPageView>> =
+  CustomPageView;
 
 CustomPagePage.getInitialProps = async (context: NextPageContext) =>
   loadCustomPageProps(context);

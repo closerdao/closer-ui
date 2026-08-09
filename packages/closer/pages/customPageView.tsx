@@ -10,7 +10,7 @@ import { parseMessageFromError } from '../utils/common';
 import { resolveStandardOrDbPage } from '../utils/standardPages';
 import PageNotFound from './not-found';
 
-interface Props {
+export interface Props {
   page: PageDoc | null;
   error?: string;
 }
