@@ -1,3 +1,5 @@
+import { sanitizeBlockHtml } from './sanitizeBlockHtml';
+
 export const BLOCK_I18N_PREFIX = '_i18n_';
 
 export type BlockI18nTranslate = (
@@ -65,7 +67,7 @@ export function resolveBlockHtml(
   t: BlockI18nTranslate,
   values?: BlockI18nValues,
 ): string {
-  return resolveEditorI18nText(value, t, values);
+  return sanitizeBlockHtml(resolveEditorI18nText(value, t, values));
 }
 
 export function materializeI18nValue(

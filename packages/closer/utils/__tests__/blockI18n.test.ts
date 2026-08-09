@@ -1,5 +1,6 @@
 import {
   extractBlockI18nKey,
+  resolveBlockHtml,
   resolveBlockText,
 } from '../../utils/blockI18n';
 
@@ -8,6 +9,7 @@ const t = (key: string, values?: Record<string, string | number | Date>) => {
     return `Pay with ${values?.reserveToken ?? 'TOKEN'}`;
   }
   if (key === 'hello') return 'Hello world';
+  if (key === 'xss_payload') return '<img src=x onerror="alert(1)">';
   return key;
 };
 
@@ -29,5 +31,16 @@ describe('blockI18n', () => {
     expect(resolveBlockText('_i18n_token_purchase_step_3_desc', t)).toBe(
       'Pay with cEUR',
     );
+  });
+
+  it('sanitizes HTML after i18n resolution', () => {
+    const sanitized = resolveBlockHtml(
+      '<p>Hi</p><script>alert(1)</script>_i18n_xss_payload',
+      t,
+    );
+    expect(sanitized).not.toMatch(/script/i);
+    expect(sanitized).not.toMatch(/onerror/i);
+    expect(sanitized).toContain('<p>Hi</p>');
+    expect(sanitized).toMatch(/<img src="x"\s*\/?>/);
   });
 });
