@@ -9,9 +9,10 @@ import { useEffect } from 'react';
 const SubscriptionSettingsPage = () => {
   const router = useRouter();
 
-  useEffect(() => {
-    router.replace('/settings#subscription');
-  }, []);
+useEffect(() => {
+  if (!router.isReady) return;
+  void router.replace('/settings#subscription');
+}, [router]);
 
   return null;
 };
