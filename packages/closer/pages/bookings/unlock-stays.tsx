@@ -11,13 +11,13 @@ import { useTranslations } from 'next-intl';
 
 import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
-import { useConfig } from '../../hooks/useConfig';
 import { SubscriptionPlan } from '../../types/subscriptions';
-import api from '../../utils/api';
+import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
 import { getCurrencySymbol } from '../../utils/helpers';
-import { loadLocaleData } from '../../utils/locale.helpers';
-import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
+import { parseSubscriptionPerks } from '../../utils/subscriptionPerks';
+import { sanitizeSubscriptionPerkHtml } from '../../utils/sanitizeSubscriptionPerkHtml';
+import { getPaidSubscriptionPlans } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
 interface Props {
@@ -31,27 +31,15 @@ const UnlockStaysPage = ({ subscriptionsConfig, bookingConfig }: Props) => {
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
-  const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
-  const config = useConfig();
-  const { STAY_BOOKING_ALLOWED_PLANS, MIN_INSTANT_BOOKING_ALLOWED_PLAN } =
-    config || {};
-
-  const allowedSubscriptionPlan = subscriptionPlans.find(
-    (plan: SubscriptionPlan) => plan.slug === MIN_INSTANT_BOOKING_ALLOWED_PLAN,
-  );
+  const subscriptionPlans = getPaidSubscriptionPlans(subscriptionsConfig);
+  const allowedSubscriptionPlan = subscriptionPlans[0];
 
   const router = useRouter();
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) {
-      if (
-        user.subscription &&
-        user.subscription.plan &&
-        STAY_BOOKING_ALLOWED_PLANS.includes(user.subscription.plan)
-      ) {
-        router.push('/bookings/create/dates');
-      }
+    if (user?.roles?.includes('member')) {
+      router.push('/bookings/create/dates');
     }
   }, [user]);
 
@@ -102,22 +90,45 @@ const UnlockStaysPage = ({ subscriptionsConfig, bookingConfig }: Props) => {
               </div>
 
               <ul className="mb-4">
-                {allowedSubscriptionPlan?.perks.split(',').map((perk) => {
+                {parseSubscriptionPerks(allowedSubscriptionPlan?.perks).map(
+                  (perk) => {
                   return (
                     <li
-                      key={perk}
+                      key={perk.title}
                       className="bg-[length:16px_16px] bg-[center_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5"
                     >
-                      <span className="block">
-                        {perk.includes('<') ? (
-                          <span dangerouslySetInnerHTML={{ __html: perk }} />
+                      <div className="block">
+                        {perk.title.includes('<') ? (
+                          <span
+                            className="block font-medium"
+                            dangerouslySetInnerHTML={{
+                              __html: sanitizeSubscriptionPerkHtml(perk.title),
+                            }}
+                          />
                         ) : (
-                          perk
+                          <span className="block font-medium">{perk.title}</span>
                         )}
-                      </span>
+                        {perk.description ? (
+                          perk.description.includes('<') ? (
+                            <span
+                              className="block text-foreground/70 mt-1"
+                              dangerouslySetInnerHTML={{
+                                __html: sanitizeSubscriptionPerkHtml(
+                                  perk.description,
+                                ),
+                              }}
+                            />
+                          ) : (
+                            <span className="block text-foreground/70 mt-1">
+                              {perk.description}
+                            </span>
+                          )
+                        ) : null}
+                      </div>
                     </li>
                   );
-                })}
+                },
+                )}
               </ul>
             </div>
 
@@ -138,31 +149,20 @@ const UnlockStaysPage = ({ subscriptionsConfig, bookingConfig }: Props) => {
 
 UnlockStaysPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [subscriptionsRes, bookingRes, messages] = await Promise.all([
-      api.get('/config/subscriptions').catch(() => {
-        return null;
-      }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
 
-    const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
-    const bookingConfig = bookingRes?.data?.results?.value;
+    const subscriptionsConfig = config.subscriptions;
+    const bookingConfig = config.booking;
 
     return {
       subscriptionsConfig,
       bookingConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       subscriptionsConfig: { enabled: false, elements: [] },
       bookingConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

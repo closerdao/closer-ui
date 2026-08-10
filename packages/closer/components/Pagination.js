@@ -2,11 +2,11 @@ import Link from 'next/link';
 
 const Pagination = ({
   loadPage,
-  queryParam,
+  queryParam = 'page',
   total,
-  page,
-  limit,
-  maxPages,
+  page = 1,
+  limit = 50,
+  maxPages = 5,
   isInverted = false,
 }) => {
   const totalPages = Math.ceil(total / limit);
@@ -112,12 +112,5 @@ const Pagination = ({
   );
 };
 
-Pagination.defaultProps = {
-  queryParam: 'page',
-  page: 1,
-  limit: 50,
-  maxPages: 5,
-  isInverted: false,
-};
 
 export default Pagination;

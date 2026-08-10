@@ -14,28 +14,33 @@ import { MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { BookingConfig } from '../../types';
-import api from '../../utils/api';
+import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 interface Props {
-  bookingConfig: BookingConfig;
+  bookingConfig: BookingConfig | null;
 }
 
 const Listings = ({ bookingConfig }: Props) => {
   const t = useTranslations();
   const discounts = {
-    daily: bookingConfig.discountsDaily,
-    weekly: bookingConfig.discountsWeekly,
-    monthly: bookingConfig.discountsMonthly,
+    daily: bookingConfig?.discountsDaily,
+    weekly: bookingConfig?.discountsWeekly,
+    monthly: bookingConfig?.discountsMonthly,
   };
 
   const { platform }: any = usePlatform();
   const { user } = useAuth();
-  const isTeamMember = false;
-  user?.roles.includes('space-host') ||
-    user?.roles.includes('steward') ||
-    user?.roles.includes('land-manager');
+
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+
+  const isTeamMember =
+    Boolean(user?.roles?.includes('admin')) ||
+    Boolean(user?.roles?.includes('space-host')) ||
+    Boolean(user?.roles?.includes('steward')) ||
+    Boolean(user?.roles?.includes('land-manager'));
 
   const listingFilter = {
     where: {},
@@ -70,24 +75,22 @@ const Listings = ({ bookingConfig }: Props) => {
           <div className="validation-error">{listings.get('error')}</div>
         )}
 
-        <section className="text-center flex flex-wrap mb-12 ">
-          <div className="md:max-w-5xl">
-            <div className="mb-6 flex justify-between flex-col sm:flex-row gap-4">
-              <Heading>{t('listings_edit_title')}</Heading>
-              {(user?.roles.includes('admin') ||
-                user?.roles.includes('space-host')) && (
-                <div className="user-actions">
-                  <Link
-                    as="/listings/create"
-                    href="/listings/create"
-                    className="btn-primary"
-                  >
-                    {t('listings_create')}
-                  </Link>
-                </div>
+        <section className="flex flex-wrap">
+          <div className="w-full">
+            <div className="mb-4 flex justify-between items-center flex-col sm:flex-row gap-4">
+              <Heading level={2}>{t('listings_edit_title')}</Heading>
+              {(user?.roles?.includes('admin') ||
+                user?.roles?.includes('space-host')) && (
+                <Link
+                  as="/listings/create"
+                  href="/listings/create"
+                  className="px-3 py-1.5 text-sm bg-accent text-white rounded-md hover:bg-accent/90 transition-colors"
+                >
+                  {t('listings_create_new')}
+                </Link>
               )}
             </div>
-            <div className="grid md:grid-cols-4 gap-x-12 md:gap-x-5 gap-y-16">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
               {listings &&
                 listings.count() > 0 &&
                 isTeamMember &&
@@ -129,15 +132,10 @@ const Listings = ({ bookingConfig }: Props) => {
 
 Listings.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [bookingRes, messages] = await Promise.all([
-      api.get('/config/booking').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
 
-    const bookingConfig = bookingRes?.data?.results?.value;
+    const bookingConfig = config.booking;
     return {
       bookingConfig,
-      messages,
     };
   } catch (err) {
     return {

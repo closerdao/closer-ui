@@ -10,18 +10,18 @@ import Pagination from '../../../../components/Pagination';
 import { ErrorMessage, Spinner } from '../../../../components/ui';
 import Heading from '../../../../components/ui/Heading';
 
+import { Record } from 'immutable';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { useAuth } from '../../../../contexts/auth';
 import { usePlatform } from '../../../../contexts/platform';
 import { useConfig } from '../../../../hooks/useConfig';
+import useRBAC from '../../../../hooks/useRBAC';
 import { GeneralConfig } from '../../../../types';
 import { Lesson } from '../../../../types/lesson';
-import api from '../../../../utils/api';
+import config from '../../../../configCached';
 import { parseMessageFromError } from '../../../../utils/common';
 import { capitalizeFirstLetter } from '../../../../utils/learn.helpers';
-import { loadLocaleData } from '../../../../utils/locale.helpers';
 import PageNotFound from '../../../not-found';
 
 const LESSONS_PER_PAGE = 10;
@@ -39,14 +39,15 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
   const isLearningHubEnabled = learningHubConfig && learningHubConfig?.enabled;
 
   const defaultConfig = useConfig();
-  const PLATFORM_NAME =
-    generalConfig?.platformName || defaultConfig.platformName;
-  const { user } = useAuth();
+  const PLATFORM_NAME = generalConfig?.platformName || defaultConfig.platformName;
   const { platform }: any = usePlatform();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
+
+  const { hasAccess } = useRBAC();
+  const canCreateLesson = hasAccess('LearningHubCreate');
 
   const filter = {
     where: getCategoryWhere(),
@@ -56,13 +57,32 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
   };
 
   const lessons = platform.lesson.find(filter);
+
+  const publicLessons = lessons?.filter(
+    (lesson: Record<Lesson>) => !lesson.get('isDraft'),
+  );
+
   const totalLessons = platform.lesson.findCount(filter);
+  const totalPublicLessons = publicLessons?.size;
+  
   const allLessons = platform.lesson.find();
+  const allPublicLessons = allLessons?.filter(
+    (lesson: Record<Lesson>) => !lesson.get('isDraft'),
+  );
 
   const categories = lessons &&
     allLessons && [
       ...new Set(
         allLessons.toJS().map((lesson: Lesson) => {
+          return lesson.category;
+        }),
+      ),
+    ];
+  
+  const publicCategories = allPublicLessons &&
+    allLessons && [
+      ...new Set(
+        allPublicLessons.toJS().map((lesson: Lesson) => {
           return lesson.category;
         }),
       ),
@@ -122,7 +142,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
           </div>
 
           <div className="action">
-            {user && user.roles.includes('admin') && (
+            {canCreateLesson && (
               <Link
                 href="/learn/create"
                 className="mt-10 btn-primary inline-block"
@@ -140,7 +160,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
             </Heading>
 
             <LearnCategoriesNav
-              categories={categories}
+              categories={canCreateLesson ? categories : publicCategories}
               currentCategory={category as string}
             />
           </nav>
@@ -156,7 +176,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
               <Heading level={1}>{t('generic_coming_soon')}</Heading>
             )}
 
-            <LessonsList lessons={lessons} />
+            <LessonsList lessons={(canCreateLesson) ? lessons : publicLessons} />
 
             {lessons && totalLessons > LESSONS_PER_PAGE && (
               <Pagination
@@ -165,7 +185,7 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
                 }}
                 page={page}
                 limit={LESSONS_PER_PAGE}
-                total={totalLessons}
+                total={(canCreateLesson) ? totalLessons : totalPublicLessons}
               />
             )}
           </section>
@@ -177,30 +197,19 @@ const LearnCategoryPage = ({ generalConfig, learningHubConfig }: Props) => {
 
 LearnCategoryPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [generalRes, learningHubRes, messages] = await Promise.all([
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      api.get('/config/learningHub').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const generalConfig = generalRes?.data?.results?.value || null;
-    const learningHubConfig = learningHubRes?.data?.results?.value || null;
+    const generalConfig = config.general || null;
+    const learningHubConfig = config.learningHub || null;
 
     return {
       generalConfig,
       learningHubConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {
       generalConfig: null,
       learningHubConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

@@ -22,7 +22,7 @@ const Checkbox = ({
         disabled={!isEnabled}
         id={id}
         type="checkbox"
-        className="accent-accent w-4 h-4 mt-1"
+        className="accent-accent w-4 h-4 mt-1 flex-shrink-0"
         checked={isChecked}
         onChange={onChange}
       />

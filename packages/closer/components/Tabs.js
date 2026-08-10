@@ -12,7 +12,7 @@ const styleMap = {
   disabled: 'text-gray-400 cursor-not-allowed dark:text-gray-500',
 };
 
-const Tabs = ({ tabs, onChange, initialCurrentTab }) => {
+const Tabs = ({ tabs, onChange = /** @type {any} */ (undefined), initialCurrentTab = 0 }) => {
   const [currentTab, setCurrentTab] = useState(initialCurrentTab);
 
   return (
@@ -47,7 +47,7 @@ const Tabs = ({ tabs, onChange, initialCurrentTab }) => {
             ))}
         </ul>
       </div>
-      <div className="tab-content mt-4 mb-8 py-4">
+      <div className="tab-content mt-3 mb-3 py-3">
         {tabs && tabs[currentTab] && tabs[currentTab].content}
         {tabs[currentTab].datePicker &&
           tabs[currentTab].title === 'general' &&
@@ -55,9 +55,6 @@ const Tabs = ({ tabs, onChange, initialCurrentTab }) => {
       </div>
     </>
   );
-};
-Tabs.defaultProps = {
-  initialCurrentTab: 0,
 };
 Tabs.propTypes = {
   tabs: PropTypes.array,

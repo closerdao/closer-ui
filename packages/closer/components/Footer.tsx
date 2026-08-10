@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { FC } from 'react';
 
 import { FaTelegram } from '@react-icons/all-files/fa/FaTelegram';
@@ -7,12 +8,16 @@ import { SiInstagram } from '@react-icons/all-files/si/SiInstagram';
 import { SiTwitter } from '@react-icons/all-files/si/SiTwitter';
 import { useTranslations } from 'next-intl';
 
+import { useNewsletter } from '../contexts/newsletter';
 import { useConfig } from '../hooks/useConfig';
 import Newsletter from './Newsletter';
 
 const Footer: FC = () => {
   const t = useTranslations();
-  // TODO: switch to per-page config fetching if we ever need this page
+
+  const newsletterContext = useNewsletter();
+  const hideFooterNewsletter = newsletterContext?.hideFooterNewsletter || false;
+
   const config = useConfig();
   const {
     DISCORD_URL,
@@ -21,6 +26,10 @@ const Footer: FC = () => {
     TELEGRAM_URL,
     TWITTER_URL,
   } = config || {};
+  const isLearningHubEnabled =
+    config?.learningHub?.enabled === true &&
+    process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true';
+
   return (
     <div>
       <footer className="flex flex-col items-center p-4 main-content text-center">
@@ -76,24 +85,39 @@ const Footer: FC = () => {
                   href={TELEGRAM_URL}
                   target="_blank"
                   rel="noreferrer nofollow"
-                  title="Join Telegram Group"
+                  title="Follow on Telegram"
                   className="text-2xl mr-2 rounded-full hover:text-gray-100 hover:bg-accent p-2 text-accent dark:text-background bg-transparent duration-300 hover:scale-110"
                 >
                   <FaTelegram />
                 </a>
               )}
             </div>
-            <div className="flex flex-col items-start mt-8 text-gray-500">
+            <div className="flex flex-col items-center md:items-start mt-8 text-gray-500 gap-2">
+              <p className="text-sm font-medium text-foreground/70">
+                {t('footer_mission')}
+              </p>
+              {isLearningHubEnabled && (
+                <Link
+                  href="/learn/category/all"
+                  className="text-xs underline hover:text-accent"
+                >
+                  {t('navigation_learning_hub')}
+                </Link>
+              )}
               <p className="text-xs">
                 {t('footer_phrase')}{' '}
-                <a href="https://closer.earth" className="underline">
+                <a href="https://closer.earth" className="underline hover:text-accent">
                   {t('footer_platform')}
                 </a>
               </p>
             </div>
           </div>
 
-          <Newsletter placement="Footer" />
+          {!hideFooterNewsletter && (
+            <div className="w-full flex justify-center">
+              <Newsletter placement="Footer" />
+            </div>
+          )}
         </div>
       </footer>
     </div>

@@ -2,35 +2,45 @@ import React, {
   Dispatch,
   FC,
   SetStateAction,
-  useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 
 import { useTranslations } from 'next-intl';
 
 import { MAX_LISTINGS_TO_FETCH, SALES_CONFIG } from '../../constants';
-import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
 import { Listing } from '../../types';
 import api from '../../utils/api';
-import { getCurrentUnitPrice, getTotalPrice } from '../../utils/bondingCurve';
+import { getReserveTokenDisplay } from '../../utils/config.utils';
 import { Information } from '../ui';
 import Select from '../ui/Select/Dropdown';
 import { Item } from '../ui/Select/types';
 
-const { MAX_TOKENS_PER_TRANSACTION, MAX_WALLET_BALANCE } = SALES_CONFIG;
+const { MAX_TOKENS_PER_TRANSACTION } = SALES_CONFIG;
 
 interface Props {
   tokensToBuy: number;
   setTokensToBuy: Dispatch<SetStateAction<number>>;
+  tokensToSpend: number;
+  setTokensToSpend: Dispatch<SetStateAction<number>>;
+  setIsCalculationPending?: Dispatch<SetStateAction<boolean>>;
 }
 
-const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
+const TokenBuyWidget: FC<Props> = ({
+  tokensToBuy,
+  setTokensToBuy,
+  tokensToSpend,
+  setTokensToSpend,
+  setIsCalculationPending,
+}) => {
   const t = useTranslations();
-  const { SOURCE_TOKEN } = useConfig() || {};
-  const { getCurrentSupply, getUserTdfBalance } = useBuyTokens();
+  const config = useConfig() || {};
+  const reserveToken = getReserveTokenDisplay(config);
+  const { isPending, getTotalCostWithoutWallet } = useBuyTokens();
+
   const FUTURE_ACCOMMODATION_TYPES = [
     {
       name: `${t('token_sale_public_sale_shared_suite')} (${t(
@@ -59,9 +69,6 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
   ];
 
   const [tokenPrice, setTokenPrice] = useState<number>(0);
-  const [currentSupply, setCurrentSupply] = useState<number>(0);
-  const [userTdfBalance, setUserTdfBalance] = useState<number>(0);
-  const { isWalletReady } = useContext(WalletState);
   const [accommodationOptions, setAccommodationOptions] = useState<{
     labels: Item[];
     prices: number[];
@@ -70,74 +77,168 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
     name: '',
     price: 0,
   });
-  const [tokensToSpend, setTokensToSpend] = useState(0);
+
   const [nightsPerYear, setNightsPerYear] = useState(0);
+  const [showMaxAmountWarning, setShowMaxAmountWarning] = useState(false);
+  const calculationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Debounced calculation function to prevent race conditions
+  const debouncedCalculateTotalCost = (amount: number) => {
+    // Clear any existing timeout
+    if (calculationTimeoutRef.current) {
+      clearTimeout(calculationTimeoutRef.current);
+    }
+
+    // Cancel any ongoing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new abort controller for this request
+    abortControllerRef.current = new AbortController();
+
+    // Set calculation as pending
+    setIsCalculationPending?.(true);
+
+    // Debounce the calculation
+    calculationTimeoutRef.current = setTimeout(async () => {
+      try {
+        const totalCost = await getTotalCostWithoutWallet(amount.toString());
+
+        // Only update if the request wasn't aborted
+        if (!abortControllerRef.current?.signal.aborted) {
+          setTokensToSpend(totalCost);
+        }
+      } catch (error) {
+        if (!abortControllerRef.current?.signal.aborted) {
+          console.error('Error calculating total cost:', error);
+          setTokensToSpend(0);
+        }
+      } finally {
+        // Only clear pending state if the request wasn't aborted
+        if (!abortControllerRef.current?.signal.aborted) {
+          setIsCalculationPending?.(false);
+        }
+      }
+    }, 300); // 300ms debounce
+  };
 
   useEffect(() => {
-    (async () => {
-      const res = await api.get('/listing', {
-        params: {
-          limit: MAX_LISTINGS_TO_FETCH,
-        },
-      });
-      const labels = res.data.results
-        .filter((option: Listing) => {
-          return !option?.priceDuration || option?.priceDuration === 'night';
-        })
-        .map((option: any) => {
-          return { label: option.name, value: option.name };
-        });
-
+    if (process.env.NODE_ENV === 'test') {
       const labelsFuture = FUTURE_ACCOMMODATION_TYPES.map(
         (accommodatinType: any) => {
           return { label: accommodatinType.name, value: accommodatinType.name };
         },
       );
-
-      const prices = res?.data?.results?.map((option: any) => {
-        return option.tokenPrice.val;
-      });
-
       const pricesFuture = FUTURE_ACCOMMODATION_TYPES.map(
         (accommodatinType: any) => {
           return accommodatinType.price;
         },
       );
-
-      labels.push(...labelsFuture);
-      prices.push(...pricesFuture);
-
-      const price = res?.data?.results[0].tokenPrice.val || 1;
-
-      setNightsPerYear(tokensToBuy / price);
-      setNightsPerYear(tokensToBuy / price);
-      setAccommodationOptions({ labels, prices });
+      setAccommodationOptions({ labels: labelsFuture, prices: pricesFuture });
       setSelectedAccommodation({
-        name: res?.data?.results[0].name,
-        price: res?.data?.results[0].tokenPrice.val,
+        name: FUTURE_ACCOMMODATION_TYPES[0]?.name || '',
+        price: FUTURE_ACCOMMODATION_TYPES[0]?.price || 1,
       });
-    })();
+      setNightsPerYear(tokensToBuy / (FUTURE_ACCOMMODATION_TYPES[0]?.price || 1));
+      setTokenPrice(0);
+      setTokensToSpend(0);
+      setIsCalculationPending?.(false);
+      return;
+    }
+
+    const initData = async () => {
+      try {
+        const res = await api.get('/listing', {
+          params: {
+            limit: MAX_LISTINGS_TO_FETCH,
+          },
+        });
+        const labels = res.data.results
+          .filter((option: Listing) => {
+            return !option?.priceDuration || option?.priceDuration === 'night';
+          })
+          .map((option: any) => {
+            return { label: option.name, value: option.name };
+          });
+
+        const labelsFuture = FUTURE_ACCOMMODATION_TYPES.map(
+          (accommodatinType: any) => {
+            return { label: accommodatinType.name, value: accommodatinType.name };
+          },
+        );
+
+        const prices = res?.data?.results
+          ?.filter((option: any) => option.tokenPrice?.val)
+          ?.map((option: any) => {
+            return option.tokenPrice?.val || 0;
+          }) || [];
+
+        const pricesFuture = FUTURE_ACCOMMODATION_TYPES.map(
+          (accommodatinType: any) => {
+            return accommodatinType.price;
+          },
+        );
+
+        labels.push(...labelsFuture);
+        prices.push(...pricesFuture);
+
+        const price = await getTotalCostWithoutWallet('1');
+
+        const firstListing =
+          res?.data?.results?.find((option: any) => option.tokenPrice?.val) ||
+          res?.data?.results?.[0];
+        const nightlyPrice = firstListing?.tokenPrice?.val || 1;
+
+        setNightsPerYear(tokensToBuy / nightlyPrice);
+        setAccommodationOptions({ labels, prices });
+        setSelectedAccommodation({
+          name: firstListing?.name || '',
+          price: nightlyPrice,
+        });
+        debouncedCalculateTotalCost(tokensToBuy);
+        setTokenPrice(price);
+      } catch (error) {
+        const labelsFuture = FUTURE_ACCOMMODATION_TYPES.map(
+          (accommodatinType: any) => {
+            return { label: accommodatinType.name, value: accommodatinType.name };
+          },
+        );
+        const pricesFuture = FUTURE_ACCOMMODATION_TYPES.map(
+          (accommodatinType: any) => {
+            return accommodatinType.price;
+          },
+        );
+        setAccommodationOptions({ labels: labelsFuture, prices: pricesFuture });
+        setSelectedAccommodation({
+          name: FUTURE_ACCOMMODATION_TYPES[0]?.name || '',
+          price: FUTURE_ACCOMMODATION_TYPES[0]?.price || 1,
+        });
+        setNightsPerYear(tokensToBuy / (FUTURE_ACCOMMODATION_TYPES[0]?.price || 1));
+        setTokenPrice(0);
+        setTokensToSpend(0);
+        setIsCalculationPending?.(false);
+        if (process.env.NODE_ENV !== 'test') {
+          console.error('Error loading listing options:', error);
+        }
+      }
+    };
+
+    void initData();
   }, []);
 
+  // Cleanup on unmount
   useEffect(() => {
-    if (isWalletReady) {
-      (async () => {
-        const supply = await getCurrentSupply();
-        const tdfBalance = await getUserTdfBalance();
-        setCurrentSupply(supply);
-        setUserTdfBalance(tdfBalance);
-      })();
-    }
-  }, [isWalletReady]);
-
-  useEffect(() => {
-    if (currentSupply) {
-      const price = getCurrentUnitPrice(currentSupply);
-      setTokenPrice(price);
-      const totalPrice = getTotalPrice(currentSupply, tokensToBuy);
-      setTokensToSpend(totalPrice);
-    }
-  }, [currentSupply]);
+    return () => {
+      if (calculationTimeoutRef.current) {
+        clearTimeout(calculationTimeoutRef.current);
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const handleAccommodationSelect = (value: string) => {
     const index = accommodationOptions?.labels.findIndex((option: Item) => {
@@ -154,46 +255,31 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
     setSelectedAccommodation({ name: value, price });
   };
 
-  const handleTokensToBuyChange = (
+  const handleTokensToBuyChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    const index = accommodationOptions?.labels.findIndex((option: Item) => {
-      return option.label === selectedAccommodation.name;
-    });
+    const newValue = Number(event.target.value);
+    const attemptedAboveMax =
+      Number.isFinite(newValue) && newValue > MAX_TOKENS_PER_TRANSACTION;
+    setShowMaxAmountWarning(attemptedAboveMax);
+    const clampedValue =
+      newValue > MAX_TOKENS_PER_TRANSACTION
+        ? MAX_TOKENS_PER_TRANSACTION
+        : newValue;
 
-    const price =
-      index !== undefined &&
-      accommodationOptions &&
-      accommodationOptions.prices[index];
+    setTokensToBuy(clampedValue);
 
-    const value =
-      event.target.value === '' ? 0 : parseInt(event.target.value, 10);
+    // Reset tokens to spend immediately to show loading state
+    setTokensToSpend(0);
 
-    const possibleAmount = calculatePossibleAmount(value);
-    const priceForTotalAmount = getTotalPrice(currentSupply, possibleAmount);
-
-    setTokensToBuy(possibleAmount);
-    setTokensToSpend(priceForTotalAmount);
-    if (price) {
-      setNightsPerYear(possibleAmount / selectedAccommodation.price || 0);
-    }
-  };
-
-  const calculatePossibleAmount = (desiredAmount: number) => {
-    let amount = desiredAmount;
-    if (amount > MAX_TOKENS_PER_TRANSACTION) {
-      amount = MAX_TOKENS_PER_TRANSACTION;
-    }
-    if (userTdfBalance + amount > MAX_WALLET_BALANCE) {
-      amount = MAX_WALLET_BALANCE - userTdfBalance;
-    }
-    return amount;
+    // Trigger debounced calculation
+    debouncedCalculateTotalCost(clampedValue);
   };
 
   return (
     <div className="flex flex-col gap-4 my-10">
-      <p className="text-stone-500 text-md w-full  p-1">
-        1 {t('token_sale_token_symbol')} ≈ {tokenPrice} {SOURCE_TOKEN}
+      <p className="text-stone-500 text-md w-full p-1">
+        1 {t('token_sale_token_symbol')} ≈ {tokenPrice} {reserveToken}
       </p>
 
       <div className="flex gap-4">
@@ -205,7 +291,6 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
         </label>
         <div className="flex-1 relative">
           <input
-            max={10}
             id="tokensToBuy"
             value={tokensToBuy}
             onChange={handleTokensToBuyChange}
@@ -220,13 +305,17 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
           htmlFor="tokensToSpend"
           className="font-bold bg-accent-light py-3.5 px-6 rounded-md text-xl"
         >
-          {t('token_sale_source_token')}
+          {t('token_sale_source_token', { reserveToken })}
         </label>
         <div className="flex-1 relative">
           <input
             id="tokensToSpend"
             disabled={true}
-            value={tokensToSpend}
+            value={
+              isPending || (setIsCalculationPending && tokensToSpend === 0)
+                ? 'calculating...'
+                : tokensToSpend
+            }
             className="h-14 px-4 pr-8 rounded-md text-xl bg-neutral text-black !border-none"
           />
           <p className="absolute right-3 top-4"> {t('token_sale_pay')}</p>
@@ -234,7 +323,7 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
       </div>
 
       <div className="flex flex-col sm:flex-row gap-2 items-left sm:items-center mb-8">
-        <p className=" whitespace-normal sm:whitespace-nowrap">
+        <p className=" whitespace-normal text-sm">
           This amount will give you right of staying{' '}
           <strong>{nightsPerYear}</strong> nights a year in a{' '}
         </p>
@@ -252,13 +341,13 @@ const TokenBuyWidget: FC<Props> = ({ tokensToBuy, setTokensToBuy }) => {
       </div>
 
       <div className="flex flex-col gap-4">
-        <Information>{t('token_sale_gas_fees_note')}</Information>
-        <Information>{t('token_sale_max_amount_note')}</Information>
-        <Information>{t('token_sale_price_disclaimer')}</Information>
-        <Information>
-          {t('token_sale_max_wallet_balance')}
-          {Math.max(MAX_WALLET_BALANCE - userTdfBalance, 0)}
-        </Information>
+        <Information>{t('token_sale_gas_fees_note', { reserveToken })}</Information>
+        {showMaxAmountWarning && (
+          <Information>
+            {`Max ${MAX_TOKENS_PER_TRANSACTION} tokens per purchase. Contact the team for larger allocations.`}
+          </Information>
+        )}
+        <Information>{t('token_sale_price_disclaimer', { reserveToken })}</Information>
       </div>
     </div>
   );

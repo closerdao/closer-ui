@@ -56,7 +56,7 @@ const Ama = ({ id }: Props) => {
             <Button
               className="text-[16px]"
               onClick={() => {
-                router.push('https://calendly.com/samueldelesque');
+                router.push('#webinar');
               }}
             >
               {t('token_sale_public_sale_button_book_a_call')}
@@ -204,7 +204,7 @@ const Ama = ({ id }: Props) => {
             <Button
               className="text-[16px]"
               onClick={() => {
-                router.push('https://calendly.com/cosmicweave/ama_space_mgm');
+                router.push('#webinar');
               }}
             >
               {t('token_sale_public_sale_button_book_a_call')}

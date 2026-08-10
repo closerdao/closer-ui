@@ -2,8 +2,7 @@ import Link from 'next/link';
 
 import { useState } from 'react';
 
-import { GrNext } from '@react-icons/all-files/gr/GrNext';
-import { GrPrevious } from '@react-icons/all-files/gr/GrPrevious';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 
 interface Props {
@@ -63,7 +62,7 @@ const Slider = ({
                     )
                   }
                 >
-                  <GrPrevious />
+                  <ChevronLeft className="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -78,7 +77,7 @@ const Slider = ({
                   )
                 }
               >
-                <GrNext />
+                <ChevronRight className="w-5 h-5" />
               </button>
             </div>
           </>
@@ -102,7 +101,7 @@ const Slider = ({
                 )
               }
             >
-              <GrPrevious />
+              <ChevronLeft className="w-5 h-5" />
             </button>
             {slides.length > 0 && (
               <figure>
@@ -118,7 +117,7 @@ const Slider = ({
                 )
               }
             >
-              <GrNext />
+              <ChevronRight className="w-5 h-5" />
             </button>
           </div>
         )}

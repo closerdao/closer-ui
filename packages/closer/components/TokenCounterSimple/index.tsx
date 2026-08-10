@@ -11,7 +11,10 @@ import { useTranslations } from 'next-intl';
 import { SALES_CONFIG } from '../../constants';
 import { WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
+import { useConfig } from '../../hooks/useConfig';
+import { getReserveTokenDisplay } from '../../utils/config.utils';
 import { getTotalPrice } from '../../utils/bondingCurve';
+import { logMetric } from '../../utils/metrics';
 
 const { MAX_TOKENS_PER_TRANSACTION, MAX_WALLET_BALANCE } = SALES_CONFIG;
 
@@ -22,6 +25,8 @@ interface Props {
 
 const TokenCounterSimple = ({ tokensToBuy, setTokensToBuy }: Props) => {
   const t = useTranslations();
+  const config = useConfig();
+  const reserveToken = getReserveTokenDisplay(config);
   const { getCurrentSupply, getUserTdfBalance } = useBuyTokens();
   const [currentSupply, setCurrentSupply] = useState<number>(0);
   const [userTdfBalance, setUserTdfBalance] = useState<number>(0);
@@ -69,6 +74,12 @@ const TokenCounterSimple = ({ tokensToBuy, setTokensToBuy }: Props) => {
 
     setTokensToBuy(possibleAmount);
     setTokensToSpend(priceForTotalAmount);
+
+    void logMetric({
+      event: 'use-calculator',
+      category: 'token',
+      value: 'calculator', point: possibleAmount,
+    });
   };
 
   const handleTokensToBuyChange = (
@@ -82,6 +93,12 @@ const TokenCounterSimple = ({ tokensToBuy, setTokensToBuy }: Props) => {
 
     setTokensToBuy(possibleAmount);
     setTokensToSpend(priceForTotalAmount);
+
+    void logMetric({
+      event: 'use-calculator',
+      category: 'token',
+      value: 'calculator', point: possibleAmount,
+    });
   };
 
   return (
@@ -107,7 +124,7 @@ const TokenCounterSimple = ({ tokensToBuy, setTokensToBuy }: Props) => {
       <div className="relative">
         <div className="absolute  px-1 py-1 h-10 flex items-center">
           <div className="text-black bg-white rounded-full h-8 px-4 flex items-center">
-            {t('token_sale_source_token')}
+            {t('token_sale_source_token', { reserveToken })}
           </div>
         </div>
         <input

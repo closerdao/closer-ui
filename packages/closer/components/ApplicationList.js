@@ -7,7 +7,7 @@ import models from '../models';
 import Pagination from './Pagination';
 import TimeSince from './TimeSince';
 
-const ApplicationList = ({ status, managedBy, limit }) => {
+const ApplicationList = ({ status = 'open', managedBy, limit = 10 }) => {
   const t = useTranslations();
 
   const { platform } = usePlatform();
@@ -154,9 +154,4 @@ const ApplicationList = ({ status, managedBy, limit }) => {
     </div>
   );
 };
-ApplicationList.defaultProps = {
-  status: 'open',
-  limit: 10,
-};
-
 export default ApplicationList;

@@ -2,7 +2,8 @@ import axios from 'axios';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
-import { ethers } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
+import { formatEther } from '@ethersproject/units';
 import { List } from 'immutable';
 
 import { blockchainConfig } from '../config_blockchain';
@@ -54,37 +55,57 @@ export const getDateRange = ({
         end: toEndOfDay(new Date(), timeZone),
       };
     case 'week':
+    case 'last7Days':
       return {
         start: toStartOfDay(dayjs().subtract(6, 'day').toDate(), timeZone),
         end: toEndOfDay(new Date(), timeZone),
       };
     case 'month':
+    case 'currentMonth':
+      return {
+        start: toStartOfDay(dayjs().startOf('month').toDate(), timeZone),
+        end: toEndOfDay(new Date(), timeZone),
+      };
+    case 'previousMonth':
       return {
         start: toStartOfDay(
-          dayjs().subtract(1, 'month').subtract(1, 'day').toDate(),
+          dayjs().subtract(1, 'month').startOf('month').toDate(),
           timeZone,
         ),
+        end: toEndOfDay(
+          dayjs().subtract(1, 'month').endOf('month').toDate(),
+          timeZone,
+        ),
+      };
+    case 'last4Weeks':
+      return {
+        start: toStartOfDay(dayjs().subtract(4, 'week').toDate(), timeZone),
         end: toEndOfDay(new Date(), timeZone),
       };
     case 'year':
+    case 'currentYear':
       return {
-        start: toStartOfDay(
-          dayjs().subtract(1, 'year').subtract(1, 'day').toDate(),
-          timeZone,
-        ),
+        start: toStartOfDay(dayjs().startOf('year').toDate(), timeZone),
         end: toEndOfDay(new Date(), timeZone),
       };
     case 'allTime':
       return {
         start:
-          fromDate && toDate ? toStartOfDay(fromDate, timeZone) : new Date(),
+          fromDate && toDate
+            ? toStartOfDay(fromDate, timeZone)
+            : toStartOfDay('1970-01-01', timeZone),
         end: toEndOfDay(new Date(), timeZone),
       };
     case 'custom':
+      if (!fromDate || !toDate) {
+        return {
+          start: toStartOfDay(new Date(), timeZone),
+          end: toEndOfDay(new Date(), timeZone),
+        };
+      }
       return {
-        start:
-          fromDate && toDate ? toStartOfDay(fromDate, timeZone) : new Date(),
-        end: toDate && fromDate ? toEndOfDay(toDate, timeZone) : new Date(),
+        start: toStartOfDay(fromDate, timeZone),
+        end: toEndOfDay(toDate, timeZone),
       };
 
     default:
@@ -94,6 +115,9 @@ export const getDateRange = ({
       };
   }
 };
+
+export const formatDateForApi = (date: Date, timeZone: string) =>
+  dayjs(date).tz(timeZone).format('YYYY-MM-DD');
 
 export const getTotalNumNights = (listings: List<Map<string, unknown>>) => {
   if (!listings) return 0;
@@ -211,10 +235,11 @@ export const getBookedNights = ({
   firstBookingDate?: string;
 }) => {
   nightlyBookings = nightlyBookings?.filter((booking: any) => {
+    if (!booking || typeof booking.get !== 'function') return false;
     return paidStatuses.includes(booking.get('status'));
   });
 
-  if (!nightlyBookings || !nightlyListings)
+  if (!nightlyBookings || !nightlyListings || nightlyBookings.size === 0)
     return { bookedNights: [], numBookedNights: 0 };
 
   if (firstBookingDate) {
@@ -231,8 +256,10 @@ export const getBookedNights = ({
   );
 
   nightlyBookings.forEach((booking: any) => {
+    if (!booking || typeof booking.get !== 'function') return;
+    
     const listing = nightlyListings.find(
-      (listing: any) => listing.get('_id') === booking.get('listing'),
+      (listing: any) => listing?.get('_id') === booking.get('listing'),
     );
     const listingName = listing?.get('name');
 
@@ -246,8 +273,9 @@ export const getBookedNights = ({
       ? duration * listing?.get('quantity')
       : duration * listing?.get('quantity') * listing?.get('beds');
 
-    if (booking.get('roomOrBedNumbers').size) {
-      booking.get('roomOrBedNumbers').map((roomOrBedNumber: any) => {
+    const roomOrBedNumbers = booking.get('roomOrBedNumbers');
+    if (roomOrBedNumbers && roomOrBedNumbers.size) {
+      roomOrBedNumbers.map((roomOrBedNumber: any) => {
         bookedNights.push({
           listingName,
           roomOrBedNumber,
@@ -304,13 +332,15 @@ export const getBookedSpaceSlots = (
   const listingsWithoutBookings = listings.filter(
     (listing: any) =>
       !bookings.find(
-        (booking: any) => booking.get('listing') === listing.get('_id'),
+        (booking: any) => booking?.get && booking.get('listing') === listing?.get('_id'),
       ),
   );
 
   bookings.forEach((booking: any) => {
+    if (!booking || typeof booking.get !== 'function') return;
+    
     const listing = listings.find(
-      (listing: any) => listing.get('_id') === booking.get('listing'),
+      (listing: any) => listing?.get('_id') === booking.get('listing'),
     );
 
     const listingName = listing && listing.get('name');
@@ -326,15 +356,18 @@ export const getBookedSpaceSlots = (
         listing.get('quantity') *
         duration || 0;
 
-    booking.get('roomOrBedNumbers').map((roomOrBedNumber: any) => {
-      bookedSpaceSlots.push({
-        listingName,
-        roomOrBedNumber,
-        spaceSlots: bookingNumSlots,
-        totalSpaceSlots,
+    const roomOrBedNumbers = booking.get('roomOrBedNumbers');
+    if (roomOrBedNumbers && roomOrBedNumbers.map) {
+      roomOrBedNumbers.map((roomOrBedNumber: any) => {
+        bookedSpaceSlots.push({
+          listingName,
+          roomOrBedNumber,
+          spaceSlots: bookingNumSlots,
+          totalSpaceSlots,
+        });
+        numBookedSpaceSlots += bookingNumSlots;
       });
-      numBookedSpaceSlots += bookingNumSlots;
-    });
+    }
   });
 
   listingsWithoutBookings.forEach((listing: any) => {
@@ -366,31 +399,36 @@ export const getBookingsWithRoomInfo = (
   const bookingsWithRoomInfo: any[] = [];
   bookings &&
     bookings.forEach((booking: any) => {
+      if (!booking || typeof booking.get !== 'function') return;
+      
       const listing = listings?.find(
-        (listing: any) => listing.get('_id') === booking.get('listing'),
+        (listing: any) => listing?.get('_id') === booking.get('listing'),
       );
 
-      booking.get('roomOrBedNumbers').map((roomOrBedNumber: any) => {
-        const doesCheckoutToday = dayjs().isSame(
-          dayjs(dateToPropertyTimeZone(timeZone, booking.get('end'))),
-          'day',
-        );
-        bookingsWithRoomInfo.push({
-          room: listing?.get('name') + ' ' + roomOrBedNumber,
-          doesCheckoutToday,
-          period:
-            !listing?.get('priceDuration') ||
-            listing?.get('priceDuration') !== 'hour'
-              ? 'night'
-              : dayjs(
-                  dateToPropertyTimeZone(timeZone, booking.get('start')),
-                ).format('HH:mm') +
-                ' - ' +
-                dayjs(
-                  dateToPropertyTimeZone(timeZone, booking.get('end')),
-                ).format('HH:mm'),
+      const roomOrBedNumbers = booking.get('roomOrBedNumbers');
+      if (roomOrBedNumbers && roomOrBedNumbers.map) {
+        roomOrBedNumbers.map((roomOrBedNumber: any) => {
+          const doesCheckoutToday = dayjs().isSame(
+            dayjs(dateToPropertyTimeZone(timeZone, booking.get('end'))),
+            'day',
+          );
+          bookingsWithRoomInfo.push({
+            room: listing?.get('name') + ' ' + roomOrBedNumber,
+            doesCheckoutToday,
+            period:
+              !listing?.get('priceDuration') ||
+              listing?.get('priceDuration') !== 'hour'
+                ? 'night'
+                : dayjs(
+                    dateToPropertyTimeZone(timeZone, booking.get('start')),
+                  ).format('HH:mm') +
+                  ' - ' +
+                  dayjs(
+                    dateToPropertyTimeZone(timeZone, booking.get('end')),
+                  ).format('HH:mm'),
+          });
         });
-      });
+      }
     });
   return bookingsWithRoomInfo;
 };
@@ -451,8 +489,7 @@ export const isSaleTransaction = (tx: TokenTransaction) => {
   const isTransferEvent = tx.topics[0] === transferEventHash;
   const isNotSelfTransfer =
     tx.fromAddressHash.toLowerCase() !== tx.toAddressHash.toLowerCase();
-  const isPositiveAmount =
-    ethers.BigNumber.from(tx.amount) > ethers.BigNumber.from(0);
+  const isPositiveAmount = BigNumber.from(tx.amount).gt(BigNumber.from(0));
 
   return (
     isTransferEvent &&
@@ -469,11 +506,11 @@ export const getTokenSales = (txs: TokenTransaction[]): SalesResult => {
   });
 
   const totalSales = sales.reduce((sum, tx) => {
-    const amountInWei = ethers.BigNumber.from(tx.amount);
+    const amountInWei = BigNumber.from(tx.amount);
     return sum.add(amountInWei);
-  }, ethers.BigNumber.from(0));
+  }, BigNumber.from(0));
 
-  const totalSalesInTDF = ethers.utils.formatEther(totalSales);
+  const totalSalesInTDF = formatEther(totalSales);
 
   return {
     salesCount: sales.length,
@@ -806,13 +843,13 @@ export const getSubPeriodData = ({
     timeZone: TIME_ZONE,
   }));
 
-  const timePeriodTokenSales = tokenSales.filter((sale: any) => {
+  const timePeriodTokenSales = tokenSales?.filter((sale: any) => {
     const saleDate = new Date(sale.get('created'));
     const startDate = new Date(start);
     const endDate = new Date(end);
 
     return saleDate >= startDate && saleDate <= endDate;
-  });
+  }) || [];
   const timePeriodTokenRevenue = timePeriodTokenSales.reduce(
     (acc: number, curr: any) => {
       return Number(acc) + Number(curr.get('value'));
@@ -833,16 +870,19 @@ export const getSubPeriodData = ({
       return acc + curr.amount;
     }, 0) / STRIPE_AMOUNT_MULTIPLIER || 0;
 
-  const filteredBookings = bookings.filter((booking: any) => {
+  const filteredBookings = bookings?.filter((booking: any) => {
+    if (!booking || typeof booking.get !== 'function') return false;
     return (
       dayjs(booking.get('start')).isBefore(end) &&
       dayjs(booking.get('end')).isAfter(start)
     );
-  });
+  }) || [];
 
   filteredBookings.forEach((booking: any) => {
-    const listing = listings.find((listing: any) => {
-      return listing.get('_id') === booking.get('listing');
+    if (!booking || typeof booking.get !== 'function') return;
+    
+    const listing = listings?.find((listing: any) => {
+      return listing?.get('_id') === booking.get('listing');
     });
 
     const isCheckin =
@@ -855,19 +895,23 @@ export const getSubPeriodData = ({
 
     if (isCheckin) {
       if (isNightly) {
-        const fiatPrice = booking?.get('rentalFiat')?.get('val') || 0;
+        const rentalFiat = booking?.get('rentalFiat');
+        const fiatPrice = (rentalFiat?.get ? rentalFiat.get('val') : rentalFiat?.val) || 0;
 
         hospitalityRevenue += fiatPrice;
 
-        const utilityPrice = booking?.get('utilityFiat')?.get('val');
+        const utilityFiat = booking?.get('utilityFiat');
+        const utilityPrice = (utilityFiat?.get ? utilityFiat.get('val') : utilityFiat?.val) || 0;
         foodRevenue += utilityPrice;
       }
       if (!isNightly) {
-        const fiatPrice = booking?.get('rentalFiat')?.get('val');
+        const rentalFiat = booking?.get('rentalFiat');
+        const fiatPrice = (rentalFiat?.get ? rentalFiat.get('val') : rentalFiat?.val) || 0;
         spacesRevenue += fiatPrice;
       }
       if (isEvent) {
-        const ticketPrice = booking?.get('ticketOption')?.get('price');
+        const ticketOption = booking?.get('ticketOption');
+        const ticketPrice = (ticketOption?.get ? ticketOption.get('price') : ticketOption?.price) || 0;
         eventsRevenue += ticketPrice;
       }
     }
@@ -893,4 +937,10 @@ export const getSubPeriodData = ({
     tokens: Number((timePeriodTokenRevenue * TOKEN_PRICE).toFixed(1)),
     totalOperations,
   };
+};
+
+export const formatThousands = (value: number): string => {
+  return value >= 1000
+    ? `${(value / 1000).toFixed(2).replace('.', ',')}k`
+    : value.toString();
 };

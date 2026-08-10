@@ -1,3 +1,5 @@
+import { convert } from 'html-to-text';
+
 import Metatags from '../../../components/Metatags';
 import VolunteerEventView from '../../../components/VolunteerEventView';
 
@@ -6,7 +8,6 @@ import { useTranslations } from 'next-intl';
 
 import { VolunteerOpportunity } from '../../../types/api';
 import api from '../../../utils/api';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import NotFoundPage from '../../not-found';
 
 interface Props {
@@ -34,13 +35,9 @@ const VolunteerPage = ({ volunteer, descriptionText }: Props) => {
 };
 
 VolunteerPage.getInitialProps = async (context: NextPageContext) => {
-  const { convert } = require('html-to-text');
   try {
     const id = context.query.slug;
-    const [volunteerResponse, messages] = await Promise.all([
-      api.get(`/volunteer/${id}`),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const volunteerResponse = await api.get(`/volunteer/${id}`)
     const volunteer = volunteerResponse?.data?.results;
 
     const options = {
@@ -53,15 +50,13 @@ VolunteerPage.getInitialProps = async (context: NextPageContext) => {
     return {
       volunteer,
       descriptionText,
-      messages,
     };
   } catch (error) {
     console.error(error);
     return {
       volunteer: null,
       descriptionText: null,
-      messages: null,
-    };
+      };
   }
 };
 

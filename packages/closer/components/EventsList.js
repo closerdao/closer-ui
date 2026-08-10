@@ -12,15 +12,16 @@ dayjs.extend(advancedFormat);
 const now = new Date();
 
 const EventsList = ({
-  center,
-  card,
-  isListView,
-  title,
-  queryParam,
+  center = false,
+  card = false,
+  isListView = false,
+  title = /** @type {any} */ (undefined),
+  queryParam = 'events',
   where,
   limit,
-  showPagination,
-  cols,
+  showPagination = true,
+  cols = 3,
+  sort_by='-created',
 }) => {
   const t = useTranslations();
   const { platform } = usePlatform();
@@ -28,7 +29,7 @@ const EventsList = ({
   const [page, setPage] = useState(1);
 
   const eventsFilter = useMemo(
-    () => ({ where, limit, page }),
+    () => ({ where, limit, page, sort_by }),
     [where, limit, page],
   );
   const events = platform.event.find(eventsFilter);
@@ -50,16 +51,16 @@ const EventsList = ({
     loadData();
   }, []);
 
+  const gridClasses = isListView
+    ? 'flex flex-col gap-2'
+    : `grid gap-6 md:gap-8 ${cols === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'} ${center ? 'md:justify-center' : 'md:justify-start'} ${card ? 'event-body' : ''}`;
+
   return (
-    <div className={card ? 'card' : ''}>
+    <div className={card ? 'card max-w-6xl' : isListView ? '' : 'max-w-6xl'}>
       {error && <p className="text-red-500">{error}</p>}
       {title && <h3 className={card ? 'card-title' : ''}>{title}</h3>}
       {events && events.count() > 0 ? (
-        <div
-          className={`grid gap-8 md:grid-cols-${cols} md:justify-${
-            center ? 'center' : 'start'
-          } ${card ? 'event-body' : ''} ${isListView ? 'grid-cols-1' : ''} `}
-        >
+        <div className={gridClasses}>
           {events.map((event) => (
             <EventPreview
               key={event.get('_id')}
@@ -69,8 +70,8 @@ const EventsList = ({
           ))}
         </div>
       ) : (
-        <div className="w-full h-full text-center p-12">
-          <p className="italic">{t('events_list_no_events')}</p>
+        <div className={`w-full text-center ${isListView ? 'py-6' : 'p-12'}`}>
+          <p className="italic text-sm text-gray-500">{t('events_list_no_events')}</p>
         </div>
       )}
       {showPagination && (
@@ -89,14 +90,4 @@ const EventsList = ({
     </div>
   );
 };
-EventsList.defaultProps = {
-  showPagination: true,
-  isListView: false,
-  cols: 3,
-  card: false,
-  queryParam: 'events',
-  center: false,
-  title: undefined,
-};
-
 export default EventsList;

@@ -16,7 +16,14 @@ const customJestConfig = {
   testEnvironment: 'jest-environment-jsdom',
   testMatch: ['**/*.test.ts', '**/*.test.tsx'],
   moduleNameMapper: {
+    '^react-markdown$':
+      '<rootDir>/../../packages/closer/test/__mocks__/react-markdown.js',
     '@/(.*)': '<rootDir>/$1',
+    '^next/router$': 'next-router-mock',
+    '^next/dist/client/router$': 'next-router-mock',
+    '^@reown/appkit/react$': '<rootDir>/../../packages/closer/test/__mocks__/reown-appkit-react.js',
+    '^@reown/appkit/networks$': '<rootDir>/../../packages/closer/test/__mocks__/appkit.js',
+    '(.*)/appkit$': '<rootDir>/../../packages/closer/test/__mocks__/appkit.js',
   },
 };
 

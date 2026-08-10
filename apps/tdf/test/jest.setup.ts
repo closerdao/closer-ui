@@ -3,13 +3,26 @@ import { cleanup } from '@testing-library/react';
 
 import { server } from './server';
 
-// Establish API mocking before all tests.
-beforeAll(() => server.listen());
-// Reset any request handlers that we may add during the tests,
-// so they don't affect other tests.
+const consoleError = console.error;
+
+beforeAll(() => {
+  server.listen();
+  jest.spyOn(console, 'error').mockImplementation((message, ...args) => {
+    if (
+      typeof message === 'string' &&
+      message.includes('An update to') &&
+      message.includes('not wrapped in act')
+    ) {
+      return;
+    }
+    consoleError(message, ...args);
+  });
+});
+
 afterEach(() => server.resetHandlers());
-// Clean up after the tests are finished.
+
 afterAll(() => {
+  jest.restoreAllMocks();
   cleanup();
   server.close();
 });

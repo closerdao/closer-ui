@@ -16,26 +16,58 @@ const withMDX = require('@next/mdx')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    largePageDataBytes: 512 * 1024,
+  },
+  async redirects() {
+    return [
+      { source: '/admin/manage-users', destination: '/dashboard/admin/manage-users', permanent: true },
+      { source: '/admin/config', destination: '/dashboard/admin/config', permanent: true },
+      { source: '/admin/rbac', destination: '/dashboard/admin/rbac', permanent: true },
+      { source: '/admin/learn', destination: '/dashboard/admin/learn', permanent: true },
+      { source: '/admin/emails', destination: '/dashboard/admin/emails', permanent: true },
+      { source: '/admin/emails/:slug', destination: '/dashboard/admin/emails/:slug', permanent: true },
+      { source: '/bookings/:slug([0-9a-fA-F]{24})', destination: '/stay/:slug', permanent: true },
+      { source: '/cohousing/application/:id/admin', destination: '/dashboard/cohousing/:id', permanent: true },
+      { source: '/cohousing/applications', destination: '/dashboard/cohousing', permanent: true },
+      { source: '/dashboard/token-sales', destination: '/dashboard/sales/financed', permanent: true },
+      { source: '/dashboard/token-sales/financed/:applicationId', destination: '/dashboard/sales/financed/:applicationId', permanent: true },
+    ];
+  },
   // If set to true, there are some infinite loops occuring with our loadData
   // https://stackoverflow.com/questions/60618844/react-hooks-useeffect-is-called-twice-even-if-an-empty-array-is-used-as-an-ar
   i18n: {
-    locales: ['en'],
+    locales: ['en', 'pt'],
     defaultLocale: 'en',
   },
   reactStrictMode: false,
-  transpilePackages: ['closer'],
-  presets: ['next/babel'],
+  transpilePackages: [
+    'closer',
+    '@reown/appkit',
+    '@reown/appkit-adapter-ethers5',
+    '@reown/appkit-common',
+    '@reown/appkit-controllers',
+    '@reown/appkit-pay',
+    '@reown/appkit-polyfills',
+    '@reown/appkit-scaffold-ui',
+    '@reown/appkit-ui',
+    '@reown/appkit-utils',
+    '@reown/appkit-wallet',
+  ],
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   images: {
     remotePatterns: [
       {
-        hostname: 'cdn.oasa.co',
+        protocol: 'https',
+        hostname: '*',
       },
     ],
   },
   webpack: (config) => {
     config.experiments = {
+      ...config.experiments,
       topLevelAwait: true,
+      layers: true,
     };
     return config;
   },

@@ -1,7 +1,7 @@
 import Head from 'next/head';
 
-import CreateVolunteerView from '../../../components/CreateVolunteerView';
-import Heading from '../../../components/ui/Heading';
+import EditVolunteerView from '../../../components/EditVolunteerView';
+import { EditModelPageLayout } from '../../../components/EditModel';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -10,7 +10,6 @@ import { Page401 } from '../../..';
 import { useAuth } from '../../../contexts/auth';
 import { VolunteerOpportunity } from '../../../types';
 import api from '../../../utils/api';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 
 interface Props {
   volunteer: VolunteerOpportunity;
@@ -27,12 +26,13 @@ const EditVolunteerOportunity = ({ volunteer }: Props) => {
       <Head>
         <title>{t('volunteer_edit_page_title')}</title>
       </Head>
-      <div>
-        <Heading level={2} className="mb-2">
-          {t('volunteer_edit_page_title')}
-        </Heading>
-        <CreateVolunteerView isEditMode={true} data={volunteer} />
-      </div>
+      <EditModelPageLayout
+        title={t('volunteer_edit_page_title')}
+        backHref={`/volunteer/${volunteer.slug}`}
+        isEdit
+      >
+        <EditVolunteerView data={volunteer} />
+      </EditModelPageLayout>
     </>
   );
 };
@@ -40,24 +40,19 @@ const EditVolunteerOportunity = ({ volunteer }: Props) => {
 EditVolunteerOportunity.getInitialProps = async (context: NextPageContext) => {
   try {
     const id = context.query.slug;
-    const [volunteerResponse, messages] = await Promise.all([
-      api.get(`/volunteer/${id}`),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const volunteerResponse = await api.get(`/volunteer/${id}`)
 
     const {
       data: { results: volunteer },
     } = volunteerResponse;
     return {
       volunteer,
-      messages,
     };
   } catch (error) {
     console.error(error);
     return {
       volunteer: null,
-      messages: null,
-    };
+      };
   }
 };
 

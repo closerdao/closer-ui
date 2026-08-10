@@ -8,6 +8,9 @@ const { BLOCKCHAIN_DAO_TOKEN, BLOCKCHAIN_DAO_TOKEN_ABI } = blockchainConfig;
 export const fetcher =
   (library, abi) =>
   (...args) => {
+    if (!library) {
+      throw new Error('Library not available');
+    }
     const [arg1, arg2, ...params] = args;
     //contract call
     if (isAddress(arg1)) {
@@ -23,6 +26,9 @@ export const fetcher =
   };
 
 export const multiFetcher = (library, abi) => (argsArray) => {
+  if (!library) {
+    throw new Error('Library not available');
+  }
   const f = fetcher(library, abi);
   return Promise.all(argsArray.map((args) => f(...args)));
 };
@@ -53,11 +59,16 @@ export async function sendDAOToken(library, toAddress, amount) {
     library.getSigner(),
   );
 
-  const tx = await DAOTokenContract.transfer(
+  const txData = DAOTokenContract.interface.encodeFunctionData('transfer', [
     utils.getAddress(toAddress),
     amount,
-  );
+  ]);
+  const tx = await DAOTokenContract.signer.sendTransaction({
+    to: DAOTokenContract.address,
+    data: txData,
+  });
 
+  await tx.wait();
   return tx;
 }
 

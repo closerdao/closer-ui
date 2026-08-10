@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import EditModel from '../../../components/EditModel';
+import EditModel, { EditModelPageLayout } from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
 
 import { NextPageContext } from 'next';
@@ -9,10 +9,10 @@ import { useTranslations } from 'next-intl';
 
 import models from '../../../models';
 import { BookingConfig, Event } from '../../../types';
+import config from '../../../configCached';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
-import PageNotFound from '../../not-found';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 interface Props {
   event: Event;
@@ -36,7 +36,7 @@ const EditEvent = ({ event, bookingConfig }: Props) => {
   }
 
   if (!isBookingEnabled) {
-    return <PageNotFound />;
+    return <FeatureNotEnabled feature="booking" />;
   }
 
   return (
@@ -44,7 +44,11 @@ const EditEvent = ({ event, bookingConfig }: Props) => {
       <Head>
         <title>{`${t('bookings_edit_slug_title')} - ${event?.name}`}</title>
       </Head>
-      <div className="main-content">
+      <EditModelPageLayout
+        title={`${t('bookings_edit_slug_title')} ${event?.name}`}
+        backHref={event?.slug ? `/events/${event.slug}` : '/bookings'}
+        isEdit
+      >
         <EditModel
           id={event?._id}
           endpoint={'/event'}
@@ -57,7 +61,7 @@ const EditEvent = ({ event, bookingConfig }: Props) => {
           deleteButton="Delete Event"
           onDelete={() => router.push('/')}
         />
-      </div>
+      </EditModelPageLayout>
     </>
   );
 };
@@ -69,25 +73,18 @@ EditEvent.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No event');
     }
 
-    const [eventRes, bookingRes, messages] = await Promise.all([
-      api.get(`/event/${query.slug}`),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const eventRes = await api.get(`/event/${query.slug}`)
 
     const event = eventRes?.data.results;
-    const bookingConfig = bookingRes?.data.results.value;
+    const bookingConfig = config.booking;
 
-    return { event, bookingConfig, messages };
+    return { event, bookingConfig };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
       bookingConfig: null,
       event: null,
-      messages: null,
-    };
+      };
   }
 };
 

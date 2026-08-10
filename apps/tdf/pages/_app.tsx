@@ -1,3 +1,4 @@
+import type { AbstractIntlMessages } from 'next-intl';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -8,63 +9,58 @@ import { useEffect, useState } from 'react';
 import { ErrorBoundary, Layout } from '@/components';
 
 import AcceptCookies from 'closer/components/AcceptCookies';
+import PushNotificationModal from 'closer/components/PushNotificationModal';
 
-import {
-  ExternalProvider,
-  JsonRpcFetchFunc,
-  Web3Provider,
-} from '@ethersproject/providers';
-import { Web3ReactProvider } from '@web3-react/core';
 import {
   AuthProvider,
   ConfigProvider,
+  LocaleMessagesNextIntlBridge,
   PlatformProvider,
-  WalletProvider,
-  api,
-  blockchainConfig,
+  appGetInitialPropsWithMessages,
+  useNavigationMetrics,
 } from 'closer';
-import { configDescription } from 'closer/config';
+import { blockchainConfig } from 'closer/config_blockchain';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
-import { prepareGeneralConfig } from 'closer/utils/app.helpers';
-import { NextIntlClientProvider } from 'next-intl';
+import rbacDefaultConfig from 'closer/constants/rbac';
+import { NewsletterProvider } from 'closer/contexts/newsletter';
+import { PushNotificationProvider } from 'closer/contexts/push-notifications';
+import { WalletProvider } from 'closer/contexts/wallet';
+import {
+  applyCurrencyLocaleFromGeneralConfig,
+  mergeGeneralConfigWithDefaults,
+  prepareGeneralConfig,
+} from 'closer/utils/app.helpers';
+import { getAppConfigFromEnv } from 'closer/utils/appConfigFromEnv';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
-import appConfig from '../config';
+import configKeyed from '../configCached';
 import '../styles/index.css';
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
+  messages?: AbstractIntlMessages;
 }
 
-export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
-  const library = new Web3Provider(provider);
-  return library;
-}
-
-const prepareDefaultConfig = () => {
-  const general =
-    configDescription.find((config) => config.slug === 'general')?.value ?? {};
-  const transformedObject = Object.entries(general).reduce(
-    (acc, [key, value]) => {
-      return { ...acc, [key]: '' };
-    },
-    {},
-  );
-  return transformedObject;
-};
-
-const MyApp = ({ Component, pageProps }: AppOwnProps) => {
-  const defaultGeneralConfig = prepareDefaultConfig();
-
+const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
   const router = useRouter();
   const { query } = router;
   const referral = query.referral;
-
-  const [config, setConfig] = useState<any>(
-    prepareGeneralConfig(defaultGeneralConfig),
+  const [config] = useState<any>(() => {
+    const mergedGeneral = mergeGeneralConfigWithDefaults(configKeyed.general);
+    applyCurrencyLocaleFromGeneralConfig(mergedGeneral);
+    return {
+      ...prepareGeneralConfig(mergedGeneral),
+      ...configKeyed,
+      _configLoaded: true,
+    };
+  });
+  const [rbacConfig] = useState<any>(
+    () => configKeyed.rbac || rbacDefaultConfig,
   );
 
   const { FACEBOOK_PIXEL_ID } = config || {};
+
+  useNavigationMetrics();
 
   useEffect(() => {
     if (referral) {
@@ -72,34 +68,22 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
     }
   }, [referral]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const generalConfigRes = await api.get('config/general').catch(() => {
-          return;
-        });
-        setConfig(prepareGeneralConfig(generalConfigRes?.data.results.value));
-      } catch (err) {
-        console.error(err);
-        return;
-      }
-    })();
-  }, []);
-
   return (
     <>
       <Head>
+        <link rel="preconnect" href="https://challenges.cloudflare.com" />
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
         />
       </Head>
 
-      <Script
-        id="fb-pixel"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
+      {FACEBOOK_PIXEL_ID && (
+        <Script
+          id="fb-pixel"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
   !function(f,b,e,v,n,t,s)
   {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
   n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -111,55 +95,53 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
   fbq('init', '${FACEBOOK_PIXEL_ID}');
   fbq('track', 'PageView');
   `,
-        }}
-      />
-
-      {/* TDF specific chatbot widget */}
-      <Script
-        id="gptconfig"
-        dangerouslySetInnerHTML={{
-          __html: `window.GPTTConfig = {
-              uuid: "a9d70d04c6b64f328acd966ad87e4fb4",
-            };`,
-        }}
-      />
-      <Script src="https://app.gpt-trainer.com/widget-asset.min.js" defer />
+          }}
+        />
+      )}
 
       <ConfigProvider
         config={{
           ...config,
           ...blockchainConfig,
-          ...appConfig,
+          ...getAppConfigFromEnv(),
+          rbacConfig,
         }}
       >
         <ErrorBoundary>
-          <NextIntlClientProvider
-            locale={router.locale || 'en'}
-            messages={pageProps.messages || {}}
-            timeZone={config?.timeZone || appConfig.DEFAULT_TIMEZONE}
+          <LocaleMessagesNextIntlBridge
+            initialMessages={messages || {}}
+            timeZone={
+              config?.TIME_ZONE ||
+              process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE ||
+              getAppConfigFromEnv().DEFAULT_TIMEZONE
+            }
             onError={(error) => {
               console.error('Error in NextIntlClientProvider', error);
             }}
           >
             <AuthProvider>
               <PlatformProvider>
-                <Web3ReactProvider getLibrary={getLibrary}>
-                  <WalletProvider>
-                    <Layout>
-                      <GoogleAnalytics trackPageViews />
-                      <Component {...pageProps} config={config} />
-                    </Layout>
-                    {/* TODO: create cookie consent page with property-specific parameters #357  */}
+                <WalletProvider>
+                  <PushNotificationProvider>
+                    <NewsletterProvider>
+                      <Layout>
+                        <GoogleAnalytics trackPageViews />
+                        <PushNotificationModal />
+                        <Component {...pageProps} config={config} />
+                      </Layout>
+                    </NewsletterProvider>
                     <AcceptCookies />
-                  </WalletProvider>
-                </Web3ReactProvider>
+                  </PushNotificationProvider>
+                </WalletProvider>
               </PlatformProvider>
             </AuthProvider>
-          </NextIntlClientProvider>
+          </LocaleMessagesNextIntlBridge>
         </ErrorBoundary>
       </ConfigProvider>
     </>
   );
 };
+
+MyApp.getInitialProps = appGetInitialPropsWithMessages;
 
 export default MyApp;

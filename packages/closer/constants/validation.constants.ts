@@ -37,6 +37,17 @@ const monthNameOptional = z
     message: 'Must be a valid month name in English',
   });
 
+export const passwordSchema = z
+  .string()
+  .min(1, { message: 'Password is required' })
+  .min(5, { message: 'Password must be at least 5 characters long' })
+  .refine((val) => /\d/.test(val), {
+    message: 'Password must contain at least one number (0-9)',
+  })
+  .refine((val) => /[a-zA-Z]/.test(val), {
+    message: 'Password must contain at least one letter (a-z or A-Z)',
+  });
+
 export const configFormSchema = z.object({
   appName: stringRequired,
   platformName: stringRequired,
@@ -57,11 +68,11 @@ export const configFormSchema = z.object({
   checkoutTime: numberRequired,
   maxDuration: numberRequired,
   minDuration: numberRequired,
+  maxBookingHorizon: numberRequired,
   volunteerCommitment: stringRequired,
+  memberMinDuration: numberRequired,
   memberMaxDuration: numberRequired,
   memberMaxBookingHorizon: numberRequired,
-  guestMaxDuration: numberRequired,
-  guestMaxBookingHorizon: numberRequired,
   discountsDaily: numberRequired,
   discountsWeekly: numberRequired,
   discountsMonthly: numberRequired,
@@ -74,17 +85,25 @@ export const configFormSchema = z.object({
   cancellationPolicyDefault: numberRequired,
   vatRate: numberRequired,
   volunteeringMinStay: numberRequired,
+  residenceMinStay: numberRequired,
 });
 
-const arrayValidationRules = {
+// Allows 0 so free plans (e.g. citizen/free tiers) can be saved
+const priceNonNegative = z
+  .string()
+  .min(1, { message: 'This field is required' })
+  .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+    message: 'Must be a number greater than or equal to 0',
+  });
+
+const subscriptionValidationRules = {
   title: stringRequired,
   description: stringRequired,
   billingPeriod: stringRequired,
   slug: stringRequired,
-  priceId: stringRequired,
   tier: numberOptional,
-  monthlyCredits: numberRequired,
-  price: numberRequired,
+  monthlyCredits: numberOptional,
+  price: priceNonNegative,
   perks: stringRequired,
   name: stringRequired,
   subject: stringRequired,
@@ -114,6 +133,9 @@ function buildValidationObject(
 }
 export const getValidationSchema = (data: DataSchema[]) => {
   if (!data) return null;
-  const arrayValidation = buildValidationObject(data, arrayValidationRules);
+  const arrayValidation = buildValidationObject(
+    data,
+    subscriptionValidationRules,
+  );
   return arrayValidation;
 };

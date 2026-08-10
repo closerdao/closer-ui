@@ -1,8 +1,8 @@
-import { ChangeEvent, useState } from 'react';
+import { ChangeEvent } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { Button, Card, ErrorMessage, Heading } from '../ui';
+import { Button, Card, ErrorMessage } from '../ui';
 
 interface Props {
   currentValue: string | number | boolean | any[];
@@ -13,8 +13,8 @@ interface Props {
     key?: string,
     index?: null | number,
   ) => void;
-  handleAddElement: () => void;
-  handleDeleteElement: (index: number) => void;
+  handleAddElement: (elementsKey?: string) => void;
+  handleDeleteElement: (index: number, elementsKey?: string) => void;
   elementsKey: string;
   description: any;
   slug: string;
@@ -30,182 +30,209 @@ const ArrayConfig = ({
   elementsKey,
   description,
   slug,
-  resetToDefault,
   errors,
 }: Props) => {
   const t = useTranslations();
-  const isEmailConfig = slug === 'emails';
-  const [openCards, setOpenCards] = useState<boolean[]>([]);
+  const isSubscriptionsConfig = slug === 'subscriptions';
 
-  const toggleCard = (index: number) => {
-    setOpenCards((prevOpenCards) => {
-      const newOpenCards = [...prevOpenCards];
-      newOpenCards[index] = !newOpenCards[index];
-      return newOpenCards;
-    });
+  /**
+   * Inner keys are generic (`name`, `type`, `label`), so the same key means
+   * different things per config. Prefer a slug scoped message when one exists.
+   */
+  const innerLabel = (innerKey: string) => {
+    const scopedKey = `config_label_${slug}_${innerKey}`;
+    if (t.has(scopedKey)) return t(scopedKey);
+    return t(`config_label_${innerKey}`);
   };
 
   return (
     <div className="flex flex-col gap-4">
       {Array.isArray(currentValue) &&
         currentValue.map((element: any, index: number) => {
+          if (!element || typeof element !== 'object') {
+            return null;
+          }
+          const elementType =
+            description?.[elementsKey]?.type?.[0] ||
+            description?.elements?.type?.[0];
+          if (!elementType) {
+            return null;
+          }
           return (
-            <Card
-              key={index}
-              className={`${
-                isEmailConfig
-                  ? openCards[index]
-                    ? 'h-auto '
-                    : 'h-[60px] overflow-hidden'
-                  : ''
-              }`}
-            >
-              {Object.entries(element).map(([innerKey]) => {
-                const inputType = description.elements.type[0][innerKey];
+            <Card key={index}>
+              {Object.entries(elementType).map(([innerKey]) => {
+                const inputType = elementType[innerKey];
+                const fieldValue = currentValue[index]?.[innerKey];
 
                 return (
                   <div
                     key={`${innerKey}-${index}`}
                     className="flex flex-col gap-1"
                   >
-                    {isEmailConfig && innerKey === 'name' && (
-                      <button
-                        onClick={() => toggleCard(index)}
-                        className="flex justify-between items-center"
-                      >
-                        <Heading level={3}>
-                          {t(
-                            `config_email_${String(
-                              currentValue[index][innerKey],
-                            )}`,
-                          )}
-                        </Heading>
-
-                        <svg
-                          className={`inline-block border-black transform ${
-                            openCards[index] ? 'rotate-90' : ''
-                          }`}
-                          width="7"
-                          height="14"
-                          viewBox="0 0 7 14"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M7 7L0.25 13.0622L0.250001 0.937822L7 7Z"
-                            fill="#313131"
-                          />
-                        </svg>
-                      </button>
-                    )}
-
-                    {!(isEmailConfig && innerKey === 'name') && (
-                      <>
-                        <label>{t(`config_label_${innerKey}`)}:</label>
-                        {inputType === 'boolean' && (
-                          <div className="flex gap-3">
-                            <label className="flex gap-1 items-center">
-                              <input
-                                type="radio"
-                                name={`${innerKey}${index}`}
-                                value="true"
-                                checked={currentValue[index][innerKey] === true}
-                                onChange={(event) =>
-                                  handleChange(event, elementsKey, index)
-                                }
-                              />
-                              {t('config_true')}
-                            </label>
-                            <label className="flex gap-1 items-center">
-                              <input
-                                type="radio"
-                                name={`${innerKey}${index}`}
-                                value="false"
-                                checked={
-                                  currentValue[index][innerKey] === false
-                                }
-                                onChange={(event) =>
-                                  handleChange(event, elementsKey, index)
-                                }
-                              />
-                              {t('config_false')}
-                            </label>
-                          </div>
-                        )}
-                        {(inputType === 'text' || inputType === 'number') && (
+                    <label>{innerLabel(innerKey)}:</label>
+                    {inputType === 'boolean' && (
+                      <div className="flex gap-3">
+                        <label className="flex gap-1 items-center">
                           <input
-                            className="bg-neutral rounded-md p-1"
+                            type="radio"
                             name={`${innerKey}-${index}`}
+                            value="true"
+                            checked={fieldValue === true}
                             onChange={(event) =>
                               handleChange(event, elementsKey, index)
                             }
-                            type="text"
-                            value={String(currentValue[index][innerKey])}
                           />
-                        )}
-                        {inputType === 'long-text' && (
-                          <textarea
-                            className="bg-neutral rounded-md p-1"
-                            name={innerKey}
+                          {t('config_true')}
+                        </label>
+                        <label className="flex gap-1 items-center">
+                          <input
+                            type="radio"
+                            name={`${innerKey}-${index}`}
+                            value="false"
+                            checked={fieldValue === false}
                             onChange={(event) =>
                               handleChange(event, elementsKey, index)
                             }
-                            rows={innerKey === 'body' ? 16 : 2}
-                            value={String(currentValue[index][innerKey])}
                           />
-                        )}
-                        {inputType?.type === 'select' && (
-                          <select
-                            className="px-2 py-1"
-                            value={String(currentValue[index][innerKey])}
-                            onChange={(event) =>
-                              handleChange(event, elementsKey, index)
-                            }
-                            name={innerKey}
-                          >
-                            {inputType.enum.map((option: string) => {
-                              return (
-                                <option value={option} key={option}>
-                                  {option}
-                                </option>
-                              );
-                            })}
-                          </select>
-                        )}
-                        {Object.keys(errors).length > 0 &&
-                          errors[
-                            `${innerKey}-${index}` as keyof typeof errors
-                          ] !== null &&
-                          errors[
-                            `${innerKey}-${index}` as keyof typeof errors
-                          ] && (
-                            <ErrorMessage
-                              error={
-                                errors[
-                                  `${innerKey}-${index}` as keyof typeof errors
-                                ]?.toString() || ''
-                              }
-                            ></ErrorMessage>
-                          )}
-                      </>
+                          {t('config_false')}
+                        </label>
+                      </div>
                     )}
+                    {inputType === 'readonly-text' && (
+                      <div className="flex flex-col gap-1">
+                        <input
+                          className="bg-neutral-dark/30 rounded-md p-1 text-foreground/70"
+                          name={`${innerKey}-${index}`}
+                          type="text"
+                          value={
+                            fieldValue
+                              ? String(fieldValue)
+                              : t('config_subscriptions_not_synced')
+                          }
+                          readOnly
+                          disabled
+                          autoComplete="off"
+                          data-lpignore="true"
+                        />
+                        {innerKey === 'priceId' && (
+                          <p className="text-xs text-foreground/60">
+                            {t('config_subscriptions_price_id_help')}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    {(inputType === 'text' || inputType === 'number') && (
+                      <input
+                        className="bg-neutral rounded-md p-1"
+                        name={`${innerKey}-${index}`}
+                        onChange={(event) =>
+                          handleChange(event, elementsKey, index)
+                        }
+                        type="text"
+                        value={String(fieldValue ?? '')}
+                        autoComplete="off"
+                        data-lpignore="true"
+                      />
+                    )}
+                    {inputType === 'long-text' && (
+                      <textarea
+                        className="bg-neutral rounded-md p-1"
+                        name={innerKey}
+                        onChange={(event) =>
+                          handleChange(event, elementsKey, index)
+                        }
+                        rows={innerKey === 'body' ? 16 : 2}
+                        value={String(fieldValue ?? '')}
+                        autoComplete="off"
+                        data-lpignore="true"
+                      />
+                    )}
+                    {inputType?.type === 'select' && (
+                      <select
+                        className="px-2 py-1"
+                        value={String(fieldValue ?? '')}
+                        onChange={(event) =>
+                          handleChange(event, elementsKey, index)
+                        }
+                        name={`${innerKey}-${index}`}
+                        autoComplete="off"
+                        data-lpignore="true"
+                      >
+                        {inputType.enum.map((option: string) => {
+                          return (
+                            <option value={option} key={option}>
+                              {option}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    )}
+                    {inputType?.type === 'multiselect' && (
+                      <div className="flex flex-wrap gap-2">
+                        {inputType.enum.map((option: string) => {
+                          const currentValues = Array.isArray(fieldValue)
+                            ? fieldValue
+                            : [];
+                          const isChecked = currentValues.includes(option);
+                          return (
+                            <label
+                              key={option}
+                              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm cursor-pointer transition-colors ${
+                                isChecked
+                                  ? 'bg-accent text-white'
+                                  : 'bg-neutral hover:bg-neutral-dark'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                name={`${innerKey}-${index}`}
+                                value={option}
+                                checked={isChecked}
+                                onChange={() => {
+                                  const newValues = isChecked
+                                    ? currentValues.filter(
+                                        (v: string) => v !== option,
+                                      )
+                                    : [...currentValues, option];
+                                  const syntheticEvent = {
+                                    target: {
+                                      name: `${innerKey}-${index}`,
+                                      value: JSON.stringify(newValues),
+                                    },
+                                  } as ChangeEvent<HTMLInputElement>;
+                                  handleChange(
+                                    syntheticEvent,
+                                    elementsKey,
+                                    index,
+                                  );
+                                }}
+                                className="sr-only"
+                              />
+                              {t(`config_product_${option}`)}
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {Object.keys(errors).length > 0 &&
+                      errors[`${innerKey}-${index}` as keyof typeof errors] !==
+                        null &&
+                      errors[`${innerKey}-${index}` as keyof typeof errors] && (
+                        <ErrorMessage
+                          error={
+                            errors[
+                              `${innerKey}-${index}` as keyof typeof errors
+                            ]?.toString() || ''
+                          }
+                        ></ErrorMessage>
+                      )}
                   </div>
                 );
               })}
 
-              {isEmailConfig && (
+              {(index > 0 || isSubscriptionsConfig) && (
                 <Button
-                  className="w-[300px]"
-                  onClick={() => resetToDefault(currentValue[index].name)}
-                  variant="secondary"
-                >
-                  {t('config_reset_to_default')}
-                </Button>
-              )}
-
-              {index > 0 && !isEmailConfig && (
-                <Button
-                  onClick={() => handleDeleteElement(index)}
+                  onClick={() => handleDeleteElement(index, elementsKey)}
                   className="w-40"
                   variant="secondary"
                 >
@@ -216,11 +243,9 @@ const ArrayConfig = ({
           );
         })}
 
-      {slug !== 'emails' && (
-        <Button onClick={handleAddElement} variant="secondary">
-          {t('config_add_entry_button')}
-        </Button>
-      )}
+      <Button onClick={() => handleAddElement(elementsKey)} variant="secondary">
+        {t('config_add_entry_button')}
+      </Button>
     </div>
   );
 };

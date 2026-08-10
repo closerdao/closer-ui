@@ -1,9 +1,12 @@
 import Head from 'next/head';
 
-import { ChangeEvent, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 
+import AccountingEntitiesVatFields from '../../components/AccountingEntitiesVatFields';
 import ArrayConfig from '../../components/ArrayConfig';
-import PlatformFeatureSelector from '../../components/PlatformConfig/PlatformFeatureSelector';
+import ConfigImageUpload from '../../components/ConfigImageUpload';
+import AdminLayout from '../../components/Dashboard/AdminLayout';
+import PhotosEditor from '../../components/PhotosEditor';
 import {
   Button,
   Card,
@@ -11,81 +14,171 @@ import {
   Heading,
   Information,
 } from '../../components/ui';
-import Switcher from '../../components/ui/Switcher';
 
-import { NextPageContext } from 'next';
+import { ChevronDown, Lock, Settings } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { configDescription } from '../../config';
 import { getValidationSchema } from '../../constants/validation.constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
-import { useConfig } from '../../hooks/useConfig';
-import { Config } from '../../types';
-import { ConfigType } from '../../types/config';
-import api from '../../utils/api';
-import { parseMessageFromError } from '../../utils/common';
+import { Config, SubscriptionPlan } from '../../types';
+import { BookingConfig } from '../../types/api';
 import {
+  getArrayConfigsSchema,
+  getDefaultConfigValue,
   getEnabledConfigs,
   getPreparedInputValue,
   getUpdatedArray,
   prepareConfigs,
 } from '../../utils/config.utils';
 import { capitalizeFirstLetter } from '../../utils/learn.helpers';
-import { loadLocaleData } from '../../utils/locale.helpers';
+import { syncSubscriptionPlansWithStripe } from '../../utils/subscriptionPlansSync';
+import { filterCitizenAndFreeFromElements } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
-interface Props {
-  defaultEmailsConfig: ConfigType;
-  error: null | string;
-}
+const BETA_FEATURES = ['community', 'governance'];
 
-const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
+const FUNDRAISER_CONFIG_KEYS_ORDER = [
+  'amountRaisedPreCampaign',
+  'loansCollectedTotal',
+  'campaignVideo',
+  'campaignTitle',
+  'creditPricePerUnit',
+  'adjustmentsLabel',
+  'milestones',
+  'packages',
+];
+
+const ACCOUNTING_ENTITIES_CONFIG_KEYS_ORDER = ['elements', 'vatByProductType'];
+
+/**
+ * `config_label_*` messages are generated from the config.ts schema, but the
+ * rendered keys come from the stored config document, which can also hold
+ * legacy or hand-added fields. Fall back to a readable version of the key
+ * instead of blowing up the whole page.
+ */
+const humanizeConfigKey = (key: string) =>
+  key
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .replace(/^./, (char) => char.toUpperCase());
+
+/**
+ * Stored configs still carry the pre-flattening nested shapes (`utilityFiat:
+ * {val, cur}`, `seasons.high`, `discounts`, `cancellationPolicy`,
+ * `conditions`), which the schema replaced with flat fields like
+ * `utilityFiatVal` and `seasonsHighStart`. Nothing reads them any more, and the
+ * flat editor renders them as an unlabelled `[object Object]` text input, so
+ * only offer keys the schema still describes. They stay in `configData.value`,
+ * so saving round-trips them untouched rather than silently deleting them.
+ */
+const isEditableConfigKey = (
+  key: string,
+  description: Record<string, any> | undefined,
+) => Boolean(description) && Object.prototype.hasOwnProperty.call(description, key);
+
+const ConfigPage = () => {
   const t = useTranslations();
+  const configLabel = (key: string) =>
+    t.has(`config_label_${key}`)
+      ? t(`config_label_${key}`)
+      : humanizeConfigKey(key);
   const { platform }: any = usePlatform();
-  const { platformAllowedConfigs } = useConfig() || {};
   const { user } = useAuth();
+
+  const [bookingConfig, setBookingConfig] = useState<BookingConfig | null>(
+    null,
+  );
+
+  const isBookingAllowedByEnv =
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+  const isBookingEnabled =
+    Boolean(bookingConfig?.enabled) && isBookingAllowedByEnv;
+
+  const isWeb3Enabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
+  const isWeb3BookingEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
+  const isBlogEnabled = process.env.NEXT_PUBLIC_FEATURE_BLOG === 'true';
+  const isCoursesEnabled = process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true';
+  const isReferralEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_REFERRAL === 'true';
+  const isSubscriptionsEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
+  const isVolunteeringEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
+  const isSupportUsEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true';
+  const isCitizenshipEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
+  const isAffiliateEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true';
+  const isRolesEnabled = process.env.NEXT_PUBLIC_FEATURE_ROLES === 'true';
+
+  const effectiveAllowedConfigs = [
+    'general',
+    'events',
+    'applications',
+    'cohousing',
+    ...(isBookingAllowedByEnv ? ['booking', 'booking-rules', 'payment'] : []),
+    ...(isVolunteeringEnabled ? ['volunteering'] : []),
+    ...(isSubscriptionsEnabled ? ['subscriptions'] : []),
+    ...(isSupportUsEnabled ? ['fundraiser'] : []),
+    ...(isCoursesEnabled ? ['learningHub', 'courses'] : []),
+    ...(isCitizenshipEnabled ? ['citizenship'] : []),
+    ...(isAffiliateEnabled ? ['affiliate'] : []),
+    ...(isBlogEnabled ? ['blog'] : []),
+    ...(isRolesEnabled ? ['roles'] : []),
+    ...(isReferralEnabled ? ['referral'] : []),
+    ...(isWeb3Enabled ? ['airdrop', 'governance'] : []),
+    ...(isWeb3BookingEnabled ? ['web3'] : []),
+    'engagement',
+    'newsletter',
+    'photo-gallery',
+    'accounting-entities',
+    'community',
+    'webinar',
+  ];
 
   const myConfigs = platform.config.find();
 
-  const filter = {};
-  const mergedConfigDescription = configDescription.concat(defaultEmailsConfig);
+  const mergedConfigDescription = configDescription;
 
-  const allConfigCategories = mergedConfigDescription
+  const allPossibleFeatures = mergedConfigDescription
     .map((config: any) => config?.slug)
-    .filter((config: any) => platformAllowedConfigs?.includes(config));
+    .filter(Boolean);
 
-  const [selectedConfig, setSelectedConfig] = useState('general');
+  const allConfigCategories = allPossibleFeatures
+    .filter((config: any) => effectiveAllowedConfigs?.includes(config))
+    .sort((a: string, b: string) => {
+      if (a === 'general') return -1;
+      if (b === 'general') return 1;
+      return a.localeCompare(b);
+    });
+
+  const disabledByEnvironment = allPossibleFeatures.filter(
+    (config: any) => !effectiveAllowedConfigs?.includes(config),
+  );
+
+  const [selectedConfig, setSelectedConfig] = useState('');
   const [updatedConfigs, setUpdatedConfigs] = useState<Config[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasConfigUpdated, setHasConfigUpdated] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [enabledConfigs, setEnabledConfigs] = useState<string[]>([]);
   const [isGeneralConfigEnabled, setIsGeneralConfigEnabled] = useState(false);
   const [errors, setErrors] = useState<{
     [key: string]: string | null | undefined | any;
   }>({});
 
-  const currentConfig = useMemo(
-    () => updatedConfigs.find((config) => config.slug === selectedConfig),
-    [updatedConfigs, selectedConfig],
-  );
+  const arrayConfigsSchema = getArrayConfigsSchema(updatedConfigs);
 
-  const arrayConfigsSchema =
-    updatedConfigs
-      .filter((config) => config.value.elements)
-      .map((config) => {
-        if (!Array.isArray(config.value.elements)) {
-          return;
-        }
-        const elements = config.value.elements;
-        return { len: elements.length, names: Object.keys(elements[0]) };
-      }) || [];
-
-  const configFormSchema = getValidationSchema(arrayConfigsSchema as any);
+  const configFormSchema = getValidationSchema(arrayConfigsSchema);
 
   useEffect(() => {
     loadData();
-  }, [platform, filter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load config once on mount to avoid GET /config loop
+  }, []);
 
   useEffect(() => {
     if (myConfigs) {
@@ -119,7 +212,7 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
   };
 
   const saveInitialConfig = async () => {
-    const initialConfigCategories = ['general', 'emails'];
+    const initialConfigCategories = ['general'];
     const newConfigs: Config[] = [
       ...updatedConfigs.map((config) => {
         if (initialConfigCategories.includes(config.slug)) {
@@ -148,7 +241,7 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
       setEnabledConfigs(
         enabledConfigs?.filter((item: string) => item !== configCategory),
       );
-      setSelectedConfig('general');
+      setSelectedConfig('');
       shouldEnable = false;
     } else {
       setSelectedConfig(configCategory);
@@ -172,44 +265,107 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
     handleSaveConfig(newConfigs, configCategory);
   };
 
+  const handleResetToDefaults = async (configSlug: string) => {
+    const defaultValue = getDefaultConfigValue(
+      configSlug,
+      mergedConfigDescription,
+    );
+    const newConfigs = updatedConfigs.map((config) =>
+      config.slug === configSlug
+        ? { ...config, value: defaultValue }
+        : config,
+    );
+    setUpdatedConfigs(newConfigs);
+    await handleSaveConfig(newConfigs, configSlug);
+    await loadData();
+  };
+
   const handleSaveConfig = async (
     newConfigs: Config[] = [],
     configCategory = '',
   ) => {
     const configCategoryToSave = configCategory || selectedConfig;
-    const configsToSave = newConfigs.length > 0 ? newConfigs : updatedConfigs;
+    let configsToSave = newConfigs.length > 0 ? newConfigs : updatedConfigs;
 
-    const updatedConfig = configsToSave.find(
+    let updatedConfig = configsToSave.find(
       (config) => config.slug === configCategoryToSave,
     );
 
     try {
       setIsLoading(true);
+      setSaveError(null);
+
+      if (configCategoryToSave === 'subscriptions' && updatedConfig?.value) {
+        const paymentFromUpdated = configsToSave.find(
+          (config) => config.slug === 'payment',
+        );
+        const paymentFromPlatform = platform.config
+          .findOne('payment')
+          ?.get?.('value')
+          ?.toJS?.();
+        const currency =
+          paymentFromUpdated?.value?.fiatCur ||
+          paymentFromUpdated?.value?.utilityFiatCur ||
+          paymentFromPlatform?.fiatCur ||
+          paymentFromPlatform?.utilityFiatCur ||
+          'EUR';
+        const filteredElements = filterCitizenAndFreeFromElements(
+          (updatedConfig.value.elements as unknown as SubscriptionPlan[]) || [],
+        );
+        const syncedElements = await syncSubscriptionPlansWithStripe(
+          filteredElements,
+          currency,
+        );
+        const syncedValue = {
+          ...updatedConfig.value,
+          elements: syncedElements,
+        } as unknown as Config['value'];
+        configsToSave = configsToSave.map((config) =>
+          config.slug === 'subscriptions'
+            ? { ...config, value: syncedValue }
+            : config,
+        );
+        updatedConfig = {
+          ...updatedConfig,
+          value: syncedValue,
+        };
+        setUpdatedConfigs(configsToSave);
+      }
+
       const configExists = myConfigs
         .toJS()
         .some((config: any) => config.slug === configCategoryToSave);
 
-      let res;
       if (configExists) {
-        res = await api.patch(`/config/${configCategoryToSave}`, {
+        await platform.config.patch(configCategoryToSave, {
           slug: configCategoryToSave,
           value: updatedConfig?.value,
         });
       } else {
-        res = await api.post('/config', {
+        await platform.config.post({
           slug: configCategoryToSave,
           value: updatedConfig?.value,
         });
       }
 
-      setHasConfigUpdated(false);
-      if (res.status === 200) {
-        setHasConfigUpdated(true);
-        setTimeout(() => {
-          setHasConfigUpdated(false);
-        }, 3000);
+      await platform.config.getOne(configCategoryToSave, { force: true });
+
+      if (configCategoryToSave === 'booking') {
+        const bookingDocAfter = platform.config.findOne('booking');
+        setBookingConfig(bookingDocAfter?.get?.('value')?.toJS?.() ?? null);
       }
+
+      setHasConfigUpdated(false);
+      setHasConfigUpdated(true);
+      setTimeout(() => {
+        setHasConfigUpdated(false);
+      }, 3000);
     } catch (error) {
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : t('config_subscriptions_sync_error'),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -243,6 +399,10 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
       }));
     }
     const strippedName = name.replace(/-?\d+$/, '');
+    const fieldKey =
+      selectedConfig && name.startsWith(`${selectedConfig}-`)
+        ? name.slice(selectedConfig.length + 1)
+        : strippedName;
 
     const newConfigs = [
       ...updatedConfigs.map((config) => {
@@ -260,6 +420,7 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
               strippedName,
               preparedInputValue,
             );
+
             return {
               ...config,
               value: { ...config.value, [key]: updatedArray },
@@ -268,7 +429,7 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
 
           return {
             ...config,
-            value: { ...config.value, [strippedName]: preparedInputValue },
+            value: { ...config.value, [fieldKey]: preparedInputValue },
           };
         }
         return config;
@@ -291,7 +452,7 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
 
           const updatedElements = elements.map((element: any) => {
             if (element.name === name) {
-              return defaultValue;
+              return { ...defaultValue };
             }
             return element;
           });
@@ -306,20 +467,38 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
     setUpdatedConfigs(newConfigs);
   };
 
-  const handleAddElement = () => {
+  const handleAddElement = (elementsKey = 'elements') => {
     const defaultConfig = mergedConfigDescription as any;
-    const defaultPlan = defaultConfig.find(
+    const configDesc = defaultConfig.find(
       (config: any) => config.slug === selectedConfig,
-    ).value.elements.default;
+    );
+    const defaultPlan = configDesc?.value?.[elementsKey]?.default;
+    const schema = configDesc?.value?.[elementsKey]?.type?.[0];
+
+    let newElement: Record<string, unknown> = {};
+    if (defaultPlan && Array.isArray(defaultPlan) && defaultPlan[0]) {
+      newElement = { ...defaultPlan[0] };
+    } else if (schema && typeof schema === 'object') {
+      Object.keys(schema).forEach((key) => {
+        const fieldType = schema[key];
+        if (fieldType === 'number') {
+          newElement[key] = 0;
+        } else {
+          newElement[key] = '';
+        }
+      });
+    } else {
+      return;
+    }
 
     const newConfigs = [
       ...updatedConfigs.map((config) => {
         if (config.slug === selectedConfig) {
-          const elements: any = config.value.elements;
-          const newElements = [...elements, ...defaultPlan];
+          const currentArray: any = config.value[elementsKey] || [];
+          const newArray = [...currentArray, newElement];
           return {
             ...config,
-            value: { ...config.value, elements: newElements },
+            value: { ...config.value, [elementsKey]: newArray },
           };
         }
         return config;
@@ -328,17 +507,20 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
     setUpdatedConfigs(newConfigs);
   };
 
-  const handleDeleteElement = (index: number) => {
+  const handleDeleteElement = (index: number, elementsKey = 'elements') => {
     const newConfigs = [
       ...updatedConfigs.map((config) => {
         if (config.slug === selectedConfig) {
-          const elements: any = config.value.elements;
+          const elements: any = config.value[elementsKey];
+          if (!Array.isArray(elements)) {
+            return config;
+          }
           const updatedElements = elements.filter(
             (_: any, idx: number) => idx !== index,
           );
           return {
             ...config,
-            value: { ...config.value, elements: updatedElements },
+            value: { ...config.value, [elementsKey]: updatedElements },
           };
         }
         return config;
@@ -352,225 +534,166 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
   }
 
   return (
-    <div>
+    <>
       <Head>
         <title>{t('platform_configs')}</title>
       </Head>
-      <div className="max-w-3xl mx-auto flex flex-col gap-10">
-        <Heading level={1}>{t('platform_configs')}</Heading>
 
-       {allConfigCategories.length > 1 && isGeneralConfigEnabled && (
-          <PlatformFeatureSelector
-            enabledConfigs={enabledConfigs}
-            allConfigCategories={allConfigCategories}
-            handleToggleConfig={handleToggleConfig}
-          />
-        )}
+      <AdminLayout>
+        <div className="w-full max-w-5xl flex flex-col gap-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-accent/10 rounded-lg">
+              <Settings className="w-5 h-5 text-accent" />
+            </div>
+            <Heading level={2}>{t('platform_configs')}</Heading>
+          </div>
 
-       {!isGeneralConfigEnabled && (
-          <Card className="flex flex-col gap-4">
-            <Heading level={4}>
-              {t('platform_configs_initial_settings')}
-            </Heading>
+          <div
+            className="rounded-lg border border-line bg-neutral-light px-4 py-3 text-sm text-foreground"
+            role="note"
+          >
+            {t('admin_platform_changes_production_delay')}
+          </div>
 
-           {(updatedConfigs.find((config) => config.slug === 'general')
-              ?.value ??
-              []) &&
-              Object.entries(
-                updatedConfigs.find((config) => config.slug === 'general')
-                  ?.value ?? {},
-              ).map(([key, value]) => {
-                const currentValue: string | number | boolean | any[] =
-                  updatedConfigs.find(
-                    (config) => config.slug === selectedConfig,
-                  )?.value[key] ?? [];
-                const description = mergedConfigDescription?.find(
-                  (c) => c.slug === 'general',
-                )?.value as Record<string, any>;
-                const inputType = description?.[key]?.type;
-                const isSelect = inputType === 'select';
-                const selectOptions = description?.[key]?.enum;
+          {!isGeneralConfigEnabled && (
+            <Card className="flex flex-col gap-4">
+              <Heading level={4}>
+                {t('platform_configs_initial_settings')}
+              </Heading>
 
-                if (key === 'enabled') return null;
-                return (
-                  <div key={key} className="flex flex-col gap-1">
-                    <label>{t(`config_label_${key}`)}:</label>
+              {(updatedConfigs.find((config) => config.slug === 'general')
+                ?.value ??
+                []) &&
+                Object.entries(
+                  updatedConfigs.find((config) => config.slug === 'general')
+                    ?.value ?? {},
+                ).map(([key]) => {
+                  const generalConfig = updatedConfigs.find(
+                    (config) => config.slug === 'general',
+                  );
+                  const currentValue: string | number | boolean | any[] =
+                    generalConfig?.value[key] ?? [];
+                  const description = mergedConfigDescription?.find(
+                    (c) => c.slug === 'general',
+                  )?.value as Record<string, any>;
+                  const inputType = description?.[key]?.type;
+                  const isSelect = inputType === 'select';
+                  let selectOptions = description?.[key]?.enum;
+                  if (
+                    isSelect &&
+                    (key === 'primaryCtaVisitor' ||
+                      key === 'primaryCtaMember')
+                  ) {
+                    const application = enabledConfigs?.includes('applications')
+                      ? ['application']
+                      : [];
+                    const baseVisitor = [
+                      'none',
+                      'login',
+                      ...(isBookingEnabled ? ['bookings'] : []),
+                      ...(isCoursesEnabled ? ['learningHub'] : []),
+                      'events',
+                      ...application,
+                      'custom',
+                    ];
+                    const baseMember = [
+                      'none',
+                      ...(isBookingEnabled ? ['bookings'] : []),
+                      ...(isCoursesEnabled ? ['learningHub'] : []),
+                      'events',
+                      ...application,
+                      'custom',
+                    ];
+                    selectOptions =
+                      key === 'primaryCtaVisitor' ? baseVisitor : baseMember;
+                  }
+                  const isTime = inputType === 'time';
+                  const isImage = inputType === 'image';
 
-                    {!isSelect && (
-                      <input
-                        className="bg-neutral rounded-md p-1"
-                        name={key}
-                        onChange={handleChange}
-                        type="text"
-                        value={String(currentValue)}
-                      />
-                    )}
-                    {isSelect && (
-                      <select
-                        className="px-2 py-1"
-                        value={String(currentValue)}
-                        onChange={handleChange}
-                        name={key}
-                      >
-                        {selectOptions.map((option: string) => {
-                          return (
-                            <option value={option} key={option}>
-                              {option}
-                            </option>
-                          );
-                        })}
-                      </select>
-                    )}
-                  </div>
-                );
-              })}
+                  if (key === 'enabled') return null;
+                  if (!isEditableConfigKey(key, description)) return null;
+                  if (
+                    (key === 'primaryCtaCustomUrl' ||
+                      key === 'primaryCtaCustomText') &&
+                    generalConfig?.value?.primaryCtaVisitor !== 'custom' &&
+                    generalConfig?.value?.primaryCtaMember !== 'custom'
+                  ) {
+                    return null;
+                  }
+                  return (
+                    <div key={key} className="flex flex-col gap-1">
+                      <label className="text-sm font-medium text-gray-700">{configLabel(key)}</label>
 
-           <Button
-              onClick={saveInitialConfig}
-              isLoading={isLoading}
-              isEnabled={!isLoading}
-            >
-              {t('generic_save_button')}
-            </Button>
-            {hasConfigUpdated && (
-              <Information>{t('config_updated')}</Information>
-            )}
-          </Card>
-        )}
-
-       {enabledConfigs.length > 0 && isGeneralConfigEnabled && (
-          <div className="flex flex-col gap-10">
-            <Switcher
-              options={enabledConfigs}
-              selectedOption={selectedConfig}
-              setSelectedOption={setSelectedConfig}
-            />
-
-            <Card className="flex flex-col gap-10">
-              {currentConfig && (
-                <div
-                  key={`${currentConfig.slug}`}
-                  className="flex flex-col gap-4"
-                >
-                  <Heading level={2}>
-                    {capitalizeFirstLetter(currentConfig.slug)}
-                  </Heading>
-
-                  {Object.entries(currentConfig.value).map(([key, value]) => {
-                    const currentValue = currentConfig.value[key];
-
-                    const description = mergedConfigDescription?.find(
-                      (c) => c.slug === currentConfig.slug,
-                    )?.value as Record<string, any>;
-                    const inputType = description?.[key]?.type;
-                    const isArray = Array.isArray(inputType);
-                    const isSelect = inputType === 'select';
-                    const selectOptions = description?.[key]?.enum;
-
-                    if (key === 'enabled') {
-                      return null;
-                    }
-
-                    return (
-                      <>
-                        {key !== 'enabled' && (
-                          <div
-                            key={`${currentConfig.slug}-${key}`}
-                            className="flex flex-col gap-1"
-                          >
-                            {!isArray && (
-                              <label>{t(`config_label_${key}`)}:</label>
-                            )}
-                            {typeof value === 'boolean' ? (
-                              <div className="flex gap-3">
-                                <label className="flex gap-1 items-center">
-                                  <input
-                                    type="radio"
-                                    name={key}
-                                    value="true"
-                                    checked={currentValue === true}
-                                    onChange={handleChange}
-                                  />
-                                  {t('config_true')}
-                                </label>
-                                <label className="flex gap-1 items-center">
-                                  <input
-                                    type="radio"
-                                    name={key}
-                                    value="false"
-                                    checked={currentValue === false}
-                                    onChange={handleChange}
-                                  />
-                                  {t('config_false')}
-                                </label>
-                              </div>
-                            ) : (
-                              <div>
-                                {isArray && (
-                                  <div>
-                                    <ArrayConfig
-                                      currentValue={currentValue}
-                                      handleChange={handleChange}
-                                      handleAddElement={handleAddElement}
-                                      handleDeleteElement={handleDeleteElement}
-                                      elementsKey={key}
-                                      description={description}
-                                      slug={currentConfig.slug}
-                                      resetToDefault={resetToDefault}
-                                      errors={errors}
-                                    />
-                                  </div>
-                                )}
-                                {!isArray && !isSelect && (
-                                  <input
-                                    className="bg-neutral rounded-md p-1"
-                                    name={key}
-                                    onChange={handleChange}
-                                    type="text"
-                                    value={String(currentValue)}
-                                  />
-                                )}
-
-                                {errors[key] && (
-                                  <ErrorMessage
-                                    error={errors[key].toString()}
-                                  ></ErrorMessage>
-                                )}
-
-                                {isSelect && (
-                                  <select
-                                    className="px-2 py-1"
-                                    value={String(currentValue)}
-                                    onChange={handleChange}
-                                    name={key}
-                                  >
-                                    {selectOptions.map((option: string) => {
-                                      return (
-                                        <option value={option} key={option}>
-                                          {option}
-                                        </option>
-                                      );
-                                    })}
-                                  </select>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </>
-                    );
-                  })}
-                </div>
-              )}
+                      {isImage && (
+                        <ConfigImageUpload
+                          value={String(currentValue)}
+                          onChange={(url) => {
+                            const newConfigs = updatedConfigs.map((config) => {
+                              if (config.slug === 'general') {
+                                return { ...config, value: { ...config.value, [key]: url } };
+                              }
+                              return config;
+                            });
+                            setUpdatedConfigs(newConfigs);
+                          }}
+                        />
+                      )}
+                      {!isSelect && !isTime && !isImage && (
+                        <input
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                          name={key}
+                          onChange={handleChange}
+                          type="text"
+                          value={String(currentValue)}
+                        />
+                      )}
+                      {isTime && (
+                        <input
+                          className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                          name={key}
+                          onChange={handleChange}
+                          type="time"
+                          value={String(currentValue)}
+                        />
+                      )}
+                      {isSelect && (
+                        <select
+                          className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                          value={String(
+                            selectOptions?.includes(currentValue)
+                              ? currentValue
+                              : selectOptions?.[0] ?? '',
+                          )}
+                          onChange={handleChange}
+                          name={key}
+                        >
+                          {selectOptions?.map((option: string) => {
+                            return (
+                              <option value={option} key={option}>
+                                {[
+                                  'none',
+                                  'login',
+                                  'bookings',
+                                  'learningHub',
+                                  'events',
+                                  'application',
+                                  'custom',
+                                ].includes(option)
+                                  ? t(`config_option_cta_${option}`)
+                                  : option}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      )}
+                    </div>
+                  );
+                })}
 
               <Button
-                onClick={handleSaveConfig}
+                onClick={saveInitialConfig}
                 isLoading={isLoading}
-                isEnabled={
-                  !isLoading &&
-                  errors &&
-                  Object.values(errors).every((value) => value === null)
-                }
+                isEnabled={!isLoading}
               >
                 {t('generic_save_button')}
               </Button>
@@ -578,34 +701,474 @@ const ConfigPage = ({ defaultEmailsConfig, error }: Props) => {
                 <Information>{t('config_updated')}</Information>
               )}
             </Card>
-          </div>
-        )}
-      </div>
-    </div>
+          )}
+
+          {isGeneralConfigEnabled && (
+            <div className="w-full flex flex-col gap-3">
+              {allConfigCategories.map((configSlug) => {
+                const isGeneral = configSlug === 'general';
+                const isEnabled = isGeneral || enabledConfigs?.includes(configSlug);
+                const configData = updatedConfigs.find(
+                  (c) => c.slug === configSlug,
+                );
+
+                if (!configData) return null;
+
+                const description = mergedConfigDescription?.find(
+                  (c) => c.slug === configSlug,
+                )?.value as Record<string, any>;
+
+                return (
+                  <div
+                    key={configSlug}
+                    className={`w-full rounded-lg border overflow-hidden ${
+                      isEnabled
+                        ? 'border-gray-200 bg-white'
+                        : 'border-gray-100 bg-gray-50'
+                    }`}
+                  >
+                    <div
+                      className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50"
+                      onClick={() => {
+                        setSelectedConfig(
+                          selectedConfig === configSlug ? '' : configSlug,
+                        );
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        {!isGeneral && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleConfig(configSlug);
+                            }}
+                            className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${
+                              isEnabled ? 'bg-accent' : 'bg-gray-300'
+                            }`}
+                          >
+                            <span
+                              className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                                isEnabled ? 'left-4' : 'left-0.5'
+                              }`}
+                            />
+                          </button>
+                        )}
+                        <span
+                          className={`text-sm font-medium ${
+                            isEnabled ? 'text-gray-900' : 'text-gray-400'
+                          }`}
+                        >
+                          {capitalizeFirstLetter(configSlug)}
+                          {BETA_FEATURES.includes(configSlug) && (
+                            <span className="ml-2 px-1.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded">
+                              Beta
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                      {isEnabled && (
+                        <ChevronDown
+                          className={`w-4 h-4 text-gray-400 transition-transform ${
+                            selectedConfig === configSlug ? 'rotate-180' : ''
+                          }`}
+                        />
+                      )}
+                    </div>
+
+                    {isEnabled && selectedConfig === configSlug && (
+                        <div className="border-t border-gray-100 p-4 flex flex-col gap-4">
+                          {(configSlug === 'fundraiser'
+                            ? FUNDRAISER_CONFIG_KEYS_ORDER.filter((k) =>
+                                Object.prototype.hasOwnProperty.call(
+                                  configData.value,
+                                  k,
+                                ),
+                              ).map((k) => [k, configData.value[k]] as const)
+                            : configSlug === 'accounting-entities'
+                              ? ACCOUNTING_ENTITIES_CONFIG_KEYS_ORDER.filter(
+                                  (k) =>
+                                    Object.prototype.hasOwnProperty.call(
+                                      configData.value,
+                                      k,
+                                    ),
+                                ).map(
+                                  (k) => [k, configData.value[k]] as const,
+                                )
+                              : Object.entries(configData.value).filter(
+                                  ([key]) => isEditableConfigKey(key, description),
+                                )
+                          ).map(
+                            ([key, value]) => {
+                              const currentValue = configData.value[key];
+                              const inputType = description?.[key]?.type;
+                              const isArray = Array.isArray(inputType);
+                              const isSelect = inputType === 'select';
+                              const isTime = inputType === 'time';
+                              const isImage = inputType === 'image';
+                              let selectOptions = description?.[key]?.enum;
+                              if (
+                                isSelect &&
+                                (key === 'primaryCtaVisitor' ||
+                                  key === 'primaryCtaMember')
+                              ) {
+                                const application = enabledConfigs?.includes(
+                                  'applications',
+                                )
+                                  ? ['application']
+                                  : [];
+                                const baseVisitor = [
+                                  'none',
+                                  'login',
+                                  ...(isBookingEnabled ? ['bookings'] : []),
+                                  ...(isCoursesEnabled ? ['learningHub'] : []),
+                                  ...(enabledConfigs?.includes('events')
+                                    ? ['events']
+                                    : []),
+                                  ...application,
+                                  'custom',
+                                ];
+                                const baseMember = [
+                                  'none',
+                                  ...(isBookingEnabled ? ['bookings'] : []),
+                                  ...(isCoursesEnabled ? ['learningHub'] : []),
+                                  ...(enabledConfigs?.includes('events')
+                                    ? ['events']
+                                    : []),
+                                  ...application,
+                                  'custom',
+                                ];
+                                selectOptions =
+                                  key === 'primaryCtaVisitor'
+                                    ? baseVisitor
+                                    : baseMember;
+                              }
+
+                              if (key === 'enabled') return null;
+                              if (
+                                (key === 'primaryCtaCustomUrl' ||
+                                  key === 'primaryCtaCustomText') &&
+                                configSlug === 'general' &&
+                                configData.value?.primaryCtaVisitor !==
+                                  'custom' &&
+                                configData.value?.primaryCtaMember !== 'custom'
+                              ) {
+                                return null;
+                              }
+
+                              if (
+                                configSlug === 'accounting-entities' &&
+                                key === 'vatByProductType'
+                              ) {
+                                const paymentVal = updatedConfigs.find(
+                                  (c) => c.slug === 'payment',
+                                )?.value;
+                                const defaultVatRate = paymentVal?.vatRate as
+                                  | number
+                                  | undefined;
+                                const vatMap =
+                                  currentValue &&
+                                  typeof currentValue === 'object' &&
+                                  !Array.isArray(currentValue)
+                                    ? (currentValue as Record<
+                                        string,
+                                        number | undefined
+                                      >)
+                                    : {};
+                                return (
+                                  <div
+                                    key={`${configSlug}-${key}`}
+                                    className="flex flex-col gap-2"
+                                  >
+                                    <h4 className="text-sm font-semibold text-gray-800">
+                                      {t('config_section_accounting_vat')}
+                                    </h4>
+                                    <AccountingEntitiesVatFields
+                                      elements={
+                                        Array.isArray(configData.value.elements)
+                                          ? configData.value.elements
+                                          : []
+                                      }
+                                      vatByProductType={vatMap}
+                                      defaultVatRate={defaultVatRate}
+                                      onChange={(next) => {
+                                        setUpdatedConfigs(
+                                          updatedConfigs.map((config) =>
+                                            config.slug === configSlug
+                                              ? {
+                                                  ...config,
+                                                  value: {
+                                                    ...config.value,
+                                                    vatByProductType: next,
+                                                  } as unknown as Config['value'],
+                                                }
+                                              : config,
+                                          ),
+                                        );
+                                      }}
+                                    />
+                                  </div>
+                                );
+                              }
+
+                              const fundraiserSectionKey =
+                                configSlug === 'fundraiser' &&
+                                (key === 'milestones' || key === 'packages')
+                                  ? key
+                                  : null;
+
+                              return (
+                                <div
+                                  key={`${configSlug}-${key}`}
+                                  className="flex flex-col gap-1"
+                                >
+                                  {fundraiserSectionKey && (
+                                    <h4 className="text-sm font-semibold text-gray-800 mt-4 mb-1 first:mt-0">
+                                      {t(
+                                        `config_section_fundraiser_${fundraiserSectionKey}`,
+                                      )}
+                                    </h4>
+                                  )}
+                                  <label className="text-sm font-medium text-gray-700">
+                                    {configLabel(key)}
+                                  </label>
+                                  {isImage ? (
+                                    <ConfigImageUpload
+                                      value={String(currentValue)}
+                                      onChange={(url) => {
+                                        const newConfigs = updatedConfigs.map((config) => {
+                                          if (config.slug === configSlug) {
+                                            return {
+                                              ...config,
+                                              value: { ...config.value, [key]: url },
+                                            };
+                                          }
+                                          return config;
+                                        });
+                                        setUpdatedConfigs(newConfigs);
+                                      }}
+                                    />
+                                  ) : typeof value === 'boolean' ? (
+                                    <div className="flex gap-4">
+                                      <label className="flex gap-2 items-center text-sm cursor-pointer">
+                                        <input
+                                          type="radio"
+                                          name={`${configSlug}-${key}`}
+                                          value="true"
+                                          checked={currentValue === true}
+                                          onChange={(e) => {
+                                            setSelectedConfig(configSlug);
+                                            handleChange(e, '', null);
+                                          }}
+                                          className="w-4 h-4 text-accent"
+                                        />
+                                        {t('config_true')}
+                                      </label>
+                                      <label className="flex gap-2 items-center text-sm cursor-pointer">
+                                        <input
+                                          type="radio"
+                                          name={`${configSlug}-${key}`}
+                                          value="false"
+                                          checked={currentValue === false}
+                                          onChange={(e) => {
+                                            setSelectedConfig(configSlug);
+                                            handleChange(e, '', null);
+                                          }}
+                                          className="w-4 h-4 text-accent"
+                                        />
+                                        {t('config_false')}
+                                      </label>
+                                    </div>
+                                  ) : (
+                                    <div>
+                                      {configSlug === 'photo-gallery' &&
+                                      key === 'photoIds' ? (
+                                        <PhotosEditor
+                                          value={currentValue || []}
+                                          onChange={(value: string[]) => {
+                                            const newConfigs =
+                                              updatedConfigs.map((config) => {
+                                                if (
+                                                  config.slug === configSlug
+                                                ) {
+                                                  return {
+                                                    ...config,
+                                                    value: {
+                                                      ...config.value,
+                                                      [key]: value,
+                                                    },
+                                                  };
+                                                }
+                                                return config;
+                                              });
+                                            setUpdatedConfigs(newConfigs);
+                                          }}
+                                        />
+                                      ) : isArray ? (
+                                        <ArrayConfig
+                                          currentValue={currentValue}
+                                          handleChange={(e, k, i) => {
+                                            setSelectedConfig(configSlug);
+                                            handleChange(e, k, i);
+                                          }}
+                                          handleAddElement={handleAddElement}
+                                          handleDeleteElement={
+                                            handleDeleteElement
+                                          }
+                                          elementsKey={key}
+                                          description={description}
+                                          slug={configSlug}
+                                          resetToDefault={resetToDefault}
+                                          errors={errors}
+                                        />
+                                      ) : null}
+                                      {!isArray && !isSelect && !isTime && !isImage && (
+                                        <input
+                                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                                          name={key}
+                                          onChange={(e) => {
+                                            setSelectedConfig(configSlug);
+                                            handleChange(e);
+                                          }}
+                                          type="text"
+                                          value={String(currentValue)}
+                                        />
+                                      )}
+                                      {isTime && (
+                                        <input
+                                          className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                                          name={key}
+                                          onChange={(e) => {
+                                            setSelectedConfig(configSlug);
+                                            handleChange(e);
+                                          }}
+                                          type="time"
+                                          value={String(currentValue)}
+                                        />
+                                      )}
+                                      {errors[key] && (
+                                        <ErrorMessage
+                                          error={errors[key].toString()}
+                                        />
+                                      )}
+                                      {isSelect && (
+                                        <select
+                                          className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                                          value={String(
+                                            selectOptions?.includes(
+                                              currentValue,
+                                            )
+                                              ? currentValue
+                                              : selectOptions?.[0] ?? '',
+                                          )}
+                                          onChange={(e) => {
+                                            setSelectedConfig(configSlug);
+                                            handleChange(e);
+                                          }}
+                                          name={key}
+                                        >
+                                          {selectOptions?.map(
+                                            (option: string) => (
+                                              <option
+                                                value={option}
+                                                key={option}
+                                              >
+                                                {[
+                                                  'none',
+                                                  'login',
+                                                  'bookings',
+                                                  'learningHub',
+                                                  'events',
+                                                  'application',
+                                                  'custom',
+                                                ].includes(option)
+                                                  ? t(
+                                                      `config_option_cta_${option}`,
+                                                    )
+                                                  : option}
+                                              </option>
+                                            ),
+                                          )}
+                                        </select>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            },
+                          )}
+
+                          <div className="flex items-center gap-3">
+                            <Button
+                              onClick={() => handleSaveConfig([], configSlug)}
+                              isLoading={isLoading}
+                              isEnabled={
+                                !isLoading &&
+                                errors &&
+                                Object.values(errors).every(
+                                  (value) => value === null,
+                                )
+                              }
+                              variant="inline"
+                              size="small"
+                            >
+                              {t('generic_save_button')}
+                            </Button>
+                            <Button
+                              onClick={() => handleResetToDefaults(configSlug)}
+                              isLoading={isLoading}
+                              isEnabled={!isLoading}
+                              variant="secondary"
+                              size="small"
+                            >
+                              {t('config_reset_to_defaults')}
+                            </Button>
+                            {hasConfigUpdated &&
+                              selectedConfig === configSlug && (
+                                <Information>{t('config_updated')}</Information>
+                              )}
+                            {saveError && selectedConfig === configSlug && (
+                              <ErrorMessage error={saveError} />
+                            )}
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {disabledByEnvironment.length > 0 && (
+            <div className="mt-6 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4">
+              <div className="flex items-start gap-3">
+                <div className="p-1.5 bg-gray-200 rounded">
+                  <Lock className="w-4 h-4 text-gray-500" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-700 mb-1">
+                    {t('config_disabled_features_title')}
+                  </p>
+                  <p className="text-xs text-gray-500 mb-3">
+                    {t('config_disabled_features_description')}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {disabledByEnvironment.map((feature) => (
+                      <span
+                        key={feature}
+                        className="px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded"
+                      >
+                        {capitalizeFirstLetter(feature)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </AdminLayout>
+    </>
   );
-};
-
-ConfigPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [emailsRes, messages] = await Promise.all([
-      api.get('/emails').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-
-    const defaultEmailsConfig = emailsRes?.data?.results;
-
-    return {
-      defaultEmailsConfig,
-      error: null,
-      messages,
-    };
-  } catch (err: unknown) {
-    return {
-      defaultEmailsConfig: null,
-      error: parseMessageFromError(err),
-      messages: null,
-    };
-  }
 };
 
 export default ConfigPage;

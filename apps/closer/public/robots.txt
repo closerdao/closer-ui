@@ -1,0 +1,37 @@
+# Closer Platform - https://closer.earth
+# Robots.txt
+
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://closer.earth/sitemap.xml
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /settings/
+Disallow: /api/
+Disallow: /bookings/*/checkout
+Disallow: /bookings/*/cancel
+Disallow: /token/checkout
+Disallow: /token/finance
+
+# Allow important pages
+Allow: /
+Allow: /roadmap
+Allow: /philosophy
+Allow: /philosophy/*
+Allow: /blog
+Allow: /blog/*
+Allow: /events
+Allow: /events/*
+Allow: /volunteer
+Allow: /volunteer/*
+Allow: /subscriptions
+Allow: /privacy-policy
+Allow: /login
+Allow: /signup
+
+# Crawl delay for politeness
+Crawl-delay: 1

@@ -1,19 +1,29 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import dayjs from 'dayjs';
+import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
 
 import {
   MAX_BOOKINGS_TO_FETCH,
+  MAX_LISTINGS_TO_FETCH,
   MAX_USERS_TO_FETCH,
   paidStatuses,
 } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
-import { getDateRange } from '../../utils/dashboard.helpers';
+import {
+  getBookedNights,
+  getDateRange,
+  getDuration,
+} from '../../utils/dashboard.helpers';
 import UserMetricsIcon from '../icons/UserMetricsIcon';
 import { Heading, Spinner } from '../ui';
-import StackedBarChart from '../ui/Charts/StackedBarChart';
+
+const StackedBarChart = dynamic(() => import('../ui/Charts/StackedBarChart'), {
+  ssr: false,
+  loading: () => <Spinner />,
+});
 
 interface Props {
   timeFrame: string;
@@ -30,17 +40,68 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
   const [isLoading, setIsLoading] = useState(false);
   const [userFilter, setUserFilter] = useState<any>(null);
   const [bookingFilter, setBookingFilter] = useState<any>(null);
-  const [start, setStart] = useState<Date | string>('');
-  const [end, setEnd] = useState<Date | string>('');
+  const [start, setStart] = useState<Date | null>(null);
+  const [end, setEnd] = useState<Date | null>(null);
 
   const tokenSalesFilter = {
     where: {},
     limit: MAX_BOOKINGS_TO_FETCH,
   };
+  const listingFilter = {
+    where: {},
+    limit: MAX_LISTINGS_TO_FETCH,
+  };
+
   const newUsers = platform.user.find(userFilter);
   const bookings = platform.booking.find(bookingFilter);
+  const listings = platform.listing.find(listingFilter);
   const tokenSales =
     APP_NAME === 'tdf' ? platform.metrics.findTokenSales('metrics') : [];
+
+  const firstBooking =
+    bookings &&
+    bookings.find((booking: any) => {
+      return paidStatuses.includes(booking.get('status'));
+    });
+
+  const firstBookingDate = firstBooking && firstBooking.get('start');
+
+  const duration = getDuration(
+    timeFrame,
+    timeFrame === 'allTime' ? new Date(firstBookingDate) : fromDate,
+    toDate,
+  );
+
+  const nightlyListings = useMemo(
+    () =>
+      listings?.filter(
+        (listing: any) =>
+          !listing.get('priceDuration') ||
+          listing.get('priceDuration') === 'night',
+      ),
+    [listings],
+  );
+
+  const nightlyListingsIds =
+    nightlyListings &&
+    nightlyListings.map((listing: any) => listing.get('_id'));
+
+  const nightlyBookings =
+    bookings &&
+    nightlyListings &&
+    bookings.filter((booking: any) => {
+      return nightlyListingsIds.includes(booking.get('listing'));
+    });
+
+  const { numBookedNights } = getBookedNights({
+    nightlyBookings,
+    nightlyListings,
+    start,
+    end,
+    duration,
+    TIME_ZONE,
+    firstBookingDate: timeFrame === 'allTime' ? firstBookingDate : undefined,
+  });
 
   const loadData = async () => {
     try {
@@ -48,6 +109,7 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
       await Promise.all([
         platform.user.get(userFilter),
         platform.booking.get(bookingFilter),
+        platform.listing.get(listingFilter),
         APP_NAME === 'tdf'
           ? platform.metrics.getTokenSales(tokenSalesFilter)
           : [],
@@ -142,8 +204,8 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
 
     const timePeriodTokenSales = tokenSales.filter((sale: any) => {
       const saleDate = new Date(sale.get('created'));
-      const startDate = new Date(start);
-      const endDate = new Date(end);
+      const startDate = new Date(start || '');
+      const endDate = new Date(end || '');
 
       if (timeFrame === 'allTime') {
         return true;
@@ -170,6 +232,10 @@ const DashboardMetrics = ({ timeFrame, fromDate, toDate }: Props) => {
       {
         name: 'Bookings made',
         amount: bookings.size,
+      },
+      {
+        name: 'Nights spent',
+        amount: numBookedNights,
       },
       {
         name: 'Admin bookings',

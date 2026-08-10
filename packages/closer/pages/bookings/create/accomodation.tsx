@@ -1,20 +1,24 @@
 import { useRouter } from 'next/router';
 
+import { useEffect, useRef, useState } from 'react';
+
 import BookingBackButton from '../../../components/BookingBackButton';
 import BookingStepsInfo from '../../../components/BookingStepsInfo';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import ListingCard from '../../../components/ListingCard';
 import { ErrorMessage } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 import ProgressBar from '../../../components/ui/ProgressBar';
 
-import dayjs, { duration } from 'dayjs';
+import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import process from 'process';
 
 import { blockchainConfig } from '../../../config_blockchain';
-import { BOOKING_STEPS } from '../../../constants';
+import { BOOKING_STEPS, BOOKING_STEP_TITLE_KEYS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import {
   BaseBookingParams,
@@ -23,9 +27,19 @@ import {
   Listing,
 } from '../../../types';
 import api from '../../../utils/api';
-import { getBookingType } from '../../../utils/booking.helpers';
+import {
+  bookingGuestNightsMetricPoint,
+  buildBookingAccomodationUrl,
+  buildBookingDatesUrl,
+  getBookingTokenCurrency,
+  getBookingType,
+} from '../../../utils/booking.helpers';
+import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
+import { parseMessageFromError } from '../../../utils/common';
+import { normalizeDiscountCode } from '../../../utils/discountCode';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
+import config from '../../../configCached';
 import { getBookingRate, getDiscountRate } from '../../../utils/helpers';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
 dayjs.extend(advancedFormat);
@@ -35,7 +49,8 @@ interface Props extends BaseBookingParams {
   error?: string;
   bookingConfig: BookingConfig | null;
   bookingError?: string | null;
-  optionalEvent: Event | null;
+  event: Event | null;
+  tokenCurrency: string;
 }
 
 const AccomodationSelector = ({
@@ -63,12 +78,18 @@ const AccomodationSelector = ({
   bookingType,
   projectId,
   volunteerId,
+  isFriendsBooking,
+  friendEmails,
+  event,
+  tokenCurrency,
 }: Props) => {
   const t = useTranslations();
 
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
-  console.log('duration=', duration);
+
+  const normalizedIsFriendsBooking =
+    normalizeIsFriendsBooking(isFriendsBooking);
   const durationInDays = dayjs(end).diff(dayjs(start), 'day');
 
   const durationName = getBookingRate(durationInDays);
@@ -97,7 +118,7 @@ const AccomodationSelector = ({
   const filteredListings =
     listings &&
     listings?.filter((listing: Listing) => {
-      if (isTeamMember) {
+      if (isTeamMember && listing.availableFor?.includes('team')) {
         return listing.availableFor?.includes('team');
       } else if (bookingType) {
         return listing.availableFor?.includes('volunteer');
@@ -110,16 +131,75 @@ const AccomodationSelector = ({
 
   const bookingCategory = getBookingType(eventId, bookingType, volunteerId);
 
+  const [requestError, setRequestError] = useState<string | null>(null);
+  const noListingsMetricLoggedRef = useRef(false);
+
+  useEffect(() => {
+    void logMetric({
+      event: 'booking-flow-started',
+      category: 'booking',
+      value: bookingCategory,
+      ...linkedMetricFields('Event', eventId),
+    });
+  }, [bookingCategory, eventId]);
+
+  useEffect(() => {
+    if (filteredListings?.length) {
+      noListingsMetricLoggedRef.current = false;
+      return;
+    }
+    if (!listings?.length) return;
+    if (noListingsMetricLoggedRef.current) return;
+    noListingsMetricLoggedRef.current = true;
+    void logMetric({
+      event: 'booking-no-listings',
+      category: 'booking',
+      value: 'empty',
+      ...linkedMetricFields('Event', eventId),
+    });
+  }, [listings, filteredListings, bookingCategory]);
+
+  const isPaidEventWithoutTicket = Boolean(event?.paid && !ticketOption);
+
   const bookListing = async (listingId: string) => {
     try {
-      const volunteerInfo =
-        (bookingType === 'volunteer' || bookingType === 'residence') && {
-          skills: parsedSkills,
-          diet: parsedDiet,
-          projectId: parsedProjectId,
-          suggestions: suggestions || '',
-          bookingType,
+      setRequestError(null);
+
+      if (isPaidEventWithoutTicket) {
+        const nights =
+          start && end
+            ? Math.max(0, dayjs(end).diff(dayjs(start), 'day'))
+            : 0;
+        const p = bookingGuestNightsMetricPoint(nights, adults);
+        void logMetric({
+          event: 'booking-request-error',
+          category: 'booking',
+          value: 'ticket', point: p,
+          ...linkedMetricFields('Event', eventId),
+        });
+        setRequestError(t('bookings_error_no_ticket_option'));
+        return;
+      }
+
+      const volunteerInfo = (bookingType === 'volunteer' ||
+        bookingType === 'residence') && {
+        skills: parsedSkills,
+        diet: parsedDiet,
+        projectId: parsedProjectId,
+        suggestions: suggestions || '',
+        bookingType,
       };
+      const eventFoodPayload =
+        event && event.foodOption
+          ? {
+              foodOption: event.foodOption,
+              foodOptionId:
+                event.foodOption === 'food_package'
+                  ? event.foodOptionId ?? null
+                  : null,
+            }
+          : {};
+
       const {
         data: { results: newBooking },
       } = await api.post('/bookings/request', {
@@ -135,25 +215,50 @@ const AccomodationSelector = ({
         ...(eventId && { eventId, ticketOption }),
         doesNeedPickup,
         doesNeedSeparateBeds,
-        foodOption,
+        ...(event ? eventFoodPayload : { foodOption }),
         ...(volunteerInfo && { volunteerInfo }),
+        ...(normalizedIsFriendsBooking && { isFriendsBooking: true }),
+        ...(friendEmails && { friendEmails }),
+      });
+      const nights =
+        start && end ? Math.max(0, dayjs(end).diff(dayjs(start), 'day')) : 0;
+      const pt = bookingGuestNightsMetricPoint(nights, adults);
+      void logMetric({
+        event: 'booking-request-success',
+        category: 'booking',
+        value: 'success', point: pt,
+        ...linkedMetricFields('Booking', newBooking._id),
       });
       if (bookingConfig?.foodOptionEnabled) {
+        const normalizedDiscountCode = normalizeDiscountCode(discountCode);
         router.push(
-          `/bookings/${newBooking._id}/food?discountCode=${discountCode}`,
+          normalizedDiscountCode
+            ? `/bookings/${newBooking._id}/food?discountCode=${encodeURIComponent(normalizedDiscountCode)}`
+            : `/bookings/${newBooking._id}/food`,
         );
         return;
       }
 
       router.push(`/bookings/${newBooking._id}/questions`);
     } catch (err) {
-      console.log(err); // TO DO handle error
+      const nights =
+        start && end
+          ? Math.max(0, dayjs(end).diff(dayjs(start), 'day'))
+          : 0;
+      const pt = bookingGuestNightsMetricPoint(nights, adults);
+      void logMetric({
+        event: 'booking-request-error',
+        category: 'booking',
+        value: 'error', point: pt,
+        ...linkedMetricFields('Event', eventId),
+      });
+      setRequestError(parseMessageFromError(err));
     } finally {
     }
   };
 
   if (!isBookingEnabled) {
-    return <PageNotFound />;
+    return <FeatureNotEnabled feature="booking" />;
   }
   if (error) {
     return <PageNotFound error={error} />;
@@ -163,44 +268,81 @@ const AccomodationSelector = ({
     return null;
   }
 
+  const stepUrlParams = {
+    start,
+    end,
+    adults: Number(adults),
+    ...(kids && { children: Number(kids) }),
+    ...(infants && { infants: Number(infants) }),
+    ...(pets && { pets: Number(pets) }),
+    ...(currency && { currency }),
+    ...(eventId && { eventId }),
+    ...(volunteerId && { volunteerId }),
+    ...(bookingType && {
+      volunteerInfo: {
+        bookingType,
+        ...(parsedSkills.length && { skills: parsedSkills }),
+        ...(parsedDiet.length && { diet: parsedDiet }),
+        ...(parsedProjectId.length && { projectId: parsedProjectId }),
+        ...(suggestions && { suggestions }),
+      },
+    }),
+    ...(normalizedIsFriendsBooking && { isFriendsBooking: true }),
+    ...(friendEmails && { friendEmails }),
+  };
+
   const backToDates = () => {
-    const params = {
-      start,
-      end,
-      adults,
-      ...(kids && { kids }),
-      ...(infants && { infants }),
-      ...(pets && { pets }),
-      ...(currency && { currency }),
-      ...(eventId && { eventId }),
-      ...(bookingType && { bookingType }),
-      ...(skills && { skills }),
-      ...(diet && { diet }),
-      ...(suggestions && { suggestions }),
-    };
-    const urlParams = new URLSearchParams(params);
-    router.push(`/bookings/create/dates?${urlParams}`);
+    router.push(buildBookingDatesUrl(stepUrlParams));
   };
 
   return (
     <>
-      <div className="max-w-screen-sm mx-auto md:first-letter:p-8">
-        <BookingBackButton onClick={backToDates} name={t('buttons_back')} />
-        <Heading className="pb-4 mt-8">
-          <span className="mr-2">🏡</span>
-          <span>{t('bookings_accomodation_step_title')}</span>
-        </Heading>
-        <ProgressBar steps={BOOKING_STEPS} />
+      <div className="max-w-screen-sm mx-auto p-4 md:p-8">
+        <div className="relative flex items-center min-h-[2.75rem] mb-6">
+          <BookingBackButton
+            onClick={backToDates}
+            name={t('buttons_back')}
+            className="relative z-10"
+          />
+          <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
+            <Heading className="text-2xl md:text-3xl pb-0 mt-0 text-center">
+              <span>{t('bookings_accomodation_step_title')}</span>
+            </Heading>
+          </div>
+        </div>
+        <FriendsBookingBlock isFriendsBooking={normalizedIsFriendsBooking} />
+        <ProgressBar
+          steps={BOOKING_STEPS}
+          stepTitleKeys={BOOKING_STEP_TITLE_KEYS}
+          stepHrefs={[
+            buildBookingDatesUrl(stepUrlParams),
+            buildBookingAccomodationUrl({
+              ...stepUrlParams,
+              currency: useTokens ? tokenCurrency : stepUrlParams.currency,
+            }),
+            null,
+            null,
+            null,
+            null,
+            null,
+          ]}
+        />
         <BookingStepsInfo
           startDate={start}
           endDate={end}
           totalGuests={adults}
           savedCurrency={currency}
+          useTokens={Boolean(useTokens)}
           backToDates={backToDates}
         />
         {bookingError && (
           <section className="my-12">
             <ErrorMessage error={bookingError} />
+          </section>
+        )}
+        {requestError && (
+          <section className="my-12">
+            <ErrorMessage error={requestError} />
           </section>
         )}
         {filteredListings?.length === 0 && (
@@ -213,7 +355,7 @@ const AccomodationSelector = ({
             </p>
           </div>
         )}
-        <div className="flex flex-col gap-4 mt-16 md:grid md:grid-cols-2 md:items-start">
+        <div className="flex flex-col gap-3 mt-8 md:grid md:grid-cols-2 md:items-start">
           {filteredListings &&
             filteredListings?.map((listing) => (
               <ListingCard
@@ -249,9 +391,11 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       currency,
       eventId,
       ticketOption,
-      discountCode,
+      discountCode: discountCodeRaw,
       doesNeedPickup,
       doesNeedSeparateBeds,
+      isFriendsBooking: normalizedIsFriendsBooking,
+      friendEmails,
       foodOption,
       skills,
       diet,
@@ -260,11 +404,11 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       bookingType,
       volunteerId,
     }: BaseBookingParams = query || {};
+    const discountCode = normalizeDiscountCode(discountCodeRaw) || undefined;
     const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
     const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
 
-    const [availabilityRes, bookingConfigRes, messages] = await Promise.all([
-      api
+    const availabilityRes = await api
         .post('/bookings/availability', {
           start,
           end,
@@ -273,6 +417,7 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
           infants,
           pets,
           useTokens,
+          isFriendsBooking: normalizedIsFriendsBooking,
           discountCode,
           ...(eventId && { eventId, ticketOption }),
         })
@@ -282,16 +427,19 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
             err.response.data.error,
           );
           return { error: err.response.data.error || 'Unknown error' };
-        }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+        })
     const bookingError = (availabilityRes as any)?.error || null;
     const availability = (availabilityRes as any)?.data?.results;
 
-    const bookingConfig = bookingConfigRes?.data?.results?.value;
+    const bookingConfig = config.booking;
+    const web3Config = config.web3;
+    const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
+
+    let event = null;
+    if (eventId) {
+      const eventRes = await api.get(`/event/${eventId}`).catch(() => null);
+      event = eventRes?.data?.results ?? null;
+    }
 
     return {
       listings: availability,
@@ -308,9 +456,10 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       discountCode,
       doesNeedPickup,
       doesNeedSeparateBeds,
+      isFriendsBooking: normalizedIsFriendsBooking,
+      friendEmails,
       bookingConfig,
       bookingError,
-      messages,
       foodOption,
       skills,
       diet,
@@ -318,16 +467,16 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       suggestions,
       bookingType,
       volunteerId,
+      event,
+      tokenCurrency,
     };
   } catch (err: any) {
-    console.log(err);
     return {
       error: err.response?.data?.error || err.message,
       bookingConfig: null,
-      messages: null,
+      tokenCurrency: getBookingTokenCurrency(),
     };
   }
 };
 
 export default AccomodationSelector;
-

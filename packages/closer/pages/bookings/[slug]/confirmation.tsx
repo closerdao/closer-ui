@@ -1,57 +1,76 @@
 import { useRouter } from 'next/router';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-import BookingBackButton from '../../../components/BookingBackButton';
 import BookingResult from '../../../components/BookingResult';
+import ConfirmationCelebrationOverlay, {
+  CONFIRMATION_CELEBRATION_DURATION_MS,
+} from '../../../components/ConfirmationCelebrationOverlay';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageError from '../../../components/PageError';
 import Button from '../../../components/ui/Button';
-import Heading from '../../../components/ui/Heading';
-import ProgressBar from '../../../components/ui/ProgressBar';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
-import { BOOKING_STEPS } from '../../../constants';
-import {
-  BaseBookingParams,
-  Booking,
-  BookingConfig,
-  Event,
-} from '../../../types';
-import api from '../../../utils/api';
+import config from '../../../configCached';
+import { usePlatform } from '../../../contexts/platform';
+import { BaseBookingParams, Booking, BookingConfig } from '../../../types';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
-import PageNotFound from '../../not-found';
 
 interface Props extends BaseBookingParams {
-  booking: Booking | null;
   error?: string;
-  event: Event | null;
   bookingConfig: BookingConfig | null;
+  booking?: Booking | null;
 }
 
-const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
+const ConfirmationStep = ({
+  error,
+  bookingConfig,
+  booking: bookingProp,
+}: Props) => {
   const t = useTranslations();
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
   const router = useRouter();
-  const { status, _id, volunteerId, eventId } = booking || {};
+  const { platform }: any = usePlatform();
+  const slugParam = router.query.slug;
+  const slug = typeof slugParam === 'string' ? slugParam : slugParam?.[0];
+
+  const [hasRequestedBooking, setHasRequestedBooking] = useState(false);
+  const [fetchedBooking, setFetchedBooking] = useState<Booking | null>(null);
 
   useEffect(() => {
-    if (!_id) {
-      console.log('No _id');
-      // startNewBooking();
-    }
-  }, [_id]);
+    if (!router.isReady || !slug) return;
+    setHasRequestedBooking(true);
+    let cancelled = false;
+    void (async () => {
+      const action = await platform.booking.getOne(slug, { force: true });
+      if (cancelled) return;
+      const payload = action?.results;
+      if (!payload) return;
+      const js =
+        typeof payload.toJS === 'function'
+          ? (payload.toJS() as Booking)
+          : (payload as Booking);
+      setFetchedBooking(js);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router.isReady, slug, platform]);
+
+  const platformBooking = slug ? platform.booking.findOne(slug) : null;
+  const fromPlatform = platformBooking?.toJS?.() as Booking | undefined;
+  const resolvedBooking =
+    fromPlatform ?? fetchedBooking ?? bookingProp ?? undefined;
+  const { status, _id, volunteerId, eventId } = resolvedBooking || {};
+  const [showCelebration, setShowCelebration] = useState(true);
 
   useEffect(() => {
-    if (status !== 'pending' && status !== 'paid') {
-      console.log('status not pending not paid');
-      // startNewBooking();
-    } else if (status === 'paid') {
+    if (status === 'paid') {
       gaEvent('booking_confirm', {
         category: 'booking',
         label: 'booking',
@@ -59,41 +78,103 @@ const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
     }
   }, [status]);
 
+  useEffect(() => {
+    if (!hasRequestedBooking && !resolvedBooking) return;
+    const b = resolvedBooking;
+    if (!b?._id) return;
+    const { status: redirectStatus, _id: redirectId } = b;
+    if (
+      redirectStatus === 'open' ||
+      redirectStatus === 'confirmed' ||
+      redirectStatus === 'pending-payment' ||
+      redirectStatus === 'tokens-staked' ||
+      redirectStatus === 'credits-paid'
+    ) {
+      // router.replace(`/bookings/${redirectId}/checkout`);
+      alert(redirectStatus);
+    } else if (redirectStatus === 'pending') {
+      // router.replace(`/bookings/${redirectId}`);
+      alert(redirectStatus);
+    } else if (redirectStatus !== 'paid' && redirectStatus !== 'checked-in') {
+      // router.replace(`/bookings/${redirectId}`);
+      alert(redirectStatus);
+    }
+  }, [hasRequestedBooking, resolvedBooking, router]);
+
+  useEffect(() => {
+    if (!_id || (status !== 'paid' && status !== 'checked-in')) return;
+    const timer = setTimeout(
+      () => setShowCelebration(false),
+      CONFIRMATION_CELEBRATION_DURATION_MS,
+    );
+    return () => clearTimeout(timer);
+  }, [_id, status]);
+
   const viewBooking = (id: string) => {
-    router.push(`/bookings/${id}`);
+    router.push(`/stay/${id}`);
   };
   // const startNewBooking = () => {
   //   router.push('/bookings/create');
   // };
-
-  const goBack = () => {
-    router.push('/');
-  };
 
   if (error) {
     return <PageError error={error} />;
   }
 
   if (!isBookingEnabled) {
-    return <PageNotFound />;
+    return <FeatureNotEnabled feature="booking" />;
   }
 
   if (!_id) {
+    return (
+      <div className="max-w-screen-sm mx-auto p-4 md:p-8">
+        <p className="mt-16 text-foreground">{t('bookings_no_bookings')}</p>
+      </div>
+    );
+  }
+
+  if (status !== 'paid' && status !== 'checked-in') {
     return null;
   }
 
   return (
     <>
-      <div className="max-w-screen-sm mx-auto p-8">
-        <BookingBackButton onClick={goBack} />
-        <Heading className="pb-4 mt-8">
-          <span className="mr-2">🎊</span>
-          <span>{t('bookings_confirmation_step_success')}</span>
-        </Heading>
-        <ProgressBar steps={BOOKING_STEPS} />
+      <ConfirmationCelebrationOverlay
+        show={showCelebration}
+        title={t('bookings_confirmation_youre_all_set')}
+      />
+      <div className="max-w-screen-sm mx-auto p-4 md:p-8">
         <div className="mt-16 flex flex-col gap-16 flex-nowrap">
-          <BookingResult booking={booking} eventName={event?.name || ''} />
-
+          <div className="flex flex-col items-center gap-6">
+            <div
+              className="flex h-16 w-16 items-center justify-center rounded-full bg-success"
+              aria-hidden
+            >
+              <svg
+                className="h-8 w-8 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h1 className="text-center text-2xl font-semibold text-foreground">
+              {t('bookings_confirmation_youre_all_set')}
+            </h1>
+            <p className="text-center text-foreground/90 max-w-md leading-relaxed">
+              {t('bookings_confirmation_welcome_lead')}
+            </p>
+          </div>
+          <BookingResult
+            booking={resolvedBooking ?? null}
+            eventName=""
+            foodOptionEnabled={bookingConfig?.foodOptionEnabled}
+            utilityOptionEnabled={bookingConfig?.utilityOptionEnabled}
+          />
           <Button onClick={() => viewBooking(_id)}>
             {eventId
               ? t('ticket_list_view_ticket')
@@ -108,34 +189,14 @@ const ConfirmationStep = ({ error, booking, event, bookingConfig }: Props) => {
 };
 
 ConfirmationStep.getInitialProps = async (context: NextPageContext) => {
-  const { query } = context;
   try {
-    const [bookingRes, bookingConfigRes, messages] = await Promise.all([
-      api.get(`/booking/${query.slug}`).catch((err) => {
-        console.error('Error fetching booking config:', err);
-        return null;
-      }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const booking = bookingRes?.data?.results;
-    const bookingConfig = bookingConfigRes?.data?.results?.value;
-
-    const optionalEvent =
-      booking.eventId && (await api.get(`/event/${booking.eventId}`));
-    const event = optionalEvent?.data?.results;
-
-    return { booking, event, error: null, bookingConfig, messages };
+    const bookingConfig = config.booking;
+    return { error: null, bookingConfig };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
-      booking: null,
       bookingConfig: null,
-      event: null,
-      messages: null,
-    };
+      };
   }
 };
 

@@ -1,18 +1,16 @@
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import EditModel from '../../../components/EditModel';
+import EditModel, { EditModelPageLayout } from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
-
-import { FaArrowLeft } from '@react-icons/all-files/fa/FaArrowLeft';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import models from '../../../models';
 import api from '../../../utils/api';
+import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
+import config from '../../../configCached';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 import PageNotFound from '../../not-found';
 
 interface Props {
@@ -50,18 +48,13 @@ const EditLessonPage = ({ lesson, error, learningHubConfig }: Props) => {
       <Head>
         <title>{`${t('learn_edit_heading')} ${lesson.name}`}</title>
       </Head>
-      <div className="main-content">
-        {error && <div className="error-box">{error}</div>}
-        <Link
-          href={`/learn/${lesson.slug}`}
-          className="mr-2 italic flex flex-row items-center justify-start"
-        >
-          <FaArrowLeft className="mr-1" /> {t('generic_back')}
-        </Link>
-        <Heading level={2} className="flex justify-start items-center">
-          {t('learn_edit_heading')} <i>{lesson.title}</i>
-        </Heading>
-        {!process.env.NEXT_PUBLIC_STRIPE_PUB_KEY && (
+      <EditModelPageLayout
+        title={`${t('learn_edit_heading')} ${lesson.title}`}
+        backHref={`/learn/${lesson.slug}`}
+        isEdit
+      >
+        {error && <div className="error-box mb-4">{error}</div>}
+        {!process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY && (
           <div className="my-4 error-box italic">
             {t('events_no_stripe_integration')}
           </div>
@@ -74,10 +67,10 @@ const EditLessonPage = ({ lesson, error, learningHubConfig }: Props) => {
           onSave={(lesson) => router.push(`/learn/${lesson.slug}`)}
           onUpdate={onUpdate}
           allowDelete
-          deleteButton="Delete lesson"
+          deleteButton="Delete Course"
           onDelete={() => router.push('/')}
         />
-      </div>
+      </EditModelPageLayout>
     </>
   );
 };
@@ -93,32 +86,20 @@ EditLessonPage.getInitialProps = async (context: NextPageContext) => {
       {
         data: { results: lesson },
       },
-      learningHubRes,
-      messages,
     ] = await Promise.all([
       api.get(`/lesson/${query.slug}`, {
-        headers: (req as NextApiRequest)?.cookies?.access_token && {
-          Authorization: `Bearer ${
-            (req as NextApiRequest)?.cookies?.access_token
-          }`,
-        },
+        headers: getBearerAuthHeaders(req as NextApiRequest),
       }),
-      api.get('/config/learningHub').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
     ]);
+    const learningHubConfig = config.learningHub || null;
 
-    const learningHubConfig = learningHubRes?.data?.results?.value || null;
-
-    return { lesson, learningHubConfig, messages };
+    return { lesson, learningHubConfig };
   } catch (err) {
     console.log(err);
     return {
       learningHubConfig: null,
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

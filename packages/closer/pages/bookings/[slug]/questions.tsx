@@ -1,31 +1,45 @@
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
+import FriendsBookingBlock from '../../../components/FriendsBookingBlock';
 import PageError from '../../../components/PageError';
 import QuestionnaireItem from '../../../components/QuestionnaireItem';
 import { Heading } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
+import Input from '../../../components/ui/Input';
 import ProgressBar from '../../../components/ui/ProgressBar';
+import Select from '../../../components/ui/Select/Dropdown';
+import MultiSelect from '../../../components/ui/Select/MultiSelect';
 
-import dayjs from 'dayjs';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
-import { BOOKING_STEPS } from '../../../constants';
+import { BOOKING_STEPS, BOOKING_STEP_TITLE_KEYS } from '../../../constants';
+import { SHARED_ACCOMMODATION_PREFERENCES } from '../../../constants/shared.constants';
 import { useAuth } from '../../../contexts/auth';
+import { usePlatform } from '../../../contexts/platform';
+import { useConfig } from '../../../hooks/useConfig';
+import { useRedirectPaidBookingToDetail } from '../../../hooks';
 import {
   BaseBookingParams,
-  Booking,
   BookingConfig,
   Question,
+  VolunteerConfig,
 } from '../../../types';
-import api from '../../../utils/api';
+import config from '../../../configCached';
+import {
+  bookingGuestNightsMetricPoint,
+  buildBookingAccomodationUrl,
+  buildBookingDatesUrl,
+  getBookingTokenCurrency,
+} from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
-import PageNotFound from '../../not-found';
+import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 
 const prepareQuestions = (eventQuestions: any) => {
   const preparedQuestions = eventQuestions?.map((question: any) => {
@@ -36,27 +50,76 @@ const prepareQuestions = (eventQuestions: any) => {
 };
 
 interface Props extends BaseBookingParams {
-  eventQuestions: Question[];
-  booking: Booking | null;
   bookingConfig: BookingConfig | null;
+  volunteerConfig: VolunteerConfig | null;
   error?: string;
+  tokenCurrency: string;
 }
 
 const Questionnaire = ({
-  eventQuestions,
-  booking,
-  error,
+  error: bookingError,
   bookingConfig,
+  volunteerConfig,
+  tokenCurrency,
 }: Props) => {
   const t = useTranslations();
   const router = useRouter();
+  const slugParam = router.query.slug;
+  const slug = typeof slugParam === 'string' ? slugParam : slugParam?.[0];
   const { goBack } = router.query;
-  const { isAuthenticated } = useAuth();
+
+  const { platform } = usePlatform() as any;
+
+  useEffect(() => {
+    if (!router.isReady || !slug) return;
+    void platform.booking.getOne(slug, { force: true });
+  }, [router.isReady, slug, platform]);
+
+  const booking = slug ? platform.booking.findOne(slug)?.toJS?.() ?? null : null;
+
+  const bookingMetricFields = useMemo(
+    () => linkedMetricFields('Booking', booking?._id),
+    [booking?._id],
+  );
+
+  useEffect(() => {
+    if (booking?.eventId) {
+      void platform.event.getOne(booking.eventId);
+    }
+  }, [booking?.eventId, platform]);
+
+  const event = booking?.eventId
+    ? platform.event.findOne(booking.eventId)?.toJS?.() ?? null
+    : null;
+
+  useRedirectPaidBookingToDetail(booking);
+  const {
+    isAuthenticated,
+    user: initialUser,
+    refetchUser,
+    setUser,
+  } = useAuth();
+  const { APP_NAME } = useConfig();
+
+  const questionsStepMetricLoggedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!booking?._id) return;
+    const idKey = String(booking._id);
+    if (questionsStepMetricLoggedRef.current === idKey) return;
+    questionsStepMetricLoggedRef.current = idKey;
+    void logMetric({
+      event: 'booking-questions-view',
+      category: 'booking',
+      value: 'view',
+      ...bookingMetricFields,
+    });
+  }, [booking?._id]);
 
   const isBookingEnabled =
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
+  const eventQuestions = event?.fields || [];
   const questions: Question[] = prepareQuestions(eventQuestions);
 
   const hasRequiredQuestions = questions?.some((question) => question.required);
@@ -67,6 +130,34 @@ const Questionnaire = ({
       ? booking?.fields
       : questions?.map((question) => ({ [question.name]: '' })),
   );
+
+  const [userPreferences, setUserPreferences] = useState({
+    diet: Array.isArray(initialUser?.preferences?.diet)
+      ? initialUser?.preferences?.diet
+      : initialUser?.preferences?.diet?.split(',') || [],
+    sharedAccomodation: initialUser?.preferences?.sharedAccomodation || '',
+    superpower: initialUser?.preferences?.superpower || '',
+    skills: initialUser?.preferences?.skills || [],
+  });
+
+  useEffect(() => {
+    if (initialUser?.preferences) {
+      setUserPreferences({
+        diet: Array.isArray(initialUser.preferences.diet)
+          ? initialUser.preferences.diet
+          : initialUser.preferences.diet?.split(',') || [],
+        sharedAccomodation: initialUser.preferences.sharedAccomodation || '',
+        superpower: initialUser.preferences.superpower || '',
+        skills: initialUser.preferences.skills || [],
+      });
+    }
+  }, [initialUser]);
+
+  const [hasSaved, setHasSaved] = useState(false);
+  const [preferencesError, setPreferencesError] = useState<string | null>(null);
+
+  const skillsOptions = volunteerConfig?.skills?.split(',') || [];
+  const dietOptions = volunteerConfig?.diet?.split(',') || [];
 
   useEffect(() => {
     if (!hasRequiredQuestions) {
@@ -80,33 +171,70 @@ const Questionnaire = ({
     setSubmitDisabled(!allRequiredQuestionsCompleted);
   }, [answers]);
 
-  useEffect(() => {
-    //this is a temporary solution to redirect to summary page if there are no questions
-    //once we have questions from user profile integrated we should remove this
-    if (!questions?.length) {
-      if (goBack === 'true') {
-        resetBooking();
-        return;
+  const saveUserData = (
+    attribute: keyof typeof userPreferences,
+  ): ((value: string | string[]) => void) => {
+    return async (value: string | string[]) => {
+      const payload: any = {
+        preferences: {
+          ...initialUser?.preferences,
+          [attribute]: value,
+        },
+      };
+
+      try {
+        setHasSaved(false);
+        if (!initialUser?._id) return;
+        await patchUserAndSyncAuthStore({
+          platform,
+          userId: initialUser._id,
+          patchBody: payload,
+          setUser,
+          refetchUser,
+        });
+        setPreferencesError(null);
+        setHasSaved(true);
+        setTimeout(() => setHasSaved(false), 2000);
+      } catch (err) {
+        const errorMessage = parseMessageFromError(err);
+        setPreferencesError(errorMessage);
       }
-      router.push(`/bookings/${booking?._id}/summary`);
-    }
-  }, []);
+    };
+  };
 
   const handleSubmit = async () => {
     try {
-      await api.patch(`/booking/${booking?._id}`, {
+      await platform.booking.patch(booking?._id, {
         fields: answers,
       });
-      //TODO when we have user profile page updated: update user preferences
-      // PATCH /user/:id {preferences}
+      const pt = bookingGuestNightsMetricPoint(
+        booking?.duration,
+        booking?.adults,
+      );
+      void logMetric({
+        event: 'booking-questions-save-success',
+        category: 'booking',
+        value: 'save', point: pt,
+        ...bookingMetricFields,
+      });
       router.push(`/bookings/${booking?._id}/summary`);
     } catch (err) {
-      console.log(err); // TO DO handle error
+      const pt = bookingGuestNightsMetricPoint(
+        booking?.duration,
+        booking?.adults,
+      );
+      void logMetric({
+        event: 'booking-questions-save-error',
+        category: 'booking',
+        value: 'save', point: pt,
+        ...bookingMetricFields,
+      });
+      console.log(err);
     }
   };
 
   const handleAnswer = (name: string, value: string) => {
-    const updatedAnswers = answers.map((answer) => {
+    const updatedAnswers = answers.map((answer: Record<string, string>) => {
       if (Object.keys(answer)[0] === name) {
         return { [name]: value };
       }
@@ -115,30 +243,50 @@ const Questionnaire = ({
     setAnswers(updatedAnswers);
   };
 
+  const stepUrlParams =
+    booking?.start && booking?.end
+      ? {
+          start: booking.start,
+          end: booking.end,
+          adults: booking.adults ?? 0,
+          ...(booking.children && { children: booking.children }),
+          ...(booking.infants && { infants: booking.infants }),
+          ...(booking.pets && { pets: booking.pets }),
+          currency: booking.useTokens ? tokenCurrency : undefined,
+          ...(booking.eventId && { eventId: booking.eventId }),
+          ...(booking.volunteerId && { volunteerId: booking.volunteerId }),
+          ...(booking.volunteerInfo && {
+            volunteerInfo: {
+              ...(booking.volunteerInfo.bookingType && {
+                bookingType: booking.volunteerInfo.bookingType,
+              }),
+              ...(booking.volunteerInfo.skills?.length && {
+                skills: booking.volunteerInfo.skills,
+              }),
+              ...(booking.volunteerInfo.diet?.length && {
+                diet: booking.volunteerInfo.diet,
+              }),
+              ...(booking.volunteerInfo.projectId?.length && {
+                projectId: booking.volunteerInfo.projectId,
+              }),
+              ...(booking.volunteerInfo.suggestions && {
+                suggestions: booking.volunteerInfo.suggestions,
+              }),
+            },
+          }),
+          ...(booking.isFriendsBooking && { isFriendsBooking: true }),
+          ...(booking.friendEmails && { friendEmails: booking.friendEmails }),
+        }
+      : null;
+
   const resetBooking = () => {
-    if (booking?.eventId) {
-      router.push(
-        `/bookings/create/dates?eventId=${booking.eventId}&start=${dayjs(
-          booking.start,
-        ).format('YYYY-MM-DD')}&end=${dayjs(booking.end).format('YYYY-MM-DD')}`,
-      );
+    if (goBack === 'true') {
+      router.push(`/bookings/${booking?._id}/rules`);
       return;
     }
-    if (booking?.volunteerId) {
-      router.push(
-        `/bookings/create/dates?volunteerId=${
-          booking.volunteerId
-        }&start=${dayjs(booking.start).format('YYYY-MM-DD')}&end=${dayjs(
-          booking.end,
-        ).format('YYYY-MM-DD')}`,
-      );
-      return;
+    if (stepUrlParams) {
+      router.push(buildBookingDatesUrl(stepUrlParams));
     }
-    router.push(
-      `/bookings/create/dates?start=${dayjs(booking?.start).format(
-        'YYYY-MM-DD',
-      )}&end=${dayjs(booking?.end).format('YYYY-MM-DD')}`,
-    );
   };
 
   const getAnswer = (
@@ -157,30 +305,54 @@ const Questionnaire = ({
   };
 
   if (!isBookingEnabled) {
-    return <PageNotFound />;
+    return <FeatureNotEnabled feature="booking" />;
   }
 
   if (!isAuthenticated) {
     return <PageNotAllowed />;
   }
 
-  if (error) {
-    return <PageError error={error} />;
+  if (bookingError) {
+    return <PageError error={bookingError} />;
   }
 
   return (
     <>
-      <div className="w-full max-w-screen-sm mx-auto p-8">
-        <BookingBackButton
-          onClick={resetBooking}
-          name={t('buttons_back_to_dates')}
+      <div className="w-full max-w-screen-sm mx-auto p-4 md:p-8">
+        <div className="relative flex items-center min-h-[2.75rem] mb-6">
+          <BookingBackButton onClick={resetBooking} name={t('buttons_back')} className="relative z-10" />
+          <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
+            <Heading level={1} className="text-2xl md:text-3xl pb-0 mt-0 text-center">
+              <span>{t('bookings_questionnaire_step_title')}</span>
+            </Heading>
+          </div>
+        </div>
+        <FriendsBookingBlock isFriendsBooking={booking?.isFriendsBooking} />
+
+        <ProgressBar
+          steps={BOOKING_STEPS}
+          stepTitleKeys={BOOKING_STEP_TITLE_KEYS}
+          stepHrefs={
+            stepUrlParams && booking
+              ? [
+                  buildBookingDatesUrl(stepUrlParams),
+                  buildBookingAccomodationUrl(stepUrlParams),
+                  `/bookings/${booking._id}/food`,
+                  `/bookings/${booking._id}/rules`,
+                  null,
+                  null,
+                  null,
+                ]
+              : undefined
+          }
         />
 
-        <Heading level={1} className="pb-4 mt-8">
-          <span className="mr-4">📄</span>
-          <span>{t('bookings_questionnaire_step_title')}</span>
-        </Heading>
-        <ProgressBar steps={BOOKING_STEPS} />
+        {preferencesError && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md mb-6">
+            <span className="block sm:inline">{preferencesError}</span>
+          </div>
+        )}
+
         <div className="my-16 gap-16 mt-16">
           {questions?.map((question) => (
             <QuestionnaireItem
@@ -191,8 +363,69 @@ const Questionnaire = ({
             />
           ))}
 
+          {/* User Preferences */}
+          <section className=" bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-8">
+            <MultiSelect
+              label={t('settings_dietary_preferences')}
+              values={userPreferences.diet}
+              onChange={(value) => {
+                setUserPreferences((prev) => ({ ...prev, diet: value }));
+                saveUserData('diet')(value);
+              }}
+              options={dietOptions}
+              placeholder={t('settings_pick_or_create_yours')}
+              className="mb-4"
+            />
+
+            {APP_NAME && APP_NAME?.toLowerCase() !== 'moos' && (
+              <Select
+                label={t('settings_shared_accommodation_preference')}
+                value={userPreferences.sharedAccomodation}
+                options={SHARED_ACCOMMODATION_PREFERENCES}
+                className="mb-4"
+                onChange={(value) => {
+                  setUserPreferences((prev) => ({
+                    ...prev,
+                    sharedAccomodation: value,
+                  }));
+                  saveUserData('sharedAccomodation')(value);
+                }}
+                isRequired
+              />
+            )}
+
+            <Input
+              label={t('settings_superpower')}
+              placeholder={t('settings_superpower_placeholder')}
+              value={userPreferences.superpower}
+              onChange={(e) => {
+                setUserPreferences((prev) => ({
+                  ...prev,
+                  superpower: e.target.value,
+                }));
+                saveUserData('superpower')(e.target.value);
+              }}
+              isInstantSave={true}
+              hasSaved={hasSaved}
+              setHasSaved={setHasSaved}
+              className="mb-4"
+            />
+
+            <MultiSelect
+              label={t('settings_skills')}
+              values={userPreferences.skills}
+              onChange={(value) => {
+                setUserPreferences((prev) => ({ ...prev, skills: value }));
+                saveUserData('skills')(value);
+              }}
+              options={skillsOptions}
+              placeholder={t('settings_pick_or_create_yours')}
+              className="mb-4"
+            />
+          </section>
+
           <Button onClick={handleSubmit} isEnabled={!isSubmitDisabled}>
-            {t('buttons_submit')}
+            {t('booking_button_continue')}
           </Button>
         </div>
       </div>
@@ -201,40 +434,25 @@ const Questionnaire = ({
 };
 
 Questionnaire.getInitialProps = async (context: NextPageContext) => {
-  const { query } = context;
-
   try {
-    const [bookingRes, bookingConfigRes, messages] = await Promise.all([
-      api.get(`/booking/${query.slug}`).catch((err) => {
-        console.error('Error fetching booking config:', err);
-        return null;
-      }),
-      api.get('/config/booking').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const booking = bookingRes?.data?.results;
-    const bookingConfig = bookingConfigRes?.data?.results?.value;
-
-    const optionalEvent =
-      booking.eventId && (await api.get(`/event/${booking.eventId}`));
-    const event = optionalEvent?.data?.results;
+    const bookingConfig = config.booking;
+    const web3Config = config.web3;
+    const tokenCurrency = getBookingTokenCurrency(web3Config, bookingConfig);
+    const volunteerConfig = config.volunteering;
 
     return {
-      booking,
       bookingConfig,
-      eventQuestions: event?.fields,
+      volunteerConfig,
       error: null,
-      messages,
+      tokenCurrency,
     };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
-      booking: null,
       bookingConfig: null,
+      volunteerConfig: null,
       questions: null,
-      messages: null,
+      tokenCurrency: getBookingTokenCurrency(),
     };
   }
 };

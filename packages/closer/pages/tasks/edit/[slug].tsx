@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import EditModel from '../../../components/EditModel';
+import EditModel, { EditModelPageLayout } from '../../../components/EditModel';
 import Heading from '../../../components/ui/Heading';
 
 import { NextPageContext } from 'next';
@@ -10,7 +10,6 @@ import { useTranslations } from 'next-intl';
 import models from '../../../models';
 import api from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
 
 interface Props {
   task: any;
@@ -38,7 +37,11 @@ const EditTask = ({ task }: Props) => {
       <Head>
         <title>{`${t('tasks_edit_title')} - ${task.name}`}</title>
       </Head>
-      <div className="main-content">
+      <EditModelPageLayout
+        title={`${t('tasks_edit_title')} ${task.name}`}
+        backHref={`/tasks/${task.slug}`}
+        isEdit
+      >
         <EditModel
           id={task._id}
           endpoint={'/task'}
@@ -51,7 +54,7 @@ const EditTask = ({ task }: Props) => {
           deleteButton="Delete Task"
           onDelete={() => router.push('/')}
         />
-      </div>
+      </EditModelPageLayout>
     </>
   );
 };
@@ -62,18 +65,14 @@ EditTask.getInitialProps = async (context: NextPageContext) => {
     if (!query.slug) {
       throw new Error('No task');
     }
-    const [taskResponse, messages] = await Promise.all([
-      api.get(`/task/${query.slug}`),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+    const taskResponse = await api.get(`/task/${query.slug}`)
 
     const task = taskResponse.data.results;
-    return { task, messages };
+    return { task };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
-      messages: null,
-    };
+      };
   }
 };
 

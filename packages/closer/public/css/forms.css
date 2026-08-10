@@ -7,7 +7,7 @@
   }
   .btn-primary,
   .btn-primary[type='submit'] {
-    @apply text-base cursor-pointer inline-block py-2 px-4 rounded-full text-white border-0 border-accent bg-accent focus:outline-none disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed uppercase;
+    @apply text-base cursor-pointer inline-block py-2 px-4 rounded-full text-accent-foreground border-0 border-accent bg-accent focus:outline-none disabled:text-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed uppercase;
   }
   .btn-primary-light,
   .btn-primary-light[type='submit'] {
@@ -21,7 +21,7 @@
   }
   .btn-small,
   .btn-small[type='submit'] {
-    @apply btn py-0 px-2 text-sm hover:bg-accent text-accent hover:text-white bg-transparent border-2 border-accent disabled:hover:bg-transparent disabled:border-gray-400 disabled:text-gray-400;
+    @apply btn py-0 px-2 text-sm hover:bg-accent text-accent hover:text-accent-foreground bg-transparent border-2 border-accent disabled:hover:bg-transparent disabled:border-gray-400 disabled:text-gray-400;
   }
   .btn-secondary,
   .btn-secondary[type='submit'] {
@@ -53,10 +53,10 @@
     @apply w-full;
   }
 
-  textarea,
+  /* textarea,
   .textarea {
-    @apply p-2 text-foreground block border-0 border-b-2 border-transparent focus:outline-none focus:border-accent;
-  }
+    @apply p-2 text-foreground block border-0 border-b-2 ;
+  } */
 
   input[type='email'],
   input[type='password']:not(.new-input),
@@ -67,7 +67,7 @@
     @apply p-2 text-foreground block border-0 border-b-2 border-transparent ring-transparent focus:outline-none focus:border-accent;
   }
 
-  select {
+  select:not(.new-input) {
     @apply text-base border-gray-200 border-2 rounded-lg ring-transparent appearance-none focus:border-accent outline-none max-w-full;
   }
 

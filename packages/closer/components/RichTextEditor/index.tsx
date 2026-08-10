@@ -102,7 +102,7 @@ const RichTextEditor = ({ value, onChange, imageSize = 'max-lg' }: Props) => {
   ];
 
   return (
-    <div>
+    <div className="wysiwyg-editor">
       <QuillNoSSRWrapper
         value={value}
         onChange={onChange}

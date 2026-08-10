@@ -2,18 +2,28 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
-import { CSVLink } from 'react-csv';
 
-import { FaUser } from '@react-icons/all-files/fa/FaUser';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import {
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Home,
+  Star,
+  UserCheck,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { ACTIONS, USER_ROLE_OPTIONS } from '../../constants';
+import EmailDisplay from '../display/emailDisplay';
+import InlineFormattedSegments from '../display/inlineFormattedSegments';
+import WalletDisplay from '../display/walletDisplay';
+import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import api, { cdn } from '../../utils/api';
-import { prepareUserDataForCsvExport } from '../../utils/helpers';
 import Counter from '../Counter';
 import Modal from '../Modal';
 import Pagination from '../Pagination';
@@ -32,15 +42,17 @@ dayjs.extend(relativeTime);
 
 const USERS_PER_PAGE = 50;
 const MAX_USERS_TO_FETCH = 2000;
+const MAX_VOUCH_CSV_COLUMNS = 10;
 
 interface Props {
   where: any;
   page: number;
   setPage: Dispatch<SetStateAction<number>>;
   sortBy: string;
+  setSortBy: Dispatch<SetStateAction<string>>;
 }
 
-const UsersList = ({ where, page, setPage, sortBy }: Props) => {
+const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
   const { user: currentUser } = useAuth();
@@ -60,6 +72,7 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
+  const [expandedUsers, setExpandedUsers] = useState<string[]>([]);
   const [action, setAction] = useState<string | null>(null);
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -67,8 +80,18 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
   const [reasonToSendCredits, setReasonToSendCredits] = useState('');
   const [error, setError] = useState<any>();
   const [success, setSuccess] = useState(false);
-  const [csvData, setCsvData] = useState<any>(null);
   const [usersEmails, setUsersEmails] = useState<any[]>([]);
+  const [csvData, setCsvData] = useState<any>(null);
+  const [isExportLoading, setIsExportLoading] = useState(false);
+  const [exportError, setExportError] = useState<any>(null);
+
+  const toggleUserExpanded = (userId: string) => {
+    setExpandedUsers((prev) =>
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId],
+    );
+  };
 
   const loadData = async () => {
     try {
@@ -84,19 +107,127 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
     }
   };
 
-  const getAllUserData = async () => {
-    try {
-      setIsLoading(true);
-      const allUserData = await platform.user.get({
-        limit: MAX_USERS_TO_FETCH,
-        sort_by: 'screenname',
+  const getAllUserDataForExport = async () => {
+    const exportFilter = {
+      where: updatedWhere,
+      limit: MAX_USERS_TO_FETCH,
+      sort_by: sortBy,
+    };
+    const res = await platform.user.get(exportFilter);
+    const results = res?.results;
+    if (!results) return null;
+    const list = results.toArray
+      ? results.toArray()
+      : Array.isArray(results)
+      ? results
+      : [];
+    return list;
+  };
+
+  const formatUsersForCsv = (users: any[]) => {
+    const escapeCsvCell = (
+      cell: string | number | undefined | null,
+    ): string => {
+      if (cell === undefined || cell === null) return '';
+      const str = String(cell);
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const vouchHeaders = Array.from(
+      { length: MAX_VOUCH_CSV_COLUMNS },
+      (_, i) => ({
+        key: `vouch${i + 1}`,
+        label: `Vouch ${i + 1}`,
+      }),
+    );
+
+    const headers = [
+      { key: 'screenname', label: 'Name' },
+      { key: 'email', label: 'Email' },
+      { key: 'created', label: 'Joined' },
+      { key: 'lastactive', label: 'Last Active' },
+      { key: 'roles', label: 'Roles' },
+      { key: 'kycPassed', label: 'KYC Passed' },
+      { key: 'tokenBalance', label: 'Token Balance' },
+      { key: 'presence', label: 'Total Nights' },
+      { key: 'totalBookings', label: 'Total Bookings' },
+      { key: 'citizenshipStatus', label: 'Citizenship Status' },
+      { key: 'citizenDate', label: 'Citizen Since' },
+      { key: 'subscriptionPlan', label: 'Subscription Plan' },
+      { key: 'vouchCount', label: 'Vouch Count' },
+      ...vouchHeaders,
+    ];
+
+    const data = users.map((user: any) => {
+      const userData = user.toJS ? user.toJS() : user;
+      const roles = userData.roles;
+      const isMember = Array.isArray(roles) && roles.includes('member');
+      const citizenshipStatus = isMember
+        ? 'citizen'
+        : userData.citizenship?.status || '';
+      const rawVouched = userData.vouched;
+      const vouchedList = !rawVouched
+        ? []
+        : typeof rawVouched.toArray === 'function'
+        ? rawVouched.toArray()
+        : Array.isArray(rawVouched)
+        ? rawVouched
+        : [];
+      const vouchCells: Record<string, string> = {};
+      vouchHeaders.forEach((h, i) => {
+        const v = vouchedList[i];
+        if (!v) {
+          vouchCells[h.key] = '';
+          return;
+        }
+        const vouchedBy = v.get ? v.get('vouchedBy') : (v as any).vouchedBy;
+        const vouchedAt = v.get ? v.get('vouchedAt') : (v as any).vouchedAt;
+        const val =
+          vouchedBy ?? (vouchedAt ? dayjs(vouchedAt).format('YYYY-MM-DD') : '');
+        const str =
+          val != null &&
+          typeof val === 'object' &&
+          typeof (val as any).toJS === 'function'
+            ? (val as any).toJS()
+            : String(val ?? '');
+        vouchCells[h.key] = escapeCsvCell(str);
       });
-      return allUserData;
-    } catch (err) {
-      setError(err);
-    } finally {
-      setIsLoading(false);
-    }
+      return {
+        screenname: escapeCsvCell(userData.screenname),
+        email: escapeCsvCell(userData.email),
+        created: escapeCsvCell(
+          userData.created ? dayjs(userData.created).format('YYYY-MM-DD') : '',
+        ),
+        lastactive: escapeCsvCell(
+          userData.lastactive
+            ? dayjs(userData.lastactive).format('YYYY-MM-DD')
+            : '',
+        ),
+        roles: escapeCsvCell(userData.roles?.join('; ') || ''),
+        kycPassed: escapeCsvCell(userData.kycPassed ? 'Yes' : 'No'),
+        tokenBalance: escapeCsvCell(userData.stats?.wallet?.tdf || 0),
+        presence: escapeCsvCell(userData.stats?.all_time?.presence || 0),
+        totalBookings: escapeCsvCell(
+          userData.stats?.all_time?.volunteeringPresence || 0,
+        ),
+        citizenshipStatus: escapeCsvCell(citizenshipStatus),
+        citizenDate: escapeCsvCell(
+          userData.citizenship?.date
+            ? dayjs(userData.citizenship.date).format('YYYY-MM-DD')
+            : userData.citizenship?.appliedAt
+            ? dayjs(userData.citizenship.appliedAt).format('YYYY-MM-DD')
+            : '',
+        ),
+        subscriptionPlan: escapeCsvCell(userData.subscription?.plan || ''),
+        vouchCount: escapeCsvCell(vouchedList.length || 0),
+        ...vouchCells,
+      };
+    });
+
+    return { headers, data };
   };
 
   useEffect(() => {
@@ -113,6 +244,38 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
       closeModal();
     }
   }, [copied]);
+
+  useEffect(() => {
+    expandedUsers.forEach((id) => {
+      platform.user.getOne(id);
+    });
+  }, [expandedUsers, platform.user]);
+
+  useEffect(() => {
+    if (!expandedUsers.length || !filteredUsers) return;
+    const vouchedByIds = new Set<string>();
+    filteredUsers.forEach((row: any) => {
+      if (!expandedUsers.includes(row.get('_id'))) return;
+      const u = platform.user.findOne(row.get('_id'));
+      const vouched = u?.get?.('vouched');
+      if (!vouched) return;
+      const list = vouched.toArray
+        ? vouched.toArray()
+        : Array.isArray(vouched)
+        ? vouched
+        : [];
+      list.forEach((v: any) => {
+        const id = v.get ? v.get('vouchedBy') : v.vouchedBy;
+        if (id) vouchedByIds.add(id);
+      });
+    });
+    if (vouchedByIds.size > 0) {
+      platform.user.get({
+        where: { _id: { $in: Array.from(vouchedByIds) } },
+        limit: Math.max(vouchedByIds.size, 100),
+      });
+    }
+  }, [expandedUsers, filteredUsers, platform.user]);
 
   const handleAddRole = async (role: string, user?: any) => {
     if (typeof user !== 'undefined') {
@@ -190,6 +353,8 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
     setAction(action);
     setSuccess(false);
     setError(null);
+    setCsvData(null);
+    setExportError(null);
 
     switch (action) {
       case 'Copy emails':
@@ -199,11 +364,20 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
         }
         break;
       case 'Export selected (CSV)':
-        setCsvData(prepareUserDataForCsvExport([...selectedUsers]));
+        setCsvData(formatUsersForCsv(selectedUsers));
         break;
       case 'Export all':
-        const data = await getAllUserData();
-        setCsvData(prepareUserDataForCsvExport([...data.results.toArray()]));
+        setIsExportLoading(true);
+        try {
+          const allData = await getAllUserDataForExport();
+          if (allData) {
+            setCsvData(formatUsersForCsv(allData));
+          }
+        } catch (err) {
+          setExportError(err);
+        } finally {
+          setIsExportLoading(false);
+        }
         break;
       case 'Unlink wallet':
         {
@@ -223,6 +397,8 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
 
   const closeModal = () => {
     setIsInfoModalOpened(false);
+    setIsExportLoading(false);
+    setExportError(null);
   };
 
   const copyToClipboard = (text: string) => {
@@ -274,7 +450,7 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
                   .join(', ')}
               </div>
               <Select
-                className="rounded-full text-accent border-accent "
+                className="rounded-full text-accent border-accent text-xs py-0.5 px-1.5"
                 value={t('manage_users_add_role_button')}
                 options={USER_ROLE_OPTIONS.slice(1)}
                 onChange={(value: string) => handleAddRole(value)}
@@ -361,14 +537,28 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
               <Heading level={4}>{t('manage_users_export')}</Heading>
 
               {csvData && (
-                <CSVLink
+                <Button
                   className="bg-accent rounded-full w-full py-3 text-center px-4 text-white uppercase"
-                  data={csvData.data}
-                  headers={csvData.headers}
-                  filename="data.csv"
+                  onClick={() => {
+                    const headers = csvData.headers
+                      .map((h: any) => h.label)
+                      .join(',');
+                    const rows = csvData.data.map((row: any) =>
+                      Object.values(row).join(','),
+                    );
+                    const csvContent = [headers, ...rows].join('\n');
+                    const blob = new Blob([csvContent], {
+                      type: 'text/csv;charset=utf-8;',
+                    });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = 'data.csv';
+                    link.click();
+                    URL.revokeObjectURL(link.href);
+                  }}
                 >
                   {t('manage_users_save_button')}
-                </CSVLink>
+                </Button>
               )}
             </div>
           )}
@@ -376,17 +566,38 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
             <div className="flex flex-col gap-6">
               <Heading level={4}>{t('manage_users_export_all')}</Heading>
 
-              {csvData ? (
-                <CSVLink
+              {(isExportLoading || (!csvData && !exportError)) && (
+                <div className="flex items-center gap-2">
+                  <Spinner />
+                  <span>{t('manage_users_preparing_data')}</span>
+                </div>
+              )}
+              {!isExportLoading && exportError && (
+                <ErrorMessage error={exportError} />
+              )}
+              {!isExportLoading && csvData && (
+                <Button
                   className="bg-accent rounded-full w-full py-3 text-center px-4 text-white uppercase"
-                  data={csvData.data}
-                  headers={csvData.headers}
-                  filename="data.csv"
+                  onClick={() => {
+                    const headers = csvData.headers
+                      .map((h: any) => h.label)
+                      .join(',');
+                    const rows = csvData.data.map((row: any) =>
+                      Object.values(row).join(','),
+                    );
+                    const csvContent = [headers, ...rows].join('\n');
+                    const blob = new Blob([csvContent], {
+                      type: 'text/csv;charset=utf-8;',
+                    });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = 'data.csv';
+                    link.click();
+                    URL.revokeObjectURL(link.href);
+                  }}
                 >
                   {t('manage_users_save_button')}
-                </CSVLink>
-              ) : (
-                <>{t('manage_users_preparing_data')}</>
+                </Button>
               )}
             </div>
           )}
@@ -432,12 +643,68 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
         </div>
       ) : (
         <>
-          <Heading level={2} className="border-b pb-2">
-            {totalUsers ? totalUsers.toString() : 0}{' '}
-            {totalUsers === 1
-              ? t('manage_users_user')
-              : t('manage_users_users')}
-          </Heading>
+          <div className="flex justify-between items-center border-b pb-2">
+            <Heading level={2}>
+              {totalUsers ? totalUsers.toString() : 0}{' '}
+              {totalUsers === 1
+                ? t('manage_users_user')
+                : t('manage_users_users')}
+            </Heading>
+
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-medium text-gray-600 min-w-[80px]">
+                {t('manage_users_sort_by')}
+              </label>
+              <Select
+                className="min-w-[200px] border-gray-300 rounded-lg"
+                value={sortBy}
+                options={[
+                  {
+                    value: '-created',
+                    label: t('manage_users_sort_by_created_desc'),
+                  },
+                  {
+                    value: 'created',
+                    label: t('manage_users_sort_by_created_asc'),
+                  },
+                  {
+                    value: '-screenname',
+                    label: t('manage_users_sort_by_name_desc'),
+                  },
+                  {
+                    value: 'screenname',
+                    label: t('manage_users_sort_by_name_asc'),
+                  },
+                  {
+                    value: '-lastactive',
+                    label: t('manage_users_sort_by_lastactive_desc'),
+                  },
+                  {
+                    value: 'lastactive',
+                    label: t('manage_users_sort_by_lastactive_asc'),
+                  },
+                  {
+                    value: '-email',
+                    label: t('manage_users_sort_by_email_desc'),
+                  },
+                  {
+                    value: 'email',
+                    label: t('manage_users_sort_by_email_asc'),
+                  },
+                  {
+                    value: '-stats.wallet.tdf',
+                    label: t('manage_users_sort_by_token_balance_desc'),
+                  },
+                  {
+                    value: 'stats.wallet.tdf',
+                    label: t('manage_users_sort_by_token_balance_asc'),
+                  },
+                ]}
+                onChange={setSortBy}
+                isRequired
+              />
+            </div>
+          </div>
 
           <div className="flex gap-3 justify-between my-4 flex-col sm:flex-row">
             <div className="flex">
@@ -476,9 +743,18 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
           {filteredUsers &&
             filteredUsers.map((row: any) => {
               const user = platform.user.findOne(row.get('_id'));
+              const isExpanded = expandedUsers.includes(user.get('_id'));
+              const citizenDate = user.getIn(['citizenship', 'date']);
+              const sweatBalance =
+                user.getIn(['stats', 'wallet', 'sweat']) || 0;
+              const presenceBalance =
+                user.getIn(['stats', 'wallet', 'presence']) || 0;
+              const vouches = user.get('vouched');
+              const tokenBalance = user.getIn(['stats', 'wallet', 'tdf']) || 0;
+
               return (
                 <Card
-                  className={`py-3 sm:py-1 text-sm ${
+                  className={`py-2 text-sm ${
                     selectedUsers.some(
                       (selectedUser) =>
                         selectedUser.get('_id') === user.get('_id'),
@@ -486,176 +762,425 @@ const UsersList = ({ where, page, setPage, sortBy }: Props) => {
                   }`}
                   key={user.get('email')}
                 >
-                  <div className="flex items-center gap-4 sm:gap-2 justify-between flex-col sm:flex-row">
-                    <div className="w-full sm:w-[50%] flex gap-2 items-center flex-wrap">
-                      <div className="flex items-center">
-                        <div>
-                          <Checkbox
-                            isChecked={selectedUsers.some(
-                              (selectedUser) =>
-                                selectedUser.get('_id') === user.get('_id'),
-                            )}
-                            onChange={() => handleUserSelect(user)}
-                          />
-                        </div>
-                        <div>
+                  <div className="flex flex-col">
+                    <div className="flex items-start gap-2 flex-wrap">
+                      <div className="flex gap-2 items-center min-w-0 flex-shrink-0">
+                        <Checkbox
+                          isChecked={selectedUsers.some(
+                            (selectedUser) =>
+                              selectedUser.get('_id') === user.get('_id'),
+                          )}
+                          onChange={() => handleUserSelect(user)}
+                        />
+                        <div className="flex-shrink-0">
                           {user.get('photo') ? (
                             <Image
                               src={`${cdn}${user.get('photo')}-profile-sm.jpg`}
                               alt={user.get('screenname')}
-                              width={30}
-                              height={30}
+                              width={32}
+                              height={32}
                               className="rounded-full"
                             />
                           ) : (
-                            <FaUser className="text-success w-[30px] h-[30px] rounded-full" />
+                            <UserAvatarPlaceholder size="md" />
                           )}
                         </div>
-                        <div className="flex flex-col">
-                          <div>
-                            <Link
-                              className="hover:bg-accent rounded-md px-1 hover:text-white"
-                              href={`/members/${user.get('slug')}`}
-                            >
-                              {user.get('screenname')}
-                            </Link>
-                          </div>
-                          <div className="text-xs px-1">
-                            {dayjs(new Date()).from(user.get('created'), true)}
-                          </div>
+                        <div className="flex flex-col min-w-0">
+                          <Link
+                            className="hover:text-accent font-medium truncate"
+                            href={`/members/${user.get('slug')}`}
+                          >
+                            {user.get('screenname')}
+                          </Link>
+                          <span className="text-xs text-gray-500">
+                            {dayjs(new Date()).from(user.get('created'), true)}{' '}
+                            ago
+                          </span>
                         </div>
                       </div>
 
-                      <div>
-                        {user.get('roles').includes('member') ? (
-                          <div className="bg-white flex border px-2 py-1 gap-1 border-accent rounded-md">
-                            <Image
-                              src={'/images/admin/icon-sheep.png'}
-                              alt={'member'}
-                              width={18}
-                              height={17}
-                              className="rounded-full"
-                            />
-                            {t('manage_users_role_member')}
-                            <Button
-                              onClick={() => handleRemoveRole('member', user)}
-                              className="p-0 min-h-min bg-white border-none text-black"
-                            >
-                              <svg
-                                viewBox="0 0 12 12"
-                                version="1.1"
-                                className="w-2.5 h-2.5 stroke-accent"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <line
-                                  x1="1"
-                                  y1="11"
-                                  x2="11"
-                                  y2="1"
-                                  strokeWidth="2"
-                                />
-                                <line
-                                  x1="1"
-                                  y1="1"
-                                  x2="11"
-                                  y2="11"
-                                  strokeWidth="2"
-                                />
-                              </svg>
-                            </Button>
+                      <div className="flex flex-wrap gap-1.5 items-center justify-start">
+                        {user.get('kycPassed') && (
+                          <div
+                            className="bg-blue-100 flex border px-1.5 py-0.5 gap-1 border-blue-400 rounded items-center"
+                            title={t('manage_users_kyc_passed')}
+                          >
+                            <CheckCircle className="text-blue-600 w-3 h-3" />
+                            <span className="text-xs text-blue-700">KYC</span>
                           </div>
-                        ) : null}
-                      </div>
-                      <div>
-                        {user.get('subscription').get('plan') ? (
-                          <div className="bg-white flex border px-2 py-1 border-gray-500 rounded-md gap-1">
+                        )}
+
+                        {vouches && vouches.length > 0 && (
+                          <div className="bg-green-100 flex border px-1.5 py-0.5 gap-1 border-green-400 rounded items-center">
+                            <UserCheck className="text-green-600 w-3 h-3" />
+                            <span className="text-xs text-green-700">
+                              {vouches.length}
+                            </span>
+                          </div>
+                        )}
+
+                        {tokenBalance > 0 && (
+                          <div className="bg-purple-100 flex border px-1.5 py-0.5 gap-1 border-purple-400 rounded items-center">
+                            <span className="text-xs text-purple-700 font-medium">
+                              {parseFloat(tokenBalance || 0).toFixed(0)} $TDF
+                            </span>
+                          </div>
+                        )}
+
+                        {presenceBalance > 0 && (
+                          <div className="bg-orange-100 flex border px-1.5 py-0.5 gap-1 border-orange-400 rounded items-center">
+                            <Home className="text-orange-600 w-3 h-3" />
+                            <span className="text-xs text-orange-700">
+                              {parseFloat(presenceBalance || 0).toFixed(0)}{' '}
+                              $Presence
+                            </span>
+                          </div>
+                        )}
+
+                        {sweatBalance > 0 && (
+                          <div className="bg-green-100 flex border px-1.5 py-0.5 gap-1 border-green-400 rounded items-center">
+                            <Home className="text-green-600 w-3 h-3" />
+                            <span className="text-xs text-green-700">
+                              {parseFloat(sweatBalance || 0).toFixed(0)} $Sweat
+                            </span>
+                          </div>
+                        )}
+
+                        {citizenDate && (
+                          <div className="bg-yellow-100 flex border px-1.5 py-0.5 gap-1 border-yellow-500 rounded items-center">
+                            <Star className="text-yellow-600 w-3 h-3" />
+                            <span className="text-xs text-yellow-700">
+                              {t('manage_users_citizen')}
+                            </span>
+                          </div>
+                        )}
+
+                        {user.get('subscription')?.get('plan') && (
+                          <div className="bg-white flex border px-1.5 py-0.5 border-gray-300 rounded gap-1 items-center">
                             <Image
                               src={`/images/admin/icon-${user
                                 .get('subscription')
                                 .get('plan')}.png`}
                               alt={user.get('subscription').get('plan')}
-                              width={20}
-                              height={20}
+                              width={14}
+                              height={14}
                             />
-                            {user
-                              .get('subscription')
-                              .get('plan')
-                              .slice(0, 1)
-                              .toUpperCase() +
-                              user.get('subscription').get('plan').slice(1)}
-                          </div>
-                        ) : (
-                          <div className="bg-white flex border px-3 py-1 border-gray-500 rounded-md gap-1">
-                            <Image
-                              src={'/images/admin/icon-explorer.png'}
-                              alt={'member'}
-                              width={20}
-                              height={20}
-                            />
-                            {t('manage_users_subscription_explorer')}
+                            <span className="text-xs text-gray-700">
+                              {user
+                                .get('subscription')
+                                .get('plan')
+                                .slice(0, 1)
+                                .toUpperCase() +
+                                user.get('subscription').get('plan').slice(1)}
+                            </span>
                           </div>
                         )}
-                      </div>
-                    </div>
-                    <div className="w-full sm:w-[50%] flex-col sm:flex-row flex gap-1 justify-end flex-wrap">
-                      <div className="flex gap-1 flex-wrap justify-start sm:justify-end">
-                        {user.get('roles').map((role: string) => {
-                          if (role !== 'member') {
-                            return (
-                              <div
-                                key={role}
-                                className=" py-[3px] text-xs bg-accent text-white rounded-full pl-4 pr-2 flex gap-[2px]"
-                              >
-                                <div className="whitespace-nowrap pt-[7px] pb-[8px]">
-                                  {role}
-                                </div>
-                                <Button
-                                  onClick={() => handleRemoveRole(role, user)}
-                                  className="p-0 min-h-min"
-                                >
-                                  <svg
-                                    viewBox="0 0 12 12"
-                                    version="1.1"
-                                    className="w-2.5 h-2.5 fill-current "
-                                    xmlns="http://www.w3.org/2000/svg"
-                                  >
-                                    <line
-                                      x1="1"
-                                      y1="11"
-                                      x2="11"
-                                      y2="1"
-                                      stroke="white"
-                                      strokeWidth="2"
-                                    />
-                                    <line
-                                      x1="1"
-                                      y1="1"
-                                      x2="11"
-                                      y2="11"
-                                      stroke="white"
-                                      strokeWidth="2"
-                                    />
-                                  </svg>
-                                </Button>
-                              </div>
-                            );
-                          }
-                        })}
+
+                        {user.get('roles').includes('member') && (
+                          <span className="px-1.5 py-0.5 text-xs bg-accent text-white rounded">
+                            {t('manage_users_role_member')}
+                          </span>
+                        )}
                       </div>
 
-                      <div>
+                      <div className="flex items-center gap-1 flex-shrink-0 ml-auto">
                         <Select
-                          className="rounded-full text-accent border-accent"
-                          value={t('manage_users_add_role_button')}
+                          className="rounded text-xs border-gray-300 min-w-[90px]"
+                          value=""
                           options={USER_ROLE_OPTIONS.slice(1)}
                           onChange={(value: string) =>
                             handleAddRole(value, user)
                           }
                           isRequired
-                          placeholder={t('manage_users_add_role_button')}
+                          placeholder="+ Role"
                         />
+
+                        <button
+                          onClick={() => toggleUserExpanded(user.get('_id'))}
+                          className="p-1.5 hover:bg-gray-100 rounded"
+                        >
+                          {isExpanded ? (
+                            <ChevronUp className="w-3 h-3 text-gray-500" />
+                          ) : (
+                            <ChevronDown className="w-3 h-3 text-gray-500" />
+                          )}
+                        </button>
                       </div>
                     </div>
+
+                    {isExpanded && (
+                      <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-gray-500 font-medium">
+                            {t('manage_users_account_info')}
+                          </span>
+                          <div className="flex items-center gap-1 text-gray-700">
+                            <Clock className="w-3 h-3 text-gray-400" />
+                            {t('manage_users_joined')}:{' '}
+                            {dayjs(user.get('created')).format('MMM D, YYYY')}
+                          </div>
+                          {user.get('lastactive') && (
+                            <div className="flex items-center gap-1 text-gray-700">
+                              <Clock className="w-3 h-3 text-gray-400" />
+                              {t('manage_users_last_active')}:{' '}
+                              {dayjs(user.get('lastactive')).fromNow()}
+                            </div>
+                          )}
+                          {citizenDate && (
+                            <div className="flex items-center gap-1 text-green-700">
+                              <Star className="w-3 h-3 text-green-500" />
+                              {t('manage_users_citizen_since')}:{' '}
+                              {dayjs(citizenDate).format('MMM D, YYYY')}
+                            </div>
+                          )}
+                          <div className="flex min-w-0 flex-wrap items-center gap-1 text-gray-600">
+                            <EmailDisplay
+                              email={user.get('email')}
+                              className="text-xs font-normal text-gray-600 no-underline hover:underline"
+                            />
+                          </div>
+                          {user.get('walletAddress') && (
+                            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-gray-600">
+                              <span className="shrink-0 text-gray-500">
+                                {t('user_data_walletAddress')}
+                              </span>
+                              <WalletDisplay
+                                address={user.get('walletAddress')}
+                                className="text-xs"
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          {presenceBalance > 0 && (
+                            <div className="flex items-center gap-1 text-orange-700">
+                              <span className="text-gray-500 font-medium">
+                                {t('manage_users_presence_stats')}
+                              </span>
+                              <span className="font-medium">
+                                {parseFloat(presenceBalance || 0).toFixed(2)}{' '}
+                                $Presence
+                              </span>
+                            </div>
+                          )}
+                          {sweatBalance > 0 && (
+                            <div className="flex items-center gap-1 text-green-700">
+                              <span className="text-gray-500 font-medium">
+                                {t('manage_users_presence_stats')}
+                              </span>
+                              <span className="font-medium">
+                                {parseFloat(sweatBalance || 0).toFixed(2)}{' '}
+                                $Sweat
+                              </span>
+                            </div>
+                          )}
+                          {tokenBalance > 0 && (
+                            <div className="flex items-center gap-1 text-purple-700">
+                              <span className="text-gray-500 font-medium">
+                                {t('manage_users_token_balance')}
+                              </span>
+                              <span className="font-medium">
+                                {parseFloat(tokenBalance || 0).toFixed(2)} $TDF
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-gray-500 font-medium">
+                            {t('manage_users_vouches')}
+                          </span>
+                          {(() => {
+                            const vouchList = vouches
+                              ? vouches.toArray
+                                ? vouches.toArray()
+                                : Array.isArray(vouches)
+                                ? vouches
+                                : []
+                              : [];
+                            if (vouchList.length === 0) {
+                              return (
+                                <span className="text-gray-400">
+                                  {t('manage_users_no_vouches')}
+                                </span>
+                              );
+                            }
+                            return (
+                              <div className="flex flex-col gap-2">
+                                {vouchList.map((vouch: any, idx: number) => {
+                                  const vouchedBy = vouch.get
+                                    ? vouch.get('vouchedBy')
+                                    : vouch.vouchedBy;
+                                  const vouchedAt = vouch.get
+                                    ? vouch.get('vouchedAt')
+                                    : vouch.vouchedAt;
+                                  const message = vouch.get
+                                    ? vouch.get('message')
+                                    : vouch.message;
+                                  const voucherUser = vouchedBy
+                                    ? platform.user.findOne(vouchedBy)
+                                    : null;
+                                  const name =
+                                    voucherUser?.get?.('screenname') ||
+                                    voucherUser?.screenname ||
+                                    vouchedBy ||
+                                    '—';
+                                  return (
+                                    <div
+                                      key={
+                                        vouch.get?.('_id') ||
+                                        vouch._id ||
+                                        vouchedBy ||
+                                        idx
+                                      }
+                                      className="flex flex-col gap-0.5 text-green-700 border-l-2 border-green-200 pl-2"
+                                    >
+                                      <div className="flex items-center gap-1">
+                                        <UserCheck className="w-3 h-3 text-green-500 flex-shrink-0" />
+                                        <span className="font-medium">
+                                          {name}
+                                        </span>
+                                        <span className="text-gray-500 text-[10px]">
+                                          {vouchedAt
+                                            ? dayjs(vouchedAt).format(
+                                                'MMM D, YYYY',
+                                              )
+                                            : ''}
+                                        </span>
+                                      </div>
+                                      {message ? (
+                                        <p className="text-gray-600 text-xs italic">
+                                          &ldquo;
+                                          <InlineFormattedSegments text={message} />
+                                          &rdquo;
+                                        </p>
+                                      ) : null}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })()}
+                        </div>
+
+                        {user.get('citizenship') && (
+                          <div className="sm:col-span-3 flex flex-col gap-1.5 pt-2 border-t border-gray-100">
+                            <span className="text-gray-500 font-medium">
+                              {t('manage_users_citizenship')}
+                            </span>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                              {user.getIn(['citizenship', 'status']) && (
+                                <div className="flex flex-col">
+                                  <span className="text-gray-400 text-[10px]">
+                                    {t('manage_users_citizenship_status')}
+                                  </span>
+                                  <span
+                                    className={`font-medium ${
+                                      user.getIn(['citizenship', 'status']) ===
+                                      'completed'
+                                        ? 'text-green-600'
+                                        : user.getIn([
+                                            'citizenship',
+                                            'status',
+                                          ]) === 'pending-payment'
+                                        ? 'text-yellow-600'
+                                        : user.getIn([
+                                            'citizenship',
+                                            'status',
+                                          ]) === 'cancelled'
+                                        ? 'text-red-600'
+                                        : 'text-gray-700'
+                                    }`}
+                                  >
+                                    {user.getIn(['citizenship', 'status'])}
+                                  </span>
+                                </div>
+                              )}
+                              {user.getIn(['citizenship', 'appliedAt']) && (
+                                <div className="flex flex-col">
+                                  <span className="text-gray-400 text-[10px]">
+                                    {t('manage_users_citizenship_applied')}
+                                  </span>
+                                  <span className="text-gray-700">
+                                    {dayjs(
+                                      user.getIn(['citizenship', 'appliedAt']),
+                                    ).format('MMM D, YYYY')}
+                                  </span>
+                                </div>
+                              )}
+                              {user.getIn([
+                                'citizenship',
+                                'tokensToFinance',
+                              ]) && (
+                                <div className="flex flex-col">
+                                  <span className="text-gray-400 text-[10px]">
+                                    {t(
+                                      'manage_users_citizenship_tokens_financed',
+                                    )}
+                                  </span>
+                                  <span className="text-gray-700">
+                                    {user.getIn([
+                                      'citizenship',
+                                      'tokensToFinance',
+                                    ])}{' '}
+                                    TDF
+                                  </span>
+                                </div>
+                              )}
+                              {user.getIn([
+                                'citizenship',
+                                'totalToPayInFiat',
+                              ]) && (
+                                <div className="flex flex-col">
+                                  <span className="text-gray-400 text-[10px]">
+                                    {t('manage_users_citizenship_total_to_pay')}
+                                  </span>
+                                  <span className="text-gray-700">
+                                    €
+                                    {user.getIn([
+                                      'citizenship',
+                                      'totalToPayInFiat',
+                                    ])}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            {user.getIn(['citizenship', 'why']) && (
+                              <div className="flex flex-col mt-1">
+                                <span className="text-gray-400 text-[10px]">
+                                  {t('manage_users_citizenship_why')}
+                                </span>
+                                <span className="text-gray-700 italic">
+                                  &ldquo;{user.getIn(['citizenship', 'why'])}
+                                  &rdquo;
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="sm:col-span-3 flex flex-wrap gap-1 pt-2 border-t border-gray-100">
+                          <span className="text-gray-500 font-medium mr-2">
+                            {t('manage_users_all_roles')}:
+                          </span>
+                          {user.get('roles').map((role: string) => (
+                            <div
+                              key={role}
+                              className="px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded flex items-center gap-1"
+                            >
+                              {role}
+                              <button
+                                onClick={() => handleRemoveRole(role, user)}
+                                className="hover:text-red-500"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </Card>
               );

@@ -1,18 +1,24 @@
 import { useState } from 'react';
 
-import { ObjectId } from 'bson';
+import { ObjectId } from '../utils/bsonObjectId';
 
 import { CURRENCIES_WITH_LABELS } from '../constants';
 import PriceEditor from './PriceEditor';
 import Switch from './Switch';
 import { useTranslations } from 'next-intl';
 
-const TicketOptionsEditor = ({ value, onChange, required }) => {
+const TicketOptionsEditor = ({
+  value = [],
+  onChange,
+  required,
+  fixedCurrency = null,
+}) => {
   const t = useTranslations();
   const [options, setOptions] = useState(value);
+  const defaultCurrency = fixedCurrency || CURRENCIES_WITH_LABELS[0].value;
   const updateOptions = (update) => {
     setOptions(update);
-    onChange && onChange(update);
+    if (onChange) onChange(update);
   };
   const updateOption = (index, option) => {
     const update = options.map((o, i) => (i === index ? option : o));
@@ -26,7 +32,7 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
         name: '',
         icon: null,
         price: 0,
-        currency: CURRENCIES_WITH_LABELS[0].value,
+        currency: defaultCurrency,
         disclaimer: '',
         limit: 0,
       }),
@@ -38,12 +44,12 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
   };
 
   return (
-    <div className="ticket-options flex justify-start items-center flex-wrap">
+    <div className="ticket-options flex justify-start items-start flex-wrap gap-3 overflow-x-hidden max-w-full">
       {options &&
         options.map((option, index) => (
           <div
             key={option._id || option.id || index}
-            className="mr-3 mb-4 card"
+            className="min-w-0 w-full sm:w-auto sm:min-w-[280px] card overflow-hidden"
           >
             <div className="mb-3">
               <label>{t('ticket_options_ticket_name')}</label>
@@ -71,7 +77,7 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
                 min="0"
                 max="10000"
                 step="1"
-                className="w-32"
+                className="w-full max-w-32"
                 value={option.limit}
                 placeholder="Quantity"
                 onChange={(e) => {
@@ -94,7 +100,7 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
                     disclaimer: e.target.value,
                   })
                 }
-                className="textarea"
+                className="textarea min-w-0 max-w-full"
               />
             </div>
             <div className="mb-3">
@@ -116,10 +122,11 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
                 updateOption(index, {
                   ...option,
                   price: price.val,
-                  currency: price.cur,
+                  currency: fixedCurrency || price.cur,
                 });
               }}
               required={required}
+              fixedCurrency={fixedCurrency || null}
             />
             <div className="mt-3">
               <a
@@ -139,11 +146,6 @@ const TicketOptionsEditor = ({ value, onChange, required }) => {
       </div>
     </div>
   );
-};
-
-TicketOptionsEditor.defaultProps = {
-  onChange: null,
-  value: [],
 };
 
 export default TicketOptionsEditor;

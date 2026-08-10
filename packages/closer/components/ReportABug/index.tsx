@@ -6,9 +6,9 @@ const ReportABug = () => {
   const t = useTranslations();
   return (
     <p className="text-center mt-4">
-      🐛
+      🐛{' '}
       <Link
-        className="text-accent underline"
+        className=""
         href="https://forms.gle/uQQhTiFu5PRtu7Ei9"
         target="_blank"
       >

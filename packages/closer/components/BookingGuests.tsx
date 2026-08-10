@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl';
 
+import { IconUsers } from './BookingIcons';
 import Counter from './Counter';
 import Switch from './Switch';
 import HeadingRow from './ui/HeadingRow';
@@ -17,6 +18,8 @@ interface Props {
   setDoesNeedSeparateBeds?: (value: boolean) => void;
   shouldHideTitle?: boolean;
   isPrivate?: boolean;
+  friendsBookingMaxGuests?: number;
+  isFriendsBooking?: boolean;
 }
 
 const BookingGuests = ({
@@ -32,37 +35,52 @@ const BookingGuests = ({
   setDoesNeedSeparateBeds,
   shouldHideTitle,
   isPrivate = false,
+  friendsBookingMaxGuests,
+  isFriendsBooking,
 }: Props) => {
   const t = useTranslations();
   return (
     <div>
       {!shouldHideTitle && (
         <HeadingRow>
-          <span className="mr-2">👨‍👩‍👦</span>
+          <IconUsers className="!mr-0" />
           <span>{t('bookings_dates_step_guests_title')}</span>
         </HeadingRow>
       )}
 
-      <div className="mt-4 ">
+      <div className="mt-2">
+        {isFriendsBooking && (
+          <div className="bg-yellow-50 px-2 py-1.5 rounded-lg my-1">
+            Max guests for friends bookings: {friendsBookingMaxGuests}
+          </div>
+        )}
         <div className="flex space-between items-center">
           <p className="flex-1">{t('bookings_dates_step_guests_adults')}</p>
-          <Counter value={adults} setFn={setAdults} minValue={1} />
+          <Counter
+            value={adults}
+            setFn={setAdults}
+            minValue={1}
+            maxValue={isFriendsBooking ? friendsBookingMaxGuests : undefined}
+          />
         </div>
-        <div className="flex space-between items-center mt-9">
+        <div className="flex space-between items-center mt-3">
           <p className="flex-1">{t('bookings_dates_step_guests_children')}</p>
           <Counter value={kids} setFn={setKids} minValue={0} />
         </div>
-        <div className="flex space-between items-center mt-9">
+        <div className="flex space-between items-center mt-3">
           <p className="flex-1">{t('bookings_dates_step_guests_infants')}</p>
           <Counter value={infants} setFn={setInfants} minValue={0} />
         </div>
-        <div className="flex space-between items-center mt-9">
+        <div className="flex space-between items-center mt-3">
           <p className="flex-1">{t('bookings_dates_step_guests_pets')}</p>
           <Counter value={pets} setFn={setPets} minValue={0} />
         </div>
-        {adults > 1 && isPrivate && (
-          <div className="mt-6 flex flex-row justify-between items-start">
+        {adults + kids + infants >= 2 &&
+          isPrivate &&
+          setDoesNeedSeparateBeds != null && (
+          <div className="mt-3 flex flex-row justify-between items-start">
             <label
+              id="separateBeds-label"
               htmlFor="separateBeds"
               className={`${shouldHideTitle ? 'text-sm' : 'text-md'}  `}
             >
@@ -72,6 +90,7 @@ const BookingGuests = ({
               disabled={false}
               name="separateBeds"
               label=""
+              labelledBy="separateBeds-label"
               onChange={setDoesNeedSeparateBeds}
               checked={doesNeedSeparateBeds}
             />

@@ -6,7 +6,7 @@ import api, { formatSearch } from '../utils/api';
 import TimeSince from './TimeSince';
 import { useTranslations } from 'next-intl';
 
-const TaskList = ({ channel = undefined, limit }) => {
+const TaskList = ({ channel = /** @type {any} */ (undefined), limit = 12 }) => {
   const t = useTranslations();
   const [tasks, setTasks] = useState([]);
   const [error, setErrors] = useState(false);
@@ -69,8 +69,4 @@ const TaskList = ({ channel = undefined, limit }) => {
     </section>
   );
 };
-TaskList.defaultProps = {
-  limit: 12,
-};
-
 export default TaskList;

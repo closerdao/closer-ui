@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
@@ -9,17 +9,23 @@ import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 import PropTypes from 'prop-types';
 
+import { usePlatform } from '../contexts/platform';
+import { WalletState } from '../contexts/wallet';
 import { useBookingSmartContract } from '../hooks/useBookingSmartContract';
 import { useConfig } from '../hooks/useConfig';
-import api from '../utils/api';
 import { payTokens } from '../utils/booking.helpers';
 import { parseMessageFromError } from '../utils/common';
+import { linkedMetricFields, logMetric } from '../utils/metrics';
+import { reportIssue } from '../utils/reporting.utils';
 import CheckoutForm from './CheckoutForm';
 import Conditions from './Conditions';
 import { ErrorMessage } from './ui';
+import Checkbox from './ui/Checkbox';
 import HeadingRow from './ui/HeadingRow';
 
-const stripe = loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY);
+const stripe = loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY, {
+  stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
+});
 
 const CheckoutPayment = ({
   partialPriceInCredits,
@@ -28,21 +34,41 @@ const CheckoutPayment = ({
   buttonDisabled,
   useTokens,
   useCredits,
-  rentalToken,
+  rentalTokenVal,
   totalToPayInFiat,
   dailyTokenValue,
   startDate,
+  endDate,
   totalNights,
   user,
   eventId,
   cancellationPolicy,
+  status,
+  shouldShowTokenDisclaimer,
+  hasAgreedToWalletDisclaimer,
+  setWalletDisclaimer,
+  refetchBooking,
+  isAdditionalFiatPayment,
+  transactionId,
+  createdBy,
+  fiatPaymentBlocked,
+  onFiatPaymentBlocked,
+  listingPrivate,
+  listingBeds,
+  isHourlyBooking,
 }) => {
   const t = useTranslations();
+  const { platform } = usePlatform();
 
   const { VISITORS_GUIDE } = useConfig() || {};
 
   if (!process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) {
-    throw new Error('stripe key is undefined');
+    const error = 'Stripe key is undefined';
+    reportIssue(
+      `STRIPE_CONFIGURATION_ERROR: bookingId=${bookingId}, error=${error}`,
+      user?.email,
+    );
+    throw new Error(error);
   }
 
   const bookingYear = dayjs(startDate).year();
@@ -56,9 +82,18 @@ const CheckoutPayment = ({
     bookingYear,
     bookingStartDayOfYear + i,
   ]);
-  const { isStaking } = useBookingSmartContract({
+  const { isStaking, stakeTokens, checkContract } = useBookingSmartContract({
     bookingNights,
   });
+
+  const {
+    balanceTotal,
+    balanceAvailable,
+    hasSameConnectedAccount,
+    isWalletConnected,
+    isCorrectNetwork,
+    balanceCeloAvailable,
+  } = useContext(WalletState);
 
   const router = useRouter();
   const [hasComplied, setCompliance] = useState(false);
@@ -66,26 +101,103 @@ const CheckoutPayment = ({
 
   const onComply = (isComplete) => setCompliance(isComplete);
 
-  const onSuccess = () => {
-    router.push(
-      `/bookings/${bookingId}/confirmation${
-        eventId ? `?eventId=${eventId}` : ''
-      }`,
-    );
+  const onSuccess = async () => {
+    const p = Math.round(Number(totalToPayInFiat?.val) || 0);
+    void logMetric({
+      event: 'booking-payment-success',
+      category: 'booking',
+      value: 'success',
+      point: p,
+      ...linkedMetricFields('Booking', bookingId),
+    });
+    try {
+      await router.push(
+        `/bookings/${bookingId}/confirmation${
+          eventId ? `?eventId=${eventId}` : ''
+        }`,
+      );
+    } catch (error) {
+      reportIssue(
+        `NAVIGATION_ERROR: bookingId=${bookingId}, error=${JSON.stringify(
+          error,
+        )}, eventId=${eventId}, path=/bookings/${bookingId}/confirmation${
+          eventId ? `?eventId=${eventId}` : ''
+        }`,
+        user?.email,
+      );
+    }
   };
 
   const payWithCredits = async () => {
     try {
       const creditsAmount = isPartialCreditsPayment
         ? partialPriceInCredits
-        : rentalToken?.val;
-      const res = await api.post(`/bookings/${bookingId}/credit-payment`, {
+        : rentalTokenVal;
+      const res = await platform.bookings.creditPayment(bookingId, {
         startDate,
         creditsAmount,
       });
       return res;
     } catch (error) {
-      setError(parseMessageFromError(error));
+      const errorMessage = parseMessageFromError(error);
+      setError(errorMessage);
+      await reportIssue(
+        `CREDIT_PAYMENT_ERROR: bookingId=${bookingId}, error=${errorMessage}, creditsAmount=${
+          isPartialCreditsPayment ? partialPriceInCredits : rentalTokenVal
+        }, startDate=${startDate}`,
+        user?.email,
+      );
+    }
+  };
+
+  const payTokensWithStatus = async (
+    bookingId,
+    dailyTokenValue,
+    stakeTokens,
+    checkContract,
+    bookingStatusOverride,
+  ) => {
+    try {
+      const result = await payTokens(
+        bookingId,
+        dailyTokenValue,
+        stakeTokens,
+        checkContract,
+        user?.email,
+        bookingStatusOverride ?? status,
+        transactionId,
+        { start: startDate, end: endDate, createdBy },
+      );
+
+      if (result?.error) {
+        await reportIssue(
+          `TOKEN PAYMENT ERROR:<br/><br/>
+          BOOKING ID=${bookingId}, <br/><br/>
+          TOKEN PRICE=${rentalTokenVal},<br/><br/>
+          TDF BALANCE TOTAL=${balanceTotal},<br/><br/>
+          TDF BALANCE AVAILABLE=${balanceAvailable},<br/><br/>
+          USER EMAIL=${user?.email},<br/><br/>
+          HAS SAME CONNECTED ACCOUNT=${hasSameConnectedAccount},<br/><br/>
+          IS WALLET CONNECTED=${isWalletConnected},<br/><br/>
+          IS CORRECT NETWORK=${isCorrectNetwork},<br/><br/>
+          BALANCE CELO AVAILABLE=${balanceCeloAvailable},<br/><br/>
+          bookingId=${bookingId}, <br/><br/>
+          DAILY TOKEN VALUE=${dailyTokenValue}, <br/><br/>
+          STATUS=${status},<br/><br/>
+          ERROR=${result.error}
+          `,
+          user?.email,
+        );
+      }
+
+      return result;
+    } catch (error) {
+      const errorMessage = parseMessageFromError(error);
+      await reportIssue(
+        `TOKEN_PAYMENT_EXCEPTION: bookingId=${bookingId}, error=${errorMessage}, dailyTokenValue=${dailyTokenValue}, status=${status}`,
+        user?.email,
+      );
+      throw error;
     }
   };
 
@@ -95,20 +207,24 @@ const CheckoutPayment = ({
         <span className="mr-2">💲</span>
         <span>{t('bookings_checkout_step_payment_title')}</span>
       </HeadingRow>
-
       {error && <ErrorMessage error={error} />}
+
       <Elements stripe={stripe}>
         <CheckoutForm
           type="booking"
           _id={bookingId}
           onSuccess={onSuccess}
+          metricBookingContext={{
+            user,
+            fiatAmount: totalToPayInFiat?.val,
+          }}
           email={user.email}
           name={user.screenname}
           buttonText={t('bookings_checkout_step_payment_button')}
           submitButtonClassName="booking-btn mt-8"
           cardElementClassName="w-full h-14 rounded-2xl bg-background border border-neutral-200 px-4 py-4"
           buttonDisabled={buttonDisabled}
-          prePayInTokens={useTokens && payTokens}
+          prePayInTokens={useTokens && payTokensWithStatus}
           useCredits={useCredits}
           payWithCredits={payWithCredits}
           isProcessingTokenPayment={isStaking}
@@ -117,8 +233,31 @@ const CheckoutPayment = ({
           hasComplied={hasComplied}
           dailyTokenValue={dailyTokenValue}
           bookingNights={bookingNights}
+          status={status}
+          refetchBooking={refetchBooking}
+          isAdditionalFiatPayment={isAdditionalFiatPayment}
+          fiatPaymentBlocked={fiatPaymentBlocked}
+          onFiatPaymentBlocked={onFiatPaymentBlocked}
+          useTokens={useTokens}
+          stakeTokens={stakeTokens}
+          checkContract={checkContract}
+          listingPrivate={listingPrivate}
+          listingBeds={listingBeds}
+          isHourlyBooking={isHourlyBooking}
         >
-          <Conditions cancellationPolicy={cancellationPolicy} setComply={onComply} visitorsGuide={VISITORS_GUIDE} />
+          <Conditions
+            cancellationPolicy={cancellationPolicy}
+            setComply={onComply}
+            visitorsGuide={VISITORS_GUIDE}
+          />
+          {shouldShowTokenDisclaimer && (
+            <Checkbox
+              isChecked={hasAgreedToWalletDisclaimer}
+              onChange={() => setWalletDisclaimer(!hasAgreedToWalletDisclaimer)}
+            >
+              <p>{t('bookings_checkout_step_wallet_disclaimer')}</p>
+            </Checkbox>
+          )}
         </CheckoutForm>
       </Elements>
     </div>
@@ -133,6 +272,7 @@ CheckoutPayment.propTypes = {
   dailyTokenValue: PropTypes.number.isRequired,
   start: PropTypes.string,
   totalNights: PropTypes.number.isRequired,
+  refetchBooking: PropTypes.func,
 };
 
 export default CheckoutPayment;

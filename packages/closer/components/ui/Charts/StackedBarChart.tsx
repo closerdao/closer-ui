@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 
 import { useConfig } from '../../../hooks/useConfig';
+import { formatIsoFiatAmount } from '../../../utils/currencyFormat';
 import { CHART_COLORS } from './chartColors';
 
 interface Props {
@@ -23,19 +24,15 @@ interface CustomPayload {
   value: string | number;
 }
 
-const CustomTooltipContent = ({
-  payload,
-  label,
-  colorOverride,
-  layout,
-}: any) => {
+const CustomTooltipContent = ({ payload, label, layout }: any) => {
   const t = useTranslations();
 
   if (!payload || !Array.isArray(payload)) return null;
 
   const total = Math.floor(
     payload.reduce((sum: number, entry: CustomPayload) => {
-      return sum + Number(entry.value);
+      const value = Number(entry.value);
+      return sum + (isNaN(value) ? 0 : value);
     }, 0),
   );
 
@@ -61,6 +58,7 @@ const CustomTooltipContent = ({
 
 const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
   const { APP_NAME } = useConfig();
+
   return (
     <div className="w-full h-full py-4">
       <ResponsiveContainer width="100%" height="100%">
@@ -160,27 +158,43 @@ const StackedBarChart = ({ data, layout = 'horizontal' }: Props) => {
                 )}{' '}
               </Bar>
               {APP_NAME === 'tdf' && (
-                <Bar dataKey="subscriptions" stackId="a" fill={CHART_COLORS[4]}>
-                  <LabelList
-                    dataKey="totalOperations"
-                    position="top"
-                    content={(props) => {
-                      const { x, y, width, value } = props;
-                      return (
-                        <text
-                          x={Number(x) + (Number(width) || 0) / 2}
-                          y={y}
-                          dy={-10}
-                          textAnchor="middle"
-                          fill="#000000"
-                          fontSize="12"
-                        >
-                          {value}
-                        </text>
-                      );
-                    }}
+                <>
+                  <Bar
+                    dataKey="fiat token sales"
+                    stackId="a"
+                    fill={CHART_COLORS[5]}
+                  >
+                    <LabelList
+                      dataKey="totalOperations"
+                      position="top"
+                      content={(props) => {
+                        const { x, y, width, value } = props;
+                        return (
+                          <text
+                            x={Number(x) + (Number(width) || 0) / 2}
+                            y={y}
+                            dy={-10}
+                            textAnchor="middle"
+                            fill="#000000"
+                            fontSize="12"
+                          >
+                            {formatIsoFiatAmount(Number(value), 'EUR')}
+                          </text>
+                        );
+                      }}
+                    />
+                  </Bar>
+                  <Bar
+                    dataKey="crypto token sales"
+                    stackId="a"
+                    fill={CHART_COLORS[6]}
                   />
-                </Bar>
+                  <Bar
+                    dataKey="subscriptions"
+                    stackId="a"
+                    fill={CHART_COLORS[4]}
+                  />
+                </>
               )}
             </>
           )}

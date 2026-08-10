@@ -7,6 +7,7 @@ export const STATUS_COLOR: StatusColor = {
   pending: 'pending',
   confirmed: 'pending',
   'pending-payment': 'pending',
+  refunded: 'pending',
   'pending-refund': 'pending',
   paid: 'success',
   'credits-paid': 'success',

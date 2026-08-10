@@ -6,26 +6,34 @@ const withMDX = require('@next/mdx')({
   },
 });
 
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
-  presets: ['next/babel'],
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
+  compiler: {
+    removeConsole: process.env.ENVIRONMENT === 'production',
+  },
   images: {
     remotePatterns: [
       {
-        hostname: 'cdn.oasa.co',
+        protocol: 'https',
+        hostname: '*',
       },
     ],
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config) => {
     config.experiments = {
+      ...config.experiments,
       topLevelAwait: true,
+      layers: true,
     };
 
     return config;
   },
 };
 
-// Merge MDX config with Next.js config
-module.exports = withMDX(nextConfig);
+module.exports = withBundleAnalyzer(withMDX(nextConfig));

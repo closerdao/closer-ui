@@ -1,4 +1,28 @@
+import { Charge } from '../../types/booking';
+
+export interface UserLink {
+  name: string;
+  url: string;
+  _id?: string;
+}
+
+export interface Vouched {
+  vouchedBy: string;
+  vouchedAt: Date;
+  message?: string;
+}
+export type Report = {
+  reportedBy: string;
+  reportedAt: Date;
+  report: { reason: string; unsafe: boolean };
+};
+
 export type User = {
+  vouched?: Vouched[];
+  reports?: Report[];
+  reportedBy?: string[];
+  message?: string;
+  tagline?: string;
   about?: string;
   stats: any;
   screenname: string;
@@ -37,8 +61,14 @@ export type User = {
   type: string;
   settings: {
     newsletter_weekly: boolean;
+    push_notifications_enabled?: boolean;
+    push_subscription?: {
+      endpoint: string;
+      keys: { p256dh: string; auth: string };
+    } | null;
+    social?: Record<string, string>;
   };
-  links: string[];
+  links: UserLink[];
   visibleBy: string[];
   createdBy: string;
   updated: string;
@@ -46,9 +76,22 @@ export type User = {
   attributes: string[];
   managedBy: string[];
   _id: string;
+  citizenship?: {
+    createdAt?: Date;
+    appliedAt?: Date;
+    status?: 'pending-payment' | 'cancelled' | 'paid' | 'completed';
+    iban?: string;
+    why?: string;
+    tokensToFinance?: number;
+    totalToPayInFiat?: number;
+    monthlyPaymentAmount?: number;
+    charges: Charge[];
+    downPaymentAmount?: number;
+  };
   subscription: {
     plan: string;
     tier: string;
+    createdAt?: Date;
     validUntil?: Date;
     cancelledAt?: Date;
     priceId: string;
@@ -63,17 +106,48 @@ export type User = {
   socialShare?: boolean;
   referrals?: number;
   actions?: any;
+  affiliate?: Date;
+  kycData?: {
+    IP: string;
+    dateRecorded: Date;
+    legalName: string;
+    TIN: string;
+    address1: string;
+    postalCode: string;
+    city: string;
+    state: string;
+    country: string;
+  };
 };
 
 export type AuthenticationContext = {
   isAuthenticated: boolean;
   user: User | null;
-  login: ({ email, password, isGoogle, idToken }: { email: string; password?: string; isGoogle?: boolean, idToken?: string | undefined}) => Promise<void>;
-  setAuthentification: (user: User, token: string) => void;
+  login: ({
+    email,
+    password,
+    isGoogle,
+    idToken,
+    turnstileToken,
+  }: {
+    email: string;
+    password?: string;
+    isGoogle?: boolean;
+    idToken?: string | undefined;
+    turnstileToken?: string | null;
+  }) => Promise<void>;
+  setAuthentification: (
+    user: User | null | undefined,
+    accessToken: string,
+    refreshToken?: string,
+  ) => void;
   isLoading: boolean;
   logout: () => void;
   error: string | null;
-  signup: (data: unknown) => Promise<{result: string | null}>;
+  signup: (
+    data: unknown,
+    options?: { turnstileToken?: string | null },
+  ) => Promise<{ result: 'signup'; userId: string } | { result: null }>;
   completeRegistration: (
     signup_token: string,
     data: unknown,
@@ -90,5 +164,7 @@ export type AuthenticationContext = {
   refetchUser: () => Promise<void>;
   hasSignedUp: boolean;
   isGoogleLoading: boolean;
-  authGoogle: () => Promise<{result: string | null}>;
+  authGoogle: (options?: {
+    turnstileToken?: string | null;
+  }) => Promise<{ result: string | null }>;
 };

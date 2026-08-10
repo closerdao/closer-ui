@@ -1,51 +1,30 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 
-import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
-import Heading from '../components/ui/Heading';
-
-import { loadLocaleData } from '../utils/locale.helpers';
+import ErrorPage from '../components/ErrorPage';
 
 const Page404 = ({ error }: { error?: string }) => {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.push('/404');
-  }, []);
+  const t = useTranslations();
 
   return (
     <>
       <Head>
-        <title>Page not found</title>
+        <title>{t('404_title')}</title>
       </Head>
-      <main className="main-content about intro page-not-found max-w-prose h-full flex flex-col flex-1 justify-center gap-4">
-        <Heading>Page not found</Heading>
-        {error && (
-          <Heading level={2} className="font-light italic my-4">
-            {' '}
-            {error}
-          </Heading>
-        )}
-        <p>
-          <Link href="/" className="btn text-center">
-            Take me home
-          </Link>
-        </p>
-      </main>
+      <ErrorPage code="404" title={t('404_title')} error={error}>
+        <Link href="/" className="btn-primary">
+          {t('404_go_back')}
+        </Link>
+      </ErrorPage>
     </>
   );
 };
 
 export async function getStaticProps() {
-  const messages = await loadLocaleData(
-    'en',
-    process.env.NEXT_PUBLIC_APP_NAME || 'tdf',
-  );
   return {
-    props: { messages },
-    revalidate: 86400, // 24 hours
+    props: {},
   };
 }
 

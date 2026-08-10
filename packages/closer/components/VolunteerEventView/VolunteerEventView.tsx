@@ -10,7 +10,7 @@ import { VolunteerOpportunity } from '../../types';
 import { cdn } from '../../utils/api';
 import EventDescription from '../EventDescription';
 import EventPhoto from '../EventPhoto';
-import UploadPhoto from '../UploadPhoto/UploadPhoto';
+import UploadPhoto from '../UploadPhoto';
 import { Card, LinkButton } from '../ui';
 import Heading from '../ui/Heading';
 
@@ -30,7 +30,7 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
   } = volunteer || {};
 
   const { user, isAuthenticated } = useAuth();
-  const [photo, setPhoto] = useState(volunteer && volunteerPhoto);
+  const [photo, setPhoto] = useState<string | null>(volunteer?.photo ?? null);
   const hasStewardRole = user?.roles?.includes('steward');
   if (!volunteer) {
     return null;
@@ -67,7 +67,7 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
               <UploadPhoto
                 model="volunteer"
                 id={volunteer._id}
-                onSave={(id) => setPhoto(id)}
+                onSave={(id) => setPhoto(id[0])}
                 label={photo ? 'Change photo' : 'Add photo'}
               />
             </div>
@@ -123,8 +123,8 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
                 {!isEnded && (
                   <Card className="bg-white border border-gray-100">
                     <LinkButton
-                      href={`/bookings/create/dates?volunteerId=${
-                        volunteer._id
+                      href={`/volunteer/apply?bookingType=${
+                        volunteer.residency ? 'residence' : 'volunteer'
                       }&start=${start.format('YYYY-MM-DD')}&end=${end.format(
                         'YYYY-MM-DD',
                       )}`}

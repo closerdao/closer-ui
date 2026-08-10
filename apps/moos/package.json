@@ -2,7 +2,9 @@
   "name": "moos",
   "version": "0.0.0",
   "private": true,
+  "description": "Excluded from root workspaces. Restore: add \"apps/moos\" to workspaces in repo package.json.",
   "scripts": {
+    "prebuild": "node ../../packages/closer/scripts/syncBuildLocales.cjs && node ../../packages/closer/scripts/syncBuildConfig.cjs",
     "dev": "dotenv -e .env next dev --turbo",
     "build": "next build",
     "start": "next start",
@@ -13,18 +15,20 @@
   "dependencies": {
     "@mdx-js/loader": "^2.3.0",
     "@mdx-js/react": "^2.3.0",
-    "@next/mdx": "^13.3.1",
-    "@sentry/nextjs": "^7.40.0",
+    "@next/mdx": "15.5.15",
+    "@sentry/nextjs": "^8.55.2",
     "@tailwindcss/forms": "^0.4.0",
     "@tailwindcss/line-clamp": "^0.4.4",
     "closer": "*",
     "gray-matter": "^4.0.3",
-    "next": "^13.1.1",
+    "next": "15.5.15",
     "nextjs-google-analytics": "^2.3.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-ga": "^3.3.1",
-    "react-gtm-module": "^2.0.11",
+    "react-icons": "^5.4.0",
+    "sharp": "^0.34.3",
+    "remark-breaks": "^4.0.0",
     "ui": "*"
   },
   "devDependencies": {
@@ -37,10 +41,10 @@
     "eslint-config-custom": "*",
     "jest": "^29.5.0",
     "jest-environment-jsdom": "^29.5.0",
-    "postcss": "^8.4.5",
+    "postcss": "^8.5.10",
     "tailwindcss": "^3.0.7",
     "tsconfig": "*",
-    "typescript": "^4.5.3"
+    "typescript": "^5.0.0"
   },
   "msw": {
     "workerDirectory": "public"

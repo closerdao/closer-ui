@@ -1,43 +1,84 @@
 import Head from 'next/head';
+import Link from 'next/link';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
+import Pagination from '../../../components/Pagination';
 import TicketListPreview from '../../../components/TicketListPreview';
 import Heading from '../../../components/ui/Heading';
 
+import { ArrowLeft } from 'lucide-react';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import { TICKETS_PER_PAGE } from '../../../constants';
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { Event } from '../../../types';
+import config from '../../../configCached';
 import api from '../../../utils/api';
+import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { loadLocaleData } from '../../../utils/locale.helpers';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageNotFound from '../../not-found';
+
+interface EventsConfig {
+  enabled: boolean;
+}
 
 interface Props {
   event: Event;
+  eventsConfig: EventsConfig | null;
 }
 
-const EventTickets = ({ event }: Props) => {
+const EventTickets = ({ event, eventsConfig }: Props) => {
   const t = useTranslations();
 
   const { user } = useAuth();
   const { platform }: any = usePlatform();
-  const ticketsFilter = { where: { event: event && event._id } };
-  const tickets = platform.ticket.find(ticketsFilter);
 
-  const loadData = async () => {
-    await Promise.all([platform.ticket.get(ticketsFilter)]);
+  const [page, setPage] = useState(1);
+  const [totalTickets, setTotalTickets] = useState(0);
+
+  const ticketsFilter = { where: { event: event && event._id } };
+  const paginatedFilter = {
+    where: { event: event && event._id },
+    limit: TICKETS_PER_PAGE,
+    page,
   };
 
+  const tickets = platform.ticket.find(paginatedFilter);
+
+  const isEventsEnabled = eventsConfig?.enabled !== false;
+
+  const loadData = async () => {
+    const [countRes] = await Promise.all([
+      platform.ticket.getCount(ticketsFilter),
+      platform.ticket.get(paginatedFilter),
+    ]);
+    const count =
+      typeof countRes?.results === 'number'
+        ? countRes.results
+        : platform.ticket.findCount(ticketsFilter) || 0;
+    setTotalTickets(count);
+  };
+
+  const canViewTickets =
+    user &&
+    (user.roles.includes('admin') ||
+      user.roles.includes('space-host') ||
+      event?.createdBy === user._id);
+
   useEffect(() => {
-    if (user && user.roles.includes('admin')) {
+    if (canViewTickets) {
       loadData();
     }
-  }, [user]);
+  }, [canViewTickets, page]);
+
+  if (!isEventsEnabled) {
+    return <FeatureNotEnabled feature="events" />;
+  }
 
   if (
     !user ||
@@ -61,22 +102,42 @@ const EventTickets = ({ event }: Props) => {
       {tickets && tickets.get('error') && (
         <div className="validation-error">{tickets.get('error')}</div>
       )}
-      <div className="main-content intro fullwidth">
-        <div className="page-header mb-3 flex justify-between">
-          <Heading>
-            <i>{event.name}</i> {t('events_slug_tickets_title')}
+      <div className="max-w-4xl mx-auto px-6 py-12">
+        <Link
+          href={`/events/${event.slug}`}
+          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-8 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          {event.name}
+        </Link>
+        <div className="mb-10">
+          <Heading level={2} className="text-2xl md:text-3xl font-semibold text-gray-900">
+            {t('events_slug_tickets_title')}
           </Heading>
-        </div>
-        <div className="tickets-list">
-          {tickets && tickets.count() > 0 ? (
-            tickets.map((ticket: any) => (
-              <TicketListPreview key={ticket.get('_id')} ticket={ticket} />
-            ))
-          ) : (
-            <p className="p-3 text-2xl card text-center italic">
-              {t('events_slug_tickets_error')}
+          {totalTickets > 0 && (
+            <p className="text-gray-600 mt-1">
+              {t('events_slug_tickets_count', { count: totalTickets })}
             </p>
           )}
+        </div>
+        {tickets && tickets.count() > 0 ? (
+          <div className="space-y-4">
+            {tickets.map((ticket: any) => (
+              <TicketListPreview key={ticket.get('_id')} ticket={ticket} />
+            ))}
+          </div>
+        ) : (
+          <div className="bg-gray-50 rounded-xl border border-gray-100 p-12 text-center">
+            <p className="text-gray-500 italic">{t('events_slug_tickets_error')}</p>
+          </div>
+        )}
+        <div className="mt-10">
+          <Pagination
+            loadPage={(p: number) => setPage(p)}
+            page={page}
+            limit={TICKETS_PER_PAGE}
+            total={totalTickets}
+          />
         </div>
       </div>
     </>
@@ -85,28 +146,23 @@ const EventTickets = ({ event }: Props) => {
 EventTickets.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
   try {
-    const [eventRes, messages] = await Promise.all([
-      api
+    const eventRes = await api
         .get(`/event/${query.slug}`, {
-          headers: (req as NextApiRequest)?.cookies?.access_token && {
-            Authorization: `Bearer ${
-              (req as NextApiRequest)?.cookies?.access_token
-            }`,
-          },
+          headers: getBearerAuthHeaders(req as NextApiRequest),
         })
         .catch((err) => {
           console.error('Error fetching event:', err);
           return null;
-        }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+        })
 
     const event = eventRes?.data?.results;
+    const eventsConfig = config.events;
 
-    return { event, messages };
+    return { event, eventsConfig };
   } catch (err) {
     return {
       error: parseMessageFromError(err),
+      eventsConfig: null,
     };
   }
 };

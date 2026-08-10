@@ -1,99 +1,106 @@
+import type { AbstractIntlMessages } from 'next-intl';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Script from 'next/script';
 
 import { useEffect, useState } from 'react';
-import React from 'react';
+import 'react-image-lightbox/style.css';
 
-import {
-  ExternalProvider,
-  JsonRpcFetchFunc,
-  Web3Provider,
-} from '@ethersproject/providers';
-import { Web3ReactProvider } from '@web3-react/core';
+import { PromptGetInTouchProvider } from '../components/PromptGetInTouchContext';
+import PushNotificationModal from '../components/PushNotificationModal';
+
 import {
   AuthProvider,
   ConfigProvider,
+  ErrorBoundary,
   PlatformProvider,
-  WalletProvider,
-  api,
-  blockchainConfig,
 } from 'closer';
-import { configDescription } from 'closer/config';
+import LocaleMessagesNextIntlBridge from '../components/LocaleMessagesNextIntlBridge';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
-import { prepareGeneralConfig } from 'closer/utils/app.helpers';
-import { NextIntlClientProvider } from 'next-intl';
+import {
+  applyCurrencyLocaleFromGeneralConfig,
+  mergeGeneralConfigWithDefaults,
+  prepareGeneralConfig,
+} from 'closer/utils/app.helpers';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
+
+import { blockchainConfig } from '../config_blockchain';
+import configKeyed from '../configCached';
+import { NewsletterProvider } from '../contexts/newsletter';
+import { PushNotificationProvider } from '../contexts/push-notifications';
+import { WalletProvider } from '../contexts/wallet';
+import { useNavigationMetrics } from '../hooks/useNavigationMetrics';
+import { appGetInitialPropsWithMessages } from '../utils/appLocaleMessages.helpers';
+import { linkedMetricFields, logMetric } from '../utils/metrics';
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
+  messages?: AbstractIntlMessages;
 }
 
-export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
-  const library = new Web3Provider(provider);
-  return library;
-}
-
-const prepareDefaultConfig = () => {
-  const general =
-    configDescription.find((config) => config.slug === 'general')?.value ?? {};
-  const transformedObject = Object.entries(general).reduce(
-    (acc, [key, value]) => {
-      return { ...acc, [key]: '' };
-    },
-    {},
-  );
-  return transformedObject;
+const buildStateFromKeyedConfig = (
+  keyedConfig: Record<string, any>,
+  configLoaded: boolean,
+) => {
+  const mergedGeneral = mergeGeneralConfigWithDefaults({
+    ...keyedConfig.general,
+    rbacConfig: keyedConfig.rbac || {},
+  });
+  applyCurrencyLocaleFromGeneralConfig(mergedGeneral);
+  return {
+    ...prepareGeneralConfig(mergedGeneral),
+    ...keyedConfig,
+    _configLoaded: configLoaded,
+  };
 };
 
-const MyApp = ({ Component, pageProps }: AppOwnProps) => {
-  const defaultGeneralConfig = prepareDefaultConfig();
-
+const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
   const router = useRouter();
   const { query } = router;
   const referral = query.referral;
 
-  const [config, setConfig] = useState<any>(
-    prepareGeneralConfig(defaultGeneralConfig),
+  const [config] = useState<any>(() =>
+    buildStateFromKeyedConfig(configKeyed, true),
   );
 
   const { FACEBOOK_PIXEL_ID } = config || {};
 
+  useNavigationMetrics();
+
   useEffect(() => {
     if (referral) {
       localStorage.setItem(REFERRAL_ID_LOCAL_STORAGE_KEY, referral as string);
+
+      void logMetric({
+        event: 'referral-view',
+        category: 'affiliate',
+        value: String(referral),
+        number: 1,
+        ...linkedMetricFields(
+          'Affiliate',
+          typeof referral === 'string' ? referral : undefined,
+        ),
+      });
     }
   }, [referral]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const generalConfigRes = await api.get('config/general').catch(() => {
-          return;
-        });
-        setConfig(prepareGeneralConfig(generalConfigRes?.data.results.value));
-      } catch (err) {
-        console.error(err);
-        return;
-      }
-    })();
-  }, []);
 
   return (
     <>
       <Head>
+        <link rel="preconnect" href="https://challenges.cloudflare.com" />
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
         />
       </Head>
 
-      <Script
-        id="fb-pixel"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
+      {FACEBOOK_PIXEL_ID && (
+        <Script
+          id="fb-pixel"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
   !function(f,b,e,v,n,t,s)
   {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
   n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -105,38 +112,43 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
   fbq('init', '${FACEBOOK_PIXEL_ID}');
   fbq('track', 'PageView');
   `,
-        }}
-      />
+          }}
+        />
+      )}
 
-<ConfigProvider
+      <ConfigProvider
         config={{
           ...config,
           ...blockchainConfig,
         }}
       >
-        <NextIntlClientProvider
-          locale={router.locale || 'en'}
-          messages={pageProps.messages || {}}
+        <LocaleMessagesNextIntlBridge
+          initialMessages={messages || {}}
           timeZone={config.timeZone || 'Europe/Lisbon'}
         >
           <AuthProvider>
             <PlatformProvider>
-              <Web3ReactProvider getLibrary={getLibrary}>
-                <WalletProvider>
+              <WalletProvider>
+                <PushNotificationProvider>
                   <GoogleAnalytics trackPageViews />
-                  <Component {...pageProps} config={config} />
-                  {/* TODO: create cookie consent page with property-specific parameters #357  */}
-                  
-                </WalletProvider>
-              </Web3ReactProvider>
+                  <PromptGetInTouchProvider>
+                    <NewsletterProvider>
+                      <PushNotificationModal />
+                      <ErrorBoundary>
+                        <Component {...pageProps} config={config} />
+                      </ErrorBoundary>
+                    </NewsletterProvider>
+                  </PromptGetInTouchProvider>
+                </PushNotificationProvider>
+              </WalletProvider>
             </PlatformProvider>
           </AuthProvider>
-        </NextIntlClientProvider>
+        </LocaleMessagesNextIntlBridge>
       </ConfigProvider>
-
-    
     </>
   );
 };
+
+MyApp.getInitialProps = appGetInitialPropsWithMessages;
 
 export default MyApp;

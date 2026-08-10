@@ -1,16 +1,24 @@
 import { useState } from 'react';
 
-import { ObjectId } from 'bson';
+import { ObjectId } from '../utils/bsonObjectId';
+import { normalizeDiscountCode } from '../utils/discountCode';
 import { useTranslations } from 'next-intl';
 
-const DiscountsEditor = ({ value, onChange }) => {
+const normalizeDiscountOptions = (opts = []) =>
+  (opts || []).map((option) => ({
+    ...option,
+    code: normalizeDiscountCode(option?.code),
+  }));
+
+const DiscountsEditor = ({ value = /** @type {any} */ ([]), onChange = /** @type {any} */ (undefined) }) => {
   const t = useTranslations();
 
-  const [options, setOptions] = useState(value);
+  const [options, setOptions] = useState(() => normalizeDiscountOptions(value));
   const updateOptions = (update) => {
     setOptions(update);
-    onChange && onChange(update);
+    if (onChange) onChange(update);
   };
+
   const updateOption = (index, option) => {
     const update = options.map((o, i) => (i === index ? option : o));
     updateOptions(update);
@@ -46,11 +54,15 @@ const DiscountsEditor = ({ value, onChange }) => {
                 type="text"
                 value={option.code}
                 placeholder="SPECIAL_PRICE_50"
+                className="uppercase"
+                autoCapitalize="characters"
+                autoCorrect="off"
+                spellCheck={false}
                 onChange={(e) => {
                   e.preventDefault();
                   updateOption(index, {
                     ...option,
-                    code: e.target.value,
+                    code: normalizeDiscountCode(e.target.value),
                   });
                 }}
               />
@@ -81,13 +93,14 @@ const DiscountsEditor = ({ value, onChange }) => {
                 max="100"
                 step="1"
                 className="w-32"
-                value={option.percent && option.percent * 100}
+                value={option.percent ? Math.round(option.percent * 10000) / 100 : ''}
                 placeholder="24%"
                 onChange={(e) => {
                   e.preventDefault();
+                  const val = parseFloat(e.target.value);
                   updateOption(index, {
                     ...option,
-                    percent: e.target.value / 100,
+                    percent: isNaN(val) ? '' : Math.round(val * 100) / 10000,
                   });
                 }}
               />
@@ -129,11 +142,6 @@ const DiscountsEditor = ({ value, onChange }) => {
       </div>
     </div>
   );
-};
-
-DiscountsEditor.defaultProps = {
-  onChange: null,
-  value: [],
 };
 
 export default DiscountsEditor;

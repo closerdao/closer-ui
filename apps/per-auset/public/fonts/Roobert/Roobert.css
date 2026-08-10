@@ -1,0 +1,16 @@
+@font-face {
+  font-family: 'Roobert';
+  src: url('/fonts/Roobert/Roobert-Regular.otf') format('otf'),
+    url('/fonts/Roobert/Roobert-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-stretch: normal;
+}
+@font-face {
+  font-family: 'Roobert';
+  src: url('/fonts/Roobert/Roobert-Bold.otf') format('otf'),
+    url('/fonts/Roobert/Roobert-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: bold;
+  font-stretch: bold;
+}

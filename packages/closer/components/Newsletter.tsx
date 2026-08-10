@@ -1,116 +1,213 @@
 import { useRouter } from 'next/router';
 
-import { useState, useEffect, FormEvent } from 'react';
+import { FormEvent, forwardRef, useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
+import { twMerge } from 'tailwind-merge';
 
 import { useAuth, useConfig } from '..';
 import api from '../utils/api';
+import { clearInteractionSession } from '../utils/interactionSession';
+import {
+  createTurnstileHandlers,
+  isTurnstileSubmitEnabled,
+} from '../utils/turnstile.helpers';
 import { trackEvent } from './Analytics';
-import { Button, ErrorMessage, Heading } from './ui';
-
-const attemptSignup = async (
-  event: FormEvent<HTMLFormElement>,
-  request: {
-    email: string;
-    screenname: string;
-    tags: [string | undefined, string, string];
-  },
-) => {
-  event.preventDefault();
-  await api.post('/subscribe', request);
-};
+import TurnstileWidget from './TurnstileWidget';
+import { Button, ErrorMessage, Input } from './ui';
 
 interface Props {
   placement?: string;
   ctaText?: string;
   className?: string;
-  onSuccess?: () => void;
+  onSuccess?: (email: string) => void;
+  showTitle?: boolean;
+  requireTurnstile?: boolean;
 }
 
-const Newsletter = ({ placement, ctaText, className, onSuccess }: Props) => {
-  const t = useTranslations();
-  const { isAuthenticated } = useAuth();
-  const { APP_NAME } = useConfig() || {};
+const Newsletter = forwardRef<HTMLDivElement, Props>(
+  (
+    {
+      placement,
+      ctaText,
+      className,
+      onSuccess,
+      showTitle = true,
+      requireTurnstile = false,
+    },
+    ref,
+  ) => {
+    const t = useTranslations();
+    const { isAuthenticated } = useAuth();
+    const { APP_NAME } = useConfig() || {};
 
-  const [email, setEmail] = useState('');
-  const [signupError, setSignupError] = useState(null);
-  const referrer =
-    typeof localStorage !== 'undefined' && localStorage.getItem('referrer');
-  const [signupCompleted, setSignupCompleted] = useState(false);
+    const [email, setEmail] = useState('');
+    const [signupError, setSignupError] = useState<string | null>(null);
+    const [referrer, setReferrer] = useState<string | undefined>(undefined);
+    const [signupCompleted, setSignupCompleted] = useState(false);
+    const [mounted, setMounted] = useState(false);
+    const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
-  const [shouldShowForm, setShouldShowForm] = useState(true);
-  const router = useRouter();
+    const [shouldShowForm, setShouldShowForm] = useState(true);
+    const router = useRouter();
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const completed = localStorage.getItem('signupCompleted') === 'true';
-      if (completed) {
-        setShouldShowForm(false);
+    const attemptSignup = async (
+      event: FormEvent<HTMLFormElement>,
+      request: {
+        email: string;
+        screenname: string;
+        tags: string[];
+        turnstileToken?: string | null;
+      },
+    ) => {
+      event.preventDefault();
+      await api.post('/subscribe', request);
+    };
+
+    useEffect(() => {
+      setMounted(true);
+      if (typeof window !== 'undefined') {
+        const completed = localStorage.getItem('signupCompleted') === 'true';
+        if (completed) {
+          setShouldShowForm(false);
+        }
+        const storedReferrer = localStorage.getItem('referrer');
+        if (storedReferrer) {
+          setReferrer(storedReferrer);
+        }
       }
-    }
-  }, []);
+    }, []);
 
-  if (isAuthenticated || APP_NAME !== 'tdf' || !shouldShowForm) return null;
+    if (!mounted) return null;
+    if (isAuthenticated || APP_NAME !== 'tdf' || !shouldShowForm) return null;
 
-  return (
-    <div className={`Newsletter pt-12 pb-5 px-4 ${className}`}>
-      {signupCompleted ? (
-        <h3>{t('newsletter_success')}</h3>
-      ) : (
-        <form
-          action="#"
-          onSubmit={(e) =>
-            attemptSignup(e, {
-              email,
-              screenname: '',
-              tags: [placement, router.asPath, `ref:${referrer}`],
-            })
-              .then(() => {
-                trackEvent(placement, 'Lead');
-                setSignupCompleted(true);
-                setSignupError(null);
-                localStorage.setItem('signupCompleted', 'true');
-                if (onSuccess) {
-                  onSuccess();
-                }
+    const isInlinePrompt = placement === 'HomePagePrompt';
+    const turnstileAction =
+      placement === 'dataroom' ? 'dataroom_subscribe' : 'newsletter_signup';
+
+    return (
+      <div
+        ref={ref}
+        className={twMerge(
+          'Newsletter',
+          isInlinePrompt ? '' : 'pt-8 pb-5 w-auto sm:w-[280px]',
+          className,
+        )}
+      >
+        {requireTurnstile ? (
+          <div className="animate-[fadeIn_0.3s_ease-in-out] mb-4 w-full">
+            <TurnstileWidget
+              action={turnstileAction}
+              size="flexible"
+              {...createTurnstileHandlers(setTurnstileToken)}
+            />
+          </div>
+        ) : (
+          email.length > 0 && (
+            <div className="fixed bottom-20 z-51 left-0 right-0 mx-auto animate-[fadeIn_0.3s_ease-in-out]">
+              <TurnstileWidget
+                action={turnstileAction}
+                size="flexible"
+                {...createTurnstileHandlers(setTurnstileToken)}
+              />
+            </div>
+          )
+        )}
+        {signupCompleted ? (
+          <p
+            className={
+              isInlinePrompt ? 'text-sm text-green-600 font-medium' : ''
+            }
+          >
+            {t('newsletter_success')}
+          </p>
+        ) : (
+          <form
+            action="#"
+            onSubmit={(e) =>
+              attemptSignup(e, {
+                email,
+                screenname: '',
+                tags: [
+                  placement || null,
+                  router.asPath,
+                  referrer ? `ref:${referrer}` : null,
+                ].filter(Boolean) as string[],
+                turnstileToken,
               })
-              .catch((err) => {
-                trackEvent(placement, 'LeadError');
-                setSignupError(
-                  (err.response &&
-                    err.response.data &&
-                    err.response.data.error) ||
-                    err.message,
-                );
-              })
-          }
-          className="flex flex-col items-center  justify-center"
-        >
-          <div className="flex flex-col justify-start px-2 md:mt-0 gap-y-2">
-            <Heading display level={4}>
-              {t('newsletter_title')}
-            </Heading>
-            <div className="flex gap-4">
-              <input
+                .then(() => {
+                  trackEvent(placement, 'Lead');
+                  setSignupCompleted(true);
+                  setSignupError(null);
+                  localStorage.setItem('signupCompleted', 'true');
+                  if (onSuccess) {
+                    onSuccess(email);
+                  }
+                })
+                .catch((err) => {
+                  trackEvent(placement, 'LeadError');
+                  const errorMessage =
+                    (err.response &&
+                      err.response.data &&
+                      err.response.data.error) ||
+                    err.message;
+                  if (/turnstile/i.test(String(errorMessage))) {
+                    clearInteractionSession();
+                    setTurnstileToken(null);
+                  }
+                  setSignupError(errorMessage);
+                })
+            }
+            className={
+              isInlinePrompt
+                ? 'flex items-center gap-2'
+                : 'flex flex-col justify-center'
+            }
+          >
+            {!isInlinePrompt && showTitle && (
+              <div className="hidden min-[1100px]:flex flex-col justify-start md:mt-0 gap-y-2">
+                {t('newsletter_title')}
+              </div>
+            )}
+            <div
+              className={
+                isInlinePrompt
+                  ? 'flex items-center gap-2 flex-1'
+                  : 'flex gap-2 sm:gap-4'
+              }
+            >
+              <Input
                 type="text"
-                className="bg-gray-100 rounded-md p-2 border-none w-[140px] sm:w-[180px]"
+                className={twMerge(
+                  'bg-white border !border-gray-300 rounded-md flex-1 min-w-0',
+                  isInlinePrompt ? 'h-9 text-sm px-3' : 'p-2',
+                )}
                 value={email}
-                placeholder="Your email"
+                placeholder={t('newsletter_email_placeholder') || 'Your email'}
                 onChange={(e) => setEmail(e.target.value)}
               />
-              <Button size="small" type="submit" variant="secondary">
+              <Button
+                size="small"
+                type="submit"
+                variant="primary"
+                isFullWidth={false}
+                isEnabled={!!email && isTurnstileSubmitEnabled(turnstileToken)}
+                className={twMerge(
+                  'shrink-0',
+                  isInlinePrompt && 'h-9 text-xs px-4',
+                )}
+              >
                 {ctaText || t('newsletter_signup')}
               </Button>
             </div>
-          </div>
-          <div className="w-[290px]">
             {signupError && <ErrorMessage error={signupError} />}
-          </div>
-        </form>
-      )}
-    </div>
-  );
-};
+          </form>
+        )}
+      </div>
+    );
+  },
+);
+
+Newsletter.displayName = 'Newsletter';
 
 export default Newsletter;

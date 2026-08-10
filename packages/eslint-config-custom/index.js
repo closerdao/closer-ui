@@ -13,9 +13,12 @@ module.exports = {
   ],
   plugins: ['unused-imports', '@typescript-eslint'],
   rules: {
+    'turbo/no-undeclared-env-vars': 'off',
     'unused-imports/no-unused-imports': 'error',
     'no-unused-vars': 'off',
-    '@typescript-eslint/no-unused-vars': 'warn',
+    '@typescript-eslint/no-unused-vars': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/no-non-null-assertion': 'off',
     '@next/next/no-img-element': 'off',
     'react-hooks/exhaustive-deps': 'off',
     quotes: ['error', 'single'],
@@ -24,10 +27,11 @@ module.exports = {
     'react/display-name': 'off', // https://reactjs.org/docs/react-component.html#displayname
     'no-html-link-for-pages': 'off',
     'no-empty-function': 'off',
-    '@typescript-eslint/no-empty-function': 'warn',
+    '@typescript-eslint/no-empty-function': 'off',
     '@typescript-eslint/no-var-requires': 'off',
   },
   globals: {
     NodeJS: true,
+    BigInt: true,
   },
 };

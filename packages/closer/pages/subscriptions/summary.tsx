@@ -1,10 +1,9 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import Counter from '../../components/Counter';
-import PageError from '../../components/PageError';
 import {
   BackButton,
   Button,
@@ -13,7 +12,7 @@ import {
   Row,
 } from '../../components/ui/';
 
-import { NextPage, NextPageContext } from 'next';
+import { NextPage } from 'next';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -28,15 +27,13 @@ import {
   SelectedPlan,
   SubscriptionPlan, // Tier,
 } from '../../types/subscriptions';
-import api from '../../utils/api';
-import { parseMessageFromError } from '../../utils/common';
 import {
   calculateSubscriptionPrice,
   getVatInfo,
   priceFormat,
 } from '../../utils/helpers';
-import { loadLocaleData } from '../../utils/locale.helpers';
-import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
+import { getPaidSubscriptionPlans } from '../../utils/subscriptions.helpers';
+import { logMetric } from '../../utils/metrics';
 import PageNotFound from '../not-found';
 
 interface Props {
@@ -68,7 +65,9 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
-  const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
+  const subscriptionPlans = getPaidSubscriptionPlans(subscriptionsConfig, {
+    availableOnly: false,
+  });
 
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
 
@@ -80,8 +79,22 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
     defaultMonthlyCredits,
   );
 
+  const hasComponentRendered = useRef(false);
+
   useEffect(() => {
-    if (user?.subscription && user.subscription.priceId) {
+    if (!hasComponentRendered.current && selectedPlan) {
+      const isTier1 = selectedPlan?.title.toLowerCase() === 'wanderer';
+      void logMetric({
+        event: isTier1 ? 'tier-1-page-view' : 'tier-2-page-view',
+        category: 'subscriptions',
+        value: isTier1 ? 'tier-1' : 'tier-2',
+      });
+      hasComponentRendered.current = true;
+    }
+  }, [selectedPlan]);
+
+  useEffect(() => {
+    if (user?.subscription && user?.subscription?.priceId && new Date(user?.subscription?.validUntil || '') > new Date()) {
       router.push('/subscriptions');
     }
   }, []);
@@ -128,10 +141,6 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
       );
     }
   };
-
-  if (error) {
-    return <PageError error={error} />;
-  }
 
   if (!areSubscriptionsEnabled) {
     return <PageNotFound error="" />;
@@ -222,43 +231,6 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
       </div>
     </>
   );
-};
-
-SubscriptionsSummaryPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [subscriptionsRes, generalRes, paymentRes, messages] =
-      await Promise.all([
-        api.get('/config/subscriptions').catch(() => {
-          return null;
-        }),
-        api.get('/config/general').catch(() => {
-          return null;
-        }),
-        api.get('/config/payment').catch(() => {
-          return null;
-        }),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      ]);
-
-    const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
-    const generalConfig = generalRes?.data?.results?.value;
-    const paymentConfig = paymentRes?.data?.results?.value;
-
-    return {
-      subscriptionsConfig,
-      generalConfig,
-      messages,
-      paymentConfig,
-    };
-  } catch (err: unknown) {
-    return {
-      subscriptionsConfig: { enabled: false, elements: [] },
-      generalConfig: null,
-      error: parseMessageFromError(err),
-      messages: null,
-      paymentConfig: null,
-    };
-  }
 };
 
 export default SubscriptionsSummaryPage;

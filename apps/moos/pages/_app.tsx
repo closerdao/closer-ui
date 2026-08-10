@@ -1,3 +1,4 @@
+import type { AbstractIntlMessages } from 'next-intl';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -10,61 +11,52 @@ import { ErrorBoundary, Layout } from '@/components';
 import AcceptCookies from 'closer/components/AcceptCookies';
 
 import {
-  ExternalProvider,
-  JsonRpcFetchFunc,
-  Web3Provider,
-} from '@ethersproject/providers';
-import { Web3ReactProvider } from '@web3-react/core';
-import {
   AuthProvider,
   ConfigProvider,
+  LocaleMessagesNextIntlBridge,
   PlatformProvider,
-  WalletProvider,
-  api,
-  blockchainConfig,
+  appGetInitialPropsWithMessages,
+  useNavigationMetrics,
 } from 'closer';
-import { configDescription } from 'closer/config';
+import configKeyed from 'closer/configCached';
+import { WalletProvider } from 'closer/contexts/wallet';
+import { blockchainConfig } from 'closer/config_blockchain';
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
-import { prepareGeneralConfig } from 'closer/utils/app.helpers';
-import { NextIntlClientProvider } from 'next-intl';
+import { NewsletterProvider } from 'closer/contexts/newsletter';
+import { PushNotificationProvider } from 'closer/contexts/push-notifications';
+import {
+  applyCurrencyLocaleFromGeneralConfig,
+  mergeGeneralConfigWithDefaults,
+  prepareGeneralConfig,
+} from 'closer/utils/app.helpers';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
-import appConfig from '../config';
+import { getAppConfigFromEnv } from 'closer/utils/appConfigFromEnv';
 import '../styles/index.css';
 
 interface AppOwnProps extends AppProps {
   configGeneral: any;
+  messages?: AbstractIntlMessages;
 }
 
-export function getLibrary(provider: ExternalProvider | JsonRpcFetchFunc) {
-  const library = new Web3Provider(provider);
-  return library;
-}
-
-const prepareDefaultConfig = () => {
-  const general =
-    configDescription.find((config) => config.slug === 'general')?.value ?? {};
-  const transformedObject = Object.entries(general).reduce(
-    (acc, [key, value]) => {
-      return { ...acc, [key]: '' };
-    },
-    {},
-  );
-  return transformedObject;
-};
-
-const MyApp = ({ Component, pageProps }: AppOwnProps) => {
-  const defaultGeneralConfig = prepareDefaultConfig();
-
+const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
   const router = useRouter();
   const { query } = router;
   const referral = query.referral;
 
-  const [config, setConfig] = useState<any>(
-    prepareGeneralConfig(defaultGeneralConfig),
-  );
+  const [config] = useState<any>(() => {
+    const mergedGeneral = mergeGeneralConfigWithDefaults(configKeyed.general);
+    applyCurrencyLocaleFromGeneralConfig(mergedGeneral);
+    return {
+      ...prepareGeneralConfig(mergedGeneral),
+      ...configKeyed,
+      _configLoaded: true,
+    };
+  });
 
   const { FACEBOOK_PIXEL_ID } = config || {};
+
+  useNavigationMetrics();
 
   useEffect(() => {
     if (referral) {
@@ -72,23 +64,10 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
     }
   }, [referral]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const generalConfigRes = await api.get('config/general').catch(() => {
-          return;
-        });
-        setConfig(prepareGeneralConfig(generalConfigRes?.data.results.value));
-      } catch (err) {
-        console.error(err);
-        return;
-      }
-    })();
-  }, []);
-
   return (
     <>
       <Head>
+        <link rel="preconnect" href="https://challenges.cloudflare.com" />
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
@@ -118,34 +97,40 @@ const MyApp = ({ Component, pageProps }: AppOwnProps) => {
         config={{
           ...config,
           ...blockchainConfig,
-          ...appConfig,
+          ...getAppConfigFromEnv(),
         }}
       >
         <ErrorBoundary>
-          <NextIntlClientProvider
-            locale={router.locale || 'en'}
-            messages={pageProps.messages}
-            timeZone={config?.timeZone || appConfig.DEFAULT_TIMEZONE}
+          <LocaleMessagesNextIntlBridge
+            initialMessages={messages || {}}
+            timeZone={
+              config?.TIME_ZONE ||
+              process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE ||
+              getAppConfigFromEnv().DEFAULT_TIMEZONE
+            }
           >
             <AuthProvider>
               <PlatformProvider>
-                <Web3ReactProvider getLibrary={getLibrary}>
-                  <WalletProvider>
+                <WalletProvider>
+                  <PushNotificationProvider>
                     <Layout>
                       <GoogleAnalytics trackPageViews />
-                      <Component {...pageProps} config={config} />
+                      <NewsletterProvider>
+                        <Component {...pageProps} config={config} />
+                      </NewsletterProvider>
                     </Layout>
-                    {/* TODO: create cookie consent page with property-specific parameters #357  */}
                     <AcceptCookies />
-                  </WalletProvider>
-                </Web3ReactProvider>
+                  </PushNotificationProvider>
+                </WalletProvider>
               </PlatformProvider>
             </AuthProvider>
-          </NextIntlClientProvider>
+          </LocaleMessagesNextIntlBridge>
         </ErrorBoundary>
       </ConfigProvider>
     </>
   );
 };
+
+MyApp.getInitialProps = appGetInitialPropsWithMessages;
 
 export default MyApp;

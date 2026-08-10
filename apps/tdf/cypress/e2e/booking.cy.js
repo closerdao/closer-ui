@@ -37,24 +37,22 @@ const selectDates = () => {
   const endDate = new Date(startDate);
   endDate.setDate(startDate.getDate() + 1);
 
-  const isLastDayOfMonth =
-    startDate.getDate() ===
-    new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0).getDate();
-
   cy.get('[data-testid="select-dates-button"]').click();
-  cy.get('.rdp-day').contains(startDate.getDate()).click();
-  if (isLastDayOfMonth) {
+
+  const today = new Date();
+  if (startDate.getMonth() !== today.getMonth()) {
     cy.get('[aria-label="Go to next month"]').click();
-    cy.get('.rdp-day').contains('1').click();
-  } else {
-    cy.get('.rdp-day')
-      .contains(startDate.getDate() + 1)
-      .click();
   }
+
+  cy.get('.rdp-day').contains(startDate.getDate()).click();
+
+  if (endDate.getMonth() !== startDate.getMonth()) {
+    cy.get('[aria-label="Go to next month"]').click();
+  }
+  cy.get('.rdp-day').contains(endDate.getDate()).click();
 
   cy.get('[data-testid="select-dates-button"]').click();
 };
-
 
 const selectDateAndTime = () => {
   cy.get('[data-testid="select-dates-button"]').click();
@@ -115,7 +113,7 @@ describe('Booking flow', () => {
       .should('be.enabled');
   });
 
-  it.only('should have correct authenticated user (can instant book) booking flow', () => {
+  it('should have correct authenticated user (can instant book) booking flow', () => {
     cy.visit(`${Cypress.config('baseUrl')}/login`);
     login({ isAdmin: true });
     cy.visit(`${Cypress.config('baseUrl')}/stay/${LISTING.slug}`);
@@ -201,7 +199,7 @@ describe('Booking flow', () => {
       .contains(/apply to stay/i)
       .click();
 
-      selectDates();
+    selectDates();
 
     cy.get('button')
       .contains(/search/i)
@@ -232,7 +230,7 @@ describe('Booking flow', () => {
       .contains(/apply to stay/i)
       .click();
 
-      selectDates();
+    selectDates();
 
     cy.get('button')
       .contains(/search/i)
@@ -346,7 +344,7 @@ it('should have correct authenticated overnight event booking flow', () => {
     .contains(/clear selection/i)
     .click();
 
-    selectDates();
+  selectDates();
 
   cy.get('button')
     .contains(/search/i)

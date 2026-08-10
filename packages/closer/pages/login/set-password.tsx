@@ -10,7 +10,6 @@ import Heading from '../../components/ui/Heading';
 import { NextPageContext } from 'next';
 
 import { useAuth } from '../../contexts/auth';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import { useTranslations } from 'next-intl';
 
 const SetPasswordScreen = () => {
@@ -131,17 +130,11 @@ const SetPasswordScreen = () => {
 
 SetPasswordScreen.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
-      messages,
     };
   } catch (err: unknown) {
     return {
-      messages: null,
-    };
+      };
   }
 };
 

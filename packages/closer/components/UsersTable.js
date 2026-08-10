@@ -11,7 +11,7 @@ import ProfilePhoto from './ProfilePhoto';
 import Tag from './Tag';
 import TimeSince from './TimeSince';
 
-const UsersTable = ({ where = {}, limit }) => {
+const UsersTable = ({ where = {}, limit = 50 }) => {
   const t = useTranslations();
 
   const { platform } = usePlatform();
@@ -184,10 +184,6 @@ const UsersTable = ({ where = {}, limit }) => {
       )}
     </div>
   );
-};
-
-UsersTable.defaultProps = {
-  limit: 50,
 };
 
 export default UsersTable;

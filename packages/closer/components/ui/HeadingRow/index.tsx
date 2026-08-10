@@ -8,22 +8,19 @@ interface HeadingRowProps extends React.HTMLAttributes<HTMLHeadingElement> {
   className?: string;
 }
 
-const HeadingRow = ({ children, className, level }: HeadingRowProps) => {
+const HeadingRow = ({ children, className, level = 2 }: HeadingRowProps) => {
+  const sizeClass =
+    level === 2 ? 'text-lg md:text-2xl' : level === 3 ? 'text-base md:text-xl' : '';
   return (
     <div className="border-solid border-b pb-2 border-neutral-200 mb-4">
       <Heading
-        className={`${className} flex justify-start items-center`}
+        className={`${sizeClass} ${className} flex justify-start items-center`}
         level={level}
       >
         {children}
       </Heading>
     </div>
   );
-};
-
-HeadingRow.defaultProps = {
-  className: '',
-  level: 2,
 };
 
 export default HeadingRow;

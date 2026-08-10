@@ -1,12 +1,11 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
-import PageError from '../../components/PageError';
 import SubscriptionCheckoutForm from '../../components/SubscriptionCheckoutForm';
 import {
   BackButton,
@@ -16,7 +15,7 @@ import {
   Row,
 } from '../../components/ui/';
 
-import { NextPage, NextPageContext } from 'next';
+import { NextPage } from 'next';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -31,51 +30,50 @@ import {
   SelectedPlan,
   SubscriptionPlan, // Tier,
 } from '../../types/subscriptions';
-import api from '../../utils/api';
-import { parseMessageFromError } from '../../utils/common';
+import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import {
   calculateSubscriptionPrice,
   getVatInfo,
   priceFormat,
 } from '../../utils/helpers';
-import { loadLocaleData } from '../../utils/locale.helpers';
-import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
+import { logMetric } from '../../utils/metrics';
+import { getPaidSubscriptionPlans } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY as string,
   {
-    stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT
-  }
+    stripeAccount: process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
+  },
 );
 
-interface Props {
-  subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
-  paymentConfig: PaymentConfig | null;
-  generalConfig: GeneralConfig | null;
-  error?: string;
-}
-
-const SubscriptionsCheckoutPage: NextPage<Props> = ({
-  subscriptionsConfig,
-  paymentConfig,
-  generalConfig,
-  error,
-}) => {
+const SubscriptionsCheckoutPage: NextPage = () => {
+  const subscriptionsConfig = getCachedConfig('subscriptions') as {
+    enabled: boolean;
+    elements: SubscriptionPlan[];
+  };
+  const paymentConfig = (mergePaymentValueWithBookingCurrencyFallback(
+    getCachedConfig('payment'),
+    getCachedConfig('booking'),
+  ) ?? null) as PaymentConfig | null;
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
   const isPaymentEnabled = paymentConfig?.enabled || false;
   const areSubscriptionsEnabled =
     subscriptionsConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
 
-  const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
+  const subscriptionPlans = getPaidSubscriptionPlans(subscriptionsConfig, {
+    availableOnly: false,
+  });
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const { priceId, monthlyCredits, source } = router.query;
   const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
   const vatRateFromConfig = Number(paymentConfig?.vatRate);
   const vatRate = vatRateFromConfig || defaultVatRate;
-  
+
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
 
   const monthlyCreditsSelected = Math.min(
@@ -86,8 +84,29 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
+  const hasComponentRendered = useRef(false);
+
   useEffect(() => {
-    if (user?.subscription && user.subscription.priceId) {
+    if (!hasComponentRendered.current && selectedPlan) {
+      void logMetric({
+        event:
+          selectedPlan?.title.toLowerCase() === 'wanderer'
+            ? 'tier-1-checkout'
+            : 'tier-2-checkout',
+        category: 'subscriptions',
+        value: 'checkout',
+      });
+      void logMetric({
+        event: 'subscription-checkout-started',
+        category: 'subscriptions',
+        value: 'payment',
+      });
+      hasComponentRendered.current = true;
+    }
+  }, [selectedPlan]);
+
+  useEffect(() => {
+    if (user?.subscription && user?.subscription?.priceId) {
       router.push('/subscriptions');
     }
   }, []);
@@ -118,10 +137,6 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
       `/subscriptions/summary?priceId=${priceId}&monthlyCredits=${monthlyCredits}`,
     );
   };
-
-  if (error) {
-    return <PageError error={error} />;
-  }
 
   if (!areSubscriptionsEnabled) {
     return <PageNotFound error="" />;
@@ -170,10 +185,13 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
                 }`}
                 additionalInfo={`${t(
                   'bookings_checkout_step_total_description',
-                )} ${getVatInfo({
-                  val: total,
-                  cur: DEFAULT_CURRENCY,
-                }, vatRate)} ${t('subscriptions_summary_per_month')}`}
+                )} ${getVatInfo(
+                  {
+                    val: total,
+                    cur: DEFAULT_CURRENCY,
+                  },
+                  vatRate,
+                )} ${t('subscriptions_summary_per_month')}`}
               />
             }
           </div>
@@ -191,6 +209,11 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
                     priceId={priceId}
                     monthlyCredits={Number(monthlyCredits)}
                     source={source as string}
+                    tierMetricEvent={
+                      selectedPlan?.title?.toLowerCase() === 'wanderer'
+                        ? 'tier-1-first-payment'
+                        : 'tier-2-first-payment'
+                    }
                   />
                 </Elements>
               ) : (
@@ -202,44 +225,6 @@ const SubscriptionsCheckoutPage: NextPage<Props> = ({
       </div>
     </>
   );
-};
-
-SubscriptionsCheckoutPage.getInitialProps = async (
-  context: NextPageContext,
-) => {
-  try {
-    const [subscriptionsRes, paymentRes, generalRes, messages] =
-      await Promise.all([
-        api.get('/config/subscriptions').catch(() => {
-          return null;
-        }),
-        api.get('/config/payment').catch(() => {
-          return null;
-        }),
-        api.get('/config/general').catch(() => {
-          return null;
-        }),
-        loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-      ]);
-
-    const subscriptionsConfig = subscriptionsRes?.data?.results?.value;
-    const paymentConfig = paymentRes?.data?.results?.value;
-    const generalConfig = generalRes?.data?.results?.value;
-    return {
-      subscriptionsConfig,
-      paymentConfig,
-      generalConfig,
-      messages,
-    };
-  } catch (err: unknown) {
-    return {
-      subscriptionsConfig: { enabled: false, elements: [] },
-      paymentConfig: null,
-      generalConfig: null,
-      error: parseMessageFromError(err),
-      messages: null,
-    };
-  }
 };
 
 export default SubscriptionsCheckoutPage;

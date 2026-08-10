@@ -32,28 +32,34 @@ const inputStyles = cva('new-input px-4 py-3 rounded-lg', {
 interface InputProps extends VariantProps<typeof inputStyles> {
   id?: string;
   label?: string;
+  ariaLabel?: string;
   value?: string;
   onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
-  type?: 'text' | 'password' | 'time' | 'number';
+  type?: 'text' | 'password' | 'time' | 'number' | 'date' | 'url';
   isRequired?: boolean;
   placeholder?: string;
   successMessage?: string;
   className?: string;
   autoFocus?: boolean;
   dataTestId?: string;
-  validation?: 'email' | 'number' | 'phone' | 'url';
+  validation?: 'email' | 'number' | 'phone' | 'url' | 'invalid';
   isDisabled?: boolean;
   isInstantSave?: boolean;
   hasSaved?: boolean;
   setHasSaved?: Dispatch<SetStateAction<boolean>>;
   additionalInfo?: string;
+  maxLength?: number;
+  customValidationError?: string;
+  min?: number | string;
+  max?: number | string;
 }
 
 const Input = React.memo(
   ({
     id,
     label,
+    ariaLabel,
     value,
     onChange,
     type = 'text',
@@ -70,6 +76,10 @@ const Input = React.memo(
     hasSaved,
     setHasSaved,
     additionalInfo,
+    maxLength,
+    customValidationError,
+    min,
+    max,
   }: InputProps) => {
     const t = useTranslations();
 
@@ -91,6 +101,9 @@ const Input = React.memo(
     } as Record<string, RegExp>;
 
     const isValidValue = (value: string) => {
+      if (validation === 'invalid') {
+        return false;
+      }
       if (validation) {
         const pattern = validationPatterns[validation];
         if (pattern) {
@@ -105,13 +118,19 @@ const Input = React.memo(
       setLocalValue(newValue);
       setIsValid(isValidValue(newValue));
       if (onChange) {
-        onChange(newValue as any);
+        onChange(event);
       }
     };
 
     useEffect(() => {
       if (value) {
         setIsValid(isValidValue(value));
+      }
+    }, [value]);
+
+    useEffect(() => {
+      if (value !== undefined && value !== localValue) {
+        setLocalValue(value);
       }
     }, [value]);
 
@@ -141,13 +160,16 @@ const Input = React.memo(
     };
 
     const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-      onBlur && onBlur(event);
+      if (onBlur) onBlur(event);
       setIsEditing(false);
     };
 
     const handleSubmit = () => {
       if (onChangeRef.current && isValidValue(localValue)) {
-        onChangeRef.current(localValue as any);
+        const syntheticEvent = {
+          target: { value: localValue },
+        } as ChangeEvent<HTMLInputElement>;
+        onChangeRef.current(syntheticEvent);
         if (inputRef?.current) {
           (inputRef.current as HTMLInputElement).blur();
         }
@@ -155,9 +177,10 @@ const Input = React.memo(
     };
 
     const validationError =
-      !isValid && validation
+      customValidationError ||
+      (!isValid && validation && validation !== 'invalid'
         ? `${label} is not a valid ${validation} value.`
-        : null;
+        : null);
 
     return (
       <div className={'flex flex-col gap-2 relative '}>
@@ -173,6 +196,9 @@ const Input = React.memo(
         )}
         <div>
           <input
+            maxLength={maxLength}
+            min={min}
+            max={max}
             id={id}
             type={type}
             value={isInstantSave ? localValue : value}
@@ -186,16 +212,11 @@ const Input = React.memo(
             `}
             data-testid={dataTestId}
             autoFocus={autoFocus}
-            aria-label={label}
+            aria-label={ariaLabel ?? label}
             aria-required={isRequired}
             aria-invalid={!isValidValue(localValue)}
             ref={inputRef}
             onKeyDown={isInstantSave ? handleKeyDown : undefined}
-            pattern={
-              validation
-                ? validationPatterns[validation].toString().slice(1, -1)
-                : undefined
-            }
             disabled={isDisabled}
             aria-labelledby={label}
           />

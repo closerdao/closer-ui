@@ -1,11 +1,190 @@
+import { ACCOUNTING_ENTITY_PRODUCT_SLUGS } from './constants/accountingEntities.constants';
+import { ISO_COUNTRY_CODES_FOR_CONFIG } from './constants/countryLocales';
 import { ConfigType } from './types/config';
+
+export const CURRENCY_ISO_SYMBOL = {
+  AED: 'AED',
+  AFN: '؋',
+  ALL: 'ALL',
+  AMD: '֏',
+  AOA: 'Kz',
+  ARS: '$',
+  AUD: '$',
+  AWG: 'AWG',
+  AZN: '₼',
+  BAM: 'KM',
+  BBD: '$',
+  BDT: '৳',
+  BHD: 'BHD',
+  BIF: 'BIF',
+  BMD: '$',
+  BND: '$',
+  BOB: 'Bs',
+  BOV: 'BOV',
+  BRL: 'R$',
+  BSD: '$',
+  BTN: 'BTN',
+  BWP: 'P',
+  BYN: 'BYN',
+  BZD: '$',
+  CAD: '$',
+  CDF: 'CDF',
+  CHE: 'CHE',
+  CHF: 'CHF',
+  CHW: 'CHW',
+  CLF: 'CLF',
+  CLP: '$',
+  CNY: '¥',
+  COP: '$',
+  COU: 'COU',
+  CRC: '₡',
+  CUC: '$',
+  CUP: '$',
+  CVE: 'CVE',
+  CZK: 'Kč',
+  DJF: 'DJF',
+  DKK: 'kr',
+  DOP: '$',
+  DZD: 'DZD',
+  EGP: 'E£',
+  ERN: 'ERN',
+  ETB: 'ETB',
+  EUR: '€',
+  FJD: '$',
+  FKP: '£',
+  GBP: '£',
+  GEL: '₾',
+  GHS: 'GH₵',
+  GIP: '£',
+  GMD: 'GMD',
+  GNF: 'FG',
+  GTQ: 'Q',
+  GYD: '$',
+  HKD: '$',
+  HNL: 'L',
+  HTG: 'HTG',
+  HUF: 'Ft',
+  IDR: 'Rp',
+  ILS: '₪',
+  INR: '₹',
+  IQD: 'IQD',
+  IRR: 'IRR',
+  ISK: 'kr',
+  JMD: '$',
+  JOD: 'JOD',
+  JPY: '¥',
+  KES: 'KES',
+  KGS: '⃀',
+  KHR: '៛',
+  KMF: 'CF',
+  KPW: '₩',
+  KRW: '₩',
+  KWD: 'KWD',
+  KYD: '$',
+  KZT: '₸',
+  LAK: '₭',
+  LBP: 'L£',
+  LKR: 'Rs',
+  LRD: '$',
+  LSL: 'LSL',
+  LYD: 'LYD',
+  MAD: 'MAD',
+  MDL: 'MDL',
+  MGA: 'Ar',
+  MKD: 'MKD',
+  MMK: 'K',
+  MNT: '₮',
+  MOP: 'MOP',
+  MRU: 'MRU',
+  MUR: 'Rs',
+  MVR: 'MVR',
+  MWK: 'MWK',
+  MXN: '$',
+  MXV: 'MXV',
+  MYR: 'RM',
+  MZN: 'MZN',
+  NAD: '$',
+  NGN: '₦',
+  NIO: 'C$',
+  NOK: 'kr',
+  NPR: 'Rs',
+  NZD: '$',
+  OMR: 'OMR',
+  PAB: 'PAB',
+  PEN: 'PEN',
+  PGK: 'PGK',
+  PHP: '₱',
+  PKR: 'Rs',
+  PLN: 'zł',
+  PYG: '₲',
+  QAR: 'QAR',
+  RON: 'lei',
+  RSD: 'RSD',
+  RUB: '₽',
+  RWF: 'RF',
+  SAR: 'SAR',
+  SBD: '$',
+  SCR: 'SCR',
+  SDG: 'SDG',
+  SEK: 'kr',
+  SGD: '$',
+  SHP: '£',
+  SLE: 'SLE',
+  SOS: 'SOS',
+  SRD: '$',
+  SSP: '£',
+  STN: 'Db',
+  SVC: 'SVC',
+  SYP: '£',
+  SZL: 'SZL',
+  THB: '฿',
+  TJS: 'TJS',
+  TMT: 'TMT',
+  TND: 'TND',
+  TOP: 'T$',
+  TRY: '₺',
+  TTD: '$',
+  TWD: '$',
+  TZS: 'TZS',
+  UAH: '₴',
+  UGX: 'UGX',
+  USD: '$',
+  USN: 'USN',
+  UYI: 'UYI',
+  UYU: '$',
+  UZS: 'UZS',
+  VED: 'VED',
+  VEF: 'Bs',
+  VND: '₫',
+  VUV: 'VUV',
+  WST: 'WST',
+  XAF: 'FCFA',
+  XCD: '$',
+  XCG: 'Cg.',
+  XDR: 'XDR',
+  XOF: 'F CFA',
+  XPF: 'CFPF',
+  XSU: 'XSU',
+  XUA: 'XUA',
+  YER: 'YER',
+  ZAR: 'R',
+  ZMW: 'ZK',
+  ZWL: 'ZWL',
+} as const;
+
+export type Iso4217CurrencyCode = keyof typeof CURRENCY_ISO_SYMBOL;
+
+export const ISO_4217_CURRENCY_CODES = Object.keys(
+  CURRENCY_ISO_SYMBOL,
+).sort() as Iso4217CurrencyCode[];
 
 export const closerConfig = {
   PLATFORM_NAME: 'Closer',
   APP_NAME: 'closer',
   GA_ANALYTICS: false,
   FB_DOMAIN_VERIFICATION: false,
-  PLATFORM_LEGAL_ADDRESS: 'TBD, Portugal',
+  PLATFORM_LEGAL_ADDRESS:
+    'OASA Verein, Industriestrasse 47, c/o Juris Services AG, 6300 Zug, Switzerland',
   DEFAULT_TITLE: 'The operating system for regenerative communities',
   SEMANTIC_URL: 'https://dev.closer.earth',
   TEAM_EMAIL: 'team@closer.earth',
@@ -13,31 +192,50 @@ export const closerConfig = {
   EXPOSE_STORE: true,
   NEWSLETTER: false,
   CACHE_DURATION: 6000000, // 1h
-  LOGO_HEADER: '/images/logo.png',
   FACEBOOK_URL: 'https://instagram.com/closerearth',
   INSTAGRAM_URL: 'https://instagram.com/closerearth',
   DISCORD_URL: 'https://discord.gg/A5WFMwPRaK',
   TWITTER_URL: 'https://twitter.com/closerearth',
   TELEGRAM_URL: 'https://t.me/closerearth',
   GOVERNANCE_URL: 'https://snapshot.org/#/traditionaldreamfactory.eth',
-  // Set which roles are permitted to do certain actions
-  PERMISSIONS: {
-    event: {
-      create: 'event-creator',
-    },
-    booking: {
-      create: 'member',
-    },
-  },
 
-  TOKEN_PRICE: 230.23,
-  SOURCE_TOKEN: 'CEUR',
+  TOKEN_PRICE: 259.44,
+  SOURCE_TOKEN: 'EURm',
 };
 
 export const configDescription: ConfigType[] = [
   /* in closer repo
     These are all the configs that exist within the platform
      */
+  {
+    slug: 'citizenship',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      isSpaceHostVouchRequired: {
+        type: 'boolean',
+        default: true,
+      },
+      downPaymentPercent: {
+        type: 'number',
+        default: 10,
+      },
+      tokenPriceModifierPercent: {
+        type: 'number',
+        default: 5,
+      },
+      minVouches: {
+        type: 'number',
+        default: 3,
+      },
+      minVouchingStayDuration: {
+        type: 'number',
+        default: 14,
+      },
+    },
+  },
   {
     slug: 'booking',
     value: {
@@ -89,9 +287,17 @@ export const configDescription: ConfigType[] = [
         type: 'number',
         default: 1,
       },
+      maxBookingHorizon: {
+        type: 'number',
+        default: 180,
+      },
       volunteerCommitment: {
         type: 'text',
         default: '4h/day',
+      },
+      memberMinDuration: {
+        type: 'number',
+        default: 3,
       },
       memberMaxDuration: {
         type: 'number',
@@ -100,14 +306,6 @@ export const configDescription: ConfigType[] = [
       memberMaxBookingHorizon: {
         type: 'number',
         default: 365,
-      },
-      guestMaxDuration: {
-        type: 'number',
-        default: 31,
-      },
-      guestMaxBookingHorizon: {
-        type: 'number',
-        default: 90,
       },
       discountsDaily: {
         type: 'number',
@@ -153,6 +351,14 @@ export const configDescription: ConfigType[] = [
         type: 'boolean',
         default: false,
       },
+      chatLink: {
+        type: 'text',
+        default: '',
+      },
+      friendsBookingMaxGuests: {
+        type: 'number',
+        default: 1,
+      },
     },
   },
   {
@@ -169,14 +375,15 @@ export const configDescription: ConfigType[] = [
             title: 'text',
             emoji: 'text',
             description: 'text',
-            priceId: 'text',
-            tier: 'number',
-            monthlyCredits: 'number',
             price: 'number',
-            perks: 'text',
             billingPeriod: 'text',
+            monthlyCredits: 'number',
+            tier: 'number',
+            perks: 'long-text',
             available: 'boolean',
             tiersAvailable: 'boolean',
+            priceId: 'readonly-text',
+            productId: 'readonly-text',
           },
         ],
         default: [
@@ -185,14 +392,15 @@ export const configDescription: ConfigType[] = [
             title: '',
             emoji: '',
             description: '',
-            priceId: '',
-            tier: 0,
-            monthlyCredits: 0,
             price: 0,
+            billingPeriod: 'month',
+            monthlyCredits: 0,
+            tier: 1,
             perks: '',
-            billingPeriod: '',
             available: true,
             tiersAvailable: false,
+            priceId: '',
+            productId: '',
           },
         ],
       },
@@ -221,6 +429,7 @@ export const configDescription: ConfigType[] = [
       },
     },
   },
+
   {
     slug: 'volunteering',
     value: {
@@ -262,52 +471,170 @@ export const configDescription: ConfigType[] = [
         type: 'boolean',
         default: false,
       },
-      creditPrice30Credits: {
+      amountRaisedPreCampaign: {
         type: 'number',
-        default: '50',
+        default: 0,
       },
-      creditPrice90Credits: {
+      loansCollectedTotal: {
         type: 'number',
-        default: '30',
+        default: 0,
       },
-      creditPrice180Credits: {
+      campaignVideo: {
+        type: 'text',
+        default: '',
+      },
+      campaignTitle: {
+        type: 'text',
+        default: 'Invest',
+      },
+      creditPricePerUnit: {
         type: 'number',
-        default: '20',
+        default: 30,
       },
-
-      videoId: {
+      adjustmentsLabel: {
         type: 'text',
-        default: 'btBqOboLdOg',
+        default: 'Commitments',
       },
-      wandererUrl: {
-        type: 'text',
-        default:
-          '/subscriptions/checkout?priceId=price_1N1YLVE9CDXOM807XtNAwiBW',
+      milestones: {
+        type: [
+          {
+            id: 'text',
+            title: 'text',
+            description: 'text',
+            items: 'long-text',
+            goal: 'number',
+            start: 'text',
+            end: 'text',
+            ctaUrl: 'text',
+          },
+        ],
+        default: [
+          {
+            id: 'milestone-1',
+            title: 'Buildings option exercise, architecture & engineering fees',
+            description:
+              'Execute secured option to buy signed in 2023 at €200k (asset expected to appraise at €1M).',
+            items: '',
+            goal: 236000,
+            start: '2025-12-01',
+            end: '2026-03-31',
+          },
+          {
+            id: 'milestone-2',
+            title: 'Solar roofs, pool completion',
+            description:
+              'Solar prices are raising. We have a special deal to buy panels at cost, and will stack functionality by turning our panels into an extra waterproofing layer over our roofs to avoid further rain dammage next year. Plus it includes €600+ energy income in the future as we establish a microgrid in Abela.',
+            items: '',
+            goal: 150000,
+            start: '2026-03-31',
+            end: '2026-06-01',
+          },
+          {
+            id: 'milestone-3',
+            title:
+              'Industrial kitchen, 30 seat restaurant & 4 creative studios',
+            description:
+              'This milestone completes our legal restaurant with 30 seat, a core business driver for our operation - alongside 4 studios with natural light and workspace for artists-in-residence and workshops. We expect some bank or grant co-financing for this step.',
+            items: '',
+            goal: 150000,
+            start: '2026-06-01',
+            end: '2026-08-01',
+          },
+          {
+            id: 'milestone-4',
+            title: 'Co-living building',
+            description:
+              'Complete the 12 en-suite rooms, dorm, and 3-bedroom house for full capacity as a licensed coliving destination. This is the community co-budget - for a €750k build that we aim to finance via bank or grants.',
+            items: '',
+            goal: 150000,
+            start: '2026-08-01',
+            end: '2026-12-01',
+          },
+        ],
       },
-      pioneerUrl: {
-        type: 'text',
-        default:
-          '/subscriptions/checkout?priceId=price_1O7ddSE9CDXOM807UGJZ5TEP',
-      },
-      oneMonthSharedUrl: {
-        type: 'text',
-        default: 'https://buy.stripe.com/9AQcPH10w8rh0485ko',
-      },
-      oneMonthPrivateUrl: {
-        type: 'text',
-        default: 'https://buy.stripe.com/eVa7vneRm8rh048aEH',
-      },
-      buy5TdfUrl: {
-        type: 'text',
-        default: '/token/checkout?tokens=5',
-      },
-      buy10TdfUrl: {
-        type: 'text',
-        default: '/token/checkout?tokens=10',
-      },
-      hostEventUrl: {
-        type: 'text',
-        default: 'mailto: space@traditionaldreamfactory.com',
+      packages: {
+        type: [
+          {
+            type: {
+              type: 'select',
+              enum: ['tokens', 'loan', 'credits', 'subscribe'],
+            },
+            title: 'text',
+            description: 'text',
+            tokens: 'number',
+            bonus: 'text',
+            minAmount: 'text',
+            credits: 'number',
+            subscribeUrl: 'text',
+            ctaUrl: 'text',
+          },
+        ],
+        default: [
+          {
+            type: 'tokens',
+            title: 'First Step',
+            description: 'Start your regenerative journey with just 1 token.',
+            tokens: 1,
+            bonus: '',
+            minAmount: '',
+            credits: 0,
+            subscribeUrl: '',
+          },
+          {
+            type: 'tokens',
+            title: 'Supporter',
+            description:
+              'Support TDF and get meaningful access with 10 tokens.',
+            tokens: 10,
+            bonus: 'Free weekend stay',
+            minAmount: '',
+            credits: 0,
+            subscribeUrl: '',
+          },
+          {
+            type: 'tokens',
+            title: 'Aspiring Citizen',
+            description:
+              'Our most popular package - commit to 30 nights/year and unlock citizenship path.',
+            tokens: 30,
+            bonus: 'Free permaculture course',
+            minAmount: '',
+            credits: 0,
+            subscribeUrl: '',
+          },
+          {
+            type: 'loan',
+            title: 'Private Lender',
+            description:
+              'Provide a loan directly to TDF with attractive terms and real estate security.',
+            tokens: 0,
+            bonus: 'Annual investor gathering',
+            minAmount: '50K',
+            credits: 0,
+            subscribeUrl: '',
+          },
+          {
+            type: 'credits',
+            title: 'Pre-book 1 month stay',
+            description: 'Pre-purchase 30 credits for a one-month stay.',
+            tokens: 0,
+            bonus: '',
+            minAmount: '',
+            credits: 30,
+            subscribeUrl: '',
+          },
+          {
+            type: 'subscribe',
+            title: 'Monthly Support',
+            description: 'Subscribe to support us monthly.',
+            tokens: 0,
+            bonus: '',
+            minAmount: '',
+            credits: 0,
+            subscribeUrl:
+              '/subscriptions/checkout?priceId=price_1N1YLVE9CDXOM807XtNAwiBW',
+          },
+        ],
       },
     },
   },
@@ -349,6 +676,10 @@ export const configDescription: ConfigType[] = [
         type: 'text',
         default: 'tdf',
       },
+      logoHeader: {
+        type: 'image',
+        default: '/images/logo.png',
+      },
       platformName: {
         type: 'text',
         default: 'Traditional Dream Factory',
@@ -361,6 +692,35 @@ export const configDescription: ConfigType[] = [
         type: 'text',
         default:
           'Fábrica de Sonhos Tradicional, 7540-011, Abela, Santiago do Cacém, Portugal',
+      },
+      legalEntityName: {
+        type: 'text',
+        default: 'Traditional Dream Factory',
+      },
+      legalStreetAddress: {
+        type: 'text',
+        default: 'Fábrica de Sonhos Tradicional',
+      },
+      legalAddressLine2: {
+        type: 'text',
+        default: '',
+      },
+      legalPostalCode: {
+        type: 'text',
+        default: '7540-011',
+      },
+      legalCity: {
+        type: 'text',
+        default: 'Abela, Santiago do Cacém',
+      },
+      legalCountry: {
+        type: 'text',
+        default: 'Portugal',
+      },
+      country: {
+        type: 'select',
+        enum: [...ISO_COUNTRY_CODES_FOR_CONFIG],
+        default: 'PT',
       },
       teamEmail: {
         type: 'text',
@@ -378,6 +738,18 @@ export const configDescription: ConfigType[] = [
         type: 'text',
         default: 'https://twitter.com/traditionaldreamfactory',
       },
+      telegramUrl: {
+        type: 'text',
+        default: '',
+      },
+      discordUrl: {
+        type: 'text',
+        default: '',
+      },
+      governanceUrl: {
+        type: 'text',
+        default: '',
+      },
       locationLat: {
         type: 'text',
         default: '38.003164469592555',
@@ -393,11 +765,151 @@ export const configDescription: ConfigType[] = [
       },
       facebookPixelId: {
         type: 'text',
-        default: '761004479106346',
+        default: '',
       },
       faqsGoogleSheetId: {
         type: 'text',
         default: '1dlaVEfLwHAbXCwoiDGzUd3w8d7YYnGl5dbPDINKmRUg',
+      },
+      minVouchingStayDuration: {
+        type: 'number',
+        default: 14,
+      },
+      expenseCategories: {
+        type: 'text',
+        default:
+          'Legal & business, Land Infrastructure, Forestry, Tools & Machines, Maintenance, Operations, Energy, Factory, Miscellaneous, Lease, Equipment, Furniture, Water, Buildings Renovations, Shares, Experiment, Donations, Food, Salaries, Events, Stays, Internal op',
+      },
+      primaryCtaVisitor: {
+        type: 'select',
+        enum: [
+          'none',
+          'login',
+          'bookings',
+          'learningHub',
+          'events',
+          'application',
+          'custom',
+        ],
+        default: 'login',
+      },
+      primaryCtaMember: {
+        type: 'select',
+        enum: [
+          'none',
+          'bookings',
+          'learningHub',
+          'events',
+          'application',
+          'custom',
+        ],
+        default: 'bookings',
+      },
+      primaryCtaCustomUrl: {
+        type: 'text',
+        default: '',
+      },
+      primaryCtaCustomText: {
+        type: 'text',
+        default: '',
+      },
+    },
+  },
+  {
+    slug: 'applications',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      /** Label of the navigation button that opens the modal. */
+      ctaText: {
+        type: 'text',
+        default: 'Apply now',
+      },
+      eyebrow: {
+        type: 'text',
+        default: 'Get started',
+      },
+      title: {
+        type: 'text',
+        default: 'Apply to join',
+      },
+      description: {
+        type: 'text',
+        default: 'Tell us a little about yourself and we will get back to you.',
+      },
+      submitButtonText: {
+        type: 'text',
+        default: 'Send application',
+      },
+      disclaimer: {
+        type: 'text',
+        default: '',
+      },
+      successTitle: {
+        type: 'text',
+        default: 'Thank you!',
+      },
+      successMessage: {
+        type: 'text',
+        default: 'We read every application. Expect a reply within a few days.',
+      },
+      /**
+       * The questions the applicant is asked. `name` is the key the answer is
+       * stored under — `name`, `email` and `phone` map to the columns of the
+       * application model, anything else lands on `application.fields`.
+       */
+      fields: {
+        type: [
+          {
+            name: 'text',
+            label: 'text',
+            type: {
+              type: 'select',
+              enum: [
+                'text',
+                'longtext',
+                'email',
+                'phone',
+                'number',
+                'url',
+                'date',
+                'select',
+                'country',
+              ],
+            },
+            options: 'text',
+            placeholder: 'text',
+            required: 'boolean',
+          },
+        ],
+        default: [
+          {
+            name: 'name',
+            label: 'Your name',
+            type: 'text',
+            options: '',
+            placeholder: 'Jane Doe',
+            required: true,
+          },
+          {
+            name: 'email',
+            label: 'Your email',
+            type: 'email',
+            options: '',
+            placeholder: 'jane@example.com',
+            required: true,
+          },
+          {
+            name: 'communitySize',
+            label: 'How big is your community?',
+            type: 'select',
+            options: '1-15 people, 15-50 people, 51-150 people, 150+ people',
+            placeholder: '',
+            required: false,
+          },
+        ],
       },
     },
   },
@@ -416,6 +928,16 @@ export const configDescription: ConfigType[] = [
         type: 'boolean',
         default: false,
       },
+      fiatCur: {
+        type: 'select',
+        enum: [...ISO_4217_CURRENCY_CODES],
+        default: 'EUR',
+      },
+      utilityFiatCur: {
+        type: 'select',
+        enum: [...ISO_4217_CURRENCY_CODES],
+        default: 'EUR',
+      },
       polygonWalletAddress: {
         type: 'text',
         default: '',
@@ -431,11 +953,277 @@ export const configDescription: ConfigType[] = [
     },
   },
   {
+    slug: 'web3',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      reserveToken: {
+        type: 'text',
+        default: 'cEUR',
+      },
+      gasToken: {
+        type: 'text',
+        default: 'CELO',
+      },
+      bookingToken: {
+        type: 'text',
+        default: 'TDF',
+      },
+      maxSupply: {
+        type: 'number',
+        default: 0,
+      },
+    },
+  },
+  {
     slug: 'learningHub',
     value: {
       enabled: {
         type: 'boolean',
         default: true,
+      },
+    },
+  },
+  {
+    slug: 'affiliate',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      tokenSaleCommissionPercent: {
+        type: 'number',
+        default: 3,
+      },
+      financedTokenSaleCommissionPercent: {
+        type: 'number',
+        default: 3,
+      },
+      subscriptionCommissionPercent: {
+        type: 'number',
+        default: 30,
+      },
+      staysCommissionPercent: {
+        type: 'number',
+        default: 10,
+      },
+      eventsCommissionPercent: {
+        type: 'number',
+        default: 10,
+      },
+      productsCommissionPercent: {
+        type: 'number',
+        default: 10,
+      },
+    },
+  },
+  {
+    slug: 'webinar',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      isDayOfMonth: {
+        type: 'boolean',
+        default: false,
+      },
+      dayOfMonth: {
+        type: 'number',
+        default: 1,
+      },
+      weekDay: {
+        type: 'select',
+        enum: [
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+          'Sunday',
+        ],
+      },
+      weekPosition: {
+        type: 'select',
+        enum: ['First', 'Second', 'Third', 'Fourth', 'Last'],
+      },
+      time: {
+        type: 'time',
+        default: '10:00',
+      },
+    },
+  },
+  {
+    slug: 'newsletter',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: true,
+      },
+      substackUrl: {
+        type: 'text',
+        default: '',
+      },
+    },
+  },
+  {
+    slug: 'photo-gallery',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      photoIds: {
+        type: ['text'],
+        default: [],
+      },
+    },
+  },
+  {
+    slug: 'accounting-entities',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      elements: {
+        type: [
+          {
+            legalName: 'text',
+            taxNumber: 'text',
+            iban: 'text',
+            address: 'text',
+            accountingDescription: 'text',
+            products: {
+              type: 'multiselect',
+              enum: [...ACCOUNTING_ENTITY_PRODUCT_SLUGS],
+            },
+          },
+        ],
+        default: [
+          {
+            legalName: '',
+            taxNumber: '',
+            iban: '',
+            address: '',
+            products: [],
+            accountingDescription: 'Formação Profissional',
+          },
+        ],
+      },
+      vatByProductType: {
+        type: 'vat-by-product-type',
+        default: {},
+      },
+    },
+  },
+  {
+    slug: 'governance',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      quorumPercent: {
+        type: 'number',
+        default: 10,
+      },
+    },
+  },
+  {
+    slug: 'events',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: true,
+      },
+    },
+  },
+  {
+    slug: 'cohousing',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+    },
+  },
+  {
+    slug: 'engagement',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: true,
+      },
+      ctaLink: {
+        type: 'text',
+        default: '',
+      },
+      ctaText: {
+        type: 'text',
+        default: '',
+      },
+    },
+  },
+  {
+    slug: 'airdrop',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      description: {
+        type: 'text',
+        default:
+          'Reward community members with token airdrops for participation.',
+      },
+    },
+  },
+  {
+    slug: 'blog',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: true,
+      },
+    },
+  },
+  {
+    slug: 'courses',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: true,
+      },
+    },
+  },
+  {
+    slug: 'referral',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+    },
+  },
+  {
+    slug: 'community',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+    },
+  },
+  {
+    slug: 'roles',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
       },
     },
   },

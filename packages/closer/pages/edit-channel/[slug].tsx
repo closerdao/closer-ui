@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import EditModel from '../../components/EditModel';
+import EditModel, { EditModelPageLayout } from '../../components/EditModel';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
@@ -9,7 +9,6 @@ import { useTranslations } from 'next-intl';
 import models from '../../models';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 interface Props {
   channel: any;
@@ -32,7 +31,11 @@ const EditChannel = ({ channel }: Props) => {
       <Head>
         <title>{`${t('edit_channel_title')} - ${channel.name}`}</title>
       </Head>
-      <div className="main-content w-full">
+      <EditModelPageLayout
+        title={`${t('edit_channel_title')} ${channel.name}`}
+        backHref={`/channel/${channel.slug}`}
+        isEdit
+      >
         <EditModel
           id={channel._id}
           endpoint={'/channel'}
@@ -43,9 +46,9 @@ const EditChannel = ({ channel }: Props) => {
           }
           allowDelete
           deleteButton="Delete Channel"
-          onDelete={() => (window.location.href = '/community')}
+          onDelete={() => (window.location.href = '/social')}
         />
-      </div>
+      </EditModelPageLayout>
     </>
   );
 };
@@ -57,15 +60,12 @@ EditChannel.getInitialProps = async (context: NextPageContext) => {
       throw new Error('No channel');
     }
 
-    const [channelRes, messages] = await Promise.all([
-      api.get(`/channel/${query.slug}`).catch(() => {
+    const channelRes = await api.get(`/channel/${query.slug}`).catch(() => {
         return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+      })
     const channel = channelRes?.data?.results;
 
-    return { channel, messages };
+    return { channel };
   } catch (err) {
     return {
       error: parseMessageFromError(err),

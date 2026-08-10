@@ -2,6 +2,7 @@ import Head from 'next/head';
 
 import { FormEvent, useState } from 'react';
 
+import TurnstileWidget from '../../components/TurnstileWidget';
 import { Button, ErrorMessage, Input } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
@@ -9,18 +10,18 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import api from '../../utils/api';
-import { loadLocaleData } from '../../utils/locale.helpers';
 
 const ForgotPasswordScreen = () => {
   const t = useTranslations();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [isResetCompleted, setIsResetCompleted] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const requestPasswordReset = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/reset-password', { email });
+      await api.post('/reset-password', { email, turnstileToken });
       setIsResetCompleted(true);
     } catch (err: any) {
       setError(err.response?.data?.error || err.message);
@@ -49,13 +50,19 @@ const ForgotPasswordScreen = () => {
             >
               <Input
                 label={t('login_forgot_password_email')}
+                placeholder={t('signup_form_email_placeholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
 
               {error && <ErrorMessage error={error} />}
 
-              <Button>{t('login_forgot_password_submit')}</Button>
+              <TurnstileWidget
+                action="forgot_password"
+                onVerify={setTurnstileToken}
+              />
+
+              <Button isEnabled={!!turnstileToken}>{t('login_forgot_password_submit')}</Button>
             </form>
           )}
         </section>
@@ -66,17 +73,11 @@ const ForgotPasswordScreen = () => {
 
 ForgotPasswordScreen.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
-      messages,
     };
   } catch (err: unknown) {
     return {
-      messages: null,
-    };
+      };
   }
 };
 

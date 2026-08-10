@@ -5,6 +5,7 @@
     "**/*.ts",
     "**/*.tsx",
     "pages/index.tsx",
+    "types/**/*.d.ts",
     "../../packages/closer/components/LessonDescription/locales.config.ts"
   ],
   "exclude": ["node_modules"],

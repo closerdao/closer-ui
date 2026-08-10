@@ -11,9 +11,9 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
-import api from '../../utils/api';
+import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
+import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import PageNotFound from '../not-found';
 
 interface Props {
@@ -29,7 +29,7 @@ const AllBookingsRequestsPage = ({ bookingConfig }: Props) => {
   const { user } = useAuth();
 
   const defaultWhere = {
-    status: { $ne: 'open' },
+    status: { $nin: ['open', 'draft'] },
   };
 
   const [filter, setFilter] = useState({
@@ -42,7 +42,7 @@ const AllBookingsRequestsPage = ({ bookingConfig }: Props) => {
   }
 
   if (!isBookingEnabled) {
-    return <PageNotFound />;
+    return <FeatureNotEnabled feature="booking" />;
   }
 
   return (
@@ -52,17 +52,19 @@ const AllBookingsRequestsPage = ({ bookingConfig }: Props) => {
       </Head>
 
       <AdminLayout>
-        <div className="max-w-screen-xl flex flex-col gap-10">
-          <Heading level={1}>{t('booking_requests_title_all')}</Heading>
-          <BookingsFilter
-            setFilter={setFilter}
-            page={page}
-            setPage={setPage}
-            defaultWhere={defaultWhere}
-          />
-
-          <Bookings filter={filter} setPage={setPage} page={page} />
-        </div>
+        <Heading level={2}>{t('booking_requests_title_all')}</Heading>
+        <BookingsFilter
+          setFilter={setFilter}
+          page={page}
+          setPage={setPage}
+          defaultWhere={defaultWhere}
+        />
+        <Bookings
+          filter={filter}
+          setPage={setPage}
+          page={page}
+          bookingConfig={bookingConfig}
+        />
       </AdminLayout>
     </>
   );
@@ -70,15 +72,10 @@ const AllBookingsRequestsPage = ({ bookingConfig }: Props) => {
 
 AllBookingsRequestsPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [bookingRes, messages] = await Promise.all([
-      api.get('/config/booking').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
 
-    const bookingConfig = bookingRes?.data?.results?.value;
+    const bookingConfig = config.booking;
     return {
       bookingConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {

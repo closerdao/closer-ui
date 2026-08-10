@@ -8,9 +8,9 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
-import api from '../../utils/api';
+import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
+import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import PageNotFound from '../not-found';
 
 interface Props {
@@ -34,7 +34,7 @@ const CurrentBookings = ({ bookingConfig }: Props) => {
   }
 
   if (!isBookingEnabled) {
-    return <PageNotFound />;
+    return <FeatureNotEnabled feature="booking" />;
   }
 
   return (
@@ -47,7 +47,11 @@ const CurrentBookings = ({ bookingConfig }: Props) => {
         <div className="max-w-screen-xl flex flex-col gap-10">
           <Heading level={1}>{t('current_bookings_title')}</Heading>
 
-          <CurrentBooking leftAfter={threeDaysAgo} arriveBefore={inSevenDays} />
+          <CurrentBooking
+            leftAfter={threeDaysAgo}
+            arriveBefore={inSevenDays}
+            bookingConfig={bookingConfig}
+          />
         </div>
       </AdminLayout>
     </>
@@ -56,15 +60,10 @@ const CurrentBookings = ({ bookingConfig }: Props) => {
 
 CurrentBookings.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [bookingRes, messages] = await Promise.all([
-      api.get('/config/booking').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
 
-    const bookingConfig = bookingRes?.data?.results?.value;
+    const bookingConfig = config.booking;
     return {
       bookingConfig,
-      messages,
     };
   } catch (err: unknown) {
     return {

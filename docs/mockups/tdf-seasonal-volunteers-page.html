@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seasonal Volunteers, Open Call — Traditional Dream Factory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink: #EE4C9C;
+    --pink-dark: #C9317C;
+    --pink-tint: #FDEBF4;
+    --ink: #0D0D0D;
+    --muted: #565656;
+    --rule: #E4E4E4;
+    --sand: #F6F4F0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Barlow', system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: #fff;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 0 24px 96px; }
+  .hero {
+    height: 340px;
+    margin: 24px 0 32px;
+    background: var(--sand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9A9A9A;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .eyebrow svg { width: 17px; height: 17px; }
+  .titlerow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+  h1 {
+    font-weight: 900;
+    font-size: clamp(34px, 5.6vw, 54px);
+    line-height: 1.02;
+    letter-spacing: -0.015em;
+    margin: 0;
+    max-width: 16ch;
+  }
+  .btn {
+    display: inline-block;
+    background: var(--pink);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 999px;
+    padding: 15px 52px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    transition: background 140ms ease;
+  }
+  .btn:hover { background: var(--pink-dark); }
+  .btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+  p { margin: 0 0 18px; max-width: 68ch; }
+  h2 {
+    font-weight: 900;
+    font-size: 26px;
+    letter-spacing: -0.01em;
+    margin: 56px 0 20px;
+  }
+  .seasons { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 32px 0 8px; }
+  .season { background: var(--sand); padding: 22px 24px; }
+  .season span { display: block; font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .season strong { display: block; font-weight: 900; font-size: 22px; line-height: 1.2; margin-top: 6px; }
+  .item { border-top: 1px solid var(--rule); padding: 24px 0; }
+  .item:last-of-type { border-bottom: 1px solid var(--rule); }
+  .item h3 { font-weight: 900; font-size: 19px; margin: 0 0 8px; }
+  .item p { color: var(--muted); margin: 0; }
+  .item p + p { margin-top: 12px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  .tag { background: var(--pink-tint); color: var(--pink-dark); font-size: 14px; font-weight: 600; padding: 6px 14px; border-radius: 999px; }
+  .flag { border-left: 4px solid var(--pink); padding-left: 20px; }
+  .skills { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+  .skill { background: #fff; padding: 22px 24px; }
+  .skill strong { display: block; font-weight: 900; font-size: 17px; }
+  .skill span { display: block; color: var(--muted); font-size: 15px; margin-top: 2px; }
+  .links { background: var(--sand); padding: 30px 32px; margin-top: 56px; }
+  .links h3 { font-weight: 900; font-size: 19px; margin: 0 0 14px; }
+  .links a { color: var(--pink-dark); font-weight: 600; text-decoration: none; border-bottom: 1px solid currentColor; }
+  .links a:hover { color: var(--ink); }
+  .links li { margin-bottom: 10px; }
+  .links ul { margin: 0; padding-left: 20px; }
+  .footer { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-top: 48px; }
+  .footer p { color: var(--muted); font-size: 16px; margin: 0; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">Hero image, greenhouse and nursery</div>
+
+  <div class="eyebrow">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+    Spring and fall seasons, Abela, Alentejo
+  </div>
+
+  <div class="titlerow">
+    <h1>Seasonal Volunteers, Open Call</h1>
+    <a class="btn" href="#apply">Apply</a>
+  </div>
+
+  <p>We are excited to invite volunteers to join us through our seasons at the Traditional Dream Factory, supporting every area of the regenerative farm and co-living development in Abela, Alentejo, Portugal.</p>
+
+  <p>We are looking for enthusiastic individuals who are interested in living, learning, and contributing to a vibrant and growing community based on respect for the land and each other. As a volunteer at TDF, you will have the chance to participate in a variety of activities, events, and workshops happening throughout the season.</p>
+
+  <div class="seasons">
+    <div class="season"><span>Spring season</span><strong>February to end of June</strong></div>
+    <div class="season"><span>Fall season</span><strong>September to end of November</strong></div>
+  </div>
+
+  <h2>What to know before applying</h2>
+
+  <div class="item">
+    <h3>Volunteering is rooted in genuine contribution</h3>
+    <p>TDF is a living, working regenerative project, and the energy and care people bring here is what keeps it alive. We welcome volunteers who are excited to roll up their sleeves and actively participate in the work of regeneration, whether that is in the garden, the kitchen, or hospitality. This is not a place to escape or to stay cheaply. It is a place to show up fully for the vision of a bigger, brighter future.</p>
+  </div>
+
+  <div class="item">
+    <h3>Minimum stay of four weeks</h3>
+    <p>This allows enough time to truly settle in, find your rhythm with the community, and make a meaningful contribution to the work here. Shorter stays do not give enough space for the kind of depth and trust that makes the experience worthwhile, for you, for us, and for the land.</p>
+  </div>
+
+  <div class="item">
+    <h3>Arrivals are on Tuesday mornings</h3>
+    <p>New volunteers always arrive on Tuesday morning for an onboarding session, followed by a landing circle. Please plan your travel around this.</p>
+  </div>
+
+  <div class="item">
+    <h3>Daily contribution</h3>
+    <p>A daily contribution helps keep everything running. We ask volunteers for 14 euros a day for food and 4 euros a day for utilities, VAT included. In return for your work hours you receive a dorm bed or a camper van spot, and you will be fed really well: abundant, nourishing meals made with quality ingredients from our garden, plus specialty teas and coffee. Food is one of our love languages here and a big part of our culture.</p>
+    <div class="tags">
+      <span class="tag">14 euros per day, food</span>
+      <span class="tag">4 euros per day, utilities</span>
+      <span class="tag">18 euros per day total, VAT included</span>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="flag">
+      <h3>Portuguese wage earners</h3>
+      <p>We know the cost of living keeps climbing here, and we want to make it possible for more people from this land to stay with us. If you are living in Portugal on a genuinely low Portuguese income, write to us before you apply and we will find an arrangement that works.</p>
+    </div>
+  </div>
+
+  <div class="item">
+    <h3>Working hours are 9am to 1pm, daily</h3>
+    <p>We keep to this schedule. The day starts with a playful 9am stand-up where we decide on the tasks together. These hours are not flexible, because they hold the group flow in the mornings. If you have morning meetings or commitments, this may not be the right opportunity for you right now.</p>
+  </div>
+
+  <div class="item">
+    <h3>Coming with children</h3>
+    <p>If you are coming with children, please ask the space host about whether this can be organised in parallel with volunteering.</p>
+  </div>
+
+  <div class="item">
+    <h3>From volunteer to resident</h3>
+    <p>Full work exchanges, which we call residencies, are for specific skilled roles and require a one to three month full-time commitment. Anyone hoping to become a resident at TDF must first complete a four week volunteer stay, so we can get to know each other.</p>
+  </div>
+
+  <div class="item">
+    <h3>Rituals and community life</h3>
+    <p>Our volunteer program offers insight into the weekly rituals of our community, with sharing spaces for deep listening, community care, and co-created workshops and skill swaps.</p>
+  </div>
+
+  <h2>Skills and qualifications that can support us</h2>
+  <div class="skills">
+    <div class="skill"><strong>Gardening</strong><span>Syntropic beds, nursery, care</span></div>
+    <div class="skill"><strong>Hospitality</strong><span>Guest care, spaces, events</span></div>
+    <div class="skill"><strong>Kitchen and cooking</strong><span>Three meals a day, together</span></div>
+    <div class="skill"><strong>Building projects</strong><span>Natural build, carpentry</span></div>
+    <div class="skill"><strong>Mushroom farm</strong><span>Substrate, flushes, harvest</span></div>
+    <div class="skill"><strong>Marketing and content</strong><span>Social media, photo, video</span></div>
+  </div>
+
+  <div class="links">
+    <h3>Before you apply</h3>
+    <ul>
+      <li><a href="#">Read the Pink Paper</a></li>
+      <li><a href="#">Read the visitors guide</a></li>
+      <li>Any specific questions, write to the space host at <a href="#">space@traditionaldreamfactory.com</a></li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    <p>Applying opens the volunteer application form.</p>
+    <a class="btn" id="apply" href="#">Apply</a>
+  </div>
+
+</div>
+</body>
+</html>

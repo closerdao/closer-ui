@@ -7,7 +7,7 @@ interface Props {
   isVolunteer?: boolean;
 }
 
-const EventDescription: FC<Props> = ({ event, isVolunteer = false }) => {
+const EventDescription: FC<Props> = ({ event }) => {
   const [initialRenderComplete, setInitialRenderComplete] = useState(false);
 
   // This useEffect is needed to fix next js hydration issue
@@ -18,8 +18,8 @@ const EventDescription: FC<Props> = ({ event, isVolunteer = false }) => {
   return (
     <section className="mb-6 flex flex-col gap-6">
       {initialRenderComplete && (
-        <p
-          className="rich-text"
+        <div
+          className="rich-text word-break overflow-hidden"
           dangerouslySetInnerHTML={{ __html: event.description }}
         />
       )}

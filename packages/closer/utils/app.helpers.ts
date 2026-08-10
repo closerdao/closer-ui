@@ -1,8 +1,30 @@
+import { configDescription } from '../config';
+import { getDefaultConfigValue } from './config.utils';
+import { syncCurrencyLocaleFromCountryCode } from './currencyFormat';
+
 interface InputObject {
   [key: string]: {
     label: string;
     value: string | number;
   };
+}
+
+export function mergeGeneralConfigWithDefaults(
+  apiValue: Record<string, unknown> | null | undefined,
+): Record<string, unknown> {
+  const defaults = getDefaultConfigValue('general', configDescription);
+  if (!apiValue || typeof apiValue !== 'object') return defaults;
+  return Object.assign({}, defaults, apiValue);
+}
+
+export function applyCurrencyLocaleFromGeneralConfig(
+  general: Record<string, unknown> | null | undefined,
+): void {
+  syncCurrencyLocaleFromCountryCode(
+    general && typeof general === 'object'
+      ? (general.country as string | undefined)
+      : undefined,
+  );
 }
 
 export function prepareGeneralConfig(
@@ -19,4 +41,10 @@ export function prepareGeneralConfig(
   });
 
   return result;
+}
+
+export function twitterUrlToHandle(url: string | undefined): string {
+  if (!url || typeof url !== 'string') return '';
+  const match = url.match(/(?:twitter\.com|x\.com)\/([^/?]+)/i);
+  return match ? `@${match[1]}` : '';
 }

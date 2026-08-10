@@ -1,6 +1,6 @@
 import ReactGA from 'react-ga';
 
-import { ObjectId } from 'bson';
+import { ObjectId } from './bsonObjectId';
 import dayjs from 'dayjs';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
 import duration from 'dayjs/plugin/duration';
@@ -10,6 +10,13 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { blockchainConfig } from '../config_blockchain';
 import { DEFAULT_CURRENCY, REFUND_PERIODS } from '../constants';
 import { PaymentType } from '../types';
+import {
+  formatIntlNumberTwoDecimals,
+  formatIsoFiatAmount,
+  getDefaultCurrencyLocale,
+  isIso4217Currency,
+  roundToTwoDecimals,
+} from './currencyFormat';
 
 dayjs.extend(localizedFormat);
 dayjs.extend(relativeTime);
@@ -81,47 +88,103 @@ export const getTimeDetails = (eventTime) => {
 };
 
 export const priceFormat = (price, currency = DEFAULT_CURRENCY) => {
+  const loc = getDefaultCurrencyLocale();
   if (currency === 'credits') {
-    return `${price} ${currency}`;
+    const v = roundToTwoDecimals(
+      typeof price === 'number' ? price : Number(price),
+    );
+    return `${formatIntlNumberTwoDecimals(v, loc)} credits`;
   }
   if (price?.cur && price.cur === 'credits') {
-    return `${price.val} ${price.cur}`;
+    const v = roundToTwoDecimals(Number(price.val));
+    return `${formatIntlNumberTwoDecimals(v, loc)} ${price.cur}`;
   }
   if (price?.val === null) {
-    return parseFloat(0).toLocaleString('en-US', {
+    const cur = currency || DEFAULT_CURRENCY;
+    if (isIso4217Currency(cur)) {
+      return formatIsoFiatAmount(0, cur);
+    }
+    return new Intl.NumberFormat(loc, {
       style: 'currency',
-      currency,
-    });
+      currency: cur,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(0);
   }
   if (!currency) {
     currency = DEFAULT_CURRENCY;
   }
   if (typeof price === 'number') {
-    return parseFloat(price).toLocaleString('en-US', {
+    const n = roundToTwoDecimals(parseFloat(price));
+    if (isIso4217Currency(currency)) {
+      return formatIsoFiatAmount(n, currency);
+    }
+    return new Intl.NumberFormat(loc, {
       style: 'currency',
       currency,
-    });
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(n);
   } else if (price?.get && typeof price.get('val') !== 'undefined') {
-    return parseFloat(price.get('val')).toLocaleString('en-US', {
+    const priceValue = roundToTwoDecimals(parseFloat(price.get('val')));
+    const curFromGet = price.get('cur');
+    if (isIso4217Currency(curFromGet)) {
+      return formatIsoFiatAmount(priceValue, curFromGet);
+    }
+    return new Intl.NumberFormat(loc, {
       style: 'currency',
-      currency: price.get('cur'),
-    });
+      currency: curFromGet,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(priceValue);
   } else if (typeof price?.val !== 'undefined') {
-    const priceValue = parseFloat(price.val);
+    const priceValue = roundToTwoDecimals(parseFloat(price.val));
+    const effectiveCur = price.cur || currency;
+    const tokenCurrencies = ['TDF', 'ETH'];
+    if (tokenCurrencies.includes(effectiveCur)) {
+      return `${formatIntlNumberTwoDecimals(priceValue, loc)} ${effectiveCur}`;
+    }
     if (price.cur === BLOCKCHAIN_DAO_TOKEN.symbol) {
-      return new Intl.NumberFormat('en-US', {
+      return new Intl.NumberFormat(loc, {
         style: 'currency',
         currency: BLOCKCHAIN_DAO_TOKEN.symbol,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
       })
         .formatToParts(priceValue)
-        .map((v, i) => (i === 0 ? '$' + v.value : v.value));
+        .map((v, i) => (i === 0 ? '$' + v.value : v.value))
+        .join('');
     }
-    return priceValue.toLocaleString('en-US', {
+    if (isIso4217Currency(effectiveCur)) {
+      return formatIsoFiatAmount(priceValue, effectiveCur);
+    }
+    return new Intl.NumberFormat(loc, {
       style: 'currency',
-      currency: price.cur || currency,
-    });
+      currency: effectiveCur,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(priceValue);
   } else {
-    return '0.00';
+    const effectiveCur = price?.cur || currency;
+    const tokenCurrencies = ['TDF', 'ETH'];
+    if (effectiveCur && tokenCurrencies.includes(effectiveCur)) {
+      return `${formatIntlNumberTwoDecimals(0, loc)} ${effectiveCur}`;
+    }
+    if (price?.cur && isIso4217Currency(price.cur)) {
+      return formatIsoFiatAmount(0, price.cur);
+    }
+    const fallbackCur = currency || 'EUR';
+    if (isIso4217Currency(fallbackCur)) {
+      return formatIsoFiatAmount(0, fallbackCur);
+    }
+    return price?.cur
+      ? `${formatIntlNumberTwoDecimals(0, loc)} ${price.cur}`
+      : new Intl.NumberFormat(loc, {
+          style: 'currency',
+          currency: fallbackCur,
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(0);
   }
 };
 
@@ -145,6 +208,7 @@ export const getSample = (field) => {
   switch (field.type) {
     case 'text':
     case 'longtext':
+    case 'textarea':
     case 'email':
     case 'phone':
       return '';
@@ -164,6 +228,7 @@ export const getSample = (field) => {
     case 'switch':
       return false;
     case 'datetime':
+    case 'photo':
       return null;
     case 'ticketOptions':
       return [
@@ -191,6 +256,8 @@ export const getSample = (field) => {
       ];
     case 'select':
       return field.options && field.options[0] && field.options[0].value;
+    case 'multi-select':
+      return [];
     case 'autocomplete':
     case 'currencies':
       return [
@@ -199,6 +266,10 @@ export const getSample = (field) => {
           val: 0,
         },
       ];
+    case 'learnEditor':
+      return [];
+    case 'note':
+      return undefined;
     default:
       throw new Error(`Invalid model type:${field.type}`);
   }
@@ -212,7 +283,6 @@ export const calculateRefundTotal = ({
   startDate,
   paymentType,
 }) => {
-
   const { default: defaultRefund, lastmonth, lastweek, lastday } = policy || {};
   const bookingStartDate = dayjs(startDate);
 
@@ -309,10 +379,9 @@ export const formatCurrency = (currency) => {
   return `${symbol[currency]} ${currency}`;
 };
 
-
 export const getVatInfo = (total, vatRate) => {
   if (vatRate) {
-    const vatAmount = total?.val * Number(vatRate) / (1 + Number(vatRate) );
+    const vatAmount = (total?.val * Number(vatRate)) / (1 + Number(vatRate));
     return `${priceFormat(vatAmount, total?.cur)}
     (${Number(vatRate) * 100}%)`;
   }
@@ -351,6 +420,35 @@ const doesRegexMatch = (value, validation) => {
 
 export const isInputValid = (value, validation) => {
   return doesRegexMatch(value, validation);
+};
+
+export const validatePassword = (password) => {
+  if (!password || typeof password !== 'string') {
+    return { isValid: false, error: 'Password must be a string' };
+  }
+
+  if (password.length < 5) {
+    return {
+      isValid: false,
+      error: 'Password must be at least 5 characters long',
+    };
+  }
+
+  if (!/\d/.test(password)) {
+    return {
+      isValid: false,
+      error: 'Password must contain at least one number (0-9)',
+    };
+  }
+
+  if (!/[a-zA-Z]/.test(password)) {
+    return {
+      isValid: false,
+      error: 'Password must contain at least one letter (a-z or A-Z)',
+    };
+  }
+
+  return { isValid: true, error: null };
 };
 
 export const doesAddressMatchPattern = (value, validation) => {
@@ -425,7 +523,7 @@ export const getMaxBookingHorizon = (settings, isMember) => {
     if (isMember) {
       return [settings.memberMaxBookingHorizon, settings.memberMaxDuration];
     }
-    return [settings.guestMaxBookingHorizon, settings.guestMaxDuration];
+    return [settings.maxBookingHorizon, settings.maxDuration];
   }
   return [0, 0];
 };
@@ -470,14 +568,28 @@ export const calculateSubscriptionPrice = (plan, monthlyCredits) => {
   }
 
   if (!plan.tiersAvailable) {
-    return plan.price;
+    return Number(plan.price);
   }
 
   if (plan.tiersAvailable) {
-    return plan.price * monthlyCredits;
+    return Number(plan.price) * monthlyCredits;
   }
 
   throw new Error(
     `Could not calculate subscription price for this amount of credits ${monthlyCredits}.`,
   );
 };
+
+export function withBoldStyle(phrase, boldPart) {
+  const startIndex = phrase.indexOf(boldPart);
+  const endIndex = startIndex + boldPart.length;
+  const preBold = phrase.slice(0, startIndex);
+  const bold = phrase.slice(startIndex, endIndex);
+  const postBold = phrase.slice(endIndex);
+  if (startIndex === -1) {
+    return phrase;
+  }
+  return [preBold, <b key="mid">{bold}</b>, postBold].filter(
+    (part) => part !== '',
+  );
+}

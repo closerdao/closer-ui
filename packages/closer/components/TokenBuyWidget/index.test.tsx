@@ -1,22 +1,40 @@
-import { screen, waitFor } from '@testing-library/react';
-import { renderWithProviders } from '../../test/utils';
+import { screen, waitFor, act } from '@testing-library/react';
 
-import TokenBuyWidget from '.';
+import TokenBuyWidget from './index';
+import { renderWithProviders } from '../../test/utils';
 
 describe('TokenBuyWidget', () => {
   const defaultTokensToBuy = 15;
+  const defaultTokensToSpend = 100;
   const defaultAccommodationPrice = 1;
 
-  it('should have correct inputs', () => {
-    renderWithProviders(
-      <TokenBuyWidget
-        tokensToBuy={defaultTokensToBuy}
-        setTokensToBuy={jest.fn()}
-      />,
-    );
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
+  });
+
+  it('should have correct inputs', async () => {
+    await act(async () => {
+      renderWithProviders(
+        <TokenBuyWidget
+          tokensToBuy={defaultTokensToBuy}
+          setTokensToBuy={jest.fn()}
+          tokensToSpend={defaultTokensToSpend}
+          setTokensToSpend={jest.fn()}
+        />,
+      );
+    });
+
+    await act(async () => {
+      jest.advanceTimersByTime(350);
+    });
 
     const tokensToBuyInput = screen.getByLabelText(/\$tdf/i);
-    const tokensToSellInput = screen.getByLabelText(/ceur/i);
+    const tokensToSellInput = screen.getByLabelText(/eur/i);
     expect(tokensToBuyInput).toBeInTheDocument();
     expect(tokensToSellInput).toBeInTheDocument();
   });
@@ -26,6 +44,8 @@ describe('TokenBuyWidget', () => {
       <TokenBuyWidget
         tokensToBuy={defaultTokensToBuy}
         setTokensToBuy={jest.fn()}
+        tokensToSpend={defaultTokensToSpend}
+        setTokensToSpend={jest.fn()}
       />,
     );
 

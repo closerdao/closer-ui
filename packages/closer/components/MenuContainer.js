@@ -7,7 +7,7 @@ const MenuContainer = ({ isOpen, toggleNav, children }) => {
   const menuRef = useRef(null);
 
   const menuClassnames = {
-    container: 'w-full h-full fixed inset-0',
+    container: 'w-full h-full fixed inset-0 z-[110]',
     overlay:
       'w-full h-full duration-500 ease-out transition-all inset-0 absolute bg-gray-900',
     slider:
@@ -67,13 +67,15 @@ const MenuContainer = ({ isOpen, toggleNav, children }) => {
               : `${menuClassnames.slider} translate-x-full`
           }
         >
-          <div
+          <button
             onClick={toggleNav}
-            className="absolute cursor-pointer text-gray-600 top-6 left-5 z-20"
+            aria-label="Close menu"
+            className="absolute top-4 right-8 z-20 flex h-8 w-8 items-center justify-center rounded-lg border border-current text-accent transition-colors hover:bg-accent-light"
           >
-            <CloseIcon />
-          </div>
-          <div className="pt-32 pb-12 px-8 relative w-full flex flex-col gap-4 z-10">
+            <CloseIcon className="h-4 w-4" strokeWidth={1} />
+          </button>
+          {/* pt-16 keeps the first row of content clear of the close button. */}
+          <div className="pt-16 pb-12 px-8 relative w-full flex flex-col gap-4 z-10">
             {children}
           </div>
         </div>

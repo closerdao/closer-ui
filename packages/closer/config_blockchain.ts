@@ -1,31 +1,4 @@
-const alfajoresConfig = {
-  BLOCKCHAIN_NETWORK_ID: 44787,
-  BLOCKCHAIN_NAME: 'CELO ALFAJORES',
-  BLOCKCHAIN_RPC_URL: 'https://alfajores-forno.celo-testnet.org',
-  BLOCKCHAIN_EXPLORER_URL: 'https://alfajores-blockscout.celo-testnet.org',
-  BLOCKCHAIN_NATIVE_TOKEN: {
-    name: 'CELO',
-    symbol: 'CELO',
-    decimals: 18,
-  },
-  BLOCKCHAIN_DAO_TOKEN: {
-    address: '0xfA9745984A85AB8931D409078eb9F5910dE07c76',
-    name: 'TDF',
-    symbol: 'TDF',
-    decimals: 18,
-  },
-  BLOCKCHAIN_CEUR_TOKEN: {
-    address: '0x0C9861e64Fd62b5d753e623879Efdc04E273A7b5',
-    name: 'fakeEUR',
-    symbol: 'fakeEUR',
-    decimals: 18,
-  },
-  BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS:
-    '0xB5A76b174C09962518838D32351Ce59955Fb6dc9',
-  BLOCKCHAIN_DAO_DIAMOND_ADDRESS: '0x4928882f5152958cB8648D74aAd8Af24a90c6751',
-  CEUR_TOKEN_ADDRESS: '0x0C9861e64Fd62b5d753e623879Efdc04E273A7b5',
-};
-
+// Network configurations
 const celoConfig = {
   BLOCKCHAIN_NETWORK_ID: 42220,
   BLOCKCHAIN_NAME: 'CELO',
@@ -48,13 +21,72 @@ const celoConfig = {
     symbol: 'cEUR',
     decimals: 18,
   },
+  BLOCKCHAIN_CELO_TOKEN: {
+    address: '0x471EcE3750Da237f93B8E339c536989b8978a438', // CELO token on mainnet
+    name: 'Celo',
+    symbol: 'CELO',
+    decimals: 18,
+  },
+  BLOCKCHAIN_PRESENCE_TOKEN: {
+    address: '0x5Bc8e45E6c0019F12bE2979De614AF3cc63538e9', // $Presence token on mainnet
+    name: '$Presence',
+    symbol: '$Presence',
+    decimals: 18,
+  },
 
+  BLOCKCHAIN_SWEAT_TOKEN: {
+    address: '0x5D2870B37aB72AB9Cc3F46878373EeCc1312FA6e',
+    name: 'Sweat',
+    symbol: 'SWEAT',
+    decimals: 18,
+  },
   BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS:
     '0xEaa00a0e0D29D1F883485E8f98A0E8FfD75B23FB',
   BLOCKCHAIN_DAO_DIAMOND_ADDRESS: '0x475398EeE0E22cb6fe5403ffA294Fb10Ad989e17',
   CEUR_TOKEN_ADDRESS: '0xd8763cba276a3738e6de85b4b3bf5fded6d6ca73',
 };
 
+const celoSepoliaConfig = {
+  BLOCKCHAIN_NETWORK_ID: 11142220,
+  BLOCKCHAIN_NAME: 'CELO SEPOLIA',
+  BLOCKCHAIN_RPC_URL: 'https://forno.celo-sepolia.celo-testnet.org',
+  BLOCKCHAIN_EXPLORER_URL: 'https://celo-sepolia.blockscout.com',
+  BLOCKCHAIN_NATIVE_TOKEN: {
+    name: 'CELO',
+    symbol: 'CELO',
+    decimals: 18,
+  },
+  BLOCKCHAIN_DAO_TOKEN: {
+    address: '0x5Bc8e45E6c0019F12bE2979De614AF3cc63538e9',
+    name: 'TDF',
+    symbol: 'TDF',
+    decimals: 18,
+  },
+  BLOCKCHAIN_CEUR_TOKEN: {
+    address: '0x31042e8498A6939d174A2D91FB4f98128089b330',
+    name: 'fakeEUR',
+    symbol: 'fakeEUR',
+    decimals: 18,
+  },
+  BLOCKCHAIN_CELO_TOKEN: {
+    address: '0x471EcE3750Da237f93B8E339c536989b8978a438',
+    name: 'Celo',
+    symbol: 'CELO',
+    decimals: 18,
+  },
+  BLOCKCHAIN_PRESENCE_TOKEN: {
+    address: '0xBA72D0644F465D78e5076284ea3480f4dBc006F6',
+    name: '$Presence',
+    symbol: '$Presence',
+    decimals: 18,
+  },
+  BLOCKCHAIN_DYNAMIC_SALE_CONTRACT_ADDRESS:
+    '0x076F0Ba89A33A6b268F164ddb2cC61df75Ee0168',
+  BLOCKCHAIN_DAO_DIAMOND_ADDRESS: '0x5D2870B37aB72AB9Cc3F46878373EeCc1312FA6e',
+  CEUR_TOKEN_ADDRESS: '0x31042e8498A6939d174A2D91FB4f98128089b330',
+};
+
+// Fallback ABIs for client-side rendering
 const celoABIs = {
   BLOCKCHAIN_DAO_TOKEN_ABI: [
     {
@@ -2536,8 +2568,1656 @@ const celoABIs = {
       type: 'function',
     },
   ],
+  BLOCKCHAIN_PRESENCE_ABI: [
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': false,
+          'internalType': 'address',
+          'name': 'previousAdmin',
+          'type': 'address'
+        },
+        {
+          'indexed': false,
+          'internalType': 'address',
+          'name': 'newAdmin',
+          'type': 'address'
+        }
+      ],
+      'name': 'AdminChanged',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'beacon',
+          'type': 'address'
+        }
+      ],
+      'name': 'BeaconUpgraded',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'implementation',
+          'type': 'address'
+        }
+      ],
+      'name': 'Upgraded',
+      'type': 'event'
+    },
+    {
+      'stateMutability': 'payable',
+      'type': 'fallback'
+    },
+    {
+      'inputs': [],
+      'name': 'admin',
+      'outputs': [
+        {
+          'internalType': 'address',
+          'name': 'admin_',
+          'type': 'address'
+        }
+      ],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'implementation',
+      'outputs': [
+        {
+          'internalType': 'address',
+          'name': 'implementation_',
+          'type': 'address'
+        }
+      ],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'newImplementation',
+          'type': 'address'
+        }
+      ],
+      'name': 'upgradeTo',
+      'outputs': [],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'newImplementation',
+          'type': 'address'
+        },
+        {
+          'internalType': 'bytes',
+          'name': 'data',
+          'type': 'bytes'
+        }
+      ],
+      'name': 'upgradeToAndCall',
+      'outputs': [],
+      'stateMutability': 'payable',
+      'type': 'function'
+    },
+    {
+      'stateMutability': 'payable',
+      'type': 'receive'
+    },
+    {
+      'inputs': [],
+      'name': 'ApproveNotAllowed',
+      'type': 'error'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'uint256',
+          'name': 'nonDecayedAmountToBurn',
+          'type': 'uint256'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'decayedAmountToBurn',
+          'type': 'uint256'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'nonDecayedUserBalance',
+          'type': 'uint256'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'decayedUserBalance',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'BurnAmountExceedsDecayedBalance',
+      'type': 'error'
+    },
+    {
+      'inputs': [],
+      'name': 'BurnDataEmpty',
+      'type': 'error'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'invalidDaoAddress',
+          'type': 'address'
+        }
+      ],
+      'name': 'InvalidDaoAddress',
+      'type': 'error'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'uint256',
+          'name': 'value',
+          'type': 'uint256'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'maxAllowedValue',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'InvalidDecayRatePerDay',
+      'type': 'error'
+    },
+    {
+      'inputs': [],
+      'name': 'MintDataEmpty',
+      'type': 'error'
+    },
+    {
+      'inputs': [],
+      'name': 'MintWithZeroAmount',
+      'type': 'error'
+    },
+    {
+      'inputs': [],
+      'name': 'TransferNotAllowed',
+      'type': 'error'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'sender',
+          'type': 'address'
+        },
+        {
+          'internalType': 'string[]',
+          'name': 'allowedRoles',
+          'type': 'string[]'
+        }
+      ],
+      'name': 'Unauthorized',
+      'type': 'error'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'owner',
+          'type': 'address'
+        },
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'spender',
+          'type': 'address'
+        },
+        {
+          'indexed': false,
+          'internalType': 'uint256',
+          'name': 'value',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'Approval',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'account',
+          'type': 'address'
+        }
+      ],
+      'name': 'BurnAllUserPresence',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'account',
+          'type': 'address'
+        },
+        {
+          'indexed': false,
+          'internalType': 'uint256',
+          'name': 'burnedAmount',
+          'type': 'uint256'
+        },
+        {
+          'indexed': false,
+          'internalType': 'uint256',
+          'name': 'decayedBurnedAmount',
+          'type': 'uint256'
+        },
+        {
+          'indexed': false,
+          'internalType': 'uint256',
+          'name': 'burnedForDaysAgo',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'BurnWithDecay',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'oldAddress',
+          'type': 'address'
+        },
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'newAddress',
+          'type': 'address'
+        }
+      ],
+      'name': 'DaoAddressChanged',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': false,
+          'internalType': 'uint256',
+          'name': 'oldDecayRatePerDay',
+          'type': 'uint256'
+        },
+        {
+          'indexed': false,
+          'internalType': 'uint256',
+          'name': 'newDecayRatePerDay',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'DecayRatePerDayChanged',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': false,
+          'internalType': 'uint8',
+          'name': 'version',
+          'type': 'uint8'
+        }
+      ],
+      'name': 'Initialized',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'account',
+          'type': 'address'
+        },
+        {
+          'indexed': false,
+          'internalType': 'uint256',
+          'name': 'mintedAmount',
+          'type': 'uint256'
+        },
+        {
+          'indexed': false,
+          'internalType': 'uint256',
+          'name': 'decayedMintedAmount',
+          'type': 'uint256'
+        },
+        {
+          'indexed': false,
+          'internalType': 'uint256',
+          'name': 'mintedForDaysAgo',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'MintWithDecay',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'previousOwner',
+          'type': 'address'
+        },
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'newOwner',
+          'type': 'address'
+        }
+      ],
+      'name': 'OwnershipTransferStarted',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'previousOwner',
+          'type': 'address'
+        },
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'newOwner',
+          'type': 'address'
+        }
+      ],
+      'name': 'OwnershipTransferred',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'from',
+          'type': 'address'
+        },
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'to',
+          'type': 'address'
+        },
+        {
+          'indexed': false,
+          'internalType': 'uint256',
+          'name': 'value',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'Transfer',
+      'type': 'event'
+    },
+    {
+      'inputs': [],
+      'name': 'DECAY_RATE_PER_DAY_DECIMALS',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'MAX_ALLOWED_ROUNDING_ERROR',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'MAX_DECAY_RATE_PER_DAY',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'PRECISION_SCALE',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'acceptOwnership',
+      'outputs': [],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'owner',
+          'type': 'address'
+        },
+        {
+          'internalType': 'address',
+          'name': 'spender',
+          'type': 'address'
+        }
+      ],
+      'name': 'allowance',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'spender',
+          'type': 'address'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'amount',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'approve',
+      'outputs': [
+        {
+          'internalType': 'bool',
+          'name': '',
+          'type': 'bool'
+        }
+      ],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'account',
+          'type': 'address'
+        }
+      ],
+      'name': 'balanceOf',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'account',
+          'type': 'address'
+        },
+        {
+          'components': [
+            {
+              'internalType': 'uint256',
+              'name': 'daysAgo',
+              'type': 'uint256'
+            },
+            {
+              'internalType': 'uint256',
+              'name': 'amount',
+              'type': 'uint256'
+            }
+          ],
+          'internalType': 'struct PresenceToken.BurnData[]',
+          'name': 'burnDataArray',
+          'type': 'tuple[]'
+        }
+      ],
+      'name': 'burn',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': 'finalBalance',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'account',
+          'type': 'address'
+        }
+      ],
+      'name': 'burnAll',
+      'outputs': [],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'uint256',
+          'name': 'amount',
+          'type': 'uint256'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'daysAgo',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'calculateDecayForDays',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'daoAddress',
+      'outputs': [
+        {
+          'internalType': 'contract TDFDiamondPartial',
+          'name': '',
+          'type': 'address'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'decayRatePerDay',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'decimals',
+      'outputs': [
+        {
+          'internalType': 'uint8',
+          'name': '',
+          'type': 'uint8'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'spender',
+          'type': 'address'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'subtractedValue',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'decreaseAllowance',
+      'outputs': [
+        {
+          'internalType': 'bool',
+          'name': '',
+          'type': 'bool'
+        }
+      ],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'getCurrentDecayRatePerYear',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'uint256',
+          'name': 'decayRatePerYear',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'getDecayRatePerDay',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'pure',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'uint256',
+          'name': 'decayRatePerDay_',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'getDecayRatePerYear',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': 'decayRatePerYear',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'pure',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'holders',
+      'outputs': [
+        {
+          'internalType': 'address',
+          'name': '',
+          'type': 'address'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'spender',
+          'type': 'address'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'addedValue',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'increaseAllowance',
+      'outputs': [
+        {
+          'internalType': 'bool',
+          'name': '',
+          'type': 'bool'
+        }
+      ],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'string',
+          'name': 'name_',
+          'type': 'string'
+        },
+        {
+          'internalType': 'string',
+          'name': 'symbol_',
+          'type': 'string'
+        },
+        {
+          'internalType': 'address',
+          'name': 'daoAddress_',
+          'type': 'address'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'decayRatePerDay_',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'initialize',
+      'outputs': [],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': '',
+          'type': 'address'
+        }
+      ],
+      'name': 'isHolder',
+      'outputs': [
+        {
+          'internalType': 'bool',
+          'name': '',
+          'type': 'bool'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': '',
+          'type': 'address'
+        }
+      ],
+      'name': 'lastDecayTimestamp',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': '',
+          'type': 'address'
+        }
+      ],
+      'name': 'lastDecayedBalance',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'account',
+          'type': 'address'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'amount',
+          'type': 'uint256'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'daysAgo',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'mint',
+      'outputs': [],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'components': [
+            {
+              'internalType': 'address',
+              'name': 'account',
+              'type': 'address'
+            },
+            {
+              'internalType': 'uint256',
+              'name': 'amount',
+              'type': 'uint256'
+            },
+            {
+              'internalType': 'uint256',
+              'name': 'daysAgo',
+              'type': 'uint256'
+            }
+          ],
+          'internalType': 'struct PresenceToken.MintData[]',
+          'name': 'mintDataArray',
+          'type': 'tuple[]'
+        }
+      ],
+      'name': 'mintBatch',
+      'outputs': [],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'name',
+      'outputs': [
+        {
+          'internalType': 'string',
+          'name': '',
+          'type': 'string'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'account',
+          'type': 'address'
+        }
+      ],
+      'name': 'nonDecayedBalanceOf',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'nonDecayedTotalSupply',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'owner',
+      'outputs': [
+        {
+          'internalType': 'address',
+          'name': '',
+          'type': 'address'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'pendingOwner',
+      'outputs': [
+        {
+          'internalType': 'address',
+          'name': '',
+          'type': 'address'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'renounceOwnership',
+      'outputs': [],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'newDaoAddress',
+          'type': 'address'
+        }
+      ],
+      'name': 'setDaoAddress',
+      'outputs': [],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'uint256',
+          'name': 'newDecayRatePerDay',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'setDecayRatePerDay',
+      'outputs': [],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'symbol',
+      'outputs': [
+        {
+          'internalType': 'string',
+          'name': '',
+          'type': 'string'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'totalSupply',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': 'decayedTotalSupply',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'to',
+          'type': 'address'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'amount',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'transfer',
+      'outputs': [
+        {
+          'internalType': 'bool',
+          'name': '',
+          'type': 'bool'
+        }
+      ],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'from',
+          'type': 'address'
+        },
+        {
+          'internalType': 'address',
+          'name': 'to',
+          'type': 'address'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'amount',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'transferFrom',
+      'outputs': [
+        {
+          'internalType': 'bool',
+          'name': '',
+          'type': 'bool'
+        }
+      ],
+      'stateMutability': 'pure',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'newOwner',
+          'type': 'address'
+        }
+      ],
+      'name': 'transferOwnership',
+      'outputs': [],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': '_logic',
+          'type': 'address'
+        },
+        {
+          'internalType': 'address',
+          'name': 'admin_',
+          'type': 'address'
+        },
+        {
+          'internalType': 'bytes',
+          'name': '_data',
+          'type': 'bytes'
+        }
+      ],
+      'stateMutability': 'payable',
+      'type': 'constructor'
+    }
+  ],
+  BLOCKCHAIN_SWEAT_TOKEN_ABI: [
+    {
+      anonymous: false,
+      inputs: [
+        { indexed: false, internalType: 'address', name: 'previousAdmin', type: 'address' },
+        { indexed: false, internalType: 'address', name: 'newAdmin', type: 'address' },
+      ],
+      name: 'AdminChanged',
+      type: 'event',
+    },
+    {
+      anonymous: false,
+      inputs: [{ indexed: true, internalType: 'address', name: 'beacon', type: 'address' }],
+      name: 'BeaconUpgraded',
+      type: 'event',
+    },
+    {
+      anonymous: false,
+      inputs: [{ indexed: true, internalType: 'address', name: 'implementation', type: 'address' }],
+      name: 'Upgraded',
+      type: 'event',
+    },
+    { stateMutability: 'payable', type: 'fallback' },
+    {
+      inputs: [],
+      name: 'admin',
+      outputs: [{ internalType: 'address', name: 'admin_', type: 'address' }],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'implementation',
+      outputs: [{ internalType: 'address', name: 'implementation_', type: 'address' }],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [{ internalType: 'address', name: 'newImplementation', type: 'address' }],
+      name: 'upgradeTo',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        { internalType: 'address', name: 'newImplementation', type: 'address' },
+        { internalType: 'bytes', name: 'data', type: 'bytes' },
+      ],
+      name: 'upgradeToAndCall',
+      outputs: [],
+      stateMutability: 'payable',
+      type: 'function',
+    },
+    { stateMutability: 'payable', type: 'receive' },
+    { inputs: [], name: 'ApproveNotAllowed', type: 'error' },
+    {
+      inputs: [
+        { internalType: 'uint256', name: 'nonDecayedAmountToBurn', type: 'uint256' },
+        { internalType: 'uint256', name: 'decayedAmountToBurn', type: 'uint256' },
+        { internalType: 'uint256', name: 'nonDecayedUserBalance', type: 'uint256' },
+        { internalType: 'uint256', name: 'decayedUserBalance', type: 'uint256' },
+      ],
+      name: 'BurnAmountExceedsDecayedBalance',
+      type: 'error',
+    },
+    { inputs: [], name: 'BurnDataEmpty', type: 'error' },
+    {
+      inputs: [{ internalType: 'address', name: 'invalidDaoAddress', type: 'address' }],
+      name: 'InvalidDaoAddress',
+      type: 'error',
+    },
+    {
+      inputs: [
+        { internalType: 'uint256', name: 'value', type: 'uint256' },
+        { internalType: 'uint256', name: 'maxAllowedValue', type: 'uint256' },
+      ],
+      name: 'InvalidDecayRatePerDay',
+      type: 'error',
+    },
+    { inputs: [], name: 'MintDataEmpty', type: 'error' },
+    { inputs: [], name: 'MintWithZeroAmount', type: 'error' },
+    { inputs: [], name: 'TransferNotAllowed', type: 'error' },
+    {
+      inputs: [
+        { internalType: 'address', name: 'sender', type: 'address' },
+        { internalType: 'string[]', name: 'allowedRoles', type: 'string[]' },
+      ],
+      name: 'Unauthorized',
+      type: 'error',
+    },
+    {
+      anonymous: false,
+      inputs: [
+        { indexed: true, internalType: 'address', name: 'owner', type: 'address' },
+        { indexed: true, internalType: 'address', name: 'spender', type: 'address' },
+        { indexed: false, internalType: 'uint256', name: 'value', type: 'uint256' },
+      ],
+      name: 'Approval',
+      type: 'event',
+    },
+    {
+      anonymous: false,
+      inputs: [{ indexed: true, internalType: 'address', name: 'account', type: 'address' }],
+      name: 'BurnAllUserTokens',
+      type: 'event',
+    },
+    {
+      anonymous: false,
+      inputs: [
+        { indexed: true, internalType: 'address', name: 'account', type: 'address' },
+        { indexed: false, internalType: 'uint256', name: 'burnedAmount', type: 'uint256' },
+        { indexed: false, internalType: 'uint256', name: 'decayedBurnedAmount', type: 'uint256' },
+        { indexed: false, internalType: 'uint256', name: 'burnedForDaysAgo', type: 'uint256' },
+      ],
+      name: 'BurnWithDecay',
+      type: 'event',
+    },
+    {
+      anonymous: false,
+      inputs: [
+        { indexed: true, internalType: 'address', name: 'oldAddress', type: 'address' },
+        { indexed: true, internalType: 'address', name: 'newAddress', type: 'address' },
+      ],
+      name: 'DaoAddressChanged',
+      type: 'event',
+    },
+    {
+      anonymous: false,
+      inputs: [
+        { indexed: false, internalType: 'uint256', name: 'oldDecayRatePerDay', type: 'uint256' },
+        { indexed: false, internalType: 'uint256', name: 'newDecayRatePerDay', type: 'uint256' },
+      ],
+      name: 'DecayRatePerDayChanged',
+      type: 'event',
+    },
+    {
+      anonymous: false,
+      inputs: [{ indexed: false, internalType: 'uint8', name: 'version', type: 'uint8' }],
+      name: 'Initialized',
+      type: 'event',
+    },
+    {
+      anonymous: false,
+      inputs: [
+        { indexed: true, internalType: 'address', name: 'account', type: 'address' },
+        { indexed: false, internalType: 'uint256', name: 'mintedAmount', type: 'uint256' },
+        { indexed: false, internalType: 'uint256', name: 'decayedMintedAmount', type: 'uint256' },
+        { indexed: false, internalType: 'uint256', name: 'mintedForDaysAgo', type: 'uint256' },
+      ],
+      name: 'MintWithDecay',
+      type: 'event',
+    },
+    {
+      anonymous: false,
+      inputs: [
+        { indexed: true, internalType: 'address', name: 'previousOwner', type: 'address' },
+        { indexed: true, internalType: 'address', name: 'newOwner', type: 'address' },
+      ],
+      name: 'OwnershipTransferStarted',
+      type: 'event',
+    },
+    {
+      anonymous: false,
+      inputs: [
+        { indexed: true, internalType: 'address', name: 'previousOwner', type: 'address' },
+        { indexed: true, internalType: 'address', name: 'newOwner', type: 'address' },
+      ],
+      name: 'OwnershipTransferred',
+      type: 'event',
+    },
+    {
+      anonymous: false,
+      inputs: [
+        { indexed: true, internalType: 'address', name: 'from', type: 'address' },
+        { indexed: true, internalType: 'address', name: 'to', type: 'address' },
+        { indexed: false, internalType: 'uint256', name: 'value', type: 'uint256' },
+      ],
+      name: 'Transfer',
+      type: 'event',
+    },
+    {
+      inputs: [],
+      name: 'DECAY_RATE_PER_DAY_DECIMALS',
+      outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'MAX_ALLOWED_ROUNDING_ERROR',
+      outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'MAX_DECAY_RATE_PER_DAY',
+      outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'PRECISION_SCALE',
+      outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'acceptOwnership',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        { internalType: 'address', name: 'owner', type: 'address' },
+        { internalType: 'address', name: 'spender', type: 'address' },
+      ],
+      name: 'allowance',
+      outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [
+        { internalType: 'address', name: 'spender', type: 'address' },
+        { internalType: 'uint256', name: 'amount', type: 'uint256' },
+      ],
+      name: 'approve',
+      outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [{ internalType: 'address', name: 'account', type: 'address' }],
+      name: 'balanceOf',
+      outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [
+        { internalType: 'address', name: 'account', type: 'address' },
+        {
+          components: [
+            { internalType: 'uint256', name: 'daysAgo', type: 'uint256' },
+            { internalType: 'uint256', name: 'amount', type: 'uint256' },
+          ],
+          internalType: 'struct ERC20NonTransferableDecaying.BurnData[]',
+          name: 'burnDataArray',
+          type: 'tuple[]',
+        },
+      ],
+      name: 'burn',
+      outputs: [{ internalType: 'uint256', name: 'finalBalance', type: 'uint256' }],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [{ internalType: 'address', name: 'account', type: 'address' }],
+      name: 'burnAll',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        { internalType: 'uint256', name: 'amount', type: 'uint256' },
+        { internalType: 'uint256', name: 'daysAgo', type: 'uint256' },
+      ],
+      name: 'calculateDecayForDays',
+      outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'daoAddress',
+      outputs: [{ internalType: 'contract IDiamondRoleChecker', name: '', type: 'address' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'decayRatePerDay',
+      outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'decimals',
+      outputs: [{ internalType: 'uint8', name: '', type: 'uint8' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [
+        { internalType: 'address', name: 'spender', type: 'address' },
+        { internalType: 'uint256', name: 'subtractedValue', type: 'uint256' },
+      ],
+      name: 'decreaseAllowance',
+      outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'getCurrentDecayRatePerYear',
+      outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [{ internalType: 'uint256', name: 'decayRatePerYear', type: 'uint256' }],
+      name: 'getDecayRatePerDay',
+      outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      stateMutability: 'pure',
+      type: 'function',
+    },
+    {
+      inputs: [{ internalType: 'uint256', name: 'decayRatePerDay_', type: 'uint256' }],
+      name: 'getDecayRatePerYear',
+      outputs: [{ internalType: 'uint256', name: 'decayRatePerYear', type: 'uint256' }],
+      stateMutability: 'pure',
+      type: 'function',
+    },
+    {
+      inputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      name: 'holders',
+      outputs: [{ internalType: 'address', name: '', type: 'address' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [
+        { internalType: 'address', name: 'spender', type: 'address' },
+        { internalType: 'uint256', name: 'addedValue', type: 'uint256' },
+      ],
+      name: 'increaseAllowance',
+      outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        { internalType: 'string', name: 'name_', type: 'string' },
+        { internalType: 'string', name: 'symbol_', type: 'string' },
+        { internalType: 'address', name: 'daoAddress_', type: 'address' },
+        { internalType: 'uint256', name: 'decayRatePerDay_', type: 'uint256' },
+      ],
+      name: 'initialize',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [{ internalType: 'address', name: '', type: 'address' }],
+      name: 'isHolder',
+      outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [{ internalType: 'address', name: '', type: 'address' }],
+      name: 'lastDecayTimestamp',
+      outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [{ internalType: 'address', name: '', type: 'address' }],
+      name: 'lastDecayedBalance',
+      outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [
+        { internalType: 'address', name: 'account', type: 'address' },
+        { internalType: 'uint256', name: 'amount', type: 'uint256' },
+        { internalType: 'uint256', name: 'daysAgo', type: 'uint256' },
+      ],
+      name: 'mint',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          components: [
+            { internalType: 'address', name: 'account', type: 'address' },
+            { internalType: 'uint256', name: 'amount', type: 'uint256' },
+            { internalType: 'uint256', name: 'daysAgo', type: 'uint256' },
+          ],
+          internalType: 'struct ERC20NonTransferableDecaying.MintData[]',
+          name: 'mintDataArray',
+          type: 'tuple[]',
+        },
+      ],
+      name: 'mintBatch',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'name',
+      outputs: [{ internalType: 'string', name: '', type: 'string' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [{ internalType: 'address', name: 'account', type: 'address' }],
+      name: 'nonDecayedBalanceOf',
+      outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'nonDecayedTotalSupply',
+      outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'owner',
+      outputs: [{ internalType: 'address', name: '', type: 'address' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'pendingOwner',
+      outputs: [{ internalType: 'address', name: '', type: 'address' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'renounceOwnership',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [{ internalType: 'address', name: 'newDaoAddress', type: 'address' }],
+      name: 'setDaoAddress',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [{ internalType: 'uint256', name: 'newDecayRatePerDay', type: 'uint256' }],
+      name: 'setDecayRatePerDay',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'symbol',
+      outputs: [{ internalType: 'string', name: '', type: 'string' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'totalSupply',
+      outputs: [{ internalType: 'uint256', name: 'decayedTotalSupply', type: 'uint256' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [
+        { internalType: 'address', name: 'to', type: 'address' },
+        { internalType: 'uint256', name: 'amount', type: 'uint256' },
+      ],
+      name: 'transfer',
+      outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        { internalType: 'address', name: 'from', type: 'address' },
+        { internalType: 'address', name: 'to', type: 'address' },
+        { internalType: 'uint256', name: 'amount', type: 'uint256' },
+      ],
+      name: 'transferFrom',
+      outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+      stateMutability: 'pure',
+      type: 'function',
+    },
+    {
+      inputs: [{ internalType: 'address', name: 'newOwner', type: 'address' }],
+      name: 'transferOwnership',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        { internalType: 'address', name: '_logic', type: 'address' },
+        { internalType: 'address', name: 'admin_', type: 'address' },
+        { internalType: 'bytes', name: '_data', type: 'bytes' },
+      ],
+      stateMutability: 'payable',
+      type: 'constructor',
+    },
+  ]
 };
-const alfajoresABIs = {
+const celoSepoliaABIs = {
   BLOCKCHAIN_DAO_TOKEN_ABI: [
     {
       anonymous: false,
@@ -5013,26 +6693,1161 @@ const alfajoresABIs = {
       type: 'function',
     },
   ],
+  BLOCKCHAIN_PRESENCE_ABI: [
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': false,
+          'internalType': 'address',
+          'name': 'previousAdmin',
+          'type': 'address'
+        },
+        {
+          'indexed': false,
+          'internalType': 'address',
+          'name': 'newAdmin',
+          'type': 'address'
+        }
+      ],
+      'name': 'AdminChanged',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'beacon',
+          'type': 'address'
+        }
+      ],
+      'name': 'BeaconUpgraded',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'implementation',
+          'type': 'address'
+        }
+      ],
+      'name': 'Upgraded',
+      'type': 'event'
+    },
+    {
+      'stateMutability': 'payable',
+      'type': 'fallback'
+    },
+    {
+      'inputs': [],
+      'name': 'admin',
+      'outputs': [
+        {
+          'internalType': 'address',
+          'name': 'admin_',
+          'type': 'address'
+        }
+      ],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'implementation',
+      'outputs': [
+        {
+          'internalType': 'address',
+          'name': 'implementation_',
+          'type': 'address'
+        }
+      ],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'newImplementation',
+          'type': 'address'
+        }
+      ],
+      'name': 'upgradeTo',
+      'outputs': [],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'newImplementation',
+          'type': 'address'
+        },
+        {
+          'internalType': 'bytes',
+          'name': 'data',
+          'type': 'bytes'
+        }
+      ],
+      'name': 'upgradeToAndCall',
+      'outputs': [],
+      'stateMutability': 'payable',
+      'type': 'function'
+    },
+    {
+      'stateMutability': 'payable',
+      'type': 'receive'
+    },
+    {
+      'inputs': [],
+      'name': 'ApproveNotAllowed',
+      'type': 'error'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'uint256',
+          'name': 'nonDecayedAmountToBurn',
+          'type': 'uint256'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'decayedAmountToBurn',
+          'type': 'uint256'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'nonDecayedUserBalance',
+          'type': 'uint256'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'decayedUserBalance',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'BurnAmountExceedsDecayedBalance',
+      'type': 'error'
+    },
+    {
+      'inputs': [],
+      'name': 'BurnDataEmpty',
+      'type': 'error'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'invalidDaoAddress',
+          'type': 'address'
+        }
+      ],
+      'name': 'InvalidDaoAddress',
+      'type': 'error'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'uint256',
+          'name': 'value',
+          'type': 'uint256'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'maxAllowedValue',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'InvalidDecayRatePerDay',
+      'type': 'error'
+    },
+    {
+      'inputs': [],
+      'name': 'MintDataEmpty',
+      'type': 'error'
+    },
+    {
+      'inputs': [],
+      'name': 'MintWithZeroAmount',
+      'type': 'error'
+    },
+    {
+      'inputs': [],
+      'name': 'TransferNotAllowed',
+      'type': 'error'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'sender',
+          'type': 'address'
+        },
+        {
+          'internalType': 'string[]',
+          'name': 'allowedRoles',
+          'type': 'string[]'
+        }
+      ],
+      'name': 'Unauthorized',
+      'type': 'error'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'owner',
+          'type': 'address'
+        },
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'spender',
+          'type': 'address'
+        },
+        {
+          'indexed': false,
+          'internalType': 'uint256',
+          'name': 'value',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'Approval',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'account',
+          'type': 'address'
+        }
+      ],
+      'name': 'BurnAllUserPresence',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'account',
+          'type': 'address'
+        },
+        {
+          'indexed': false,
+          'internalType': 'uint256',
+          'name': 'burnedAmount',
+          'type': 'uint256'
+        },
+        {
+          'indexed': false,
+          'internalType': 'uint256',
+          'name': 'decayedBurnedAmount',
+          'type': 'uint256'
+        },
+        {
+          'indexed': false,
+          'internalType': 'uint256',
+          'name': 'burnedForDaysAgo',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'BurnWithDecay',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'oldAddress',
+          'type': 'address'
+        },
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'newAddress',
+          'type': 'address'
+        }
+      ],
+      'name': 'DaoAddressChanged',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': false,
+          'internalType': 'uint256',
+          'name': 'oldDecayRatePerDay',
+          'type': 'uint256'
+        },
+        {
+          'indexed': false,
+          'internalType': 'uint256',
+          'name': 'newDecayRatePerDay',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'DecayRatePerDayChanged',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': false,
+          'internalType': 'uint8',
+          'name': 'version',
+          'type': 'uint8'
+        }
+      ],
+      'name': 'Initialized',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'account',
+          'type': 'address'
+        },
+        {
+          'indexed': false,
+          'internalType': 'uint256',
+          'name': 'mintedAmount',
+          'type': 'uint256'
+        },
+        {
+          'indexed': false,
+          'internalType': 'uint256',
+          'name': 'decayedMintedAmount',
+          'type': 'uint256'
+        },
+        {
+          'indexed': false,
+          'internalType': 'uint256',
+          'name': 'mintedForDaysAgo',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'MintWithDecay',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'previousOwner',
+          'type': 'address'
+        },
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'newOwner',
+          'type': 'address'
+        }
+      ],
+      'name': 'OwnershipTransferStarted',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'previousOwner',
+          'type': 'address'
+        },
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'newOwner',
+          'type': 'address'
+        }
+      ],
+      'name': 'OwnershipTransferred',
+      'type': 'event'
+    },
+    {
+      'anonymous': false,
+      'inputs': [
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'from',
+          'type': 'address'
+        },
+        {
+          'indexed': true,
+          'internalType': 'address',
+          'name': 'to',
+          'type': 'address'
+        },
+        {
+          'indexed': false,
+          'internalType': 'uint256',
+          'name': 'value',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'Transfer',
+      'type': 'event'
+    },
+    {
+      'inputs': [],
+      'name': 'DECAY_RATE_PER_DAY_DECIMALS',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'MAX_ALLOWED_ROUNDING_ERROR',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'MAX_DECAY_RATE_PER_DAY',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'PRECISION_SCALE',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'acceptOwnership',
+      'outputs': [],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'owner',
+          'type': 'address'
+        },
+        {
+          'internalType': 'address',
+          'name': 'spender',
+          'type': 'address'
+        }
+      ],
+      'name': 'allowance',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'spender',
+          'type': 'address'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'amount',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'approve',
+      'outputs': [
+        {
+          'internalType': 'bool',
+          'name': '',
+          'type': 'bool'
+        }
+      ],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'account',
+          'type': 'address'
+        }
+      ],
+      'name': 'balanceOf',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'account',
+          'type': 'address'
+        },
+        {
+          'components': [
+            {
+              'internalType': 'uint256',
+              'name': 'daysAgo',
+              'type': 'uint256'
+            },
+            {
+              'internalType': 'uint256',
+              'name': 'amount',
+              'type': 'uint256'
+            }
+          ],
+          'internalType': 'struct PresenceToken.BurnData[]',
+          'name': 'burnDataArray',
+          'type': 'tuple[]'
+        }
+      ],
+      'name': 'burn',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': 'finalBalance',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'account',
+          'type': 'address'
+        }
+      ],
+      'name': 'burnAll',
+      'outputs': [],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'uint256',
+          'name': 'amount',
+          'type': 'uint256'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'daysAgo',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'calculateDecayForDays',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'daoAddress',
+      'outputs': [
+        {
+          'internalType': 'contract TDFDiamondPartial',
+          'name': '',
+          'type': 'address'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'decayRatePerDay',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'decimals',
+      'outputs': [
+        {
+          'internalType': 'uint8',
+          'name': '',
+          'type': 'uint8'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'spender',
+          'type': 'address'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'subtractedValue',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'decreaseAllowance',
+      'outputs': [
+        {
+          'internalType': 'bool',
+          'name': '',
+          'type': 'bool'
+        }
+      ],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'getCurrentDecayRatePerYear',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'uint256',
+          'name': 'decayRatePerYear',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'getDecayRatePerDay',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'pure',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'uint256',
+          'name': 'decayRatePerDay_',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'getDecayRatePerYear',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': 'decayRatePerYear',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'pure',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'holders',
+      'outputs': [
+        {
+          'internalType': 'address',
+          'name': '',
+          'type': 'address'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'spender',
+          'type': 'address'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'addedValue',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'increaseAllowance',
+      'outputs': [
+        {
+          'internalType': 'bool',
+          'name': '',
+          'type': 'bool'
+        }
+      ],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'string',
+          'name': 'name_',
+          'type': 'string'
+        },
+        {
+          'internalType': 'string',
+          'name': 'symbol_',
+          'type': 'string'
+        },
+        {
+          'internalType': 'address',
+          'name': 'daoAddress_',
+          'type': 'address'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'decayRatePerDay_',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'initialize',
+      'outputs': [],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': '',
+          'type': 'address'
+        }
+      ],
+      'name': 'isHolder',
+      'outputs': [
+        {
+          'internalType': 'bool',
+          'name': '',
+          'type': 'bool'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': '',
+          'type': 'address'
+        }
+      ],
+      'name': 'lastDecayTimestamp',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': '',
+          'type': 'address'
+        }
+      ],
+      'name': 'lastDecayedBalance',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'account',
+          'type': 'address'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'amount',
+          'type': 'uint256'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'daysAgo',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'mint',
+      'outputs': [],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'components': [
+            {
+              'internalType': 'address',
+              'name': 'account',
+              'type': 'address'
+            },
+            {
+              'internalType': 'uint256',
+              'name': 'amount',
+              'type': 'uint256'
+            },
+            {
+              'internalType': 'uint256',
+              'name': 'daysAgo',
+              'type': 'uint256'
+            }
+          ],
+          'internalType': 'struct PresenceToken.MintData[]',
+          'name': 'mintDataArray',
+          'type': 'tuple[]'
+        }
+      ],
+      'name': 'mintBatch',
+      'outputs': [],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'name',
+      'outputs': [
+        {
+          'internalType': 'string',
+          'name': '',
+          'type': 'string'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'account',
+          'type': 'address'
+        }
+      ],
+      'name': 'nonDecayedBalanceOf',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'nonDecayedTotalSupply',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': '',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'owner',
+      'outputs': [
+        {
+          'internalType': 'address',
+          'name': '',
+          'type': 'address'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'pendingOwner',
+      'outputs': [
+        {
+          'internalType': 'address',
+          'name': '',
+          'type': 'address'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'renounceOwnership',
+      'outputs': [],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'newDaoAddress',
+          'type': 'address'
+        }
+      ],
+      'name': 'setDaoAddress',
+      'outputs': [],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'uint256',
+          'name': 'newDecayRatePerDay',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'setDecayRatePerDay',
+      'outputs': [],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'symbol',
+      'outputs': [
+        {
+          'internalType': 'string',
+          'name': '',
+          'type': 'string'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [],
+      'name': 'totalSupply',
+      'outputs': [
+        {
+          'internalType': 'uint256',
+          'name': 'decayedTotalSupply',
+          'type': 'uint256'
+        }
+      ],
+      'stateMutability': 'view',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'to',
+          'type': 'address'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'amount',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'transfer',
+      'outputs': [
+        {
+          'internalType': 'bool',
+          'name': '',
+          'type': 'bool'
+        }
+      ],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'from',
+          'type': 'address'
+        },
+        {
+          'internalType': 'address',
+          'name': 'to',
+          'type': 'address'
+        },
+        {
+          'internalType': 'uint256',
+          'name': 'amount',
+          'type': 'uint256'
+        }
+      ],
+      'name': 'transferFrom',
+      'outputs': [
+        {
+          'internalType': 'bool',
+          'name': '',
+          'type': 'bool'
+        }
+      ],
+      'stateMutability': 'pure',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': 'newOwner',
+          'type': 'address'
+        }
+      ],
+      'name': 'transferOwnership',
+      'outputs': [],
+      'stateMutability': 'nonpayable',
+      'type': 'function'
+    },
+    {
+      'inputs': [
+        {
+          'internalType': 'address',
+          'name': '_logic',
+          'type': 'address'
+        },
+        {
+          'internalType': 'address',
+          'name': 'admin_',
+          'type': 'address'
+        },
+        {
+          'internalType': 'bytes',
+          'name': '_data',
+          'type': 'bytes'
+        }
+      ],
+      'stateMutability': 'payable',
+      'type': 'constructor'
+    }
+  ]
 };
 
 const getNetworkConfig = () => {
   const network = process.env.NEXT_PUBLIC_NETWORK;
-  if (network === 'celo') {
-    return celoConfig;
-  } else {
-    return alfajoresConfig;
+  if (network === 'celoSepolia') {
+    return celoSepoliaConfig;
   }
+  return celoConfig;
 };
+
 const getABIs = () => {
-  const network = process.env.NEXT_PUBLIC_NETWORK;
-  if (network === 'alfajores') {
-    return alfajoresABIs;
-  } else if (network === 'celo') {
-    return celoABIs;
+  const network = process.env.NEXT_PUBLIC_NETWORK || 'celo';
+  if (network === 'celoSepolia') {
+    return celoSepoliaABIs;
   }
+  return celoABIs;
 };
 
 export const blockchainConfig = {
   ...getNetworkConfig(),
   ...getABIs(),
+};
+
+export const allNetworkConfigs = {
+  celo: { ...celoConfig, ...celoABIs },
+  celoSepolia: { ...celoSepoliaConfig, ...celoSepoliaABIs },
 };

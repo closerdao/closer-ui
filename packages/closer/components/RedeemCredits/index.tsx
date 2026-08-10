@@ -2,11 +2,9 @@ import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../../hooks/useConfig';
 import { CloserCurrencies, Price } from '../../types';
-import { priceFormat } from '../../utils/helpers';
 import { Button, Card, ErrorMessage, Heading } from '../ui';
 
 interface Props {
-  fiatPricePerNight?: number;
   isPartialCreditsPayment?: boolean;
   priceInCredits?: number;
   maxNightsToPayWithCredits?: number;
@@ -17,12 +15,13 @@ interface Props {
   applyCredits?: () => Promise<void>;
   hasAppliedCredits?: boolean;
   creditsError?: string | null | undefined;
+  isLoading?: boolean;
   isDemo?: boolean;
+  disabled?: boolean;
 }
 
 const RedeemCredits = ({
   isPartialCreditsPayment,
-  fiatPricePerNight,
   maxNightsToPayWithCredits,
   priceInCredits,
   useCredits,
@@ -32,9 +31,10 @@ const RedeemCredits = ({
   applyCredits,
   hasAppliedCredits,
   creditsError,
+  isLoading,
   isDemo,
+  disabled,
 }: Props) => {
-
   const t = useTranslations();
   const { APP_NAME } = useConfig();
 
@@ -80,17 +80,7 @@ const RedeemCredits = ({
                   <Heading level={4}>=</Heading>
                 </div>
                 <div className="w-2/5">
-                  <Heading level={4}>
-                    {isDemo &&
-                      priceFormat(
-                        APP_NAME && APP_NAME.toLowerCase() !== 'moos' ? 50 : 5,
-                      )}
-                    {!isDemo &&
-                      priceFormat(
-                        (fiatPricePerNight || 0) * (maxNightsToPayWithCredits || 0),
-                      )}
-
-                  </Heading>
+                  <Heading level={4}>{maxNightsToPayWithCredits}</Heading>
                   <div className="text-xs">
                     {t('carrots_off_accommodation')}
                   </div>
@@ -99,7 +89,11 @@ const RedeemCredits = ({
             </div>
 
             {!isDemo && (
-              <Button onClick={applyCredits}>
+              <Button
+                onClick={applyCredits}
+                isEnabled={!disabled}
+                isLoading={isLoading}
+              >
                 {t('carrots_button_apply_discount')}
               </Button>
             )}

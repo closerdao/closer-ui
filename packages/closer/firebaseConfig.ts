@@ -1,10 +1,12 @@
-import { initializeApp, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
+import { FirebaseApp, initializeApp } from 'firebase/app';
+import { Auth, getAuth } from 'firebase/auth';
 
 let firebaseConfig;
 
 try {
-  firebaseConfig = process.env.NEXT_PUBLIC_FIREBASE_CONFIG ? JSON.parse(process.env.NEXT_PUBLIC_FIREBASE_CONFIG) : null;
+  firebaseConfig = process.env.NEXT_PUBLIC_FIREBASE_CONFIG
+    ? JSON.parse(process.env.NEXT_PUBLIC_FIREBASE_CONFIG)
+    : null;
 } catch (e) {
   console.error('Failed to parse Firebase configuration:', e);
   firebaseConfig = null;
@@ -20,8 +22,8 @@ if (firebaseConfig) {
   } catch (e) {
     console.error('Failed to initialize Firebase app:', e);
   }
-} else {
-  console.error('Firebase configuration is missing or invalid.');
+} else if (typeof window !== 'undefined') {
+  console.warn('Firebase not configured');
 }
 
 export { auth };

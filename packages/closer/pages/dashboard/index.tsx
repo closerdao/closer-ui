@@ -1,33 +1,40 @@
 import Head from 'next/head';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
 import AdminLayout from '../../components/Dashboard/AdminLayout';
-import DashboardBookings from '../../components/Dashboard/DashboardBookings';
-import DashboardMetrics from '../../components/Dashboard/DashboardMetrics';
-import DashboardRevenue from '../../components/Dashboard/DashboardRevenue';
-import TimeFrameSelector from '../../components/Dashboard/TimeFrameSelector';
-import { Heading } from '../../components/ui';
+import DashboardActions from '../../components/Dashboard/DashboardActions';
+import DashboardIntro from '../../components/Dashboard/DashboardIntro';
+import RevenueTimeFrameSelector from '../../components/Dashboard/RevenueTimeFrameSelector';
+import { Heading, Spinner } from '../../components/ui';
 
-import { NextPageContext } from 'next';
+const DashboardBookings = dynamic(
+  () => import('../../components/Dashboard/DashboardBookings'),
+  { ssr: false, loading: () => <Spinner /> }
+);
+const DashboardRevenue = dynamic(
+  () => import('../../components/Dashboard/DashboardRevenue'),
+  { ssr: false, loading: () => <Spinner /> }
+);
+const DashboardSubscriptions = dynamic(
+  () => import('../../components/Dashboard/DashboardSubscriptions'),
+  { ssr: false, loading: () => <Spinner /> }
+);
 import { useTranslations } from 'next-intl';
 import process from 'process';
 
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
-import { GeneralConfig } from '../../types';
-import api from '../../utils/api';
-import { parseMessageFromError } from '../../utils/common';
-import { loadLocaleData } from '../../utils/locale.helpers';
+import useRBAC from '../../hooks/useRBAC';
+import { BookingConfig, GeneralConfig } from '../../types';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import PageNotFound from '../not-found';
 
-interface Props {
-  generalConfig: GeneralConfig;
-  error?: string;
-}
-
-const DashboardPage = ({ generalConfig }: Props) => {
+const DashboardPage = () => {
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
+  const bookingConfig = getCachedConfig('booking') as BookingConfig | null;
   const t = useTranslations();
   const defaultConfig = useConfig();
   const { user } = useAuth();
@@ -39,14 +46,39 @@ const DashboardPage = ({ generalConfig }: Props) => {
 
   const { time_frame } = router.query;
   const [timeFrame, setTimeFrame] = useState<string>(
-    time_frame?.toString() || 'month',
+    time_frame?.toString() || 'currentMonth',
   );
 
+  const handleTimeFrameChange = (
+    value: string | ((prevState: string) => string),
+  ) => {
+    const newTimeFrame = typeof value === 'function' ? value(timeFrame) : value;
+    setTimeFrame(newTimeFrame);
+
+    router.replace(
+      {
+        pathname: '/dashboard',
+        query: { time_frame: newTimeFrame },
+      },
+      undefined,
+      { shallow: true },
+    );
+  };
+
+  const areSubscriptionsEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
+
+  const isBookingEnabled =
+    bookingConfig?.enabled &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+
   useEffect(() => {
-    router.push({
-      pathname: '/dashboard',
-      query: { time_frame: timeFrame },
-    });
+    if (isBookingEnabled) {
+      router.push({
+        pathname: '/dashboard',
+        query: { time_frame: timeFrame },
+      });
+    }
   }, [timeFrame]);
 
   useEffect(() => {
@@ -55,12 +87,13 @@ const DashboardPage = ({ generalConfig }: Props) => {
     }
   }, [router.query]);
 
-  const isAdmin = user?.roles.includes('admin');
+  const { hasAccess } = useRBAC();
+  const hasAccessToDashboard = hasAccess('Dashboard');
 
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
-  if (!user || !isAdmin) {
+  if (!user || !hasAccessToDashboard) {
     return <PageNotFound error="User may not access" />;
   }
 
@@ -68,19 +101,26 @@ const DashboardPage = ({ generalConfig }: Props) => {
     <>
       <Head>
         <title>{`${t('dashboard_title')} - ${PLATFORM_NAME}`}</title>
+        <meta name="robots" content="noindex, nofollow" />
       </Head>
       <AdminLayout>
-        <div className="flex justify-between flex-col md:flex-row gap-4">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           <Heading level={2}>{t('dashboard_title')}</Heading>
-          <TimeFrameSelector
+          <RevenueTimeFrameSelector
             timeFrame={timeFrame}
-            setTimeFrame={setTimeFrame}
+            setTimeFrame={handleTimeFrameChange}
             fromDate={fromDate}
             setFromDate={setFromDate}
             toDate={toDate}
             setToDate={setToDate}
           />
         </div>
+
+        <DashboardIntro
+          timeFrame={timeFrame}
+          fromDate={fromDate}
+          toDate={toDate}
+        />
 
         <DashboardBookings
           timeFrame={timeFrame}
@@ -92,37 +132,18 @@ const DashboardPage = ({ generalConfig }: Props) => {
           fromDate={fromDate}
           toDate={toDate}
         />
-        <DashboardMetrics
-          timeFrame={timeFrame}
-          fromDate={fromDate}
-          toDate={toDate}
-        />
+        {areSubscriptionsEnabled && (
+          <DashboardSubscriptions
+            timeFrame={timeFrame}
+            fromDate={fromDate}
+            toDate={toDate}
+          />
+        )}
+
+        <DashboardActions />
       </AdminLayout>
     </>
   );
-};
-
-DashboardPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [generalRes, messages] = await Promise.all([
-      api.get('/config/general').catch(() => {
-        return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const generalConfig = generalRes?.data?.results?.value;
-
-    return {
-      generalConfig,
-      messages,
-    };
-  } catch (error) {
-    return {
-      error: parseMessageFromError(error),
-      generalConfig: null,
-      messages: null,
-    };
-  }
 };
 
 export default DashboardPage;

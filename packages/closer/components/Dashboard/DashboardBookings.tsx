@@ -2,9 +2,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
 import { Card, Heading, Spinner } from '../../components/ui';
-import DonutChart from '../../components/ui/Charts/DonutChart';
 
 import dayjs from 'dayjs';
+import dynamic from 'next/dynamic';
+
+const DonutChart = dynamic(() => import('../ui/Charts/DonutChart'), {
+  ssr: false,
+  loading: () => <Spinner />,
+});
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import { useTranslations } from 'next-intl';
@@ -194,16 +199,16 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
     ).size;
 
   const peopleData = [
-    { name: 'Guests', value: numGuests },
-    { name: 'Volunteers', value: numVolunteers },
-    { name: 'Team', value: numTeam },
-    { name: 'Event Attendees', value: numEventAttendees },
+    { name: t('dashboard_chart_guests'), value: numGuests },
+    { name: t('dashboard_chart_volunteers'), value: numVolunteers },
+    { name: t('dashboard_chart_team'), value: numTeam },
+    { name: t('dashboard_chart_event_attendees'), value: numEventAttendees },
   ];
 
   const applicationsData = [
-    { name: 'Confirmed', value: numConfirmedBookings },
-    { name: 'Pending', value: numPendingBookings },
-    { name: 'Paid', value: numPaidBookings },
+    { name: t('dashboard_chart_confirmed'), value: numConfirmedBookings },
+    { name: t('dashboard_chart_pending'), value: numPendingBookings },
+    { name: t('dashboard_chart_paid'), value: numPaidBookings },
   ];
 
   const loadData = async () => {
@@ -291,19 +296,26 @@ const DashboardBookings = ({ timeFrame, fromDate, toDate }: Props) => {
           />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <OccupancyCard
-            isNightly={false}
-            listings={listings}
-            nightlyListings={nightlyListings}
-            spaceListings={spaceListings}
-            duration={duration}
-            numBookedSpaceSlots={numBookedSpaceSlots}
-          />
-          <OccupancyByListing
-            bookedNights={bookedNights}
-            bookedSpaceSlots={bookedSpaceSlots}
-            isNightly={false}
-          />
+          {spaceListings && spaceListings.size > 100 ? (
+            <>
+              {' '}
+              <OccupancyCard
+                isNightly={false}
+                listings={listings}
+                nightlyListings={nightlyListings}
+                spaceListings={spaceListings}
+                duration={duration}
+                numBookedSpaceSlots={numBookedSpaceSlots}
+              />
+              <OccupancyByListing
+                bookedNights={bookedNights}
+                bookedSpaceSlots={bookedSpaceSlots}
+                isNightly={false}
+              />
+            </>
+          ) : (
+            t('dashboard_no_space_listings')
+          )}
         </div>
       </div>
 

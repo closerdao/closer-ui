@@ -1,4 +1,40 @@
+import { DEFAULT_CURRENCY } from '../constants';
 import { Listing } from '../types';
+
+export function transformEventFoodBeforeSave<T extends { foodOptionId?: string | null }>(
+  data: T,
+): T & { foodOption: string; foodOptionId: string | null } {
+  let raw = data.foodOptionId;
+  if (
+    raw === 'null' ||
+    raw === 'undefined' ||
+    (typeof raw === 'string' && raw.trim().toLowerCase() === 'null')
+  ) {
+    raw = null;
+  }
+  const foodOption =
+    raw === 'no_food'
+      ? 'no_food'
+      : raw && raw !== ''
+        ? 'food_package'
+        : 'default';
+  const foodOptionId = foodOption === 'food_package' ? (raw ?? null) : null;
+  return { ...data, foodOption, foodOptionId };
+}
+
+export function toPhotoId(value: unknown): string | null {
+  if (value == null) return null;
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value) && value.length > 0) {
+    const first = value[0];
+    return typeof first === 'string' ? first : (first as { _id?: string })?._id ?? null;
+  }
+  if (typeof value === 'object' && value !== null && '_id' in value) {
+    const id = (value as { _id: unknown })._id;
+    return typeof id === 'string' ? id : (id as any)?.toString?.() ?? null;
+  }
+  return null;
+}
 
 const isHighSeason = (seasons: any, startDate: any) => {
   const date = new Date(startDate);
@@ -63,6 +99,20 @@ const getMinMaxFiatPrice = (
   return { min, max };
 };
 
+const getAccommodationListingCurrency = (listings: Listing[]): string => {
+  if (listings.length === 0) {
+    return DEFAULT_CURRENCY;
+  }
+  const curs = listings
+    .map((l) => l?.fiatPrice?.cur as string | undefined)
+    .filter((c): c is string => Boolean(c));
+  const unique = [...new Set(curs)];
+  if (unique.length === 1) {
+    return unique[0];
+  }
+  return listings[0]?.fiatPrice?.cur ?? DEFAULT_CURRENCY;
+};
+
 function calculateDurationDiscount(duration: number, settings: any) {
   let discount;
   if (duration >= 28) {
@@ -80,7 +130,7 @@ export const getAccommodationPriceRange = (
   listings: Listing[],
   duration: number,
   start: any,
-) => {
+): { min: number; max: number; currency: string } => {
   const durationDiscount = calculateDurationDiscount(duration, settings);
 
   const listingsAvailableForEvents = listings.filter(
@@ -90,6 +140,7 @@ export const getAccommodationPriceRange = (
       !listing?.availableFor,
   );
   const minMaxValues = getMinMaxFiatPrice(listingsAvailableForEvents);
+  const currency = getAccommodationListingCurrency(listingsAvailableForEvents);
   const seasons = {
     high: {
       start: settings.seasonsHighStart,
@@ -102,9 +153,11 @@ export const getAccommodationPriceRange = (
     ? {
         min: minMaxValues.min * settings.seasonsHighModifier * duration,
         max: minMaxValues.max * settings.seasonsHighModifier * duration,
+        currency,
       }
     : {
         min: minMaxValues.min * duration,
         max: minMaxValues.max * duration * (1 - durationDiscount),
+        currency,
       };
 };

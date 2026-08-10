@@ -4,16 +4,27 @@ import { useTranslations } from 'next-intl';
 import objectPath from 'object-path';
 
 import { CURRENCIES_WITH_LABELS } from '../constants';
+import LearnEditor from './LearnEditor';
 import Autocomplete from './Autocomplete';
 import Checkbox from './Checkbox';
 import DiscountsEditor from './DiscountsEditor';
 import FieldsEditor from './FieldsEditor';
+import PhotoEditor from './PhotoEditor';
 import PhotosEditor from './PhotosEditor';
 import PriceEditor from './PriceEditor';
 import RichTextEditor from './RichTextEditor';
 import Switch from './Switch';
 import Tag from './Tag';
 import TicketOptionsEditor from './TicketOptionsEditor';
+
+const TOKEN_PRICE_FIELDS = ['tokenPrice', 'tokenHourlyPrice'];
+const FIAT_PRICE_FIELDS = ['fiatPrice', 'fiatHourlyPrice'];
+
+const controlClassName =
+  'new-input w-full rounded-xl border border-gray-200 !bg-gray-50 px-3.5 py-2.5 text-[15px] leading-snug text-gray-900 placeholder:text-gray-400 outline-none transition-colors focus:border-accent focus:!bg-white focus:ring-2 focus:ring-accent/20 disabled:opacity-50 disabled:cursor-not-allowed';
+
+const selectClassName =
+  'new-input w-full rounded-xl border border-gray-200 !bg-gray-50 px-3.5 py-2.5 text-[15px] leading-snug text-gray-900 outline-none transition-colors focus:border-accent focus:!bg-white focus:ring-2 focus:ring-accent/20 appearance-none bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-10';
 
 const FormField = ({
   data,
@@ -31,8 +42,17 @@ const FormField = ({
   min,
   max,
   step,
-  dynamicField = null,
+  headingKey,
+  messageKey,
+  dynamicField = /** @type {any} */ (null),
+  isPrimaryField = false,
+  isSecondary = false,
+  currencyConfig = /** @type {any} */ (null),
 }) => {
+  const fixedCurrency =
+    type === 'currency' &&
+    currencyConfig &&
+    (TOKEN_PRICE_FIELDS.includes(name) ? currencyConfig.tokenCur : FIAT_PRICE_FIELDS.includes(name) ? currencyConfig.fiatCur : null);
   const t = useTranslations();
 
   const [addTag, setAddTag] = useState('');
@@ -48,16 +68,28 @@ const FormField = ({
     }
   };
 
+  const labelClass =
+    'block text-[11px] uppercase tracking-[0.12em] text-gray-400 font-medium mb-1.5';
+  const fieldWrapperClass = isSecondary ? 'mb-4' : 'mb-5';
+
   return (
-    <div className={`form-field w-full mb-6 form-type-${type}`} key={name}>
-      {name !== 'start' && name !== 'end' && (
-        <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2">
+    <div className={`form-field w-full ${fieldWrapperClass} form-type-${type}`} key={name}>
+      {name !== 'start' && name !== 'end' && type !== 'note' && (
+        <label className={labelClass}>
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
 
       {
         <>
+          {type === 'note' && headingKey && messageKey && (
+            <div className="border-t border-gray-100 pt-5 mt-1 space-y-2">
+              <p className="text-[11px] uppercase tracking-[0.12em] text-gray-400 font-medium">
+                {t(headingKey)}
+              </p>
+              <p className="text-sm text-gray-600 leading-relaxed">{t(messageKey)}</p>
+            </div>
+          )}
           {['text', 'email', 'phone', 'hidden', 'number', 'date'].includes(
             type,
           ) && (
@@ -68,16 +100,28 @@ const FormField = ({
               placeholder={placeholder}
               min={min}
               max={max}
-              className={'bg-transparent ' + className}
+              className={`${controlClassName} ${isSecondary ? 'text-sm py-2' : ''} ${className || ''}`}
               onChange={(e) => update(name, e.target.value)}
               required={required}
             />
           )}
           {type === 'longtext' && (
-            <RichTextEditor
-              value={objectPath.get(data, name)}
+            <div className={isPrimaryField ? 'rich-text-editor-large min-h-[320px]' : ''}>
+              <RichTextEditor
+                value={objectPath.get(data, name)}
+                placeholder={placeholder}
+                onChange={(value) => update(name, value)}
+              />
+            </div>
+          )}
+          {type === 'textarea' && (
+            <textarea
+              value={objectPath.get(data, name) || ''}
               placeholder={placeholder}
-              onChange={(value) => update(name, value)}
+              rows={4}
+              className={`${controlClassName} resize-y min-h-[96px] ${className || ''}`}
+              onChange={(e) => update(name, e.target.value)}
+              required={required}
             />
           )}
           {type === 'currency' && (
@@ -86,6 +130,7 @@ const FormField = ({
               onChange={(value) => update(name, value)}
               placeholder={placeholder}
               required={required}
+              fixedCurrency={fixedCurrency}
             />
           )}
           {type === 'photos' && (
@@ -95,13 +140,21 @@ const FormField = ({
               required={required}
             />
           )}
+          {type === 'photo' && (
+            <PhotoEditor
+              value={objectPath.get(data, name)}
+              onChange={(value) => update(name, value)}
+              required={required}
+            />
+          )}
           {type === 'currencies' && (
-            <div className="currencies-group">
+            <div className="currencies-group flex flex-col gap-3">
               {(objectPath.get(data, name) || []).map(
                 (currencyGroup, index) => (
-                  <div className="currency-group" key={`${name}.${index}.cur`}>
+                  <div className="currency-group flex flex-wrap items-center gap-2" key={`${name}.${index}.cur`}>
                     <select
                       value={objectPath.get(data, name)?.cur}
+                      className={`${selectClassName} max-w-[200px]`}
                       onChange={(e) =>
                         update(`${name}.${index}.cur`, e.target.value)
                       }
@@ -116,6 +169,7 @@ const FormField = ({
                       type={type}
                       value={objectPath.get(data, name)[index]?.val || ''}
                       placeholder={placeholder}
+                      className={`${controlClassName} max-w-[160px]`}
                       onChange={(e) =>
                         update(`${name}.${index}.val`, e.target.value)
                       }
@@ -124,6 +178,7 @@ const FormField = ({
                     {index > 0 && (
                       <a
                         href="#"
+                        className="text-sm text-gray-500 hover:text-gray-800 underline underline-offset-2"
                         onClick={(e) => {
                           e.preventDefault();
                           update(
@@ -142,6 +197,7 @@ const FormField = ({
               )}
               <a
                 href="#"
+                className="text-sm font-medium text-accent hover:text-accent-dark"
                 onClick={(e) => {
                   e.preventDefault();
                   update(
@@ -161,7 +217,11 @@ const FormField = ({
               <select
                 value={objectPath.get(data, name)}
                 onChange={(e) => update(name, e.target.value)}
-                className={`px-2 py-1 min-w-[180px] ${className}`}
+                className={`${selectClassName} ${className || ''}`}
+                style={{
+                  backgroundImage:
+                    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")",
+                }}
               >
                 {(dynamicField?.name === name
                   ? dynamicField?.options
@@ -175,14 +235,14 @@ const FormField = ({
             </>
           )}
           {type === 'multi-select' && (
-            <div className="flex flex-wrap gap-4 my-6">
+            <div className="flex flex-wrap gap-3 my-2">
               {dynamicField?.name === name
                 ? dynamicField?.options.map((option) => (
                     <Checkbox
                       key={option}
                       onChange={() => handleCheckboxChange(option)}
                       checked={objectPath.get(data, name).includes(option)}
-                      className="mb-4"
+                      className="mb-0"
                     >
                       {option}
                     </Checkbox>
@@ -192,7 +252,7 @@ const FormField = ({
                       key={option}
                       onChange={() => handleCheckboxChange(option)}
                       checked={objectPath.get(data, name).includes(option)}
-                      className="mb-4"
+                      className="mb-0"
                     >
                       {option}
                     </Checkbox>
@@ -229,7 +289,7 @@ const FormField = ({
                 ))}
               <input
                 type="text"
-                className="mt-2"
+                className={`${controlClassName} mt-2`}
                 placeholder={placeholder || 'Add tag'}
                 value={addTag}
                 title="Press enter to add"
@@ -292,6 +352,13 @@ const FormField = ({
             <TicketOptionsEditor
               value={objectPath.get(data, name)}
               onChange={(value) => update(name, value)}
+              fixedCurrency={currencyConfig?.fiatCur ?? null}
+            />
+          )}
+          {type === 'learnEditor' && (
+            <LearnEditor
+              value={objectPath.get(data, name)}
+              onChange={(value) => update(name, value)}
             />
           )}
           {type === 'discounts' && (
@@ -311,7 +378,5 @@ const FormField = ({
     </div>
   );
 };
-
-FormField.defaultProps = {};
 
 export default FormField;

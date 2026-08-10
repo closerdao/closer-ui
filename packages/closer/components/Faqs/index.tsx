@@ -21,7 +21,7 @@ const Faqs = ({ faqs, error, isExpanded }: Props) => {
           return (
             <div
               key={category[0]}
-              className="border-b border-accent-light text-sm"
+              className="w-full border-b border-accent-light text-sm"
             >
               <details
                 className="appearance-none group py-2 "

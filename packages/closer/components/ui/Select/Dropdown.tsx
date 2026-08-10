@@ -22,11 +22,11 @@ const Dropdown: FC<DropdownProps> = React.memo(
     }
 
     const handleChange = (option: Item) => {
-      onChange && onChange(option.value);
+      if (onChange) onChange(option.value);
     };
 
     return (
-      <div className={' relative w-full'}>
+      <div className={' relative w-full flex flex-col gap-2'}>
         {label && (
           <label className="font-medium text-complimentary-light">
             {label}
@@ -42,6 +42,11 @@ const Dropdown: FC<DropdownProps> = React.memo(
           placeholder={placeholder}
           data-testid={dataTestId}
           aria-required={isRequired}
+          listProps={{
+            style: {
+              maxHeight: 400,
+            },
+          }}
           optionComponent={(props) => (
             <div
               role="option"

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import api, { formatSearch } from '../utils/api';
 import { useTranslations } from 'next-intl';
 
-const Autocomplete = ({ endpoint, where, placeholder, value, onChange }) => {
+const Autocomplete = ({ endpoint, where = {}, placeholder = 'Start typing...', value = [], onChange = () => {} }) => {
   const t = useTranslations();
 
   const [search, setSearch] = useState('');
@@ -115,13 +115,6 @@ const Autocomplete = ({ endpoint, where, placeholder, value, onChange }) => {
       )}
     </div>
   );
-};
-
-Autocomplete.defaultProps = {
-  onChange: () => null,
-  value: [],
-  where: {},
-  placeholder: 'Start typing...',
 };
 
 export default Autocomplete;

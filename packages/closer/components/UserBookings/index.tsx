@@ -3,26 +3,46 @@ import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { User } from '../../contexts/auth/types';
+import { BookingConfig } from '../../types/api';
 import Bookings from '../Bookings';
 import Tabs from '../Tabs';
 
 interface Props {
   user: User;
   isSpaceHostView?: boolean;
+  bookingConfig?: BookingConfig;
+  hideExportCsv?: boolean;
 }
 
-const UserBookingsComponent = ({ user, isSpaceHostView }: Props) => {
+const UserBookingsComponent = ({
+  user,
+  isSpaceHostView,
+  bookingConfig,
+  hideExportCsv = true,
+}: Props) => {
   const t = useTranslations();
   const bookingsToShowLimit = 50;
 
-  const [page, setPage] = useState(1);
+  const [upcomingPage, setUpcomingPage] = useState(1);
+  const [pastPage, setPastPage] = useState(1);
+
+  const friendOrSelfOr = [
+    { createdBy: user._id },
+    {
+      $and: [
+        { isFriendsBooking: { $eq: true } },
+        { friendEmails: { $exists: true } },
+        { friendEmails: { $ne: [] } },
+        { friendEmails: { $in: [user.email] } },
+      ],
+    },
+  ];
 
   const filters = {
     myBookings: user && {
       where: {
-        createdBy: user._id,
+        $or: friendOrSelfOr,
         status: [
-          'open',
           'pending',
           'confirmed',
           'tokens-staked',
@@ -39,7 +59,7 @@ const UserBookingsComponent = ({ user, isSpaceHostView }: Props) => {
     },
     pastBookings: user && {
       where: {
-        createdBy: user._id,
+        $or: friendOrSelfOr,
         end: { $lt: new Date() },
       },
       limit: bookingsToShowLimit,
@@ -51,15 +71,16 @@ const UserBookingsComponent = ({ user, isSpaceHostView }: Props) => {
       <Tabs
         tabs={[
           {
-            title: isSpaceHostView
-              ? t('bookings_title_user')
-              : t('bookings_title'),
+            title: t('bookings_upcoming_tab'),
             value: 'my-bookings',
             content: (
               <Bookings
-                page={page}
-                setPage={setPage}
+                page={upcomingPage}
+                setPage={setUpcomingPage}
                 filter={filters.myBookings}
+                bookingConfig={bookingConfig}
+                hideExportCsv={hideExportCsv}
+                previewAsAdmin={Boolean(isSpaceHostView)}
               />
             ),
           },
@@ -68,9 +89,12 @@ const UserBookingsComponent = ({ user, isSpaceHostView }: Props) => {
             value: 'past-bookings',
             content: (
               <Bookings
-                page={page}
-                setPage={setPage}
+                page={pastPage}
+                setPage={setPastPage}
                 filter={filters.pastBookings}
+                bookingConfig={bookingConfig}
+                hideExportCsv={hideExportCsv}
+                previewAsAdmin={Boolean(isSpaceHostView)}
               />
             ),
           },

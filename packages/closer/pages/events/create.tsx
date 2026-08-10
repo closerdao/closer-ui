@@ -1,29 +1,47 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import EditModel from '../../components/EditModel';
-import Heading from '../../components/ui/Heading';
+import EditModel, { EditModelPageLayout } from '../../components/EditModel';
+import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import models from '../../models';
-import { loadLocaleData } from '../../utils/locale.helpers';
 import { FoodOption } from '../../types/food';
+import config from '../../configCached';
 import api from '../../utils/api';
+import { getBookingTokenCurrency } from '../../utils/booking.helpers';
+import { transformEventFoodBeforeSave } from '../../utils/events.helpers';
+
+interface EventsConfig {
+  enabled: boolean;
+}
 
 interface Props {
   foodOptions: FoodOption[];
+  eventsConfig: EventsConfig | null;
+  paymentConfig: {
+    fiatCur?: string;
+    utilityFiatCur?: string;
+  } | null;
+  web3Config: { bookingToken?: string } | null;
 }
 
-const CreateEvent = ({ foodOptions }: Props) => {
+const CreateEvent = ({ foodOptions, eventsConfig, paymentConfig, web3Config }: Props) => {
   const t = useTranslations();
   const router = useRouter();
+
+  const isEventsEnabled = eventsConfig?.enabled !== false;
 
   const foodOptionsWithDefault = [
     {
       label: 'Allow guests to select',
       value: '',
+    },
+    {
+      label: 'No food',
+      value: 'no_food',
     },
     ...foodOptions?.map((option) => ({
       label: option.name,
@@ -31,15 +49,42 @@ const CreateEvent = ({ foodOptions }: Props) => {
     })),
   ];
 
+  if (!isEventsEnabled) {
+    return <FeatureNotEnabled feature="events" />;
+  }
+
+  const eventFiatCurrency =
+    paymentConfig?.fiatCur ??
+    paymentConfig?.utilityFiatCur ??
+    'EUR';
+
+  const transformDataBeforeSave = (data: Record<string, unknown>) => {
+    let result = { ...data };
+    if (
+      Array.isArray(result.ticketOptions) &&
+      result.ticketOptions.length > 0 &&
+      eventFiatCurrency
+    ) {
+      result = {
+        ...result,
+        ticketOptions: result.ticketOptions.map((opt: Record<string, unknown>) => ({
+          ...opt,
+          currency: eventFiatCurrency,
+        })),
+      };
+    }
+    return transformEventFoodBeforeSave(result);
+  };
+
   return (
     <>
       <Head>
         <title>{t('events_create_title')}</title>
       </Head>
-      <div className="main-content intro">
-        <Heading level={2} className="mb-2">
-          {t('events_create_title')}
-        </Heading>
+      <EditModelPageLayout
+        title={t('events_create_title')}
+        subtitle={t('edit_model_create_intro')}
+      >
         <EditModel
           dynamicField={{
             name: 'foodOptionId',
@@ -48,32 +93,44 @@ const CreateEvent = ({ foodOptions }: Props) => {
           endpoint={'/event'}
           fields={models.event}
           onSave={(event) => router.push(`/events/${event.slug}`)}
+          transformDataBeforeSave={transformDataBeforeSave}
+          currencyConfig={{
+            fiatCur: eventFiatCurrency,
+            tokenCur: getBookingTokenCurrency(web3Config, undefined),
+          }}
         />
-      </div>
+      </EditModelPageLayout>
     </>
   );
 };
 
 CreateEvent.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [foodRes, messages] = await Promise.all([
-
-      api.get('/food').catch((err) => {
+    const foodRes = await api.get('/food').catch((err) => {
         console.error('Error fetching food:', err);
         return null;
-      }),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
+      })
 
-    const foodOptions = foodRes?.data?.results;
+    const allFood = foodRes?.data?.results || [];
+    const foodOptions = allFood.filter((f: FoodOption) =>
+      f.availableFor?.includes('events'),
+    );
+    const eventsConfig = config.events;
+    const paymentConfig = config.payment ?? null;
+    const web3Config = config.web3 ?? null;
+
     return {
-      messages,
       foodOptions,
+      eventsConfig,
+      paymentConfig,
+      web3Config,
     };
   } catch (err: unknown) {
     return {
-      messages: null,
       foodOptions: null,
+      eventsConfig: null,
+      paymentConfig: null,
+      web3Config: null,
     };
   }
 };

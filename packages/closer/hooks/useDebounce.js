@@ -1,22 +1,36 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export function useDebounce(value, delay) {
   // State and setters for debounced value
   const [debouncedValue, setDebouncedValue] = useState(value);
-  useEffect(
-    () => {
-      // Update debounced value after delay
-      const handler = setTimeout(() => {
+  const timeoutRef = useRef(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    // Set mounted flag
+    isMountedRef.current = true;
+
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    // Update debounced value after delay
+    timeoutRef.current = setTimeout(() => {
+      // Only update if component is still mounted
+      if (isMountedRef.current) {
         setDebouncedValue(value);
-      }, delay);
-      // Cancel the timeout if value changes (also on delay change or unmount)
-      // This is how we prevent debounced value from updating if value is changed ...
-      // .. within the delay period. Timeout gets cleared and restarted.
-      return () => {
-        clearTimeout(handler);
-      };
-    },
-    [value, delay], // Only re-call effect if value or delay changes
-  );
+      }
+    }, delay);
+
+    // Cleanup function
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      isMountedRef.current = false;
+    };
+  }, [value, delay]); // Only re-call effect if value or delay changes
+
   return debouncedValue;
 }

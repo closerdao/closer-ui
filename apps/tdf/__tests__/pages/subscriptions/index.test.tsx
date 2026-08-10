@@ -1,14 +1,14 @@
 import { generalConfig } from '@/__tests__/mocks/generalConfig';
-import SubscriptionsPage from '@/pages/subscriptions';
+import SubscriptionsPage from '@/pages/legacy/subscriptions';
 import { renderWithProviders } from '@/test/utils';
 
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 
 import { listings } from '../../mocks/listings';
 import { subscriptionsConfig } from '../../mocks/subscriptions';
 
 describe('Subscriptions', () => {
-  it('should have a proper title', () => {
+  it('should render comparison heading when multiple plans exist', async () => {
     renderWithProviders(
       <SubscriptionsPage
         listings={listings}
@@ -17,14 +17,20 @@ describe('Subscriptions', () => {
       />,
     );
 
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
     const title = screen.getByRole('heading', {
-      name: /ONE REGENERATIVE CO-LIVING/i,
+      name: /Choose your membership/i,
     });
 
     expect(title).toBeInTheDocument();
+    expect(screen.getByText(/Wanderer/i)).toBeInTheDocument();
+    expect(screen.getByText(/Pioneer/i)).toBeInTheDocument();
   });
 
-  it('should show free plan card by default', () => {
+  it('should show create account CTA by default', async () => {
     renderWithProviders(
       <SubscriptionsPage
         listings={listings}
@@ -33,10 +39,14 @@ describe('Subscriptions', () => {
       />,
     );
 
-    const createAccountButton = screen.getByRole('button', {
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    const createAccountButtons = screen.getAllByRole('button', {
       name: /create account/i,
     });
 
-    expect(createAccountButton).toBeInTheDocument();
+    expect(createAccountButtons.length).toBeGreaterThan(0);
   });
 });

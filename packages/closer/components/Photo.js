@@ -12,7 +12,7 @@ import { cdn } from '../utils/api';
     max-xl
 */
 
-const Photo = ({ id, className, size, title, cover, rounded, photoUrl }) => {
+const Photo = ({ id, className = '', size = 'sm', title, cover = true, rounded, photoUrl }) => {
   const placeholder = '/images/profile-placeholder.png';
   const url = photoUrl
     ? photoUrl
@@ -37,12 +37,6 @@ const Photo = ({ id, className, size, title, cover, rounded, photoUrl }) => {
       )}
     </span>
   );
-};
-
-Photo.defaultProps = {
-  size: 'sm',
-  cover: true,
-  className: '',
 };
 
 export default Photo;

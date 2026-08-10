@@ -1,51 +1,83 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
-import { CSVLink } from 'react-csv';
+import { Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
-import { BOOKINGS_PER_PAGE, MAX_BOOKINGS_TO_FETCH } from '../constants';
+import { BOOKINGS_PER_PAGE, MAX_BOOKINGS_TO_FETCH, MAX_LISTINGS_TO_FETCH } from '../constants';
 import { usePlatform } from '../contexts/platform';
+import { useAuth } from '../contexts/auth';
+import { Listing } from '../types';
+import BookingActionsDropdown from './BookingActionsDropdown';
 import BookingListPreview from './BookingListPreview/BookingListPreview';
 import Pagination from './Pagination';
 import { Heading, Spinner } from './ui';
+import { BookingConfig } from '../types/api';
+import {
+  getBookingListingDisplayName,
+  getBookingListingEmbedded,
+  getBookingListingRefId,
+} from '../utils/booking.helpers';
 
 interface Props {
   filter: any;
   page: number;
   setPage: Dispatch<SetStateAction<number>>;
+  bookingConfig?: BookingConfig;
+  hideExportCsv?: boolean;
+  previewAsAdmin?: boolean;
+  bookingDetailHrefPrefix?: string;
 }
 
 const MAX_USERS_TO_FETCH = 2000;
 
-const Bookings = ({ filter, page, setPage }: Props) => {
+const Bookings = ({
+  filter,
+  page,
+  setPage,
+  bookingConfig,
+  hideExportCsv = false,
+  previewAsAdmin = true,
+  bookingDetailHrefPrefix,
+}: Props) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
+  const { user } = useAuth();
+
+  const isSpaceHost = user?.roles?.includes('space-host');
 
   const bookings = platform.booking.find(filter);
   const allUsers = platform.user.find({ limit: MAX_USERS_TO_FETCH });
+  const listingsData = platform.listing.find({
+    where: {},
+    limit: MAX_LISTINGS_TO_FETCH,
+  });
 
-  const eventsFilter = bookings && {
-    where: {
-      _id: {
-        $in: bookings.map((booking: any) => booking.get('eventId')),
-      },
-    },
-  };
-  const volunteerFilter = bookings && {
-    where: {
-      _id: {
-        $in: bookings.map((booking: any) => booking.get('volunteerId')),
-      },
-    },
-  };
-  const listingFilter = bookings && {
-    where: {
-      _id: {
-        $in: bookings.map((booking: any) => booking.get('listing')),
-      },
-    },
-  };
+  const listingOptions = useMemo(() => {
+    if (!listingsData) return [];
+    return listingsData.toJS().map((listing: Listing) => ({
+      value: listing._id,
+      label: listing.name,
+    }));
+  }, [listingsData]);
+
+  const eventIds =
+    bookings &&
+    bookings.map((b: any) => b.get('eventId')).filter(Boolean).toJS();
+  const volunteerIds =
+    bookings &&
+    bookings.map((b: any) => b.get('volunteerId')).filter(Boolean).toJS();
+  const listingIds =
+    bookings &&
+    bookings
+      .map((b: any) => getBookingListingRefId(b.get('listing')))
+      .filter((id: string | null) => id != null && id !== '')
+      .toJS();
+  const eventsFilter =
+    eventIds?.length > 0 && { where: { _id: { $in: eventIds } } };
+  const volunteerFilter =
+    volunteerIds?.length > 0 && { where: { _id: { $in: volunteerIds } } };
+  const listingFilter =
+    listingIds?.length > 0 && { where: { _id: { $in: listingIds } } };
 
   const error = bookings && bookings.get('error');
 
@@ -62,13 +94,14 @@ const Bookings = ({ filter, page, setPage }: Props) => {
       platform.booking.get({
         where: filter.where,
         limit: MAX_BOOKINGS_TO_FETCH,
-      }),
-        setLoading(true);
+      });
+      setLoading(true);
       if (bookings) {
         await Promise.all([
-          platform.event.get(eventsFilter),
-          platform.volunteer.get(volunteerFilter),
-          platform.listing.get(listingFilter),
+          ...(eventsFilter ? [platform.event.get(eventsFilter)] : []),
+          ...(volunteerFilter ? [platform.volunteer.get(volunteerFilter)] : []),
+          ...(listingFilter ? [platform.listing.get(listingFilter)] : []),
+          platform.listing.get({ where: {}, limit: MAX_LISTINGS_TO_FETCH }),
           platform.user.get({ limit: MAX_USERS_TO_FETCH }),
         ]);
       }
@@ -84,6 +117,70 @@ const Bookings = ({ filter, page, setPage }: Props) => {
     }
   }, [filter, page, bookings]);
 
+  const handleExportCsv = useCallback(() => {
+    if (!bookings) return;
+
+    const headers = [
+      { label: 'ID', key: 'id' },
+      { label: 'Name', key: 'name' },
+      { label: 'Listing', key: 'listing' },
+      { label: 'Event', key: 'event' },
+      { label: 'Guests', key: 'guests' },
+      { label: 'Volunteer', key: 'volunteer' },
+      { label: 'Arrival', key: 'arrival' },
+      ...(bookingConfig?.pickUpEnabled
+        ? [{ label: 'Pickup', key: 'pickup' }]
+        : []),
+      { label: 'Total', key: 'total' },
+    ];
+    const data = bookings
+      .map((booking: any) => {
+        const user = platform.user.findOne(booking.get('createdBy'));
+        const listingRef = booking.get('listing');
+        const listingId = getBookingListingRefId(listingRef);
+        const listing = listingId
+          ? platform.listing.findOne(listingId)
+          : null;
+        const bookingEvent = platform.event.findOne(booking.get('eventId'));
+
+        return {
+          id: booking.get('_id'),
+          name: user?.get('screenname'),
+          listing:
+            listing?.get('name') ??
+            getBookingListingDisplayName(listingRef, listing, ''),
+          event: bookingEvent?.get('name'),
+          guests: booking.get('adults'),
+          volunteer: booking.get('volunteerId'),
+          arrival: booking.get('start'),
+          ...(bookingConfig?.pickUpEnabled
+            ? { pickup: booking.get('doesNeedPickup') }
+            : {}),
+          total:
+            booking.getIn(['total', 'val']) ??
+            booking.getIn(['priceLock', 'total', 'val']) ??
+            booking.getIn(['fiatTarget', 'val']),
+        };
+      })
+      .toJS();
+
+    const csvContent = [
+      headers.map((h) => h.label).join(','),
+      ...data.map((row: Record<string, string | number>) =>
+        Object.values(row).join(','),
+      ),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], {
+      type: 'text/csv;charset=utf-8;',
+    });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `bookings-${dayjs().format('YYYY-MM-DD.HH:mm')}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }, [bookings, platform, bookingConfig]);
+
   if (error) {
     return <div className="validation-error">{JSON.stringify(error)}</div>;
   }
@@ -96,73 +193,42 @@ const Bookings = ({ filter, page, setPage }: Props) => {
             <Spinner /> {t('generic_loading')}
           </div>
         ) : (
-          <div className="columns mt-8">
+          <div className="columns">
             <div className="flex flex-start items-center border-b pb-4">
-              <Heading level={2} className="mr-4">
+              <Heading level={2} className="mr-4 whitespace-nowrap">
                 {allBookings ? allBookings.size : 0}{' '}
                 {bookings && bookings.count() === 1
                   ? t('booking_requests_result')
                   : t('booking_requests_results')}
               </Heading>
 
-              {bookings && (
-                <CSVLink
-                  className="underline  text-accent"
-                  data={bookings
-                    .map((booking: any) => {
-                      const user = platform.user.findOne(
-                        booking.get('createdBy'),
-                      );
-                      const listing = platform.listing.findOne(
-                        booking.get('listing'),
-                      );
-                      const bookingEvent = platform.event.findOne(
-                        booking.get('eventId'),
-                      );
-
-                      return {
-                        id: booking.get('_id'),
-                        name: user?.get('screenname'),
-                        listing: listing?.get('name'),
-                        event: bookingEvent?.get('name'),
-                        guests: booking.get('adults'),
-                        volunteer: booking.get('volunteerId'),
-                        arrival: booking.get('start'),
-                        pickup: booking.get('doesNeedPickup'),
-                        total: booking.getIn(['total', 'val']),
-                      };
-                    })
-                    .toJS()}
-                  headers={[
-                    { label: 'ID', key: 'id' },
-                    { label: 'Name', key: 'name' },
-                    { label: 'Listing', key: 'listing' },
-                    { label: 'Event', key: 'event' },
-                    { label: 'Guests', key: 'guests' },
-                    { label: 'Volunteer', key: 'volunteer' },
-                    { label: 'Arrival', key: 'arrival' },
-                    { label: 'Pickup', key: 'pickup' },
-                    { label: 'Total', key: 'total' },
-                  ]}
-                  filename={`bookings-${dayjs().format(
-                    'YYYY-MM-DD.HH:mm',
-                  )}.csv`}
-                >
-                  {t('generic_export_csv')}
-                </CSVLink>
+              {bookings && (!hideExportCsv || isSpaceHost) && (
+                <div className="ml-auto">
+                  <BookingActionsDropdown
+                    listingOptions={listingOptions}
+                    onExportCsv={handleExportCsv}
+                    showExportCsv={!hideExportCsv}
+                    showCreateBooking={isSpaceHost}
+                  />
+                </div>
               )}
             </div>
-            <div className="bookings-list mt-8 flex flex-wrap gap-4">
+            <div className="bookings-list mt-8 grid grid-cols-1 justify-items-start gap-4 md:grid-cols-2">
               {!bookings || bookings.count() === 0 ? (
                 <p className="mt-4">{t('no_bookings')}</p>
               ) : (
                 bookings.map((booking: any) => {
-                  const listing = platform.listing.findOne(
-                    booking.get('listing'),
+                  const listingRef = booking.get('listing');
+                  const listingId = getBookingListingRefId(listingRef);
+                  const listing = listingId
+                    ? platform.listing.findOne(listingId)
+                    : null;
+                  const embedded = getBookingListingEmbedded(listingRef);
+                  const listingName = getBookingListingDisplayName(
+                    listingRef,
+                    listing,
+                    t('no_listing_type'),
                   );
-                  const listingName = listing
-                    ? listing.get('name')
-                    : t('no_listing_type');
 
                   const user =
                     allUsers &&
@@ -171,6 +237,12 @@ const Bookings = ({ filter, page, setPage }: Props) => {
                       .find(
                         (user: any) => user._id === booking.get('createdBy'),
                       );
+
+                  const paidBy = booking.get('paidBy');
+                  const payer =
+                    paidBy &&
+                    allUsers &&
+                    allUsers.toJS().find((user: any) => user._id === paidBy);
 
                   const currentEvent = platform.event.findOne(
                     booking.get('eventId'),
@@ -190,27 +262,38 @@ const Bookings = ({ filter, page, setPage }: Props) => {
                       `/volunteer/${currentVolunteer.get('slug')}`;
                   }
 
+                  const userToShow = payer || user;
+
+                  const isPrivateListing =
+                    (listing && listing.get('private')) ?? embedded.private;
+                  const isHourlyListing =
+                    (listing && listing.get('priceDuration') === 'hour') ||
+                    embedded.priceDuration === 'hour';
+
                   return (
                     <BookingListPreview
-                      isAdmin={true}
+                      isAdmin={previewAsAdmin}
                       key={booking.get('_id')}
                       booking={platform.booking.findOne(booking.get('_id'))}
                       listingName={listingName}
-                      isPrivate={listing && listing.get('private')}
-                      isHourly={listing && listing.get('priceDuration') === 'hour'}
+                      isPrivate={isPrivateListing}
+                      isHourly={isHourlyListing}
                       userInfo={
-                        user && {
-                          name: user.screenname,
-                          photo: user.photo,
-                          diet: user.preferences?.diet,
-                          email: user.email,
+                        userToShow && {
+                          name: userToShow.screenname,
+                          photo: userToShow.photo,
+                          diet: userToShow.preferences?.diet,
+                          email: userToShow.email,
                         }
                       }
                       eventName={currentEvent && currentEvent.get('name')}
+                      eventChatLink={currentEvent && currentEvent.get('chatLink')}
                       volunteerName={
                         currentVolunteer && currentVolunteer.get('name')
                       }
                       link={link}
+                      bookingConfig={bookingConfig}
+                      bookingDetailHrefPrefix={bookingDetailHrefPrefix}
                     />
                   );
                 })

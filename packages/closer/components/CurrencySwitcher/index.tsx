@@ -9,6 +9,8 @@ interface Props {
   selectedCurrency: string | CloserCurrencies;
   onSelect: Dispatch<SetStateAction<string | CloserCurrencies>>;
   className?: string;
+  optionsTitles?: string[];
+  requireWalletConnection?: boolean;
 }
 
 const CurrencySwitcher = ({
@@ -16,11 +18,20 @@ const CurrencySwitcher = ({
   selectedCurrency,
   onSelect,
   className,
+  optionsTitles,
+  requireWalletConnection = true,
 }: Props) => {
   const { isWalletConnected, isCorrectNetwork, hasSameConnectedAccount } =
     useContext(WalletState);
   const isWeb3BookingEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
+
+  const isTokenPaymentAvailable = requireWalletConnection
+    ? isWalletConnected &&
+      isWeb3BookingEnabled &&
+      isCorrectNetwork &&
+      hasSameConnectedAccount
+    : undefined;
 
   return (
     <div className={`${className ? className : ''}`}>
@@ -28,12 +39,8 @@ const CurrencySwitcher = ({
         options={currencies}
         selectedOption={selectedCurrency}
         setSelectedOption={onSelect}
-        isTokenPaymentAvailable={
-          isWalletConnected &&
-          isWeb3BookingEnabled &&
-          isCorrectNetwork &&
-          hasSameConnectedAccount
-        }
+        optionsTitles={optionsTitles}
+        isTokenPaymentAvailable={isTokenPaymentAvailable}
       />
     </div>
   );

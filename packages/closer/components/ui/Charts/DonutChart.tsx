@@ -1,9 +1,12 @@
+import { isMobile } from 'react-device-detect';
+
 import { Cell, Legend, Pie, PieChart } from 'recharts';
 
+import { formatThousands } from '../../../utils/dashboard.helpers';
 import { CHART_COLORS } from './chartColors';
 
-import { isMobile } from 'react-device-detect';
 const RADIAN = Math.PI / 180;
+
 const renderCustomizedLabel = ({
   cx,
   cy,
@@ -11,6 +14,7 @@ const renderCustomizedLabel = ({
   innerRadius,
   outerRadius,
   value,
+  isEur,
 }: any) => {
   const radius = innerRadius + (outerRadius - innerRadius) * 0.4;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -21,32 +25,35 @@ const renderCustomizedLabel = ({
       x={x}
       y={y}
       fill="white"
-      textAnchor={x > cx ? 'start' : 'end'}
       dominantBaseline="central"
-      style={{ fontWeight: 'bold', fontSize: '1.2rem' }}
+      style={{
+        fontWeight: 'bold',
+        fontSize: '0.8rem',
+        textShadow: '0 0 1px black',
+      }}
     >
-      {value}
+      {isEur ? '€' : ''}
+      {formatThousands(Math.floor(value))}
     </text>
   );
 };
 
-
 interface Props {
   data: Record<string, unknown>[];
+  isEur?: boolean;
 }
 
-const DonutChart = ({ data }: Props) => {
-
+const DonutChart = ({ data, isEur = false }: Props) => {
   return (
-    <div className=''>
-
+    <div className="">
       <PieChart width={isMobile ? 190 : 370} height={isMobile ? 280 : 220}>
         <Pie
           data={data}
           cx={isMobile ? 90 : 100}
           cy={110}
+          minAngle={15}
           labelLine={false}
-          label={renderCustomizedLabel}
+          label={(props) => renderCustomizedLabel({ ...props, isEur })}
           outerRadius={90}
           innerRadius={50}
           dataKey="value"
@@ -66,15 +73,9 @@ const DonutChart = ({ data }: Props) => {
             color: CHART_COLORS[index % CHART_COLORS.length],
           }))}
           align={isMobile ? 'center' : 'right'}
-
-          // verticalAlign="top"
           verticalAlign={isMobile ? 'bottom' : 'top'}
-             layout={isMobile ? 'horizontal' : 'vertical' }
-           
-          // layout="vertical"
-            // layout="horizontal"
-          wrapperStyle={{ marginTop: '50px' }} // Add top margin here
-
+          layout={isMobile ? 'horizontal' : 'vertical'}
+          wrapperStyle={{ marginTop: '50px' }}
         />
       </PieChart>
     </div>

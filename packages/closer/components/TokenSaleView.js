@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../hooks/useConfig';
@@ -45,6 +46,14 @@ const TokenSaleView = () => {
           </p>
           <div className="max-w-screen-sm w-full mt-4">
             <AccomodationPriceInfo />
+          </div>
+          <div className="text-center mt-8">
+            <p className="text-lg mb-4">
+              See our complete journey and future plans in our{' '}
+              <Link href="/roadmap" className="text-accent underline hover:text-accent-dark">
+                detailed roadmap
+              </Link>
+            </p>
           </div>
         </div>
       </div>

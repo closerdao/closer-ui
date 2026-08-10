@@ -13,7 +13,7 @@ import { priceFormat } from '../../utils/helpers';
 import EventDescription from '../EventDescription';
 import EventPhoto from '../EventPhoto';
 import Tag from '../Tag';
-import UploadPhoto from '../UploadPhoto/UploadPhoto';
+import UploadPhoto from '../UploadPhoto';
 import { LinkButton } from '../ui';
 import Heading from '../ui/Heading';
 
@@ -41,7 +41,7 @@ const ProjectView: FC<Props> = ({ project, timeFrame }) => {
   } = project || {};
 
   const { user, isAuthenticated } = useAuth();
-  const [photo, setPhoto] = useState(project && projectPhoto);
+  const [photo, setPhoto] = useState<string | null>(project?.photo ?? null);
   const hasStewardRole = user?.roles?.includes('steward');
   if (!project) {
     return null;
@@ -77,7 +77,7 @@ const ProjectView: FC<Props> = ({ project, timeFrame }) => {
               <UploadPhoto
                 model="project"
                 id={project._id}
-                onSave={(id) => setPhoto(id)}
+                onSave={(id) => setPhoto(id[0])}
                 label={photo ? 'Change photo' : 'Add photo'}
               />
             </div>

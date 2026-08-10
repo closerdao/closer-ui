@@ -1,14 +1,30 @@
 import Head from 'next/head';
 
 import { Heading } from 'closer';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
 import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 const Terms = () => {
+  const t = useTranslations();
   return (
     <>
       <Head>
-        <title>Privacy Policy of Traditional Dream Factory</title>
+        <title>{t('terms_page_title')}</title>
+        <meta name="description" content={t('terms_page_meta_description')} />
+        <link
+          rel="canonical"
+          href="https://www.traditionaldreamfactory.com/legal/terms"
+        />
+        <meta property="og:type" content="website" />
+        <meta
+          property="og:url"
+          content="https://www.traditionaldreamfactory.com/legal/terms"
+        />
+        <meta property="og:title" content={t('terms_page_title')} />
+        <meta
+          property="og:description"
+          content={t('terms_page_meta_description')}
+        />
       </Head>
       <section className="my-6 max-w-6xl mx-auto flex flex-col gap-4">
         <Heading level={1}>Privacy Policy of Traditional Dream Factory</Heading>
@@ -137,17 +153,11 @@ const Terms = () => {
 
 Terms.getInitialProps = async (context: NextPageContext) => {
   try {
-    const messages = await loadLocaleData(
-      context?.locale,
-      process.env.NEXT_PUBLIC_APP_NAME,
-    );
     return {
-      messages,
     };
   } catch (err: unknown) {
     return {
-      messages: null,
-    };
+      };
   }
 };
 

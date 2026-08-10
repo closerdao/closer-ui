@@ -1,6 +1,8 @@
 import { BookingConfig } from './api';
 import { CloserCurrencies, Price } from './currency';
 import { Discount, TicketOption } from './event';
+import type { PendingExtension, PriceLock, StayMoney } from './stay';
+import type { VolunteerApplication } from './volunteerApplication';
 
 // we set those as url params on
 // - /bookings/create/dates
@@ -27,6 +29,8 @@ export interface BaseBookingParams {
   projectId?: string | undefined;
   suggestions?: string | undefined;
   bookingType?: 'volunteer' | 'residence' | undefined;
+  isFriendsBooking?: boolean | string | undefined;
+  friendEmails?: string | undefined;
 }
 
 export type Listing = {
@@ -75,10 +79,29 @@ export type TokenSaleChargeMeta = {
 
 export type Charge = {
   id: string;
-  status: 'paid' | 'refunded' | 'pending-refund';
-  method: 'stripe' | 'tokens' | 'credits' | 'crypto';
-  type: 'booking' | 'subscription' | 'product' | 'tokenSale';
+  _id?: string;
+  status:
+    | 'paid'
+    | 'refunded'
+    | 'pending-refund'
+    | 'pending-payment'
+    | 'canceled';
+  method: 'stripe' | 'tokens' | 'credits' | 'crypto' | 'monerium' | 'manual';
+  type:
+    | 'booking'
+    | 'subscription'
+    | 'product'
+    | 'tokenSale'
+    | 'fiatTokenSale'
+    | 'financedToken'
+    | 'donation'
+    | 'citizenship'
+    | 'affiliatePayout';
   date: Date;
+  lockedStake?: {
+    val: number;
+    cur: CloserCurrencies;
+  };
   amount: {
     total: {
       val: number;
@@ -93,6 +116,11 @@ export type Charge = {
       cur: CloserCurrencies;
     };
   };
+  referredBy?: string;
+  affiliateRevenue?: { val: number; cur: CloserCurrencies };
+  description?: string;
+  category?: string;
+  documentDate?: string;
   meta: {
     stripePaymentIntentId?: string;
     stripeConnectFee?: number;
@@ -101,6 +129,10 @@ export type Charge = {
     isTokenRefund?: boolean;
     stripeConnectFeeRefunded?: number;
     fractionToRefund?: number;
+    uploadedDocumentUrl?: string | null;
+    toconlineData?: any;
+
+    comment?: string;
   } & Partial<SubscriptionChargeMeta> &
     Partial<TokenSaleChargeMeta>;
 };
@@ -117,6 +149,11 @@ export type VolunteerInfo = {
   projectId?: string[];
   suggestions?: string;
   bookingType?: 'volunteer' | 'residence' | undefined;
+  /**
+   * Long-form volunteer application (about you, experience, health, agreement).
+   * `volunteerInfo` is a Mixed field server-side, so the FE owns its shape.
+   */
+  application?: VolunteerApplication;
 };
 
 export type Booking = {
@@ -174,6 +211,24 @@ export type Booking = {
   roomOrBedNumbers?: number[];
   charges?: Charge[];
   volunteerInfo?: VolunteerInfo;
+  isFriendsBooking?: boolean;
+  friendEmails?: string;
+  paidByMember?: boolean;
+  paidBy?: string;
+  transactionId?: string;
+  priceLock?: PriceLock;
+  fiatTarget?: StayMoney;
+  creditsTarget?: StayMoney;
+  tokensTarget?: StayMoney;
+  fiatPaid?: StayMoney;
+  creditsPaid?: StayMoney;
+  tokensStaked?: StayMoney;
+  appliedCredits?: StayMoney;
+  appliedTokens?: StayMoney;
+  pendingExtension?: PendingExtension;
+  checkedIn?: string;
+  checkedOut?: string;
+  numberOfUnits?: number;
 };
 
 export interface StatusColor {
@@ -282,6 +337,8 @@ export enum PaymentType {
   PARTIAL_TOKENS = 'partialTokens',
   PARTIAL_CREDITS = 'partialCredits',
 }
+export type BookingPaymentDelta = NonNullable<Booking['paymentDelta']>;
+
 export type UpdatedPrices = {
   rentalFiat: Price<CloserCurrencies.EUR>;
   rentalToken: Price<CloserCurrencies.TDF>;
@@ -289,6 +346,7 @@ export type UpdatedPrices = {
   foodFiat: Price<CloserCurrencies.EUR>;
   utilityFiat: Price<CloserCurrencies.EUR>;
   total: Price<CloserCurrencies.EUR>;
+  paymentDelta?: BookingPaymentDelta | null;
 };
 
 export type DynamicField = {

@@ -1,695 +1,1094 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import { useContext, useEffect, useState } from 'react';
-import { isMobile } from 'react-device-detect';
+import { useEffect, useRef, useState } from 'react';
 
-import PhotoGallery from 'closer/components/PhotoGallery';
+import LandingPagePhotoMosaic from '../components/LandingPagePhotoMosaic';
+import ReportDownloadModal from '../components/ReportDownloadModal';
+import FundraisingWidget from 'closer/components/FundraisingWidget';
 import UpcomingEventsIntro from 'closer/components/UpcomingEventsIntro';
+import LinkButton from 'closer/components/ui/LinkButton';
 
+import { Heading, Webinar, getCachedConfig } from 'closer';
+import { VolunteerConfig } from 'closer/types/api';
 import {
-  Heading,
-  LinkButton,
-  Tag,
-  WalletState,
-  YoutubeEmbed,
-  useAuth,
-} from 'closer';
-import { useBuyTokens } from 'closer/hooks/useBuyTokens';
+  DEFAULT_TOKEN_STATS,
+  TokenStats,
+} from 'closer/types';
 import api from 'closer/utils/api';
-import { loadLocaleData } from 'closer/utils/locale.helpers';
-import { NextPageContext } from 'next';
-import { event } from 'nextjs-google-analytics';
+import { twitterUrlToHandle } from 'closer/utils/app.helpers';
+import {
+  ArrowRight,
+  Check,
+  Circle,
+  Heart,
+  Home,
+  Laptop,
+  Palette,
+  RefreshCw,
+  Sparkles,
+  Sprout,
+  TreePine,
+  Users,
+  Users2,
+} from 'lucide-react';
+import type { GetStaticPropsContext } from 'next';
 import { useTranslations } from 'next-intl';
+import { event } from 'nextjs-google-analytics';
+
+import config from '../configCached';
 
 const HomePage = () => {
   const t = useTranslations();
+  const twitterHandle = twitterUrlToHandle(config.general.twitterUrl);
+  const volunteerConfig = getCachedConfig('volunteering') as VolunteerConfig | null;
+  const minStayWeeks = Math.round((volunteerConfig?.volunteeringMinStay ?? 28) / 7);
 
-  const { isAuthenticated } = useAuth();
-  const { isWalletReady } = useContext(WalletState);
-  const { getTokensAvailableForPurchase } = useBuyTokens();
+  const [selectedReport, setSelectedReport] = useState<{
+    year: string;
+    url: string;
+  } | null>(null);
+  const [tokenStats, setTokenStats] = useState<TokenStats>(DEFAULT_TOKEN_STATS);
+  const [isLoadingTokenStats, setIsLoadingTokenStats] = useState(true);
+  const hasFetchedTokenStats = useRef(false);
 
-  const [tokensAvailable, setTokensAvailable] = useState<number | null>(null);
+  const isFundraiserEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US === 'true' &&
+    config.fundraiser.enabled;
 
   useEffect(() => {
-    if (isWalletReady) {
-      (async () => {
-        const remainingAmount = await getTokensAvailableForPurchase();
-        setTokensAvailable(remainingAmount);
-      })();
-    }
-  }, [isWalletReady]);
+    if (hasFetchedTokenStats.current) return;
+    hasFetchedTokenStats.current = true;
 
-  const CTA = isAuthenticated ? (
-    <Link
-      href="/stay"
-      type="submit"
-      className="bg-accent text-white rounded-full py-2.5 px-8 text-xl uppercase"
-      onClick={() =>
-        event('click', {
-          category: 'HomePage',
-          label: 'Book a stay',
-        })
+    const fetchTokenStats = async () => {
+      setIsLoadingTokenStats(true);
+      try {
+        const res = await api.get('/token/stats');
+        if (res?.data) {
+          setTokenStats(res.data);
+        }
+      } catch (error) {
+        console.error('Error fetching token stats:', error);
+      } finally {
+        setIsLoadingTokenStats(false);
       }
-    >
-      Book a stay
-    </Link>
-  ) : (
-    <Link
-      href="/signup"
-      type="submit"
-      className="bg-accent text-white rounded-full py-2.5 px-8 text-xl uppercase"
-      onClick={() =>
-        event('click', {
-          category: 'HomePage',
-          label: 'Join the Dream',
-        })
-      }
-    >
-      JOIN THE DREAM
-    </Link>
-  );
+    };
+
+    fetchTokenStats();
+  }, []);
 
   return (
     <>
       <Head>
-        <title>Traditional Dream Factory</title>
-        <meta
-          name="description"
-          content="Traditional Dream Factory (TDF) is a regenerative playground in Abela, Portugal."
-        />
+        <title>{t('home_hero_title')}</title>
+        <meta name="description" content={t('home_meta_description')} />
         <link
           rel="canonical"
           href="https://www.traditionaldreamfactory.com/"
           key="canonical"
         />
+        <meta property="og:type" content="website" />
+        <meta
+          property="og:url"
+          content="https://www.traditionaldreamfactory.com/"
+        />
+        <meta property="og:title" content={t('home_hero_title')} />
+        <meta property="og:description" content={t('home_meta_description')} />
+        <meta
+          property="og:image"
+          content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
+        />
+        <meta name="twitter:card" content="summary_large_image" />
+        {twitterHandle && (
+          <meta name="twitter:site" content={twitterHandle} />
+        )}
+        <meta name="twitter:title" content={t('home_hero_title')} />
+        <meta name="twitter:description" content={t('home_meta_description')} />
+        <meta
+          name="twitter:image"
+          content="https://cdn.oasa.co/tdf/tdf-invest-og.jpg"
+        />
       </Head>
-      <section className="md:absolute md:-top-2 overflow-hidden md:left-0 md:h-[100vh] md:min-w-[100vw] md:min-h-[100vh] bg-accent-light mb-8 md:mb-[100vh]">
-        <div className="md:h-[100vh]">
-          {isMobile ? (
-            <video
-              loop={true}
-              muted={true}
-              autoPlay={true}
-              playsInline={true}
-              className="w-full h-full object-cover"
+
+      <section className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-24 md:py-36">
+          <div className="max-w-4xl mx-auto text-center">
+            <Heading
+              className="mb-4 text-4xl md:text-6xl"
+              data-testid="page-title"
+              display
+              level={1}
             >
-              <source
-                src="https://cdn.oasa.co/video/tdf-360-mute.mp4"
-                type="video/mp4"
-              />
-            </video>
-          ) : (
-            <YoutubeEmbed isBackgroundVideo={true} embedId="VkoqvPcaRpk" />
-          )}
-        </div>
-        <div className="md:absolute md:left-0 md:top-0 md:w-full md:h-full md:bg-white/60 flex justify-center ">
-          <div className="w-full flex justify-center flex-col items-center">
-            <div className=" max-w-4xl p-6 rounded-xl p-12">
-              <Heading
-                className="mb-4 text-2xl md:text-4xl md:text-6xl"
-                data-testid="page-title"
-                display
-                level={1}
-              >
-                Ready to explore life in a regenerative village?
-              </Heading>
-              <div className="my-4">
-                <p className="text-xl md:text-2xl max-w-3xl">
-                  We are building a climate resilient neighborhood of the future
-                  in Portugal - and you are invited to be a part of it.
-                </p>
+              {t('home_hero_title')}
+            </Heading>
+            <p className="text-xl md:text-2xl text-gray-700 mb-16 leading-relaxed max-w-3xl mx-auto font-light">
+              {t('home_hero_subtitle')}
+            </p>
+
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-8 max-w-2xl mx-auto">
+              <div className="bg-accent-light/50 rounded-lg p-3 sm:p-6 text-center border border-accent/10">
+                <div className="text-lg sm:text-2xl font-semibold text-accent mb-1">
+                  280+
+                </div>
+                <div className="text-[10px] sm:text-xs text-gray-600">
+                  {t('home_stats_token_holders')}
+                </div>
               </div>
-              <div>{CTA}</div>
+              <div className="bg-accent-light/50 rounded-lg p-3 sm:p-6 text-center border border-accent/10">
+                <div className="text-lg sm:text-2xl font-semibold text-accent mb-1">
+                  25
+                </div>
+                <div className="text-[10px] sm:text-xs text-gray-600">
+                  {t('home_stats_hectares')}
+                </div>
+              </div>
+              <div className="bg-accent-light/50 rounded-lg p-3 sm:p-6 text-center border border-accent/10">
+                <div className="text-lg sm:text-2xl font-semibold text-accent mb-1">
+                  €1.25M+
+                </div>
+                <div className="text-[10px] sm:text-xs text-gray-600">
+                  {t('home_stats_total_capital')}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-3 mt-8">
+              <LinkButton
+                href="/#participation-structures"
+                variant="primary"
+                onClick={() =>
+                  event('click', {
+                    category: 'HomePage',
+                    label: 'explore_investment_options',
+                  })
+                }
+              >
+                {t('home_hero_cta_explore')}
+              </LinkButton>
+              <LinkButton
+                variant="secondary"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setSelectedReport({
+                    year: '2025',
+                    url: '/pdf/2025-TDF-report.pdf',
+                  });
+                  event('click', {
+                    category: 'HomePage',
+                    label: 'download_2025_report',
+                  });
+                }}
+              >
+                {t('home_hero_cta_report')}
+              </LinkButton>
             </div>
           </div>
         </div>
       </section>
 
-      <div className="relative md:top-[105vh]">
-        <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2">
-          <div className="md:max-w-xl">
+      <section className="bg-white -mt-8 md:-mt-12 w-full overflow-hidden">
+        <LandingPagePhotoMosaic className="w-full" />
+      </section>
+
+      <section className="bg-white py-14 md:py-16 border-t border-gray-100">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <p className="text-[11px] uppercase tracking-widest text-gray-400 mb-6">
+            {t('home_press_label')}
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 mb-5">
+            <a
+              href="https://www.context.news/rethinking-the-economy/digital-nomads-seek-sun-sea-sustainability-as-remote-work-booms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-base font-semibold text-gray-800 hover:text-gray-900 transition-colors"
+            >
+              Thomson Reuters
+            </a>
+            <a
+              href="https://tynmagazine.com/traditional-dream-factory-surpasses-1-2-million-and-leads-the-regenerative-economy-in-europe"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-base font-semibold text-gray-800 hover:text-gray-900 transition-colors"
+            >
+              TyN Magazine
+            </a>
+            <a
+              href="https://jornaleconomico.sapo.pt/noticias/traditional-dream-factory-lanca-nova-ronda-de-investimento-de-800-mil-euros-para-expandir-a-sua-ecovila/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-base font-semibold text-gray-800 hover:text-gray-900 transition-colors"
+            >
+              Jornal Económico
+            </a>
+            <a
+              href="https://www.theportugalnews.com/news/2025-08-30/traditional-dream-factory-regenerative-village/85048"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-base font-semibold text-gray-800 hover:text-gray-900 transition-colors"
+            >
+              The Portugal News
+            </a>
+            <a
+              href="https://expresso.pt/economia/economia_imobiliario/2025-06-26-nomadas-digitais-criam-aldeia-tecnologica-no-alentejo-354f740a"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-base font-semibold text-gray-800 hover:text-gray-900 transition-colors"
+            >
+              Expresso
+            </a>
+          </div>
+          <Link
+            href="/press"
+            className="text-xs text-gray-400 hover:text-gray-600 transition-colors underline underline-offset-2"
+          >
+            {t('home_token_press_cta')}
+          </Link>
+        </div>
+      </section>
+
+      <section className="bg-white py-24 md:py-32 border-t border-gray-200">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="mb-16">
+            <p className="text-xs uppercase tracking-wider text-gray-500 mb-6 font-medium">
+              {t('home_community_section_label')}
+            </p>
             <Heading
-              level={2}
               display
-              className="text-center md:text-left mb-6 md:text-6xl"
+              level={2}
+              className="mb-8 text-2xl md:text-3xl font-normal text-gray-900 tracking-tight leading-snug"
             >
-              Traditional Dream Factory
+              {t('home_community_section_title')}
             </Heading>
-            <p className="text-center md:text-left mb-6">
-              Our current project is a 5 hectare regenerative playground in
-              Abela, where we have a reforestation, food forest, glamping
-              accomodations, industrial kitchen, cafe, sauna and more:
-            </p>
-            <div className="md:flex md:flex-cols-2 md:space-x-6">
-              <ul className="space-y-6 md:w-1/2">
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/cowork.png"
-                    alt="Coworking"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    OPEN Coworking & STARLINK WIFI
-                  </Heading>
-                </li>
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/van.png"
-                    alt="Van"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    6 Van parking areas
-                  </Heading>
-                </li>
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/glamping.png"
-                    alt="Glamping"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    10 Glamping Accommodations
-                  </Heading>
-                </li>
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/foodforest.png"
-                    alt="Syntropic food forest"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    Food Forest + REFORESTATION
-                    <p className="text-sm font-light">(w/ 2000+ trees)</p>
-                  </Heading>
-                </li>
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/veggies.png"
-                    alt="Veggetable production"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    Market garden{' '}
-                    <small className="text-sm font-light">
-                      (producing vegetables for 30+ people)
-                    </small>
-                  </Heading>
-                </li>
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/cafe.png"
-                    alt="TDF Cafe"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    Mushroom farm{' '}
-                    <Tag className="m-1" color="primary">
-                      Coming soon
-                    </Tag>
-                  </Heading>
-                </li>
-              </ul>
-              <ul className="space-y-6 md:w-1/2">
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/event.png"
-                    alt="Events"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    Pop-up event space
-                  </Heading>
-                </li>
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/event.png"
-                    alt="Events"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    Sauna
-                  </Heading>
-                </li>
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/wellness.png"
-                    alt="Wellness candle"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    Natural pool
-                    <Tag className="m-1" color="primary">
-                      Coming soon
-                    </Tag>
-                  </Heading>
-                </li>
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/restaurant.png"
-                    alt="Restaurant plate"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    Pizza oven
-                  </Heading>
-                </li>
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/cafe.png"
-                    alt="TDF Cafe"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    Coffee shop
-                  </Heading>
-                </li>
-                <li className="flex justify-start items-center">
-                  <img
-                    src="/images/icons/makerspace.png"
-                    alt="Makerspace"
-                    className="mr-1 w-12"
-                  />
-                  <Heading display level={4} className="md:text-sm">
-                    Makerspace & workshop
-                  </Heading>
-                </li>
-              </ul>
+            <div className="space-y-5 text-base text-gray-700 leading-relaxed font-light">
+              <p>{t('home_community_section_intro_1')}</p>
+              <p>{t('home_community_section_intro_2')}</p>
+              <p>{t('home_community_section_intro_3')}</p>
+              <p className="font-medium text-gray-900">
+                {t('home_community_section_intro_4')}
+              </p>
             </div>
           </div>
-          <div className="md:pl-16">
-            <img src="/images/landing/tdf-map.png" alt="TDF Map" />
+
+          <p className="text-sm text-gray-500 mb-6 font-medium">
+            {t('home_community_section_subtitle')}
+          </p>
+
+          <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-9 gap-3">
+            {[
+              { Icon: Sprout, titleKey: 'home_community_land_stewards_title' },
+              { Icon: Home, titleKey: 'home_community_nest_builders_title' },
+              { Icon: Heart, titleKey: 'home_community_healers_title' },
+              { Icon: Palette, titleKey: 'home_community_creatives_title' },
+              {
+                Icon: RefreshCw,
+                titleKey: 'home_community_systems_thinkers_title',
+              },
+              {
+                Icon: TreePine,
+                titleKey: 'home_community_nature_lovers_title',
+              },
+              { Icon: Users2, titleKey: 'home_community_families_title' },
+              { Icon: Laptop, titleKey: 'home_community_remote_workers_title' },
+              {
+                Icon: Sparkles,
+                titleKey: 'home_community_curious_souls_title',
+              },
+            ].map((item, i) => (
+              <div
+                key={i}
+                className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-center hover:bg-gray-100 transition-colors"
+              >
+                <item.Icon className="w-5 h-5 text-gray-500 mx-auto mb-2" />
+                <p className="text-xs text-gray-700 font-medium leading-tight">
+                  {t(item.titleKey)}
+                </p>
+              </div>
+            ))}
           </div>
-        </section>
-        <section>
-          <div className="w-full flex justify-center flex-wrap mb-24">
-            <p className="w-full font-bold uppercase text-center mb-6">
-              Check out our yearly reports to see everything we have done so
-              far!
+
+          <div className="mt-10 pt-8 border-t border-gray-200">
+            <p className="text-sm text-gray-600 mb-3">
+              {t('home_community_cta_volunteer_intro', { var: minStayWeeks })}
             </p>
-            <Link
-              href="/pdf/2021-TDF-report.pdf"
-              target="_blank"
-              className="bg-accent-light px-5 py-2 rounded-full uppercase mr-4"
+            <div className="flex flex-wrap gap-3 items-center">
+              <Link
+                href="/volunteer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-dark text-white rounded-lg transition-colors text-sm font-medium"
+              >
+                {t('home_community_cta_volunteer')}
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <a
+                href="https://t.me/traditionaldreamfactor"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 hover:border-gray-400 text-gray-700 rounded-lg transition-colors text-sm font-medium"
+              >
+                <svg
+                  className="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
+                </svg>
+                {t('join_community_telegram_button')}
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-gray-50 py-24 md:py-32 border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-gray-600 mb-4 font-medium">
+                {t('home_token_section_label')}
+              </p>
+              <Heading
+                display
+                level={2}
+                className="mb-6 text-2xl md:text-3xl font-normal text-gray-900 tracking-tight"
+              >
+                {t('home_token_section_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 mb-10 leading-relaxed font-light">
+                {t('home_token_section_subtitle')}
+              </p>
+
+              <div className="space-y-6">
+                <div className="flex gap-4">
+                  <div className="w-11 h-11 bg-gray-900 rounded flex items-center justify-center flex-shrink-0">
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M13.8 12H3"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <Heading
+                      level={4}
+                      className="text-base font-semibold text-gray-900 mb-2"
+                    >
+                      {t('home_token_feature_unlock_title')}
+                    </Heading>
+                    <p className="text-sm text-gray-700 leading-relaxed font-light mb-3">
+                      {t('home_token_feature_unlock_desc')}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-11 h-11 bg-gray-900 rounded flex items-center justify-center flex-shrink-0">
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 20V10M18 20V4M6 20v-4"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <Heading
+                      level={4}
+                      className="text-base font-semibold text-gray-900 mb-2"
+                    >
+                      {t('home_token_feature_voice_title')}
+                    </Heading>
+                    <p className="text-sm text-gray-700 leading-relaxed font-light">
+                      {t('home_token_feature_voice_desc')}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-11 h-11 bg-gray-900 rounded flex items-center justify-center flex-shrink-0">
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <Heading
+                      level={4}
+                      className="text-base font-semibold text-gray-900 mb-2"
+                    >
+                      {t('home_token_feature_longterm_title')}
+                    </Heading>
+                    <p className="text-sm text-gray-700 leading-relaxed font-light">
+                      {t('home_token_feature_longterm_desc')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg p-8 shadow-sm border border-gray-300">
+              <div className="flex items-center gap-4 mb-8 pb-6 border-b border-gray-300">
+                <div className="w-14 h-14 bg-gray-900 rounded-lg flex items-center justify-center text-white font-semibold text-base">
+                  $TDF
+                </div>
+                <Heading
+                  level={3}
+                  className="text-xl font-normal text-gray-900"
+                >
+                  {t('home_token_name')}
+                </Heading>
+              </div>
+              <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                <div className="bg-gray-50 rounded border border-gray-300 p-3 sm:p-5">
+                  <div className="text-[10px] sm:text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    {t('home_token_stat_holders')}
+                  </div>
+                  <div className="text-lg sm:text-2xl font-semibold text-gray-900">
+                    {isLoadingTokenStats
+                      ? '...'
+                      : tokenStats.tokenHolders.toLocaleString()}
+                  </div>
+                </div>
+                <div className="bg-gray-50 rounded border border-gray-300 p-3 sm:p-5">
+                  <div className="text-[10px] sm:text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    {t('home_token_stat_supply')}
+                  </div>
+                  <div className="text-lg sm:text-2xl font-semibold text-gray-900">
+                    {isLoadingTokenStats
+                      ? '...'
+                      : tokenStats.currentSupply.toLocaleString()}
+                  </div>
+                </div>
+                <div className="bg-gray-50 rounded border border-gray-300 p-3 sm:p-5">
+                  <div className="text-[10px] sm:text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    {t('home_token_stat_price')}
+                  </div>
+                  <div className="text-lg sm:text-2xl font-semibold text-gray-900">
+                    €{isLoadingTokenStats ? '...' : tokenStats.tokenPrice}
+                  </div>
+                  <div className="text-[10px] sm:text-xs text-gray-600 mt-1">
+                    {t('home_token_stat_price_note')}
+                  </div>
+                </div>
+                <div className="bg-gray-50 rounded border border-gray-300 p-3 sm:p-5">
+                  <div className="text-[10px] sm:text-xs uppercase tracking-wider text-gray-600 mb-2">
+                    {t('home_token_stat_raised')}
+                  </div>
+                  <div className="text-lg sm:text-2xl font-semibold text-gray-900">
+                    €384k
+                  </div>
+                  <div className="text-[10px] sm:text-xs text-gray-600 mt-1">
+                    {t('home_token_stat_raised_note')}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6">
+                <LinkButton href="/token" variant="primary">
+                  {t('home_token_buy_cta')}
+                </LinkButton>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-16 pt-16 border-t border-gray-300">
+            <div className="max-w-3xl mx-auto">
+              <Heading
+                level={3}
+                className="mb-4 text-xl md:text-2xl font-normal text-gray-900 tracking-tight"
+              >
+                {t('home_token_citizenship_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 mb-6 leading-relaxed font-light">
+                {t('home_token_citizenship_desc')}
+              </p>
+              <LinkButton href="/citizenship" variant="secondary">
+                {t('home_token_citizenship_cta')}
+              </LinkButton>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white border-t border-gray-200">
+        <div className="max-w-6xl mx-auto px-6 py-16 md:py-24">
+          <img
+            src="/images/landing/land-plan.png"
+            alt={t('home_land_plan_alt')}
+            className="w-full h-auto rounded-xl shadow-lg"
+          />
+
+          <div className="grid md:grid-cols-2 gap-8 mt-12">
+            <div className="bg-gray-50 rounded-xl p-8 border border-gray-200">
+              <Heading
+                level={3}
+                className="text-xl font-semibold text-gray-900 mb-4"
+              >
+                {t('home_land_food_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 leading-relaxed mb-6">
+                {t('home_land_food_desc')}
+              </p>
+              <Link
+                href="/pages/regenerative-agriculture"
+                className="text-sm font-medium text-accent hover:text-accent-dark transition-colors inline-flex items-center gap-1"
+              >
+                {t('home_land_food_cta')} →
+              </Link>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-8 border border-gray-200">
+              <Heading
+                level={3}
+                className="text-xl font-semibold text-gray-900 mb-4"
+              >
+                {t('home_land_ecology_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 leading-relaxed mb-6">
+                {t('home_land_ecology_desc')}
+              </p>
+              <Link
+                href="/pages/ecology"
+                className="text-sm font-medium text-accent hover:text-accent-dark transition-colors inline-flex items-center gap-1"
+              >
+                {t('home_land_ecology_cta')} →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-gray-50 py-24 md:py-32 border-t border-gray-200">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <p className="text-xs uppercase tracking-wider text-gray-600 mb-4 font-medium">
+              {t('home_build_section_label')}
+            </p>
+            <Heading
+              display
+              level={2}
+              className="mb-4 text-3xl md:text-4xl font-normal text-gray-900 tracking-tight"
             >
-              2021 report
-            </Link>
-            <Link
-              href="/pdf/2022-TDF-report.pdf"
-              target="_blank"
-              className="bg-accent-light px-5 py-2 rounded-full uppercase"
-            >
-              2022 report
-            </Link>
-          </div>
-        </section>
-
-        <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2 space-x-4">
-          <div>
-            <div className="md:pl-4 mt-5">
-              <img src="/images/maps/co-living.png" alt="TDF Orchard Map" />
-            </div>
-          </div>
-          <div className="max-w-prose">
-            <Heading className="text-center md:text-left mb-6 uppercase text-2xl font-black flex">
-              Co-living Development{' '}
-              <span className="justify-center align-center -mt-1 ml-4">
-                <Tag color="primary">Plans approved!</Tag>
-              </span>
+              {t('home_built_title')}
             </Heading>
-            <div className="md:flex md:flex-cols-2 md:space-x-2">
-              <ul className="space-y-6">
-                <li className="">
-                  <Heading className="uppercase bold" level={3}>
-                    Building 14 suites
-                  </Heading>
-                  <p>
-                    Each suite has over 20m2 of living space - giving ample
-                    space for resident to have a desk, private bathroom, a
-                    luxurious queen sized bed. We are tailoring the interior to
-                    fit the needs of digital nomads, young families, yogies, and
-                    other conscious individuals.
-                  </p>
-                </li>
-                <li className="">
-                  <Heading className="uppercase bold" level={3}>
-                    Bioclimatic buildings
-                  </Heading>
-                  <p>
-                    The building is designed to be energy efficient, with
-                    passive solar design, natural ventilation, and a solar roof
-                    - making it a comfortable place to live year round while
-                    producing it&apos;s own energy.
-                  </p>
-                </li>
-                <li className="">
-                  <Heading className="uppercase bold" level={3}>
-                    Mixed use co-living & hospitality
-                  </Heading>
-                  <p>
-                    The property is ideal for hosting large events (up to 100
-                    people), and we are planning to use it for retreats,
-                    workshops, and other events for 3 months out of the year
-                    while running our own co-living community for 9 months out
-                    of the year.
-                  </p>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <section className="mb-12 max-w-6xl mx-auto md:pt-20 md:flex md:flex-cols-2 space-x-4">
-          <div className="max-w-prose">
-            <Heading className="text-center md:text-left mb-6 uppercase text-2xl font-black">
-              Agroforestry and land developments
-            </Heading>
-            <p>
-              With over 3000 trees already planted on the land, and a plan to
-              create a productive agroforestry system with over 10 000 fruit
-              trees (including almonds, olives, citrus, berries etc) over the
-              next few years, TDF is committed to creating a regenerative
-              landscape that hydrates the land, sequesters carbon, and
-              nourrishes our village and the local community.
+            <p className="text-base text-gray-700 max-w-2xl mx-auto leading-relaxed font-light">
+              {t('home_built_subtitle')}
             </p>
-            <div className="md:flex md:flex-cols-2 mt-6">
-              <ul className="space-y-6">
-                <li className="">
-                  <Heading className="uppercase bold" level={3}>
-                    Creating a water retention landscape
-                  </Heading>
-                  <p>
-                    Our swales collect runoff waters from the landscape and will
-                    be storing it in our 2 planned lakes. This will ensure a
-                    steady water supply year round.
-                  </p>
-                </li>
+          </div>
 
-                <li className="">
-                  <Heading className="uppercase bold" level={3}>
-                    Restorative Farming Practices
-                  </Heading>
-                  <p>
-                    TDF is committed to organic farming, avoiding synthetic
-                    fertilizers and pesticides. Organic practices are employed
-                    to maintain a balanced ecosystem, focusing on natural pest
-                    control and the use of compost for soil nutrition.
-                  </p>
-                </li>
+          <div className="grid lg:grid-cols-2 gap-12 mb-16">
+            <div>
+              <Heading
+                level={3}
+                className="text-xl font-semibold text-gray-900 mb-6"
+              >
+                {t('home_build_section_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 mb-8 leading-relaxed font-light">
+                {t('home_build_section_subtitle')}
+              </p>
+              <div className="space-y-5">
+                {[
+                  {
+                    titleKey: 'home_build_item_suites',
+                    descKey: 'home_build_item_suites_desc',
+                  },
+                  {
+                    titleKey: 'home_build_item_flex',
+                    descKey: 'home_build_item_flex_desc',
+                  },
+                  {
+                    titleKey: 'home_build_item_studios',
+                    descKey: 'home_build_item_studios_desc',
+                  },
+                  {
+                    titleKey: 'home_build_item_restaurant',
+                    descKey: 'home_build_item_restaurant_desc',
+                  },
+                  {
+                    titleKey: 'home_build_item_mushroom',
+                    descKey: 'home_build_item_mushroom_desc',
+                  },
+                  {
+                    titleKey: 'home_build_item_wellness',
+                    descKey: 'home_build_item_wellness_desc',
+                  },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="w-6 h-6 bg-accent rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-900">
+                        {t(item.titleKey)}
+                      </span>
+                      <span className="text-sm text-gray-600">
+                        {' '}
+                        — {t(item.descKey)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-                <li className="">
-                  <Heading className="uppercase bold" level={3}>
-                    Biochar Production
-                  </Heading>
-                  <p>
-                    Using syntropic methods, our agroforestry landscape is set
-                    to produce excess biomass we can process into biochar.
-                    Biochar improves soil fertility, increase water retention
-                    and stimulates microbial activity, leading to healthier
-                    trees and better crop yields - all while capturing carbon
-                    from the atmosphere and producing excess energy in the
-                    process.
-                  </p>
-                </li>
-
-                <li className="italic mt-6">
-                  Scalability and Future Prospects: TDF envisions this orchard
-                  as a scalable model for regenerative and profitable farming,
-                  demonstrating how environmental responsibility can align with
-                  commercial success. The project could serve as blueprint for
-                  future villages around the world.
-                </li>
-              </ul>
+            <div className="relative">
+              <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-accent to-accent-light"></div>
+              <div className="space-y-6">
+                {[
+                  {
+                    date: '2023',
+                    titleKey: 'roadmap_2023_title',
+                    bullets: ['roadmap_2023_bullet_1', 'roadmap_2023_bullet_2'],
+                    status: 'complete',
+                  },
+                  {
+                    date: '2024',
+                    titleKey: 'roadmap_2024_fundraising',
+                    bullets: ['roadmap_2024_bullet_1', 'roadmap_2024_bullet_2'],
+                    status: 'complete',
+                  },
+                  {
+                    date: '2025',
+                    titleKey: 'roadmap_2025_title',
+                    bullets: ['roadmap_2025_bullet_4', 'roadmap_2025_bullet_6'],
+                    status: 'complete',
+                  },
+                  {
+                    date: '2026',
+                    titleKey: 'roadmap_2026_title',
+                    bullets: ['roadmap_2026_bullet_1'],
+                    status: 'current',
+                  },
+                  {
+                    date: '2027',
+                    titleKey: 'roadmap_2027_title',
+                    bullets: ['roadmap_2027_bullet_1'],
+                    status: 'upcoming',
+                  },
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-6 relative">
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-4 border-gray-50 ${
+                        item.status === 'complete'
+                          ? 'bg-accent text-white'
+                          : item.status === 'current'
+                          ? 'bg-accent-light border-accent text-accent'
+                          : 'bg-gray-200 text-gray-500'
+                      }`}
+                    >
+                      {item.status === 'complete' ? (
+                        <Check className="w-5 h-5" />
+                      ) : (
+                        <Circle className="w-5 h-5" />
+                      )}
+                    </div>
+                    <div className="pt-1 flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs text-accent font-medium tracking-wider uppercase">
+                          {item.date}
+                        </span>
+                        <span className="text-sm font-semibold text-gray-900">
+                          {t(item.titleKey)}
+                        </span>
+                      </div>
+                      <ul className="space-y-1">
+                        {item.bullets.map((bullet, j) => (
+                          <li
+                            key={j}
+                            className="text-sm text-gray-600 leading-relaxed font-light"
+                          >
+                            {t(bullet)}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="pt-8 pl-[72px]">
+                <LinkButton href="/roadmap" variant="secondary">
+                  {t('home_built_roadmap_cta')}
+                </LinkButton>
+              </div>
             </div>
           </div>
-          <div>
-            <div className="md:pl-4 mt-5">
-              <img src="/images/maps/orchard.png" alt="TDF Orchard Map" />
-            </div>
-          </div>
-        </section>
 
-        <section className="py-20 my-12 bg-black text-white -mx-4">
-          <div className="text-center mb-20">
-            <div className="w-full flex items-center flex-col">
-              <div className="max-w-prose">
-                <p className="text-2xl max-w-prose">
-                  {`Meet your new home, way of life, and tribe. 
-                    Join a unique collective of creatives, digital nomads, solarpunks, web3 aficionados, permaculturists & entrepreneurs. 
-                    Together, we're reshaping communal living.`}
+          {isFundraiserEnabled && (
+            <div className="max-w-2xl mx-auto">
+              <div className="bg-white rounded-2xl border-2 border-accent/20 p-5 sm:p-6 shadow-lg">
+                <div className="flex flex-col sm:flex-row gap-5 sm:gap-6 items-start">
+                  <div className="flex-1 space-y-3">
+                    <p className="text-xs uppercase tracking-wider text-accent font-semibold">
+                      {t('home_fundraising_preview_label')}
+                    </p>
+                    <Heading
+                      level={3}
+                      className="text-lg font-semibold text-gray-900"
+                    >
+                      {t('home_fundraising_preview_title')}
+                    </Heading>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      {t('home_fundraising_preview_desc')}
+                    </p>
+                  </div>
+                  <div className="w-full sm:w-auto flex-shrink-0 space-y-3">
+                    <FundraisingWidget
+                      variant="hero"
+                      milestones={config.fundraiser.milestones}
+                      amountRaisedPreCampaign={
+                        config.fundraiser.amountRaisedPreCampaign
+                      }
+                      loansCollectedTotal={
+                        config.fundraiser.loansCollectedTotal
+                      }
+                    />
+                    <Link
+                      href="/fundraiser"
+                      className="group flex items-center justify-center gap-2 w-full bg-accent hover:bg-accent-dark text-white font-medium py-2.5 px-4 rounded-lg transition-colors text-sm"
+                      onClick={() =>
+                        event('click', {
+                          category: 'HomePage',
+                          label: 'invest_from_roadmap_section',
+                        })
+                      }
+                    >
+                      {t('home_fundraising_preview_cta')}
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Co-housing Section */}
+      <section className="bg-white py-24 md:py-32 border-t border-gray-200">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-accent mb-4 font-semibold">
+                {t('home_cohousing_section_label')}
+              </p>
+              <Heading
+                display
+                level={2}
+                className="mb-6 text-2xl md:text-3xl font-normal text-gray-900 tracking-tight"
+              >
+                {t('home_cohousing_section_title')}
+              </Heading>
+              <p className="text-base text-gray-700 mb-6 leading-relaxed font-light">
+                {t('home_cohousing_section_desc')}
+              </p>
+              <div className="space-y-4 mb-8">
+                <div className="flex items-start gap-3">
+                  <Home className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-gray-700">
+                    {t('home_cohousing_feature_houses')}
+                  </p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Users className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-gray-700">
+                    {t('home_cohousing_feature_neighbors')}
+                  </p>
+                </div>
+              </div>
+              <LinkButton href="/cohousing" variant="primary">
+                {t('home_cohousing_cta')}
+              </LinkButton>
+            </div>
+            <div className="bg-gradient-to-br from-accent/5 to-accent/10 rounded-2xl p-8 border border-accent/20">
+              <div className="text-center">
+                <div className="text-3xl sm:text-4xl font-semibold text-accent mb-2">
+                  23
+                </div>
+                <p className="text-base font-medium text-gray-900 mb-4">
+                  {t('home_cohousing_stat_title')}
+                </p>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {t('home_cohousing_stat_desc')}
                 </p>
               </div>
             </div>
-            <PhotoGallery className="mt-8" />
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className='-ml-4 w-[calc(100vw)] mb-20 h-[600px] md:h-[700px] flex  items-end md:items-center flex-col bg-center bg-[#333333] bg-cover bg-no-repeat text-white bg-[url("/images/token-sale/token-sale-hero.webp")]'>
-          <Heading
-            level={1}
-            className="text-right  text-3xl md:text-6xl font-extrabold uppercase px-4 drop-shadow-lg mb-2 md:mb-8 md:text-center max-w-[700px] mt-1 md:mt-[100px] md:bg-[url('/images/token-sale/token-illy.png')] bg-no-repeat pt-[20px] md:pt-[130px] bg-top"
-          >
-            Gain exclusive access to regenerative living
-          </Heading>
-          <Heading
-            level={2}
-            className="font-bold text-right uppercase md:text-center px-4 text-xl md:text-md max-w-[700px] mb-4"
-          >
-            $TDF Unlocks access to housing in our village.
-          </Heading>
-          <LinkButton
-            className="!w-60 font-bold mb-3 md:mb-8 relative text-xl mx-4"
-            href="/token"
-            size="small"
-          >
-            {t('token_sale_public_sale_buy_token')}
-          </LinkButton>
+      {/* Participation Structures */}
+      <section
+        id="participation-structures"
+        className="bg-gray-50 py-24 md:py-32 border-t border-gray-200"
+      >
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <Heading
+              display
+              level={2}
+              className="mb-4 text-2xl md:text-3xl font-normal text-gray-900 tracking-tight"
+            >
+              {t('home_investment_opportunities_title')}
+            </Heading>
+          </div>
 
-          {/* {isWalletReady ? (
-              <div className='p-4'>
-                <TokenCounterSimple
-                  tokensToBuy={tokensToBuy}
-                  setTokensToBuy={setTokensToBuy}
-                />
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-xl p-6 border border-gray-200">
+              <Heading
+                level={3}
+                className="mb-3 text-lg font-semibold text-gray-900"
+              >
+                {t('home_invest_tokens_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 mb-5 leading-relaxed font-light">
+                {t('home_invest_tokens_desc')}
+              </p>
+              <LinkButton href="/token" variant="secondary">
+                {t('home_invest_tokens_cta')}
+              </LinkButton>
+            </div>
 
-                <Button
-                  className="!w-60 font-bold mb-3 md:mb-8 relative"
-                  onClick={handleNext}
-                  size="small"
+            <div className="bg-white rounded-xl p-6 border border-gray-200">
+              <Heading
+                level={3}
+                className="mb-3 text-lg font-semibold text-gray-900"
+              >
+                {t('home_invest_lending_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 mb-5 leading-relaxed font-light">
+                {t('home_invest_lending_desc')}
+              </p>
+              <LinkButton href="/dataroom" variant="secondary">
+                {t('home_invest_lending_cta')}
+              </LinkButton>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white py-24 md:py-32 border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <p className="text-xs uppercase tracking-wider text-accent mb-4 font-semibold">
+              {t('home_authority_section_label')}
+            </p>
+            <Heading
+              display
+              level={2}
+              className="mb-6 text-3xl md:text-4xl font-normal text-gray-900 tracking-tight"
+            >
+              {t('home_authority_section_title')}
+            </Heading>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            <div className="bg-gray-50 rounded-xl p-8 text-center border-2 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="w-16 h-16 bg-accent rounded-xl flex items-center justify-center mx-auto mb-6 shadow-md">
+                <svg
+                  className="w-8 h-8 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  {t('token_sale_public_sale_buy_token')}
-                </Button>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
+                  />
+                </svg>
               </div>
-            ) : (
-              <div>
-                <Button
+              <Heading
+                level={4}
+                className="text-lg font-semibold text-gray-900 mb-3"
+              >
+                {t('home_authority_swiss_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 leading-relaxed font-light">
+                {t('home_authority_swiss_desc')}
+              </p>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-8 text-center border-2 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="w-16 h-16 bg-accent rounded-xl flex items-center justify-center mx-auto mb-6 shadow-md">
+                <svg
+                  className="w-8 h-8 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <path d="M3 9h18M9 21V9" />
+                </svg>
+              </div>
+              <Heading
+                level={4}
+                className="text-lg font-semibold text-gray-900 mb-3"
+              >
+                {t('home_authority_academic_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 leading-relaxed font-light">
+                {t('home_authority_academic_desc')}
+              </p>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-8 text-center border-2 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="w-16 h-16 bg-accent rounded-xl flex items-center justify-center mx-auto mb-6 shadow-md">
+                <svg
+                  className="w-8 h-8 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
+                  />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+              </div>
+              <Heading
+                level={4}
+                className="text-lg font-semibold text-gray-900 mb-3"
+              >
+                {t('home_authority_transparency_title')}
+              </Heading>
+              <p className="text-sm text-gray-700 leading-relaxed font-light">
+                {t('home_authority_transparency_desc')}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto mb-12">
+            <a
+              href="https://expresso.pt/economia/economia_imobiliario/2025-06-26-nomadas-digitais-criam-aldeia-tecnologica-no-alentejo-354f740a"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative block hover:opacity-80 transition-opacity"
+            >
+              <div className="absolute -top-4 -left-4 text-8xl md:text-9xl text-gray-200 font-serif leading-none">
+                &ldquo;
+              </div>
+              <blockquote className="text-2xl md:text-3xl font-light text-gray-900 leading-relaxed mb-6 relative z-10 italic">
+                {t('home_authority_quote_1')}
+              </blockquote>
+              <p className="text-sm text-gray-600 font-medium">
+                {t('home_authority_quote_1_source')}
+              </p>
+            </a>
+            <a
+              href="https://jornaleconomico.sapo.pt/noticias/48-dos-portugueses-sonham-trocar-a-cidade-pelo-campo/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative block hover:opacity-80 transition-opacity"
+            >
+              <div className="absolute -top-4 -left-4 text-8xl md:text-9xl text-gray-200 font-serif leading-none">
+                &ldquo;
+              </div>
+              <blockquote className="text-2xl md:text-3xl font-light text-gray-900 leading-relaxed mb-6 relative z-10 italic">
+                {t('home_authority_quote_2')}
+              </blockquote>
+              <p className="text-sm text-gray-600 font-medium">
+                {t('home_authority_quote_2_source')}
+              </p>
+            </a>
+          </div>
+
+          <div className="mt-20 pt-16 border-t border-gray-200 max-w-3xl mx-auto">
+            <Heading
+              level={3}
+              className="text-2xl md:text-3xl font-normal text-gray-900 mb-6"
+            >
+              {t('home_authority_reports_title')}
+            </Heading>
+            <p className="text-base text-gray-600 leading-relaxed mb-8">
+              {t('home_authority_reports_intro')}
+            </p>
+            <div className="flex flex-wrap gap-x-6 gap-y-3">
+              {[
+                {
+                  year: '2025',
+                  url: '/pdf/2025-TDF-report.pdf',
+                  labelKey: 'home_reports_2025',
+                },
+                {
+                  year: '2024',
+                  url: '/pdf/2024-TDF-report.pdf',
+                  labelKey: 'home_reports_2024',
+                },
+                {
+                  year: '2022',
+                  url: '/pdf/2022-TDF-report.pdf',
+                  labelKey: 'home_reports_2022',
+                },
+                {
+                  year: '2021',
+                  url: '/pdf/2021-TDF-report.pdf',
+                  labelKey: 'home_reports_2021',
+                },
+              ].map((report) => (
+                <button
+                  key={report.year}
+                  className="text-sm font-medium text-accent hover:text-accent-dark transition-colors underline underline-offset-4"
                   onClick={() => {
-                    router.push('https://calendly.com/samueldelesque');
+                    setSelectedReport({
+                      year: report.year,
+                      url: report.url,
+                    });
                   }}
                 >
-                  {t('token_sale_public_sale_button_book_a_call')}
-                </Button>
-              </div>
-            )} */}
-
-          {tokensAvailable && (
-            <h3 className="font-bold text-xl text-white pb-2 text-center w-60 px-6 rounded-full">
-              {tokensAvailable} {t('token_sale_public_sale_tokens_left')}
-            </h3>
-          )}
-        </section>
-
-        <section className="mb-12" id="how-to-play">
-          <div>
-            <div className="max-w-prose mb-12 mx-auto" >
-
-              <Heading
-                level={2}
-                className="text-center md:text-left mb-4 uppercase text-2xl font-black"
-              >
-                How to play
-              </Heading>
-              <p>
-                While the village is in development we offer multiple ways to
-                come and visit. Whether you are looking for a short stay, a
-                longer term residency, or a work exchange - we have something
-                for you.
-              </p>
-              <p>
-                Once we get to know each other, and if there is mutual interest
-                - you&apos;ll be invited to become a full member of the village.
-                Members are returning residents who co-own the village together
-                and can participate in the decision making process, and can
-                apply for work opportunities.
-              </p>
-            </div>
-            <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 justify-center align-center">
-              <div className="p-4 border-2 border-primary rounded-xl md:w-[30%]">
-                <div className="flex justify-between flex-col h-full">
-                  <div>
-                    <Heading level={4} className="text-center">
-                      Guest
-                    </Heading>
-                    <p className="my-2 italic">
-                      Come and enjoy the nature - work from our co-working
-                      space, connect with out community and enjoy our
-                      facilities.
-                    </p>
-                    <ul>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        Private or shared glamping or van
-                      </li>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        Work on your own projects
-                      </li>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        Get discounted rates if you book for a week or more
-                      </li>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        1 day minimum stay
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="mt-4 mb-4 flex justify-center align-center">
-                    <Link href="/stay" className="uppercase btn-primary">
-                      Book a stay
-                    </Link>
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 border-2 border-primary rounded-xl md:w-[30%]">
-                <div className="flex justify-between flex-col h-full">
-                  <div>
-                    <Heading level={4} className="text-center">
-                      Volunteer
-                    </Heading>
-                    <p className="my-2 italic">
-                      Learn about permaculture, bioconstruction & cooking while
-                      doing a work exchange.
-                    </p>
-                    <ul>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        Work 4h/day
-                      </li>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        Free accomodation (dorm, shared glamper, or camping)
-                      </li>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        2 week minimum stay
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="mt-4 mb-4 flex justify-center align-center">
-                    <Link href="/volunteer" className="uppercase btn-primary">
-                      See opportunities
-                    </Link>
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 border-2 border-primary rounded-xl md:w-[30%]">
-                <div className="flex justify-between flex-col h-full">
-                  <div>
-                    <Heading level={4} className="text-center">
-                      Resident
-                    </Heading>
-                    <p className="my-2 italic">
-                      Apply for a 1+ month residency and leave a mark on our
-                      village - maybe you are an expert carpenter - or maybe you
-                      want to practice a new craft. Make a proposal for what
-                      you&apos;d like to build and we will have a conversation.
-                    </p>
-                    <ul>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        Work ~6h/day (project based)
-                      </li>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        Free accomodation
-                      </li>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        Free food
-                      </li>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        Accrue real estate assets for completing work
-                      </li>
-                      <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-                        1 month minimum stay
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="mt-4 mb-4 flex justify-center align-center">
-                    <Link
-                      href="/projects"
-                      className="uppercase btn-primary"
-                    >
-                      Apply
-                    </Link>
-                  </div>
-                </div>
-              </div>
+                  {t(report.labelKey)}
+                </button>
+              ))}
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="flex justify-center my-20 -mx-4 p-4 py-12 bg-black text-white">
-          <div className="max-w-prose flex flex-wrap">
-            <Heading className="text-center md:text-left mb-6 uppercase text-2xl font-black">
-              Not just a co-living - become part of a movement conserving &
-              regenerating land
-            </Heading>
-            <p className="mb-8">
-              TDF is part of the OASA network - transforming ownership into
-              stewardship. The TDF project is bound by the{' '}
-              <Link
-                href="https://docs.google.com/document/d/1Ocv9rtRkDxsJmeRxrL6mV07EyWcHc2YqfN8mHoylO2E/edit"
-                className="underline"
-              >
-                Regenerative Land Stewardship Principles
-              </Link>{' '}
-              set forth by OASA. By accessing TDF lands, our members and
-              visitors must abide by our regenerative ethos. OASA is on a bold
-              mission to conserve 100.000 ha of land globally - and TDF is its
-              first prototype in utilising real estate as a vehicle for
-              ecological restoration.
-            </p>
-            <Link
-              href="https://oasa.earth/"
-              target="_blank"
-              className="underline"
-            >
-              Learn more
-            </Link>
-          </div>
-        </section>
+      {config.webinar.enabled && (
+        <Webinar
+          tags={['landing-page', 'investor-webinar']}
+          analyticsCategory="HomePage"
+          schedule={config.webinar}
+          generalTimezone={config.general.timeZone}
+        />
+      )}
 
-        <UpcomingEventsIntro />
+      <UpcomingEventsIntro />
 
-        {/* this is needed because video embed in the header causes layout to be cut off at the bottom of the page */}
-        <section className="mb-[120vh]"></section>
-      </div>
+      {selectedReport && (
+        <ReportDownloadModal
+          closeModal={() => setSelectedReport(null)}
+          reportYear={selectedReport.year}
+          reportUrl={selectedReport.url}
+        />
+      )}
     </>
   );
 };
 
-HomePage.getInitialProps = async (context: NextPageContext) => {
-  try {
-    const [subsRes, messages] = await Promise.all([
-      api.get('/config/subscriptions').catch(() => null),
-      loadLocaleData(context?.locale, process.env.NEXT_PUBLIC_APP_NAME),
-    ]);
-    const subscriptionsConfig = subsRes?.data?.results?.value.plans;
-
-    return {
-      subscriptionsConfig,
-      messages,
-    };
-  } catch (err) {
-    return {
-      subscriptionsConfig: { enabled: false, plans: [] },
-      error: err,
-      messages: null,
-    };
-  }
-};
-
 export default HomePage;
+
+export async function getStaticProps({ locale }: GetStaticPropsContext) {
+  return {
+    props: {},
+  };
+}
