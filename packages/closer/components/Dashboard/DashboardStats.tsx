@@ -61,7 +61,12 @@ const DashboardStats = ({ timeFrame, fromDate, toDate }: Props) => {
   )}`;
 
   useEffect(() => {
-    if (!hasRange || !startTime || !endTime) return;
+    if (!hasRange || !startTime || !endTime) {
+      setValues({});
+      setPreviousValues({});
+      setIsLoading(false);
+      return;
+    }
 
     const range: StatRange = {
       start: new Date(startTime),
