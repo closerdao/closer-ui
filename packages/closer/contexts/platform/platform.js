@@ -12,7 +12,6 @@ export const models = [
   'booking',
   'config',
   'channel',
-  'charge',
   'event',
   'ticket',
   'listing',
