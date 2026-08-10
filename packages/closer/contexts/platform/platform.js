@@ -578,14 +578,14 @@ export const PlatformProvider = ({ children }) => {
         const filterKey = filterToKey(params);
         dispatch({ type: constants.GET_AGGREGATE_INIT, model, filterKey });
         if (
-          state.getIn([model, 'aggregate', filterKey, 'receivedAt']) >
-          Date.now() - config.CACHE_DURATION
+          stateRef.current.getIn([model, 'aggregate', filterKey, 'receivedAt']) >
+          Date.now() - CACHE_DURATION_MS
         ) {
           return new Promise((resolve) =>
             resolve({
               type: constants.GET_AGGREGATE_SUCCESS,
               fromCache: true,
-              results: state.getIn([model, 'aggregate', filterKey, 'data']),
+              results: stateRef.current.getIn([model, 'aggregate', filterKey, 'data']),
             }),
           );
         }
@@ -615,14 +615,14 @@ export const PlatformProvider = ({ children }) => {
         const filterKey = filterToKey(params);
         dispatch({ type: constants.GET_SUM_INIT, model, filterKey });
         if (
-          state.getIn([model, 'sum', filterKey, 'receivedAt']) >
-          Date.now() - config.CACHE_DURATION
+          stateRef.current.getIn([model, 'sum', filterKey, 'receivedAt']) >
+          Date.now() - CACHE_DURATION_MS
         ) {
           return new Promise((resolve) =>
             resolve({
               type: constants.GET_SUM_SUCCESS,
               fromCache: true,
-              results: state.getIn([model, 'sum', filterKey, 'data']),
+              results: stateRef.current.getIn([model, 'sum', filterKey, 'data']),
             }),
           );
         }
