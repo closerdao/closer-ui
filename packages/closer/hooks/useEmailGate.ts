@@ -6,7 +6,8 @@ export const EMAIL_GATE_STORAGE_KEY = 'signupCompleted';
 
 const listeners = new Set<() => void>();
 
-const notify = () => {
+const notify = (event?: StorageEvent) => {
+  if (event && event.key && event.key !== EMAIL_GATE_STORAGE_KEY) return;
   listeners.forEach((listener) => listener());
 };
 
