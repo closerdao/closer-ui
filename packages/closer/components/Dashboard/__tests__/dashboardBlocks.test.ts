@@ -1,7 +1,9 @@
 import {
-  filterDashboardBlocks,
+  filterBlocks,
   getDashboardBlocks,
+  getPerformanceBlocks,
   getVisibleDashboardBlockIds,
+  getVisiblePerformanceBlockIds,
 } from '../dashboardBlocks';
 import { DashboardFeatures } from '../dashboardFeatures';
 
@@ -49,7 +51,7 @@ describe('getDashboardBlocks', () => {
   });
 });
 
-describe('filterDashboardBlocks', () => {
+describe('filterBlocks', () => {
   const blocks = getDashboardBlocks({
     ...noFeatures,
     isBookingEnabled: true,
@@ -58,7 +60,7 @@ describe('filterDashboardBlocks', () => {
   });
 
   it('drops disabled blocks', () => {
-    const ids = filterDashboardBlocks(
+    const ids = filterBlocks(
       getDashboardBlocks(noFeatures),
       ['admin'],
       allowAll,
@@ -69,7 +71,7 @@ describe('filterDashboardBlocks', () => {
   });
 
   it('drops blocks the user has no role for', () => {
-    const ids = filterDashboardBlocks(blocks, ['space-host'], allowAll).map(
+    const ids = filterBlocks(blocks, ['space-host'], allowAll).map(
       (block) => block.id,
     );
 
@@ -82,7 +84,7 @@ describe('filterDashboardBlocks', () => {
 
   it('drops blocks the RBAC config denies even when the role matches', () => {
     const hasAccess = (page: string) => page !== 'Revenue';
-    const ids = filterDashboardBlocks(blocks, ['admin'], hasAccess).map(
+    const ids = filterBlocks(blocks, ['admin'], hasAccess).map(
       (block) => block.id,
     );
 
@@ -91,8 +93,78 @@ describe('filterDashboardBlocks', () => {
   });
 
   it('returns nothing for a user with no matching roles', () => {
-    expect(filterDashboardBlocks(blocks, [], allowAll)).toEqual([]);
-    expect(filterDashboardBlocks(blocks, ['member'], allowAll)).toEqual([]);
+    expect(filterBlocks(blocks, [], allowAll)).toEqual([]);
+    expect(filterBlocks(blocks, ['member'], allowAll)).toEqual([]);
+  });
+});
+
+describe('getPerformanceBlocks', () => {
+  it('shows no funnel on a platform with every feature off', () => {
+    expect(
+      getPerformanceBlocks(noFeatures).filter((block) => block.enabled),
+    ).toEqual([]);
+  });
+
+  it('gates the stays funnel on booking, which was previously ungated', () => {
+    const enabledIds = (features: Partial<DashboardFeatures>) =>
+      getPerformanceBlocks({ ...noFeatures, ...features })
+        .filter((block) => block.enabled)
+        .map((block) => block.id);
+
+    expect(enabledIds({})).not.toContain('stays');
+    expect(enabledIds({ isBookingEnabled: true })).toContain('stays');
+  });
+
+  it('gates the applications funnel on the applications config', () => {
+    const blocks = getPerformanceBlocks({
+      ...noFeatures,
+      isApplicationsEnabled: true,
+    });
+
+    expect(
+      blocks.find((block) => block.id === 'applications')?.enabled,
+    ).toBe(true);
+    expect(blocks.find((block) => block.id === 'stays')?.enabled).toBe(false);
+  });
+
+  it('maps each remaining funnel to its own feature', () => {
+    const enabled = (features: Partial<DashboardFeatures>) =>
+      getPerformanceBlocks({ ...noFeatures, ...features })
+        .filter((block) => block.enabled)
+        .map((block) => block.id);
+
+    expect(enabled({ isWeb3Enabled: true })).toEqual(['tokenSales']);
+    expect(enabled({ isSubscriptionsEnabled: true })).toEqual([
+      'subscriptions',
+    ]);
+    expect(enabled({ isCitizenshipEnabled: true })).toEqual(['citizenship']);
+  });
+});
+
+describe('getVisiblePerformanceBlockIds', () => {
+  it('lists funnels in display order for the enabled features', () => {
+    expect(
+      getVisiblePerformanceBlockIds(
+        {
+          ...noFeatures,
+          isBookingEnabled: true,
+          isApplicationsEnabled: true,
+          isSubscriptionsEnabled: true,
+        },
+        ['admin'],
+        allowAll,
+      ),
+    ).toEqual(['stays', 'applications', 'subscriptions']);
+  });
+
+  it('does not depend on roles, since the page itself is RBAC gated', () => {
+    expect(
+      getVisiblePerformanceBlockIds(
+        { ...noFeatures, isApplicationsEnabled: true },
+        [],
+        allowAll,
+      ),
+    ).toEqual(['applications']);
   });
 });
 
