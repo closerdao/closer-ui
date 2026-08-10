@@ -68,10 +68,17 @@ export const useActiveSubscription = (plans: SubscriptionPlan[] = []) => {
       return;
     }
 
+    const userPriceId = user?.subscription?.priceId;
     const selectedSubscription = plans.find(
       (plan) =>
-        plan.priceId === user?.subscription?.priceId ||
-        plan.priceId?.includes(user?.subscription?.priceId || ''),
+        plan.priceId === userPriceId ||
+        (userPriceId
+          ? plan.priceId
+              ?.split(',')
+              .map((priceId) => priceId.trim())
+              .includes(userPriceId)
+          : false) ||
+        plan.slug === user?.subscription?.plan,
     );
     setUserActivePlan(selectedSubscription);
   }, [user, plans, hasActiveSubscription]);
