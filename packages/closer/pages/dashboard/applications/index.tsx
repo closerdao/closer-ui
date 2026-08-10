@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
+import DashboardPageHeader from '../../../components/Dashboard/DashboardPageHeader';
 import Pagination from '../../../components/Pagination';
 import TimeSince from '../../../components/TimeSince';
 import { Button, Heading, LinkButton, Spinner } from '../../../components/ui';
@@ -235,14 +236,11 @@ const ApplicationsDashboardPage = () => {
       </Head>
       <AdminLayout>
         <div className="flex flex-col gap-6 max-w-4xl">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-            <div className="flex flex-col gap-1">
-              <Heading level={2}>{t('dashboard_applications_title')}</Heading>
-              <p className="text-sm text-gray-600">
-                {t('dashboard_applications_subtitle')}
-              </p>
-            </div>
-            <div className="flex flex-col gap-1 min-w-[200px] shrink-0">
+          <DashboardPageHeader
+            title={t('dashboard_applications_title')}
+            subtitle={t('dashboard_applications_subtitle')}
+          >
+            <div className="flex flex-col gap-1 min-w-[200px]">
               <label
                 htmlFor="application-status-filter"
                 className="text-xs font-medium text-gray-500 uppercase tracking-wide"
@@ -267,7 +265,7 @@ const ApplicationsDashboardPage = () => {
                 ))}
               </select>
             </div>
-          </div>
+          </DashboardPageHeader>
 
           <div className="flex flex-wrap gap-3">
             {STATUSES.map((status) => (

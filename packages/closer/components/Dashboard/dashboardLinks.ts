@@ -10,7 +10,6 @@ type TranslationFunction = (key: string) => string;
 
 interface DashboardLinksConfig {
   isBookingEnabled?: boolean;
-  isGovernanceEnabled?: boolean;
   isLearningHubEnabled?: boolean;
   isAffiliateEnabled?: boolean;
   isTokenEnabled?: boolean;
@@ -23,7 +22,6 @@ export const getDashboardLinks = (
 ): DashboardLink[] => {
   const {
     isBookingEnabled = false,
-    isGovernanceEnabled = false,
     isLearningHubEnabled = true,
     isAffiliateEnabled = process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true',
     isTokenEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true',
@@ -51,13 +49,6 @@ export const getDashboardLinks = (
       rbacPage: 'Revenue',
       enabled: true,
       roles: ['admin', 'team'],
-    },
-    {
-      label: t('navigation_governance'),
-      url: '/governance',
-      rbacPage: 'Governance',
-      enabled: isGovernanceEnabled,
-      roles: ['member'],
     },
     {
       label: t('navigation_sales'),

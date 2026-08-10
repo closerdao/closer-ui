@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 
 import AdminLayout from '../../components/Dashboard/AdminLayout';
 import DashboardActions from '../../components/Dashboard/DashboardActions';
+import DashboardPageHeader from '../../components/Dashboard/DashboardPageHeader';
 import DashboardStats from '../../components/Dashboard/DashboardStats';
 import RevenueTimeFrameSelector from '../../components/Dashboard/RevenueTimeFrameSelector';
 import {
@@ -13,7 +14,7 @@ import {
   getVisibleDashboardBlockIds,
 } from '../../components/Dashboard/dashboardBlocks';
 import { useDashboardFeatures } from '../../components/Dashboard/useDashboardFeatures';
-import { Heading, Spinner } from '../../components/ui';
+import { Spinner } from '../../components/ui';
 
 const DashboardBookings = dynamic(
   () => import('../../components/Dashboard/DashboardBookings'),
@@ -99,8 +100,7 @@ const DashboardPage = () => {
         <meta name="robots" content="noindex, nofollow" />
       </Head>
       <AdminLayout>
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-          <Heading level={2}>{t('dashboard_title')}</Heading>
+        <DashboardPageHeader title={t('dashboard_title')}>
           <RevenueTimeFrameSelector
             timeFrame={timeFrame}
             setTimeFrame={handleTimeFrameChange}
@@ -109,7 +109,7 @@ const DashboardPage = () => {
             toDate={toDate}
             setToDate={setToDate}
           />
-        </div>
+        </DashboardPageHeader>
 
         {isVisible('stats') && <DashboardStats {...timeFrameProps} />}
         {isVisible('bookings') && <DashboardBookings {...timeFrameProps} />}

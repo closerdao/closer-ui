@@ -4,13 +4,13 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
+import DashboardPageHeader from '../../../components/Dashboard/DashboardPageHeader';
 import TimeFrameSelector from '../../../components/Dashboard/TimeFrameSelector';
 import {
   PerformanceBlockId,
   getVisiblePerformanceBlockIds,
 } from '../../../components/Dashboard/dashboardBlocks';
 import { useDashboardFeatures } from '../../../components/Dashboard/useDashboardFeatures';
-import { Heading } from '../../../components/ui';
 import ApplicationsFunnel from './components/ApplicationsFunnel';
 import StaysFunnel from './components/StaysFunnel';
 import TokenSalesFunnel from './components/TokenSalesFunnel';
@@ -79,8 +79,7 @@ const PerformancePage = () => {
         <meta name="robots" content="noindex, nofollow" />
       </Head>
       <AdminLayout>
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-          <Heading level={2}>{t('dashboard_performance_title')}</Heading>
+        <DashboardPageHeader title={t('dashboard_performance_title')}>
           <TimeFrameSelector
             timeFrame={timeFrame}
             setTimeFrame={handleTimeFrameChange}
@@ -89,7 +88,7 @@ const PerformancePage = () => {
             toDate={toDate}
             setToDate={setToDate}
           />
-        </div>
+        </DashboardPageHeader>
 
         {visibleBlocks.length === 0 ? (
           <p className="mt-6 text-gray-500">
