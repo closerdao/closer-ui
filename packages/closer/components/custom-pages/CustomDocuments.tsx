@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
 import { resolveBlockText } from '../../utils/blockI18n';
+import { getSafeHref } from '../../utils/safeHref';
 import { Card, Heading } from '../ui';
 import FeatureBlockIcon from './FeatureBlockIcon';
 
@@ -96,33 +97,44 @@ const CustomDocuments = ({ content, settings }: Props) => {
               : FALLBACK_ICONS[index % FALLBACK_ICONS.length];
             const tint = ICON_TINTS[index % ICON_TINTS.length];
             const [tintBg, ...tintText] = tint.split(' ');
+            const href = getSafeHref(item.href);
+            const body = (
+              <>
+                <div
+                  className={`w-14 h-14 rounded-full ${tintBg} flex items-center justify-center mb-4 mx-auto`}
+                >
+                  <FeatureBlockIcon
+                    iconId={iconId}
+                    className={`w-7 h-7 ${tintText.join(' ')}`}
+                  />
+                </div>
+                <h3 className="text-lg font-semibold mb-3 text-gray-900">
+                  {resolveBlockText(item.title, t)}
+                </h3>
+                {item.downloadLabel ? (
+                  <span className="text-gray-900 font-medium text-sm underline">
+                    {resolveBlockText(item.downloadLabel, t)}
+                  </span>
+                ) : null}
+              </>
+            );
             return (
               <Card
                 key={`${item.href}-${index}`}
                 className="p-8 text-center border border-gray-300 rounded-lg bg-white hover:shadow-lg transition-shadow"
               >
-                <Link
-                  href={item.href || '#'}
-                  target="_blank"
-                  className="block"
-                >
-                  <div
-                    className={`w-14 h-14 rounded-full ${tintBg} flex items-center justify-center mb-4 mx-auto`}
+                {href ? (
+                  <Link
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
                   >
-                    <FeatureBlockIcon
-                      iconId={iconId}
-                      className={`w-7 h-7 ${tintText.join(' ')}`}
-                    />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-3 text-gray-900">
-                    {resolveBlockText(item.title, t)}
-                  </h3>
-                  {item.downloadLabel ? (
-                    <span className="text-gray-900 font-medium text-sm underline">
-                      {resolveBlockText(item.downloadLabel, t)}
-                    </span>
-                  ) : null}
-                </Link>
+                    {body}
+                  </Link>
+                ) : (
+                  <div className="block">{body}</div>
+                )}
               </Card>
             );
           })}
