@@ -176,6 +176,43 @@ describe('CustomSubscriptionPlans', () => {
       ).toBeTruthy();
     });
 
+    it('tells a member on an older price that they can keep it', async () => {
+      setUser({
+        ...activeSubscriber,
+        subscription: {
+          ...activeSubscriber.subscription,
+          priceId: 'price_basic_2023',
+        },
+      });
+      renderWithNextIntl(<CustomSubscriptionPlans />);
+
+      expect(await screen.findByText(/older price for this plan/i)).toBeTruthy();
+      expect(
+        screen.getByRole('link', { name: /move to the current price/i }),
+      ).toHaveAttribute('href', '/settings#subscription');
+      // Their plan is still theirs — the table keeps marking it as current.
+      expect(screen.getByText(/current plan/i)).toBeTruthy();
+    });
+
+    it('flags a plan that is no longer offered and points at the migration', async () => {
+      setUser({
+        ...activeSubscriber,
+        subscription: {
+          ...activeSubscriber.subscription,
+          plan: 'founding-member',
+          priceId: 'price_retired',
+        },
+      });
+      renderWithNextIntl(<CustomSubscriptionPlans />);
+
+      expect(await screen.findByText(/plan we no longer offer/i)).toBeTruthy();
+      expect(
+        screen.getByRole('link', { name: /move to a current plan/i }),
+      ).toHaveAttribute('href', '/settings#subscription');
+      // Still a member: no plan below is offered as a fresh subscription.
+      expect(screen.queryByRole('button', { name: /^subscribe$/i })).toBeNull();
+    });
+
     it('sends a member picking another plan to the settings page', async () => {
       renderWithNextIntl(<CustomSubscriptionPlans />);
 

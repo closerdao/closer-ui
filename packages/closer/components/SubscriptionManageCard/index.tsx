@@ -14,6 +14,10 @@ interface SubscriptionManageCardProps {
   currency: string;
   validUntil: Date | null;
   isCancelled: boolean;
+  /** The plan they pay for is no longer offered — see useActiveSubscription. */
+  isOnDeprecatedPlan?: boolean;
+  /** The plan is still sold, but at a different price than they pay. */
+  isOnLegacyPricing?: boolean;
   isBusy: boolean;
   error: string | null;
   otherPlans: SubscriptionPlan[];
@@ -36,6 +40,8 @@ const SubscriptionManageCard = ({
   currency,
   validUntil,
   isCancelled,
+  isOnDeprecatedPlan = false,
+  isOnLegacyPricing = false,
   isBusy,
   error,
   otherPlans,
@@ -49,8 +55,16 @@ const SubscriptionManageCard = ({
   const [isConfirmingCancel, setIsConfirmingCancel] = useState(false);
 
   const title = activePlan?.title || planTitleFallback || '';
-  const amount = activePlan?.price ?? price;
+  // What the member is actually billed. Normally the plan and the subscription
+  // agree; on legacy pricing they do not, and the subscription is the truth.
+  const amount = isOnLegacyPricing
+    ? price ?? activePlan?.price
+    : activePlan?.price ?? price;
   const renewalDate = formatDate(validUntil);
+  const currentPlanPrice =
+    isOnLegacyPricing && typeof activePlan?.price === 'number'
+      ? formatIsoFiatAmount(Number(activePlan.price), currency)
+      : '';
 
   const closePanels = () => {
     setIsChoosingPlan(false);
@@ -102,6 +116,55 @@ const SubscriptionManageCard = ({
         ) : null}
       </div>
 
+      {isOnDeprecatedPlan ? (
+        <div
+          role="status"
+          className="rounded-xl border border-line bg-accent-light p-4 flex flex-col gap-3"
+        >
+          <p className="font-semibold">
+            {t('subscriptions_deprecated_title')}
+          </p>
+          <p className="text-sm">{t('subscriptions_deprecated_intro')}</p>
+          {otherPlans.length > 0 && !isChoosingPlan ? (
+            <Button
+              size="small"
+              isFullWidth={false}
+              isEnabled={!isBusy}
+              onClick={() => setIsChoosingPlan(true)}
+            >
+              {t('subscriptions_deprecated_migrate_button')}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+
+      {isOnLegacyPricing && activePlan ? (
+        <div
+          role="status"
+          className="rounded-xl border border-line bg-neutral p-4 flex flex-col gap-3"
+        >
+          <p className="font-semibold">
+            {t('subscriptions_legacy_pricing_title')}
+          </p>
+          <p className="text-sm">
+            {currentPlanPrice
+              ? t('subscriptions_legacy_pricing_intro_priced', {
+                  price: currentPlanPrice,
+                })
+              : t('subscriptions_legacy_pricing_intro')}
+          </p>
+          <Button
+            size="small"
+            variant="secondary"
+            isFullWidth={false}
+            isEnabled={!isBusy}
+            onClick={() => onChangePlan(activePlan)}
+          >
+            {t('subscriptions_legacy_pricing_button')}
+          </Button>
+        </div>
+      ) : null}
+
       {error ? (
         <div role="alert">
           <ErrorMessage error={error} />
@@ -129,8 +192,9 @@ const SubscriptionManageCard = ({
               </Button>
               {/* A cancelled member still has access until the end of the
                   period, so switching plan is a real option — not only
-                  resuming the one they just left. */}
-              {otherPlans.length > 0 ? (
+                  resuming the one they just left. On a retired plan the
+                  notice above already offers this, so it is not repeated. */}
+              {otherPlans.length > 0 && !isOnDeprecatedPlan ? (
                 <Button
                   size="small"
                   variant="secondary"
@@ -144,7 +208,7 @@ const SubscriptionManageCard = ({
             </>
           ) : (
             <>
-              {otherPlans.length > 0 ? (
+              {otherPlans.length > 0 && !isOnDeprecatedPlan ? (
                 <Button
                   size="small"
                   isFullWidth={false}

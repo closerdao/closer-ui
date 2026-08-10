@@ -1,18 +1,19 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-
 import { useRouter } from 'next/router';
+
+import { useCallback, useMemo, useState } from 'react';
 
 import { useAuth } from '../contexts/auth';
 import { SubscriptionPlan } from '../types/subscriptions';
 import api from '../utils/api';
-import { logMetric } from '../utils/metrics';
 import { parseMessageFromError } from '../utils/common';
+import { logMetric } from '../utils/metrics';
 import {
   SubscriptionActionUnavailableError,
   cancelSubscription,
   changeSubscriptionPlan,
   resumeSubscription,
 } from '../utils/subscriptionActions';
+import { isSubscriptionActive } from '../utils/subscriptions.helpers';
 
 export type SubscriptionActionState = {
   isBusy: boolean;
@@ -36,20 +37,13 @@ export type SubscriptionActionState = {
 export const useActiveSubscription = (plans: SubscriptionPlan[] = []) => {
   const router = useRouter();
   const { user, refetchUser } = useAuth();
-  const [userActivePlan, setUserActivePlan] = useState<SubscriptionPlan>();
   const [actionState, setActionState] = useState<SubscriptionActionState>({
     isBusy: false,
     error: null,
   });
 
   const hasActiveSubscription = useMemo(
-    () =>
-      Boolean(
-        user?.subscription?.plan &&
-          user?.subscription?.priceId &&
-          user.subscription.priceId !== 'free' &&
-          new Date(user?.subscription?.validUntil || '') > new Date(),
-      ),
+    () => isSubscriptionActive(user?.subscription),
     [user],
   );
 
@@ -62,26 +56,58 @@ export const useActiveSubscription = (plans: SubscriptionPlan[] = []) => {
     ? new Date(user.subscription.validUntil)
     : null;
 
-  useEffect(() => {
+  const { userActivePlan, isMatchedByPriceId } = useMemo(() => {
     if (!hasActiveSubscription) {
-      setUserActivePlan(undefined);
-      return;
+      return { userActivePlan: undefined, isMatchedByPriceId: false };
     }
 
     const userPriceId = user?.subscription?.priceId;
-    const selectedSubscription = plans.find(
-      (plan) =>
-        plan.priceId === userPriceId ||
-        (userPriceId
-          ? plan.priceId
+    // A plan can carry several prices as a comma separated list, which is how a
+    // platform keeps earlier prices attached to the plan that sells them.
+    const matchesPriceId = (plan: SubscriptionPlan) =>
+      Boolean(
+        userPriceId &&
+          (plan.priceId === userPriceId ||
+            plan.priceId
               ?.split(',')
               .map((priceId) => priceId.trim())
-              .includes(userPriceId)
-          : false) ||
-        plan.slug === user?.subscription?.plan,
-    );
-    setUserActivePlan(selectedSubscription);
+              .includes(userPriceId)),
+      );
+
+    const byPriceId = plans.find(matchesPriceId);
+    if (byPriceId) {
+      return { userActivePlan: byPriceId, isMatchedByPriceId: true };
+    }
+
+    return {
+      userActivePlan: plans.find(
+        (plan) => plan.slug === user?.subscription?.plan,
+      ),
+      isMatchedByPriceId: false,
+    };
   }, [user, plans, hasActiveSubscription]);
+
+  /**
+   * The member is paying for something the platform no longer lists: the plan
+   * was retired or renamed, or its Stripe price was rotated by a config save.
+   * Their access and their billing are untouched, but nothing on the page can
+   * describe what they have, so we say so and send them to change plan.
+   *
+   * Guarded on `plans.length` so a config that has not loaded yet — the state
+   * every page starts in — never reads as a retired plan.
+   */
+  const isOnDeprecatedPlan =
+    hasActiveSubscription && plans.length > 0 && !userActivePlan;
+
+  /**
+   * The plan is still on offer, but the price the member pays is not the one it
+   * sells today — they subscribed before the price was edited. Stripe keeps
+   * billing the original amount forever, so this is an offer, never a warning:
+   * they can sit on the old price indefinitely.
+   */
+  const isOnLegacyPricing = Boolean(
+    hasActiveSubscription && userActivePlan && !isMatchedByPriceId,
+  );
 
   const openCustomerPortal = useCallback(async () => {
     void logMetric({
@@ -173,6 +199,8 @@ export const useActiveSubscription = (plans: SubscriptionPlan[] = []) => {
   return {
     userActivePlan,
     hasActiveSubscription,
+    isOnDeprecatedPlan,
+    isOnLegacyPricing,
     isCancelled,
     validUntil,
     actionState,
