@@ -138,6 +138,16 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
     };
   }, [member?._id, attendedEventIds, pastEventsCutoff]);
 
+  // Re-sync `about`/`aboutDraft` when navigating between member profiles.
+  // This page uses getInitialProps and stays mounted across
+  // /members/[slug] -> /members/[slug] client-side navigations, so the
+  // useState initializers only run once. Without this, the About section would
+  // keep showing the previously viewed member's text.
+  useEffect(() => {
+    setAbout(member?.about || '');
+    setAboutDraft(member?.about || '');
+  }, [member?._id]);
+
   useEffect(() => {
     if (hasSaved) {
       setTimeout(() => {
