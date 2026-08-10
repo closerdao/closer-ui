@@ -55,6 +55,26 @@ export interface BadgeableSubscription {
   validUntil?: Date | string;
 }
 
+/**
+ * Whether the user is currently a paying member. Every user carries a
+ * `subscription` object — the free tier included — so the mere presence of one,
+ * or of a `priceId`, says nothing. A membership only counts when it names a
+ * plan, is not the free tier, and has not run out. A cancelled membership still
+ * counts until `validUntil` passes, which is what the member paid for.
+ */
+export const isSubscriptionActive = (
+  subscription?: BadgeableSubscription | null,
+): boolean => {
+  const priceId = subscription?.priceId?.trim();
+  if (!subscription?.plan || !priceId || priceId === 'free') {
+    return false;
+  }
+
+  return Boolean(
+    subscription.validUntil && new Date(subscription.validUntil) > new Date(),
+  );
+};
+
 export interface ResolvedSubscriptionBadge {
   /** Uploaded badge image. Null when the plan only has an emoji. */
   imageUrl: string | null;
@@ -74,24 +94,18 @@ export const resolveSubscriptionBadge = (
   subscription?: BadgeableSubscription | null,
   subscriptionsConfig?: SubscriptionsConfig | null,
 ): ResolvedSubscriptionBadge | null => {
-  if (!subscriptionsConfig?.enabled || subscriptionsConfig.showBadges === false) {
-    return null;
-  }
-
-  const priceId = subscription?.priceId?.trim();
-  if (!subscription?.plan || !priceId || priceId === 'free') {
-    return null;
-  }
-
-  // A cancelled membership still counts until the paid period runs out, which is
-  // exactly what validUntil tracks.
   if (
-    !subscription.validUntil ||
-    new Date(subscription.validUntil) <= new Date()
+    !subscriptionsConfig?.enabled ||
+    subscriptionsConfig.showBadges === false
   ) {
     return null;
   }
 
+  if (!isSubscriptionActive(subscription)) {
+    return null;
+  }
+
+  const priceId = subscription?.priceId?.trim();
   const plan = prepareSubscriptions(subscriptionsConfig).find(
     (element) =>
       element.priceId === priceId ||
@@ -119,7 +133,5 @@ export const filterCitizenAndFreeFromElements = (
 ): SubscriptionPlan[] =>
   elements.filter(
     (plan) =>
-      plan?.slug !== 'citizen' &&
-      plan?.priceId !== 'free' &&
-      Boolean(plan),
+      plan?.slug !== 'citizen' && plan?.priceId !== 'free' && Boolean(plan),
   );

@@ -30,15 +30,18 @@ import {
   SelectedPlan,
   SubscriptionPlan, // Tier,
 } from '../../types/subscriptions';
-import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
 import {
   calculateSubscriptionPrice,
   getVatInfo,
   priceFormat,
 } from '../../utils/helpers';
 import { logMetric } from '../../utils/metrics';
-import { getPaidSubscriptionPlans } from '../../utils/subscriptions.helpers';
+import {
+  getPaidSubscriptionPlans,
+  isSubscriptionActive,
+} from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
 const stripePromise = loadStripe(
@@ -105,8 +108,11 @@ const SubscriptionsCheckoutPage: NextPage = () => {
     }
   }, [selectedPlan]);
 
+  // Only an existing paying member is sent back to the plans page. Deliberately
+  // mount-only: the checkout form refetches the user on success, and reacting to
+  // that would bounce a member who just paid before they reach the success page.
   useEffect(() => {
-    if (user?.subscription && user?.subscription?.priceId) {
+    if (isSubscriptionActive(user?.subscription)) {
       router.push('/subscriptions');
     }
   }, []);

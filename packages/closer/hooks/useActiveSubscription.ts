@@ -1,18 +1,19 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-
 import { useRouter } from 'next/router';
+
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useAuth } from '../contexts/auth';
 import { SubscriptionPlan } from '../types/subscriptions';
 import api from '../utils/api';
-import { logMetric } from '../utils/metrics';
 import { parseMessageFromError } from '../utils/common';
+import { logMetric } from '../utils/metrics';
 import {
   SubscriptionActionUnavailableError,
   cancelSubscription,
   changeSubscriptionPlan,
   resumeSubscription,
 } from '../utils/subscriptionActions';
+import { isSubscriptionActive } from '../utils/subscriptions.helpers';
 
 export type SubscriptionActionState = {
   isBusy: boolean;
@@ -43,13 +44,7 @@ export const useActiveSubscription = (plans: SubscriptionPlan[] = []) => {
   });
 
   const hasActiveSubscription = useMemo(
-    () =>
-      Boolean(
-        user?.subscription?.plan &&
-          user?.subscription?.priceId &&
-          user.subscription.priceId !== 'free' &&
-          new Date(user?.subscription?.validUntil || '') > new Date(),
-      ),
+    () => isSubscriptionActive(user?.subscription),
     [user],
   );
 
