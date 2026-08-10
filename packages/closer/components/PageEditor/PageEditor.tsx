@@ -43,6 +43,10 @@ import {
 } from '../../constants/standardPages';
 import type { PageDoc, PageSection, SectionType } from '../../types/page';
 import api from '../../utils/api';
+import {
+  materializePageI18n,
+  type BlockI18nTranslate,
+} from '../../utils/blockI18n';
 import { parseMessageFromError } from '../../utils/common';
 import {
   fetchPageBySlug,
@@ -114,10 +118,19 @@ const PageEditor = ({ initialPage, pages }: Props) => {
   const { platform } = usePlatform();
   const config = useConfig();
 
+  // `t` is read through a ref so `toEditorPage` keeps a stable identity: it is
+  // an effect dependency, and a new identity would reload the page mid-edit.
+  const tRef = useRef(t);
+  tRef.current = t;
+
   const toEditorPage = useCallback(
     (raw: Record<string, unknown> | PageDoc): PageDoc => {
       const normalized = normalizePage(raw as Record<string, unknown>);
-      return upgradeStandardPageFromDefaults(normalized);
+      const upgraded = upgradeStandardPageFromDefaults(normalized);
+      return materializePageI18n(
+        upgraded,
+        tRef.current as unknown as BlockI18nTranslate,
+      );
     },
     [],
   );

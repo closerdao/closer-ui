@@ -18,7 +18,6 @@ type BlockCategory =
   | 'fundraiser'
   | 'team'
   | 'press'
-  | 'dataroom'
   | 'closer';
 
 interface BlockTypeDef {
@@ -94,6 +93,36 @@ const BLOCK_TYPES: BlockTypeDef[] = [
     type: 'cta',
     labelKey: 'pages_editor_block_cta',
     descKey: 'pages_editor_block_cta_desc',
+    category: 'layout',
+  },
+  {
+    type: 'dataTable',
+    labelKey: 'pages_editor_block_data_table',
+    descKey: 'pages_editor_block_data_table_desc',
+    category: 'layout',
+  },
+  {
+    type: 'barChart',
+    labelKey: 'pages_editor_block_bar_chart',
+    descKey: 'pages_editor_block_bar_chart_desc',
+    category: 'layout',
+  },
+  {
+    type: 'flowDiagram',
+    labelKey: 'pages_editor_block_flow_diagram',
+    descKey: 'pages_editor_block_flow_diagram_desc',
+    category: 'layout',
+  },
+  {
+    type: 'documents',
+    labelKey: 'pages_editor_block_documents',
+    descKey: 'pages_editor_block_documents_desc',
+    category: 'layout',
+  },
+  {
+    type: 'emailGate',
+    labelKey: 'pages_editor_block_email_gate',
+    descKey: 'pages_editor_block_email_gate_desc',
     category: 'layout',
   },
   {
@@ -314,13 +343,6 @@ const BLOCK_TYPES: BlockTypeDef[] = [
     featureKey: 'press',
   },
   {
-    type: 'dataroom',
-    labelKey: 'pages_editor_block_dataroom',
-    descKey: 'pages_editor_block_dataroom_desc',
-    category: 'dataroom',
-    featureKey: 'dataroom',
-  },
-  {
     type: 'webinar',
     labelKey: 'pages_editor_block_webinar',
     descKey: 'pages_editor_block_webinar_desc',
@@ -341,7 +363,6 @@ const CATEGORY_ORDER: BlockCategory[] = [
   'fundraiser',
   'team',
   'press',
-  'dataroom',
   'closer',
 ];
 

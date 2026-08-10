@@ -43,6 +43,11 @@ export type SectionType =
   | 'pressPodcasts'
   | 'pressContact'
   | 'dataroom'
+  | 'emailGate'
+  | 'dataTable'
+  | 'documents'
+  | 'barChart'
+  | 'flowDiagram'
   | 'timeline'
   | 'collapsibleFaq';
 

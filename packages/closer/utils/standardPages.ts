@@ -74,13 +74,25 @@ const isOutdatedThinTokenSeed = (page: PageDoc): boolean => {
   );
 };
 
+/**
+ * The data room used to ship as a single `dataroom` block. It is now built from
+ * regular blocks, so a page that still holds only the old block is a seed, not
+ * an edit, and should be replaced by the current defaults.
+ */
+const isLegacyDataroomSeed = (page: PageDoc): boolean => {
+  if (normalizePageSlug(page.slug) !== '/dataroom') return false;
+  const types = (page.sections ?? []).map((section) => section.type);
+  return types.length === 1 && types[0] === 'dataroom';
+};
+
 const preferDefaultsForSparseOverride = (page: PageDoc): PageDoc => {
   if (!getStandardPageDefinition(page.slug) && !page.isStandard) return page;
   const defaults = buildDefaultStandardPageDoc(page.slug);
   if (!defaults) return page;
   const shouldPreferDefaults =
     isSparseStandardPageOverride(page, defaults) ||
-    isOutdatedThinTokenSeed(page);
+    isOutdatedThinTokenSeed(page) ||
+    isLegacyDataroomSeed(page);
   if (!shouldPreferDefaults) {
     return page;
   }

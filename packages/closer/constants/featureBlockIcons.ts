@@ -1,16 +1,26 @@
 import type { LucideIcon } from 'lucide-react';
 import {
+  BarChart3,
+  Building2,
   Calendar,
+  Check,
+  Droplets,
+  FileSpreadsheet,
+  FileText,
   Heart,
   Home,
+  Landmark,
   Leaf,
+  Map,
   MapPin,
+  Rocket,
   Shield,
   Sparkles,
   Star,
   Sun,
   Users,
   Utensils,
+  Wallet,
   Wifi,
   Zap,
 } from 'lucide-react';
@@ -28,7 +38,17 @@ export type FeatureBlockIconId =
   | 'mapPin'
   | 'wifi'
   | 'utensils'
-  | 'sparkles';
+  | 'sparkles'
+  | 'barChart'
+  | 'building'
+  | 'check'
+  | 'droplets'
+  | 'fileSpreadsheet'
+  | 'fileText'
+  | 'landmark'
+  | 'map'
+  | 'rocket'
+  | 'wallet';
 
 export const FEATURE_BLOCK_ICONS: {
   id: FeatureBlockIconId;
@@ -47,6 +67,16 @@ export const FEATURE_BLOCK_ICONS: {
   { id: 'wifi', Icon: Wifi },
   { id: 'utensils', Icon: Utensils },
   { id: 'sparkles', Icon: Sparkles },
+  { id: 'barChart', Icon: BarChart3 },
+  { id: 'building', Icon: Building2 },
+  { id: 'check', Icon: Check },
+  { id: 'droplets', Icon: Droplets },
+  { id: 'fileSpreadsheet', Icon: FileSpreadsheet },
+  { id: 'fileText', Icon: FileText },
+  { id: 'landmark', Icon: Landmark },
+  { id: 'map', Icon: Map },
+  { id: 'rocket', Icon: Rocket },
+  { id: 'wallet', Icon: Wallet },
 ];
 
 export const FEATURE_BLOCK_ICON_MAP = Object.fromEntries(

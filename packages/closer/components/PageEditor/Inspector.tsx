@@ -13,6 +13,7 @@ import CloserBlockInspector from './inspectors/CloserBlockInspector';
 import ContentListInspector from './inspectors/ContentListInspector';
 import { BLOCK_INSPECTOR_CONFIGS } from './inspectors/blockInspectorConfigs';
 import DailyContributionInspector from './inspectors/DailyContributionInspector';
+import DataTableInspector from './inspectors/DataTableInspector';
 import FeaturesInspector from './inspectors/FeaturesInspector';
 import GalleryInspector from './inspectors/GalleryInspector';
 import HeroInspector from './inspectors/HeroInspector';
@@ -89,6 +90,9 @@ const Inspector = ({
       if (selectedSection.type === 'dailyContribution') {
         return <DailyContributionInspector {...common} />;
       }
+      if (selectedSection.type === 'dataTable') {
+        return <DataTableInspector {...common} />;
+      }
       if (configured) {
         return <ContentListInspector {...common} config={configured} />;
       }
@@ -131,7 +135,16 @@ const Inspector = ({
     const handleBgChange = (next: SectionBackground) => {
       common.onChange({ ...common.data, background: next });
     };
+    const blockSettings =
+      (common.data.settings as Record<string, unknown> | undefined) ?? {};
+    const handleGatedChange = (checked: boolean) => {
+      common.onChange({
+        ...common.data,
+        settings: { ...blockSettings, gatedByEmail: checked },
+      });
+    };
     const showBackground = !isDynamicBlockType(selectedSection.type);
+    const showGateToggle = selectedSection.type !== 'emailGate';
     return (
       <div className="flex flex-col gap-4">
         {showBackground ? (
@@ -140,6 +153,23 @@ const Inspector = ({
               value={(common.data.background as string | undefined) ?? 'transparent'}
               onChange={handleBgChange}
             />
+            <div className="h-px bg-gray-100" />
+          </>
+        ) : null}
+        {showGateToggle ? (
+          <>
+            <div className="flex flex-col gap-1">
+              <PageEditorCheckbox
+                id={`block-gated-${selectedSection._localId}`}
+                checked={blockSettings.gatedByEmail === true}
+                onChange={handleGatedChange}
+              >
+                {t('pages_editor_field_gated')}
+              </PageEditorCheckbox>
+              <p className="text-xs text-gray-500">
+                {t('pages_editor_gated_help')}
+              </p>
+            </div>
             <div className="h-px bg-gray-100" />
           </>
         ) : null}

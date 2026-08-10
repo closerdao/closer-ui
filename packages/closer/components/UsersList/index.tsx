@@ -27,6 +27,7 @@ import api, { cdn } from '../../utils/api';
 import Counter from '../Counter';
 import Modal from '../Modal';
 import Pagination from '../Pagination';
+import SubscriptionBadge from '../SubscriptionBadge';
 import {
   Button,
   Card,
@@ -791,6 +792,9 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                             href={`/members/${user.get('slug')}`}
                           >
                             {user.get('screenname')}
+                            <SubscriptionBadge
+                              subscription={user.get('subscription')}
+                            />
                           </Link>
                           <span className="text-xs text-gray-500">
                             {dayjs(new Date()).from(user.get('created'), true)}{' '}

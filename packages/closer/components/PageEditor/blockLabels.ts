@@ -46,6 +46,11 @@ export const BLOCK_TYPE_LABEL_KEYS: Partial<Record<SectionType, string>> = {
   pressPodcasts: 'pages_editor_block_press_podcasts',
   pressContact: 'pages_editor_block_press_contact',
   dataroom: 'pages_editor_block_dataroom',
+  emailGate: 'pages_editor_block_email_gate',
+  dataTable: 'pages_editor_block_data_table',
+  documents: 'pages_editor_block_documents',
+  barChart: 'pages_editor_block_bar_chart',
+  flowDiagram: 'pages_editor_block_flow_diagram',
   webinar: 'pages_editor_block_webinar',
 };
 

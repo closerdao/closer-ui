@@ -28,11 +28,15 @@ export interface SubscriptionPlan {
   tiers?: string;
   variants?: SubscriptionVariant;
   note?: string;
+  /** Shown next to the member's avatar. Falls back to `emoji` when empty. */
+  badge?: string;
 }
 
 export interface SubscriptionsConfig {
   enabled: boolean;
   elements: SubscriptionPlan[];
+  /** Whether member badges are rendered next to avatars. Defaults to on. */
+  showBadges?: boolean;
 }
 
 export interface Subscriptions {

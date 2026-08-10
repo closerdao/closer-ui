@@ -395,10 +395,11 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: { showTitle: true },
           content: {
-            eyebrow: '_i18n_invest_hero_label',
-            title: '_i18n_invest_hero_title',
-            description: '_i18n_invest_hero_subtitle',
-            ctaText: '_i18n_prompt_fundraiser_cta',
+            eyebrow: 'Fundraising campaign',
+            title: 'Help Build Traditional Dream Factory',
+            description:
+              'Join mission-aligned supporters funding core infrastructure for a regenerative village.',
+            ctaText: 'Support TDF',
             ctaLink: '/fundraiser',
           },
         },
@@ -425,8 +426,8 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: {},
           content: {
-            title: '_i18n_token_sale_public_sale_buy_token',
-            ctaText: '_i18n_token_sale_public_sale_buy_token',
+            title: 'Buy Tokens',
+            ctaText: 'Buy Tokens',
           },
         },
       };
@@ -460,7 +461,7 @@ export const createSection = (type: SectionType): PageSection => {
         type: 'citizenProgressBar',
         data: {
           settings: { citizenTarget: 300 },
-          content: { title: '_i18n_citizenship_citizens_joined' },
+          content: { title: 'Citizens joined' },
         },
       };
     case 'financedTokensStart':
@@ -470,14 +471,14 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: {},
           content: {
-            title: '_i18n_citizenship_financed_tokens_title',
+            title: 'Financed Tokens — Flexible Entry',
             description: '',
             items: [
-              '_i18n_citizenship_financed_tokens_1',
-              '_i18n_citizenship_financed_tokens_2',
-              '_i18n_citizenship_financed_tokens_3',
+              'Available for citizenship (30, 60, 90, 120 token plans over 36 months).',
+              '10% downpayment, 5% above bonding curve price.',
+              'Instant utility unlocked from all tokens.',
             ],
-            ctaText: '_i18n_citizenship_start_financed_plan',
+            ctaText: 'Start Financed Plan',
             ctaLink: '/token/finance',
           },
         },
@@ -489,9 +490,10 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: {},
           content: {
-            title: '_i18n_cohousing_cta_title',
-            description: '_i18n_cohousing_cta_subtitle',
-            ctaText: '_i18n_cohousing_banner_cta',
+            title: 'Ready to Join?',
+            description:
+              "We're running a co-housing program for the first cohort now. Join the waitlist to be notified when applications open.",
+            ctaText: 'Open your application',
             ctaLink: '/cohousing/application',
           },
         },
@@ -502,7 +504,7 @@ export const createSection = (type: SectionType): PageSection => {
         type: 'listingsPreviews',
         data: {
           settings: {},
-          content: { title: '_i18n_stay_chose_accommodation' },
+          content: { title: 'Chose your accommodation' },
         },
       };
     case 'reviews':
@@ -512,7 +514,7 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: { shuffle: true, limit: 3 },
           content: {
-            title: '_i18n_stay_reviews_title',
+            title: "Words from people who've stayed",
             items: [
               {
                 name: 'Daria',
@@ -542,9 +544,10 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: {},
           content: {
-            title: '_i18n_volunteers_open_call_title',
-            description: '_i18n_volunteers_intro_1',
-            ctaText: '_i18n_apply_submit_button',
+            title: 'Volunteers Open Call',
+            description:
+              'We are excited to extend an invitation to join us at the Traditional Dream Factory, a regenerative farm and co-living development in Abela, Alentejo, Portugal.',
+            ctaText: 'Apply',
             ctaLink: '/volunteer/apply',
           },
         },
@@ -559,15 +562,16 @@ export const createSection = (type: SectionType): PageSection => {
             showAccommodation: true,
           },
           content: {
-            title: '_i18n_daily_contribution_title',
-            description: '_i18n_daily_contribution_description',
-            foodLabel: '_i18n_daily_contribution_food',
-            utilitiesLabel: '_i18n_daily_contribution_utilities',
-            accommodationLabel: '_i18n_daily_contribution_accommodation',
-            totalLabel: '_i18n_daily_contribution_total',
-            freeLabel: '_i18n_daily_contribution_free',
-            perDayLabel: '_i18n_daily_contribution_per_day',
-            selectionLabel: '_i18n_daily_contribution_selection',
+            title: 'Daily contribution',
+            description:
+              'A daily contribution helps keep everything running. VAT included. In return for your work hours you receive a dorm bed, a camping spot or a van parking spot, and you will be fed really well.',
+            foodLabel: 'Food',
+            utilitiesLabel: 'Utilities',
+            accommodationLabel: 'Accommodation',
+            totalLabel: 'Total',
+            freeLabel: 'Free',
+            perDayLabel: 'per day',
+            selectionLabel: 'Selection',
           },
         },
       };
@@ -605,18 +609,21 @@ export const createSection = (type: SectionType): PageSection => {
             items: [
               {
                 icon: 'landmark',
-                title: '_i18n_team_oasa_association_title',
-                description: '_i18n_team_oasa_association_desc',
+                title: 'OASA Association',
+                description:
+                  'Swiss non-profit overseeing land conservation and governance across the network',
               },
               {
                 icon: 'vote',
-                title: '_i18n_team_tdf_dao_title',
-                description: '_i18n_team_tdf_dao_desc',
+                title: 'TDF DAO',
+                description:
+                  'Community governance through token holders, citizens, and the citizen assembly',
               },
               {
                 icon: 'zap',
-                title: '_i18n_team_executive_team_title',
-                description: '_i18n_team_executive_team_desc',
+                title: 'Executive Team',
+                description:
+                  'Day-to-day operations, development, and strategic direction',
               },
             ],
           },
@@ -629,14 +636,15 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: {},
           content: {
-            eyebrow: '_i18n_team_executive_team_label',
-            title: '_i18n_team_leadership_title',
-            description: '_i18n_team_leadership_desc',
+            eyebrow: 'Executive Team',
+            title: 'Leadership',
+            description:
+              'Strategic real estate development and operational direction given by the DAO.',
             members: [
               {
                 name: 'Samuel Delesque',
-                role: '_i18n_team_samuel_role',
-                bio: '_i18n_team_samuel_desc',
+                role: 'Executive Director',
+                bio: 'Franco-Danish entrepreneur and former software engineer. Founded TDF with a vision of moving "from ownership to stewardship."',
                 twitterUrl: 'https://twitter.com/samdelesque',
                 linkedinUrl: 'https://www.linkedin.com/in/samdelesque/',
               },
@@ -651,90 +659,94 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: {},
           content: {
-            eyebrow: '_i18n_team_operations_label',
-            title: '_i18n_team_ground_teams_title',
-            description: '_i18n_team_ground_teams_desc',
+            eyebrow: 'Operations',
+            title: 'On-the-Ground Teams',
+            description: 'The people making magic happen every day at TDF.',
             departments: [
               {
-                title: '_i18n_team_hospitality_team_title',
-                subtitle: '_i18n_team_hospitality_team_when',
-                description: '_i18n_team_hospitality_team_desc',
+                title: 'Hospitality Team',
+                subtitle: 'Assembled over 2026',
+                description:
+                  'Run a profitable rural tourism operation with high guest satisfaction.',
                 members: [
                   {
-                    name: '_i18n_team_luna_name',
-                    role: '_i18n_team_luna_role',
+                    name: 'Luna Mangan',
+                    role: 'Hospitality Manager',
                   },
                   {
-                    name: '_i18n_team_kitchen_lead',
-                    role: '_i18n_team_position_open',
+                    name: 'Kitchen Lead',
+                    role: 'Position open',
                     isOpen: true,
                   },
                   {
-                    name: '_i18n_team_kitchen_support',
-                    role: '_i18n_team_position_open',
+                    name: 'Kitchen Support',
+                    role: 'Position open',
                     isOpen: true,
                   },
                   {
-                    name: '_i18n_team_housekeeping',
-                    role: '_i18n_team_housekeeping_positions',
+                    name: 'Housekeeping',
+                    role: '2 positions',
                     isOpen: true,
                   },
                   {
-                    name: '_i18n_team_maintenance',
-                    role: '_i18n_team_maintenance_position',
+                    name: 'Maintenance',
+                    role: '0.5x position',
                     isOpen: true,
                   },
                 ],
               },
               {
-                title: '_i18n_team_ecology_food_title',
-                description: '_i18n_team_ecology_food_desc',
+                title: 'Ecology & Food Production',
+                description:
+                  'Produce food for 50+ people, increase soil fertility, and retain water (OASA metrics).',
                 members: [
                   {
-                    name: '_i18n_team_ofer_name',
-                    role: '_i18n_team_land_steward',
+                    name: 'Ofer Carmon',
+                    role: 'Land Steward',
                   },
                   {
-                    name: '_i18n_team_joao_name',
-                    role: '_i18n_team_land_steward',
+                    name: 'Joao Baranov',
+                    role: 'Land Steward',
                   },
                   {
-                    name: '_i18n_team_land_steward',
-                    role: '_i18n_team_land_steward_additional',
+                    name: 'Land Steward',
+                    role: '1 additional position',
                     isOpen: true,
                   },
                   {
-                    name: '_i18n_team_volunteers',
-                    role: '_i18n_team_volunteers_positions',
+                    name: 'Volunteers',
+                    role: '2 rotating positions',
                     isOpen: true,
                   },
                 ],
               },
               {
-                title: '_i18n_team_build_team_title',
-                description: '_i18n_team_build_team_desc',
+                title: 'Internal Build Team',
+                description:
+                  'Create unique accommodations and beautify the land for human use.',
                 members: [
                   {
-                    name: '_i18n_team_julia_name',
-                    role: '_i18n_team_carpentry',
+                    name: 'Julia Aust',
+                    role: 'Carpentry',
                   },
                 ],
               },
               {
-                title: '_i18n_team_mushroom_farm_title',
-                description: '_i18n_team_mushroom_farm_desc',
+                title: 'Mushroom Farm',
+                description:
+                  'Produce edible mushrooms for 3 restaurants and medicinal products.',
                 members: [
                   {
-                    name: '_i18n_team_richard_name',
-                    role: '_i18n_team_richard_role',
+                    name: 'Richard Olson',
+                    role: 'Mycology Lead (0.25x)',
                   },
                   {
-                    name: '_i18n_team_tonya_name',
-                    role: '_i18n_team_tonya_role',
+                    name: 'Tonya Gorman',
+                    role: 'Mycology Ops (1x)',
                   },
                   {
-                    name: '_i18n_team_mycology_assistants',
-                    role: '_i18n_team_mycology_assistants_positions',
+                    name: 'Mycology Assistants',
+                    role: '2 positions',
                     isOpen: true,
                   },
                 ],
@@ -750,9 +762,10 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: {},
           content: {
-            eyebrow: '_i18n_team_partners_label',
-            title: '_i18n_team_partners_title',
-            description: '_i18n_team_partners_desc',
+            eyebrow: 'Partners & Contractors',
+            title: 'External Partners',
+            description:
+              'Professional partners and service providers supporting TDF and OASA.',
             partners: [
               { name: 'Coin Finance', role: 'Token & Web3' },
               { name: 'Lars Schlichting', role: 'Legal' },
@@ -776,40 +789,47 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: {},
           content: {
-            eyebrow: '_i18n_team_governance_label',
-            title: '_i18n_team_tdf_dao_title',
-            description: '_i18n_team_dao_desc',
+            eyebrow: 'Governance',
+            title: 'TDF DAO',
+            description:
+              'Decentralized governance through our token holder community.',
             items: [
               {
-                title: '_i18n_team_citizens_title',
-                description: '_i18n_team_citizens_desc',
+                title: 'Citizens',
+                description:
+                  'Members who have completed the onboarding process and embody TDF values.',
               },
               {
-                title: '_i18n_team_citizen_assembly_title',
-                description: '_i18n_team_citizen_assembly_desc',
+                title: 'Citizen Assembly',
+                description:
+                  'Regular gatherings to discuss proposals and shape the community direction.',
               },
               {
-                title: '_i18n_team_treasury_title',
-                description: '_i18n_team_treasury_desc',
+                title: 'Treasury',
+                description:
+                  'Community-controlled funds for development and operations.',
               },
               {
-                title: '_i18n_team_token_holders_title',
-                description: '_i18n_team_token_holders_desc',
+                title: '$TDF Token Holders',
+                description:
+                  '280+ holders with governance rights and accommodation access.',
               },
               {
-                title: '_i18n_team_sweat_holders_title',
-                description: '_i18n_team_sweat_holders_desc',
+                title: '$SWEAT Holders',
+                description:
+                  'Contributors rewarded with tokens for work on the project.',
               },
               {
-                title: '_i18n_team_presence_holders_title',
-                description: '_i18n_team_presence_holders_desc',
+                title: '$PRESENCE Holders',
+                description:
+                  'Proof of presence tokens earned through time spent at TDF.',
               },
             ],
-            governsTitle: '_i18n_team_dao_governs_title',
+            governsTitle: 'What TDF DAO Governs',
             governsItems: [
-              '_i18n_team_dao_governs_game_guide',
-              '_i18n_team_dao_governs_land_plan',
-              '_i18n_team_dao_governs_elections',
+              'Game Guide (living agreement)',
+              'Land Plan (build master plan)',
+              'Executive team elections',
             ],
           },
         },
@@ -821,11 +841,12 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: {},
           content: {
-            title: '_i18n_team_join_title',
-            description: '_i18n_team_join_desc',
-            primaryText: '_i18n_team_join_view_positions',
+            title: 'Join the Team',
+            description:
+              "We're always looking for passionate people to join our regenerative community. Whether as a steward, volunteer, or contributor.",
+            primaryText: 'View Open Positions',
             primaryLink: '/roles',
-            secondaryText: '_i18n_team_join_volunteer_program',
+            secondaryText: 'Volunteer Program',
             secondaryLink: '/volunteer',
           },
         },
@@ -839,20 +860,20 @@ export const createSection = (type: SectionType): PageSection => {
           content: {
             items: [
               {
-                value: '_i18n_press_stats_articles_count',
-                label: '_i18n_press_stats_articles_label',
+                value: '80+',
+                label: 'Press Articles',
               },
               {
-                value: '_i18n_press_stats_portuguese_count',
-                label: '_i18n_press_stats_portuguese_label',
+                value: '40+',
+                label: 'Portuguese Media',
               },
               {
-                value: '_i18n_press_stats_spanish_count',
-                label: '_i18n_press_stats_spanish_label',
+                value: '25+',
+                label: 'Spanish Media',
               },
               {
-                value: '_i18n_press_stats_podcasts_count',
-                label: '_i18n_press_stats_podcasts_label',
+                value: '7',
+                label: 'Podcast Appearances',
               },
             ],
           },
@@ -865,7 +886,7 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: {},
           content: {
-            eyebrow: '_i18n_press_featured_in',
+            eyebrow: 'Featured in',
             items: [
               { name: 'Expresso' },
               { name: 'Forbes Portugal' },
@@ -884,42 +905,46 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: {},
           content: {
-            eyebrow: '_i18n_press_highlight_title',
+            eyebrow: 'Highlight Coverage',
             items: [
               {
                 outlet: 'Expresso',
                 date: 'June 26, 2025',
-                title: '_i18n_press_highlight_expresso_title',
+                title: 'Nómadas digitais criam aldeia tecnológica no Alentejo',
                 url: 'https://expresso.pt/economia/economia_imobiliario/2025-06-26-nomadas-digitais-criam-aldeia-tecnologica-no-alentejo-354f740a',
               },
               {
                 outlet: 'Forbes Portugal',
                 date: 'August 26, 2025',
-                title: '_i18n_press_highlight_forbes_title',
+                title:
+                  'Portugal é o sétimo destino favorito dos nómadas digitais',
                 url: 'https://www.forbespt.com/portugal-e-o-setimo-destino-favorito-dos-nomadas-digitais/',
               },
               {
                 outlet: 'Diário de Notícias',
                 date: 'August 24, 2025',
-                title: '_i18n_press_highlight_dn_title',
+                title:
+                  'Alentejo vê nascer primeira aldeia regenerativa da Europa financiada com tokens',
                 url: 'https://www.dn.pt/edicao-impressa/alentejo-v%C3%AA-nascer-primeira-aldeia-regenerativa-da-europa-financiada-com-tokens',
               },
               {
                 outlet: 'EFE Verde',
                 date: 'September 21, 2025',
-                title: '_i18n_press_highlight_efe_title',
+                title:
+                  'Regenerar para avanzar: el futuro del campo pasa por la innovación social y ecológica',
                 url: 'https://efeverde.com/regenerar-para-avanzar-el-futuro-del-campo-pasa-por-la-innovacion-social-y-ecologica-por-samuel-delesque-traditional-dream-factory-tdf/',
               },
               {
                 outlet: 'Idealista',
                 date: 'December 18, 2025',
-                title: '_i18n_press_highlight_idealista_title',
+                title:
+                  'Primeira aldeia regenerativa tokenizada da Europa nasce no Alentejo',
                 url: 'https://www.idealista.pt/news/imobiliario/habitacao/2025/12/18/73120-primeira-aldeia-regenerativa-tokenizada-da-europa-nasce-no-alentejo',
               },
               {
                 outlet: 'Jornal Económico',
                 date: '2025',
-                title: '_i18n_press_highlight_jornal_title',
+                title: '48% dos portugueses sonham trocar a cidade pelo campo',
                 url: 'https://jornaleconomico.sapo.pt/noticias/48-dos-portugueses-sonham-trocar-a-cidade-pelo-campo/',
               },
             ],
@@ -933,37 +958,38 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: {},
           content: {
-            eyebrow: '_i18n_press_podcasts_title',
-            description: '_i18n_press_podcasts_subtitle',
+            eyebrow: 'Podcast appearances',
+            description:
+              'Founder Samuel Delesque on regenerative finance and village building.',
             items: [
               {
-                title: '_i18n_press_podcast_green_planet_title',
-                date: '_i18n_press_podcast_green_planet_date',
+                title: 'Green Planet Blue Planet',
+                date: 'January 2023 • 44 min',
                 url: 'https://podcasts.apple.com/gb/podcast/ep-322-sam-delesque-regenerative-entrepreneur-developing/id1265643891?i=1000595309300',
               },
               {
-                title: '_i18n_press_podcast_refi_title',
-                date: '_i18n_press_podcast_refi_date',
+                title: 'ReFi Podcast',
+                date: 'October 2023 • 55 min',
                 url: 'https://blog.refidao.com/building-regenerative-villages-with-samuel-delesque-season-3-episode-8/',
               },
               {
-                title: '_i18n_press_podcast_crypto_altruism_title',
-                date: '_i18n_press_podcast_crypto_altruism_date',
+                title: 'Crypto Altruism',
+                date: 'January 2023',
                 url: 'https://www.cryptoaltruism.org/blog/crypto-altruism-podcast-episode84-oasa-using-web3-to-build-for-a-regenerative-future',
               },
               {
-                title: '_i18n_press_podcast_blockchain_socialist_title',
-                date: '_i18n_press_podcast_blockchain_socialist_date',
+                title: 'The Blockchain Socialist',
+                date: 'January 2024',
                 url: 'https://theblockchainsocialist.com/a-regenerative-village-as-a-dao-in-portugal-traditional-dream-factory/',
               },
               {
-                title: '_i18n_press_podcast_strangers_title',
-                date: '_i18n_press_podcast_strangers_date',
+                title: 'The New Movement',
+                date: '42 min',
                 url: 'https://thenewmvt.com/podcast/sam-delesque/',
               },
               {
-                title: '_i18n_press_podcast_primal_title',
-                date: '_i18n_press_podcast_primal_date',
+                title: 'Primal Gathering',
+                date: 'November 2021 • 59 min',
                 url: 'https://podcasts.apple.com/ng/podcast/from-ownership-to-stewardship-samuel-delesque-founder/id1591874552?i=1000540529193',
               },
             ],
@@ -977,8 +1003,9 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: {},
           content: {
-            title: '_i18n_press_contact_title',
-            description: '_i18n_press_contact_description',
+            title: 'Press Contact',
+            description:
+              'For media inquiries, interview requests, or press materials, please contact:',
             email: 'press@traditionaldreamfactory.com',
           },
         },
@@ -990,68 +1017,69 @@ export const createSection = (type: SectionType): PageSection => {
         data: {
           settings: {},
           content: {
-            heroEyebrow: '_i18n_dataroom_hero_label',
-            heroTitle: '_i18n_dataroom_hero_subtitle',
-            heroDescription: '_i18n_dataroom_hero_description',
+            heroEyebrow: 'Data Room',
+            heroTitle: 'Finance Pioneering Regenerative Tourism in Portugal',
+            heroDescription:
+              '€450,000 private debt offering | 5% annual interest | 4-year term. Secured by a pledge over shares in the asset-holding SPV (Enseada Sonhadora S.A.), with an optional token conversion feature.',
             stats: [
               {
                 value: '€450K',
-                label: '_i18n_dataroom_stat_total_funding',
+                label: 'Private Debt Raise',
               },
               {
                 value: '€1.24M',
-                label: '_i18n_dataroom_stat_construction_budget',
+                label: 'Construction Budget',
               },
               {
                 value: '€653k',
-                label: '_i18n_dataroom_stat_revenue_target',
+                label: '2028 Revenue (Base Case)',
               },
               {
                 value: '25ha',
-                label: '_i18n_dataroom_stat_land_stewardship',
+                label: 'Diverse Real Estate Portfolio',
               },
             ],
             loanTerms: [
-              { value: '€450K', label: '_i18n_dataroom_terms_amount' },
-              { value: '5%', label: '_i18n_dataroom_terms_rate' },
-              { value: '4 yr', label: '_i18n_dataroom_terms_term' },
-              { value: '€50K', label: '_i18n_dataroom_terms_minimum' },
+              { value: '€450K', label: 'Total Raise' },
+              { value: '5%', label: 'Fixed Annual Rate' },
+              { value: '4 yr', label: 'Term' },
+              { value: '€50K', label: 'Minimum Ticket' },
             ],
             documents: [
               {
-                title: '_i18n_dataroom_financial_plan_title',
+                title: 'Financial Model (XLSX)',
                 href: '/dataroom/tdf-financial-plan.xlsx',
-                downloadLabel: '_i18n_dataroom_download_file',
+                downloadLabel: 'Download file →',
               },
               {
-                title: '_i18n_dataroom_area_map_title',
+                title: 'Area Map (KML)',
                 href: '/dataroom/tdf-area-map.kml',
-                downloadLabel: '_i18n_dataroom_download_file',
+                downloadLabel: 'Download file →',
               },
               {
-                title: '_i18n_dataroom_architecture_title',
+                title: 'Architecture Package (PDF)',
                 href: '/dataroom/tdf-architecture.pdf',
-                downloadLabel: '_i18n_dataroom_download_pdf',
+                downloadLabel: 'Download PDF →',
               },
               {
-                title: '_i18n_dataroom_report_2021_title',
+                title: '2021 Annual Report',
                 href: '/pdf/2021-TDF-report.pdf',
-                downloadLabel: '_i18n_dataroom_download_pdf',
+                downloadLabel: 'Download PDF →',
               },
               {
-                title: '_i18n_dataroom_report_2022_title',
+                title: '2022 Annual Report',
                 href: '/pdf/2022-TDF-report.pdf',
-                downloadLabel: '_i18n_dataroom_download_pdf',
+                downloadLabel: 'Download PDF →',
               },
               {
-                title: '_i18n_dataroom_report_2024_title',
+                title: '2024 Annual Report',
                 href: '/pdf/2024-TDF-report.pdf',
-                downloadLabel: '_i18n_dataroom_download_pdf',
+                downloadLabel: 'Download PDF →',
               },
               {
-                title: '_i18n_dataroom_report_2025_title',
+                title: '2025 Annual Report',
                 href: '/pdf/2025-TDF-report.pdf',
-                downloadLabel: '_i18n_dataroom_download_pdf',
+                downloadLabel: 'Download PDF →',
               },
             ],
             partners: [
@@ -1068,6 +1096,125 @@ export const createSection = (type: SectionType): PageSection => {
             ],
             webinarTags: ['dataroom', 'investor-webinar'],
             webinarAnalyticsCategory: 'Dataroom',
+          },
+        },
+      };
+    case 'emailGate':
+      return {
+        _localId,
+        type: 'emailGate',
+        data: {
+          settings: { placement: 'dataroom' },
+          content: {
+            eyebrow: '',
+            title: 'Unlock the full page',
+            description: 'Enter your email to access the rest of this page.',
+            ctaText: 'Get access',
+          },
+        },
+      };
+    case 'dataTable':
+      return {
+        _localId,
+        type: 'dataTable',
+        data: {
+          settings: { isCompact: false },
+          content: {
+            eyebrow: '',
+            title: 'Table',
+            description: '',
+            columns: [
+              { label: 'Item', align: 'left' },
+              { label: 'Amount', align: 'right' },
+            ],
+            rows: [
+              {
+                cells: [
+                  { text: 'First item', note: '' },
+                  { text: '€0', note: '' },
+                ],
+              },
+              {
+                cells: [
+                  { text: 'Second item', note: '' },
+                  { text: '€0', note: '' },
+                ],
+              },
+            ],
+            footer: {
+              cells: [{ text: 'Total' }, { text: '€0' }],
+            },
+            note: '',
+          },
+        },
+      };
+    case 'documents':
+      return {
+        _localId,
+        type: 'documents',
+        data: {
+          settings: { numColumns: 4 },
+          content: {
+            eyebrow: '',
+            title: 'Documents',
+            description: '',
+            items: [
+              {
+                title: 'Document',
+                href: '',
+                downloadLabel: 'Download PDF →',
+                icon: 'fileText',
+              },
+            ],
+          },
+        },
+      };
+    case 'barChart':
+      return {
+        _localId,
+        type: 'barChart',
+        data: {
+          settings: {},
+          content: {
+            eyebrow: '',
+            title: 'Projection',
+            description: '',
+            items: [
+              { label: '2026', value: '€100k', amount: 100 },
+              { label: '2027', value: '€150k', amount: 150 },
+              { label: '2028', value: '€200k', amount: 200 },
+            ],
+            note: '',
+          },
+        },
+      };
+    case 'flowDiagram':
+      return {
+        _localId,
+        type: 'flowDiagram',
+        data: {
+          settings: {},
+          content: {
+            eyebrow: '',
+            title: 'Structure',
+            description: '',
+            nodes: [
+              {
+                title: 'Parent entity',
+                subtitle: '',
+                connectorLabel: '',
+                icon: 'landmark',
+                style: 'default',
+              },
+              {
+                title: 'Subsidiary',
+                subtitle: '',
+                connectorLabel: 'holds equity in',
+                icon: 'building',
+                style: 'dark',
+              },
+            ],
+            note: '',
           },
         },
       };

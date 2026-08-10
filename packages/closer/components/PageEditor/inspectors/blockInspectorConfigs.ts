@@ -477,6 +477,123 @@ export const BLOCK_INSPECTOR_CONFIGS: Partial<
       },
     ],
   },
+  emailGate: {
+    hint: 'pages_editor_email_gate_hint',
+    fields: [
+      { key: 'eyebrow', labelKey: 'pages_editor_field_eyebrow' },
+      { key: 'title', labelKey: 'pages_editor_field_title' },
+      {
+        key: 'description',
+        labelKey: 'pages_editor_field_description',
+        type: 'textarea',
+      },
+      { key: 'ctaText', labelKey: 'pages_editor_field_cta_text' },
+    ],
+  },
+  documents: {
+    settingsFields: [
+      {
+        key: 'numColumns',
+        labelKey: 'pages_editor_field_columns',
+        type: 'number',
+        defaultValue: 4,
+      },
+    ],
+    fields: [
+      { key: 'eyebrow', labelKey: 'pages_editor_field_eyebrow' },
+      { key: 'title', labelKey: 'pages_editor_field_title' },
+      {
+        key: 'description',
+        labelKey: 'pages_editor_field_description',
+        type: 'textarea',
+      },
+    ],
+    listKey: 'items',
+    listLabelKey: 'pages_editor_field_documents',
+    listAddLabelKey: 'pages_editor_add_document',
+    minItems: 1,
+    defaultItem: {
+      title: '',
+      href: '',
+      downloadLabel: 'Download file →',
+      icon: 'fileText',
+    },
+    listItemFields: [
+      { key: 'title', labelKey: 'pages_editor_field_title' },
+      { key: 'href', labelKey: 'pages_editor_field_url', type: 'url' },
+      { key: 'downloadLabel', labelKey: 'pages_editor_field_cta_text' },
+      { key: 'icon', labelKey: 'pages_editor_field_icon' },
+    ],
+  },
+  barChart: {
+    fields: [
+      { key: 'eyebrow', labelKey: 'pages_editor_field_eyebrow' },
+      { key: 'title', labelKey: 'pages_editor_field_title' },
+      {
+        key: 'description',
+        labelKey: 'pages_editor_field_description',
+        type: 'textarea',
+      },
+      { key: 'note', labelKey: 'pages_editor_field_note', type: 'textarea' },
+    ],
+    listKey: 'items',
+    listLabelKey: 'pages_editor_field_bars',
+    listAddLabelKey: 'pages_editor_add_bar',
+    minItems: 1,
+    defaultItem: { label: '', value: '', amount: '0' },
+    listItemFields: [
+      { key: 'label', labelKey: 'pages_editor_field_label' },
+      { key: 'value', labelKey: 'pages_editor_field_value' },
+      {
+        key: 'amount',
+        labelKey: 'pages_editor_field_amount',
+        type: 'number',
+      },
+    ],
+  },
+  flowDiagram: {
+    fields: [
+      { key: 'eyebrow', labelKey: 'pages_editor_field_eyebrow' },
+      { key: 'title', labelKey: 'pages_editor_field_title' },
+      {
+        key: 'description',
+        labelKey: 'pages_editor_field_description',
+        type: 'textarea',
+      },
+      { key: 'note', labelKey: 'pages_editor_field_note', type: 'textarea' },
+    ],
+    listKey: 'nodes',
+    listLabelKey: 'pages_editor_field_nodes',
+    listAddLabelKey: 'pages_editor_add_node',
+    minItems: 1,
+    defaultItem: {
+      title: '',
+      subtitle: '',
+      connectorLabel: '',
+      icon: '',
+      style: 'default',
+    },
+    listItemFields: [
+      { key: 'title', labelKey: 'pages_editor_field_title' },
+      { key: 'subtitle', labelKey: 'pages_editor_field_subtitle' },
+      {
+        key: 'connectorLabel',
+        labelKey: 'pages_editor_field_connector_label',
+      },
+      { key: 'icon', labelKey: 'pages_editor_field_icon' },
+      {
+        key: 'style',
+        labelKey: 'pages_editor_field_style',
+        type: 'select',
+        options: [
+          { value: 'default', labelKey: 'pages_editor_flow_style_default' },
+          { value: 'dashed', labelKey: 'pages_editor_flow_style_dashed' },
+          { value: 'dark', labelKey: 'pages_editor_flow_style_dark' },
+          { value: 'accent', labelKey: 'pages_editor_flow_style_accent' },
+        ],
+      },
+    ],
+  },
   dataroom: {
     fields: [
       { key: 'heroEyebrow', labelKey: 'pages_editor_field_eyebrow' },
@@ -494,7 +611,7 @@ export const BLOCK_INSPECTOR_CONFIGS: Partial<
     defaultItem: {
       title: '',
       href: '',
-      downloadLabel: '_i18n_dataroom_download_file',
+      downloadLabel: 'Download file →',
     },
     listItemFields: [
       { key: 'title', labelKey: 'pages_editor_field_title' },

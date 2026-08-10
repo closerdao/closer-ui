@@ -1,8 +1,10 @@
 import {
   extractBlockI18nKey,
+  materializePageI18n,
   resolveBlockHtml,
   resolveBlockText,
 } from '../../utils/blockI18n';
+import type { PageDoc } from '../../types/page';
 
 const t = (key: string, values?: Record<string, string | number | Date>) => {
   if (key === 'token_purchase_step_3_desc') {
@@ -31,6 +33,55 @@ describe('blockI18n', () => {
     expect(resolveBlockText('_i18n_token_purchase_step_3_desc', t)).toBe(
       'Pay with cEUR',
     );
+  });
+
+  it('skips lookups for keys the translator does not have', () => {
+    const lookups: string[] = [];
+    const tWithHas = Object.assign(
+      (key: string) => {
+        lookups.push(key);
+        return t(key);
+      },
+      { has: (key: string) => key === 'hello' },
+    );
+
+    expect(resolveBlockText('_i18n_learn_page_title', tWithHas)).toBe(
+      'learn_page_title',
+    );
+    expect(lookups).toEqual([]);
+    expect(resolveBlockText('_i18n_hello', tWithHas)).toBe('Hello world');
+    expect(lookups).toEqual(['hello']);
+  });
+
+  it('materializes a saved page doc so editor fields hold real copy', () => {
+    const page: PageDoc = {
+      _id: '507f1f77bcf86cd799439011',
+      title: '_i18n_hello',
+      slug: '/dataroom',
+      description: '_i18n_hello',
+      menuLabel: '_i18n_hello',
+      sections: [
+        {
+          type: 'textBlock',
+          data: {
+            settings: { imagePosition: 'none' },
+            content: { title: '_i18n_hello', body: '<p>_i18n_hello</p>' },
+          },
+        },
+      ],
+    };
+
+    const materialized = materializePageI18n(page, t);
+
+    expect(materialized.title).toBe('Hello world');
+    expect(materialized.description).toBe('Hello world');
+    expect(materialized.menuLabel).toBe('Hello world');
+    expect(materialized.sections[0].data).toEqual({
+      settings: { imagePosition: 'none' },
+      content: { title: 'Hello world', body: '<p>Hello world</p>' },
+    });
+    expect(materialized._id).toBe('507f1f77bcf86cd799439011');
+    expect(materialized.slug).toBe('/dataroom');
   });
 
   it('sanitizes HTML after i18n resolution', () => {
