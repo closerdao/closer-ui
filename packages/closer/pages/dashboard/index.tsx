@@ -6,8 +6,13 @@ import { useEffect, useState } from 'react';
 
 import AdminLayout from '../../components/Dashboard/AdminLayout';
 import DashboardActions from '../../components/Dashboard/DashboardActions';
-import DashboardIntro from '../../components/Dashboard/DashboardIntro';
+import DashboardStats from '../../components/Dashboard/DashboardStats';
 import RevenueTimeFrameSelector from '../../components/Dashboard/RevenueTimeFrameSelector';
+import {
+  DashboardBlockId,
+  getVisibleDashboardBlockIds,
+} from '../../components/Dashboard/dashboardBlocks';
+import { useDashboardFeatures } from '../../components/Dashboard/useDashboardFeatures';
 import { Heading, Spinner } from '../../components/ui';
 
 const DashboardBookings = dynamic(
@@ -23,20 +28,17 @@ const DashboardSubscriptions = dynamic(
   { ssr: false, loading: () => <Spinner /> }
 );
 import { useTranslations } from 'next-intl';
-import process from 'process';
 
 import { useAuth } from '../../contexts/auth';
-import { useConfig } from '../../hooks/useConfig';
 import useRBAC from '../../hooks/useRBAC';
-import { BookingConfig, GeneralConfig } from '../../types';
+import { GeneralConfig } from '../../types';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import PageNotFound from '../not-found';
 
 const DashboardPage = () => {
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
-  const bookingConfig = getCachedConfig('booking') as BookingConfig | null;
   const t = useTranslations();
-  const defaultConfig = useConfig();
+  const { features, config } = useDashboardFeatures();
   const { user } = useAuth();
 
   const [fromDate, setFromDate] = useState<string>('');
@@ -65,22 +67,6 @@ const DashboardPage = () => {
     );
   };
 
-  const areSubscriptionsEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
-
-  const isBookingEnabled =
-    bookingConfig?.enabled &&
-    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
-
-  useEffect(() => {
-    if (isBookingEnabled) {
-      router.push({
-        pathname: '/dashboard',
-        query: { time_frame: timeFrame },
-      });
-    }
-  }, [timeFrame]);
-
   useEffect(() => {
     if (time_frame) {
       setTimeFrame(time_frame.toString());
@@ -90,12 +76,21 @@ const DashboardPage = () => {
   const { hasAccess } = useRBAC();
   const hasAccessToDashboard = hasAccess('Dashboard');
 
+  const visibleBlocks = getVisibleDashboardBlockIds(
+    features,
+    user?.roles || [],
+    hasAccess,
+  );
+  const isVisible = (id: DashboardBlockId) => visibleBlocks.includes(id);
+
   const PLATFORM_NAME =
-    generalConfig?.platformName || defaultConfig.platformName;
+    generalConfig?.platformName || config.platformName;
 
   if (!user || !hasAccessToDashboard) {
     return <PageNotFound error="User may not access" />;
   }
+
+  const timeFrameProps = { timeFrame, fromDate, toDate };
 
   return (
     <>
@@ -116,31 +111,13 @@ const DashboardPage = () => {
           />
         </div>
 
-        <DashboardIntro
-          timeFrame={timeFrame}
-          fromDate={fromDate}
-          toDate={toDate}
-        />
-
-        <DashboardBookings
-          timeFrame={timeFrame}
-          fromDate={fromDate}
-          toDate={toDate}
-        />
-        <DashboardRevenue
-          timeFrame={timeFrame}
-          fromDate={fromDate}
-          toDate={toDate}
-        />
-        {areSubscriptionsEnabled && (
-          <DashboardSubscriptions
-            timeFrame={timeFrame}
-            fromDate={fromDate}
-            toDate={toDate}
-          />
+        {isVisible('stats') && <DashboardStats {...timeFrameProps} />}
+        {isVisible('bookings') && <DashboardBookings {...timeFrameProps} />}
+        {isVisible('revenue') && <DashboardRevenue {...timeFrameProps} />}
+        {isVisible('subscriptions') && (
+          <DashboardSubscriptions {...timeFrameProps} />
         )}
-
-        <DashboardActions />
+        {isVisible('actions') && <DashboardActions />}
       </AdminLayout>
     </>
   );
