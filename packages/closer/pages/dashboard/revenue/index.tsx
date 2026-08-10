@@ -19,6 +19,10 @@ import { DEFAULT_CURRENCY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import useRBAC from '../../../hooks/useRBAC';
 import { BookingConfig } from '../../../types/api';
+import {
+  RevenueCategorySums,
+  RevenueHeadlineTotals,
+} from '../../../types/dashboard';
 import { ExpenseTrackingCombinedEntry } from '../../../types/expense';
 import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
@@ -71,41 +75,29 @@ const RevenuePage = () => {
   const [moneriumLoading, setMoneriumLoading] = useState<boolean>(false);
   const [cryptoLoading, setCryptoLoading] = useState<boolean>(false);
 
-  const [categorySums, setCategorySums] = useState<{
-    tokenSales: number;
-    cryptoTokenSales: number;
-    events: number;
-    rental: number;
-    food: number;
-    utilities: number;
-    subscriptions: number;
-    refunds: number;
-    connectFee: number;
-    stripeProcessingFee: number;
-    other: number;
-  }>({
-    tokenSales: 0,
-    cryptoTokenSales: 0,
-    events: 0,
-    rental: 0,
-    food: 0,
-    utilities: 0,
-    subscriptions: 0,
-    refunds: 0,
-    connectFee: 0,
-    stripeProcessingFee: 0,
-    other: 0,
+  const [categorySums, setCategorySums] = useState<RevenueCategorySums>({
+    tokenSales: null,
+    cryptoTokenSales: null,
+    events: null,
+    rental: null,
+    food: null,
+    utilities: null,
+    subscriptions: null,
+    refunds: null,
+    connectFee: null,
+    stripeProcessingFee: null,
+    other: null,
   });
   /**
    * Headline figures resolved by the API's aggregation endpoints rather than
    * by summing the downloaded entry list, so they stay exact past the
    * download limit.
    */
-  const [revenueTotals, setRevenueTotals] = useState<{
-    netRevenue: number;
-    tax: number;
-    transactions: number;
-  }>({ netRevenue: 0, tax: 0, transactions: 0 });
+  const [revenueTotals, setRevenueTotals] = useState<RevenueHeadlineTotals>({
+    netRevenue: 0,
+    tax: 0,
+    transactions: 0,
+  });
   const [sumsLoading, setSumsLoading] = useState<boolean>(false);
 
   const entriesDebounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -294,6 +286,10 @@ const RevenuePage = () => {
         $lte: endDateStr,
       };
 
+      const parseCategorySum = (
+        res: { data?: unknown } | null,
+      ): number | null => (res ? parseStatResponse(res.data) : null);
+
       const [
         tokenSalesRes,
         cryptoTokenSalesRes,
@@ -320,7 +316,7 @@ const RevenuePage = () => {
               },
             },
           })
-          .catch(() => ({ data: { results: 0 } })),
+          .catch(() => null),
         api
           .get('/sum/charge/amount.total.val', {
             params: {
@@ -332,7 +328,7 @@ const RevenuePage = () => {
               },
             },
           })
-          .catch(() => ({ data: { results: 0 } })),
+          .catch(() => null),
         api
           .get('/sum/charge/amount.event.val', {
             params: {
@@ -350,7 +346,7 @@ const RevenuePage = () => {
               },
             },
           })
-          .catch(() => ({ data: { results: 0 } })),
+          .catch(() => null),
         api
           .get('/sum/charge/amount.rental.val', {
             params: {
@@ -368,7 +364,7 @@ const RevenuePage = () => {
               },
             },
           })
-          .catch(() => ({ data: { results: 0 } })),
+          .catch(() => null),
         api
           .get('/sum/charge/amount.food.val', {
             params: {
@@ -386,7 +382,7 @@ const RevenuePage = () => {
               },
             },
           })
-          .catch(() => ({ data: { results: 0 } })),
+          .catch(() => null),
         api
           .get('/sum/charge/amount.utilities.val', {
             params: {
@@ -404,7 +400,7 @@ const RevenuePage = () => {
               },
             },
           })
-          .catch(() => ({ data: { results: 0 } })),
+          .catch(() => null),
         api
           .get('/sum/charge/amount.total.val', {
             params: {
@@ -415,14 +411,14 @@ const RevenuePage = () => {
               },
             },
           })
-          .catch(() => ({ data: { results: 0 } })),
+          .catch(() => null),
         api
           .get('/sum/charge/amount.total.val', {
             params: {
               where: { date: dateFilter, status: 'refunded' },
             },
           })
-          .catch(() => ({ data: { results: 0 } })),
+          .catch(() => null),
         api
           .get('/sum/charge/meta.stripeConnectFee', {
             params: {
@@ -433,7 +429,7 @@ const RevenuePage = () => {
               },
             },
           })
-          .catch(() => ({ data: { results: 0 } })),
+          .catch(() => null),
         api
           .get('/sum/charge/meta.stripeProcessingFee', {
             params: {
@@ -444,9 +440,7 @@ const RevenuePage = () => {
               },
             },
           })
-          .catch(() => ({ data: { results: 0 } })),
-        // Net of tax and processing fees — the figure accounting actually
-        // reports on, and one the page had no way to show before.
+          .catch(() => null),
         api
           .get('/sum/charge/netRevenue.val', {
             params: {
@@ -471,17 +465,17 @@ const RevenuePage = () => {
       ]);
 
       setCategorySums({
-        tokenSales: parseStatResponse(tokenSalesRes?.data),
-        cryptoTokenSales: parseStatResponse(cryptoTokenSalesRes?.data),
-        events: parseStatResponse(eventsRes?.data),
-        rental: parseStatResponse(rentalRes?.data),
-        food: parseStatResponse(foodRes?.data),
-        utilities: parseStatResponse(utilitiesRes?.data),
-        subscriptions: parseStatResponse(subscriptionsRes?.data),
-        refunds: parseStatResponse(refundsRes?.data),
-        connectFee: parseStatResponse(connectFeeRes?.data),
-        stripeProcessingFee: parseStatResponse(stripeFeeRes?.data),
-        other: 0,
+        tokenSales: parseCategorySum(tokenSalesRes),
+        cryptoTokenSales: parseCategorySum(cryptoTokenSalesRes),
+        events: parseCategorySum(eventsRes),
+        rental: parseCategorySum(rentalRes),
+        food: parseCategorySum(foodRes),
+        utilities: parseCategorySum(utilitiesRes),
+        subscriptions: parseCategorySum(subscriptionsRes),
+        refunds: parseCategorySum(refundsRes),
+        connectFee: parseCategorySum(connectFeeRes),
+        stripeProcessingFee: parseCategorySum(stripeFeeRes),
+        other: null,
       });
 
       setRevenueTotals({
@@ -732,13 +726,13 @@ const RevenuePage = () => {
   /**
    * The API's `/sum` aggregation is the source of truth: it covers every
    * matching charge, while the entry list it used to be derived from stops at
-   * the download limit. The client-side figures stay as a fallback for when a
-   * sum request fails, which is why each category takes the entries value only
-   * when the server returned nothing.
+   * the download limit. A successful aggregate of 0 means the period has no
+   * matching charges for that category. Client-side figures stay only as a
+   * fallback when a sum request fails (`null`).
    */
   const getCategoryTotals = () => {
-    const preferServer = (server: number, fromEntries: number) =>
-      server > 0 ? server : fromEntries;
+    const preferServer = (server: number | null, fromEntries: number) =>
+      server != null ? server : fromEntries;
 
     const connectFee = preferServer(
       categorySums.connectFee,
