@@ -201,6 +201,13 @@ export const getDashboardLinks = (
       enabled: isAffiliateEnabled,
       roles: [],
     },
+    {
+      label: t('navigation_deploy_queue'),
+      url: '/dashboard/deploy-queue',
+      rbacPage: 'AffiliateSettings',
+      enabled: true,
+      roles: ['admin', 'affiliate-manager'],
+    },
   ];
 
   return [...baseLinks, ...bookingLinks, ...adminLinks, ...featureLinks];

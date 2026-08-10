@@ -2,13 +2,16 @@ import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { ReactNode, useContext, useState } from 'react';
+import { ReactNode, useContext, useEffect, useState } from 'react';
 
 import { CommunityMap } from '@/components';
 import CloserChatWidget from '@/components/CloserChatWidget';
+import { mergeLandProjectMapItems } from '@/utils/landProjectMap.utils';
 
 import { GeneralConfig, getCachedConfig } from 'closer';
 import { PromptGetInTouchContext } from 'closer/components/PromptGetInTouchContext';
+import { LandProjectMapItem } from 'closer/types/landProject';
+import { fetchLandProjects } from 'closer/utils/landProject.utils';
 import { parseMessageFromError } from 'closer/utils/common';
 
 import { NextPageContext } from 'next';
@@ -181,6 +184,23 @@ const HomePage = ({}: Props) => {
     setIsOpen: (open: boolean) => void;
   };
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [mapProjects, setMapProjects] = useState<LandProjectMapItem[]>(() =>
+    mergeLandProjectMapItems([]),
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const apiProjects = await fetchLandProjects({ limit: 200 });
+      if (!cancelled) {
+        setMapProjects(mergeLandProjectMapItems(apiProjects));
+      }
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const openFunnel = () => setIsOpen(true);
 
@@ -552,8 +572,20 @@ const HomePage = ({}: Props) => {
               style={{ zIndex: 10 }}
             >
               <div className="w-full h-full rounded-2xl overflow-hidden">
-                <CommunityMap />
+                <CommunityMap projects={mapProjects} />
               </div>
+            </div>
+            <div className="mt-4 flex flex-wrap justify-center gap-3 text-sm">
+              <Link href="/map" className="text-[#0FA968] font-medium hover:underline">
+                Open full map
+              </Link>
+              <span className="text-[#5C6E64]">·</span>
+              <Link
+                href="/ambassadors"
+                className="text-[#0FA968] font-medium hover:underline"
+              >
+                Become an Ambassador
+              </Link>
             </div>
           </div>
 
