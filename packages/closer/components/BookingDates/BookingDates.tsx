@@ -2,6 +2,7 @@ import { FC } from 'react';
 
 import { useTranslations } from 'next-intl';
 import dayjs from 'dayjs';
+import { Info } from 'lucide-react';
 
 import { BookingConditions } from '../../types';
 import DateTimePicker from '../DateTimePicker';
@@ -99,33 +100,15 @@ const BookingDates: FC<Props> = ({
     }
   };
 
-  const formatEventDates = () => {
-    if (!eventStartDate || !eventEndDate) return '';
-    
-    const start = dayjs(eventStartDate);
-    const end = dayjs(eventEndDate);
-    const isSameDay = start.isSame(end, 'day');
-    
-    if (isSameDay) {
-      return t('bookings_event_single_day', {
-        date: start.format('MMMM D'),
-        startTime: start.format('h:mm a'),
-        endTime: end.format('h:mm a')
-      });
-    } else {
-      return t('bookings_event_multi_day', {
-        startDate: start.format('MMM D'),
-        startTime: start.format('h:mm a'),
-        endDate: end.format('MMM D'),
-        endTime: end.format('h:mm a')
-      });
-    }
-  };
-
   const start = startDate ? dayjs(startDate) : null;
   const end = endDate ? dayjs(endDate) : null;
   const nights =
     start && end && end.isAfter(start) ? end.diff(start, 'day') : 0;
+
+  const fixedDatesLabel =
+    start && end
+      ? `${start.format('MMM D')} – ${end.format('MMM D')}`
+      : null;
 
   return (
     <div className="rounded-lg border border-neutral-dark bg-neutral-light p-3 sm:p-4">
@@ -137,7 +120,7 @@ const BookingDates: FC<Props> = ({
 
       <div className="mt-3 flex flex-col gap-2">
         <div className="flex justify-between items-center">
-          <div className="relative">
+          <div className="relative w-full">
             {canSelectDates ? (
               <>
                 {calendarError && (
@@ -181,9 +164,37 @@ const BookingDates: FC<Props> = ({
                 />
               </>
             ) : (
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <p className="text-sm text-gray-600 mb-2">
-                  {formatEventDates()}
+              <div
+                className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 cursor-default"
+                aria-disabled="true"
+              >
+                <p className="text-sm md:text-base font-medium text-gray-900 inline-flex items-center gap-1.5">
+                  <span className="opacity-70">
+                    {fixedDatesLabel}
+                    {nights > 0 && (
+                      <span className="text-gray-500 font-normal">
+                        {' '}
+                        ·{' '}
+                        {t('bookings_dates_nights_selected', { count: nights })}
+                      </span>
+                    )}
+                  </span>
+                  <span
+                    className="relative group/info inline-flex shrink-0"
+                    tabIndex={0}
+                    aria-label={t('stay_search_bar_event_dates_fixed_hint')}
+                  >
+                    <Info
+                      className="h-3.5 w-3.5 text-gray-400"
+                      aria-hidden
+                    />
+                    <span
+                      role="tooltip"
+                      className="pointer-events-none absolute left-1/2 top-full z-50 mt-1.5 w-56 -translate-x-1/2 rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-[11px] font-normal leading-snug text-gray-600 opacity-0 shadow-md transition-opacity group-hover/info:opacity-100 group-focus/info:opacity-100"
+                    >
+                      {t('stay_search_bar_event_dates_fixed_hint')}
+                    </span>
+                  </span>
                 </p>
               </div>
             )}

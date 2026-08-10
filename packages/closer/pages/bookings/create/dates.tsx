@@ -38,6 +38,7 @@ import api from '../../../utils/api';
 import { bookingGuestNightsMetricPoint } from '../../../utils/booking.helpers';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
+import { normalizeDiscountCode } from '../../../utils/discountCode';
 import { getMaxBookingHorizon } from '../../../utils/helpers';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 
@@ -474,7 +475,9 @@ const DatesSelector = ({
         ...(selectedTicketOption?.name && {
           ticketOption: selectedTicketOption.name,
         }),
-        ...(discountCode && { discountCode }),
+        ...(discountCode && {
+          discountCode: normalizeDiscountCode(discountCode),
+        }),
         ...(skills && { skills: skills as string }),
         ...(diet && { diet: diet as string }),
         ...(projectId && { projectId: projectId as string }),
@@ -511,7 +514,7 @@ const DatesSelector = ({
           pets,
           eventId: data.eventId,
           ticketOption: data.ticketOption,
-          discountCode: data.discountCode,
+          discountCode: normalizeDiscountCode(data.discountCode) || undefined,
           isDayTicket: true,
           children: kids,
           doesNeedPickup,
@@ -786,17 +789,32 @@ DatesSelector.getInitialProps = async (
     const bookingSettings = config.booking as BookingSettings;
     const volunteerConfig = config.volunteering as VolunteerConfig;
     if (eventId) {
-      const [ticketsAvailable, event] = await Promise.all([
-        api.get(`/bookings/event/${eventId}/availability`).catch(() => null),
-        api.get(`/event/${eventId}`).catch(() => null),
-      ]);
-
+      const stayQuery = new URLSearchParams();
+      Object.entries(query).forEach(([key, value]) => {
+        if (value == null) return;
+        if (Array.isArray(value)) {
+          value.forEach((entry) => stayQuery.append(key, entry));
+        } else {
+          stayQuery.set(key, value);
+        }
+      });
+      const destination = `/stay/create?${stayQuery.toString()}`;
+      if (context.res) {
+        context.res.writeHead(302, { Location: destination });
+        context.res.end();
+        return {
+          bookingSettings,
+          volunteerConfig,
+          isFriendsBooking: normalizeIsFriendsBooking(isFriendsBooking),
+        };
+      }
+      if (typeof window !== 'undefined') {
+        window.location.replace(destination);
+      }
       return {
         bookingSettings,
         volunteerConfig,
-        ticketOptions: ticketsAvailable?.data?.ticketOptions,
         isFriendsBooking: normalizeIsFriendsBooking(isFriendsBooking),
-        event: event?.data?.results,
       };
     }
     if (

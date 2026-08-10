@@ -67,7 +67,7 @@
     @apply p-2 text-foreground block border-0 border-b-2 border-transparent ring-transparent focus:outline-none focus:border-accent;
   }
 
-  select {
+  select:not(.new-input) {
     @apply text-base border-gray-200 border-2 rounded-lg ring-transparent appearance-none focus:border-accent outline-none max-w-full;
   }
 

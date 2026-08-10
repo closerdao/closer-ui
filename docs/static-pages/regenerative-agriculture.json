@@ -1,0 +1,142 @@
+{
+  "title": "_i18n_regen_ag_hero_title",
+  "slug": "/pages/regenerative-agriculture",
+  "description": "_i18n_regen_ag_hero_subtitle",
+  "ogImage": "",
+  "sections": [
+    {
+      "type": "hero",
+      "data": {
+        "settings": {
+          "alignText": "center",
+          "isInverted": false,
+          "isCompact": false
+        },
+        "content": {
+          "eyebrow": "",
+          "title": "_i18n_regen_ag_hero_title",
+          "body": "_i18n_regen_ag_hero_subtitle",
+          "imageUrl": "",
+          "cta": {
+            "text": "_i18n_regen_ag_cta_impact",
+            "url": "/impact-map"
+          }
+        }
+      }
+    },
+    {
+      "type": "stats",
+      "data": {
+        "settings": {},
+        "content": {
+          "eyebrow": "",
+          "title": "",
+          "items": [
+            {
+              "value": "1.2M L",
+              "label": "_i18n_regen_ag_metric_rainwater"
+            },
+            {
+              "value": "1/5",
+              "label": "_i18n_regen_ag_metric_lakes"
+            },
+            {
+              "value": "4,000+",
+              "label": "_i18n_regen_ag_metric_trees"
+            },
+            {
+              "value": "150+",
+              "label": "_i18n_regen_ag_metric_flora"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "textBlock",
+      "data": {
+        "settings": {
+          "imagePosition": "none"
+        },
+        "content": {
+          "title": "_i18n_regen_ag_approach_title",
+          "body": "_i18n_regen_ag_approach_desc_1",
+          "imageUrl": "",
+          "imageAlt": ""
+        }
+      }
+    },
+    {
+      "type": "features",
+      "data": {
+        "settings": {
+          "numColumns": 3,
+          "isSmallImage": true,
+          "isColorful": false,
+          "hasBorder": true
+        },
+        "content": {
+          "title": "_i18n_regen_ag_cycles_title",
+          "description": "",
+          "items": [
+            {
+              "title": "_i18n_regen_ag_agroforestry_title",
+              "text": "<p>_i18n_regen_ag_agroforestry_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_regen_ag_biochar_title",
+              "text": "<p>_i18n_regen_ag_biochar_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_regen_ag_chicken_title",
+              "text": "<p>_i18n_regen_ag_chicken_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_regen_ag_mushroom_current_title",
+              "text": "<p>_i18n_regen_ag_mushroom_intro</p><p>_i18n_regen_ag_mushroom_current_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "textBlock",
+      "data": {
+        "settings": {
+          "imagePosition": "none"
+        },
+        "content": {
+          "title": "_i18n_regen_ag_impact_title",
+          "body": "_i18n_regen_ag_impact_desc",
+          "imageUrl": "",
+          "imageAlt": ""
+        }
+      }
+    },
+    {
+      "type": "cta",
+      "data": {
+        "settings": {
+          "style": "accent"
+        },
+        "content": {
+          "eyebrow": "",
+          "title": "_i18n_regen_ag_impact_title",
+          "text": "_i18n_regen_ag_impact_desc",
+          "primaryText": "_i18n_regen_ag_cta_impact",
+          "primaryLink": "/impact-map",
+          "secondaryText": "_i18n_regen_ag_cta_ecology",
+          "secondaryLink": "/pages/ecology"
+        }
+      }
+    }
+  ]
+}

@@ -1,22 +1,17 @@
 import Image from 'next/image';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
 import { Review } from '../types/review';
+import { resolveBlockText } from '../utils/blockI18n';
 import Heading from './ui/Heading';
 
-const REVIEWS_LIST: Review[] = [
+export const DEFAULT_REVIEWS_LIST: Review[] = [
   {
     screenname: 'Daria',
-    copy: `TDF…
-  It feels like a healing sanctuary in connection with nature, 
-  A pioneer in the space of innovation and sustainable living,
-  A meeting point for the most interesting deep thinkers, change-makers and rebels,
-  A playground for the kids in all of us that never want to grow up,
-  A place for dreamers to see and create their soul missions. 
-  And most of all, TDF feels like HOME for anyone, who puts the values of freedom, living in integrity and in community first to their hearts.`,
+    copy: `TDF feels like a healing sanctuary in connection with nature — a meeting point for deep thinkers, change-makers and rebels. Most of all, it feels like home.`,
     photo: '/images/reviews/daria.jpg',
   },
   {
@@ -31,22 +26,22 @@ const REVIEWS_LIST: Review[] = [
   },
   {
     screenname: 'Rim',
-    copy: 'A special place with character. The charm of TDF is unique. Everything enchants you. You come out different. I will come back next year for sure!',
+    copy: 'A special place with character. Everything enchants you. You come out different — I will come back next year for sure.',
     photo: '/images/reviews/rim.jpg',
   },
   {
     screenname: 'Vinay',
-    copy: 'Don\'t come here. The community is way too kind. The nature is way too peaceful. The ideas are way too beautiful. It\'ll ruin your life. But maybe that\'s exactly what you\'re looking for.',
+    copy: "Don't come here. The community is way too kind. The nature is way too peaceful. It'll ruin your life. But maybe that's exactly what you're looking for.",
     photo: '/images/reviews/vinay.png',
   },
   {
     screenname: 'Chavis',
-    copy: 'I couldn\'t stop thinking about TDF after my first visit. It was a rare sort of experience that left me genuinely inspired about the future. It might have been the very first time that climate change actually felt like a problem I was empowered to do something about. Great food, too.',
+    copy: 'I couldn\'t stop thinking about TDF after my first visit. It left me genuinely inspired about the future — and the food was great, too.',
     photo: '/images/reviews/chavis.jpg',
   },
   {
     screenname: 'Marcelina',
-    copy: 'I joined TDF for couple of weeks last fall and it was truly great experience! Initially, I was facilitating movement sessions during one of the events and later decided to stay and volunteer for the project. I believe In the vision of this place and I am sure there is huge potential for growth and development. The truth is that we are facing a global shift at the moment and TDF is one of the places and tangible projects that can support the transformation.',
+    copy: 'I volunteered for a couple of weeks last fall and it was a truly great experience. I believe in the vision of this place.',
     photo: '/images/reviews/marcelina.png',
   },
   {
@@ -56,55 +51,105 @@ const REVIEWS_LIST: Review[] = [
   },
 ];
 
-const Reviews = () => {
+interface ReviewsProps {
+  title?: string;
+  reviews?: Review[];
+  shuffle?: boolean;
+  limit?: number;
+}
+
+const Reviews = ({
+  title,
+  reviews,
+  shuffle = true,
+  limit = 3,
+}: ReviewsProps) => {
   const t = useTranslations();
-  const [activeReviews, setReviewsList] = useState<Review[]>([]);
+  const sourceReviews = useMemo(
+    () => (reviews && reviews.length > 0 ? reviews : DEFAULT_REVIEWS_LIST),
+    [reviews],
+  );
+  const [activeReviews, setReviewsList] = useState<Review[]>(
+    shuffle ? [] : sourceReviews,
+  );
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (!shuffle) {
+      setReviewsList(sourceReviews);
+      return;
+    }
+    setReviewsList([...sourceReviews].sort(() => Math.random() - 0.5));
+  }, [sourceReviews, shuffle]);
 
-    setReviewsList([...REVIEWS_LIST].sort(() => Math.random() - 0.5));
-  }, []);
+  const heading = resolveBlockText(title || '_i18n_stay_reviews_title', t);
+
+  if (!activeReviews.length) {
+    return null;
+  }
+
+  const visible = activeReviews.slice(0, limit);
 
   return (
-    <>
-      {activeReviews && (
-        <div className="mb-6 max-w-prose">
-          <Heading level={2} className="text-3xl mb-6 italic">
-            <blockquote>
-              <span className="text-6xl">&quot;</span>
-              {t('stay_reviews_title')}
-            </blockquote>
-          </Heading>
-          <div className="grid md:grid-cols-1 gap-x-3 md:gap-x-3 gap-y-12">
-            {activeReviews.slice(0, 3).map((review) => (
-              <div
-                className="flex flex-col md:flex-row items-center"
-                key={review.screenname}
-              >
-                <div>
-                  <div className="w-[100px] ml-4">
-                    <Image
-                      src={review.photo}
-                      alt={review.copy}
-                      width={100}
-                      height={100}
-                      className="w-[100px] h-[100px] rounded-full"
-                    />
-                  </div>
+    <div className="w-full flex flex-col items-center gap-10 md:gap-14">
+      <header className="max-w-2xl mx-auto text-center flex flex-col gap-3 px-2">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
+          {t('stay_reviews_eyebrow')}
+        </p>
+        <Heading
+          level={2}
+          display
+          className="text-3xl md:text-4xl font-normal leading-snug text-foreground"
+        >
+          {heading}
+        </Heading>
+      </header>
+
+      <div
+        className={`w-full grid grid-cols-1 gap-12 md:gap-10 ${
+          visible.length === 1
+            ? 'md:grid-cols-1 max-w-xl mx-auto'
+            : visible.length === 2
+              ? 'md:grid-cols-2 max-w-4xl mx-auto'
+              : 'md:grid-cols-3 max-w-6xl mx-auto'
+        }`}
+      >
+        {visible.map((review) => {
+          const name = resolveBlockText(review.screenname, t);
+          const copy = resolveBlockText(review.copy, t);
+          return (
+            <figure
+              key={`${review.screenname}-${review.photo}`}
+              className="flex flex-col items-center text-center gap-5"
+            >
+              {review.photo ? (
+                <div className="relative w-20 h-20 md:w-24 md:h-24 shrink-0">
+                  <Image
+                    src={review.photo}
+                    alt={name}
+                    fill
+                    sizes="96px"
+                    className="rounded-full object-cover"
+                  />
                 </div>
-                <div className="ml-0 md:ml-4 mt-4 md:mt-0 max-w-prose p-3">
-                  <p className="text-xl md:text-2xl font-bold">
-                    {review.screenname}
-                  </p>
-                  <p className="text-lg md:text-xl italic">{review.copy}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </>
+              ) : null}
+              <blockquote className="relative text-lg md:text-xl leading-relaxed text-complimentary-light italic max-w-sm">
+                <span
+                  aria-hidden
+                  className="absolute -top-3 -left-2 md:-left-4 text-4xl md:text-5xl leading-none text-accent not-italic select-none"
+                >
+                  &ldquo;
+                </span>
+                {copy}
+              </blockquote>
+              <figcaption className="text-sm font-semibold tracking-wide text-foreground">
+                {name}
+              </figcaption>
+            </figure>
+          );
+        })}
+      </div>
+    </div>
   );
 };
 

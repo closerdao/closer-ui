@@ -22,7 +22,7 @@ import { configDescription } from '../../config';
 import { getValidationSchema } from '../../constants/validation.constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
-import { Config } from '../../types';
+import { Config, SubscriptionPlan } from '../../types';
 import { BookingConfig } from '../../types/api';
 import {
   getArrayConfigsSchema,
@@ -33,6 +33,8 @@ import {
   prepareConfigs,
 } from '../../utils/config.utils';
 import { capitalizeFirstLetter } from '../../utils/learn.helpers';
+import { syncSubscriptionPlansWithStripe } from '../../utils/subscriptionPlansSync';
+import { filterCitizenAndFreeFromElements } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
 const BETA_FEATURES = ['community', 'governance'];
@@ -117,6 +119,7 @@ const ConfigPage = () => {
     'general',
     'events',
     'applications',
+    'cohousing',
     ...(isBookingAllowedByEnv ? ['booking', 'booking-rules', 'payment'] : []),
     ...(isVolunteeringEnabled ? ['volunteering'] : []),
     ...(isSubscriptionsEnabled ? ['subscriptions'] : []),
@@ -161,6 +164,7 @@ const ConfigPage = () => {
   const [updatedConfigs, setUpdatedConfigs] = useState<Config[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasConfigUpdated, setHasConfigUpdated] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [enabledConfigs, setEnabledConfigs] = useState<string[]>([]);
   const [isGeneralConfigEnabled, setIsGeneralConfigEnabled] = useState(false);
   const [errors, setErrors] = useState<{
@@ -281,14 +285,53 @@ const ConfigPage = () => {
     configCategory = '',
   ) => {
     const configCategoryToSave = configCategory || selectedConfig;
-    const configsToSave = newConfigs.length > 0 ? newConfigs : updatedConfigs;
+    let configsToSave = newConfigs.length > 0 ? newConfigs : updatedConfigs;
 
-    const updatedConfig = configsToSave.find(
+    let updatedConfig = configsToSave.find(
       (config) => config.slug === configCategoryToSave,
     );
 
     try {
       setIsLoading(true);
+      setSaveError(null);
+
+      if (configCategoryToSave === 'subscriptions' && updatedConfig?.value) {
+        const paymentFromUpdated = configsToSave.find(
+          (config) => config.slug === 'payment',
+        );
+        const paymentFromPlatform = platform.config
+          .findOne('payment')
+          ?.get?.('value')
+          ?.toJS?.();
+        const currency =
+          paymentFromUpdated?.value?.fiatCur ||
+          paymentFromUpdated?.value?.utilityFiatCur ||
+          paymentFromPlatform?.fiatCur ||
+          paymentFromPlatform?.utilityFiatCur ||
+          'EUR';
+        const filteredElements = filterCitizenAndFreeFromElements(
+          (updatedConfig.value.elements as unknown as SubscriptionPlan[]) || [],
+        );
+        const syncedElements = await syncSubscriptionPlansWithStripe(
+          filteredElements,
+          currency,
+        );
+        const syncedValue = {
+          ...updatedConfig.value,
+          elements: syncedElements,
+        } as unknown as Config['value'];
+        configsToSave = configsToSave.map((config) =>
+          config.slug === 'subscriptions'
+            ? { ...config, value: syncedValue }
+            : config,
+        );
+        updatedConfig = {
+          ...updatedConfig,
+          value: syncedValue,
+        };
+        setUpdatedConfigs(configsToSave);
+      }
+
       const configExists = myConfigs
         .toJS()
         .some((config: any) => config.slug === configCategoryToSave);
@@ -318,6 +361,11 @@ const ConfigPage = () => {
         setHasConfigUpdated(false);
       }, 3000);
     } catch (error) {
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : t('config_subscriptions_sync_error'),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -1078,6 +1126,9 @@ const ConfigPage = () => {
                               selectedConfig === configSlug && (
                                 <Information>{t('config_updated')}</Information>
                               )}
+                            {saveError && selectedConfig === configSlug && (
+                              <ErrorMessage error={saveError} />
+                            )}
                           </div>
                         </div>
                       )}

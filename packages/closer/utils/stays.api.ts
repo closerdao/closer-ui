@@ -540,6 +540,8 @@ export type StayOptionsPayload = Partial<{
   gift: string;
   about: string;
   volunteerInfo: VolunteerInfo;
+  ticketOption: string | null;
+  eventDiscount: string | null;
 }>;
 
 export const updateStayOptions = async (

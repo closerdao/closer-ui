@@ -30,12 +30,6 @@ export async function loadLocaleData(
           default:
             return import('../generated/locales/moos/en.json');
         }
-      case 'foz':
-        switch (localeKey) {
-          case 'en':
-          default:
-            return import('../generated/locales/foz/en.json');
-        }
       case 'per-auset':
         switch (localeKey) {
           case 'en':

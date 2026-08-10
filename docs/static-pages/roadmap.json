@@ -1,0 +1,99 @@
+{
+  "title": "_i18n_roadmap_heading",
+  "slug": "/roadmap",
+  "description": "_i18n_roadmap_meta_description",
+  "ogImage": "https://cdn.oasa.co/tdf/tdf-invest-og.jpg",
+  "sections": [
+    {
+      "type": "hero",
+      "data": {
+        "settings": {
+          "alignText": "center",
+          "isInverted": false,
+          "isCompact": true
+        },
+        "content": {
+          "eyebrow": "",
+          "title": "_i18n_roadmap_heading",
+          "body": "_i18n_roadmap_meta_description",
+          "imageUrl": "",
+          "cta": {
+            "text": "",
+            "url": ""
+          }
+        }
+      }
+    },
+    {
+      "type": "timeline",
+      "data": {
+        "settings": {},
+        "content": {
+          "title": "_i18n_roadmap_heading",
+          "description": "",
+          "items": [
+            {
+              "phase": "2021",
+              "title": "_i18n_roadmap_2021_title",
+              "text": "<ul><li>_i18n_roadmap_2021_bullet_1</li><li>_i18n_roadmap_2021_bullet_2</li><li>_i18n_roadmap_2021_bullet_3</li><li>_i18n_roadmap_2021_bullet_4</li><li>_i18n_roadmap_2021_bullet_5</li></ul>",
+              "status": "done"
+            },
+            {
+              "phase": "2022",
+              "title": "_i18n_roadmap_2022_title",
+              "text": "<ul><li>_i18n_roadmap_2022_bullet_1</li><li>_i18n_roadmap_2022_bullet_2</li><li>_i18n_roadmap_2022_bullet_3</li><li>_i18n_roadmap_2022_bullet_4</li><li>_i18n_roadmap_2022_bullet_5</li></ul>",
+              "status": "done"
+            },
+            {
+              "phase": "2023",
+              "title": "_i18n_roadmap_2023_title",
+              "text": "<ul><li>_i18n_roadmap_2023_bullet_1</li><li>_i18n_roadmap_2023_bullet_2</li><li>_i18n_roadmap_2023_bullet_3</li><li>_i18n_roadmap_2023_bullet_4</li><li>_i18n_roadmap_2023_bullet_5</li><li>_i18n_roadmap_2023_bullet_6</li></ul>",
+              "status": "done"
+            },
+            {
+              "phase": "2024",
+              "title": "_i18n_roadmap_2024_title",
+              "text": "<ul><li>_i18n_roadmap_2024_bullet_1</li><li>_i18n_roadmap_2024_bullet_2</li><li>_i18n_roadmap_2024_bullet_3</li><li>_i18n_roadmap_2024_bullet_4</li></ul>",
+              "status": "done"
+            },
+            {
+              "phase": "2025",
+              "title": "_i18n_roadmap_2025_title",
+              "text": "<ul><li>_i18n_roadmap_2025_bullet_1</li><li>_i18n_roadmap_2025_bullet_2</li><li>_i18n_roadmap_2025_bullet_3</li><li>_i18n_roadmap_2025_bullet_4</li><li>_i18n_roadmap_2025_bullet_5</li><li>_i18n_roadmap_2025_bullet_6</li><li>_i18n_roadmap_2025_bullet_7</li><li>_i18n_roadmap_2025_bullet_8</li></ul>",
+              "status": "done"
+            },
+            {
+              "phase": "2026",
+              "title": "_i18n_roadmap_2026_title",
+              "text": "<ul><li>_i18n_roadmap_2026_bullet_1</li><li>_i18n_roadmap_2026_bullet_2</li><li>_i18n_roadmap_2026_bullet_3</li></ul>",
+              "status": "current"
+            },
+            {
+              "phase": "2027",
+              "title": "_i18n_roadmap_2027_title",
+              "text": "<ul><li>_i18n_roadmap_2027_bullet_1</li><li>_i18n_roadmap_2027_bullet_2</li></ul>",
+              "status": "upcoming"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "cta",
+      "data": {
+        "settings": {
+          "style": "accent"
+        },
+        "content": {
+          "eyebrow": "",
+          "title": "_i18n_roadmap_heading",
+          "text": "_i18n_roadmap_meta_description",
+          "primaryText": "_i18n_token_legal_dataroom_link",
+          "primaryLink": "/dataroom",
+          "secondaryText": "_i18n_token_sale_public_sale_buy_token",
+          "secondaryLink": "/token"
+        }
+      }
+    }
+  ]
+}

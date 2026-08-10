@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 
 import { TicketOption } from '../../types';
 import api from '../../utils/api';
+import { normalizeDiscountCode } from '../../utils/discountCode';
 import { priceFormat } from '../../utils/helpers';
 import { Button } from '../ui';
 import Input from '../ui/Input';
@@ -13,6 +14,7 @@ interface Props {
   discountCode: string;
   eventId?: string;
   selectedTicketOption?: TicketOption;
+  onDiscountValidated?: (code: string) => void;
 }
 
 interface DiscountResult {
@@ -29,6 +31,7 @@ const DiscountCode = ({
   discountCode,
   eventId,
   selectedTicketOption,
+  onDiscountValidated,
 }: Props) => {
   const t = useTranslations();
   const [discountResult, setDiscountResult] = useState<DiscountResult>();
@@ -38,12 +41,19 @@ const DiscountCode = ({
   }, [selectedTicketOption?.name, discountCode]);
 
   const handleApplyDiscountCode = async () => {
+    const normalizedCode = normalizeDiscountCode(discountCode);
+    if (normalizedCode !== discountCode) {
+      setDiscountCode(normalizedCode);
+    }
     const res = await api.post('/bookings/validate-discount-code', {
-      discountCode,
+      discountCode: normalizedCode,
       eventId,
       ticketOption: selectedTicketOption,
     });
     setDiscountResult({ ...res.data });
+    if (res.data?.status === 'success' && normalizedCode) {
+      onDiscountValidated?.(normalizedCode);
+    }
   };
 
   return (
@@ -55,11 +65,13 @@ const DiscountCode = ({
         <Input
           type="text"
           value={discountCode}
-          onChange={(e) => setDiscountCode(e.target.value)}
+          onChange={(e) =>
+            setDiscountCode(normalizeDiscountCode(e.target.value))
+          }
           placeholder={t(
             'bookings_dates_step_tickets_discount_code_placeholder',
           )}
-          className=""
+          className="uppercase"
         />
         <Button
           variant="inline"

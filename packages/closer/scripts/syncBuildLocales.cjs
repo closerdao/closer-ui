@@ -10,7 +10,6 @@ const APP_LOCALES = {
   lios: ['en', 'pl'],
   tdf: ['en', 'pt'],
   moos: ['en', 'pt'],
-  foz: ['en'],
   'per-auset': ['en'],
   earthbound: ['en'],
   closer: ['en'],

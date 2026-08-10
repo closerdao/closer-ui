@@ -17,6 +17,7 @@ export interface SubscriptionPlan {
   emoji?: string;
   description: string;
   priceId: string;
+  productId?: string;
   tier: number;
   monthlyCredits?: number;
   price: number;
@@ -29,17 +30,42 @@ export interface SubscriptionPlan {
   note?: string;
 }
 
-export interface Tier {
-  unitPrice: number;
-  minAmount: number;
-  maxAmount: number;
+export interface SubscriptionsConfig {
+  enabled: boolean;
+  elements: SubscriptionPlan[];
 }
 
 export interface Subscriptions {
-  config: {
+  enabled: boolean;
+  elements: SubscriptionPlan[];
+  config?: {
     currency: string;
     symbol: string;
   };
+}
+
+export interface SubscriptionPlanSyncInput {
+  slug: string;
+  title: string;
+  emoji?: string;
+  description: string;
+  priceId?: string;
+  productId?: string;
+  tier: number;
+  monthlyCredits?: number;
+  price: number;
+  available: boolean;
+  tiersAvailable: boolean;
+  perks: string;
+  billingPeriod: string;
+}
+
+export interface SubscriptionPlansSyncRequest {
+  elements: SubscriptionPlanSyncInput[];
+  currency: string;
+}
+
+export interface SubscriptionPlansSyncResponse {
   elements: SubscriptionPlan[];
 }
 

@@ -1,0 +1,146 @@
+{
+  "title": "_i18n_restaurant_page_title",
+  "slug": "/pages/restaurant",
+  "description": "_i18n_restaurant_page_description",
+  "ogImage": "",
+  "sections": [
+    {
+      "type": "hero",
+      "data": {
+        "settings": {
+          "alignText": "center",
+          "isInverted": false,
+          "isCompact": false
+        },
+        "content": {
+          "eyebrow": "",
+          "title": "_i18n_restaurant_hero_title",
+          "body": "_i18n_restaurant_hero_subtitle",
+          "imageUrl": "",
+          "cta": {
+            "text": "_i18n_restaurant_cta_visit",
+            "url": "/stay"
+          }
+        }
+      }
+    },
+    {
+      "type": "stats",
+      "data": {
+        "settings": {},
+        "content": {
+          "eyebrow": "",
+          "title": "",
+          "items": [
+            {
+              "value": "30",
+              "label": "_i18n_restaurant_metric_seats"
+            },
+            {
+              "value": "100+",
+              "label": "_i18n_restaurant_metric_meals"
+            },
+            {
+              "value": "90%",
+              "label": "_i18n_restaurant_metric_local"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "features",
+      "data": {
+        "settings": {
+          "numColumns": 3,
+          "isSmallImage": true,
+          "isColorful": false,
+          "hasBorder": true
+        },
+        "content": {
+          "title": "",
+          "description": "",
+          "items": [
+            {
+              "title": "_i18n_restaurant_feature_vegetarian_title",
+              "text": "<p>_i18n_restaurant_feature_vegetarian_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_restaurant_feature_community_title",
+              "text": "<p>_i18n_restaurant_feature_community_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_restaurant_feature_throughput_title",
+              "text": "<p>_i18n_restaurant_feature_throughput_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "textBlock",
+      "data": {
+        "settings": {
+          "imagePosition": "none"
+        },
+        "content": {
+          "title": "_i18n_restaurant_philosophy_title",
+          "body": "_i18n_restaurant_philosophy_desc_1\n\n_i18n_restaurant_philosophy_desc_2",
+          "imageUrl": "",
+          "imageAlt": ""
+        }
+      }
+    },
+    {
+      "type": "textBlock",
+      "data": {
+        "settings": {
+          "imagePosition": "none"
+        },
+        "content": {
+          "title": "_i18n_restaurant_business_model_title",
+          "body": "_i18n_restaurant_business_model_desc\n\n- _i18n_restaurant_business_primary_demand\n- _i18n_restaurant_business_inhabitants\n- _i18n_restaurant_business_external_capacity\n- _i18n_restaurant_business_cost_reduction\n- _i18n_restaurant_business_derisk",
+          "imageUrl": "",
+          "imageAlt": ""
+        }
+      }
+    },
+    {
+      "type": "textBlock",
+      "data": {
+        "settings": {
+          "imagePosition": "none"
+        },
+        "content": {
+          "title": "_i18n_restaurant_bakery_title",
+          "body": "_i18n_restaurant_bakery_desc\n\n_i18n_restaurant_cafe_ovo_desc",
+          "imageUrl": "",
+          "imageAlt": "_i18n_restaurant_cafe_ovo_alt"
+        }
+      }
+    },
+    {
+      "type": "cta",
+      "data": {
+        "settings": {
+          "style": "accent"
+        },
+        "content": {
+          "eyebrow": "",
+          "title": "_i18n_restaurant_cta_title",
+          "text": "_i18n_restaurant_cta_desc",
+          "primaryText": "_i18n_restaurant_cta_visit",
+          "primaryLink": "/stay",
+          "secondaryText": "_i18n_restaurant_cta_agriculture",
+          "secondaryLink": "/pages/regenerative-agriculture"
+        }
+      }
+    }
+  ]
+}
