@@ -793,7 +793,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
                           >
                             {user.get('screenname')}
                             <SubscriptionBadge
-                              subscription={user.get('subscription')}
+                              subscription={user.get('subscription')?.toJS()}
                             />
                           </Link>
                           <span className="text-xs text-gray-500">
