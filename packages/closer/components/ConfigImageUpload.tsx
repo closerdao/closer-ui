@@ -96,6 +96,7 @@ const ConfigImageUpload: FC<ConfigImageUploadProps> = ({
                 type="button"
                 variant="secondary"
                 size="small"
+                isFullWidth={false}
                 onClick={(e) => {
                   e.stopPropagation();
                   onChange('');

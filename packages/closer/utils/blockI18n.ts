@@ -1,11 +1,16 @@
+import type { PageDoc, PageSection } from '../types/page';
 import { sanitizeBlockHtml } from './sanitizeBlockHtml';
 
 export const BLOCK_I18N_PREFIX = '_i18n_';
 
-export type BlockI18nTranslate = (
+export type BlockI18nTranslate = ((
   key: string,
   values?: Record<string, string | number | Date>,
-) => string;
+) => string) & {
+  // `useTranslations()` exposes `has`, which looks a key up without reporting a
+  // MISSING_MESSAGE error. Optional so plain functions still satisfy the type.
+  has?: (key: string) => boolean;
+};
 
 export type BlockI18nValues = Record<string, string | number | Date>;
 
@@ -30,6 +35,10 @@ const resolveTranslation = (
   values?: BlockI18nValues,
 ): string => {
   try {
+    // Block content can reference keys that no longer exist in the locale
+    // files. Calling `t` for those reports a MISSING_MESSAGE error (which the
+    // dev overlay surfaces) even though we fall back to the key anyway.
+    if (typeof t.has === 'function' && !t.has(key)) return key;
     const resolved = t(key, { ...DEFAULT_BLOCK_I18N_VALUES, ...values });
     if (resolved == null || resolved === '') return key;
     return resolved;
@@ -68,6 +77,33 @@ export function resolveBlockHtml(
   values?: BlockI18nValues,
 ): string {
   return sanitizeBlockHtml(resolveEditorI18nText(value, t, values));
+}
+
+/**
+ * Resolves every `_i18n_` key held by a page document to its English copy.
+ *
+ * Page defaults ship plain English, but pages saved before that still hold
+ * keys. The editor materializes on load so its inputs show real copy — and so
+ * the copy the admin sees is what the next save persists.
+ */
+export function materializePageI18n(
+  page: PageDoc,
+  t: BlockI18nTranslate,
+  values?: BlockI18nValues,
+): PageDoc {
+  return {
+    ...page,
+    title: resolveEditorI18nText(page.title, t, values),
+    description: resolveEditorI18nText(page.description, t, values),
+    ...(page.menuLabel
+      ? { menuLabel: resolveEditorI18nText(page.menuLabel, t, values) }
+      : {}),
+    sections: materializeI18nValue(
+      page.sections ?? [],
+      t,
+      values,
+    ) as PageSection[],
+  };
 }
 
 export function materializeI18nValue(

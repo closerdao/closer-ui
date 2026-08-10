@@ -48,8 +48,14 @@ import CustomVideoEmbed from './CustomVideoEmbed';
 import CustomVolunteerCta from './CustomVolunteerCta';
 import CustomDailyContribution from './CustomDailyContribution';
 import CustomDataroom from './CustomDataroom';
+import CustomBarChart from './CustomBarChart';
+import CustomDataTable from './CustomDataTable';
+import CustomDocuments from './CustomDocuments';
+import CustomEmailGate from './CustomEmailGate';
+import CustomFlowDiagram from './CustomFlowDiagram';
 import CustomWebinar from './CustomWebinar';
 import { isDynamicBlockType } from '../../constants/dynamicBlockTypes';
+import { useEmailGate } from '../../hooks/useEmailGate';
 import { getSectionBackgroundClass } from './sectionBackground';
 import type { SectionBackground } from '../../types/page';
 
@@ -108,7 +114,14 @@ const componentRegistry: Record<string, React.ComponentType<any>> = {
   pressHighlights: CustomPressHighlights,
   pressPodcasts: CustomPressPodcasts,
   pressContact: CustomPressContact,
+  // Deprecated: superseded by the individual blocks the /dataroom page is now
+  // built from. Kept so pages that still have a saved `dataroom` block render.
   dataroom: CustomDataroom,
+  emailGate: CustomEmailGate,
+  dataTable: CustomDataTable,
+  documents: CustomDocuments,
+  barChart: CustomBarChart,
+  flowDiagram: CustomFlowDiagram,
 };
 
 const CustomSectionComponent: React.FC<{
@@ -116,6 +129,7 @@ const CustomSectionComponent: React.FC<{
   data: any;
   embedded?: boolean;
 }> = ({ type, data, embedded }) => {
+  const { isReady, isUnlocked } = useEmailGate();
   const Component = componentRegistry[type];
   if (!Component) return null;
   const background = (data?.background as SectionBackground | undefined) ?? undefined;
@@ -123,6 +137,11 @@ const CustomSectionComponent: React.FC<{
     isDynamicBlockType(type) ? '' : getSectionBackgroundClass(background);
   const settings = data?.settings ?? {};
   const content = data?.content ?? {};
+  // Blocks placed after an `emailGate` can opt into staying hidden until the
+  // visitor unlocks the page. The editor always shows them.
+  if (settings.gatedByEmail === true && !embedded && (!isReady || !isUnlocked)) {
+    return null;
+  }
   const usesInternalBackground = type === 'hero';
   const block = (
     <Component

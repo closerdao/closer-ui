@@ -54,6 +54,33 @@ describe('upgradeStandardPageFromDefaults', () => {
     expect(upgraded.isStandard).toBe(true);
   });
 
+  it('replaces a saved legacy single-block dataroom with the block defaults', () => {
+    const upgraded = upgradeStandardPageFromDefaults({
+      _id: 'abc',
+      title: '_i18n_dataroom_hero_subtitle',
+      slug: '/dataroom',
+      sections: [{ type: 'dataroom', data: { settings: {}, content: {} } }],
+      isStandard: true,
+    });
+    expect(upgraded.sections.length).toBeGreaterThan(1);
+    expect(upgraded.sections.some((s) => s.type === 'dataroom')).toBe(false);
+    expect(upgraded._id).toBe('abc');
+  });
+
+  it('keeps an edited dataroom page as saved', () => {
+    const page = {
+      _id: 'abc',
+      title: 'Data room',
+      slug: '/dataroom',
+      sections: [
+        { type: 'hero', data: {} },
+        { type: 'documents', data: {} },
+      ],
+      isStandard: true,
+    };
+    expect(upgradeStandardPageFromDefaults(page)).toBe(page);
+  });
+
   it('leaves non-standard pages untouched', () => {
     const page = {
       _id: '1',

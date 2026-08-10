@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 import SubscriptionComparisonTable from '../../components/SubscriptionComparisonTable';
 import SubscriptionEditorial from '../../components/SubscriptionEditorial';
@@ -13,11 +13,11 @@ import { NextPage, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
+import { useActiveSubscription } from '../../hooks/useActiveSubscription';
 import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import { PageMetaOverride } from '../../types/page';
 import { SubscriptionPlan, SubscriptionsConfig } from '../../types/subscriptions';
-import api from '../../utils/api';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { getPaidSubscriptionPlans } from '../../utils/subscriptions.helpers';
@@ -42,7 +42,7 @@ const SubscriptionsPage: NextPage<Props> = ({ pageMeta }) => {
     utilityFiatCur?: string;
   } | null;
   const t = useTranslations();
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
@@ -66,7 +66,8 @@ const SubscriptionsPage: NextPage<Props> = ({ pageMeta }) => {
     () => getPaidSubscriptionPlans(subscriptionsConfig),
     [subscriptionsConfig],
   );
-  const [userActivePlan, setUserActivePlan] = useState<SubscriptionPlan>();
+  const { userActivePlan, hasActiveSubscription, openCustomerPortal } =
+    useActiveSubscription(plans);
   const hasComponentRendered = useRef(false);
 
   useEffect(() => {
@@ -79,41 +80,6 @@ const SubscriptionsPage: NextPage<Props> = ({ pageMeta }) => {
       hasComponentRendered.current = true;
     }
   }, []);
-
-  useEffect(() => {
-    const isSubscriber =
-      user?.subscription?.plan &&
-      user?.subscription?.priceId &&
-      user.subscription.priceId !== 'free' &&
-      new Date(user?.subscription?.validUntil || '') > new Date();
-
-    if (!isSubscriber) {
-      setUserActivePlan(undefined);
-      return;
-    }
-
-    const selectedSubscription = plans.find(
-      (plan) =>
-        plan.priceId === user?.subscription?.priceId ||
-        plan.priceId?.includes(user?.subscription?.priceId || ''),
-    );
-    setUserActivePlan(selectedSubscription);
-  }, [user, plans]);
-
-  const openCustomerPortal = async () => {
-    void logMetric({
-      event: 'manage-subscription-button-click',
-      category: 'subscriptions',
-      value: 'manage',
-    });
-
-    const response = await api.get(
-      '/stripe/create-customer-portal?email=' +
-        encodeURIComponent(user?.email || ''),
-    );
-    const portalUrl = response.data.sessionUrl;
-    router.push(portalUrl);
-  };
 
   const handleSubscribe = async (plan: SubscriptionPlan) => {
     let priceId = plan.priceId;
@@ -135,12 +101,7 @@ const SubscriptionsPage: NextPage<Props> = ({ pageMeta }) => {
       return;
     }
 
-    if (userActivePlan?.priceId && userActivePlan.priceId === priceId) {
-      await openCustomerPortal();
-      return;
-    }
-
-    if (userActivePlan?.priceId) {
+    if (hasActiveSubscription) {
       await openCustomerPortal();
       return;
     }
@@ -153,14 +114,11 @@ const SubscriptionsPage: NextPage<Props> = ({ pageMeta }) => {
     router.push(`/subscriptions/summary?priceId=${priceId}`);
   };
 
-  const getCtaLabel = (plan: SubscriptionPlan) => {
+  const getCtaLabel = (_plan: SubscriptionPlan) => {
     if (!isAuthenticated) {
       return t('subscriptions_create_account_button');
     }
-    if (userActivePlan?.priceId === plan.priceId) {
-      return t('subscriptions_manage_button');
-    }
-    if (userActivePlan?.priceId) {
+    if (hasActiveSubscription) {
       return t('subscriptions_manage_button');
     }
     return t('subscriptions_subscribe_button');
@@ -259,7 +217,7 @@ const SubscriptionsPage: NextPage<Props> = ({ pageMeta }) => {
               {t('subscriptions_become_citizen_button')}
             </Link>
           )}
-          {userActivePlan?.priceId ? (
+          {hasActiveSubscription ? (
             <button
               className="btn text-sm px-5 py-2"
               onClick={() => void openCustomerPortal()}

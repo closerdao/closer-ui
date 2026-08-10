@@ -6,6 +6,7 @@ import AccountingEntitiesVatFields from '../../components/AccountingEntitiesVatF
 import ArrayConfig from '../../components/ArrayConfig';
 import ConfigImageUpload from '../../components/ConfigImageUpload';
 import AdminLayout from '../../components/Dashboard/AdminLayout';
+import FaviconUpload from '../../components/FaviconUpload';
 import PhotosEditor from '../../components/PhotosEditor';
 import {
   Button,
@@ -624,10 +625,9 @@ const ConfigPage = () => {
                     <div key={key} className="flex flex-col gap-1">
                       <label className="text-sm font-medium text-gray-700">{configLabel(key)}</label>
 
-                      {isImage && (
-                        <ConfigImageUpload
-                          value={String(currentValue)}
-                          onChange={(url) => {
+                      {isImage &&
+                        (() => {
+                          const handleImageChange = (url: string) => {
                             const newConfigs = updatedConfigs.map((config) => {
                               if (config.slug === 'general') {
                                 return { ...config, value: { ...config.value, [key]: url } };
@@ -635,9 +635,23 @@ const ConfigPage = () => {
                               return config;
                             });
                             setUpdatedConfigs(newConfigs);
-                          }}
-                        />
-                      )}
+                          };
+
+                          return key === 'favicon' ? (
+                            <FaviconUpload
+                              value={String(currentValue)}
+                              onChange={handleImageChange}
+                              platformName={String(
+                                generalConfig?.value?.platformName ?? '',
+                              )}
+                            />
+                          ) : (
+                            <ConfigImageUpload
+                              value={String(currentValue)}
+                              onChange={handleImageChange}
+                            />
+                          );
+                        })()}
                       {!isSelect && !isTime && !isImage && (
                         <input
                           className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
@@ -694,6 +708,9 @@ const ConfigPage = () => {
                 onClick={saveInitialConfig}
                 isLoading={isLoading}
                 isEnabled={!isLoading}
+                variant="inline"
+                size="small"
+                className="self-start"
               >
                 {t('generic_save_button')}
               </Button>
@@ -932,9 +949,10 @@ const ConfigPage = () => {
                                     {configLabel(key)}
                                   </label>
                                   {isImage ? (
-                                    <ConfigImageUpload
-                                      value={String(currentValue)}
-                                      onChange={(url) => {
+                                    (() => {
+                                      const handleImageChange = (
+                                        url: string,
+                                      ) => {
                                         const newConfigs = updatedConfigs.map((config) => {
                                           if (config.slug === configSlug) {
                                             return {
@@ -945,8 +963,25 @@ const ConfigPage = () => {
                                           return config;
                                         });
                                         setUpdatedConfigs(newConfigs);
-                                      }}
-                                    />
+                                      };
+
+                                      return key === 'favicon' ? (
+                                        <FaviconUpload
+                                          value={String(currentValue)}
+                                          onChange={handleImageChange}
+                                          platformName={String(
+                                            updatedConfigs.find(
+                                              (c) => c.slug === 'general',
+                                            )?.value?.platformName ?? '',
+                                          )}
+                                        />
+                                      ) : (
+                                        <ConfigImageUpload
+                                          value={String(currentValue)}
+                                          onChange={handleImageChange}
+                                        />
+                                      );
+                                    })()
                                   ) : typeof value === 'boolean' ? (
                                     <div className="flex gap-4">
                                       <label className="flex gap-2 items-center text-sm cursor-pointer">
@@ -1097,7 +1132,7 @@ const ConfigPage = () => {
                             },
                           )}
 
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-4">
                             <Button
                               onClick={() => handleSaveConfig([], configSlug)}
                               isLoading={isLoading}
@@ -1113,15 +1148,22 @@ const ConfigPage = () => {
                             >
                               {t('generic_save_button')}
                             </Button>
-                            <Button
-                              onClick={() => handleResetToDefaults(configSlug)}
-                              isLoading={isLoading}
-                              isEnabled={!isLoading}
-                              variant="secondary"
-                              size="small"
+                            <button
+                              type="button"
+                              disabled={isLoading}
+                              onClick={() => {
+                                if (
+                                  window.confirm(
+                                    t('config_reset_to_defaults_confirm'),
+                                  )
+                                ) {
+                                  handleResetToDefaults(configSlug);
+                                }
+                              }}
+                              className="text-sm text-gray-500 underline underline-offset-2 hover:text-accent disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {t('config_reset_to_defaults')}
-                            </Button>
+                            </button>
                             {hasConfigUpdated &&
                               selectedConfig === configSlug && (
                                 <Information>{t('config_updated')}</Information>

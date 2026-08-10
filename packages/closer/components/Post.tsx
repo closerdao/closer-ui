@@ -8,9 +8,11 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../contexts/auth';
 import api, { cdn, formatSearch } from '../utils/api';
 import { looksLikePlainSocialPost } from '../utils/display.helpers';
+import { BadgeableSubscription } from '../utils/subscriptions.helpers';
 import FormattedPlainText from './display/formattedPlainText';
 import CreatePost from './CreatePost';
 import ProfilePhoto from './ProfilePhoto';
+import SubscriptionBadge from './SubscriptionBadge';
 import TimeSince from './TimeSince';
 
 type TranslateFn = (key: string) => string;
@@ -42,6 +44,7 @@ interface User {
   photo?: string;
   presence?: number;
   stats?: { presence?: { totalNights?: number } };
+  subscription?: BadgeableSubscription;
 }
 
 interface Channel {
@@ -179,6 +182,7 @@ const Post = ({
                   className="font-semibold text-foreground hover:text-accent transition-colors"
                 >
                   {author.screenname}
+                  <SubscriptionBadge subscription={author.subscription} />
                 </Link>
               )}
               {author &&
@@ -392,6 +396,9 @@ const Post = ({
                           className="font-semibold text-sm hover:text-accent"
                         >
                           {replyAuthor.screenname}
+                          <SubscriptionBadge
+                            subscription={replyAuthor.subscription}
+                          />
                         </Link>
                         <TimeSince time={reply.created} />
                       </div>

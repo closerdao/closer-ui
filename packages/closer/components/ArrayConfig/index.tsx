@@ -2,6 +2,7 @@ import { ChangeEvent } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import ConfigImageUpload from '../ConfigImageUpload';
 import { Button, Card, ErrorMessage } from '../ui';
 
 interface Props {
@@ -121,6 +122,26 @@ const ArrayConfig = ({
                         )}
                       </div>
                     )}
+                    {inputType === 'image' && (
+                      <ConfigImageUpload
+                        value={String(fieldValue ?? '')}
+                        onChange={(url) =>
+                          // ConfigImageUpload hands back a URL, but the config
+                          // editor updates entries from change events, so wrap
+                          // it in the shape handleChange expects.
+                          handleChange(
+                            {
+                              target: {
+                                name: `${innerKey}-${index}`,
+                                value: url,
+                              },
+                            } as ChangeEvent<HTMLInputElement>,
+                            elementsKey,
+                            index,
+                          )
+                        }
+                      />
+                    )}
                     {(inputType === 'text' || inputType === 'number') && (
                       <input
                         className="bg-neutral rounded-md p-1"
@@ -233,8 +254,10 @@ const ArrayConfig = ({
               {(index > 0 || isSubscriptionsConfig) && (
                 <Button
                   onClick={() => handleDeleteElement(index, elementsKey)}
-                  className="w-40"
                   variant="secondary"
+                  size="small"
+                  isFullWidth={false}
+                  className="self-start"
                 >
                   {t('generic_delete_button')}
                 </Button>
@@ -243,7 +266,13 @@ const ArrayConfig = ({
           );
         })}
 
-      <Button onClick={() => handleAddElement(elementsKey)} variant="secondary">
+      <Button
+        onClick={() => handleAddElement(elementsKey)}
+        variant="secondary"
+        size="small"
+        isFullWidth={false}
+        className="self-start"
+      >
         {t('config_add_entry_button')}
       </Button>
     </div>

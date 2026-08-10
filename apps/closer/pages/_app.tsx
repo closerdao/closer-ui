@@ -14,6 +14,7 @@ import { PromptGetInTouchProvider } from 'closer/components/PromptGetInTouchCont
 import {
   AuthProvider,
   ConfigProvider,
+  FaviconLinks,
   LocaleMessagesNextIntlBridge,
   PlatformProvider,
   appGetInitialPropsWithMessages,
@@ -73,9 +74,9 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
         />
-        <link rel="icon" type="image/png" href="/images/closer-logo-icon.png" />
-        <link rel="apple-touch-icon" href="/images/closer-logo-icon.png" />
       </Head>
+
+      <FaviconLinks favicon={config?.FAVICON} />
 
       {FACEBOOK_PIXEL_ID && (
         <Script

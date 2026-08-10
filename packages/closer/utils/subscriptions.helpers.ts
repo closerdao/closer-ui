@@ -48,6 +48,72 @@ export const getPaidSubscriptionPlans = (
   return plans.filter((plan) => plan.available);
 };
 
+/** The bit of a user we need to work out their badge. */
+export interface BadgeableSubscription {
+  plan?: string;
+  priceId?: string;
+  validUntil?: Date | string;
+}
+
+export interface ResolvedSubscriptionBadge {
+  /** Uploaded badge image. Null when the plan only has an emoji. */
+  imageUrl: string | null;
+  /** Emoji fallback, rendered when there is no image. */
+  label: string;
+  /** Plan name, used as the tooltip and for screen readers. */
+  title: string;
+}
+
+/**
+ * Resolves the badge shown next to a member's avatar from the subscriptions
+ * config. Returns null whenever there is nothing to show, so callers can render
+ * it unconditionally: badges turned off, no membership, an expired one, or a
+ * plan the admin has left without a badge.
+ */
+export const resolveSubscriptionBadge = (
+  subscription?: BadgeableSubscription | null,
+  subscriptionsConfig?: SubscriptionsConfig | null,
+): ResolvedSubscriptionBadge | null => {
+  if (!subscriptionsConfig?.enabled || subscriptionsConfig.showBadges === false) {
+    return null;
+  }
+
+  const priceId = subscription?.priceId?.trim();
+  if (!subscription?.plan || !priceId || priceId === 'free') {
+    return null;
+  }
+
+  // A cancelled membership still counts until the paid period runs out, which is
+  // exactly what validUntil tracks.
+  if (
+    !subscription.validUntil ||
+    new Date(subscription.validUntil) <= new Date()
+  ) {
+    return null;
+  }
+
+  const plan = prepareSubscriptions(subscriptionsConfig).find(
+    (element) =>
+      element.priceId === priceId ||
+      element.priceId?.split(',').includes(priceId) ||
+      element.slug === subscription.plan,
+  );
+
+  // `badge` is an uploaded image URL; `emoji` is what platforms configured
+  // before badge images existed, so it stays as the fallback.
+  const imageUrl = plan?.badge?.trim() || '';
+  const label = plan?.emoji?.trim() || '';
+  if (!imageUrl && !label) {
+    return null;
+  }
+
+  return {
+    imageUrl: imageUrl || null,
+    label,
+    title: plan?.title || subscription.plan,
+  };
+};
+
 export const filterCitizenAndFreeFromElements = (
   elements: SubscriptionPlan[] = [],
 ): SubscriptionPlan[] =>
