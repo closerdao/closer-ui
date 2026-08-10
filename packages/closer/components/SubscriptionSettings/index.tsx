@@ -40,6 +40,8 @@ const SubscriptionSettings = () => {
   const {
     userActivePlan,
     hasActiveSubscription,
+    isOnDeprecatedPlan,
+    isOnLegacyPricing,
     isCancelled,
     validUntil,
     actionState,
@@ -74,6 +76,8 @@ const SubscriptionSettings = () => {
         currency={currency}
         validUntil={validUntil}
         isCancelled={isCancelled}
+        isOnDeprecatedPlan={isOnDeprecatedPlan}
+        isOnLegacyPricing={isOnLegacyPricing}
         isBusy={actionState.isBusy}
         error={actionState.error}
         otherPlans={otherPlans}

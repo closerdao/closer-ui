@@ -12,6 +12,7 @@
  */
 import {
   SubscriptionPlan,
+  SubscriptionPlanSyncInput,
   SubscriptionPlansSyncRequest,
   SubscriptionPlansSyncResponse,
 } from '../types/subscriptions';
@@ -22,9 +23,36 @@ import { filterCitizenAndFreeFromElements } from './subscriptions.helpers';
 export const SUBSCRIPTION_PLANS_SYNC_PATH =
   '/stripe/subscription-plans/sync';
 
+/**
+ * A stored priceId/productId can point at an object the current Stripe account
+ * has never heard of — plans copied between platforms, a key swapped from test
+ * to live, or an object deleted in the Stripe dashboard. The backend fails the
+ * whole sync when it cannot retrieve one, which leaves the admin stuck: the
+ * stale id lives in config, so every save re-sends it and fails again. We treat
+ * that as "this id is gone" and re-sync without it, which is the same path a
+ * brand new plan takes, so Stripe mints a fresh price.
+ */
+const MISSING_STRIPE_OBJECT_PATTERNS = [
+  /was not found on the stripe connected account/i,
+  /no such (price|product|plan)/i,
+  /resource_missing/i,
+];
+
+const STRIPE_ID_PATTERN = /\b(?:price|prod)_[A-Za-z0-9]+/g;
+
+const isMissingStripeObjectError = (message: string): boolean =>
+  MISSING_STRIPE_OBJECT_PATTERNS.some((pattern) => pattern.test(message));
+
+const extractStripeIds = (message: string): string[] =>
+  message.match(STRIPE_ID_PATTERN) || [];
+
+const isStale = (staleIds: Set<string>, id?: string): boolean =>
+  Boolean(id && staleIds.has(id));
+
 const mergeSyncedPlanIds = (
   localElements: SubscriptionPlan[],
   syncedElements: SubscriptionPlan[],
+  staleIds: Set<string>,
 ): SubscriptionPlan[] => {
   const bySlug = new Map(
     syncedElements
@@ -34,13 +62,19 @@ const mergeSyncedPlanIds = (
 
   return localElements.map((plan) => {
     const synced = bySlug.get(plan.slug);
+    // Never fall back to an id Stripe told us does not exist.
+    const localPriceId = isStale(staleIds, plan.priceId) ? '' : plan.priceId;
+    const localProductId = isStale(staleIds, plan.productId)
+      ? ''
+      : plan.productId;
+
     if (!synced) {
-      return plan;
+      return { ...plan, priceId: localPriceId, productId: localProductId };
     }
     return {
       ...plan,
-      priceId: synced.priceId || plan.priceId,
-      productId: synced.productId || plan.productId,
+      priceId: synced.priceId || localPriceId,
+      productId: synced.productId || localProductId,
       price:
         typeof synced.price === 'number' && !Number.isNaN(synced.price)
           ? synced.price
@@ -48,6 +82,28 @@ const mergeSyncedPlanIds = (
     };
   });
 };
+
+const buildSyncElements = (
+  plansToSync: SubscriptionPlan[],
+  staleIds: Set<string>,
+): SubscriptionPlanSyncInput[] =>
+  plansToSync.map((plan) => ({
+    slug: plan.slug,
+    title: plan.title,
+    emoji: plan.emoji,
+    description: plan.description,
+    priceId: isStale(staleIds, plan.priceId) ? undefined : plan.priceId || undefined,
+    productId: isStale(staleIds, plan.productId)
+      ? undefined
+      : plan.productId || undefined,
+    tier: Number(plan.tier) || 0,
+    monthlyCredits: Number(plan.monthlyCredits) || 0,
+    price: Number(plan.price) || 0,
+    available: Boolean(plan.available),
+    tiersAvailable: Boolean(plan.tiersAvailable),
+    perks: plan.perks || '',
+    billingPeriod: plan.billingPeriod || 'month',
+  }));
 
 export const syncSubscriptionPlansWithStripe = async (
   elements: SubscriptionPlan[],
@@ -60,47 +116,60 @@ export const syncSubscriptionPlansWithStripe = async (
     return localElements;
   }
 
-  const payload: SubscriptionPlansSyncRequest = {
-    currency: currency.toLowerCase(),
-    elements: plansToSync.map((plan) => ({
-      slug: plan.slug,
-      title: plan.title,
-      emoji: plan.emoji,
-      description: plan.description,
-      priceId: plan.priceId || undefined,
-      productId: plan.productId || undefined,
-      tier: Number(plan.tier) || 0,
-      monthlyCredits: Number(plan.monthlyCredits) || 0,
-      price: Number(plan.price) || 0,
-      available: Boolean(plan.available),
-      tiersAvailable: Boolean(plan.tiersAvailable),
-      perks: plan.perks || '',
-      billingPeriod: plan.billingPeriod || 'month',
-    })),
-  };
+  const sentIds = new Set(
+    plansToSync
+      .flatMap((plan) => [plan.priceId, plan.productId])
+      .filter((id): id is string => Boolean(id)),
+  );
+  const staleIds = new Set<string>();
+  // The backend reports the first id it cannot resolve, so several stale ids
+  // take several rounds. One attempt per id we sent is the most that can help.
+  const maxAttempts = sentIds.size + 1;
 
-  try {
-    const response = await api.post(SUBSCRIPTION_PLANS_SYNC_PATH, payload);
-    const data = response?.data as
-      | SubscriptionPlansSyncResponse
-      | { results?: SubscriptionPlansSyncResponse }
-      | undefined;
-    const syncedElements =
-      data && 'elements' in data && Array.isArray(data.elements)
-        ? data.elements
-        : data &&
-            'results' in data &&
-            data.results &&
-            Array.isArray(data.results.elements)
-          ? data.results.elements
-          : null;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const payload: SubscriptionPlansSyncRequest = {
+      currency: currency.toLowerCase(),
+      elements: buildSyncElements(plansToSync, staleIds),
+    };
 
-    if (!syncedElements) {
-      throw new Error('Invalid response from subscription plans sync');
+    try {
+      const response = await api.post(SUBSCRIPTION_PLANS_SYNC_PATH, payload);
+      const data = response?.data as
+        | SubscriptionPlansSyncResponse
+        | { results?: SubscriptionPlansSyncResponse }
+        | undefined;
+      const syncedElements =
+        data && 'elements' in data && Array.isArray(data.elements)
+          ? data.elements
+          : data &&
+              'results' in data &&
+              data.results &&
+              Array.isArray(data.results.elements)
+            ? data.results.elements
+            : null;
+
+      if (!syncedElements) {
+        throw new Error('Invalid response from subscription plans sync');
+      }
+
+      return mergeSyncedPlanIds(localElements, syncedElements, staleIds);
+    } catch (error) {
+      const message = parseMessageFromError(error);
+      const newStaleIds = isMissingStripeObjectError(message)
+        ? extractStripeIds(message).filter(
+            (id) => sentIds.has(id) && !staleIds.has(id),
+          )
+        : [];
+
+      if (newStaleIds.length === 0) {
+        throw new Error(message);
+      }
+
+      newStaleIds.forEach((id) => staleIds.add(id));
     }
-
-    return mergeSyncedPlanIds(localElements, syncedElements);
-  } catch (error) {
-    throw new Error(parseMessageFromError(error));
   }
+
+  throw new Error(
+    'Could not sync subscription plans with Stripe: the stored Stripe ids do not exist on this account.',
+  );
 };

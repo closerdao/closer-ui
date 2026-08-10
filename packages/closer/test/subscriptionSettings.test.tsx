@@ -210,6 +210,125 @@ describe('SubscriptionSettings', () => {
     });
   });
 
+  describe('on an older price of a plan that still exists', () => {
+    // The slug still matches a configured plan; the priceId does not, because
+    // the plan's price was edited after they subscribed.
+    const legacyPricedSubscriber = {
+      ...activeSubscriber,
+      subscription: {
+        ...activeSubscriber.subscription,
+        priceId: 'price_basic_2023',
+        monthlyPrice: { val: 3, cur: 'EUR' },
+      },
+    };
+
+    it('offers the current price without pushing them off the old one', async () => {
+      setUser(legacyPricedSubscriber);
+      renderWithNextIntl(<SubscriptionSettings />);
+
+      expect(await screen.findByText(/older price for this plan/i)).toBeTruthy();
+      expect(screen.getByText(/keep it for as long as you like/i)).toBeTruthy();
+      // Their own plan is still recognised, so this is not the retired-plan case.
+      expect(screen.queryByText(/plan we no longer offer/i)).toBeNull();
+      expect(screen.getByText(/basic subscription/i)).toBeTruthy();
+    });
+
+    it('shows what they actually pay, not the new price of the plan', async () => {
+      setUser(legacyPricedSubscriber);
+      renderWithNextIntl(<SubscriptionSettings />);
+
+      // 3 is their subscription; 5 is what the plan sells for today and
+      // belongs in the offer, not in the headline.
+      expect(await screen.findByText(/^3[.,]00/)).toBeTruthy();
+      expect(screen.getByText(/this plan is now 5[.,]00/i)).toBeTruthy();
+    });
+
+    it('moves them to the current price of the same plan', async () => {
+      setUser(legacyPricedSubscriber);
+      renderWithNextIntl(<SubscriptionSettings />);
+
+      await userEvent.click(
+        await screen.findByRole('button', {
+          name: /move to the current price/i,
+        }),
+      );
+
+      await waitFor(() => {
+        expect(api.post).toHaveBeenCalledWith('/stripe/change-subscription', {
+          priceId: 'price_basic',
+        });
+      });
+    });
+
+    it('says nothing when the plan carries the old price too', async () => {
+      // A plan listing several prices keeps earlier subscribers matched.
+      mockPlans[0].priceId = 'price_basic,price_basic_2023';
+      setUser(legacyPricedSubscriber);
+      renderWithNextIntl(<SubscriptionSettings />);
+
+      expect(
+        await screen.findByRole('button', { name: /^change plan$/i }),
+      ).toBeTruthy();
+      expect(screen.queryByText(/older price for this plan/i)).toBeNull();
+      mockPlans[0].priceId = 'price_basic';
+    });
+  });
+
+  describe('on a plan that is no longer offered', () => {
+    // Neither the priceId nor the plan slug matches anything in the config —
+    // the plan was retired, renamed, or its Stripe price was rotated.
+    const deprecatedSubscriber = {
+      ...activeSubscriber,
+      subscription: {
+        ...activeSubscriber.subscription,
+        plan: 'founding-member',
+        priceId: 'price_retired',
+      },
+    };
+
+    it('says the plan is deprecated and offers the migration', async () => {
+      setUser(deprecatedSubscriber);
+      renderWithNextIntl(<SubscriptionSettings />);
+
+      expect(
+        await screen.findByText(/plan we no longer offer/i),
+      ).toBeTruthy();
+      // The membership itself is untouched, so cancelling stays available.
+      expect(
+        screen.getByRole('button', { name: /cancel membership/i }),
+      ).toBeTruthy();
+      // One route out, not two competing buttons.
+      expect(screen.queryByRole('button', { name: /^change plan$/i })).toBeNull();
+    });
+
+    it('migrates to a current plan', async () => {
+      setUser(deprecatedSubscriber);
+      renderWithNextIntl(<SubscriptionSettings />);
+
+      await userEvent.click(
+        await screen.findByRole('button', { name: /move to a current plan/i }),
+      );
+      // Every configured plan is on offer, since none of them is theirs.
+      await userEvent.click(screen.getByRole('button', { name: /^upgrade$/i }));
+
+      await waitFor(() => {
+        expect(api.post).toHaveBeenCalledWith('/stripe/change-subscription', {
+          priceId: 'price_pro',
+        });
+      });
+    });
+
+    it('leaves a matched plan alone', async () => {
+      setUser(activeSubscriber);
+      renderWithNextIntl(<SubscriptionSettings />);
+
+      expect(
+        await screen.findByRole('button', { name: /^change plan$/i }),
+      ).toBeTruthy();
+      expect(screen.queryByText(/plan we no longer offer/i)).toBeNull();
+    });
+  });
+
   it('falls back to the Stripe portal when the backend has no endpoint yet', async () => {
     setUser(activeSubscriber);
     api.post.mockRejectedValue({ response: { status: 404 } });

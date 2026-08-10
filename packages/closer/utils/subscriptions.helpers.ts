@@ -55,6 +55,12 @@ export interface BadgeableSubscription {
   validUntil?: Date | string;
 }
 
+/** A membership that passed `isSubscriptionActive`, so it names a plan and price. */
+export interface ActiveSubscription extends BadgeableSubscription {
+  plan: string;
+  priceId: string;
+}
+
 /**
  * Whether the user is currently a paying member. Every user carries a
  * `subscription` object — the free tier included — so the mere presence of one,
@@ -64,7 +70,7 @@ export interface BadgeableSubscription {
  */
 export const isSubscriptionActive = (
   subscription?: BadgeableSubscription | null,
-): boolean => {
+): subscription is ActiveSubscription => {
   const priceId = subscription?.priceId?.trim();
   if (!subscription?.plan || !priceId || priceId === 'free') {
     return false;
@@ -105,7 +111,7 @@ export const resolveSubscriptionBadge = (
     return null;
   }
 
-  const priceId = subscription?.priceId?.trim();
+  const priceId = subscription.priceId.trim();
   const plan = prepareSubscriptions(subscriptionsConfig).find(
     (element) =>
       element.priceId === priceId ||
