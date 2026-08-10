@@ -112,10 +112,7 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
   const [isEditingAbout, setIsEditingAbout] = useState(false);
   const [isSavingAbout, setIsSavingAbout] = useState(false);
 
-  const { eventIds: attendedEventIds } = useAttendedEvents(
-    member?._id,
-    member?.email,
-  );
+  const { eventIds: attendedEventIds } = useAttendedEvents(member?._id);
 
   // Pinned on mount: a fresh `new Date()` per render would change the query on
   // every pass and refetch the same events.

@@ -9,10 +9,10 @@ import api from '../utils/api';
  *    pays for a ticket while logged in;
  *  - a paid booking carrying an `eventId` — the usual path for events that are
  *    booked as a stay;
- *  - a ticket sold for the event — the usual path for ticketed events, and the
- *    only record when the buyer was not logged in.
+ *  - a ticket sold for the event — the usual path for ticketed events.
  * So we resolve the last two into event ids here and let the caller union them
- * with `attendees`.
+ * with `attendees`. Tickets are matched by `createdBy` only — never by email,
+ * since `where` is serialized into the GET query string.
  */
 
 /** Booking states that mean the guest actually paid for and joined the event. */
@@ -46,10 +46,7 @@ interface AttendedEvents {
  * cover the same events for everyone else, since every paid event booking also
  * creates a ticket.
  */
-export function useAttendedEvents(
-  memberId?: string,
-  memberEmail?: string,
-): AttendedEvents {
+export function useAttendedEvents(memberId?: string): AttendedEvents {
   const [bookingEventIds, setBookingEventIds] = useState<string[]>([]);
   const [ticketEventIds, setTicketEventIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -63,14 +60,6 @@ export function useAttendedEvents(
 
     let isCurrent = true;
     setIsLoading(true);
-
-    const ticketOwnerClauses: Record<string, unknown>[] = [
-      { createdBy: memberId },
-    ];
-    if (memberEmail) {
-      // Tickets bought without logging in are only tied to the buyer's email.
-      ticketOwnerClauses.push({ email: memberEmail });
-    }
 
     Promise.all([
       api
@@ -89,7 +78,7 @@ export function useAttendedEvents(
         .get('/ticket', {
           params: {
             where: {
-              $or: ticketOwnerClauses,
+              createdBy: memberId,
               event: { $exists: true },
               status: { $in: ATTENDED_TICKET_STATUSES },
             },
@@ -111,7 +100,7 @@ export function useAttendedEvents(
     return () => {
       isCurrent = false;
     };
-  }, [memberId, memberEmail]);
+  }, [memberId]);
 
   const eventIds = useMemo(
     () => Array.from(new Set([...bookingEventIds, ...ticketEventIds])),
