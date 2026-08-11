@@ -8,11 +8,48 @@ export type SectionType =
   | 'cta'
   | 'media'
   | 'textBlock'
+  | 'bookAStay'
   | 'staySearch'
+  | 'upcomingEvents'
+  | 'pastEvents'
   | 'events'
+  | 'eventsCalendar'
   | 'fundraiser'
   | 'tokenStats'
-  | 'webinar';
+  | 'floatingBuyTokens'
+  | 'supplyGraph'
+  | 'priceHistory'
+  | 'webinar'
+  | 'citizenProgressBar'
+  | 'financedTokensStart'
+  | 'cohousingApplication'
+  | 'listingsPreviews'
+  | 'reviews'
+  | 'volunteerCta'
+  | 'dailyContribution'
+  | 'subscriptionPlans'
+  | 'fundraiserProgress'
+  | 'fundraiserMilestones'
+  | 'fundraiserRewards'
+  | 'teamStructure'
+  | 'teamMembers'
+  | 'teamDepartments'
+  | 'teamPartners'
+  | 'teamGovernance'
+  | 'teamJoinCta'
+  | 'pressStats'
+  | 'pressPublications'
+  | 'pressHighlights'
+  | 'pressPodcasts'
+  | 'pressContact'
+  | 'dataroom'
+  | 'emailGate'
+  | 'dataTable'
+  | 'documents'
+  | 'barChart'
+  | 'flowDiagram'
+  | 'timeline'
+  | 'collapsibleFaq';
 
 export type SectionBackground =
   | 'transparent'
@@ -38,4 +75,17 @@ export interface PageDoc {
   ogImage?: string;
   sections: PageSection[];
   aiMeta?: Record<string, unknown>;
+  showInMenu?: boolean;
+  menuLabel?: string;
+  menuSection?: string;
+  menuSectionOrder?: number;
+  menuOrder?: number;
+  isStandard?: boolean;
+  isDefault?: boolean;
+}
+
+export interface PageMetaOverride {
+  title?: string;
+  description?: string;
+  ogImage?: string;
 }

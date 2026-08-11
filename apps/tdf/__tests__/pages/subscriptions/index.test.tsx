@@ -1,5 +1,5 @@
 import { generalConfig } from '@/__tests__/mocks/generalConfig';
-import SubscriptionsPage from '@/pages/subscriptions';
+import SubscriptionsPage from '@/pages/legacy/subscriptions';
 import { renderWithProviders } from '@/test/utils';
 
 import { act, screen } from '@testing-library/react';
@@ -8,7 +8,7 @@ import { listings } from '../../mocks/listings';
 import { subscriptionsConfig } from '../../mocks/subscriptions';
 
 describe('Subscriptions', () => {
-  it('should render featured plan heading', async () => {
+  it('should render comparison heading when multiple plans exist', async () => {
     renderWithProviders(
       <SubscriptionsPage
         listings={listings}
@@ -22,10 +22,12 @@ describe('Subscriptions', () => {
     });
 
     const title = screen.getByRole('heading', {
-      name: /Explorer/i,
+      name: /Choose your membership/i,
     });
 
     expect(title).toBeInTheDocument();
+    expect(screen.getByText(/Wanderer/i)).toBeInTheDocument();
+    expect(screen.getByText(/Pioneer/i)).toBeInTheDocument();
   });
 
   it('should show create account CTA by default', async () => {
@@ -41,10 +43,10 @@ describe('Subscriptions', () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    const createAccountButton = screen.getByRole('button', {
+    const createAccountButtons = screen.getAllByRole('button', {
       name: /create account/i,
     });
 
-    expect(createAccountButton).toBeInTheDocument();
+    expect(createAccountButtons.length).toBeGreaterThan(0);
   });
 });

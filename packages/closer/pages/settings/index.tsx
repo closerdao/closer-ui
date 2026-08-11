@@ -3,9 +3,9 @@ import { useRouter } from 'next/router';
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { User as UserIcon, Key, Star, Bell, AlertTriangle, Settings as SettingsIcon, CreditCard, Info } from 'lucide-react';
+import { Key, Star, Bell, AlertTriangle, Settings as SettingsIcon, CreditCard, Info } from 'lucide-react';
 
-import UploadPhoto from '../../components/UploadPhoto';
+import SubscriptionSettings from '../../components/SubscriptionSettings';
 import { Button } from '../../components/ui';
 import Checkbox from '../../components/ui/Checkbox';
 import Heading from '../../components/ui/Heading';
@@ -30,7 +30,7 @@ import PageNotFound from '../not-found';
 type UpdateUserFunction = (value: string | string[]) => Promise<void>;
 
 // Tab interface types
-type TabId = 'profile' | 'account' | 'preferences' | 'notifications' | 'danger';
+type TabId = 'preferences' | 'account' | 'subscription' | 'notifications';
 
 interface Tab {
   id: TabId;
@@ -143,8 +143,10 @@ const DeleteAccountSection = ({ t }: DeleteAccountSectionProps) => {
     }
   };
 
+  // The caller supplies the card around this — it is a section of the Account
+  // tab rather than a page of its own.
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6">
+    <div>
       {!showConfirmation ? (
         <div>
           <p className="mb-4 text-gray-600">
@@ -152,7 +154,9 @@ const DeleteAccountSection = ({ t }: DeleteAccountSectionProps) => {
           </p>
           <Button
             onClick={() => setShowConfirmation(true)}
-            className="bg-red-600 hover:bg-red-700 text-white"
+            variant="secondary"
+            size="small"
+            isFullWidth={false}
           >
             {t('settings_delete_account_button')}
           </Button>
@@ -185,26 +189,28 @@ const DeleteAccountSection = ({ t }: DeleteAccountSectionProps) => {
             />
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex items-center gap-4">
             <Button
               onClick={handleDeleteAccount}
               isEnabled={!isDeleting}
+              size="small"
+              isFullWidth={false}
               className="bg-red-600 border-red-700 hover:bg-red-700 text-white"
             >
               {isDeleting
                 ? t('settings_deleting')
                 : t('settings_delete_account_confirm_button')}
             </Button>
-            <Button
+            <button
               onClick={() => {
                 setShowConfirmation(false);
                 setConfirmText('');
                 setError(null);
               }}
-              variant="secondary"
+              className="text-sm underline text-red-700"
             >
               {t('settings_cancel')}
-            </Button>
+            </button>
           </div>
         </div>
       )}
@@ -237,7 +243,7 @@ const SettingsPage = () => {
   const [emailSaved, setEmailSaved] = useState<boolean | null>(null);
   const [hasSaved, setHasSaved] = useState(false);
   const [, setShowSaveSuccess] = useState(false);
-  const [activeTab, setActiveTab] = useState<TabId>('profile');
+  const [activeTab, setActiveTab] = useState<TabId>('preferences');
   const { platform } = usePlatform() as any;
   const {
     isSupported: isPushSupported,
@@ -252,13 +258,25 @@ const SettingsPage = () => {
 
   const kycDataDebounceTimers = useRef<Record<string, NodeJS.Timeout>>({});
 
+  const areSubscriptionsEnabled = Boolean(
+    (getCachedConfig('subscriptions') as { enabled?: boolean } | null)
+      ?.enabled && process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true',
+  );
+
   // Define tabs
   const tabs: Tab[] = [
-    { id: 'profile', label: t('settings_tab_profile'), icon: <UserIcon className="w-4 h-4" /> },
+    { id: 'preferences', label: t('settings_tab_preferences'), icon: <SettingsIcon className="w-4 h-4" /> },
     { id: 'account', label: t('settings_tab_account'), icon: <Key className="w-4 h-4" /> },
-    { id: 'preferences', label: t('settings_tab_preferences'), icon: <Star className="w-4 h-4" /> },
+    ...(areSubscriptionsEnabled
+      ? [
+          {
+            id: 'subscription' as TabId,
+            label: t('settings_tab_subscription'),
+            icon: <CreditCard className="w-4 h-4" />,
+          },
+        ]
+      : []),
     { id: 'notifications', label: t('settings_tab_notifications'), icon: <Bell className="w-4 h-4" /> },
-    { id: 'danger', label: t('settings_tab_danger'), icon: <AlertTriangle className="w-4 h-4" /> },
   ];
 
   // Scroll to top when changing tabs
@@ -522,7 +540,6 @@ const SettingsPage = () => {
       </Head>
       <div className="max-w-screen-xl mx-auto px-4 md:px-8 py-3 md:py-6">
         <div className="flex items-center gap-2 mb-3 md:mb-4">
-          <SettingsIcon className="w-5 h-5 text-gray-700" />
           <Heading>{t('settings_page_title')}</Heading>
         </div>
 
@@ -555,58 +572,6 @@ const SettingsPage = () => {
 
           {/* Main content area */}
           <div ref={contentRef} className="flex-1 overflow-hidden">
-            {/* Profile Tab */}
-            {activeTab === 'profile' && (
-              <div className="space-y-6">
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <UserIcon className="w-5 h-5 text-gray-700" />
-                    <h3 className="text-lg font-medium text-gray-900">
-                      {t('settings_profile_information')}
-                    </h3>
-                  </div>
-
-                  <Input
-                    label={t('settings_about_you')}
-                    additionalInfo={
-                      APP_NAME === 'moos'
-                        ? t('settings_required_to_make_bookings')
-                        : ''
-                    }
-                    isRequired={APP_NAME === 'moos' ? true : false}
-                    placeholder={t('settings_tell_us_more_about_yourself')}
-                    value={user.about}
-                    onChange={saveUserData('about') as any}
-                    isInstantSave={true}
-                    hasSaved={hasSaved}
-                    setHasSaved={setHasSaved}
-                    className="mb-4"
-                  />
-
-                  <div className="mt-6">
-                    <label
-                      className="font-medium text-complimentary-light"
-                      htmlFor=""
-                    >
-                      {t('settings_profile_picture')}
-                      {APP_NAME === 'moos' && (
-                        <span className="text-red-500">
-                          {t('settings_required_to_make_bookings_star')}
-                        </span>
-                      )}
-                    </label>
-                    <UploadPhoto
-                      model="user"
-                      id={user._id}
-                      label={t('settings_change')}
-                      className="my-4"
-                      allowDelete
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Account Tab */}
             {activeTab === 'account' && (
               <div className="space-y-6">
@@ -811,6 +776,33 @@ const SettingsPage = () => {
                     setHasSaved={setHasSaved}
                   />
                 </div>
+
+                {/* Deleting the account is an account action, so it lives at
+                    the bottom of this section rather than in a tab of its own. */}
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                    <h3 className="text-lg font-medium text-red-600">
+                      {t('settings_delete_account')}
+                    </h3>
+                  </div>
+                  <DeleteAccountSection t={t} />
+                </div>
+              </div>
+            )}
+
+            {/* Subscription Tab */}
+            {activeTab === 'subscription' && areSubscriptionsEnabled && (
+              <div className="space-y-6">
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <CreditCard className="w-5 h-5 text-gray-700" />
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {t('subscriptions_settings_title')}
+                    </h3>
+                  </div>
+                  <SubscriptionSettings />
+                </div>
               </div>
             )}
 
@@ -965,24 +957,6 @@ const SettingsPage = () => {
               </div>
             )}
 
-            {/* Danger Zone Tab */}
-            {activeTab === 'danger' && (
-              <div className="space-y-6">
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <AlertTriangle className="w-5 h-5 text-red-600" />
-                    <h3 className="text-lg font-medium text-red-600">
-                      {t('settings_danger_zone')}
-                    </h3>
-                  </div>
-                  <p className="text-gray-600 mb-6">
-                    {t('settings_danger_zone_warning')}
-                  </p>
-
-                  <DeleteAccountSection t={t} />
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>

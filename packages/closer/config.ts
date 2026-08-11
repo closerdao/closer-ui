@@ -368,21 +368,27 @@ export const configDescription: ConfigType[] = [
         type: 'boolean',
         default: false,
       },
+      showBadges: {
+        type: 'boolean',
+        default: true,
+      },
       elements: {
         type: [
           {
             slug: 'text',
             title: 'text',
             emoji: 'text',
+            badge: 'image',
             description: 'text',
-            priceId: 'text',
-            tier: 'number',
-            monthlyCredits: 'number',
             price: 'number',
-            perks: 'long-text',
             billingPeriod: 'text',
+            monthlyCredits: 'number',
+            tier: 'number',
+            perks: 'long-text',
             available: 'boolean',
             tiersAvailable: 'boolean',
+            priceId: 'readonly-text',
+            productId: 'readonly-text',
           },
         ],
         default: [
@@ -390,15 +396,17 @@ export const configDescription: ConfigType[] = [
             slug: '',
             title: '',
             emoji: '',
+            badge: '',
             description: '',
-            priceId: '',
-            tier: 0,
-            monthlyCredits: 0,
             price: 0,
+            billingPeriod: 'month',
+            monthlyCredits: 0,
+            tier: 1,
             perks: '',
-            billingPeriod: '',
             available: true,
             tiersAvailable: false,
+            priceId: '',
+            productId: '',
           },
         ],
       },
@@ -677,6 +685,10 @@ export const configDescription: ConfigType[] = [
       logoHeader: {
         type: 'image',
         default: '/images/logo.png',
+      },
+      favicon: {
+        type: 'image',
+        default: '',
       },
       platformName: {
         type: 'text',
@@ -1137,6 +1149,15 @@ export const configDescription: ConfigType[] = [
       enabled: {
         type: 'boolean',
         default: true,
+      },
+    },
+  },
+  {
+    slug: 'cohousing',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
       },
     },
   },

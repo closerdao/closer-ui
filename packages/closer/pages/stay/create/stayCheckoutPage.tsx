@@ -26,6 +26,7 @@ import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import Modal from '../../../components/Modal';
 import PageError from '../../../components/PageError';
 import Switch from '../../../components/Switch';
+import TicketOptions from '../../../components/TicketOptions';
 import BookingSurface from '../../../components/booking/bookingSurface';
 import BookingUnitsNote from '../../../components/booking/bookingUnitsNote';
 import { StayQuoteFiatDiscountPreview } from '../../../components/booking/stayQuoteFiatDiscountPreview';
@@ -60,7 +61,7 @@ import {
   VolunteerConfig,
 } from '../../../types/api';
 import { Listing } from '../../../types/booking';
-import { Event } from '../../../types/event';
+import { Event, TicketOption } from '../../../types/event';
 import { FoodOption } from '../../../types/food';
 import {
   Stay,
@@ -77,11 +78,13 @@ import {
   userCanCreateTeamBooking,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { normalizeDiscountCode } from '../../../utils/discountCode';
 import { priceFormat } from '../../../utils/helpers';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
 import { formatStakeBookingErrorForUi } from '../../../utils/stakeBookingError.helpers';
 import { stayRequiresFullCheckoutFlow } from '../../../utils/stayPaymentRouting.helpers';
+import { buildStayCreateHrefFromStay } from '../../../utils/stayRouting.helpers';
 import {
   clearPendingStayTokenStake,
   readPendingStayTokenStake,
@@ -459,6 +462,13 @@ const StayCheckoutContent = ({
   }>({ diet: [], sharedAccomodation: '' });
   const [stayMessage, setStayMessage] = useState(stay.message || '');
   const [stayEvent, setStayEvent] = useState<Event | null>(null);
+  const [eventTicketOptions, setEventTicketOptions] = useState<TicketOption[]>(
+    [],
+  );
+  const [selectedTicketOption, setSelectedTicketOption] =
+    useState<TicketOption | null>(null);
+  const [eventDiscountCode, setEventDiscountCode] = useState('');
+  const [isLoadingEventTickets, setIsLoadingEventTickets] = useState(false);
   const [foodPhotoSlideByOptionId, setFoodPhotoSlideByOptionId] = useState<
     Record<string, number>
   >({});
@@ -508,15 +518,53 @@ const StayCheckoutContent = ({
   useEffect(() => {
     if (!currentStay.eventId) {
       setStayEvent(null);
+      setEventTicketOptions([]);
+      setSelectedTicketOption(null);
       return;
     }
     let cancelled = false;
     (async () => {
+      setIsLoadingEventTickets(true);
       try {
-        const { data } = await api.get(`/event/${currentStay.eventId}`);
-        if (!cancelled) setStayEvent(data?.results ?? null);
+        const [eventRes, availabilityRes] = await Promise.all([
+          api.get(`/event/${currentStay.eventId}`),
+          api
+            .get(`/bookings/event/${currentStay.eventId}/availability`)
+            .catch(() => null),
+        ]);
+        if (cancelled) return;
+        const event = (eventRes?.data?.results ?? null) as Event | null;
+        setStayEvent(event);
+        const rawOptions: TicketOption[] =
+          availabilityRes?.data?.ticketOptions ||
+          event?.ticketOptions ||
+          [];
+        const overnight = rawOptions.filter(
+          (option) => !option.isDayTicket && option.available > 0,
+        );
+        setEventTicketOptions(overnight);
+        const savedName = currentStay.ticketOption?.name;
+        const matched = savedName
+          ? overnight.find((option) => option.name === savedName) || null
+          : null;
+        setSelectedTicketOption((prev) => {
+          if (matched) return matched;
+          if (
+            prev &&
+            overnight.some((option) => option.name === prev.name)
+          ) {
+            return prev;
+          }
+          return null;
+        });
       } catch {
-        if (!cancelled) setStayEvent(null);
+        if (!cancelled) {
+          setStayEvent(null);
+          setEventTicketOptions([]);
+          setSelectedTicketOption(null);
+        }
+      } finally {
+        if (!cancelled) setIsLoadingEventTickets(false);
       }
     })();
     return () => {
@@ -694,6 +742,13 @@ const StayCheckoutContent = ({
   );
 
   const stayEventId = currentStay.eventId;
+  const showEventTicketSelection =
+    Boolean(stayEventId) && Boolean(stayEvent?.paid);
+  const hasValidEventTicket =
+    !stayEvent?.paid ||
+    Boolean(
+      selectedTicketOption?.name || currentStay.ticketOption?.name,
+    );
   const eventFoodOptionSet = Boolean(
     stayEvent?.foodOption === 'food_package'
       ? stayEvent?.foodOptionId
@@ -1268,6 +1323,41 @@ const StayCheckoutContent = ({
     }
   };
 
+  const persistEventTicketOptions = async (payload: {
+    ticketOption?: string | null;
+    eventDiscount?: string | null;
+  }) => {
+    setActionError(null);
+    setIsSavingOptions(true);
+    try {
+      const updated = await updateStayOptions(currentStay._id, payload);
+      setCurrentStay(updated);
+    } catch (err) {
+      setActionError(parseMessageFromError(err));
+    } finally {
+      setIsSavingOptions(false);
+    }
+  };
+
+  const handleSelectTicketOption = (ticket: object) => {
+    const next = ticket as TicketOption;
+    setSelectedTicketOption(next);
+    void persistEventTicketOptions({
+      ticketOption: next.name,
+      eventDiscount: normalizeDiscountCode(eventDiscountCode) || null,
+    });
+  };
+
+  const handleEventDiscountValidated = (code: string) => {
+    const normalizedCode = normalizeDiscountCode(code);
+    setEventDiscountCode(normalizedCode);
+    if (!selectedTicketOption?.name) return;
+    void persistEventTicketOptions({
+      ticketOption: selectedTicketOption.name,
+      eventDiscount: normalizedCode || null,
+    });
+  };
+
   const handleTeamBookingToggle = async (nextValue: boolean) => {
     if (isSavingTeamBooking) return;
 
@@ -1482,6 +1572,10 @@ const StayCheckoutContent = ({
   };
 
   const handleConfirmAndPay = async () => {
+    if (!hasValidEventTicket) {
+      setActionError(t('bookings_error_no_ticket_option'));
+      return;
+    }
     setActionError(null);
     setIsProcessing(true);
     const stayPaymentPoint =
@@ -1588,7 +1682,9 @@ const StayCheckoutContent = ({
     >
       <div className="relative flex items-center min-h-[2.75rem] mb-4">
         <BookingBackButton
-          onClick={() => router.push('/stay/create')}
+          onClick={() =>
+            router.push(buildStayCreateHrefFromStay(currentStay))
+          }
           name={t('buttons_back')}
           className="relative z-10"
         />
@@ -1753,6 +1849,37 @@ const StayCheckoutContent = ({
             )}
           </div>
         </BookingSurface>
+
+        {showEventTicketSelection && (
+          <BookingSurface as="section" tone="elevated" padding="lg">
+            {isLoadingEventTickets ? (
+              <div className="flex justify-center py-6">
+                <Spinner />
+              </div>
+            ) : eventTicketOptions.length > 0 ? (
+              <TicketOptions
+                items={eventTicketOptions}
+                selectTicketOption={handleSelectTicketOption}
+                selectedTicketOption={selectedTicketOption}
+                discountCode={eventDiscountCode}
+                setDiscountCode={setEventDiscountCode}
+                eventId={stayEventId}
+                onDiscountValidated={handleEventDiscountValidated}
+              />
+            ) : (
+              <p className="text-sm text-gray-600">
+                {t('bookings_error_no_ticket_option')}
+              </p>
+            )}
+            {!isLoadingEventTickets &&
+              eventTicketOptions.length > 0 &&
+              !hasValidEventTicket && (
+                <p className="mt-3 text-sm text-error">
+                  {t('bookings_error_no_ticket_option')}
+                </p>
+              )}
+          </BookingSurface>
+        )}
 
         {/* Volunteers already gave diet and host notes in the application
             form, so re-asking here would collect the same answers twice. */}
@@ -2563,7 +2690,9 @@ const StayCheckoutContent = ({
           <div className="mt-4">
             {useCardPaymentPrimaryCta && !isMember ? (
               <Button
-                isEnabled={hasAcceptedTerms && !isProcessing}
+                isEnabled={
+                  hasAcceptedTerms && !isProcessing && hasValidEventTicket
+                }
                 onClick={() => {
                   const pt =
                     Math.round(
@@ -2585,7 +2714,9 @@ const StayCheckoutContent = ({
               </Button>
             ) : (
               <Button
-                isEnabled={hasAcceptedTerms && !isProcessing}
+                isEnabled={
+                  hasAcceptedTerms && !isProcessing && hasValidEventTicket
+                }
                 isLoading={isProcessing}
                 onClick={handleConfirmAndPay}
                 className="min-h-[48px]"

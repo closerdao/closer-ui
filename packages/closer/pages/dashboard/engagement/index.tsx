@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
+import DashboardPageHeader from '../../../components/Dashboard/DashboardPageHeader';
 import EngagementSampleEmailModal from '../../../components/Dashboard/engagementSampleEmailModal';
 import Pagination from '../../../components/Pagination';
 import {
@@ -57,21 +58,27 @@ type DraftFields = {
   hostBrief: string;
 };
 
-function stageLabel(stage: string | undefined, t: (k: string) => string) {
+/**
+ * Stages and statuses are open sets defined by the API, so a new one can
+ * arrive before it has a translation. `t.has` is checked first because calling
+ * `t()` on an unknown key logs a MISSING_MESSAGE error even when the caller
+ * handles the fallback.
+ */
+type Translator = ((k: string) => string) & { has: (k: string) => boolean };
+
+function stageLabel(stage: string | undefined, t: Translator) {
   if (!stage) return '';
   const key = `engagement_stage_${stage}`;
-  const label = t(key);
-  return label === key ? stage : label;
+  return t.has(key) ? t(key) : stage;
 }
 
 function statusLabel(
   status: EngagementOpportunityStatus | undefined,
-  t: (k: string) => string,
+  t: Translator,
 ) {
   if (!status) return '';
   const key = `engagement_status_${status}`;
-  const label = t(key);
-  return label === key ? status : label;
+  return t.has(key) ? t(key) : status;
 }
 
 const EngagementDashboardPage = () => {
@@ -347,13 +354,12 @@ const EngagementDashboardPage = () => {
       </Head>
       <AdminLayout>
         <div className="flex flex-col gap-6 max-w-4xl">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-            <div className="flex flex-col gap-1">
-              <Heading level={2}>{t('engagement_title')}</Heading>
-              <p className="text-sm text-gray-600">{t('engagement_simple_intro')}</p>
-            </div>
+          <DashboardPageHeader
+            title={t('engagement_title')}
+            subtitle={t('engagement_simple_intro')}
+          >
             {(showEngagementCta || isManager) && (
-              <div className="flex flex-col sm:flex-row sm:items-end gap-3 shrink-0">
+              <>
                 {showEngagementCta && (
                   <LinkButton
                     href={ctaHref}
@@ -389,9 +395,9 @@ const EngagementDashboardPage = () => {
                     </select>
                   </div>
                 )}
-              </div>
+              </>
             )}
-          </div>
+          </DashboardPageHeader>
 
           {error && (
             <p className="text-sm text-red-600" role="alert">

@@ -13,6 +13,7 @@ import AcceptCookies from 'closer/components/AcceptCookies';
 import {
   AuthProvider,
   ConfigProvider,
+  FaviconLinks,
   LocaleMessagesNextIntlBridge,
   PlatformProvider,
   appGetInitialPropsWithMessages,
@@ -73,6 +74,8 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
         />
       </Head>
+
+      <FaviconLinks favicon={config?.FAVICON} />
 
       <Script
         id="fb-pixel"

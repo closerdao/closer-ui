@@ -6,6 +6,7 @@ import AccountingEntitiesVatFields from '../../components/AccountingEntitiesVatF
 import ArrayConfig from '../../components/ArrayConfig';
 import ConfigImageUpload from '../../components/ConfigImageUpload';
 import AdminLayout from '../../components/Dashboard/AdminLayout';
+import FaviconUpload from '../../components/FaviconUpload';
 import PhotosEditor from '../../components/PhotosEditor';
 import {
   Button,
@@ -22,7 +23,7 @@ import { configDescription } from '../../config';
 import { getValidationSchema } from '../../constants/validation.constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
-import { Config } from '../../types';
+import { Config, SubscriptionPlan } from '../../types';
 import { BookingConfig } from '../../types/api';
 import {
   getArrayConfigsSchema,
@@ -33,6 +34,8 @@ import {
   prepareConfigs,
 } from '../../utils/config.utils';
 import { capitalizeFirstLetter } from '../../utils/learn.helpers';
+import { syncSubscriptionPlansWithStripe } from '../../utils/subscriptionPlansSync';
+import { filterCitizenAndFreeFromElements } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
 const BETA_FEATURES = ['community', 'governance'];
@@ -117,6 +120,7 @@ const ConfigPage = () => {
     'general',
     'events',
     'applications',
+    'cohousing',
     ...(isBookingAllowedByEnv ? ['booking', 'booking-rules', 'payment'] : []),
     ...(isVolunteeringEnabled ? ['volunteering'] : []),
     ...(isSubscriptionsEnabled ? ['subscriptions'] : []),
@@ -161,6 +165,7 @@ const ConfigPage = () => {
   const [updatedConfigs, setUpdatedConfigs] = useState<Config[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasConfigUpdated, setHasConfigUpdated] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [enabledConfigs, setEnabledConfigs] = useState<string[]>([]);
   const [isGeneralConfigEnabled, setIsGeneralConfigEnabled] = useState(false);
   const [errors, setErrors] = useState<{
@@ -281,14 +286,53 @@ const ConfigPage = () => {
     configCategory = '',
   ) => {
     const configCategoryToSave = configCategory || selectedConfig;
-    const configsToSave = newConfigs.length > 0 ? newConfigs : updatedConfigs;
+    let configsToSave = newConfigs.length > 0 ? newConfigs : updatedConfigs;
 
-    const updatedConfig = configsToSave.find(
+    let updatedConfig = configsToSave.find(
       (config) => config.slug === configCategoryToSave,
     );
 
     try {
       setIsLoading(true);
+      setSaveError(null);
+
+      if (configCategoryToSave === 'subscriptions' && updatedConfig?.value) {
+        const paymentFromUpdated = configsToSave.find(
+          (config) => config.slug === 'payment',
+        );
+        const paymentFromPlatform = platform.config
+          .findOne('payment')
+          ?.get?.('value')
+          ?.toJS?.();
+        const currency =
+          paymentFromUpdated?.value?.fiatCur ||
+          paymentFromUpdated?.value?.utilityFiatCur ||
+          paymentFromPlatform?.fiatCur ||
+          paymentFromPlatform?.utilityFiatCur ||
+          'EUR';
+        const filteredElements = filterCitizenAndFreeFromElements(
+          (updatedConfig.value.elements as unknown as SubscriptionPlan[]) || [],
+        );
+        const syncedElements = await syncSubscriptionPlansWithStripe(
+          filteredElements,
+          currency,
+        );
+        const syncedValue = {
+          ...updatedConfig.value,
+          elements: syncedElements,
+        } as unknown as Config['value'];
+        configsToSave = configsToSave.map((config) =>
+          config.slug === 'subscriptions'
+            ? { ...config, value: syncedValue }
+            : config,
+        );
+        updatedConfig = {
+          ...updatedConfig,
+          value: syncedValue,
+        };
+        setUpdatedConfigs(configsToSave);
+      }
+
       const configExists = myConfigs
         .toJS()
         .some((config: any) => config.slug === configCategoryToSave);
@@ -318,6 +362,11 @@ const ConfigPage = () => {
         setHasConfigUpdated(false);
       }, 3000);
     } catch (error) {
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : t('config_subscriptions_sync_error'),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -576,10 +625,9 @@ const ConfigPage = () => {
                     <div key={key} className="flex flex-col gap-1">
                       <label className="text-sm font-medium text-gray-700">{configLabel(key)}</label>
 
-                      {isImage && (
-                        <ConfigImageUpload
-                          value={String(currentValue)}
-                          onChange={(url) => {
+                      {isImage &&
+                        (() => {
+                          const handleImageChange = (url: string) => {
                             const newConfigs = updatedConfigs.map((config) => {
                               if (config.slug === 'general') {
                                 return { ...config, value: { ...config.value, [key]: url } };
@@ -587,9 +635,23 @@ const ConfigPage = () => {
                               return config;
                             });
                             setUpdatedConfigs(newConfigs);
-                          }}
-                        />
-                      )}
+                          };
+
+                          return key === 'favicon' ? (
+                            <FaviconUpload
+                              value={String(currentValue)}
+                              onChange={handleImageChange}
+                              platformName={String(
+                                generalConfig?.value?.platformName ?? '',
+                              )}
+                            />
+                          ) : (
+                            <ConfigImageUpload
+                              value={String(currentValue)}
+                              onChange={handleImageChange}
+                            />
+                          );
+                        })()}
                       {!isSelect && !isTime && !isImage && (
                         <input
                           className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
@@ -646,6 +708,9 @@ const ConfigPage = () => {
                 onClick={saveInitialConfig}
                 isLoading={isLoading}
                 isEnabled={!isLoading}
+                variant="inline"
+                size="small"
+                className="self-start"
               >
                 {t('generic_save_button')}
               </Button>
@@ -884,9 +949,10 @@ const ConfigPage = () => {
                                     {configLabel(key)}
                                   </label>
                                   {isImage ? (
-                                    <ConfigImageUpload
-                                      value={String(currentValue)}
-                                      onChange={(url) => {
+                                    (() => {
+                                      const handleImageChange = (
+                                        url: string,
+                                      ) => {
                                         const newConfigs = updatedConfigs.map((config) => {
                                           if (config.slug === configSlug) {
                                             return {
@@ -897,8 +963,25 @@ const ConfigPage = () => {
                                           return config;
                                         });
                                         setUpdatedConfigs(newConfigs);
-                                      }}
-                                    />
+                                      };
+
+                                      return key === 'favicon' ? (
+                                        <FaviconUpload
+                                          value={String(currentValue)}
+                                          onChange={handleImageChange}
+                                          platformName={String(
+                                            updatedConfigs.find(
+                                              (c) => c.slug === 'general',
+                                            )?.value?.platformName ?? '',
+                                          )}
+                                        />
+                                      ) : (
+                                        <ConfigImageUpload
+                                          value={String(currentValue)}
+                                          onChange={handleImageChange}
+                                        />
+                                      );
+                                    })()
                                   ) : typeof value === 'boolean' ? (
                                     <div className="flex gap-4">
                                       <label className="flex gap-2 items-center text-sm cursor-pointer">
@@ -1049,7 +1132,7 @@ const ConfigPage = () => {
                             },
                           )}
 
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-4">
                             <Button
                               onClick={() => handleSaveConfig([], configSlug)}
                               isLoading={isLoading}
@@ -1065,19 +1148,29 @@ const ConfigPage = () => {
                             >
                               {t('generic_save_button')}
                             </Button>
-                            <Button
-                              onClick={() => handleResetToDefaults(configSlug)}
-                              isLoading={isLoading}
-                              isEnabled={!isLoading}
-                              variant="secondary"
-                              size="small"
+                            <button
+                              type="button"
+                              disabled={isLoading}
+                              onClick={() => {
+                                if (
+                                  window.confirm(
+                                    t('config_reset_to_defaults_confirm'),
+                                  )
+                                ) {
+                                  handleResetToDefaults(configSlug);
+                                }
+                              }}
+                              className="text-sm text-gray-500 underline underline-offset-2 hover:text-accent disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {t('config_reset_to_defaults')}
-                            </Button>
+                            </button>
                             {hasConfigUpdated &&
                               selectedConfig === configSlug && (
                                 <Information>{t('config_updated')}</Information>
                               )}
+                            {saveError && selectedConfig === configSlug && (
+                              <ErrorMessage error={saveError} />
+                            )}
                           </div>
                         </div>
                       )}

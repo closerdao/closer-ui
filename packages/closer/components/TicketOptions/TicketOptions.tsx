@@ -20,6 +20,7 @@ interface Props {
   discountCode?: string;
   setDiscountCode: Dispatch<SetStateAction<string>>;
   eventId?: string;
+  onDiscountValidated?: (code: string) => void;
 }
 
 const Ticket = ({
@@ -81,6 +82,7 @@ const TicketOptions: FC<Props> = ({
   discountCode,
   setDiscountCode,
   eventId,
+  onDiscountValidated,
 }) => {
   const t = useTranslations();
   return (
@@ -112,6 +114,7 @@ const TicketOptions: FC<Props> = ({
         discountCode={discountCode || ''}
         setDiscountCode={setDiscountCode}
         selectedTicketOption={selectedTicketOption}
+        onDiscountValidated={onDiscountValidated}
       />
     </>
   );

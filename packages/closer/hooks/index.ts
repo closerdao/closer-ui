@@ -1,3 +1,5 @@
+export { useActiveSubscription } from './useActiveSubscription';
+export { useAttendedEvents } from './useAttendedEvents';
 export { useBookingLinkedCharges } from './useBookingLinkedCharges';
 export { useBookingSearchWhere } from './useBookingSearchWhere';
 export { useBookingSmartContract } from './useBookingSmartContract';

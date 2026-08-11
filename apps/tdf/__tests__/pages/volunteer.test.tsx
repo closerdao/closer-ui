@@ -2,7 +2,7 @@ import { renderWithProviders } from '@/test/utils';
 
 import { screen } from '@testing-library/react';
 
-import VolunteerPage from '../../pages/volunteer';
+import VolunteerPage from '../../pages/legacy/volunteer';
 
 describe('Volunteer', () => {
   beforeEach(() => {

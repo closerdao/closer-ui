@@ -60,14 +60,36 @@ function omitCacheOption(config) {
   return next;
 }
 
+function storeGetResponse(key, response) {
+  getResponseCache.set(key, {
+    data: response.data,
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+    expiresAt: Date.now() + GET_CACHE_TTL_MS,
+  });
+}
+
 const axiosGet = api.get.bind(api);
 api.get = function getWithCache(url, config) {
   const merged = config ?? {};
-  if (merged.cache === false || typeof window === 'undefined') {
+  if (typeof window === 'undefined') {
     return axiosGet(url, omitCacheOption(merged));
   }
   const axiosConfig = omitCacheOption(merged);
   const key = buildGetCacheKey(url, axiosConfig);
+  // `cache: false` is how callers refresh after a mutation, so it both skips the
+  // cached value and replaces it: a request that was already in flight when the
+  // mutation landed may return stale data, so we never join one, and whoever
+  // reads through the cache next gets the post-mutation value rather than the
+  // pre-mutation one that would otherwise sit there for the rest of the TTL.
+  if (merged.cache === false) {
+    getResponseCache.delete(key);
+    return axiosGet(url, axiosConfig).then((response) => {
+      storeGetResponse(key, response);
+      return response;
+    });
+  }
   const now = Date.now();
   const hit = getResponseCache.get(key);
   if (hit && hit.expiresAt > now) {
@@ -85,13 +107,7 @@ api.get = function getWithCache(url, config) {
   }
   const pending = axiosGet(url, axiosConfig)
     .then((response) => {
-      getResponseCache.set(key, {
-        data: response.data,
-        status: response.status,
-        statusText: response.statusText,
-        headers: response.headers,
-        expiresAt: Date.now() + GET_CACHE_TTL_MS,
-      });
+      storeGetResponse(key, response);
       return response;
     })
     .finally(() => {

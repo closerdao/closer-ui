@@ -644,8 +644,8 @@ const EventPage = ({
                                         <LinkButton
                                           href={
                                             isAuthenticated
-                                              ? `/bookings/create/dates/?eventId=${event._id}&start=${start ? start.format('YYYY-MM-DD') : ''}&end=${end ? end.format('YYYY-MM-DD') : ''}`
-                                              : `/login?back=${encodeURIComponent(`/bookings/create/dates/?eventId=${event._id}&start=${start ? start.format('YYYY-MM-DD') : ''}&end=${end ? end.format('YYYY-MM-DD') : ''}`)}`
+                                              ? `/stay/create?eventId=${event._id}&start=${start ? start.format('YYYY-MM-DD') : ''}&end=${end ? end.format('YYYY-MM-DD') : ''}`
+                                              : `/login?back=${encodeURIComponent(`/stay/create?eventId=${event._id}&start=${start ? start.format('YYYY-MM-DD') : ''}&end=${end ? end.format('YYYY-MM-DD') : ''}`)}`
                                           }
                                           className=""
                                         >

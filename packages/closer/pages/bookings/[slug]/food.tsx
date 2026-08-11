@@ -44,6 +44,7 @@ import {
   getFoodOptionsForBookingContext,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { normalizeDiscountCode } from '../../../utils/discountCode';
 import { priceFormat } from '../../../utils/helpers';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 
@@ -791,7 +792,9 @@ const FoodSelectionPage = ({
 FoodSelectionPage.getInitialProps = async (context: NextPageContext) => {
   const { query } = context;
 
-  const discountCode = query?.discountCode;
+  const discountCode = normalizeDiscountCode(
+    typeof query?.discountCode === 'string' ? query.discountCode : '',
+  ) || undefined;
 
   try {
     const foodRes = await api.get('/food').catch(() => null);

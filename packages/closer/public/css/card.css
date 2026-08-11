@@ -12,8 +12,8 @@
 .card .card-footer button {
   margin-right: 0.5rem;
 }
-.card input,
-.card textarea {
+.card input:not(.new-input),
+.card textarea:not(.new-input) {
   background-color: #f2f4f3;
 }
 .card p:last-child {

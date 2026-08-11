@@ -8,9 +8,12 @@ export { ErrorBoundary } from './components/ErrorBoundary';
 export { default as EventPreview } from './components/EventPreview';
 export { default as EventsList } from './components/EventsList';
 export { default as ApplicationModal } from './components/ApplicationModal';
+export { default as EventsCalendar } from './components/EventsCalendar';
 export { default as Footer } from './components/Footer';
 export { default as JoinCommunityCTA } from './components/JoinCommunityCTA';
+export { default as CollapsibleFaq } from './components/CollapsibleFaq';
 export { default as Metatags } from './components/Metatags/';
+export { FaviconLinks } from './components/Metatags/FaviconLinks';
 export { default as Modal } from './components/Modal';
 export { default as Navigation } from './components/Navigation';
 export { default as Newsletter } from './components/Newsletter';
@@ -19,7 +22,9 @@ export { default as Prompts } from './components/Prompts';
 export { default as Resources } from './components/Resources';
 export { default as SubscriptionCards } from './components/SubscriptionCards';
 export { default as SubscriptionCheckoutForm } from './components/SubscriptionCheckoutForm';
+export { default as SubscriptionComparisonTable } from './components/SubscriptionComparisonTable';
 export { default as SubscriptionConditions } from './components/SubscriptionConditions';
+export { default as SubscriptionEditorial } from './components/SubscriptionEditorial';
 export { default as Tag } from './components/Tag';
 export { default as BackButton } from './components/ui/BackButton';
 export { default as Button } from './components/ui/Button';
@@ -93,6 +98,18 @@ export { default as SocialPage } from './pages/social';
 // Pages
 export { default as FeatureNotEnabled } from './components/FeatureNotEnabled';
 export { default as CustomPagePage } from './pages/[slug]';
+export { default as LegacyStandardPage } from './pages/legacy/LegacyStandardPage';
+export { default as LegacyCitizenshipPage } from './pages/legacy/citizenship';
+export { default as LegacyEventsPage } from './pages/legacy/events';
+export {
+  default as LegacyFundraiserPage,
+  type InvestPageProps,
+} from './pages/legacy/fundraiser';
+export { default as LegacyStayPage } from './pages/legacy/stay';
+export { default as LegacySubscriptionsPage } from './pages/legacy/subscriptions';
+export { default as LegacyTokenPage } from './pages/legacy/token';
+export { default as LegacyVolunteerPage } from './pages/legacy/volunteer';
+export { default as LegacyDataroomPage } from './pages/legacy/dataroom';
 export { default as ConfigPage } from './pages/admin/config';
 export { default as EmailsPage } from './pages/admin/emails';
 export { default as EmailEditorPage } from './pages/admin/emails/[slug]';
@@ -172,6 +189,7 @@ export { default as SettingsPage } from './pages/settings';
 export { default as AffiliatePage } from './pages/settings/affiliate';
 export { default as CreditsPage } from './pages/settings/credits';
 export { default as ReferralsPage } from './pages/settings/referrals';
+export { default as SubscriptionSettingsPage } from './pages/settings/subscription';
 export { default as SignUpPage } from './pages/signup';
 export { default as StayPage } from './pages/stay/';
 export { default as StayConfirmationPage } from './pages/stay/[slug]/confirmation';
@@ -238,8 +256,12 @@ export { default as DonateSuccessPage } from './pages/donate/success';
 export {
   default as FundraiserPage,
   default as InvestPage,
-  type InvestPageProps,
 } from './pages/fundraiser';
+export { default as TeamPage } from './pages/team';
+export { default as PressPage } from './pages/press';
+export { default as DataroomPage } from './pages/dataroom';
+export { default as CohousingPage } from './pages/cohousing';
+export { createFixedSlugCustomPage } from './pages/customPageView';
 export { default as CommonsExclosurePage } from './pages/philosophy/commons-exclosure';
 export { default as CommonsGovernancePage } from './pages/philosophy/commons-governance';
 export { default as DigitalCommonsPage } from './pages/philosophy/digital-commons';

@@ -26,6 +26,7 @@ import { FoodOption } from '../types/food';
 import type { Stay } from '../types/stay';
 import api from './api';
 import { parseMessageFromError } from './common';
+import { normalizeDiscountCode } from './discountCode';
 import { priceFormat } from './helpers';
 import { reportIssue } from './reporting.utils';
 import { formatStakeBookingErrorEnglish } from './stakeBookingError.helpers';
@@ -1444,6 +1445,9 @@ export function buildBookingDatesUrl(params: BookingStepUrlParams): string {
   if (params.isFriendsBooking) q.set('isFriendsBooking', 'true');
   if (params.friendEmails != null && params.friendEmails !== '')
     q.set('friendEmails', params.friendEmails);
+  if (params.eventId != null && params.eventId !== '') {
+    return `/stay/create?${q.toString()}`;
+  }
   return `/bookings/create/dates?${q.toString()}`;
 }
 
@@ -1648,7 +1652,7 @@ export function buildBookingAccomodationUrl(
   if (params.friendEmails != null && params.friendEmails !== '')
     q.set('friendEmails', params.friendEmails);
   if (params.discountCode != null && params.discountCode !== '')
-    q.set('discountCode', params.discountCode);
+    q.set('discountCode', normalizeDiscountCode(params.discountCode));
   return `/bookings/create/accomodation?${q.toString()}`;
 }
 

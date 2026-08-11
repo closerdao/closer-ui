@@ -150,12 +150,23 @@ const SingleLineChart = ({
   );
 };
 
-const TokenGraph = () => {
+interface TokenGraphProps {
+  variant?: 'both' | 'price' | 'supply';
+}
+
+const TokenGraph = ({ variant = 'both' }: TokenGraphProps) => {
   const t = useTranslations();
   const [supplyData, setSupplyData] = useState<ChartDataPoint[]>([]);
   const [priceData, setPriceData] = useState<ChartDataPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const showSupply = variant === 'both' || variant === 'supply';
+  const showPrice = variant === 'both' || variant === 'price';
+  const headingKey =
+    variant === 'supply'
+      ? 'token_graph_supply_title'
+      : 'token_price_history_title';
 
   useEffect(() => {
     const fetchGraph = async () => {
@@ -184,7 +195,7 @@ const TokenGraph = () => {
     return (
       <Card className="p-6">
         <Heading level={3} className="mb-4 text-xl">
-          {t('token_price_history_title')}
+          {t(headingKey)}
         </Heading>
         <div className="bg-gray-50 rounded-lg p-12 text-center min-h-[200px] flex items-center justify-center">
           <p className="text-gray-500">{t('token_graph_loading')}</p>
@@ -197,7 +208,7 @@ const TokenGraph = () => {
     return (
       <Card className="p-6">
         <Heading level={3} className="mb-4 text-xl">
-          {t('token_price_history_title')}
+          {t(headingKey)}
         </Heading>
         <div className="bg-gray-50 rounded-lg p-12 text-center min-h-[200px] flex items-center justify-center">
           <p className="text-gray-500">{t('token_graph_error')}</p>
@@ -209,12 +220,14 @@ const TokenGraph = () => {
     );
   }
 
-  const hasData = supplyData.length > 0 || priceData.length > 0;
+  const visibleSupply = showSupply ? supplyData : [];
+  const visiblePrice = showPrice ? priceData : [];
+  const hasData = visibleSupply.length > 0 || visiblePrice.length > 0;
   if (!hasData) {
     return (
       <Card className="p-6">
         <Heading level={3} className="mb-4 text-xl">
-          {t('token_price_history_title')}
+          {t(headingKey)}
         </Heading>
         <div className="bg-gray-50 rounded-lg p-12 text-center min-h-[200px] flex items-center justify-center">
           <p className="text-gray-500">
@@ -230,25 +243,25 @@ const TokenGraph = () => {
 
   return (
     <div className="space-y-6">
-      {supplyData.length > 0 && (
+      {visibleSupply.length > 0 && (
         <Card className="p-6">
           <Heading level={3} className="mb-4 text-xl">
             {t('token_graph_supply_title')}
           </Heading>
           <SingleLineChart
-            data={supplyData}
+            data={visibleSupply}
             dataKey="value"
             color={CHART_COLORS[2]}
           />
         </Card>
       )}
-      {priceData.length > 0 && (
+      {visiblePrice.length > 0 && (
         <Card className="p-6">
           <Heading level={3} className="mb-4 text-xl">
             {t('token_price_history_title')}
           </Heading>
           <SingleLineChart
-            data={priceData}
+            data={visiblePrice}
             dataKey="value"
             color={CHART_COLORS[3]}
             valueFormatter={(v) => formatIsoFiatAmount(v, 'EUR')}

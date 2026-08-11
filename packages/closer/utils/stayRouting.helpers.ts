@@ -1,6 +1,8 @@
 import dayjs from 'dayjs';
 
+import type { Stay } from '../types/stay';
 import api from './api';
+import { normalizeDiscountCode } from './discountCode';
 
 export function isStayMongoId(param: string | undefined): boolean {
   return typeof param === 'string' && /^[a-f\d]{24}$/i.test(param);
@@ -42,6 +44,81 @@ export function buildStayCreateListingHref(
     q.set('pets', String(params.pets));
   }
   return `/stay/create?${q.toString()}`;
+}
+
+export type StayCreateEventHrefParams = {
+  eventId: string;
+  startDate?: string | Date | null;
+  endDate?: string | Date | null;
+  adults?: number;
+  children?: number;
+  infants?: number;
+  pets?: number;
+  ticketOption?: string | null;
+  discountCode?: string | null;
+};
+
+export function buildStayCreateEventHref(
+  params: StayCreateEventHrefParams,
+): string {
+  const q = new URLSearchParams();
+  q.set('eventId', params.eventId);
+  if (params.startDate) {
+    q.set('start', dayjs(params.startDate).format('YYYY-MM-DD'));
+  }
+  if (params.endDate) {
+    q.set('end', dayjs(params.endDate).format('YYYY-MM-DD'));
+  }
+  if (params.adults != null) {
+    q.set('adults', String(params.adults));
+  }
+  if (params.children) {
+    q.set('children', String(params.children));
+  }
+  if (params.infants) {
+    q.set('infants', String(params.infants));
+  }
+  if (params.pets) {
+    q.set('pets', String(params.pets));
+  }
+  if (params.ticketOption) {
+    q.set('ticketOption', params.ticketOption);
+  }
+  if (params.discountCode) {
+    q.set('discountCode', normalizeDiscountCode(params.discountCode));
+  }
+  return `/stay/create?${q.toString()}`;
+}
+
+export function buildStayCreateHrefFromStay(stay: Stay): string {
+  const q = new URLSearchParams();
+  if (stay.start) {
+    q.set('start', dayjs(stay.start).format('YYYY-MM-DD'));
+  }
+  if (stay.end) {
+    q.set('end', dayjs(stay.end).format('YYYY-MM-DD'));
+  }
+  if (stay.adults != null) {
+    q.set('adults', String(stay.adults));
+  }
+  if (stay.children) {
+    q.set('children', String(stay.children));
+  }
+  if (stay.infants) {
+    q.set('infants', String(stay.infants));
+  }
+  if (stay.pets) {
+    q.set('pets', String(stay.pets));
+  }
+  if (stay.eventId) {
+    q.set('eventId', stay.eventId);
+  }
+  const bookingType = stay.volunteerInfo?.bookingType;
+  if (bookingType === 'volunteer' || bookingType === 'residence') {
+    q.set('bookingType', bookingType);
+  }
+  const qs = q.toString();
+  return qs ? `/stay/create?${qs}` : '/stay/create';
 }
 
 export function buildStayCreateListingBackPath(

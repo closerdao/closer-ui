@@ -273,6 +273,10 @@ export type VolunteerConfig = {
   diet?: string;
 };
 
+export type CohousingConfig = {
+  enabled: boolean;
+};
+
 export type MilestoneStatus = 'pending' | 'active' | 'completed';
 
 export type FundraisingMilestone = {

@@ -13,6 +13,7 @@ import {
   resolveCheckoutFiatTotal,
 } from '../utils/booking.helpers';
 import { parseMessageFromError } from '../utils/common';
+import { normalizeDiscountCode } from '../utils/discountCode';
 import { linkedMetricFields, logMetric } from '../utils/metrics';
 import { ErrorMessage } from './ui';
 import Button from './ui/Button';
@@ -280,7 +281,7 @@ const CheckoutForm = ({
         ticketOption,
         total: fiatTotalToCharge,
         currency,
-        discountCode,
+        discountCode: normalizeDiscountCode(discountCode) || undefined,
         _id,
         email,
         name,
