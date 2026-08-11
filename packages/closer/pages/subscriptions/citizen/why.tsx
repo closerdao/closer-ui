@@ -1,12 +1,9 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import CitizenGoodToBuy from '../../../components/CitizenGoodToBuy';
-import CitizenQuests from '../../../components/CitizenQuests';
 import CitizenWhy from '../../../components/CitizenWhy';
-import Wallet from '../../../components/Wallet';
 import { Button, Heading, ProgressBar } from '../../../components/ui';
 
 import { NextPage } from 'next';
@@ -15,11 +12,11 @@ import { useTranslations } from 'next-intl';
 import { SUBSCRIPTION_CITIZEN_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
-import { WalletState } from '../../../contexts/wallet';
 import { useConfig } from '../../../hooks/useConfig';
-import { CitizenshipConfig } from '../../../types';
-import { SubscriptionPlan } from '../../../types/subscriptions';
-import api from '../../../utils/api';
+import {
+  CitizenApplication,
+  SubscriptionPlan,
+} from '../../../types/subscriptions';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { logMetric } from '../../../utils/metrics';
 import PageNotFound from '../../not-found';
@@ -36,9 +33,6 @@ const CitizenWhyPage: NextPage = () => {
     enabled: boolean;
     elements: SubscriptionPlan[];
   };
-  const citizenshipConfig = getCachedConfig(
-    'citizenship',
-  ) as CitizenshipConfig | null;
   const t = useTranslations();
   const { isLoading, user, refetchUser } = useAuth();
   const { PLATFORM_NAME } = useConfig();
@@ -46,49 +40,24 @@ const CitizenWhyPage: NextPage = () => {
 
   const router = useRouter();
 
-  const {
-    balanceTotal,
-    isWalletConnected,
-    isCorrectNetwork,
-    hasSameConnectedAccount,
-  } = useContext(WalletState);
-
-  const owns30Tokens = balanceTotal >= 30;
-
   const areSubscriptionsEnabled =
     subscriptionsConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
-  const isWalletEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
   const isMember = user?.roles?.includes('member');
 
   const citizenshipStatus = user?.citizenship?.status;
-
   const userCitizenshipWhy = user?.citizenship?.why;
+  const hasSubmittedWhy = Boolean(userCitizenshipWhy);
 
-  const minVouches = citizenshipConfig?.minVouches || 3;
-  const isSpaceHostVouchRequired = citizenshipConfig?.isSpaceHostVouchRequired;
-  const vouchCount = user?.vouched?.length || 0;
-
-  const [eligibility, setEligibility] = useState<null | string>(null);
-  const [hasStayedForMinDuration, setHasStayedForMinDuration] = useState(false);
-  const [isVouched, setIsVouched] = useState(false);
   const stampedCitizenshipAppliedAtForUserIdRef = useRef<string | null>(null);
-  const [application, setApplication] = useState<{
-    owns30Tokens: boolean;
-    why: string;
-    intent: {
-      iWantToApply: boolean;
-      iWantToBuyTokens: boolean;
-      iWantToFinanceTokens: boolean;
-    };
-  }>({
-    owns30Tokens,
+  const [application, setApplication] = useState<CitizenApplication>({
+    ownsRequiredTokens: false,
     why: userCitizenshipWhy || '',
+    hasSelectedTokenIntent: false,
     intent: {
-      iWantToApply: Boolean(owns30Tokens) && !isMember,
+      iWantToApply: false,
       iWantToBuyTokens: false,
-      iWantToFinanceTokens: true,
+      iWantToFinanceTokens: false,
     },
   });
 
@@ -115,64 +84,6 @@ const CitizenWhyPage: NextPage = () => {
     return <div className="bg-yellow-100 py-2 px-3 rounded-md">{message}</div>;
   };
 
-  const getCtaButtonText = () => {
-    if (application?.intent?.iWantToBuyTokens) {
-      return t('token_sale_public_sale_buy_token');
-    } else if (application?.intent?.iWantToFinanceTokens) {
-      return t('subscriptions_citizen_start_financed_plan');
-    } else {
-      return t('booking_button_continue');
-    }
-  };
-
-  useEffect(() => {
-    if (owns30Tokens) {
-      setApplication((prev) => ({
-        ...prev,
-        owns30Tokens,
-        intent: {
-          ...prev.intent,
-          iWantToApply: false,
-          iWantToFinanceTokens: true,
-          iWantToBuyTokens: false,
-        },
-      }));
-    }
-    if (!user?._id) {
-      return;
-    }
-    (async () => {
-      try {
-        const hasStayedRes = await api.get(
-          '/subscription/citizen/check-has-stayed-for-min-duration',
-        );
-
-        const hasStayedForMinDurationLocal =
-          hasStayedRes?.data?.hasStayedForMinDuration;
-
-        setHasStayedForMinDuration(Boolean(hasStayedForMinDurationLocal));
-
-        const isVouchedRes = await api.get(
-          '/subscription/citizen/check-is-vouched',
-        );
-        const isVouchedLocal = isVouchedRes?.data?.isVouched;
-
-        setIsVouched(Boolean(isVouchedLocal));
-
-        if (
-          (isVouchedLocal && hasStayedForMinDurationLocal && owns30Tokens) ||
-          isMember
-        ) {
-          setEligibility('buy_more');
-        } else if (isVouchedLocal && hasStayedForMinDurationLocal) {
-          setEligibility('good_to_buy');
-        } else {
-          setEligibility('not_eligible');
-        }
-      } catch (error) {}
-    })();
-  }, [owns30Tokens, isMember, user?._id]);
-
   useEffect(() => {
     if (!isLoading && !user) {
       stampedCitizenshipAppliedAtForUserIdRef.current = null;
@@ -181,6 +92,11 @@ const CitizenWhyPage: NextPage = () => {
     }
 
     if (isLoading || !user?._id) {
+      return;
+    }
+
+    if (!citizenshipStatus && (hasSubmittedWhy || isMember)) {
+      router.replace('/subscriptions/citizen/validation');
       return;
     }
 
@@ -218,7 +134,9 @@ const CitizenWhyPage: NextPage = () => {
     isLoading,
     refetchUser,
     citizenshipStatus,
+    hasSubmittedWhy,
     userCitizenshipWhy,
+    isMember,
     router,
     platform,
   ]);
@@ -230,29 +148,17 @@ const CitizenWhyPage: NextPage = () => {
         why: userCitizenshipWhy,
       }));
     }
-  }, [userCitizenshipWhy]);
-
-  // A financed or in-progress token purchase settles the token quest, so users
-  // who chose a payment plan are not locked out of vouching.
-  const isTokensComplete =
-    owns30Tokens ||
-    Boolean(application?.intent?.iWantToBuyTokens) ||
-    Boolean(application?.intent?.iWantToFinanceTokens);
-
-  const tokensProgress = Math.min(1, (balanceTotal || 0) / 30);
+  }, [userCitizenshipWhy, application.why]);
 
   const updateApplication = (
-    key: string,
-    value:
-      | string
-      | boolean
-      | {
-          iWantToApply: boolean;
-          iWantToBuyTokens: boolean;
-          iWantToFinanceTokens: boolean;
-        },
+    key: keyof CitizenApplication,
+    value: CitizenApplication[keyof CitizenApplication],
   ) => {
-    setApplication((prev) => ({ ...prev, [key]: value }));
+    setApplication((prev) => ({
+      ...prev,
+      [key]: value,
+      ...(key === 'intent' ? { hasSelectedTokenIntent: true } : {}),
+    }));
   };
 
   const handleNext = async () => {
@@ -263,6 +169,7 @@ const CitizenWhyPage: NextPage = () => {
           why: application?.why,
         },
       });
+      await refetchUser();
 
       void logMetric({
         event: 'citizen-applied',
@@ -273,20 +180,7 @@ const CitizenWhyPage: NextPage = () => {
       console.error('error with citizen application:', error);
     }
 
-    if (application?.intent?.iWantToBuyTokens) {
-      router.push(
-        `/token/before-you-begin?citizenApplication=true&tokens=${
-          30 - (balanceTotal || 0)
-        }`,
-      );
-      return;
-    } else if (application?.intent?.iWantToFinanceTokens) {
-      router.push('/token/finance?citizenApplication=true');
-      return;
-    }
-
     router.push('/subscriptions/citizen/validation?intent=apply');
-    return;
   };
 
   if (!areSubscriptionsEnabled) {
@@ -315,8 +209,8 @@ const CitizenWhyPage: NextPage = () => {
         </Heading>
         <ProgressBar steps={SUBSCRIPTION_CITIZEN_STEPS} />
 
-        <main className="pt-14 pb-24 space-y-6">
-          {!isMember && <> {renderUserMessage()}</>}
+        <main className="pt-14 pb-24 flex flex-col gap-6">
+          {!isMember && renderUserMessage()}
 
           {citizenshipStatus && (
             <div>
@@ -335,81 +229,22 @@ const CitizenWhyPage: NextPage = () => {
             </div>
           )}
 
-          {/* TODO: add a message if the user has a pending payment */}
           {!citizenshipStatus && (
             <>
-              <section className="mb-10 space-y-6">
-                {isMember && (
-                  <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
-                    <p className="font-bold text-green-700 mb-2">
-                      {t('subscriptions_citizen_already_member_title')}
-                    </p>
-                    <p>
-                      {t('subscriptions_citizen_already_member_description')}
-                    </p>
-                  </div>
-                )}
-              </section>
-              {!isMember && (
-                <CitizenWhy
-                  updateApplication={updateApplication}
-                  application={application}
-                />
-              )}
-
-              <CitizenQuests
-                hasStayedForMinDuration={hasStayedForMinDuration}
-                isTokensComplete={isTokensComplete}
-                isVouched={isVouched}
-                vouchCount={vouchCount}
-                minVouches={minVouches}
-                isSpaceHostVouchRequired={isSpaceHostVouchRequired}
-                tokensProgress={tokensProgress}
-                showEligibilityQuests={!isMember}
-                tokensCard={
-                  <>
-                    {isWalletConnected &&
-                      isCorrectNetwork &&
-                      hasSameConnectedAccount && (
-                        <p className="mb-3 text-sm font-bold">
-                          {t('subscriptions_citizen_you_hold', {
-                            var: balanceTotal,
-                          })}
-                        </p>
-                      )}
-                    <CitizenGoodToBuy
-                      updateApplication={updateApplication}
-                      application={application}
-                      balanceTotal={balanceTotal}
-                    />
-                  </>
-                }
+              <CitizenWhy
+                updateApplication={updateApplication}
+                application={application}
               />
-              {isWalletEnabled &&
-              (eligibility === 'buy_more' || eligibility === 'not_eligible') ? (
-                <div className="my-8 space-y-6">
-                  <p>
-                    <strong>{t('subscriptions_citizen_connect_wallet')}</strong>
-                  </p>
-                  <Wallet />
-                </div>
-              ) : null}
               <div className="py-4">
                 <Button
-                  isEnabled={
-                    eligibility === 'buy_more'
-                      ? true
-                      : Boolean(application?.why)
-                  }
+                  isEnabled={Boolean(application?.why)}
                   onClick={handleNext}
                 >
-                  {getCtaButtonText()}
+                  {t('booking_button_continue')}
                 </Button>
-                {!isMember && (
-                  <p className="mt-4 text-center text-sm text-gray-500">
-                    {t('subscriptions_citizen_hero_fineprint')}
-                  </p>
-                )}
+                <p className="mt-4 text-center text-sm text-gray-500">
+                  {t('subscriptions_citizen_hero_fineprint')}
+                </p>
               </div>
             </>
           )}

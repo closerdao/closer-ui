@@ -1,12 +1,15 @@
 import { useTranslations } from 'next-intl';
 
 import { useConfig } from '../../hooks/useConfig';
+import { CitizenApplication } from '../../types/subscriptions';
 import { Heading, Textarea } from '../ui';
 
 interface Props {
-  updateApplication: (key: string, value: any) => void;
-  application: any;
-  buyMore?: boolean;
+  updateApplication: (
+    key: keyof CitizenApplication,
+    value: CitizenApplication[keyof CitizenApplication],
+  ) => void;
+  application: CitizenApplication;
 }
 
 const CitizenWhy = ({ updateApplication, application }: Props) => {
@@ -31,7 +34,7 @@ const CitizenWhy = ({ updateApplication, application }: Props) => {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col gap-8">
       <div className="text-center">
         {LOGO_HEADER && (
           <img
@@ -63,7 +66,7 @@ const CitizenWhy = ({ updateApplication, application }: Props) => {
         ))}
       </div>
 
-      <div className="space-y-2">
+      <div className="flex flex-col gap-2">
         <label htmlFor="why" className="block text-sm font-bold">
           {t('subscriptions_citizen_good_why')}{' '}
           <span className="text-xs font-semibold text-accent">

@@ -234,6 +234,10 @@ export const configDescription: ConfigType[] = [
         type: 'number',
         default: 14,
       },
+      tokensRequired: {
+        type: 'number',
+        default: 30,
+      },
     },
   },
   {

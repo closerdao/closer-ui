@@ -1,17 +1,16 @@
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import { useContext, useEffect, useState } from 'react';
 
-import CitizenEligibility from '../../../components/CitizenEligibility';
+import CitizenGoodToBuy from '../../../components/CitizenGoodToBuy';
+import CitizenQuests from '../../../components/CitizenQuests';
 import Wallet from '../../../components/Wallet';
 import {
   BackButton,
   Button,
   ErrorMessage,
   Heading,
-  LinkButton,
   ProgressBar,
 } from '../../../components/ui';
 
@@ -23,7 +22,10 @@ import { useAuth } from '../../../contexts/auth';
 import { WalletState } from '../../../contexts/wallet';
 import { useConfig } from '../../../hooks/useConfig';
 import { CitizenshipConfig } from '../../../types';
-import { SubscriptionPlan } from '../../../types/subscriptions';
+import {
+  CitizenApplication,
+  SubscriptionPlan,
+} from '../../../types/subscriptions';
 import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
@@ -36,17 +38,25 @@ const ValidationCitizenPage: NextPage = () => {
     elements: SubscriptionPlan[];
   };
 
-  const citizenshipConfig = getCachedConfig('citizenship') as CitizenshipConfig | null;
+  const citizenshipConfig = getCachedConfig(
+    'citizenship',
+  ) as CitizenshipConfig | null;
   const t = useTranslations();
   const { isLoading, user } = useAuth();
 
-  const { PLATFORM_NAME, DISCORD_URL } = useConfig();
+  const { PLATFORM_NAME } = useConfig();
 
   const router = useRouter();
 
-  const { balanceTotal } = useContext(WalletState);
+  const {
+    balanceTotal,
+    isWalletConnected,
+    isCorrectNetwork,
+    hasSameConnectedAccount,
+  } = useContext(WalletState);
 
-  const owns30Tokens = balanceTotal >= 30;
+  const tokensRequired = citizenshipConfig?.tokensRequired ?? 30;
+  const ownsRequiredTokens = (balanceTotal || 0) >= tokensRequired;
 
   const areSubscriptionsEnabled =
     subscriptionsConfig?.enabled &&
@@ -57,17 +67,51 @@ const ValidationCitizenPage: NextPage = () => {
 
   const [isVouched, setIsVouched] = useState(false);
   const [hasStayedForMinDuration, setHasStayedForMinDuration] = useState(false);
-
-  const [isEligible, setIsEligible] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [application, setApplication] = useState<CitizenApplication>({
+    ownsRequiredTokens,
+    why: user?.citizenship?.why || '',
+    hasSelectedTokenIntent: false,
+    intent: {
+      iWantToApply: Boolean(ownsRequiredTokens) && !isMember,
+      iWantToBuyTokens: false,
+      iWantToFinanceTokens: false,
+    },
+  });
 
   const isSpaceHostVouchRequired = citizenshipConfig?.isSpaceHostVouchRequired;
+  const minVouches = citizenshipConfig?.minVouches ?? 3;
+  const vouchCount = user?.vouched?.length || 0;
 
-  const minVouches = citizenshipConfig?.minVouches || 3;
+  const hasNoReports =
+    (user?.reportedBy?.length === 0 || !user?.reportedBy) &&
+    (user?.reports?.length === 0 || !user?.reports);
+
+  const isTokensComplete =
+    ownsRequiredTokens ||
+    (application.hasSelectedTokenIntent &&
+      (Boolean(application.intent.iWantToBuyTokens) ||
+        Boolean(application.intent.iWantToFinanceTokens)));
+
+  const tokensProgress = Math.min(1, (balanceTotal || 0) / tokensRequired);
+
+  const isEligible =
+    hasStayedForMinDuration &&
+    isVouched &&
+    ownsRequiredTokens &&
+    hasNoReports;
 
   const getCtaButtonText = () => {
     if (isMember) {
       return t('subscriptions_citizen_already_member');
+    }
+
+    if (application.intent.iWantToBuyTokens) {
+      return t('token_sale_public_sale_buy_token');
+    }
+
+    if (application.intent.iWantToFinanceTokens) {
+      return t('subscriptions_citizen_start_financed_plan');
     }
 
     if (isEligible) {
@@ -77,7 +121,23 @@ const ValidationCitizenPage: NextPage = () => {
     return t('booking_button_continue');
   };
 
+  const isCtaEnabled = () => {
+    if (isMember) {
+      return true;
+    }
+
+    if (application.intent.iWantToBuyTokens || application.intent.iWantToFinanceTokens) {
+      return application.hasSelectedTokenIntent;
+    }
+
+    return isEligible;
+  };
+
   useEffect(() => {
+    if (!user?._id) {
+      return;
+    }
+
     (async () => {
       try {
         const hasStayedRes = await api.get(
@@ -87,48 +147,70 @@ const ValidationCitizenPage: NextPage = () => {
         const hasStayedForMinDurationLocal =
           hasStayedRes?.data?.hasStayedForMinDuration;
 
-        setHasStayedForMinDuration(hasStayedForMinDurationLocal);
+        setHasStayedForMinDuration(Boolean(hasStayedForMinDurationLocal));
+
         const isVouchedRes = await api.get(
           '/subscription/citizen/check-is-vouched',
         );
 
         const isVouchedLocal = isVouchedRes?.data?.isVouched;
 
-        setIsVouched(isVouchedLocal);
-
-        console.log(
-          '=====================hasStayedForMinDurationLocal=',
-          hasStayedForMinDurationLocal,
-        );
-        console.log('user?.reportedB=', user?.reportedBy);
-        console.log('user?.reports=', user?.reports);
-
-        console.log(
-          'eligible=',
-          isVouchedLocal &&
-          hasStayedForMinDurationLocal &&
-            (user?.reportedBy?.length === 0 || !user?.reportedBy) &&
-            (user?.reports?.length === 0 || !user?.reports),
-        );
-
-        setIsEligible(
-          // isVouchedLocal &&
-            hasStayedForMinDurationLocal &&
-            (user?.reportedBy?.length === 0 || !user?.reportedBy) &&
-            (user?.reports?.length === 0 || !user?.reports),
-        );
+        setIsVouched(Boolean(isVouchedLocal));
       } catch (error) {}
     })();
-  }, [owns30Tokens, isMember]);
+  }, [ownsRequiredTokens, isMember, user?._id]);
 
   useEffect(() => {
     if (!isLoading && !user) {
       router.push(`/signup?back=${router.asPath}`);
+      return;
     }
-  }, [user, isLoading]);
+
+    if (isLoading || !router.isReady) {
+      return;
+    }
+
+    const comingFromWhy = router.query.intent === 'apply';
+
+    if (
+      user &&
+      !isMember &&
+      !user?.citizenship?.why &&
+      !user?.citizenship?.status &&
+      !comingFromWhy
+    ) {
+      router.replace('/subscriptions/citizen/why');
+    }
+  }, [user, isLoading, isMember, router]);
+
+  useEffect(() => {
+    if (ownsRequiredTokens) {
+      setApplication((prev) => ({
+        ...prev,
+        ownsRequiredTokens,
+        intent: {
+          ...prev.intent,
+          iWantToApply: !isMember,
+          iWantToFinanceTokens: false,
+          iWantToBuyTokens: false,
+        },
+      }));
+    }
+  }, [ownsRequiredTokens, isMember]);
 
   const goBack = () => {
-    router.push('/citizenship');
+    router.push('/subscriptions/citizen/why');
+  };
+
+  const updateApplication = (
+    key: keyof CitizenApplication,
+    value: CitizenApplication[keyof CitizenApplication],
+  ) => {
+    setApplication((prev) => ({
+      ...prev,
+      [key]: value,
+      ...(key === 'intent' ? { hasSelectedTokenIntent: true } : {}),
+    }));
   };
 
   if (!areSubscriptionsEnabled) {
@@ -142,23 +224,34 @@ const ValidationCitizenPage: NextPage = () => {
       router.push('/token');
       return;
     }
+
+    if (application.intent.iWantToBuyTokens) {
+      router.push(
+        `/token/before-you-begin?citizenApplication=true&tokens=${
+          tokensRequired - (balanceTotal || 0)
+        }`,
+      );
+      return;
+    }
+
+    if (application.intent.iWantToFinanceTokens) {
+      router.push('/token/finance?citizenApplication=true');
+      return;
+    }
+
     try {
       const res = await api.post('/subscription/citizen/apply', {
-        owns30Tokens,
+        owns30Tokens: ownsRequiredTokens,
       });
 
-      if (res.data.status === 'success') {
+      if (res.data.status === 'success' || isEligible) {
         router.push('/subscriptions/citizen/success?intent=apply');
         return;
       }
-
-      if (isEligible) {
-        router.push('/subscriptions/citizen/success?intent=apply');
-        return;
-      }
-    } catch (err: any) {
-      if (err?.response?.status === 400 && err?.response?.data?.error) {
-        setApiError(err.response.data.error);
+    } catch (err: unknown) {
+      const error = err as { response?: { status?: number; data?: { error?: string } } };
+      if (error?.response?.status === 400 && error?.response?.data?.error) {
+        setApiError(error.response.data.error);
       } else {
         setApiError(parseMessageFromError(err));
       }
@@ -197,61 +290,60 @@ const ValidationCitizenPage: NextPage = () => {
         </Heading>
         <ProgressBar steps={SUBSCRIPTION_CITIZEN_STEPS} />
 
-        <main className="pt-14 pb-24 space-y-6">
-          <section className="mb-10 space-y-6">
-            <Heading level={2} className="border-b pb-2 mb-6 text-xl">
+        <main className="pt-14 pb-24 flex flex-col gap-6">
+          <section className="flex flex-col gap-4">
+            <Heading level={2} className="border-b pb-2 text-xl">
               {isMember
                 ? t('subscriptions_citizen_already_member')
-                : isEligible === false
-                ? t('subscriptions_citizen_not_eligible')
-                : t('subscriptions_citizen_eligible')}
+                : t('subscriptions_citizen_quests_title')}
             </Heading>
             {isMember && (
-              <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
-                <p className="font-bold text-green-700 mb-2">
+              <div className="rounded-md border border-green-200 bg-green-50 p-4">
+                <p className="mb-2 font-bold text-green-700">
                   {t('subscriptions_citizen_already_member_title')}
                 </p>
                 <p>{t('subscriptions_citizen_already_member_description')}</p>
               </div>
             )}
+            {!isMember && (
+              <p className="text-sm text-gray-600">
+                {t('subscriptions_citizen_quests_subtitle')}
+              </p>
+            )}
           </section>
-          {!isMember && (
-            <section className="space-y-6">
-              <CitizenEligibility
-                userReports={user?.reports || []}
-                userSubscription={user?.subscription}
-                hasStayedForMinDuration={hasStayedForMinDuration}
-                isVouched={isVouched}
-                owns30Tokens={owns30Tokens}
-                minVouches={minVouches}
-                isSpaceHostVouchRequired={isSpaceHostVouchRequired}
-              />
-            </section>
-          )}
 
-          {!isVouched && DISCORD_URL && (
-            <div>
-              {t('subscriptions_citizen_introduce_yourself_in_discord')}
-              <Link
-                className="text-primary underline"
-                href={DISCORD_URL || ''}
-                target="_blank"
-              >
-                {' '}
-                {DISCORD_URL || ''}
-              </Link>
-            </div>
-          )}
-          {!hasStayedForMinDuration && (
-            <div>
-              <LinkButton variant="secondary" href="/stay" target="_blank">
-                {t('navigation_stay')}
-              </LinkButton>
-            </div>
-          )}
+          <CitizenQuests
+            hasStayedForMinDuration={hasStayedForMinDuration}
+            isTokensComplete={isTokensComplete}
+            isVouched={isVouched}
+            vouchCount={vouchCount}
+            minVouches={minVouches}
+            isSpaceHostVouchRequired={isSpaceHostVouchRequired}
+            tokensProgress={tokensProgress}
+            showEligibilityQuests={!isMember}
+            tokensCard={
+              <>
+                {isWalletConnected &&
+                  isCorrectNetwork &&
+                  hasSameConnectedAccount && (
+                    <p className="mb-3 text-sm font-bold">
+                      {t('subscriptions_citizen_you_hold', {
+                        var: balanceTotal,
+                      })}
+                    </p>
+                  )}
+                <CitizenGoodToBuy
+                  updateApplication={updateApplication}
+                  application={application}
+                  balanceTotal={balanceTotal}
+                  tokensRequired={tokensRequired}
+                />
+              </>
+            }
+          />
 
-          {isWalletEnabled && !isEligible ? (
-            <div className="my-8 space-y-6">
+          {isWalletEnabled ? (
+            <div className="my-4 flex flex-col gap-4">
               <p>
                 <strong>{t('subscriptions_citizen_connect_wallet')}</strong>
               </p>
@@ -259,12 +351,12 @@ const ValidationCitizenPage: NextPage = () => {
             </div>
           ) : null}
 
-          {isEligible && (
-            <div className="py-4">
-              {apiError && <ErrorMessage error={apiError} />}
-              <Button onClick={handleNext}>{getCtaButtonText()}</Button>
-            </div>
-          )}
+          <div className="py-4">
+            {apiError && <ErrorMessage error={apiError} />}
+            <Button isEnabled={isCtaEnabled()} onClick={handleNext}>
+              {getCtaButtonText()}
+            </Button>
+          </div>
         </main>
       </div>
     </>

@@ -91,7 +91,13 @@ const CitizenQuests = ({
   const { DISCORD_URL } = useConfig();
 
   const isVouchLocked = !hasStayedForMinDuration || !isTokensComplete;
-  const hasEnoughVouches = isVouched || vouchCount >= minVouches;
+  const hasEnoughVouches =
+    isVouched || (minVouches <= 0 ? true : vouchCount >= minVouches);
+  const vouchProgress = isVouched
+    ? 1
+    : minVouches <= 0
+    ? 1
+    : Math.min(1, vouchCount / minVouches);
 
   return (
     <div
@@ -138,7 +144,7 @@ const CitizenQuests = ({
           title={t('subscriptions_citizen_quest_vouch_title')}
           tag={t('subscriptions_citizen_quest_vouch_tag')}
           isComplete={isVouched}
-          progress={isVouched ? 1 : Math.min(1, vouchCount / minVouches)}
+          progress={vouchProgress}
           lockedMessage={
             isVouchLocked ? t('subscriptions_citizen_quest_locked') : null
           }
@@ -183,6 +189,7 @@ const CitizenQuests = ({
                   className="text-primary underline"
                   href={DISCORD_URL}
                   target="_blank"
+                  rel="noopener noreferrer"
                 >
                   {DISCORD_URL}
                 </Link>

@@ -159,6 +159,7 @@ export type CitizenshipConfig = {
   tokenPriceModifierPercent: number;
   minVouches: number;
   minVouchingStayDuration: number;
+  tokensRequired: number;
 };
 
 export type AffiliateConfig = {

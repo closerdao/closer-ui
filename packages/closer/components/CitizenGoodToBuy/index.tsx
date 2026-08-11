@@ -1,36 +1,47 @@
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
+import {
+  CitizenApplication,
+  CitizenTokenIntent,
+} from '../../types/subscriptions';
 
 interface Props {
-  updateApplication: (key: string, value: any) => void;
-  application: any;
+  updateApplication: (
+    key: keyof CitizenApplication,
+    value: CitizenApplication[keyof CitizenApplication],
+  ) => void;
+  application: CitizenApplication;
   buyMore?: boolean;
   balanceTotal?: number;
+  tokensRequired: number;
 }
-
-const TOKENS_REQUIRED = 30;
 
 const CitizenGoodToBuy = ({
   updateApplication,
   application,
   buyMore,
   balanceTotal,
+  tokensRequired,
 }: Props) => {
   const t = useTranslations();
   const { user } = useAuth();
   const isMember = user?.roles?.includes('member');
 
   const tokensToBuy =
-    balanceTotal && balanceTotal < TOKENS_REQUIRED
-      ? TOKENS_REQUIRED - balanceTotal
-      : TOKENS_REQUIRED;
+    balanceTotal && balanceTotal < tokensRequired
+      ? tokensRequired - balanceTotal
+      : tokensRequired;
 
-  const options = [
+  const options: {
+    id: keyof CitizenTokenIntent;
+    label: string;
+    intent: CitizenTokenIntent;
+  }[] = [
     ...(buyMore && !isMember
       ? [
           {
-            id: 'iWantToApply',
+            id: 'iWantToApply' as const,
             label: t('subscriptions_citizen_i_own_tokens'),
             intent: {
               iWantToApply: true,
@@ -65,16 +76,14 @@ const CitizenGoodToBuy = ({
   ];
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-3">
       <p className="text-sm text-gray-600">
         {t('subscriptions_citizen_good_how')}
       </p>
 
-      <div className="space-y-2">
+      <div className="flex flex-col gap-2">
         {options.map((option) => {
-          const isSelected = Boolean(
-            application?.intent?.[option.id as keyof typeof application.intent],
-          );
+          const isSelected = Boolean(application?.intent?.[option.id]);
 
           return (
             <label
