@@ -1,20 +1,27 @@
-import api, { formatSearch } from './api';
+import axios from 'axios';
+
+import {
+  AMBASSADOR_ROLE,
+  PEOPLE_COUNT_MAX,
+  PEOPLE_COUNT_MIN,
+  ROOMS_COUNT_MIN,
+  VILLAGE_COLLECTION,
+  VILLAGE_REVIEWER_ROLES,
+} from '../constants/village.constants';
+import { User } from '../contexts/auth/types';
 import {
   CreateVillageInput,
   LatLng,
   LngLat,
   Village,
   VillageCriteria,
+  VillageEvent,
   VillageMapItem,
   VillageSearchParams,
   VillageSearchResponse,
+  VillageSocialNetwork,
 } from '../types/village';
-import {
-  PEOPLE_COUNT_MAX,
-  PEOPLE_COUNT_MIN,
-  ROOMS_COUNT_MIN,
-  VILLAGE_COLLECTION,
-} from '../constants/village.constants';
+import api, { formatSearch } from './api';
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value);
@@ -207,15 +214,124 @@ export async function requestVillageDeploy(
   } as Partial<Village>);
 }
 
-export async function markVillageSubscribed(id: string): Promise<Village> {
-  return updateVillage(id, {
-    onboardingStatus: 'subscribed',
-    platformSubscription: {
-      status: 'trialing',
-      planPriceEur: 49,
-      trialStartedAt: new Date().toISOString(),
-    },
-  } as Partial<Village>);
+/**
+ * Sends the owner their invitation. Deliberately separate from the follow-up
+ * `updateVillage` that records the address as the project manager contact: the
+ * invite is the side effect, the PATCH is the bookkeeping, and a failed invite
+ * must not leave a contact behind for an email nobody received.
+ */
+export async function inviteVillageOwner(
+  id: string,
+  email: string,
+): Promise<void> {
+  await api.post(`/villages/${id}/invite-owner`, { email });
+}
+
+/**
+ * A village that is live runs its own Closer instance, so its events live on
+ * *its* API rather than ours.
+ *
+ * Deliberately not routed through `api`: that client is pinned to our own
+ * base URL and attaches the signed-in user's access token to every request,
+ * which must never travel to a host a village operator controls.
+ */
+export async function fetchVillageEvents(
+  apiUrl?: string,
+  limit = 3,
+): Promise<VillageEvent[]> {
+  const base = (apiUrl || '').trim().replace(/\/+$/, '');
+  if (!/^https?:\/\//i.test(base)) return [];
+
+  const where = formatSearch({ end: { $gt: new Date().toISOString() } });
+  // Built by hand rather than through axios `params`: `formatSearch` already
+  // percent-encodes, and the serializer would encode it a second time.
+  const query = `?where=${where}&sort_by=start&limit=${limit}`;
+
+  // The collection route is `/event` on every instance we know of; `/events` is
+  // only a fallback in case a village fronts its API with the plural.
+  for (const path of ['/event', '/events']) {
+    try {
+      const { data } = await axios.get(`${base}${path}${query}`, {
+        timeout: 8000,
+      });
+      const results = data?.results || data;
+      if (Array.isArray(results)) return results as VillageEvent[];
+    } catch {
+      // Try the next spelling; an unreachable village just shows no events.
+    }
+  }
+  return [];
+}
+
+async function fetchUsers(where: Record<string, unknown>): Promise<User[]> {
+  try {
+    const { data } = await api.get(`/user?where=${formatSearch(where)}`, {
+      params: { limit: 200 },
+    });
+    const results = data?.results || data;
+    return Array.isArray(results) ? (results as User[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Candidates for the coordinator picker. */
+export async function fetchAmbassadors(): Promise<User[]> {
+  return fetchUsers({ roles: { $in: [AMBASSADOR_ROLE] } });
+}
+
+/** Resolves `village.managedBy` ids into users so they can be named in the UI. */
+export async function fetchUsersByIds(ids: string[]): Promise<User[]> {
+  if (ids.length === 0) return [];
+  return fetchUsers({ _id: { $in: ids } });
+}
+
+/**
+ * Who may set the verification badge and assign coordinators: platform admins,
+ * plus the ambassadors explicitly assigned to this village. Deliberately
+ * narrower than `canManageVillage`, which also lets the original creator in.
+ */
+export function canCoordinateVillage(
+  village: Village | null | undefined,
+  userId?: string,
+  isAdmin?: boolean,
+): boolean {
+  if (isAdmin) return true;
+  if (!village || !userId) return false;
+  return Boolean(village.managedBy?.includes(userId));
+}
+
+/**
+ * Who may see the internal parts of the village form: the fit checklist that
+ * decides whether a village is pre-assessed, and the project manager card.
+ * Village owners edit their own listing without either.
+ */
+export function canReviewVillage(roles?: string[]): boolean {
+  return Boolean(roles?.some((role) => VILLAGE_REVIEWER_ROLES.includes(role)));
+}
+
+const SOCIAL_BASE_URLS: Record<VillageSocialNetwork, string> = {
+  instagram: 'https://instagram.com/',
+  twitter: 'https://x.com/',
+  facebook: 'https://facebook.com/',
+};
+
+/**
+ * The form takes whatever the village types — `@handle`, `instagram.com/handle`
+ * or a full URL — so the handle is normalised here rather than at input time.
+ */
+export function villageSocialUrl(
+  network: VillageSocialNetwork,
+  value?: string,
+): string | null {
+  const handle = value?.trim();
+  if (!handle) return null;
+  if (/^https?:\/\//i.test(handle)) return handle;
+  const cleaned = handle
+    .replace(/^@/, '')
+    .replace(/^(www\.)?(instagram|twitter|x|facebook)\.com\//i, '')
+    .replace(/^\/+/, '');
+  return cleaned ? `${SOCIAL_BASE_URLS[network]}${cleaned}` : null;
 }
 
 export function canManageVillage(
@@ -227,18 +343,20 @@ export function canManageVillage(
   return Boolean(village.managedBy?.includes(userId));
 }
 
+/**
+ * The subscription is no longer started from this UI, so deploy is gated on the
+ * onboarding stage alone — anything that has not been handed to the deploy
+ * queue yet can still ask for one.
+ */
 export function canRequestDeploy(
   village: Village | null | undefined,
   userId?: string,
 ): boolean {
   if (!canManageVillage(village, userId) || !village) return false;
-  const sub = village.platformSubscription?.status;
-  const subscribed = sub === 'trialing' || sub === 'active';
   const status = village.onboardingStatus;
   return (
-    subscribed &&
-    (status === 'subscribed' ||
-      status === 'pre_assessed' ||
-      status === 'map_only')
+    status === 'subscribed' ||
+    status === 'pre_assessed' ||
+    status === 'map_only'
   );
 }

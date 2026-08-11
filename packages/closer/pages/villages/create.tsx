@@ -16,7 +16,7 @@ import Page401 from '../401';
 import { AMBASSADOR_ROLE } from '../../constants/village.constants';
 import { useAuth } from '../../contexts/auth';
 import { CreateVillageInput } from '../../types/village';
-import { createVillage } from '../../utils/village.utils';
+import { canReviewVillage, createVillage } from '../../utils/village.utils';
 
 const CreateVillagePage = () => {
   const t = useTranslations();
@@ -93,6 +93,7 @@ const CreateVillagePage = () => {
         <VillageForm
           submitLabel={t('villages_create_submit')}
           onSubmit={handleSubmit}
+          isReviewer={canReviewVillage(user?.roles)}
         />
       </PageShell>
     </>

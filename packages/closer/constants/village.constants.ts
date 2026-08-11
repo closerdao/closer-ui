@@ -44,3 +44,10 @@ export const MONTHLY_VOLUME_SOFT_MIN = 5000;
 export const MONTHLY_VOLUME_SOFT_MAX = 20000;
 
 export const AMBASSADOR_ROLE = 'ambassador';
+
+/**
+ * Roles allowed to see the internal parts of the village form — the fit
+ * checklist and the project manager card. Village owners edit their listing
+ * without either.
+ */
+export const VILLAGE_REVIEWER_ROLES = ['team', 'admin', AMBASSADOR_ROLE];

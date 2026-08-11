@@ -15,6 +15,7 @@ import { useAuth } from '../../../contexts/auth';
 import { CreateVillageInput, Village } from '../../../types/village';
 import {
   canManageVillage,
+  canReviewVillage,
   getVillage,
   updateVillage,
 } from '../../../utils/village.utils';
@@ -58,7 +59,7 @@ const EditVillagePage = () => {
     return <PageNotFound error={t('villages_not_found')} />;
   }
 
-  const isAdmin = user?.roles?.includes('admin');
+  const isAdmin = Boolean(user?.roles?.includes('admin'));
   if (!canManageVillage(village, user?._id) && !isAdmin) {
     return <Page401 />;
   }
@@ -94,6 +95,8 @@ const EditVillagePage = () => {
           initial={village}
           submitLabel={t('villages_edit_submit')}
           onSubmit={handleSubmit}
+          isAdmin={isAdmin}
+          isReviewer={canReviewVillage(user?.roles)}
         />
       </PageShell>
     </>

@@ -38,14 +38,12 @@ export type VillageCapacity = {
   events?: number;
 };
 
+export type VillageSocialNetwork = 'instagram' | 'twitter' | 'facebook';
+
 export type VillageContact = {
   email?: string;
   phone?: string;
-  social?: {
-    instagram?: string;
-    twitter?: string;
-    facebook?: string;
-  };
+  social?: Partial<Record<VillageSocialNetwork, string>>;
 };
 
 export type VillageManagerInfo = {
@@ -95,6 +93,7 @@ export type Village = {
   country: string;
   website?: string;
   appUrl?: string;
+  apiUrl?: string;
   /**
    * GeoJSON order — `[lng, lat]`. This is what the API stores and returns.
    * Convert with `toLeafletCoords` before handing it to a map.
@@ -127,6 +126,24 @@ export type Village = {
     photo?: string;
   };
   distance?: number;
+};
+
+/**
+ * An event as it comes back from *another* village's Closer API. Deliberately
+ * looser than the local `Event` type: we only rely on the handful of fields we
+ * render, and a village may be running an older build of the platform.
+ */
+export type VillageEvent = {
+  _id: string;
+  name: string;
+  slug?: string;
+  photo?: string;
+  visual?: string;
+  start?: string;
+  end?: string;
+  location?: string;
+  address?: string;
+  virtual?: boolean;
 };
 
 export type VillageMapItem = {
@@ -173,6 +190,8 @@ export type CreateVillageInput = {
   tags?: string[];
   country: string;
   website?: string;
+  appUrl?: string;
+  apiUrl?: string;
   /**
    * Leaflet order — `[lat, lng]`. Form state is map-shaped; `createVillage` and
    * `updateVillage` convert to GeoJSON at the API boundary.

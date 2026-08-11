@@ -8,12 +8,14 @@ import {
   PEOPLE_COUNT_MAX,
   PEOPLE_COUNT_MIN,
   ROOMS_COUNT_MIN,
+  VILLAGE_ONBOARDING_STATUSES,
 } from '../../constants/village.constants';
 import {
   CreateVillageInput,
   LatLng,
   Village,
   VillageCriteria,
+  VillageOnboardingStatus,
 } from '../../types/village';
 import { meetsHardCriteria, toLeafletCoords } from '../../utils/village.utils';
 import CommunityMap from '../CommunityMap';
@@ -24,6 +26,13 @@ type VillageFormProps = {
   initial?: Partial<Village>;
   submitLabel: string;
   onSubmit: (payload: CreateVillageInput) => Promise<void>;
+  /** Unlocks the platform fields — onboarding stage and the deployed URLs. */
+  isAdmin?: boolean;
+  /**
+   * Unlocks the internal sections — the fit checklist and the project manager
+   * card. Team, admins and ambassadors only.
+   */
+  isReviewer?: boolean;
 };
 
 const emptyCriteria: VillageCriteria = {
@@ -106,7 +115,13 @@ const CriteriaToggle: FC<{
   </button>
 );
 
-const VillageForm = ({ initial, submitLabel, onSubmit }: VillageFormProps) => {
+const VillageForm = ({
+  initial,
+  submitLabel,
+  onSubmit,
+  isAdmin = false,
+  isReviewer = false,
+}: VillageFormProps) => {
   const t = useTranslations();
   const [name, setName] = useState(initial?.name || '');
   const [description, setDescription] = useState(initial?.description || '');
@@ -116,15 +131,30 @@ const VillageForm = ({ initial, submitLabel, onSubmit }: VillageFormProps) => {
   // `initial` is an API village, so its coords are GeoJSON — convert once here
   // and keep every other piece of form state in Leaflet order.
   const initialLatLng = toLeafletCoords(initial?.coords);
-  const [lat, setLat] = useState(
-    initialLatLng ? String(initialLatLng[0]) : '',
+  const [lat, setLat] = useState(initialLatLng ? String(initialLatLng[0]) : '');
+  const [lng, setLng] = useState(initialLatLng ? String(initialLatLng[1]) : '');
+  const [contactEmail, setContactEmail] = useState(
+    initial?.contact?.email || '',
   );
-  const [lng, setLng] = useState(
-    initialLatLng ? String(initialLatLng[1]) : '',
+  const [contactPhone, setContactPhone] = useState(
+    initial?.contact?.phone || '',
+  );
+  const [instagram, setInstagram] = useState(
+    initial?.contact?.social?.instagram || '',
+  );
+  const [twitter, setTwitter] = useState(
+    initial?.contact?.social?.twitter || '',
+  );
+  const [facebook, setFacebook] = useState(
+    initial?.contact?.social?.facebook || '',
   );
   const [pmName, setPmName] = useState(initial?.projectManager?.name || '');
   const [pmEmail, setPmEmail] = useState(initial?.projectManager?.email || '');
   const [pmRole, setPmRole] = useState(initial?.projectManager?.role || '');
+  const [appUrl, setAppUrl] = useState(initial?.appUrl || '');
+  const [apiUrl, setApiUrl] = useState(initial?.apiUrl || '');
+  const [onboardingStatus, setOnboardingStatus] =
+    useState<VillageOnboardingStatus>(initial?.onboardingStatus || 'map_only');
   const [criteria, setCriteria] = useState<VillageCriteria>({
     ...emptyCriteria,
     ...(initial?.criteria || {}),
@@ -154,6 +184,17 @@ const VillageForm = ({ initial, submitLabel, onSubmit }: VillageFormProps) => {
     Boolean(criteria[key]),
   ).length;
   const isFit = meetsHardCriteria(criteria);
+
+  // Sections come and go with the viewer's role, so the numbers on the badges
+  // are derived from the list that is actually rendered rather than hardcoded.
+  const sections = [
+    'basics',
+    'location',
+    'contact',
+    ...(isReviewer ? ['manager', 'fit'] : []),
+    ...(isAdmin ? ['platform'] : []),
+  ];
+  const step = (section: string) => sections.indexOf(section) + 1;
 
   const toggleCriteria = (key: keyof VillageCriteria) => {
     setCriteria((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -190,6 +231,20 @@ const VillageForm = ({ initial, submitLabel, onSubmit }: VillageFormProps) => {
 
     setInvalidFields([]);
 
+    // The fit checklist only ever decides between the two pre-deploy stages, so
+    // it must not walk a village that is already subscribed or live back to the
+    // start — and once an admin sets the stage by hand, their choice wins.
+    // Editors who never saw the checklist leave the stage exactly as it was.
+    const derived = isFit ? 'pre_assessed' : 'map_only';
+    const current = initial?.onboardingStatus;
+    const nextOnboardingStatus: VillageOnboardingStatus = isAdmin
+      ? onboardingStatus
+      : !isReviewer
+      ? current || 'map_only'
+      : !current || current === 'map_only' || current === 'pre_assessed'
+      ? derived
+      : current;
+
     const payload: CreateVillageInput = {
       name: name.trim(),
       description: description.trim(),
@@ -201,13 +256,32 @@ const VillageForm = ({ initial, submitLabel, onSubmit }: VillageFormProps) => {
         .filter(Boolean),
       coords: pickedCoords as LatLng,
       status: initial?.status || 'planning',
-      criteria,
-      projectManager: {
-        name: pmName.trim() || undefined,
-        email: pmEmail.trim() || undefined,
-        role: pmRole.trim() || undefined,
+      contact: {
+        email: contactEmail.trim() || undefined,
+        phone: contactPhone.trim() || undefined,
+        social: {
+          instagram: instagram.trim() || undefined,
+          twitter: twitter.trim() || undefined,
+          facebook: facebook.trim() || undefined,
+        },
       },
-      onboardingStatus: isFit ? 'pre_assessed' : 'map_only',
+      // The checklist and the manager card are internal: an owner never sees
+      // them, so their untouched form state must not be written back.
+      ...(isReviewer
+        ? {
+            criteria,
+            projectManager: {
+              name: pmName.trim() || undefined,
+              email: pmEmail.trim() || undefined,
+              role: pmRole.trim() || undefined,
+            },
+          }
+        : {}),
+      onboardingStatus: nextOnboardingStatus,
+      // Omitted entirely for non-admins — they never see these fields, and
+      // sending empty form state would blank whatever an admin had set. Sent as
+      // a plain trimmed string for admins so emptying a field actually clears it.
+      ...(isAdmin ? { appUrl: appUrl.trim(), apiUrl: apiUrl.trim() } : {}),
     };
 
     try {
@@ -230,7 +304,7 @@ const VillageForm = ({ initial, submitLabel, onSubmit }: VillageFormProps) => {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-8">
       <Section
-        step={1}
+        step={step('basics')}
         title={t('villages_form_basics_title')}
         description={t('villages_form_basics_intro')}
       >
@@ -297,7 +371,7 @@ const VillageForm = ({ initial, submitLabel, onSubmit }: VillageFormProps) => {
       </Section>
 
       <Section
-        step={2}
+        step={step('location')}
         title={t('villages_form_location_title')}
         description={t('villages_form_location_intro')}
       >
@@ -352,170 +426,303 @@ const VillageForm = ({ initial, submitLabel, onSubmit }: VillageFormProps) => {
       </Section>
 
       <Section
-        step={3}
-        title={t('villages_form_contact_title')}
-        description={t('villages_form_contact_intro')}
+        step={step('contact')}
+        title={t('villages_form_public_contact_title')}
+        description={t('villages_form_public_contact_intro')}
       >
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          <label className="flex flex-col gap-2">
-            <span className={labelClass}>{t('villages_form_pm_name')}</span>
-            <input
-              className={inputClass}
-              value={pmName}
-              onChange={(event) => setPmName(event.target.value)}
-            />
-          </label>
-          <label className="flex flex-col gap-2">
-            <span className={labelClass}>{t('villages_form_pm_email')}</span>
-            <input
-              className={inputClass}
-              type="email"
-              value={pmEmail}
-              onChange={(event) => setPmEmail(event.target.value)}
-              placeholder="name@village.org"
-            />
-          </label>
-          <label className="flex flex-col gap-2">
-            <span className={labelClass}>{t('villages_form_pm_role')}</span>
-            <input
-              className={inputClass}
-              value={pmRole}
-              onChange={(event) => setPmRole(event.target.value)}
-              placeholder={t('villages_form_pm_role_placeholder')}
-            />
-          </label>
-        </div>
-      </Section>
-
-      <Section
-        step={4}
-        title={t('villages_form_fit_title')}
-        description={t('villages_form_fit_intro')}
-      >
-        {/* Live read-out of where the village stands against the hard criteria. */}
-        <div
-          className={`rounded-[18px] border px-5 py-4 flex flex-wrap items-center gap-x-5 gap-y-2 ${
-            isFit
-              ? 'border-[#C2F0DA] bg-[#E2FAEE]'
-              : 'border-[#DCE7E1] bg-[#F7F9F8]'
-          }`}
-        >
-          <div className="flex-1 min-w-[200px]">
-            <p
-              className={`text-[15px] font-semibold ${
-                isFit ? 'text-[#0B7A4C]' : 'text-[#10201A]'
-              }`}
-            >
-              {isFit
-                ? t('villages_form_fit_pass')
-                : t('villages_form_fit_progress', {
-                    met: hardCriteriaMet,
-                    total: HARD_CRITERIA.length,
-                  })}
-            </p>
-            <p className="text-[13px] text-[#5C6E64] mt-1">
-              {isFit
-                ? t('villages_form_fit_pass_hint')
-                : t('villages_form_fit_progress_hint')}
-            </p>
-          </div>
-          <div className="flex gap-1.5">
-            {HARD_CRITERIA.map((key) => (
-              <span
-                key={key}
-                className={`w-8 h-1.5 rounded-full ${
-                  criteria[key] ? 'bg-[#3EE08F]' : 'bg-[#DCE7E1]'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <Eyebrow className="mb-3">{t('villages_form_hard_criteria')}</Eyebrow>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {HARD_CRITERIA.map((key) => (
-              <CriteriaToggle
-                key={key}
-                label={t(`villages_criteria_${key}`)}
-                checked={Boolean(criteria[key])}
-                onToggle={() => toggleCriteria(key)}
-              />
-            ))}
-          </div>
-        </div>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <label className="flex flex-col gap-2">
             <span className={labelClass}>
-              {t('villages_form_people_count')}
+              {t('villages_form_contact_email')}
             </span>
             <input
               className={inputClass}
-              type="number"
-              value={
-                criteria.peopleCount !== undefined
-                  ? String(criteria.peopleCount)
-                  : ''
-              }
-              onChange={(event) =>
-                setNumericCriteria('peopleCount', event.target.value)
-              }
-              placeholder={`${PEOPLE_COUNT_MIN}–${PEOPLE_COUNT_MAX}`}
+              type="email"
+              value={contactEmail}
+              onChange={(event) => setContactEmail(event.target.value)}
+              placeholder="hello@village.org"
             />
+            <span className="text-[12px] text-[#9BAAA2]">
+              {t('villages_form_contact_email_hint')}
+            </span>
           </label>
           <label className="flex flex-col gap-2">
-            <span className={labelClass}>{t('villages_form_rooms_count')}</span>
+            <span className={labelClass}>
+              {t('villages_form_contact_phone')}
+            </span>
             <input
               className={inputClass}
-              type="number"
-              value={
-                criteria.roomsCount !== undefined
-                  ? String(criteria.roomsCount)
-                  : ''
-              }
-              onChange={(event) =>
-                setNumericCriteria('roomsCount', event.target.value)
-              }
-              placeholder={`${ROOMS_COUNT_MIN}+`}
+              type="tel"
+              value={contactPhone}
+              onChange={(event) => setContactPhone(event.target.value)}
+              placeholder="+351 900 000 000"
             />
           </label>
         </div>
 
-        <div className="pt-2 border-t border-[#EEF3F0]">
-          <Eyebrow className="mb-3 mt-4">
-            {t('villages_form_soft_signals')}
-          </Eyebrow>
-          <label className="flex flex-col gap-2 mb-4 max-w-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <label className="flex flex-col gap-2">
             <span className={labelClass}>
-              {t('villages_form_monthly_volume')}
+              {t('villages_form_contact_instagram')}
             </span>
             <input
               className={inputClass}
-              type="number"
-              value={
-                criteria.monthlyVolumeEur !== undefined
-                  ? String(criteria.monthlyVolumeEur)
-                  : ''
-              }
-              onChange={(event) =>
-                setNumericCriteria('monthlyVolumeEur', event.target.value)
-              }
-              placeholder={`${MONTHLY_VOLUME_SOFT_MIN}–${MONTHLY_VOLUME_SOFT_MAX}`}
+              value={instagram}
+              onChange={(event) => setInstagram(event.target.value)}
+              placeholder="@village"
             />
           </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {SOFT_CRITERIA.map((key) => (
-              <CriteriaToggle
-                key={key}
-                label={t(`villages_criteria_${key}`)}
-                checked={Boolean(criteria[key])}
-                onToggle={() => toggleCriteria(key)}
-              />
-            ))}
-          </div>
+          <label className="flex flex-col gap-2">
+            <span className={labelClass}>
+              {t('villages_form_contact_twitter')}
+            </span>
+            <input
+              className={inputClass}
+              value={twitter}
+              onChange={(event) => setTwitter(event.target.value)}
+              placeholder="@village"
+            />
+          </label>
+          <label className="flex flex-col gap-2">
+            <span className={labelClass}>
+              {t('villages_form_contact_facebook')}
+            </span>
+            <input
+              className={inputClass}
+              value={facebook}
+              onChange={(event) => setFacebook(event.target.value)}
+              placeholder="facebook.com/village"
+            />
+          </label>
         </div>
       </Section>
+
+      {isReviewer ? (
+        <Section
+          step={step('manager')}
+          title={t('villages_form_contact_title')}
+          description={t('villages_form_contact_intro')}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <label className="flex flex-col gap-2">
+              <span className={labelClass}>{t('villages_form_pm_name')}</span>
+              <input
+                className={inputClass}
+                value={pmName}
+                onChange={(event) => setPmName(event.target.value)}
+              />
+            </label>
+            <label className="flex flex-col gap-2">
+              <span className={labelClass}>{t('villages_form_pm_email')}</span>
+              <input
+                className={inputClass}
+                type="email"
+                value={pmEmail}
+                onChange={(event) => setPmEmail(event.target.value)}
+                placeholder="name@village.org"
+              />
+            </label>
+            <label className="flex flex-col gap-2">
+              <span className={labelClass}>{t('villages_form_pm_role')}</span>
+              <input
+                className={inputClass}
+                value={pmRole}
+                onChange={(event) => setPmRole(event.target.value)}
+                placeholder={t('villages_form_pm_role_placeholder')}
+              />
+            </label>
+          </div>
+        </Section>
+      ) : null}
+
+      {isReviewer ? (
+        <Section
+          step={step('fit')}
+          title={t('villages_form_fit_title')}
+          description={t('villages_form_fit_intro')}
+        >
+          {/* Live read-out of where the village stands against the hard criteria. */}
+          <div
+            className={`rounded-[18px] border px-5 py-4 flex flex-wrap items-center gap-x-5 gap-y-2 ${
+              isFit
+                ? 'border-[#C2F0DA] bg-[#E2FAEE]'
+                : 'border-[#DCE7E1] bg-[#F7F9F8]'
+            }`}
+          >
+            <div className="flex-1 min-w-[200px]">
+              <p
+                className={`text-[15px] font-semibold ${
+                  isFit ? 'text-[#0B7A4C]' : 'text-[#10201A]'
+                }`}
+              >
+                {isFit
+                  ? t('villages_form_fit_pass')
+                  : t('villages_form_fit_progress', {
+                      met: hardCriteriaMet,
+                      total: HARD_CRITERIA.length,
+                    })}
+              </p>
+              <p className="text-[13px] text-[#5C6E64] mt-1">
+                {isFit
+                  ? t('villages_form_fit_pass_hint')
+                  : t('villages_form_fit_progress_hint')}
+              </p>
+            </div>
+            <div className="flex gap-1.5">
+              {HARD_CRITERIA.map((key) => (
+                <span
+                  key={key}
+                  className={`w-8 h-1.5 rounded-full ${
+                    criteria[key] ? 'bg-[#3EE08F]' : 'bg-[#DCE7E1]'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Eyebrow className="mb-3">
+              {t('villages_form_hard_criteria')}
+            </Eyebrow>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {HARD_CRITERIA.map((key) => (
+                <CriteriaToggle
+                  key={key}
+                  label={t(`villages_criteria_${key}`)}
+                  checked={Boolean(criteria[key])}
+                  onToggle={() => toggleCriteria(key)}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <label className="flex flex-col gap-2">
+              <span className={labelClass}>
+                {t('villages_form_people_count')}
+              </span>
+              <input
+                className={inputClass}
+                type="number"
+                value={
+                  criteria.peopleCount !== undefined
+                    ? String(criteria.peopleCount)
+                    : ''
+                }
+                onChange={(event) =>
+                  setNumericCriteria('peopleCount', event.target.value)
+                }
+                placeholder={`${PEOPLE_COUNT_MIN}–${PEOPLE_COUNT_MAX}`}
+              />
+            </label>
+            <label className="flex flex-col gap-2">
+              <span className={labelClass}>
+                {t('villages_form_rooms_count')}
+              </span>
+              <input
+                className={inputClass}
+                type="number"
+                value={
+                  criteria.roomsCount !== undefined
+                    ? String(criteria.roomsCount)
+                    : ''
+                }
+                onChange={(event) =>
+                  setNumericCriteria('roomsCount', event.target.value)
+                }
+                placeholder={`${ROOMS_COUNT_MIN}+`}
+              />
+            </label>
+          </div>
+
+          <div className="pt-2 border-t border-[#EEF3F0]">
+            <Eyebrow className="mb-3 mt-4">
+              {t('villages_form_soft_signals')}
+            </Eyebrow>
+            <label className="flex flex-col gap-2 mb-4 max-w-sm">
+              <span className={labelClass}>
+                {t('villages_form_monthly_volume')}
+              </span>
+              <input
+                className={inputClass}
+                type="number"
+                value={
+                  criteria.monthlyVolumeEur !== undefined
+                    ? String(criteria.monthlyVolumeEur)
+                    : ''
+                }
+                onChange={(event) =>
+                  setNumericCriteria('monthlyVolumeEur', event.target.value)
+                }
+                placeholder={`${MONTHLY_VOLUME_SOFT_MIN}–${MONTHLY_VOLUME_SOFT_MAX}`}
+              />
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {SOFT_CRITERIA.map((key) => (
+                <CriteriaToggle
+                  key={key}
+                  label={t(`villages_criteria_${key}`)}
+                  checked={Boolean(criteria[key])}
+                  onToggle={() => toggleCriteria(key)}
+                />
+              ))}
+            </div>
+          </div>
+        </Section>
+      ) : null}
+
+      {isAdmin ? (
+        <Section
+          step={step('platform')}
+          title={t('villages_form_platform_title')}
+          description={t('villages_form_platform_intro')}
+        >
+          <label className="flex flex-col gap-2 max-w-sm">
+            <span className={labelClass}>
+              {t('villages_form_onboarding_status')}
+            </span>
+            <select
+              className={inputClass}
+              value={onboardingStatus}
+              onChange={(event) =>
+                setOnboardingStatus(
+                  event.target.value as VillageOnboardingStatus,
+                )
+              }
+            >
+              {VILLAGE_ONBOARDING_STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {t(`village_status_${status}`)}
+                </option>
+              ))}
+            </select>
+            <span className="text-[12px] text-[#9BAAA2]">
+              {t('villages_form_onboarding_status_hint')}
+            </span>
+          </label>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <label className="flex flex-col gap-2">
+              <span className={labelClass}>{t('villages_form_app_url')}</span>
+              <input
+                className={inputClass}
+                value={appUrl}
+                onChange={(event) => setAppUrl(event.target.value)}
+                placeholder="https://village.closer.earth"
+              />
+            </label>
+            <label className="flex flex-col gap-2">
+              <span className={labelClass}>{t('villages_form_api_url')}</span>
+              <input
+                className={inputClass}
+                value={apiUrl}
+                onChange={(event) => setApiUrl(event.target.value)}
+                placeholder="https://api.closer.earth"
+              />
+            </label>
+          </div>
+        </Section>
+      ) : null}
 
       {error ? <ErrorMessage error={error} /> : null}
 
