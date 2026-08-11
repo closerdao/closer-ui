@@ -28,6 +28,9 @@ const platformLinks: FooterLink[] = [
 // Philosophy sub-pages are reachable from /philosophy itself — one link is enough here.
 const exploreLinks: FooterLink[] = [
   { label: 'Communities', href: '/#communities' },
+  { label: 'Map', href: '/map' },
+  { label: 'Ambassadors', href: '/ambassadors' },
+  { label: 'Villages', href: '/villages' },
   { label: 'Philosophy', href: '/philosophy' },
   { label: 'Blog', href: '/blog' },
   { label: 'Resources', href: '/resources' },

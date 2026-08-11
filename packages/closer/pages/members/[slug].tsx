@@ -7,6 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import EmailDisplay from '../../components/display/emailDisplay';
 import WalletDisplay from '../../components/display/walletDisplay';
+import AmbassadorBadge from '../../components/AmbassadorBadge';
 import CitizenSubscriptionProgress from '../../components/CitizenSubscriptionProgress';
 import EventsList from '../../components/EventsList';
 import FinancedTokenProgress from '../../components/FinancedTokenProgress';
@@ -362,13 +363,19 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
 
                 {/* Profile Info */}
                 <div className="flex flex-col flex-grow md:ml-4">
-                  <h3 className="font-medium text-4xl md:text-5xl text-center md:text-left">
-                    {member.screenname}
-                    <SubscriptionBadge
-                      subscription={member?.subscription}
-                      size="large"
-                    />
-                  </h3>
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                    <h3 className="font-medium text-4xl md:text-5xl text-center md:text-left">
+                      {member.screenname}
+                      <SubscriptionBadge
+                        subscription={member?.subscription}
+                        size="large"
+                      />
+                    </h3>
+                    {(member.affiliate ||
+                      member.roles?.includes('ambassador')) && (
+                      <AmbassadorBadge size="md" />
+                    )}
+                  </div>
 
                   {/* Roles Tags */}
                   <div className="mt-3 mb-4">
