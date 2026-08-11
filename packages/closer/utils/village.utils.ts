@@ -1,6 +1,8 @@
 import api, { formatSearch } from './api';
 import {
   CreateVillageInput,
+  LatLng,
+  LngLat,
   Village,
   VillageCriteria,
   VillageMapItem,
@@ -14,37 +16,49 @@ import {
   VILLAGE_COLLECTION,
 } from '../constants/village.constants';
 
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value);
+
+const isValidLatLng = (lat: number, lng: number) =>
+  Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
+
+/**
+ * API (GeoJSON `[lng, lat]`) -> Leaflet (`[lat, lng]`).
+ *
+ * This used to guess the order by magnitude, which is undecidable whenever both
+ * values are <= 90 — i.e. all of Europe, Africa, the Middle East and India. Per
+ * Auset (lng 32.9, lat 24.0) read back as lat 32.9 / lng 24.0 and landed in the
+ * Mediterranean. The order is now fixed by convention rather than inferred.
+ *
+ * The one remaining inference is a rescue for legacy rows written lat-first by
+ * older versions of the village form: if swapping would produce an out-of-range
+ * latitude, the row cannot have been `[lng, lat]` to begin with.
+ */
 export function toLeafletCoords(
-  coords: [number, number] | number[] | undefined,
-): [number, number] | null {
+  coords: LngLat | number[] | undefined | null,
+): LatLng | null {
   if (!coords || coords.length !== 2) return null;
-  const [a, b] = coords;
-  if (
-    typeof a !== 'number' ||
-    typeof b !== 'number' ||
-    Number.isNaN(a) ||
-    Number.isNaN(b)
-  ) {
-    return null;
-  }
-  if (Math.abs(a) <= 90 && Math.abs(b) <= 180) {
-    return [a, b];
-  }
-  if (Math.abs(b) <= 90 && Math.abs(a) <= 180) {
-    return [b, a];
-  }
-  return [a, b];
+  const [lng, lat] = coords;
+  if (!isFiniteNumber(lng) || !isFiniteNumber(lat)) return null;
+
+  if (isValidLatLng(lat, lng)) return [lat, lng];
+  // Legacy lat-first row: `lat` here is really a longitude beyond +/-90.
+  if (isValidLatLng(lng, lat)) return [lng, lat];
+  return null;
 }
 
-export function toApiCoords(
-  leafletCoords: [number, number],
-): [number, number] {
-  return leafletCoords;
+/** Leaflet (`[lat, lng]`) -> API (GeoJSON `[lng, lat]`). */
+export function toApiCoords(leafletCoords: LatLng): LngLat {
+  const [lat, lng] = leafletCoords;
+  return [lng, lat];
 }
 
-export function villageToMapItem(
-  village: Village | VillageMapItem,
-): VillageMapItem | null {
+/**
+ * Takes an API village (GeoJSON coords) and returns a map-ready item (Leaflet
+ * coords). Data that is already map-shaped must not be passed through here —
+ * it would get swapped a second time.
+ */
+export function villageToMapItem(village: Village): VillageMapItem | null {
   const coords = toLeafletCoords(village.coords);
   if (!coords) return null;
   return {
@@ -158,13 +172,22 @@ export async function createVillage(
   return (data?.results || data) as Village;
 }
 
+/**
+ * `coords` is taken in Leaflet order here, like `createVillage`, so callers can
+ * hand over form state unchanged. Everything else matches `Village`.
+ */
+export type UpdateVillageInput = Partial<Omit<Village, 'coords'>> & {
+  coords?: LatLng;
+};
+
 export async function updateVillage(
   id: string,
-  payload: Partial<Village>,
+  payload: UpdateVillageInput,
 ): Promise<Village> {
-  const body = { ...payload };
-  if (body.coords) {
-    body.coords = toApiCoords(body.coords as [number, number]);
+  const { coords, ...rest } = payload;
+  const body: Record<string, unknown> = { ...rest };
+  if (coords) {
+    body.coords = toApiCoords(coords);
   }
   const { data } = await api.patch(`/${VILLAGE_COLLECTION}/${id}`, body);
   return (data?.results || data) as Village;

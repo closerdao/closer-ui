@@ -1,27 +1,45 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import VillageCard from '../../components/VillageCard';
-import { Heading, Spinner } from '../../components/ui';
+import {
+  EmptyState,
+  Eyebrow,
+  PageShell,
+  btnPrimary,
+  btnSecondary,
+  inputClass,
+} from '../../components/VillageUI';
+import { Spinner } from '../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
+import { AMBASSADOR_ROLE } from '../../constants/village.constants';
+import { useAuth } from '../../contexts/auth';
 import { Village } from '../../types/village';
 import { fetchVillages } from '../../utils/village.utils';
 
 const VillagesPage = () => {
   const t = useTranslations();
-  const [projects, setProjects] = useState<Village[]>([]);
+  const { user, isAuthenticated } = useAuth();
+  const [villages, setVillages] = useState<Village[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [query, setQuery] = useState('');
+
+  const canAddVillage =
+    isAuthenticated &&
+    (Boolean(user?.affiliate) ||
+      user?.roles?.includes(AMBASSADOR_ROLE) ||
+      user?.roles?.includes('admin'));
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       const results = await fetchVillages({ limit: 100 });
       if (!cancelled) {
-        setProjects(results);
+        setVillages(results);
         setIsLoading(false);
       }
     };
@@ -31,36 +49,86 @@ const VillagesPage = () => {
     };
   }, []);
 
+  const filtered = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return villages;
+    return villages.filter((village) =>
+      [village.name, village.country, ...(village.tags || [])]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(needle)),
+    );
+  }, [villages, query]);
+
   return (
     <>
       <Head>
         <title>{t('villages_page_title')}</title>
       </Head>
-      <div className="main-content w-full flex flex-col gap-6 py-8">
-        <div className="flex flex-col gap-2">
-          <Heading level={1}>{t('villages_page_title')}</Heading>
-          <p className="text-gray-600 max-w-2xl">{t('villages_page_intro')}</p>
-          <div className="flex flex-wrap gap-3 text-sm">
-            <Link href="/map" className="underline">
+
+      <PageShell width="wide">
+        <header className="max-w-2xl">
+          <Eyebrow>{t('villages_page_eyebrow')}</Eyebrow>
+          <h1 className="font-serif text-4xl md:text-5xl leading-[1.08] mt-3">
+            {t('villages_page_headline')}{' '}
+            <em className="italic text-[#0FA968]">
+              {t('villages_page_accent')}
+            </em>
+          </h1>
+          <p className="text-[17px] text-[#5C6E64] mt-4 leading-relaxed">
+            {t('villages_page_intro')}
+          </p>
+        </header>
+
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-9 mb-10">
+          <label className="flex-1 max-w-sm">
+            <span className="sr-only">{t('villages_search_label')}</span>
+            <input
+              className={inputClass}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={t('villages_search_placeholder')}
+            />
+          </label>
+          <div className="flex flex-wrap gap-3 sm:ml-auto">
+            <Link href="/map" className={btnSecondary}>
               {t('villages_view_map')}
             </Link>
-            <Link href="/villages/create" className="underline">
-              {t('villages_add_cta')}
+            <Link
+              href={canAddVillage ? '/villages/create' : '/ambassadors'}
+              className={btnPrimary}
+            >
+              {canAddVillage
+                ? t('villages_add_cta')
+                : t('map_become_ambassador_cta')}
             </Link>
           </div>
         </div>
+
         {isLoading ? (
-          <Spinner />
-        ) : projects.length === 0 ? (
-          <p className="text-sm text-gray-600">{t('villages_empty')}</p>
-        ) : (
-          <div className="flex flex-col">
-            {projects.map((project) => (
-              <VillageCard key={project._id} village={project} />
-            ))}
+          <div className="flex justify-center py-16">
+            <Spinner />
           </div>
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            title={query ? t('villages_no_results') : t('villages_empty_title')}
+            description={
+              query ? t('villages_no_results_body') : t('villages_empty')
+            }
+            action={{ href: '/map', label: t('villages_view_map') }}
+          />
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filtered.map((village) => (
+                <VillageCard key={village._id} village={village} />
+              ))}
+            </div>
+            <p className="text-[13.5px] text-[#5C6E64] mt-8">
+              {t('map_result_count', { count: filtered.length })}
+            </p>
+          </>
         )}
-      </div>
+      </PageShell>
     </>
   );
 };

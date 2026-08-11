@@ -8,17 +8,11 @@ import { Heading, Spinner } from '../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
-import staticVillages from '../../data/staticVillages';
 import { VillageMapItem } from '../../types/village';
 import {
   fetchVillages,
   villageToMapItem,
 } from '../../utils/village.utils';
-
-const getStaticFallback = (): VillageMapItem[] =>
-  staticVillages
-    .map((project) => villageToMapItem(project))
-    .filter((project): project is VillageMapItem => Boolean(project));
 
 const MapEmbedPage = () => {
   const t = useTranslations();
@@ -35,7 +29,7 @@ const MapEmbedPage = () => {
       const fromApi = apiProjects
         .map((project) => villageToMapItem(project))
         .filter((project): project is VillageMapItem => Boolean(project));
-      setProjects(fromApi.length > 0 ? fromApi : getStaticFallback());
+      setProjects(fromApi);
       setIsLoading(false);
     };
     void load();

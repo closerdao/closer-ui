@@ -5,8 +5,15 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import AmbassadorBadge from '../../components/AmbassadorBadge';
+import ProfilePhoto from '../../components/ProfilePhoto';
 import VillageCard from '../../components/VillageCard';
-import { Heading, Spinner } from '../../components/ui';
+import {
+  EmptyState,
+  Eyebrow,
+  PageShell,
+  btnSmall,
+} from '../../components/VillageUI';
+import { Spinner } from '../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
@@ -22,7 +29,7 @@ const AmbassadorProfilePage = () => {
   const router = useRouter();
   const { slug } = router.query;
   const [member, setMember] = useState<User | null>(null);
-  const [projects, setProjects] = useState<Village[]>([]);
+  const [villages, setVillages] = useState<Village[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,16 +47,17 @@ const AmbassadorProfilePage = () => {
 
         const all = await fetchVillages({ limit: 200 });
         if (cancelled) return;
-        const owned = all.filter(
-          (project) =>
-            project.referredBy === user._id ||
-            project.ambassadorId === user._id ||
-            project.createdBy === user._id ||
-            project.managedBy?.includes(user._id),
+        setVillages(
+          all.filter(
+            (village) =>
+              village.referredBy === user._id ||
+              village.ambassadorId === user._id ||
+              village.createdBy === user._id ||
+              village.managedBy?.includes(user._id),
+          ),
         );
-        setProjects(owned);
       } catch (err) {
-        if (!cancelled) setError('Ambassador not found');
+        if (!cancelled) setError(t('ambassadors_profile_not_found'));
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -59,11 +67,11 @@ const AmbassadorProfilePage = () => {
     return () => {
       cancelled = true;
     };
-  }, [slug]);
+  }, [slug, t]);
 
   if (isLoading) {
     return (
-      <div className="main-content py-12">
+      <div className="bg-[#FCFDFB] min-h-screen flex justify-center py-24">
         <Spinner />
       </div>
     );
@@ -76,6 +84,7 @@ const AmbassadorProfilePage = () => {
   const isAmbassador = Boolean(
     member.affiliate || member.roles?.includes(AMBASSADOR_ROLE),
   );
+  const liveCount = villages.filter((village) => village.closer).length;
 
   return (
     <>
@@ -84,32 +93,57 @@ const AmbassadorProfilePage = () => {
           {member.screenname} — {t('ambassadors_profile_title')}
         </title>
       </Head>
-      <div className="main-content w-full flex flex-col gap-6 py-8 max-w-3xl">
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap items-center gap-3">
-            <Heading level={1}>{member.screenname}</Heading>
-            {isAmbassador ? <AmbassadorBadge size="md" /> : null}
-          </div>
-          <p className="text-gray-600">
-            <Link href={`/members/${member.slug}`} className="underline">
-              {t('ambassadors_view_member_profile')}
-            </Link>
-          </p>
-        </div>
 
-        <div className="flex flex-col gap-2">
-          <Heading level={2}>{t('ambassadors_managed_villages')}</Heading>
-          {projects.length === 0 ? (
-            <p className="text-sm text-gray-600">
-              {t('ambassadors_no_villages')}
-            </p>
+      <PageShell>
+        <header className="flex flex-col sm:flex-row sm:items-center gap-6 pb-10 border-b border-[#C2F0DA]">
+          <div className="flex-none [&>span]:w-24 [&>span]:h-24">
+            <ProfilePhoto user={member} size="24" stack={false} />
+          </div>
+          <div className="flex-1">
+            {isAmbassador ? (
+              <AmbassadorBadge className="mb-3" />
+            ) : (
+              <Eyebrow className="mb-2">
+                {t('ambassadors_profile_title')}
+              </Eyebrow>
+            )}
+            <h1 className="font-serif text-4xl md:text-5xl leading-tight">
+              {member.screenname}
+            </h1>
+            <div className="flex flex-wrap items-center gap-4 mt-4">
+              <span className="text-[13.5px] text-[#5C6E64]">
+                {t('ambassadors_profile_stats', {
+                  villages: villages.length,
+                  live: liveCount,
+                })}
+              </span>
+              <Link href={`/members/${member.slug}`} className={btnSmall}>
+                {t('ambassadors_view_member_profile')}
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        <section className="pt-12">
+          <Eyebrow>{t('ambassadors_managed_villages')}</Eyebrow>
+          <h2 className="font-serif text-3xl mt-3 mb-8">
+            {t('ambassadors_managed_villages_headline')}
+          </h2>
+          {villages.length === 0 ? (
+            <EmptyState
+              title={t('ambassadors_no_villages')}
+              description={t('ambassadors_no_villages_body')}
+              action={{ href: '/map', label: t('ambassadors_cta_map') }}
+            />
           ) : (
-            projects.map((project) => (
-              <VillageCard key={project._id} village={project} />
-            ))
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {villages.map((village) => (
+                <VillageCard key={village._id} village={village} />
+              ))}
+            </div>
           )}
-        </div>
-      </div>
+        </section>
+      </PageShell>
     </>
   );
 };

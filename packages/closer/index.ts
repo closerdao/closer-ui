@@ -130,6 +130,7 @@ export { default as AmbassadorBadge } from './components/AmbassadorBadge';
 export { default as CommunityMap } from './components/CommunityMap';
 export { default as VillageCard } from './components/VillageCard';
 export { default as VillageForm } from './components/VillageForm';
+export * from './components/VillageUI';
 export { default as UnlockStaysPage } from './pages/bookings/unlock-stays';
 export { default as CreditCheckoutPage } from './pages/credits/checkout';
 export { default as DashboardPage } from './pages/dashboard';

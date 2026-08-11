@@ -1,3 +1,15 @@
+/**
+ * Coordinates carry two incompatible orders and mixing them silently drops pins
+ * in the wrong country, so each one gets its own name.
+ *
+ * - `LngLat` is GeoJSON order and is what the API/database speaks.
+ * - `LatLng` is Leaflet order and is what every map component speaks.
+ *
+ * Cross the boundary only through `toLeafletCoords` / `toApiCoords`.
+ */
+export type LngLat = [number, number];
+export type LatLng = [number, number];
+
 export type VillageStatus =
   | 'planning'
   | 'active'
@@ -83,7 +95,11 @@ export type Village = {
   country: string;
   website?: string;
   appUrl?: string;
-  coords: [number, number];
+  /**
+   * GeoJSON order — `[lng, lat]`. This is what the API stores and returns.
+   * Convert with `toLeafletCoords` before handing it to a map.
+   */
+  coords: LngLat;
   status: VillageStatus;
   capacity?: VillageCapacity;
   amenities?: string[];
@@ -122,7 +138,8 @@ export type VillageMapItem = {
   tags: string[];
   country: string;
   website?: string;
-  coords: [number, number];
+  /** Leaflet order — `[lat, lng]`. Ready to hand straight to a map. */
+  coords: LatLng;
   verificationBadge?: VillageVerificationBadge;
   onboardingStatus?: VillageOnboardingStatus;
 };
@@ -156,7 +173,11 @@ export type CreateVillageInput = {
   tags?: string[];
   country: string;
   website?: string;
-  coords: [number, number];
+  /**
+   * Leaflet order — `[lat, lng]`. Form state is map-shaped; `createVillage` and
+   * `updateVillage` convert to GeoJSON at the API boundary.
+   */
+  coords: LatLng;
   status?: VillageStatus;
   capacity?: VillageCapacity;
   amenities?: string[];
