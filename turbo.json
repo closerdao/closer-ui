@@ -3,10 +3,12 @@
   "globalDependencies": ["**/.env.*local"],
   "tasks": {
     "build:locales": {
+      "dependsOn": ["build:config"],
       "inputs": [
         "locales/**",
         "scripts/syncBuildLocales.cjs",
-        "scripts/ensureBuildLocalesExist.cjs"
+        "scripts/ensureBuildLocalesExist.cjs",
+        "generated/appConfig.snapshot.json"
       ],
       "outputs": ["generated/locales/**"]
     },

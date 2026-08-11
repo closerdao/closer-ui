@@ -84,13 +84,35 @@ The Village App can use these when present:
 
 ## Copy and Locale Bundles
 
-Villages render `packages/closer/generated/locales/village/en.json`, which is
-pure `locales/base-en.json` — there is no `locales/village/` overlay, on
-purpose. Any message key a shared component renders must therefore exist in
-`base-en.json` with brand-neutral wording; a key that lives only in an app
-overlay renders as its raw key path for every other app, silently.
+Villages render `packages/closer/generated/locales/village/<locale>.json` —
+there is no `locales/village/` overlay directory, on purpose. Any message key
+a shared component renders must therefore exist in `base-en.json` with
+brand-neutral wording; a key that lives only in an app overlay renders as its
+raw key path for every other app, silently.
 `packages/closer/scripts/__tests__/localeParity.test.js` asserts that every
 generated English bundle covers the Closer bundle's key set.
+
+The village bundle is built for **every base locale**
+(`locales/base-<locale>.json`, currently `en`, `pl`, `pt`). Non-English
+bundles underlay `base-en.json` so a partially translated base language never
+renders raw key paths. Two per-village hooks exist, both build-time only
+(sourced from the same `/config` snapshot `syncBuildConfig.cjs` writes, so
+edits reach the site via the ordinary rebuild-on-change hook):
+
+- **`general.language`** — the village's configured language (same bucket and
+  camelCase convention as `general.timeZone`). `resolveVillageI18n()`
+  (`packages/closer/scripts/villageI18n.cjs`) makes it the Next.js
+  `defaultLocale` at build; absent/unknown values fall back to `en`.
+- **`locales` bucket** — a config row whose value maps locale → message
+  overrides, e.g. `{ "en": { "stay_title": "..." }, "pt": { ... } }`.
+  `syncBuildLocales.cjs` merges it over the base bundle at build. An absent
+  bucket (every current village) ships the pure-base bundle exactly as
+  before; a malformed bucket is warned about and skipped, never failing the
+  build. Because each village's overlay lives in its own DB, villages cannot
+  collide.
+
+Seeding `general.language` and overlay rows is the procurement/api half
+(closerdao/closer-procurement#558).
 
 ## Homepage Page Record
 

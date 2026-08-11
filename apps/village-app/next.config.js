@@ -14,14 +14,19 @@ const withMDX = require('@next/mdx')({
   },
 });
 
+// The village's configured language (general.language in its own DB config,
+// snapshotted at build by syncBuildConfig.cjs — prebuild runs it before this
+// file is evaluated by `next build`) picks the default locale; every base
+// locale bundle stays routable. Missing/invalid config falls back to en.
+const {
+  resolveVillageI18n,
+} = require('../../packages/closer/scripts/villageI18n.cjs');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // If set to true, there are some infinite loops occuring with our loadData
   // https://stackoverflow.com/questions/60618844/react-hooks-useeffect-is-called-twice-even-if-an-empty-array-is-used-as-an-ar
-  i18n: {
-    locales: ['en'],
-    defaultLocale: 'en',
-  },
+  i18n: resolveVillageI18n(),
   reactStrictMode: false,
   transpilePackages: [
     'closer',

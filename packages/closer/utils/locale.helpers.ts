@@ -49,17 +49,28 @@ export async function loadLocaleData(
             return import('../generated/locales/closer/en.json');
         }
       case 'village':
-        switch (localeKey) {
-          case 'en':
-          default:
-            return import('../generated/locales/village/en.json');
-        }
+        return importVillageLocale(localeKey);
       default:
-        // Provisioned village apps set NEXT_PUBLIC_APP_NAME to their village
-        // slug, so any name outside the first-party app list above is expected
-        // to land here and intentionally gets the shared, brand-neutral
-        // village bundle. This is the correct path, not an error — only a
-        // missing appName (handled below) warrants a warning.
+        // Any app name outside the legacy list is a provisioned village slug
+        // (NEXT_PUBLIC_APP_NAME, see #948): serve the shared village bundle
+        // in the requested locale. This is the correct path, not an error —
+        // only a missing appName (handled below) warrants a warning. The
+        // bundle exists for every base locale (syncBuildLocales.cjs builds
+        // village/<locale>.json from locales/base-<locale>.json); adding a
+        // new base language means adding a case here too, since Next.js
+        // needs static import paths.
+        return importVillageLocale(localeKey);
+    }
+  }
+
+  async function importVillageLocale(localeKey: string) {
+    switch (localeKey) {
+      case 'pt':
+        return import('../generated/locales/village/pt.json');
+      case 'pl':
+        return import('../generated/locales/village/pl.json');
+      case 'en':
+      default:
         return import('../generated/locales/village/en.json');
     }
   }

@@ -7,12 +7,20 @@
  * renders the raw key path when a message is missing, so the regression is only
  * caught by eyeballing a live page.
  *
- * The village bundle is pure base (no overlay directory on purpose), so this
- * effectively asserts that every shared key lives in locales/base-en.json.
+ * The village bundle has no overlay directory on purpose — per-village
+ * strings arrive only via the build-time config snapshot's `locales` bucket —
+ * so this effectively asserts that every shared key lives in
+ * locales/base-en.json.
  */
 const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+
+const {
+  SNAPSHOT_PATH,
+  mergeMessages,
+  readVillageLocalesOverlay,
+} = require('../syncBuildLocales.cjs');
 
 const LOCALES_ROOT = path.join(__dirname, '..', '..', 'locales');
 const GENERATED_ROOT = path.join(__dirname, '..', '..', 'generated', 'locales');
@@ -60,11 +68,12 @@ describe('generated locale bundles', () => {
   });
 
   it('generated bundles are in sync with locales/ (run pnpm build:locales)', () => {
-    const base = readJson(path.join(LOCALES_ROOT, 'base-en.json'));
+    const villageOverlay = readVillageLocalesOverlay(
+      fs.existsSync(SNAPSHOT_PATH) ? readJson(SNAPSHOT_PATH) : {},
+      { warn: () => {} },
+    );
     for (const app of generatedApps) {
-      const overlayPath = path.join(LOCALES_ROOT, app, 'en.json');
-      const overlay = fs.existsSync(overlayPath) ? readJson(overlayPath) : {};
-      const expected = { ...base, ...overlay };
+      const expected = mergeMessages(app, 'en', villageOverlay);
       const actual = readJson(path.join(GENERATED_ROOT, app, 'en.json'));
       expect({ app, messages: actual }).toEqual({ app, messages: expected });
     }
