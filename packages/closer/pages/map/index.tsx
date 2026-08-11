@@ -8,22 +8,22 @@ import { Heading, Spinner } from '../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
-import staticLandProjects from '../../data/staticLandProjects';
-import { LandProjectMapItem } from '../../types/landProject';
+import staticVillages from '../../data/staticVillages';
+import { VillageMapItem } from '../../types/village';
 import {
-  fetchLandProjects,
-  landProjectToMapItem,
-} from '../../utils/landProject.utils';
+  fetchVillages,
+  villageToMapItem,
+} from '../../utils/village.utils';
 
-const getStaticFallback = (): LandProjectMapItem[] =>
-  staticLandProjects
-    .map((project) => landProjectToMapItem(project))
-    .filter((project): project is LandProjectMapItem => Boolean(project));
+const getStaticFallback = (): VillageMapItem[] =>
+  staticVillages
+    .map((project) => villageToMapItem(project))
+    .filter((project): project is VillageMapItem => Boolean(project));
 
 const MapPage = () => {
   const t = useTranslations();
   const router = useRouter();
-  const [projects, setProjects] = useState<LandProjectMapItem[]>(getStaticFallback);
+  const [projects, setProjects] = useState<VillageMapItem[]>(getStaticFallback);
   const [isLoading, setIsLoading] = useState(true);
   const [country, setCountry] = useState('');
   const [closerOnly, setCloserOnly] = useState(false);
@@ -32,14 +32,14 @@ const MapPage = () => {
     let cancelled = false;
     const load = async () => {
       setIsLoading(true);
-      const apiProjects = await fetchLandProjects({
+      const apiProjects = await fetchVillages({
         limit: 200,
         country: country || undefined,
       });
       if (cancelled) return;
       const fromApi = apiProjects
-        .map((project) => landProjectToMapItem(project))
-        .filter((project): project is LandProjectMapItem => Boolean(project));
+        .map((project) => villageToMapItem(project))
+        .filter((project): project is VillageMapItem => Boolean(project));
       const items = (fromApi.length > 0 ? fromApi : getStaticFallback()).filter(
         (project) => {
           const countryOk = country

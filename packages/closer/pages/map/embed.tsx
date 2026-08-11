@@ -8,33 +8,33 @@ import { Heading, Spinner } from '../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
-import staticLandProjects from '../../data/staticLandProjects';
-import { LandProjectMapItem } from '../../types/landProject';
+import staticVillages from '../../data/staticVillages';
+import { VillageMapItem } from '../../types/village';
 import {
-  fetchLandProjects,
-  landProjectToMapItem,
-} from '../../utils/landProject.utils';
+  fetchVillages,
+  villageToMapItem,
+} from '../../utils/village.utils';
 
-const getStaticFallback = (): LandProjectMapItem[] =>
-  staticLandProjects
-    .map((project) => landProjectToMapItem(project))
-    .filter((project): project is LandProjectMapItem => Boolean(project));
+const getStaticFallback = (): VillageMapItem[] =>
+  staticVillages
+    .map((project) => villageToMapItem(project))
+    .filter((project): project is VillageMapItem => Boolean(project));
 
 const MapEmbedPage = () => {
   const t = useTranslations();
   const router = useRouter();
   const curator = typeof router.query.curator === 'string' ? router.query.curator : '';
-  const [projects, setProjects] = useState<LandProjectMapItem[]>([]);
+  const [projects, setProjects] = useState<VillageMapItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const apiProjects = await fetchLandProjects({ limit: 200 });
+      const apiProjects = await fetchVillages({ limit: 200 });
       if (cancelled) return;
       const fromApi = apiProjects
-        .map((project) => landProjectToMapItem(project))
-        .filter((project): project is LandProjectMapItem => Boolean(project));
+        .map((project) => villageToMapItem(project))
+        .filter((project): project is VillageMapItem => Boolean(project));
       setProjects(fromApi.length > 0 ? fromApi : getStaticFallback());
       setIsLoading(false);
     };

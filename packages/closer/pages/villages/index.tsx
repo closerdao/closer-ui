@@ -3,23 +3,23 @@ import Link from 'next/link';
 
 import { useEffect, useState } from 'react';
 
-import LandProjectCard from '../../components/LandProjectCard';
+import VillageCard from '../../components/VillageCard';
 import { Heading, Spinner } from '../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
-import { LandProject } from '../../types/landProject';
-import { fetchLandProjects } from '../../utils/landProject.utils';
+import { Village } from '../../types/village';
+import { fetchVillages } from '../../utils/village.utils';
 
 const VillagesPage = () => {
   const t = useTranslations();
-  const [projects, setProjects] = useState<LandProject[]>([]);
+  const [projects, setProjects] = useState<Village[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const results = await fetchLandProjects({ limit: 100 });
+      const results = await fetchVillages({ limit: 100 });
       if (!cancelled) {
         setProjects(results);
         setIsLoading(false);
@@ -56,7 +56,7 @@ const VillagesPage = () => {
         ) : (
           <div className="flex flex-col">
             {projects.map((project) => (
-              <LandProjectCard key={project._id} project={project} />
+              <VillageCard key={project._id} village={project} />
             ))}
           </div>
         )}

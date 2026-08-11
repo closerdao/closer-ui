@@ -1,18 +1,18 @@
 import api, { formatSearch } from './api';
 import {
-  CreateLandProjectInput,
-  LandProject,
-  LandProjectCriteria,
-  LandProjectMapItem,
-  LandProjectSearchParams,
-  LandProjectSearchResponse,
-} from '../types/landProject';
+  CreateVillageInput,
+  Village,
+  VillageCriteria,
+  VillageMapItem,
+  VillageSearchParams,
+  VillageSearchResponse,
+} from '../types/village';
 import {
   PEOPLE_COUNT_MAX,
   PEOPLE_COUNT_MIN,
   ROOMS_COUNT_MIN,
   VILLAGE_COLLECTION,
-} from '../constants/landProject.constants';
+} from '../constants/village.constants';
 
 export function toLeafletCoords(
   coords: [number, number] | number[] | undefined,
@@ -42,29 +42,29 @@ export function toApiCoords(
   return leafletCoords;
 }
 
-export function landProjectToMapItem(
-  project: LandProject | LandProjectMapItem,
-): LandProjectMapItem | null {
-  const coords = toLeafletCoords(project.coords);
+export function villageToMapItem(
+  village: Village | VillageMapItem,
+): VillageMapItem | null {
+  const coords = toLeafletCoords(village.coords);
   if (!coords) return null;
   return {
-    _id: '_id' in project ? project._id : undefined,
-    slug: project.slug,
-    name: project.name,
-    closer: Boolean(project.closer),
-    description: project.description,
-    tags: project.tags || [],
-    country: project.country,
-    website: project.website,
+    _id: '_id' in village ? village._id : undefined,
+    slug: village.slug,
+    name: village.name,
+    closer: Boolean(village.closer),
+    description: village.description,
+    tags: village.tags || [],
+    country: village.country,
+    website: village.website,
     coords,
     verificationBadge:
-      'verificationBadge' in project ? project.verificationBadge : undefined,
+      'verificationBadge' in village ? village.verificationBadge : undefined,
     onboardingStatus:
-      'onboardingStatus' in project ? project.onboardingStatus : undefined,
+      'onboardingStatus' in village ? village.onboardingStatus : undefined,
   };
 }
 
-export function meetsHardCriteria(criteria?: LandProjectCriteria): boolean {
+export function meetsHardCriteria(criteria?: VillageCriteria): boolean {
   if (!criteria) return false;
   const peopleOk =
     typeof criteria.peopleCount === 'number' &&
@@ -85,7 +85,7 @@ export function meetsHardCriteria(criteria?: LandProjectCriteria): boolean {
 }
 
 function buildVillageWhere(
-  params: LandProjectSearchParams = {},
+  params: VillageSearchParams = {},
 ): Record<string, unknown> {
   const where: Record<string, unknown> = {};
   if (params.status) where.status = params.status;
@@ -97,9 +97,9 @@ function buildVillageWhere(
   return where;
 }
 
-export async function fetchLandProjects(
-  params: LandProjectSearchParams = {},
-): Promise<LandProject[]> {
+export async function fetchVillages(
+  params: VillageSearchParams = {},
+): Promise<Village[]> {
   try {
     const where = buildVillageWhere(params);
     const { data } = await api.get(`/${VILLAGE_COLLECTION}`, {
@@ -112,23 +112,21 @@ export async function fetchLandProjects(
         sort: params.sort,
       },
     });
-    if (Array.isArray(data?.results)) return data.results as LandProject[];
-    if (Array.isArray(data?.villages)) return data.villages as LandProject[];
-    if (Array.isArray(data?.landProjects))
-      return data.landProjects as LandProject[];
-    if (Array.isArray(data)) return data as LandProject[];
+    if (Array.isArray(data?.results)) return data.results as Village[];
+    if (Array.isArray(data?.villages)) return data.villages as Village[];
+    if (Array.isArray(data)) return data as Village[];
     return [];
   } catch {
     return [];
   }
 }
 
-export async function searchLandProjects(
-  params: LandProjectSearchParams = {},
-): Promise<LandProjectSearchResponse> {
-  const results = await fetchLandProjects(params);
+export async function searchVillages(
+  params: VillageSearchParams = {},
+): Promise<VillageSearchResponse> {
+  const results = await fetchVillages(params);
   return {
-    landProjects: results,
+    villages: results,
     pagination: {
       page: params.page || 1,
       limit: params.limit || 20,
@@ -138,20 +136,18 @@ export async function searchLandProjects(
   };
 }
 
-export async function getLandProject(
-  idOrSlug: string,
-): Promise<LandProject | null> {
+export async function getVillage(idOrSlug: string): Promise<Village | null> {
   try {
     const { data } = await api.get(`/${VILLAGE_COLLECTION}/${idOrSlug}`);
-    return (data?.results || data) as LandProject;
+    return (data?.results || data) as Village;
   } catch {
     return null;
   }
 }
 
-export async function createLandProject(
-  payload: CreateLandProjectInput,
-): Promise<LandProject> {
+export async function createVillage(
+  payload: CreateVillageInput,
+): Promise<Village> {
   const { data } = await api.post(`/${VILLAGE_COLLECTION}`, {
     ...payload,
     coords: toApiCoords(payload.coords),
@@ -159,74 +155,63 @@ export async function createLandProject(
     verificationBadge: payload.verificationBadge || 'unverified',
     onboardingStatus: payload.onboardingStatus || 'map_only',
   });
-  return (data?.results || data) as LandProject;
+  return (data?.results || data) as Village;
 }
 
-export async function updateLandProject(
+export async function updateVillage(
   id: string,
-  payload: Partial<LandProject>,
-): Promise<LandProject> {
+  payload: Partial<Village>,
+): Promise<Village> {
   const body = { ...payload };
   if (body.coords) {
     body.coords = toApiCoords(body.coords as [number, number]);
   }
   const { data } = await api.patch(`/${VILLAGE_COLLECTION}/${id}`, body);
-  return (data?.results || data) as LandProject;
+  return (data?.results || data) as Village;
 }
 
-export async function linkLandProjectToProjectApi(
-  landProjectId: string,
-  projectApiId: string,
-): Promise<LandProject> {
-  return updateLandProject(landProjectId, {
-    projectApi: projectApiId,
-  } as Partial<LandProject>);
-}
-
-export async function requestLandProjectDeploy(
+export async function requestVillageDeploy(
   id: string,
   notes?: string,
-): Promise<LandProject> {
-  return updateLandProject(id, {
+): Promise<Village> {
+  return updateVillage(id, {
     onboardingStatus: 'deploy_requested',
     deployRequest: {
       status: 'requested',
       requestedAt: new Date().toISOString(),
       notes,
     },
-  } as Partial<LandProject>);
+  } as Partial<Village>);
 }
 
-export async function markLandProjectSubscribed(
-  id: string,
-): Promise<LandProject> {
-  return updateLandProject(id, {
+export async function markVillageSubscribed(id: string): Promise<Village> {
+  return updateVillage(id, {
     onboardingStatus: 'subscribed',
     platformSubscription: {
       status: 'trialing',
       planPriceEur: 49,
       trialStartedAt: new Date().toISOString(),
     },
-  } as Partial<LandProject>);
+  } as Partial<Village>);
 }
 
-export function canManageLandProject(
-  project: LandProject | null | undefined,
+export function canManageVillage(
+  village: Village | null | undefined,
   userId?: string,
 ): boolean {
-  if (!project || !userId) return false;
-  if (project.createdBy === userId) return true;
-  return Boolean(project.managedBy?.includes(userId));
+  if (!village || !userId) return false;
+  if (village.createdBy === userId) return true;
+  return Boolean(village.managedBy?.includes(userId));
 }
 
 export function canRequestDeploy(
-  project: LandProject | null | undefined,
+  village: Village | null | undefined,
   userId?: string,
 ): boolean {
-  if (!canManageLandProject(project, userId) || !project) return false;
-  const sub = project.platformSubscription?.status;
+  if (!canManageVillage(village, userId) || !village) return false;
+  const sub = village.platformSubscription?.status;
   const subscribed = sub === 'trialing' || sub === 'active';
-  const status = project.onboardingStatus;
+  const status = village.onboardingStatus;
   return (
     subscribed &&
     (status === 'subscribed' ||

@@ -1,4 +1,6 @@
-[
+import { VillageMapItem } from "../types/village";
+
+const staticVillages = [
   {
     "name": "Traditional Dream Factory",
     "closer": true,
@@ -1469,4 +1471,6 @@
       -112.10110404565829
     ]
   }
-]
+] as VillageMapItem[];
+
+export default staticVillages;

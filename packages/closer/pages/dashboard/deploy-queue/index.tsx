@@ -8,17 +8,17 @@ import { Button, Heading, Spinner } from '../../components/ui';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
-import { LandProject } from '../../types/landProject';
+import { Village } from '../../types/village';
 import {
-  fetchLandProjects,
-  updateLandProject,
-} from '../../utils/landProject.utils';
+  fetchVillages,
+  updateVillage,
+} from '../../utils/village.utils';
 import Page401 from '../401';
 
 const DeployQueuePage = () => {
   const t = useTranslations();
   const { user, isAuthenticated } = useAuth();
-  const [projects, setProjects] = useState<LandProject[]>([]);
+  const [projects, setProjects] = useState<Village[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isActing, setIsActing] = useState(false);
 
@@ -31,7 +31,7 @@ const DeployQueuePage = () => {
     if (!canAccess) return;
     let cancelled = false;
     const load = async () => {
-      const all = await fetchLandProjects({ limit: 200 });
+      const all = await fetchVillages({ limit: 200 });
       if (cancelled) return;
       setProjects(
         all.filter(
@@ -50,9 +50,9 @@ const DeployQueuePage = () => {
 
   if (!isAuthenticated || !canAccess) return <Page401 />;
 
-  const markDeploying = async (project: LandProject) => {
+  const markDeploying = async (project: Village) => {
     setIsActing(true);
-    await updateLandProject(project._id, {
+    await updateVillage(project._id, {
       onboardingStatus: 'deploying',
       deployRequest: {
         ...(project.deployRequest || {}),
@@ -60,8 +60,8 @@ const DeployQueuePage = () => {
         processedAt: new Date().toISOString(),
         processedBy: user?._id,
       },
-    } as Partial<LandProject>);
-    const all = await fetchLandProjects({ limit: 200 });
+    } as Partial<Village>);
+    const all = await fetchVillages({ limit: 200 });
     setProjects(
       all.filter(
         (item) =>
@@ -72,9 +72,9 @@ const DeployQueuePage = () => {
     setIsActing(false);
   };
 
-  const markLive = async (project: LandProject) => {
+  const markLive = async (project: Village) => {
     setIsActing(true);
-    await updateLandProject(project._id, {
+    await updateVillage(project._id, {
       onboardingStatus: 'live',
       closer: true,
       deployRequest: {
@@ -83,8 +83,8 @@ const DeployQueuePage = () => {
         processedAt: new Date().toISOString(),
         processedBy: user?._id,
       },
-    } as Partial<LandProject>);
-    const all = await fetchLandProjects({ limit: 200 });
+    } as Partial<Village>);
+    const all = await fetchVillages({ limit: 200 });
     setProjects(
       all.filter(
         (item) =>

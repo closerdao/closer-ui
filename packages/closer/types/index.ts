@@ -20,4 +20,4 @@ export * from './volunteerApplication';
 export * from './wallet';
 export * from './engagement';
 export * from './interaction';
-export * from './landProject';
+export * from './village';

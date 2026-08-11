@@ -2,6 +2,8 @@
 
 Villages use the standard Closer base CRUD model route **`/village`** (same pattern as `/project`, `/event`, `/listing`).
 
+Backend: [closer-api#493](https://github.com/closerdao/closer-api/pull/493) (merged).
+
 ## Base CRUD
 
 | Method | Path | Purpose |
@@ -12,11 +14,7 @@ Villages use the standard Closer base CRUD model route **`/village`** (same patt
 | `PATCH` | `/village/:id` | Update (managers in `managedBy` + creator) |
 | `DELETE` | `/village/:id` | Soft-delete when permitted |
 
-Linking a live Closer tenant is a normal PATCH: `{ "projectApi": "<projectapiId>" }` (not a custom link route).
-
-Companion model for tenants: **`/projectapi`** (base CRUD).
-
-Depends on the Village / LandProject model shipping in closer-api (see [closer-api#290](https://github.com/closerdao/closer-api/pull/290); prefer model name `Village` / route `village` over `landprojects`).
+Deployments are managed via the **Procurement** app (not a separate closer-api tenant model). After subscribe + deploy request, ops fulfill in Procurement; marking `onboardingStatus: live` / `closer: true` updates the Village record.
 
 ## Attribution
 
@@ -31,7 +29,7 @@ Depends on the Village / LandProject model shipping in closer-api (see [closer-a
 }
 ```
 
-Same pattern for optional `ambassadorId` and on `ProjectApi.referredBy` when a tenant goes live.
+Optional `ambassadorId` alias on Village for the referring Ambassador.
 
 ## Verification & onboarding
 
@@ -49,7 +47,7 @@ Same pattern for optional `ambassadorId` and on `ProjectApi.referredBy` when a t
   - Commercial: €0 setup, €49/mo, first month free
 - `deployRequest`: `{ status, requestedAt, requestedBy, notes, processedAt, processedBy }`
   - Request allowed when subscription is `trialing` or `active`
-  - Fulfillment human-gated initially; same object later triggers automation
+  - Fulfillment human-gated via Procurement initially; same object later triggers automation
 
 ## ACL
 

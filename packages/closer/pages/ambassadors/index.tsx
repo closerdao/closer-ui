@@ -9,7 +9,7 @@ import { Button, ErrorMessage, Heading, LinkButton } from '../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
-import { AMBASSADOR_ROLE } from '../../constants/landProject.constants';
+import { AMBASSADOR_ROLE } from '../../constants/village.constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { logMetric } from '../../utils/metrics';

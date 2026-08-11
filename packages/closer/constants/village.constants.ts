@@ -1,8 +1,6 @@
 export const VILLAGE_COLLECTION = 'village';
-export const LAND_PROJECT_COLLECTION = VILLAGE_COLLECTION;
-export const PROJECT_API_COLLECTION = 'projectapi';
 
-export const LAND_PROJECT_STATUSES = [
+export const VILLAGE_STATUSES = [
   'planning',
   'active',
   'paused',
@@ -10,14 +8,14 @@ export const LAND_PROJECT_STATUSES = [
   'cancelled',
 ] as const;
 
-export const LAND_PROJECT_VERIFICATION_BADGES = [
+export const VILLAGE_VERIFICATION_BADGES = [
   'unverified',
   'pending',
   'verified',
   'resonant',
 ] as const;
 
-export const LAND_PROJECT_ONBOARDING_STATUSES = [
+export const VILLAGE_ONBOARDING_STATUSES = [
   'map_only',
   'pre_assessed',
   'subscribed',

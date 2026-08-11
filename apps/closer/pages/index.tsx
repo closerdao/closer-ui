@@ -6,12 +6,12 @@ import { ReactNode, useContext, useEffect, useState } from 'react';
 
 import { CommunityMap } from '@/components';
 import CloserChatWidget from '@/components/CloserChatWidget';
-import { mergeLandProjectMapItems } from '@/utils/landProjectMap.utils';
+import { mergeVillageMapItems } from '@/utils/villageMap.utils';
 
 import { GeneralConfig, getCachedConfig } from 'closer';
 import { PromptGetInTouchContext } from 'closer/components/PromptGetInTouchContext';
-import { LandProjectMapItem } from 'closer/types/landProject';
-import { fetchLandProjects } from 'closer/utils/landProject.utils';
+import { VillageMapItem } from 'closer/types/village';
+import { fetchVillages } from 'closer/utils/village.utils';
 import { parseMessageFromError } from 'closer/utils/common';
 
 import { NextPageContext } from 'next';
@@ -184,16 +184,16 @@ const HomePage = ({}: Props) => {
     setIsOpen: (open: boolean) => void;
   };
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [mapProjects, setMapProjects] = useState<LandProjectMapItem[]>(() =>
-    mergeLandProjectMapItems([]),
+  const [mapProjects, setMapProjects] = useState<VillageMapItem[]>(() =>
+    mergeVillageMapItems([]),
   );
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const apiProjects = await fetchLandProjects({ limit: 200 });
+      const apiProjects = await fetchVillages({ limit: 200 });
       if (!cancelled) {
-        setMapProjects(mergeLandProjectMapItems(apiProjects));
+        setMapProjects(mergeVillageMapItems(apiProjects));
       }
     };
     void load();

@@ -11,17 +11,17 @@ import { useTranslations } from 'next-intl';
 import {
   PLATFORM_SETUP_FEE_EUR,
   PLATFORM_SUBSCRIPTION_PRICE_EUR,
-} from '../../constants/landProject.constants';
+} from '../../constants/village.constants';
 import { useAuth } from '../../contexts/auth';
-import { LandProject } from '../../types/landProject';
+import { Village } from '../../types/village';
 import {
-  canManageLandProject,
+  canManageVillage,
   canRequestDeploy,
-  getLandProject,
-  markLandProjectSubscribed,
-  requestLandProjectDeploy,
-  updateLandProject,
-} from '../../utils/landProject.utils';
+  getVillage,
+  markVillageSubscribed,
+  requestVillageDeploy,
+  updateVillage,
+} from '../../utils/village.utils';
 import PageNotFound from '../not-found';
 
 const VillageDetailPage = () => {
@@ -29,7 +29,7 @@ const VillageDetailPage = () => {
   const router = useRouter();
   const { slug } = router.query;
   const { user } = useAuth();
-  const [project, setProject] = useState<LandProject | null>(null);
+  const [project, setProject] = useState<Village | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isActing, setIsActing] = useState(false);
@@ -40,7 +40,7 @@ const VillageDetailPage = () => {
     let cancelled = false;
     const load = async () => {
       setIsLoading(true);
-      const result = await getLandProject(slug);
+      const result = await getVillage(slug);
       if (!cancelled) {
         setProject(result);
         setIsLoading(false);
@@ -64,7 +64,7 @@ const VillageDetailPage = () => {
     return <PageNotFound error={t('villages_not_found')} />;
   }
 
-  const isManager = canManageLandProject(project, user?._id);
+  const isManager = canManageVillage(project, user?._id);
   const isAdmin = user?.roles?.includes('admin');
   const canDeploy = canRequestDeploy(project, user?._id);
   const subscribed =
@@ -72,7 +72,7 @@ const VillageDetailPage = () => {
     project.platformSubscription?.status === 'active';
 
   const refresh = async () => {
-    const result = await getLandProject(project.slug || project._id);
+    const result = await getVillage(project.slug || project._id);
     setProject(result);
   };
 
@@ -80,7 +80,7 @@ const VillageDetailPage = () => {
     try {
       setIsActing(true);
       setActionError(null);
-      await markLandProjectSubscribed(project._id);
+      await markVillageSubscribed(project._id);
       await refresh();
     } catch (err) {
       setActionError(
@@ -95,7 +95,7 @@ const VillageDetailPage = () => {
     try {
       setIsActing(true);
       setActionError(null);
-      await requestLandProjectDeploy(project._id);
+      await requestVillageDeploy(project._id);
       await refresh();
     } catch (err) {
       setActionError(
@@ -115,7 +115,7 @@ const VillageDetailPage = () => {
       const attributes = Array.from(
         new Set([...(project.attributes || []), note]),
       );
-      await updateLandProject(project._id, { attributes } as Partial<LandProject>);
+      await updateVillage(project._id, { attributes } as Partial<Village>);
       setInviteEmail('');
       await refresh();
     } catch (err) {
@@ -130,9 +130,9 @@ const VillageDetailPage = () => {
   const handleVerify = async (badge: 'verified' | 'resonant' | 'pending') => {
     try {
       setIsActing(true);
-      await updateLandProject(project._id, {
+      await updateVillage(project._id, {
         verificationBadge: badge,
-      } as Partial<LandProject>);
+      } as Partial<Village>);
       await refresh();
     } catch (err) {
       setActionError(

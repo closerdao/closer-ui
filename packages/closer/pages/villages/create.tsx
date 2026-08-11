@@ -1,15 +1,15 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import LandProjectForm from '../../components/LandProjectForm';
+import VillageForm from '../../components/VillageForm';
 import { Heading } from '../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
-import { AMBASSADOR_ROLE } from '../../constants/landProject.constants';
+import { AMBASSADOR_ROLE } from '../../constants/village.constants';
 import { useAuth } from '../../contexts/auth';
-import { CreateLandProjectInput } from '../../types/landProject';
-import { createLandProject } from '../../utils/landProject.utils';
+import { CreateVillageInput } from '../../types/village';
+import { createVillage } from '../../utils/village.utils';
 import Page401 from '../401';
 
 const CreateVillagePage = () => {
@@ -43,8 +43,8 @@ const CreateVillagePage = () => {
     );
   }
 
-  const handleSubmit = async (payload: CreateLandProjectInput) => {
-    const created = await createLandProject({
+  const handleSubmit = async (payload: CreateVillageInput) => {
+    const created = await createVillage({
       ...payload,
       referredBy: user?._id,
       ambassadorId: user?._id,
@@ -62,7 +62,7 @@ const CreateVillagePage = () => {
       <div className="main-content w-full flex flex-col gap-6 py-8">
         <Heading level={1}>{t('villages_create_title')}</Heading>
         <p className="text-gray-600 max-w-2xl">{t('villages_create_intro')}</p>
-        <LandProjectForm
+        <VillageForm
           submitLabel={t('villages_create_submit')}
           onSubmit={handleSubmit}
         />

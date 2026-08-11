@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 
-import { LandProjectMapItem } from '../../types/landProject';
+import { VillageMapItem } from '../../types/village';
 
 type CommunityMapProps = {
-  projects?: LandProjectMapItem[];
+  projects?: VillageMapItem[];
   className?: string;
 };
 

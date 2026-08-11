@@ -3,26 +3,26 @@ import { FormEvent, useState } from 'react';
 import { Button, ErrorMessage, Heading, Input } from '../ui';
 
 import {
-  CreateLandProjectInput,
-  LandProject,
-  LandProjectCriteria,
-} from '../../types/landProject';
-import { meetsHardCriteria } from '../../utils/landProject.utils';
+  CreateVillageInput,
+  Village,
+  VillageCriteria,
+} from '../../types/village';
+import { meetsHardCriteria } from '../../utils/village.utils';
 import {
   MONTHLY_VOLUME_SOFT_MAX,
   MONTHLY_VOLUME_SOFT_MIN,
   PEOPLE_COUNT_MAX,
   PEOPLE_COUNT_MIN,
   ROOMS_COUNT_MIN,
-} from '../../constants/landProject.constants';
+} from '../../constants/village.constants';
 
-type LandProjectFormProps = {
-  initial?: Partial<LandProject>;
+type VillageFormProps = {
+  initial?: Partial<Village>;
   submitLabel: string;
-  onSubmit: (payload: CreateLandProjectInput) => Promise<void>;
+  onSubmit: (payload: CreateVillageInput) => Promise<void>;
 };
 
-const emptyCriteria: LandProjectCriteria = {
+const emptyCriteria: VillageCriteria = {
   landBased: false,
   hasLand: false,
   peopleOnLand: false,
@@ -36,11 +36,11 @@ const emptyCriteria: LandProjectCriteria = {
   web3Openness: false,
 };
 
-const LandProjectForm = ({
+const VillageForm = ({
   initial,
   submitLabel,
   onSubmit,
-}: LandProjectFormProps) => {
+}: VillageFormProps) => {
   const [name, setName] = useState(initial?.name || '');
   const [description, setDescription] = useState(initial?.description || '');
   const [country, setCountry] = useState(initial?.country || '');
@@ -55,14 +55,14 @@ const LandProjectForm = ({
   const [pmName, setPmName] = useState(initial?.projectManager?.name || '');
   const [pmEmail, setPmEmail] = useState(initial?.projectManager?.email || '');
   const [pmRole, setPmRole] = useState(initial?.projectManager?.role || '');
-  const [criteria, setCriteria] = useState<LandProjectCriteria>({
+  const [criteria, setCriteria] = useState<VillageCriteria>({
     ...emptyCriteria,
     ...(initial?.criteria || {}),
   });
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const toggleCriteria = (key: keyof LandProjectCriteria) => {
+  const toggleCriteria = (key: keyof VillageCriteria) => {
     setCriteria((prev) => ({
       ...prev,
       [key]: !prev[key],
@@ -86,7 +86,7 @@ const LandProjectForm = ({
       return;
     }
 
-    const payload: CreateLandProjectInput = {
+    const payload: CreateVillageInput = {
       name: name.trim(),
       description: description.trim(),
       country: country.trim(),
@@ -294,4 +294,4 @@ const LandProjectForm = ({
   );
 };
 
-export default LandProjectForm;
+export default VillageForm;

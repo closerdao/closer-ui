@@ -1,17 +1,17 @@
-export type LandProjectStatus =
+export type VillageStatus =
   | 'planning'
   | 'active'
   | 'paused'
   | 'completed'
   | 'cancelled';
 
-export type LandProjectVerificationBadge =
+export type VillageVerificationBadge =
   | 'unverified'
   | 'pending'
   | 'verified'
   | 'resonant';
 
-export type LandProjectOnboardingStatus =
+export type VillageOnboardingStatus =
   | 'map_only'
   | 'pre_assessed'
   | 'subscribed'
@@ -20,21 +20,13 @@ export type LandProjectOnboardingStatus =
   | 'live'
   | 'intro_scheduled';
 
-export type ProjectApiStatus =
-  | 'active'
-  | 'suspended'
-  | 'maintenance'
-  | 'cancelled';
-
-export type ProjectApiServerTier = 'mini' | 'medium' | 'large';
-
-export type LandProjectCapacity = {
+export type VillageCapacity = {
   residents?: number;
   visitors?: number;
   events?: number;
 };
 
-export type LandProjectContact = {
+export type VillageContact = {
   email?: string;
   phone?: string;
   social?: {
@@ -44,13 +36,13 @@ export type LandProjectContact = {
   };
 };
 
-export type LandProjectManagerInfo = {
+export type VillageManagerInfo = {
   name?: string;
   email?: string;
   role?: string;
 };
 
-export type LandProjectCriteria = {
+export type VillageCriteria = {
   landBased?: boolean;
   hasLand?: boolean;
   peopleOnLand?: boolean;
@@ -64,7 +56,7 @@ export type LandProjectCriteria = {
   web3Openness?: boolean;
 };
 
-export type LandProjectDeployRequest = {
+export type VillageDeployRequest = {
   status?: 'none' | 'requested' | 'approved' | 'rejected' | 'completed';
   requestedAt?: string;
   requestedBy?: string;
@@ -73,7 +65,7 @@ export type LandProjectDeployRequest = {
   processedBy?: string;
 };
 
-export type LandProjectSubscription = {
+export type VillageSubscription = {
   status?: 'none' | 'trialing' | 'active' | 'past_due' | 'cancelled';
   planPriceEur?: number;
   trialStartedAt?: string;
@@ -81,7 +73,7 @@ export type LandProjectSubscription = {
   stripeSubscriptionId?: string;
 };
 
-export type LandProject = {
+export type Village = {
   _id: string;
   slug?: string;
   name: string;
@@ -91,21 +83,19 @@ export type LandProject = {
   country: string;
   website?: string;
   appUrl?: string;
-  apiUrl?: string;
   coords: [number, number];
-  status: LandProjectStatus;
-  capacity?: LandProjectCapacity;
+  status: VillageStatus;
+  capacity?: VillageCapacity;
   amenities?: string[];
-  contact?: LandProjectContact;
-  projectApi?: string | ProjectApi | null;
+  contact?: VillageContact;
   referredBy?: string | null;
   ambassadorId?: string | null;
-  verificationBadge?: LandProjectVerificationBadge;
-  onboardingStatus?: LandProjectOnboardingStatus;
-  criteria?: LandProjectCriteria;
-  projectManager?: LandProjectManagerInfo;
-  deployRequest?: LandProjectDeployRequest;
-  platformSubscription?: LandProjectSubscription;
+  verificationBadge?: VillageVerificationBadge;
+  onboardingStatus?: VillageOnboardingStatus;
+  criteria?: VillageCriteria;
+  projectManager?: VillageManagerInfo;
+  deployRequest?: VillageDeployRequest;
+  platformSubscription?: VillageSubscription;
   visibility?: string;
   visibleBy?: string[];
   createdBy?: string;
@@ -120,49 +110,10 @@ export type LandProject = {
     slug?: string;
     photo?: string;
   };
-  projectApiData?: Partial<ProjectApi>;
   distance?: number;
 };
 
-export type ProjectApiAgreement = {
-  tokenFee?: number;
-  txFee?: number;
-  hostingFee?: number;
-  setupFee?: number;
-  maintenanceFee?: number;
-};
-
-export type ProjectApiStats = {
-  totalUsers?: number;
-  activeUsers?: number;
-  totalRevenue?: number;
-  monthlyRevenue?: number;
-  lastUpdated?: string;
-};
-
-export type ProjectApi = {
-  _id: string;
-  slug?: string;
-  name: string;
-  description: string;
-  agreement?: ProjectApiAgreement;
-  deploymentDate: string;
-  apiUrl: string;
-  appUrl: string;
-  serverTier: ProjectApiServerTier;
-  privateDatabase?: boolean;
-  stats?: ProjectApiStats;
-  adminEmail: string;
-  status: ProjectApiStatus;
-  landProjects?: string[];
-  referredBy?: string | null;
-  createdBy?: string;
-  managedBy?: string[];
-  created?: string;
-  updated?: string;
-};
-
-export type LandProjectMapItem = {
+export type VillageMapItem = {
   _id?: string;
   slug?: string;
   name: string;
@@ -172,25 +123,25 @@ export type LandProjectMapItem = {
   country: string;
   website?: string;
   coords: [number, number];
-  verificationBadge?: LandProjectVerificationBadge;
-  onboardingStatus?: LandProjectOnboardingStatus;
+  verificationBadge?: VillageVerificationBadge;
+  onboardingStatus?: VillageOnboardingStatus;
 };
 
-export type LandProjectSearchParams = {
+export type VillageSearchParams = {
   lat?: number;
   lng?: number;
   radius?: number;
   page?: number;
   limit?: number;
   sort?: string;
-  status?: LandProjectStatus;
+  status?: VillageStatus;
   country?: string;
   tags?: string;
   closer?: boolean;
 };
 
-export type LandProjectSearchResponse = {
-  landProjects: LandProject[];
+export type VillageSearchResponse = {
+  villages: Village[];
   pagination: {
     page: number;
     limit: number;
@@ -199,22 +150,22 @@ export type LandProjectSearchResponse = {
   };
 };
 
-export type CreateLandProjectInput = {
+export type CreateVillageInput = {
   name: string;
   description: string;
   tags?: string[];
   country: string;
   website?: string;
   coords: [number, number];
-  status?: LandProjectStatus;
-  capacity?: LandProjectCapacity;
+  status?: VillageStatus;
+  capacity?: VillageCapacity;
   amenities?: string[];
-  contact?: LandProjectContact;
-  criteria?: LandProjectCriteria;
-  projectManager?: LandProjectManagerInfo;
+  contact?: VillageContact;
+  criteria?: VillageCriteria;
+  projectManager?: VillageManagerInfo;
   referredBy?: string;
   ambassadorId?: string;
   managedBy?: string[];
-  verificationBadge?: LandProjectVerificationBadge;
-  onboardingStatus?: LandProjectOnboardingStatus;
+  verificationBadge?: VillageVerificationBadge;
+  onboardingStatus?: VillageOnboardingStatus;
 };

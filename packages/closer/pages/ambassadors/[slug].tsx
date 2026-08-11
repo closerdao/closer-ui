@@ -5,16 +5,16 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import AmbassadorBadge from '../../components/AmbassadorBadge';
-import LandProjectCard from '../../components/LandProjectCard';
+import VillageCard from '../../components/VillageCard';
 import { Heading, Spinner } from '../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
-import { AMBASSADOR_ROLE } from '../../constants/landProject.constants';
+import { AMBASSADOR_ROLE } from '../../constants/village.constants';
 import { User } from '../../contexts/auth/types';
-import { LandProject } from '../../types/landProject';
+import { Village } from '../../types/village';
 import api from '../../utils/api';
-import { fetchLandProjects } from '../../utils/landProject.utils';
+import { fetchVillages } from '../../utils/village.utils';
 import PageNotFound from '../not-found';
 
 const AmbassadorProfilePage = () => {
@@ -22,7 +22,7 @@ const AmbassadorProfilePage = () => {
   const router = useRouter();
   const { slug } = router.query;
   const [member, setMember] = useState<User | null>(null);
-  const [projects, setProjects] = useState<LandProject[]>([]);
+  const [projects, setProjects] = useState<Village[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,7 +38,7 @@ const AmbassadorProfilePage = () => {
         if (cancelled) return;
         setMember(user);
 
-        const all = await fetchLandProjects({ limit: 200 });
+        const all = await fetchVillages({ limit: 200 });
         if (cancelled) return;
         const owned = all.filter(
           (project) =>
@@ -105,7 +105,7 @@ const AmbassadorProfilePage = () => {
             </p>
           ) : (
             projects.map((project) => (
-              <LandProjectCard key={project._id} project={project} />
+              <VillageCard key={project._id} village={project} />
             ))
           )}
         </div>
