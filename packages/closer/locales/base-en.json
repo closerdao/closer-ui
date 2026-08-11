@@ -3580,6 +3580,8 @@
   "villages_next_step_deploy_title": "Request their deployment",
   "villages_next_step_deploy_body": "They’re subscribed and ready. Request the build and our team will set up their app.",
   "villages_next_step_waiting_title": "With our team",
+  "villages_next_step_intro_title": "Intro is booked",
+  "villages_next_step_intro_body": "After the call, get them subscribed — then you can request their deployment.",
   "villages_next_step_live_title": "They’re live",
   "villages_next_step_live_body": "Nothing to do here. Keep an eye on them and help them grow.",
   "villages_invite_owner_hint": "Emails an invitation to the owner and records the address as the village contact.",

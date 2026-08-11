@@ -145,6 +145,7 @@ const VillageDetailPage = () => {
   const isAwaitingDeploy =
     village.onboardingStatus === 'deploy_requested' ||
     village.onboardingStatus === 'deploying';
+  const isLive = village.onboardingStatus === 'live';
   const mapItem = villageToMapItem(village);
   const villagePath = `/villages/${village.slug || village._id}`;
   const hasActionPanels = Boolean(isManager || isAdmin);
@@ -408,14 +409,18 @@ const VillageDetailPage = () => {
                     ? t('villages_next_step_waiting_title')
                     : canDeploy
                     ? t('villages_next_step_deploy_title')
-                    : t('villages_next_step_live_title')
+                    : isLive
+                    ? t('villages_next_step_live_title')
+                    : t('villages_next_step_intro_title')
                 }
                 description={
                   isAwaitingDeploy
                     ? t('villages_deploy_pending')
                     : canDeploy
                     ? t('villages_next_step_deploy_body')
-                    : t('villages_next_step_live_body')
+                    : isLive
+                    ? t('villages_next_step_live_body')
+                    : t('villages_next_step_intro_body')
                 }
               >
                 <div className="flex flex-wrap gap-3">
