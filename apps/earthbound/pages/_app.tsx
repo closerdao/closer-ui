@@ -101,7 +101,6 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
           ...config,
           ...blockchainConfig,
           ...getAppConfigFromEnv('earthbound'),
-          APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'earthbound',
         }}
       >
         <ErrorBoundary>
