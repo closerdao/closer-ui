@@ -32,6 +32,7 @@ import {
 } from 'closer/utils/app.helpers';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
+import { villageConfigDefaults } from '../config';
 import { appConfigFromEnv, env } from '../env';
 import '../styles/index.css';
 
@@ -46,7 +47,16 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
   const referral = query.referral;
 
   const [config] = useState<any>(() => {
-    const mergedGeneral = mergeGeneralConfigWithDefaults(configKeyed.general);
+    // mergeGeneralConfigWithDefaults layers the *shared* config defaults under
+    // the fetched config, and the shared default for platformName is TDF's own
+    // name. A village that has not set one must not inherit it — fall back to
+    // the single neutral default in ../config instead.
+    const mergedGeneral = mergeGeneralConfigWithDefaults({
+      ...configKeyed.general,
+      platformName:
+        configKeyed.general?.platformName ||
+        villageConfigDefaults.general.platformName,
+    });
     applyCurrencyLocaleFromGeneralConfig(mergedGeneral);
     return {
       ...prepareGeneralConfig(mergedGeneral),

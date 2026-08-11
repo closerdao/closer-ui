@@ -39,6 +39,13 @@ export default function LocaleMessagesNextIntlBridge({
       messages={messages}
       timeZone={timeZone}
       onError={(error) => {
+        // next-intl's default onError logs missing/invalid messages. Supplying
+        // our own handler replaces that default, so a missing key would render
+        // as the raw key path with nothing in the console. Keep the log (dev
+        // only, to avoid noisy production consoles) before delegating.
+        if (process.env.NODE_ENV !== 'production') {
+          console.error(error);
+        }
         onError?.(error as Error & { code?: string });
       }}
     >

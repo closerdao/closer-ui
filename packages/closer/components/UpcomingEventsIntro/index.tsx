@@ -65,11 +65,14 @@ const UpcomingEventsIntro = () => {
               {t('events_upcoming_heading', appName)}
             </Heading>
 
-            {t('events_upcoming_intro') !== 'events_upcoming_intro' && (
-              <p className="mb-6 text-sm md:text-base text-gray-700 leading-relaxed font-light">
-                {t('events_upcoming_intro', appName)}
-              </p>
-            )}
+            {/* The base bundle defines this key as an empty string, so skip
+                blank values too — not just the raw-key-path miss. */}
+            {Boolean(t('events_upcoming_intro')) &&
+              t('events_upcoming_intro') !== 'events_upcoming_intro' && (
+                <p className="mb-6 text-sm md:text-base text-gray-700 leading-relaxed font-light">
+                  {t('events_upcoming_intro', appName)}
+                </p>
+              )}
 
             <Link
               href="/events"

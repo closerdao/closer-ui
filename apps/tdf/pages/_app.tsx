@@ -106,7 +106,7 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
         config={{
           ...config,
           ...blockchainConfig,
-          ...getAppConfigFromEnv(),
+          ...getAppConfigFromEnv('tdf'),
           rbacConfig,
         }}
       >

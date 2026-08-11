@@ -48,11 +48,19 @@ export async function loadLocaleData(
           default:
             return import('../generated/locales/closer/en.json');
         }
+      case 'village':
+        switch (localeKey) {
+          case 'en':
+          default:
+            return import('../generated/locales/village/en.json');
+        }
       default:
-        console.warn(
-          `Unsupported app: ${appKey}, falling back to base English locale`,
-        );
-        return import('../generated/locales/closer/en.json');
+        // Provisioned village apps set NEXT_PUBLIC_APP_NAME to their village
+        // slug, so any name outside the first-party app list above is expected
+        // to land here and intentionally gets the shared, brand-neutral
+        // village bundle. This is the correct path, not an error — only a
+        // missing appName (handled below) warrants a warning.
+        return import('../generated/locales/village/en.json');
     }
   }
 
@@ -60,7 +68,7 @@ export async function loadLocaleData(
 
   if (!appName) {
     console.warn('appName is undefined, falling back to base English locale');
-    const res = await import('../generated/locales/closer/en.json');
+    const res = await import('../generated/locales/village/en.json');
     return (res.default || {}) as AbstractIntlMessages;
   }
 
