@@ -154,10 +154,9 @@ const VillageDetailPage = () => {
     hasActionPanels && !(village.closer && village.onboardingStatus === 'live');
   const projectManager = village.projectManager;
   const hasContactCard = Boolean(projectManager?.name || projectManager?.email);
-  // The invite only makes sense while the village has nobody attached to it —
-  // once it was created by a user, or an owner address is on file, there is
-  // nobody left to invite.
-  const hasOwner = Boolean(village.createdBy || projectManager?.email);
+  // createdBy is who filed the village (often an ambassador), not who owns it.
+  // An owner is only "attached" once their invite address is on the PM card.
+  const hasOwner = Boolean(projectManager?.email);
   const contact = village.contact;
   const socialLinks = SOCIAL_NETWORKS.map((network) => ({
     network,
