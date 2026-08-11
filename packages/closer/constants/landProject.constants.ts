@@ -1,5 +1,6 @@
-export const LAND_PROJECT_COLLECTION = 'landprojects';
-export const PROJECT_API_COLLECTION = 'projectapis';
+export const VILLAGE_COLLECTION = 'village';
+export const LAND_PROJECT_COLLECTION = VILLAGE_COLLECTION;
+export const PROJECT_API_COLLECTION = 'projectapi';
 
 export const LAND_PROJECT_STATUSES = [
   'planning',

@@ -1,4 +1,4 @@
-import api from './api';
+import api, { formatSearch } from './api';
 import {
   CreateLandProjectInput,
   LandProject,
@@ -8,10 +8,10 @@ import {
   LandProjectSearchResponse,
 } from '../types/landProject';
 import {
-  LAND_PROJECT_COLLECTION,
   PEOPLE_COUNT_MAX,
   PEOPLE_COUNT_MIN,
   ROOMS_COUNT_MIN,
+  VILLAGE_COLLECTION,
 } from '../constants/landProject.constants';
 
 export function toLeafletCoords(
@@ -84,23 +84,36 @@ export function meetsHardCriteria(criteria?: LandProjectCriteria): boolean {
   );
 }
 
+function buildVillageWhere(
+  params: LandProjectSearchParams = {},
+): Record<string, unknown> {
+  const where: Record<string, unknown> = {};
+  if (params.status) where.status = params.status;
+  if (params.country) where.country = params.country;
+  if (params.closer !== undefined) where.closer = params.closer;
+  if (params.tags) {
+    where.tags = { $in: params.tags.split(',').map((tag) => tag.trim()) };
+  }
+  return where;
+}
+
 export async function fetchLandProjects(
   params: LandProjectSearchParams = {},
 ): Promise<LandProject[]> {
-  const query = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
-      query.set(key, String(value));
-    }
-  });
-  const qs = query.toString();
   try {
-    const { data } = await api.get(
-      qs
-        ? `/${LAND_PROJECT_COLLECTION}/search?${qs}`
-        : `/${LAND_PROJECT_COLLECTION}`,
-    );
+    const where = buildVillageWhere(params);
+    const { data } = await api.get(`/${VILLAGE_COLLECTION}`, {
+      params: {
+        ...(Object.keys(where).length > 0
+          ? { where: formatSearch(where) }
+          : {}),
+        limit: params.limit || 100,
+        page: params.page,
+        sort: params.sort,
+      },
+    });
     if (Array.isArray(data?.results)) return data.results as LandProject[];
+    if (Array.isArray(data?.villages)) return data.villages as LandProject[];
     if (Array.isArray(data?.landProjects))
       return data.landProjects as LandProject[];
     if (Array.isArray(data)) return data as LandProject[];
@@ -113,22 +126,13 @@ export async function fetchLandProjects(
 export async function searchLandProjects(
   params: LandProjectSearchParams = {},
 ): Promise<LandProjectSearchResponse> {
-  const query = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
-      query.set(key, String(value));
-    }
-  });
-  const qs = query.toString();
-  const { data } = await api.get(
-    `/${LAND_PROJECT_COLLECTION}/search${qs ? `?${qs}` : ''}`,
-  );
+  const results = await fetchLandProjects(params);
   return {
-    landProjects: (data?.landProjects || data?.results || []) as LandProject[],
-    pagination: data?.pagination || {
+    landProjects: results,
+    pagination: {
       page: params.page || 1,
       limit: params.limit || 20,
-      total: (data?.landProjects || data?.results || []).length,
+      total: results.length,
       pages: 1,
     },
   };
@@ -138,7 +142,7 @@ export async function getLandProject(
   idOrSlug: string,
 ): Promise<LandProject | null> {
   try {
-    const { data } = await api.get(`/${LAND_PROJECT_COLLECTION}/${idOrSlug}`);
+    const { data } = await api.get(`/${VILLAGE_COLLECTION}/${idOrSlug}`);
     return (data?.results || data) as LandProject;
   } catch {
     return null;
@@ -148,7 +152,7 @@ export async function getLandProject(
 export async function createLandProject(
   payload: CreateLandProjectInput,
 ): Promise<LandProject> {
-  const { data } = await api.post(`/${LAND_PROJECT_COLLECTION}`, {
+  const { data } = await api.post(`/${VILLAGE_COLLECTION}`, {
     ...payload,
     coords: toApiCoords(payload.coords),
     closer: false,
@@ -166,7 +170,7 @@ export async function updateLandProject(
   if (body.coords) {
     body.coords = toApiCoords(body.coords as [number, number]);
   }
-  const { data } = await api.patch(`/${LAND_PROJECT_COLLECTION}/${id}`, body);
+  const { data } = await api.patch(`/${VILLAGE_COLLECTION}/${id}`, body);
   return (data?.results || data) as LandProject;
 }
 
@@ -174,11 +178,9 @@ export async function linkLandProjectToProjectApi(
   landProjectId: string,
   projectApiId: string,
 ): Promise<LandProject> {
-  const { data } = await api.patch(
-    `/${LAND_PROJECT_COLLECTION}/${landProjectId}/link-project-api`,
-    { projectApiId },
-  );
-  return (data?.landProject || data?.results || data) as LandProject;
+  return updateLandProject(landProjectId, {
+    projectApi: projectApiId,
+  } as Partial<LandProject>);
 }
 
 export async function requestLandProjectDeploy(

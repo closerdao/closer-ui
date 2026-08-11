@@ -1,6 +1,22 @@
-# LandProject API additions (Ambassador program)
+# Village API (Ambassador program)
 
-Companion to [closer-api#290](https://github.com/closerdao/closer-api/pull/290). UI implementation in closer-ui expects these fields on `LandProject` in addition to the PR model.
+Villages use the standard Closer base CRUD model route **`/village`** (same pattern as `/project`, `/event`, `/listing`).
+
+## Base CRUD
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `POST` | `/village` | Create village |
+| `GET` | `/village` | List (`?where=…` via `formatSearch`) |
+| `GET` | `/village/:idOrSlug` | Read one |
+| `PATCH` | `/village/:id` | Update (managers in `managedBy` + creator) |
+| `DELETE` | `/village/:id` | Soft-delete when permitted |
+
+Linking a live Closer tenant is a normal PATCH: `{ "projectApi": "<projectapiId>" }` (not a custom link route).
+
+Companion model for tenants: **`/projectapi`** (base CRUD).
+
+Depends on the Village / LandProject model shipping in closer-api (see [closer-api#290](https://github.com/closerdao/closer-api/pull/290); prefer model name `Village` / route `village` over `landprojects`).
 
 ## Attribution
 
@@ -15,7 +31,7 @@ Companion to [closer-api#290](https://github.com/closerdao/closer-api/pull/290).
 }
 ```
 
-Same pattern for optional `ambassadorId` (alias) and on `ProjectApi.referredBy` when a tenant goes live.
+Same pattern for optional `ambassadorId` and on `ProjectApi.referredBy` when a tenant goes live.
 
 ## Verification & onboarding
 
@@ -37,4 +53,4 @@ Same pattern for optional `ambassadorId` (alias) and on `ProjectApi.referredBy` 
 
 ## ACL
 
-`managedBy` (baseFields) must include Ambassador and village owner. Confirm generic PATCH routes authorize managers, not only `createdBy` (link-project-api already checks managers).
+`managedBy` (baseFields) must include Ambassador and village owner. Base PATCH routes must authorize managers, not only `createdBy`.

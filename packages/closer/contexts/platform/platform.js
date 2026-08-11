@@ -36,6 +36,7 @@ export const models = [
   'vote',
   'cohousingapplication',
   'engagementopportunity',
+  'village',
 ];
 
 const filterToKey = (filter) => JSON.stringify(filter) || '__';

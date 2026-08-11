@@ -86,7 +86,7 @@ flowchart LR
 
 **Requirements**
 
-- Replace hardcoded map array with `GET /landprojects` + `/landprojects/search` (geo, tags, country, status).
+- Replace hardcoded map array with base CRUD `GET /village` (filters via `where` / formatSearch: tags, country, status, closer).
 - Map UX: clean pins, filters (tags, country, Closer-live vs map-only), popup with name, short description, tags, website, verification badge, link to village detail.
 - Seed from existing static list / PR `data/projects.json` so current closer.earth pins survive migration.
 - Dedicated `/map` (or keep homepage embed + full page).
@@ -223,7 +223,7 @@ flowchart LR
 | `/ambassadors` or branded `/affiliate`        | Join program                            |
 | `/ambassadors/[slug]`                         | Public Ambassador profile               |
 | `/map` + homepage map                         | Discover LandProjects                   |
-| `/villages/[slug]` or `/land-projects/[slug]` | Public + edit (managers)                |
+| `/villages/[slug]` | Public + edit (managers) |
 | `/settings/affiliate`                         | Earnings (existing)                     |
 | Admin land-project tools                      | Verification, managers, link ProjectApi |
 
@@ -261,7 +261,7 @@ Depends on [closer-api#290](https://github.com/closerdao/closer-api/pull/290) (`
 
 - `LandProject` fields: name, closer, description, tags, country, website, appUrl, apiUrl, coords, status, capacity, amenities, contact, projectApi
 - `managedBy` / `createdBy` via `baseFields` — managers may edit and link ProjectApi
-- Routes: `GET /landprojects/search`, `PATCH /landprojects/:id/link-project-api`, unlink
+- Routes: base CRUD on `/village` (`POST`/`GET`/`PATCH`/`DELETE`); link tenant via `PATCH /village/:id` `{ projectApi }`
 
 ### Required API additions for this program
 
@@ -283,4 +283,4 @@ Permissions:
 - Deploy queue transitions (`deploying`, `live`, verification badge) for admin / affiliate-manager / Ambassador Coordinator
 - Coords contract: seed data and UI use Leaflet `[lat, lng]`; normalize consistently in API validation
 
-Until these fields ship, the UI still posts/patches them where possible; unknown fields may be ignored by older API builds. Map falls back to static pins when `GET /landprojects` is empty/unavailable.
+Until these fields ship, the UI still posts/patches them where possible; unknown fields may be ignored by older API builds. Map falls back to static pins when `GET /village` is empty/unavailable.
