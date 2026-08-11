@@ -199,7 +199,7 @@ const Navigation = () => {
                 APP_NAME?.toLowerCase() === 'closer' && (
                   <div className="flex gap-3 items-center  w-full justify-between">
                     <div className="w-full flex justify-center">
-                      <ul className="gap-6 text-sm md:text-md hidden md:flex font-medium">
+                      <ul className="gap-6 text-sm lg:text-md hidden lg:flex font-medium">
                         <li>
                           <Link href="/#why">{t('header_nav_why')}</Link>
                         </li>
