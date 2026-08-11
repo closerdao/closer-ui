@@ -3,17 +3,17 @@ import Link from 'next/link';
 
 import { useEffect, useState } from 'react';
 
-import { Button, Heading, Spinner } from '../../components/ui';
+import { Button, Heading, Spinner } from '../../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
-import { useAuth } from '../../contexts/auth';
-import { Village } from '../../types/village';
+import { useAuth } from '../../../contexts/auth';
+import { Village } from '../../../types/village';
 import {
   fetchVillages,
   updateVillage,
-} from '../../utils/village.utils';
-import Page401 from '../401';
+} from '../../../utils/village.utils';
+import Page401 from '../../401';
 
 const DeployQueuePage = () => {
   const t = useTranslations();

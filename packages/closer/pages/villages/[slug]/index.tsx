@@ -4,16 +4,16 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
 
-import { Button, ErrorMessage, Heading, Spinner } from '../../components/ui';
+import { Button, ErrorMessage, Heading, Spinner } from '../../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
 import {
   PLATFORM_SETUP_FEE_EUR,
   PLATFORM_SUBSCRIPTION_PRICE_EUR,
-} from '../../constants/village.constants';
-import { useAuth } from '../../contexts/auth';
-import { Village } from '../../types/village';
+} from '../../../constants/village.constants';
+import { useAuth } from '../../../contexts/auth';
+import { Village } from '../../../types/village';
 import {
   canManageVillage,
   canRequestDeploy,
@@ -21,8 +21,8 @@ import {
   markVillageSubscribed,
   requestVillageDeploy,
   updateVillage,
-} from '../../utils/village.utils';
-import PageNotFound from '../not-found';
+} from '../../../utils/village.utils';
+import PageNotFound from '../../not-found';
 
 const VillageDetailPage = () => {
   const t = useTranslations();
