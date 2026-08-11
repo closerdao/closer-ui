@@ -338,8 +338,8 @@ export const formatStatValue = (value: number): string => {
   if (!Number.isFinite(value)) return '0';
   const rounded = Math.round(value * 100) / 100;
   return Number.isInteger(rounded)
-    ? rounded.toLocaleString()
-    : rounded.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    ? rounded.toLocaleString('en-US')
+    : rounded.toLocaleString('en-US', { maximumFractionDigits: 2 });
 };
 
 export const formatStatDelta = (delta: StatDelta): string | null => {
