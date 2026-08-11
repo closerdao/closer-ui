@@ -142,12 +142,23 @@ const popupHtml = (project: VillageMapItem) => {
   const closerBadge = project.closer
     ? '<div class="closer-badge">Powered by Closer</div>'
     : '';
+const safeExternalUrl = (value?: string) => {
+  if (!value) return '';
+  try {
+    const url = new URL(value, 'https://example.invalid');
+    return url.protocol === 'http:' || url.protocol === 'https:' ? value : '';
+  } catch {
+    return '';
+  }
+};
+
+  const websiteHref = safeExternalUrl(project.website);
   const detailHref = project.slug
     ? `/villages/${project.slug}`
     : project._id
       ? `/villages/${project._id}`
-      : project.website || '';
-  const isExternal = Boolean(project.website && detailHref === project.website);
+      : websiteHref;
+  const isExternal = Boolean(websiteHref && detailHref === websiteHref);
   const linkHtml = detailHref
     ? `<a href="${escapeHtml(detailHref)}" class="popup-link"${
         isExternal ? ' target="_blank" rel="noopener noreferrer"' : ''
