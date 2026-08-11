@@ -15,10 +15,17 @@ const fs = require('fs');
 
 const { BASE_LOCALES, SNAPSHOT_PATH } = require('./syncBuildLocales.cjs');
 
-function readSnapshot(snapshotPath = SNAPSHOT_PATH) {
+function readSnapshot(snapshotPath = SNAPSHOT_PATH, log = console) {
   try {
     return JSON.parse(fs.readFileSync(snapshotPath, 'utf8'));
-  } catch {
+  } catch (error) {
+    // A corrupt/unreadable snapshot silently building an English-only village
+    // would be hard to trace, so say what happened — but still never fail.
+    log.warn(
+      `[village-i18n] Could not read appConfig snapshot at ${snapshotPath} (${
+        error && error.message ? error.message : error
+      }); falling back to default English i18n.`,
+    );
     return {};
   }
 }

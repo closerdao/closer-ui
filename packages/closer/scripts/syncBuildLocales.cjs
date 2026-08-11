@@ -80,20 +80,47 @@ function readVillageLocalesOverlay(snapshot, log = console) {
   const bucket = snapshot.locales;
   if (bucket == null) return {};
   if (!isPlainObject(bucket)) {
+    // The whole overlay is being dropped — make that impossible to miss in a
+    // build log, without failing the build.
     log.warn(
-      '[sync-build-locales] Ignoring config `locales` bucket: expected an object keyed by locale, got ' +
-        (Array.isArray(bucket) ? 'array' : typeof bucket),
+      [
+        '[sync-build-locales] ============================================================',
+        '[sync-build-locales] VILLAGE LOCALES OVERLAY IGNORED — malformed `locales` bucket.',
+        '[sync-build-locales] Expected an object keyed by locale, e.g.',
+        '[sync-build-locales]   { "en": { "stay_title": "..." }, "pt": { ... } }',
+        '[sync-build-locales] but the config snapshot holds ' +
+          (Array.isArray(bucket) ? 'an array' : `a ${typeof bucket}`) +
+          '.',
+        '[sync-build-locales] Every village string customization in this bucket is being',
+        '[sync-build-locales] skipped; the build continues with pure base translations.',
+        '[sync-build-locales] ============================================================',
+      ].join('\n'),
     );
     return {};
   }
   const overlay = {};
-  for (const [locale, messages] of Object.entries(bucket)) {
+  for (const [rawLocale, messages] of Object.entries(bucket)) {
+    // Normalize the locale key the same way general.language is normalized
+    // (villageI18n.cjs), so a "PT" or " pt " bucket still applies.
+    const locale =
+      typeof rawLocale === 'string'
+        ? rawLocale.trim().toLowerCase()
+        : rawLocale;
     if (!isPlainObject(messages)) {
       log.warn(
         `[sync-build-locales] Ignoring config locales overlay for "${locale}": expected an object of messages, got ` +
           (Array.isArray(messages) ? 'array' : typeof messages),
       );
       continue;
+    }
+    if (!BASE_LOCALES.includes(locale)) {
+      // Only base locales are built (APP_LOCALES.village), so this overlay
+      // would otherwise vanish without a trace.
+      log.warn(
+        `[sync-build-locales] Config locales overlay for "${locale}" has no base locale bundle (${BASE_LOCALES.join(
+          ', ',
+        )}); its messages will not appear in any built bundle.`,
+      );
     }
     const clean = {};
     for (const [key, value] of Object.entries(messages)) {
@@ -105,7 +132,7 @@ function readVillageLocalesOverlay(snapshot, log = console) {
       }
       clean[key] = value;
     }
-    overlay[locale] = clean;
+    overlay[locale] = { ...overlay[locale], ...clean };
   }
   return overlay;
 }

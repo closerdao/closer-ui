@@ -17,7 +17,7 @@ const {
   mergeMessages,
   readVillageLocalesOverlay,
 } = require('../syncBuildLocales.cjs');
-const { resolveVillageI18n } = require('../villageI18n.cjs');
+const { readSnapshot, resolveVillageI18n } = require('../villageI18n.cjs');
 
 const LOCALES_ROOT = path.join(__dirname, '..', '..', 'locales');
 
@@ -71,12 +71,63 @@ describe('readVillageLocalesOverlay', () => {
     expect(log.warn).not.toHaveBeenCalled();
   });
 
-  it('warns and skips a malformed bucket without throwing', () => {
+  it('warns loudly and skips a malformed bucket without throwing', () => {
     for (const bad of ['nope', 42, ['en'], true]) {
       const log = silentLog();
       expect(readVillageLocalesOverlay({ locales: bad }, log)).toEqual({});
       expect(log.warn).toHaveBeenCalledTimes(1);
+      // The whole overlay is dropped here, so the warning must be findable in
+      // a noisy build log: multi-line with an unmistakable marker.
+      const message = log.warn.mock.calls[0][0];
+      expect(message).toContain('VILLAGE LOCALES OVERLAY IGNORED');
+      expect(message.split('\n').length).toBeGreaterThan(3);
     }
+  });
+
+  it('normalizes locale keys so a "PT" or " pt " bucket still applies', () => {
+    const log = silentLog();
+    const overlay = readVillageLocalesOverlay(
+      {
+        locales: {
+          PT: { stay_title: 'Reserve uma cama' },
+          ' En ': { stay_title: 'Book a bed' },
+        },
+      },
+      log,
+    );
+    expect(overlay).toEqual({
+      pt: { stay_title: 'Reserve uma cama' },
+      en: { stay_title: 'Book a bed' },
+    });
+    expect(log.warn).not.toHaveBeenCalled();
+  });
+
+  it('merges duplicate locale keys that normalize to the same locale', () => {
+    const log = silentLog();
+    const overlay = readVillageLocalesOverlay(
+      {
+        locales: {
+          pt: { a: 'A', b: 'B' },
+          PT: { b: 'B2', c: 'C' },
+        },
+      },
+      log,
+    );
+    expect(overlay).toEqual({ pt: { a: 'A', b: 'B2', c: 'C' } });
+  });
+
+  it('warns when an overlay locale has no base bundle instead of silently dropping it', () => {
+    const log = silentLog();
+    const overlay = readVillageLocalesOverlay(
+      { locales: { fr: { stay_title: 'Réservez un lit' } } },
+      log,
+    );
+    // The messages are kept in the overlay (harmless), but no fr bundle is
+    // built, so the build must say the customization goes nowhere.
+    expect(overlay).toEqual({ fr: { stay_title: 'Réservez un lit' } });
+    expect(log.warn).toHaveBeenCalledTimes(1);
+    expect(log.warn.mock.calls[0][0]).toContain('"fr"');
+    expect(log.warn.mock.calls[0][0]).toContain('no base locale bundle');
   });
 
   it('warns and skips a malformed locale entry, keeping valid ones', () => {
@@ -153,6 +204,58 @@ describe('mergeMessages for the village bundle', () => {
       ...baseEn,
       ...tdfOverlay,
     });
+  });
+});
+
+describe('readSnapshot', () => {
+  const os = require('os');
+
+  it('warns and returns {} for a corrupt snapshot instead of failing silently', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'village-i18n-'));
+    const corrupt = path.join(dir, 'appConfig.snapshot.json');
+    fs.writeFileSync(corrupt, '{ not json', 'utf8');
+    const log = silentLog();
+    expect(readSnapshot(corrupt, log)).toEqual({});
+    expect(log.warn).toHaveBeenCalledTimes(1);
+    expect(log.warn.mock.calls[0][0]).toContain(corrupt);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('warns and returns {} for an unreadable snapshot path', () => {
+    const log = silentLog();
+    expect(
+      readSnapshot(path.join(__dirname, 'does-not-exist.snapshot.json'), log),
+    ).toEqual({});
+    expect(log.warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('reads a valid snapshot without warning', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'village-i18n-'));
+    const good = path.join(dir, 'appConfig.snapshot.json');
+    fs.writeFileSync(good, JSON.stringify({ general: { language: 'pt' } }));
+    const log = silentLog();
+    expect(readSnapshot(good, log)).toEqual({ general: { language: 'pt' } });
+    expect(log.warn).not.toHaveBeenCalled();
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+});
+
+describe('BASE_LOCALES / importVillageLocale sync guard', () => {
+  // The set of village locales lives in three places: locales/base-<locale>.json
+  // files (→ BASE_LOCALES), APP_LOCALES.village (asserted above), and the
+  // static-import switch in utils/locale.helpers.ts (Next.js needs literal
+  // import paths, so it cannot be derived). Catch the third one drifting.
+  it('locale.helpers.ts imports a village bundle for exactly the base locales', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '..', '..', 'utils', 'locale.helpers.ts'),
+      'utf8',
+    );
+    const imported = new Set();
+    const pattern = /generated\/locales\/village\/([a-z0-9-]+)\.json/g;
+    for (const match of source.matchAll(pattern)) {
+      imported.add(match[1]);
+    }
+    expect([...imported].sort()).toEqual([...BASE_LOCALES].sort());
   });
 });
 
