@@ -188,7 +188,9 @@ describe('resolveVillageI18n', () => {
 
   it('tolerates malformed snapshots', () => {
     const log = silentLog();
-    for (const bad of [null, undefined, 'nope', { general: { language: 7 } }]) {
+    // `undefined` is excluded: it would trigger the default parameter, which
+    // reads whatever snapshot happens to be on disk.
+    for (const bad of [null, 'nope', 42, { general: { language: 7 } }]) {
       expect(resolveVillageI18n(bad, log).defaultLocale).toBe('en');
     }
   });
