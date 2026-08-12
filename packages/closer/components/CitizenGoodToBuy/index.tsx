@@ -42,7 +42,9 @@ const CitizenGoodToBuy = ({
       ? [
           {
             id: 'iWantToApply' as const,
-            label: t('subscriptions_citizen_i_own_tokens'),
+            label: t('subscriptions_citizen_i_own_tokens', {
+              var: tokensRequired,
+            }),
             intent: {
               iWantToApply: true,
               iWantToBuyTokens: false,
@@ -54,8 +56,13 @@ const CitizenGoodToBuy = ({
     {
       id: 'iWantToFinanceTokens',
       label: buyMore
-        ? t('subscriptions_citizen_i_own_tokens_and_wish_to_finance_tokens')
-        : t('subscriptions_citizen_i_wish_to_finance_tokens'),
+        ? t(
+            'subscriptions_citizen_i_own_tokens_and_wish_to_finance_tokens',
+            { var: tokensRequired, amount: tokensToBuy },
+          )
+        : t('subscriptions_citizen_i_wish_to_finance_tokens', {
+            var: tokensToBuy,
+          }),
       intent: {
         iWantToApply: false,
         iWantToBuyTokens: false,
@@ -65,7 +72,10 @@ const CitizenGoodToBuy = ({
     {
       id: 'iWantToBuyTokens',
       label: buyMore
-        ? t('subscriptions_citizen_i_own_tokens_and_wish_to_buy_now')
+        ? t('subscriptions_citizen_i_own_tokens_and_wish_to_buy_now', {
+            var: tokensRequired,
+            amount: tokensToBuy,
+          })
         : t('subscriptions_citizen_i_wish_to_buy_now', { var: tokensToBuy }),
       intent: {
         iWantToApply: false,
