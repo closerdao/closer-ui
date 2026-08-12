@@ -115,7 +115,7 @@ const BookingResult = ({
             <p className="card-feature">{t('bookings_tokens_lock')}</p>
             <p className="text-sm">
               {priceFormat(
-                { val: rentalToken.val, cur: rentalToken.cur ?? 'TDF' },
+                { val: rentalToken.val, cur: rentalToken.cur ?? '' },
               )}
             </p>
           </div>
