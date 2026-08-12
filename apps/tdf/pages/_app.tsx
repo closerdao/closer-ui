@@ -14,6 +14,7 @@ import PushNotificationModal from 'closer/components/PushNotificationModal';
 import {
   AuthProvider,
   ConfigProvider,
+  FaviconLinks,
   LocaleMessagesNextIntlBridge,
   PlatformProvider,
   appGetInitialPropsWithMessages,
@@ -78,6 +79,8 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
         />
       </Head>
 
+      <FaviconLinks favicon={config?.FAVICON} />
+
       {FACEBOOK_PIXEL_ID && (
         <Script
           id="fb-pixel"
@@ -103,7 +106,7 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
         config={{
           ...config,
           ...blockchainConfig,
-          ...getAppConfigFromEnv(),
+          ...getAppConfigFromEnv('tdf'),
           rbacConfig,
         }}
       >

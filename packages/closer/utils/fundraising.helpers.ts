@@ -100,6 +100,11 @@ export const formatMilestoneDateRange = (
   return start || end;
 };
 
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+/** How close a milestone deadline has to be before the urgency banner shows. */
+export const MILESTONE_URGENCY_WINDOW_DAYS = 14;
+
 export const getMilestoneDaysLeft = (
   milestone: FundraisingMilestone | null | undefined,
 ): number => {
@@ -107,7 +112,7 @@ export const getMilestoneDaysLeft = (
   const end = parseFundraisingMilestoneDate(getMilestoneEnd(milestone), 'end');
   if (!end) return 0;
   const diffMs = end.getTime() - Date.now();
-  return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+  return Math.max(0, Math.ceil(diffMs / MS_PER_DAY));
 };
 
 export const getMilestoneCumulativeGoalBefore = (
@@ -246,10 +251,17 @@ export const computeMilestoneStates = (
               100,
           )
         : 0;
+    // "Deadline approaching" should mean it actually is. Without the window
+    // this was true for the whole life of every underfunded milestone.
+    const daysToEnd =
+      end === null
+        ? null
+        : Math.ceil((end.getTime() - now.getTime()) / MS_PER_DAY);
     const urgency =
       !isCompleted &&
-      end !== null &&
-      now <= end &&
+      daysToEnd !== null &&
+      daysToEnd >= 0 &&
+      daysToEnd <= MILESTONE_URGENCY_WINDOW_DAYS &&
       fundraisingTotal < cumulativeGoalThis;
 
     if (isCompleted) {
@@ -507,4 +519,66 @@ export const fetchFundraisingBreakdown = async (
     loansTotal: loans,
     donorCount,
   };
+};
+
+export type FundraisingBubbleMessage = {
+  key: string;
+  values?: Record<string, string | number>;
+};
+
+/** Descending, so the highest milestone crossed (or approached) wins. */
+const BUBBLE_PERCENT_THRESHOLDS = [90, 75, 50, 25];
+
+/** How many points below a threshold still counts as "almost". */
+const BUBBLE_ALMOST_MARGIN = 5;
+
+/**
+ * Picks the nav tooltip copy from where the campaign actually is, so the bubble
+ * says something useful rather than the same generic line every time.
+ *
+ * Deadline pressure outruns progress: with two days to go, "2 days left" is a
+ * better prompt than "over 75% funded", however good the number looks.
+ */
+export const getFundraisingBubbleMessage = ({
+  isGoalReached,
+  progressPercent,
+  daysLeft,
+  isLoading,
+}: {
+  isGoalReached: boolean;
+  progressPercent: number;
+  daysLeft: number;
+  isLoading?: boolean;
+}): FundraisingBubbleMessage => {
+  // Until the totals land, progressPercent is 0 and would read as "just started".
+  if (isLoading) return { key: 'invest_bubble_fundraising' };
+
+  if (isGoalReached) return { key: 'invest_bubble_goal_reached' };
+
+  if (daysLeft > 0 && daysLeft <= 3) {
+    return { key: 'invest_bubble_days_left', values: { days: daysLeft } };
+  }
+  if (daysLeft === 0) return { key: 'invest_bubble_last_day' };
+
+  const pct = Math.floor(progressPercent);
+  if (pct >= 90) return { key: 'invest_bubble_almost_there' };
+
+  // Approaching a round number is worth saying out loud: at 48% "almost 50%"
+  // lands better than "over 25%", which undersells where the campaign is.
+  for (const threshold of BUBBLE_PERCENT_THRESHOLDS) {
+    if (pct < threshold && pct >= threshold - BUBBLE_ALMOST_MARGIN) {
+      return {
+        key: 'invest_bubble_almost_percent',
+        values: { percent: threshold },
+      };
+    }
+  }
+
+  for (const threshold of BUBBLE_PERCENT_THRESHOLDS) {
+    if (pct >= threshold) {
+      return { key: 'invest_bubble_over_percent', values: { percent: threshold } };
+    }
+  }
+
+  return { key: 'invest_bubble_fundraising' };
 };

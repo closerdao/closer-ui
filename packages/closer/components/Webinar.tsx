@@ -8,12 +8,12 @@ import utc from 'dayjs/plugin/utc';
 import { useTranslations } from 'next-intl';
 import { event as gaEvent } from 'nextjs-google-analytics';
 
-import { useInteractionIsHuman } from '../hooks/useInteractionIsHuman';
-import api from '../utils/api';
 import configCached from '../configCached';
+import api from '../utils/api';
+import { clearInteractionSession } from '../utils/interactionSession';
 import {
+  createTurnstileHandlers,
   isTurnstileSubmitEnabled,
-  turnstileTokenForRequest,
 } from '../utils/turnstile.helpers';
 import TurnstileWidget from './TurnstileWidget';
 import { Button, ErrorMessage, Heading } from './ui';
@@ -54,7 +54,6 @@ const Webinar = ({
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const isHuman = useInteractionIsHuman();
   const [webinarConfig, setWebinarConfig] =
     useState<WebinarScheduleConfig | null>(
       scheduleProp !== undefined ? scheduleProp : null,
@@ -200,7 +199,7 @@ const Webinar = ({
       await api.post('/webinar', {
         email,
         tags,
-        turnstileToken: turnstileTokenForRequest(isHuman, turnstileToken),
+        turnstileToken,
       });
 
       if (process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true') {
@@ -217,7 +216,7 @@ const Webinar = ({
           await api.post('/subscribe', {
             email,
             tags: subscribeTags,
-            turnstileToken: turnstileTokenForRequest(isHuman, turnstileToken),
+            turnstileToken,
           });
         } catch (subscribeError) {
           console.error('Error subscribing to newsletter:', subscribeError);
@@ -232,11 +231,15 @@ const Webinar = ({
       });
     } catch (err: any) {
       console.error('Error sending webinar invite:', err);
-      setError(
+      const errorMessage =
         err?.response?.data?.error ||
-          err?.message ||
-          t('webinar_error_generic'),
-      );
+        err?.message ||
+        t('webinar_error_generic');
+      if (/turnstile/i.test(String(errorMessage))) {
+        clearInteractionSession();
+        setTurnstileToken(null);
+      }
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -308,19 +311,17 @@ const Webinar = ({
                 placeholder={t('webinar_form_email')}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
               />
-              {email.length > 0 && !isHuman && (
-                <div className="animate-[fadeIn_0.3s_ease-in-out]">
-                  <TurnstileWidget
-                    action="webinar_signup"
-                    onVerify={setTurnstileToken}
-                  />
-                </div>
-              )}
+              <TurnstileWidget
+                action="webinar_signup"
+                {...createTurnstileHandlers(setTurnstileToken)}
+              />
               {error && <ErrorMessage error={error} />}
               <Button
                 type="submit"
                 isEnabled={
-                  !isLoading && isTurnstileSubmitEnabled(isHuman, turnstileToken)
+                  !!email.trim() &&
+                  !isLoading &&
+                  isTurnstileSubmitEnabled(turnstileToken)
                 }
                 isLoading={isLoading}
                 className="w-full"

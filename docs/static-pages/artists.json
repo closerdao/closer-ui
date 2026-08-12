@@ -1,0 +1,110 @@
+{
+  "title": "_i18n_artists_page_title",
+  "slug": "/artists",
+  "description": "_i18n_artists_page_description",
+  "ogImage": "",
+  "sections": [
+    {
+      "type": "hero",
+      "data": {
+        "settings": {
+          "alignText": "center",
+          "isInverted": false,
+          "isCompact": false
+        },
+        "content": {
+          "title": "_i18n_artists_hero_title",
+          "body": "_i18n_artists_hero_subtitle",
+          "imageUrl": "",
+          "cta": {
+            "text": "_i18n_artists_apply_residency",
+            "url": "/volunteer"
+          }
+        }
+      }
+    },
+    {
+      "type": "features",
+      "data": {
+        "settings": {
+          "numColumns": 2,
+          "isSmallImage": false,
+          "isColorful": false
+        },
+        "content": {
+          "title": "",
+          "description": "",
+          "items": [
+            {
+              "title": "Bráulio Amado",
+              "text": "<p>_i18n_artist_braulio_short_bio</p><p>PT · Graphic Designer &amp; Illustrator</p>",
+              "imageUrl": "/images/logo.png",
+              "visualType": "photo",
+              "cta": {
+                "text": "_i18n_artists_view_profile",
+                "url": "/artists/braulio-amado"
+              }
+            },
+            {
+              "title": "Katya Bezuma",
+              "text": "<p>_i18n_artist_katya_short_bio</p><p>USA · Visual Artist</p>",
+              "imageUrl": "/images/artists/katya-bezuma.jpg",
+              "visualType": "photo",
+              "cta": {
+                "text": "_i18n_artists_view_profile",
+                "url": "/artists/katya-bezuma"
+              }
+            },
+            {
+              "title": "Marcos Moccero",
+              "text": "<p>_i18n_artist_marcos_short_bio</p><p>AR · Multidisciplinary Artist</p>",
+              "imageUrl": "/images/artists/marcos-moccero.jpg",
+              "visualType": "photo",
+              "cta": {
+                "text": "_i18n_artists_view_profile",
+                "url": "/artists/marcos-moccero"
+              }
+            },
+            {
+              "title": "Ron Razon",
+              "text": "<p>_i18n_artist_ron_short_bio</p><p>ISR · Multidisciplinary Artist</p>",
+              "imageUrl": "/images/artists/ron-razon.jpg",
+              "visualType": "photo",
+              "cta": {
+                "text": "_i18n_artists_view_profile",
+                "url": "/artists/ron-razon"
+              }
+            },
+            {
+              "title": "Ivan Zema",
+              "text": "<p>_i18n_artist_ivan_short_bio</p><p>RU · Sculptor &amp; Land Artist</p>",
+              "imageUrl": "/images/landing/art-faire.png",
+              "visualType": "photo",
+              "cta": {
+                "text": "_i18n_artists_view_profile",
+                "url": "/artists/ivan-zema"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "cta",
+      "data": {
+        "settings": {
+          "style": "default"
+        },
+        "content": {
+          "eyebrow": "",
+          "title": "_i18n_artists_residency_title",
+          "text": "_i18n_artists_residency_description",
+          "primaryText": "_i18n_artists_apply_residency",
+          "primaryLink": "/volunteer",
+          "secondaryText": "",
+          "secondaryLink": ""
+        }
+      }
+    }
+  ]
+}

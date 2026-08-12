@@ -14,6 +14,7 @@ import {
   findActiveMilestone,
   findFundingMilestone,
   formatFundraiserAmount,
+  getFundraisingBubbleMessage,
   getMilestoneDaysLeft,
   getMilestoneDisplayRaised,
   getMilestoneGoal,
@@ -129,13 +130,6 @@ const FundraisingWidget = ({
   const progressPercent =
     displayGoal > 0 ? Math.min(100, (displayRaised / displayGoal) * 100) : 0;
 
-  const totalGoal = useMemo(
-    () => sortedMilestones.reduce((sum, m) => sum + getMilestoneGoal(m), 0),
-    [sortedMilestones],
-  );
-  const totalProgress =
-    totalGoal > 0 ? Math.min(100, (totalRaised / totalGoal) * 100) : 0;
-
   const formatAmount = (amount: number) =>
     formatFundraiserAmount(amount, intlLocale);
 
@@ -149,6 +143,17 @@ const FundraisingWidget = ({
     displayMilestone?.name ??
     t('invest_progress_milestone_default');
   const isGoalReached = !isLoading && displayGoal > 0 && displayRaised >= displayGoal;
+
+  const bubbleMessage = useMemo(
+    () =>
+      getFundraisingBubbleMessage({
+        isGoalReached,
+        progressPercent,
+        daysLeft,
+        isLoading,
+      }),
+    [isGoalReached, progressPercent, daysLeft, isLoading],
+  );
 
   if (variant === 'hero') {
     if (isGoalReached) {
@@ -255,7 +260,9 @@ const FundraisingWidget = ({
   }
 
   const circumference = 2 * Math.PI * 11;
-  const navPercent = totalProgress;
+  // Progress against the milestone currently being funded, not the sum of every
+  // milestone goal — the ring should track the same target the hero card shows.
+  const navPercent = progressPercent;
   const strokeOffset = circumference - (circumference * Math.min(navPercent, 100)) / 100;
 
   const ProgressRing = () => (
@@ -313,7 +320,7 @@ const FundraisingWidget = ({
     return (
       <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 pointer-events-none z-50 animate-fade-in">
         <span className="relative block bg-gray-900 text-white text-[10px] font-medium whitespace-nowrap rounded-md px-2.5 py-1.5 shadow-lg">
-          {t('invest_bubble_fundraising')}
+          {t(bubbleMessage.key, bubbleMessage.values)}
           <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45" />
         </span>
       </span>
@@ -371,9 +378,6 @@ const FundraisingWidget = ({
           <div className="w-7 h-7 flex-shrink-0"><ProgressRing /></div>
           <span className="text-xs font-medium text-gray-900">
             {isLoading ? '...' : formatAmount(totalRaised)}
-          </span>
-          <span className="text-xs text-gray-500">
-            {Math.round(navPercent)}% {t('invest_progress_funded')}
           </span>
           <span className="text-xs text-gray-500">
             {daysLeft}{t('invest_nav_days_suffix')}

@@ -14,6 +14,7 @@ import { PromptGetInTouchProvider } from 'closer/components/PromptGetInTouchCont
 import {
   AuthProvider,
   ConfigProvider,
+  FaviconLinks,
   LocaleMessagesNextIntlBridge,
   PlatformProvider,
   appGetInitialPropsWithMessages,
@@ -30,9 +31,9 @@ import {
   mergeGeneralConfigWithDefaults,
   prepareGeneralConfig,
 } from 'closer/utils/app.helpers';
-import { getAppConfigFromEnv } from 'closer/utils/appConfigFromEnv';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
+import { appConfigFromEnv, env } from '../env';
 import '../styles/index.css';
 
 interface AppOwnProps extends AppProps {
@@ -73,9 +74,9 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
         />
-        <link rel="icon" type="image/png" href="/images/closer-logo-icon.png" />
-        <link rel="apple-touch-icon" href="/images/closer-logo-icon.png" />
       </Head>
+
+      <FaviconLinks favicon={config?.FAVICON} />
 
       {FACEBOOK_PIXEL_ID && (
         <Script
@@ -102,7 +103,7 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
         config={{
           ...config,
           ...blockchainConfig,
-          ...getAppConfigFromEnv(),
+          ...appConfigFromEnv,
         }}
       >
         <ErrorBoundary>
@@ -110,8 +111,8 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
             initialMessages={messages || {}}
             timeZone={
               config?.TIME_ZONE ||
-              process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE ||
-              getAppConfigFromEnv().DEFAULT_TIMEZONE
+              env.NEXT_PUBLIC_DEFAULT_TIMEZONE ||
+              appConfigFromEnv.DEFAULT_TIMEZONE
             }
           >
             <AuthProvider>

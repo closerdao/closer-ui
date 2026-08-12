@@ -1,6 +1,6 @@
 import { configDescription } from '../config';
-import { syncCurrencyLocaleFromCountryCode } from './currencyFormat';
 import { getDefaultConfigValue } from './config.utils';
+import { syncCurrencyLocaleFromCountryCode } from './currencyFormat';
 
 interface InputObject {
   [key: string]: {
@@ -35,6 +35,10 @@ export function prepareGeneralConfig(
   const result: Record<string, string> = {};
 
   Object.entries(inputObj).forEach(([key, value]) => {
+    // Skip absent values rather than stringifying them: String(undefined) is
+    // the truthy string "undefined", which defeats every `VALUE ? … : …`
+    // fallback downstream (e.g. `(c) 2026 undefined` in the footer).
+    if (value === undefined || value === null) return;
     const words = key.split(/(?=[A-Z])/).map((word) => word.toUpperCase());
     const upperCaseKey = words.join('_');
     result[upperCaseKey] = String(value);

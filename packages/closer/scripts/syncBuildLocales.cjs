@@ -10,10 +10,13 @@ const APP_LOCALES = {
   lios: ['en', 'pl'],
   tdf: ['en', 'pt'],
   moos: ['en', 'pt'],
-  foz: ['en'],
   'per-auset': ['en'],
   earthbound: ['en'],
   closer: ['en'],
+  // No locales/village/ overlay directory exists on purpose: the merge with a
+  // missing overlay yields a pure-base, brand-neutral bundle shared by all
+  // villages.
+  village: ['en'],
 };
 
 function readJson(filePath) {

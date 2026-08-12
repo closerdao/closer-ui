@@ -36,6 +36,7 @@ import {
 } from '../../../utils/booking.helpers';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
+import { normalizeDiscountCode } from '../../../utils/discountCode';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import config from '../../../configCached';
 import { getBookingRate, getDiscountRate } from '../../../utils/helpers';
@@ -229,8 +230,11 @@ const AccomodationSelector = ({
         ...linkedMetricFields('Booking', newBooking._id),
       });
       if (bookingConfig?.foodOptionEnabled) {
+        const normalizedDiscountCode = normalizeDiscountCode(discountCode);
         router.push(
-          `/bookings/${newBooking._id}/food?discountCode=${discountCode}`,
+          normalizedDiscountCode
+            ? `/bookings/${newBooking._id}/food?discountCode=${encodeURIComponent(normalizedDiscountCode)}`
+            : `/bookings/${newBooking._id}/food`,
         );
         return;
       }
@@ -387,7 +391,7 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       currency,
       eventId,
       ticketOption,
-      discountCode,
+      discountCode: discountCodeRaw,
       doesNeedPickup,
       doesNeedSeparateBeds,
       isFriendsBooking: normalizedIsFriendsBooking,
@@ -400,6 +404,7 @@ AccomodationSelector.getInitialProps = async (context: NextPageContext) => {
       bookingType,
       volunteerId,
     }: BaseBookingParams = query || {};
+    const discountCode = normalizeDiscountCode(discountCodeRaw) || undefined;
     const { BLOCKCHAIN_DAO_TOKEN } = blockchainConfig;
     const useTokens = currency === BLOCKCHAIN_DAO_TOKEN.symbol;
 

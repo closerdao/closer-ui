@@ -393,11 +393,222 @@ const DateTimePicker = ({
   };
 
   const showCalendar = !startCollapsed || isExpanded;
-  const hasDates = dateRange?.from || savedStartDate;
   const dateTagClass =
     'text-xs md:text-sm border rounded-full bg-neutral py-2 px-3 font-medium inline-flex items-center justify-center shrink-0 min-w-4 text-center';
   const durationTagClass =
     'text-xs md:text-sm font-medium text-foreground/90 py-2 px-3 rounded-full bg-accent/20 min-w-4 inline-flex items-center justify-center shrink-0 text-center border border-accent/30';
+
+  const formatRangeDate = (date: Date | undefined) => {
+    if (!date) return t('events_date_select');
+    return dayjs(date).format('ddd, MMM D');
+  };
+
+  const formatRangeTime = (time: string | null | undefined) => {
+    if (!time) return '--:--';
+    const parsed = dayjs(`2000-01-01T${time}`);
+    if (!parsed.isValid()) return time;
+    return parsed.format('h:mm A');
+  };
+
+  const startDisplayDate = dateRange?.from
+    ? dateRange.from
+    : savedStartDate
+      ? new Date(savedStartDate as string)
+      : undefined;
+  const endDisplayDate = dateRange?.to
+    ? dateRange.to
+    : savedEndDate
+      ? new Date(savedEndDate as string)
+      : undefined;
+
+  const rangeSummaryContent = (
+    <>
+      <div className="flex">
+        <div className="flex flex-col items-center w-10 pt-5 pb-5 shrink-0">
+          <span className="w-2.5 h-2.5 rounded-full bg-accent shadow-[0_0_0_4px_rgba(0,0,0,0.04)] ring-4 ring-accent/15" />
+          <span className="w-px flex-1 bg-gray-200 my-1.5 min-h-[18px]" />
+          <span className="w-2.5 h-2.5 rounded-full border-2 border-gray-300 bg-white" />
+        </div>
+
+        <div className="flex-1 min-w-0 py-2 pr-3">
+          <div className="flex items-center justify-between gap-3 py-2.5">
+            <div className="min-w-0">
+              <p className="text-[11px] uppercase tracking-[0.12em] text-gray-400 font-medium">
+                {t('events_date_start')}
+              </p>
+              <p
+                className={`text-[15px] font-medium truncate ${
+                  startDisplayDate ? 'text-gray-900' : 'text-gray-400'
+                }`}
+              >
+                {formatRangeDate(startDisplayDate)}
+              </p>
+            </div>
+            <p
+              className={`text-[15px] font-medium tabular-nums shrink-0 ${
+                startDisplayDate ? 'text-gray-700' : 'text-gray-300'
+              }`}
+            >
+              {startDisplayDate ? formatRangeTime(startTime) : '—'}
+            </p>
+          </div>
+
+          <div className="h-px bg-gray-100" />
+
+          <div className="flex items-center justify-between gap-3 py-2.5">
+            <div className="min-w-0">
+              <p className="text-[11px] uppercase tracking-[0.12em] text-gray-400 font-medium">
+                {t('events_date_end')}
+              </p>
+              <p
+                className={`text-[15px] font-medium truncate ${
+                  endDisplayDate ? 'text-gray-900' : 'text-gray-400'
+                }`}
+              >
+                {formatRangeDate(endDisplayDate)}
+              </p>
+            </div>
+            <p
+              className={`text-[15px] font-medium tabular-nums shrink-0 ${
+                endDisplayDate ? 'text-gray-700' : 'text-gray-300'
+              }`}
+            >
+              {endDisplayDate ? formatRangeTime(endTime) : '—'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {durationLabel ? (
+        <div className="px-4 py-2.5 border-t border-gray-100 bg-gray-50/80 text-xs text-gray-500 font-medium">
+          {durationLabel}
+        </div>
+      ) : null}
+    </>
+  );
+
+  if (startCollapsed) {
+    return (
+      <div className="w-full">
+        <button
+          type="button"
+          data-testid="dates"
+          onClick={() => setIsExpanded(true)}
+          className="w-full text-left rounded-2xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+        >
+          {rangeSummaryContent}
+        </button>
+
+        {timeZone ? (
+          <p className="mt-2 px-1 text-xs text-gray-400">
+            {timeZone} {t('events_time')}
+          </p>
+        ) : null}
+
+        {isExpanded ? (
+          <div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
+            aria-modal
+            role="dialog"
+          >
+            <div
+              className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+              onClick={() => setIsExpanded(false)}
+              aria-hidden
+            />
+            <div className="relative z-10 w-full sm:max-w-[420px] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-gray-100 max-h-[92vh] overflow-y-auto">
+              <div className="sticky top-0 z-10 flex items-center justify-between gap-3 px-5 py-4 border-b border-gray-100 bg-white/95 backdrop-blur">
+                <h3 className="text-base font-semibold text-gray-900">
+                  {t('events_date_time_title')}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setIsExpanded(false)}
+                  className="text-sm font-medium text-accent hover:text-accent-dark px-2 py-1 rounded-lg"
+                >
+                  {t('generic_done')}
+                </button>
+              </div>
+
+              <div className="px-4 pt-3 pb-2 flex justify-center [&_.rdp]:m-0 [&_.rdp]:p-0 [&_.rdp-months]:justify-center [&_.rdp-caption_label]:font-semibold [&_.rdp-day_selected]:!bg-accent [&_.rdp-day_selected]:!text-white [&_.rdp-day_range_middle]:!bg-accent/15 [&_.rdp-day_range_middle]:!text-foreground [&_.rdp-day_range_start]:!bg-accent [&_.rdp-day_range_end]:!bg-accent [&_.rdp-button:hover]:!bg-accent/10">
+                <DayPicker
+                  disabled={normalizeBlockedDateRangesForDayPicker(
+                    blockedDateRanges,
+                  )}
+                  mode="range"
+                  defaultMonth={defaultMonth}
+                  numberOfMonths={1}
+                  onSelect={handleSelectDay}
+                  selected={dateRange}
+                />
+              </div>
+              {dateError && (
+                <div className="px-5">
+                  <ErrorMessage error={dateError} />
+                </div>
+              )}
+
+              <div className="px-5 pb-5 flex flex-col gap-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="flex flex-col gap-1.5">
+                    <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400 font-medium">
+                      {t('events_date_start')}
+                    </span>
+                    <input
+                      type="time"
+                      id="startTime"
+                      value={startTime}
+                      disabled={!Boolean(dateRange?.from)}
+                      onChange={handleTimeChange}
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm font-medium text-gray-900 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:opacity-40"
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1.5">
+                    <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400 font-medium">
+                      {t('events_date_end')}
+                    </span>
+                    <input
+                      type="time"
+                      id="endTime"
+                      value={endTime}
+                      disabled={!Boolean(dateRange?.to)}
+                      onChange={handleTimeChange}
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm font-medium text-gray-900 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:opacity-40"
+                    />
+                  </label>
+                </div>
+
+                {timeZone ? (
+                  <p className="text-xs text-gray-400">
+                    {timeZone} {t('events_time')}
+                  </p>
+                ) : null}
+
+                <div className="flex items-center justify-between gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleClearDates}
+                    className="text-sm text-gray-500 hover:text-gray-800 underline underline-offset-2"
+                  >
+                    {t('generic_clear_selection')}
+                  </button>
+                  <Button
+                    type="button"
+                    size="small"
+                    isFullWidth={false}
+                    className="btn-primary !rounded-full !px-5"
+                    onClick={() => setIsExpanded(false)}
+                  >
+                    {t('generic_done')}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -477,31 +688,17 @@ const DateTimePicker = ({
               </>
             )}
           </div>
-          {startCollapsed ? (
-            <Button
-              type="button"
-              size="small"
-              isFullWidth={false}
-              className="btn-primary !py-1.5 !px-3 !min-h-0"
-              onClick={() => setIsExpanded(true)}
-            >
-              {hasDates
-                ? t('events_edit_dates') || 'Edit dates'
-                : t('events_set_dates') || 'Set dates'}
-            </Button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleClearDates}
-              className="text-xs text-foreground/60 hover:text-foreground underline py-1 px-1.5 min-w-0"
-            >
-              {t('generic_clear_selection')}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleClearDates}
+            className="text-xs text-foreground/60 hover:text-foreground underline py-1 px-1.5 min-w-0"
+          >
+            {t('generic_clear_selection')}
+          </button>
         </div>
       )}
 
-      {showCalendar && !startCollapsed && (
+      {showCalendar && (
         <>
           <div
             className={
@@ -552,73 +749,7 @@ const DateTimePicker = ({
           </div>
         </>
       )}
-
-      {startCollapsed && isExpanded && (
-        <>
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            aria-modal
-            role="dialog"
-          >
-            <div
-              className="absolute inset-0 bg-foreground/40"
-              onClick={() => setIsExpanded(false)}
-              aria-hidden
-            />
-            <div className="relative z-10 bg-white rounded-lg shadow-xl border border-neutral-dark/30 p-6 max-h-[90vh] overflow-y-auto">
-              <DayPicker
-                disabled={normalizeBlockedDateRangesForDayPicker(blockedDateRanges)}
-                mode="range"
-                defaultMonth={defaultMonth}
-                numberOfMonths={isOneMonthCalendar ? 1 : 2}
-                onSelect={handleSelectDay}
-                selected={dateRange}
-              />
-              {dateError && <ErrorMessage error={dateError} />}
-              {isAdmin && (
-                <div className="mt-4">
-                  <div className="text-sm mb-2 flex">
-                    <div className="w-[136px] mr-2">
-                      <Input
-                        label={t('events_event_start_time')}
-                        value={startTime}
-                        isDisabled={!Boolean(dateRange?.from)}
-                        type="time"
-                        id="startTime"
-                        onChange={handleTimeChange}
-                      />
-                    </div>
-                    <div className="w-[136px]">
-                      <Input
-                        label={t('events_event_end_time')}
-                        value={endTime}
-                        isDisabled={!Boolean(dateRange?.to)}
-                        type="time"
-                        id="endTime"
-                        onChange={handleTimeChange}
-                      />
-                    </div>
-                  </div>
-                  <div className="text-sm mt-4">
-                    {timeZone} {t('events_time')}
-                  </div>
-                </div>
-              )}
-              <div className="mt-6 flex justify-end">
-                <Button
-                  type="button"
-                  size="small"
-                  className="btn-primary"
-                  onClick={() => setIsExpanded(false)}
-                >
-                  {t('generic_done') || 'Done'}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-      {priceDuration !== 'night' && showCalendar && !startCollapsed && (
+      {priceDuration !== 'night' && showCalendar && (
         <div className="py-2 border-t">
           <TimePicker
             startDate={savedStartDate}

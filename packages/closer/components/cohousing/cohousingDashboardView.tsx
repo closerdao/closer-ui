@@ -15,7 +15,7 @@ import {
   getCohousingTierLabelKey,
 } from '../../utils/cohousingFinancials.helpers';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
-import Heading from '../ui/Heading';
+import DashboardPageHeader from '../Dashboard/DashboardPageHeader';
 import Spinner from '../ui/Spinner';
 import CohousingAddParticipantModal from './cohousingAddParticipantModal';
 import { CohousingQuizResultsView } from './cohousingQuizResultsView';
@@ -227,10 +227,8 @@ export const CohousingDashboardView = () => {
         existingApplicantUserIds={existingApplicantUserIds}
       />
 
-      <main className="main-content w-full max-w-6xl mx-auto px-4 py-8">
-        <Heading className="mb-6 font-sans uppercase tracking-tight">
-          {t('cohousing_team_title')}
-        </Heading>
+      <div className="flex flex-col gap-6">
+        <DashboardPageHeader title={t('cohousing_team_title')} />
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
           {(
@@ -586,7 +584,7 @@ export const CohousingDashboardView = () => {
             </div>
           )}
         </div>
-      </main>
+      </div>
     </>
   );
 };

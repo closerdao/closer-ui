@@ -1,8 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useState } from 'react';
-
 import EditModel, { EditModelPageLayout } from '../../components/EditModel';
 import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 
@@ -33,7 +31,6 @@ interface Props {
 const CreateEvent = ({ foodOptions, eventsConfig, paymentConfig, web3Config }: Props) => {
   const t = useTranslations();
   const router = useRouter();
-  const [saveError, setSaveError] = useState<string | null>(null);
 
   const isEventsEnabled = eventsConfig?.enabled !== false;
 
@@ -88,14 +85,6 @@ const CreateEvent = ({ foodOptions, eventsConfig, paymentConfig, web3Config }: P
         title={t('events_create_title')}
         subtitle={t('edit_model_create_intro')}
       >
-        {saveError && (
-          <div
-            role="alert"
-            className="mb-4 rounded-lg border border-red-500/50 bg-red-50 p-4 text-sm text-red-800 dark:bg-red-950/30 dark:text-red-200"
-          >
-            {saveError}
-          </div>
-        )}
         <EditModel
           dynamicField={{
             name: 'foodOptionId',
@@ -104,8 +93,6 @@ const CreateEvent = ({ foodOptions, eventsConfig, paymentConfig, web3Config }: P
           endpoint={'/event'}
           fields={models.event}
           onSave={(event) => router.push(`/events/${event.slug}`)}
-          onError={setSaveError}
-          onErrorClear={() => setSaveError(null)}
           transformDataBeforeSave={transformDataBeforeSave}
           currencyConfig={{
             fiatCur: eventFiatCurrency,

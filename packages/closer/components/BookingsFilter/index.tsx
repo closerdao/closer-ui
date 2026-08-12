@@ -1,5 +1,4 @@
 import {
-  ChangeEvent,
   Dispatch,
   SetStateAction,
   useEffect,
@@ -11,7 +10,7 @@ import DateTimePicker from '../../components/DateTimePicker';
 import { Button, ErrorMessage } from '../../components/ui';
 
 import dayjs from 'dayjs';
-import { Calendar, ChevronDown, Filter, Search, X } from 'lucide-react';
+import { Calendar, ChevronDown, Filter, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -20,6 +19,9 @@ import {
   BOOKING_TYPE_OPTIONS,
 } from '../../constants';
 import { usePlatform } from '../../contexts/platform';
+import { useBookingSearchWhere } from '../../hooks/useBookingSearchWhere';
+import { mergeBookingSearchWhere } from '../../utils/bookingSearch.helpers';
+import BookingsSearchBar from '../BookingsSearchBar';
 
 const loadTime = new Date();
 
@@ -41,7 +43,8 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
 
   const [bookingType, setBookingType] = useState('any');
   const [bookingStatus, setBookingStatus] = useState('any');
-  const [bookingId, setBookingId] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const { searchWhere, isSearching } = useBookingSearchWhere(searchTerm);
   const [selectedEvent, setSelectedEvent] = useState({
     label: 'any',
     value: 'any',
@@ -53,7 +56,6 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
   const [filterValues, setFilterValues] = useState({
     type: 'any',
     status: 'any',
-    bookingId: '',
     selectedEvent: { label: 'any', value: '' },
     dateFrom: '',
     dateTo: '',
@@ -96,48 +98,49 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
 
   useEffect(() => {
     setPage(1);
-  }, [filterValues]);
+  }, [filterValues, searchWhere]);
 
   useEffect(() => {
     const dateFromObj = new Date(filterValues.dateFrom);
     dateFromObj.setDate(dateFromObj.getDate() - 1);
 
+    const where = {
+      ...(filterValues.type === 'event' && { eventId: { $exists: true } }),
+      ...(filterValues.type === 'volunteer' && {
+        'volunteerInfo.bookingType': 'volunteer'
+      }),
+      ...(filterValues.type === 'residency' && {
+        'volunteerInfo.bookingType': 'residence'
+      }),
+      ...(filterValues.type === 'stay' && {
+        volunteerId: { $exists: false },
+        volunteerInfo: { $exists: false },
+        eventId: { $exists: false },
+      }),
+      ...(filterValues.status !== 'any'
+        ? { status: [bookingStatus] }
+        : defaultWhere),
+      ...(filterValues.selectedEvent.label !== 'any' && {
+        eventId: filterValues.selectedEvent.value,
+      }),
+      ...(filterValues.dateTo &&
+        filterValues.dateFrom && {
+          start: {
+            $lte: new Date(filterValues.dateTo),
+            $gte: dateFromObj,
+          },
+        }),
+    };
+
     const getFilter = {
-      where: {
-        ...(filterValues.type === 'event' && { eventId: { $exists: true } }),
-        ...(filterValues.type === 'volunteer' && {
-          'volunteerInfo.bookingType': 'volunteer'
-        }),
-        ...(filterValues.type === 'residency' && {
-          'volunteerInfo.bookingType': 'residence'
-        }),
-        ...(filterValues.type === 'stay' && {
-          volunteerId: { $exists: false },
-          volunteerInfo: { $exists: false },
-          eventId: { $exists: false },
-        }),
-        ...(filterValues.status !== 'any'
-          ? { status: [bookingStatus] }
-          : defaultWhere),
-        ...(filterValues.bookingId !== '' && { _id: filterValues.bookingId }),
-        ...(filterValues.selectedEvent.label !== 'any' && {
-          eventId: filterValues.selectedEvent.value,
-        }),
-        ...(filterValues.dateTo &&
-          filterValues.dateFrom && {
-            start: {
-              $lte: new Date(filterValues.dateTo),
-              $gte: dateFromObj,
-            },
-          }),
-      },
+      where: mergeBookingSearchWhere(where, searchWhere),
       limit: BOOKINGS_PER_PAGE,
       sort_by: filterValues.sortBy,
       page: page,
     };
 
     setFilter(getFilter as any);
-  }, [filterValues, page]);
+  }, [filterValues, page, searchWhere]);
 
   useEffect(() => {
     if (dateFrom && dateTo) {
@@ -155,14 +158,6 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
       });
     }
   }, [dateFrom, dateTo]);
-
-  const handleBookingId = (e: ChangeEvent<HTMLInputElement>) => {
-    setBookingId(e.target.value);
-    setFilterValues({
-      ...filterValues,
-      bookingId: e.target.value,
-    });
-  };
 
   const handleClearDates = () => {
     setDateFrom('');
@@ -184,16 +179,12 @@ const BookingsFilter = ({ setFilter, page, setPage, defaultWhere }: Props) => {
   return (
     <section className="bg-white rounded-lg border border-gray-200 p-2">
       <div className="flex flex-wrap gap-1.5 items-center">
-        <div className="flex-1 min-w-[200px] relative">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            value={bookingId}
-            onChange={handleBookingId}
-            type="text"
-            placeholder={t('booking_id_placeholder')}
-            className="w-full pl-3 pr-10 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-          />
-        </div>
+        <BookingsSearchBar
+          value={searchTerm}
+          onChange={setSearchTerm}
+          isSearching={isSearching}
+          className="flex-1 min-w-[200px]"
+        />
 
         <div ref={datePickerRef} className="relative">
           <button

@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../contexts/auth';
 import { cdn } from '../utils/api';
 import CreditsBalance from './CreditsBalance';
+import SubscriptionBadge from './SubscriptionBadge';
 import UserAvatarPlaceholder from './UserAvatarPlaceholder';
 import { Button, Heading } from './ui';
 
@@ -61,6 +62,7 @@ const Profile = ({ isMenu = false, isDemo, onLogout }: ProfileProps) => {
             <div className="flex flex-col ">
               <Heading level={2} className="text-md ">
                 {user?.screenname}
+                <SubscriptionBadge subscription={user?.subscription} />
               </Heading>
               {isCreditsEnabled && (
                 <CreditsBalance className="text-md" isDemo={isDemo} />
@@ -83,7 +85,7 @@ const Profile = ({ isMenu = false, isDemo, onLogout }: ProfileProps) => {
               className="text-xs normal-case !w-fit !bg-black !text-white hover:!bg-gray-800 ml-auto py-0 !h-6 !px-2 !border-0 flex items-center gap-1"
             >
               <Settings className="h-3 w-3" />
-              {t('buttons_edit_profile')}
+              {t('settings_page_title')}
             </Button>
             {isMenu && onLogout && (
               <Button

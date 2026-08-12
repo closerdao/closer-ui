@@ -12,49 +12,56 @@ import {
   useState,
 } from 'react';
 
-import { CardElement, Elements, useElements, useStripe } from '@stripe/react-stripe-js';
+import {
+  CardElement,
+  Elements,
+  useElements,
+  useStripe,
+} from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import BookingBackButton from '../../../components/BookingBackButton';
 import Conditions from '../../../components/Conditions';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+import Modal from '../../../components/Modal';
 import PageError from '../../../components/PageError';
+import Switch from '../../../components/Switch';
+import TicketOptions from '../../../components/TicketOptions';
 import BookingSurface from '../../../components/booking/bookingSurface';
 import BookingUnitsNote from '../../../components/booking/bookingUnitsNote';
 import { StayQuoteFiatDiscountPreview } from '../../../components/booking/stayQuoteFiatDiscountPreview';
-import Modal from '../../../components/Modal';
-import Switch from '../../../components/Switch';
 import { ErrorMessage, Information } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
 import Checkbox from '../../../components/ui/Checkbox';
+import Heading from '../../../components/ui/Heading';
 import Select from '../../../components/ui/Select/Dropdown';
 import MultiSelect from '../../../components/ui/Select/MultiSelect';
-import { Textarea } from '../../../components/ui/textarea';
-import Heading from '../../../components/ui/Heading';
 import Spinner from '../../../components/ui/Spinner';
+import { Textarea } from '../../../components/ui/textarea';
 
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import { utils } from 'ethers';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import config from '../../../configCached';
 import { MIN_CELO_FOR_GAS } from '../../../constants';
 import { SHARED_ACCOMMODATION_PREFERENCES } from '../../../constants/shared.constants';
-import config from '../../../configCached';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { WalletDispatch, WalletState } from '../../../contexts/wallet';
 import { useBookingSmartContract } from '../../../hooks/useBookingSmartContract';
 import { useConfig } from '../../../hooks/useConfig';
+import { useStayCreditsEligibility } from '../../../hooks/useStayCreditsEligibility';
 import {
   BookingSettings,
   GeneralConfig,
   VolunteerConfig,
 } from '../../../types/api';
 import { Listing } from '../../../types/booking';
-import { Event } from '../../../types/event';
+import { Event, TicketOption } from '../../../types/event';
 import { FoodOption } from '../../../types/food';
 import {
   Stay,
@@ -68,14 +75,23 @@ import {
   getDefaultSelectedFoodOptionId,
   getFoodOption,
   getFoodOptionsForBookingContext,
+  userCanCreateTeamBooking,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { linkedMetricFields, logMetric } from '../../../utils/metrics';
-import { formatStakeBookingErrorForUi } from '../../../utils/stakeBookingError.helpers';
+import { normalizeDiscountCode } from '../../../utils/discountCode';
 import { priceFormat } from '../../../utils/helpers';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { patchUserAndSyncAuthStore } from '../../../utils/platformUserSync';
+import { formatStakeBookingErrorForUi } from '../../../utils/stakeBookingError.helpers';
 import { stayRequiresFullCheckoutFlow } from '../../../utils/stayPaymentRouting.helpers';
+import { buildStayCreateHrefFromStay } from '../../../utils/stayRouting.helpers';
 import {
+  clearPendingStayTokenStake,
+  readPendingStayTokenStake,
+  writePendingStayTokenStake,
+} from '../../../utils/stayTokenStakePendingStorage';
+import {
+  applyOptimisticTeamBookingToStay,
   buildStayTokenStakePlan,
   canAugmentTokenOrCreditsPayment,
   canChangeStayPaymentMethod,
@@ -90,6 +106,7 @@ import {
   getStayAccommodationTokenTotal,
   inferPaymentChoiceFromStay,
   isStayAwaitingHostApproval,
+  isVolunteerStay,
   isStayAwaitingPayment,
   isStayCheckoutDraft,
   isStayPaid,
@@ -100,11 +117,6 @@ import {
   submitStay,
   updateStayOptions,
 } from '../../../utils/stays.api';
-import {
-  clearPendingStayTokenStake,
-  readPendingStayTokenStake,
-  writePendingStayTokenStake,
-} from '../../../utils/stayTokenStakePendingStorage';
 
 dayjs.extend(dayOfYear);
 
@@ -198,7 +210,6 @@ const StayCheckoutPage = ({
   const router = useRouter();
   const t = useTranslations();
   const { user, isAuthenticated } = useAuth();
-  const { platform }: any = usePlatform();
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
@@ -211,7 +222,6 @@ const StayCheckoutPage = ({
 
   const [stay, setStay] = useState<Stay | null>(null);
   const [listing, setListing] = useState<Listing | null>(null);
-  const [creditsBalance, setCreditsBalance] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
 
@@ -240,14 +250,6 @@ const StayCheckoutPage = ({
             console.warn('Could not load listing', err);
           }
         }
-        try {
-          const balanceRes = await platform?.carrots?.getBalance();
-          if (!cancelled) {
-            setCreditsBalance(Number(balanceRes?.results) || 0);
-          }
-        } catch {
-          if (!cancelled) setCreditsBalance(0);
-        }
       } catch (err) {
         if (!cancelled) setPageError(parseMessageFromError(err));
       } finally {
@@ -257,19 +259,24 @@ const StayCheckoutPage = ({
     return () => {
       cancelled = true;
     };
-  }, [router.isReady, stayId, platform]);
+  }, [router.isReady, stayId]);
 
   if (error) return <PageError error={error} />;
   if (!isBookingEnabled) return <FeatureNotEnabled feature="booking" />;
 
-  const pageTitle = `${t('stay_create_checkout_meta_title')} - ${PLATFORM_NAME}`;
+  const pageTitle = `${t(
+    'stay_create_checkout_meta_title',
+  )} - ${PLATFORM_NAME}`;
 
   const SeoHead = (
     <Head>
       <title>{pageTitle}</title>
       <meta name="robots" content="noindex, nofollow" />
       <meta name="googlebot" content="noindex, nofollow" />
-      <meta name="description" content={t('stay_create_checkout_meta_description')} />
+      <meta
+        name="description"
+        content={t('stay_create_checkout_meta_description')}
+      />
     </Head>
   );
 
@@ -365,7 +372,6 @@ const StayCheckoutPage = ({
         <StayCheckoutContent
           stay={stay}
           listing={listing}
-          creditsBalance={creditsBalance ?? 0}
           userEmail={user?.email || ''}
           userName={user?.screenname || ''}
           refetchStay={refetchStay}
@@ -381,7 +387,6 @@ const StayCheckoutPage = ({
 interface ContentProps {
   stay: Stay;
   listing: Listing | null;
-  creditsBalance: number;
   userEmail: string;
   userName: string;
   refetchStay: () => Promise<Stay | null>;
@@ -393,7 +398,6 @@ interface ContentProps {
 const StayCheckoutContent = ({
   stay,
   listing,
-  creditsBalance,
   userEmail,
   userName,
   refetchStay,
@@ -424,7 +428,11 @@ const StayCheckoutContent = ({
   const { user: authUser, refetchUser, setUser } = useAuth();
   const { platform }: any = usePlatform();
 
+  const canCreateTeamBooking = userCanCreateTeamBooking(authUser?.roles);
+
   const [currentStay, setCurrentStay] = useState<Stay>(stay);
+  const { creditsBalance, canApplyCreditsAtStart } =
+    useStayCreditsEligibility(currentStay);
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const [isSavingOptions, setIsSavingOptions] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -444,8 +452,7 @@ const StayCheckoutContent = ({
     null,
   );
   const [isApplyingCredits, setIsApplyingCredits] = useState(false);
-  const [isRevertingTokenPayment, setIsRevertingTokenPayment] =
-    useState(false);
+  const [isRevertingTokenPayment, setIsRevertingTokenPayment] = useState(false);
   const [preferencesError, setPreferencesError] = useState<string | null>(null);
   const [isSavingPreferences, setIsSavingPreferences] = useState(false);
   const [isSavingStayMessage, setIsSavingStayMessage] = useState(false);
@@ -455,6 +462,13 @@ const StayCheckoutContent = ({
   }>({ diet: [], sharedAccomodation: '' });
   const [stayMessage, setStayMessage] = useState(stay.message || '');
   const [stayEvent, setStayEvent] = useState<Event | null>(null);
+  const [eventTicketOptions, setEventTicketOptions] = useState<TicketOption[]>(
+    [],
+  );
+  const [selectedTicketOption, setSelectedTicketOption] =
+    useState<TicketOption | null>(null);
+  const [eventDiscountCode, setEventDiscountCode] = useState('');
+  const [isLoadingEventTickets, setIsLoadingEventTickets] = useState(false);
   const [foodPhotoSlideByOptionId, setFoodPhotoSlideByOptionId] = useState<
     Record<string, number>
   >({});
@@ -465,10 +479,17 @@ const StayCheckoutContent = ({
     | null
   >(null);
   const draftFoodDefaultAppliedRef = useRef<string | null>(null);
+  const preTeamPriceLockRef = useRef<Stay['priceLock'] | null>(null);
+  const [isSavingTeamBooking, setIsSavingTeamBooking] = useState(false);
 
   useEffect(() => {
     draftFoodDefaultAppliedRef.current = null;
+    preTeamPriceLockRef.current = null;
   }, [stay._id]);
+
+  useEffect(() => {
+    draftFoodDefaultAppliedRef.current = null;
+  }, [currentStay.isTeamBooking]);
 
   useEffect(() => {
     setCurrentStay(stay);
@@ -484,8 +505,8 @@ const StayCheckoutContent = ({
       diet: Array.isArray(authUser.preferences.diet)
         ? authUser.preferences.diet
         : typeof authUser.preferences.diet === 'string'
-          ? authUser.preferences.diet.split(',').filter(Boolean)
-          : [],
+        ? authUser.preferences.diet.split(',').filter(Boolean)
+        : [],
       sharedAccomodation: authUser.preferences.sharedAccomodation || '',
     });
   }, [authUser?._id, authUser?.preferences]);
@@ -497,15 +518,53 @@ const StayCheckoutContent = ({
   useEffect(() => {
     if (!currentStay.eventId) {
       setStayEvent(null);
+      setEventTicketOptions([]);
+      setSelectedTicketOption(null);
       return;
     }
     let cancelled = false;
     (async () => {
+      setIsLoadingEventTickets(true);
       try {
-        const { data } = await api.get(`/event/${currentStay.eventId}`);
-        if (!cancelled) setStayEvent(data?.results ?? null);
+        const [eventRes, availabilityRes] = await Promise.all([
+          api.get(`/event/${currentStay.eventId}`),
+          api
+            .get(`/bookings/event/${currentStay.eventId}/availability`)
+            .catch(() => null),
+        ]);
+        if (cancelled) return;
+        const event = (eventRes?.data?.results ?? null) as Event | null;
+        setStayEvent(event);
+        const rawOptions: TicketOption[] =
+          availabilityRes?.data?.ticketOptions ||
+          event?.ticketOptions ||
+          [];
+        const overnight = rawOptions.filter(
+          (option) => !option.isDayTicket && option.available > 0,
+        );
+        setEventTicketOptions(overnight);
+        const savedName = currentStay.ticketOption?.name;
+        const matched = savedName
+          ? overnight.find((option) => option.name === savedName) || null
+          : null;
+        setSelectedTicketOption((prev) => {
+          if (matched) return matched;
+          if (
+            prev &&
+            overnight.some((option) => option.name === prev.name)
+          ) {
+            return prev;
+          }
+          return null;
+        });
       } catch {
-        if (!cancelled) setStayEvent(null);
+        if (!cancelled) {
+          setStayEvent(null);
+          setEventTicketOptions([]);
+          setSelectedTicketOption(null);
+        }
+      } finally {
+        if (!cancelled) setIsLoadingEventTickets(false);
       }
     })();
     return () => {
@@ -537,7 +596,8 @@ const StayCheckoutContent = ({
     void logMetric({
       event: 'stay-checkout-view',
       category: 'co-housing',
-      value: 'view', point: pt,
+      value: 'view',
+      point: pt,
       ...stayMetricFields,
     });
   }, [currentStay._id, currentStay.duration, currentStay.adults]);
@@ -558,6 +618,7 @@ const StayCheckoutContent = ({
 
   const priceLock = currentStay.priceLock;
   const isMember = Boolean(authUser?.roles?.includes('member'));
+  const isVolunteerApplication = isVolunteerStay(currentStay);
   const showTokenCreditPaymentOptions = canShowStayTokenCreditPaymentOptions(
     currentStay,
     isMember,
@@ -580,8 +641,7 @@ const StayCheckoutContent = ({
   );
 
   const canChangePaymentMethod = canChangeStayPaymentMethod(currentStay);
-  const canAugmentTokenOrCredits =
-    canAugmentTokenOrCreditsPayment(currentStay);
+  const canAugmentTokenOrCredits = canAugmentTokenOrCreditsPayment(currentStay);
   const canUseTokenCreditUiActions =
     canChangePaymentMethod || canAugmentTokenOrCredits;
 
@@ -599,8 +659,7 @@ const StayCheckoutContent = ({
         status: currentStay.status,
         paymentDelta: currentStay.paymentDelta,
         useTokens:
-          paymentChoice === 'partial-tokens' ||
-          paymentChoice === 'full-tokens',
+          paymentChoice === 'partial-tokens' || paymentChoice === 'full-tokens',
         fiatOwed: computeFiatOwed(currentStay),
         tokensOwed: computeTokensOwed(currentStay),
         creditsOwed: computeCreditsOwed(currentStay),
@@ -624,11 +683,7 @@ const StayCheckoutContent = ({
       return false;
     }
     return checkoutRouteTarget === paymentPageUrl;
-  }, [
-    checkoutRouteTarget,
-    paymentPageUrl,
-    currentStay.status,
-  ]);
+  }, [checkoutRouteTarget, paymentPageUrl, currentStay.status]);
 
   const showCreditsTokensGuideCta = useMemo(() => {
     if (
@@ -637,10 +692,7 @@ const StayCheckoutContent = ({
     ) {
       return false;
     }
-    return stayRequiresFullCheckoutFlow(
-      currentStay,
-      currentStay.paymentDelta,
-    );
+    return stayRequiresFullCheckoutFlow(currentStay, currentStay.paymentDelta);
   }, [currentStay]);
 
   const hasAlternativeAccommodationPayment = paymentChoice !== 'fiat';
@@ -690,6 +742,13 @@ const StayCheckoutContent = ({
   );
 
   const stayEventId = currentStay.eventId;
+  const showEventTicketSelection =
+    Boolean(stayEventId) && Boolean(stayEvent?.paid);
+  const hasValidEventTicket =
+    !stayEvent?.paid ||
+    Boolean(
+      selectedTicketOption?.name || currentStay.ticketOption?.name,
+    );
   const eventFoodOptionSet = Boolean(
     stayEvent?.foodOption === 'food_package'
       ? stayEvent?.foodOptionId
@@ -704,13 +763,13 @@ const StayCheckoutContent = ({
     return stayEventId && stayEvent?.foodOption === 'default'
       ? 'guests'
       : stayEventId
-        ? 'events'
-        : currentStay.volunteerInfo?.bookingType === 'volunteer' ||
-            currentStay.volunteerInfo?.bookingType === 'residence'
-          ? 'volunteer'
-          : currentStay.isTeamBooking
-            ? 'team'
-            : 'guests';
+      ? 'events'
+      : currentStay.volunteerInfo?.bookingType === 'volunteer' ||
+        currentStay.volunteerInfo?.bookingType === 'residence'
+      ? 'volunteer'
+      : currentStay.isTeamBooking
+      ? 'team'
+      : 'guests';
   }, [
     stayEventId,
     stayEvent?.foodOption,
@@ -831,6 +890,7 @@ const StayCheckoutContent = ({
   const isApplyCreditsEnabled =
     canUseTokenCreditUiActions &&
     !stayUsesTokens &&
+    canApplyCreditsAtStart &&
     creditsAmountToApply > 0 &&
     !isApplyingCredits &&
     !isStakeModalOpen;
@@ -857,6 +917,9 @@ const StayCheckoutContent = ({
     if (creditsBalance <= 0) {
       return t('stay_create_apply_credits_disabled_no_balance');
     }
+    if (!canApplyCreditsAtStart) {
+      return t('stay_create_apply_credits_disabled_not_valid_at_checkin');
+    }
     return undefined;
   }, [
     isApplyCreditsEnabled,
@@ -865,6 +928,7 @@ const StayCheckoutContent = ({
     stayUsesTokens,
     tokenAccommodationVal,
     creditsBalance,
+    canApplyCreditsAtStart,
     isStakeModalOpen,
     t,
   ]);
@@ -1028,7 +1092,10 @@ const StayCheckoutContent = ({
         if (storedTx) {
           setIsVerifyingStake(true);
           try {
-            const stakeResult = await stakeStayTokens(stayForStake._id, storedTx);
+            const stakeResult = await stakeStayTokens(
+              stayForStake._id,
+              storedTx,
+            );
             clearPendingStayTokenStake(stayForStake._id);
             setCurrentStay(stakeResult.booking);
             setTokenStakeSuccessNotice(t('stay_create_token_stake_success'));
@@ -1042,7 +1109,9 @@ const StayCheckoutContent = ({
               setCurrentStay(fresh);
               if (computeTokensOwed(fresh) === 0) {
                 clearPendingStayTokenStake(stayForStake._id);
-                setTokenStakeSuccessNotice(t('stay_create_token_stake_success'));
+                setTokenStakeSuccessNotice(
+                  t('stay_create_token_stake_success'),
+                );
                 setIsStakeModalOpen(false);
                 setStakePlan(null);
                 setStakeModalError(null);
@@ -1073,11 +1142,9 @@ const StayCheckoutContent = ({
         }
         try {
           setIsVerifyingStake(true);
-          const stakeResult = await stakeStayTokens(
-            stayForStake._id,
-            '',
-            { syncBookingAlreadyOnChain: true },
-          );
+          const stakeResult = await stakeStayTokens(stayForStake._id, '', {
+            syncBookingAlreadyOnChain: true,
+          });
           clearPendingStayTokenStake(stayForStake._id);
           setCurrentStay(stakeResult.booking);
           setTokenStakeSuccessNotice(t('stay_create_token_stake_success'));
@@ -1120,11 +1187,17 @@ const StayCheckoutContent = ({
           /booking already exists/i.test(lower))
       ) {
         const snapshotKey = JSON.stringify(planSnapshot.bookingNights);
-        const storedTx = readPendingStayTokenStake(stayForStake._id, snapshotKey);
+        const storedTx = readPendingStayTokenStake(
+          stayForStake._id,
+          snapshotKey,
+        );
         if (storedTx) {
           try {
             setIsVerifyingStake(true);
-            const stakeResult = await stakeStayTokens(stayForStake._id, storedTx);
+            const stakeResult = await stakeStayTokens(
+              stayForStake._id,
+              storedTx,
+            );
             clearPendingStayTokenStake(stayForStake._id);
             setCurrentStay(stakeResult.booking);
             setTokenStakeSuccessNotice(t('stay_create_token_stake_success'));
@@ -1160,7 +1233,12 @@ const StayCheckoutContent = ({
   const openCreditsConfirmationModal = () => {
     if (!showTokenCreditPaymentOptions) return;
     if (stayUsesTokens) return;
-    if (!canUseTokenCreditUiActions || creditsAmountToApply <= 0) return;
+    if (
+      !canUseTokenCreditUiActions ||
+      !canApplyCreditsAtStart ||
+      creditsAmountToApply <= 0
+    )
+      return;
     if (isStakeModalOpen) return;
     setCreditsModalError(null);
     setIsCreditsModalOpen(true);
@@ -1174,7 +1252,12 @@ const StayCheckoutContent = ({
   const confirmApplyCredits = async () => {
     if (!showTokenCreditPaymentOptions) return;
     if (stayUsesTokens) return;
-    if (!canUseTokenCreditUiActions || creditsAmountToApply <= 0) return;
+    if (
+      !canUseTokenCreditUiActions ||
+      !canApplyCreditsAtStart ||
+      creditsAmountToApply <= 0
+    )
+      return;
     setCreditsModalError(null);
     setActionError(null);
     setIsApplyingCredits(true);
@@ -1237,6 +1320,75 @@ const StayCheckoutContent = ({
       setActionError(parseMessageFromError(err));
     } finally {
       setIsSavingOptions(false);
+    }
+  };
+
+  const persistEventTicketOptions = async (payload: {
+    ticketOption?: string | null;
+    eventDiscount?: string | null;
+  }) => {
+    setActionError(null);
+    setIsSavingOptions(true);
+    try {
+      const updated = await updateStayOptions(currentStay._id, payload);
+      setCurrentStay(updated);
+    } catch (err) {
+      setActionError(parseMessageFromError(err));
+    } finally {
+      setIsSavingOptions(false);
+    }
+  };
+
+  const handleSelectTicketOption = (ticket: object) => {
+    const next = ticket as TicketOption;
+    setSelectedTicketOption(next);
+    void persistEventTicketOptions({
+      ticketOption: next.name,
+      eventDiscount: normalizeDiscountCode(eventDiscountCode) || null,
+    });
+  };
+
+  const handleEventDiscountValidated = (code: string) => {
+    const normalizedCode = normalizeDiscountCode(code);
+    setEventDiscountCode(normalizedCode);
+    if (!selectedTicketOption?.name) return;
+    void persistEventTicketOptions({
+      ticketOption: selectedTicketOption.name,
+      eventDiscount: normalizedCode || null,
+    });
+  };
+
+  const handleTeamBookingToggle = async (nextValue: boolean) => {
+    if (isSavingTeamBooking) return;
+
+    const previousStay = currentStay;
+    if (!preTeamPriceLockRef.current && !previousStay.isTeamBooking) {
+      preTeamPriceLockRef.current = previousStay.priceLock ?? null;
+    }
+
+    setActionError(null);
+    setIsSavingTeamBooking(true);
+    setCurrentStay(
+      applyOptimisticTeamBookingToStay(
+        previousStay,
+        nextValue,
+        preTeamPriceLockRef.current,
+      ),
+    );
+
+    try {
+      const updated = await updateStayOptions(previousStay._id, {
+        isTeamBooking: nextValue,
+      });
+      setCurrentStay(updated);
+      if (!updated.isTeamBooking) {
+        preTeamPriceLockRef.current = null;
+      }
+    } catch (err) {
+      setCurrentStay(previousStay);
+      setActionError(parseMessageFromError(err));
+    } finally {
+      setIsSavingTeamBooking(false);
     }
   };
 
@@ -1420,6 +1572,10 @@ const StayCheckoutContent = ({
   };
 
   const handleConfirmAndPay = async () => {
+    if (!hasValidEventTicket) {
+      setActionError(t('bookings_error_no_ticket_option'));
+      return;
+    }
     setActionError(null);
     setIsProcessing(true);
     const stayPaymentPoint =
@@ -1429,7 +1585,8 @@ const StayCheckoutContent = ({
     void logMetric({
       event: 'stay-payment-started',
       category: 'co-housing',
-      value: 'payment', point: stayPaymentPoint,
+      value: 'payment',
+      point: stayPaymentPoint,
       ...stayMetricFields,
     });
     try {
@@ -1525,7 +1682,9 @@ const StayCheckoutContent = ({
     >
       <div className="relative flex items-center min-h-[2.75rem] mb-4">
         <BookingBackButton
-          onClick={() => router.push('/stay/create')}
+          onClick={() =>
+            router.push(buildStayCreateHrefFromStay(currentStay))
+          }
           name={t('buttons_back')}
           className="relative z-10"
         />
@@ -1632,7 +1791,8 @@ const StayCheckoutContent = ({
               </div>
             </div>
             {(bookingSettings?.pickUpEnabled ||
-              stayBookingGuestCount >= 2) && (
+              stayBookingGuestCount >= 2 ||
+              (canCreateTeamBooking && isStayCheckoutDraft(currentStay))) && (
               <div className="w-full border-t border-foreground/[0.08] pt-5">
                 <p className="text-sm font-semibold text-gray-900 mb-3">
                   {t('stay_create_options_title')}
@@ -1667,75 +1827,127 @@ const StayCheckoutContent = ({
                       {t('stay_create_option_separate_beds')}
                     </Checkbox>
                   )}
+                  {canCreateTeamBooking && isStayCheckoutDraft(currentStay) && (
+                    <div className="flex flex-row justify-between items-center gap-3 [&_.switch]:mb-0">
+                      <span id="opt-team-booking-label" className="text-sm">
+                        {t('stay_create_option_team_booking')}
+                      </span>
+                      <Switch
+                        disabled={isSavingTeamBooking}
+                        name="stay-checkout-team-booking"
+                        label=""
+                        labelledBy="opt-team-booking-label"
+                        onChange={(nextValue) => {
+                          void handleTeamBookingToggle(nextValue);
+                        }}
+                        checked={!!currentStay.isTeamBooking}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             )}
           </div>
         </BookingSurface>
 
-        <BookingSurface
-          as="section"
-          tone="elevated"
-          padding="lg"
-          aria-labelledby="preferences-heading"
-        >
-          <Heading id="preferences-heading" level={2} className="text-lg mb-2">
-            {t('stay_create_preferences_section_title')}
-          </Heading>
-          <p className="text-sm text-gray-600 mb-4">
-            {t('stay_create_preferences_section_intro')}
-          </p>
-          {preferencesError && (
-            <div className="mb-4">
-              <ErrorMessage error={preferencesError} />
-            </div>
-          )}
-          <MultiSelect
-            label={t('settings_dietary_preferences')}
-            values={userPreferences.diet}
-            onChange={(value) => {
-              setUserPreferences((prev) => ({ ...prev, diet: value }));
-              void patchUserPreference('diet', value);
-            }}
-            options={dietOptions}
-            placeholder={t('settings_pick_or_create_yours')}
-            className="mb-4"
-          />
-          {APP_NAME && APP_NAME?.toLowerCase() !== 'moos' && (
-            <Select
-              label={t('settings_shared_accommodation_preference')}
-              value={userPreferences.sharedAccomodation}
-              options={SHARED_ACCOMMODATION_PREFERENCES}
-              className="mb-4"
+        {showEventTicketSelection && (
+          <BookingSurface as="section" tone="elevated" padding="lg">
+            {isLoadingEventTickets ? (
+              <div className="flex justify-center py-6">
+                <Spinner />
+              </div>
+            ) : eventTicketOptions.length > 0 ? (
+              <TicketOptions
+                items={eventTicketOptions}
+                selectTicketOption={handleSelectTicketOption}
+                selectedTicketOption={selectedTicketOption}
+                discountCode={eventDiscountCode}
+                setDiscountCode={setEventDiscountCode}
+                eventId={stayEventId}
+                onDiscountValidated={handleEventDiscountValidated}
+              />
+            ) : (
+              <p className="text-sm text-gray-600">
+                {t('bookings_error_no_ticket_option')}
+              </p>
+            )}
+            {!isLoadingEventTickets &&
+              eventTicketOptions.length > 0 &&
+              !hasValidEventTicket && (
+                <p className="mt-3 text-sm text-error">
+                  {t('bookings_error_no_ticket_option')}
+                </p>
+              )}
+          </BookingSurface>
+        )}
+
+        {/* Volunteers already gave diet and host notes in the application
+            form, so re-asking here would collect the same answers twice. */}
+        {!isVolunteerApplication && (
+          <BookingSurface
+            as="section"
+            tone="elevated"
+            padding="lg"
+            aria-labelledby="preferences-heading"
+          >
+            <Heading id="preferences-heading" level={2} className="text-lg mb-2">
+              {t('stay_create_preferences_section_title')}
+            </Heading>
+            <p className="text-sm text-gray-600 mb-4">
+              {t('stay_create_preferences_section_intro')}
+            </p>
+            {preferencesError && (
+              <div className="mb-4">
+                <ErrorMessage error={preferencesError} />
+              </div>
+            )}
+            <MultiSelect
+              label={t('settings_dietary_preferences')}
+              values={userPreferences.diet}
               onChange={(value) => {
-                setUserPreferences((prev) => ({
-                  ...prev,
-                  sharedAccomodation: value,
-                }));
-                void patchUserPreference('sharedAccomodation', value);
+                setUserPreferences((prev) => ({ ...prev, diet: value }));
+                void patchUserPreference('diet', value);
               }}
-              isRequired
-              isDisabled={isSavingPreferences}
+              options={dietOptions}
+              placeholder={t('settings_pick_or_create_yours')}
+              className="mb-4"
             />
-          )}
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="stay-host-notes"
-              className="font-medium text-complimentary-light text-sm"
-            >
-              {t('stay_create_preferences_host_notes_label')}
-            </label>
-            <Textarea
-              id="stay-host-notes"
-              value={stayMessage}
-              onChange={(e) => setStayMessage(e.target.value)}
-              onBlur={() => void handleStayMessageBlur()}
-              placeholder={t('stay_create_preferences_host_notes_placeholder')}
-              disabled={isSavingStayMessage || isSavingOptions}
-              className="border-2 border-neutral text-complimentary-core text-sm rounded-lg min-h-[88px]"
-            />
-          </div>
-        </BookingSurface>
+            {APP_NAME && APP_NAME?.toLowerCase() !== 'moos' && (
+              <Select
+                label={t('settings_shared_accommodation_preference')}
+                value={userPreferences.sharedAccomodation}
+                options={SHARED_ACCOMMODATION_PREFERENCES}
+                className="mb-4"
+                onChange={(value) => {
+                  setUserPreferences((prev) => ({
+                    ...prev,
+                    sharedAccomodation: value,
+                  }));
+                  void patchUserPreference('sharedAccomodation', value);
+                }}
+                isRequired
+                isDisabled={isSavingPreferences}
+              />
+            )}
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="stay-host-notes"
+                className="font-medium text-complimentary-light text-sm"
+              >
+                {t('stay_create_preferences_host_notes_label')}
+              </label>
+              <Textarea
+                id="stay-host-notes"
+                value={stayMessage}
+                onChange={(e) => setStayMessage(e.target.value)}
+                onBlur={() => void handleStayMessageBlur()}
+                placeholder={t('stay_create_preferences_host_notes_placeholder')}
+                disabled={isSavingStayMessage || isSavingOptions}
+                className="border-2 border-neutral text-complimentary-core text-sm rounded-lg min-h-[88px]"
+              />
+            </div>
+          </BookingSurface>
+        )}
 
         {showFoodSection && (
           <BookingSurface
@@ -2117,7 +2329,9 @@ const StayCheckoutContent = ({
             {t('stay_create_summary_title')}
           </Heading>
           {tokenStakeSuccessNotice && (
-            <Information className="mb-4">{tokenStakeSuccessNotice}</Information>
+            <Information className="mb-4">
+              {tokenStakeSuccessNotice}
+            </Information>
           )}
           {priceLock ? (
             <div className="flex flex-col gap-2 text-sm">
@@ -2132,10 +2346,14 @@ const StayCheckoutContent = ({
                         <span className="line-through text-gray-500">
                           {formatStayMoney(accommodationPriceDetail.gross)}
                         </span>
-                        <span>{formatStayMoney(accommodationPriceDetail.net)}</span>
+                        <span>
+                          {formatStayMoney(accommodationPriceDetail.net)}
+                        </span>
                       </div>
                     ) : (
-                      <span>{formatStayMoney(priceLock.lines.accommodation)}</span>
+                      <span>
+                        {formatStayMoney(priceLock.lines.accommodation)}
+                      </span>
                     )}
                   </div>
                 </div>
@@ -2144,14 +2362,18 @@ const StayCheckoutContent = ({
                     {priceLock.appliedCredits.val > 0 && (
                       <span>
                         {t('stay_create_accommodation_benefit_credits', {
-                          amount: `${formatModalTwoDecimals(priceLock.appliedCredits.val)} ${priceLock.appliedCredits.cur}`,
+                          amount: `${formatModalTwoDecimals(
+                            priceLock.appliedCredits.val,
+                          )} ${priceLock.appliedCredits.cur}`,
                         })}
                       </span>
                     )}
                     {priceLock.appliedTokens.val > 0 && (
                       <span>
                         {t('stay_create_accommodation_benefit_tokens', {
-                          amount: `${formatModalTwoDecimals(priceLock.appliedTokens.val)} ${priceLock.appliedTokens.cur}`,
+                          amount: `${formatModalTwoDecimals(
+                            priceLock.appliedTokens.val,
+                          )} ${priceLock.appliedTokens.cur}`,
                         })}
                       </span>
                     )}
@@ -2176,12 +2398,8 @@ const StayCheckoutContent = ({
                   value={formatStayMoney(priceLock.lines.event)}
                 />
               )}
-              {priceLock.platformFee.val > 0 && (
-                <Row
-                  label={t('stay_create_line_platform_fee')}
-                  value={formatStayMoney(priceLock.platformFee)}
-                />
-              )}
+              {/* platformFee is carved out of the lines above, not added on top
+                  of them — its own row read as an extra charge. */}
               <hr className="my-2 border-gray-200" />
               <Row
                 label={t('stay_create_line_subtotal')}
@@ -2208,13 +2426,17 @@ const StayCheckoutContent = ({
               {priceLock.appliedCredits.val > 0 && (
                 <Row
                   label={t('stay_create_line_credits_applied')}
-                  value={`-${formatModalTwoDecimals(priceLock.appliedCredits.val)} ${priceLock.appliedCredits.cur}`}
+                  value={`-${formatModalTwoDecimals(
+                    priceLock.appliedCredits.val,
+                  )} ${priceLock.appliedCredits.cur}`}
                 />
               )}
               {priceLock.appliedTokens.val > 0 && (
                 <Row
                   label={t('stay_create_line_tokens_applied')}
-                  value={`-${formatModalTwoDecimals(priceLock.appliedTokens.val)} ${priceLock.appliedTokens.cur}`}
+                  value={`-${formatModalTwoDecimals(
+                    priceLock.appliedTokens.val,
+                  )} ${priceLock.appliedTokens.cur}`}
                 />
               )}
               {showTokenCreditPaymentOptions && tokensOwed > 0 && (
@@ -2235,7 +2457,9 @@ const StayCheckoutContent = ({
                     )}
                   <Row
                     label={t('stay_create_line_tokens_owed')}
-                    value={`${formatModalTwoDecimals(tokensOwed)} ${currentStay.tokensTarget?.cur || ''}`}
+                    value={`${formatModalTwoDecimals(tokensOwed)} ${
+                      currentStay.tokensTarget?.cur || ''
+                    }`}
                   />
                   {accommodationTokenStakePreview &&
                     Math.abs(
@@ -2264,10 +2488,94 @@ const StayCheckoutContent = ({
             className="text-sm text-gray-600 mt-3"
           />
           {showTokenCreditPaymentOptions && (
-          <div className="mt-5 flex flex-col gap-3">
-            {showFullTokenCreditControls ? (
-              <>
-                {isWeb3Enabled && tokenAccommodationVal > 0 && (
+            <div className="mt-5 flex flex-col gap-3">
+              {showFullTokenCreditControls ? (
+                <>
+                  {isWeb3Enabled && tokenAccommodationVal > 0 && (
+                    <>
+                      {isWalletConnected ? (
+                        <div
+                          title={
+                            isSameDayTokenBooking
+                              ? t('stay_create_same_day_tokens_not_supported')
+                              : undefined
+                          }
+                        >
+                          <Button
+                            onClick={handleApplyTokens}
+                            size="small"
+                            isFullWidth={false}
+                            isEnabled={
+                              canUseTokenCreditUiActions &&
+                              tokenAmountToApply > 0 &&
+                              !isSameDayTokenBooking &&
+                              !isCreditsModalOpen &&
+                              !isStaking &&
+                              !isVerifyingStake
+                            }
+                            isLoading={isStaking || isVerifyingStake}
+                            className={compactPaymentButtonClass}
+                          >
+                            {t('stay_create_apply_tdf_button')}
+                          </Button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => connectWallet?.()}
+                          className="text-sm text-accent underline text-left"
+                        >
+                          {t('stay_create_connect_wallet_link')}
+                        </button>
+                      )}
+                    </>
+                  )}
+                  {!stayUsesTokens ? (
+                    <div
+                      className={
+                        applyCreditsDisabledExplanation
+                          ? 'w-full cursor-help'
+                          : 'w-full'
+                      }
+                      {...(applyCreditsDisabledExplanation
+                        ? { title: applyCreditsDisabledExplanation }
+                        : {})}
+                    >
+                      <Button
+                        onClick={openCreditsConfirmationModal}
+                        variant="secondary"
+                        size="small"
+                        isFullWidth={false}
+                        isEnabled={isApplyCreditsEnabled}
+                        isLoading={isApplyingCredits}
+                        className={compactPaymentButtonClass}
+                      >
+                        {t('stay_create_apply_credits_button')}
+                      </Button>
+                    </div>
+                  ) : (
+                    canChangePaymentMethod && (
+                      <button
+                        type="button"
+                        onClick={handleCancelTokenPayment}
+                        disabled={
+                          isRevertingTokenPayment ||
+                          isApplyingCredits ||
+                          isStakeModalOpen ||
+                          isStaking ||
+                          isVerifyingStake
+                        }
+                        className="text-sm text-accent underline text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isRevertingTokenPayment
+                          ? t('stay_create_cancel_token_payment_loading')
+                          : t('stay_create_cancel_token_payment_link')}
+                      </button>
+                    )
+                  )}
+                </>
+              ) : (
+                needsTokenStakeCompletion && (
                   <>
                     {isWalletConnected ? (
                       <div
@@ -2278,23 +2586,18 @@ const StayCheckoutContent = ({
                         }
                       >
                         <Button
-                          onClick={handleApplyTokens}
+                          onClick={handleResumeTokenStake}
                           size="small"
                           isFullWidth={false}
                           isEnabled={
-                            canUseTokenCreditUiActions &&
-                            tokenAmountToApply > 0 &&
                             !isSameDayTokenBooking &&
-                            !isCreditsModalOpen &&
                             !isStaking &&
                             !isVerifyingStake
                           }
-                          isLoading={
-                            isStaking || isVerifyingStake
-                          }
+                          isLoading={isStaking || isVerifyingStake}
                           className={compactPaymentButtonClass}
                         >
-                          {t('stay_create_apply_tdf_button')}
+                          {t('stay_create_complete_token_stake_button')}
                         </Button>
                       </div>
                     ) : (
@@ -2307,95 +2610,14 @@ const StayCheckoutContent = ({
                       </button>
                     )}
                   </>
-                )}
-                {!stayUsesTokens ? (
-                  <div
-                    className={
-                      applyCreditsDisabledExplanation
-                        ? 'w-full cursor-help'
-                        : 'w-full'
-                    }
-                    {...(applyCreditsDisabledExplanation
-                      ? { title: applyCreditsDisabledExplanation }
-                      : {})}
-                  >
-                    <Button
-                      onClick={openCreditsConfirmationModal}
-                      variant="secondary"
-                      size="small"
-                      isFullWidth={false}
-                      isEnabled={isApplyCreditsEnabled}
-                      isLoading={isApplyingCredits}
-                      className={compactPaymentButtonClass}
-                    >
-                      {t('stay_create_apply_credits_button')}
-                    </Button>
-                  </div>
-                ) : (
-                  canChangePaymentMethod && (
-                    <button
-                      type="button"
-                      onClick={handleCancelTokenPayment}
-                      disabled={
-                        isRevertingTokenPayment ||
-                        isApplyingCredits ||
-                        isStakeModalOpen ||
-                        isStaking ||
-                        isVerifyingStake
-                      }
-                      className="text-sm text-accent underline text-left disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isRevertingTokenPayment
-                        ? t('stay_create_cancel_token_payment_loading')
-                        : t('stay_create_cancel_token_payment_link')}
-                    </button>
-                  )
-                )}
-              </>
-            ) : (
-              needsTokenStakeCompletion && (
-                <>
-                  {isWalletConnected ? (
-                    <div
-                      title={
-                        isSameDayTokenBooking
-                          ? t('stay_create_same_day_tokens_not_supported')
-                          : undefined
-                      }
-                    >
-                      <Button
-                        onClick={handleResumeTokenStake}
-                        size="small"
-                        isFullWidth={false}
-                        isEnabled={
-                          !isSameDayTokenBooking &&
-                          !isStaking &&
-                          !isVerifyingStake
-                        }
-                        isLoading={isStaking || isVerifyingStake}
-                        className={compactPaymentButtonClass}
-                      >
-                        {t('stay_create_complete_token_stake_button')}
-                      </Button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => connectWallet?.()}
-                      className="text-sm text-accent underline text-left"
-                    >
-                      {t('stay_create_connect_wallet_link')}
-                    </button>
-                  )}
-                </>
-              )
-            )}
-            {!canUseTokenCreditUiActions && (
-              <p className="text-xs text-gray-500">
-                {t('stay_create_payment_method_locked')}
-              </p>
-            )}
-          </div>
+                )
+              )}
+              {!canUseTokenCreditUiActions && (
+                <p className="text-xs text-gray-500">
+                  {t('stay_create_payment_method_locked')}
+                </p>
+              )}
+            </div>
           )}
         </BookingSurface>
 
@@ -2409,10 +2631,10 @@ const StayCheckoutContent = ({
             {useCardPaymentPrimaryCta && !isMember
               ? t('stay_checkout_cta_card_shortcut_title')
               : showStripeCardInput
-                ? t('stay_create_card_title')
-                : !isMember
-                  ? t('stay_create_request_review_title')
-                  : t('stay_create_card_title')}
+              ? t('stay_create_card_title')
+              : !isMember
+              ? t('stay_create_request_review_title')
+              : t('stay_create_card_title')}
           </Heading>
           {useCardPaymentPrimaryCta && !isMember ? (
             <p className="text-sm text-muted-foreground mb-4">
@@ -2468,18 +2690,20 @@ const StayCheckoutContent = ({
           <div className="mt-4">
             {useCardPaymentPrimaryCta && !isMember ? (
               <Button
-                isEnabled={hasAcceptedTerms && !isProcessing}
+                isEnabled={
+                  hasAcceptedTerms && !isProcessing && hasValidEventTicket
+                }
                 onClick={() => {
                   const pt =
                     Math.round(
-                      Number(
-                        currentStay.duration ?? currentStay.adults ?? 0,
-                      ) || 0,
+                      Number(currentStay.duration ?? currentStay.adults ?? 0) ||
+                        0,
                     ) || 1;
                   void logMetric({
                     event: 'stay-payment-page-navigated',
                     category: 'co-housing',
-                    value: 'payment', point: pt,
+                    value: 'payment',
+                    point: pt,
                     ...stayMetricFields,
                   });
                   router.push(paymentPageUrl);
@@ -2490,7 +2714,9 @@ const StayCheckoutContent = ({
               </Button>
             ) : (
               <Button
-                isEnabled={hasAcceptedTerms && !isProcessing}
+                isEnabled={
+                  hasAcceptedTerms && !isProcessing && hasValidEventTicket
+                }
                 isLoading={isProcessing}
                 onClick={handleConfirmAndPay}
                 className="min-h-[48px]"
@@ -2498,16 +2724,18 @@ const StayCheckoutContent = ({
                 {!isMember
                   ? t('buttons_booking_request')
                   : isFree
-                    ? t('stay_create_confirm_button')
-                    : t('stay_create_confirm_and_pay_button')}
+                  ? t('stay_create_confirm_button')
+                  : t('stay_create_confirm_and_pay_button')}
               </Button>
             )}
           </div>
-
         </BookingSurface>
       </div>
       {isCreditsModalOpen && showTokenCreditPaymentOptions && (
-        <Modal closeModal={closeCreditsModal} className="sm:max-w-xl md:w-[560px]">
+        <Modal
+          closeModal={closeCreditsModal}
+          className="sm:max-w-xl md:w-[560px]"
+        >
           <div className="flex flex-col gap-4">
             <Heading level={2} className="text-xl pr-10">
               {t('stay_create_credits_modal_title')}
@@ -2572,7 +2800,10 @@ const StayCheckoutContent = ({
         </Modal>
       )}
       {isStakeModalOpen && showTokenCreditPaymentOptions && (
-        <Modal closeModal={closeStakeModal} className="sm:max-w-xl md:w-[560px]">
+        <Modal
+          closeModal={closeStakeModal}
+          className="sm:max-w-xl md:w-[560px]"
+        >
           <div className="flex flex-col gap-4">
             <Heading level={2} className="text-xl pr-10">
               {t('stay_create_stake_modal_title')}
@@ -2635,8 +2866,7 @@ const StayCheckoutContent = ({
                 ) : (
                   t('wallet_tdf_available')
                 )}
-                :{' '}
-                {formatModalTwoDecimals(Number(tokenBalanceAvailable || 0))}
+                : {formatModalTwoDecimals(Number(tokenBalanceAvailable || 0))}
               </p>
               <p className="text-gray-700">
                 {t('wallet_celo')}:{' '}
@@ -2673,7 +2903,9 @@ const StayCheckoutContent = ({
                 size="small"
                 isFullWidth={false}
                 onClick={handleStakeTokens}
-                isEnabled={!isLowCeloForStake && !isStaking && !isVerifyingStake}
+                isEnabled={
+                  !isLowCeloForStake && !isStaking && !isVerifyingStake
+                }
                 isLoading={isStaking || isVerifyingStake}
                 className={`${compactPaymentButtonClass} min-h-[40px]`}
               >
@@ -2698,7 +2930,11 @@ const Row = ({ label, value, bold }: RowProps) => (
     <span className={bold ? 'font-semibold text-gray-900' : 'text-gray-600'}>
       {label}
     </span>
-    <span className={bold ? 'font-semibold text-gray-900 text-base' : 'text-gray-900'}>
+    <span
+      className={
+        bold ? 'font-semibold text-gray-900 text-base' : 'text-gray-900'
+      }
+    >
       {value}
     </span>
   </div>
@@ -2725,7 +2961,7 @@ StayCheckoutPage.getInitialProps = async (context: NextPageContext) => {
       generalConfig: null,
       volunteerConfig: null,
       foodOptions: null,
-      };
+    };
   }
 };
 

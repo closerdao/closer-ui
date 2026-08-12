@@ -15,7 +15,6 @@ export const Footer: FC = () => {
     TELEGRAM_URL,
     TWITTER_URL,
   } = useConfig() || {};
-  const platformName = PLATFORM_NAME || 'This village';
   const currentYear = new Date().getFullYear();
 
   return (
@@ -105,7 +104,11 @@ export const Footer: FC = () => {
           )}
         </div>
         <div className="mt-12">
-          <p>{`(c) ${currentYear} ${platformName}`}</p>
+          <p>
+            {PLATFORM_NAME
+              ? `(c) ${currentYear} ${PLATFORM_NAME}`
+              : `(c) ${currentYear}`}
+          </p>
           {SEMANTIC_URL ? <p>{SEMANTIC_URL}</p> : null}
           <p className="mt-2">
             Platform developed by <a href="https://closer.earth">Closer</a>.

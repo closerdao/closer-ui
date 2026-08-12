@@ -1,0 +1,279 @@
+{
+  "title": "_i18n_learn_more_page_title",
+  "slug": "/learn-more",
+  "description": "_i18n_learn_more_page_meta_description",
+  "ogImage": "https://cdn.oasa.co/tdf/tdf-invest-og.jpg",
+  "sections": [
+    {
+      "type": "hero",
+      "data": {
+        "settings": {
+          "alignText": "left",
+          "isInverted": false,
+          "isCompact": false
+        },
+        "content": {
+          "eyebrow": "_i18n_learn_more_hero_label",
+          "title": "_i18n_learn_more_hero_title",
+          "body": "_i18n_learn_more_hero_subtitle",
+          "imageUrl": "",
+          "cta": {
+            "text": "_i18n_learn_more_book_stay",
+            "url": "/stay"
+          },
+          "secondaryCta": {
+            "text": "_i18n_learn_more_get_tokens",
+            "url": "/token"
+          }
+        },
+        "background": "accent-light"
+      }
+    },
+    {
+      "type": "features",
+      "data": {
+        "settings": {
+          "numColumns": 4,
+          "isSmallImage": true,
+          "isColorful": false
+        },
+        "content": {
+          "title": "",
+          "description": "",
+          "items": [
+            {
+              "title": "_i18n_learn_more_topic_about",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "home",
+              "cta": {
+                "text": "",
+                "url": "#about"
+              }
+            },
+            {
+              "title": "_i18n_learn_more_topic_location",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "mapPin",
+              "cta": {
+                "text": "",
+                "url": "#location"
+              }
+            },
+            {
+              "title": "_i18n_learn_more_topic_token",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "zap",
+              "cta": {
+                "text": "",
+                "url": "#token"
+              }
+            },
+            {
+              "title": "_i18n_learn_more_topic_governance",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "users",
+              "cta": {
+                "text": "",
+                "url": "#governance"
+              }
+            },
+            {
+              "title": "_i18n_learn_more_topic_regeneration",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "leaf",
+              "cta": {
+                "text": "",
+                "url": "#regeneration"
+              }
+            },
+            {
+              "title": "_i18n_learn_more_topic_community",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "heart",
+              "cta": {
+                "text": "",
+                "url": "#community"
+              }
+            },
+            {
+              "title": "_i18n_learn_more_topic_oasa",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "users",
+              "cta": {
+                "text": "",
+                "url": "#oasa"
+              }
+            },
+            {
+              "title": "_i18n_learn_more_topic_faq",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "sparkles",
+              "cta": {
+                "text": "",
+                "url": "#faq"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "textBlock",
+      "data": {
+        "settings": {
+          "imagePosition": "none"
+        },
+        "content": {
+          "title": "_i18n_learn_more_topic_about",
+          "body": "Traditional Dream Factory is a web3-powered regenerative co-living space in Abela, Portugal. Founded in 2021, we are pioneering a new model for community living that combines modern technology with ancient wisdom about living in harmony with the land.\n\nOur mission is to create positive loops in all interactions between stakeholders—including nature, all life, and future generations. We aim to prove that we can optimize resources while nurturing a creative, thriving community that leaves a positive trace on the environment.\n\nTDF is designed for 80-100 members who continuously return year after year, deepening their connection with the land and each other.",
+          "imageUrl": "",
+          "imageAlt": ""
+        }
+      }
+    },
+    {
+      "type": "textBlock",
+      "data": {
+        "settings": {
+          "imagePosition": "none"
+        },
+        "content": {
+          "title": "_i18n_learn_more_topic_location",
+          "body": "TDF is located in Abela, Alentejo, Portugal — a rural landscape of cork oaks, hills, and regenerating farmland.",
+          "imageUrl": "",
+          "imageAlt": ""
+        }
+      }
+    },
+    {
+      "type": "textBlock",
+      "data": {
+        "settings": {
+          "imagePosition": "none"
+        },
+        "content": {
+          "title": "_i18n_learn_more_topic_token",
+          "body": "_i18n_learn_more_faq_2_a",
+          "imageUrl": "",
+          "imageAlt": ""
+        }
+      }
+    },
+    {
+      "type": "textBlock",
+      "data": {
+        "settings": {
+          "imagePosition": "none"
+        },
+        "content": {
+          "title": "_i18n_learn_more_topic_governance",
+          "body": "_i18n_learn_more_faq_5_a",
+          "imageUrl": "",
+          "imageAlt": ""
+        }
+      }
+    },
+    {
+      "type": "textBlock",
+      "data": {
+        "settings": {
+          "imagePosition": "none"
+        },
+        "content": {
+          "title": "_i18n_learn_more_topic_regeneration",
+          "body": "_i18n_learn_more_faq_4_a",
+          "imageUrl": "",
+          "imageAlt": ""
+        }
+      }
+    },
+    {
+      "type": "textBlock",
+      "data": {
+        "settings": {
+          "imagePosition": "none"
+        },
+        "content": {
+          "title": "_i18n_learn_more_topic_community",
+          "body": "_i18n_learn_more_faq_7_a",
+          "imageUrl": "",
+          "imageAlt": ""
+        }
+      }
+    },
+    {
+      "type": "textBlock",
+      "data": {
+        "settings": {
+          "imagePosition": "none"
+        },
+        "content": {
+          "title": "_i18n_learn_more_topic_oasa",
+          "body": "_i18n_learn_more_faq_6_a",
+          "imageUrl": "",
+          "imageAlt": ""
+        }
+      }
+    },
+    {
+      "type": "collapsibleFaq",
+      "data": {
+        "settings": {},
+        "content": {
+          "title": "_i18n_learn_more_topic_faq",
+          "description": "",
+          "items": [
+            {
+              "title": "_i18n_learn_more_faq_1_q",
+              "text": "_i18n_learn_more_faq_1_a"
+            },
+            {
+              "title": "_i18n_learn_more_faq_2_q",
+              "text": "_i18n_learn_more_faq_2_a"
+            },
+            {
+              "title": "_i18n_learn_more_faq_3_q",
+              "text": "_i18n_learn_more_faq_3_a"
+            },
+            {
+              "title": "_i18n_learn_more_faq_4_q",
+              "text": "_i18n_learn_more_faq_4_a"
+            },
+            {
+              "title": "_i18n_learn_more_faq_5_q",
+              "text": "_i18n_learn_more_faq_5_a"
+            },
+            {
+              "title": "_i18n_learn_more_faq_6_q",
+              "text": "_i18n_learn_more_faq_6_a"
+            },
+            {
+              "title": "_i18n_learn_more_faq_7_q",
+              "text": "_i18n_learn_more_faq_7_a"
+            },
+            {
+              "title": "_i18n_learn_more_faq_8_q",
+              "text": "_i18n_learn_more_faq_8_a"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

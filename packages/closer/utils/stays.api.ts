@@ -1,18 +1,17 @@
-import { BigNumber, utils as ethersUtils } from 'ethers';
 import dayjs from 'dayjs';
 import dayOfYear from 'dayjs/plugin/dayOfYear';
 import utc from 'dayjs/plugin/utc';
+import { BigNumber, utils as ethersUtils } from 'ethers';
 
-import api from './api';
-import { priceFormat } from './helpers';
-
-import { CloserCurrencies } from '../types/currency';
 import type {
   BookingPaymentDelta,
   UpdatedPrices,
+  VolunteerInfo,
 } from '../types/booking';
+import { CloserCurrencies } from '../types/currency';
 import type { StaySearchResponse } from '../types/durationDiscount';
 import type {
+  PriceLock,
   Stay,
   StayCheckoutResponse,
   StayMoney,
@@ -21,6 +20,8 @@ import type {
   StayStatus,
   StayTokenStakePlan,
 } from '../types/stay';
+import api from './api';
+import { priceFormat } from './helpers';
 
 dayjs.extend(utc);
 dayjs.extend(dayOfYear);
@@ -58,7 +59,9 @@ const roundHumanTokenAmountForWei = (val: number): string => {
   return s === '' ? '0' : s;
 };
 
-export const formatStayMoney = (money: StayMoney | undefined | null): string => {
+export const formatStayMoney = (
+  money: StayMoney | undefined | null,
+): string => {
   if (!money) return '';
   return priceFormat(money.val, money.cur as CloserCurrencies);
 };
@@ -72,6 +75,40 @@ export const getCreditsBalance = async (): Promise<number> => {
   } catch {
     return 0;
   }
+};
+
+export const checkCarrotsAvailability = async ({
+  startDate,
+  creditsAmount,
+  minCreditsAmount,
+}: {
+  startDate: string | Date;
+  creditsAmount: number;
+  minCreditsAmount: number;
+}): Promise<boolean> => {
+  try {
+    const { data } = await api.post('/carrots/availability', {
+      startDate,
+      creditsAmount,
+      minCreditsAmount,
+    });
+    return Boolean(data?.results);
+  } catch {
+    return false;
+  }
+};
+
+export const getStayTokenPricePerNight = (stay: Stay): number => {
+  const daily = stay.priceLock?.dailyRentalToken?.val;
+  if (daily != null && Number.isFinite(daily) && daily > 0) {
+    return daily;
+  }
+  const nights = getStayAccommodationNightCount(stay);
+  const total = getStayAccommodationTokenTotal(stay);
+  if (!nights || !total) {
+    return 0;
+  }
+  return total / nights;
 };
 
 export const STAY_TERMINAL_STATUSES: ReadonlyArray<StayStatus> = [
@@ -96,6 +133,18 @@ export const isStayAwaitingPayment = (
   stay: Pick<Stay, 'status'> | null | undefined,
 ): boolean =>
   stay?.status === 'confirmed' || stay?.status === 'pending-payment';
+
+export const isStayCollectingRemainingFiat = (
+  stay: Pick<Stay, 'status'> | null | undefined,
+): boolean => {
+  const status = stay?.status;
+  return (
+    status === 'confirmed' ||
+    status === 'pending-payment' ||
+    status === 'tokens-staked' ||
+    status === 'credits-paid'
+  );
+};
 
 function normalizeStayStatusRaw(
   status: Stay['status'] | null | undefined,
@@ -123,11 +172,21 @@ export const canApplyTokenOrCreditsToStay = (
   return s === 'confirmed' || s === 'pending-payment';
 };
 
+export const isVolunteerStay = (
+  stay: Pick<Stay, 'volunteerInfo'> | null | undefined,
+): boolean => {
+  const bookingType = stay?.volunteerInfo?.bookingType;
+  return bookingType === 'volunteer' || bookingType === 'residence';
+};
+
 export const canShowStayTokenCreditPaymentOptions = (
-  stay: Pick<Stay, 'status'> | null | undefined,
+  stay: Pick<Stay, 'status' | 'volunteerInfo'> | null | undefined,
   isMember: boolean,
 ): boolean => {
   if (!stay) return false;
+  // Accommodation is already 0 on a volunteer/residence stay, but the server
+  // still stakes tokens/credits off the listing price — so never offer them.
+  if (isVolunteerStay(stay)) return false;
   if (isStayCheckoutDraft(stay)) {
     return Boolean(isMember);
   }
@@ -138,8 +197,7 @@ export const canShowStayTokenCreditPaymentOptions = (
 };
 
 export const computeFiatOwed = (stay: Stay): number => {
-  const target =
-    stay.fiatTarget?.val ?? stay.priceLock?.total.val ?? 0;
+  const target = stay.fiatTarget?.val ?? stay.priceLock?.total.val ?? 0;
   const paid = stay.fiatPaid?.val ?? 0;
   return Math.max(0, target - paid);
 };
@@ -189,7 +247,8 @@ export const buildStayTokenStakePlan = (
   const duration = getStayAccommodationNightCount(stay);
   const maxTokensForStay = getStayAccommodationTokenTotal(stay);
 
-  if (!startUtc.isValid() || duration <= 0 || maxTokensForStay <= 0) return null;
+  if (!startUtc.isValid() || duration <= 0 || maxTokensForStay <= 0)
+    return null;
 
   const maxWeiRaw = ethersUtils.parseUnits(
     roundHumanTokenAmountForWei(maxTokensForStay),
@@ -201,9 +260,7 @@ export const buildStayTokenStakePlan = (
   const maxWei = pricePerNightWei.mul(durationBn);
 
   const cappedWeiRaw = ethersUtils.parseUnits(
-    roundHumanTokenAmountForWei(
-      Math.min(tokensToStakeTotal, maxTokensForStay),
-    ),
+    roundHumanTokenAmountForWei(Math.min(tokensToStakeTotal, maxTokensForStay)),
     TDF_DECIMALS,
   );
   const cappedWei = cappedWeiRaw.gt(maxWei) ? maxWei : cappedWeiRaw;
@@ -246,10 +303,7 @@ export const buildStayTokenStakePlan = (
 };
 
 export const accommodationTokenTotalFromPriceLock = (
-  priceLock:
-    | { dailyRentalToken?: { val: number } | null }
-    | null
-    | undefined,
+  priceLock: { dailyRentalToken?: { val: number } | null } | null | undefined,
   duration: number,
   adults: number,
   listingIsPrivate?: boolean | null,
@@ -276,9 +330,7 @@ export const canChangeStayPaymentMethod = (stay: Stay): boolean => {
 
 export const canAugmentTokenOrCreditsPayment = (stay: Stay): boolean => {
   if (!isStayAwaitingPayment(stay)) return false;
-  return (
-    computeTokensOwed(stay) > 0.005 || computeCreditsOwed(stay) > 0.005
-  );
+  return computeTokensOwed(stay) > 0.005 || computeCreditsOwed(stay) > 0.005;
 };
 
 export const inferPaymentChoiceFromStay = (
@@ -297,7 +349,8 @@ export const inferPaymentChoiceFromStay = (
         )
       : 0);
   const tokensTarget = stay.tokensTarget?.val ?? stay.appliedTokens?.val ?? 0;
-  const creditsTarget = stay.creditsTarget?.val ?? stay.appliedCredits?.val ?? 0;
+  const creditsTarget =
+    stay.creditsTarget?.val ?? stay.appliedCredits?.val ?? 0;
   if (
     fullTokenAccommodation > 0 &&
     tokensTarget > 0 &&
@@ -326,13 +379,20 @@ export const stayUsesTokenAccommodation = (stay: Stay): boolean => {
 
 type ApiOk<T> = { results: T };
 
+export type StayBookingType = 'volunteer' | 'residence';
+
 export type StaySearchPayload = {
   start: string;
   end: string;
   adults: number;
   children?: number;
   eventId?: string | null;
-  volunteerId?: string | null;
+  /**
+   * Classifies the stay server-side (stored as volunteerInfo.bookingType) and
+   * restricts results to listings whose availableFor covers it. Replaces the
+   * deprecated volunteerId.
+   */
+  bookingType?: StayBookingType | null;
   isFriendsBooking?: boolean;
 };
 
@@ -345,7 +405,17 @@ export const searchStays = async (
 
 export const checkStayListingAvailability = async (
   listingId: string,
-  payload: { start: string; end: string; adults: number },
+  payload: {
+    start: string;
+    end: string;
+    adults: number;
+    /**
+     * Required for volunteer stays: without it the calendar greys out days that
+     * POST /stays accepts, because volunteer stays ignore event calendar blocks
+     * and use the volunteering minimum stay.
+     */
+    bookingType?: StayBookingType | null;
+  },
 ): Promise<{
   results: boolean;
   availability: any[];
@@ -371,8 +441,12 @@ export type CreateStayPayload = {
   isFriendsBooking?: boolean;
   friendEmails?: string;
   eventId?: string | null;
-  volunteerId?: string | null;
-  volunteerInfo?: { bookingType: 'volunteer' | 'residence' };
+  /**
+   * Shorthand the server folds into volunteerInfo when there are no application
+   * details to send. Prefer the full volunteerInfo when there are.
+   */
+  bookingType?: StayBookingType | null;
+  volunteerInfo?: VolunteerInfo;
   isTeamBooking?: boolean;
   ticketOption?: string | null;
   eventDiscount?: string | null;
@@ -393,15 +467,81 @@ export const getStay = async (id: string): Promise<Stay> => {
   return (data as ApiOk<Stay>).results;
 };
 
+const zeroStayMoney = (money: StayMoney): StayMoney => ({
+  val: 0,
+  cur: money.cur,
+});
+
+export const applyOptimisticTeamBookingToStay = (
+  stay: Stay,
+  isTeamBooking: boolean,
+  previousPriceLock?: PriceLock | null,
+): Stay => {
+  if (!isTeamBooking) {
+    if (!previousPriceLock) {
+      return { ...stay, isTeamBooking: false };
+    }
+    return {
+      ...stay,
+      isTeamBooking: false,
+      priceLock: previousPriceLock,
+      fiatTarget: {
+        val: previousPriceLock.total.val,
+        cur: previousPriceLock.total.cur,
+      },
+    };
+  }
+
+  if (!stay.priceLock) {
+    return { ...stay, isTeamBooking: true };
+  }
+
+  const priceLock = stay.priceLock;
+  const waived =
+    priceLock.lines.accommodation.val +
+    priceLock.lines.food.val +
+    priceLock.lines.utility.val;
+  const newSubtotal = Math.max(
+    0,
+    +(priceLock.subtotal.val - waived).toFixed(2),
+  );
+  const newTotal = Math.max(0, +(priceLock.total.val - waived).toFixed(2));
+
+  return {
+    ...stay,
+    isTeamBooking: true,
+    priceLock: {
+      ...priceLock,
+      lines: {
+        ...priceLock.lines,
+        accommodation: zeroStayMoney(priceLock.lines.accommodation),
+        accommodationGross: zeroStayMoney(
+          priceLock.lines.accommodationGross ?? priceLock.lines.accommodation,
+        ),
+        food: zeroStayMoney(priceLock.lines.food),
+        utility: zeroStayMoney(priceLock.lines.utility),
+      },
+      subtotal: { ...priceLock.subtotal, val: newSubtotal },
+      total: { ...priceLock.total, val: newTotal },
+    },
+    fiatTarget: stay.fiatTarget
+      ? { ...stay.fiatTarget, val: newTotal }
+      : { val: newTotal, cur: priceLock.total.cur },
+  };
+};
+
 export type StayOptionsPayload = Partial<{
   foodOption: string;
   foodOptionId: string | null;
   doesNeedPickup: boolean;
   doesNeedSeparateBeds: boolean;
+  isTeamBooking: boolean;
   message: string;
   gift: string;
   about: string;
-  volunteerInfo: { bookingType: 'volunteer' | 'residence' };
+  volunteerInfo: VolunteerInfo;
+  ticketOption: string | null;
+  eventDiscount: string | null;
 }>;
 
 export const updateStayOptions = async (
@@ -509,9 +649,8 @@ export const stakeStayTokens = async (
       ? { syncBookingAlreadyOnChain: true }
       : { transactionId };
   const { data } = await api.post(`/stays/${id}/token-stake`, body);
-  const results = (
-    data as ApiOk<{ booking?: Stay | null; verified?: boolean }>
-  )?.results;
+  const results = (data as ApiOk<{ booking?: Stay | null; verified?: boolean }>)
+    ?.results;
   if (results?.booking) {
     return { booking: results.booking, verified: Boolean(results.verified) };
   }
@@ -543,7 +682,12 @@ export function isStayShapedBooking(
 
 function unwrapStayMutationResult(data: { results?: unknown }): Stay {
   const r = data?.results as { booking?: Stay } | Stay;
-  if (r && typeof r === 'object' && 'booking' in r && (r as { booking: Stay }).booking) {
+  if (
+    r &&
+    typeof r === 'object' &&
+    'booking' in r &&
+    (r as { booking: Stay }).booking
+  ) {
     return (r as { booking: Stay }).booking;
   }
   return r as Stay;
@@ -600,7 +744,10 @@ export function mapStayQuoteToUpdatedPrices(
   };
 }
 
-export const extendStay = async (id: string, payload: { end: string }): Promise<Stay> => {
+export const extendStay = async (
+  id: string,
+  payload: { end: string },
+): Promise<Stay> => {
   const { data } = await api.post(`/stays/${id}/extend`, payload);
   return unwrapStayMutationResult(data);
 };
@@ -636,7 +783,10 @@ export const updateStayGuests = async (
   return unwrapStayMutationResult(data);
 };
 
-export const shortenStay = async (id: string, payload: { end: string }): Promise<Stay> => {
+export const shortenStay = async (
+  id: string,
+  payload: { end: string },
+): Promise<Stay> => {
   const { data } = await api.post(`/stays/${id}/shorten`, payload);
   return unwrapStayMutationResult(data);
 };

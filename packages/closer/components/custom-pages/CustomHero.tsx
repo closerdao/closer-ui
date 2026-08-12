@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 
 import YoutubeEmbed from '../YoutubeEmbed';
 import { Heading, LinkButton } from '../ui';
-import { resolveBlockHtml, resolveBlockText } from '../../utils/blockI18n';
+import { resolveBlockText } from '../../utils/blockI18n';
 import { isValidNextImageSrc } from '../../utils/nextImageSrc';
 import SafeCustomPageImage from './SafeCustomPageImage';
 import {
@@ -29,10 +29,15 @@ const CustomHero: React.FC<{
   content: {
     title: string;
     body: string;
+    eyebrow?: string;
     imageUrl?: string;
     videoEmbedId?: string;
     mobileVideoUrl?: string;
     cta?: {
+      text?: string;
+      url?: string;
+    };
+    secondaryCta?: {
       text?: string;
       url?: string;
     };
@@ -96,11 +101,29 @@ const CustomHero: React.FC<{
   const hasMedia = hasVideoEmbed || hasImage || (isClientMobile && hasMobileVideo);
 
   const titleText = resolveBlockText(content.title, t);
-  const bodyHtml = resolveBlockHtml(content.body, t);
+  const bodyText = resolveBlockText(
+    String(content.body ?? '')
+      .replace(/<\/p>\s*<p>/gi, '\n\n')
+      .replace(/<\/?p[^>]*>/gi, '')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .trim() || undefined,
+    t,
+  );
+  const eyebrowRaw = content.eyebrow?.trim() ?? '';
+  const eyebrowText = eyebrowRaw
+    ? resolveBlockText(eyebrowRaw, t)
+    : '';
   const ctaTextRaw = content.cta?.text?.trim() ?? '';
   const ctaText = resolveBlockText(ctaTextRaw || undefined, t);
   const ctaUrl = content.cta?.url ?? '';
   const showCta = ctaText.length > 0;
+  const secondaryCtaTextRaw = content.secondaryCta?.text?.trim() ?? '';
+  const secondaryCtaText = resolveBlockText(
+    secondaryCtaTextRaw || undefined,
+    t,
+  );
+  const secondaryCtaUrl = content.secondaryCta?.url ?? '';
+  const showSecondaryCta = secondaryCtaText.length > 0 && Boolean(secondaryCtaUrl);
   const sectionBgClass = getSectionBackgroundClass(background);
   const useSectionBackground = hasSectionBackground(background);
   const useLightText = Boolean(settings?.isInverted || background === 'dark');
@@ -166,19 +189,29 @@ const CustomHero: React.FC<{
     setIsClientMobile(isMobile);
   }, []);
 
-  const sectionClass = hasMedia
-    ? embedded
-      ? 'relative w-full overflow-hidden aspect-[16/9] min-h-[220px] max-h-[480px]'
-      : 'relative h-[calc(100vh-75px)] w-[100vw] left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] overflow-hidden'
-    : embedded
-      ? 'relative w-full min-h-[280px] md:min-h-[320px] overflow-hidden'
-      : 'relative w-full min-h-[50vh] md:min-h-[60vh] overflow-hidden';
+  const isCompact = Boolean(settings?.isCompact);
 
-  const innerShellClass = hasMedia
-    ? `relative z-10 h-full w-full flex max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 ${outerAlign}`
-    : embedded
-      ? `relative z-10 flex min-h-[280px] md:min-h-[320px] w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 ${outerAlign}`
-      : `relative z-10 flex min-h-[50vh] md:min-h-[60vh] w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 ${outerAlign}`;
+  const sectionClass = isCompact
+    ? embedded
+      ? 'relative w-full overflow-hidden min-h-[200px] max-h-[240px]'
+      : hasMedia
+        ? 'relative w-[100vw] left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] min-h-[200px] md:min-h-[220px] overflow-hidden'
+        : 'relative w-full min-h-[200px] md:min-h-[220px] overflow-hidden'
+    : hasMedia
+      ? embedded
+        ? 'relative w-full overflow-hidden aspect-[16/9] min-h-[220px] max-h-[480px]'
+        : 'relative h-[calc(100vh-75px)] w-[100vw] left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] overflow-hidden'
+      : embedded
+        ? 'relative w-full min-h-[280px] md:min-h-[320px] overflow-hidden'
+        : 'relative w-full min-h-[50vh] md:min-h-[60vh] overflow-hidden';
+
+  const innerShellClass = isCompact
+    ? `relative z-10 flex min-h-[200px] md:min-h-[220px] w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 ${outerAlign}`
+    : hasMedia
+      ? `relative z-10 h-full w-full flex max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 ${outerAlign}`
+      : embedded
+        ? `relative z-10 flex min-h-[280px] md:min-h-[320px] w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 ${outerAlign}`
+        : `relative z-10 flex min-h-[50vh] md:min-h-[60vh] w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 ${outerAlign}`;
 
   return (
     <section className={`${sectionClass} ${sectionBgClass}`.trim()}>
@@ -194,6 +227,15 @@ const CustomHero: React.FC<{
 
       <div className={innerShellClass}>
         <div className={`max-w-2xl flex flex-col gap-2 ${innerAlign}`}>
+          {eyebrowText ? (
+            <p
+              className={`text-xs font-semibold uppercase tracking-widest ${
+                useLightText ? 'text-accent-light' : 'text-accent'
+              }`}
+            >
+              {eyebrowText}
+            </p>
+          ) : null}
           <Heading
             level={1}
             className={`${
@@ -205,27 +247,42 @@ const CustomHero: React.FC<{
             {titleText}
           </Heading>
 
-          <div
-            className={`${
-              settings?.isCompact ? 'text-sm sm:text-lg max-w-xl' : 'text-2xl'
-            } rich-text ${
-              useLightText ? 'text-accent-light' : 'text-black'
-            }`}
-            dangerouslySetInnerHTML={{ __html: bodyHtml }}
-          />
+          {bodyText ? (
+            <p
+              className={`${
+                settings?.isCompact ? 'text-sm sm:text-lg max-w-xl' : 'text-2xl'
+              } whitespace-pre-line ${
+                useLightText ? 'text-accent-light' : 'text-black'
+              }`}
+            >
+              {bodyText}
+            </p>
+          ) : null}
 
-          {showCta && (
-            <div className="mt-4">
-              <LinkButton
-                href={ctaUrl}
-                className={`${
-                  useLightText
-                    ? 'text-dominant border-accent-alt bg-accent-alt'
-                    : ''
-                } w-fit px-5`}
-              >
-                {ctaText}
-              </LinkButton>
+          {(showCta || showSecondaryCta) && (
+            <div className="mt-4 flex flex-wrap gap-3">
+              {showCta ? (
+                <LinkButton
+                  href={ctaUrl}
+                  className={`${
+                    useLightText
+                      ? 'text-dominant border-accent-alt bg-accent-alt'
+                      : ''
+                  } w-fit px-5`}
+                >
+                  {ctaText}
+                </LinkButton>
+              ) : null}
+              {showSecondaryCta ? (
+                <LinkButton
+                  href={secondaryCtaUrl}
+                  variant="secondary"
+                  isFullWidth={false}
+                  className="w-fit px-5"
+                >
+                  {secondaryCtaText}
+                </LinkButton>
+              ) : null}
             </div>
           )}
         </div>

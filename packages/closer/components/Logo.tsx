@@ -23,14 +23,17 @@ const Logo: FC = () => {
           
           {APP_NAME === 'closer' && (
             <div className="w-[240px] sm:w-full flex items-center ">
+              {/* The source is square; sized to fit the h-20 nav bar with its p-4. */}
               <Image
                 src={LOGO_HEADER}
                 alt={PLATFORM_NAME}
-
-                width={60}
-                height={38}
+                width={64}
+                height={64}
+                className="h-12 w-12 shrink-0 object-contain"
               />
-              <div className='tracking-tight text-2xl mt-0.5 font-medium'>{PLATFORM_NAME }</div>
+              <div className="tracking-tight text-2xl font-medium leading-none">
+                {PLATFORM_NAME}
+              </div>
             </div>
           )}
           {APP_NAME === 'lios' && (

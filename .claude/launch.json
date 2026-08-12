@@ -1,0 +1,26 @@
+{
+  "version": "0.0.1",
+  "autoPort": true,
+  "configurations": [
+    {
+      "name": "closer-app",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": [
+        "--cwd",
+        "apps/closer",
+        "dev"
+      ],
+      "port": 3041
+    },
+    {
+      "name": "tdf-app",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": [
+        "--cwd",
+        "apps/tdf",
+        "dev"
+      ],
+      "port": 3042
+    }
+  ]
+}

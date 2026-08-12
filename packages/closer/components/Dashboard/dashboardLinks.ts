@@ -10,10 +10,10 @@ type TranslationFunction = (key: string) => string;
 
 interface DashboardLinksConfig {
   isBookingEnabled?: boolean;
-  isGovernanceEnabled?: boolean;
   isLearningHubEnabled?: boolean;
   isAffiliateEnabled?: boolean;
   isTokenEnabled?: boolean;
+  isApplicationsEnabled?: boolean;
 }
 
 export const getDashboardLinks = (
@@ -22,10 +22,10 @@ export const getDashboardLinks = (
 ): DashboardLink[] => {
   const {
     isBookingEnabled = false,
-    isGovernanceEnabled = false,
     isLearningHubEnabled = true,
     isAffiliateEnabled = process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true',
     isTokenEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true',
+    isApplicationsEnabled = false,
   } = config;
 
   const baseLinks: DashboardLink[] = [
@@ -51,13 +51,6 @@ export const getDashboardLinks = (
       roles: ['admin', 'team'],
     },
     {
-      label: t('navigation_governance'),
-      url: '/governance',
-      rbacPage: 'Governance',
-      enabled: isGovernanceEnabled,
-      roles: ['member'],
-    },
-    {
       label: t('navigation_sales'),
       url: '/dashboard/sales',
       rbacPage: 'TokenSales',
@@ -77,6 +70,13 @@ export const getDashboardLinks = (
       rbacPage: 'Engagement',
       enabled: true,
       roles: ['admin', 'community-curator', 'space-host', 'team'],
+    },
+    {
+      label: t('navigation_applications'),
+      url: '/dashboard/applications',
+      rbacPage: 'Applications',
+      enabled: isApplicationsEnabled,
+      roles: ['admin', 'community-curator', 'team'],
     },
     {
       label: t('navigation_cohousing'),
@@ -191,6 +191,13 @@ export const getDashboardLinks = (
       rbacPage: 'AffiliateSettings',
       enabled: isAffiliateEnabled,
       roles: [],
+    },
+    {
+      label: t('navigation_deploy_queue'),
+      url: '/dashboard/deploy-queue',
+      rbacPage: 'AffiliateSettings',
+      enabled: true,
+      roles: ['admin', 'affiliate-manager'],
     },
   ];
 

@@ -3,16 +3,15 @@ import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { z } from 'zod';
 
-import { useInteractionIsHuman } from '../hooks/useInteractionIsHuman';
 import api from '../utils/api';
+import { clearInteractionSession } from '../utils/interactionSession';
 import {
+  createTurnstileHandlers,
   isTurnstileSubmitEnabled,
-  turnstileTokenForRequest,
 } from '../utils/turnstile.helpers';
 import TurnstileWidget from './TurnstileWidget';
 import { Button, Heading, Input } from './ui';
 
-// Email validation schema
 const emailSchema = z
   .string()
   .email({ message: 'Please enter a valid email address' });
@@ -29,7 +28,6 @@ const JoinWebinarPrompt = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const isHuman = useInteractionIsHuman();
 
   useEffect(() => {
     const localEmail = localStorage.getItem('email');
@@ -39,7 +37,6 @@ const JoinWebinarPrompt = ({
   }, []);
 
   const sendInvite = async () => {
-    // Validate email before sending
     try {
       setIsLoading(true);
       emailSchema.parse(email);
@@ -47,14 +44,29 @@ const JoinWebinarPrompt = ({
 
       await api.post('/webinar', {
         email,
-        tags: (tags?.length ? tags : ['webinar']),
-        turnstileToken: turnstileTokenForRequest(isHuman, turnstileToken),
+        tags: tags?.length ? tags : ['webinar'],
+        turnstileToken,
       });
       setIsSuccess(true);
     } catch (error) {
       if (error instanceof z.ZodError) {
         setEmailError(error.errors[0].message);
+        return;
       }
+      const errorMessage =
+        (
+          error as {
+            response?: { data?: { error?: string } };
+            message?: string;
+          }
+        )?.response?.data?.error ||
+        (error as Error).message ||
+        'Failed to send invite';
+      if (/turnstile/i.test(String(errorMessage))) {
+        clearInteractionSession();
+        setTurnstileToken(null);
+      }
+      setEmailError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -68,7 +80,6 @@ const JoinWebinarPrompt = ({
     const newEmail = e.target.value;
     setEmail(newEmail);
 
-    // Clear error when user starts typing
     if (emailError) {
       setEmailError(null);
     }
@@ -87,6 +98,10 @@ const JoinWebinarPrompt = ({
             </div>
 
             <div className="flex flex-col gap-2">
+              <TurnstileWidget
+                action="webinar_signup"
+                {...createTurnstileHandlers(setTurnstileToken)}
+              />
               <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   value={email}
@@ -97,7 +112,9 @@ const JoinWebinarPrompt = ({
                 />
                 <Button
                   isEnabled={
-                    !isLoading && isTurnstileSubmitEnabled(isHuman, turnstileToken)
+                    !isLoading &&
+                    !!email.trim() &&
+                    isTurnstileSubmitEnabled(turnstileToken)
                   }
                   onClick={sendInvite}
                   className="w-fit"
@@ -105,12 +122,6 @@ const JoinWebinarPrompt = ({
                   Join webinar
                 </Button>
               </div>
-              {!isHuman && (
-                <TurnstileWidget
-                  action="webinar_signup"
-                  onVerify={setTurnstileToken}
-                />
-              )}
               {isSuccess && (
                 <p className="text-green-500 text-sm">
                   Webinar invite sent! Please check your inbox.

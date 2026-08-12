@@ -1,13 +1,15 @@
 import { BigNumber, utils as ethersUtils } from 'ethers';
 
+import type { Stay, StayMoney, StayQuoteResponse } from '../../types/stay';
 import {
   STAY_TERMINAL_STATUSES,
   accommodationTokenTotalFromPriceLock,
   buildStayTokenStakePlan,
   canApplyTokenOrCreditsToStay,
   canAugmentTokenOrCreditsPayment,
-  canShowStayTokenCreditPaymentOptions,
   canChangeStayPaymentMethod,
+  canShowStayTokenCreditPaymentOptions,
+  isVolunteerStay,
   computeCreditsOwed,
   computeFiatDiscountFromStayQuote,
   computeFiatOwed,
@@ -19,12 +21,11 @@ import {
   isStayAwaitingHostApproval,
   isStayAwaitingPayment,
   isStayCheckoutDraft,
+  isStayCollectingRemainingFiat,
   isStayPaid,
   isStayTerminal,
   stayUsesTokenAccommodation,
 } from '../stays.api';
-
-import type { Stay, StayMoney, StayQuoteResponse } from '../../types/stay';
 
 const baseStay = (overrides: Partial<Stay> = {}): Stay =>
   ({
@@ -42,7 +43,7 @@ const baseStay = (overrides: Partial<Stay> = {}): Stay =>
     created: '2026-05-01',
     updated: '2026-05-01',
     ...overrides,
-  }) as Stay;
+  } as Stay);
 
 const money = (val: number, cur = 'EUR'): StayMoney => ({ val, cur });
 
@@ -95,9 +96,9 @@ describe('isStayPaid / isStayAwaitingPayment', () => {
 
   it('detects awaiting-payment stays', () => {
     expect(isStayAwaitingPayment(baseStay({ status: 'confirmed' }))).toBe(true);
-    expect(
-      isStayAwaitingPayment(baseStay({ status: 'pending-payment' })),
-    ).toBe(true);
+    expect(isStayAwaitingPayment(baseStay({ status: 'pending-payment' }))).toBe(
+      true,
+    );
     expect(isStayAwaitingPayment(baseStay({ status: 'paid' }))).toBe(false);
     expect(isStayAwaitingPayment(baseStay({ status: 'draft' }))).toBe(false);
   });
@@ -107,6 +108,35 @@ describe('isStayPaid / isStayAwaitingPayment', () => {
     expect(isStayPaid(undefined)).toBe(false);
     expect(isStayAwaitingPayment(null)).toBe(false);
     expect(isStayAwaitingPayment(undefined)).toBe(false);
+  });
+});
+
+describe('isStayCollectingRemainingFiat', () => {
+  it('includes tokens-staked and credits-paid for remaining fiat collection', () => {
+    expect(
+      isStayCollectingRemainingFiat(baseStay({ status: 'tokens-staked' })),
+    ).toBe(true);
+    expect(
+      isStayCollectingRemainingFiat(baseStay({ status: 'credits-paid' })),
+    ).toBe(true);
+  });
+
+  it('includes confirmed and pending-payment', () => {
+    expect(
+      isStayCollectingRemainingFiat(baseStay({ status: 'confirmed' })),
+    ).toBe(true);
+    expect(
+      isStayCollectingRemainingFiat(baseStay({ status: 'pending-payment' })),
+    ).toBe(true);
+  });
+
+  it('excludes paid and draft', () => {
+    expect(isStayCollectingRemainingFiat(baseStay({ status: 'paid' }))).toBe(
+      false,
+    );
+    expect(isStayCollectingRemainingFiat(baseStay({ status: 'draft' }))).toBe(
+      false,
+    );
   });
 });
 
@@ -307,11 +337,50 @@ describe('canShowStayTokenCreditPaymentOptions', () => {
 
   it('hides when token or credits cannot be applied', () => {
     expect(
-      canShowStayTokenCreditPaymentOptions(baseStay({ status: 'pending' }), true),
+      canShowStayTokenCreditPaymentOptions(
+        baseStay({ status: 'pending' }),
+        true,
+      ),
     ).toBe(false);
     expect(
       canShowStayTokenCreditPaymentOptions(baseStay({ status: 'paid' }), true),
     ).toBe(false);
+  });
+
+  it('never offers tokens or credits on a volunteer or residence stay', () => {
+    // Accommodation is 0, but the server would still stake off the listing
+    // price and strand the stay in pending-payment.
+    expect(
+      canShowStayTokenCreditPaymentOptions(
+        {
+          ...baseStay({ status: 'confirmed' }),
+          volunteerInfo: { bookingType: 'volunteer' },
+        },
+        true,
+      ),
+    ).toBe(false);
+    expect(
+      canShowStayTokenCreditPaymentOptions(
+        {
+          ...baseStay({ status: 'draft' }),
+          volunteerInfo: { bookingType: 'residence' },
+        },
+        true,
+      ),
+    ).toBe(false);
+  });
+});
+
+describe('isVolunteerStay', () => {
+  it('matches volunteer and residence booking types only', () => {
+    expect(isVolunteerStay({ volunteerInfo: { bookingType: 'volunteer' } })).toBe(
+      true,
+    );
+    expect(isVolunteerStay({ volunteerInfo: { bookingType: 'residence' } })).toBe(
+      true,
+    );
+    expect(isVolunteerStay({ volunteerInfo: {} })).toBe(false);
+    expect(isVolunteerStay(null)).toBe(false);
   });
 });
 

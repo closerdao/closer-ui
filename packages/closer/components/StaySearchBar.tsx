@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import dayjs from 'dayjs';
-import { Search } from 'lucide-react';
+import { Info, Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
@@ -34,6 +34,19 @@ interface Props {
   externalError?: string | null;
   onSearch: (params: StaySearchBarParams) => void;
   className?: string;
+  /**
+   * Overrides the guest/member minimum — /stays/search validates against
+   * bookingSettings, not the volunteering minimum, so volunteer flows have to
+   * enforce it here or POST /stays rejects the booking later.
+   */
+  minNightsOverride?: number | null;
+  minNightsErrorMessage?: string;
+  skipMinDuration?: boolean;
+  canSelectDates?: boolean;
+  eventStartDate?: string;
+  eventEndDate?: string;
+  searchLabel?: string;
+  hideSearchButton?: boolean;
 }
 
 const formatDate = (d: Date | string | null) =>
@@ -51,6 +64,14 @@ const StaySearchBar = ({
   externalError,
   onSearch,
   className = '',
+  minNightsOverride,
+  minNightsErrorMessage,
+  skipMinDuration = false,
+  canSelectDates = true,
+  eventStartDate,
+  eventEndDate,
+  searchLabel,
+  hideSearchButton = false,
 }: Props) => {
   const t = useTranslations();
   const { user } = useAuth();
@@ -58,9 +79,13 @@ const StaySearchBar = ({
   const isMember = !!user?.roles?.includes('member');
   const [maxHorizon] = getMaxBookingHorizon(bookingSettings, isMember);
 
-  const minDuration = isMember
-    ? bookingSettings?.memberMinDuration || 1
-    : bookingSettings?.minDuration || 1;
+  const minDuration = skipMinDuration
+    ? 0
+    : minNightsOverride && minNightsOverride > 0
+      ? minNightsOverride
+      : isMember
+        ? bookingSettings?.memberMinDuration || 1
+        : bookingSettings?.minDuration || 1;
 
   const defaultSearchStart = useMemo(
     () => dayjs().add(14, 'day').startOf('day'),
@@ -123,13 +148,20 @@ const StaySearchBar = ({
 
   const blockedDateRanges = useMemo(() => {
     const ranges: any[] = [{ before: new Date() }];
-    if (maxHorizon && maxHorizon > 0) {
+    if (maxHorizon && maxHorizon > 0 && !eventStartDate) {
       ranges.push({
         after: dayjs().add(maxHorizon, 'day').toDate(),
       });
     }
     return ranges;
-  }, [maxHorizon]);
+  }, [maxHorizon, eventStartDate]);
+
+  useEffect(() => {
+    if (!canSelectDates && eventStartDate && eventEndDate) {
+      setStart(eventStartDate);
+      setEnd(eventEndDate);
+    }
+  }, [canSelectDates, eventStartDate, eventEndDate]);
 
   const nights = useMemo(
     () => (start && end ? Math.max(0, dayjs(end).diff(dayjs(start), 'day')) : 0),
@@ -153,12 +185,17 @@ const StaySearchBar = ({
   }, [start, end, t]);
 
   const validationError =
-    start && end && nights < minDuration
-      ? t('bookings_dates_min_duration_error', { var: minDuration })
+    !skipMinDuration && start && end && nights < minDuration
+      ? minNightsErrorMessage ||
+        t('bookings_dates_min_duration_error', { var: minDuration })
       : null;
 
   const canSearch =
-    !!start && !!end && nights >= minDuration && adults >= 1 && !isSearching;
+    !!start &&
+    !!end &&
+    (skipMinDuration || nights >= minDuration) &&
+    adults >= 1 &&
+    !isSearching;
 
   const handleSearch = () => {
     if (!canSearch || validationError) return;
@@ -187,32 +224,68 @@ const StaySearchBar = ({
       >
         <div className="relative flex flex-1 min-w-0 flex-col sm:flex-row sm:divide-x sm:divide-gray-200 divide-y sm:divide-y-0 divide-gray-200">
           <div className="relative min-h-0 min-w-0 flex-1">
-            <button
-              ref={datesTriggerRef}
-              type="button"
-              onClick={() =>
-                setOpenPopover(openPopover === 'dates' ? null : 'dates')
-              }
-              aria-haspopup="dialog"
-              aria-expanded={openPopover === 'dates'}
-              aria-controls="stay-search-bar-panel"
-              className={`${sectionBtnBase} ${
-                openPopover === 'dates' ? sectionBtnActive : ''
-              }`}
-            >
-              <span className="text-[11px] font-semibold text-gray-500">
-                {t('stay_search_bar_when')}
-              </span>
-              <span className="text-sm md:text-base font-medium text-gray-900">
-                {datesLabel}
-                {nights > 0 && (
-                  <span className="text-gray-500 font-normal">
-                    {' '}
-                    · {t('bookings_dates_nights_selected', { count: nights })}
+            {canSelectDates ? (
+              <button
+                ref={datesTriggerRef}
+                type="button"
+                onClick={() =>
+                  setOpenPopover(openPopover === 'dates' ? null : 'dates')
+                }
+                aria-haspopup="dialog"
+                aria-expanded={openPopover === 'dates'}
+                aria-controls="stay-search-bar-panel"
+                className={`${sectionBtnBase} ${
+                  openPopover === 'dates' ? sectionBtnActive : ''
+                }`}
+              >
+                <span className="text-[11px] font-semibold text-gray-500">
+                  {t('stay_search_bar_when')}
+                </span>
+                <span className="text-sm md:text-base font-medium text-gray-900">
+                  {datesLabel}
+                  {nights > 0 && (
+                    <span className="text-gray-500 font-normal">
+                      {' '}
+                      · {t('bookings_dates_nights_selected', { count: nights })}
+                    </span>
+                  )}
+                </span>
+              </button>
+            ) : (
+              <div
+                className="flex flex-col items-start text-left px-4 md:px-5 py-2.5 md:py-3 rounded-none sm:rounded-full min-h-[52px] sm:min-h-[56px] w-full cursor-default"
+                aria-disabled="true"
+              >
+                <span className="text-[11px] font-semibold text-gray-500 inline-flex items-center gap-1">
+                  <span className="opacity-70">{t('stay_search_bar_when')}</span>
+                  <span
+                    className="relative group/info inline-flex"
+                    tabIndex={0}
+                    aria-label={t('stay_search_bar_event_dates_fixed_hint')}
+                  >
+                    <Info
+                      className="h-3.5 w-3.5 text-gray-400"
+                      aria-hidden
+                    />
+                    <span
+                      role="tooltip"
+                      className="pointer-events-none absolute left-0 top-full z-50 mt-1.5 w-56 rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-[11px] font-normal leading-snug text-gray-600 opacity-0 shadow-md transition-opacity group-hover/info:opacity-100 group-focus/info:opacity-100"
+                    >
+                      {t('stay_search_bar_event_dates_fixed_hint')}
+                    </span>
                   </span>
-                )}
-              </span>
-            </button>
+                </span>
+                <span className="text-sm md:text-base font-medium text-gray-900 opacity-70">
+                  {datesLabel}
+                  {nights > 0 && (
+                    <span className="text-gray-500 font-normal">
+                      {' '}
+                      · {t('bookings_dates_nights_selected', { count: nights })}
+                    </span>
+                  )}
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="relative min-h-0 min-w-0 flex-1">
@@ -255,7 +328,7 @@ const StaySearchBar = ({
                   : 'left-0 right-0 w-full max-w-full sm:left-auto sm:right-0 sm:w-72 sm:max-w-[calc(100vw-2rem)]'
               }`}
             >
-              {openPopover === 'dates' ? (
+              {openPopover === 'dates' && canSelectDates ? (
                 <div
                   className="flex w-max max-w-full min-h-0 flex-col overflow-y-auto overscroll-contain px-3 py-3"
                   role="dialog"
@@ -269,10 +342,15 @@ const StaySearchBar = ({
                     blockedDateRanges={blockedDateRanges}
                     savedStartDate={start as string | Date | null}
                     savedEndDate={end as string | Date | null}
+                    eventStartDate={eventStartDate}
+                    eventEndDate={eventEndDate}
+                    defaultMonth={
+                      eventStartDate ? new Date(eventStartDate) : undefined
+                    }
                   />
                   <StayDurationDiscountHints bookingSettings={bookingSettings} />
                 </div>
-              ) : (
+              ) : openPopover === 'guests' ? (
                 <div
                   className="flex w-full min-h-0 flex-col overflow-y-auto overscroll-contain px-3 py-3 sm:w-72"
                   role="dialog"
@@ -290,24 +368,29 @@ const StaySearchBar = ({
                     setPets={setPets}
                   />
                 </div>
-              )}
+              ) : null}
             </div>
           )}
         </div>
 
-        <div className="p-3 sm:p-1.5 flex items-stretch sm:items-center justify-center sm:justify-end shrink-0">
-          <Button
-            type="button"
-            onClick={handleSearch}
-            isEnabled={!!canSearch && !validationError}
-            isLoading={isSearching}
-            isFullWidth={false}
-            className={`!rounded-full !px-6 min-h-[44px] w-full sm:!w-auto flex items-center justify-center gap-2 ${btnNormalCase}`}
-          >
-            <Search className="h-[1.125rem] w-[1.125rem] shrink-0" aria-hidden />
-            {t('stay_search_bar_search')}
-          </Button>
-        </div>
+        {!hideSearchButton && (
+          <div className="p-3 sm:p-1.5 flex items-stretch sm:items-center justify-center sm:justify-end shrink-0">
+            <Button
+              type="button"
+              onClick={handleSearch}
+              isEnabled={!!canSearch && !validationError}
+              isLoading={isSearching}
+              isFullWidth={false}
+              className={`!rounded-full !px-6 min-h-[44px] w-full sm:!w-auto flex items-center justify-center gap-2 ${btnNormalCase}`}
+            >
+              <Search
+                className="h-[1.125rem] w-[1.125rem] shrink-0"
+                aria-hidden
+              />
+              {searchLabel || t('stay_search_bar_search')}
+            </Button>
+          </div>
+        )}
       </div>
 
       {(validationError || externalError) && (

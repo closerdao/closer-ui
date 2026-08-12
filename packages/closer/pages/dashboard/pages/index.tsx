@@ -1,5 +1,5 @@
 import Head from 'next/head';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useRouter } from 'next/router';
 import { NextPageContext } from 'next';
@@ -11,17 +11,20 @@ import NewPageDialog, {
   buildPostPayloadFromGenerateResult,
   type NewPageSubmit,
 } from '../../../components/PageEditor/NewPageDialog';
-import { Button, Heading } from '../../../components/ui';
-
-import { useAuth } from '../../../contexts/auth';
-import { usePlatform } from '../../../contexts/platform';
-import useRBAC from '../../../hooks/useRBAC';
-import api from '../../../utils/api';
-import { parseMessageFromError } from '../../../utils/common';
 import {
   formatPageSaveError,
   validatePageSections,
 } from '../../../components/PageEditor/sectionValidation';
+import { Button, Heading } from '../../../components/ui';
+
+import { useAuth } from '../../../contexts/auth';
+import { usePlatform } from '../../../contexts/platform';
+import { useConfig } from '../../../hooks/useConfig';
+import useRBAC from '../../../hooks/useRBAC';
+import api from '../../../utils/api';
+import { parseMessageFromError } from '../../../utils/common';
+import { mergeEditorPages } from '../../../utils/standardPages';
+import { editorHrefForPage } from '../../../constants/standardPages';
 import PageNotFound from '../../not-found';
 
 function toPlain<T>(x: T): T {
@@ -44,15 +47,22 @@ const DashboardPagesIndex = ({ pages }: Props) => {
   const { user } = useAuth();
   const { hasAccess } = useRBAC();
   const { platform } = usePlatform();
+  const config = useConfig();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newPageError, setNewPageError] = useState<string | null>(null);
 
+  const allPages = useMemo(
+    () => mergeEditorPages(pages ?? [], config),
+    [pages, config],
+  );
+  const firstPage = allPages[0];
+
   useEffect(() => {
-    if (pages?.length > 0) {
-      void router.replace(`/dashboard/pages/${pages[0]._id}`);
+    if (firstPage) {
+      void router.replace(editorHrefForPage(firstPage));
     }
-  }, [pages, router]);
+  }, [firstPage, router]);
 
   const handleCreate = async (submit: NewPageSubmit) => {
     setIsSubmitting(true);
@@ -68,7 +78,9 @@ const DashboardPagesIndex = ({ pages }: Props) => {
         if (genAction?.error) {
           const raw = parseMessageFromError(genAction.error);
           setNewPageError(
-            formatPageSaveError(raw) || raw || t('pages_editor_new_page_create_error'),
+            formatPageSaveError(raw) ||
+              raw ||
+              t('pages_editor_new_page_create_error'),
           );
           return;
         }
@@ -106,7 +118,9 @@ const DashboardPagesIndex = ({ pages }: Props) => {
       if (action?.error) {
         const raw = parseMessageFromError(action.error);
         setNewPageError(
-          formatPageSaveError(raw) || raw || t('pages_editor_new_page_create_error'),
+          formatPageSaveError(raw) ||
+            raw ||
+            t('pages_editor_new_page_create_error'),
         );
         return;
       }
@@ -121,7 +135,9 @@ const DashboardPagesIndex = ({ pages }: Props) => {
     } catch (err) {
       const raw = parseMessageFromError(err);
       setNewPageError(
-        formatPageSaveError(raw) || raw || t('pages_editor_new_page_create_error'),
+        formatPageSaveError(raw) ||
+          raw ||
+          t('pages_editor_new_page_create_error'),
       );
     } finally {
       setIsSubmitting(false);
@@ -132,10 +148,12 @@ const DashboardPagesIndex = ({ pages }: Props) => {
     return <PageNotFound error="User may not access" />;
   }
 
-  if (pages?.length > 0) {
+  if (firstPage) {
     return (
       <AdminLayout>
-        <div className="p-8 text-center text-gray-500 text-sm">{t('pages_editor_redirecting')}</div>
+        <div className="p-8 text-center text-gray-500 text-sm">
+          {t('pages_editor_redirecting')}
+        </div>
       </AdminLayout>
     );
   }
@@ -149,7 +167,9 @@ const DashboardPagesIndex = ({ pages }: Props) => {
       <AdminLayout>
         <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4 text-center px-4">
           <Heading level={3}>{t('pages_editor_empty_list_title')}</Heading>
-          <p className="text-sm text-gray-600 max-w-md">{t('pages_editor_empty_list_body')}</p>
+          <p className="text-sm text-gray-600 max-w-md">
+            {t('pages_editor_empty_list_body')}
+          </p>
           <Button type="button" onClick={() => setDialogOpen(true)}>
             {t('pages_editor_create_first')}
           </Button>
@@ -170,15 +190,10 @@ const DashboardPagesIndex = ({ pages }: Props) => {
   );
 };
 
-DashboardPagesIndex.getInitialProps = async (context: NextPageContext) => {
+DashboardPagesIndex.getInitialProps = async (_context: NextPageContext) => {
   try {
     const res = await api.get('/page', { params: { limit: 100 } });
     const pages = res?.data?.results ?? [];
-    if (typeof window === 'undefined' && context.res && pages.length > 0) {
-      const firstId = pages[0]._id;
-      context.res.writeHead(302, { Location: `/dashboard/pages/${firstId}` });
-      context.res.end();
-    }
     return { pages };
   } catch {
     return { pages: [] };

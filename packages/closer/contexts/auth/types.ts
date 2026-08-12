@@ -1,5 +1,3 @@
-import login from '@/pages/login';
-
 import { Charge } from '../../types/booking';
 
 export interface UserLink {
@@ -166,5 +164,7 @@ export type AuthenticationContext = {
   refetchUser: () => Promise<void>;
   hasSignedUp: boolean;
   isGoogleLoading: boolean;
-  authGoogle: () => Promise<{ result: string | null }>;
+  authGoogle: (options?: {
+    turnstileToken?: string | null;
+  }) => Promise<{ result: string | null }>;
 };

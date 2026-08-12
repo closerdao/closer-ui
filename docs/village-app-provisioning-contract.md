@@ -8,6 +8,7 @@ The Village App must be deployable before a Village has public content. Provisio
 
 A Village Deployment is deployable when the frontend has:
 
+- `NEXT_PUBLIC_APP_NAME` set to the Village slug. **Required, no default.**
 - `NEXT_PUBLIC_API_URL` pointing at the Village backend.
 - `NEXT_PUBLIC_PLATFORM_URL` or equivalent deployment domain.
 - `NEXT_PUBLIC_DEFAULT_TIMEZONE`, or a backend `general.timeZone` config value.
@@ -19,6 +20,28 @@ The app-level env contract is enforced with `@t3-oss/env-nextjs` and exported
 from `apps/village-app/env.js` as `villageAppEnvSchema`. The same module exports
 the required, optional, and defaulted provisioning key lists for future CI drift
 checks and SDK sharing.
+
+### `NEXT_PUBLIC_APP_NAME` is a hard build gate
+
+`createEnv` runs without `skipValidation`, so a missing or empty
+`NEXT_PUBLIC_APP_NAME` fails `next build` outright — it is not a warning and
+there is no fall-through default. (There deliberately isn't one: the only other
+source of `APP_NAME` is the shared config default `general.appName`, which is
+`'tdf'`, so a defaulted Village would identify as TDF and switch on TDF-only
+feature branches.)
+
+Consequence for Villages provisioned before procurement#548 started supplying
+the variable: their **next redeploy fails at build time**, and the deployment
+platform keeps serving the last successful build. The Village stays up on stale
+output — it does not go down — but no change ships until the variable is added
+to the deployment's environment. Backfill `NEXT_PUBLIC_APP_NAME` on those
+projects before redeploying them.
+
+Because `@t3-oss/env-core` re-validates the client schema in the browser,
+`experimental__runtimeEnv` must list every `NEXT_PUBLIC_` key explicitly as
+`KEY: process.env.KEY`. Next.js only inlines member expressions, so a bare
+`process.env` becomes `{}` client-side and validation throws during hydration.
+`packages/closer/scripts/__tests__/villageAppRuntimeEnv.test.js` guards this.
 
 ## Launch-Ready State
 
@@ -58,6 +81,16 @@ The Village App can use these when present:
 - `primaryCtaMember`
 - `primaryCtaCustomUrl`
 - `primaryCtaCustomText`
+
+## Copy and Locale Bundles
+
+Villages render `packages/closer/generated/locales/village/en.json`, which is
+pure `locales/base-en.json` — there is no `locales/village/` overlay, on
+purpose. Any message key a shared component renders must therefore exist in
+`base-en.json` with brand-neutral wording; a key that lives only in an app
+overlay renders as its raw key path for every other app, silently.
+`packages/closer/scripts/__tests__/localeParity.test.js` asserts that every
+generated English bundle covers the Closer bundle's key set.
 
 ## Homepage Page Record
 

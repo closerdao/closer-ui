@@ -6,7 +6,9 @@ import BookingDates from '../../../components/BookingDates/BookingDates';
 import BookingGuests from '../../../components/BookingGuests';
 import { IconBanknote } from '../../../components/BookingIcons';
 import CurrencySwitch from '../../../components/CurrencySwitch';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageError from '../../../components/PageError';
+import ProjectPreview from '../../../components/ProjectPreview';
 import Switch from '../../../components/Switch';
 import TicketOptions from '../../../components/TicketOptions';
 import { ErrorMessage } from '../../../components/ui';
@@ -20,6 +22,7 @@ import dayjs from 'dayjs';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import config from '../../../configCached';
 import {
   BOOKING_STEPS,
   BOOKING_STEP_TITLE_KEYS,
@@ -31,15 +34,13 @@ import { usePlatform } from '../../../contexts/platform';
 import { Event, TicketOption } from '../../../types';
 import { BookingSettings, Project, VolunteerConfig } from '../../../types/api';
 import { CloserCurrencies } from '../../../types/currency';
-import config from '../../../configCached';
 import api from '../../../utils/api';
 import { bookingGuestNightsMetricPoint } from '../../../utils/booking.helpers';
 import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
-import { linkedMetricFields, logMetric } from '../../../utils/metrics';
+import { normalizeDiscountCode } from '../../../utils/discountCode';
 import { getMaxBookingHorizon } from '../../../utils/helpers';
-import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
-import ProjectPreview from '../../../components/ProjectPreview';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 
 interface Props {
   error?: string;
@@ -65,8 +66,7 @@ const DatesSelector = ({
 }: Props) => {
   const t = useTranslations();
   const isBookingEnabled =
-    bookingSettings &&
-    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+    bookingSettings && process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
   const router = useRouter();
 
@@ -151,8 +151,8 @@ const DatesSelector = ({
     const mode = eventId
       ? String(eventId)
       : volunteerId
-        ? 'volunteer'
-        : 'guest';
+      ? 'volunteer'
+      : 'guest';
     void logMetric({
       event: 'booking-dates-view',
       category: 'booking',
@@ -358,13 +358,19 @@ const DatesSelector = ({
   useEffect(() => {
     setBookingError(null);
     if (start && end) {
-      if (isMember && !isMemberMinDurationMatched) {
+      if (!eventId && isMember && !isMemberMinDurationMatched) {
         setBookingError(
           t('bookings_dates_min_duration_error', {
             var: bookingSettings?.memberMinDuration,
           }),
         );
-      } else if (!isMember && !isGuestMinDurationMatched && !isVolunteerApplication && !isResidenceApplication) {
+      } else if (
+        !eventId &&
+        !isMember &&
+        !isGuestMinDurationMatched &&
+        !isVolunteerApplication &&
+        !isResidenceApplication
+      ) {
         setBookingError(
           t('bookings_dates_min_duration_error', {
             var: bookingSettings?.minDuration,
@@ -387,7 +393,16 @@ const DatesSelector = ({
         );
       }
     }
-  }, [start, end, isMember, isMemberMinDurationMatched, isGuestMinDurationMatched]);
+  }, [
+    start,
+    end,
+    eventId,
+    isMember,
+    isMemberMinDurationMatched,
+    isGuestMinDurationMatched,
+    isVolunteerApplication,
+    isResidenceApplication,
+  ]);
 
   useEffect(() => {
     setCalendarErrorDismissed(false);
@@ -430,17 +445,15 @@ const DatesSelector = ({
 
     const nightsForMetric =
       start && end
-        ? Math.max(
-            0,
-            dayjs(end as string).diff(dayjs(start as string), 'day'),
-          )
+        ? Math.max(0, dayjs(end as string).diff(dayjs(start as string), 'day'))
         : 0;
 
     if (event?.paid && !selectedTicketOption) {
       void logMetric({
         event: 'booking-dates-error',
         category: 'booking',
-        value: 'ticket', point: bookingGuestNightsMetricPoint(nightsForMetric, adults),
+        value: 'ticket',
+        point: bookingGuestNightsMetricPoint(nightsForMetric, adults),
         ...linkedMetricFields('Event', queryEventId),
       });
       setHandleNextError(t('bookings_error_no_ticket_option'));
@@ -462,7 +475,9 @@ const DatesSelector = ({
         ...(selectedTicketOption?.name && {
           ticketOption: selectedTicketOption.name,
         }),
-        ...(discountCode && { discountCode }),
+        ...(discountCode && {
+          discountCode: normalizeDiscountCode(discountCode),
+        }),
         ...(skills && { skills: skills as string }),
         ...(diet && { diet: diet as string }),
         ...(projectId && { projectId: projectId as string }),
@@ -479,16 +494,15 @@ const DatesSelector = ({
           redirectToSignup();
           return;
         }
-        const eventFoodPayload =
-          event?.foodOption
-            ? {
-                foodOption: event.foodOption,
-                foodOptionId:
-                  event.foodOption === 'food_package'
-                    ? event.foodOptionId ?? null
-                    : null,
-              }
-            : {};
+        const eventFoodPayload = event?.foodOption
+          ? {
+              foodOption: event.foodOption,
+              foodOptionId:
+                event.foodOption === 'food_package'
+                  ? event.foodOptionId ?? null
+                  : null,
+            }
+          : {};
 
         const {
           data: { results: newBooking },
@@ -500,7 +514,7 @@ const DatesSelector = ({
           pets,
           eventId: data.eventId,
           ticketOption: data.ticketOption,
-          discountCode: data.discountCode,
+          discountCode: normalizeDiscountCode(data.discountCode) || undefined,
           isDayTicket: true,
           children: kids,
           doesNeedPickup,
@@ -516,7 +530,8 @@ const DatesSelector = ({
         void logMetric({
           event: 'booking-dates-request-success',
           category: 'booking',
-          value: 'day-ticket', point: bookingGuestNightsMetricPoint(1, adults),
+          value: 'day-ticket',
+          point: bookingGuestNightsMetricPoint(1, adults),
           ...linkedMetricFields('Booking', newBooking._id),
         });
         router.push(`/bookings/${newBooking._id}/food`);
@@ -524,15 +539,17 @@ const DatesSelector = ({
       } else {
         const urlParams = new URLSearchParams(
           Object.fromEntries(
-            Object.entries(data).filter(
-              ([, v]) => v != null && v !== '',
-            ) as [string, string][],
+            Object.entries(data).filter(([, v]) => v != null && v !== '') as [
+              string,
+              string,
+            ][],
           ),
         );
         void logMetric({
           event: 'booking-dates-continue-success',
           category: 'booking',
-          value: 'continue', point: bookingGuestNightsMetricPoint(nightsForMetric, adults),
+          value: 'continue',
+          point: bookingGuestNightsMetricPoint(nightsForMetric, adults),
           ...linkedMetricFields('Event', queryEventId),
         });
         router.push(`/bookings/create/accomodation?${urlParams}`);
@@ -541,7 +558,8 @@ const DatesSelector = ({
       void logMetric({
         event: 'booking-dates-error',
         category: 'booking',
-        value: 'error', point: bookingGuestNightsMetricPoint(nightsForMetric, adults),
+        value: 'error',
+        point: bookingGuestNightsMetricPoint(nightsForMetric, adults),
         ...linkedMetricFields('Event', queryEventId),
       });
       setHandleNextError(parseMessageFromError(err));
@@ -579,7 +597,9 @@ const DatesSelector = ({
       <div className="max-w-screen-sm mx-auto p-4 md:p-8 h-full">
         <div className="relative flex items-center min-h-[2.75rem] mb-6">
           {showBackButton ? (
-            <BackButton handleClick={goBack} className="relative z-10">{t('buttons_back')}</BackButton>
+            <BackButton handleClick={goBack} className="relative z-10">
+              {t('buttons_back')}
+            </BackButton>
           ) : (
             <span />
           )}
@@ -622,7 +642,10 @@ const DatesSelector = ({
               </ul>
             </div>
           )}
-        <ProgressBar steps={BOOKING_STEPS} stepTitleKeys={BOOKING_STEP_TITLE_KEYS} />
+        <ProgressBar
+          steps={BOOKING_STEPS}
+          stepTitleKeys={BOOKING_STEP_TITLE_KEYS}
+        />
 
         <div className="mt-8 flex flex-col gap-8">
           {process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' && (
@@ -766,17 +789,32 @@ DatesSelector.getInitialProps = async (
     const bookingSettings = config.booking as BookingSettings;
     const volunteerConfig = config.volunteering as VolunteerConfig;
     if (eventId) {
-      const [ticketsAvailable, event] = await Promise.all([
-        api.get(`/bookings/event/${eventId}/availability`).catch(() => null),
-        api.get(`/event/${eventId}`).catch(() => null),
-      ]);
-
+      const stayQuery = new URLSearchParams();
+      Object.entries(query).forEach(([key, value]) => {
+        if (value == null) return;
+        if (Array.isArray(value)) {
+          value.forEach((entry) => stayQuery.append(key, entry));
+        } else {
+          stayQuery.set(key, value);
+        }
+      });
+      const destination = `/stay/create?${stayQuery.toString()}`;
+      if (context.res) {
+        context.res.writeHead(302, { Location: destination });
+        context.res.end();
+        return {
+          bookingSettings,
+          volunteerConfig,
+          isFriendsBooking: normalizeIsFriendsBooking(isFriendsBooking),
+        };
+      }
+      if (typeof window !== 'undefined') {
+        window.location.replace(destination);
+      }
       return {
         bookingSettings,
         volunteerConfig,
-        ticketOptions: ticketsAvailable?.data?.ticketOptions,
         isFriendsBooking: normalizeIsFriendsBooking(isFriendsBooking),
-        event: event?.data?.results,
       };
     }
     if (
@@ -812,7 +850,9 @@ DatesSelector.getInitialProps = async (
     ) {
       const firstId = projectIdParam.split(',')[0]?.trim();
       if (firstId) {
-        const projectRes = await api.get(`/project/${firstId}`).catch(() => null);
+        const projectRes = await api
+          .get(`/project/${firstId}`)
+          .catch(() => null);
         const results = projectRes?.data?.results;
         project = Array.isArray(results) ? results[0] ?? null : results ?? null;
       }

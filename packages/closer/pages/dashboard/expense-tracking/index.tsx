@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
+import DashboardPageHeader from '../../../components/Dashboard/DashboardPageHeader';
 import TimeFrameSelector from '../../../components/Dashboard/TimeFrameSelector';
 import Pagination from '../../../components/Pagination';
 import {
@@ -378,8 +379,7 @@ const ExpenseTrackingDashboardPage = () => {
       </Head>
       <AdminLayout>
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-            <Heading level={2}>{t('expense_tracking_dashboard_title')}</Heading>
+          <DashboardPageHeader title={t('expense_tracking_dashboard_title')}>
             <TimeFrameSelector
               timeFrame={timeFrame}
               setTimeFrame={setTimeFrame}
@@ -388,7 +388,7 @@ const ExpenseTrackingDashboardPage = () => {
               toDate={toDate}
               setToDate={setToDate}
             />
-          </div>
+          </DashboardPageHeader>
           <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 flex flex-col gap-2">
             <p>{t('expense_tracking_dashboard_info_start_date')}</p>
             <p>{t('expense_tracking_dashboard_info_toconline_sync')}</p>

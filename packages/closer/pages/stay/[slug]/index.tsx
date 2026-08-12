@@ -1,5 +1,4 @@
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import React, { useEffect, useMemo, useState } from 'react';
@@ -12,6 +11,7 @@ import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
 import UserInfoButton from '../../../components/UserInfoButton';
+import VolunteerApplicationDetail from '../../../components/VolunteerApplicationDetail';
 import { Button, Information } from '../../../components/ui';
 import BookingSurface, {
   BookingSectionEyebrow,
@@ -24,7 +24,7 @@ import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import PageNotAllowed from '../../401';
-import { HeadingRow, Tag, useConfig } from '../../..';
+import { useConfig } from '../../..';
 import { MAX_LISTINGS_TO_FETCH } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
@@ -85,6 +85,7 @@ import {
   shortenStay,
   upgradeStayListing,
   updateStayGuests,
+  updateStayOptions,
 } from '../../../utils/stays.api';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageNotFound from '../../not-found';
@@ -646,6 +647,47 @@ const StayBookingSummaryPage = ({
     await syncBookingFromServer();
   };
 
+  /**
+   * Moves the application to "call requested" and records the host's note.
+   * volunteerInfo is replaced wholesale by the server, so the whole object is
+   * sent back. There is no server-side notification endpoint yet, so the host
+   * still sends the message themselves via the mailto handoff.
+   */
+  const requestApplicantCall = async (message: string) => {
+    if (!volunteerInfo) return;
+    const nextVolunteerInfo = {
+      ...volunteerInfo,
+      ...(volunteerInfo.application
+        ? {
+            application: {
+              ...volunteerInfo.application,
+              review: {
+                ...volunteerInfo.application.review,
+                status: 'call-requested' as const,
+                callRequestedAt: new Date().toISOString(),
+                callRequestMessage: message,
+              },
+            },
+          }
+        : {}),
+    };
+    await updateStayOptions(_id, { volunteerInfo: nextVolunteerInfo });
+    await syncBookingFromServer();
+
+    const applicantEmail = bookingCreatedBy?.email;
+    if (applicantEmail && typeof window !== 'undefined') {
+      const subject = encodeURIComponent(
+        t('volunteer_application_request_call_email_subject'),
+      );
+      window.open(
+        `mailto:${applicantEmail}?subject=${subject}&body=${encodeURIComponent(
+          message,
+        )}`,
+        '_blank',
+      );
+    }
+  };
+
   const persistStayBookingUpdate = async (): Promise<boolean> => {
     try {
       setIsLoading(true);
@@ -1205,64 +1247,16 @@ const StayBookingSummaryPage = ({
         </BookingSurface>
 
         {bookingView?.volunteerInfo && (
-          <section className="flex flex-col gap-2">
-            {bookingView.volunteerInfo.bookingType === 'volunteer' ? (
-              <HeadingRow>
-                {t('projects_volunteer_application_title')}
-              </HeadingRow>
-            ) : (
-              <HeadingRow>
-                {t('projects_residence_application_title')}
-              </HeadingRow>
-            )}
-
-            {bookingView?.volunteerInfo?.projectId &&
-              bookingView.volunteerInfo.projectId?.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  <Heading level={5}>{t('projects_build_title')}</Heading>
-                  {bookingView.volunteerInfo.projectId?.map((projectId) => (
-                    <p key={projectId}>
-                      <Link
-                        href={`/projects/${
-                          projects?.find((project) => project._id === projectId)
-                            ?.slug ?? projectId
-                        }`}
-                      >
-                        {
-                          projects?.find((project) => project._id === projectId)
-                            ?.name
-                        }
-                      </Link>
-                    </p>
-                  ))}
-                </div>
-              )}
-
-            <Heading level={5}>
-              {t('projects_skills_and_qualifications_title')}
-            </Heading>
-            <div className="flex flex-wrap gap-2">
-              {bookingView.volunteerInfo.skills?.map((skill) => (
-                <Tag color="primary" size="small" key={skill}>
-                  {skill}
-                </Tag>
-              ))}
-            </div>
-            <Heading level={5}>{t('projects_food_title')}</Heading>
-            <div className="flex flex-wrap gap-2">
-              {bookingView.volunteerInfo.diet?.map((diet) => (
-                <Tag color="primary" size="small" key={diet}>
-                  {diet}
-                </Tag>
-              ))}
-            </div>
-            <Heading level={5}>{t('projects_suggestions_title')}</Heading>
-            <p>
-              {!bookingView.volunteerInfo.suggestions
-                ? 'No suggestions'
-                : bookingView.volunteerInfo.suggestions}
-            </p>
-          </section>
+          <VolunteerApplicationDetail
+            volunteerInfo={bookingView.volunteerInfo}
+            projects={projects}
+            canViewHealth={canManageBooking}
+            applicantEmail={bookingCreatedBy?.email}
+            applicantName={
+              bookingView.volunteerInfo.application?.about?.fullName
+            }
+            onRequestCall={canManageBooking ? requestApplicantCall : undefined}
+          />
         )}
 
         {canUseStayEditActions && (

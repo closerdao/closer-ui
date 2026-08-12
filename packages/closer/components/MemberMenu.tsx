@@ -8,21 +8,28 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import { useBuyTokens } from '../hooks/useBuyTokens';
+import { usePageMenuSections } from '../hooks/usePageMenuSections';
 import useRBAC from '../hooks/useRBAC';
 import { NavigationLink } from '../types/nav';
 import api, { formatSearch } from '../utils/api';
 import { getCurrentUnitPrice } from '../utils/bondingCurve';
+import { toNavigationSections } from '../utils/pageMenu';
 import type { MemberMenuFeatureFlags } from '../utils/memberMenuFeatureFlags';
 import FinancedTokenMenuWidget from './FinancedTokenMenuWidget';
 import Profile from './Profile';
 import ReportABug from './ReportABug';
 import Wallet from './Wallet';
 
-
 interface MenuSection {
   label: string;
   isOpen: boolean;
   items: NavigationLink[];
+  /**
+   * `account` sections (dashboard, bookings, admin) are always rendered.
+   * `content` sections describe the website itself and are replaced by the
+   * page-driven menu as soon as any page is flagged with `showInMenu`.
+   */
+  kind?: 'content' | 'account';
 }
 
 const MemberMenu = ({
@@ -41,12 +48,14 @@ const MemberMenu = ({
   isRolesEnabled,
   isFaqEnabled,
   isAffiliateEnabled,
+  isCohousingEnabled,
 }: MemberMenuFeatureFlags) => {
   const t = useTranslations();
   const APP_NAME = appName;
   const { hasAccess, rbacLiveRevision } = useRBAC();
   const router = useRouter();
   const { getCurrentSupplyWithoutWallet } = useBuyTokens();
+  const pageMenuSections = usePageMenuSections();
 
   const { user, logout } = useAuth();
   const [menuSections, setMenuSections] = useState<MenuSection[]>([]);
@@ -79,6 +88,7 @@ const MemberMenu = ({
     isRolesEnabled: boolean,
     isFaqEnabled: boolean,
     isAffiliateEnabled: boolean,
+    isCohousingEnabled: boolean,
   ): MenuSection[] => {
     // TDF-specific navigation structure
     if (APP_NAME?.toLowerCase() === 'tdf') {
@@ -106,7 +116,7 @@ const MemberMenu = ({
             {
               label: t('menu_cohousing'),
               url: '/cohousing',
-              enabled: true,
+              enabled: isCohousingEnabled,
             },
             {
               label: t('menu_regenerative_agriculture'),
@@ -129,6 +139,11 @@ const MemberMenu = ({
               url: '/events',
               enabled: isEventsEnabled,
               rbacPage: 'Events',
+            },
+            {
+              label: t('menu_artists_in_residence'),
+              url: '/artists',
+              enabled: true,
             },
           ],
         },
@@ -210,6 +225,7 @@ const MemberMenu = ({
         },
         {
           label: t('menu_section_dashboard'),
+          kind: 'account' as const,
           isOpen: false,
           items: [
             {
@@ -407,31 +423,35 @@ const MemberMenu = ({
           },
         ],
       },
-      // Stay section (open by default)
-      {
-        label: t('menu_section_stay'),
-        isOpen: true,
-        items: [
-          {
-            label: t('navigation_stay'),
-            url: '/stay',
-            enabled: isBookingEnabled,
-            rbacPage: 'Stay',
-          },
-          {
-            label: t('navigation_volunteer'),
-            url: '/volunteer',
-            enabled: isVolunteeringEnabled,
-            rbacPage: 'Volunteer',
-          },
-          {
-            label: t('navigation_residence'),
-            url: '/projects',
-            enabled: isVolunteeringEnabled && APP_NAME?.toLowerCase() === 'tdf',
-            rbacPage: 'Residence',
-          },
-        ],
-      },
+      ...(APP_NAME?.toLowerCase().includes('earthbound')
+        ? []
+        : [
+            {
+              label: t('menu_section_stay'),
+              isOpen: true,
+              items: [
+                {
+                  label: t('navigation_stay'),
+                  url: '/stay',
+                  enabled: isBookingEnabled,
+                  rbacPage: 'Stay',
+                },
+                {
+                  label: t('navigation_volunteer'),
+                  url: '/volunteer',
+                  enabled: isVolunteeringEnabled,
+                  rbacPage: 'Volunteer',
+                },
+                {
+                  label: t('navigation_residence'),
+                  url: '/projects',
+                  enabled:
+                    isVolunteeringEnabled && APP_NAME?.toLowerCase() === 'tdf',
+                  rbacPage: 'Residence',
+                },
+              ],
+            },
+          ]),
 
       // Events section
       {
@@ -444,8 +464,7 @@ const MemberMenu = ({
             enabled:
               isEventsEnabled &&
               APP_NAME?.toLowerCase() !== 'lios' &&
-              APP_NAME?.toLowerCase() !== 'earthbound' &&
-              APP_NAME?.toLowerCase() !== 'closer',
+              APP_NAME?.toLowerCase() !== 'earthbound',
             rbacPage: 'Events',
           },
         ],
@@ -478,93 +497,25 @@ const MemberMenu = ({
         ],
       },
 
-      // Closer app navigation items (top-level buttons)
-      ...(APP_NAME && APP_NAME?.toLowerCase() === 'closer'
-        ? [
+      ...(APP_NAME?.toLowerCase().includes('earthbound')
+        ? []
+        : [
             {
-              label: t('header_nav_features'),
+              label: t('navigation_faq'),
               isOpen: false,
               items: [
                 {
-                  label: t('header_nav_features'),
-                  url: '/#features',
-                  enabled: true,
+                  label: t('navigation_faq'),
+                  url: '/resources',
+                  enabled: isFaqEnabled,
+                  rbacPage: 'Resources',
                 },
               ],
             },
-            {
-              label: t('header_nav_communities'),
-              isOpen: false,
-              items: [
-                {
-                  label: t('header_nav_communities'),
-                  url: '/#communities',
-                  enabled: true,
-                },
-              ],
-            },
-            {
-              label: t('header_nav_governance'),
-              isOpen: false,
-              items: [
-                {
-                  label: t('header_nav_governance'),
-                  url: '/#governance',
-                  enabled: isGovernanceEnabled,
-                },
-              ],
-            },
-            {
-              label: t('header_nav_agent'),
-              isOpen: false,
-              items: [
-                {
-                  label: t('header_nav_agent'),
-                  url: '/agent',
-                  enabled: true,
-                },
-              ],
-            },
-            {
-              label: t('header_nav_pricing'),
-              isOpen: false,
-              items: [
-                {
-                  label: t('header_nav_pricing'),
-                  url: '/pricing',
-                  enabled: true,
-                },
-              ],
-            },
-            {
-              label: t('header_nav_docs'),
-              isOpen: false,
-              items: [
-                {
-                  label: t('header_nav_docs'),
-                  url: 'https://closer.gitbook.io/documentation',
-                  target: '_blank',
-                  enabled: true,
-                },
-              ],
-            },
-          ]
-        : []),
-
-      {
-        label: t('navigation_faq'),
-        isOpen: false,
-        items: [
-          {
-            label: t('navigation_faq'),
-            url: '/resources',
-            enabled: isFaqEnabled,
-            rbacPage: 'Resources',
-          },
-        ],
-      },
+          ]),
       {
         label: t('menu_section_other'),
+        kind: 'account' as const,
         isOpen: false,
         items: [
           ...(isAffiliateEnabled && user?.affiliate
@@ -580,6 +531,7 @@ const MemberMenu = ({
       },
       {
         label: t('menu_section_dashboard'),
+        kind: 'account' as const,
         isOpen: false,
         items: [
           {
@@ -702,6 +654,7 @@ const MemberMenu = ({
     if (isBookingEnabled) {
       sections.push({
         label: t('menu_section_bookings'),
+        kind: 'account' as const,
         isOpen: false,
         items: [
           {
@@ -797,7 +750,7 @@ const MemberMenu = ({
   useEffect(() => {
     if (!ready) return;
 
-    const sections = getMenuSections(
+    const builtInSections = getMenuSections(
       isBookingEnabled,
       areSubscriptionsEnabled,
       isVolunteeringEnabled,
@@ -810,10 +763,23 @@ const MemberMenu = ({
       isRolesEnabled,
       isFaqEnabled,
       isAffiliateEnabled,
+      isCohousingEnabled,
     );
+    // Pages flagged with `showInMenu` replace the hand-written content
+    // sections; dashboard and booking sections always stay.
+    const sections =
+      pageMenuSections.length > 0
+        ? [
+            ...toNavigationSections(pageMenuSections),
+            ...builtInSections.filter(
+              (section) => section.kind === 'account',
+            ),
+          ]
+        : builtInSections;
     const filteredSections = filterMenuSections(sections, user?.roles || []);
     setMenuSections(filteredSections);
   }, [
+    pageMenuSections,
     ready,
     isBookingEnabled,
     areSubscriptionsEnabled,
@@ -827,6 +793,7 @@ const MemberMenu = ({
     isRolesEnabled,
     isFaqEnabled,
     isAffiliateEnabled,
+    isCohousingEnabled,
     user,
     router.locale,
     rbacLiveRevision,

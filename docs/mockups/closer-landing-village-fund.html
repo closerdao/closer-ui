@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Closer — Launch a regenerative community (OASA)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FCFDFB; --ink:#10201A; --forest:#0E1E16;
+  --mint:#3EE08F; --mint-deep:#0FA968; --mint-dark:#0B7A4C; --mint-soft:#E2FAEE; --mint-line:#C2F0DA;
+  --muted:#5C6E64;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);line-height:1.7;font-size:16px}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:500;line-height:1.1;letter-spacing:-.01em}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1080px;margin:0 auto;padding:0 32px}
+.narrow{max-width:720px;margin:0 auto}
+.btn{display:inline-block;padding:15px 32px;border-radius:12px;font-weight:600;font-size:15px;cursor:pointer;border:1px solid transparent;transition:.2s;font-family:'Inter',sans-serif}
+.btn-primary{background:var(--mint);color:#07351F;box-shadow:0 6px 20px rgba(62,224,143,.35)}
+.btn-primary:hover{background:#5BEBA4;transform:translateY(-2px) rotate(-.5deg)}
+.btn-quiet{background:transparent;border-color:var(--mint-line);color:var(--ink)}
+.btn-quiet:hover{border-color:var(--mint-deep);color:var(--mint-dark)}
+.eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--mint-deep);font-weight:700}
+section{padding:96px 0}
+.fundpill{display:inline-block;margin-bottom:30px;font-size:13px;background:#fff;border:1px solid var(--mint-line);border-radius:999px;padding:8px 18px;color:var(--muted);transition:.2s;box-shadow:0 2px 10px rgba(15,169,104,.08)}
+.fundpill b{color:var(--mint-dark)}
+.fundpill:hover{border-color:var(--mint-deep);transform:translateY(-1px)}
+/* FUND */
+.fund{background:var(--forest);color:#EAF6EF}
+.fund .eyebrow{color:var(--mint)}
+.fund h2{font-size:clamp(30px,4vw,48px);color:#fff;margin-top:12px}
+.fund h2 em{font-style:italic;color:var(--mint)}
+.fund p.lead{color:#B9CFC2;font-size:17px;max-width:680px;margin-top:18px}
+.fund p.lead b{color:#fff}
+.fundstats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:40px 0 44px}
+.fundstats div{background:rgba(255,255,255,.05);border:1px solid rgba(62,224,143,.25);border-radius:18px;padding:24px}
+.fundstats b{display:block;font-family:'Fraunces',serif;font-size:32px;color:var(--mint);margin-bottom:6px}
+.fundstats span{font-size:13.5px;color:#B9CFC2;line-height:1.5;display:block}
+.fundcols{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:8px}
+.fundcols h3{font-size:19px;color:#fff;margin-bottom:14px}
+.fundcols ul{list-style:none}
+.fundcols li{font-size:14px;color:#C9DCD1;padding:8px 0 8px 24px;position:relative;border-bottom:1px solid rgba(255,255,255,.08);line-height:1.55}
+.fundcols li:last-child{border-bottom:none}
+.fundcols li b{color:#fff}
+.fundcols .q li::before{content:"→";position:absolute;left:0;color:var(--mint);font-weight:700}
+.fundcols .no li::before{content:"✕";position:absolute;left:0;color:#E8A05D;font-weight:700;font-size:12px;top:11px}
+.fund .honest{margin-top:36px;font-size:13.5px;color:#8FA99A;border-left:3px solid var(--mint);padding-left:16px;max-width:640px;line-height:1.6}
+.fund .actions{margin-top:36px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.fund .actions .more{font-size:13.5px;color:#B9CFC2;text-decoration:underline;text-underline-offset:3px}
+/* wizard fund step */
+.fundopt label.chk{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--ink);font-weight:400;text-transform:none;letter-spacing:0;margin:10px 0;cursor:pointer;line-height:1.5}
+.fundopt label.chk input{margin-top:3px;accent-color:var(--mint-deep)}
+.skipnote{font-size:12.5px;color:var(--muted);margin-top:10px}
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:20px 40px;position:sticky;top:0;background:rgba(252,253,251,.92);backdrop-filter:blur(10px);z-index:50;border-bottom:1px solid var(--mint-line)}
+nav .logo{font-family:'Fraunces',serif;font-size:23px;font-weight:600;display:flex;align-items:baseline;gap:10px}
+nav .logo .oasa{font-family:'Inter',sans-serif;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--mint-deep);font-weight:600;border-left:1px solid var(--mint-line);padding-left:10px}
+nav ul{display:flex;gap:26px;list-style:none;font-size:14px;color:var(--muted);font-weight:500}
+nav ul a:hover{color:var(--mint-deep)}
+nav .btn{padding:11px 24px;font-size:14px}
+/* HERO */
+.hero{background:
+  radial-gradient(circle 700px at 50% -220px,rgba(62,224,143,.28),transparent),
+  radial-gradient(circle 520px at 88% 30%,rgba(62,224,143,.12),transparent),
+  var(--bg);
+  text-align:center;padding:104px 0 96px;position:relative;overflow:hidden}
+.hero .eyebrow{margin-bottom:26px;display:block}
+.hero h1{font-size:clamp(46px,7vw,90px)}
+.hero h1 em{font-style:italic;color:var(--mint-deep)}
+.hero p.sub{font-size:18px;color:var(--muted);max-width:560px;margin:26px auto 36px}
+.hero p.sub b{color:var(--ink);font-weight:600}
+.hero .actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.hero .note{margin-top:20px;font-size:13.5px;color:var(--muted)}
+.hero .note b{color:var(--mint-dark)}
+.hero .who{font-size:13.5px;color:var(--muted);margin-top:10px}
+.hero .who b{color:var(--ink);font-weight:600}
+/* MARQUEE */
+.marquee{background:var(--mint);color:var(--forest);padding:13px 0;overflow:hidden;white-space:nowrap;font-weight:700;font-size:13.5px;letter-spacing:.06em}
+.marquee span{display:inline-block;padding-right:48px;animation:scroll 26s linear infinite}
+@keyframes scroll{to{transform:translateX(-50%)}}
+/* PRESS + TRUST */
+.press{padding:56px 0 20px;text-align:center}
+.press .label{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:22px}
+.press .logos{display:flex;gap:44px;justify-content:center;flex-wrap:wrap;font-family:'Fraunces',serif;font-size:19px;color:#8A9A90;align-items:center}
+.press .logos span{opacity:.75}
+.trust{padding:34px 0 20px;text-align:center}
+.trust .strip{display:inline-flex;align-items:center;gap:26px;flex-wrap:wrap;justify-content:center;background:#fff;border:1px solid var(--mint-line);border-radius:999px;padding:16px 34px;font-size:14px;color:var(--muted);box-shadow:0 4px 24px rgba(15,169,104,.1)}
+.trust b{color:var(--ink)}
+.trust .sep{color:var(--mint-line)}
+/* MANIFESTO / EDUCATIONAL */
+.manifesto{background:var(--forest);color:#EAF4EE;position:relative;overflow:hidden}
+.manifesto .eyebrow{color:var(--mint)}
+.manifesto h2{color:#fff;font-size:clamp(32px,4.6vw,54px);margin:14px 0 24px;max-width:820px}
+.manifesto h2 em{font-style:italic;color:var(--mint)}
+.manifesto .lede{font-size:19px;color:#BFD6C9;max-width:720px}
+.manifesto .lede b{color:#fff;font-weight:600}
+.bigstat{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin:56px 0 8px}
+.principles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:52px 0 12px}
+.principles .s{border:1px solid rgba(62,224,143,.28);border-radius:18px;padding:22px 20px;background:rgba(62,224,143,.06)}
+.principles .s b{font-family:'Fraunces',serif;font-size:24px;color:var(--mint);display:block;line-height:1.1}
+.principles .s span{font-size:13px;color:#BFD6C9;display:block;margin-top:8px;line-height:1.55}
+.bigstat .s{border:1px solid rgba(62,224,143,.28);border-radius:20px;padding:30px;background:rgba(62,224,143,.06)}
+.bigstat .s b{font-family:'Fraunces',serif;font-size:46px;color:var(--mint);display:block;line-height:1}
+.bigstat .s span{font-size:14px;color:#BFD6C9;display:block;margin-top:10px}
+.manifesto .src{font-size:12.5px;color:#7FA08F;margin-top:22px;font-style:italic}
+/* KEYSTONE — light editorial */
+.keystone .head{text-align:center;max-width:760px;margin:0 auto 60px}
+.keystone h2{font-size:clamp(30px,4.2vw,50px);margin-top:14px}
+.keystone h2 em{font-style:italic;color:var(--mint-deep)}
+.keystone .head p{color:var(--muted);font-size:18px;margin-top:18px}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:900px;margin:0 auto}
+.col{border:1px solid var(--mint-line);border-radius:22px;padding:34px;background:#fff}
+.col.bad{background:#FBF7F3;border-color:#EADFD3}
+.col .tag{font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;margin-bottom:16px}
+.col.bad .tag{color:#B47B4A}
+.col.good .tag{color:var(--mint-deep)}
+.col h3{font-size:22px;margin-bottom:14px}
+.col ul{list-style:none}
+.col li{padding:9px 0;font-size:14.5px;color:var(--muted);border-bottom:1px solid rgba(0,0,0,.05);padding-left:26px;position:relative}
+.col li:last-child{border:none}
+.col.bad li:before{content:"–";position:absolute;left:6px;color:#B47B4A;font-weight:700}
+.col.good li:before{content:"→";position:absolute;left:0;color:var(--mint-deep);font-weight:700}
+.pull{max-width:820px;margin:64px auto 0;text-align:center}
+.pull blockquote{font-family:'Fraunces',serif;font-style:italic;font-size:clamp(22px,3vw,32px);line-height:1.4}
+.pull blockquote em{color:var(--mint-deep);font-style:normal}
+.pull cite{display:block;margin-top:18px;font-size:13.5px;color:var(--muted);font-style:normal}
+/* STEPS */
+.steps{background:var(--mint-soft)}
+.steps .head{text-align:center;margin-bottom:56px}
+.steps h2{font-size:clamp(30px,4vw,48px);margin-top:12px}
+.steps h2 em{font-style:italic;color:var(--mint-deep)}
+.stepgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.step{background:#fff;border:1px solid var(--mint-line);border-radius:22px;padding:34px;transition:.25s;position:relative}
+.step:hover{transform:translateY(-5px) rotate(-.6deg);box-shadow:0 18px 40px rgba(15,169,104,.14)}
+.step:nth-child(2):hover{transform:translateY(-5px) rotate(.6deg)}
+.step .n{position:absolute;top:-16px;left:26px;background:var(--mint);color:var(--forest);border-radius:999px;padding:5px 16px;font-weight:700;font-size:13.5px;box-shadow:0 4px 12px rgba(62,224,143,.4)}
+.step h3{font-size:21px;margin-bottom:10px;margin-top:6px}
+.step p{font-size:14.5px;color:var(--muted)}
+.step p b{color:var(--ink)}
+/* FEATURES */
+.features .head{max-width:640px;margin-bottom:56px}
+.features h2{font-size:clamp(30px,4vw,48px);margin-top:12px}
+.features h2 em{font-style:italic;color:var(--mint-deep)}
+.features .head p{color:var(--muted);margin-top:16px}
+.featgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.feat{background:#fff;border:1px solid var(--mint-line);border-radius:18px;padding:26px;transition:.2s}
+.feat:hover{border-color:var(--mint-deep);transform:translateY(-3px)}
+.feat h3{font-family:'Inter',sans-serif;font-weight:600;font-size:15.5px;margin-bottom:8px}
+.feat p{font-size:14px;color:var(--muted)}
+/* CASE */
+.case{background:var(--mint-soft);text-align:center}
+.case h2{font-size:clamp(28px,4vw,46px);margin:14px auto 16px;max-width:640px}
+.case h2 em{font-style:italic;color:var(--mint-deep)}
+.case p.lead{color:var(--muted);max-width:560px;margin:0 auto}
+.statrow{display:flex;justify-content:center;gap:20px;margin:56px 0 34px;flex-wrap:wrap}
+.stat{background:#fff;border:1px solid var(--mint-line);border-radius:18px;padding:26px 38px;transition:.2s}
+.stat:hover{transform:translateY(-4px) rotate(-1deg);box-shadow:0 12px 28px rgba(15,169,104,.14)}
+.stat b{display:block;font-family:'Fraunces',serif;font-size:36px;color:var(--mint-deep)}
+.stat span{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.case a.link{color:var(--mint-dark);font-weight:600;font-size:14.5px}
+/* NETWORK */
+.network{text-align:center}
+.network p.names{font-family:'Fraunces',serif;font-style:italic;font-size:clamp(17px,2vw,21px);color:var(--muted);max-width:760px;margin:18px auto 0;line-height:2.1}
+.network p.names b{color:var(--ink);font-weight:500}
+.network p.names .you{color:var(--mint-deep);border-bottom:2px solid var(--mint);padding-bottom:1px}
+.network .oasa-note{margin-top:44px;font-size:14px;color:var(--muted);background:var(--mint-soft);display:inline-block;border-radius:999px;padding:12px 26px}
+.network .oasa-note b{color:var(--ink)}
+.network .oasa-note a{color:var(--mint-deep);font-weight:600;border-bottom:1px solid var(--mint-line)}
+/* PRICING */
+.pricing{background:var(--mint-soft)}
+.pricing .grid{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center}
+.pricing h2{font-size:clamp(30px,4vw,46px);margin:14px 0 18px}
+.pricing h2 em{font-style:italic;color:var(--mint-deep)}
+.pricing .lead{color:var(--muted);font-size:15.5px}
+.pricing .anchor{margin-top:22px;font-size:15px;color:var(--mint-dark);font-style:italic;font-family:'Fraunces',serif}
+.pricecard{background:#fff;border-radius:26px;padding:44px;text-align:center;box-shadow:0 24px 60px rgba(15,169,104,.16);border:1px solid var(--mint-line);position:relative}
+.pricecard .free{position:absolute;top:-16px;left:50%;transform:translateX(-50%) rotate(-2deg);background:var(--forest);color:var(--mint);border-radius:999px;padding:7px 20px;font-size:13px;font-weight:700;white-space:nowrap}
+.pricecard .amount{font-family:'Fraunces',serif;font-size:66px;margin-top:10px}
+.pricecard .amount small{font-size:18px;color:var(--muted)}
+.pricecard .plus{font-size:14px;color:var(--mint-dark);font-weight:600;margin-top:2px}
+.pricecard .after{font-size:13.5px;color:var(--muted);margin-top:6px}
+.pricecard ul{list-style:none;text-align:left;margin:26px auto;font-size:14.5px;max-width:340px}
+.pricecard li{padding:8px 0;color:var(--muted);border-bottom:1px solid var(--mint-soft)}
+.pricecard li:last-child{border:none}
+.pricecard li:before{content:"✓ ";color:var(--mint-deep);font-weight:700}
+.pricecard .btn{width:100%}
+.pricecard .demo{margin-top:14px;font-size:13px;color:var(--muted)}
+.pricecard .demo a{text-decoration:underline}
+/* FAQ */
+.faq .head{text-align:center;margin-bottom:56px}
+.faq h2{font-size:clamp(28px,3.8vw,44px);margin-top:12px}
+.faq h2 em{font-style:italic;color:var(--mint-deep)}
+.faqlist{max-width:720px;margin:0 auto}
+.faqitem{border-bottom:1px solid var(--mint-line)}
+.faqitem button.q{width:100%;background:none;border:none;text-align:left;padding:22px 0;font-family:'Inter',sans-serif;font-size:16.5px;font-weight:600;color:var(--ink);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.faqitem .q span{color:var(--mint-deep);font-size:22px;font-weight:400;transition:.2s}
+.faqitem.open .q span{transform:rotate(45deg)}
+.faqitem .a{max-height:0;overflow:hidden;transition:max-height .3s ease;color:var(--muted);font-size:15px}
+.faqitem.open .a{max-height:260px;padding-bottom:22px}
+/* FINAL */
+.final{text-align:center;padding:120px 0;background:
+  radial-gradient(circle 600px at 50% 130%,rgba(62,224,143,.25),transparent),var(--bg)}
+.final h2{font-size:clamp(40px,6vw,76px);margin-bottom:20px}
+.final h2 em{font-style:italic;color:var(--mint-deep)}
+.final p{color:var(--muted);margin-bottom:38px;font-size:15px}
+footer{color:var(--muted);padding:36px 0 52px;font-size:13px;border-top:1px solid var(--mint-line)}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px}
+footer b{color:var(--ink)}
+/* WIZARD */
+.overlay{position:fixed;inset:0;background:rgba(14,30,22,.6);backdrop-filter:blur(6px);z-index:100;display:none;align-items:center;justify-content:center;padding:24px}
+.overlay.open{display:flex}
+.wizard{background:var(--bg);border-radius:26px;max-width:640px;width:100%;max-height:92vh;overflow-y:auto;padding:46px 50px;position:relative}
+.wizard .close{position:absolute;top:20px;right:24px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)}
+.wizard .progress{display:flex;gap:7px;margin-bottom:34px}
+.wizard .progress i{height:5px;flex:1;background:var(--mint-soft);border-radius:5px;transition:.3s}
+.wizard .progress i.on{background:var(--mint)}
+.wizard h3{font-size:27px;margin-bottom:8px}
+.wizard h3 em{font-style:italic;color:var(--mint-deep)}
+.wizard .sub{color:var(--muted);font-size:14.5px;margin-bottom:24px}
+.wizard label{display:block;font-size:12.5px;font-weight:600;margin:16px 0 7px}
+.wizard input,.wizard textarea,.wizard select{width:100%;padding:13px 16px;border:1px solid var(--mint-line);border-radius:12px;background:#fff;font-family:inherit;font-size:15px;color:var(--ink)}
+.wizard input:focus,.wizard textarea:focus,.wizard select:focus{outline:none;border-color:var(--mint-deep)}
+.wizard .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.wizard .nav{display:flex;justify-content:space-between;margin-top:30px}
+.domain{font-size:13.5px;margin-top:8px;min-height:20px;color:var(--muted)}
+.domain.ok{color:var(--mint-dark);font-weight:600}
+.stylepick{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px}
+.stylepick button{padding:15px 8px;border-radius:12px;border:1px solid var(--mint-line);background:#fff;cursor:pointer;font-family:'Inter';font-size:13px;font-weight:600;color:var(--ink);transition:.15s}
+.stylepick button:hover{transform:rotate(-1deg)}
+.stylepick button.sel{border-color:var(--mint-deep);background:var(--mint-soft)}
+.stylepick small{display:block;font-weight:400;color:var(--muted);margin-top:4px}
+.preview{border:1px solid var(--mint-line);border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 12px 32px rgba(15,169,104,.14)}
+.preview .pbar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--mint-line);background:#F6FBF8}
+.preview .pbar i{width:9px;height:9px;border-radius:50%;background:var(--mint-line)}
+.preview .pbar .purl{font-family:ui-monospace,monospace;font-size:11.5px;color:var(--muted);background:#fff;border:1px solid var(--mint-line);border-radius:6px;padding:3px 12px;margin-left:8px}
+.preview .pbody{padding:30px 28px 26px;text-align:center}
+.preview .pnav{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:22px;text-transform:uppercase;letter-spacing:.1em}
+.preview .pnav b{font-family:'Fraunces',serif;text-transform:none;font-size:13px;letter-spacing:0;color:var(--pv,#0FA968)}
+.preview h4{font-family:'Fraunces',serif;font-weight:500;font-size:26px;line-height:1.2}
+.preview h4 em{font-style:italic;color:var(--pv,#0FA968)}
+.preview .ptag{font-size:12px;color:var(--muted);margin:10px auto 18px;max-width:340px}
+.preview .pbtns{display:flex;gap:8px;justify-content:center}
+.preview .pbtns span{font-size:11px;font-weight:600;padding:8px 16px;border-radius:999px}
+.preview .pbtns .a{background:var(--pv,#0FA968);color:#fff}
+.preview .pbtns .b{border:1px solid var(--mint-line);color:var(--muted)}
+.preview .pcards{display:flex;gap:8px;margin-top:22px}
+.preview .pcards i{flex:1;height:44px;border-radius:8px;background:linear-gradient(135deg,var(--pv,#0FA968) -80%,#F0F5F1 60%)}
+.regen{font-size:13px;color:var(--muted);text-align:center;margin-top:14px}
+.regen a{color:var(--mint-dark);font-weight:600;cursor:pointer}
+.subcard{background:#fff;border:1px solid var(--mint-line);border-radius:14px;padding:22px;margin-bottom:8px}
+.subcard .line{display:flex;justify-content:space-between;font-size:14.5px;padding:6px 0;color:var(--muted)}
+.subcard .line.total{border-top:1px solid var(--mint-line);font-weight:600;margin-top:6px;padding-top:12px;color:var(--ink)}
+.subcard .green{color:var(--mint-dark);font-weight:600}
+.remind{font-size:13px;color:var(--muted);background:var(--mint-soft);border-radius:10px;padding:11px 16px;margin-top:16px}
+.remind b{color:var(--mint-dark)}
+.deploylog{background:var(--forest);color:#A6E8C6;border-radius:14px;padding:22px;font-family:ui-monospace,monospace;font-size:13px;min-height:190px;margin-top:8px}
+.deploylog div{padding:3px 0;opacity:0;animation:fadein .4s forwards}
+@keyframes fadein{to{opacity:1}}
+.donebox{text-align:center;padding:18px 0 4px;display:none}
+.donebox h3{color:var(--mint-dark)}
+.donebox .url{font-family:ui-monospace,monospace;background:var(--mint-soft);padding:10px 20px;border-radius:10px;display:inline-block;margin:14px 0 20px;font-size:14px;color:var(--mint-dark)}
+@media(max-width:820px){
+  .stepgrid,.featgrid,.bigstat,.compare{grid-template-columns:1fr}
+  .principles{grid-template-columns:1fr 1fr}
+  .pricing .grid{grid-template-columns:1fr;gap:48px}
+  .statrow{gap:12px}.stat{padding:20px 26px}
+  nav ul{display:none}
+  section{padding:64px 0}
+  .press .logos{gap:24px;font-size:16px}
+  .wizard{padding:32px 24px}.wizard .row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="#">Closer <span class="oasa">part of OASA</span></a>
+  <ul>
+    <li><a href="#why">Why</a></li>
+    <li><a href="#keystone">The idea</a></li>
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#fund">Village Fund</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <button class="btn btn-primary" onclick="openWizard()">Launch your community</button>
+</nav>
+
+<section class="hero">
+  <div class="wrap">
+    <a class="fundpill" href="#fund">🌱 <b>OASA Village Fund</b> — first cohort of 10, fall 2026 →</a>
+    <h1>Build your village,<br><em>not your software.</em></h1>
+    <p class="sub">Bookings, members, events and governance on your own domain — generated for you, live in one click. Steward your land under OASA principles and qualify for matched funding.</p>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="openWizard()">Launch your village — free</button>
+    </div>
+    <p class="note"><b>First month free</b> · 49€/month after · cancel anytime</p>
+  </div>
+</section>
+
+<div class="marquee"><span>BOOKINGS ✦ EVENTS ✦ MEMBERSHIPS ✦ AI-GENERATED PAGES ✦ 1-CLICK DEPLOY ✦ WATER · SOIL · BIODIVERSITY ✦ GOVERNANCE WHEN YOU'RE READY ✦ OASA VILLAGE FUND ✦ BOOKINGS ✦ EVENTS ✦ MEMBERSHIPS ✦ AI-GENERATED PAGES ✦ 1-CLICK DEPLOY ✦ WATER · SOIL · BIODIVERSITY ✦&nbsp;</span></div>
+
+<div class="press">
+  <div class="wrap">
+    <div class="label">From the OASA network — as seen in</div>
+    <div class="logos"><span>Reuters</span><span>The Japan Times</span><span>Expresso</span><span>O Jornal Económico</span></div>
+  </div>
+</div>
+
+<!-- WHY / EDUCATIONAL -->
+<section class="manifesto" id="why">
+  <div class="wrap">
+    <span class="eyebrow">Why regenerative hubs</span>
+    <h2>The 21st-century crisis is local. So is <em>the solution.</em></h2>
+    <p class="lede">As heat records break and 20th-century infrastructure buckles — rails warping, roads melting, grids shedding load exactly when people need them most — a quieter fact keeps showing up in the data: small pockets of restored land stay livable while everything around them fails. Not by luck. By <b>years of unglamorous work</b> — planting diverse canopy, slowing water with swales, building soil that holds rain like a sponge instead of shedding it like a roof.</p>
+    <div class="principles">
+      <div class="s"><b>Soil</b><span>Life-filled and fertile — living cover year-round, no synthetics, fertility built biologically.</span></div>
+      <div class="s"><b>Water</b><span>Slowed, spread and sunk — rain captured in swales and ponds; greywater treated and reused.</span></div>
+      <div class="s"><b>Air</b><span>Clean and restorative — carbon locked into forests, soil and biochar; no open burning.</span></div>
+      <div class="s"><b>Waste</b><span>A non-waste mindset — compost, upcycle, recover every organic stream.</span></div>
+      <div class="s"><b>Rewilding</b><span>At least 50% of land wild — native species, food forests, biodiversity compounding.</span></div>
+      <div class="s"><b>Resources</b><span>Renewable and local — under 5% built, natural materials, plant-forward and seasonal.</span></div>
+      <div class="s"><b>Community</b><span>Equitable and open — consent-based decisions, open knowledge, strong local ties.</span></div>
+    </div>
+    <p class="src">The seven regenerative principles of the <a href="https://oasa.earth/papers/oasa-constitution-2025/" style="color:var(--mint);text-decoration:underline;text-underline-offset:3px">OASA Constitution</a> — the minimum standard every OASA project upholds, and the bar for the Village Fund.</p>
+  </div>
+</section>
+
+<!-- KEYSTONE reframe -->
+<section class="keystone" id="keystone">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">The reframe</span>
+      <h2>From owning land to <em>stewarding</em> it.</h2>
+      <p>For five hundred years our culture told one story: civilization on one side, wilderness on the other, human presence a subtraction from nature. That story is disabling — it leaves only "dominate" or "leave alone," and both are separation. There is an older, third way: the human hand as a <b>keystone</b> — the species whose presence makes the forest thick, the river clear, the soil deeper each year.</p>
+    </div>
+    <div class="compare">
+      <div class="col bad">
+        <div class="tag">The extractive default</div>
+        <h3>Ownership as a drain</h3>
+        <ul>
+          <li>Land held to be used up — its value in what you take out</li>
+          <li>Nutrients exported, never cycled back; soil overdrawn</li>
+          <li>Water rushed downstream as flood, gone a week later</li>
+          <li>Diversity simplified for short-term yield, then collapse</li>
+          <li>Community sovereignty traded for corporate bottom lines</li>
+        </ul>
+      </div>
+      <div class="col good">
+        <div class="tag">The regenerative game</div>
+        <h3>Stewardship as a loop</h3>
+        <ul>
+          <li>Land held to grow the pie for future generations</li>
+          <li>Soil carbon built year over year — an account that refills</li>
+          <li>Water slowed, spread and sunk; the water table rises</li>
+          <li>Species added, resilience compounding over time</li>
+          <li>Sovereignty kept local: your data, your domain, your rules</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pull">
+      <blockquote>Keystone species don't dominate their ecosystems. They <em>hold the arch open</em> so everything else can live inside it. The otter makes the kelp forest possible. The beaver makes the wetland. Humans have played exactly this role — when the culture told them to.</blockquote>
+      <cite>— <em>Becoming Keystone</em>, Samuel Delesque</cite>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="steps" id="how">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">How it works</span>
+      <h2>Three steps. <em>No developers.</em></h2>
+    </div>
+    <div class="stepgrid">
+      <div class="step">
+        <div class="n">Step 1</div>
+        <h3>Tell us about your community</h3>
+        <p>Name, type, one line about what you're building. Your address — <b>yourvillage.closer.earth</b> — is reserved on the spot.</p>
+      </div>
+      <div class="step">
+        <div class="n">Step 2</div>
+        <h3>Preview your platform</h3>
+        <p>Pick a style, share your story, and watch AI generate your pages. <b>See it before you pay a cent</b> — then make it yours.</p>
+      </div>
+      <div class="step">
+        <div class="n">Step 3</div>
+        <h3>Go live &amp; grow</h3>
+        <p>One click and you're live. Take bookings, host events, welcome members — and switch on <b>token governance</b> whenever you're ready.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Everything included</span>
+      <h2>One platform, <em>every tool</em> your community needs.</h2>
+      <p>Turn a secluded project into a functional, digital-native economy — hospitality and stays at the core, complemented by events, food, education, subscriptions and products.</p>
+    </div>
+    <div class="featgrid">
+      <div class="feat"><h3>Bookings &amp; Stays</h3><p>Guests, volunteers and residents — payments, calendars and check-ins.</p></div>
+      <div class="feat"><h3>Events &amp; Ticketing</h3><p>Workshops and gatherings with registration, payments and communication.</p></div>
+      <div class="feat"><h3>Memberships</h3><p>Recurring subscriptions and tiers that sustain your operations.</p></div>
+      <div class="feat"><h3>Spaces &amp; Inventory</h3><p>Shared spaces, tools and equipment — availability and usage tracking.</p></div>
+      <div class="feat"><h3>Learning Hub</h3><p>Document community wisdom, create courses, share and monetize skills.</p></div>
+      <div class="feat"><h3>Governance &amp; Tokens</h3><p>Proof of Presence, Proof of Sweat — optional, opt-in, whenever you're ready.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- CASE -->
+<section class="case" id="communities">
+  <div class="wrap">
+    <span class="eyebrow">Proven in the field</span>
+    <h2><em>Traditional Dream Factory</em> runs on Closer</h2>
+    <p class="lead">Europe's first tokenized regenerative ecovillage — a degraded poultry farm in Alentejo turned into an oasis of life. DAO-governed, built entirely on Closer, from land purchase to daily operations. In 2025 its water table rose from 20m below ground to just 3m — trees surviving a six-month drought without a drop of borehole water.</p>
+    <div class="statrow">
+      <div class="stat"><b>€1.5M+</b><span>Raised</span></div>
+      <div class="stat"><b>300+</b><span>Token holders</span></div>
+      <div class="stat"><b>5,000+</b><span>Trees planted</span></div>
+    </div>
+    <a class="link" href="https://traditionaldreamfactory.com">Visit traditionaldreamfactory.com →</a>
+  </div>
+</section>
+
+<!-- NETWORK -->
+<section class="network">
+  <div class="wrap" style="text-align:center">
+    <span class="eyebrow">A growing network</span>
+    <p class="names">
+      <b>Traditional Dream Factory</b>, Portugal · <b>Foz Da Cova</b>, mountain hamlet ·
+      <b>Earthbound</b>, intentional community · <b>Moos</b>, Berlin ·
+      <b>Lios</b>, ecological imagination · <b>Per Auset</b>, the Nile ·
+      <span class="you">your community, next</span>
+    </p>
+    <div class="oasa-note">Closer is the platform of <b>OASA</b> — diverting the world's most prized asset class, real estate, toward perpetual commons: houses sold at cost + 30% to fund land and restoration. <a href="https://oasa.earth">Read the constitution</a></div>
+  </div>
+</section>
+
+<!-- VILLAGE FUND -->
+<section class="fund" id="fund">
+  <div class="wrap">
+    <span class="eyebrow">OASA Village Fund · First cohort fall 2026</span>
+    <h2>Deploy on Closer. Steward the land. <em>Get funded.</em></h2>
+    <p class="lead">Villages that run on Closer and respect the <b>OASA principles</b> qualify for the OASA Village Fund — matched funding for the first cohort of <b>10 villages</b>. Building a village is legally exhausting and financially punishing, and most attempts fail. The fund exists to change those odds for the builders with the stomach for it.</p>
+    <div class="fundstats">
+      <div><b>~3x</b><span>Your Artizen campaign draws from a donor-seeded matching pool plus endowment prizes — pre-raised money, matched until the pool is spent.</span></div>
+      <div><b>10 villages</b><span>Selected for the first cohort, launching fall 2026 — with a token raise (governance &amp; use rights, never equity) opening follow-on capital in spring 2027.</span></div>
+      <div><b>1% of fees</b><span>Closer commits 1% of every platform transaction — carved from its 5% fee — back into the fund. As the network grows, the fund refills itself.</span></div>
+    </div>
+    <div class="fundcols">
+      <div>
+        <h3>What qualifies you</h3>
+        <ul class="q">
+          <li><b>Land</b> — title or long-term lease, and a regeneration plan aligned with the OASA Constitution's seven principles.</li>
+          <li><b>A binding stewardship commitment.</b> The OASA trust model is one proven path — not required. Protect your land another way and you disclose your methodology openly.</li>
+          <li><b>Open books</b> — financial and ecological transparency to the OASA network, with annual reporting.</li>
+          <li><b>Run on Closer for the cohort.</b> No lock-in — your data and community stay yours, and you can leave after.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Reasons not to apply</h3>
+        <ul class="no">
+          <li>You see the land as a real estate play with an exit.</li>
+          <li>You're building toward an exit, not a legacy — stewardship is a constraint you'd rather escape.</li>
+          <li>You won't open your books to the OASA network.</li>
+        </ul>
+        <p class="honest">Consent-based governance causes friction. Co-ownership is legally complex. Novel financing means building the plane while flying it. We have the playbook — and OASA's legal counsel is at your disposal whichever structure you choose — but you need the resilience.</p>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="openWizard()">Launch &amp; apply for the fund</button>
+      <a class="more" href="https://oasa.earth/papers/oasa-constitution-2025/">Read the OASA Constitution →</a>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="wrap">
+    <div class="grid">
+      <div>
+        <span class="eyebrow">Pricing</span>
+        <h2>One price. <em>Everything included.</em></h2>
+        <p class="lead">No tiers, no per-member fees, no surprises. 49€/month plus 5% on commercial transactions — we only earn when your community does. Your first month is free: enough time to launch, invite members and take your first bookings.</p>
+        <p class="anchor">The flat fee is less than one guest-night per month.</p>
+      </div>
+      <div class="pricecard">
+        <div class="free">First month free</div>
+        <div class="amount">49€<small>/month</small></div>
+        <div class="plus">+ 5% on bookings, tickets &amp; sales</div>
+        <div class="after">0€ today · first charge in 30 days · cancel anytime</div>
+        <ul>
+          <li>White-label platform on your own domain</li>
+          <li>AI-generated custom pages</li>
+          <li>Bookings, events, memberships, inventory</li>
+          <li>Learning hub &amp; community spaces</li>
+          <li>Governance &amp; token tools (optional)</li>
+          <li>Full RESTful API &amp; data export</li>
+        </ul>
+        <button class="btn btn-primary" onclick="openWizard()">Launch your community</button>
+        <p class="demo">Running a network of communities? <a href="#">Talk to us</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Questions</span>
+      <h2>Before <em>you ask</em></h2>
+    </div>
+    <div class="faqlist">
+      <div class="faqitem">
+        <button class="q" onclick="faq(this)">What actually makes a hub "regenerative"?<span>+</span></button>
+        <div class="a"><p>A regenerative system grows its resources over time instead of depleting them: more quantity of life (biomass, carbon), more diversity (biodiversity, resilience) and more quality (vibrant, connected ecosystems). In practice that means restoring water cycles, building soil and adding species — fewer inputs, same or more outputs, compounding returns. Closer gives you the operational tools; the land practice is yours.</p></div>
+      </div>
+      <div class="faqitem">
+        <button class="q" onclick="faq(this)">Do I need to understand tokens or crypto?<span>+</span></button>
+        <div class="a"><p>No. Closer works fully without any of it — bookings, events, members, payments in euros. Token governance is optional and opt-in; most communities switch it on later, some never do.</p></div>
+      </div>
+      <div class="faqitem">
+        <button class="q" onclick="faq(this)">What does "from ownership to stewardship" mean for me?<span>+</span></button>
+        <div class="a"><p>It's the OASA model: instead of owning land to extract from it, you hold access and governance rights and commit to caring for it. Counterintuitively this creates more security — with no right to extract, no one can force a sell-off, so the project can endure for generations. Adopting it is entirely your choice; Closer supports it but doesn't require it.</p></div>
+      </div>
+      <div class="faqitem">
+        <button class="q" onclick="faq(this)">How editable are the AI-generated pages?<span>+</span></button>
+        <div class="a"><p>Fully. The AI gives you a strong starting point in your style and voice; every page, image and word is yours to change. Regenerate any page with a new prompt whenever you like.</p></div>
+      </div>
+      <div class="faqitem">
+        <button class="q" onclick="faq(this)">What happens to my data if I cancel?<span>+</span></button>
+        <div class="a"><p>It's yours. Export everything — members, bookings, content — anytime via dashboard or API. Data sovereignty isn't a feature, it's the architecture: keeping extractive forces out is the whole point. Each community runs its own database and can localise all the way down.</p></div>
+      </div>
+      <div class="faqitem">
+        <button class="q" onclick="faq(this)">How does the 5% transaction fee work?<span>+</span></button>
+        <div class="a"><p>Closer takes 5% of commercial activity processed through the platform — bookings, event tickets, product sales. Membership contributions inside your community are yours. No revenue, no fee: our income scales with yours, so we're invested in your community actually thriving.</p></div>
+      </div>
+      <div class="faqitem">
+        <button class="q" onclick="faq(this)">How do I qualify for the OASA Village Fund?<span>+</span></button>
+        <div class="a"><p>Deploy your village on Closer and respect the OASA principles. Concretely: land (title or long-term lease) with a regeneration plan aligned with the Constitution's seven principles; a binding stewardship commitment — the OASA trust model, or your own methodology disclosed openly; open books to the network; and running on Closer during the cohort (no lock-in — your data stays yours). Ten villages will be selected for the first cohort in fall 2026, with campaigns matched ~3x on Artizen and a token raise — governance and use rights, never equity — opening spring 2027. Adopting the OASA legal structure is optional; our legal counsel is available whichever structure you choose.</p></div>
+      </div>
+      <div class="faqitem">
+        <button class="q" onclick="faq(this)">How does Closer relate to OASA?<span>+</span></button>
+        <div class="a"><p>Closer is the community platform of the OASA network — the operating system its villages run on. OASA transitions land into perpetual commons; Closer gives those communities (and yours) the tools to operate and govern themselves, replicable across any land-based project in the world.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL -->
+<section class="final">
+  <div class="wrap">
+    <h2>Pick up your <em>sovereignty.</em></h2>
+    <p>Launch or join a community · first month free · 49€/month after · live in minutes</p>
+    <button class="btn btn-primary" onclick="openWizard()">Launch your community</button>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>© 2026 Closer, part of <b>OASA</b> — from ownership to stewardship.</div>
+    <div>Philosophy · Papers · Docs · Privacy · team@closer.earth</div>
+  </div>
+</footer>
+
+<!-- WIZARD -->
+<div class="overlay" id="overlay">
+  <div class="wizard">
+    <button class="close" onclick="closeWizard()">✕</button>
+    <div class="progress"><i class="on" id="p1"></i><i id="p2"></i><i id="p3"></i><i id="p4"></i><i id="p5"></i><i id="p6"></i></div>
+
+    <div class="wstep" id="s1">
+      <h3>Your <em>community</em></h3>
+      <p class="sub">Three fields. You can change everything later.</p>
+      <label>Community name</label>
+      <input placeholder="e.g. Valle Verde" id="cname" oninput="checkDomain()">
+      <div class="domain" id="domain"></div>
+      <label>Community type</label>
+      <select><option>Co-living</option><option>Ecovillage</option><option>Retreat center</option><option>Land project</option><option>Network / other</option></select>
+      <label>What are you building? (one line)</label>
+      <input placeholder="A regenerative olive farm & learning village for 40 residents" id="ctag">
+      <div class="nav"><span></span><button class="btn btn-primary" onclick="go(2)">Continue</button></div>
+    </div>
+
+    <div class="wstep fundopt" id="s2" style="display:none">
+      <h3>The <em>Village Fund</em></h3>
+      <p class="sub">Villages that deploy on Closer and respect the OASA principles qualify for matched funding — first cohort of 10, fall 2026. Optional: you can skip and just launch your platform.</p>
+      <label>Your land</label>
+      <select id="fland"><option>We hold title</option><option>Long-term lease (7+ years)</option><option>In negotiation</option><option>Still searching — platform first</option></select>
+      <label>Your stewardship commitment</label>
+      <select id="fsteward"><option>Adopt the OASA model — land in trust, use rights over equity</option><option>Our own methodology — disclosed openly to the network</option><option>Not ready to commit yet</option></select>
+      <label class="chk"><input type="checkbox" id="fbooks"> <span><b>Open books.</b> We commit to financial and ecological transparency to the OASA network, with annual reporting.</span></label>
+      <label class="chk"><input type="checkbox" id="fmessy"> <span><b>We have the stomach for the messy middle.</b> We understand consent-based governance causes friction, co-ownership is legally complex, and novel financing means building the plane while flying it.</span></label>
+      <label>Why do you have the stomach for this? (one line)</label>
+      <input id="fwhy" placeholder="We've been living on the land for two years. We've already survived our first governance crisis.">
+      <p class="skipnote">Applying doesn't guarantee selection — we read every application, and we say no a lot. The OASA legal structure is available but not required; our counsel helps either way. Closer is required only during the cohort — no lock-in.</p>
+      <div class="nav"><button class="btn btn-quiet" onclick="go(1)">Back</button><span><button class="btn btn-quiet" onclick="fundApplied=false;go(3)">Skip — just launch</button> <button class="btn btn-primary" onclick="applyFund()">Apply &amp; continue</button></span></div>
+    </div>
+
+    <div class="wstep" id="s3" style="display:none">
+      <h3>Your <em>style</em></h3>
+      <p class="sub">Closer's AI will generate your landing, booking and member pages from your story. Pick a style and describe the vibe.</p>
+      <label>Visual style</label>
+      <div class="stylepick">
+        <button class="sel" data-c="#0FA968" onclick="pick(this)">Organic<small>warm & earthy</small></button>
+        <button data-c="#E85D9B" onclick="pick(this)">Vivid<small>bold & bright</small></button>
+        <button data-c="#3B82F6" onclick="pick(this)">Techy<small>dark & precise</small></button>
+        <button data-c="#B98A2F" onclick="pick(this)">Editorial<small>serif & gallery</small></button>
+        <button data-c="#6B7280" onclick="pick(this)">Minimal<small>quiet & spacious</small></button>
+        <button data-c="#8B5CF6" onclick="pick(this)">Surprise me<small>AI's choice</small></button>
+      </div>
+      <label>Describe your community's story & vibe</label>
+      <textarea rows="4" placeholder="We're restoring a 19th-century olive farm into a village for makers and growers. Barefoot but organized. Mediterranean light, shared meals, serious permaculture…"></textarea>
+      <div class="nav"><button class="btn btn-quiet" onclick="go(2)">Back</button><button class="btn btn-primary" onclick="go(4);genPreview()">Generate my pages</button></div>
+    </div>
+
+    <div class="wstep" id="s4" style="display:none">
+      <h3>Here's <em id="pvname">your community</em></h3>
+      <p class="sub">Generated from your story — fully editable after launch.</p>
+      <div class="preview" id="pv">
+        <div class="pbar"><i></i><i></i><i></i><span class="purl" id="pvurl">valleverde.closer.earth</span></div>
+        <div class="pbody">
+          <div class="pnav"><b id="pvlogo">Valle Verde</b><span>Stay · Events · Learn · Join</span></div>
+          <h4 id="pvh">Welcome to <em>Valle Verde</em></h4>
+          <p class="ptag" id="pvtag">A regenerative olive farm & learning village for 40 residents.</p>
+          <div class="pbtns"><span class="a">Book a stay</span><span class="b">Upcoming events</span></div>
+          <div class="pcards"><i></i><i></i><i></i></div>
+        </div>
+      </div>
+      <p class="regen">Not quite right? <a onclick="genPreview(true)">Regenerate</a> or tweak your prompt.</p>
+      <div class="nav"><button class="btn btn-quiet" onclick="go(3)">Back</button><button class="btn btn-primary" onclick="go(5)">Love it — make it live</button></div>
+    </div>
+
+    <div class="wstep" id="s5" style="display:none">
+      <h3>Your <em>free month</em></h3>
+      <p class="sub">Nothing due today. Your subscription starts in 30 days.</p>
+      <div class="subcard">
+        <div class="line"><span>Closer platform — everything included</span><span>49€/mo</span></div>
+        <div class="line"><span>Transaction fee (bookings, tickets, sales)</span><span>5%</span></div>
+        <div class="line"><span>First month</span><span class="green">Free</span></div>
+        <div class="line total"><span>Due today</span><span>0€</span></div>
+      </div>
+      <label>Email</label><input placeholder="you@yourvillage.earth">
+      <label>Card</label><input placeholder="1234 5678 9012 3456">
+      <div class="row">
+        <div><label>Expiry</label><input placeholder="MM/YY"></div>
+        <div><label>CVC</label><input placeholder="123"></div>
+      </div>
+      <div class="remind">We'll email you a reminder <b>3 days before your first charge</b> — cancel anytime before then and pay nothing.</div>
+      <div class="nav"><button class="btn btn-quiet" onclick="go(4)">Back</button><button class="btn btn-primary" onclick="go(6);deploy()">Deploy my platform</button></div>
+    </div>
+
+    <div class="wstep" id="s6" style="display:none">
+      <h3>Building your <em>community</em>…</h3>
+      <p class="sub">Deploying your platform and publishing your pages.</p>
+      <div class="deploylog" id="log"></div>
+      <div class="donebox" id="done">
+        <h3>You're <em>live!</em></h3>
+        <div class="url" id="liveurl">valleverde.closer.earth</div><br>
+        <button class="btn btn-primary">Open my platform</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let fundApplied=false;
+function openWizard(){document.getElementById('overlay').classList.add('open')}
+function applyFund(){fundApplied=true;go(3)}
+function closeWizard(){document.getElementById('overlay').classList.remove('open')}
+function go(n){for(let i=1;i<=6;i++){document.getElementById('s'+i).style.display=(i===n)?'block':'none';document.getElementById('p'+i).classList.toggle('on',i<=n)}}
+function pick(el){el.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('sel'));el.classList.add('sel')}
+function slug(){return (document.getElementById('cname').value||'Valle Verde').toLowerCase().replace(/[^a-z0-9]+/g,'')||'valleverde'}
+function checkDomain(){
+  const v=document.getElementById('cname').value.trim();
+  const d=document.getElementById('domain');
+  if(!v){d.textContent='';d.className='domain';return}
+  d.textContent='✓ '+slug()+'.closer.earth is available';
+  d.className='domain ok';
+}
+function genPreview(regen){
+  const name=document.getElementById('cname').value.trim()||'Valle Verde';
+  const tag=document.getElementById('ctag').value.trim()||'A regenerative olive farm & learning village for 40 residents.';
+  const c=document.querySelector('.stylepick .sel').dataset.c;
+  document.getElementById('pv').style.setProperty('--pv',c);
+  document.getElementById('pvname').textContent=name;
+  document.getElementById('pvlogo').textContent=name;
+  document.getElementById('pvurl').textContent=slug()+'.closer.earth';
+  document.getElementById('pvh').innerHTML=(regen?'Life at <em>':'Welcome to <em>')+name+'</em>';
+  document.getElementById('pvtag').textContent=tag;
+}
+function faq(btn){btn.parentNode.classList.toggle('open')}
+function deploy(){
+  const name=document.getElementById('cname').value.trim()||'Valle Verde';
+  document.getElementById('liveurl').textContent=slug()+'.closer.earth';
+  const lines=['$ closer deploy --community "'+name+'"','✓ Reserving '+slug()+'.closer.earth…','✓ Provisioning white-label instance…','✓ Publishing your generated pages…','✓ Configuring payments (49€/mo + 5% · first month free)…','✓ Setting up bookings, events & members…'].concat(fundApplied?['✓ Village Fund application received — we read every one…']:[]).concat(['✓ Live in 42s']);
+  const log=document.getElementById('log');log.innerHTML='';
+  lines.forEach((l,i)=>{setTimeout(()=>{const d=document.createElement('div');d.textContent=l;log.appendChild(d);if(i===lines.length-1)document.getElementById('done').style.display='block'},600*(i+1))});
+}
+</script>
+</body>
+</html>

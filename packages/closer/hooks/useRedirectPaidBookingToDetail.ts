@@ -13,6 +13,6 @@ export function useRedirectPaidBookingToDetail(
     if (!router.isReady) return;
     const id = booking?._id;
     if (!id || booking?.status !== 'paid') return;
-    void router.replace(`/bookings/${id}`);
+    void router.replace(`/stay/${id}`);
   }, [router.isReady, router, booking?._id, booking?.status]);
 }

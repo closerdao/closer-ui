@@ -6,10 +6,12 @@ import { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import configCached from '../configCached';
 import { useBuyTokens } from '../hooks/useBuyTokens';
 import { useConfig } from '../hooks/useConfig';
+import { usePageMenuSections } from '../hooks/usePageMenuSections';
 import useRBAC from '../hooks/useRBAC';
-import configCached from '../configCached';
+import { toNavigationSections } from '../utils/pageMenu';
 import { getCurrentUnitPrice } from '../utils/bondingCurve';
 import { getReserveTokenDisplay } from '../utils/config.utils';
 import ReportABug from './ReportABug';
@@ -35,6 +37,7 @@ const GuestMenu = () => {
   const { hasAccess, rbacLiveRevision } = useRBAC();
   const router = useRouter();
   const { getCurrentSupplyWithoutWallet } = useBuyTokens();
+  const pageMenuSections = usePageMenuSections();
 
   const [menuSections, setMenuSections] = useState<MenuSection[]>([]);
   const [currentSupply, setCurrentSupply] = useState<number | null>(null);
@@ -60,6 +63,7 @@ const GuestMenu = () => {
     isBlogEnabled: boolean,
     isCitizenshipEnabled: boolean,
     isFaqEnabled: boolean,
+    isCohousingEnabled: boolean,
   ): MenuSection[] => {
     // TDF-specific navigation structure
     if (APP_NAME?.toLowerCase() === 'tdf') {
@@ -93,7 +97,7 @@ const GuestMenu = () => {
             {
               label: t('menu_cohousing'),
               url: '/cohousing',
-              enabled: true,
+              enabled: isCohousingEnabled,
             },
             {
               label: t('menu_regenerative_agriculture'),
@@ -116,6 +120,11 @@ const GuestMenu = () => {
               url: '/events',
               enabled: true,
               rbacPage: 'Events',
+            },
+            {
+              label: t('menu_artists_in_residence'),
+              url: '/artists',
+              enabled: true,
             },
           ],
         },
@@ -183,31 +192,35 @@ const GuestMenu = () => {
 
     // Create all menu sections with their items for other apps
     const sections: MenuSection[] = [
-      // Stay section (open by default)
-      {
-        label: t('menu_section_stay'),
-        isOpen: true,
-        items: [
-          {
-            label: t('navigation_stay'),
-            url: '/stay',
-            enabled: isBookingEnabled,
-            rbacPage: 'Stay',
-          },
-          {
-            label: t('navigation_volunteer'),
-            url: '/volunteer',
-            enabled: isVolunteeringEnabled,
-            rbacPage: 'Volunteer',
-          },
-          {
-            label: t('navigation_residence'),
-            url: '/projects',
-            enabled: isVolunteeringEnabled && APP_NAME?.toLowerCase() === 'tdf',
-            rbacPage: 'Residence',
-          },
-        ],
-      },
+      ...(APP_NAME?.toLowerCase().includes('earthbound')
+        ? []
+        : [
+            {
+              label: t('menu_section_stay'),
+              isOpen: true,
+              items: [
+                {
+                  label: t('navigation_stay'),
+                  url: '/stay',
+                  enabled: isBookingEnabled,
+                  rbacPage: 'Stay',
+                },
+                {
+                  label: t('navigation_volunteer'),
+                  url: '/volunteer',
+                  enabled: isVolunteeringEnabled,
+                  rbacPage: 'Volunteer',
+                },
+                {
+                  label: t('navigation_residence'),
+                  url: '/projects',
+                  enabled:
+                    isVolunteeringEnabled && APP_NAME?.toLowerCase() === 'tdf',
+                  rbacPage: 'Residence',
+                },
+              ],
+            },
+          ]),
 
       // Subscriptions section (standalone)
       {
@@ -233,8 +246,7 @@ const GuestMenu = () => {
             url: '/events',
             enabled:
               APP_NAME?.toLowerCase() !== 'lios' &&
-              APP_NAME?.toLowerCase() !== 'earthbound' &&
-              APP_NAME?.toLowerCase() !== 'closer',
+              APP_NAME?.toLowerCase() !== 'earthbound',
             rbacPage: 'Events',
           },
         ],
@@ -267,90 +279,6 @@ const GuestMenu = () => {
         ],
       },
 
-      // Closer app navigation items (top-level buttons)
-      ...(APP_NAME && APP_NAME?.toLowerCase() === 'closer'
-        ? [
-            {
-              label: t('header_nav_features'),
-              isOpen: false,
-              items: [
-                {
-                  label: t('header_nav_features'),
-                  url: '/#features',
-                  enabled: true,
-                },
-              ],
-            },
-            {
-              label: t('header_nav_communities'),
-              isOpen: false,
-              items: [
-                {
-                  label: t('header_nav_communities'),
-                  url: '/#communities',
-                  enabled: true,
-                },
-              ],
-            },
-            {
-              label: t('header_nav_governance'),
-              isOpen: false,
-              items: [
-                {
-                  label: t('header_nav_governance'),
-                  url: '/#governance',
-                  enabled: true,
-                },
-              ],
-            },
-            {
-              label: t('header_nav_agent'),
-              isOpen: false,
-              items: [
-                {
-                  label: t('header_nav_agent'),
-                  url: '/agent',
-                  enabled: true,
-                },
-              ],
-            },
-            {
-              label: t('header_nav_pricing'),
-              isOpen: false,
-              items: [
-                {
-                  label: t('header_nav_pricing'),
-                  url: '/pricing',
-                  enabled: true,
-                },
-              ],
-            },
-            {
-              label: t('header_nav_docs'),
-              isOpen: false,
-              items: [
-                {
-                  label: t('header_nav_docs'),
-                  url: 'https://closer.gitbook.io/documentation',
-                  target: '_blank',
-                  enabled: true,
-                },
-              ],
-            },
-            {
-              label: t('philosophy_title'),
-              isOpen: false,
-              items: [
-                {
-                  label: t('philosophy_title'),
-                  url: '/philosophy',
-                  enabled: true,
-                },
-              ],
-            },
-          ]
-        : []),
-
       // Learn more section
       {
         label: 'General',
@@ -368,7 +296,6 @@ const GuestMenu = () => {
                   label: t('header_nav_invest'),
                   url: '/pages/invest',
                   enabled: true,
-                  rbacPage: 'Invest',
                 },
                 {
                   label: t('header_nav_stay'),
@@ -379,13 +306,11 @@ const GuestMenu = () => {
                   label: t('header_nav_community'),
                   url: '/pages/community',
                   enabled: true,
-                  rbacPage: 'Community',
                 },
                 {
                   label: t('header_nav_events'),
                   url: '/pages/events',
                   enabled: true,
-                  rbacPage: 'Events',
                 },
               ]
             : []),
@@ -396,6 +321,21 @@ const GuestMenu = () => {
             rbacPage: 'Token',
           },
           {
+            label: t('menu_team'),
+            url: '/team',
+            enabled: true,
+          },
+          {
+            label: t('menu_press'),
+            url: '/press',
+            enabled: true,
+          },
+          {
+            label: t('menu_cohousing'),
+            url: '/cohousing',
+            enabled: isCohousingEnabled,
+          },
+          {
             label: 'Become a Citizen',
             url: '/citizenship',
             enabled: isCitizenshipEnabled,
@@ -403,19 +343,22 @@ const GuestMenu = () => {
         ],
       },
 
-      // FAQ section (lowest item)
-      {
-        label: t('navigation_faq'),
-        isOpen: false,
-        items: [
-          {
-            label: t('navigation_faq'),
-            url: '/resources',
-            enabled: isFaqEnabled,
-            rbacPage: 'Resources',
-          },
-        ],
-      },
+      ...(APP_NAME?.toLowerCase().includes('earthbound')
+        ? []
+        : [
+            {
+              label: t('navigation_faq'),
+              isOpen: false,
+              items: [
+                {
+                  label: t('navigation_faq'),
+                  url: '/resources',
+                  enabled: isFaqEnabled,
+                  rbacPage: 'Resources',
+                },
+              ],
+            },
+          ]),
     ];
 
     return sections;
@@ -471,21 +414,28 @@ const GuestMenu = () => {
       citizenshipConfig?.enabled === true &&
       process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
     const isFaqEnabled = Boolean(generalConfig?.faqsGoogleSheetId);
+    const isCohousingEnabled = configCached.cohousing?.enabled === true;
 
-    const sections = getMenuSections(
-      isBookingEnabled,
-      isVolunteeringEnabled,
-      isGovernanceEnabled,
-      isLearningHubEnabled,
-      isBlogEnabled,
-      isCitizenshipEnabled,
-      isFaqEnabled,
-    );
+    // Pages flagged with `showInMenu` define the menu. The hand-written
+    // sections below are the fallback for sites that have not set any yet.
+    const sections =
+      pageMenuSections.length > 0
+        ? toNavigationSections(pageMenuSections)
+        : getMenuSections(
+            isBookingEnabled,
+            isVolunteeringEnabled,
+            isGovernanceEnabled,
+            isLearningHubEnabled,
+            isBlogEnabled,
+            isCitizenshipEnabled,
+            isFaqEnabled,
+            isCohousingEnabled,
+          );
 
     const filteredSections = filterMenuSections(sections);
 
     setMenuSections(filteredSections);
-  }, [router.locale, rbacLiveRevision]);
+  }, [router.locale, rbacLiveRevision, pageMenuSections]);
 
   useEffect(() => {
     if (

@@ -25,9 +25,11 @@ const nextConfig = {
       },
     ],
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config) => {
     config.experiments = {
+      ...config.experiments,
       topLevelAwait: true,
+      layers: true,
     };
 
     return config;

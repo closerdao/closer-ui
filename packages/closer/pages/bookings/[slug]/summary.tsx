@@ -30,8 +30,8 @@ import config from '../../../configCached';
 import { BOOKING_STEPS, BOOKING_STEP_TITLE_KEYS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
-import { useConfig } from '../../../hooks/useConfig';
 import { useRedirectPaidBookingToDetail } from '../../../hooks';
+import { useConfig } from '../../../hooks/useConfig';
 import {
   BaseBookingParams,
   Booking,
@@ -44,9 +44,9 @@ import type { Event } from '../../../types/event';
 import type { Stay } from '../../../types/stay';
 import api from '../../../utils/api';
 import {
+  bookingGuestNightsMetricPoint,
   buildBookingAccomodationUrl,
   buildBookingDatesUrl,
-  bookingGuestNightsMetricPoint,
   getBookingPaymentCheckoutPath,
   getBookingTokenCurrency,
 } from '../../../utils/booking.helpers';
@@ -153,7 +153,8 @@ const Summary = ({
     void logMetric({
       event: 'booking-summary-view',
       category: 'booking',
-      value: 'view', point: pt,
+      value: 'view',
+      point: pt,
       ...bookingMetricFields,
     });
   }, [booking?._id, booking?.duration, booking?.adults]);
@@ -236,22 +237,26 @@ const Summary = ({
     ? isStayShapedBooking(booking as Record<string, unknown>)
     : false;
   const stayLike = booking as unknown as Stay;
-  const afterSummaryCheckoutPath = booking?._id
-    ? getBookingPaymentCheckoutPath({
-        bookingId: booking._id,
-        stayShaped,
-        status: String(booking.status ?? ''),
-        paymentDelta: booking.paymentDelta,
-        useTokens: Boolean(booking.useTokens),
-        fiatOwed: stayShaped ? computeFiatOwed(stayLike) : 0,
-        tokensOwed: stayShaped ? computeTokensOwed(stayLike) : 0,
-        creditsOwed: stayShaped ? computeCreditsOwed(stayLike) : 0,
-      })
-    : `/bookings/${slug ?? ''}/checkout`;
+
+  const resolvePostSummaryCheckoutPath = (nextStatus: string) => {
+    if (!booking?._id) {
+      return `/bookings/${slug ?? ''}/checkout`;
+    }
+    return getBookingPaymentCheckoutPath({
+      bookingId: booking._id,
+      stayShaped,
+      status: nextStatus,
+      paymentDelta: booking.paymentDelta,
+      useTokens: Boolean(booking.useTokens),
+      fiatOwed: stayShaped ? computeFiatOwed(stayLike) : 0,
+      tokensOwed: stayShaped ? computeTokensOwed(stayLike) : 0,
+      creditsOwed: stayShaped ? computeCreditsOwed(stayLike) : 0,
+    });
+  };
 
   useEffect(() => {
     if (booking?.status === 'pending' || booking?.status === 'paid') {
-      router.push(`/bookings/${booking?._id}`);
+      router.push(`/stay/${booking?._id}`);
     }
   }, [booking?.status]);
 
@@ -265,16 +270,25 @@ const Summary = ({
     setLoading(true);
     setHandleNextError(null);
     const metricPoint = bookingGuestNightsMetricPoint(duration, adults);
-    if (booking?.status === 'confirmed') {
+    const currentStatus = String(booking?.status ?? '');
+
+    if (
+      currentStatus === 'confirmed' ||
+      currentStatus === 'tokens-staked' ||
+      currentStatus === 'credits-paid' ||
+      currentStatus === 'pending-payment'
+    ) {
       void logMetric({
         event: 'booking-summary-to-checkout',
         category: 'booking',
-        value: 'checkout', point: metricPoint,
+        value: 'checkout',
+        point: metricPoint,
         ...bookingMetricFields,
       });
       setLoading(false);
-      return router.push(afterSummaryCheckoutPath);
+      return router.push(resolvePostSummaryCheckoutPath(currentStatus));
     }
+
     try {
       const res = await platform.bookings.complete(booking?._id);
       const status = res.data.results.status;
@@ -283,24 +297,27 @@ const Summary = ({
         void logMetric({
           event: 'booking-summary-complete-success',
           category: 'booking',
-          value: 'confirmed', point: metricPoint,
+          value: 'confirmed',
+          point: metricPoint,
           ...bookingMetricFields,
         });
-        router.push(afterSummaryCheckoutPath);
+        router.push(resolvePostSummaryCheckoutPath('confirmed'));
       } else if (status === 'pending') {
         void logMetric({
           event: 'booking-summary-pending-success',
           category: 'booking',
-          value: 'pending', point: metricPoint,
+          value: 'pending',
+          point: metricPoint,
           ...bookingMetricFields,
         });
-        router.push(`/bookings/${booking?._id}`);
+        router.push(`/stay/${booking?._id}`);
       }
     } catch (err) {
       void logMetric({
         event: 'booking-summary-complete-error',
         category: 'booking',
-        value: 'error', point: metricPoint,
+        value: 'error',
+        point: metricPoint,
         ...bookingMetricFields,
       });
       setHandleNextError(parseMessageFromError(err));
@@ -370,7 +387,8 @@ const Summary = ({
         void logMetric({
           event: 'booking-friends-send-success',
           category: 'booking',
-          value: 'friends', point: p,
+          value: 'friends',
+          point: p,
           ...bookingMetricFields,
         });
         setEmailSuccess(true);
@@ -379,7 +397,8 @@ const Summary = ({
         void logMetric({
           event: 'booking-friends-send-error',
           category: 'booking',
-          value: 'friends', point: p,
+          value: 'friends',
+          point: p,
           ...bookingMetricFields,
         });
         setEmailSuccess(false);
@@ -390,7 +409,8 @@ const Summary = ({
       void logMetric({
         event: 'booking-friends-send-error',
         category: 'booking',
-        value: 'friends', point: p,
+        value: 'friends',
+        point: p,
         ...bookingMetricFields,
       });
       setEmailSuccess(false);

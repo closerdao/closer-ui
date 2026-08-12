@@ -7,7 +7,9 @@ export type StayStatus =
   | 'pending-payment'
   | 'paid'
   | 'cancelled'
-  | 'rejected';
+  | 'rejected'
+  | 'tokens-staked'
+  | 'credits-paid';
 
 export type StayPaymentMethod =
   | 'fiat'

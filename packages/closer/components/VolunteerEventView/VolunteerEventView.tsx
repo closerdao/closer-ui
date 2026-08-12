@@ -123,8 +123,8 @@ const VolunteerEventView: FC<Props> = ({ volunteer }) => {
                 {!isEnded && (
                   <Card className="bg-white border border-gray-100">
                     <LinkButton
-                      href={`/bookings/create/dates?volunteerId=${
-                        volunteer._id
+                      href={`/volunteer/apply?bookingType=${
+                        volunteer.residency ? 'residence' : 'volunteer'
                       }&start=${start.format('YYYY-MM-DD')}&end=${end.format(
                         'YYYY-MM-DD',
                       )}`}

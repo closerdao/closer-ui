@@ -6,10 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
 import useRBAC from '../../hooks/useRBAC';
-import {
-  filterDashboardLinks,
-  getDashboardLinks,
-} from './dashboardLinks';
+import { filterDashboardLinks, getDashboardLinks } from './dashboardLinks';
 
 const DashboardNav = () => {
   const t = useTranslations();
@@ -22,23 +19,22 @@ const DashboardNav = () => {
   const isBookingEnabled =
     config?.booking?.enabled === true &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
-  const isGovernanceEnabled = config?.governance?.enabled === true;
   const isLearningHubEnabled =
     config?.learningHub?.enabled === true &&
     process.env.NEXT_PUBLIC_FEATURE_COURSES === 'true';
   const isAffiliateEnabled =
     config?.affiliate?.enabled === true &&
     process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true';
-  const isTokenEnabled =
-    process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
+  const isTokenEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
+  const isApplicationsEnabled = config?.applications?.enabled === true;
 
   const links = filterDashboardLinks(
     getDashboardLinks(t, {
       isBookingEnabled,
-      isGovernanceEnabled,
       isLearningHubEnabled,
       isAffiliateEnabled,
       isTokenEnabled,
+      isApplicationsEnabled,
     }),
     user?.roles || [],
     hasAccess,

@@ -220,7 +220,7 @@ const BookingsCalendarPage = ({
 
   const handleBookingClick = useCallback((bookingId: string) => {
     const cleanId = bookingId.includes('-') ? bookingId.split('-')[0] : bookingId;
-    window.open(`/bookings/${cleanId}`, '_blank');
+    window.open(`/stay/${cleanId}`, '_blank');
   }, []);
 
   if (!user || !user.roles.includes('space-host')) {

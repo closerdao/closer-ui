@@ -12,11 +12,12 @@ export const villageAppEnvShape = {
   NEXT_PUBLIC_PLATFORM_URL: optionalUrl.describe(
     'Canonical public URL for the deployed village app.',
   ),
-  NEXT_PUBLIC_PLATFORM: optionalUrl.describe(
-    'Legacy canonical public URL fallback.',
-  ),
-  NEXT_PUBLIC_APP_NAME: optionalString.default('closer'),
-  NEXT_PUBLIC_PLATFORM_NAME: optionalString.default('This village'),
+  NEXT_PUBLIC_APP_NAME: z
+    .string()
+    .min(1)
+    .describe(
+      'Village slug supplied at provisioning. Feature discriminator and locale lookup key — not a display name.',
+    ),
   NEXT_PUBLIC_DEFAULT_TIMEZONE: optionalString.default('Europe/Lisbon'),
   NEXT_PUBLIC_CDN_URL: optionalUrl,
   NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL: optionalUrl,
@@ -47,6 +48,7 @@ export const villageAppEnvSchema = z.object(villageAppEnvShape);
 
 export const requiredProvisioningEnvKeys = [
   'NEXT_PUBLIC_API_URL',
+  'NEXT_PUBLIC_APP_NAME',
   'NEXT_PUBLIC_PLATFORM_URL',
 ];
 
@@ -61,9 +63,7 @@ export const optionalProvisioningEnvKeys = [
 ];
 
 export const defaultedProvisioningEnvKeys = [
-  'NEXT_PUBLIC_APP_NAME',
   'NEXT_PUBLIC_DEFAULT_TIMEZONE',
-  'NEXT_PUBLIC_PLATFORM_NAME',
   'NEXT_PUBLIC_FEATURE_AFFILIATE',
   'NEXT_PUBLIC_FEATURE_BLOG',
   'NEXT_PUBLIC_FEATURE_BOOKING',
@@ -81,9 +81,54 @@ export const defaultedProvisioningEnvKeys = [
   'NEXT_PUBLIC_FEATURE_WEB3_WALLET',
 ];
 
+// t3-env validates the client schema in the browser too, so it needs the real
+// values there. Next.js only inlines *member expressions* — `process.env.FOO` —
+// it does not replace a bare `process.env`, which webpack's polyfill turns into
+// `{}` client-side. So every NEXT_PUBLIC_ key in villageAppEnvShape must be
+// listed explicitly below, or the browser validates against an empty object and
+// createEnv throws at module load (blank page, app never hydrates).
 export const env = createEnv({
   client: villageAppEnvShape,
-  experimental__runtimeEnv: process.env,
+  experimental__runtimeEnv: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_PLATFORM_URL: process.env.NEXT_PUBLIC_PLATFORM_URL,
+    NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
+    NEXT_PUBLIC_DEFAULT_TIMEZONE: process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE,
+    NEXT_PUBLIC_CDN_URL: process.env.NEXT_PUBLIC_CDN_URL,
+    NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL:
+      process.env.NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL,
+    NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY:
+      process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY,
+    NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT:
+      process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT,
+    NEXT_PUBLIC_FIREBASE_CONFIG: process.env.NEXT_PUBLIC_FIREBASE_CONFIG,
+    NEXT_PUBLIC_GOOGLE_MAPS_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY,
+    NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID:
+      process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
+    NEXT_PUBLIC_NETWORK: process.env.NEXT_PUBLIC_NETWORK,
+    NEXT_PUBLIC_FEATURE_AFFILIATE: process.env.NEXT_PUBLIC_FEATURE_AFFILIATE,
+    NEXT_PUBLIC_FEATURE_BLOG: process.env.NEXT_PUBLIC_FEATURE_BLOG,
+    NEXT_PUBLIC_FEATURE_BOOKING: process.env.NEXT_PUBLIC_FEATURE_BOOKING,
+    NEXT_PUBLIC_FEATURE_CARROTS: process.env.NEXT_PUBLIC_FEATURE_CARROTS,
+    NEXT_PUBLIC_FEATURE_CITIZENSHIP:
+      process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP,
+    NEXT_PUBLIC_FEATURE_COURSES: process.env.NEXT_PUBLIC_FEATURE_COURSES,
+    NEXT_PUBLIC_FEATURE_LOCALE_SWITCH:
+      process.env.NEXT_PUBLIC_FEATURE_LOCALE_SWITCH,
+    NEXT_PUBLIC_FEATURE_ROLES: process.env.NEXT_PUBLIC_FEATURE_ROLES,
+    NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE:
+      process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE,
+    NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS:
+      process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS,
+    NEXT_PUBLIC_FEATURE_SUPPORT_US: process.env.NEXT_PUBLIC_FEATURE_SUPPORT_US,
+    NEXT_PUBLIC_FEATURE_TOKEN_SALE: process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE,
+    NEXT_PUBLIC_FEATURE_VOLUNTEERING:
+      process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING,
+    NEXT_PUBLIC_FEATURE_WEB3_BOOKING:
+      process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING,
+    NEXT_PUBLIC_FEATURE_WEB3_WALLET:
+      process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET,
+  },
   emptyStringAsUndefined: true,
 });
 
@@ -93,5 +138,4 @@ export const appConfigFromEnv = {
   STRIPE_CUSTOMER_PORTAL_URL: env.NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL,
 };
 
-export const platformUrl =
-  env.NEXT_PUBLIC_PLATFORM_URL || env.NEXT_PUBLIC_PLATFORM || '';
+export const platformUrl = env.NEXT_PUBLIC_PLATFORM_URL || '';

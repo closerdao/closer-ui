@@ -3,22 +3,21 @@ import { useRouter } from 'next/router';
 
 import { FormEvent, useEffect, useState } from 'react';
 
+import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
-import { useInteractionIsHuman } from '../hooks/useInteractionIsHuman';
 import api from '../utils/api';
-import { linkedMetricFields, logMetric } from '../utils/metrics';
-import {
-  isTurnstileSubmitEnabled,
-  turnstileTokenForRequest,
-} from '../utils/turnstile.helpers';
-import TurnstileWidget from './TurnstileWidget';
 import { parseMessageFromError, slugify } from '../utils/common';
 import { isInputValid, validatePassword } from '../utils/helpers';
+import { clearInteractionSession } from '../utils/interactionSession';
+import { linkedMetricFields, logMetric } from '../utils/metrics';
+import {
+  createTurnstileHandlers,
+  isTurnstileSubmitEnabled,
+} from '../utils/turnstile.helpers';
+import TurnstileWidget from './TurnstileWidget';
 import { Button, Checkbox, ErrorMessage, Input } from './ui';
-import { X } from 'lucide-react';
-
 import Heading from './ui/Heading';
 
 interface Props {
@@ -33,7 +32,6 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
   const router = useRouter();
   const { signup, error, user, refetchUser } = useAuth();
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const isHuman = useInteractionIsHuman();
 
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
@@ -64,6 +62,13 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
     setApplication((prevState) => ({ ...prevState, ...update }));
   };
 
+  const handleTurnstileError = (errorMessage: string) => {
+    if (/turnstile/i.test(errorMessage)) {
+      clearInteractionSession();
+      setTurnstileToken(null);
+    }
+  };
+
   const handleEmailSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!email || !isInputValid(email, 'email')) {
@@ -73,7 +78,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
     try {
       const res = await api.post('/check-user-exists', {
         email,
-        turnstileToken: turnstileTokenForRequest(isHuman, turnstileToken),
+        turnstileToken,
       });
       const doesUserExist = res?.data?.doesUserExist;
 
@@ -82,7 +87,10 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
         return;
       }
 
-      if (process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true' && isEmailConsent) {
+      if (
+        process.env.NEXT_PUBLIC_FEATURE_SIGNUP_SUBSCRIBE === 'true' &&
+        isEmailConsent
+      ) {
         const tags = [
           'signup-modal',
           eventId ? `event:${eventId}` : null,
@@ -91,7 +99,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
           email,
           screenname: '',
           tags,
-          turnstileToken: turnstileTokenForRequest(isHuman, turnstileToken),
+          turnstileToken,
         });
       }
 
@@ -100,13 +108,15 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
       setApplication({ ...application, email });
 
       setTimeout(() => {
+        setTurnstileToken(null);
         setStep(2);
       }, 1000);
     } catch (err: any) {
-      setNewsletterError(
+      const errorMessage =
         (err.response && err.response.data && err.response.data.error) ||
-          err.message,
-      );
+        err.message;
+      handleTurnstileError(errorMessage);
+      setNewsletterError(errorMessage);
     }
   };
 
@@ -116,7 +126,6 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
       return;
     }
 
-    // Validate password before submitting
     const passwordValidation = validatePassword(application.password);
     if (!passwordValidation.isValid) {
       setLocalError(passwordValidation.error);
@@ -146,20 +155,15 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
           ...linkedMetricFields('User', res.userId),
         });
 
-        // If eventId is provided, register the user for the event and send notification
         if (eventId) {
           try {
-            // Register user for the event
             await api.post(`/attend/event/${eventId}`, { attend: true });
 
-            // Send event notification - try to get user from context first, then refetch if needed
             let currentUser = user;
             if (!currentUser?._id) {
               try {
-                // Wait a bit for the context to update, then refetch user
                 await new Promise((resolve) => setTimeout(resolve, 100));
                 await refetchUser();
-                // Get the updated user from context after refetch
                 const userResponse = await api.get('/mine/user');
                 currentUser = userResponse.data.results;
               } catch (userError) {
@@ -167,7 +171,6 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
               }
             }
 
-            // Access the _id field directly and ensure it's a string
             const userId = currentUser?._id;
 
             if (userId) {
@@ -181,21 +184,18 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
             }
           } catch (eventError) {
             console.error('Event registration error:', eventError);
-            // Don't fail the signup if event registration fails
-            // The error is logged but not shown to user to avoid confusion
           }
         }
 
         setTimeout(() => {
           onSuccess();
         }, 2000);
-      } else {
-        // Error is already set by the auth context, so we don't need to set it here
-        // The user will stay on step 2 and see the error message
       }
     } catch (error) {
       console.error('Signup error:', error);
-      setLocalError(parseMessageFromError(error));
+      const errorMessage = parseMessageFromError(error);
+      handleTurnstileError(errorMessage);
+      setLocalError(errorMessage);
     } finally {
       setIsSignupLoading(false);
     }
@@ -259,12 +259,10 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
                 {t('signup_form_email_consent')}
               </Checkbox>
 
-              {!isHuman && (
-                <TurnstileWidget
-                  action="signup_email"
-                  onVerify={setTurnstileToken}
-                />
-              )}
+              <TurnstileWidget
+                action="signup_email"
+                {...createTurnstileHandlers(setTurnstileToken)}
+              />
 
               <Button
                 isEnabled={
@@ -272,7 +270,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
                   isInputValid(email, 'email') &&
                   !newsletterSuccess &&
                   isEmailConsent &&
-                  isTurnstileSubmitEnabled(isHuman, turnstileToken)
+                  isTurnstileSubmitEnabled(turnstileToken)
                 }
                 isLoading={false}
                 type="submit"
@@ -284,9 +282,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
                 {t('signup_form_have_account')}{' '}
                 <Link
                   className="text-accent underline font-bold"
-                  href={`/login?back=${encodeURIComponent(
-                    router.asPath,
-                  )}`}
+                  href={`/login?back=${encodeURIComponent(router.asPath)}`}
                 >
                   {t('login_title')}
                 </Link>
@@ -320,7 +316,6 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
                   updateApplication({
                     password: e.target.value,
                   });
-                  // Clear local error when user starts typing
                   if (localError) {
                     setLocalError(null);
                   }
@@ -331,19 +326,17 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
                 <ErrorMessage error={localError || error} />
               )}
 
-              {!isHuman && (
-                <TurnstileWidget
-                  action="signup"
-                  onVerify={setTurnstileToken}
-                />
-              )}
+              <TurnstileWidget
+                action="signup"
+                {...createTurnstileHandlers(setTurnstileToken)}
+              />
 
               <Button
                 isEnabled={
                   !!application.screenname &&
                   !!application.password &&
                   !isSignupLoading &&
-                  isTurnstileSubmitEnabled(isHuman, turnstileToken)
+                  isTurnstileSubmitEnabled(turnstileToken)
                 }
                 isLoading={isSignupLoading}
               >
@@ -356,9 +349,7 @@ const SignupModal = ({ isOpen, onClose, onSuccess, eventId }: Props) => {
                 {t('signup_form_have_account')}{' '}
                 <Link
                   className="text-accent underline font-bold"
-                  href={`/login?back=${encodeURIComponent(
-                    router.asPath,
-                  )}`}
+                  href={`/login?back=${encodeURIComponent(router.asPath)}`}
                 >
                   {t('login_title')}
                 </Link>

@@ -372,21 +372,27 @@ export const configDescription: ConfigType[] = [
         type: 'boolean',
         default: false,
       },
+      showBadges: {
+        type: 'boolean',
+        default: true,
+      },
       elements: {
         type: [
           {
             slug: 'text',
             title: 'text',
             emoji: 'text',
+            badge: 'image',
             description: 'text',
-            priceId: 'text',
-            tier: 'number',
-            monthlyCredits: 'number',
             price: 'number',
-            perks: 'long-text',
             billingPeriod: 'text',
+            monthlyCredits: 'number',
+            tier: 'number',
+            perks: 'long-text',
             available: 'boolean',
             tiersAvailable: 'boolean',
+            priceId: 'readonly-text',
+            productId: 'readonly-text',
           },
         ],
         default: [
@@ -394,15 +400,17 @@ export const configDescription: ConfigType[] = [
             slug: '',
             title: '',
             emoji: '',
+            badge: '',
             description: '',
-            priceId: '',
-            tier: 0,
-            monthlyCredits: 0,
             price: 0,
+            billingPeriod: 'month',
+            monthlyCredits: 0,
+            tier: 1,
             perks: '',
-            billingPeriod: '',
             available: true,
             tiersAvailable: false,
+            priceId: '',
+            productId: '',
           },
         ],
       },
@@ -682,6 +690,10 @@ export const configDescription: ConfigType[] = [
         type: 'image',
         default: '/images/logo.png',
       },
+      favicon: {
+        type: 'image',
+        default: '',
+      },
       platformName: {
         type: 'text',
         default: 'Traditional Dream Factory',
@@ -784,12 +796,27 @@ export const configDescription: ConfigType[] = [
       },
       primaryCtaVisitor: {
         type: 'select',
-        enum: ['none', 'login', 'bookings', 'learningHub', 'events', 'custom'],
+        enum: [
+          'none',
+          'login',
+          'bookings',
+          'learningHub',
+          'events',
+          'application',
+          'custom',
+        ],
         default: 'login',
       },
       primaryCtaMember: {
         type: 'select',
-        enum: ['none', 'bookings', 'learningHub', 'events', 'custom'],
+        enum: [
+          'none',
+          'bookings',
+          'learningHub',
+          'events',
+          'application',
+          'custom',
+        ],
         default: 'bookings',
       },
       primaryCtaCustomUrl: {
@@ -799,6 +826,104 @@ export const configDescription: ConfigType[] = [
       primaryCtaCustomText: {
         type: 'text',
         default: '',
+      },
+    },
+  },
+  {
+    slug: 'applications',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
+      },
+      /** Label of the navigation button that opens the modal. */
+      ctaText: {
+        type: 'text',
+        default: 'Apply now',
+      },
+      eyebrow: {
+        type: 'text',
+        default: 'Get started',
+      },
+      title: {
+        type: 'text',
+        default: 'Apply to join',
+      },
+      description: {
+        type: 'text',
+        default: 'Tell us a little about yourself and we will get back to you.',
+      },
+      submitButtonText: {
+        type: 'text',
+        default: 'Send application',
+      },
+      disclaimer: {
+        type: 'text',
+        default: '',
+      },
+      successTitle: {
+        type: 'text',
+        default: 'Thank you!',
+      },
+      successMessage: {
+        type: 'text',
+        default: 'We read every application. Expect a reply within a few days.',
+      },
+      /**
+       * The questions the applicant is asked. `name` is the key the answer is
+       * stored under — `name`, `email` and `phone` map to the columns of the
+       * application model, anything else lands on `application.fields`.
+       */
+      fields: {
+        type: [
+          {
+            name: 'text',
+            label: 'text',
+            type: {
+              type: 'select',
+              enum: [
+                'text',
+                'longtext',
+                'email',
+                'phone',
+                'number',
+                'url',
+                'date',
+                'select',
+                'country',
+              ],
+            },
+            options: 'text',
+            placeholder: 'text',
+            required: 'boolean',
+          },
+        ],
+        default: [
+          {
+            name: 'name',
+            label: 'Your name',
+            type: 'text',
+            options: '',
+            placeholder: 'Jane Doe',
+            required: true,
+          },
+          {
+            name: 'email',
+            label: 'Your email',
+            type: 'email',
+            options: '',
+            placeholder: 'jane@example.com',
+            required: true,
+          },
+          {
+            name: 'communitySize',
+            label: 'How big is your community?',
+            type: 'select',
+            options: '1-15 people, 15-50 people, 51-150 people, 150+ people',
+            placeholder: '',
+            required: false,
+          },
+        ],
       },
     },
   },
@@ -1028,6 +1153,15 @@ export const configDescription: ConfigType[] = [
       enabled: {
         type: 'boolean',
         default: true,
+      },
+    },
+  },
+  {
+    slug: 'cohousing',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: false,
       },
     },
   },

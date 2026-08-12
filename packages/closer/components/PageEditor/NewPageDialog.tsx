@@ -6,6 +6,7 @@ import Modal from '../Modal';
 import { Button, Input, Textarea } from '../ui';
 
 import { slugify } from '../../utils/common';
+import { getStandardPageDefinition } from '../../constants/standardPages';
 import {
   sanitizePageSections,
   validatePageSections,
@@ -36,6 +37,7 @@ export const buildNewPagePayload = (
   if (!data.customData) return base;
   const { _id: _ignoredId, ...rest } = data.customData;
   const merged: Record<string, unknown> = { ...base, ...rest };
+  merged.slug = base.slug;
   if (Array.isArray(merged.sections)) {
     merged.sections = sanitizePageSections(merged.sections as PageSection[]);
   }
@@ -142,6 +144,7 @@ const NewPageDialog = ({
   const [customData, setCustomData] = useState('');
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [prompt, setPrompt] = useState('');
+  const [localError, setLocalError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -153,6 +156,7 @@ const NewPageDialog = ({
       setCustomData('');
       setAdvancedOpen(false);
       setPrompt('');
+      setLocalError(null);
       onClearSubmitError?.();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -187,6 +191,11 @@ const NewPageDialog = ({
       return;
     }
     const finalSlug = normalizeSlug(slug) || toSlug(title) || '/';
+    if (getStandardPageDefinition(finalSlug)) {
+      setLocalError(t('pages_editor_slug_reserved'));
+      return;
+    }
+    setLocalError(null);
     await onCreate({
       mode: 'manual',
       data: {
@@ -361,12 +370,12 @@ const NewPageDialog = ({
           </>
         )}
 
-        {submitError ? (
+        {localError || submitError ? (
           <div
             role="alert"
             className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 break-words whitespace-pre-line"
           >
-            {submitError}
+            {localError || submitError}
           </div>
         ) : null}
 

@@ -24,7 +24,7 @@ jest.mock('closer/utils/cachedConfig.helpers', () => {
     general: generalConfig,
     payment: paymentConfig,
     subscriptions: subscriptionsConfig,
-    volunteering: { enabled: true },
+    volunteering: { enabled: true, volunteeringMinStay: 28 },
   };
 
   return {

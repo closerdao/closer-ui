@@ -7,7 +7,6 @@
     "apps/closer",
     "apps/earthbound",
     "apps/village-app",
-    "apps/foz",
     "apps/lios",
     "apps/tdf",
     "packages/*"
@@ -46,7 +45,7 @@
     "axios/form-data": "^4.0.5",
     "protobufjs": "^7.5.5",
     "elliptic": "^6.6.1",
-    "axios": "^1.15.2",
+    "axios": "^1.18.0",
     "picomatch": "^4.0.2",
     "braces": "^3.0.3",
     "cross-spawn": "^7.0.6",
@@ -63,14 +62,15 @@
     "minimatch": "^9.0.5",
     "glob": "^11.0.0",
     "rollup": "^4.34.9",
-    "undici": "^7.25.0"
+    "undici": "^7.25.0",
+    "zod": "^3.25.76"
   },
   "dependencies": {
     "@google/genai": "^1.12.0",
-    "axios": "^1.15.2",
+    "axios": "^1.18.0",
     "deepmerge": "^4.3.1",
     "jimp": "^1.6.0",
-    "next": "15.5.15",
+    "next": "15.5.21",
     "next-intl": "^3.26.5",
     "nextjs-google-analytics": "^2.3.7"
   }

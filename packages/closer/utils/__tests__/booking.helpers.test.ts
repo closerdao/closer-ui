@@ -9,8 +9,35 @@ import {
   getFoodTotal,
   getPaymentDelta,
   getPaymentType,
+  getResidualFiatAfterFullTokenStake,
   getUtilityTotal,
+  hasOnChainAccommodationStake,
+  isFullAccommodationCoveredByTokens,
+  isTokenPaymentVerified,
+  isUnsyncedOnChainTokenStakeError,
+  resolveCheckoutFiatTotal,
+  resolveTokensStakedVal,
+  userCanCreateTeamBooking,
 } from '../booking.helpers';
+
+describe('userCanCreateTeamBooking', () => {
+  it('returns true for staff roles that may create team bookings', () => {
+    expect(userCanCreateTeamBooking(['member', 'space-host'])).toBe(true);
+    expect(userCanCreateTeamBooking(['steward'])).toBe(true);
+    expect(userCanCreateTeamBooking(['land-manager'])).toBe(true);
+    expect(userCanCreateTeamBooking(['team'])).toBe(true);
+  });
+
+  it('returns true for admin', () => {
+    expect(userCanCreateTeamBooking(['admin'])).toBe(true);
+  });
+
+  it('returns false for guests and members without staff roles', () => {
+    expect(userCanCreateTeamBooking(undefined)).toBe(false);
+    expect(userCanCreateTeamBooking([])).toBe(false);
+    expect(userCanCreateTeamBooking(['member'])).toBe(false);
+  });
+});
 
 describe('getFiatTotal', () => {
   it('returns 0 for team booking', () => {
@@ -540,7 +567,15 @@ describe('getPaymentDelta', () => {
 
   it('returns null when fiat-only and delta is zero', () => {
     expect(
-      getPaymentDelta(100, 100, false, false, rentalToken, 0, CloserCurrencies.EUR),
+      getPaymentDelta(
+        100,
+        100,
+        false,
+        false,
+        rentalToken,
+        0,
+        CloserCurrencies.EUR,
+      ),
     ).toBeNull();
   });
 
@@ -608,7 +643,282 @@ describe('getPaymentDelta', () => {
 
   it('returns null when useTokens and accommodation delta is zero', () => {
     expect(
-      getPaymentDelta(50, 50, true, false, rentalToken, 10, CloserCurrencies.EUR),
+      getPaymentDelta(
+        50,
+        50,
+        true,
+        false,
+        rentalToken,
+        10,
+        CloserCurrencies.EUR,
+      ),
     ).toBeNull();
+  });
+});
+
+describe('getResidualFiatAfterFullTokenStake', () => {
+  it('returns utility food and event only for tokens-staked full-token bookings', () => {
+    expect(
+      getResidualFiatAfterFullTokenStake({
+        status: 'tokens-staked',
+        rentalFiat: { val: 0, cur: 'EUR' },
+        utilityFiat: { val: 24, cur: 'EUR' },
+        foodFiat: { val: 12, cur: 'EUR' },
+        eventFiat: { val: 5, cur: 'EUR' },
+        total: { val: 251, cur: 'EUR' },
+      }),
+    ).toEqual({ val: 41, cur: CloserCurrencies.EUR });
+  });
+
+  it('returns utility food and event when tokens fully cover despite wiped rentalFiat', () => {
+    expect(
+      getResidualFiatAfterFullTokenStake({
+        status: 'tokens-staked',
+        rentalFiat: { val: 210, cur: 'EUR' },
+        utilityFiat: { val: 24, cur: 'EUR' },
+        tokensStaked: { val: 6, cur: 'TDF' },
+        duration: 6,
+        adults: 1,
+        dailyRentalToken: { val: 1 },
+        total: { val: 234, cur: 'EUR' },
+      }),
+    ).toEqual({ val: 24, cur: CloserCurrencies.EUR });
+  });
+
+  it('returns null for partial tokens-staked bookings with outstanding rental fiat', () => {
+    expect(
+      getResidualFiatAfterFullTokenStake({
+        status: 'tokens-staked',
+        rentalFiat: { val: 105, cur: 'EUR' },
+        utilityFiat: { val: 24, cur: 'EUR' },
+        tokensStaked: { val: 3, cur: 'TDF' },
+        duration: 6,
+        adults: 1,
+        dailyRentalToken: { val: 1 },
+      }),
+    ).toBeNull();
+  });
+
+  it('returns utility food and event only for credits-paid bookings', () => {
+    expect(
+      getResidualFiatAfterFullTokenStake({
+        status: 'credits-paid',
+        useCredits: true,
+        rentalFiat: { val: 0, cur: 'EUR' },
+        utilityFiat: { val: 24, cur: 'EUR' },
+        foodFiat: { val: 0, cur: 'EUR' },
+        eventFiat: { val: 10, cur: 'EUR' },
+        total: { val: 244, cur: 'EUR' },
+      }),
+    ).toEqual({ val: 34, cur: CloserCurrencies.EUR });
+  });
+
+  it('returns null for partial credits-paid bookings with outstanding rental fiat', () => {
+    expect(
+      getResidualFiatAfterFullTokenStake({
+        status: 'credits-paid',
+        useCredits: true,
+        rentalFiat: { val: 100, cur: 'EUR' },
+        utilityFiat: { val: 24, cur: 'EUR' },
+      }),
+    ).toBeNull();
+  });
+
+  it('returns null for confirmed bookings', () => {
+    expect(
+      getResidualFiatAfterFullTokenStake({
+        status: 'confirmed',
+        utilityFiat: { val: 24, cur: 'EUR' },
+      }),
+    ).toBeNull();
+  });
+
+  it('returns utility fiat when tokens-staked and accommodation fully covered', () => {
+    expect(
+      getResidualFiatAfterFullTokenStake({
+        status: 'tokens-staked',
+        rentalFiat: { val: 0, cur: 'EUR' },
+        utilityFiat: { val: 24, cur: 'EUR' },
+        tokensStaked: { val: 6, cur: 'TDF' },
+        duration: 6,
+        adults: 1,
+        dailyRentalToken: { val: 1 },
+        total: { val: 24, cur: 'EUR' },
+      }),
+    ).toEqual({ val: 24, cur: CloserCurrencies.EUR });
+  });
+
+  it('returns null for credits-paid when useCredits is false', () => {
+    expect(
+      getResidualFiatAfterFullTokenStake({
+        status: 'credits-paid',
+        useCredits: false,
+        utilityFiat: { val: 24, cur: 'EUR' },
+      }),
+    ).toBeNull();
+  });
+
+  it('uses numeric tokensStaked to cover wiped rentalFiat after stake', () => {
+    expect(
+      getResidualFiatAfterFullTokenStake({
+        status: 'tokens-staked',
+        rentalFiat: { val: 60, cur: 'EUR' },
+        utilityFiat: { val: 6, cur: 'EUR' },
+        eventFiat: { val: 199, cur: 'EUR' },
+        tokensStaked: 0.03,
+        duration: 3,
+        adults: 1,
+        dailyRentalToken: { val: 0.01 },
+        total: { val: 265, cur: 'EUR' },
+      }),
+    ).toEqual({ val: 205, cur: CloserCurrencies.EUR });
+  });
+});
+
+describe('resolveTokensStakedVal', () => {
+  it('prefers tokensStaked field when present', () => {
+    expect(
+      resolveTokensStakedVal({
+        tokensStaked: { val: 6 },
+        charges: [
+          {
+            method: 'tokens',
+            status: 'paid',
+            lockedStake: { val: 3 },
+          },
+        ],
+      }),
+    ).toBe(6);
+  });
+
+  it('falls back to paid token charge lockedStake', () => {
+    expect(
+      resolveTokensStakedVal({
+        tokensStaked: undefined,
+        charges: [
+          {
+            method: 'tokens',
+            status: 'paid',
+            lockedStake: { val: 0.03 },
+          },
+        ],
+        rentalToken: { val: 0.03 },
+      }),
+    ).toBe(0.03);
+  });
+});
+
+describe('resolveCheckoutFiatTotal', () => {
+  it('prefers positive residual over zero paymentDelta', () => {
+    expect(
+      resolveCheckoutFiatTotal({
+        residualFiatAfterTokenStake: { val: 24, cur: CloserCurrencies.EUR },
+        paymentDeltaFiat: { val: 0, cur: 'EUR' },
+        total: { val: 234, cur: 'EUR' },
+      }),
+    ).toEqual({ val: 24, cur: CloserCurrencies.EUR });
+  });
+
+  it('falls back to paymentDelta when residual is zero but delta has fiat due', () => {
+    expect(
+      resolveCheckoutFiatTotal({
+        residualFiatAfterTokenStake: { val: 0, cur: CloserCurrencies.EUR },
+        paymentDeltaFiat: { val: 24, cur: 'EUR' },
+        total: { val: 234, cur: 'EUR' },
+      }),
+    ).toEqual({ val: 24, cur: CloserCurrencies.EUR });
+  });
+
+  it('uses paymentDelta or total when residual is unavailable', () => {
+    expect(
+      resolveCheckoutFiatTotal({
+        residualFiatAfterTokenStake: null,
+        paymentDeltaFiat: { val: 60, cur: 'EUR' },
+        total: { val: 234, cur: 'EUR' },
+      }),
+    ).toEqual({ val: 60, cur: CloserCurrencies.EUR });
+  });
+});
+
+describe('hasOnChainAccommodationStake', () => {
+  it('returns true when checkContract reports success', async () => {
+    await expect(
+      hasOnChainAccommodationStake(async () => ({ success: true })),
+    ).resolves.toBe(true);
+  });
+
+  it('returns false when checkContract is missing or unsuccessful', async () => {
+    await expect(hasOnChainAccommodationStake()).resolves.toBe(false);
+    await expect(
+      hasOnChainAccommodationStake(async () => ({ success: false })),
+    ).resolves.toBe(false);
+  });
+});
+
+describe('isUnsyncedOnChainTokenStakeError', () => {
+  it('matches known unsynced stake messages', () => {
+    expect(
+      isUnsyncedOnChainTokenStakeError(
+        'Your tokens are staked on the blockchain but this booking is not updated yet. Please refresh the page and try again.',
+      ),
+    ).toBe(true);
+  });
+});
+
+describe('isFullAccommodationCoveredByTokens', () => {
+  it('returns false for partial token stake with outstanding rental fiat', () => {
+    expect(
+      isFullAccommodationCoveredByTokens({
+        rentalFiat: { val: 105, cur: 'EUR' },
+        tokensStaked: { val: 3, cur: 'TDF' },
+        duration: 6,
+        adults: 1,
+        dailyRentalToken: { val: 1 },
+      }),
+    ).toBe(false);
+  });
+
+  it('returns true when staked amount covers full formula threshold', () => {
+    expect(
+      isFullAccommodationCoveredByTokens({
+        rentalFiat: { val: 210, cur: 'EUR' },
+        tokensStaked: { val: 6, cur: 'TDF' },
+        duration: 6,
+        adults: 1,
+        dailyRentalToken: { val: 1 },
+      }),
+    ).toBe(true);
+  });
+
+  it('returns false for private listing when stake covers one space but guests need two', () => {
+    expect(
+      isFullAccommodationCoveredByTokens({
+        rentalFiat: { val: 210, cur: 'EUR' },
+        tokensStaked: { val: 6, cur: 'TDF' },
+        duration: 6,
+        adults: 3,
+        dailyRentalToken: { val: 1 },
+        listingPrivate: true,
+        listingBeds: 2,
+      }),
+    ).toBe(false);
+  });
+});
+
+describe('isTokenPaymentVerified', () => {
+  it('accepts boolean true and verified objects with ok true', () => {
+    expect(isTokenPaymentVerified({ data: { verified: true } })).toBe(true);
+    expect(isTokenPaymentVerified({ data: { verified: { ok: true } } })).toBe(
+      true,
+    );
+  });
+
+  it('rejects false, missing, and failed verification objects', () => {
+    expect(isTokenPaymentVerified({ data: { verified: false } })).toBe(false);
+    expect(isTokenPaymentVerified({ data: {} })).toBe(false);
+    expect(isTokenPaymentVerified({})).toBe(false);
+    expect(isTokenPaymentVerified({ data: { verified: { ok: false } } })).toBe(
+      false,
+    );
   });
 });
