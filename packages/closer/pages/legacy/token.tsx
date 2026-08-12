@@ -23,7 +23,7 @@ import {
   GeneralConfig,
   Listing,
   TokenStats,
-  Web3Config,
+  TokenConfig,
 } from '../../types';
 import { PageMetaOverride } from '../../types/page';
 import api from '../../utils/api';
@@ -50,8 +50,8 @@ interface Props {
 
 const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
-  const web3Config = getCachedConfig('web3') as Web3Config | null;
-  const initialSaleHardCap = Number(web3Config?.maxSupply) || 0;
+  const tokenConfig = getCachedConfig('token') as TokenConfig | null;
+  const initialSaleHardCap = Number(tokenConfig?.maxSupply) || 0;
   const t = useTranslations();
   const defaultConfig = useConfig();
   const { getCurrentSupplyWithoutWallet, getSaleHardCapWithoutWallet } = useBuyTokens();

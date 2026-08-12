@@ -5,18 +5,19 @@ import { useRouter } from 'next/router';
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import EmailDisplay from '../../components/display/emailDisplay';
-import WalletDisplay from '../../components/display/walletDisplay';
 import AmbassadorBadge from '../../components/AmbassadorBadge';
 import CitizenSubscriptionProgress from '../../components/CitizenSubscriptionProgress';
 import EventsList from '../../components/EventsList';
 import FinancedTokenProgress from '../../components/FinancedTokenProgress';
 import Modal from '../../components/Modal';
+import RoleTag, { getRoleTagKey } from '../../components/RoleTag';
 import SubscriptionBadge from '../../components/SubscriptionBadge';
 import UploadPhoto from '../../components/UploadPhoto';
 import UserAvatarPlaceholder from '../../components/UserAvatarPlaceholder';
 import UserBookings from '../../components/UserBookings';
 import Vouching from '../../components/Vouching';
+import EmailDisplay from '../../components/display/emailDisplay';
+import WalletDisplay from '../../components/display/walletDisplay';
 import { Card } from '../../components/ui';
 import Button from '../../components/ui/Button';
 import Heading from '../../components/ui/Heading';
@@ -35,18 +36,16 @@ import {
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import config from '../../configCached';
 import { useAuth } from '../../contexts/auth';
-import { useAttendedEvents } from '../../hooks/useAttendedEvents';
 import { User, UserLink } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
+import { useAttendedEvents } from '../../hooks/useAttendedEvents';
 import { FinanceApplication } from '../../types';
 import { BookingConfig } from '../../types/api';
-import { GeneralConfig } from '../../types/api';
-import config from '../../configCached';
 import api, { cdn } from '../../utils/api';
-import { getCachedConfig } from '../../utils/cachedConfig.helpers';
-import { getUrlDisplayString } from '../../utils/display.helpers';
 import { parseMessageFromError } from '../../utils/common';
+import { getUrlDisplayString } from '../../utils/display.helpers';
 import PageNotFound from '../not-found';
 
 const ConnectedWallet =
@@ -67,7 +66,6 @@ interface MemberPageProps {
 }
 
 const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
-  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
   const {
     user: currentUser,
@@ -112,6 +110,26 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
   const [aboutDraft, setAboutDraft] = useState<string>(member?.about || '');
   const [isEditingAbout, setIsEditingAbout] = useState(false);
   const [isSavingAbout, setIsSavingAbout] = useState(false);
+
+  // Affiliates wear the ambassador chip without carrying the role, so they get
+  // an unlinked one — the rest of the row filters the member list by role.
+  const isAffiliateOnly = Boolean(
+    member?.affiliate && !member?.roles?.includes('ambassador'),
+  );
+
+  // `member` and `citizen` render as the same tag, so keep one of each and let
+  // ambassador lead — it is the standing people look for first.
+  const rolesToShow = useMemo(() => {
+    const seen = new Set<string>();
+    return (member?.roles || [])
+      .filter((role) => {
+        const key = getRoleTagKey(role);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .sort((a, b) => Number(b === 'ambassador') - Number(a === 'ambassador'));
+  }, [member?.roles]);
 
   const { eventIds: attendedEventIds } = useAttendedEvents(member?._id);
 
@@ -221,8 +239,10 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
 
   const checkIfReported = async () => {
     try {
+      // The endpoint answers with `{ results: { reported: boolean } }` — the
+      // envelope itself is always truthy, so read the flag inside it.
       const { data } = await api.get(`/report/user/${member._id}`);
-      setHasReported(!!data.results);
+      setHasReported(Boolean(data?.results?.reported));
     } catch (err) {
       console.error('Error checking if user is reported:', err);
     }
@@ -371,29 +391,26 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                         size="large"
                       />
                     </h3>
-                    {(member.affiliate ||
-                      member.roles?.includes('ambassador')) && (
-                      <AmbassadorBadge size="md" />
-                    )}
                   </div>
 
                   {/* Roles Tags */}
-                  <div className="mt-3 mb-4">
-                    {member.roles && (
-                      <div className="text-sm tags flex flex-wrap justify-center md:justify-start gap-2">
-                        {member.roles.map((role) => (
+                  {(rolesToShow.length > 0 || isAffiliateOnly) && (
+                    <div className="mt-3 mb-4">
+                      <div className="flex flex-wrap justify-center md:justify-start gap-2">
+                        {isAffiliateOnly && <AmbassadorBadge />}
+                        {rolesToShow.map((role) => (
                           <Link
                             as={`/members?role=${encodeURIComponent(role)}`}
                             href="/members"
                             key={role}
-                            className="tag bg-gray-400 hover:bg-gray-200 px-2 py-1 rounded-full"
+                            className="rounded-full transition-opacity hover:opacity-75"
                           >
-                            {role}
+                            <RoleTag role={role} />
                           </Link>
                         ))}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   {/* Action Buttons */}
                   {isAuthenticated && member?._id !== currentUser?._id && (
@@ -681,7 +698,9 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                           placeholder={t(
                             'settings_tell_us_more_about_yourself',
                           )}
-                          onChange={(event) => setAboutDraft(event.target.value)}
+                          onChange={(event) =>
+                            setAboutDraft(event.target.value)
+                          }
                         />
                         <div className="flex gap-2">
                           <Button
@@ -721,19 +740,15 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                   </div>
                 )}
 
-                {/* Vouching Section */}
-                {(isMember || isAdmin || isSpaceHost) && !isOwnProfile && (
+                {/* Vouching Section — every citizen sees it, including on
+                    their own profile, where it lists who vouched for them. */}
+                {(isMember || isAdmin || isSpaceHost) && (
                   <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h4 className="font-medium text-xl mb-4">
-                      {t('members_slug_vouching')}
-                    </h4>
                     <Vouching
                       vouchData={member?.vouched || []}
                       myId={currentUser?._id}
                       userId={member._id}
-                      minVouchingStayDuration={
-                        Number(generalConfig?.minVouchingStayDuration) || 14
-                      }
+                      memberName={member.screenname}
                     />
                   </div>
                 )}
@@ -1323,7 +1338,7 @@ MemberPage.getInitialProps = async (context: NextPageContext) => {
     return {
       loadError: parseMessageFromError(err),
       bookingConfig: null,
-      };
+    };
   }
 };
 

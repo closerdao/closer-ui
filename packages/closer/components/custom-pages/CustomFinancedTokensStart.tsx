@@ -41,7 +41,7 @@ const CustomFinancedTokensStart = ({ content }: Props) => {
   const ctaText = pick(content?.ctaText, t('citizenship_start_financed_plan'));
   const defaultLink = user?.roles?.includes('member')
     ? '/token/finance'
-    : '/subscriptions/citizen/why';
+    : '/citizenship/why';
   const ctaLink = content?.ctaLink?.trim() || defaultLink;
 
   return (

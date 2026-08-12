@@ -218,14 +218,6 @@ export const configDescription: ConfigType[] = [
         type: 'boolean',
         default: true,
       },
-      downPaymentPercent: {
-        type: 'number',
-        default: 10,
-      },
-      tokenPriceModifierPercent: {
-        type: 'number',
-        default: 5,
-      },
       minVouches: {
         type: 'number',
         default: 3,
@@ -967,7 +959,12 @@ export const configDescription: ConfigType[] = [
     },
   },
   {
-    slug: 'web3',
+    // Was `web3`; stored config documents still use that slug, so
+    // `getLegacyTokenConfigValue` reads through to it. The financed-purchase
+    // terms live here rather than on `citizenship`: financing tokens and
+    // applying for citizenship are separate flows, and either can happen
+    // without the other.
+    slug: 'token',
     value: {
       enabled: {
         type: 'boolean',
@@ -988,6 +985,23 @@ export const configDescription: ConfigType[] = [
       maxSupply: {
         type: 'number',
         default: 0,
+      },
+      downPaymentPercent: {
+        type: 'number',
+        default: 10,
+      },
+      // Neutral by default: platforms that have not opted into the new section
+      // yet fall back to these, and a 0% modifier keeps the financed price
+      // identical to the spot token price.
+      tokenPriceModifierPercent: {
+        type: 'number',
+        default: 0,
+      },
+      // Comma separated list of the repayment terms buyers can pick from. A
+      // single entry hides the picker and just uses that term.
+      financingDurationsMonths: {
+        type: 'text',
+        default: '36',
       },
     },
   },

@@ -300,6 +300,30 @@ export const BLOCK_INSPECTOR_CONFIGS: Partial<
       { key: 'ctaLink', labelKey: 'pages_editor_field_cta_url' },
     ],
   },
+  citizenshipStatus: {
+    hint: 'pages_editor_citizenship_status_hint',
+    settingsFields: [
+      {
+        key: 'showBalances',
+        labelKey: 'pages_editor_field_show_balances',
+        type: 'checkbox',
+        defaultValue: true,
+      },
+    ],
+    fields: [
+      { key: 'title', labelKey: 'pages_editor_field_title' },
+      {
+        key: 'description',
+        labelKey: 'pages_editor_field_description',
+        type: 'textarea',
+      },
+      { key: 'ctaText', labelKey: 'pages_editor_field_cta_text' },
+      { key: 'ctaLink', labelKey: 'pages_editor_field_cta_url' },
+    ],
+    stringListKey: 'items',
+    stringListLabelKey: 'pages_editor_field_benefits',
+    stringListAddLabelKey: 'pages_editor_add_item',
+  },
   financedTokensStart: {
     fields: [
       { key: 'title', labelKey: 'pages_editor_field_title' },

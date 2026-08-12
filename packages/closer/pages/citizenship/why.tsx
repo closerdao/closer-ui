@@ -3,23 +3,21 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useRef, useState } from 'react';
 
-import CitizenWhy from '../../../components/CitizenWhy';
-import { Button, Heading, ProgressBar } from '../../../components/ui';
+import CitizenWhy from '../../components/CitizenWhy';
+import { Button, Heading, ProgressBar } from '../../components/ui';
 
 import { NextPage } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { SUBSCRIPTION_CITIZEN_STEPS } from '../../../constants';
-import { useAuth } from '../../../contexts/auth';
-import { usePlatform } from '../../../contexts/platform';
-import { useConfig } from '../../../hooks/useConfig';
-import {
-  CitizenApplication,
-  SubscriptionPlan,
-} from '../../../types/subscriptions';
-import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
-import { logMetric } from '../../../utils/metrics';
-import PageNotFound from '../../not-found';
+import { SUBSCRIPTION_CITIZEN_STEPS } from '../../constants';
+import { useAuth } from '../../contexts/auth';
+import { usePlatform } from '../../contexts/platform';
+import { useConfig } from '../../hooks/useConfig';
+import { CitizenshipConfig } from '../../types/api';
+import { CitizenApplication } from '../../types/subscriptions';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { logMetric } from '../../utils/metrics';
+import PageNotFound from '../not-found';
 
 interface PlatformContext {
   user: {
@@ -29,10 +27,9 @@ interface PlatformContext {
 }
 
 const CitizenWhyPage: NextPage = () => {
-  const subscriptionsConfig = getCachedConfig('subscriptions') as {
-    enabled: boolean;
-    elements: SubscriptionPlan[];
-  };
+  const citizenshipConfig = getCachedConfig(
+    'citizenship',
+  ) as CitizenshipConfig | null;
   const t = useTranslations();
   const { isLoading, user, refetchUser } = useAuth();
   const { PLATFORM_NAME } = useConfig();
@@ -40,9 +37,7 @@ const CitizenWhyPage: NextPage = () => {
 
   const router = useRouter();
 
-  const areSubscriptionsEnabled =
-    subscriptionsConfig?.enabled &&
-    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
+  const isCitizenshipEnabled = Boolean(citizenshipConfig?.enabled);
   const isMember = user?.roles?.includes('member');
 
   const citizenshipStatus = user?.citizenship?.status;
@@ -96,7 +91,7 @@ const CitizenWhyPage: NextPage = () => {
     }
 
     if (!citizenshipStatus && (hasSubmittedWhy || isMember)) {
-      router.replace('/subscriptions/citizen/validation');
+      router.replace('/citizenship/validation');
       return;
     }
 
@@ -180,10 +175,10 @@ const CitizenWhyPage: NextPage = () => {
       console.error('error with citizen application:', error);
     }
 
-    router.push('/subscriptions/citizen/validation?intent=apply');
+    router.push('/citizenship/validation?intent=apply');
   };
 
-  if (!areSubscriptionsEnabled) {
+  if (!isCitizenshipEnabled) {
     return <PageNotFound error="" />;
   }
 

@@ -294,6 +294,16 @@ export const SUBSCRIPTION_STEPS = [
 
 export const SUBSCRIPTION_CITIZEN_STEPS = ['why', 'validation', 'success'];
 
+/**
+ * Financed token plans are only sold in whole blocks (30, 60, 90, 120 tokens),
+ * so any "finance N tokens" copy has to round up to the next block.
+ */
+export const TOKEN_FINANCING_INCREMENT = 30;
+
+export const roundUpToFinancingIncrement = (tokens: number) =>
+  Math.max(1, Math.ceil(tokens / TOKEN_FINANCING_INCREMENT)) *
+  TOKEN_FINANCING_INCREMENT;
+
 export const TOKEN_SALE_STEPS = [
   'before-you-begin',
   'checklist-crypto',

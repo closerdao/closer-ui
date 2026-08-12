@@ -10,6 +10,14 @@ import {
 } from '../constants/shared.constants';
 import { WalletDispatch, WalletState } from '../contexts/wallet';
 import { checkIfBookingEqBlockchain } from '../utils/helpers';
+import {
+  buildLaterYearStakeConflictError,
+  detectLaterYearStakeConflict,
+} from '../utils/laterYearStakeConflict.helpers';
+import {
+  SOLIDITY_PANIC_UNDERFLOW,
+  getSolidityPanicCode,
+} from '../utils/smartContractErrorParser';
 import { BOOK_ACCOMMODATION_TX_REVERTED_PREFIX } from '../utils/stakeBookingError.helpers';
 import { useConfig } from './useConfig';
 
@@ -195,6 +203,7 @@ export const useBookingSmartContract = ({ bookingNights }) => {
       );
 
       const bookingYear = Number(nights[0][0]);
+      let bookingYearEndTm = null;
       try {
         const [yearGate, yearStruct] = await Diamond.getAccommodationYear(
           bookingYear,
@@ -207,6 +216,7 @@ export const useBookingSmartContract = ({ bookingNights }) => {
             success: null,
           };
         }
+        bookingYearEndTm = yearStruct.end ?? null;
       } catch (yearErr) {
         console.log('getAccommodationYear preflight failed', yearErr);
       }
@@ -229,6 +239,39 @@ export const useBookingSmartContract = ({ bookingNights }) => {
       } catch (staticErr) {
         if (isBookingAlreadyExistsError(staticErr)) {
           return { error: null, success: { transactionId: 'existing' } };
+        }
+        // StakeLibV2.handleBooking subtracts the whole stake ledger dated after
+        // this year's end from a SINGLE night's price, so a larger later-year
+        // stake underflows and reverts every night of this booking. Only
+        // diagnose once the simulation has actually failed that way — when the
+        // later-year stake already covers the required balance the facet
+        // short-circuits and the booking succeeds.
+        if (
+          getSolidityPanicCode(staticErr) === SOLIDITY_PANIC_UNDERFLOW &&
+          bookingYearEndTm &&
+          Diamond.depositsStakedFor
+        ) {
+          try {
+            const deposits = await Diamond.depositsStakedFor(account);
+            const conflict = detectLaterYearStakeConflict({
+              deposits,
+              yearEndTm: bookingYearEndTm,
+              pricePerNightWei: priceWeiForTx,
+            });
+            if (conflict) {
+              console.log('Token booking blocked by later-year stake', {
+                bookingYear,
+                laterYearStakeWei: conflict.laterYearStakeWei.toString(),
+                pricePerNightWei: priceWeiForTx.toString(),
+              });
+              return {
+                error: buildLaterYearStakeConflictError(conflict, bookingYear),
+                success: null,
+              };
+            }
+          } catch (stakeErr) {
+            console.log('depositsStakedFor diagnosis failed', stakeErr);
+          }
         }
         return { error: staticErr, success: null };
       }

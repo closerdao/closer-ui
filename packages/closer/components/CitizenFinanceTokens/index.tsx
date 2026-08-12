@@ -17,6 +17,8 @@ interface CitizenFinanceTokensProps {
     value: any,
   ) => void;
   tokenPriceModifierPercent: number;
+  downPaymentPercent: number;
+  durations: number[];
   isAgreementAccepted: boolean;
   handleNext: () => void;
   loading: boolean;
@@ -30,6 +32,8 @@ const CitizenFinanceTokens = ({
   application,
   updateApplication,
   tokenPriceModifierPercent,
+  downPaymentPercent,
+  durations,
   isAgreementAccepted,
   handleNext,
   loading,
@@ -51,10 +55,16 @@ const CitizenFinanceTokens = ({
       (totalToPayInFiat / (application?.tokensToFinance || 1)).toFixed(2),
     ) || 0;
 
-  const downPayment = Number((totalToPayInFiat * 0.1).toFixed(2)) || 0;
+  // The shortest offered term is the default so the quoted monthly payment is
+  // never lower than what the buyer ends up agreeing to.
+  const durationInMonths = application?.durationInMonths || durations[0];
+
+  const downPayment =
+    Number((totalToPayInFiat * (downPaymentPercent / 100)).toFixed(2)) || 0;
 
   const monthlyPayment =
-    Number(((totalToPayInFiat - downPayment) / 36).toFixed(2)) || 0;
+    Number(((totalToPayInFiat - downPayment) / durationInMonths).toFixed(2)) ||
+    0;
 
   const validateIban = (iban: string) => {
     if (!iban.trim()) {
@@ -108,7 +118,11 @@ const CitizenFinanceTokens = ({
 
       <p>{t('subscriptions_citizen_finance_tokens_details')}</p>
       <ul className="list-disc ml-4 font-bold">
-        <li>{t('subscriptions_citizen_finance_tokens_details_36_months')}</li>
+        <li>
+          {t('subscriptions_citizen_finance_tokens_details_months', {
+            months: durationInMonths,
+          })}
+        </li>
         <li>
           {t.rich('subscriptions_citizen_finance_tokens_details_stay_credits', {
             link: (chunks) => (
@@ -124,7 +138,9 @@ const CitizenFinanceTokens = ({
           })}
         </li>
         <li>
-          {t('subscriptions_citizen_finance_tokens_details_10_down_payment')}
+          {t('subscriptions_citizen_finance_tokens_details_down_payment', {
+            percent: downPaymentPercent,
+          })}
         </li>
         <li>
           {t('subscriptions_citizen_finance_tokens_details_tokens_accrued')}
@@ -186,6 +202,32 @@ const CitizenFinanceTokens = ({
         </div>
       </fieldset>
 
+      {durations.length > 1 && (
+        <>
+          <p>{t('subscriptions_citizen_finance_tokens_duration_question')}</p>
+          <fieldset className="flex flex-col gap-2">
+            {durations.map((months) => (
+              <div key={months} className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  id={`duration${months}`}
+                  name="durationChoice"
+                  className="w-4 h-4"
+                  checked={durationInMonths === months}
+                  onChange={() => updateApplication('durationInMonths', months)}
+                />
+                <label
+                  htmlFor={`duration${months}`}
+                  className="whitespace-nowrap"
+                >
+                  {months} {t('subscriptions_citizen_finance_tokens_months')}
+                </label>
+              </div>
+            ))}
+          </fieldset>
+        </>
+      )}
+
       <p>
         {t.rich('subscriptions_citizen_finance_tokens_you_have_chosen', {
           b: (chunks) => <strong>{chunks}</strong>,
@@ -204,8 +246,9 @@ const CitizenFinanceTokens = ({
             <span className="font-bold">
               {t('subscriptions_citizen_finance_tokens_total_cost')}
             </span>{' '}
-            {t('subscriptions_citizen_finance_tokens_total_cost_36_months', {
+            {t('subscriptions_citizen_finance_tokens_total_cost_months', {
               var: totalToPayInFiat,
+              months: durationInMonths,
             })}
           </li>
           <li className="pl-2">

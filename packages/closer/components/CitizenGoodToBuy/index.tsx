@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl';
 
+import { roundUpToFinancingIncrement } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import {
   CitizenApplication,
@@ -33,6 +34,10 @@ const CitizenGoodToBuy = ({
       ? tokensRequired - balanceTotal
       : tokensRequired;
 
+  // Financing is only sold in whole blocks of 30, so the label has to promise
+  // an amount people can actually pick on `/token/finance`.
+  const tokensToFinance = roundUpToFinancingIncrement(tokensToBuy);
+
   const options: {
     id: keyof CitizenTokenIntent;
     label: string;
@@ -58,10 +63,10 @@ const CitizenGoodToBuy = ({
       label: buyMore
         ? t('subscriptions_citizen_i_own_tokens_and_wish_to_finance_tokens', {
             var: tokensRequired,
-            amount: tokensToBuy,
+            amount: tokensToFinance,
           })
         : t('subscriptions_citizen_i_wish_to_finance_tokens', {
-            var: tokensToBuy,
+            var: tokensToFinance,
           }),
       intent: {
         iWantToApply: false,
@@ -99,10 +104,14 @@ const CitizenGoodToBuy = ({
             <label
               key={option.id}
               htmlFor={option.id}
-              className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-sm transition-colors ${
+              // Neutral borders only: these sit inside a quest card that turns
+              // accent-bordered once a token intent is picked, and an accent
+              // border inside an accent border reads as boxes in boxes. The
+              // accent radio dot carries the selected state instead.
+              className={`flex cursor-pointer items-center gap-3 rounded-xl border bg-white p-3 text-sm transition-colors ${
                 isSelected
-                  ? 'border-accent bg-accent-light/40 font-bold'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                  ? 'border-gray-400 font-bold shadow-sm'
+                  : 'border-gray-200 hover:border-gray-300'
               }`}
             >
               <input

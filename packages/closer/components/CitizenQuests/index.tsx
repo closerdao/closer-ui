@@ -66,6 +66,9 @@ const QuestCard = ({
 
 interface Props {
   hasStayedForMinDuration: boolean;
+  totalStayDays: number;
+  minStayDuration: number;
+  presenceProgress: number;
   isTokensComplete: boolean;
   isVouched: boolean;
   vouchCount: number;
@@ -78,6 +81,9 @@ interface Props {
 
 const CitizenQuests = ({
   hasStayedForMinDuration,
+  totalStayDays,
+  minStayDuration,
+  presenceProgress,
   isTokensComplete,
   isVouched,
   vouchCount,
@@ -109,10 +115,18 @@ const CitizenQuests = ({
           title={t('subscriptions_citizen_quest_presence_title')}
           tag={t('subscriptions_citizen_quest_presence_tag')}
           isComplete={hasStayedForMinDuration}
-          progress={hasStayedForMinDuration ? 1 : 0}
+          progress={presenceProgress}
         >
+          <p className="mb-1 text-sm font-bold">
+            {t('subscriptions_citizen_presence_progress', {
+              nights: totalStayDays,
+              required: minStayDuration,
+            })}
+          </p>
           <p className="mb-3 text-sm text-gray-600">
-            {t('subscriptions_citizen_stayed_for_min_duration')}
+            {t('subscriptions_citizen_stayed_for_min_duration', {
+              var: minStayDuration,
+            })}
           </p>
           {hasStayedForMinDuration ? (
             <p className="text-sm font-bold text-accent">

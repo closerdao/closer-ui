@@ -140,6 +140,8 @@ export interface FinanceApplicationCreateRequest {
   tokensToFinance: number;
   totalToPayInFiat: number;
   iban: string;
+  /** Repayment term, chosen from the `token` config's offered durations. */
+  durationInMonths?: number;
   isCitizenApplication: boolean;
   why?: string;
 }
