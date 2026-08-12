@@ -1388,7 +1388,9 @@ export function getBookingTokenCurrency(
   web3Config?: { bookingToken?: string } | null,
   bookingConfig?: { utilityTokenCur?: string } | null,
 ): string {
-  return web3Config?.bookingToken ?? bookingConfig?.utilityTokenCur ?? 'TDF';
+  // No branded fallback: a village that has configured no token must not
+  // inherit another village's token symbol (#946).
+  return web3Config?.bookingToken ?? bookingConfig?.utilityTokenCur ?? '';
 }
 
 export interface BookingStepUrlParams {
