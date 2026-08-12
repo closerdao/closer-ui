@@ -226,10 +226,10 @@ const ValidationCitizenPage: NextPage = () => {
     }
 
     if (application.intent.iWantToBuyTokens) {
+      const tokensMissing = tokensRequired - (balanceTotal || 0);
+      const tokensToBuy = tokensMissing > 0 ? tokensMissing : tokensRequired;
       router.push(
-        `/token/before-you-begin?citizenApplication=true&tokens=${
-          tokensRequired - (balanceTotal || 0)
-        }`,
+        `/token/before-you-begin?citizenApplication=true&tokens=${tokensToBuy}`,
       );
       return;
     }
@@ -316,6 +316,7 @@ const ValidationCitizenPage: NextPage = () => {
             hasStayedForMinDuration={hasStayedForMinDuration}
             isTokensComplete={isTokensComplete}
             isVouched={isVouched}
+            hasNoReports={hasNoReports}
             vouchCount={vouchCount}
             minVouches={minVouches}
             isSpaceHostVouchRequired={isSpaceHostVouchRequired}
@@ -335,6 +336,7 @@ const ValidationCitizenPage: NextPage = () => {
                 <CitizenGoodToBuy
                   updateApplication={updateApplication}
                   application={application}
+                  buyMore={ownsRequiredTokens}
                   balanceTotal={balanceTotal}
                   tokensRequired={tokensRequired}
                 />
