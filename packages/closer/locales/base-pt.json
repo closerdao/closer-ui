@@ -1460,6 +1460,8 @@
   "subscriptions_citizen_quest_tokens_tag": "Token de utilidade",
   "subscriptions_citizen_quest_vouch_title": "Obter Vouch",
   "subscriptions_citizen_quest_vouch_tag": "A comunidade decide",
+  "subscriptions_citizen_quest_reports_title": "Limpar Reportes",
+  "subscriptions_citizen_quest_reports_tag": "Reputação na comunidade",
   "subscriptions_citizen_quest_locked": "O vouch está bloqueado. Complete primeiro Presença e Tokens — a comunidade dá vouch a quem já apareceu.",
   "subscriptions_citizen_quest_complete": "Concluído",
   "subscriptions_citizen_apply": "Candidatar-se à cidadania",

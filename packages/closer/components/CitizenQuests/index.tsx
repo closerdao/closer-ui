@@ -202,8 +202,8 @@ const CitizenQuests = ({
       {showEligibilityQuests && !hasNoReports && (
         <QuestCard
           icon="🛡️"
-          title={t('subscriptions_citizen_no_reports')}
-          tag={t('subscriptions_citizen_not_eligible_reason')}
+          title={t('subscriptions_citizen_quest_reports_title')}
+          tag={t('subscriptions_citizen_quest_reports_tag')}
           isComplete={false}
           progress={0}
           className="sm:col-span-2"
