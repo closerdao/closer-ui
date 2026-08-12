@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 
 import { renderWithNextIntl } from '../../test/utils';
 import Vouching from './index';
@@ -22,6 +22,37 @@ jest.mock('../../contexts/platform', () => ({
   usePlatform: () => ({ platform: platformMock }),
 }));
 
+// The component reaches the real utils/api through the package barrel, so the
+// real file path is what has to be mocked here.
+jest.mock('../../utils/api.js', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn(() =>
+      Promise.resolve({ data: { results: { totalNights: 27 } } }),
+    ),
+    post: jest.fn(() => Promise.resolve({ data: {} })),
+    interceptors: {
+      request: { use: jest.fn() },
+      response: { use: jest.fn() },
+    },
+    defaults: { headers: {} },
+  },
+  cdn: '',
+  formatSearch: () => '',
+}));
+
+const api = jest.requireMock('../../utils/api.js').default as {
+  get: jest.Mock;
+  post: jest.Mock;
+};
+
+const stayedNights = (totalNights: number) =>
+  api.get.mockResolvedValue({ data: { results: { totalNights } } });
+
+beforeEach(() => {
+  stayedNights(27);
+});
+
 const vouchData = [
   {
     vouchedBy: 'voucher-1',
@@ -43,6 +74,7 @@ describe('Vouching', () => {
         memberName="Sam"
         vouchData={vouchData}
         myId="viewer-1"
+        minVouchingStayDuration={14}
       />,
     );
 
@@ -70,6 +102,7 @@ describe('Vouching', () => {
         memberName="Sam"
         vouchData={vouchData}
         myId="viewer-1"
+        minVouchingStayDuration={14}
       />,
     );
 
@@ -83,6 +116,7 @@ describe('Vouching', () => {
         memberName="Sam"
         vouchData={[]}
         myId="viewer-1"
+        minVouchingStayDuration={14}
       />,
     );
 
@@ -98,6 +132,7 @@ describe('Vouching', () => {
         memberName="Sam"
         vouchData={vouchData}
         myId="voucher-1"
+        minVouchingStayDuration={14}
       />,
     );
 
@@ -114,10 +149,52 @@ describe('Vouching', () => {
         memberName="Sam"
         vouchData={vouchData}
         myId="member-1"
+        minVouchingStayDuration={14}
       />,
     );
 
     expect(screen.getByRole('link', { name: 'Ana' })).toBeInTheDocument();
     expect(screen.queryByText(/Do you know Sam\?/i)).not.toBeInTheDocument();
+  });
+
+  it('lets you vouch once the stays endpoint reports enough nights', async () => {
+    stayedNights(27);
+
+    renderWithNextIntl(
+      <Vouching
+        userId="member-1"
+        memberName="Sam"
+        vouchData={vouchData}
+        myId="viewer-1"
+        minVouchingStayDuration={14}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Vouch/i })).toBeEnabled(),
+    );
+    expect(api.get).toHaveBeenCalledWith('/stays/nights/member-1');
+    expect(
+      screen.queryByText(/needs to stay for at least/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it('blocks vouching when the guest has not stayed enough nights', async () => {
+    stayedNights(5);
+
+    renderWithNextIntl(
+      <Vouching
+        userId="member-1"
+        memberName="Sam"
+        vouchData={vouchData}
+        myId="viewer-1"
+        minVouchingStayDuration={14}
+      />,
+    );
+
+    expect(
+      await screen.findByText(/at least 14 nights to be eligible/i),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Vouch/i })).toBeDisabled();
   });
 });

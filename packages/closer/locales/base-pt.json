@@ -2462,6 +2462,7 @@
   "projects_no_completed_projects": "Não há projetos concluídos no momento.",
   "bookings_dates_min_residence_stay_error": "A estadia mínima de residência é de {var} dias",
   "vouch_button": "Avaliar",
+  "vouch_min_duration_not_met": "O convidado precisa de ficar pelo menos {var} noites para ser elegível para avaliação",
   "vouch_already_vouched": "Já avaliou este membro",
   "vouch_count": "{count, plural, one {# avaliação} other {# avaliações}}",
   "vouch_unknown_member": "Um membro da comunidade",

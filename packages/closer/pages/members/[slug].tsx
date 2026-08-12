@@ -43,7 +43,9 @@ import { usePlatform } from '../../contexts/platform';
 import { useAttendedEvents } from '../../hooks/useAttendedEvents';
 import { FinanceApplication } from '../../types';
 import { BookingConfig } from '../../types/api';
+import { GeneralConfig } from '../../types/api';
 import api, { cdn } from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { getUrlDisplayString } from '../../utils/display.helpers';
 import PageNotFound from '../not-found';
@@ -66,6 +68,7 @@ interface MemberPageProps {
 }
 
 const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
   const {
     user: currentUser,
@@ -749,6 +752,9 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                       myId={currentUser?._id}
                       userId={member._id}
                       memberName={member.screenname}
+                      minVouchingStayDuration={
+                        Number(generalConfig?.minVouchingStayDuration) || 14
+                      }
                     />
                   </div>
                 )}

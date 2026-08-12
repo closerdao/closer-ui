@@ -23,11 +23,13 @@ const Vouching = ({
   memberName,
   vouchData,
   myId,
+  minVouchingStayDuration,
 }: {
   userId: string;
   memberName?: string;
   vouchData: Vouched[];
   myId: string | undefined;
+  minVouchingStayDuration: number;
 }) => {
   const t = useTranslations();
   const { platform }: any = usePlatform();
@@ -38,6 +40,8 @@ const Vouching = ({
   const [updatedVouchData, setUpdatedVouchData] = useState(vouchData);
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
   const [vouchMessage, setVouchMessage] = useState('');
+  /** null until the stays endpoint answers, so we never judge on a guess. */
+  const [totalNights, setTotalNights] = useState<number | null>(null);
 
   const isOwnProfile = Boolean(myId) && myId === userId;
   const hasBeenVouchedByMe = updatedVouchData?.some(
@@ -58,6 +62,9 @@ const Vouching = ({
 
   const vouchedUsers = platform.user.find(userFilter);
 
+  const hasStayedForMinDuration =
+    totalNights !== null && totalNights >= minVouchingStayDuration;
+
   // Newest vouch first, the way recommendations read elsewhere.
   const vouches = useMemo(() => {
     const vouchersById = new Map<string, User>(
@@ -77,7 +84,7 @@ const Vouching = ({
 
   useEffect(() => {
     loadData();
-  }, [userFilter]);
+  }, [userId, userFilter]);
 
   const vouchUser = async () => {
     try {
@@ -103,7 +110,11 @@ const Vouching = ({
   async function loadData() {
     try {
       setLoading(true);
-      await platform.user.get(userFilter);
+      const [staysRes] = await Promise.all([
+        api.get(`/stays/nights/${userId}`),
+        platform.user.get(userFilter),
+      ]);
+      setTotalNights(Number(staysRes?.data?.results?.totalNights) || 0);
     } catch (err) {
       setError(parseMessageFromError(err));
     } finally {
@@ -208,12 +219,20 @@ const Vouching = ({
             variant="primary"
             size="small"
             isFullWidth={false}
-            isEnabled={!loading}
+            isEnabled={hasStayedForMinDuration && !loading}
             onClick={openModal}
             className="flex items-center gap-2"
           >
             {t('vouch_button')} {loading && <Spinner />}
           </Button>
+          {/* Only once the stays endpoint answered — no message while loading. */}
+          {totalNights !== null && !hasStayedForMinDuration && (
+            <Information>
+              {t('vouch_min_duration_not_met', {
+                var: minVouchingStayDuration,
+              })}
+            </Information>
+          )}
         </div>
       )}
       {!isOwnProfile && hasBeenVouchedByMe && (
@@ -237,6 +256,7 @@ const Vouching = ({
             <Button
               variant="primary"
               isEnabled={
+                hasStayedForMinDuration &&
                 !hasBeenVouchedByMe &&
                 !loading &&
                 !success &&

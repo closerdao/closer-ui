@@ -2480,6 +2480,7 @@
   "projects_no_manager": "no manager",
   "bookings_dates_min_residence_stay_error": "Minimum residence stay is {var} days ",
   "vouch_button": "Vouch",
+  "vouch_min_duration_not_met": "The guest needs to stay for at least {var} nights to be eligible for vouching",
   "vouch_already_vouched": "You have already vouched for this member",
   "vouch_count": "{count, plural, one {# vouch} other {# vouches}}",
   "vouch_unknown_member": "A community member",
