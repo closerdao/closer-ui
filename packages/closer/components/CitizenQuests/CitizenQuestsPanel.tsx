@@ -42,6 +42,7 @@ const CitizenQuestsPanel = ({
     presenceProgress,
     isTokensComplete,
     isVouched,
+    hasNoReports,
     vouchCount,
     minVouches,
     isSpaceHostVouchRequired,
@@ -66,6 +67,7 @@ const CitizenQuestsPanel = ({
       presenceProgress={presenceProgress}
       isTokensComplete={isTokensComplete}
       isVouched={isVouched}
+      hasNoReports={hasNoReports}
       vouchCount={vouchCount}
       minVouches={minVouches}
       isSpaceHostVouchRequired={isSpaceHostVouchRequired}
@@ -86,6 +88,7 @@ const CitizenQuestsPanel = ({
             <CitizenGoodToBuy
               updateApplication={updateApplication}
               application={application}
+              buyMore={ownsRequiredTokens}
               balanceTotal={balanceTotal}
               tokensRequired={tokensRequired}
             />

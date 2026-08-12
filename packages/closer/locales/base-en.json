@@ -1476,6 +1476,8 @@
   "subscriptions_citizen_quest_tokens_tag": "Utility token",
   "subscriptions_citizen_quest_vouch_title": "Get Vouched",
   "subscriptions_citizen_quest_vouch_tag": "The community decides",
+  "subscriptions_citizen_quest_reports_title": "Clear Reports",
+  "subscriptions_citizen_quest_reports_tag": "Community standing",
   "subscriptions_citizen_quest_locked": "Vouching is locked. Complete Presence and Tokens first — the community vouches for people who have shown up.",
   "subscriptions_citizen_quest_complete": "Complete",
   "subscriptions_citizen_apply": "Apply for citizenship",

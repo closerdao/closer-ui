@@ -71,6 +71,7 @@ interface Props {
   presenceProgress: number;
   isTokensComplete: boolean;
   isVouched: boolean;
+  hasNoReports: boolean;
   vouchCount: number;
   minVouches: number;
   isSpaceHostVouchRequired?: boolean;
@@ -86,6 +87,7 @@ const CitizenQuests = ({
   presenceProgress,
   isTokensComplete,
   isVouched,
+  hasNoReports,
   vouchCount,
   minVouches,
   isSpaceHostVouchRequired,
@@ -208,6 +210,27 @@ const CitizenQuests = ({
               </p>
             )
           )}
+        </QuestCard>
+      )}
+
+      {showEligibilityQuests && !hasNoReports && (
+        <QuestCard
+          icon="🛡️"
+          title={t('subscriptions_citizen_quest_reports_title')}
+          tag={t('subscriptions_citizen_quest_reports_tag')}
+          isComplete={false}
+          progress={0}
+          className="sm:col-span-2"
+        >
+          <p className="text-sm text-gray-600">
+            {t('subscriptions_citizen_report_mistake')}{' '}
+            <a
+              className="text-primary underline"
+              href="mailto:space@traditionaldreamfactory.com"
+            >
+              space@traditionaldreamfactory.com
+            </a>
+          </p>
         </QuestCard>
       )}
     </div>

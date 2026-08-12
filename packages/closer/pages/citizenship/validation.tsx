@@ -139,10 +139,12 @@ const ValidationCitizenPage: NextPage = () => {
     }
 
     if (application.intent.iWantToBuyTokens) {
+      // People who already hold the required tokens can still buy more, and a
+      // zero/negative "missing" amount would send them to an empty checkout.
+      const tokensMissing = tokensRequired - (balanceTotal || 0);
+      const tokensToBuy = tokensMissing > 0 ? tokensMissing : tokensRequired;
       router.push(
-        `/token/before-you-begin?citizenApplication=true&tokens=${
-          tokensRequired - (balanceTotal || 0)
-        }`,
+        `/token/before-you-begin?citizenApplication=true&tokens=${tokensToBuy}`,
       );
       return;
     }
