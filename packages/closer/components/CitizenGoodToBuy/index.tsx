@@ -56,10 +56,10 @@ const CitizenGoodToBuy = ({
     {
       id: 'iWantToFinanceTokens',
       label: buyMore
-        ? t(
-            'subscriptions_citizen_i_own_tokens_and_wish_to_finance_tokens',
-            { var: tokensRequired, amount: tokensToBuy },
-          )
+        ? t('subscriptions_citizen_i_own_tokens_and_wish_to_finance_tokens', {
+            var: tokensRequired,
+            amount: tokensToBuy,
+          })
         : t('subscriptions_citizen_i_wish_to_finance_tokens', {
             var: tokensToBuy,
           }),
