@@ -91,8 +91,6 @@ const CitizenQuests = ({
   const { DISCORD_URL } = useConfig();
 
   const isVouchLocked = !hasStayedForMinDuration || !isTokensComplete;
-  const hasEnoughVouches =
-    isVouched || (minVouches <= 0 ? true : vouchCount >= minVouches);
   const vouchProgress = isVouched
     ? 1
     : minVouches <= 0
@@ -153,12 +151,12 @@ const CitizenQuests = ({
           <div className="mb-3 flex flex-wrap gap-2">
             <span
               className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${
-                hasEnoughVouches
+                isVouched
                   ? 'border-accent bg-accent-light text-accent'
                   : 'border-gray-200 bg-gray-50 text-gray-500'
               }`}
             >
-              {hasEnoughVouches && '✓ '}
+              {isVouched && '✓ '}
               {t('subscriptions_citizen_vouched_by_n_members', {
                 var: minVouches,
               })}
