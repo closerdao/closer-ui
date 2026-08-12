@@ -1,7 +1,10 @@
 const {
   fetchWithRetry,
+  getMissingExpectedSlugs,
+  isStaleSnapshotAllowed,
   redactUrl,
   resolveConfigApiUrl,
+  EXPECTED_CONFIG_SLUGS,
   FETCH_TIMEOUT_MS,
   MAX_ATTEMPTS,
   RETRY_DELAYS_MS,
@@ -286,5 +289,50 @@ describe('resolveConfigApiUrl', () => {
       apiUrl: 'https://api.example.closer.earth',
       isOverride: false,
     });
+  });
+});
+
+describe('isStaleSnapshotAllowed', () => {
+  it('is allowed only when ALLOW_STALE_CONFIG_SNAPSHOT is exactly "1"', () => {
+    expect(isStaleSnapshotAllowed({ ALLOW_STALE_CONFIG_SNAPSHOT: '1' })).toBe(
+      true,
+    );
+    expect(isStaleSnapshotAllowed({})).toBe(false);
+    expect(isStaleSnapshotAllowed({ ALLOW_STALE_CONFIG_SNAPSHOT: '' })).toBe(
+      false,
+    );
+    expect(isStaleSnapshotAllowed({ ALLOW_STALE_CONFIG_SNAPSHOT: 'true' })).toBe(
+      false,
+    );
+    expect(isStaleSnapshotAllowed({ ALLOW_STALE_CONFIG_SNAPSHOT: '0' })).toBe(
+      false,
+    );
+  });
+});
+
+describe('getMissingExpectedSlugs', () => {
+  const fullMap = () =>
+    Object.fromEntries(EXPECTED_CONFIG_SLUGS.map((slug) => [slug, {}]));
+
+  it('returns no missing slugs when every expected bucket is present', () => {
+    expect(getMissingExpectedSlugs(fullMap())).toEqual([]);
+  });
+
+  it('tolerates extra, unexpected slugs', () => {
+    expect(
+      getMissingExpectedSlugs({ ...fullMap(), 'photo-gallery': {} }),
+    ).toEqual([]);
+  });
+
+  it('lists every expected bucket that disappeared from the response', () => {
+    const map = fullMap();
+    delete map.general;
+    delete map.booking;
+    expect(getMissingExpectedSlugs(map)).toEqual(['booking', 'general']);
+  });
+
+  it('reports everything missing for an empty or absent payload', () => {
+    expect(getMissingExpectedSlugs({})).toEqual(EXPECTED_CONFIG_SLUGS);
+    expect(getMissingExpectedSlugs(undefined)).toEqual(EXPECTED_CONFIG_SLUGS);
   });
 });
