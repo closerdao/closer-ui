@@ -1,32 +1,39 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { NextPageContext } from 'next';
-import { useTranslations } from 'next-intl';
 
 import Heading from '../../components/ui/Heading';
 
-const SITE_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
+import { useConfig } from '../../hooks/useConfig';
+import { getSiteUrl } from '../../utils/siteUrl';
+
+const SITE_URL = getSiteUrl();
 
 const DigitalCommonsPage = () => {
   const t = useTranslations();
+  const { PLATFORM_NAME } = useConfig() || {};
 
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: 'Digital Commons at Trillion-Dollar Scale',
-    description: 'Open-source software creates $8.8 trillion in value. Wikipedia. DAOs managing billions. The digital age proves commons can work at unprecedented scale.',
+    description:
+      'Open-source software creates $8.8 trillion in value. Wikipedia. DAOs managing billions. The digital age proves commons can work at unprecedented scale.',
     author: {
       '@type': 'Organization',
       name: 'Closer',
-      url: SITE_URL,
+      ...(SITE_URL ? { url: SITE_URL } : {}),
     },
     publisher: {
       '@type': 'Organization',
       name: 'Closer',
-      url: SITE_URL,
+      ...(SITE_URL ? { url: SITE_URL } : {}),
     },
     mainEntityOfPage: `${SITE_URL}/philosophy/digital-commons`,
-    keywords: 'digital commons, open source software, Wikipedia, DAO, blockchain governance, Creative Commons, GitHub',
+    keywords:
+      'digital commons, open source software, Wikipedia, DAO, blockchain governance, Creative Commons, GitHub',
   };
 
   const stats = [
@@ -55,25 +62,54 @@ const DigitalCommonsPage = () => {
   return (
     <>
       <Head>
-        <title>Digital Commons at Trillion-Dollar Scale | Closer Philosophy</title>
+        <title>
+          Digital Commons at Trillion-Dollar Scale | Closer Philosophy
+        </title>
         <meta
           name="description"
           content="Open-source software creates $8.8 trillion in value. Wikipedia. DAOs managing billions. The digital age proves commons can work at unprecedented scale."
         />
-        <meta name="keywords" content="digital commons, open source software, Wikipedia, DAO, blockchain governance, Creative Commons, GitHub, decentralized governance" />
-        
-        <meta property="og:title" content="Digital Commons at Trillion-Dollar Scale" />
-        <meta property="og:description" content="Open-source software creates $8.8 trillion in value. Wikipedia. DAOs managing billions. The digital age proves commons can work at unprecedented scale." />
+        <meta
+          name="keywords"
+          content="digital commons, open source software, Wikipedia, DAO, blockchain governance, Creative Commons, GitHub, decentralized governance"
+        />
+
+        <meta
+          property="og:title"
+          content="Digital Commons at Trillion-Dollar Scale"
+        />
+        <meta
+          property="og:description"
+          content="Open-source software creates $8.8 trillion in value. Wikipedia. DAOs managing billions. The digital age proves commons can work at unprecedented scale."
+        />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content={`${SITE_URL}/philosophy/digital-commons`} />
-        <meta property="og:site_name" content="Closer" />
-        
+        {SITE_URL && (
+          <meta
+            property="og:url"
+            content={`${SITE_URL}/philosophy/digital-commons`}
+          />
+        )}
+        {PLATFORM_NAME && (
+          <meta property="og:site_name" content={PLATFORM_NAME} />
+        )}
+
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Digital Commons at Trillion-Dollar Scale" />
-        <meta name="twitter:description" content="Open-source software creates $8.8 trillion in value. The digital age proves commons can work at unprecedented scale." />
-        
-        <link rel="canonical" href={`${SITE_URL}/philosophy/digital-commons`} />
-        
+        <meta
+          name="twitter:title"
+          content="Digital Commons at Trillion-Dollar Scale"
+        />
+        <meta
+          name="twitter:description"
+          content="Open-source software creates $8.8 trillion in value. The digital age proves commons can work at unprecedented scale."
+        />
+
+        {SITE_URL && (
+          <link
+            rel="canonical"
+            href={`${SITE_URL}/philosophy/digital-commons`}
+          />
+        )}
+
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
@@ -158,11 +194,11 @@ const DigitalCommonsPage = () => {
             <p className="text-lg leading-relaxed mb-6">
               Bitcoin&apos;s 15-year governance track record demonstrates that
               leaderless, community-driven protocols can successfully navigate
-              contentious decisions. Ethereum&apos;s transition to proof-of-stake
-              in September 2022, the largest coordinated protocol upgrade in
-              cryptocurrency history, was achieved through years of public
-              debate, competing client teams, and ultimately validated by node
-              operators choosing to run updated software.
+              contentious decisions. Ethereum&apos;s transition to
+              proof-of-stake in September 2022, the largest coordinated protocol
+              upgrade in cryptocurrency history, was achieved through years of
+              public debate, competing client teams, and ultimately validated by
+              node operators choosing to run updated software.
             </p>
 
             <Heading level={2} className="text-2xl mb-4 mt-10">
@@ -272,6 +308,6 @@ DigitalCommonsPage.getInitialProps = async (context: NextPageContext) => {
   try {
     return {};
   } catch (err) {
-    return { error: err, };
+    return { error: err };
   }
 };

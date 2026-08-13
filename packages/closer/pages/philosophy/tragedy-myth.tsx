@@ -1,53 +1,81 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { NextPageContext } from 'next';
-import { useTranslations } from 'next-intl';
 
 import Heading from '../../components/ui/Heading';
 
-const SITE_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
+import { useConfig } from '../../hooks/useConfig';
+import { getSiteUrl } from '../../utils/siteUrl';
+
+const SITE_URL = getSiteUrl();
 
 const TragedyMythPage = () => {
   const t = useTranslations();
+  const { PLATFORM_NAME } = useConfig() || {};
 
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: 'The Tragedy of the Commons Myth',
-    description: 'Garrett Hardin\'s famous essay conflated unmanaged open access with governed commons. The historical record tells a different story.',
+    description:
+      "Garrett Hardin's famous essay conflated unmanaged open access with governed commons. The historical record tells a different story.",
     author: {
       '@type': 'Organization',
       name: 'Closer',
-      url: SITE_URL,
+      ...(SITE_URL ? { url: SITE_URL } : {}),
     },
     publisher: {
       '@type': 'Organization',
       name: 'Closer',
-      url: SITE_URL,
+      ...(SITE_URL ? { url: SITE_URL } : {}),
     },
     mainEntityOfPage: `${SITE_URL}/philosophy/tragedy-myth`,
-    keywords: 'tragedy of the commons, Garrett Hardin, commons myth, Elinor Ostrom, enclosure, commons history',
+    keywords:
+      'tragedy of the commons, Garrett Hardin, commons myth, Elinor Ostrom, enclosure, commons history',
   };
 
   return (
     <>
       <Head>
         <title>The Tragedy of the Commons Myth | Closer Philosophy</title>
-        <meta name="description" content="Garrett Hardin's famous essay conflated unmanaged open access with governed commons. The historical record of successful commons spanning centuries tells a different story." />
-        <meta name="keywords" content="tragedy of the commons, Garrett Hardin, commons myth, Elinor Ostrom, enclosure, commons history, shared resources" />
-        
+        <meta
+          name="description"
+          content="Garrett Hardin's famous essay conflated unmanaged open access with governed commons. The historical record of successful commons spanning centuries tells a different story."
+        />
+        <meta
+          name="keywords"
+          content="tragedy of the commons, Garrett Hardin, commons myth, Elinor Ostrom, enclosure, commons history, shared resources"
+        />
+
         <meta property="og:title" content="The Tragedy of the Commons Myth" />
-        <meta property="og:description" content="Garrett Hardin's famous essay conflated unmanaged open access with governed commons. The historical record tells a different story." />
+        <meta
+          property="og:description"
+          content="Garrett Hardin's famous essay conflated unmanaged open access with governed commons. The historical record tells a different story."
+        />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content={`${SITE_URL}/philosophy/tragedy-myth`} />
-        <meta property="og:site_name" content="Closer" />
-        
+        {SITE_URL && (
+          <meta
+            property="og:url"
+            content={`${SITE_URL}/philosophy/tragedy-myth`}
+          />
+        )}
+        {PLATFORM_NAME && (
+          <meta property="og:site_name" content={PLATFORM_NAME} />
+        )}
+
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="The Tragedy of the Commons Myth" />
-        <meta name="twitter:description" content="Garrett Hardin's famous essay conflated unmanaged open access with governed commons." />
-        
-        <link rel="canonical" href={`${SITE_URL}/philosophy/tragedy-myth`} />
-        
+        <meta
+          name="twitter:description"
+          content="Garrett Hardin's famous essay conflated unmanaged open access with governed commons."
+        />
+
+        {SITE_URL && (
+          <link rel="canonical" href={`${SITE_URL}/philosophy/tragedy-myth`} />
+        )}
+
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
@@ -81,9 +109,9 @@ const TragedyMythPage = () => {
               Commons&rdquo; became one of the most cited articles in
               environmental discourse. Yet its actual arguments are widely
               misunderstood. Hardin&apos;s primary focus was population control,
-              not resource management. His opening thesis declared:
-              &ldquo;The population problem has no technical solution; it
-              requires a fundamental extension in morality.&rdquo;
+              not resource management. His opening thesis declared: &ldquo;The
+              population problem has no technical solution; it requires a
+              fundamental extension in morality.&rdquo;
             </p>
 
             <div className="bg-accent/10 border-l-4 border-accent p-6 my-8">
@@ -101,9 +129,9 @@ const TragedyMythPage = () => {
             </Heading>
             <p className="text-lg leading-relaxed mb-6">
               Academic critics identified Hardin&apos;s conflation of
-              &ldquo;open access&rdquo; with &ldquo;common property&rdquo; as his
-              fundamental error. As economist Susan Jane Buck Cox documented in
-              her 1985 study:
+              &ldquo;open access&rdquo; with &ldquo;common property&rdquo; as
+              his fundamental error. As economist Susan Jane Buck Cox documented
+              in her 1985 study:
             </p>
 
             <div className="bg-complimentary/10 border-l-4 border-complimentary p-6 my-8">
@@ -256,6 +284,6 @@ TragedyMythPage.getInitialProps = async (context: NextPageContext) => {
   try {
     return {};
   } catch (err) {
-    return { error: err, };
+    return { error: err };
   }
 };

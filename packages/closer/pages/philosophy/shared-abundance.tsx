@@ -1,32 +1,39 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { NextPageContext } from 'next';
-import { useTranslations } from 'next-intl';
 
 import Heading from '../../components/ui/Heading';
 
-const SITE_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
+import { useConfig } from '../../hooks/useConfig';
+import { getSiteUrl } from '../../utils/siteUrl';
+
+const SITE_URL = getSiteUrl();
 
 const SharedAbundancePage = () => {
   const t = useTranslations();
+  const { PLATFORM_NAME } = useConfig() || {};
 
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: 'Building Shared Abundance',
-    description: 'From Swiss alpine villages to Balinese rice terraces, communities have governed shared resources for centuries. Now we build the exclosures that protect them.',
+    description:
+      'From Swiss alpine villages to Balinese rice terraces, communities have governed shared resources for centuries. Now we build the exclosures that protect them.',
     author: {
       '@type': 'Organization',
       name: 'Closer',
-      url: SITE_URL,
+      ...(SITE_URL ? { url: SITE_URL } : {}),
     },
     publisher: {
       '@type': 'Organization',
       name: 'Closer',
-      url: SITE_URL,
+      ...(SITE_URL ? { url: SITE_URL } : {}),
     },
     mainEntityOfPage: `${SITE_URL}/philosophy/shared-abundance`,
-    keywords: 'shared abundance, regenerative communities, commons success, Swiss commons, Valencia Water Tribunal, community governance',
+    keywords:
+      'shared abundance, regenerative communities, commons success, Swiss commons, Valencia Water Tribunal, community governance',
   };
 
   const successStories = [
@@ -59,12 +66,14 @@ const SharedAbundancePage = () => {
   const outcomes = [
     {
       metric: '17-26%',
-      description: 'Lower deforestation on indigenous lands vs non-protected areas',
+      description:
+        'Lower deforestation on indigenous lands vs non-protected areas',
       source: 'Nature Sustainability, 2021',
     },
     {
       metric: '90%',
-      description: 'Of Amazon deforestation occurred outside indigenous territories',
+      description:
+        'Of Amazon deforestation occurred outside indigenous territories',
       source: 'FAO/FILAC, 2021',
     },
     {
@@ -74,7 +83,8 @@ const SharedAbundancePage = () => {
     },
     {
       metric: '100%',
-      description: 'Foreclosure prevention by Portland Proud Ground CLT over 26 years',
+      description:
+        'Foreclosure prevention by Portland Proud Ground CLT over 26 years',
       source: 'CLT research, 2022',
     },
   ];
@@ -87,20 +97,41 @@ const SharedAbundancePage = () => {
           name="description"
           content="From Swiss alpine villages to Balinese rice terraces, communities have governed shared resources for centuries. Now we build the exclosures that protect them."
         />
-        <meta name="keywords" content="shared abundance, regenerative communities, commons success, Swiss commons, Valencia Water Tribunal, community governance, exclosures" />
-        
+        <meta
+          name="keywords"
+          content="shared abundance, regenerative communities, commons success, Swiss commons, Valencia Water Tribunal, community governance, exclosures"
+        />
+
         <meta property="og:title" content="Building Shared Abundance" />
-        <meta property="og:description" content="From Swiss alpine villages to Balinese rice terraces, communities have governed shared resources for centuries." />
+        <meta
+          property="og:description"
+          content="From Swiss alpine villages to Balinese rice terraces, communities have governed shared resources for centuries."
+        />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content={`${SITE_URL}/philosophy/shared-abundance`} />
-        <meta property="og:site_name" content="Closer" />
-        
+        {SITE_URL && (
+          <meta
+            property="og:url"
+            content={`${SITE_URL}/philosophy/shared-abundance`}
+          />
+        )}
+        {PLATFORM_NAME && (
+          <meta property="og:site_name" content={PLATFORM_NAME} />
+        )}
+
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Building Shared Abundance" />
-        <meta name="twitter:description" content="From Swiss alpine villages to Balinese rice terraces, communities have governed shared resources for centuries." />
-        
-        <link rel="canonical" href={`${SITE_URL}/philosophy/shared-abundance`} />
-        
+        <meta
+          name="twitter:description"
+          content="From Swiss alpine villages to Balinese rice terraces, communities have governed shared resources for centuries."
+        />
+
+        {SITE_URL && (
+          <link
+            rel="canonical"
+            href={`${SITE_URL}/philosophy/shared-abundance`}
+          />
+        )}
+
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
@@ -179,7 +210,9 @@ const SharedAbundancePage = () => {
                   </span>
                   <div>
                     <p className="text-foreground">{outcome.description}</p>
-                    <p className="text-xs text-foreground/50">{outcome.source}</p>
+                    <p className="text-xs text-foreground/50">
+                      {outcome.source}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -326,6 +359,6 @@ SharedAbundancePage.getInitialProps = async (context: NextPageContext) => {
   try {
     return {};
   } catch (err) {
-    return { error: err, };
+    return { error: err };
   }
 };

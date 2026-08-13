@@ -17,25 +17,31 @@ import { useActiveSubscription } from '../../hooks/useActiveSubscription';
 import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import { PageMetaOverride } from '../../types/page';
-import { SubscriptionPlan, SubscriptionsConfig } from '../../types/subscriptions';
+import {
+  SubscriptionPlan,
+  SubscriptionsConfig,
+} from '../../types/subscriptions';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
-import { getPaidSubscriptionPlans } from '../../utils/subscriptions.helpers';
 import { logMetric } from '../../utils/metrics';
+import { getSiteUrl } from '../../utils/siteUrl';
 import {
   fetchPageMetaOverride,
   resolvePageMeta,
 } from '../../utils/standardPages';
+import { getPaidSubscriptionPlans } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
+
+const SITE_URL = getSiteUrl();
 
 interface Props {
   pageMeta?: PageMetaOverride | null;
 }
 
 const SubscriptionsPage: NextPage<Props> = ({ pageMeta }) => {
-  const subscriptionsConfig = getCachedConfig('subscriptions') as
-    | SubscriptionsConfig
-    | null;
+  const subscriptionsConfig = getCachedConfig(
+    'subscriptions',
+  ) as SubscriptionsConfig | null;
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const paymentConfig = getCachedConfig('payment') as {
     fiatCur?: string;
@@ -150,10 +156,9 @@ const SubscriptionsPage: NextPage<Props> = ({ pageMeta }) => {
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:type" content="website" />
-        <meta
-          property="og:url"
-          content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/subscriptions`}
-        />
+        {SITE_URL && (
+          <meta property="og:url" content={`${SITE_URL}/subscriptions`} />
+        )}
         {meta.ogImage ? (
           <meta property="og:image" content={meta.ogImage} />
         ) : null}
@@ -163,10 +168,9 @@ const SubscriptionsPage: NextPage<Props> = ({ pageMeta }) => {
         {meta.ogImage ? (
           <meta name="twitter:image" content={meta.ogImage} />
         ) : null}
-        <link
-          rel="canonical"
-          href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/subscriptions`}
-        />
+        {SITE_URL && (
+          <link rel="canonical" href={`${SITE_URL}/subscriptions`} />
+        )}
       </Head>
       <main className="pt-10 pb-14 flex flex-col gap-6">
         <div className="w-full text-center text-foreground flex flex-col gap-3">
@@ -174,9 +178,7 @@ const SubscriptionsPage: NextPage<Props> = ({ pageMeta }) => {
             {t('subscriptions_membership_badge')}
           </p>
           <Heading level={1} className="text-3xl md:text-5xl">
-            {singlePlan
-              ? singlePlan.title
-              : t('subscriptions_compare_heading')}
+            {singlePlan ? singlePlan.title : t('subscriptions_compare_heading')}
           </Heading>
           <p className="text-base md:text-xl text-foreground/80 max-w-xl mx-auto">
             {singlePlan
@@ -231,7 +233,10 @@ const SubscriptionsPage: NextPage<Props> = ({ pageMeta }) => {
           )}
         </div>
       </main>
-      <Webinar tags={['subscriptions-page']} analyticsCategory="Subscriptions" />
+      <Webinar
+        tags={['subscriptions-page']}
+        analyticsCategory="Subscriptions"
+      />
     </div>
   );
 };
