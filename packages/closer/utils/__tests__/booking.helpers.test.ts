@@ -4,6 +4,7 @@ import { PaymentType } from '../../types/booking';
 import {
   getAccommodationTotal,
   getBookingPaymentType,
+  getBookingTokenCurrency,
   getDisplayTotalFromComponents,
   getFiatTotal,
   getFoodTotal,
@@ -920,5 +921,24 @@ describe('isTokenPaymentVerified', () => {
     expect(isTokenPaymentVerified({ data: { verified: { ok: false } } })).toBe(
       false,
     );
+  });
+});
+
+describe('getBookingTokenCurrency', () => {
+  it('prefers a configured booking token', () => {
+    expect(
+      getBookingTokenCurrency({ bookingToken: 'ABC' }, { utilityTokenCur: 'XYZ' }),
+    ).toBe('ABC');
+  });
+
+  it("falls through a neutral-seeded '' bookingToken to the configured utility token", () => {
+    expect(
+      getBookingTokenCurrency({ bookingToken: '' }, { utilityTokenCur: 'XYZ' }),
+    ).toBe('XYZ');
+  });
+
+  it('returns empty — never a branded symbol — when nothing is configured', () => {
+    expect(getBookingTokenCurrency(null, null)).toBe('');
+    expect(getBookingTokenCurrency({ bookingToken: '' }, { utilityTokenCur: '' })).toBe('');
   });
 });

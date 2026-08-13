@@ -114,9 +114,9 @@ const BookingResult = ({
           <div className="flex-1 min-w-0">
             <p className="card-feature">{t('bookings_tokens_lock')}</p>
             <p className="text-sm">
-              {priceFormat(
-                { val: rentalToken.val, cur: rentalToken.cur ?? '' },
-              )}
+              {rentalToken.cur
+                ? priceFormat({ val: rentalToken.val, cur: rentalToken.cur })
+                : rentalToken.val}
             </p>
           </div>
         )}

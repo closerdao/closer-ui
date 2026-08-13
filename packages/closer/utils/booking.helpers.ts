@@ -1389,8 +1389,10 @@ export function getBookingTokenCurrency(
   bookingConfig?: { utilityTokenCur?: string } | null,
 ): string {
   // No branded fallback: a village that has configured no token must not
-  // inherit another village's token symbol (#946).
-  return web3Config?.bookingToken ?? bookingConfig?.utilityTokenCur ?? '';
+  // inherit another village's token symbol (#946). `||` not `??`: the neutral
+  // schema seeds bookingToken as '', which must not shadow a configured
+  // utilityTokenCur.
+  return web3Config?.bookingToken || bookingConfig?.utilityTokenCur || '';
 }
 
 export interface BookingStepUrlParams {
