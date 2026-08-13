@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 
 import CustomCTA from './CustomCTA';
 import CustomCitizenProgressBar from './CustomCitizenProgressBar';
+import CustomCitizenshipStatus from './CustomCitizenshipStatus';
 import CustomCohousingApplication from './CustomCohousingApplication';
 import CustomCollapsibleFaq from './CustomCollapsibleFaq';
 import CustomEventsCalendar from './CustomEventsCalendar';
@@ -96,6 +97,7 @@ const componentRegistry: Record<string, React.ComponentType<any>> = {
   supplyGraph: CustomSupplyGraph,
   priceHistory: CustomPriceHistory,
   citizenProgressBar: CustomCitizenProgressBar,
+  citizenshipStatus: CustomCitizenshipStatus,
   financedTokensStart: CustomFinancedTokensStart,
   cohousingApplication: CustomCohousingApplication,
   listingsPreviews: CustomListingsPreviews,

@@ -8,32 +8,29 @@ import {
   Heading,
   LinkButton,
   ProgressBar,
-} from '../../../components/ui/';
+} from '../../components/ui/';
 
 import { NextPage } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { SUBSCRIPTION_CITIZEN_STEPS } from '../../../constants';
-import { useAuth } from '../../../contexts/auth';
-import { useConfig } from '../../../hooks/useConfig';
-import { GeneralConfig } from '../../../types';
-import { SubscriptionPlan } from '../../../types/subscriptions';
-import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
-import { logMetric } from '../../../utils/metrics';
-import PageNotFound from '../../not-found';
+import { SUBSCRIPTION_CITIZEN_STEPS } from '../../constants';
+import { useAuth } from '../../contexts/auth';
+import { useConfig } from '../../hooks/useConfig';
+import { GeneralConfig } from '../../types';
+import { CitizenshipConfig } from '../../types/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { logMetric } from '../../utils/metrics';
+import PageNotFound from '../not-found';
 
 const SuccessCitizenPage: NextPage = () => {
-  const subscriptionsConfig = getCachedConfig('subscriptions') as {
-    enabled: boolean;
-    elements: SubscriptionPlan[];
-  };
+  const citizenshipConfig = getCachedConfig(
+    'citizenship',
+  ) as CitizenshipConfig | null;
 
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
 
-  const areSubscriptionsEnabled =
-    subscriptionsConfig?.enabled &&
-    process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';
+  const isCitizenshipEnabled = Boolean(citizenshipConfig?.enabled);
 
   const { isLoading, user, refetchUser } = useAuth();
   const isMember = user?.roles?.includes('member');
@@ -98,10 +95,10 @@ const SuccessCitizenPage: NextPage = () => {
   }, [user?.citizenship?.status, user?.roles]);
 
   const goBack = () => {
-    router.push('/subscriptions/citizen/validation');
+    router.push('/citizenship/validation');
   };
 
-  if (!areSubscriptionsEnabled) {
+  if (!isCitizenshipEnabled) {
     return <PageNotFound error="" />;
   }
 

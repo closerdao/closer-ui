@@ -25,6 +25,7 @@ export const BLOCK_TYPE_LABEL_KEYS: Partial<Record<SectionType, string>> = {
   supplyGraph: 'pages_editor_block_supply_graph',
   priceHistory: 'pages_editor_block_price_history',
   citizenProgressBar: 'pages_editor_block_citizen_progress',
+  citizenshipStatus: 'pages_editor_block_citizenship_status',
   financedTokensStart: 'pages_editor_block_financed_tokens',
   cohousingApplication: 'pages_editor_block_cohousing_application',
   volunteerCta: 'pages_editor_block_volunteer_cta',

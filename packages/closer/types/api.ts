@@ -191,10 +191,9 @@ export type ApplicationsConfig = {
 export type CitizenshipConfig = {
   enabled: boolean;
   isSpaceHostVouchRequired: boolean;
-  downPaymentPercent: number;
-  tokenPriceModifierPercent: number;
   minVouches: number;
   minVouchingStayDuration: number;
+  tokensRequired: number;
 };
 
 export type AffiliateConfig = {
@@ -256,12 +255,16 @@ export type PaymentConfig = {
   vatRate: number;
 };
 
-export type Web3Config = {
+export type TokenConfig = {
   enabled: boolean;
   reserveToken?: string;
   gasToken?: string;
   bookingToken?: string;
   maxSupply?: number | string;
+  downPaymentPercent?: number;
+  tokenPriceModifierPercent?: number;
+  /** Comma separated months, e.g. `'12,24,36'`. */
+  financingDurationsMonths?: string;
 };
 
 export type VolunteerConfig = {

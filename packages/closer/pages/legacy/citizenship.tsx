@@ -37,12 +37,16 @@ import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
-import { CitizenshipConfig } from '../../types/api';
+import { TokenConfig } from '../../types/api';
 import { PageMetaOverride } from '../../types/page';
 import { twitterUrlToHandle } from '../../utils/app.helpers';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import {
+  getDownPaymentPercent,
+  getFinancingDurations,
+} from '../../utils/tokenFinancing';
 import { linkedMetricFields, logMetric } from '../../utils/metrics';
 import {
   fetchPageMetaOverride,
@@ -72,8 +76,11 @@ const CitizenshipPage = ({
   customConfig = {} as { citizenTarget?: number; apiEndpoint?: string },
   pageMeta,
 }: CitizenshipPageProps) => {
-  const citizenshipConfig = (getCachedConfig('citizenship') ??
-    {}) as CitizenshipConfig;
+  const tokenConfig = (getCachedConfig('token') ?? {}) as TokenConfig;
+  const downPaymentPercent = getDownPaymentPercent(tokenConfig);
+  // This page only advertises a single headline monthly payment, so it quotes
+  // the shortest term on offer.
+  const durationInMonths = getFinancingDurations(tokenConfig)[0];
   const t = useTranslations();
   const config = useConfig();
   const twitterHandle = twitterUrlToHandle(config?.TWITTER_URL);
@@ -144,7 +151,7 @@ const CitizenshipPage = ({
 
   useEffect(() => {
     const calculateTokenPlans = async () => {
-      if (!isConfigReady || !citizenshipConfig) return;
+      if (!isConfigReady || !tokenConfig) return;
 
       try {
         setIsTokenPriceLoading(true);
@@ -169,7 +176,12 @@ const CitizenshipPage = ({
     };
 
     calculateTokenPlans();
-  }, [isConfigReady, citizenshipConfig?.tokenPriceModifierPercent]);
+  }, [
+    isConfigReady,
+    tokenConfig?.tokenPriceModifierPercent,
+    downPaymentPercent,
+    durationInMonths,
+  ]);
 
   const progress = Math.min(
     100,
@@ -178,27 +190,30 @@ const CitizenshipPage = ({
 
   // Calculate financed token prices
   const calculateFinancedPrice = async (tokens: number) => {
-    console.log('=== citizenshipConfig ===', citizenshipConfig);
+    console.log('=== tokenConfig ===', tokenConfig);
     if (!isConfigReady) return 0;
     try {
       const totalCost = await getTotalCostWithoutWallet(tokens.toString());
-      const priceModifier = citizenshipConfig?.tokenPriceModifierPercent || 0;
+      const priceModifier =
+        tokenConfig?.tokenPriceModifierPercent || 0;
       const totalToPayInFiat = Number(
         (totalCost * (1 + priceModifier / 100)).toFixed(2),
       );
-      const downPayment = Number((totalToPayInFiat * 0.1).toFixed(2));
+      const downPayment = Number(
+        (totalToPayInFiat * (downPaymentPercent / 100)).toFixed(2),
+      );
       const monthlyPayment = Number(
-        ((totalToPayInFiat - downPayment) / 36).toFixed(2),
+        ((totalToPayInFiat - downPayment) / durationInMonths).toFixed(2),
       );
 
       console.log(`Citizenship calculation for ${tokens} tokens:`, {
         totalCost,
         priceModifier,
-        priceModifierPercent: citizenshipConfig?.tokenPriceModifierPercent,
+        priceModifierPercent: tokenConfig?.tokenPriceModifierPercent,
         totalToPayInFiat,
         downPayment,
         monthlyPayment,
-        citizenshipConfig: citizenshipConfig,
+        tokenConfig,
       });
 
       return monthlyPayment;
@@ -363,7 +378,7 @@ const CitizenshipPage = ({
             {!user?.roles?.includes('member') && (
               <Button asChild size="lg" className="rounded-2xl px-6">
                 <Link
-                  href="/subscriptions/citizen/why"
+                  href="/citizenship/why"
                   onClick={() => {
                     void logMetric({
                       event: 'become-citizen-button-click',
@@ -608,7 +623,7 @@ const CitizenshipPage = ({
                       href={`${
                         user?.roles?.includes('member')
                           ? '/token/finance'
-                          : '/subscriptions/citizen/why'
+                          : '/citizenship/why'
                       }`}
                     >
                       {t('citizenship_start_financed_plan')}
@@ -680,7 +695,7 @@ const CitizenshipPage = ({
                   size="lg"
                   className="rounded-2xl bg-background text-accent hover:bg-background/90"
                 >
-                  <Link href="/subscriptions/citizen/why">
+                  <Link href="/citizenship/why">
                     {t('citizenship_cta_become_citizen')}
                   </Link>
                 </Button>

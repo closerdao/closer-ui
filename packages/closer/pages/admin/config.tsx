@@ -132,7 +132,9 @@ const ConfigPage = () => {
     ...(isRolesEnabled ? ['roles'] : []),
     ...(isReferralEnabled ? ['referral'] : []),
     ...(isWeb3Enabled ? ['airdrop', 'governance'] : []),
-    ...(isWeb3BookingEnabled ? ['web3'] : []),
+    // `token` (formerly `web3`) now also carries the financed-purchase terms,
+    // which matter to any platform with a token sale, not just token bookings.
+    ...(isWeb3Enabled || isWeb3BookingEnabled ? ['token'] : []),
     'engagement',
     'newsletter',
     'photo-gallery',

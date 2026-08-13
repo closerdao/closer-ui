@@ -21,6 +21,7 @@ export type SectionType =
   | 'priceHistory'
   | 'webinar'
   | 'citizenProgressBar'
+  | 'citizenshipStatus'
   | 'financedTokensStart'
   | 'cohousingApplication'
   | 'listingsPreviews'

@@ -140,6 +140,8 @@ export interface FinanceApplicationCreateRequest {
   tokensToFinance: number;
   totalToPayInFiat: number;
   iban: string;
+  /** Repayment term, chosen from the `token` config's offered durations. */
+  durationInMonths?: number;
   isCitizenApplication: boolean;
   why?: string;
 }
@@ -147,4 +149,17 @@ export interface FinanceApplicationCreateRequest {
 export interface FinanceApplicationResponse {
   results: FinanceApplication[];
   count?: number;
+}
+
+export interface CitizenTokenIntent {
+  iWantToApply: boolean;
+  iWantToBuyTokens: boolean;
+  iWantToFinanceTokens: boolean;
+}
+
+export interface CitizenApplication {
+  ownsRequiredTokens: boolean;
+  why: string;
+  hasSelectedTokenIntent: boolean;
+  intent: CitizenTokenIntent;
 }
