@@ -16,6 +16,17 @@
  * The fetch is retried with exponential backoff (see RETRY_DELAYS_MS) on both
  * network-level errors and non-200 responses, because Vercel build containers
  * have transiently failed to resolve/route to freshly provisioned domains.
+ *
+ * A build that cannot fetch real config fails loudly: when neither API URL
+ * env var is set the script exits 1 instead of silently keeping whatever
+ * snapshot is on disk (which is how TDF's production config used to ship in
+ * other builds). Deliberate offline work can opt back into the old behaviour
+ * with ALLOW_STALE_CONFIG_SNAPSHOT=1.
+ *
+ * The fetched payload must also contain every slug in EXPECTED_CONFIG_SLUGS
+ * (the buckets closer-api's ensureConfigs guarantees on every deployment);
+ * a bucket silently disappearing from the API response would otherwise
+ * degrade the build to schema defaults without any failure signal.
  */
 require('./ensureBuildConfigSnapshotExists.cjs');
 
@@ -23,6 +34,25 @@ const fs = require('fs');
 const path = require('path');
 
 const OUT = path.join(__dirname, '..', 'generated', 'appConfig.snapshot.json');
+
+/**
+ * Config buckets that closer-api's ensureConfigs seeds on boot for every
+ * deployment, so their absence from a /config response always indicates a
+ * broken or misconfigured API rather than a legitimately empty platform.
+ */
+const EXPECTED_CONFIG_SLUGS = [
+  'accounting-entities',
+  'affiliate',
+  'booking',
+  'citizenship',
+  'engagement',
+  'fundraiser',
+  'general',
+  'payment',
+  'subscriptions',
+  'volunteering',
+  'webinar',
+];
 
 const FETCH_TIMEOUT_MS = 20000;
 const RETRY_DELAYS_MS = [2000, 4000, 8000, 16000];
@@ -171,6 +201,23 @@ function resolveConfigApiUrl(env) {
   return { apiUrl, isOverride: Boolean(overrideUrl) };
 }
 
+/**
+ * Opt-in escape hatch for deliberate offline work: when set to '1' a build
+ * with no API URL keeps whatever snapshot is on disk instead of failing.
+ */
+function isStaleSnapshotAllowed(env) {
+  return env.ALLOW_STALE_CONFIG_SNAPSHOT === '1';
+}
+
+/**
+ * Return the EXPECTED_CONFIG_SLUGS missing from a fetched slug map.
+ */
+function getMissingExpectedSlugs(bySlug) {
+  return EXPECTED_CONFIG_SLUGS.filter(
+    (slug) => !Object.prototype.hasOwnProperty.call(bySlug || {}, slug),
+  );
+}
+
 async function main() {
   const packageRoot = path.join(__dirname, '..');
   loadEnvFromDir(packageRoot);
@@ -178,10 +225,18 @@ async function main() {
 
   const { apiUrl, isOverride } = resolveConfigApiUrl(process.env);
   if (!apiUrl) {
-    console.warn(
-      '[sync-build-config] Neither CONFIG_BUILD_API_URL nor NEXT_PUBLIC_API_URL is set; keeping existing snapshot.',
+    if (isStaleSnapshotAllowed(process.env)) {
+      console.warn(
+        '[sync-build-config] Neither CONFIG_BUILD_API_URL nor NEXT_PUBLIC_API_URL is set; ALLOW_STALE_CONFIG_SNAPSHOT=1, keeping existing snapshot.',
+      );
+      process.exit(0);
+    }
+    console.error(
+      '[sync-build-config] Neither CONFIG_BUILD_API_URL nor NEXT_PUBLIC_API_URL is set. ' +
+        'Refusing to build with a stale config snapshot. ' +
+        'Set NEXT_PUBLIC_API_URL (or CONFIG_BUILD_API_URL), or set ALLOW_STALE_CONFIG_SNAPSHOT=1 for deliberate offline work.',
     );
-    process.exit(0);
+    process.exit(1);
   }
   if (isOverride) {
     console.log(
@@ -211,6 +266,14 @@ async function main() {
     process.exit(1);
   }
   const bySlug = configPayloadToSlugMap(data);
+  const missingSlugs = getMissingExpectedSlugs(bySlug);
+  if (missingSlugs.length > 0) {
+    console.error(
+      `[sync-build-config] Config response is missing expected slug(s): ${missingSlugs.join(', ')}. ` +
+        `URL: ${redactUrl(url)}. Refusing to build with an incomplete config.`,
+    );
+    process.exit(1);
+  }
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
   fs.writeFileSync(OUT, `${JSON.stringify(bySlug)}\n`, 'utf8');
   console.log('[sync-build-config] wrote', OUT);
@@ -228,8 +291,11 @@ if (require.main === module) {
 module.exports = {
   configPayloadToSlugMap,
   fetchWithRetry,
+  getMissingExpectedSlugs,
+  isStaleSnapshotAllowed,
   redactUrl,
   resolveConfigApiUrl,
+  EXPECTED_CONFIG_SLUGS,
   FETCH_TIMEOUT_MS,
   MAX_ATTEMPTS,
   RETRY_DELAYS_MS,
