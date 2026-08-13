@@ -99,9 +99,11 @@ describe('configDescription schema defaults', () => {
     });
   });
 
-  it('web3 bookingToken resolves to a neutral empty value', () => {
-    const web3 = getDefaultConfigValue('web3', configDescription);
-    expect(web3.bookingToken).toBe('');
+  it('token bookingToken resolves to a neutral empty value', () => {
+    // bookingToken moved from the removed `web3` section to `token` on develop;
+    // it must stay default-free so no village inherits another's token symbol.
+    const token = getDefaultConfigValue('token', configDescription);
+    expect(token.bookingToken).toBe('');
   });
 
   it('policy defaults are preserved (not zeroed)', () => {
