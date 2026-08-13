@@ -89,7 +89,7 @@ const Search = ({ articles, page, numArticles, authors }: Props) => {
     router.push(`/blog?page=${pageNumber}`);
   };
 
-  const isBlogEnabled = blogConfig?.enabled !== false;
+  const isBlogEnabled = blogConfig?.enabled === true;
 
   if (!isBlogEnabled) {
     return <FeatureNotEnabled feature="blog" />;

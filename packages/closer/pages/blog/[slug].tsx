@@ -55,7 +55,7 @@ const ArticlePage = ({ article, author, error, relatedArticles }: Props) => {
   const isAdmin = user && user?.roles.includes('admin');
   const isContentCreator = user && user?.roles.includes('content-creator');
 
-  const isBlogEnabled = blogConfig?.enabled !== false;
+  const isBlogEnabled = blogConfig?.enabled === true;
 
   const fullImageUrl =
     article &&

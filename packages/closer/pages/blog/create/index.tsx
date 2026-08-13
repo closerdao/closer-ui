@@ -25,7 +25,7 @@ const Create = ({ blogConfig }: Props) => {
   const isAdmin = user?.roles.includes('admin');
   const isContentCreator = user?.roles.includes('content-creator');
 
-  const isBlogEnabled = blogConfig?.enabled !== false;
+  const isBlogEnabled = blogConfig?.enabled === true;
 
   if (!isBlogEnabled) {
     return <FeatureNotEnabled feature="blog" />;

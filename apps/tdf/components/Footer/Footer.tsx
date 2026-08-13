@@ -13,7 +13,7 @@ export const Footer: FC = () => {
   const isBookingEnabled =
     config.booking?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
-  const isEventsEnabled = config.events?.enabled !== false;
+  const isEventsEnabled = config.events?.enabled === true;
   const isSubscriptionsEnabled =
     config.subscriptions?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS === 'true';

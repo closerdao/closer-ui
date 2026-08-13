@@ -141,7 +141,7 @@ export const isStandardPageFeatureEnabled = (
     case 'cohousing':
       return Boolean(config?.cohousing?.enabled);
     case 'events':
-      return config?.events?.enabled !== false;
+      return config?.events?.enabled === true;
     case 'booking':
       return (
         process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true' &&
