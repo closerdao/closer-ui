@@ -672,7 +672,8 @@ export const configDescription: ConfigType[] = [
           'Africa/Cairo',
           'Africa/Johannesburg',
         ],
-        default: 'Europe/Lisbon',
+        // No fallback timezone (#990): the operator must pick one.
+        default: '',
       },
       appName: {
         type: 'text',

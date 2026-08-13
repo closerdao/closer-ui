@@ -19,8 +19,12 @@ export function getAppConfigFromEnv(
     // Omit the key entirely when we have nothing, so a spread of this object
     // does not clobber an APP_NAME provided by the app's own config.
     ...(appName ? { APP_NAME: appName } : {}),
-    DEFAULT_TIMEZONE:
-      process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE || 'Europe/Lisbon',
+    // No fallback timezone (#990): omit the key when the env var is unset so a
+    // spread of this object never invents a timezone or clobbers one supplied
+    // by the app's own config.
+    ...(process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE
+      ? { DEFAULT_TIMEZONE: process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE }
+      : {}),
     STRIPE_CUSTOMER_PORTAL_URL:
       process.env.NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL,
   };

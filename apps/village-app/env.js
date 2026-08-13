@@ -18,7 +18,12 @@ export const villageAppEnvShape = {
     .describe(
       'Village slug supplied at provisioning. Feature discriminator and locale lookup key — not a display name.',
     ),
-  NEXT_PUBLIC_DEFAULT_TIMEZONE: optionalString.default('Europe/Lisbon'),
+  NEXT_PUBLIC_DEFAULT_TIMEZONE: z
+    .string()
+    .min(1)
+    .describe(
+      'IANA timezone for the village, supplied at provisioning (the signup form requires one). No fallback — a build without a timezone fails loud.',
+    ),
   NEXT_PUBLIC_CDN_URL: optionalUrl,
   NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL: optionalUrl,
   NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY: optionalString,
@@ -49,6 +54,7 @@ export const villageAppEnvSchema = z.object(villageAppEnvShape);
 export const requiredProvisioningEnvKeys = [
   'NEXT_PUBLIC_API_URL',
   'NEXT_PUBLIC_APP_NAME',
+  'NEXT_PUBLIC_DEFAULT_TIMEZONE',
   'NEXT_PUBLIC_PLATFORM_URL',
 ];
 
@@ -63,7 +69,6 @@ export const optionalProvisioningEnvKeys = [
 ];
 
 export const defaultedProvisioningEnvKeys = [
-  'NEXT_PUBLIC_DEFAULT_TIMEZONE',
   'NEXT_PUBLIC_FEATURE_AFFILIATE',
   'NEXT_PUBLIC_FEATURE_BLOG',
   'NEXT_PUBLIC_FEATURE_BOOKING',

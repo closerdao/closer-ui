@@ -78,6 +78,21 @@ describe('apps/village-app/env.js', () => {
     expect(defaultingOn).toEqual([]);
   });
 
+  it('requires a timezone with no fallback (#990)', () => {
+    const shapeBlock = sliceBlock('export const villageAppEnvShape');
+    const tzLine = shapeBlock
+      .split(/,\n(?=\s{2}NEXT_PUBLIC_)/)
+      .find((entry) => entry.includes('NEXT_PUBLIC_DEFAULT_TIMEZONE'));
+    expect(tzLine).toBeDefined();
+    expect(tzLine).not.toMatch(/\.optional\(\)|\.default\(/);
+    expect(source).not.toMatch(/Europe\/Lisbon/);
+    const requiredBlock = source.slice(
+      source.indexOf('export const requiredProvisioningEnvKeys'),
+      source.indexOf('export const optionalProvisioningEnvKeys'),
+    );
+    expect(requiredBlock).toContain('NEXT_PUBLIC_DEFAULT_TIMEZONE');
+  });
+
   it('maps each key to its own inlinable process.env member expression', () => {
     const wrong = runtimeKeys.filter(
       (key) =>

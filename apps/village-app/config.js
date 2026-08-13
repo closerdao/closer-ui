@@ -8,7 +8,9 @@ export const villageGeneralConfigSchema = z.object({
   appName: z.string().default('closer'),
   semanticUrl: optionalUrl.default(''),
   teamEmail: optionalEmail.default(''),
-  timeZone: z.string().default('Europe/Lisbon'),
+  // No fallback timezone (#990): the required NEXT_PUBLIC_DEFAULT_TIMEZONE
+  // env var is the source of truth; runtime config may override, never invent.
+  timeZone: z.string().optional(),
   logoHeader: z.string().optional(),
   facebookUrl: optionalUrl.default(''),
   instagramUrl: optionalUrl.default(''),
@@ -64,7 +66,6 @@ export const defaultedRuntimeConfigKeys = [
   'general.appName',
   'general.semanticUrl',
   'general.teamEmail',
-  'general.timeZone',
   'general.facebookUrl',
   'general.instagramUrl',
   'general.telegramUrl',
