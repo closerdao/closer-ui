@@ -54,8 +54,6 @@ describe('getPageEditorFeatureFlags — events', () => {
 
 describe('getEnabledConfigs — schema-less buckets', () => {
   it('does not count a bucket with no schema entry as enabled', () => {
-    // `emails` and `rbac` have no entry in configDescription; with no stored
-    // row they must not register as enabled features.
     expect(getEnabledConfigs([], ['emails', 'rbac'])).toEqual([]);
   });
 
