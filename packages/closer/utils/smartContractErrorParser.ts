@@ -26,7 +26,7 @@ export interface SmartContractError {
  * @returns A clean, user-friendly error message or null if not a smart contract error
  */
 const SOLIDITY_PANIC_OVERFLOW =
-  'The contract reverted with a math overflow or underflow (Solidity panic 0x11). Common causes: wrong wei amounts, overlapping or invalid booking nights, or a mismatch between what the UI sends and what the booking facet expects. Try refreshing; if it keeps happening, contact support.';
+  'The contract reverted with a math overflow or underflow (Solidity panic 0x11). For token bookings this usually means you already have more $TDF locked on-chain for a later year than the per-night price of these nights — the staking library subtracts that whole later-year balance from a single night’s price. Cancel the later bookings first, or contact support.';
 
 const SOLIDITY_PANIC_DIV_ZERO =
   'The contract reverted with division by zero (Solidity panic 0x12). Try again or contact support.';
@@ -56,17 +56,30 @@ function readPanicCodeFromObject(obj: any): number | null {
   return null;
 }
 
-function parseSolidityPanicUserMessage(err: any): string | null {
-  let code: number | null = null;
-  for (const layer of [err, err?.error]) {
+/** Solidity panic raised by an arithmetic overflow/underflow. */
+export const SOLIDITY_PANIC_UNDERFLOW = 0x11;
+
+/**
+ * Extracts the Solidity panic code from an ethers/MetaMask error, or null when
+ * the error is not a panic revert.
+ */
+export function getSolidityPanicCode(err: any): number | null {
+  for (const layer of [err, err?.error, err?.data, err?.error?.data]) {
     if (!layer || typeof layer !== 'object') continue;
-    code = readPanicCodeFromObject(layer);
-    if (code !== null) break;
+    const code = readPanicCodeFromObject(layer);
+    if (code !== null) return code;
   }
-  if (code === null && typeof err?.message === 'string') {
+  if (typeof err?.message === 'string') {
     const m = err.message.match(/panic code\s+(\d+)/i);
-    if (m) code = parseInt(m[1], 10);
+    if (m) return parseInt(m[1], 10);
+    const hex = err.message.match(/panic[^)]*\(0x([0-9a-f]{2})\)/i);
+    if (hex) return parseInt(hex[1], 16);
   }
+  return null;
+}
+
+function parseSolidityPanicUserMessage(err: any): string | null {
+  const code = getSolidityPanicCode(err);
   if (code === null) return null;
   switch (code) {
     case 0x01:

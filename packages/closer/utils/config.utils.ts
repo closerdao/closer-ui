@@ -2,10 +2,10 @@ import { configDescription } from '../config';
 import { Config } from '../types';
 
 export const getReserveTokenDisplay = (config: any): string =>
-  config?.web3?.reserveToken ?? 'cEUR';
+  config?.token?.reserveToken ?? config?.web3?.reserveToken ?? 'cEUR';
 
 export const getGasTokenDisplay = (config: any): string =>
-  config?.web3?.gasToken ?? 'CELO';
+  config?.token?.gasToken ?? config?.web3?.gasToken ?? 'CELO';
 
 export const getEnabledConfigs = (configs: any, allConfigs: string[]) => {
   const enabledConfigs = allConfigs.filter((configName) => {
@@ -71,6 +71,29 @@ export const getPreparedInputValue = (value: string) => {
   return String(value);
 };
 
+/**
+ * The `token` config was called `web3`, and the financed-purchase terms
+ * (`downPaymentPercent`, `tokenPriceModifierPercent`) used to live on
+ * `citizenship`. Stored config documents still carry the old slugs, so read
+ * through to them: anything explicitly set on a `token` document still wins.
+ *
+ * Returns the values a `token` document should be layered on top of.
+ */
+export const getLegacyTokenConfigValue = (
+  apiBySlug: Record<string, Record<string, any>>,
+): Record<string, any> => {
+  const legacyCitizenship = apiBySlug['citizenship'];
+
+  const inherited: Record<string, any> = { ...(apiBySlug['web3'] || {}) };
+  ['downPaymentPercent', 'tokenPriceModifierPercent'].forEach((key) => {
+    if (legacyCitizenship && key in legacyCitizenship) {
+      inherited[key] = legacyCitizenship[key];
+    }
+  });
+
+  return inherited;
+};
+
 export const buildMergedConfig = (
   apiConfigs: Array<{ slug: string; value?: Record<string, any> }>,
 ): Record<string, Record<string, any>> => {
@@ -78,11 +101,17 @@ export const buildMergedConfig = (
   (apiConfigs || []).forEach((c) => {
     apiBySlug[c.slug] = c.value || {};
   });
+  const legacyToken = getLegacyTokenConfigValue(apiBySlug);
   const result: Record<string, Record<string, any>> = {};
   configDescription.forEach((desc) => {
     const slug = desc.slug;
     const defaults = getDefaultConfigValue(slug, configDescription);
-    result[slug] = Object.assign({}, defaults, apiBySlug[slug] || {});
+    result[slug] = Object.assign(
+      {},
+      defaults,
+      slug === 'token' ? legacyToken : {},
+      apiBySlug[slug] || {},
+    );
   });
   Object.keys(apiBySlug).forEach((slug) => {
     if (!result[slug]) result[slug] = apiBySlug[slug];
@@ -192,13 +221,24 @@ export const prepareConfigs = (
   myConfigs: Config[],
   configDescriptions: any,
 ): Array<{ slug: string; value: Record<string, any> }> => {
+  const apiBySlug: Record<string, Record<string, any>> = {};
+  (myConfigs || []).forEach((c) => {
+    apiBySlug[c.slug] = (c.value as Record<string, any>) || {};
+  });
+  const legacyToken = getLegacyTokenConfigValue(apiBySlug);
+
   return configDescriptions.map((desc: any) => {
     const slug = desc.slug;
     const defaults = getDefaultConfigValue(slug, configDescriptions);
-    const apiValue = myConfigs.find((c) => c.slug === slug)?.value || {};
+    const apiValue = apiBySlug[slug] || {};
     return {
       slug,
-      value: Object.assign({}, defaults, apiValue),
+      value: Object.assign(
+        {},
+        defaults,
+        slug === 'token' ? legacyToken : {},
+        apiValue,
+      ),
     };
   });
 };

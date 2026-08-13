@@ -768,7 +768,7 @@
             "imageUrl": "",
             "cta": {
               "text": "Become a Citizen",
-              "url": "/subscriptions/citizen/why"
+              "url": "/citizenship/why"
             },
             "secondaryCta": {
               "text": "Learn about $TDF",
@@ -1011,7 +1011,7 @@
             "title": "Ready to claim your place as a founding citizen?",
             "text": "Step into agency, belonging, and impact. Help us complete the village and grow the commons.",
             "primaryText": "Become a Citizen",
-            "primaryLink": "/subscriptions/citizen/why",
+            "primaryLink": "/citizenship/why",
             "secondaryText": "Learn about $TDF",
             "secondaryLink": "/token"
           }
