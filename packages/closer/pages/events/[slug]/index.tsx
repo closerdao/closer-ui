@@ -7,29 +7,29 @@ import { useEffect, useRef, useState } from 'react';
 import EventAttendees from '../../../components/EventAttendees';
 import EventDescription from '../../../components/EventDescription';
 import EventPhotoUploadSection from '../../../components/EventPhotoUpload';
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import Photo from '../../../components/Photo';
 import SignupModal from '../../../components/SignupModal';
+import UserAvatarPlaceholder from '../../../components/UserAvatarPlaceholder';
 import { Button, Card, ErrorMessage, LinkButton } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
-import UserAvatarPlaceholder from '../../../components/UserAvatarPlaceholder';
 import dayjs from 'dayjs';
 import { convert } from 'html-to-text';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import config from '../../../configCached';
 import { MAX_LISTINGS_TO_FETCH } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { User } from '../../../contexts/auth/types';
 import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
-import { CloserCurrencies } from '../../../types/currency';
 import { Event, Listing } from '../../../types';
-import config from '../../../configCached';
+import { CloserCurrencies } from '../../../types/currency';
 import api, { cdn } from '../../../utils/api';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { getAccommodationPriceRange } from '../../../utils/events.helpers';
 import {
   getBookingRate,
@@ -37,8 +37,11 @@ import {
   prependHttp,
   priceFormat,
 } from '../../../utils/helpers';
-import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+import { linkedMetricFields, logMetric } from '../../../utils/metrics';
+import { getSiteUrl } from '../../../utils/siteUrl';
 import PageNotFound from '../../not-found';
+
+const SITE_URL = getSiteUrl();
 
 interface EventsConfig {
   enabled: boolean;
@@ -262,12 +265,26 @@ const EventPage = ({
     <>
       <Head>
         <title>{event.name}</title>
-        <meta name="description" content={descriptionText || `${event.name} - Join us for this event.`} />
-        <meta name="keywords" content={`${event.name}, event, regenerative communities`} />
+        <meta
+          name="description"
+          content={descriptionText || `${event.name} - Join us for this event.`}
+        />
+        <meta
+          name="keywords"
+          content={`${event.name}, event, regenerative communities`}
+        />
         <meta property="og:title" content={event.name} />
         <meta property="og:type" content="event" />
-        <meta property="og:description" content={descriptionText || `${event.name} - Join us for this event.`} />
-        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/events/${event.slug}`} />
+        <meta
+          property="og:description"
+          content={descriptionText || `${event.name} - Join us for this event.`}
+        />
+        {SITE_URL && (
+          <meta
+            property="og:url"
+            content={`${SITE_URL}/events/${event.slug}`}
+          />
+        )}
         {photo && (
           <meta
             key="og:image"
@@ -277,7 +294,10 @@ const EventPage = ({
         )}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={event.name} />
-        <meta name="twitter:description" content={descriptionText || `${event.name} - Join us for this event.`} />
+        <meta
+          name="twitter:description"
+          content={descriptionText || `${event.name} - Join us for this event.`}
+        />
         {photo && (
           <meta
             key="twitter:image"
@@ -286,20 +306,28 @@ const EventPage = ({
           />
         )}
         {event.start && (
-          <meta property="event:start_time" content={new Date(event.start).toISOString()} />
+          <meta
+            property="event:start_time"
+            content={new Date(event.start).toISOString()}
+          />
         )}
         {event.end && (
-          <meta property="event:end_time" content={new Date(event.end).toISOString()} />
+          <meta
+            property="event:end_time"
+            content={new Date(event.end).toISOString()}
+          />
         )}
-        <link
-          rel="canonical"
-          href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/events/${event.slug}`}
-          key="canonical"
-        />
+        {SITE_URL && (
+          <link
+            rel="canonical"
+            href={`${SITE_URL}/events/${event.slug}`}
+            key="canonical"
+          />
+        )}
       </Head>
 
-      {(isShowingEvent === false ||
-      (event.password && event.password !== password)) ? (
+      {isShowingEvent === false ||
+      (event.password && event.password !== password) ? (
         <div className="flex flex-col justify-center items-center my-20 ">
           <div className="w-34 flex flex-col gap-4">
             <Heading>This event is password protected</Heading>
@@ -411,12 +439,12 @@ const EventPage = ({
                         </div>
                       )}
                       <Link
-                        href={`/members/${eventCreator?.slug || eventCreator?._id}`}
+                        href={`/members/${
+                          eventCreator?.slug || eventCreator?._id
+                        }`}
                         className="flex gap-2 items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
                       >
-                        <p className="font-medium">
-                          {t('event_organiser')}
-                        </p>
+                        <p className="font-medium">{t('event_organiser')}</p>
                         {eventCreator?.photo ? (
                           <Image
                             src={`${cdn}${eventCreator?.photo}-profile-lg.jpg`}
@@ -468,116 +496,171 @@ const EventPage = ({
                       </section>
                     )}
                   </div>
-                  {(event.address || (event.location && !event.address) || (attendees && attendees.length > 0) || (end && !end.isBefore(dayjs()))) && (
-                  <div className="h-auto fixed z-10 bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px] space-y-4">
-                    <Card className="bg-white border border-gray-100 p-4">
-                      <div className="space-y-4">
-                        {event.address && (
-                          <div className="flex gap-2 items-center">
-                            <Image
-                              alt="location icon"
-                              src="/images/icons/pin-icon.svg"
-                              width={16}
-                              height={16}
-                            />
-                            {event.address.startsWith('http') ? (
-                              <a
-                                href={event.address}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm font-medium text-blue-600 hover:text-blue-800 underline truncate"
-                              >
-                                {event.address}
-                              </a>
-                            ) : (
-                              <p className="text-sm font-medium truncate">
-                                {event.address}
-                              </p>
-                            )}
-                          </div>
-                        )}
+                  {(event.address ||
+                    (event.location && !event.address) ||
+                    (attendees && attendees.length > 0) ||
+                    (end && !end.isBefore(dayjs()))) && (
+                    <div className="h-auto fixed z-10 bottom-0 left-0 sm:sticky sm:top-[100px] w-full sm:w-[250px] space-y-4">
+                      <Card className="bg-white border border-gray-100 p-4">
+                        <div className="space-y-4">
+                          {event.address && (
+                            <div className="flex gap-2 items-center">
+                              <Image
+                                alt="location icon"
+                                src="/images/icons/pin-icon.svg"
+                                width={16}
+                                height={16}
+                              />
+                              {event.address.startsWith('http') ? (
+                                <a
+                                  href={event.address}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-sm font-medium text-blue-600 hover:text-blue-800 underline truncate"
+                                >
+                                  {event.address}
+                                </a>
+                              ) : (
+                                <p className="text-sm font-medium truncate">
+                                  {event.address}
+                                </p>
+                              )}
+                            </div>
+                          )}
 
-                        {event.location && !event.address && (
-                          <div className="flex gap-2 items-center">
-                            <Image
-                              alt="location icon"
-                              src="/images/icons/pin-icon.svg"
-                              width={16}
-                              height={16}
-                            />
-                            {event.location.startsWith('http') ? (
-                              <a
-                                href={event.location}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm font-medium text-blue-600 hover:text-blue-800 underline truncate"
-                              >
-                                {event.location}
-                              </a>
-                            ) : (
-                              <p className="text-sm font-medium truncate">
-                                {event.location}
-                              </p>
-                            )}
-                          </div>
-                        )}
+                          {event.location && !event.address && (
+                            <div className="flex gap-2 items-center">
+                              <Image
+                                alt="location icon"
+                                src="/images/icons/pin-icon.svg"
+                                width={16}
+                                height={16}
+                              />
+                              {event.location.startsWith('http') ? (
+                                <a
+                                  href={event.location}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-sm font-medium text-blue-600 hover:text-blue-800 underline truncate"
+                                >
+                                  {event.location}
+                                </a>
+                              ) : (
+                                <p className="text-sm font-medium truncate">
+                                  {event.location}
+                                </p>
+                              )}
+                            </div>
+                          )}
 
-                        {attendees && attendees.length > 0 && (
-                          <EventAttendees
-                            event={event}
-                            start={start}
-                            attendees={attendees}
-                            ticketsCount={ticketsCount}
-                            platform={platform}
-                          />
-                        )}
-                      </div>
+                          {attendees && attendees.length > 0 && (
+                            <EventAttendees
+                              event={event}
+                              start={start}
+                              attendees={attendees}
+                              ticketsCount={ticketsCount}
+                              platform={platform}
+                            />
+                          )}
+                        </div>
 
                         {end && !end.isBefore(dayjs()) && (
                           <div className="space-y-3">
                             {(() => {
                               // Check if all tickets are sold out
-                              const allTicketsSoldOut = event.paid && event.ticketOptions.every((ticketOption: any) => {
-                                const availableTickets = soldTickets && ticketOption.limit - soldTickets.filter((ticket: any) => ticket.option.name === ticketOption.name).length;
-                                return availableTickets === 0 && ticketOption.limit !== 0;
-                              });
-                              
+                              const allTicketsSoldOut =
+                                event.paid &&
+                                event.ticketOptions.every(
+                                  (ticketOption: any) => {
+                                    const availableTickets =
+                                      soldTickets &&
+                                      ticketOption.limit -
+                                        soldTickets.filter(
+                                          (ticket: any) =>
+                                            ticket.option.name ===
+                                            ticketOption.name,
+                                        ).length;
+                                    return (
+                                      availableTickets === 0 &&
+                                      ticketOption.limit !== 0
+                                    );
+                                  },
+                                );
+
                               return allTicketsSoldOut ? (
                                 <div className="text-center py-6 px-3">
-                                  <p className="font-bold text-lg">{t('events_no_tickets_available')}</p>
-                                  <p className="text-sm mt-1">{t('events_completely_sold_out')}</p>
+                                  <p className="font-bold text-lg">
+                                    {t('events_no_tickets_available')}
+                                  </p>
+                                  <p className="text-sm mt-1">
+                                    {t('events_completely_sold_out')}
+                                  </p>
                                 </div>
                               ) : (
                                 event.paid &&
-                                (() => {
-                                  const availableOptions = event.ticketOptions.filter((opt: any) => {
-                                    const sold = soldTickets?.filter((t: any) => t.option?.name === opt.name).length || 0;
-                                    return opt.limit === 0 || opt.limit - sold > 0;
-                                  });
-                                  if (availableOptions.length === 0) return null;
-                                  const prices = availableOptions.map((o: any) => o.price ?? 0);
-                                  const minPrice = Math.min(...prices);
-                                  const maxPrice = Math.max(...prices);
-                                  const currency = availableOptions[0]?.currency;
-                                  const priceSummary = minPrice === maxPrice
-                                    ? priceFormat(minPrice, currency)
-                                    : `${priceFormat(minPrice, currency)} – ${priceFormat(maxPrice, currency)}`;
-                                  return (
-                                    <div className="text-sm">
-                                      {t('events_ticket')}{' '}
-                                      <strong>{priceSummary}</strong>
-                                    </div>
-                                  );
-                                })()
+                                  (() => {
+                                    const availableOptions =
+                                      event.ticketOptions.filter((opt: any) => {
+                                        const sold =
+                                          soldTickets?.filter(
+                                            (t: any) =>
+                                              t.option?.name === opt.name,
+                                          ).length || 0;
+                                        return (
+                                          opt.limit === 0 ||
+                                          opt.limit - sold > 0
+                                        );
+                                      });
+                                    if (availableOptions.length === 0)
+                                      return null;
+                                    const prices = availableOptions.map(
+                                      (o: any) => o.price ?? 0,
+                                    );
+                                    const minPrice = Math.min(...prices);
+                                    const maxPrice = Math.max(...prices);
+                                    const currency =
+                                      availableOptions[0]?.currency;
+                                    const priceSummary =
+                                      minPrice === maxPrice
+                                        ? priceFormat(minPrice, currency)
+                                        : `${priceFormat(
+                                            minPrice,
+                                            currency,
+                                          )} – ${priceFormat(
+                                            maxPrice,
+                                            currency,
+                                          )}`;
+                                    return (
+                                      <div className="text-sm">
+                                        {t('events_ticket')}{' '}
+                                        <strong>{priceSummary}</strong>
+                                      </div>
+                                    );
+                                  })()
                               );
                             })()}
                             {durationInDays > 0 &&
                               APP_NAME &&
                               APP_NAME !== 'lios' &&
-                              !(event.paid && event.ticketOptions.every((ticketOption: any) => {
-                                const availableTickets = soldTickets && ticketOption.limit - soldTickets.filter((ticket: any) => ticket.option.name === ticketOption.name).length;
-                                return availableTickets === 0 && ticketOption.limit !== 0;
-                              })) && (
+                              !(
+                                event.paid &&
+                                event.ticketOptions.every(
+                                  (ticketOption: any) => {
+                                    const availableTickets =
+                                      soldTickets &&
+                                      ticketOption.limit -
+                                        soldTickets.filter(
+                                          (ticket: any) =>
+                                            ticket.option.name ===
+                                            ticketOption.name,
+                                        ).length;
+                                    return (
+                                      availableTickets === 0 &&
+                                      ticketOption.limit !== 0
+                                    );
+                                  },
+                                )
+                              ) && (
                                 <>
                                   <div className="text-sm">
                                     {t('events_accommodation')}{' '}
@@ -597,7 +680,9 @@ const EventPage = ({
                               )}
                             <div>
                               {/* Event uses an external ticketing system */}
-                              {event.ticket && start && start.isAfter(dayjs()) ? (
+                              {event.ticket &&
+                              start &&
+                              start.isAfter(dayjs()) ? (
                                 <Link
                                   href={prependHttp(event.ticket)}
                                   className="btn-primary mr-2"
@@ -615,7 +700,9 @@ const EventPage = ({
                                         {myTickets.map((ticket: any) => (
                                           <li key={ticket.get('_id')}>
                                             <Link
-                                              href={`/tickets/${ticket.get('_id')}`}
+                                              href={`/tickets/${ticket.get(
+                                                '_id',
+                                              )}`}
                                               className="text-accent"
                                             >
                                               {ticket.get('name')} x{' '}
@@ -631,41 +718,89 @@ const EventPage = ({
                                     (event.stripePub ||
                                       process.env
                                         .NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) &&
-                                    !(event.paid && event.ticketOptions.every((ticketOption: any) => {
-                                      const availableTickets = soldTickets && ticketOption.limit - soldTickets.filter((ticket: any) => ticket.option.name === ticketOption.name).length;
-                                      return availableTickets === 0 && ticketOption.limit !== 0;
-                                    })) && (
+                                    !(
+                                      event.paid &&
+                                      event.ticketOptions.every(
+                                        (ticketOption: any) => {
+                                          const availableTickets =
+                                            soldTickets &&
+                                            ticketOption.limit -
+                                              soldTickets.filter(
+                                                (ticket: any) =>
+                                                  ticket.option.name ===
+                                                  ticketOption.name,
+                                              ).length;
+                                          return (
+                                            availableTickets === 0 &&
+                                            ticketOption.limit !== 0
+                                          );
+                                        },
+                                      )
+                                    ) && (
                                       <>
                                         {event.requireApproval && (
                                           <p className="text-sm text-gray-600 mb-2">
-                                            {t('bookings_event_requires_approval')}
+                                            {t(
+                                              'bookings_event_requires_approval',
+                                            )}
                                           </p>
                                         )}
                                         <LinkButton
                                           href={
                                             isAuthenticated
-                                              ? `/stay/create?eventId=${event._id}&start=${start ? start.format('YYYY-MM-DD') : ''}&end=${end ? end.format('YYYY-MM-DD') : ''}`
-                                              : `/login?back=${encodeURIComponent(`/stay/create?eventId=${event._id}&start=${start ? start.format('YYYY-MM-DD') : ''}&end=${end ? end.format('YYYY-MM-DD') : ''}`)}`
+                                              ? `/stay/create?eventId=${
+                                                  event._id
+                                                }&start=${
+                                                  start
+                                                    ? start.format('YYYY-MM-DD')
+                                                    : ''
+                                                }&end=${
+                                                  end
+                                                    ? end.format('YYYY-MM-DD')
+                                                    : ''
+                                                }`
+                                              : `/login?back=${encodeURIComponent(
+                                                  `/stay/create?eventId=${
+                                                    event._id
+                                                  }&start=${
+                                                    start
+                                                      ? start.format(
+                                                          'YYYY-MM-DD',
+                                                        )
+                                                      : ''
+                                                  }&end=${
+                                                    end
+                                                      ? end.format('YYYY-MM-DD')
+                                                      : ''
+                                                  }`,
+                                                )}`
                                           }
                                           className=""
                                         >
-                                          {isAuthenticated ? t('events_buy_ticket_button') : t('events_login_to_book')}
+                                          {isAuthenticated
+                                            ? t('events_buy_ticket_button')
+                                            : t('events_login_to_book')}
                                         </LinkButton>
                                       </>
                                     )}
                                 </>
                               ) : (
                                 <>
-                                  {!event.paid && 
-                                    start && 
-                                    end && 
-                                    start.isSame(end, 'day') && 
-                                    start.isAfter(dayjs()) ? (
+                                  {!event.paid &&
+                                  start &&
+                                  end &&
+                                  start.isSame(end, 'day') &&
+                                  start.isAfter(dayjs()) ? (
                                     <div className="text-center">
-                                      {user?._id && attendees?.includes(user._id) ? (
+                                      {user?._id &&
+                                      attendees?.includes(user._id) ? (
                                         <>
                                           <p className="text-sm text-gray-600 mb-2">
-                                            {event.virtual ? t('events_virtual_looking_forward') : 'We look forward to seeing you.'}
+                                            {event.virtual
+                                              ? t(
+                                                  'events_virtual_looking_forward',
+                                                )
+                                              : 'We look forward to seeing you.'}
                                           </p>
                                           <a
                                             href="#"
@@ -675,7 +810,9 @@ const EventPage = ({
                                               if (user?._id) {
                                                 attendEvent(
                                                   event._id,
-                                                  !attendees?.includes(user._id),
+                                                  !attendees?.includes(
+                                                    user._id,
+                                                  ),
                                                 );
                                               }
                                             }}
@@ -697,7 +834,9 @@ const EventPage = ({
                                               if (user?._id) {
                                                 attendEvent(
                                                   event._id,
-                                                  !attendees?.includes(user._id),
+                                                  !attendees?.includes(
+                                                    user._id,
+                                                  ),
                                                 );
                                               }
                                             }}
@@ -709,7 +848,9 @@ const EventPage = ({
                                       )}
                                     </div>
                                   ) : start &&
-                                    start.isBefore(dayjs().subtract(15, 'minutes')) &&
+                                    start.isBefore(
+                                      dayjs().subtract(15, 'minutes'),
+                                    ) &&
                                     end &&
                                     end.isAfter(dayjs()) &&
                                     event.virtual &&
@@ -783,7 +924,11 @@ const EventPage = ({
                                         {attendees?.includes(user._id) ? (
                                           <>
                                             <p className="text-sm text-gray-600 mb-2">
-                                              {event.virtual ? t('events_virtual_looking_forward') : 'We look forward to seeing you.'}
+                                              {event.virtual
+                                                ? t(
+                                                    'events_virtual_looking_forward',
+                                                  )
+                                                : 'We look forward to seeing you.'}
                                             </p>
                                             <a
                                               href="#"
@@ -792,7 +937,9 @@ const EventPage = ({
                                                 e.preventDefault();
                                                 attendEvent(
                                                   event._id,
-                                                  !attendees?.includes(user._id),
+                                                  !attendees?.includes(
+                                                    user._id,
+                                                  ),
                                                 );
                                               }}
                                             >
@@ -812,7 +959,9 @@ const EventPage = ({
                                                 e.preventDefault();
                                                 attendEvent(
                                                   event._id,
-                                                  !attendees?.includes(user._id),
+                                                  !attendees?.includes(
+                                                    user._id,
+                                                  ),
                                                 );
                                               }}
                                               className="btn-primary mr-2"
@@ -829,8 +978,8 @@ const EventPage = ({
                             </div>
                           </div>
                         )}
-                    </Card>
-                  </div>
+                      </Card>
+                    </div>
                   )}
                 </div>
               </div>
@@ -906,7 +1055,7 @@ EventPage.getInitialProps = async (context: NextPageContext) => {
     return {
       error: parseMessageFromError(err),
       eventsConfig: null,
-      };
+    };
   }
 };
 

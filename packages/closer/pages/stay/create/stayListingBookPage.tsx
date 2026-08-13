@@ -47,7 +47,6 @@ import {
   getUtilityTotal,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { buildStayCreateListingBackPath } from '../../../utils/stayRouting.helpers';
 import {
   getBookingRate,
   getDiscountRate,
@@ -59,7 +58,11 @@ import {
   formatDate,
   getBlockedDateRanges,
 } from '../../../utils/listings.helpers';
+import { getSiteUrl } from '../../../utils/siteUrl';
+import { buildStayCreateListingBackPath } from '../../../utils/stayRouting.helpers';
 import PageNotFound from '../../not-found';
+
+const SITE_URL = getSiteUrl();
 
 const MAX_DAYS_TO_CHECK_AVAILABILITY = 60;
 
@@ -498,12 +501,14 @@ const ListingPage: NextPage<Props> = ({
           property="og:description"
           content={descriptionText || `${listing.name} - Book your stay.`}
         />
-        <meta
-          property="og:url"
-          content={`${
-            process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'
-          }/stay/create?listingId=${listing._id}&${getUrlParams()}`}
-        />
+        {SITE_URL && (
+          <meta
+            property="og:url"
+            content={`${SITE_URL}/stay/create?listingId=${
+              listing._id
+            }&${getUrlParams()}`}
+          />
+        )}
         {photo && (
           <meta
             key="og:image"
@@ -524,12 +529,14 @@ const ListingPage: NextPage<Props> = ({
             content={`${cdn}${photo}-max-lg.jpg`}
           />
         )}
-        <link
-          rel="canonical"
-          href={`${
-            process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'
-          }/stay/create?listingId=${listing._id}&${getUrlParams()}`}
-        />
+        {SITE_URL && (
+          <link
+            rel="canonical"
+            href={`${SITE_URL}/stay/create?listingId=${
+              listing._id
+            }&${getUrlParams()}`}
+          />
+        )}
       </Head>
       <main className="flex justify-center flex-wrap my-4 ">
         <div className="flex flex-col gap-8  max-w-4xl">
@@ -932,9 +939,9 @@ ListingPage.getInitialProps = async (context: NextPageContext) => {
   const { query } = context;
   try {
     const listing = await api.get(`/listing/${query.slug}`).catch((err) => {
-        console.error('Error fetching listing:', err);
-        return null;
-      })
+      console.error('Error fetching listing:', err);
+      return null;
+    });
 
     const options = {
       baseElements: { selectors: ['p', 'h2', 'span'] },

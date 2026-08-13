@@ -1,11 +1,14 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { NextPageContext } from 'next';
-import { useTranslations } from 'next-intl';
 
 import Heading from '../../components/ui/Heading';
 
-const SITE_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
+import { getSiteUrl } from '../../utils/siteUrl';
+
+const SITE_URL = getSiteUrl();
 
 const PhilosophyIndexPage = () => {
   const t = useTranslations();
@@ -14,7 +17,8 @@ const PhilosophyIndexPage = () => {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
     name: 'Philosophy — Closer',
-    description: 'Explore the philosophical foundations behind Closer: commons governance, exclosures, digital commons, and building shared abundance for regenerative communities.',
+    description:
+      'Explore the philosophical foundations behind Closer: commons governance, exclosures, digital commons, and building shared abundance for regenerative communities.',
     url: `${SITE_URL}/philosophy`,
     publisher: {
       '@type': 'Organization',
@@ -24,11 +28,31 @@ const PhilosophyIndexPage = () => {
     mainEntity: {
       '@type': 'ItemList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, url: `${SITE_URL}/philosophy/commons-governance` },
-        { '@type': 'ListItem', position: 2, url: `${SITE_URL}/philosophy/tragedy-myth` },
-        { '@type': 'ListItem', position: 3, url: `${SITE_URL}/philosophy/commons-exclosure` },
-        { '@type': 'ListItem', position: 4, url: `${SITE_URL}/philosophy/digital-commons` },
-        { '@type': 'ListItem', position: 5, url: `${SITE_URL}/philosophy/shared-abundance` },
+        {
+          '@type': 'ListItem',
+          position: 1,
+          url: `${SITE_URL}/philosophy/commons-governance`,
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          url: `${SITE_URL}/philosophy/tragedy-myth`,
+        },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          url: `${SITE_URL}/philosophy/commons-exclosure`,
+        },
+        {
+          '@type': 'ListItem',
+          position: 4,
+          url: `${SITE_URL}/philosophy/digital-commons`,
+        },
+        {
+          '@type': 'ListItem',
+          position: 5,
+          url: `${SITE_URL}/philosophy/shared-abundance`,
+        },
       ],
     },
   };
@@ -69,22 +93,38 @@ const PhilosophyIndexPage = () => {
   return (
     <>
       <Head>
-        <title>Philosophy — Closer | Commons Governance for Regenerative Communities</title>
-        <meta name="description" content="Explore the philosophical foundations behind Closer: commons governance based on Elinor Ostrom's research, exclosures that protect communities, and building shared abundance." />
-        <meta name="keywords" content="commons governance, Elinor Ostrom, tragedy of the commons, exclosure, digital commons, regenerative communities, shared abundance, decentralized governance" />
-        
+        <title>
+          Philosophy — Closer | Commons Governance for Regenerative Communities
+        </title>
+        <meta
+          name="description"
+          content="Explore the philosophical foundations behind Closer: commons governance based on Elinor Ostrom's research, exclosures that protect communities, and building shared abundance."
+        />
+        <meta
+          name="keywords"
+          content="commons governance, Elinor Ostrom, tragedy of the commons, exclosure, digital commons, regenerative communities, shared abundance, decentralized governance"
+        />
+
         <meta property="og:title" content="Philosophy — Closer" />
-        <meta property="og:description" content="Explore the philosophical foundations behind Closer: commons governance, exclosures, and building shared abundance for regenerative communities." />
+        <meta
+          property="og:description"
+          content="Explore the philosophical foundations behind Closer: commons governance, exclosures, and building shared abundance for regenerative communities."
+        />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={`${SITE_URL}/philosophy`} />
+        {SITE_URL && (
+          <meta property="og:url" content={`${SITE_URL}/philosophy`} />
+        )}
         <meta property="og:site_name" content="Closer" />
-        
+
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Philosophy — Closer" />
-        <meta name="twitter:description" content="Explore the philosophical foundations behind Closer: commons governance, exclosures, and building shared abundance." />
-        
-        <link rel="canonical" href={`${SITE_URL}/philosophy`} />
-        
+        <meta
+          name="twitter:description"
+          content="Explore the philosophical foundations behind Closer: commons governance, exclosures, and building shared abundance."
+        />
+
+        {SITE_URL && <link rel="canonical" href={`${SITE_URL}/philosophy`} />}
+
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
@@ -153,6 +193,6 @@ PhilosophyIndexPage.getInitialProps = async (context: NextPageContext) => {
   try {
     return {};
   } catch (err) {
-    return { error: err, };
+    return { error: err };
   }
 };

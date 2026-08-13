@@ -1,13 +1,16 @@
 import Head from 'next/head';
-import { useTranslations } from 'next-intl';
 
 import Heading from '../components/ui/Heading';
+
+import { useTranslations } from 'next-intl';
+
 import { normalizeAccountingProductSlug } from '../constants/accountingEntities.constants';
 import { useConfig } from '../hooks/useConfig';
 import { AccountingEntitiesConfig } from '../types/api';
 import { getCachedConfig } from '../utils/cachedConfig.helpers';
+import { getSiteUrl } from '../utils/siteUrl';
 
-const SITE_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth';
+const SITE_URL = getSiteUrl();
 
 const PRODUCT_TYPE_KEYS: Record<string, string> = {
   accommodations: 'privacy_policy_product_accommodations',
@@ -53,8 +56,12 @@ const PrivacyPolicyPage = () => {
   const teamEmail = TEAM_EMAIL || '';
   const websiteUrl = SEMANTIC_URL || '';
   const websiteDisplay = websiteUrl.replace(/^https?:\/\//, '');
-  const hasLegalAddress = legalEntityName && legalStreetAddress && legalCity && legalCountry;
-  const hasAccountingEntities = accountingEntities && accountingEntities.length > 0 && accountingEntities.some(e => e.legalName);
+  const hasLegalAddress =
+    legalEntityName && legalStreetAddress && legalCity && legalCountry;
+  const hasAccountingEntities =
+    accountingEntities &&
+    accountingEntities.length > 0 &&
+    accountingEntities.some((e) => e.legalName);
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -67,7 +74,9 @@ const PrivacyPolicyPage = () => {
       name: legalEntityName,
       address: {
         '@type': 'PostalAddress',
-        streetAddress: legalAddressLine2 ? `${legalStreetAddress}, ${legalAddressLine2}` : legalStreetAddress,
+        streetAddress: legalAddressLine2
+          ? `${legalStreetAddress}, ${legalAddressLine2}`
+          : legalStreetAddress,
         addressLocality: legalCity,
         postalCode: legalPostalCode,
         addressCountry: legalCountry,
@@ -85,23 +94,38 @@ const PrivacyPolicyPage = () => {
     });
     if (translatedProducts.length === 1) return translatedProducts[0];
     const last = translatedProducts.pop();
-    return `${translatedProducts.join(', ')} ${t('privacy_policy_and')} ${last}`;
+    return `${translatedProducts.join(', ')} ${t(
+      'privacy_policy_and',
+    )} ${last}`;
   };
 
   return (
     <>
       <Head>
         <title>{`${t('privacy_policy_title')} — ${platformName}`}</title>
-        <meta name="description" content={t('privacy_policy_meta', { platformName })} />
+        <meta
+          name="description"
+          content={t('privacy_policy_meta', { platformName })}
+        />
         <meta name="robots" content="noindex, follow" />
-        
-        <meta property="og:title" content={`${t('privacy_policy_title')} — ${platformName}`} />
-        <meta property="og:description" content={t('privacy_policy_meta', { platformName })} />
+
+        <meta
+          property="og:title"
+          content={`${t('privacy_policy_title')} — ${platformName}`}
+        />
+        <meta
+          property="og:description"
+          content={t('privacy_policy_meta', { platformName })}
+        />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={`${SITE_URL}/privacy-policy`} />
-        
-        <link rel="canonical" href={`${SITE_URL}/privacy-policy`} />
-        
+        {SITE_URL && (
+          <meta property="og:url" content={`${SITE_URL}/privacy-policy`} />
+        )}
+
+        {SITE_URL && (
+          <link rel="canonical" href={`${SITE_URL}/privacy-policy`} />
+        )}
+
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
@@ -122,7 +146,12 @@ const PrivacyPolicyPage = () => {
                 {t('privacy_policy_section_1_title')}
               </Heading>
               <p className="text-foreground/80 leading-relaxed mb-4">
-                {t('privacy_policy_section_1_intro', { platformName, legalEntityName, legalCity, legalCountry })}
+                {t('privacy_policy_section_1_intro', {
+                  platformName,
+                  legalEntityName,
+                  legalCity,
+                  legalCountry,
+                })}
               </p>
               <p className="text-foreground/80 leading-relaxed">
                 {t('privacy_policy_section_1_agreement', { platformName })}
@@ -133,7 +162,7 @@ const PrivacyPolicyPage = () => {
               <Heading level={2} className="text-2xl mb-4">
                 {t('privacy_policy_section_2_title')}
               </Heading>
-              
+
               <Heading level={3} className="text-xl mb-3 mt-6">
                 {t('privacy_policy_section_2_1_title')}
               </Heading>
@@ -186,7 +215,7 @@ const PrivacyPolicyPage = () => {
               <p className="text-foreground/80 leading-relaxed mb-4">
                 {t('privacy_policy_section_3_intro')}
               </p>
-              
+
               <Heading level={3} className="text-xl mb-3 mt-6">
                 {t('privacy_policy_section_3_1_title')}
               </Heading>
@@ -289,12 +318,30 @@ const PrivacyPolicyPage = () => {
                 {t('privacy_policy_section_6_intro')}
               </p>
               <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-4">
-                <li><strong>{t('privacy_policy_section_6_access')}</strong> {t('privacy_policy_section_6_access_text')}</li>
-                <li><strong>{t('privacy_policy_section_6_correction')}</strong> {t('privacy_policy_section_6_correction_text')}</li>
-                <li><strong>{t('privacy_policy_section_6_deletion')}</strong> {t('privacy_policy_section_6_deletion_text')}</li>
-                <li><strong>{t('privacy_policy_section_6_portability')}</strong> {t('privacy_policy_section_6_portability_text')}</li>
-                <li><strong>{t('privacy_policy_section_6_objection')}</strong> {t('privacy_policy_section_6_objection_text')}</li>
-                <li><strong>{t('privacy_policy_section_6_withdraw')}</strong> {t('privacy_policy_section_6_withdraw_text')}</li>
+                <li>
+                  <strong>{t('privacy_policy_section_6_access')}</strong>{' '}
+                  {t('privacy_policy_section_6_access_text')}
+                </li>
+                <li>
+                  <strong>{t('privacy_policy_section_6_correction')}</strong>{' '}
+                  {t('privacy_policy_section_6_correction_text')}
+                </li>
+                <li>
+                  <strong>{t('privacy_policy_section_6_deletion')}</strong>{' '}
+                  {t('privacy_policy_section_6_deletion_text')}
+                </li>
+                <li>
+                  <strong>{t('privacy_policy_section_6_portability')}</strong>{' '}
+                  {t('privacy_policy_section_6_portability_text')}
+                </li>
+                <li>
+                  <strong>{t('privacy_policy_section_6_objection')}</strong>{' '}
+                  {t('privacy_policy_section_6_objection_text')}
+                </li>
+                <li>
+                  <strong>{t('privacy_policy_section_6_withdraw')}</strong>{' '}
+                  {t('privacy_policy_section_6_withdraw_text')}
+                </li>
               </ul>
               <p className="text-foreground/80 leading-relaxed">
                 {t('privacy_policy_section_6_text', { teamEmail })}
@@ -369,15 +416,25 @@ const PrivacyPolicyPage = () => {
               {hasLegalAddress && (
                 <div className="bg-foreground/5 rounded-lg p-6 mb-6">
                   <p className="text-foreground/80 mb-4">
-                    <strong>{legalEntityName}</strong><br />
-                    {legalStreetAddress}<br />
-                    {legalAddressLine2 && <>{legalAddressLine2}<br /></>}
+                    <strong>{legalEntityName}</strong>
+                    <br />
+                    {legalStreetAddress}
+                    <br />
+                    {legalAddressLine2 && (
+                      <>
+                        {legalAddressLine2}
+                        <br />
+                      </>
+                    )}
                     {legalPostalCode} {legalCity}, {legalCountry}
                   </p>
                   {teamEmail && (
                     <p className="text-foreground/80 mb-2">
                       <strong>{t('privacy_policy_section_12_email')}</strong>{' '}
-                      <a href={`mailto:${teamEmail}`} className="text-accent hover:underline">
+                      <a
+                        href={`mailto:${teamEmail}`}
+                        className="text-accent hover:underline"
+                      >
                         {teamEmail}
                       </a>
                     </p>
@@ -385,7 +442,10 @@ const PrivacyPolicyPage = () => {
                   {websiteUrl && (
                     <p className="text-foreground/80">
                       <strong>{t('privacy_policy_section_12_website')}</strong>{' '}
-                      <a href={websiteUrl} className="text-accent hover:underline">
+                      <a
+                        href={websiteUrl}
+                        className="text-accent hover:underline"
+                      >
                         {websiteDisplay}
                       </a>
                     </p>
@@ -396,19 +456,40 @@ const PrivacyPolicyPage = () => {
               {hasAccountingEntities && (
                 <div className="bg-foreground/5 rounded-lg p-6 mb-6">
                   <p className="text-foreground/80 mb-4">
-                    {t('privacy_policy_accounting_entities_intro', { platformName })}
+                    {t('privacy_policy_accounting_entities_intro', {
+                      platformName,
+                    })}
                   </p>
                   <ul className="space-y-4">
-                    {accountingEntities?.filter(e => e.legalName).map((entity, index) => (
-                      <li key={index} className="text-foreground/80">
-                        <strong>{entity.legalName}</strong>
-                        {entity.taxNumber && <> ({t('privacy_policy_tax_number')}: {entity.taxNumber})</>}
-                        {entity.address && <><br />{entity.address}</>}
-                        {entity.products && entity.products.length > 0 && (
-                          <><br /><span className="text-foreground/60">{t('privacy_policy_handles')}: {getProductsDescription(entity.products)}</span></>
-                        )}
-                      </li>
-                    ))}
+                    {accountingEntities
+                      ?.filter((e) => e.legalName)
+                      .map((entity, index) => (
+                        <li key={index} className="text-foreground/80">
+                          <strong>{entity.legalName}</strong>
+                          {entity.taxNumber && (
+                            <>
+                              {' '}
+                              ({t('privacy_policy_tax_number')}:{' '}
+                              {entity.taxNumber})
+                            </>
+                          )}
+                          {entity.address && (
+                            <>
+                              <br />
+                              {entity.address}
+                            </>
+                          )}
+                          {entity.products && entity.products.length > 0 && (
+                            <>
+                              <br />
+                              <span className="text-foreground/60">
+                                {t('privacy_policy_handles')}:{' '}
+                                {getProductsDescription(entity.products)}
+                              </span>
+                            </>
+                          )}
+                        </li>
+                      ))}
                   </ul>
                 </div>
               )}
@@ -416,13 +497,24 @@ const PrivacyPolicyPage = () => {
               <div className="bg-foreground/5 rounded-lg p-6">
                 <p className="text-foreground/80 mb-4">
                   {t('privacy_policy_section_12_platform_info')}{' '}
-                  <a href="https://oasa.earth" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+                  <a
+                    href="https://oasa.earth"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-accent hover:underline"
+                  >
                     OASA
-                  </a>.
+                  </a>
+                  .
                 </p>
                 <p className="text-foreground/80">
-                  <strong>{t('privacy_policy_section_12_technical_support')}</strong>{' '}
-                  <a href="mailto:team@closer.earth" className="text-accent hover:underline">
+                  <strong>
+                    {t('privacy_policy_section_12_technical_support')}
+                  </strong>{' '}
+                  <a
+                    href="mailto:team@closer.earth"
+                    className="text-accent hover:underline"
+                  >
                     team@closer.earth
                   </a>
                 </p>

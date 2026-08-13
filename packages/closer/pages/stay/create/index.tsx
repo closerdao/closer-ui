@@ -3,8 +3,6 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useMemo, useState } from 'react';
 
-import StayListingAccommodationPrice from '../../../components/booking/stayListingAccommodationPrice';
-import StayListingUnitsCard from '../../../components/booking/stayListingUnitsCard';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageError from '../../../components/PageError';
 import Slider from '../../../components/Slider';
@@ -12,6 +10,8 @@ import StaySearchBar, {
   StaySearchBarParams,
 } from '../../../components/StaySearchBar';
 import TicketOptions from '../../../components/TicketOptions';
+import StayListingAccommodationPrice from '../../../components/booking/stayListingAccommodationPrice';
+import StayListingUnitsCard from '../../../components/booking/stayListingUnitsCard';
 import BackButton from '../../../components/ui/BackButton';
 import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
@@ -39,6 +39,7 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { normalizeDiscountCode } from '../../../utils/discountCode';
+import { getSiteUrl } from '../../../utils/siteUrl';
 import { createStay, searchStays } from '../../../utils/stays.api';
 import { buildVolunteerInfo } from '../../../utils/volunteerApplication.helpers';
 import {
@@ -57,8 +58,7 @@ interface Props {
   messages?: any;
 }
 
-const PLATFORM_URL =
-  process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth';
+const PLATFORM_URL = getSiteUrl();
 
 const formatDate = (d: Date | string | null) =>
   d ? dayjs(d).format('YYYY-MM-DD') : '';
@@ -101,8 +101,8 @@ const StayCreatePage = ({
     typeof value === 'string'
       ? value
       : Array.isArray(value)
-        ? value[0]
-        : undefined;
+      ? value[0]
+      : undefined;
 
   const listingId = readParam(listingIdQuery);
   const eventId = readParam(eventIdQuery);
@@ -110,14 +110,13 @@ const StayCreatePage = ({
     readParam(bookingTypeQuery) === 'residence'
       ? 'residence'
       : readParam(bookingTypeQuery) === 'volunteer'
-        ? 'volunteer'
-        : undefined;
+      ? 'volunteer'
+      : undefined;
   const isVolunteerApplication = Boolean(bookingType);
   const isEventBooking = Boolean(eventId);
 
   const availableTickets = useMemo(
-    () =>
-      (ticketOptionsProp || []).filter((option) => option.available > 0),
+    () => (ticketOptionsProp || []).filter((option) => option.available > 0),
     [ticketOptionsProp],
   );
 
@@ -189,11 +188,10 @@ const StayCreatePage = ({
   const [results, setResults] = useState<StaySearchListing[] | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [didSearchOnce, setDidSearchOnce] = useState(false);
-  const [selectedTicketOption, selectTicketOption] = useState<
-    TicketOption | null
-  >(null);
-  const [discountCode, setDiscountCode] = useState(
-    () => normalizeDiscountCode(readParam(discountCodeQuery)),
+  const [selectedTicketOption, selectTicketOption] =
+    useState<TicketOption | null>(null);
+  const [discountCode, setDiscountCode] = useState(() =>
+    normalizeDiscountCode(readParam(discountCodeQuery)),
   );
 
   useEffect(() => {
@@ -202,7 +200,10 @@ const StayCreatePage = ({
       return;
     }
     selectTicketOption((prev) => {
-      if (prev && availableTickets.some((option) => option.name === prev.name)) {
+      if (
+        prev &&
+        availableTickets.some((option) => option.name === prev.name)
+      ) {
         return prev;
       }
       const fromQuery = readParam(ticketOptionQuery);
@@ -413,13 +414,13 @@ const StayCreatePage = ({
         ...(isEventBooking && eventProp?.foodOption
           ? eventFoodPayload
           : bookingSettings?.foodOptionEnabled &&
-              defaultGuestFoodOptionId &&
-              !isVolunteerApplication
-            ? {
-                foodOption: 'food_package',
-                foodOptionId: defaultGuestFoodOptionId,
-              }
-            : {}),
+            defaultGuestFoodOptionId &&
+            !isVolunteerApplication
+          ? {
+              foodOption: 'food_package',
+              foodOptionId: defaultGuestFoodOptionId,
+            }
+          : {}),
       });
       if (isVolunteerApplication) {
         clearVolunteerApplicationDraft(user?._id, bookingType);
@@ -490,7 +491,7 @@ const StayCreatePage = ({
   const pageDescription = isEventBooking
     ? t('stay_create_event_meta_description')
     : t('stay_create_meta_description');
-  const canonicalUrl = `${PLATFORM_URL}/stay/create`;
+  const canonicalUrl = PLATFORM_URL ? `${PLATFORM_URL}/stay/create` : '';
 
   const goBack = () => {
     if (isEventBooking && eventProp?.slug) {
@@ -516,11 +517,11 @@ const StayCreatePage = ({
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={pageDescription} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={canonicalUrl} />
+        {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={pageDescription} />
-        <link rel="canonical" href={canonicalUrl} />
+        {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
       </Head>
 
       <main
@@ -536,15 +537,15 @@ const StayCreatePage = ({
             {isEventBooking
               ? eventProp?.name || t('stay_create_event_title')
               : isVolunteerApplication
-                ? t('volunteer_application_accommodation_title')
-                : t('stay_create_title')}
+              ? t('volunteer_application_accommodation_title')
+              : t('stay_create_title')}
           </Heading>
           <p className="text-base md:text-lg text-gray-600 max-w-xl mx-auto">
             {isEventBooking
               ? t('stay_create_event_subtitle')
               : isVolunteerApplication
-                ? t('volunteer_application_accommodation_subtitle')
-                : t('stay_create_subtitle')}
+              ? t('volunteer_application_accommodation_subtitle')
+              : t('stay_create_subtitle')}
           </p>
           {isEventBooking && eventProp?.requireApproval && (
             <p className="text-sm text-gray-600 mt-2">
@@ -711,7 +712,10 @@ const StayCreatePage = ({
 };
 
 const stripHtml = (html: string): string =>
-  html?.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() || '';
+  html
+    ?.replace(/<[^>]*>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim() || '';
 
 interface ListingResultCardProps {
   listing: StaySearchListing;
@@ -743,7 +747,9 @@ const ListingResultCard = ({
     <article
       aria-labelledby={headingId}
       className={`group flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg focus-within:shadow-lg focus-within:ring-2 focus-within:ring-accent transition-shadow ${
-        layoutFocused ? 'shadow-md md:flex-row md:items-stretch md:max-h-none' : ''
+        layoutFocused
+          ? 'shadow-md md:flex-row md:items-stretch md:max-h-none'
+          : ''
       } ${isUnavailable ? 'opacity-75' : ''}`}
     >
       <div
@@ -829,8 +835,8 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
       typeof eventIdParam === 'string'
         ? eventIdParam
         : Array.isArray(eventIdParam)
-          ? eventIdParam[0]
-          : undefined;
+        ? eventIdParam[0]
+        : undefined;
 
     let defaultGuestFoodOptionId: string | null = null;
     if (bookingSettings?.foodOptionEnabled) {

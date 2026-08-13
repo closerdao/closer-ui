@@ -1,11 +1,14 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { NextPageContext } from 'next';
-import { useTranslations } from 'next-intl';
 
 import Heading from '../../components/ui/Heading';
 
-const SITE_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
+import { getSiteUrl } from '../../utils/siteUrl';
+
+const SITE_URL = getSiteUrl();
 
 const CommonsGovernancePage = () => {
   const t = useTranslations();
@@ -13,8 +16,9 @@ const CommonsGovernancePage = () => {
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Article',
-    headline: 'Ostrom\'s Eight Principles for Commons Governance',
-    description: 'Nobel Prize-winning research documented 800+ cases of successful commons governance spanning centuries. Learn the eight design principles that make commons work.',
+    headline: "Ostrom's Eight Principles for Commons Governance",
+    description:
+      'Nobel Prize-winning research documented 800+ cases of successful commons governance spanning centuries. Learn the eight design principles that make commons work.',
     author: {
       '@type': 'Organization',
       name: 'Closer',
@@ -26,7 +30,8 @@ const CommonsGovernancePage = () => {
       url: SITE_URL,
     },
     mainEntityOfPage: `${SITE_URL}/philosophy/commons-governance`,
-    keywords: 'Elinor Ostrom, commons governance, design principles, collective action, community governance, decentralized governance',
+    keywords:
+      'Elinor Ostrom, commons governance, design principles, collective action, community governance, decentralized governance',
   };
 
   const principles = [
@@ -83,25 +88,52 @@ const CommonsGovernancePage = () => {
   return (
     <>
       <Head>
-        <title>Ostrom&apos;s Eight Principles — Commons Governance | Closer</title>
+        <title>
+          Ostrom&apos;s Eight Principles — Commons Governance | Closer
+        </title>
         <meta
           name="description"
           content="Nobel Prize-winning research documented 800+ cases of successful commons governance spanning centuries. Learn the eight design principles that make commons work."
         />
-        <meta name="keywords" content="Elinor Ostrom, commons governance, eight principles, collective action, community governance, decentralized governance, shared resources" />
-        
-        <meta property="og:title" content="Ostrom's Eight Principles — Commons Governance" />
-        <meta property="og:description" content="Nobel Prize-winning research documented 800+ cases of successful commons governance spanning centuries." />
+        <meta
+          name="keywords"
+          content="Elinor Ostrom, commons governance, eight principles, collective action, community governance, decentralized governance, shared resources"
+        />
+
+        <meta
+          property="og:title"
+          content="Ostrom's Eight Principles — Commons Governance"
+        />
+        <meta
+          property="og:description"
+          content="Nobel Prize-winning research documented 800+ cases of successful commons governance spanning centuries."
+        />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content={`${SITE_URL}/philosophy/commons-governance`} />
+        {SITE_URL && (
+          <meta
+            property="og:url"
+            content={`${SITE_URL}/philosophy/commons-governance`}
+          />
+        )}
         <meta property="og:site_name" content="Closer" />
-        
+
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Ostrom's Eight Principles — Commons Governance" />
-        <meta name="twitter:description" content="Nobel Prize-winning research documented 800+ cases of successful commons governance spanning centuries." />
-        
-        <link rel="canonical" href={`${SITE_URL}/philosophy/commons-governance`} />
-        
+        <meta
+          name="twitter:title"
+          content="Ostrom's Eight Principles — Commons Governance"
+        />
+        <meta
+          name="twitter:description"
+          content="Nobel Prize-winning research documented 800+ cases of successful commons governance spanning centuries."
+        />
+
+        {SITE_URL && (
+          <link
+            rel="canonical"
+            href={`${SITE_URL}/philosophy/commons-governance`}
+          />
+        )}
+
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
@@ -163,7 +195,9 @@ const CommonsGovernancePage = () => {
                     <Heading level={3} className="text-xl mb-2">
                       {principle.title}
                     </Heading>
-                    <p className="text-foreground/80">{principle.description}</p>
+                    <p className="text-foreground/80">
+                      {principle.description}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -218,6 +252,6 @@ CommonsGovernancePage.getInitialProps = async (context: NextPageContext) => {
   try {
     return {};
   } catch (err) {
-    return { error: err, };
+    return { error: err };
   }
 };

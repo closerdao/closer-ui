@@ -43,15 +43,16 @@ import { twitterUrlToHandle } from '../../utils/app.helpers';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
-import {
-  getDownPaymentPercent,
-  getFinancingDurations,
-} from '../../utils/tokenFinancing';
 import { linkedMetricFields, logMetric } from '../../utils/metrics';
+import { getSiteUrl } from '../../utils/siteUrl';
 import {
   fetchPageMetaOverride,
   resolvePageMeta,
 } from '../../utils/standardPages';
+import {
+  getDownPaymentPercent,
+  getFinancingDurations,
+} from '../../utils/tokenFinancing';
 import PageNotFound from '../not-found';
 
 const CITIZEN_TARGET = 300;
@@ -194,8 +195,7 @@ const CitizenshipPage = ({
     if (!isConfigReady) return 0;
     try {
       const totalCost = await getTotalCostWithoutWallet(tokens.toString());
-      const priceModifier =
-        tokenConfig?.tokenPriceModifierPercent || 0;
+      const priceModifier = tokenConfig?.tokenPriceModifierPercent || 0;
       const totalToPayInFiat = Number(
         (totalCost * (1 + priceModifier / 100)).toFixed(2),
       );
@@ -311,12 +311,10 @@ const CitizenshipPage = ({
     return <PageNotFound error="" />;
   }
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_PLATFORM_URL ||
-    'https://www.traditionaldreamfactory.com';
-  const canonicalUrl = `${String(baseUrl)
-    .replace(/\/$/, '')
-    .replace(/^(?!https?:\/\/)/, 'https://')}/citizenship`;
+  const baseUrl = getSiteUrl();
+  const canonicalUrl = baseUrl
+    ? `${baseUrl.replace(/^(?!https?:\/\/)/, 'https://')}/citizenship`
+    : '';
   const heroTitle = appName
     ? `${t('citizenship_hero_title')} ${appName}`
     : t('citizenship_hero_title');
@@ -334,9 +332,9 @@ const CitizenshipPage = ({
       <Head>
         <title>{title}</title>
         <meta name="description" content={description} />
-        <link rel="canonical" href={canonicalUrl} />
+        {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={canonicalUrl} />
+        {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         {meta.ogImage ? (

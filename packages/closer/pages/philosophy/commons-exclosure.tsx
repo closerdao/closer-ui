@@ -1,11 +1,14 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { NextPageContext } from 'next';
-import { useTranslations } from 'next-intl';
 
 import Heading from '../../components/ui/Heading';
 
-const SITE_URL = process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth';
+import { NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
+
+import { getSiteUrl } from '../../utils/siteUrl';
+
+const SITE_URL = getSiteUrl();
 
 const CommonsExclosurePage = () => {
   const t = useTranslations();
@@ -14,7 +17,8 @@ const CommonsExclosurePage = () => {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: 'Commons Exclosure: Inverting the Enclosure',
-    description: 'Where historical enclosure fenced communities out, exclosure fences extractive forces out—creating protected spaces for community stewardship.',
+    description:
+      'Where historical enclosure fenced communities out, exclosure fences extractive forces out—creating protected spaces for community stewardship.',
     author: {
       '@type': 'Organization',
       name: 'Closer',
@@ -26,7 +30,8 @@ const CommonsExclosurePage = () => {
       url: SITE_URL,
     },
     mainEntityOfPage: `${SITE_URL}/philosophy/commons-exclosure`,
-    keywords: 'commons exclosure, enclosure, land commons, community stewardship, regenerative communities, Ethiopia exclosures',
+    keywords:
+      'commons exclosure, enclosure, land commons, community stewardship, regenerative communities, Ethiopia exclosures',
   };
 
   return (
@@ -37,20 +42,45 @@ const CommonsExclosurePage = () => {
           name="description"
           content="Where historical enclosure fenced communities out, exclosure fences extractive forces out—creating protected spaces for community stewardship and regeneration."
         />
-        <meta name="keywords" content="commons exclosure, enclosure history, land commons, community stewardship, regenerative communities, Ethiopia exclosures, commons governance" />
-        
-        <meta property="og:title" content="Commons Exclosure — Inverting the Enclosure" />
-        <meta property="og:description" content="Where historical enclosure fenced communities out, exclosure fences extractive forces out—creating protected spaces for community stewardship." />
+        <meta
+          name="keywords"
+          content="commons exclosure, enclosure history, land commons, community stewardship, regenerative communities, Ethiopia exclosures, commons governance"
+        />
+
+        <meta
+          property="og:title"
+          content="Commons Exclosure — Inverting the Enclosure"
+        />
+        <meta
+          property="og:description"
+          content="Where historical enclosure fenced communities out, exclosure fences extractive forces out—creating protected spaces for community stewardship."
+        />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content={`${SITE_URL}/philosophy/commons-exclosure`} />
+        {SITE_URL && (
+          <meta
+            property="og:url"
+            content={`${SITE_URL}/philosophy/commons-exclosure`}
+          />
+        )}
         <meta property="og:site_name" content="Closer" />
-        
+
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Commons Exclosure — Inverting the Enclosure" />
-        <meta name="twitter:description" content="Where historical enclosure fenced communities out, exclosure fences extractive forces out." />
-        
-        <link rel="canonical" href={`${SITE_URL}/philosophy/commons-exclosure`} />
-        
+        <meta
+          name="twitter:title"
+          content="Commons Exclosure — Inverting the Enclosure"
+        />
+        <meta
+          name="twitter:description"
+          content="Where historical enclosure fenced communities out, exclosure fences extractive forces out."
+        />
+
+        {SITE_URL && (
+          <link
+            rel="canonical"
+            href={`${SITE_URL}/philosophy/commons-exclosure`}
+          />
+        )}
+
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
@@ -149,7 +179,10 @@ const CommonsExclosurePage = () => {
 
             <div className="space-y-6 mb-8">
               <div className="border border-red-300 bg-red-50 dark:bg-red-950/30 rounded-lg p-6">
-                <Heading level={3} className="text-lg mb-2 text-red-700 dark:text-red-400">
+                <Heading
+                  level={3}
+                  className="text-lg mb-2 text-red-700 dark:text-red-400"
+                >
                   Derg Military Regime (1974–1991)
                 </Heading>
                 <p className="text-foreground/80">
@@ -161,7 +194,10 @@ const CommonsExclosurePage = () => {
               </div>
 
               <div className="border border-green-300 bg-green-50 dark:bg-green-950/30 rounded-lg p-6">
-                <Heading level={3} className="text-lg mb-2 text-green-700 dark:text-green-400">
+                <Heading
+                  level={3}
+                  className="text-lg mb-2 text-green-700 dark:text-green-400"
+                >
                   Community Governance (Post-1991)
                 </Heading>
                 <p className="text-foreground/80">
@@ -242,8 +278,8 @@ const CommonsExclosurePage = () => {
                 At Closer, we build digital exclosures around regenerative
                 communities. Token holders have stakes but within governance
                 structures that embed ecological accountability and collective
-                benefits. The question isn&apos;t whether private ownership
-                must be extractive—it&apos;s what institutional conditions make
+                benefits. The question isn&apos;t whether private ownership must
+                be extractive—it&apos;s what institutional conditions make
                 ownership regenerative versus extractive.
               </p>
             </div>
@@ -280,6 +316,6 @@ CommonsExclosurePage.getInitialProps = async (context: NextPageContext) => {
   try {
     return {};
   } catch (err) {
-    return { error: err, };
+    return { error: err };
   }
 };
