@@ -35,7 +35,7 @@ import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import { resolveTimeZone } from 'closer/utils/appConfigFromEnv';
 
-import { appConfigFromEnv, env } from '../env';
+import { appConfigFromEnv } from '../env';
 import '../styles/index.css';
 
 interface AppOwnProps extends AppProps {
