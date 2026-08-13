@@ -14,6 +14,7 @@ export function getAppConfigFromEnv(
   fallbackAppName?: string,
 ): Record<string, any> {
   const appName = process.env.NEXT_PUBLIC_APP_NAME || fallbackAppName;
+  const timezone = process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE;
 
   return {
     // Omit the key entirely when we have nothing, so a spread of this object
@@ -22,9 +23,7 @@ export function getAppConfigFromEnv(
     // No fallback timezone (#990): omit the key when the env var is unset so a
     // spread of this object never invents a timezone or clobbers one supplied
     // by the app's own config.
-    ...(process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE
-      ? { DEFAULT_TIMEZONE: process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE }
-      : {}),
+    ...(timezone ? { DEFAULT_TIMEZONE: timezone } : {}),
     STRIPE_CUSTOMER_PORTAL_URL:
       process.env.NEXT_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL,
   };

@@ -11,7 +11,7 @@ A Village Deployment is deployable when the frontend has:
 - `NEXT_PUBLIC_APP_NAME` set to the Village slug. **Required, no default.**
 - `NEXT_PUBLIC_API_URL` pointing at the Village backend.
 - `NEXT_PUBLIC_PLATFORM_URL` or equivalent deployment domain.
-- `NEXT_PUBLIC_DEFAULT_TIMEZONE`, or a backend `general.timeZone` config value.
+- `NEXT_PUBLIC_DEFAULT_TIMEZONE` set to the village's IANA timezone. **Required, no default** — the build fails without it (#990). A backend `general.timeZone` config value may override it at runtime but cannot substitute for it at build.
 - Optional CDN/media environment values used by shared Closer features.
 
 The backend may have no homepage content. In that case `/` renders the Coming Soon State and marks it `noindex,nofollow`.
