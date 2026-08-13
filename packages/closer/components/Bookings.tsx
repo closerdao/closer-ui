@@ -13,6 +13,7 @@ import Pagination from './Pagination';
 import { Heading, Spinner } from './ui';
 import { BookingConfig } from '../types/api';
 import {
+  getBookingAnswers,
   getBookingListingDisplayName,
   getBookingListingEmbedded,
   getBookingListingRefId,
@@ -29,6 +30,10 @@ interface Props {
 }
 
 const MAX_USERS_TO_FETCH = 2000;
+
+// Answers are free text, so every cell has to be quoted and escaped.
+const csvCell = (value: unknown) =>
+  `"${(value == null ? '' : String(value)).replace(/"/g, '""')}"`;
 
 const Bookings = ({
   filter,
@@ -132,6 +137,7 @@ const Bookings = ({
         ? [{ label: 'Pickup', key: 'pickup' }]
         : []),
       { label: 'Total', key: 'total' },
+      { label: 'Questionnaire', key: 'questionnaire' },
     ];
     const data = bookings
       .map((booking: any) => {
@@ -160,14 +166,19 @@ const Bookings = ({
             booking.getIn(['total', 'val']) ??
             booking.getIn(['priceLock', 'total', 'val']) ??
             booking.getIn(['fiatTarget', 'val']),
+          questionnaire: getBookingAnswers(
+            booking.get('fields')?.toJS?.() ?? booking.get('fields'),
+          )
+            .map(({ question, answer }) => `${question}: ${answer}`)
+            .join(' | '),
         };
       })
       .toJS();
 
     const csvContent = [
-      headers.map((h) => h.label).join(','),
+      headers.map((h) => csvCell(h.label)).join(','),
       ...data.map((row: Record<string, string | number>) =>
-        Object.values(row).join(','),
+        headers.map((h) => csvCell(row[h.key])).join(','),
       ),
     ].join('\n');
 

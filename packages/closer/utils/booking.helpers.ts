@@ -246,6 +246,25 @@ export const areNumberArraysEqual = (
   return aa.every((value, index) => value === bb[index]);
 };
 
+/**
+ * `booking.fields` holds one single-key object per questionnaire question, keyed
+ * by the question label the guest was shown. Returns the answered ones only.
+ */
+export const getBookingAnswers = (
+  fields?: { [key: string]: string }[] | null,
+): { question: string; answer: string }[] => {
+  if (!Array.isArray(fields)) {
+    return [];
+  }
+  return fields
+    .map((field) => {
+      const question = Object.keys(field || {})[0];
+      const answer = question ? field[question] : '';
+      return { question, answer: typeof answer === 'string' ? answer : '' };
+    })
+    .filter(({ question, answer }) => Boolean(question) && answer.trim() !== '');
+};
+
 export function bookingGuestNightsMetricPoint(
   nights: number | string | undefined | null,
   adults: number | string | undefined | null,

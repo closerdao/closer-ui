@@ -125,11 +125,22 @@ const Questionnaire = ({
   const hasRequiredQuestions = questions?.some((question) => question.required);
   const [isSubmitDisabled, setSubmitDisabled] = useState(hasRequiredQuestions);
 
-  const [answers, setAnswers] = useState(
-    booking?.fields && booking?.fields?.length
-      ? booking?.fields
-      : questions?.map((question) => ({ [question.name]: '' })),
-  );
+  // Booking and event both load asynchronously, so answers cannot be seeded in
+  // the useState initializer — it runs before either is available.
+  const [answers, setAnswers] = useState<Record<string, string>[]>([]);
+  const answersSeededRef = useRef(false);
+
+  useEffect(() => {
+    if (answersSeededRef.current) return;
+    if (!booking?._id || !questions?.length) return;
+    answersSeededRef.current = true;
+    const seeded = booking.fields?.length
+      ? booking.fields
+      : questions.map((question) => ({ [question.name]: '' }));
+    setAnswers((previousAnswers) =>
+      previousAnswers?.length ? previousAnswers : seeded,
+    );
+  }, [booking?._id, questions?.length]);
 
   const [userPreferences, setUserPreferences] = useState({
     diet: Array.isArray(initialUser?.preferences?.diet)
@@ -140,7 +151,13 @@ const Questionnaire = ({
     skills: initialUser?.preferences?.skills || [],
   });
 
+  // Once the visitor starts editing, local state owns these fields: every save
+  // resolves into a fresh auth user object, and re-syncing from it would undo
+  // whatever was typed in the meantime.
+  const hasEditedPreferencesRef = useRef(false);
+
   useEffect(() => {
+    if (hasEditedPreferencesRef.current) return;
     if (initialUser?.preferences) {
       setUserPreferences({
         diet: Array.isArray(initialUser.preferences.diet)
@@ -163,13 +180,14 @@ const Questionnaire = ({
     if (!hasRequiredQuestions) {
       return;
     }
-    const allRequiredQuestionsCompleted = questions?.some((question) => {
-      const answer = getAnswer(answers, question.name);
-      const isAnswered = answer !== '';
-      return question.required && isAnswered;
-    });
+    const allRequiredQuestionsCompleted = questions
+      ?.filter((question) => question.required)
+      .every((question) => {
+        const answer = getAnswer(answers, question.name);
+        return typeof answer === 'string' && answer.trim() !== '';
+      });
     setSubmitDisabled(!allRequiredQuestionsCompleted);
-  }, [answers]);
+  }, [answers, hasRequiredQuestions, questions?.length]);
 
   const saveUserData = (
     attribute: keyof typeof userPreferences,
@@ -201,6 +219,21 @@ const Questionnaire = ({
       }
     };
   };
+
+  // Free-text preferences save as you type, so hold the request until typing
+  // pauses instead of firing one PATCH per keystroke.
+  const superpowerSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  useEffect(
+    () => () => {
+      if (superpowerSaveTimerRef.current) {
+        clearTimeout(superpowerSaveTimerRef.current);
+      }
+    },
+    [],
+  );
 
   const handleSubmit = async () => {
     try {
@@ -234,13 +267,18 @@ const Questionnaire = ({
   };
 
   const handleAnswer = (name: string, value: string) => {
-    const updatedAnswers = answers.map((answer: Record<string, string>) => {
-      if (Object.keys(answer)[0] === name) {
-        return { [name]: value };
+    setAnswers((previousAnswers) => {
+      const current = previousAnswers ?? [];
+      const hasEntry = current.some(
+        (answer) => Object.keys(answer)[0] === name,
+      );
+      if (!hasEntry) {
+        return [...current, { [name]: value }];
       }
-      return answer;
+      return current.map((answer) =>
+        Object.keys(answer)[0] === name ? { [name]: value } : answer,
+      );
     });
-    setAnswers(updatedAnswers);
   };
 
   const stepUrlParams =
@@ -369,6 +407,7 @@ const Questionnaire = ({
               label={t('settings_dietary_preferences')}
               values={userPreferences.diet}
               onChange={(value) => {
+                hasEditedPreferencesRef.current = true;
                 setUserPreferences((prev) => ({ ...prev, diet: value }));
                 saveUserData('diet')(value);
               }}
@@ -384,6 +423,7 @@ const Questionnaire = ({
                 options={SHARED_ACCOMMODATION_PREFERENCES}
                 className="mb-4"
                 onChange={(value) => {
+                  hasEditedPreferencesRef.current = true;
                   setUserPreferences((prev) => ({
                     ...prev,
                     sharedAccomodation: value,
@@ -399,11 +439,18 @@ const Questionnaire = ({
               placeholder={t('settings_superpower_placeholder')}
               value={userPreferences.superpower}
               onChange={(e) => {
+                const value = e.target.value;
+                hasEditedPreferencesRef.current = true;
                 setUserPreferences((prev) => ({
                   ...prev,
-                  superpower: e.target.value,
+                  superpower: value,
                 }));
-                saveUserData('superpower')(e.target.value);
+                if (superpowerSaveTimerRef.current) {
+                  clearTimeout(superpowerSaveTimerRef.current);
+                }
+                superpowerSaveTimerRef.current = setTimeout(() => {
+                  saveUserData('superpower')(value);
+                }, 600);
               }}
               isInstantSave={true}
               hasSaved={hasSaved}
@@ -415,6 +462,7 @@ const Questionnaire = ({
               label={t('settings_skills')}
               values={userPreferences.skills}
               onChange={(value) => {
+                hasEditedPreferencesRef.current = true;
                 setUserPreferences((prev) => ({ ...prev, skills: value }));
                 saveUserData('skills')(value);
               }}
