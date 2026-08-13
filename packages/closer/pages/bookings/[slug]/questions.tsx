@@ -128,19 +128,31 @@ const Questionnaire = ({
   // Booking and event both load asynchronously, so answers cannot be seeded in
   // the useState initializer — it runs before either is available.
   const [answers, setAnswers] = useState<Record<string, string>[]>([]);
-  const answersSeededRef = useRef(false);
+  const seededBookingIdRef = useRef<string | null>(null);
+  const seededFromFieldsRef = useRef(false);
 
   useEffect(() => {
-    if (answersSeededRef.current) return;
     if (!booking?._id || !questions?.length) return;
-    answersSeededRef.current = true;
-    const seeded = booking.fields?.length
-      ? booking.fields
-      : questions.map((question) => ({ [question.name]: '' }));
-    setAnswers((previousAnswers) =>
-      previousAnswers?.length ? previousAnswers : seeded,
-    );
-  }, [booking?._id, questions?.length]);
+
+    const bookingId = String(booking._id);
+    const hasFields = Boolean(booking.fields?.length);
+
+    if (seededBookingIdRef.current !== bookingId) {
+      seededBookingIdRef.current = bookingId;
+      seededFromFieldsRef.current = hasFields;
+      setAnswers(
+        hasFields
+          ? booking.fields
+          : questions.map((question) => ({ [question.name]: '' })),
+      );
+      return;
+    }
+
+    if (hasFields && !seededFromFieldsRef.current) {
+      seededFromFieldsRef.current = true;
+      setAnswers(booking.fields);
+    }
+  }, [booking?._id, booking?.fields?.length, questions?.length]);
 
   const [userPreferences, setUserPreferences] = useState({
     diet: Array.isArray(initialUser?.preferences?.diet)
@@ -225,11 +237,28 @@ const Questionnaire = ({
   const superpowerSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+  const superpowerValueRef = useRef(userPreferences.superpower);
+  superpowerValueRef.current = userPreferences.superpower;
+  const saveSuperpowerRef = useRef<(value: string | string[]) => void>(
+    () => {},
+  );
+  saveSuperpowerRef.current = saveUserData('superpower');
+
+  const flushPendingSuperpowerSave = () => {
+    if (!superpowerSaveTimerRef.current) {
+      return;
+    }
+    clearTimeout(superpowerSaveTimerRef.current);
+    superpowerSaveTimerRef.current = null;
+    return saveSuperpowerRef.current(superpowerValueRef.current);
+  };
 
   useEffect(
     () => () => {
       if (superpowerSaveTimerRef.current) {
         clearTimeout(superpowerSaveTimerRef.current);
+        superpowerSaveTimerRef.current = null;
+        saveSuperpowerRef.current(superpowerValueRef.current);
       }
     },
     [],
@@ -237,6 +266,7 @@ const Questionnaire = ({
 
   const handleSubmit = async () => {
     try {
+      await flushPendingSuperpowerSave();
       await platform.booking.patch(booking?._id, {
         fields: answers,
       });
@@ -449,6 +479,7 @@ const Questionnaire = ({
                   clearTimeout(superpowerSaveTimerRef.current);
                 }
                 superpowerSaveTimerRef.current = setTimeout(() => {
+                  superpowerSaveTimerRef.current = null;
                   saveUserData('superpower')(value);
                 }, 600);
               }}
