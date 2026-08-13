@@ -33,6 +33,8 @@ import {
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 import { villageConfigDefaults } from '../config';
+import { resolveTimeZone } from 'closer/utils/appConfigFromEnv';
+
 import { appConfigFromEnv, env } from '../env';
 import '../styles/index.css';
 
@@ -116,11 +118,7 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
         <ErrorBoundary>
           <LocaleMessagesNextIntlBridge
             initialMessages={messages || {}}
-            timeZone={
-              config?.TIME_ZONE ||
-              env.NEXT_PUBLIC_DEFAULT_TIMEZONE ||
-              appConfigFromEnv.DEFAULT_TIMEZONE
-            }
+            timeZone={resolveTimeZone(config, env.NEXT_PUBLIC_DEFAULT_TIMEZONE)}
           >
             <AuthProvider>
               <PlatformProvider>

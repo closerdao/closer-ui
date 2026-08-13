@@ -10,6 +10,31 @@
  * its own name as `fallbackAppName`; the env var still wins when set (villages
  * supply their slug at provisioning time).
  */
+/**
+ * Single resolution chain for the app's display timezone: the village's own
+ * config first, then the deployment env. Shared code carries no timezone
+ * default (#990); a branded app passes its own last-resort literal once here,
+ * and village-app passes none — its build requires the env var instead.
+ */
+export function resolveTimeZone(
+  config: { TIME_ZONE?: string } | null | undefined,
+  appFallbackTimeZone: string,
+): string;
+export function resolveTimeZone(
+  config: { TIME_ZONE?: string } | null | undefined,
+): string | undefined;
+export function resolveTimeZone(
+  config: { TIME_ZONE?: string } | null | undefined,
+  appFallbackTimeZone?: string,
+): string | undefined {
+  return (
+    config?.TIME_ZONE ||
+    process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE ||
+    appFallbackTimeZone ||
+    undefined
+  );
+}
+
 export function getAppConfigFromEnv(
   fallbackAppName?: string,
 ): Record<string, any> {

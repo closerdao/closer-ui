@@ -6,7 +6,7 @@
  * spread of this object cannot clobber a timezone supplied by the app's own
  * config, and nothing downstream silently inherits Europe/Lisbon.
  */
-import { getAppConfigFromEnv } from '../appConfigFromEnv';
+import { getAppConfigFromEnv, resolveTimeZone } from '../appConfigFromEnv';
 
 describe('getAppConfigFromEnv — DEFAULT_TIMEZONE', () => {
   const prev = process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE;
@@ -45,5 +45,36 @@ describe('getAppConfigFromEnv — DEFAULT_TIMEZONE', () => {
       ...getAppConfigFromEnv('someapp'),
     };
     expect(merged.DEFAULT_TIMEZONE).toBe('Asia/Tokyo');
+  });
+});
+
+describe('resolveTimeZone', () => {
+  const OLD = process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE;
+  afterEach(() => {
+    if (OLD === undefined) delete process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE;
+    else process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE = OLD;
+  });
+
+  it('prefers the village config over env and app fallback', () => {
+    process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE = 'Europe/Berlin';
+    expect(
+      resolveTimeZone({ TIME_ZONE: 'Atlantic/Azores' }, 'Europe/Lisbon'),
+    ).toBe('Atlantic/Azores');
+  });
+
+  it('falls through empty config to the env var', () => {
+    process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE = 'Europe/Berlin';
+    expect(resolveTimeZone({}, 'Europe/Lisbon')).toBe('Europe/Berlin');
+  });
+
+  it('uses the app-supplied literal only as last resort', () => {
+    delete process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE;
+    expect(resolveTimeZone(null, 'Europe/Lisbon')).toBe('Europe/Lisbon');
+  });
+
+  it('returns undefined with no config, env, or app fallback — never invents one', () => {
+    delete process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE;
+    expect(resolveTimeZone(undefined)).toBeUndefined();
+    expect(resolveTimeZone({ TIME_ZONE: '' })).toBeUndefined();
   });
 });

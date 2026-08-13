@@ -33,6 +33,8 @@ import {
 } from 'closer/utils/app.helpers';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
+import { resolveTimeZone } from 'closer/utils/appConfigFromEnv';
+
 import { appConfigFromEnv, env } from '../env';
 import '../styles/index.css';
 
@@ -109,14 +111,7 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
         <ErrorBoundary>
           <LocaleMessagesNextIntlBridge
             initialMessages={messages || {}}
-            timeZone={
-              config?.TIME_ZONE ||
-              env.NEXT_PUBLIC_DEFAULT_TIMEZONE ||
-              appConfigFromEnv.DEFAULT_TIMEZONE ||
-              // This branded app's own last-resort timezone (previously the shared
-              // template default, removed in #990 — branded apps keep their literal).
-              'Europe/Lisbon'
-            }
+            timeZone={resolveTimeZone(config, 'Europe/Lisbon')}
           >
             <AuthProvider>
               <PromptGetInTouchProvider>
