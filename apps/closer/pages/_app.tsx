@@ -112,7 +112,10 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
             timeZone={
               config?.TIME_ZONE ||
               env.NEXT_PUBLIC_DEFAULT_TIMEZONE ||
-              appConfigFromEnv.DEFAULT_TIMEZONE
+              appConfigFromEnv.DEFAULT_TIMEZONE ||
+              // This branded app's own last-resort timezone (previously the shared
+              // template default, removed in #990 — branded apps keep their literal).
+              'Europe/Lisbon'
             }
           >
             <AuthProvider>
