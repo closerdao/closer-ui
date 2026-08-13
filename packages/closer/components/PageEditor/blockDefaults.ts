@@ -464,6 +464,21 @@ export const createSection = (type: SectionType): PageSection => {
           content: { title: 'Citizens joined' },
         },
       };
+    case 'citizenshipStatus':
+      return {
+        _localId,
+        type: 'citizenshipStatus',
+        data: {
+          settings: { showBalances: true },
+          content: {
+            title: '',
+            description: '',
+            ctaText: '',
+            ctaLink: '/citizenship/why',
+            items: [],
+          },
+        },
+      };
     case 'financedTokensStart':
       return {
         _localId,

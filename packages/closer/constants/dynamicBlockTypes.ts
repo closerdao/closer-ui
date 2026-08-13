@@ -17,6 +17,7 @@ export const DYNAMIC_BLOCK_TYPES: SectionType[] = [
   'priceHistory',
   'webinar',
   'citizenProgressBar',
+  'citizenshipStatus',
   'financedTokensStart',
   'cohousingApplication',
   'listingsPreviews',

@@ -14,6 +14,7 @@ interface DashboardLinksConfig {
   isAffiliateEnabled?: boolean;
   isTokenEnabled?: boolean;
   isApplicationsEnabled?: boolean;
+  isFederationEnabled?: boolean;
 }
 
 export const getDashboardLinks = (
@@ -26,6 +27,7 @@ export const getDashboardLinks = (
     isAffiliateEnabled = process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true',
     isTokenEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true',
     isApplicationsEnabled = false,
+    isFederationEnabled = process.env.NEXT_PUBLIC_FEATURE_FEDERATION === 'true',
   } = config;
 
   const baseLinks: DashboardLink[] = [
@@ -196,7 +198,7 @@ export const getDashboardLinks = (
       label: t('navigation_deploy_queue'),
       url: '/dashboard/deploy-queue',
       rbacPage: 'AffiliateSettings',
-      enabled: true,
+      enabled: isFederationEnabled,
       roles: ['admin', 'affiliate-manager'],
     },
   ];

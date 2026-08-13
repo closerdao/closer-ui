@@ -13,7 +13,7 @@ import { SUBSCRIPTION_CITIZEN_STEPS } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { useConfig } from '../../../hooks/useConfig';
-import { CitizenshipConfig, GeneralConfig } from '../../../types';
+import { GeneralConfig, TokenConfig } from '../../../types';
 import {
   FinanceApplication,
   FinanceApplicationCreateRequest,
@@ -23,6 +23,10 @@ import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { financeApplicationIdFromCreateResponse } from '../../../utils/financeApplicationIdFromResponse';
 import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
+import {
+  getDownPaymentPercent,
+  getFinancingDurations,
+} from '../../../utils/tokenFinancing';
 import PageNotFound from '../../not-found';
 
 const SubscriptionsCitizenApplyPage: NextPage = () => {
@@ -30,11 +34,14 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
     enabled: boolean;
     elements: SubscriptionPlan[];
   };
-  const citizenshipConfig = getCachedConfig('citizenship') as CitizenshipConfig | null;
+  const tokenConfig = getCachedConfig('token') as TokenConfig | null;
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
 
   const MIN_TOKENS_TO_FINANCE = 30;
+
+  const durations = getFinancingDurations(tokenConfig);
+  const downPaymentPercent = getDownPaymentPercent(tokenConfig);
 
   const areSubscriptionsEnabled =
     subscriptionsConfig?.enabled &&
@@ -111,6 +118,9 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
         tokensToFinance: application.tokensToFinance!,
         totalToPayInFiat: application.totalToPayInFiat!,
         iban: application.iban!,
+        // The picker is hidden when only one term is offered, so the default
+        // still has to be sent explicitly.
+        durationInMonths: application.durationInMonths || durations[0],
         isCitizenApplication,
         why: application?.why,
       } as FinanceApplicationCreateRequest);
@@ -188,8 +198,10 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
               application={application}
               updateApplication={updateApplication}
               tokenPriceModifierPercent={
-                citizenshipConfig?.tokenPriceModifierPercent || 0
+                tokenConfig?.tokenPriceModifierPercent || 0
               }
+              downPaymentPercent={downPaymentPercent}
+              durations={durations}
               isAgreementAccepted={isAgreementAccepted}
               setIsAgreementAccepted={setIsAgreementAccepted}
               isTokenTermsAccepted={isTokenTermsAccepted}

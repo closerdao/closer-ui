@@ -203,6 +203,13 @@ const BLOCK_TYPES: BlockTypeDef[] = [
     featureKey: 'citizenship',
   },
   {
+    type: 'citizenshipStatus',
+    labelKey: 'pages_editor_block_citizenship_status',
+    descKey: 'pages_editor_block_citizenship_status_desc',
+    category: 'citizenship',
+    featureKey: 'citizenship',
+  },
+  {
     type: 'financedTokensStart',
     labelKey: 'pages_editor_block_financed_tokens',
     descKey: 'pages_editor_block_financed_tokens_desc',

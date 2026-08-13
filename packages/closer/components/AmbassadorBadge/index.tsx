@@ -1,28 +1,20 @@
 import { FC } from 'react';
 
-import { useTranslations } from 'next-intl';
+import RoleTag, { RoleTagSize } from '../RoleTag';
 
 type AmbassadorBadgeProps = {
   className?: string;
-  size?: 'sm' | 'md';
+  size?: RoleTagSize;
 };
 
+/**
+ * Ambassadors get their own entry point because the badge is shown for
+ * affiliates too, who do not carry the `ambassador` role. The chip itself is
+ * the shared role tag, so it stays in step with the rest of them.
+ */
 const AmbassadorBadge: FC<AmbassadorBadgeProps> = ({
   className = '',
   size = 'sm',
-}) => {
-  const t = useTranslations();
-  const sizeClass =
-    size === 'md' ? 'text-[12.5px] px-3.5 py-1.5' : 'text-[11px] px-2.5 py-1';
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full border border-[#C2F0DA] bg-[#E2FAEE] font-semibold uppercase tracking-[0.1em] text-[#0B7A4C] ${sizeClass} ${className}`}
-    >
-      <span className="text-[#0FA968]">✦</span>
-      {t('ambassadors_badge_label')}
-    </span>
-  );
-};
+}) => <RoleTag role="ambassador" size={size} className={className} />;
 
 export default AmbassadorBadge;
