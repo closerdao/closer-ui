@@ -68,7 +68,7 @@ const EventPage = ({
   const { user, isAuthenticated, refetchUser } = useAuth();
   const { APP_NAME } = useConfig() || {};
 
-  const isEventsEnabled = eventsConfig?.enabled !== false;
+  const isEventsEnabled = eventsConfig?.enabled === true;
 
   const [photo, setPhoto] = useState<string | null>(event?.photo ?? null);
   const [password, setPassword] = useState('');

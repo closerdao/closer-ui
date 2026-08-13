@@ -32,7 +32,7 @@ export const getPageEditorFeatureFlags = (
     Boolean(config?.fundraiser?.enabled);
   const token = process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true';
   const webinar = Boolean(config?.webinar?.enabled);
-  const events = config?.events?.enabled !== false;
+  const events = config?.events?.enabled === true;
   const booking =
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true' &&
     Boolean(config?.booking?.enabled);

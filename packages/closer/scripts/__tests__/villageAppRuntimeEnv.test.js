@@ -66,6 +66,18 @@ describe('apps/village-app/env.js', () => {
     expect(missing).toEqual([]);
   });
 
+  it('defaults every feature gate to off (#950)', () => {
+    const shapeBlock = sliceBlock('export const villageAppEnvShape');
+    const featureLines = shapeBlock
+      .split('\n')
+      .filter((line) => /NEXT_PUBLIC_FEATURE_[A-Z0-9_]+:/.test(line));
+    expect(featureLines.length).toBeGreaterThan(10);
+    const defaultingOn = featureLines.filter(
+      (line) => !line.includes(".default('false')"),
+    );
+    expect(defaultingOn).toEqual([]);
+  });
+
   it('maps each key to its own inlinable process.env member expression', () => {
     const wrong = runtimeKeys.filter(
       (key) =>

@@ -33,7 +33,7 @@ const Search = ({ articles, keyword, tags, authors }: Props) => {
   const blogConfig = getCachedConfig('blog') as BlogConfig | null;
   const t = useTranslations();
 
-  const isBlogEnabled = blogConfig?.enabled !== false;
+  const isBlogEnabled = blogConfig?.enabled === true;
 
   if (!isBlogEnabled) {
     return <FeatureNotEnabled feature="blog" />;

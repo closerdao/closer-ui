@@ -33,7 +33,7 @@ const Events = ({ generalConfig, eventsConfig, pageMeta }: Props) => {
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
-  const isEventsEnabled = eventsConfig?.enabled !== false;
+  const isEventsEnabled = eventsConfig?.enabled === true;
 
   const meta = resolvePageMeta(pageMeta, {
     title: `${t('events_title')} - ${PLATFORM_NAME}`,

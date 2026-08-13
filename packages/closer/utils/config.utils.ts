@@ -17,7 +17,7 @@ export const getEnabledConfigs = (configs: any, allConfigs: string[]) => {
     });
     const isDefaultEnabled =
       configDescription.find((config) => config.slug === configName)?.value
-        ?.enabled?.default ?? true;
+        ?.enabled?.default ?? false;
     const isEnabled = (!isConfigDefined && isDefaultEnabled) || isConfigEnabled;
 
     return isEnabled;
