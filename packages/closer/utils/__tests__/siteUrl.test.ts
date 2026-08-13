@@ -16,6 +16,16 @@ describe('getSiteUrl', () => {
     expect(getSiteUrl()).toBe('https://example-village.com');
   });
 
+  it('prepends https:// when the configured value has no scheme', () => {
+    process.env.NEXT_PUBLIC_PLATFORM_URL = 'example-village.com';
+    expect(getSiteUrl()).toBe('https://example-village.com');
+  });
+
+  it('keeps an explicit http:// scheme', () => {
+    process.env.NEXT_PUBLIC_PLATFORM_URL = 'http://localhost:3000';
+    expect(getSiteUrl()).toBe('http://localhost:3000');
+  });
+
   it('strips trailing slashes', () => {
     process.env.NEXT_PUBLIC_PLATFORM_URL = 'https://example-village.com/';
     expect(getSiteUrl()).toBe('https://example-village.com');

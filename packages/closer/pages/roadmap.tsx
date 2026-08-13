@@ -3,11 +3,13 @@ import Link from 'next/link';
 
 import { NextPageContext } from 'next';
 
+import { useConfig } from '../hooks/useConfig';
 import { getSiteUrl } from '../utils/siteUrl';
 
 const SITE_URL = getSiteUrl();
 
 const RoadmapPage = () => {
+  const { PLATFORM_NAME } = useConfig() || {};
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -17,12 +19,12 @@ const RoadmapPage = () => {
     author: {
       '@type': 'Organization',
       name: 'Closer',
-      url: SITE_URL,
+      ...(SITE_URL ? { url: SITE_URL } : {}),
     },
     publisher: {
       '@type': 'Organization',
       name: 'Closer',
-      url: SITE_URL,
+      ...(SITE_URL ? { url: SITE_URL } : {}),
     },
     datePublished: '2026-01-01',
     dateModified: '2026-01-23',
@@ -140,7 +142,9 @@ const RoadmapPage = () => {
         />
         <meta property="og:type" content="article" />
         {SITE_URL && <meta property="og:url" content={`${SITE_URL}/roadmap`} />}
-        <meta property="og:site_name" content="Closer" />
+        {PLATFORM_NAME && (
+          <meta property="og:site_name" content={PLATFORM_NAME} />
+        )}
         <meta
           property="article:published_time"
           content="2026-01-01T00:00:00Z"

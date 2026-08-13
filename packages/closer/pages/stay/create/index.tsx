@@ -58,7 +58,7 @@ interface Props {
   messages?: any;
 }
 
-const PLATFORM_URL = getSiteUrl();
+const SITE_URL = getSiteUrl();
 
 const formatDate = (d: Date | string | null) =>
   d ? dayjs(d).format('YYYY-MM-DD') : '';
@@ -491,7 +491,7 @@ const StayCreatePage = ({
   const pageDescription = isEventBooking
     ? t('stay_create_event_meta_description')
     : t('stay_create_meta_description');
-  const canonicalUrl = PLATFORM_URL ? `${PLATFORM_URL}/stay/create` : '';
+  const canonicalUrl = SITE_URL ? `${SITE_URL}/stay/create` : '';
 
   const goBack = () => {
     if (isEventBooking && eventProp?.slug) {

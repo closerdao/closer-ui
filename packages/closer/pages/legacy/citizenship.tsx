@@ -312,9 +312,7 @@ const CitizenshipPage = ({
   }
 
   const baseUrl = getSiteUrl();
-  const canonicalUrl = baseUrl
-    ? `${baseUrl.replace(/^(?!https?:\/\/)/, 'https://')}/citizenship`
-    : '';
+  const canonicalUrl = baseUrl ? `${baseUrl}/citizenship` : '';
   const heroTitle = appName
     ? `${t('citizenship_hero_title')} ${appName}`
     : t('citizenship_hero_title');

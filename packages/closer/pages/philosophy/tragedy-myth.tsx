@@ -6,12 +6,14 @@ import Heading from '../../components/ui/Heading';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import { useConfig } from '../../hooks/useConfig';
 import { getSiteUrl } from '../../utils/siteUrl';
 
 const SITE_URL = getSiteUrl();
 
 const TragedyMythPage = () => {
   const t = useTranslations();
+  const { PLATFORM_NAME } = useConfig() || {};
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -22,12 +24,12 @@ const TragedyMythPage = () => {
     author: {
       '@type': 'Organization',
       name: 'Closer',
-      url: SITE_URL,
+      ...(SITE_URL ? { url: SITE_URL } : {}),
     },
     publisher: {
       '@type': 'Organization',
       name: 'Closer',
-      url: SITE_URL,
+      ...(SITE_URL ? { url: SITE_URL } : {}),
     },
     mainEntityOfPage: `${SITE_URL}/philosophy/tragedy-myth`,
     keywords:
@@ -59,7 +61,9 @@ const TragedyMythPage = () => {
             content={`${SITE_URL}/philosophy/tragedy-myth`}
           />
         )}
-        <meta property="og:site_name" content="Closer" />
+        {PLATFORM_NAME && (
+          <meta property="og:site_name" content={PLATFORM_NAME} />
+        )}
 
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="The Tragedy of the Commons Myth" />

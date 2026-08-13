@@ -196,9 +196,7 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
   };
 
   const baseUrl = getSiteUrl();
-  const canonicalUrl = baseUrl
-    ? `${baseUrl.replace(/^(?!https?:\/\/)/, 'https://')}/token`
-    : '';
+  const canonicalUrl = baseUrl ? `${baseUrl}/token` : '';
   const tokenPrice = networkTokenPrice;
   const formattedMaxSupply = maxSupplyFormatter.format(saleHardCap);
 
