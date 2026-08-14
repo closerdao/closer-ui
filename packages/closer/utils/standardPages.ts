@@ -9,6 +9,7 @@ import {
   slugFromStandardPageVirtualId,
   toStandardPageVirtualId,
   type AppConfigForStandardPages,
+  type StandardPageFeatureToggle,
 } from '../constants/standardPages';
 import type { PageDoc, PageMetaOverride, PageSection } from '../types/page';
 import api from './api';
@@ -23,9 +24,11 @@ import { readPageMenuMeta, type PageMenuMeta } from './pageMenu';
 const isTdfApp = (): boolean =>
   (process.env.NEXT_PUBLIC_APP_NAME ?? '').toLowerCase() === 'tdf';
 
-const configSection = (slug: string): { enabled?: boolean } | undefined => {
+const configSection = (
+  slug: string,
+): StandardPageFeatureToggle | undefined => {
   const value = getBuildTimeConfigValue(slug);
-  return value ? (value as { enabled?: boolean }) : undefined;
+  return value ? (value as StandardPageFeatureToggle) : undefined;
 };
 
 const getStandardPagesFeatureConfig = (): AppConfigForStandardPages => ({

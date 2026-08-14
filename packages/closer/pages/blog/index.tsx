@@ -51,8 +51,6 @@ const Search = ({ articles, page, numArticles, authors }: Props) => {
   const PLATFORM_NAME = String(
     generalConfig?.platformName || defaultConfig?.PLATFORM_NAME || '',
   ).trim();
-  // Degrade cleanly when no platform name is configured: no 'undefined', no
-  // dangling ' - ' (#951).
   const pageTitle = PLATFORM_NAME
     ? `${PLATFORM_NAME} ${t('blog_title')} - ${PLATFORM_NAME}`
     : t('blog_title');

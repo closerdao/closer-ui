@@ -27,7 +27,6 @@ const toCustomSectionsPage = (page: PageDoc): Page => ({
 
 const getVillageName = (generalConfig: GeneralConfig | null) =>
   generalConfig?.platformName ||
-  // appName is the provisioning slug — humanize it for display.
   humanizeVillageSlug(generalConfig?.appName) ||
   villageConfigDefaults.general.platformName;
 

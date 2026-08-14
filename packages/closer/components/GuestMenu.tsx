@@ -41,9 +41,6 @@ const GuestMenu = () => {
   const pageMenuSections = usePageMenuSections();
 
   const [menuSections, setMenuSections] = useState<MenuSection[]>([]);
-  // Slugs of pages that actually exist in the DB. Team/Press have no shipped
-  // content outside TDF, so their menu entries only appear when a page doc
-  // exists (#951).
   const [dbPageSlugs, setDbPageSlugs] = useState<Set<string>>(new Set());
   const [currentSupply, setCurrentSupply] = useState<number | null>(null);
   const [tokenPrice, setTokenPrice] = useState<number | null>(null);
