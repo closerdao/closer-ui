@@ -130,6 +130,7 @@ const Questionnaire = ({
   const [answers, setAnswers] = useState<Record<string, string>[]>([]);
   const seededBookingIdRef = useRef<string | null>(null);
   const seededFromFieldsRef = useRef(false);
+  const hasEditedAnswersRef = useRef(false);
 
   useEffect(() => {
     if (!booking?._id || !questions?.length) return;
@@ -140,6 +141,7 @@ const Questionnaire = ({
     if (seededBookingIdRef.current !== bookingId) {
       seededBookingIdRef.current = bookingId;
       seededFromFieldsRef.current = hasFields;
+      hasEditedAnswersRef.current = false;
       setAnswers(
         hasFields
           ? booking.fields
@@ -150,7 +152,9 @@ const Questionnaire = ({
 
     if (hasFields && !seededFromFieldsRef.current) {
       seededFromFieldsRef.current = true;
-      setAnswers(booking.fields);
+      if (!hasEditedAnswersRef.current) {
+        setAnswers(booking.fields);
+      }
     }
   }, [booking?._id, booking?.fields?.length, questions?.length]);
 
@@ -297,6 +301,7 @@ const Questionnaire = ({
   };
 
   const handleAnswer = (name: string, value: string) => {
+    hasEditedAnswersRef.current = true;
     setAnswers((previousAnswers) => {
       const current = previousAnswers ?? [];
       const hasEntry = current.some(
