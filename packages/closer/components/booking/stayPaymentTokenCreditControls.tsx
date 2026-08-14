@@ -306,17 +306,17 @@ export function StayPaymentTokenCreditControls({
         pendingTokenPaymentPayloadRef.current = null;
         await onStaySynced();
         stayForStake = updated;
+      }
 
-        if (targetStay.status === 'draft') {
-          const submitted = await submitStay(updated._id);
-          await onStaySynced();
-          stayForStake = (await getStay(submitted._id)) ?? submitted;
+      if (isStayCheckoutDraft(stayForStake)) {
+        const submitted = await submitStay(stayForStake._id);
+        await onStaySynced();
+        stayForStake = (await getStay(submitted._id)) ?? submitted;
 
-          if (isStayAwaitingHostApproval(stayForStake)) {
-            setIsStakeModalOpen(false);
-            setStakePlan(null);
-            return;
-          }
+        if (isStayAwaitingHostApproval(stayForStake)) {
+          setIsStakeModalOpen(false);
+          setStakePlan(null);
+          return;
         }
       }
 

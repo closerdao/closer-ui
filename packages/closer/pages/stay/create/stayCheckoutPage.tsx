@@ -1101,18 +1101,18 @@ const StayCheckoutContent = ({
         pendingTokenPaymentPayloadRef.current = null;
         setCurrentStay(updated);
         stayForStake = updated;
+      }
 
-        if (targetStay.status === 'draft') {
-          const submitted = await submitStay(updated._id);
-          setCurrentStay(submitted);
-          stayForStake = submitted;
+      if (isStayCheckoutDraft(stayForStake)) {
+        const submitted = await submitStay(stayForStake._id);
+        setCurrentStay(submitted);
+        stayForStake = submitted;
 
-          if (isStayAwaitingHostApproval(submitted)) {
-            setIsStakeModalOpen(false);
-            setStakePlan(null);
-            router.replace(`/stay/${submitted._id}/pending`);
-            return;
-          }
+        if (isStayAwaitingHostApproval(submitted)) {
+          setIsStakeModalOpen(false);
+          setStakePlan(null);
+          router.replace(`/stay/${submitted._id}/pending`);
+          return;
         }
       }
 
