@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import { useDebounce } from '../hooks/useDebounce';
 import { Question } from '../types';
 import Input from './ui/Input';
 
@@ -19,32 +18,18 @@ const QuestionnaireItem = ({
 }: Props) => {
   const t = useTranslations();
   const [answer, setAnswer] = React.useState(savedAnswer || '');
-  const debouncedAnswer = useDebounce(answer, 300);
-
-  // The answer we last reported up, and the last value the prop itself held.
-  // Both are refs so they never re-trigger the effects below.
-  const reportedAnswerRef = useRef(savedAnswer || '');
   const savedAnswerPropRef = useRef(savedAnswer || '');
-  const handleAnswerRef = useRef(handleAnswer);
-  handleAnswerRef.current = handleAnswer;
+  const hasEditedRef = useRef(false);
 
-  useEffect(() => {
-    if (debouncedAnswer === reportedAnswerRef.current) {
-      return;
-    }
-    reportedAnswerRef.current = debouncedAnswer;
-    handleAnswerRef.current(name, debouncedAnswer);
-  }, [debouncedAnswer, name]);
-
-  // Adopt the saved answer only when the prop itself changes (e.g. the booking
-  // finished loading). Never sync off local state — that would wipe typing.
   useEffect(() => {
     const incoming = savedAnswer || '';
     if (incoming === savedAnswerPropRef.current) {
       return;
     }
     savedAnswerPropRef.current = incoming;
-    reportedAnswerRef.current = incoming;
+    if (hasEditedRef.current) {
+      return;
+    }
     setAnswer(incoming);
   }, [savedAnswer]);
 
@@ -52,12 +37,18 @@ const QuestionnaireItem = ({
     return null;
   }
 
+  const updateAnswer = (value: string) => {
+    hasEditedRef.current = true;
+    setAnswer(value);
+    handleAnswer(name, value);
+  };
+
   const onChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setAnswer(e.target.value);
+    updateAnswer(e.target.value);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAnswer(e.target.value);
+    updateAnswer(e.target.value);
   };
 
   return (

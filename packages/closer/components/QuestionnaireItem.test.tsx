@@ -1,4 +1,4 @@
-import { act, fireEvent } from '@testing-library/react';
+import { fireEvent } from '@testing-library/react';
 
 import QuestionnaireItem from './QuestionnaireItem';
 import { renderWithNextIntl } from '../test/utils';
@@ -11,15 +11,7 @@ const question = {
 } as any;
 
 describe('QuestionnaireItem', () => {
-  beforeEach(() => {
-    jest.useFakeTimers();
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
-  test('keeps typed text after the debounced answer is reported up', () => {
+  test('keeps typed text after the answer is reported up', () => {
     const handleAnswer = jest.fn();
     const { getByRole } = renderWithNextIntl(
       <QuestionnaireItem
@@ -31,10 +23,6 @@ describe('QuestionnaireItem', () => {
 
     const input = getByRole('textbox') as HTMLInputElement;
     fireEvent.change(input, { target: { value: 'to rest' } });
-
-    act(() => {
-      jest.advanceTimersByTime(1000);
-    });
 
     expect(handleAnswer).toHaveBeenCalledWith(question.name, 'to rest');
     expect(input.value).toBe('to rest');
@@ -58,12 +46,37 @@ describe('QuestionnaireItem', () => {
       />,
     );
 
-    act(() => {
-      jest.advanceTimersByTime(1000);
-    });
-
     const input = getByRole('textbox') as HTMLInputElement;
     expect(input.value).toBe('from the booking');
     expect(handleAnswer).not.toHaveBeenCalled();
+  });
+
+  test('does not overwrite typed text when a saved answer arrives later', () => {
+    const handleAnswer = jest.fn();
+    const { getByRole, rerender } = renderWithNextIntl(
+      <QuestionnaireItem
+        question={question}
+        savedAnswer=""
+        handleAnswer={handleAnswer}
+      />,
+    );
+
+    const input = getByRole('textbox') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'to rest' } });
+
+    rerender(
+      <QuestionnaireItem
+        question={question}
+        savedAnswer="from the booking"
+        handleAnswer={handleAnswer}
+      />,
+    );
+
+    expect(input.value).toBe('to rest');
+    expect(handleAnswer).toHaveBeenCalledWith(question.name, 'to rest');
+    expect(handleAnswer).not.toHaveBeenCalledWith(
+      question.name,
+      'from the booking',
+    );
   });
 });
