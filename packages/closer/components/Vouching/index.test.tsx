@@ -258,6 +258,9 @@ describe('Vouching', () => {
       />,
     );
 
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /delete/i })).toBeEnabled(),
+    );
     fireEvent.click(screen.getByRole('button', { name: /edit/i }));
     const textarea = screen.getByPlaceholderText(
       /Share how you know them and why you trust them/i,
@@ -266,6 +269,9 @@ describe('Vouching', () => {
     fireEvent.change(textarea, {
       target: { value: 'Ana still holds the space.' },
     });
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /save/i })).toBeEnabled(),
+    );
     fireEvent.click(screen.getByRole('button', { name: /save/i }));
 
     await waitFor(() =>
@@ -299,6 +305,9 @@ describe('Vouching', () => {
       />,
     );
 
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /delete/i })).toBeEnabled(),
+    );
     fireEvent.click(screen.getByRole('button', { name: /delete/i }));
 
     expect(window.confirm).toHaveBeenCalled();
@@ -328,6 +337,9 @@ describe('Vouching', () => {
       />,
     );
 
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /delete/i })).toBeEnabled(),
+    );
     fireEvent.click(screen.getByRole('button', { name: /delete/i }));
 
     expect(api.delete).not.toHaveBeenCalled();
