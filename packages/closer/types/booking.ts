@@ -175,7 +175,8 @@ export type Booking = {
   dailyUtilityFiat: Price<CloserCurrencies.EUR>;
   dailyRentalToken: Price<CloserCurrencies.TDF | CloserCurrencies.ETH>;
   fields: { [key: string]: string }[];
-  visibleBy: string[];
+  /** Co-guests sharing the booking. Read-only through PATCH /booking/:id. */
+  guests?: string[];
   createdBy: string;
   updated: string;
   created: string;

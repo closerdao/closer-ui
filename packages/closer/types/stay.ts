@@ -91,7 +91,8 @@ export type Stay = {
   gift?: string;
   roomOrBedNumbers?: number[];
   createdBy: string;
-  visibleBy?: string[];
+  /** Co-guests sharing the stay. Read-only through PATCH; see addStayGuest. */
+  guests?: string[];
   created: string;
   updated: string;
   useTokens?: boolean;

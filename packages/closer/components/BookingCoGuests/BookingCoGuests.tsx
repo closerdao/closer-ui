@@ -22,6 +22,11 @@ interface Props {
   adults?: number;
   isSaving?: boolean;
   error?: string | null;
+  /**
+   * Renders the results in flow instead of as an overlay, so they stay
+   * reachable inside a scrolling container such as the search bar popover.
+   */
+  inlineResults?: boolean;
   onAdd: (user: SearchUserHit) => boolean;
   onRemove: (userId: string) => void;
 }
@@ -33,6 +38,7 @@ const BookingCoGuests = ({
   adults,
   isSaving = false,
   error,
+  inlineResults = false,
   onAdd,
   onRemove,
 }: Props) => {
@@ -157,7 +163,13 @@ const BookingCoGuests = ({
             />
           </div>
           {isOpen && (search.length >= 2 || results.length > 0) && (
-            <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-48 overflow-y-auto rounded-lg border border-line bg-background shadow-lg">
+            <div
+              className={`${
+                inlineResults
+                  ? 'relative'
+                  : 'absolute left-0 right-0 top-full z-50 shadow-lg'
+              } mt-1 max-h-48 overflow-y-auto rounded-lg border border-line bg-background`}
+            >
               {isLoading && (
                 <div className="px-3 py-2 text-sm text-disabled">
                   {t('booking_co_guests_loading')}
@@ -210,9 +222,11 @@ const BookingCoGuests = ({
         </div>
       )}
 
-      {canEdit && !canAddMore && maxCoGuests > 0 && (
+      {canEdit && !canAddMore && (
         <p className="text-xs text-disabled">
-          {t('booking_co_guests_max_reached')}
+          {maxCoGuests > 0
+            ? t('booking_co_guests_max_reached')
+            : t('booking_co_guests_no_spots')}
         </p>
       )}
 

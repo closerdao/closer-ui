@@ -282,7 +282,7 @@ const Bookings = ({
                     allUsers.toJS().filter((listedUser: any) =>
                       getBookingCoGuestIds({
                         createdBy: booking.get('createdBy'),
-                        visibleBy: booking.get('visibleBy'),
+                        guests: booking.get('guests'),
                       }).includes(listedUser._id),
                     );
 
@@ -290,7 +290,7 @@ const Bookings = ({
                     {
                       createdBy: booking.get('createdBy'),
                       paidBy,
-                      visibleBy: booking.get('visibleBy'),
+                      guests: booking.get('guests'),
                     },
                     currentUserId,
                   );

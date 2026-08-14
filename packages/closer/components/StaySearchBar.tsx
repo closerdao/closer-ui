@@ -6,8 +6,12 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import { BookingSettings } from '../types/api';
+import { getMaxBookingCoGuests } from '../utils/bookingCoGuests.helpers';
 import { getMaxBookingHorizon } from '../utils/helpers';
 import StayDurationDiscountHints from './booking/stayDurationDiscountHints';
+import BookingCoGuests, {
+  type BookingCoGuestUser,
+} from './BookingCoGuests/BookingCoGuests';
 import BookingGuests from './BookingGuests';
 import DateTimePicker from './DateTimePicker';
 import Button from './ui/Button';
@@ -33,6 +37,11 @@ interface Props {
   isSearching?: boolean;
   externalError?: string | null;
   onSearch: (params: StaySearchBarParams) => void;
+  /**
+   * Fires whenever the picked dates or guests change, before the search runs.
+   * Lets the page tell that the shown results no longer match what is selected.
+   */
+  onParamsChange?: (params: StaySearchBarParams) => void;
   className?: string;
   /**
    * Overrides the guest/member minimum — /stays/search validates against
@@ -53,6 +62,13 @@ interface Props {
   maxDate?: string | null;
   searchLabel?: string;
   hideSearchButton?: boolean;
+  /**
+   * Co-guests to send with the booking that this search creates. Draft stays
+   * reject edits, so the picker has to live here rather than at checkout —
+   * pass both props to switch it on, omit them for plain searches.
+   */
+  coGuests?: BookingCoGuestUser[];
+  onCoGuestsChange?: (coGuests: BookingCoGuestUser[]) => void;
 }
 
 const formatDate = (d: Date | string | null) =>
@@ -69,6 +85,7 @@ const StaySearchBar = ({
   isSearching = false,
   externalError,
   onSearch,
+  onParamsChange,
   className = '',
   minNightsOverride,
   minNightsErrorMessage,
@@ -80,6 +97,8 @@ const StaySearchBar = ({
   maxDate,
   searchLabel,
   hideSearchButton = false,
+  coGuests,
+  onCoGuestsChange,
 }: Props) => {
   const t = useTranslations();
   const { user } = useAuth();
@@ -182,6 +201,18 @@ const StaySearchBar = ({
     [start, end],
   );
 
+  const showCoGuests = Boolean(coGuests && onCoGuestsChange);
+
+  // Dropping the adult count has to drop the co-guests that no longer fit,
+  // otherwise POST /stays goes out with more guests than beds paid for.
+  useEffect(() => {
+    if (!coGuests || !onCoGuestsChange) return;
+    const max = getMaxBookingCoGuests(adults);
+    if (coGuests.length > max) {
+      onCoGuestsChange(coGuests.slice(0, max));
+    }
+  }, [adults, coGuests, onCoGuestsChange]);
+
   const totalGuests = adults + childrenCount;
   const guestsLabel =
     totalGuests <= 1
@@ -198,6 +229,26 @@ const StaySearchBar = ({
     return `${dayjs(start).format('MMM D')} – ${dayjs(end).format('MMM D')}`;
   }, [start, end, t]);
 
+  const currentParams: StaySearchBarParams = useMemo(
+    () => ({
+      start: formatDate(start),
+      end: formatDate(end),
+      adults,
+      children: childrenCount,
+      infants,
+      pets,
+    }),
+    [start, end, adults, childrenCount, infants, pets],
+  );
+
+  // Held in a ref so an inline callback prop cannot restart the effect below.
+  const onParamsChangeRef = useRef(onParamsChange);
+  onParamsChangeRef.current = onParamsChange;
+
+  useEffect(() => {
+    onParamsChangeRef.current?.(currentParams);
+  }, [currentParams]);
+
   const validationError =
     !skipMinDuration && start && end && nights < minDuration
       ? minNightsErrorMessage ||
@@ -211,16 +262,30 @@ const StaySearchBar = ({
     adults >= 1 &&
     !isSearching;
 
+  const handleAddCoGuest = (hit: {
+    _id: string;
+    screenname: string;
+    photo?: string;
+  }) => {
+    if (!coGuests || !onCoGuestsChange) return false;
+    if (hit._id === user?._id) return false;
+    if (coGuests.some((guest) => guest._id === hit._id)) return false;
+    if (coGuests.length >= getMaxBookingCoGuests(adults)) return false;
+    onCoGuestsChange([
+      ...coGuests,
+      { _id: hit._id, screenname: hit.screenname, photo: hit.photo },
+    ]);
+    return true;
+  };
+
+  const handleRemoveCoGuest = (userId: string) => {
+    if (!coGuests || !onCoGuestsChange) return;
+    onCoGuestsChange(coGuests.filter((guest) => guest._id !== userId));
+  };
+
   const handleSearch = () => {
     if (!canSearch || validationError) return;
-    onSearch({
-      start: formatDate(start),
-      end: formatDate(end),
-      adults,
-      children: childrenCount,
-      infants,
-      pets,
-    });
+    onSearch(currentParams);
   };
 
   const sectionBtnBase =
@@ -271,16 +336,15 @@ const StaySearchBar = ({
                 aria-disabled="true"
               >
                 <span className="text-[11px] font-semibold text-gray-500 inline-flex items-center gap-1">
-                  <span className="opacity-70">{t('stay_search_bar_when')}</span>
+                  <span className="opacity-70">
+                    {t('stay_search_bar_when')}
+                  </span>
                   <span
                     className="relative group/info inline-flex"
                     tabIndex={0}
                     aria-label={t('stay_search_bar_event_dates_fixed_hint')}
                   >
-                    <Info
-                      className="h-3.5 w-3.5 text-gray-400"
-                      aria-hidden
-                    />
+                    <Info className="h-3.5 w-3.5 text-gray-400" aria-hidden />
                     <span
                       role="tooltip"
                       className="pointer-events-none absolute left-0 top-full z-50 mt-1.5 w-56 rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-[11px] font-normal leading-snug text-gray-600 opacity-0 shadow-md transition-opacity group-hover/info:opacity-100 group-focus/info:opacity-100"
@@ -362,11 +426,13 @@ const StaySearchBar = ({
                       eventStartDate
                         ? new Date(eventStartDate)
                         : minDate
-                          ? new Date(minDate)
-                          : undefined
+                        ? new Date(minDate)
+                        : undefined
                     }
                   />
-                  <StayDurationDiscountHints bookingSettings={bookingSettings} />
+                  <StayDurationDiscountHints
+                    bookingSettings={bookingSettings}
+                  />
                 </div>
               ) : openPopover === 'guests' ? (
                 <div
@@ -385,6 +451,27 @@ const StaySearchBar = ({
                     setInfants={setInfants}
                     setPets={setPets}
                   />
+                  {showCoGuests && (
+                    <div className="mt-4 flex flex-col gap-2 border-t border-gray-200 pt-4">
+                      <div className="flex flex-col gap-0.5">
+                        <p className="text-sm font-medium text-gray-900">
+                          {t('booking_co_guests_add_title')}
+                        </p>
+                        <p className="text-[11px] leading-snug text-gray-500">
+                          {t('booking_co_guests_add_smallprint')}
+                        </p>
+                      </div>
+                      <BookingCoGuests
+                        guests={coGuests!}
+                        canEdit
+                        excludeUserIds={user?._id ? [user._id] : []}
+                        adults={adults}
+                        inlineResults
+                        onAdd={handleAddCoGuest}
+                        onRemove={handleRemoveCoGuest}
+                      />
+                    </div>
+                  )}
                 </div>
               ) : null}
             </div>

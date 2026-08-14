@@ -1,7 +1,7 @@
 export type BookingCoGuestAccessFields = {
   createdBy?: string | null;
   paidBy?: string | null;
-  visibleBy?: unknown;
+  guests?: unknown;
 };
 
 const toIdList = (value: unknown): string[] => {
@@ -23,10 +23,10 @@ const toIdList = (value: unknown): string[] => {
   return [];
 };
 
-export const getBookingVisibleByIds = (visibleBy: unknown): string[] =>
-  toIdList(visibleBy);
+export const getBookingGuestIds = (guests: unknown): string[] =>
+  toIdList(guests);
 
-export const normalizeBookingVisibleBy = (
+export const normalizeBookingGuests = (
   ids: string[],
   createdBy?: string | null,
 ): string[] => {
@@ -40,10 +40,7 @@ export const normalizeBookingVisibleBy = (
 export const getBookingCoGuestIds = (
   booking: BookingCoGuestAccessFields,
 ): string[] =>
-  normalizeBookingVisibleBy(
-    getBookingVisibleByIds(booking.visibleBy),
-    booking.createdBy,
-  );
+  normalizeBookingGuests(getBookingGuestIds(booking.guests), booking.createdBy);
 
 export const isBookingOwner = (
   booking: BookingCoGuestAccessFields,
@@ -60,7 +57,7 @@ export const isBookingCoGuest = (
   if (!userId || isBookingOwner(booking, userId)) {
     return false;
   }
-  return getBookingVisibleByIds(booking.visibleBy).includes(userId);
+  return getBookingGuestIds(booking.guests).includes(userId);
 };
 
 export const canViewBookingAsGuest = (
@@ -78,7 +75,7 @@ export const getMaxBookingCoGuests = (adults?: number | null): number =>
   Math.max(0, (adults ?? 1) - 1);
 
 export const appendBookingCoGuest = (
-  visibleBy: string[],
+  guests: string[],
   userId: string,
   createdBy?: string | null,
   adults?: number | null,
@@ -86,7 +83,7 @@ export const appendBookingCoGuest = (
   if (!userId || userId === createdBy) {
     return null;
   }
-  const current = normalizeBookingVisibleBy(visibleBy, createdBy);
+  const current = normalizeBookingGuests(guests, createdBy);
   if (current.includes(userId)) {
     return null;
   }
@@ -102,7 +99,7 @@ export const buildMyBookingsAccessOr = (user: {
 }): Record<string, unknown>[] => {
   const clauses: Record<string, unknown>[] = [
     { createdBy: user._id },
-    { visibleBy: { $in: [user._id] } },
+    { guests: { $in: [user._id] } },
   ];
 
   if (user.email) {
