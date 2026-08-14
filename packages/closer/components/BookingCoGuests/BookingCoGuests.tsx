@@ -20,6 +20,12 @@ interface Props {
   canEdit: boolean;
   excludeUserIds: string[];
   adults?: number;
+  /**
+   * Overrides the adults-derived cap. The booking flow raises the adult count
+   * as co-guests are named, so there it is always one above the current list
+   * rather than a fixed ceiling.
+   */
+  maxCoGuests?: number;
   isSaving?: boolean;
   error?: string | null;
   /**
@@ -36,6 +42,7 @@ const BookingCoGuests = ({
   canEdit,
   excludeUserIds,
   adults,
+  maxCoGuests: maxCoGuestsOverride,
   isSaving = false,
   error,
   inlineResults = false,
@@ -54,7 +61,7 @@ const BookingCoGuests = ({
     () => new Set([...excludeUserIds, ...guests.map((guest) => guest._id)]),
     [excludeUserIds, guests],
   );
-  const maxCoGuests = getMaxBookingCoGuests(adults);
+  const maxCoGuests = maxCoGuestsOverride ?? getMaxBookingCoGuests(adults);
   const canAddMore = guests.length < maxCoGuests;
 
   const fetchUsers = useCallback(

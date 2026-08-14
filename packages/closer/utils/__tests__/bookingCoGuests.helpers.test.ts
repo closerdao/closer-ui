@@ -1,5 +1,6 @@
 import {
   appendBookingCoGuest,
+  buildCreateStayGuestsPayload,
   buildMyBookingsAccessOr,
   canEditBookingCoGuests,
   canViewBookingAsGuest,
@@ -15,6 +16,30 @@ const booking = {
   paidBy: 'payer-1',
   guests: ['owner-1', 'guest-1', 'guest-2'],
 };
+
+describe('buildCreateStayGuestsPayload', () => {
+  it('sends the picked co-guests as user ids', () => {
+    expect(
+      buildCreateStayGuestsPayload([{ _id: 'guest-1' }, { _id: 'guest-2' }]),
+    ).toEqual({ guests: ['guest-1', 'guest-2'] });
+  });
+
+  it('drops duplicates and blanks', () => {
+    expect(
+      buildCreateStayGuestsPayload([
+        { _id: 'guest-1' },
+        { _id: 'guest-1' },
+        { _id: '' },
+      ]),
+    ).toEqual({ guests: ['guest-1'] });
+  });
+
+  it('omits the key entirely when nobody was picked', () => {
+    expect(buildCreateStayGuestsPayload([])).toEqual({});
+    expect(buildCreateStayGuestsPayload(null)).toEqual({});
+    expect(buildCreateStayGuestsPayload(undefined)).toEqual({});
+  });
+});
 
 describe('normalizeBookingGuests', () => {
   it('drops blanks, duplicates and the booking owner', () => {

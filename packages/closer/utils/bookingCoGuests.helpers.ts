@@ -74,6 +74,20 @@ export const canEditBookingCoGuests = (
 export const getMaxBookingCoGuests = (adults?: number | null): number =>
   Math.max(0, (adults ?? 1) - 1);
 
+/**
+ * The `guests` half of a POST /stays body. Co-guests are only settable at
+ * creation — a draft stay rejects edits — so an omission here cannot be
+ * repaired later without the addStayGuest round trip.
+ */
+export const buildCreateStayGuestsPayload = (
+  coGuests: { _id: string }[] | null | undefined,
+): { guests?: string[] } => {
+  const ids = normalizeBookingGuests(
+    (coGuests ?? []).map((guest) => guest._id).filter(Boolean),
+  );
+  return ids.length > 0 ? { guests: ids } : {};
+};
+
 export const appendBookingCoGuest = (
   guests: string[],
   userId: string,

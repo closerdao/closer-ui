@@ -46,7 +46,13 @@ import {
   CalendarBlockingEvent,
   getCalendarBlockingEventsInRange,
 } from '../../../utils/events.helpers';
+import { buildCreateStayGuestsPayload } from '../../../utils/bookingCoGuests.helpers';
 import { getSiteUrl } from '../../../utils/siteUrl';
+import {
+  clearStayCoGuestsDraft,
+  readStayCoGuestsDraft,
+  writeStayCoGuestsDraft,
+} from '../../../utils/stayCoGuestsDraft';
 import { createStay, searchStays } from '../../../utils/stays.api';
 import { buildVolunteerInfo } from '../../../utils/volunteerApplication.helpers';
 import {
@@ -273,8 +279,18 @@ const StayCreatePage = ({
     Boolean(savedStart && savedEnd) && urlDatesFitProjectWindow;
 
   // Collected in the guests popover and posted with the booking: a draft stay
-  // rejects edits, so this is the only chance to send them.
+  // rejects edits, so this is the only chance to send them. Restored from the
+  // session because an unauthenticated guest is sent through /signup first.
   const [coGuests, setCoGuests] = useState<BookingCoGuestUser[]>([]);
+
+  useEffect(() => {
+    const stored = readStayCoGuestsDraft();
+    if (stored.length > 0) setCoGuests(stored);
+  }, []);
+
+  useEffect(() => {
+    writeStayCoGuestsDraft(coGuests);
+  }, [coGuests]);
 
   const [activeParams, setActiveParams] = useState<StaySearchBarParams | null>(
     () => {
@@ -505,8 +521,7 @@ const StayCreatePage = ({
     router.push(`/signup?back=${back}`);
   };
 
-  const coGuestPayload = () =>
-    coGuests.length > 0 ? { guests: coGuests.map((guest) => guest._id) } : {};
+  const coGuestPayload = () => buildCreateStayGuestsPayload(coGuests);
 
   const eventFoodPayload = eventProp?.foodOption
     ? {
@@ -560,6 +575,7 @@ const StayCreatePage = ({
         ...coGuestPayload(),
         ...eventFoodPayload,
       });
+      clearStayCoGuestsDraft();
       router.push(`/stay/create/${stay._id}`);
     } catch (err) {
       setSearchError(parseMessageFromError(err));
@@ -623,6 +639,7 @@ const StayCreatePage = ({
       if (isVolunteerApplication) {
         clearVolunteerApplicationDraft(user?._id, bookingType);
       }
+      clearStayCoGuestsDraft();
       router.push(`/stay/create/${stay._id}`);
     } catch (err) {
       setSearchError(parseMessageFromError(err));

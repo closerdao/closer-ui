@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import { BookingSettings } from '../types/api';
-import { getMaxBookingCoGuests } from '../utils/bookingCoGuests.helpers';
 import { getMaxBookingHorizon } from '../utils/helpers';
 import StayDurationDiscountHints from './booking/stayDurationDiscountHints';
 import BookingCoGuests, {
@@ -203,15 +202,20 @@ const StaySearchBar = ({
 
   const showCoGuests = Boolean(coGuests && onCoGuestsChange);
 
-  // Dropping the adult count has to drop the co-guests that no longer fit,
-  // otherwise POST /stays goes out with more guests than beds paid for.
+  /**
+   * Every named co-guest occupies an adult spot alongside the booker, so the
+   * head count can never sit below them. Raising it here rather than refusing
+   * the add keeps a picked guest from being dropped on the way to POST /stays,
+   * which used to happen whenever the count was left at its default of 1.
+   */
+  const minAdults = (coGuests?.length ?? 0) + 1;
+
   useEffect(() => {
     if (!coGuests || !onCoGuestsChange) return;
-    const max = getMaxBookingCoGuests(adults);
-    if (coGuests.length > max) {
-      onCoGuestsChange(coGuests.slice(0, max));
+    if (adults < minAdults) {
+      setAdults(minAdults);
     }
-  }, [adults, coGuests, onCoGuestsChange]);
+  }, [adults, minAdults, coGuests, onCoGuestsChange]);
 
   const totalGuests = adults + childrenCount;
   const guestsLabel =
@@ -270,17 +274,26 @@ const StaySearchBar = ({
     if (!coGuests || !onCoGuestsChange) return false;
     if (hit._id === user?._id) return false;
     if (coGuests.some((guest) => guest._id === hit._id)) return false;
-    if (coGuests.length >= getMaxBookingCoGuests(adults)) return false;
-    onCoGuestsChange([
+    const next = [
       ...coGuests,
       { _id: hit._id, screenname: hit.screenname, photo: hit.photo },
-    ]);
+    ];
+    onCoGuestsChange(next);
+    // The effect above would catch this too, but setting it here keeps the
+    // count and the list in step within the same render.
+    if (adults < next.length + 1) {
+      setAdults(next.length + 1);
+    }
     return true;
   };
 
   const handleRemoveCoGuest = (userId: string) => {
     if (!coGuests || !onCoGuestsChange) return;
-    onCoGuestsChange(coGuests.filter((guest) => guest._id !== userId));
+    const next = coGuests.filter((guest) => guest._id !== userId);
+    if (next.length === coGuests.length) return;
+    onCoGuestsChange(next);
+    // Naming a guest raised the count, so dropping them gives the spot back.
+    setAdults((current) => Math.max(1, current - 1));
   };
 
   const handleSearch = () => {
@@ -450,6 +463,7 @@ const StaySearchBar = ({
                     setKids={setChildrenCount}
                     setInfants={setInfants}
                     setPets={setPets}
+                    minAdults={showCoGuests ? minAdults : 1}
                   />
                   {showCoGuests && (
                     <div className="mt-4 flex flex-col gap-2 border-t border-gray-200 pt-4">
@@ -466,6 +480,7 @@ const StaySearchBar = ({
                         canEdit
                         excludeUserIds={user?._id ? [user._id] : []}
                         adults={adults}
+                        maxCoGuests={coGuests!.length + 1}
                         inlineResults
                         onAdd={handleAddCoGuest}
                         onRemove={handleRemoveCoGuest}
