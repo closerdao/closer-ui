@@ -91,6 +91,7 @@ export type Stay = {
   gift?: string;
   roomOrBedNumbers?: number[];
   createdBy: string;
+  visibleBy?: string[];
   created: string;
   updated: string;
   useTokens?: boolean;
