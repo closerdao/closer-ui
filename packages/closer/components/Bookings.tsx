@@ -18,6 +18,7 @@ import {
   getBookingListingEmbedded,
   getBookingListingRefId,
 } from '../utils/booking.helpers';
+import { csvCell } from '../utils/csv';
 
 interface Props {
   filter: any;
@@ -30,10 +31,6 @@ interface Props {
 }
 
 const MAX_USERS_TO_FETCH = 2000;
-
-// Answers are free text, so every cell has to be quoted and escaped.
-const csvCell = (value: unknown) =>
-  `"${(value == null ? '' : String(value)).replace(/"/g, '""')}"`;
 
 const Bookings = ({
   filter,
