@@ -26,6 +26,7 @@ import CustomPressPodcasts from './CustomPressPodcasts';
 import CustomPressPublications from './CustomPressPublications';
 import CustomPressStats from './CustomPressStats';
 import CustomPriceHistory from './CustomPriceHistory';
+import CustomProjectList from './CustomProjectList';
 import CustomPromoCard from './CustomPromoCard';
 import CustomReviews from './CustomReviews';
 import CustomRichText from './CustomRichText';
@@ -103,6 +104,7 @@ const componentRegistry: Record<string, React.ComponentType<any>> = {
   listingsPreviews: CustomListingsPreviews,
   reviews: CustomReviews,
   volunteerCta: CustomVolunteerCta,
+  projectList: CustomProjectList,
   dailyContribution: CustomDailyContribution,
   subscriptionPlans: CustomSubscriptionPlans,
   teamStructure: CustomTeamStructure,

@@ -2,7 +2,9 @@ import type { PageSection, SectionType } from '../types/page';
 import standardPageDefaults from './standardPages.defaults.json';
 
 export type StandardPageKey =
+  | 'home'
   | 'volunteer'
+  | 'projects'
   | 'cohousing'
   | 'events'
   | 'stay'
@@ -22,6 +24,7 @@ export interface StandardPageDefinition {
 }
 
 export type StandardPageFeature =
+  | 'home'
   | 'volunteering'
   | 'cohousing'
   | 'events'
@@ -37,10 +40,22 @@ export type StandardPageFeature =
 export const STANDARD_PAGE_IDS_PREFIX = 'std:';
 
 export const STANDARD_PAGES: Record<string, StandardPageDefinition> = {
+  '/': {
+    key: 'home',
+    slug: '/',
+    titleKey: 'pages_editor_standard_home',
+    feature: 'home',
+  },
   '/volunteer': {
     key: 'volunteer',
     slug: '/volunteer',
     titleKey: 'pages_editor_standard_volunteer',
+    feature: 'volunteering',
+  },
+  '/projects': {
+    key: 'projects',
+    slug: '/projects',
+    titleKey: 'pages_editor_standard_projects',
     feature: 'volunteering',
   },
   '/cohousing': {
@@ -133,6 +148,9 @@ export const isStandardPageFeatureEnabled = (
   config: AppConfigForStandardPages | null | undefined,
 ): boolean => {
   switch (feature) {
+    // Every platform has a landing page, so the home page is never gated.
+    case 'home':
+      return true;
     case 'volunteering':
       return (
         process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true' &&
@@ -204,6 +222,13 @@ export const slugFromStandardPageVirtualId = (
   return normalizePageSlug(String(id).slice(STANDARD_PAGE_IDS_PREFIX.length));
 };
 
+/**
+ * The home page's slug is `/`, which leaves nothing to put in the editor route.
+ * It gets this segment instead — `/home` is not a standard page, so nothing else
+ * can claim it.
+ */
+export const HOME_PAGE_EDITOR_SEGMENT = 'home';
+
 export const editorPathSegmentForPage = (page: {
   _id?: string;
   slug?: string;
@@ -212,7 +237,10 @@ export const editorPathSegmentForPage = (page: {
   const slug = normalizePageSlug(page.slug);
   const isStandard =
     page.isStandard === true || Boolean(getStandardPageDefinition(slug));
-  if (isStandard && slug && slug !== '/') {
+  if (isStandard && slug === '/') {
+    return HOME_PAGE_EDITOR_SEGMENT;
+  }
+  if (isStandard && slug) {
     return encodeURIComponent(slug.replace(/^\//, ''));
   }
   return String(page._id ?? '');
@@ -232,6 +260,9 @@ export const resolveEditorRouteParam = (
   if (!decoded) return '';
   if (isStandardPageVirtualId(decoded)) {
     return slugFromStandardPageVirtualId(decoded) ?? decoded;
+  }
+  if (decoded === HOME_PAGE_EDITOR_SEGMENT) {
+    return '/';
   }
   if (decoded.startsWith('/')) {
     return normalizePageSlug(decoded);

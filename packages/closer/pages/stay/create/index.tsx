@@ -3,9 +3,11 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useMemo, useState } from 'react';
 
+import StayEventBlockedNotice from '../../../components/booking/stayEventBlockedNotice';
 import StayListingAccommodationPrice from '../../../components/booking/stayListingAccommodationPrice';
 import StayListingUnitsCard from '../../../components/booking/stayListingUnitsCard';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+import Modal from '../../../components/Modal';
 import PageError from '../../../components/PageError';
 import Slider from '../../../components/Slider';
 import StaySearchBar, {
@@ -39,6 +41,10 @@ import {
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { normalizeDiscountCode } from '../../../utils/discountCode';
+import {
+  CalendarBlockingEvent,
+  getCalendarBlockingEventsInRange,
+} from '../../../utils/events.helpers';
 import { createStay, searchStays } from '../../../utils/stays.api';
 import { buildVolunteerInfo } from '../../../utils/volunteerApplication.helpers';
 import {
@@ -53,6 +59,8 @@ interface Props {
   defaultGuestFoodOptionId?: string | null;
   event?: Event | null;
   ticketOptions?: TicketOption[];
+  /** Future events that block the booking calendar, used to explain greyed out results. */
+  calendarBlockingEvents?: CalendarBlockingEvent[];
   error?: string;
   messages?: any;
 }
@@ -70,6 +78,7 @@ const StayCreatePage = ({
   defaultGuestFoodOptionId,
   event: eventProp,
   ticketOptions: ticketOptionsProp,
+  calendarBlockingEvents,
   error,
 }: Props) => {
   const t = useTranslations();
@@ -195,6 +204,11 @@ const StayCreatePage = ({
   const [discountCode, setDiscountCode] = useState(
     () => normalizeDiscountCode(readParam(discountCodeQuery)),
   );
+  const [dismissedEventBlockKey, setDismissedEventBlockKey] = useState<
+    string | null
+  >(null);
+  /** True when the shown listing came from /listing rather than the search — its availability is unproven. */
+  const [usedListingFallback, setUsedListingFallback] = useState(false);
 
   useEffect(() => {
     if (!isDayTicketOnlyEvent) {
@@ -220,6 +234,48 @@ const StayCreatePage = ({
   const canSelectDates = eventProp?.canSelectDates !== false;
   const hasValidDayTicket =
     !isDayTicketOnlyEvent || Boolean(selectedTicketOption);
+
+  /**
+   * Events flagged `blocksBookingCalendar` make /stays/search return every
+   * listing as unavailable, so guests otherwise face a grid of greyed out
+   * options with no reason given. Stays booked for an event and volunteer
+   * stays are exempt from the block, so the notice never applies to them.
+   */
+  const blockingEventsForRange = useMemo(
+    () =>
+      isEventBooking || isVolunteerApplication
+        ? []
+        : getCalendarBlockingEventsInRange(
+            calendarBlockingEvents,
+            activeParams?.start,
+            activeParams?.end,
+          ),
+    [
+      calendarBlockingEvents,
+      activeParams?.start,
+      activeParams?.end,
+      isEventBooking,
+      isVolunteerApplication,
+    ],
+  );
+
+  const hasBookableResult =
+    !usedListingFallback &&
+    Boolean(results?.some((listing) => listing.available !== false));
+
+  const showEventBlockNotice =
+    didSearchOnce &&
+    !isSearching &&
+    !!results &&
+    !hasBookableResult &&
+    blockingEventsForRange.length > 0;
+
+  const searchedRangeKey = activeParams
+    ? `${activeParams.start}_${activeParams.end}`
+    : '';
+
+  const isEventBlockModalOpen =
+    showEventBlockNotice && dismissedEventBlockKey !== searchedRangeKey;
 
   const buildQueryParams = (params: StaySearchBarParams) => {
     const out: Record<string, string> = {
@@ -262,6 +318,7 @@ const StayCreatePage = ({
     setSearchError(null);
     setIsSearching(true);
     setActiveParams(params);
+    setDismissedEventBlockKey(null);
     syncUrl(params);
     try {
       const searchResponse = await searchStays({
@@ -275,6 +332,7 @@ const StayCreatePage = ({
       const apiDuration = Number(searchResponse.duration) || 0;
       setSearchDuration(apiDuration);
       let listings = searchResponse.results || [];
+      let didFallBackToListing = false;
       if (listingId) {
         const match = listings.find((l) => l._id === listingId);
         if (match) {
@@ -284,6 +342,7 @@ const StayCreatePage = ({
             const { data } = await api.get(`/listing/${listingId}`);
             if (data?.results) {
               listings = [data.results as StaySearchListing];
+              didFallBackToListing = true;
             } else {
               listings = [];
             }
@@ -292,12 +351,14 @@ const StayCreatePage = ({
           }
         }
       }
+      setUsedListingFallback(didFallBackToListing);
       setResults(listings);
       setDidSearchOnce(true);
     } catch (err) {
       setSearchError(parseMessageFromError(err));
       setSearchDuration(0);
       setResults([]);
+      setUsedListingFallback(false);
       setDidSearchOnce(true);
     } finally {
       setIsSearching(false);
@@ -636,8 +697,15 @@ const StayCreatePage = ({
               </div>
             )}
 
+            {showEventBlockNotice && (
+              <div className="mb-6 rounded-2xl border border-yellow-200 bg-yellow-50/60 p-4 md:p-6">
+                <StayEventBlockedNotice events={blockingEventsForRange} />
+              </div>
+            )}
+
             {!isSearching &&
               didSearchOnce &&
+              !showEventBlockNotice &&
               results &&
               results.length === 0 && (
                 <div
@@ -706,6 +774,15 @@ const StayCreatePage = ({
           </section>
         )}
       </main>
+
+      {isEventBlockModalOpen && (
+        <Modal closeModal={() => setDismissedEventBlockKey(searchedRangeKey)}>
+          <StayEventBlockedNotice
+            events={blockingEventsForRange}
+            onDismiss={() => setDismissedEventBlockKey(searchedRangeKey)}
+          />
+        </Modal>
+      )}
     </>
   );
 };
@@ -857,8 +934,32 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
         defaultGuestFoodOptionId,
         ticketOptions: ticketsAvailable?.data?.ticketOptions,
         event: event?.data?.results ?? null,
+        calendarBlockingEvents: [],
       };
     }
+
+    // Only needed to explain why a guest stay came back unavailable, so a
+    // failure here just falls back to the generic no-results message.
+    const futureEventsRes = await api
+      .get(
+        `/event?where=${JSON.stringify({
+          end: { $gt: new Date() },
+        })}&limit=100`,
+      )
+      .catch(() => null);
+    const calendarBlockingEvents: CalendarBlockingEvent[] = (
+      (futureEventsRes?.data?.results as Event[]) ?? []
+    )
+      .filter((event) => event?.blocksBookingCalendar)
+      .map(({ _id, name, slug, start, end, paid, blocksBookingCalendar }) => ({
+        _id,
+        name,
+        slug,
+        start,
+        end,
+        paid,
+        blocksBookingCalendar,
+      }));
 
     return {
       bookingSettings,
@@ -867,6 +968,7 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
       defaultGuestFoodOptionId,
       event: null,
       ticketOptions: [],
+      calendarBlockingEvents,
     };
   } catch (err) {
     return {
@@ -877,6 +979,7 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
       defaultGuestFoodOptionId: null,
       event: null,
       ticketOptions: [],
+      calendarBlockingEvents: [],
     };
   }
 };

@@ -231,6 +231,13 @@ const BLOCK_TYPES: BlockTypeDef[] = [
     featureKey: 'volunteering',
   },
   {
+    type: 'projectList',
+    labelKey: 'pages_editor_block_project_list',
+    descKey: 'pages_editor_block_project_list_desc',
+    category: 'volunteering',
+    featureKey: 'volunteering',
+  },
+  {
     type: 'dailyContribution',
     labelKey: 'pages_editor_block_daily_contribution',
     descKey: 'pages_editor_block_daily_contribution_desc',

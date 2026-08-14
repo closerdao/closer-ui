@@ -67,6 +67,8 @@ export type User = {
       keys: { p256dh: string; auth: string };
     } | null;
     social?: Record<string, string>;
+    /** Quests claimed on /token/onboarding, by quest id. */
+    token_onboarding_progress?: { completed: string[] };
   };
   links: UserLink[];
   visibleBy: string[];

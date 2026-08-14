@@ -45,7 +45,7 @@ export { default as Webinar } from './components/Webinar';
 export { default as YoutubeEmbed } from './components/YoutubeEmbed';
 
 // Config
-export { blockchainConfig } from './config_blockchain';
+export { blockchainConfig, resolveNetwork } from './config_blockchain';
 export * from './contexts/auth';
 // Contexts
 export { useAuth } from './contexts/auth';
@@ -234,6 +234,7 @@ export { default as TokenFinancedApplicationsPage } from './pages/token/financed
 export { default as TokenFinancedApplicationPage } from './pages/token/financed/[applicationId]';
 export { default as PublicTokenSalePage } from './pages/token/index';
 export { default as NationalityPage } from './pages/token/nationality';
+export { default as TokenOnboardingPage } from './pages/token/onboarding';
 export { default as TokenSaleSuccessPage } from './pages/token/success';
 export { default as VolunteerOpportunitiesPage } from './pages/volunteer/';
 export { default as VolunteerPage } from './pages/volunteer/[slug]/';
@@ -259,6 +260,7 @@ export {
   default as FundraiserPage,
   default as InvestPage,
 } from './pages/fundraiser';
+export { default as HomePage } from './pages/index';
 export { default as TeamPage } from './pages/team';
 export { default as PressPage } from './pages/press';
 export { default as DataroomPage } from './pages/dataroom';

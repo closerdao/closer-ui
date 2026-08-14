@@ -165,7 +165,9 @@ export const fetchPageBySlug = async (
   slug: string,
 ): Promise<PageDoc | null> => {
   const normalized = normalizePageSlug(slug);
-  if (!normalized || normalized === '/') return null;
+  if (!normalized) return null;
+  // The home page is stored under the literal `/` slug — there is no
+  // slash-less variant of it to try.
   const candidates = Array.from(
     new Set([normalized, normalized.replace(/^\//, '')].filter(Boolean)),
   );
@@ -187,6 +189,11 @@ export const fetchPageBySlug = async (
       /* try next candidate */
     }
   }
+
+  // The scan below exists to catch slugs stored in an unexpected shape. `/` has
+  // only one shape, and it is the busiest route on the site — so a miss there is
+  // a genuine miss, not worth fetching every page to confirm.
+  if (normalized === '/') return null;
 
   try {
     const res = await api.get('/page', {

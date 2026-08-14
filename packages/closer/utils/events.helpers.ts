@@ -1,5 +1,49 @@
+import dayjs from 'dayjs';
+
 import { DEFAULT_CURRENCY } from '../constants';
 import { Listing } from '../types';
+
+export type CalendarBlockingEvent = {
+  _id: string;
+  name: string;
+  slug?: string;
+  start: string;
+  end: string;
+  paid?: boolean;
+  blocksBookingCalendar?: boolean;
+};
+
+/**
+ * Events flagged `blocksBookingCalendar` make /stays/search return every
+ * listing as unavailable without saying why, so the stay flow matches its own
+ * search range against those events to explain the greyed out results.
+ *
+ * A night is blocked when its date falls inside the event, including the event
+ * end day (same rule the legacy booking calendar used). A stay that checks out
+ * on the event start day therefore does not overlap.
+ */
+export const getCalendarBlockingEventsInRange = (
+  events: CalendarBlockingEvent[] | null | undefined,
+  start?: string | Date | null,
+  end?: string | Date | null,
+): CalendarBlockingEvent[] => {
+  if (!events?.length || !start || !end) return [];
+
+  const stayStart = dayjs(start).startOf('day');
+  const stayEnd = dayjs(end).startOf('day');
+  if (!stayStart.isValid() || !stayEnd.isValid()) return [];
+
+  return events.filter((event) => {
+    if (!event?.blocksBookingCalendar || !event.start || !event.end) {
+      return false;
+    }
+    const eventStart = dayjs(event.start).startOf('day');
+    const eventEnd = dayjs(event.end).startOf('day');
+    if (!eventStart.isValid() || !eventEnd.isValid()) return false;
+
+    return !stayStart.isAfter(eventEnd) && stayEnd.isAfter(eventStart);
+  });
+};
 
 export function transformEventFoodBeforeSave<T extends { foodOptionId?: string | null }>(
   data: T,

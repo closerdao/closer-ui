@@ -1,6 +1,7 @@
 import Metatags from '../../../components/Metatags';
 import ProjectView from '../../../components/ProjectView';
 
+import { convert } from 'html-to-text';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
@@ -45,6 +46,9 @@ ProjectPage.getInitialProps = async (context: NextPageContext) => {
 
     return {
       project,
+      descriptionText: project?.description
+        ? convert(project.description).trim().slice(0, 160)
+        : '',
     };
   } catch (error) {
     console.error(error);

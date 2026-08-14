@@ -27,6 +27,7 @@ export type SectionType =
   | 'listingsPreviews'
   | 'reviews'
   | 'volunteerCta'
+  | 'projectList'
   | 'dailyContribution'
   | 'subscriptionPlans'
   | 'fundraiserProgress'
