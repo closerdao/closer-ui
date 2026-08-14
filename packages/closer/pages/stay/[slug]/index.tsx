@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import BookingRequestButtons from '../../../components/BookingRequestButtons';
 import BookingStatusTag from '../../../components/BookingStatusTag';
 import BookingGuests from '../../../components/BookingGuests';
+import BookingQuestionnaireAnswers from '../../../components/BookingQuestionnaireAnswers';
 import Modal from '../../../components/Modal';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
@@ -1245,6 +1246,8 @@ const StayBookingSummaryPage = ({
             />
           </div>
         </BookingSurface>
+
+        <BookingQuestionnaireAnswers fields={bookingView?.fields} />
 
         {bookingView?.volunteerInfo && (
           <VolunteerApplicationDetail

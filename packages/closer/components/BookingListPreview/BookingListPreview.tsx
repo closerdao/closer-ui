@@ -11,6 +11,7 @@ import { Flag, MessageSquareMore } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import BookingRequestButtons from '../BookingRequestButtons';
+import BookingQuestionnaireAnswers from '../BookingQuestionnaireAnswers';
 import BookingStatusTag from '../BookingStatusTag';
 import BookingSurface from '../booking/bookingSurface';
 import UserInfoButton from '../UserInfoButton';
@@ -93,6 +94,7 @@ const BookingListPreview = ({
     useTokens,
     paymentDelta,
     pendingExtension,
+    fields,
   } = raw;
 
   const router = useRouter();
@@ -284,6 +286,10 @@ const BookingListPreview = ({
           <span>{adults}</span>
         </p>
       </div>
+
+      {canManageBooking && (
+        <BookingQuestionnaireAnswers compact fields={fields} />
+      )}
 
       {chatLink ? (
         <LinkButton
