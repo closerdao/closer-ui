@@ -579,6 +579,9 @@ export const configDescription: ConfigType[] = [
       },
       logoHeader: {
         type: 'image',
+        // Day-one default: the platform's own logo, shipped in each app's
+        // public/images; a village's real logo replaces it via config.
+        default: '/images/logo.png',
       },
       favicon: {
         type: 'image',
