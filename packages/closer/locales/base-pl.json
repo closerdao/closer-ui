@@ -1097,6 +1097,7 @@
   "vouch_already_vouched_by_users": "The user has been vouched for by:",
   "vouch_not_vouched_by_users": "The user has not been vouched for",
   "vouch_why_vouch": "Why do you want to vouch for this user?",
+  "vouch_delete_confirm": "Are you sure you want to delete your vouch for {name}?",
   "learn_heading": "Learning Hub",
   "learn_categories_heading": "Categories",
   "learn_courses": "courses",

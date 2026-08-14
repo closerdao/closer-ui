@@ -16,27 +16,28 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { MAX_LISTINGS_TO_FETCH } from '../../constants';
+import { SALES_CONFIG } from '../../constants/shared.constants';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
 import { useConfig } from '../../hooks/useConfig';
 import {
   DEFAULT_TOKEN_STATS,
   GeneralConfig,
   Listing,
-  TokenStats,
   TokenConfig,
+  TokenStats,
 } from '../../types';
 import { PageMetaOverride } from '../../types/page';
 import api from '../../utils/api';
 import { resolveBlockText } from '../../utils/blockI18n';
-import { getCachedConfig } from '../../utils/cachedConfig.helpers';
-import { logMetric } from '../../utils/metrics';
 import { getCurrentUnitPrice } from '../../utils/bondingCurve';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { getReserveTokenDisplay } from '../../utils/config.utils';
+import { logMetric } from '../../utils/metrics';
+import { getSiteUrl } from '../../utils/siteUrl';
 import {
   fetchPageMetaOverride,
   resolvePageMeta,
 } from '../../utils/standardPages';
-import { SALES_CONFIG } from '../../constants/shared.constants';
 
 const ACCOMMODATION_ICONS = ['van.png', 'camping.png', 'hotel.png'];
 const MIN_TOKENS = 1;
@@ -54,7 +55,8 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
   const initialSaleHardCap = Number(tokenConfig?.maxSupply) || 0;
   const t = useTranslations();
   const defaultConfig = useConfig();
-  const { getCurrentSupplyWithoutWallet, getSaleHardCapWithoutWallet } = useBuyTokens();
+  const { getCurrentSupplyWithoutWallet, getSaleHardCapWithoutWallet } =
+    useBuyTokens();
   const reserveToken = getReserveTokenDisplay(defaultConfig);
   const heroRef = useRef<HTMLElement | null>(null);
 
@@ -101,7 +103,9 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
   const [selectedTokens, setSelectedTokens] = useState(10);
   const [showStickyCta, setShowStickyCta] = useState(false);
   const [animatedTokenPrice, setAnimatedTokenPrice] = useState(0);
-  const [networkTokenPrice, setNetworkTokenPrice] = useState<number | null>(null);
+  const [networkTokenPrice, setNetworkTokenPrice] = useState<number | null>(
+    null,
+  );
   const [saleHardCap, setSaleHardCap] = useState<number>(initialSaleHardCap);
   const [animatedSupplyCurrent, setAnimatedSupplyCurrent] = useState(0);
   const [animatedSupplyRemaining, setAnimatedSupplyRemaining] = useState(0);
@@ -191,12 +195,8 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
     void trackTokenMetric('download-whitepaper', 'whitepaper', selectedTokens);
   };
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_PLATFORM_URL ||
-    'https://www.traditionaldreamfactory.com';
-  const canonicalUrl = `${String(baseUrl)
-    .replace(/\/$/, '')
-    .replace(/^(?!https?:\/\/)/, 'https://')}/token`;
+  const baseUrl = getSiteUrl();
+  const canonicalUrl = baseUrl ? `${baseUrl}/token` : '';
   const tokenPrice = networkTokenPrice;
   const formattedMaxSupply = maxSupplyFormatter.format(saleHardCap);
 
@@ -237,7 +237,11 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
     const current = Math.max(0, tokenStats.currentSupply || 0);
     const remaining = Math.max(0, saleHardCap - current);
 
-    const cleanupCurrent = animateNumber(current, setAnimatedSupplyCurrent, 1400);
+    const cleanupCurrent = animateNumber(
+      current,
+      setAnimatedSupplyCurrent,
+      1400,
+    );
     const cleanupRemaining = animateNumber(
       remaining,
       setAnimatedSupplyRemaining,
@@ -276,11 +280,9 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
           {description ? (
             <meta name="description" content={description} />
           ) : null}
-          <link
-            rel="canonical"
-            href="https://www.traditionaldreamfactory.com/token"
-            key="canonical"
-          />
+          {canonicalUrl && (
+            <link rel="canonical" href={canonicalUrl} key="canonical" />
+          )}
         </Head>
 
         <div className="max-w-6xl mx-auto">
@@ -312,9 +314,10 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
   const decrementTokens = () => {
     handleTokenInputChange(selectedTokens - 1);
   };
-  const estimatedTotal = tokenPrice !== null
-    ? Number((selectedTokens * tokenPrice).toFixed(2))
-    : null;
+  const estimatedTotal =
+    tokenPrice !== null
+      ? Number((selectedTokens * tokenPrice).toFixed(2))
+      : null;
 
   const BuySparkles = () => {
     if (!showBuySparkle) return null;
@@ -347,9 +350,9 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
       <Head>
         <title>{title}</title>
         <meta name="description" content={description} />
-        <link rel="canonical" href={canonicalUrl} />
+        {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={canonicalUrl} />
+        {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         {meta.ogImage ? (
@@ -410,7 +413,9 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                     <div className="text-2xl md:text-3xl font-bold text-accent mb-1">
                       {isLoadingTokenStats
                         ? '...'
-                        : numberFormatter.format(Math.round(animatedSupplyCurrent))}
+                        : numberFormatter.format(
+                            Math.round(animatedSupplyCurrent),
+                          )}
                     </div>
                     <div className="text-xs md:text-sm text-gray-600">
                       {t('token_supply_current')}
@@ -432,7 +437,9 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                     <div className="text-2xl md:text-3xl font-bold text-accent mb-1">
                       {isLoadingTokenStats
                         ? '...'
-                        : numberFormatter.format(Math.round(animatedSupplyRemaining))}
+                        : numberFormatter.format(
+                            Math.round(animatedSupplyRemaining),
+                          )}
                     </div>
                     <div className="text-xs md:text-sm text-gray-600">
                       {t('token_supply_remaining_to_hard_cap')}
@@ -511,11 +518,11 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                 </div>
                 {showMaxAmountWarning && (
                   <p className="mt-2 text-[11px] text-amber-700 text-left sm:text-center">
-                    Max {MAX_TOKENS} tokens per purchase. Contact the team for larger allocations.
+                    Max {MAX_TOKENS} tokens per purchase. Contact the team for
+                    larger allocations.
                   </p>
                 )}
               </div>
-
             </div>
           </div>
         </section>
@@ -542,37 +549,45 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                   </div>
                   <div className="space-y-4">
                     {listings &&
-                      listings.filter((listing: any) => listing.tokenPrice?.val > 0).map((listing: any) => {
-                        const getIcon = () => {
-                          if (listing.name.toLowerCase().includes('van')) {
-                            return ACCOMMODATION_ICONS[0];
-                          }
-                          if (listing.name.toLowerCase().includes('private') ||
+                      listings
+                        .filter((listing: any) => listing.tokenPrice?.val > 0)
+                        .map((listing: any) => {
+                          const getIcon = () => {
+                            if (listing.name.toLowerCase().includes('van')) {
+                              return ACCOMMODATION_ICONS[0];
+                            }
+                            if (
+                              listing.name.toLowerCase().includes('private') ||
                               listing.name.toLowerCase().includes('camping') ||
                               listing.name.toLowerCase().includes('glamping') ||
-                              listing.name.toLowerCase().includes('shared')) {
-                            return ACCOMMODATION_ICONS[1];
-                          }
-                          return ACCOMMODATION_ICONS[2];
-                        };
+                              listing.name.toLowerCase().includes('shared')
+                            ) {
+                              return ACCOMMODATION_ICONS[1];
+                            }
+                            return ACCOMMODATION_ICONS[2];
+                          };
 
-                        return (
-                          <div key={listing.name} className="flex items-center gap-4 pb-4 border-b last:border-0">
-                            <Image
-                              src={`/images/token-sale/${getIcon()}`}
-                              alt=""
-                              width={40}
-                              height={40}
-                            />
-                            <div className="flex-1">
-                              <p className="font-medium">{listing.name}</p>
+                          return (
+                            <div
+                              key={listing.name}
+                              className="flex items-center gap-4 pb-4 border-b last:border-0"
+                            >
+                              <Image
+                                src={`/images/token-sale/${getIcon()}`}
+                                alt=""
+                                width={40}
+                                height={40}
+                              />
+                              <div className="flex-1">
+                                <p className="font-medium">{listing.name}</p>
+                              </div>
+                              <p className="text-accent font-semibold">
+                                {t('token_sale_public_sale_token_symbol')}{' '}
+                                {listing.tokenPrice?.val || 0}
+                              </p>
                             </div>
-                            <p className="text-accent font-semibold">
-                              {t('token_sale_public_sale_token_symbol')} {listing.tokenPrice?.val || 0}
-                            </p>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
 
                     <div className="flex items-center gap-4 pb-4 border-b">
                       <Image
@@ -582,10 +597,16 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                         height={40}
                       />
                       <div className="flex-1">
-                        <p className="font-medium">{t('token_sale_public_sale_shared_suite')}</p>
-                        <span className="text-xs text-accent">{t('token_sale_public_sale_coming_soon')}</span>
+                        <p className="font-medium">
+                          {t('token_sale_public_sale_shared_suite')}
+                        </p>
+                        <span className="text-xs text-accent">
+                          {t('token_sale_public_sale_coming_soon')}
+                        </span>
                       </div>
-                      <p className="text-accent font-semibold">{t('token_sale_public_sale_token_symbol')} 1</p>
+                      <p className="text-accent font-semibold">
+                        {t('token_sale_public_sale_token_symbol')} 1
+                      </p>
                     </div>
                     <div className="flex items-center gap-4 pb-4 border-b">
                       <Image
@@ -595,10 +616,16 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                         height={40}
                       />
                       <div className="flex-1">
-                        <p className="font-medium">{t('token_sale_public_sale_private_suite')}</p>
-                        <span className="text-xs text-accent">{t('token_sale_public_sale_coming_soon')}</span>
+                        <p className="font-medium">
+                          {t('token_sale_public_sale_private_suite')}
+                        </p>
+                        <span className="text-xs text-accent">
+                          {t('token_sale_public_sale_coming_soon')}
+                        </span>
                       </div>
-                      <p className="text-accent font-semibold">{t('token_sale_public_sale_token_symbol')} 2</p>
+                      <p className="text-accent font-semibold">
+                        {t('token_sale_public_sale_token_symbol')} 2
+                      </p>
                     </div>
                     <div className="flex items-center gap-4 pb-4 border-b">
                       <Image
@@ -608,10 +635,16 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                         height={40}
                       />
                       <div className="flex-1">
-                        <p className="font-medium">{t('token_sale_public_sale_studio')}</p>
-                        <span className="text-xs text-accent">{t('token_sale_public_sale_coming_soon')}</span>
+                        <p className="font-medium">
+                          {t('token_sale_public_sale_studio')}
+                        </p>
+                        <span className="text-xs text-accent">
+                          {t('token_sale_public_sale_coming_soon')}
+                        </span>
                       </div>
-                      <p className="text-accent font-semibold">{t('token_sale_public_sale_token_symbol')} 3</p>
+                      <p className="text-accent font-semibold">
+                        {t('token_sale_public_sale_token_symbol')} 3
+                      </p>
                     </div>
                     <div className="flex items-center gap-4">
                       <Image
@@ -621,9 +654,13 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                         height={40}
                       />
                       <div className="flex-1">
-                        <p className="font-medium">{t('token_sale_public_sale_token_symbol')} 5</p>
+                        <p className="font-medium">
+                          {t('token_sale_public_sale_token_symbol')} 5
+                        </p>
                       </div>
-                      <p className="text-accent font-semibold">{t('token_sale_public_sale_token_symbol')} 5</p>
+                      <p className="text-accent font-semibold">
+                        {t('token_sale_public_sale_token_symbol')} 5
+                      </p>
                     </div>
                   </div>
                 </Card>
@@ -663,7 +700,6 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                 </div>
               </div>
             </div>
-
           </div>
         </section>
 
@@ -680,24 +716,44 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                 </Heading>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center border-b pb-2">
-                    <span className="text-gray-700">{t('token_utility_accommodation')}</span>
-                    <span className="font-semibold text-accent">1 token = 1 night/year</span>
+                    <span className="text-gray-700">
+                      {t('token_utility_accommodation')}
+                    </span>
+                    <span className="font-semibold text-accent">
+                      1 token = 1 night/year
+                    </span>
                   </div>
                   <div className="flex justify-between items-center border-b pb-2">
-                    <span className="text-gray-700">{t('token_utility_governance')}</span>
-                    <span className="font-semibold text-accent">{t('token_utility_governance_value')}</span>
+                    <span className="text-gray-700">
+                      {t('token_utility_governance')}
+                    </span>
+                    <span className="font-semibold text-accent">
+                      {t('token_utility_governance_value')}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center border-b pb-2">
-                    <span className="text-gray-700">{t('token_utility_events')}</span>
-                    <span className="font-semibold text-accent">{t('token_utility_events_value')}</span>
+                    <span className="text-gray-700">
+                      {t('token_utility_events')}
+                    </span>
+                    <span className="font-semibold text-accent">
+                      {t('token_utility_events_value')}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center border-b pb-2">
-                    <span className="text-gray-700">{t('token_utility_citizenship')}</span>
-                    <span className="font-semibold text-accent">{t('token_utility_citizenship_value')}</span>
+                    <span className="text-gray-700">
+                      {t('token_utility_citizenship')}
+                    </span>
+                    <span className="font-semibold text-accent">
+                      {t('token_utility_citizenship_value')}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-700">{t('token_utility_secondary')}</span>
-                    <span className="font-semibold text-accent">{t('token_utility_secondary_value')}</span>
+                    <span className="text-gray-700">
+                      {t('token_utility_secondary')}
+                    </span>
+                    <span className="font-semibold text-accent">
+                      {t('token_utility_secondary_value')}
+                    </span>
                   </div>
                 </div>
               </Card>
@@ -717,13 +773,19 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                   </p>
                   <div className="mt-4 pt-4 border-t space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-gray-700">{t('token_supply_current')}</span>
+                      <span className="text-gray-700">
+                        {t('token_supply_current')}
+                      </span>
                       <span className="font-semibold">
-                        {isLoadingTokenStats ? t('token_supply_loading') : tokenStats.currentSupply.toLocaleString()}
+                        {isLoadingTokenStats
+                          ? t('token_supply_loading')
+                          : tokenStats.currentSupply.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-700">{t('home_token_stat_price')}</span>
+                      <span className="text-gray-700">
+                        {t('home_token_stat_price')}
+                      </span>
                       <span className="font-semibold">
                         {tokenPrice === null
                           ? t('token_supply_loading')
@@ -731,17 +793,26 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-700">{t('token_supply_remaining_to_hard_cap')}</span>
+                      <span className="text-gray-700">
+                        {t('token_supply_remaining_to_hard_cap')}
+                      </span>
                       <span className="font-semibold">
                         {isLoadingTokenStats
                           ? t('token_supply_loading')
-                          : Math.max(0, saleHardCap - tokenStats.currentSupply).toLocaleString()}
+                          : Math.max(
+                              0,
+                              saleHardCap - tokenStats.currentSupply,
+                            ).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between pt-2 border-t">
-                      <span className="text-gray-700">{t('token_holders_count')}</span>
+                      <span className="text-gray-700">
+                        {t('token_holders_count')}
+                      </span>
                       <span className="font-semibold">
-                        {isLoadingTokenStats ? t('token_supply_loading') : tokenStats.tokenHolders.toLocaleString()}
+                        {isLoadingTokenStats
+                          ? t('token_supply_loading')
+                          : tokenStats.tokenHolders.toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -753,7 +824,10 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
               <div className="p-8 md:p-12">
                 <div className="flex flex-col md:flex-row items-center gap-8">
                   <div className="flex-1 text-center md:text-left">
-                    <Heading level={3} className="mb-4 text-2xl md:text-3xl font-bold">
+                    <Heading
+                      level={3}
+                      className="mb-4 text-2xl md:text-3xl font-bold"
+                    >
                       {t('token_sale_whitepaper_title')}
                     </Heading>
                     <p className="text-lg text-gray-700 mb-6 max-w-2xl">
@@ -765,7 +839,10 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                       className="!px-8 !py-3 text-lg font-bold"
                       onClick={async () => {
                         await logDownloadWhitepaperAction();
-                        window.open('https://oasa.earth/papers/OASA-Whitepaper-V1.2.pdf', '_blank');
+                        window.open(
+                          'https://oasa.earth/papers/OASA-Whitepaper-V1.2.pdf',
+                          '_blank',
+                        );
                       }}
                     >
                       {t('token_sale_whitepaper')} →
@@ -790,7 +867,11 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                   rel="noopener noreferrer"
                   className="block text-accent hover:underline"
                   onClick={() => {
-                    void trackTokenMetric('use-calculator', 'calculator', selectedTokens);
+                    void trackTokenMetric(
+                      'use-calculator',
+                      'calculator',
+                      selectedTokens,
+                    );
                   }}
                 >
                   {t('token_explorer_tdf_link')}
@@ -801,7 +882,11 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                   rel="noopener noreferrer"
                   className="block text-accent hover:underline"
                   onClick={() => {
-                    void trackTokenMetric('use-calculator', 'calculator', selectedTokens);
+                    void trackTokenMetric(
+                      'use-calculator',
+                      'calculator',
+                      selectedTokens,
+                    );
                   }}
                 >
                   {t('token_explorer_holder_chart_link')}
@@ -812,7 +897,11 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                   rel="noopener noreferrer"
                   className="block text-accent hover:underline"
                   onClick={() => {
-                    void trackTokenMetric('use-calculator', 'calculator', selectedTokens);
+                    void trackTokenMetric(
+                      'use-calculator',
+                      'calculator',
+                      selectedTokens,
+                    );
                   }}
                 >
                   {t('token_explorer_presence_link')}
@@ -834,7 +923,11 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                       href="/legal/terms"
                       className="block text-accent hover:underline"
                       onClick={() => {
-                        void trackTokenMetric('use-calculator', 'calculator', selectedTokens);
+                        void trackTokenMetric(
+                          'use-calculator',
+                          'calculator',
+                          selectedTokens,
+                        );
                       }}
                     >
                       {t('token_legal_terms_link')}
@@ -853,7 +946,11 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                       href="/dataroom"
                       className="block text-accent hover:underline"
                       onClick={() => {
-                        void trackTokenMetric('use-calculator', 'calculator', selectedTokens);
+                        void trackTokenMetric(
+                          'use-calculator',
+                          'calculator',
+                          selectedTokens,
+                        );
                       }}
                     >
                       {t('token_legal_dataroom_link')}
@@ -871,29 +968,45 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                     <div className="flex items-start gap-3">
                       <span className="text-accent font-bold">1.</span>
                       <div>
-                        <p className="font-semibold">{t('token_purchase_step_1_title')}</p>
-                        <p className="text-sm text-gray-600">{t('token_purchase_step_1_desc')}</p>
+                        <p className="font-semibold">
+                          {t('token_purchase_step_1_title')}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {t('token_purchase_step_1_desc')}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
                       <span className="text-accent font-bold">2.</span>
                       <div>
-                        <p className="font-semibold">{t('token_purchase_step_2_title')}</p>
-                        <p className="text-sm text-gray-600">{t('token_purchase_step_2_desc')}</p>
+                        <p className="font-semibold">
+                          {t('token_purchase_step_2_title')}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {t('token_purchase_step_2_desc')}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
                       <span className="text-accent font-bold">3.</span>
                       <div>
-                        <p className="font-semibold">{t('token_purchase_step_3_title')}</p>
-                        <p className="text-sm text-gray-600">{t('token_purchase_step_3_desc', { reserveToken })}</p>
+                        <p className="font-semibold">
+                          {t('token_purchase_step_3_title')}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {t('token_purchase_step_3_desc', { reserveToken })}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
                       <span className="text-accent font-bold">4.</span>
                       <div>
-                        <p className="font-semibold">{t('token_purchase_step_4_title')}</p>
-                        <p className="text-sm text-gray-600">{t('token_purchase_step_4_desc')}</p>
+                        <p className="font-semibold">
+                          {t('token_purchase_step_4_title')}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {t('token_purchase_step_4_desc')}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -925,7 +1038,9 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <p className="font-semibold">{t('token_secondary_market_features_title')}</p>
+                  <p className="font-semibold">
+                    {t('token_secondary_market_features_title')}
+                  </p>
                   <ul className="list-disc list-inside space-y-1 text-gray-700">
                     <li>{t('token_secondary_market_feature_1')}</li>
                     <li>{t('token_secondary_market_feature_2')}</li>
@@ -997,7 +1112,8 @@ const PublicTokenSalePage = ({ listings, pageMeta }: Props) => {
           </div>
           {showMaxAmountWarning && (
             <p className="mt-1 text-[11px] text-amber-700 text-center">
-              Max {MAX_TOKENS} tokens per purchase. Contact the team for larger allocations.
+              Max {MAX_TOKENS} tokens per purchase. Contact the team for larger
+              allocations.
             </p>
           )}
         </div>

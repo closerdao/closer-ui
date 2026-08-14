@@ -18,9 +18,12 @@ import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
 import { Article } from '../../types/blog';
 import api, { cdn, formatSearch } from '../../utils/api';
-import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { estimateReadingTime, getFirstSentence } from '../../utils/blog.utils';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
+import { getSiteUrl } from '../../utils/siteUrl';
+
+const SITE_URL = getSiteUrl();
 
 interface BlogConfig {
   enabled: boolean;
@@ -34,12 +37,7 @@ interface Props {
   error?: string;
 }
 
-const Search = ({
-  articles,
-  page,
-  numArticles,
-  authors,
-}: Props) => {
+const Search = ({ articles, page, numArticles, authors }: Props) => {
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const blogConfig = getCachedConfig('blog') as BlogConfig | null;
   const t = useTranslations();
@@ -91,7 +89,7 @@ const Search = ({
     router.push(`/blog?page=${pageNumber}`);
   };
 
-  const isBlogEnabled = blogConfig?.enabled !== false;
+  const isBlogEnabled = blogConfig?.enabled === true;
 
   if (!isBlogEnabled) {
     return <FeatureNotEnabled feature="blog" />;
@@ -120,12 +118,7 @@ const Search = ({
           content={`Read articles and stories from ${PLATFORM_NAME}. Community insights, regenerative living, and updates from our network.`}
         />
         <meta property="og:type" content="website" />
-        <meta
-          property="og:url"
-          content={`${
-            process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'
-          }/blog`}
-        />
+        {SITE_URL && <meta property="og:url" content={`${SITE_URL}/blog`} />}
         {latestArticleImageUrl && (
           <meta property="og:image" content={latestArticleImageUrl} />
         )}
@@ -141,12 +134,7 @@ const Search = ({
         {latestArticleImageUrl && (
           <meta name="twitter:image" content={latestArticleImageUrl} />
         )}
-        <link
-          rel="canonical"
-          href={`${
-            process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'
-          }/blog`}
-        />
+        {SITE_URL && <link rel="canonical" href={`${SITE_URL}/blog`} />}
       </Head>
       <main className="w-full flex flex-col items-center px-4 md:px-8">
         <section className="w-full max-w-5xl pt-12 pb-8">

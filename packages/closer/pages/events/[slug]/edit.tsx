@@ -50,7 +50,7 @@ const EditEvent = ({ event, error, foodOptions, generalConfig, eventsConfig, pay
   const t = useTranslations();
   const router = useRouter();
 
-  const isEventsEnabled = eventsConfig?.enabled !== false;
+  const isEventsEnabled = eventsConfig?.enabled === true;
   const timeZone = generalConfig?.timeZone;
 
   if (!isEventsEnabled) {

@@ -3,7 +3,9 @@ import { CloserCurrencies } from '../../types';
 import { PaymentType } from '../../types/booking';
 import {
   getAccommodationTotal,
+  getBookingAnswers,
   getBookingPaymentType,
+  getBookingTokenCurrency,
   getDisplayTotalFromComponents,
   getFiatTotal,
   getFoodTotal,
@@ -18,6 +20,38 @@ import {
   resolveTokensStakedVal,
   userCanCreateTeamBooking,
 } from '../booking.helpers';
+
+describe('getBookingAnswers', () => {
+  it('pairs each question label with its answer', () => {
+    expect(
+      getBookingAnswers([
+        { 'Why are you coming?': 'to rest' },
+        { 'Dietary needs': 'vegan' },
+      ]),
+    ).toEqual([
+      { question: 'Why are you coming?', answer: 'to rest' },
+      { question: 'Dietary needs', answer: 'vegan' },
+    ]);
+  });
+
+  it('drops unanswered and blank questions', () => {
+    expect(
+      getBookingAnswers([
+        { 'Why are you coming?': '' },
+        { 'Dietary needs': '   ' },
+        { Allergies: 'none' },
+      ]),
+    ).toEqual([{ question: 'Allergies', answer: 'none' }]);
+  });
+
+  it('returns an empty list for missing or malformed fields', () => {
+    expect(getBookingAnswers(undefined)).toEqual([]);
+    expect(getBookingAnswers(null)).toEqual([]);
+    expect(getBookingAnswers([])).toEqual([]);
+    expect(getBookingAnswers([{}] as any)).toEqual([]);
+    expect(getBookingAnswers([{ Question: 42 }] as any)).toEqual([]);
+  });
+});
 
 describe('userCanCreateTeamBooking', () => {
   it('returns true for staff roles that may create team bookings', () => {
@@ -901,5 +935,25 @@ describe('isFullAccommodationCoveredByTokens', () => {
         listingBeds: 2,
       }),
     ).toBe(false);
+  });
+});
+
+describe('getBookingTokenCurrency', () => {
+  it('prefers a configured booking token', () => {
+    expect(
+      getBookingTokenCurrency({ bookingToken: 'ABC' }, { utilityTokenCur: 'XYZ' }),
+    ).toBe('ABC');
+  });
+
+  it("falls through a neutral-seeded '' bookingToken to the configured utility token", () => {
+    expect(
+      getBookingTokenCurrency({ bookingToken: '' }, { utilityTokenCur: 'XYZ' }),
+    ).toBe('XYZ');
+  });
+
+  it('returns empty — never a branded symbol — when nothing is configured', () => {
+    expect(getBookingTokenCurrency()).toBe('');
+    expect(getBookingTokenCurrency(null, null)).toBe('');
+    expect(getBookingTokenCurrency({ bookingToken: '' }, { utilityTokenCur: '' })).toBe('');
   });
 });

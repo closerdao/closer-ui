@@ -231,6 +231,25 @@ export const areNumberArraysEqual = (
   return aa.every((value, index) => value === bb[index]);
 };
 
+/**
+ * `booking.fields` holds one single-key object per questionnaire question, keyed
+ * by the question label the guest was shown. Returns the answered ones only.
+ */
+export const getBookingAnswers = (
+  fields?: { [key: string]: string }[] | null,
+): { question: string; answer: string }[] => {
+  if (!Array.isArray(fields)) {
+    return [];
+  }
+  return fields
+    .map((field) => {
+      const question = Object.keys(field || {})[0];
+      const answer = question ? field[question] : '';
+      return { question, answer: typeof answer === 'string' ? answer : '' };
+    })
+    .filter(({ question, answer }) => Boolean(question) && answer.trim() !== '');
+};
+
 export function bookingGuestNightsMetricPoint(
   nights: number | string | undefined | null,
   adults: number | string | undefined | null,
@@ -1372,7 +1391,11 @@ export function getBookingTokenCurrency(
   web3Config?: { bookingToken?: string } | null,
   bookingConfig?: { utilityTokenCur?: string } | null,
 ): string {
-  return web3Config?.bookingToken ?? bookingConfig?.utilityTokenCur ?? 'TDF';
+  // No branded fallback: a village that has configured no token must not
+  // inherit another village's token symbol (#946). `||` not `??`: the neutral
+  // schema seeds bookingToken as '', which must not shadow a configured
+  // utilityTokenCur.
+  return web3Config?.bookingToken || bookingConfig?.utilityTokenCur || '';
 }
 
 export interface BookingStepUrlParams {

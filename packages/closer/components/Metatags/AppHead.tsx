@@ -33,7 +33,7 @@ export const AppHead: FC = () => {
       <meta charSet="utf-8" />
       <meta name="description" content={defaultDescription} />
       <meta name="keywords" content="regenerative communities, community management, booking system, event management, DAO, decentralized governance, ecovillage, intentional community" />
-      <meta name="author" content={PLATFORM_NAME || 'Closer'} />
+      {PLATFORM_NAME && <meta name="author" content={PLATFORM_NAME} />}
       <meta name="robots" content="index, follow" />
       <link rel="canonical" href={fullUrl} />
       
@@ -42,7 +42,9 @@ export const AppHead: FC = () => {
       <meta property="og:url" content={fullUrl} />
       <meta property="og:type" content="website" />
       <meta property="og:image" content={ogImage} />
-      <meta property="og:site_name" content={PLATFORM_NAME || 'Closer'} />
+      {PLATFORM_NAME && (
+        <meta property="og:site_name" content={PLATFORM_NAME} />
+      )}
       <meta property="og:locale" content="en_US" />
       
       <meta name="twitter:card" content="summary_large_image" />

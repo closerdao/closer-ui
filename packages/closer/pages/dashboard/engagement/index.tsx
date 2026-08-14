@@ -99,7 +99,7 @@ const EngagementDashboardPage = () => {
     typeof engagementConfig?.ctaText === 'string'
       ? engagementConfig.ctaText.trim()
       : '';
-  const engagementCtaEnabled = engagementConfig?.enabled !== false;
+  const engagementCtaEnabled = engagementConfig?.enabled === true;
   const showEngagementCta =
     engagementCtaEnabled && Boolean(ctaHref && ctaLabel);
   const ctaIsExternal = /^https?:\/\//i.test(ctaHref);

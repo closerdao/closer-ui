@@ -66,7 +66,7 @@ export function deriveMemberMenuFeatureFlags(
   const isVolunteeringEnabled =
     volunteerConfig?.enabled === true &&
     process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING === 'true';
-  const isEventsEnabled = eventsConfig?.enabled !== false;
+  const isEventsEnabled = eventsConfig?.enabled === true;
   const isCommunityEnabled = communityConfig?.enabled === true;
   const isGovernanceEnabled = config.governance?.enabled === true;
   const isLearningHubEnabled =

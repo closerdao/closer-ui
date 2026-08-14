@@ -32,7 +32,7 @@ const CreateEvent = ({ foodOptions, eventsConfig, paymentConfig, web3Config }: P
   const t = useTranslations();
   const router = useRouter();
 
-  const isEventsEnabled = eventsConfig?.enabled !== false;
+  const isEventsEnabled = eventsConfig?.enabled === true;
 
   const foodOptionsWithDefault = [
     {

@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 
 import { useEffect } from 'react';
 
+import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import Hosts from '../../components/Hosts';
 import ListingListPreview from '../../components/ListingListPreview';
 import Reviews from '../../components/Reviews';
@@ -11,11 +12,13 @@ import StaySearchBar, {
   StaySearchBarParams,
 } from '../../components/StaySearchBar';
 import UpcomingEventsIntro from '../../components/UpcomingEventsIntro';
+import { LinkButton } from '../../components/ui';
 import Heading from '../../components/ui/Heading';
 
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import config from '../../configCached';
 import { MAX_LISTINGS_TO_FETCH } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
@@ -27,18 +30,18 @@ import {
   VolunteerOpportunity,
 } from '../../types';
 import { PageMetaOverride } from '../../types/page';
-import config from '../../configCached';
 import api from '../../utils/api';
 import { resolveBlockText } from '../../utils/blockI18n';
-import { logMetric } from '../../utils/metrics';
 import { parseMessageFromError } from '../../utils/common';
+import { logMetric } from '../../utils/metrics';
+import { getSiteUrl } from '../../utils/siteUrl';
 import {
   fetchPageMetaOverride,
   resolvePageMeta,
 } from '../../utils/standardPages';
-import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import PageNotFound from '../not-found';
-import {  LinkButton } from '../../components/ui';
+
+const SITE_URL = getSiteUrl();
 
 interface Props {
   bookingSettings: any;
@@ -156,11 +159,14 @@ const StayPage = ({
       <Head>
         <title>{title}</title>
         <meta name="description" content={description} />
-        <meta name="keywords" content={`${PLATFORM_NAME}, accommodations, booking, stay, regenerative communities, ecovillage, intentional community, sustainable travel`} />
+        <meta
+          name="keywords"
+          content={`${PLATFORM_NAME}, accommodations, booking, stay, regenerative communities, ecovillage, intentional community, sustainable travel`}
+        />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/stay`} />
+        {SITE_URL && <meta property="og:url" content={`${SITE_URL}/stay`} />}
         {meta.ogImage ? (
           <meta property="og:image" content={meta.ogImage} />
         ) : null}
@@ -170,7 +176,7 @@ const StayPage = ({
         {meta.ogImage ? (
           <meta name="twitter:image" content={meta.ogImage} />
         ) : null}
-        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://closer.earth'}/stay`} />
+        {SITE_URL && <link rel="canonical" href={`${SITE_URL}/stay`} />}
       </Head>
       {listings && listings.get('error') && (
         <div className="validation-error">{listings.get('error')}</div>
@@ -216,22 +222,34 @@ const StayPage = ({
 
               <div className="grid md:grid-cols-3 gap-6 mb-12">
                 <div className="p-6 border border-gray-200 rounded-xl">
-                  <div className="text-4xl font-semibold text-gray-900 mb-2">14</div>
-                  <div className="text-sm text-gray-600 mb-4">{t('stay_feature_suites_label')}</div>
+                  <div className="text-4xl font-semibold text-gray-900 mb-2">
+                    14
+                  </div>
+                  <div className="text-sm text-gray-600 mb-4">
+                    {t('stay_feature_suites_label')}
+                  </div>
                   <p className="text-gray-700 text-sm">
                     {t('stay_feature_suites_desc')}
                   </p>
                 </div>
                 <div className="p-6 border border-gray-200 rounded-xl">
-                  <div className="text-4xl font-semibold text-gray-900 mb-2">{t('stay_feature_building_status')}</div>
-                  <div className="text-sm text-gray-600 mb-4">{t('stay_feature_building_label')}</div>
+                  <div className="text-4xl font-semibold text-gray-900 mb-2">
+                    {t('stay_feature_building_status')}
+                  </div>
+                  <div className="text-sm text-gray-600 mb-4">
+                    {t('stay_feature_building_label')}
+                  </div>
                   <p className="text-gray-700 text-sm">
                     {t('stay_feature_building_desc')}
                   </p>
                 </div>
                 <div className="p-6 border border-gray-200 rounded-xl">
-                  <div className="text-4xl font-semibold text-gray-900 mb-2">{t('stay_feature_community_status')}</div>
-                  <div className="text-sm text-gray-600 mb-4">{t('stay_feature_community_label')}</div>
+                  <div className="text-4xl font-semibold text-gray-900 mb-2">
+                    {t('stay_feature_community_status')}
+                  </div>
+                  <div className="text-sm text-gray-600 mb-4">
+                    {t('stay_feature_community_label')}
+                  </div>
                   <p className="text-gray-700 text-sm">
                     {t('stay_feature_community_desc')}
                   </p>
@@ -331,7 +349,13 @@ const StayPage = ({
       )}
 
       <section className="max-w-6xl mx-auto mb-16">
-        <div className={` w-full ${PLATFORM_NAME.toLowerCase().includes('earthbound') ? 'flex justify-center' : ''}`}>
+        <div
+          className={` w-full ${
+            PLATFORM_NAME.toLowerCase().includes('earthbound')
+              ? 'flex justify-center'
+              : ''
+          }`}
+        >
           <Hosts hosts={hosts} email={TEAM_EMAIL} />
         </div>
 
@@ -341,7 +365,7 @@ const StayPage = ({
               <Heading level={2} className="text-2xl mb-2 max-w-prose">
                 {t('stay_chose_accommodation')}
               </Heading>
-              
+
               <p className="mb-8 max-w-prose">
                 {APP_NAME &&
                   !t('stay_chose_accommodation_description').includes(
@@ -382,7 +406,7 @@ const StayPage = ({
 
 StayPage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const volunteerRes = await api.get('/volunteer').catch(() => null)
+    const volunteerRes = await api.get('/volunteer').catch(() => null);
     const generalConfig = config.general;
     const bookingSettings = config.booking;
     const bookingRules = config['booking-rules'];
