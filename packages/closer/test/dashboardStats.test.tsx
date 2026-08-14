@@ -116,4 +116,15 @@ describe('DashboardStats', () => {
       expect(screen.queryAllByRole('status').length).toBe(0);
     });
   });
+
+  it('stops loading when custom timeframe has no dates', async () => {
+    renderWithNextIntl(
+      <DashboardStats timeFrame="custom" fromDate="" toDate="" />,
+    );
+
+    await waitFor(() => {
+      expect(screen.queryAllByRole('status').length).toBe(0);
+    });
+    expect(mockedFetch).not.toHaveBeenCalled();
+  });
 });
