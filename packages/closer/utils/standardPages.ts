@@ -3,15 +3,58 @@ import {
   buildDefaultStandardPageDoc,
   getEnabledStandardPages,
   getStandardPageDefinition,
+  isStandardPageFeatureEnabled,
   isStandardPageVirtualId,
   normalizePageSlug,
   slugFromStandardPageVirtualId,
   toStandardPageVirtualId,
   type AppConfigForStandardPages,
+  type StandardPageFeatureToggle,
 } from '../constants/standardPages';
 import type { PageDoc, PageMetaOverride, PageSection } from '../types/page';
 import api from './api';
+import { getBuildTimeConfigValue } from './buildTimeConfig.helpers';
 import { readPageMenuMeta, type PageMenuMeta } from './pageMenu';
+
+/**
+ * The shipped standard-page defaults (standardPages.defaults.json) are TDF's
+ * real site content. Only a TDF build may ever render them: a zero-config
+ * village serves its own DB pages or nothing (#951, epic #902).
+ */
+const isTdfApp = (): boolean =>
+  (process.env.NEXT_PUBLIC_APP_NAME ?? '').toLowerCase() === 'tdf';
+
+const configSection = (
+  slug: string,
+): StandardPageFeatureToggle | undefined => {
+  const value = getBuildTimeConfigValue(slug);
+  return value ? (value as StandardPageFeatureToggle) : undefined;
+};
+
+const getStandardPagesFeatureConfig = (): AppConfigForStandardPages => ({
+  volunteering: configSection('volunteering'),
+  cohousing: configSection('cohousing'),
+  events: configSection('events'),
+  booking: configSection('booking'),
+  subscriptions: configSection('subscriptions'),
+  citizenship: configSection('citizenship'),
+  fundraiser: configSection('fundraiser'),
+});
+
+/**
+ * Whether the shipped defaults for a standard page may be served on the public
+ * render path: only on a TDF build, and only when the page's feature gate is
+ * on (a gated-off /token or /volunteer must 404, not show default content).
+ */
+export const canRenderDefaultStandardPage = (slug: string): boolean => {
+  const def = getStandardPageDefinition(slug);
+  if (!def) return false;
+  if (!isTdfApp()) return false;
+  return isStandardPageFeatureEnabled(
+    def.feature,
+    getStandardPagesFeatureConfig(),
+  );
+};
 
 export interface PageListItem extends PageMenuMeta {
   _id: string;
@@ -86,6 +129,8 @@ const isLegacyDataroomSeed = (page: PageDoc): boolean => {
 };
 
 const preferDefaultsForSparseOverride = (page: PageDoc): PageDoc => {
+  // The defaults are TDF content; never swap them into another app's pages.
+  if (!isTdfApp()) return page;
   if (!getStandardPageDefinition(page.slug) && !page.isStandard) return page;
   const defaults = buildDefaultStandardPageDoc(page.slug);
   if (!defaults) return page;
@@ -222,15 +267,28 @@ export const fetchPageBySlug = async (
   return null;
 };
 
+export interface ResolveStandardOrDbPageOptions {
+  /**
+   * The dashboard editor may open the shipped defaults as a starting point
+   * for any standard page. The public render path (the default) must not:
+   * defaults are only renderable per canRenderDefaultStandardPage.
+   */
+  context?: 'render' | 'editor';
+}
+
 export const resolveStandardOrDbPage = async (
   slugOrId: string,
+  options?: ResolveStandardOrDbPageOptions,
 ): Promise<PageDoc | null> => {
+  const defaultsAllowed = (slug: string): boolean =>
+    options?.context === 'editor' || canRenderDefaultStandardPage(slug);
+
   if (isStandardPageVirtualId(slugOrId)) {
     const slug = slugFromStandardPageVirtualId(slugOrId);
     if (!slug) return null;
     const existing = await fetchPageBySlug(slug);
     if (existing) return upgradeStandardPageFromDefaults(existing);
-    return buildDefaultStandardPageDoc(slug);
+    return defaultsAllowed(slug) ? buildDefaultStandardPageDoc(slug) : null;
   }
 
   const looksLikeObjectId = /^[a-f\d]{24}$/i.test(slugOrId);
@@ -255,7 +313,7 @@ export const resolveStandardOrDbPage = async (
   const existing = await fetchPageBySlug(slug);
   if (existing) return upgradeStandardPageFromDefaults(existing);
 
-  if (getStandardPageDefinition(slug)) {
+  if (getStandardPageDefinition(slug) && defaultsAllowed(slug)) {
     return buildDefaultStandardPageDoc(slug);
   }
   return null;

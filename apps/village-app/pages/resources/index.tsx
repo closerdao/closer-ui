@@ -18,15 +18,20 @@ const ResourcesPage = ({ generalConfig }: Props) => {
   const t = useTranslations();
 
   const defaultConfig = useConfig();
-  const PLATFORM_NAME =
-    generalConfig?.platformName || defaultConfig.platformName;
+  const PLATFORM_NAME = String(
+    generalConfig?.platformName || defaultConfig?.PLATFORM_NAME || '',
+  );
   const { FAQS_GOOGLE_SHEET_ID } = useConfig() || {};
   const { faqs, error } = useFaqs(FAQS_GOOGLE_SHEET_ID);
 
   return (
     <div>
       <Head>
-        <title>{`${t('resources_heading')} - ${PLATFORM_NAME}`}</title>
+        <title>
+          {PLATFORM_NAME
+            ? `${t('resources_heading')} - ${PLATFORM_NAME}`
+            : t('resources_heading')}
+        </title>
       </Head>
       <section className="h-[900px] overflow-scroll w-[100vw] -mx-4 px-4  pt-12 pb-20 flex justify-center  bg-cover bg-center">
         <div className="flex flex-col gap-8 items-center w-full sm:w-[600px] ">

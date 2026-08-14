@@ -133,14 +133,18 @@ export const STANDARD_PAGE_DEFAULTS = standardPageDefaults as Record<
   StandardPageDefaultDoc
 >;
 
+export interface StandardPageFeatureToggle {
+  enabled?: boolean;
+}
+
 export interface AppConfigForStandardPages {
-  volunteering?: { enabled?: boolean };
-  cohousing?: { enabled?: boolean };
-  events?: { enabled?: boolean };
-  booking?: { enabled?: boolean };
-  subscriptions?: { enabled?: boolean };
-  citizenship?: { enabled?: boolean };
-  fundraiser?: { enabled?: boolean };
+  volunteering?: StandardPageFeatureToggle;
+  cohousing?: StandardPageFeatureToggle;
+  events?: StandardPageFeatureToggle;
+  booking?: StandardPageFeatureToggle;
+  subscriptions?: StandardPageFeatureToggle;
+  citizenship?: StandardPageFeatureToggle;
+  fundraiser?: StandardPageFeatureToggle;
 }
 
 export const isStandardPageFeatureEnabled = (
