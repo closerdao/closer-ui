@@ -3,7 +3,9 @@ import { useRouter } from 'next/router';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import BookingCoGuests from '../../../components/BookingCoGuests/BookingCoGuests';
+import BookingCoGuests, {
+  type BookingCoGuestUser,
+} from '../../../components/BookingCoGuests/BookingCoGuests';
 import BookingRequestButtons from '../../../components/BookingRequestButtons';
 import BookingStatusTag from '../../../components/BookingStatusTag';
 import BookingGuests from '../../../components/BookingGuests';
@@ -63,6 +65,7 @@ import {
   getBookingPaymentType,
 } from '../../../utils/booking.helpers';
 import {
+  appendBookingCoGuest,
   canEditBookingCoGuests,
   canViewBookingAsGuest,
   getBookingCoGuestIds,
@@ -273,7 +276,7 @@ const StayBookingSummaryPage = ({
   const [isShortenModalOpen, setIsShortenModalOpen] = useState(false);
   const [isAccommodationModalOpen, setIsAccommodationModalOpen] =
     useState(false);
-  const [coGuests, setCoGuests] = useState<User[]>([]);
+  const [coGuests, setCoGuests] = useState<BookingCoGuestUser[]>([]);
   const [coGuestError, setCoGuestError] = useState<string | null>(null);
   const [isSavingCoGuests, setIsSavingCoGuests] = useState(false);
   const visibleByRef = useRef(getBookingVisibleByIds(booking?.visibleBy));
@@ -350,7 +353,13 @@ const StayBookingSummaryPage = ({
     let cancelled = false;
     fetchUsersByIds(ids).then((users) => {
       if (!cancelled) {
-        setCoGuests(users);
+        setCoGuests(
+          users.map((user) => ({
+            _id: user._id,
+            screenname: user.screenname,
+            photo: user.photo,
+          })),
+        );
       }
     });
     return () => {
@@ -1016,17 +1025,21 @@ const StayBookingSummaryPage = ({
     coGuestSaveChainRef.current = coGuestSaveChainRef.current
       .catch(() => undefined)
       .then(async () => {
-        const toSave = visibleByRef.current;
+        const toSave = [...visibleByRef.current];
         try {
           await api.patch(`/booking/${_id}`, { visibleBy: toSave });
           lastSavedVisibleByRef.current = toSave;
         } catch (error) {
           if (version === coGuestSaveVersionRef.current) {
-            visibleByRef.current = lastSavedVisibleByRef.current;
+            const rolledBack = [...lastSavedVisibleByRef.current];
+            visibleByRef.current = rolledBack;
             setLiveBooking((prev) => ({
               ...(prev ?? booking),
-              visibleBy: lastSavedVisibleByRef.current,
+              visibleBy: rolledBack,
             }));
+            setCoGuests((prev) =>
+              prev.filter((guest) => rolledBack.includes(guest._id)),
+            );
             setCoGuestError(parseMessageFromError(error));
           }
         } finally {
@@ -1038,11 +1051,33 @@ const StayBookingSummaryPage = ({
   };
 
   const handleAddCoGuest = (hit: SearchUserHit) => {
-    void persistVisibleBy([...visibleByRef.current, hit._id]);
+    const next = appendBookingCoGuest(
+      visibleByRef.current,
+      hit._id,
+      createdBy,
+      adults,
+    );
+    if (!next) {
+      return;
+    }
+    setCoGuests((prev) =>
+      prev.some((guest) => guest._id === hit._id)
+        ? prev
+        : [
+            ...prev,
+            {
+              _id: hit._id,
+              screenname: hit.screenname,
+              photo: hit.photo,
+            },
+          ],
+    );
+    persistVisibleBy(next);
   };
 
   const handleRemoveCoGuest = (userId: string) => {
-    void persistVisibleBy(visibleByRef.current.filter((id) => id !== userId));
+    setCoGuests((prev) => prev.filter((guest) => guest._id !== userId));
+    persistVisibleBy(visibleByRef.current.filter((id) => id !== userId));
   };
 
   if (!isBookingEnabled) {
@@ -1273,11 +1308,7 @@ const StayBookingSummaryPage = ({
               </div>
             )}
             <BookingCoGuests
-              guests={coGuests.map((guest) => ({
-                _id: guest._id,
-                screenname: guest.screenname,
-                photo: guest.photo,
-              }))}
+              guests={coGuests}
               canEdit={canEditCoGuests}
               excludeUserIds={[createdBy, bookingView?.paidBy].filter(
                 (id): id is string => Boolean(id),

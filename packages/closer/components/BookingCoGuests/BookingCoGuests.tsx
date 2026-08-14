@@ -43,6 +43,7 @@ const BookingCoGuests = ({
   const [isLoading, setIsLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const acceptedIdsRef = useRef(new Set<string>());
   const excludedSet = useMemo(
     () => new Set([...excludeUserIds, ...guests.map((guest) => guest._id)]),
     [excludeUserIds, guests],
@@ -98,6 +99,15 @@ const BookingCoGuests = ({
       }
     };
   }, []);
+
+  useEffect(() => {
+    const guestIds = new Set(guests.map((guest) => guest._id));
+    acceptedIdsRef.current.forEach((id) => {
+      if (!guestIds.has(id) && !isSaving) {
+        acceptedIdsRef.current.delete(id);
+      }
+    });
+  }, [guests, isSaving]);
 
   if (!canEdit && guests.length === 0) {
     return null;
@@ -162,15 +172,22 @@ const BookingCoGuests = ({
                 <button
                   key={hit._id}
                   type="button"
-                  disabled={isSaving}
+                  disabled={isSaving || acceptedIdsRef.current.has(hit._id)}
                   onClick={() => {
-                    if (isSaving) {
+                    if (
+                      isSaving ||
+                      acceptedIdsRef.current.has(hit._id) ||
+                      excludedSet.has(hit._id)
+                    ) {
                       return;
                     }
+                    acceptedIdsRef.current.add(hit._id);
                     onAdd(hit);
+                    setResults((prev) =>
+                      prev.filter((result) => result._id !== hit._id),
+                    );
                     setSearch('');
                     setIsOpen(false);
-                    setResults([]);
                   }}
                   className="flex w-full flex-col gap-0.5 px-3 py-2 text-left hover:bg-accent-light/70 disabled:opacity-50"
                 >

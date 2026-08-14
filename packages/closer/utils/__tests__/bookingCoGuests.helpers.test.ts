@@ -1,4 +1,5 @@
 import {
+  appendBookingCoGuest,
   buildMyBookingsAccessOr,
   canEditBookingCoGuests,
   canViewBookingAsGuest,
@@ -80,6 +81,33 @@ describe('getMaxBookingCoGuests', () => {
     expect(getMaxBookingCoGuests(1)).toBe(0);
     expect(getMaxBookingCoGuests(3)).toBe(2);
     expect(getMaxBookingCoGuests(undefined)).toBe(0);
+  });
+});
+
+describe('appendBookingCoGuest', () => {
+  it('appends onto the latest list so two rapid adds both stick', () => {
+    const afterFirst = appendBookingCoGuest(
+      ['guest-1'],
+      'guest-2',
+      'owner-1',
+      3,
+    );
+    expect(afterFirst).toEqual(['guest-1', 'guest-2']);
+    expect(
+      appendBookingCoGuest(afterFirst ?? [], 'guest-3', 'owner-1', 4),
+    ).toEqual(['guest-1', 'guest-2', 'guest-3']);
+  });
+
+  it('rejects duplicates, the owner, and adds past the adult cap', () => {
+    expect(
+      appendBookingCoGuest(['guest-1'], 'guest-1', 'owner-1', 3),
+    ).toBeNull();
+    expect(
+      appendBookingCoGuest(['guest-1'], 'owner-1', 'owner-1', 3),
+    ).toBeNull();
+    expect(
+      appendBookingCoGuest(['guest-1'], 'guest-2', 'owner-1', 2),
+    ).toBeNull();
   });
 });
 

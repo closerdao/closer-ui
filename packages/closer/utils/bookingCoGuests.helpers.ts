@@ -77,6 +77,25 @@ export const canEditBookingCoGuests = (
 export const getMaxBookingCoGuests = (adults?: number | null): number =>
   Math.max(0, (adults ?? 1) - 1);
 
+export const appendBookingCoGuest = (
+  visibleBy: string[],
+  userId: string,
+  createdBy?: string | null,
+  adults?: number | null,
+): string[] | null => {
+  if (!userId || userId === createdBy) {
+    return null;
+  }
+  const current = normalizeBookingVisibleBy(visibleBy, createdBy);
+  if (current.includes(userId)) {
+    return null;
+  }
+  if (current.length >= getMaxBookingCoGuests(adults)) {
+    return null;
+  }
+  return [...current, userId];
+};
+
 export const buildMyBookingsAccessOr = (user: {
   _id: string;
   email?: string;
