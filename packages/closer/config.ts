@@ -449,7 +449,6 @@ export const configDescription: ConfigType[] = [
       },
       residenceTimeFrame: {
         type: 'text',
-        default: 'October 2024 - December 2025',
       },
       skills: {
         type: 'text',
@@ -510,49 +509,8 @@ export const configDescription: ConfigType[] = [
             ctaUrl: 'text',
           },
         ],
-        default: [
-          {
-            id: 'milestone-1',
-            title: 'Buildings option exercise, architecture & engineering fees',
-            description:
-              'Execute secured option to buy signed in 2023 at €200k (asset expected to appraise at €1M).',
-            items: '',
-            goal: 236000,
-            start: '2025-12-01',
-            end: '2026-03-31',
-          },
-          {
-            id: 'milestone-2',
-            title: 'Solar roofs, pool completion',
-            description:
-              'Solar prices are raising. We have a special deal to buy panels at cost, and will stack functionality by turning our panels into an extra waterproofing layer over our roofs to avoid further rain dammage next year. Plus it includes €600+ energy income in the future as we establish a microgrid in Abela.',
-            items: '',
-            goal: 150000,
-            start: '2026-03-31',
-            end: '2026-06-01',
-          },
-          {
-            id: 'milestone-3',
-            title:
-              'Industrial kitchen, 30 seat restaurant & 4 creative studios',
-            description:
-              'This milestone completes our legal restaurant with 30 seat, a core business driver for our operation - alongside 4 studios with natural light and workspace for artists-in-residence and workshops. We expect some bank or grant co-financing for this step.',
-            items: '',
-            goal: 150000,
-            start: '2026-06-01',
-            end: '2026-08-01',
-          },
-          {
-            id: 'milestone-4',
-            title: 'Co-living building',
-            description:
-              'Complete the 12 en-suite rooms, dorm, and 3-bedroom house for full capacity as a licensed coliving destination. This is the community co-budget - for a €750k build that we aim to finance via bank or grants.',
-            items: '',
-            goal: 150000,
-            start: '2026-08-01',
-            end: '2026-12-01',
-          },
-        ],
+        // No default milestones: campaign content is village-specific (#946).
+        default: [],
       },
       packages: {
         type: [
@@ -571,72 +529,10 @@ export const configDescription: ConfigType[] = [
             ctaUrl: 'text',
           },
         ],
-        default: [
-          {
-            type: 'tokens',
-            title: 'First Step',
-            description: 'Start your regenerative journey with just 1 token.',
-            tokens: 1,
-            bonus: '',
-            minAmount: '',
-            credits: 0,
-            subscribeUrl: '',
-          },
-          {
-            type: 'tokens',
-            title: 'Supporter',
-            description:
-              'Support TDF and get meaningful access with 10 tokens.',
-            tokens: 10,
-            bonus: 'Free weekend stay',
-            minAmount: '',
-            credits: 0,
-            subscribeUrl: '',
-          },
-          {
-            type: 'tokens',
-            title: 'Aspiring Citizen',
-            description:
-              'Our most popular package - commit to 30 nights/year and unlock citizenship path.',
-            tokens: 30,
-            bonus: 'Free permaculture course',
-            minAmount: '',
-            credits: 0,
-            subscribeUrl: '',
-          },
-          {
-            type: 'loan',
-            title: 'Private Lender',
-            description:
-              'Provide a loan directly to TDF with attractive terms and real estate security.',
-            tokens: 0,
-            bonus: 'Annual investor gathering',
-            minAmount: '50K',
-            credits: 0,
-            subscribeUrl: '',
-          },
-          {
-            type: 'credits',
-            title: 'Pre-book 1 month stay',
-            description: 'Pre-purchase 30 credits for a one-month stay.',
-            tokens: 0,
-            bonus: '',
-            minAmount: '',
-            credits: 30,
-            subscribeUrl: '',
-          },
-          {
-            type: 'subscribe',
-            title: 'Monthly Support',
-            description: 'Subscribe to support us monthly.',
-            tokens: 0,
-            bonus: '',
-            minAmount: '',
-            credits: 0,
-            subscribeUrl:
-              '/subscriptions/checkout?priceId=price_1N1YLVE9CDXOM807XtNAwiBW',
-          },
-        ],
+        // No default packages: the old defaults carried TDF marketing copy and
+        // a live Stripe price id — a fresh village must never render another
+        // village's checkout (#946).
+        default: [],
       },
     },
   },
@@ -674,9 +570,12 @@ export const configDescription: ConfigType[] = [
         ],
         default: 'Europe/Lisbon',
       },
+      // Identity/branding fields below deliberately carry no `default` —
+      // getDefaultConfigValue synthesizes a neutral type-zero ('' / 0 / []) so
+      // an unconfigured village never inherits another village's identity
+      // (#946). Policy defaults (enabled flags, rates, durations) stay.
       appName: {
         type: 'text',
-        default: 'tdf',
       },
       logoHeader: {
         type: 'image',
@@ -688,24 +587,18 @@ export const configDescription: ConfigType[] = [
       },
       platformName: {
         type: 'text',
-        default: 'Traditional Dream Factory',
       },
       semanticUrl: {
         type: 'text',
-        default: 'traditionaldreamfactory.com',
       },
       platformLegalAddress: {
         type: 'text',
-        default:
-          'Fábrica de Sonhos Tradicional, 7540-011, Abela, Santiago do Cacém, Portugal',
       },
       legalEntityName: {
         type: 'text',
-        default: 'Traditional Dream Factory',
       },
       legalStreetAddress: {
         type: 'text',
-        default: 'Fábrica de Sonhos Tradicional',
       },
       legalAddressLine2: {
         type: 'text',
@@ -713,36 +606,28 @@ export const configDescription: ConfigType[] = [
       },
       legalPostalCode: {
         type: 'text',
-        default: '7540-011',
       },
       legalCity: {
         type: 'text',
-        default: 'Abela, Santiago do Cacém',
       },
       legalCountry: {
         type: 'text',
-        default: 'Portugal',
       },
       country: {
         type: 'select',
         enum: [...ISO_COUNTRY_CODES_FOR_CONFIG],
-        default: 'PT',
       },
       teamEmail: {
         type: 'text',
-        default: 'traditionaldreamfactory@gmail.com',
       },
       instagramUrl: {
         type: 'text',
-        default: 'https://instagram.com/traditionaldreamfactory',
       },
       facebookUrl: {
         type: 'text',
-        default: 'https://www.facebook.com/oasaliving',
       },
       twitterUrl: {
         type: 'text',
-        default: 'https://twitter.com/traditionaldreamfactory',
       },
       telegramUrl: {
         type: 'text',
@@ -758,16 +643,12 @@ export const configDescription: ConfigType[] = [
       },
       locationLat: {
         type: 'text',
-        default: '38.003164469592555',
       },
       locationLon: {
         type: 'text',
-        default: '-8.55915483117878',
       },
       visitorsGuide: {
         type: 'text',
-        default:
-          'https://docs.google.com/document/d/198vWYEQCC1lELQa8f76Jcw3l3UDiPcBKt04PGFKnUvg/edit',
       },
       facebookPixelId: {
         type: 'text',
@@ -775,7 +656,6 @@ export const configDescription: ConfigType[] = [
       },
       faqsGoogleSheetId: {
         type: 'text',
-        default: '1dlaVEfLwHAbXCwoiDGzUd3w8d7YYnGl5dbPDINKmRUg',
       },
       minVouchingStayDuration: {
         type: 'number',
@@ -783,8 +663,6 @@ export const configDescription: ConfigType[] = [
       },
       expenseCategories: {
         type: 'text',
-        default:
-          'Legal & business, Land Infrastructure, Forestry, Tools & Machines, Maintenance, Operations, Energy, Factory, Miscellaneous, Lease, Equipment, Furniture, Water, Buildings Renovations, Shares, Experiment, Donations, Food, Salaries, Events, Stays, Internal op',
       },
       primaryCtaVisitor: {
         type: 'select',
@@ -980,7 +858,6 @@ export const configDescription: ConfigType[] = [
       },
       bookingToken: {
         type: 'text',
-        default: 'TDF',
       },
       maxSupply: {
         type: 'number',
@@ -1138,7 +1015,7 @@ export const configDescription: ConfigType[] = [
             iban: '',
             address: '',
             products: [],
-            accountingDescription: 'Formação Profissional',
+            accountingDescription: '',
           },
         ],
       },
