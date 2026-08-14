@@ -23,7 +23,7 @@ origin_documents:
 
 The Closer v4 Scaling Roadmap (Pillar 1) commits to removing the biggest growth bottleneck: **each new village currently requires ~half a day of developer time and ~€1,000 to deploy.**
 
-This document proposes the medium-grain technical direction for that work: a self-serve signup at `closer.earth` that auto-provisions a new village's domain (either a `<slug>.closer.earth` subdomain or a custom domain such as `earthbound.eco`), database, application instances, and payment rails — replacing the manual runbook the central team executes today. The current architecture (shared MongoDB server with per-village databases, per-village droplet hosting `closer-api`, per-village Vercel app per `closer-ui/apps/<village>/`, per-village Stripe Connect account, ~68 env vars per village) is documented in Section 3 so the team can sign off on the baseline before discussing change.
+This document proposes the medium-grain technical direction for that work: a self-serve signup at `closer.earth` that auto-provisions a new village's domain (either a `<slug>.closer.earth` subdomain or a custom domain such as `earthbound.eco`), database, application instances, and payment rails — replacing the manual runbook the central team executes today. The current architecture (shared MongoDB server with per-village databases, per-village DigitalOcean droplet hosting `closer-api` via PM2, per-village Vercel app per `closer-ui/apps/<village>/`, per-village Stripe Connect account, ~68 env vars per village) is documented in Section 3 so the team can sign off on the baseline before discussing change. v1 provisions new `closer-api` instances onto **DigitalOcean App Platform** rather than Droplets (KTD1, KTD8).
 
 The concrete sign-off test for v1 is: **could we redeploy Earthbound as a customer onto the new system, with its existing `earthbound.eco` custom domain, without bespoke central-team work?** If yes, v1 is done.
 
@@ -41,8 +41,8 @@ A handful of terms have specific meaning in this doc; quick reference:
 - **Hub** — a federation coordinator (per Token Model doc: "any community can become a hub"). `api.closer.earth` is the first hub today.
 - **`ProjectApi`** — a record (introduced by closer-api PRs #290 + #330) in the central registry that maps a village to its running instance (API URL, app URL, status, server tier).
 - **`LandProject`** — the curated, geolocated catalog record for a village. Distinct from `ProjectApi`: a village can exist as a catalog entry before it is deployed.
-- **Per-village vs shared resource** — "per-village" means each village has its own instance of the resource (own droplet, own Stripe account, own DB). "Shared" means one resource serves many villages (shared MongoDB server, shared `api.closer.earth` hub).
-- **Template** — the single monorepo app code base that all villages deploy from. Replaces the current `apps/<village>/` folder pattern. May be split into multiple tier-specific templates (see "Tier").
+- **Per-village vs shared resource** — "per-village" means each village has its own instance of the resource (own API app, own Stripe account, own DB). "Shared" means one resource serves many villages (shared MongoDB server, shared `api.closer.earth` hub). Today the per-village API instance is a DigitalOcean droplet; v1 provisions it as a DigitalOcean App Platform app.
+- **Template** — the single monorepo app code base that all villages deploy from. Replaces the current `apps/<village>/` folder pattern. `apps/village-app` is the in-repo starting point for this template. May be split into multiple tier-specific templates (see "Tier").
 - **Tier** — a coarse-grained variant of the template, scoping out unused capability (e.g., a non-web3 tier that strips token/wallet code for villages that don't need it). Distinct from "deployment tier" (€50/mo shared-DB vs €100+/mo self-hosted) — see KTD3.
 - **Compiled config** — per-village configuration values baked into a minified JSON file at build time, so the FE has access to logo, brand elements, feature flags, and other config during initial page load without an API round-trip. Sam introduced this pattern in a recent open PR (exact PR still to be identified); the pattern is load-bearing for KTD4 and KTD12.
 - **Procurement app** — a **new app** built as part of v1. Receives the API call from the `closer.earth/signup` flow, then orchestrates the setup of the new village. Owns the customer pipeline (leads, contracts, what was sold) and is the source of truth for what gets provisioned (template version, features, tier, custom domain). The provisioning script is part of this app, not a standalone tool.
@@ -62,16 +62,16 @@ A handful of terms have specific meaning in this doc; quick reference:
 
 ### 3.2 Repos and code layout
 
-- **`closerdao/closer-ui`** — Turborepo monorepo. One Next.js app per village in `apps/<village>/`: `apps/closer` (official/generic), `apps/tdf`, `apps/earthbound`, `apps/moos`, `apps/lios`, `apps/foz`, `apps/per-auset`. All apps consume a shared `packages/closer` package containing ~95% of components, pages, hooks, contexts. Per-village customization happens via env vars, per-app `public/images/` assets, and occasional per-app pages. **Per founder assessment, the per-village delta is small: "all the code is already shared and usable by any village (except a handful of static pages)."** The custom code that does exist is concentrated in a few areas — see 3.4 for the inventory.
-- **`closerdao/closer-api`** — Single Node/Koa codebase. One deployment per village. Deploy script is 3 lines: `rsync` to a hardcoded `crocodile` host + `pm2 restart`. No tenancy primitives in models (no `tenantId`/`communityId` field). Background jobs include per-village folders (`jobs/tdf/`, `jobs/foz/`, `jobs/moos/`).
-- **Federation work in flight**: closer-api PR #290 adds `LandProject` + `ProjectApi` registry models. PR #330 (a superset) adds federated identity (`Passport`), Lamport quantum-safe signing for instance authentication, DigitalOcean DNS provisioning helper, and instance self-registration. Both PRs are open and currently unmerged on `develop`.
+- **`closerdao/closer-ui`** — Turborepo monorepo. One Next.js app per village in `apps/<village>/`: `apps/closer` (official/generic), `apps/tdf`, `apps/earthbound`, `apps/moos`, `apps/lios`, `apps/foz`, `apps/per-auset`. All apps consume a shared `packages/closer` package containing ~95% of components, pages, hooks, contexts. Per-village customization happens via env vars, per-app `public/images/` assets, and occasional per-app pages. **Per founder assessment, the per-village delta is small: "all the code is already shared and usable by any village (except a handful of static pages)."** The custom code that does exist is concentrated in a few areas — see 3.5 for the inventory. A generic `apps/village-app` template has since landed in the monorepo (see `docs/village-app-plan.md` and `docs/village-app-provisioning-contract.md`); it is the in-repo starting point for KTD4.
+- **`closerdao/closer-api`** — Single Node/Koa codebase. One deployment per village. Today's deploy script is 3 lines: `rsync` to a hardcoded `crocodile` host + `pm2 restart`. No tenancy primitives in models (no `tenantId`/`communityId` field). Background jobs include per-village folders (`jobs/tdf/`, `jobs/foz/`, `jobs/moos/`). v1 replaces this droplet + PM2 path with DigitalOcean App Platform (KTD1).
+- **Federation work in flight**: closer-api PR #290 adds `LandProject` + `ProjectApi` registry models. PR #330 (a superset) adds federated identity (`Passport`), Lamport quantum-safe signing for instance authentication, DigitalOcean DNS provisioning helper, and instance self-registration. Both PRs were open and unmerged on `develop` as of 2026-05-16 (re-check before treating them as landed; see Section 6).
 
 ### 3.3 Runtime topology per village
 
 | Resource | Per-village or shared? | Notes |
 |---|---|---|
 | Frontend (Next.js `closer-ui`) | **Per-village** | One Vercel project per village; built from `apps/<village>/`; ~68 `NEXT_PUBLIC_*` env vars baked in at build, including 17 feature flags |
-| API (`closer-api`) | **Per-village** | One DigitalOcean droplet per village; runs `closer-api` via PM2 |
+| API (`closer-api`) | **Per-village** | Today: one DigitalOcean droplet per village, running `closer-api` via PM2. v1: one DigitalOcean App Platform app per village (KTD1, KTD8) |
 | Database (MongoDB) | **Hybrid** — shared server, per-village database | Single shared MongoDB server with a separate logical DB per village (e.g., `closer_tdf`, `closer_moos`). Isolation is by Mongo user permissions, not separate clusters |
 | Stripe Connect account | **Per-village** | One Connect account per village; ~14-step manual onboarding documented in `closer-ui/MIGRATE_PLATFORM_STRIPE_ACCOUNT.md` |
 | Firebase project (auth) | **Per-village** | One Firebase project per village; manual GCP console setup |
@@ -107,7 +107,7 @@ Goal 5.1 #4 (no custom code in the template) hinges on either absorbing these in
 
 ### 3.6 What the "manual half-day" actually consists of
 
-Reconstructed from `closer-api/SETUP.md`, `closer-ui/MIGRATE_PLATFORM_STRIPE_ACCOUNT.md`, `closer-api/deploy.fish`, `closer-api/jobs/tdf/init.js`, and the `apps/<village>/.env.sample` files:
+Reconstructed from `closer-api/SETUP.md`, `closer-ui/MIGRATE_PLATFORM_STRIPE_ACCOUNT.md`, `closer-api/deploy.fish`, `closer-api/jobs/tdf/init.js`, and the `apps/<village>/.env.sample` files. This is **today's manual path** (droplet + PM2). v1 automates the equivalent of steps 1–12 onto App Platform + Vercel API + generic seed (KTD1, KTD7, KTD8); it does not keep SSH / cloud-init / PM2 for new villages.
 
 1. Create new Vercel project; link to `closer-ui` repo; populate ~68 env vars by hand.
 2. Copy `apps/tdf/` → `apps/<new-village>/` template; adjust branding assets, env vars, custom pages.
@@ -194,7 +194,7 @@ Per the founder: launch a basic version to real customers even with limited cust
 
 - **Inventory of the shared MongoDB server's current spec, headroom, and connection-count ceiling.** Capacity at 25/50/100 villages must be understood before opening signup.
 - **Admin credentials for the shared MongoDB server stored in a secret store the orchestrator can access** (not on engineer laptops).
-- **DigitalOcean account API token with droplet-creation rights and a confirmed quota** that comfortably exceeds the 20-village target.
+- **DigitalOcean account API token with App Platform app-create rights and a confirmed quota** that comfortably exceeds the expected village count. Droplet-create rights are not required for v1 provisioning.
 - **Vercel team account API token** with project-creation rights.
 - **Stripe platform account with Connect enabled** (already exists per `MIGRATE_PLATFORM_STRIPE_ACCOUNT.md`).
 - **Mailgun account** with capacity for many sending subdomains.
@@ -222,8 +222,8 @@ The following are explicitly **out of scope for v1 of Pillar 1**. Several are do
 4. **Pillar 3 (Integrated Passport) extensions.** PR #330's existing passport primitives are consumed; no new federation features are built here.
 5. **Pillar 4 (AI Village Operations).** Out of scope for this work.
 6. **Self-serve UI for granular branding** (logo upload, theme color picker, copy editing) during signup. v1 uses sensible defaults; the village admin UI handles post-provision customization.
-7. **A proper secrets vault** (HashiCorp Vault, Doppler, AWS Secrets Manager). v1 uses cloud-init-injected encrypted env vars; vault is a documented follow-up.
-8. **Replacing PM2 with systemd, Kubernetes, or other orchestration on the droplet.** v1 matches `closer-api/deploy.fish` conventions.
+7. **A proper secrets vault** (HashiCorp Vault, Doppler, AWS Secrets Manager). v1 uses DigitalOcean App Platform encrypted env vars; vault is a documented follow-up.
+8. **Replacing DigitalOcean App Platform with Kubernetes or other cluster orchestration.** v1 deploys per-village `closer-api` as App Platform apps (not Droplets + PM2, and not a custom cluster). Existing droplet-hosted villages stay as-is (see non-goal 1).
 9. **Cross-village analytics, billing, or multi-instance moderation tools** beyond what PR #290's daily `sync-project-stats.js` already provides.
 10. **Replacing the shared MongoDB server with Atlas or per-village dedicated Mongo.** Documented follow-up; trigger is capacity-driven (KTD3). Shared MongoDB server capacity (spec, headroom, when to upsize/shard) is currently unknown — needs to be baselined as part of the prerequisites in Section 6.
 11. **Replacing per-village Firebase projects with shared-project + tenant IDs.** Out of scope for v1; manual Firebase remains the documented gap. Whether to invest in the shared-project refactor or live with per-village Firebase indefinitely is an open call.
@@ -234,13 +234,13 @@ The following are explicitly **out of scope for v1 of Pillar 1**. Several are do
 
 > Medium-grain technical direction. Each KTD is a call this doc is asking the team to ratify or push back on. Implementation detail (which files, which functions, which test cases) is intentionally omitted — it belongs in the follow-up plan.
 
-### KTD1 — Topology: per-village app instances on shared infrastructure (matches today)
+### KTD1 — Topology: per-village app instances on shared infrastructure (App Platform for API)
 
-**Decision.** Each new village gets its own droplet, its own Vercel project, its own Stripe Connect account, its own Firebase project, its own Mailgun subdomain, and its own logical database on the **shared** MongoDB server. This matches the current production topology and the roadmap's €50/mo shared-DB tier.
+**Decision.** Each new village gets its own **DigitalOcean App Platform** app for `closer-api`, its own Vercel project, its own Stripe Connect account, its own Firebase project, its own Mailgun subdomain, and its own logical database on the **shared** MongoDB server. This matches the current production topology at the payments / FE / storage layers, and replaces today's per-village droplet + PM2 path at the API layer. It is the compute shape for the roadmap's €50/mo shared-DB tier.
 
-**Why.** Three reasons. First, it's what production already does — building automation around the known pattern is lower-risk than refactoring to a new one. Second, it preserves the per-village sovereignty that STRATEGY.md commits to at the application layer (own API process, own payments rails, own domain) while keeping storage cost down. Third, it leaves the door open for a follow-up "self-hosted" tier where heavy villages get dedicated Mongo without re-architecting v1.
+**Why.** Four reasons. First, founder direction on PR #888: the v1 compute layer for `closer-api` is DigitalOcean App Platform, not raw Droplets. App Platform supplies encrypted env vars (KTD8), managed TLS, and API-driven deploys (`POST /v2/apps` / Terraform `digitalocean_app`) without cloud-init, nginx, certbot, or PM2. Second, the rest of the topology is what production already does — building automation around the known pattern is lower-risk than refactoring Stripe, Firebase, Mailgun, or Mongo. Third, it preserves the per-village sovereignty that STRATEGY.md commits to at the application layer (own API process, own payments rails, own domain) while keeping storage cost down. Fourth, it leaves the door open for a follow-up "self-hosted" tier where heavy villages get dedicated Mongo without re-architecting v1.
 
-**Trade-off.** "Federated isolation" is the right label for the API/UI/payments/domain layers, but the shared Mongo is a single backbone — a misconfigured user grant or a server-level outage affects all villages on the shared tier. The plan accepts this trade-off for v1; revisiting (Atlas or per-village dedicated Mongo) is in the follow-up scope.
+**Trade-off.** "Federated isolation" is the right label for the API/UI/payments/domain layers, but the shared Mongo is a single backbone — a misconfigured user grant or a server-level outage affects all villages on the shared tier. The plan accepts this trade-off for v1; revisiting (Atlas or per-village dedicated Mongo) is in the follow-up scope. App Platform also means less host-level control than a droplet (no SSH, no custom nginx); that is accepted for v1.
 
 ### KTD2 — Build on closer-api PRs #290 and #330 as merged prerequisites
 
@@ -268,7 +268,8 @@ The following are explicitly **out of scope for v1 of Pillar 1**. Several are do
 1. The provisioning script (part of the new procurement app — KTD11) reads the customer's contract: tier, feature set, app version, slug, custom domain, branding.
 2. It generates a compiled config JSON (matches the format from Sam's recent open PR) and a compiled style file (the customer's uploaded Tailwind config, or the default).
 3. It creates a Vercel project, pushes the template at the contracted version, and injects the compiled files as part of the build.
-4. Vercel builds and deploys. The bundle contains only the code paths the tier enables; the config and style files are part of the bundle, not a runtime fetch.
+4. It creates a DigitalOcean App Platform app for that village's `closer-api` (app spec + encrypted env vars; KTD1, KTD8) and a scoped database user on the shared MongoDB server.
+5. Vercel builds and deploys the frontend. The bundle contains only the code paths the tier enables; the config and style files are part of the bundle, not a runtime fetch.
 
 **Trade-off and follow-ups.** Per-village builds mean N Vercel projects (one per village) — this requires Vercel API automation for project creation as part of the provisioning script. Style edits made by an admin require a re-deploy (build-time pattern), not a runtime hot-swap; KTD12 makes that explicit. Tier splits compound the build matrix; KTD10 discusses the threshold.
 
@@ -288,7 +289,7 @@ The following are explicitly **out of scope for v1 of Pillar 1**. Several are do
 1. Receives the API call from the `closer.earth/signup` flow (lead capture).
 2. Manages the customer pipeline (leads, conversations, contracts) for the central team.
 3. Stores the contract record — village name, slug, custom domain or `<slug>.closer.earth`, tier, feature set, template version, pricing, billing terms, any village-specific exceptions.
-4. Runs the provisioning script (creates Vercel project, provisions DB user, creates Stripe Connect account, sets up Mailgun subdomain, etc.) — this script is part of the procurement app, not a standalone tool.
+4. Runs the provisioning script (creates Vercel project, creates DigitalOcean App Platform app for `closer-api`, provisions DB user, creates Stripe Connect account, sets up Mailgun subdomain, etc.) — this script is part of the procurement app, not a standalone tool.
 5. Tracks deployment state and surfaces status to the founder (status dashboard) and the central team (admin view).
 
 The contract record is the source of truth for what gets provisioned. The provisioning script never makes "what does this customer get?" decisions itself — it executes against the contract.
@@ -346,19 +347,19 @@ The contract record is the source of truth for what gets provisioned. The provis
 
 ### KTD8 — Secrets via DigitalOcean App Platform encrypted env vars in v1; vault deferred
 
-**Decision.** Per-village secrets (Mongo URI, JWT secret, Stripe Connect ID, Mailgun key, etc.) are injected at droplet provision time via DigitalOcean's encrypted env-var mechanism (or cloud-init `write_files`). No central plaintext storage; the central `ProjectApi.technical` field stores IDs/references, not raw secrets. A proper vault is deferred.
+**Decision.** Per-village secrets (Mongo URI, JWT secret, Stripe Connect ID, Mailgun key, etc.) are injected as **encrypted environment variables on the village's DigitalOcean App Platform app** at create/update time (DO Apps API / Terraform `digitalocean_app` `envs` with `type: SECRET`). They are never written to a droplet filesystem, cloud-init `write_files`, or a central plaintext store. The central `ProjectApi.technical` field stores IDs/references, not raw secrets. A proper vault is deferred.
 
-**Why.** Adding a vault adds a third infra dependency, a new failure mode, and an ops surface for a team that does not currently run one. v1 needs to ship, not be a vault project. Encrypted env vars on DO are a known, supported pattern.
+**Why.** Founder confirmed App Platform as the compute layer (PR #888 review). App Platform's encrypted env vars are the matching secrets mechanism: they are a known, supported pattern, they stay on the app, and they do not require a third infra dependency. Adding a vault adds a new failure mode and an ops surface for a team that does not currently run one. v1 needs to ship, not be a vault project.
 
-**Trade-off.** Secrets rotation is harder without a vault (each rotation is a manual re-deploy step). v1 documents the rotation runbook; the follow-up replaces it with a vault when the village count justifies it.
+**Trade-off.** Secrets rotation is harder without a vault (each rotation is an App Platform app update / re-deploy). v1 documents the rotation runbook; the follow-up replaces it with a vault when the village count justifies it. This KTD does **not** apply to existing droplet-hosted villages; they keep their current secrets layout until migrated.
 
 ### KTD9 — Custom domains supported in v1, via PR #330's existing verification flow
 
-**Decision.** A village can be deployed onto either a `<slug>.closer.earth` subdomain (the default) or its own custom apex/subdomain (e.g., `earthbound.eco`). The DNS verification primitive in PR #330 (`closer-api/utils/digitalocean-dns.js` + custom-domain TXT verification routes) is the foundation; this work surfaces it in the signup and admin flows and wires it through to Vercel + the per-village `closer-api` instance.
+**Decision.** A village can be deployed onto either a `<slug>.closer.earth` subdomain (the default) or its own custom apex/subdomain (e.g., `earthbound.eco`). The DNS verification primitive in PR #330 (`closer-api/utils/digitalocean-dns.js` + custom-domain TXT verification routes) is the foundation; this work surfaces it in the signup and admin flows and wires it through to Vercel (frontend) and the village's DigitalOcean App Platform app (API).
 
 **Why.** The Earthbound-as-customer goal (5.1 #3) is the explicit sign-off test; supporting it requires that v1 can attach `earthbound.eco` to a fresh deploy without bespoke central-team work. Custom domains are also the simpler half of two related features (custom domain at signup vs custom branding) and the federation primitives already exist for them. Deferring would push the Earthbound test out of reach.
 
-**Concrete shape.** Signup form asks "use `<slug>.closer.earth` or bring your own domain?" → if custom, the founder is shown the CNAME and TXT records to configure at their registrar → the orchestrator polls PR #330's verification endpoint → once verified, the domain is attached to the village's Vercel project and SSL is provisioned (Let's Encrypt via Vercel). Both the `<slug>.closer.earth` record and the custom domain remain configured; the custom domain becomes the canonical URL once verified.
+**Concrete shape.** Signup form asks "use `<slug>.closer.earth` or bring your own domain?" → if custom, the founder is shown the CNAME and TXT records to configure at their registrar → the orchestrator polls PR #330's verification endpoint → once verified, the domain is attached to the village's Vercel project (frontend TLS via Vercel) and to the village's App Platform app (API TLS via App Platform). Both the `<slug>.closer.earth` record and the custom domain remain configured; the custom domain becomes the canonical URL once verified.
 
 **Trade-off.** Custom domain signup adds a wait-state in provisioning (DNS propagation can be minutes to hours; the founder may close the tab and come back later). The orchestrator state machine must handle "waiting on founder to configure DNS" as a first-class phase rather than a failure. The status dashboard must show clear "what you need to do next" steps when the system is blocked on the founder.
 
@@ -370,7 +371,7 @@ The contract record is the source of truth for what gets provisioned. The provis
 
 | # | Question | Why it matters | Decision |
 |---|----------|----------------|----------|
-|   |          |                |          |
+| 1 | Droplets or DigitalOcean App Platform for per-village `closer-api`? | Determines secrets injection, IaC (`digitalocean_droplet` + cloud-init vs `digitalocean_app`), TLS, and whether SSH/PM2 remain in the v1 runbook. | **App Platform.** Founder on PR #888 (2026-05-21). Locked in KTD1 and KTD8. Existing droplet-hosted villages stay as-is. |
 
 ---
 
@@ -382,7 +383,7 @@ To keep this an alignment doc and not an implementation plan, the following are 
 - Implementation units (file-level changes, functions, test cases)
 - Interface contracts between tracks
 - Mermaid sequence diagrams of the provisioning lifecycle
-- The specific shape of the Terraform modules / cloud-init / CLI
+- The specific shape of the Terraform modules / DigitalOcean App Platform app spec / CLI
 - Test scenarios for individual units
 - Risk register at the implementation level
 
@@ -402,6 +403,7 @@ These existed in an earlier draft (git history of this file) and will be regener
 | 2026-05-17 | Clarified procurement app is a **new build** that receives the signup API call and owns the whole signup-to-deployed pipeline (lead → contract → provision → deploy → status). Q17 narrowed to repo placement + off-the-shelf-piece integration | v1 deliverable is a new app, not an extension or evaluation of any prior prototype |
 | 2026-05-17 | Cleared the Open Questions table entirely and rewrote it as a blank invitation for the engineering team to populate as work progresses. Cross-references in body text (Glossary, Non-Goals item 10/11, KTD11 trade-off) rewritten to stand on their own without pointing at specific Q numbers | Earlier Q1–Q20 were Claude-authored as scaffolding; engineers should own the question list themselves, with no preloaded framing to push back on |
 | 2026-05-17 | Added Appendix A — "Claude Open Questions" — with the most-relevant questions Claude flagged while drafting, framed explicitly as starter material to pull from rather than a canonical list | Keeps the scaffolding value (a useful starter set) while preserving the team's ownership of Section 9 |
+| 2026-08-14 | Locked v1 `closer-api` compute to DigitalOcean App Platform (not Droplets). Updated KTD1, KTD4, KTD8, KTD11, Non-Goals 7–8, operational prerequisites, glossary, current-architecture notes, and CQ3. Time-anchored closer-api PR #290/#330 status as of 2026-05-16. Noted `apps/village-app` as the in-repo template starting point. | Founder review on PR #888: "App Platform". Resolves the App Platform vs Droplet / cloud-init inconsistency (KTD8 encrypted env vars only exist on App Platform). |
 
 ---
 
@@ -415,7 +417,7 @@ These existed in an earlier draft (git history of this file) and will be regener
 |---|----------|----------------|----------|
 | CQ1 | How does this work coordinate with Pillar 2 (Platform Configurability — custom pages, theme system)? | Pillars 1 and 2 overlap in the "config-driven branding and copy" space. KTD4's compiled-config pattern and KTD12's style editor sit in a corridor that Pillar 2 will also walk through. Risk of duplicating work or building incompatible abstractions. | |
 | CQ2 | What's the right interplay between this work and the federation hub (`api.closer.earth`)? Is `api.closer.earth` also where the control plane / procurement app talks to, or is it a separate central service? | KTD5 assumes the control plane lives in `closer-api`. If a separate federation-hub service is planned, the interfaces between it, the procurement app, and the per-village instances need to be drawn. | |
-| CQ3 | Topology variant: should v1 default to a "fully shared" tier (multiple villages sharing one droplet + shared Mongo) instead of KTD1's per-village droplet? | A fully-shared tier would cost ~€10–20/mo per village instead of ~€50, but loses per-village API process isolation. The roadmap mentions €50/mo as the shared-DB minimum, which implies per-village droplet — but worth explicitly ratifying. | |
+| CQ3 | Topology variant: should v1 default to a "fully shared" tier (multiple villages sharing one App Platform app + shared Mongo) instead of KTD1's per-village App Platform app? | A fully-shared tier would cost ~€10–20/mo per village instead of ~€50, but loses per-village API process isolation. The roadmap mentions €50/mo as the shared-DB minimum, which implies per-village API compute — but worth explicitly ratifying. KTD1 already chooses per-village App Platform (not Droplets, not a shared API process). | |
 | CQ4 | KTD10 defers the tier-strategy call: start with one template + feature flags, or split into web3-enabled / non-web3-stripped from day one? | Single template is faster to ship; tier split reduces bundle size and shrinks the security surface for non-web3 villages. Sam's framing was "maybe per tier" — the team should decide before the template is bootstrapped. | |
 | CQ5 | KTD13 defers the exception-policy call: do we accept any TDF-specific code paths as named exceptions in v1, or strictly eliminate (forcing TDF migration to the template now)? | Named exceptions keep TDF working unchanged but introduce a "second-class" pattern in shared code that future developers may copy. Strict elimination forces an early TDF migration that may not be ready. | |
 
