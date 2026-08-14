@@ -628,6 +628,12 @@ describe('canChangeStayPaymentMethod', () => {
     );
   });
 
+  it('blocks change while waiting for host approval', () => {
+    expect(canChangeStayPaymentMethod(baseStay({ status: 'pending' }))).toBe(
+      false,
+    );
+  });
+
   it('blocks change once credits have been spent', () => {
     const stay = baseStay({
       status: 'confirmed',
