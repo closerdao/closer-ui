@@ -22,7 +22,7 @@ interface Props {
   adults?: number;
   isSaving?: boolean;
   error?: string | null;
-  onAdd: (user: SearchUserHit) => void;
+  onAdd: (user: SearchUserHit) => boolean;
   onRemove: (userId: string) => void;
 }
 
@@ -181,8 +181,10 @@ const BookingCoGuests = ({
                     ) {
                       return;
                     }
+                    if (!onAdd(hit)) {
+                      return;
+                    }
                     acceptedIdsRef.current.add(hit._id);
-                    onAdd(hit);
                     setResults((prev) =>
                       prev.filter((result) => result._id !== hit._id),
                     );

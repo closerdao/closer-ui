@@ -1013,6 +1013,7 @@ const StayBookingSummaryPage = ({
 
   const persistVisibleBy = (nextVisibleBy: string[]) => {
     const normalized = normalizeBookingVisibleBy(nextVisibleBy, createdBy);
+    const guestsSnapshot = coGuests;
     visibleByRef.current = normalized;
     setIsSavingCoGuests(true);
     setCoGuestError(null);
@@ -1037,8 +1038,8 @@ const StayBookingSummaryPage = ({
               ...(prev ?? booking),
               visibleBy: rolledBack,
             }));
-            setCoGuests((prev) =>
-              prev.filter((guest) => rolledBack.includes(guest._id)),
+            setCoGuests(
+              guestsSnapshot.filter((guest) => rolledBack.includes(guest._id)),
             );
             setCoGuestError(parseMessageFromError(error));
           }
@@ -1058,7 +1059,7 @@ const StayBookingSummaryPage = ({
       adults,
     );
     if (!next) {
-      return;
+      return false;
     }
     setCoGuests((prev) =>
       prev.some((guest) => guest._id === hit._id)
@@ -1073,6 +1074,7 @@ const StayBookingSummaryPage = ({
           ],
     );
     persistVisibleBy(next);
+    return true;
   };
 
   const handleRemoveCoGuest = (userId: string) => {
