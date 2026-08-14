@@ -899,6 +899,7 @@
   "booking_details_checked_out_at": "Checked out",
   "booking_details_stay_arrival_change_not_supported": "Changing the check-in date is not supported here. Please contact your host.",
   "booking_details_extension_pending": "A stay extension is waiting for host approval.",
+  "booking_details_questionnaire_title": "Questionnaire answers",
   "booking_details_approve_extension": "Approve extension",
   "booking_details_reject_extension": "Reject extension",
   "current_booking_table_guest": "Guest",
