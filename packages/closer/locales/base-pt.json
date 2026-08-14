@@ -2474,6 +2474,7 @@
   "vouch_encourage_add": "Conhece {name}? Adicione a sua avaliação e diga à comunidade porquê.",
   "vouch_why_vouch": "Porque avalia {name}?",
   "vouch_message_placeholder": "Conte como o conhece e porque confia nele.",
+  "vouch_delete_confirm": "Tem a certeza que quer apagar a sua avaliação de {name}?",
   "menu_section_stay": "Estadia",
   "menu_section_events": "Eventos",
   "menu_section_blog": "Blog",

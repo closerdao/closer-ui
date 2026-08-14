@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 
 import { renderWithNextIntl } from '../../test/utils';
 import Vouching from './index';
@@ -8,7 +8,6 @@ const vouchers = [
   { _id: 'voucher-2', screenname: 'Bruno', photo: null },
 ];
 
-/** Platform collections are Immutable-ish: the component only calls toJS(). */
 const list = (items: unknown[]) => ({ toJS: () => items });
 
 const platformMock = {
@@ -22,8 +21,6 @@ jest.mock('../../contexts/platform', () => ({
   usePlatform: () => ({ platform: platformMock }),
 }));
 
-// The component reaches the real utils/api through the package barrel, so the
-// real file path is what has to be mocked here.
 jest.mock('../../utils/api.js', () => ({
   __esModule: true,
   default: {
@@ -31,6 +28,8 @@ jest.mock('../../utils/api.js', () => ({
       Promise.resolve({ data: { results: { totalNights: 27 } } }),
     ),
     post: jest.fn(() => Promise.resolve({ data: {} })),
+    patch: jest.fn(() => Promise.resolve({ data: {} })),
+    delete: jest.fn(() => Promise.resolve({ data: {} })),
     interceptors: {
       request: { use: jest.fn() },
       response: { use: jest.fn() },
@@ -44,6 +43,8 @@ jest.mock('../../utils/api.js', () => ({
 const api = jest.requireMock('../../utils/api.js').default as {
   get: jest.Mock;
   post: jest.Mock;
+  patch: jest.Mock;
+  delete: jest.Mock;
 };
 
 const stayedNights = (totalNights: number) =>
@@ -51,6 +52,14 @@ const stayedNights = (totalNights: number) =>
 
 beforeEach(() => {
   stayedNights(27);
+  api.post.mockResolvedValue({ data: {} });
+  api.patch.mockResolvedValue({ data: {} });
+  api.delete.mockResolvedValue({ data: {} });
+  jest.spyOn(window, 'confirm').mockReturnValue(true);
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
 });
 
 const vouchData = [
@@ -125,7 +134,7 @@ describe('Vouching', () => {
     ).toBeInTheDocument();
   });
 
-  it('tells a citizen who already vouched instead of nudging them again', () => {
+  it('lets the voucher edit or delete their own vouch instead of nudging them again', () => {
     renderWithNextIntl(
       <Vouching
         userId="member-1"
@@ -136,10 +145,27 @@ describe('Vouching', () => {
       />,
     );
 
-    expect(
-      screen.getByText(/You have already vouched for this member/i),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
     expect(screen.queryByText(/Do you know Sam\?/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/You have already vouched for this member/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it('does not let you edit or delete someone elses vouch', () => {
+    renderWithNextIntl(
+      <Vouching
+        userId="member-1"
+        memberName="Sam"
+        vouchData={vouchData}
+        myId="voucher-1"
+        minVouchingStayDuration={14}
+      />,
+    );
+
+    expect(screen.getAllByRole('button', { name: /edit/i })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: /delete/i })).toHaveLength(1);
   });
 
   it('shows vouches on your own profile without asking you to vouch', () => {
@@ -155,6 +181,12 @@ describe('Vouching', () => {
 
     expect(screen.getByRole('link', { name: 'Ana' })).toBeInTheDocument();
     expect(screen.queryByText(/Do you know Sam\?/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /edit/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /delete/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('lets you vouch once the stays endpoint reports enough nights', async () => {
@@ -196,5 +228,123 @@ describe('Vouching', () => {
       await screen.findByText(/at least 14 nights to be eligible/i),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Vouch/i })).toBeDisabled();
+  });
+
+  it('patches the vouch message when the voucher saves an edit', async () => {
+    api.patch.mockResolvedValue({
+      data: {
+        results: {
+          user: {
+            vouched: [
+              {
+                vouchedBy: 'voucher-1',
+                vouchedAt: new Date('2026-01-15'),
+                message: 'Ana still holds the space.',
+              },
+              vouchData[1],
+            ],
+          },
+        },
+      },
+    });
+
+    renderWithNextIntl(
+      <Vouching
+        userId="member-1"
+        memberName="Sam"
+        vouchData={vouchData}
+        myId="voucher-1"
+        minVouchingStayDuration={14}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /delete/i })).toBeEnabled(),
+    );
+    fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+    const textarea = screen.getByPlaceholderText(
+      /Share how you know them and why you trust them/i,
+    );
+    expect(textarea).toHaveValue('Ana knows how to hold a space.');
+    fireEvent.change(textarea, {
+      target: { value: 'Ana still holds the space.' },
+    });
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /save/i })).toBeEnabled(),
+    );
+    fireEvent.click(screen.getByRole('button', { name: /save/i }));
+
+    await waitFor(() =>
+      expect(api.patch).toHaveBeenCalledWith('/users/member-1/vouch', {
+        message: 'Ana still holds the space.',
+      }),
+    );
+    expect(
+      await screen.findByText('Ana still holds the space.'),
+    ).toBeInTheDocument();
+  });
+
+  it('deletes the vouch after confirmation', async () => {
+    api.delete.mockResolvedValue({
+      data: {
+        results: {
+          user: {
+            vouched: [vouchData[1]],
+          },
+        },
+      },
+    });
+
+    renderWithNextIntl(
+      <Vouching
+        userId="member-1"
+        memberName="Sam"
+        vouchData={vouchData}
+        myId="voucher-1"
+        minVouchingStayDuration={14}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /delete/i })).toBeEnabled(),
+    );
+    fireEvent.click(screen.getByRole('button', { name: /delete/i }));
+
+    expect(window.confirm).toHaveBeenCalled();
+    await waitFor(() =>
+      expect(api.delete).toHaveBeenCalledWith('/users/member-1/vouch'),
+    );
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Ana knows how to hold a space.'),
+      ).not.toBeInTheDocument(),
+    );
+    expect(
+      screen.getByText(/Do you know Sam\?/i),
+    ).toBeInTheDocument();
+  });
+
+  it('does not delete the vouch when confirmation is cancelled', async () => {
+    (window.confirm as jest.Mock).mockReturnValue(false);
+
+    renderWithNextIntl(
+      <Vouching
+        userId="member-1"
+        memberName="Sam"
+        vouchData={vouchData}
+        myId="voucher-1"
+        minVouchingStayDuration={14}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /delete/i })).toBeEnabled(),
+    );
+    fireEvent.click(screen.getByRole('button', { name: /delete/i }));
+
+    expect(api.delete).not.toHaveBeenCalled();
+    expect(
+      screen.getByText('Ana knows how to hold a space.'),
+    ).toBeInTheDocument();
   });
 });

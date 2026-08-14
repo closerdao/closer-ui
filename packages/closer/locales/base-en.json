@@ -2492,6 +2492,7 @@
   "vouch_encourage_add": "Do you know {name}? Add your vouch and tell the community why.",
   "vouch_why_vouch": "Why do you vouch for {name}?",
   "vouch_message_placeholder": "Share how you know them and why you trust them.",
+  "vouch_delete_confirm": "Are you sure you want to delete your vouch for {name}?",
   "menu_section_stay": "Stay",
   "menu_section_events": "Events",
   "menu_section_blog": "Blog",

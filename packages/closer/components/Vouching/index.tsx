@@ -15,8 +15,11 @@ import UserAvatarPlaceholder from '../UserAvatarPlaceholder';
 import { ErrorMessage, Information, Spinner, Textarea } from '../ui';
 import Button from '../ui/Button';
 
-/** Every voucher's profile is needed to render their name and photo. */
 const MAX_VOUCHERS_TO_LOAD = 100;
+
+const getVouchedFromResponse = (
+  res: { data?: { results?: { user?: User } } },
+): Vouched[] | undefined => res?.data?.results?.user?.vouched;
 
 const Vouching = ({
   userId,
@@ -39,14 +42,15 @@ const Vouching = ({
   const [success, setSuccess] = useState(false);
   const [updatedVouchData, setUpdatedVouchData] = useState(vouchData);
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
+  const [isEditingVouch, setIsEditingVouch] = useState(false);
   const [vouchMessage, setVouchMessage] = useState('');
-  /** null until the stays endpoint answers, so we never judge on a guess. */
   const [totalNights, setTotalNights] = useState<number | null>(null);
 
   const isOwnProfile = Boolean(myId) && myId === userId;
-  const hasBeenVouchedByMe = updatedVouchData?.some(
+  const myVouch = updatedVouchData?.find(
     (vouched: Vouched) => vouched.vouchedBy === myId,
   );
+  const hasBeenVouchedByMe = Boolean(myVouch);
   const vouchedUserIds =
     updatedVouchData?.map((vouched: Vouched) => vouched.vouchedBy) || [];
 
@@ -65,7 +69,6 @@ const Vouching = ({
   const hasStayedForMinDuration =
     totalNights !== null && totalNights >= minVouchingStayDuration;
 
-  // Newest vouch first, the way recommendations read elsewhere.
   const vouches = useMemo(() => {
     const vouchersById = new Map<string, User>(
       (vouchedUsers?.toJS() || []).map((user: User) => [user._id, user]),
@@ -86,6 +89,14 @@ const Vouching = ({
     loadData();
   }, [userId, userFilter]);
 
+  const applyVouchedUpdate = (
+    res: { data?: { results?: { user?: User } } },
+    fallback: Vouched[],
+  ) => {
+    const next = getVouchedFromResponse(res);
+    setUpdatedVouchData(Array.isArray(next) ? next : fallback);
+  };
+
   const vouchUser = async () => {
     try {
       setSuccess(false);
@@ -95,11 +106,69 @@ const Vouching = ({
       const res = await api.post(`/users/${userId}/vouch`, {
         message: vouchMessage,
       });
-      const updatedUser = res.data.results.user;
 
-      setUpdatedVouchData(updatedUser.vouched);
+      applyVouchedUpdate(res, [
+        ...(updatedVouchData || []),
+        {
+          vouchedBy: myId || '',
+          vouchedAt: new Date(),
+          message: vouchMessage,
+        },
+      ]);
       setIsInfoModalOpened(false);
+      setIsEditingVouch(false);
       setSuccess(true);
+    } catch (error) {
+      setError(parseMessageFromError(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateVouch = async () => {
+    try {
+      setSuccess(false);
+      setError(null);
+      setLoading(true);
+
+      const res = await api.patch(`/users/${userId}/vouch`, {
+        message: vouchMessage,
+      });
+
+      applyVouchedUpdate(
+        res,
+        (updatedVouchData || []).map((vouch: Vouched) =>
+          vouch.vouchedBy === myId ? { ...vouch, message: vouchMessage } : vouch,
+        ),
+      );
+      setIsInfoModalOpened(false);
+      setIsEditingVouch(false);
+      setSuccess(true);
+    } catch (error) {
+      setError(parseMessageFromError(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteVouch = async () => {
+    if (!window.confirm(t('vouch_delete_confirm', { name: memberName || '' }))) {
+      return;
+    }
+
+    try {
+      setSuccess(false);
+      setError(null);
+      setLoading(true);
+
+      const res = await api.delete(`/users/${userId}/vouch`);
+
+      applyVouchedUpdate(
+        res,
+        (updatedVouchData || []).filter(
+          (vouch: Vouched) => vouch.vouchedBy !== myId,
+        ),
+      );
     } catch (error) {
       setError(parseMessageFromError(error));
     } finally {
@@ -122,13 +191,32 @@ const Vouching = ({
     }
   }
 
-  const openModal = () => {
+  const openCreateModal = () => {
+    setVouchMessage('');
+    setIsEditingVouch(false);
+    setError(null);
+    setSuccess(false);
+    setIsInfoModalOpened(true);
+  };
+
+  const openEditModal = () => {
+    setVouchMessage(myVouch?.message || '');
+    setIsEditingVouch(true);
+    setError(null);
+    setSuccess(false);
     setIsInfoModalOpened(true);
   };
 
   const closeModal = () => {
     setIsInfoModalOpened(false);
+    setIsEditingVouch(false);
   };
+
+  const canSubmitVouch =
+    !loading &&
+    !success &&
+    vouchMessage.trim().length > 0 &&
+    (isEditingVouch || (hasStayedForMinDuration && !hasBeenVouchedByMe));
 
   return (
     <>
@@ -145,6 +233,7 @@ const Vouching = ({
         <ul className="flex flex-col gap-4">
           {vouches.map((vouch) => {
             const voucher = vouch.voucher;
+            const isMyVouch = Boolean(myId) && vouch.vouchedBy === myId;
             const avatar = voucher?.photo ? (
               <Image
                 className="rounded-full"
@@ -169,7 +258,7 @@ const Vouching = ({
                     avatar
                   )}
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 flex flex-col gap-1">
                   <div className="flex flex-wrap items-baseline gap-x-2">
                     {voucher ? (
                       <Link
@@ -190,9 +279,28 @@ const Vouching = ({
                     )}
                   </div>
                   {vouch.message && (
-                    <p className="mt-1 whitespace-pre-line text-sm">
+                    <p className="whitespace-pre-line text-sm">
                       {vouch.message}
                     </p>
+                  )}
+                  {isMyVouch && (
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        className="text-sm text-accent hover:underline"
+                        onClick={openEditModal}
+                      >
+                        {t('generic_edit_button')}
+                      </button>
+                      <button
+                        type="button"
+                        className="text-sm text-gray-400 hover:text-red-500"
+                        onClick={deleteVouch}
+                        disabled={loading}
+                      >
+                        {t('generic_delete_button')}
+                      </button>
+                    </div>
                   )}
                 </div>
               </li>
@@ -207,7 +315,6 @@ const Vouching = ({
         </p>
       )}
 
-      {/* Anyone who can see this section and has not vouched yet gets nudged. */}
       {!isOwnProfile && !hasBeenVouchedByMe && (
         <div className="mt-4 flex flex-col gap-3 rounded-md border-2 border-dashed border-accent/50 p-4">
           <p>
@@ -220,12 +327,11 @@ const Vouching = ({
             size="small"
             isFullWidth={false}
             isEnabled={hasStayedForMinDuration && !loading}
-            onClick={openModal}
+            onClick={openCreateModal}
             className="flex items-center gap-2"
           >
             {t('vouch_button')} {loading && <Spinner />}
           </Button>
-          {/* Only once the stays endpoint answered — no message while loading. */}
           {totalNights !== null && !hasStayedForMinDuration && (
             <Information>
               {t('vouch_min_duration_not_met', {
@@ -234,9 +340,6 @@ const Vouching = ({
             </Information>
           )}
         </div>
-      )}
-      {!isOwnProfile && hasBeenVouchedByMe && (
-        <Information className="mt-4">{t('vouch_already_vouched')}</Information>
       )}
       {error && <ErrorMessage error={error} />}
 
@@ -255,17 +358,12 @@ const Vouching = ({
             />
             <Button
               variant="primary"
-              isEnabled={
-                hasStayedForMinDuration &&
-                !hasBeenVouchedByMe &&
-                !loading &&
-                !success &&
-                vouchMessage.trim().length > 0
-              }
-              onClick={vouchUser}
+              isEnabled={canSubmitVouch}
+              onClick={isEditingVouch ? updateVouch : vouchUser}
               className="flex items-center gap-2"
             >
-              {t('vouch_button')} {loading && <Spinner />}
+              {isEditingVouch ? t('generic_save_button') : t('vouch_button')}{' '}
+              {loading && <Spinner />}
             </Button>
             {error && <ErrorMessage error={error} />}
           </div>
