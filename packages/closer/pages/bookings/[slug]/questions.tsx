@@ -49,6 +49,35 @@ const prepareQuestions = (eventQuestions: any) => {
   return preparedQuestions;
 };
 
+const getAnswerName = (answer: Record<string, string>) =>
+  Object.keys(answer)[0];
+
+const mergeQuestionnaireAnswers = (
+  previousAnswers: Record<string, string>[],
+  savedFields: Record<string, string>[],
+  editedKeys: Set<string>,
+) => {
+  const previousByName = new Map(
+    previousAnswers.map((answer) => [getAnswerName(answer), answer]),
+  );
+  const seen = new Set<string>();
+  const merged = savedFields.map((field) => {
+    const name = getAnswerName(field);
+    seen.add(name);
+    if (name && editedKeys.has(name)) {
+      return previousByName.get(name) ?? field;
+    }
+    return field;
+  });
+  previousAnswers.forEach((answer) => {
+    const name = getAnswerName(answer);
+    if (name && !seen.has(name)) {
+      merged.push(answer);
+    }
+  });
+  return merged;
+};
+
 interface Props extends BaseBookingParams {
   bookingConfig: BookingConfig | null;
   volunteerConfig: VolunteerConfig | null;
@@ -130,7 +159,7 @@ const Questionnaire = ({
   const [answers, setAnswers] = useState<Record<string, string>[]>([]);
   const seededBookingIdRef = useRef<string | null>(null);
   const seededFromFieldsRef = useRef(false);
-  const hasEditedAnswersRef = useRef(false);
+  const editedAnswerKeysRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!booking?._id || !questions?.length) return;
@@ -141,7 +170,7 @@ const Questionnaire = ({
     if (seededBookingIdRef.current !== bookingId) {
       seededBookingIdRef.current = bookingId;
       seededFromFieldsRef.current = hasFields;
-      hasEditedAnswersRef.current = false;
+      editedAnswerKeysRef.current = new Set();
       setAnswers(
         hasFields
           ? booking.fields
@@ -152,9 +181,16 @@ const Questionnaire = ({
 
     if (hasFields && !seededFromFieldsRef.current) {
       seededFromFieldsRef.current = true;
-      if (!hasEditedAnswersRef.current) {
-        setAnswers(booking.fields);
-      }
+      setAnswers((previousAnswers) => {
+        if (editedAnswerKeysRef.current.size === 0) {
+          return booking.fields;
+        }
+        return mergeQuestionnaireAnswers(
+          previousAnswers,
+          booking.fields,
+          editedAnswerKeysRef.current,
+        );
+      });
     }
   }, [booking?._id, booking?.fields?.length, questions?.length]);
 
@@ -301,7 +337,7 @@ const Questionnaire = ({
   };
 
   const handleAnswer = (name: string, value: string) => {
-    hasEditedAnswersRef.current = true;
+    editedAnswerKeysRef.current.add(name);
     setAnswers((previousAnswers) => {
       const current = previousAnswers ?? [];
       const hasEntry = current.some(
