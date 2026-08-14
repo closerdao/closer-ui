@@ -7,11 +7,12 @@ import { ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import configCached from '../configCached';
+import { normalizePageSlug } from '../constants/standardPages';
 import { useBuyTokens } from '../hooks/useBuyTokens';
 import { useConfig } from '../hooks/useConfig';
 import { usePageMenuSections } from '../hooks/usePageMenuSections';
 import useRBAC from '../hooks/useRBAC';
-import { toNavigationSections } from '../utils/pageMenu';
+import { fetchMenuPages, toNavigationSections } from '../utils/pageMenu';
 import { getCurrentUnitPrice } from '../utils/bondingCurve';
 import { getReserveTokenDisplay } from '../utils/config.utils';
 import ReportABug from './ReportABug';
@@ -40,6 +41,10 @@ const GuestMenu = () => {
   const pageMenuSections = usePageMenuSections();
 
   const [menuSections, setMenuSections] = useState<MenuSection[]>([]);
+  // Slugs of pages that actually exist in the DB. Team/Press have no shipped
+  // content outside TDF, so their menu entries only appear when a page doc
+  // exists (#951).
+  const [dbPageSlugs, setDbPageSlugs] = useState<Set<string>>(new Set());
   const [currentSupply, setCurrentSupply] = useState<number | null>(null);
   const [tokenPrice, setTokenPrice] = useState<number | null>(null);
   const [isLoadingTokenData, setIsLoadingTokenData] = useState(false);
@@ -323,12 +328,12 @@ const GuestMenu = () => {
           {
             label: t('menu_team'),
             url: '/team',
-            enabled: true,
+            enabled: dbPageSlugs.has('/team'),
           },
           {
             label: t('menu_press'),
             url: '/press',
-            enabled: true,
+            enabled: dbPageSlugs.has('/press'),
           },
           {
             label: t('menu_cohousing'),
@@ -389,6 +394,19 @@ const GuestMenu = () => {
   };
 
   useEffect(() => {
+    let cancelled = false;
+    void fetchMenuPages().then((pages) => {
+      if (cancelled) return;
+      setDbPageSlugs(
+        new Set(pages.map((page) => normalizePageSlug(page.slug))),
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     const volunteerConfig = configCached.volunteering;
     const bookingConfig = configCached.booking;
     const governanceConfig = configCached.governance;
@@ -435,7 +453,7 @@ const GuestMenu = () => {
     const filteredSections = filterMenuSections(sections);
 
     setMenuSections(filteredSections);
-  }, [router.locale, rbacLiveRevision, pageMenuSections]);
+  }, [router.locale, rbacLiveRevision, pageMenuSections, dbPageSlugs]);
 
   useEffect(() => {
     if (

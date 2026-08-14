@@ -3,8 +3,29 @@ import { z } from 'zod';
 const optionalUrl = z.string().url().optional().or(z.literal(''));
 const optionalEmail = z.string().email().optional().or(z.literal(''));
 
+/**
+ * Display form of the provisioning slug: "sunset-valley" → "Sunset Valley".
+ * Display only — the raw slug keeps its discriminator/locale-key role.
+ */
+export const humanizeVillageSlug = (slug) =>
+  String(slug ?? '')
+    .trim()
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+
+/**
+ * Day-one display name: the humanized provisioning slug (NEXT_PUBLIC_APP_NAME
+ * is required at build time). The real name wins once general.platformName is
+ * seeded. 'This village' survives only as a last-resort guard for builds that
+ * somehow pass an empty slug.
+ */
+const dayOneVillageName =
+  humanizeVillageSlug(process.env.NEXT_PUBLIC_APP_NAME) || 'This village';
+
 export const villageGeneralConfigSchema = z.object({
-  platformName: z.string().default('This village'),
+  platformName: z.string().default(dayOneVillageName),
   appName: z.string().default('closer'),
   semanticUrl: optionalUrl.default(''),
   teamEmail: optionalEmail.default(''),

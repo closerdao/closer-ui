@@ -579,7 +579,6 @@ export const configDescription: ConfigType[] = [
       },
       logoHeader: {
         type: 'image',
-        default: '/images/logo.png',
       },
       favicon: {
         type: 'image',

@@ -3,7 +3,31 @@ import {
   getStandardPageDefinition,
 } from '../../constants/standardPages';
 import { mergeEditorPages } from '../standardPages';
-import { upgradeStandardPageFromDefaults } from '../standardPages';
+import {
+  canRenderDefaultStandardPage,
+  resolveStandardOrDbPage,
+  upgradeStandardPageFromDefaults,
+} from '../standardPages';
+
+const ENV_KEYS = [
+  'NEXT_PUBLIC_APP_NAME',
+  'NEXT_PUBLIC_FEATURE_TOKEN_SALE',
+  'NEXT_PUBLIC_FEATURE_VOLUNTEERING',
+] as const;
+const originalEnv: Record<string, string | undefined> = {};
+
+beforeAll(() => {
+  ENV_KEYS.forEach((key) => {
+    originalEnv[key] = process.env[key];
+  });
+});
+
+afterEach(() => {
+  ENV_KEYS.forEach((key) => {
+    if (originalEnv[key] === undefined) delete process.env[key];
+    else process.env[key] = originalEnv[key];
+  });
+});
 
 describe('mergeEditorPages', () => {
   it('returns one flat list of every page', () => {
@@ -40,6 +64,11 @@ describe('mergeEditorPages', () => {
 });
 
 describe('upgradeStandardPageFromDefaults', () => {
+  // The shipped defaults are TDF's real content; only a TDF build swaps them in.
+  beforeEach(() => {
+    process.env.NEXT_PUBLIC_APP_NAME = 'tdf';
+  });
+
   it('upgrades empty standard pages to defaults', () => {
     const defaults = buildDefaultStandardPageDoc('/dataroom');
     expect(defaults).not.toBeNull();
@@ -89,6 +118,55 @@ describe('upgradeStandardPageFromDefaults', () => {
       sections: [],
     };
     expect(upgradeStandardPageFromDefaults(page)).toBe(page);
+  });
+
+  it('never swaps TDF defaults into a sparse page on a non-tdf app', () => {
+    process.env.NEXT_PUBLIC_APP_NAME = 'demo';
+    const page = {
+      _id: 'abc',
+      title: '',
+      slug: '/dataroom',
+      sections: [],
+      isStandard: true,
+    };
+    expect(upgradeStandardPageFromDefaults(page)).toBe(page);
+  });
+});
+
+describe('day-one neutrality of standard-page defaults (#951)', () => {
+  it('never serves shipped defaults on a non-tdf app', async () => {
+    process.env.NEXT_PUBLIC_APP_NAME = 'demo';
+    expect(canRenderDefaultStandardPage('/team')).toBe(false);
+    expect(await resolveStandardOrDbPage('/team')).toBeNull();
+    expect(await resolveStandardOrDbPage('/press')).toBeNull();
+    expect(await resolveStandardOrDbPage('/dataroom')).toBeNull();
+    expect(await resolveStandardOrDbPage('std:/team')).toBeNull();
+  });
+
+  it('never serves shipped defaults on a zero-config app (no APP_NAME)', async () => {
+    delete process.env.NEXT_PUBLIC_APP_NAME;
+    expect(await resolveStandardOrDbPage('/team')).toBeNull();
+  });
+
+  it('serves defaults on tdf when the feature gate is on', async () => {
+    process.env.NEXT_PUBLIC_APP_NAME = 'tdf';
+    const page = await resolveStandardOrDbPage('/team');
+    expect(page?.isDefault).toBe(true);
+    expect((page?.sections ?? []).length).toBeGreaterThan(0);
+  });
+
+  it('respects feature gates on tdf: a gated-off route resolves to null', async () => {
+    process.env.NEXT_PUBLIC_APP_NAME = 'tdf';
+    process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE = 'false';
+    process.env.NEXT_PUBLIC_FEATURE_VOLUNTEERING = 'false';
+    expect(await resolveStandardOrDbPage('/token')).toBeNull();
+    expect(await resolveStandardOrDbPage('/volunteer')).toBeNull();
+  });
+
+  it('still serves defaults to the dashboard editor on any app', async () => {
+    process.env.NEXT_PUBLIC_APP_NAME = 'demo';
+    const page = await resolveStandardOrDbPage('/team', { context: 'editor' });
+    expect(page?.isDefault).toBe(true);
   });
 });
 

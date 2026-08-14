@@ -76,6 +76,7 @@ describe('configDescription schema defaults', () => {
     const general = getDefaultConfigValue('general', configDescription);
     [
       'appName',
+      'logoHeader',
       'platformName',
       'semanticUrl',
       'platformLegalAddress',
