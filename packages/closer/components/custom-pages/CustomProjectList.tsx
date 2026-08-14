@@ -8,6 +8,8 @@ import { useAuth } from '../../contexts/auth';
 import type { Project } from '../../types/api';
 import api, { formatSearch } from '../../utils/api';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { parseMessageFromError } from '../../utils/common';
+import PageError from '../PageError';
 import ProjectCard from '../ProjectCard/ProjectCard';
 import { Heading, LinkButton, Spinner } from '../ui';
 
@@ -54,6 +56,7 @@ const CustomProjectList = ({ settings, content }: Props) => {
 
   const [projects, setProjects] = useState<Project[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const showInProgress = settings?.showInProgress !== false;
   const showCompleted = settings?.showCompleted !== false;
@@ -73,9 +76,13 @@ const CustomProjectList = ({ settings, content }: Props) => {
         const users = await fetchManagersByIds(managerIds);
         users.forEach((manager: any) => managers.set(manager._id, manager));
         if (!isCurrent) return;
+        setError(null);
         setProjects(results.map((project) => withPreview(project, managers)));
-      } catch {
-        if (isCurrent) setProjects([]);
+      } catch (err) {
+        if (isCurrent) {
+          setError(parseMessageFromError(err));
+          setProjects(null);
+        }
       } finally {
         if (isCurrent) setIsLoading(false);
       }
@@ -123,6 +130,10 @@ const CustomProjectList = ({ settings, content }: Props) => {
       ))}
     </div>
   );
+
+  if (!isLoading && error) {
+    return <PageError error={error} />;
+  }
 
   return (
     <section className="py-12 md:py-16">
