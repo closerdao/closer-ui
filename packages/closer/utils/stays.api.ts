@@ -840,6 +840,80 @@ export const rejectStayRequest = async (id: string): Promise<Stay> => {
   return unwrapStayMutationResult(data);
 };
 
+export type DiscountProbeResult = {
+  status: 'success' | 'fail';
+  reason: '' | 'invalid_code' | 'ticket_mismatch';
+  applicableTicketName: string;
+  discount: {
+    code: string;
+    name?: string;
+    percent?: number;
+    val?: number;
+  } | null;
+  currency?: CloserCurrencies;
+  discountType: '' | 'percent' | 'val';
+  discountVal: number;
+  discountPercent: number;
+};
+
+/**
+ * Probes a discount code. A rejected code is a 200 with status: 'fail' — only a
+ * non-2xx means the request itself failed. Runs the same validator as the
+ * eventDiscount write on PATCH /stays/:id/options.
+ */
+export const validateDiscountCode = async (payload: {
+  discountCode: string;
+  eventId?: string;
+  stayId?: string;
+  ticketOption?: unknown;
+}): Promise<DiscountProbeResult> => {
+  const { data } = await api.post('/stays/validate-discount-code', payload);
+  return (data as ApiOk<DiscountProbeResult>).results;
+};
+
+export type SendStayToFriendsResult = {
+  emailsSent: number;
+  emails: string[];
+  /** Malformed addresses skipped server-side; the rest were still sent. */
+  invalidEmails?: string[];
+  totalEmailsProcessed: number;
+};
+
+/**
+ * Unlike the legacy endpoint, this no longer confirms the stay as a side
+ * effect — submit the stay first or the server answers 400.
+ *
+ * Accepts the comma-separated string the stay stores as well as an array; omit
+ * it entirely to let the server use the stay's own friendEmails.
+ */
+export const sendStayToFriends = async (
+  id: string,
+  friendEmails?: string[] | string | null,
+): Promise<SendStayToFriendsResult> => {
+  const emails =
+    typeof friendEmails === 'string'
+      ? friendEmails
+          .split(',')
+          .map((email) => email.trim())
+          .filter(Boolean)
+      : friendEmails ?? undefined;
+  const { data } = await api.post(
+    `/stays/${id}/send-to-friend`,
+    emails?.length ? { friendEmails: emails } : {},
+  );
+  return (data as ApiOk<SendStayToFriendsResult>).results;
+};
+
+/**
+ * Adds the caller to the stay's managedBy, which is what grants them
+ * GET /stays/:id and the checkout pair. Idempotent; 403 when the caller's email
+ * is not on the invite list.
+ */
+export const claimStayAsFriend = async (id: string): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/claim-as-friend`, {});
+  return (data as ApiOk<Stay>).results;
+};
+
 export const checkInStay = async (id: string): Promise<Stay> => {
   const { data } = await api.post(`/stays/${id}/check-in`, {});
   return unwrapStayMutationResult(data);

@@ -26,7 +26,7 @@ import { useTranslations } from 'next-intl';
 import config from '../../../configCached';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
-import { Event, TicketOption } from '../../../types';
+import { Event, Project, TicketOption } from '../../../types';
 import {
   BookingSettings,
   GeneralConfig,
@@ -61,6 +61,8 @@ interface Props {
   ticketOptions?: TicketOption[];
   /** Future events that block the booking calendar, used to explain greyed out results. */
   calendarBlockingEvents?: CalendarBlockingEvent[];
+  /** Projects named by ?projectId on a residence booking — they scope the dates. */
+  residenceProjects?: Project[];
   error?: string;
   messages?: any;
 }
@@ -71,6 +73,19 @@ const PLATFORM_URL =
 const formatDate = (d: Date | string | null) =>
   d ? dayjs(d).format('YYYY-MM-DD') : '';
 
+const readQueryParam = (value: string | string[] | undefined) =>
+  typeof value === 'string'
+    ? value
+    : Array.isArray(value)
+      ? value[0]
+      : undefined;
+
+const splitProjectIds = (value: string | undefined) =>
+  value
+    ?.split(',')
+    .map((id) => id.trim())
+    .filter(Boolean) || [];
+
 const StayCreatePage = ({
   bookingSettings,
   generalConfig,
@@ -79,6 +94,7 @@ const StayCreatePage = ({
   event: eventProp,
   ticketOptions: ticketOptionsProp,
   calendarBlockingEvents,
+  residenceProjects,
   error,
 }: Props) => {
   const t = useTranslations();
@@ -104,14 +120,10 @@ const StayCreatePage = ({
     eventId: eventIdQuery,
     ticketOption: ticketOptionQuery,
     discountCode: discountCodeQuery,
+    projectId: projectIdQuery,
   } = router.query || {};
 
-  const readParam = (value: string | string[] | undefined) =>
-    typeof value === 'string'
-      ? value
-      : Array.isArray(value)
-        ? value[0]
-        : undefined;
+  const readParam = readQueryParam;
 
   const listingId = readParam(listingIdQuery);
   const eventId = readParam(eventIdQuery);
@@ -123,6 +135,11 @@ const StayCreatePage = ({
         : undefined;
   const isVolunteerApplication = Boolean(bookingType);
   const isEventBooking = Boolean(eventId);
+  const projectIdParam = readParam(projectIdQuery);
+  const projectIds = useMemo(
+    () => splitProjectIds(projectIdParam),
+    [projectIdParam],
+  );
 
   const availableTickets = useMemo(
     () =>
@@ -158,6 +175,42 @@ const StayCreatePage = ({
       : bookingSettings.minDuration || 1;
   }, [bookingSettings, isMember, volunteerMinNights, isEventBooking]);
 
+  /** Residents stay for the duration of the project, so the project run is the
+   *  only bookable window. With several projects picked it spans all of them. */
+  const projects = useMemo(
+    () =>
+      bookingType === 'residence' && residenceProjects?.length
+        ? residenceProjects
+        : [],
+    [bookingType, residenceProjects],
+  );
+
+  const projectNames = projects
+    .map((project) => project.name)
+    .filter(Boolean)
+    .join(', ');
+
+  const projectWindow = useMemo(() => {
+    const starts = projects
+      .map((project) => dayjs(project.start))
+      .filter((date) => date.isValid());
+    const ends = projects
+      .map((project) => dayjs(project.end))
+      .filter((date) => date.isValid());
+    if (!starts.length || !ends.length) return null;
+    const start = starts.reduce((a, b) => (b.isBefore(a) ? b : a));
+    const end = ends.reduce((a, b) => (b.isAfter(a) ? b : a));
+    if (!end.isAfter(start)) return null;
+    const today = dayjs().startOf('day');
+    // A project already underway can only be joined from today onwards.
+    const bookableStart = start.isBefore(today) ? today : start.startOf('day');
+    if (!end.isAfter(bookableStart)) return null;
+    return {
+      start: bookableStart.format('YYYY-MM-DD'),
+      end: end.startOf('day').format('YYYY-MM-DD'),
+    };
+  }, [projects]);
+
   const defaultDateRange = useMemo(() => {
     if (isEventBooking && eventProp?.start && eventProp?.end) {
       return {
@@ -165,19 +218,49 @@ const StayCreatePage = ({
         end: dayjs(eventProp.end).format('YYYY-MM-DD'),
       };
     }
+    const nights = Math.max(minNights, 1);
+    if (projectWindow) {
+      const windowStart = dayjs(projectWindow.start);
+      const windowEnd = dayjs(projectWindow.end);
+      const preferred = dayjs().add(14, 'day').startOf('day');
+      // Start at the usual two weeks out only when the minimum stay still fits
+      // before the project ends, otherwise open at the start of the window.
+      const start =
+        preferred.isAfter(windowStart) &&
+        !preferred.add(nights, 'day').isAfter(windowEnd)
+          ? preferred
+          : windowStart;
+      const end = start.add(nights, 'day');
+      return {
+        start: start.format('YYYY-MM-DD'),
+        end: (end.isAfter(windowEnd) ? windowEnd : end).format('YYYY-MM-DD'),
+      };
+    }
     const start = dayjs().add(14, 'day').startOf('day');
-    const end = start.add(Math.max(minNights, 1), 'day');
+    const end = start.add(nights, 'day');
     return {
       start: start.format('YYYY-MM-DD'),
       end: end.format('YYYY-MM-DD'),
     };
-  }, [minNights, isEventBooking, eventProp?.start, eventProp?.end]);
+  }, [
+    minNights,
+    isEventBooking,
+    eventProp?.start,
+    eventProp?.end,
+    projectWindow,
+  ]);
 
-  const hasUrlDates = Boolean(savedStart && savedEnd);
+  /** Dates carried in the URL are ignored when they fall outside the project run. */
+  const urlDatesFitProjectWindow =
+    !projectWindow ||
+    (!dayjs(String(savedStart)).isBefore(dayjs(projectWindow.start)) &&
+      !dayjs(String(savedEnd)).isAfter(dayjs(projectWindow.end)));
+
+  const hasUrlDates = Boolean(savedStart && savedEnd) && urlDatesFitProjectWindow;
 
   const [activeParams, setActiveParams] = useState<StaySearchBarParams | null>(
     () => {
-      if (savedStart && savedEnd) {
+      if (hasUrlDates) {
         return {
           start: String(savedStart),
           end: String(savedEnd),
@@ -277,6 +360,13 @@ const StayCreatePage = ({
   const isEventBlockModalOpen =
     showEventBlockNotice && dismissedEventBlockKey !== searchedRangeKey;
 
+  /** Keeps the picked project through the detour to the application form. */
+  const applyUrl = `/volunteer/apply?bookingType=${bookingType}${
+    projectIds.length
+      ? `&projectId=${encodeURIComponent(projectIds.join(','))}`
+      : ''
+  }`;
+
   const buildQueryParams = (params: StaySearchBarParams) => {
     const out: Record<string, string> = {
       start: params.start,
@@ -288,6 +378,7 @@ const StayCreatePage = ({
     if (params.pets) out.pets = String(params.pets);
     if (listingId) out.listingId = listingId;
     if (bookingType) out.bookingType = bookingType;
+    if (projectIds.length) out.projectId = projectIds.join(',');
     if (eventId) out.eventId = eventId;
     if (isDayTicketOnlyEvent && selectedTicketOption?.name) {
       out.ticketOption = selectedTicketOption.name;
@@ -442,7 +533,7 @@ const StayCreatePage = ({
     if (isVolunteerApplication) {
       const draft = readVolunteerApplicationDraft(user?._id, bookingType);
       if (!draft?.volunteerInfo?.application?.agreement?.acceptedAt) {
-        router.push(`/volunteer/apply?bookingType=${bookingType}`);
+        router.push(applyUrl);
         return;
       }
       volunteerPayload = {
@@ -451,7 +542,9 @@ const StayCreatePage = ({
           skills: draft.volunteerInfo.skills,
           diet: draft.volunteerInfo.diet,
           suggestions: draft.volunteerInfo.suggestions,
-          projectId: draft.volunteerInfo.projectId,
+          projectId: draft.volunteerInfo.projectId?.length
+            ? draft.volunteerInfo.projectId
+            : projectIds,
           application: draft.volunteerInfo.application,
         }),
       };
@@ -507,7 +600,7 @@ const StayCreatePage = ({
       setDidSearchOnce(true);
       return;
     }
-    if (savedStart && savedEnd) {
+    if (hasUrlDates) {
       void runSearch({
         start: String(savedStart),
         end: String(savedEnd),
@@ -558,7 +651,7 @@ const StayCreatePage = ({
       return;
     }
     if (isVolunteerApplication) {
-      router.push(`/volunteer/apply?bookingType=${bookingType}`);
+      router.push(applyUrl);
       return;
     }
     router.push('/stay');
@@ -602,10 +695,22 @@ const StayCreatePage = ({
           <p className="text-base md:text-lg text-gray-600 max-w-xl mx-auto">
             {isEventBooking
               ? t('stay_create_event_subtitle')
-              : isVolunteerApplication
-                ? t('volunteer_application_accommodation_subtitle')
-                : t('stay_create_subtitle')}
+              : projectNames
+                ? t('stay_create_residence_project_subtitle', {
+                    project: projectNames,
+                  })
+                : isVolunteerApplication
+                  ? t('volunteer_application_accommodation_subtitle')
+                  : t('stay_create_subtitle')}
           </p>
+          {projectWindow && (
+            <p className="text-sm text-gray-600 mt-2">
+              {t('stay_create_residence_project_dates_hint', {
+                start: dayjs(projectWindow.start).format('MMM D, YYYY'),
+                end: dayjs(projectWindow.end).format('MMM D, YYYY'),
+              })}
+            </p>
+          )}
           {isEventBooking && eventProp?.requireApproval && (
             <p className="text-sm text-gray-600 mt-2">
               {t('bookings_event_requires_approval')}
@@ -653,6 +758,8 @@ const StayCreatePage = ({
                 : undefined
             }
             hideSearchButton={isDayTicketOnlyEvent}
+            minDate={projectWindow?.start}
+            maxDate={projectWindow?.end}
             minNightsOverride={isEventBooking ? null : volunteerMinNights}
             minNightsErrorMessage={
               volunteerMinNights
@@ -900,13 +1007,25 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
     const generalConfig = (config.general || null) as GeneralConfig | null;
     const volunteerConfig = (config.volunteering ||
       null) as VolunteerConfig | null;
-    const eventIdParam = context.query?.eventId;
-    const eventId =
-      typeof eventIdParam === 'string'
-        ? eventIdParam
-        : Array.isArray(eventIdParam)
-          ? eventIdParam[0]
-          : undefined;
+    const eventId = readQueryParam(context.query?.eventId);
+
+    // A residence booking is scoped to the project it is for: its name goes in
+    // the intro and its run limits the calendar.
+    const projectIds =
+      readQueryParam(context.query?.bookingType) === 'residence'
+        ? splitProjectIds(readQueryParam(context.query?.projectId)).slice(0, 10)
+        : [];
+    const residenceProjects: Project[] = projectIds.length
+      ? (
+          await Promise.all(
+            projectIds.map((id) =>
+              api.get(`/project/${id}`).catch(() => null),
+            ),
+          )
+        )
+          .map((res) => res?.data?.results as Project | undefined)
+          .filter((project): project is Project => Boolean(project))
+      : [];
 
     let defaultGuestFoodOptionId: string | null = null;
     if (bookingSettings?.foodOptionEnabled) {
@@ -934,6 +1053,7 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
         ticketOptions: ticketsAvailable?.data?.ticketOptions,
         event: event?.data?.results ?? null,
         calendarBlockingEvents: [],
+        residenceProjects,
       };
     }
 
@@ -968,6 +1088,7 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
       event: null,
       ticketOptions: [],
       calendarBlockingEvents,
+      residenceProjects,
     };
   } catch (err) {
     return {
@@ -979,6 +1100,7 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
       event: null,
       ticketOptions: [],
       calendarBlockingEvents: [],
+      residenceProjects: [],
     };
   }
 };

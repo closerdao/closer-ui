@@ -45,6 +45,12 @@ interface Props {
   canSelectDates?: boolean;
   eventStartDate?: string;
   eventEndDate?: string;
+  /**
+   * Hard bounds on the calendar — used by residence bookings, which can only
+   * run inside the project window. They also override the booking horizon.
+   */
+  minDate?: string | null;
+  maxDate?: string | null;
   searchLabel?: string;
   hideSearchButton?: boolean;
 }
@@ -70,6 +76,8 @@ const StaySearchBar = ({
   canSelectDates = true,
   eventStartDate,
   eventEndDate,
+  minDate,
+  maxDate,
   searchLabel,
   hideSearchButton = false,
 }: Props) => {
@@ -148,13 +156,19 @@ const StaySearchBar = ({
 
   const blockedDateRanges = useMemo(() => {
     const ranges: any[] = [{ before: new Date() }];
-    if (maxHorizon && maxHorizon > 0 && !eventStartDate) {
+    if (minDate) {
+      ranges.push({ before: dayjs(minDate).startOf('day').toDate() });
+    }
+    if (maxDate) {
+      ranges.push({ after: dayjs(maxDate).startOf('day').toDate() });
+    }
+    if (maxHorizon && maxHorizon > 0 && !eventStartDate && !maxDate) {
       ranges.push({
         after: dayjs().add(maxHorizon, 'day').toDate(),
       });
     }
     return ranges;
-  }, [maxHorizon, eventStartDate]);
+  }, [maxHorizon, eventStartDate, minDate, maxDate]);
 
   useEffect(() => {
     if (!canSelectDates && eventStartDate && eventEndDate) {
@@ -345,7 +359,11 @@ const StaySearchBar = ({
                     eventStartDate={eventStartDate}
                     eventEndDate={eventEndDate}
                     defaultMonth={
-                      eventStartDate ? new Date(eventStartDate) : undefined
+                      eventStartDate
+                        ? new Date(eventStartDate)
+                        : minDate
+                          ? new Date(minDate)
+                          : undefined
                     }
                   />
                   <StayDurationDiscountHints bookingSettings={bookingSettings} />

@@ -77,6 +77,7 @@ import {
   getFoodOptionsForBookingContext,
   userCanCreateTeamBooking,
 } from '../../../utils/booking.helpers';
+import { normalizeIsFriendsBooking } from '../../../utils/bookingUtils';
 import { parseMessageFromError } from '../../../utils/common';
 import { normalizeDiscountCode } from '../../../utils/discountCode';
 import { priceFormat } from '../../../utils/helpers';
@@ -97,6 +98,7 @@ import {
   canChangeStayPaymentMethod,
   canShowStayTokenCreditPaymentOptions,
   checkoutStay,
+  claimStayAsFriend,
   computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
@@ -106,11 +108,11 @@ import {
   getStayAccommodationTokenTotal,
   inferPaymentChoiceFromStay,
   isStayAwaitingHostApproval,
-  isVolunteerStay,
   isStayAwaitingPayment,
   isStayCheckoutDraft,
   isStayPaid,
   isStayTerminal,
+  isVolunteerStay,
   setStayPaymentMethod,
   stakeStayTokens,
   stayUsesTokenAccommodation,
@@ -216,6 +218,8 @@ const StayCheckoutPage = ({
 
   const idParam = router.query.slug ?? router.query.id;
   const stayId = typeof idParam === 'string' ? idParam : idParam?.[0];
+  // Invite emails link here as /stay/create/<stayId>?isFriend=true.
+  const isFriend = normalizeIsFriendsBooking(router.query.isFriend);
 
   const isBookingEnabled =
     !!bookingSettings && process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
@@ -224,6 +228,7 @@ const StayCheckoutPage = ({
   const [listing, setListing] = useState<Listing | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
+  const [friendClaimDenied, setFriendClaimDenied] = useState(false);
 
   const refetchStay = useCallback(async () => {
     if (!stayId) return null;
@@ -238,8 +243,29 @@ const StayCheckoutPage = ({
     (async () => {
       setIsLoading(true);
       setPageError(null);
+      setFriendClaimDenied(false);
       try {
-        const next = await getStay(stayId);
+        let next: Stay;
+        if (isFriend) {
+          // Read first: the stay is only readable once the caller is in
+          // managedBy, so a 401 here just means they have not claimed yet.
+          // Claiming is idempotent, so a second visit is harmless.
+          const existing = await getStay(stayId).catch(() => null);
+          if (existing) {
+            next = existing;
+          } else {
+            try {
+              await claimStayAsFriend(stayId);
+            } catch {
+              // 403: this account's email is not on the invite list.
+              if (!cancelled) setFriendClaimDenied(true);
+              return;
+            }
+            next = await getStay(stayId);
+          }
+        } else {
+          next = await getStay(stayId);
+        }
         if (cancelled) return;
         setStay(next);
         if (next.listing) {
@@ -259,7 +285,7 @@ const StayCheckoutPage = ({
     return () => {
       cancelled = true;
     };
-  }, [router.isReady, stayId]);
+  }, [router.isReady, stayId, isFriend]);
 
   if (error) return <PageError error={error} />;
   if (!isBookingEnabled) return <FeatureNotEnabled feature="booking" />;
@@ -323,6 +349,32 @@ const StayCheckoutPage = ({
     );
   }
 
+  if (friendClaimDenied) {
+    return (
+      <>
+        {SeoHead}
+        <main
+          id="main-content"
+          className="w-full max-w-screen-sm mx-auto p-4 md:p-6 text-center"
+        >
+          <Heading level={1} className="text-2xl md:text-3xl">
+            {t('stay_friend_claim_not_invited_title')}
+          </Heading>
+          <p className="mt-3 mb-6 text-muted-foreground">
+            {t('stay_friend_claim_not_invited_description')}
+          </p>
+          <Button
+            onClick={() => router.push('/login')}
+            isFullWidth={false}
+            className="min-h-[44px]"
+          >
+            {t('stay_friend_claim_switch_account')}
+          </Button>
+        </main>
+      </>
+    );
+  }
+
   if (pageError || !stay) {
     return (
       <>
@@ -378,6 +430,7 @@ const StayCheckoutPage = ({
           bookingSettings={bookingSettings}
           volunteerConfig={volunteerConfig}
           foodOptions={foodOptions ?? []}
+          isFriend={isFriend}
         />
       </Elements>
     </>
@@ -393,6 +446,9 @@ interface ContentProps {
   bookingSettings: BookingSettings | null;
   volunteerConfig: VolunteerConfig | null;
   foodOptions: FoodOption[];
+  /** Claimed friend paying someone else's stay: they may pay, but not edit,
+   * cancel, change options, or token-stake. */
+  isFriend: boolean;
 }
 
 const StayCheckoutContent = ({
@@ -404,6 +460,7 @@ const StayCheckoutContent = ({
   bookingSettings,
   volunteerConfig,
   foodOptions,
+  isFriend,
 }: ContentProps) => {
   const router = useRouter();
   const t = useTranslations();
@@ -536,9 +593,7 @@ const StayCheckoutContent = ({
         const event = (eventRes?.data?.results ?? null) as Event | null;
         setStayEvent(event);
         const rawOptions: TicketOption[] =
-          availabilityRes?.data?.ticketOptions ||
-          event?.ticketOptions ||
-          [];
+          availabilityRes?.data?.ticketOptions || event?.ticketOptions || [];
         const overnight = rawOptions.filter(
           (option) => !option.isDayTicket && option.available > 0,
         );
@@ -549,10 +604,7 @@ const StayCheckoutContent = ({
           : null;
         setSelectedTicketOption((prev) => {
           if (matched) return matched;
-          if (
-            prev &&
-            overnight.some((option) => option.name === prev.name)
-          ) {
+          if (prev && overnight.some((option) => option.name === prev.name)) {
             return prev;
           }
           return null;
@@ -619,10 +671,9 @@ const StayCheckoutContent = ({
   const priceLock = currentStay.priceLock;
   const isMember = Boolean(authUser?.roles?.includes('member'));
   const isVolunteerApplication = isVolunteerStay(currentStay);
-  const showTokenCreditPaymentOptions = canShowStayTokenCreditPaymentOptions(
-    currentStay,
-    isMember,
-  );
+  // Token staking and credits belong to the stay owner, not the paying friend.
+  const showTokenCreditPaymentOptions =
+    !isFriend && canShowStayTokenCreditPaymentOptions(currentStay, isMember);
   const isFree =
     !priceLock ||
     (priceLock.total.val === 0 &&
@@ -743,12 +794,10 @@ const StayCheckoutContent = ({
 
   const stayEventId = currentStay.eventId;
   const showEventTicketSelection =
-    Boolean(stayEventId) && Boolean(stayEvent?.paid);
+    !isFriend && Boolean(stayEventId) && Boolean(stayEvent?.paid);
   const hasValidEventTicket =
     !stayEvent?.paid ||
-    Boolean(
-      selectedTicketOption?.name || currentStay.ticketOption?.name,
-    );
+    Boolean(selectedTicketOption?.name || currentStay.ticketOption?.name);
   const eventFoodOptionSet = Boolean(
     stayEvent?.foodOption === 'food_package'
       ? stayEvent?.foodOptionId
@@ -856,7 +905,7 @@ const StayCheckoutContent = ({
   );
 
   const showFoodSection =
-    !!bookingSettings?.foodOptionEnabled && !shouldSkipFood;
+    !isFriend && !!bookingSettings?.foodOptionEnabled && !shouldSkipFood;
 
   const isWeb3Enabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
   const needsTokenStakeCompletion =
@@ -1681,13 +1730,16 @@ const StayCheckoutContent = ({
       className="w-full max-w-screen-sm mx-auto p-4 md:p-6 pb-24 md:pb-12"
     >
       <div className="relative flex items-center min-h-[2.75rem] mb-4">
-        <BookingBackButton
-          onClick={() =>
-            router.push(buildStayCreateHrefFromStay(currentStay))
-          }
-          name={t('buttons_back')}
-          className="relative z-10"
-        />
+        {/* Back leads into the owner's edit flow, which a friend cannot use. */}
+        {!isFriend && (
+          <BookingBackButton
+            onClick={() =>
+              router.push(buildStayCreateHrefFromStay(currentStay))
+            }
+            name={t('buttons_back')}
+            className="relative z-10"
+          />
+        )}
         <div className="absolute inset-0 flex justify-center items-center pointer-events-none px-4">
           <Heading
             level={1}
@@ -1790,63 +1842,65 @@ const StayCheckoutContent = ({
                 </p>
               </div>
             </div>
-            {(bookingSettings?.pickUpEnabled ||
-              stayBookingGuestCount >= 2 ||
-              (canCreateTeamBooking && isStayCheckoutDraft(currentStay))) && (
-              <div className="w-full border-t border-foreground/[0.08] pt-5">
-                <p className="text-sm font-semibold text-gray-900 mb-3">
-                  {t('stay_create_options_title')}
-                </p>
-                <div className="flex flex-col gap-3">
-                  {bookingSettings?.pickUpEnabled && (
-                    <Checkbox
-                      isChecked={!!currentStay.doesNeedPickup}
-                      onChange={() =>
-                        handleToggleOption({
-                          doesNeedPickup: !currentStay.doesNeedPickup,
-                        })
-                      }
-                      isEnabled={!isSavingOptions}
-                      id="opt-pickup"
-                    >
-                      {t('stay_create_option_pickup')}
-                    </Checkbox>
-                  )}
-                  {stayBookingGuestCount >= 2 && (
-                    <Checkbox
-                      isChecked={!!currentStay.doesNeedSeparateBeds}
-                      onChange={() =>
-                        handleToggleOption({
-                          doesNeedSeparateBeds:
-                            !currentStay.doesNeedSeparateBeds,
-                        })
-                      }
-                      isEnabled={!isSavingOptions}
-                      id="opt-separate"
-                    >
-                      {t('stay_create_option_separate_beds')}
-                    </Checkbox>
-                  )}
-                  {canCreateTeamBooking && isStayCheckoutDraft(currentStay) && (
-                    <div className="flex flex-row justify-between items-center gap-3 [&_.switch]:mb-0">
-                      <span id="opt-team-booking-label" className="text-sm">
-                        {t('stay_create_option_team_booking')}
-                      </span>
-                      <Switch
-                        disabled={isSavingTeamBooking}
-                        name="stay-checkout-team-booking"
-                        label=""
-                        labelledBy="opt-team-booking-label"
-                        onChange={(nextValue) => {
-                          void handleTeamBookingToggle(nextValue);
-                        }}
-                        checked={!!currentStay.isTeamBooking}
-                      />
-                    </div>
-                  )}
+            {!isFriend &&
+              (bookingSettings?.pickUpEnabled ||
+                stayBookingGuestCount >= 2 ||
+                (canCreateTeamBooking && isStayCheckoutDraft(currentStay))) && (
+                <div className="w-full border-t border-foreground/[0.08] pt-5">
+                  <p className="text-sm font-semibold text-gray-900 mb-3">
+                    {t('stay_create_options_title')}
+                  </p>
+                  <div className="flex flex-col gap-3">
+                    {bookingSettings?.pickUpEnabled && (
+                      <Checkbox
+                        isChecked={!!currentStay.doesNeedPickup}
+                        onChange={() =>
+                          handleToggleOption({
+                            doesNeedPickup: !currentStay.doesNeedPickup,
+                          })
+                        }
+                        isEnabled={!isSavingOptions}
+                        id="opt-pickup"
+                      >
+                        {t('stay_create_option_pickup')}
+                      </Checkbox>
+                    )}
+                    {stayBookingGuestCount >= 2 && (
+                      <Checkbox
+                        isChecked={!!currentStay.doesNeedSeparateBeds}
+                        onChange={() =>
+                          handleToggleOption({
+                            doesNeedSeparateBeds:
+                              !currentStay.doesNeedSeparateBeds,
+                          })
+                        }
+                        isEnabled={!isSavingOptions}
+                        id="opt-separate"
+                      >
+                        {t('stay_create_option_separate_beds')}
+                      </Checkbox>
+                    )}
+                    {canCreateTeamBooking &&
+                      isStayCheckoutDraft(currentStay) && (
+                        <div className="flex flex-row justify-between items-center gap-3 [&_.switch]:mb-0">
+                          <span id="opt-team-booking-label" className="text-sm">
+                            {t('stay_create_option_team_booking')}
+                          </span>
+                          <Switch
+                            disabled={isSavingTeamBooking}
+                            name="stay-checkout-team-booking"
+                            label=""
+                            labelledBy="opt-team-booking-label"
+                            onChange={(nextValue) => {
+                              void handleTeamBookingToggle(nextValue);
+                            }}
+                            checked={!!currentStay.isTeamBooking}
+                          />
+                        </div>
+                      )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
         </BookingSurface>
 
@@ -1890,7 +1944,11 @@ const StayCheckoutContent = ({
             padding="lg"
             aria-labelledby="preferences-heading"
           >
-            <Heading id="preferences-heading" level={2} className="text-lg mb-2">
+            <Heading
+              id="preferences-heading"
+              level={2}
+              className="text-lg mb-2"
+            >
               {t('stay_create_preferences_section_title')}
             </Heading>
             <p className="text-sm text-gray-600 mb-4">
@@ -1929,23 +1987,30 @@ const StayCheckoutContent = ({
                 isDisabled={isSavingPreferences}
               />
             )}
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="stay-host-notes"
-                className="font-medium text-complimentary-light text-sm"
-              >
-                {t('stay_create_preferences_host_notes_label')}
-              </label>
-              <Textarea
-                id="stay-host-notes"
-                value={stayMessage}
-                onChange={(e) => setStayMessage(e.target.value)}
-                onBlur={() => void handleStayMessageBlur()}
-                placeholder={t('stay_create_preferences_host_notes_placeholder')}
-                disabled={isSavingStayMessage || isSavingOptions}
-                className="border-2 border-neutral text-complimentary-core text-sm rounded-lg min-h-[88px]"
-              />
-            </div>
+            {/* The dietary/accommodation selects above patch the friend's own
+                user record, but host notes are a stay option they cannot
+                write. */}
+            {!isFriend && (
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="stay-host-notes"
+                  className="font-medium text-complimentary-light text-sm"
+                >
+                  {t('stay_create_preferences_host_notes_label')}
+                </label>
+                <Textarea
+                  id="stay-host-notes"
+                  value={stayMessage}
+                  onChange={(e) => setStayMessage(e.target.value)}
+                  onBlur={() => void handleStayMessageBlur()}
+                  placeholder={t(
+                    'stay_create_preferences_host_notes_placeholder',
+                  )}
+                  disabled={isSavingStayMessage || isSavingOptions}
+                  className="border-2 border-neutral text-complimentary-core text-sm rounded-lg min-h-[88px]"
+                />
+              </div>
+            )}
           </BookingSurface>
         )}
 
@@ -2683,6 +2748,13 @@ const StayCheckoutContent = ({
             {actionError && (
               <div className="mt-3">
                 <ErrorMessage error={actionError} />
+              </div>
+            )}
+            {/* Friends cannot pick a ticket, so without this the CTA would be
+                disabled with nothing on screen explaining why. */}
+            {isFriend && !hasValidEventTicket && (
+              <div className="mt-3">
+                <ErrorMessage error={t('bookings_error_no_ticket_option')} />
               </div>
             )}
           </div>

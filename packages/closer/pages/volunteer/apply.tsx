@@ -43,6 +43,7 @@ const VolunteerApplicationPage = ({
     bookingType: bookingTypeQuery,
     start: startQuery,
     end: endQuery,
+    projectId: projectIdQuery,
   } = router.query || {};
 
   const readParam = (value: string | string[] | undefined) =>
@@ -59,8 +60,10 @@ const VolunteerApplicationPage = ({
     }
   }, [isAuthenticated, isLoading]);
 
+  // A projectId is only carried here by the project application, so it is the
+  // marker for which listing the applicant came from.
   const goBack = () => {
-    router.push('/volunteer');
+    router.push(readParam(projectIdQuery) ? '/projects' : '/volunteer');
   };
 
   if (error) {
@@ -102,6 +105,7 @@ const VolunteerApplicationPage = ({
           platformName={PLATFORM_NAME}
           start={readParam(startQuery)}
           end={readParam(endQuery)}
+          projectId={readParam(projectIdQuery)}
           onExit={goBack}
         />
       </div>

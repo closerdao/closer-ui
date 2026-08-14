@@ -78,6 +78,11 @@ import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { formatDate } from '../../../utils/listings.helpers';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
+import {
+  isStayCheckoutDraft,
+  sendStayToFriends,
+  submitStay,
+} from '../../../utils/stays.api';
 
 dayjs.extend(dayOfYear);
 
@@ -106,6 +111,7 @@ const Checkout = ({
   const isFriend = normalizeIsFriendsBooking(router.query.isFriend);
   const t = useTranslations();
   const { platform }: any = usePlatform();
+  const [friendClaimDenied, setFriendClaimDenied] = useState(false);
 
   useEffect(() => {
     if (!router.isReady || !slug) return;
@@ -116,11 +122,19 @@ const Checkout = ({
     }
 
     void (async () => {
+      // Read first — the stay is only readable once the caller is in managedBy,
+      // so a successful read means this friend has already claimed it.
       await platform.booking.getOne(slug, { force: true });
       if (platform.booking.findOne(slug)) {
         return;
       }
-      await claimBookingAsFriend(slug);
+      try {
+        await claimBookingAsFriend(slug);
+      } catch {
+        // 403: the logged-in email is not on the invite list.
+        setFriendClaimDenied(true);
+        return;
+      }
       await platform.booking.getOne(slug, { force: true });
     })();
   }, [router.isReady, slug, isFriend, platform]);
@@ -381,6 +395,7 @@ const Checkout = ({
 
   const [emailSuccess, setEmailSuccess] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [invalidEmails, setInvalidEmails] = useState<string[]>([]);
   const [isApplyingCredits, setIsApplyingCredits] = useState(false);
   const [isListingAvailable, setIsListingAvailable] = useState<boolean | null>(
     null,
@@ -1127,34 +1142,27 @@ const Checkout = ({
       setProcessing(true);
       setPaymentError(null);
       setEmailError(null);
+      setInvalidEmails([]);
+
+      // Sending no longer confirms the stay as a side effect — submitting is
+      // now a precondition, and the server 400s when the stay is still a draft.
+      if (_id && isStayCheckoutDraft(booking)) {
+        await submitStay(_id);
+      }
 
       // Send checkout link to friend
-      const res = await api.post(`/bookings/${_id}/send-to-friend`, {
-        friendEmails: booking?.friendEmails,
-      });
+      const results = await sendStayToFriends(_id, booking?.friendEmails);
 
-      if (res.status === 200) {
-        const p = bookingPaymentMetricPoint();
-        void logMetric({
-          event: 'booking-friends-send-success',
-          category: 'booking',
-          value: 'friends',
-          point: p,
-          ...bookingMetricFields,
-        });
-        setEmailSuccess(true);
-      } else {
-        const p = bookingPaymentMetricPoint();
-        void logMetric({
-          event: 'booking-friends-send-error',
-          category: 'booking',
-          value: 'friends',
-          point: p,
-          ...bookingMetricFields,
-        });
-        setEmailSuccess(false);
-        setEmailError(res.data.error);
-      }
+      const p = bookingPaymentMetricPoint();
+      void logMetric({
+        event: 'booking-friends-send-success',
+        category: 'booking',
+        value: 'friends',
+        point: p,
+        ...bookingMetricFields,
+      });
+      setEmailSuccess(true);
+      setInvalidEmails(results?.invalidEmails ?? []);
     } catch (error) {
       const p = bookingPaymentMetricPoint();
       void logMetric({
@@ -1335,6 +1343,26 @@ const Checkout = ({
 
   if (error) {
     return <PageError error={error} />;
+  }
+
+  if (friendClaimDenied) {
+    return (
+      <div className="w-full max-w-screen-sm mx-auto p-4 md:p-6 text-center">
+        <Heading level={1} className="text-2xl md:text-3xl">
+          {t('stay_friend_claim_not_invited_title')}
+        </Heading>
+        <p className="mt-3 mb-6 text-muted-foreground">
+          {t('stay_friend_claim_not_invited_description')}
+        </p>
+        <Button
+          onClick={() => router.push('/login')}
+          isFullWidth={false}
+          className="min-h-[44px]"
+        >
+          {t('stay_friend_claim_switch_account')}
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -1744,6 +1772,14 @@ const Checkout = ({
                       <div className="text-green-600 text-sm font-medium inline-flex items-center gap-2">
                         <IconCheckCircle className="shrink-0 text-green-600" />
                         {t('friends_booking_checkout_sent')}
+                      </div>
+                    )}
+
+                    {invalidEmails.length > 0 && (
+                      <div className="text-amber-700 text-sm">
+                        {t('friends_booking_invalid_emails_skipped', {
+                          emails: invalidEmails.join(', '),
+                        })}
                       </div>
                     )}
 

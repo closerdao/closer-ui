@@ -1639,13 +1639,17 @@ export function buildBookingAccomodationUrl(
   return `/stay/create?${q.toString()}`;
 }
 
+/**
+ * Adds the caller to the stay's managedBy, which is what grants them
+ * GET /stays/:id and the checkout pair. Idempotent, so re-visiting an already
+ * claimed stay is harmless.
+ *
+ * Rejects rather than swallowing: a 403 means the caller's email is not on the
+ * invite list, and the caller must show that instead of a blank page.
+ */
 export async function claimBookingAsFriend(
   bookingId: string,
   requestConfig?: AxiosRequestConfig,
 ): Promise<void> {
-  try {
-    await api.post(`/bookings/${bookingId}/claim-as-friend`, {}, requestConfig);
-  } catch {
-    return;
-  }
+  await api.post(`/stays/${bookingId}/claim-as-friend`, {}, requestConfig);
 }
