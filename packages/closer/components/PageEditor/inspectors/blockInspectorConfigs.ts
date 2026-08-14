@@ -285,6 +285,36 @@ export const BLOCK_INSPECTOR_CONFIGS: Partial<
       { key: 'ctaLink', labelKey: 'pages_editor_field_cta_url' },
     ],
   },
+  projectList: {
+    settingsFields: [
+      {
+        key: 'showInProgress',
+        labelKey: 'pages_editor_field_show_in_progress_projects',
+        type: 'checkbox',
+        defaultValue: true,
+      },
+      {
+        key: 'showCompleted',
+        labelKey: 'pages_editor_field_show_completed_projects',
+        type: 'checkbox',
+        defaultValue: true,
+      },
+      {
+        key: 'limit',
+        labelKey: 'pages_editor_field_max_projects',
+        type: 'number',
+      },
+    ],
+    fields: [
+      { key: 'title', labelKey: 'pages_editor_field_title' },
+      {
+        key: 'inProgressTitle',
+        labelKey: 'pages_editor_field_in_progress_title',
+      },
+      { key: 'completedTitle', labelKey: 'pages_editor_field_completed_title' },
+    ],
+    hint: 'pages_editor_dynamic_block_hint',
+  },
   dailyContribution: {
     hint: 'pages_editor_daily_contribution_utility_note_plain',
   },

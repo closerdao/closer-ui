@@ -567,6 +567,19 @@ export const createSection = (type: SectionType): PageSection => {
           },
         },
       };
+    case 'projectList':
+      return {
+        _localId,
+        type: 'projectList',
+        data: {
+          settings: { showInProgress: true, showCompleted: true },
+          content: {
+            title: 'Build projects',
+            inProgressTitle: 'In progress',
+            completedTitle: 'Completed',
+          },
+        },
+      };
     case 'dailyContribution':
       return {
         _localId,

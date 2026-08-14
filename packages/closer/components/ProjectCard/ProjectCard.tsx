@@ -1,38 +1,57 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { useState } from 'react';
+
 import { Card, Heading, LinkButton } from '../../components/ui';
 
 import { Project } from 'closer/types';
 import { useTranslations } from 'next-intl';
 
 import { cdn } from '../../utils/api';
+import { toPhotoId } from '../../utils/events.helpers';
 import { priceFormat } from '../../utils/helpers';
 import Tag from '../Tag';
 
 interface Props {
   project: Project;
-  hasStewardRole: boolean;
+  canManageProject: boolean;
 }
 
-const ProjectCard = ({ project, hasStewardRole }: Props) => {
+const ProjectCard = ({ project, canManageProject }: Props) => {
   const t = useTranslations();
+  const [imgError, setImgError] = useState(false);
+  const photoId = toPhotoId(project?.photo);
+  // A project with no photo — or one whose photo has gone missing from the CDN —
+  // gets no image area at all, rather than a broken-image placeholder.
+  const showImage = Boolean(photoId) && !imgError;
+
   return (
     <Card
       key={project?._id}
       className="p-0 bg-white border border-gray-100 justify-start"
     >
-      <div className="relative w-full h-[180px] border rounded-t-md overflow-hidden">
-        <Link className="hover:text-accent" href={`/projects/${project?.slug}`}>
-          <Image
-            src={`${cdn}${project?.photo}-post-md.jpg`}
-            alt={project?.name}
-            fill
-            className="object-cover"
-          />
-        </Link>
-      </div>
-      <div className="relative px-4 pb-4 flex flex-col justify-between gap-4 h-[calc(100%-180px)]">
+      {showImage && (
+        <div className="relative w-full h-[180px] border rounded-t-md overflow-hidden">
+          <Link
+            className="hover:text-accent"
+            href={`/projects/${project?.slug}`}
+          >
+            <Image
+              src={`${cdn}${photoId}-post-md.jpg`}
+              alt={project?.name}
+              fill
+              className="object-cover"
+              onError={() => setImgError(true)}
+            />
+          </Link>
+        </div>
+      )}
+      <div
+        className={`relative px-4 pb-4 flex flex-col justify-between gap-4 ${
+          showImage ? 'h-[calc(100%-180px)]' : 'h-full pt-4'
+        }`}
+      >
         <div className="space-y-2">
           <Heading level={3} className="uppercase">
             <Link
@@ -87,7 +106,7 @@ const ProjectCard = ({ project, hasStewardRole }: Props) => {
               </LinkButton>
             )}
 
-            {hasStewardRole && (
+            {canManageProject && (
               <LinkButton size="small" href={`/projects/${project?.slug}/edit`}>
                 {t('projects_edit_project_title')}
               </LinkButton>

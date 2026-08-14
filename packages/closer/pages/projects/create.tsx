@@ -6,6 +6,7 @@ import { EditModelPageLayout } from '../../components/EditModel';
 import { useTranslations } from 'next-intl';
 
 import Page401 from '../401';
+import { userRolesCanManageProjects } from '../../constants/projectAccess';
 import { useAuth } from '../../contexts/auth';
 import { VolunteerConfig } from '../../types';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
@@ -14,14 +15,14 @@ const CreateProject = () => {
   const volunteerConfig = getCachedConfig('volunteering') as VolunteerConfig | null;
   const t = useTranslations();
   const { user } = useAuth();
-  const hasStewardRole = user?.roles?.includes('steward');
+  const canManageProjects = userRolesCanManageProjects(user?.roles);
 
   const skillsDynamicField = {
     name: 'skills',
     options: volunteerConfig?.skills?.split(',') || [],
   };
 
-  if (!hasStewardRole) return <Page401 />;
+  if (!canManageProjects) return <Page401 />;
 
   return (
     <>

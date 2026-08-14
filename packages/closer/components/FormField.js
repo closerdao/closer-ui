@@ -57,14 +57,22 @@ const FormField = ({
 
   const [addTag, setAddTag] = useState('');
 
+  // A record saved before the field existed — or one that simply never had a
+  // value set — has no array here at all, so read it as an empty selection.
+  const getSelectedValues = () => {
+    const value = objectPath.get(data, name);
+    return Array.isArray(value) ? value : [];
+  };
+
   const handleCheckboxChange = (optionValue) => {
-    if (objectPath.get(data, name).includes(optionValue)) {
+    const selected = getSelectedValues();
+    if (selected.includes(optionValue)) {
       update(
         name,
-        objectPath.get(data, name).filter((value) => value !== optionValue),
+        selected.filter((value) => value !== optionValue),
       );
     } else {
-      update(name, [...objectPath.get(data, name), optionValue]);
+      update(name, [...selected, optionValue]);
     }
   };
 
@@ -236,27 +244,19 @@ const FormField = ({
           )}
           {type === 'multi-select' && (
             <div className="flex flex-wrap gap-3 my-2">
-              {dynamicField?.name === name
-                ? dynamicField?.options.map((option) => (
-                    <Checkbox
-                      key={option}
-                      onChange={() => handleCheckboxChange(option)}
-                      checked={objectPath.get(data, name).includes(option)}
-                      className="mb-0"
-                    >
-                      {option}
-                    </Checkbox>
-                  ))
-                : options.map((option) => (
-                    <Checkbox
-                      key={option}
-                      onChange={() => handleCheckboxChange(option)}
-                      checked={objectPath.get(data, name).includes(option)}
-                      className="mb-0"
-                    >
-                      {option}
-                    </Checkbox>
-                  ))}
+              {(dynamicField?.name === name
+                ? dynamicField?.options
+                : options
+              )?.map((option) => (
+                <Checkbox
+                  key={option}
+                  onChange={() => handleCheckboxChange(option)}
+                  checked={getSelectedValues().includes(option)}
+                  className="mb-0"
+                >
+                  {option}
+                </Checkbox>
+              ))}
             </div>
           )}
 

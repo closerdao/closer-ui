@@ -1,4 +1,107 @@
 {
+  "/": {
+    "title": "Welcome",
+    "slug": "/",
+    "description": "A place to visit, stay, and build together.",
+    "ogImage": "",
+    "sections": [
+      {
+        "type": "hero",
+        "data": {
+          "settings": {
+            "alignText": "center",
+            "isInverted": false,
+            "isCompact": false
+          },
+          "content": {
+            "eyebrow": "",
+            "title": "Welcome",
+            "body": "We are building a place where land is held in common, community is intentional, and belonging is not left to chance.",
+            "imageUrl": "",
+            "cta": {
+              "text": "Join us",
+              "url": "/signup"
+            },
+            "secondaryCta": {
+              "text": "Plan a visit",
+              "url": "/stay"
+            }
+          }
+        }
+      },
+      {
+        "type": "features",
+        "data": {
+          "settings": {
+            "numColumns": 3,
+            "isSmallImage": true,
+            "isColorful": false
+          },
+          "background": "neutral-light",
+          "content": {
+            "title": "What happens here",
+            "description": "",
+            "items": [
+              {
+                "title": "Stay with us",
+                "text": "<p>Book a room, a cabin or a camping spot and experience daily life on the land.</p>",
+                "imageUrl": "",
+                "visualType": "none",
+                "cta": {
+                  "text": "Book a stay",
+                  "url": "/stay"
+                }
+              },
+              {
+                "title": "Join an event",
+                "text": "<p>Workshops, gatherings and residencies run throughout the year.</p>",
+                "imageUrl": "",
+                "visualType": "none",
+                "cta": {
+                  "text": "See what's on",
+                  "url": "/events"
+                }
+              },
+              {
+                "title": "Become part of it",
+                "text": "<p>Members and citizens shape how this place is governed and cared for.</p>",
+                "imageUrl": "",
+                "visualType": "none",
+                "cta": {
+                  "text": "Learn more",
+                  "url": "/citizenship"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "upcomingEvents",
+        "data": {
+          "settings": {},
+          "content": {}
+        }
+      },
+      {
+        "type": "cta",
+        "data": {
+          "settings": {
+            "style": "accent"
+          },
+          "content": {
+            "eyebrow": "",
+            "title": "Come and see for yourself",
+            "text": "Create an account to book a stay, join events and follow what we are building.",
+            "primaryText": "Create an account",
+            "primaryLink": "/signup",
+            "secondaryText": "Plan a visit",
+            "secondaryLink": "/stay"
+          }
+        }
+      }
+    ]
+  },
   "/volunteer": {
     "title": "Seasonal Volunteers, Open Call",
     "slug": "/volunteer",
@@ -228,6 +331,121 @@
             "description": "Applying opens the volunteer application form.",
             "ctaText": "Apply",
             "ctaLink": "/volunteer/apply"
+          }
+        }
+      }
+    ]
+  },
+  "/projects": {
+    "title": "Builders Residency Open Call",
+    "slug": "/projects",
+    "description": "Join the build at Traditional Dream Factory. Take on a self-build project in Abela, Alentejo, earn token rewards, and live with the crew putting up TDF V2.",
+    "ogImage": "",
+    "sections": [
+      {
+        "type": "hero",
+        "data": {
+          "settings": {
+            "alignText": "center",
+            "isInverted": false,
+            "isCompact": false
+          },
+          "content": {
+            "eyebrow": "",
+            "title": "Builders Residency Open Call",
+            "body": "Pick a project, bring your hands, and help build TDF V2.",
+            "imageUrl": "/images/builders-l.png"
+          }
+        }
+      },
+      {
+        "type": "textBlock",
+        "data": {
+          "settings": {
+            "imagePosition": "none"
+          },
+          "content": {
+            "title": "We are starting to build",
+            "body": "TDF has secured funding to start major renovations. The first phase of accommodation runs with a professional contractor, and alongside that we are self-building the projects that open TDF V2.\n\nEvery project below is a real piece of that build, with its own scope, budget and reward. Find one that matches your skills and apply to it directly.",
+            "imageUrl": "",
+            "imageAlt": ""
+          }
+        }
+      },
+      {
+        "type": "features",
+        "data": {
+          "settings": {
+            "numColumns": 1,
+            "isSmallImage": true,
+            "isColorful": false,
+            "hasBorder": true
+          },
+          "content": {
+            "title": "What the residency offers",
+            "description": "",
+            "items": [
+              {
+                "title": "Requirements",
+                "text": "<p>6 hours per day, 1 month minimum. Free accommodation and food — glamping tents and dorms available, or bring your van.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Token rewards for completed projects",
+                "text": "<p>We offer tokens to builders who take a project from start to completion. Each project lists its reward, and the final terms are agreed with the team before you start.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Community culture",
+                "text": "<p>Experience co-living with fellow builders and the TDF team: regular community activities, saunas, experiential dinners, music jams, embodiment practices, yoga, massage and more.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "projectList",
+        "data": {
+          "settings": {
+            "showInProgress": true,
+            "showCompleted": true
+          },
+          "content": {
+            "title": "Open projects",
+            "inProgressTitle": "Being built right now",
+            "completedTitle": "Completed"
+          }
+        }
+      },
+      {
+        "type": "textBlock",
+        "data": {
+          "settings": {
+            "imagePosition": "none"
+          },
+          "content": {
+            "title": "Skills & qualifications",
+            "body": "You do not need all of these — most projects need one or two.\n\n- Practical build skills\n- Electrical\n- Plumbing\n- Cement & plastering\n- Carpentry\n- Painting & decorating\n- Stoneworks\n- Tools & machinery operation\n- Design & drawing skills",
+            "imageUrl": "",
+            "imageAlt": ""
+          }
+        }
+      },
+      {
+        "type": "textBlock",
+        "data": {
+          "settings": {
+            "imagePosition": "none"
+          },
+          "content": {
+            "title": "Planning your stay",
+            "body": "Open a project above to see its dates, scope and reward, then apply from that page — your application is tied to the project you pick.\n\nPlease try to book your stay starting from the 1st or the 15th of the month, so you arrive alongside other people and we can onboard you together.",
+            "imageUrl": "",
+            "imageAlt": ""
           }
         }
       }

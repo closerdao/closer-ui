@@ -4,9 +4,7 @@ import { Discount, TicketOption } from './event';
 import type { PendingExtension, PriceLock, StayMoney } from './stay';
 import type { VolunteerApplication } from './volunteerApplication';
 
-// we set those as url params on
-// - /bookings/create/dates
-// - /bookings/create/accomodation
+// we set those as url params on /stay/create
 export interface BaseBookingParams {
   eventId?: string;
   volunteerId?: string;

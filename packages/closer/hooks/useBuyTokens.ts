@@ -1,6 +1,7 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Contract, providers, utils } from 'ethers';
 import { WalletState } from '../contexts/wallet';
+import { resolveNetwork } from '../config_blockchain';
 import { useConfig } from './useConfig';
 import { parseTokenSaleError } from '../utils/smartContractErrorParser';
 
@@ -29,7 +30,7 @@ const getSaleHardCapWithoutWalletResultCache = new Map<string, { result: number;
 const CACHE_TTL = 30000;
 
 const getReadOnlyContractInstance = async (address: string, abi: any) => {
-  const network = process.env.NEXT_PUBLIC_NETWORK || 'celo';
+  const network = resolveNetwork();
   const abiKey = Array.isArray(abi) ? abi.map((item: any) => item.name || JSON.stringify(item)).join(',') : String(abi);
   const cacheKey = `${network}-${address.toLowerCase()}-${abiKey}`;
   

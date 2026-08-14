@@ -7,6 +7,7 @@ import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
 import { Page401 } from '../../..';
+import { userRolesCanManageProjects } from '../../../constants/projectAccess';
 import { useAuth } from '../../../contexts/auth';
 import { Project, VolunteerConfig } from '../../../types';
 import api from '../../../utils/api';
@@ -20,14 +21,14 @@ const EditProject = ({ project }: Props) => {
   const volunteerConfig = getCachedConfig('volunteering') as VolunteerConfig | null;
   const t = useTranslations();
   const { user } = useAuth();
-  const hasStewardRole = user?.roles?.includes('steward');
+  const canManageProjects = userRolesCanManageProjects(user?.roles);
 
   const skillsDynamicField = {
     name: 'skills',
     options: volunteerConfig?.skills?.split(',') ?? [],
   };
 
-  if (!hasStewardRole) return <Page401 />;
+  if (!canManageProjects) return <Page401 />;
   return (
     <>
       <Head>

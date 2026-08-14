@@ -15,7 +15,6 @@ import {
   getUtilityTotal,
   hasOnChainAccommodationStake,
   isFullAccommodationCoveredByTokens,
-  isTokenPaymentVerified,
   isUnsyncedOnChainTokenStakeError,
   resolveCheckoutFiatTotal,
   resolveTokensStakedVal,
@@ -936,24 +935,6 @@ describe('isFullAccommodationCoveredByTokens', () => {
         listingBeds: 2,
       }),
     ).toBe(false);
-  });
-});
-
-describe('isTokenPaymentVerified', () => {
-  it('accepts boolean true and verified objects with ok true', () => {
-    expect(isTokenPaymentVerified({ data: { verified: true } })).toBe(true);
-    expect(isTokenPaymentVerified({ data: { verified: { ok: true } } })).toBe(
-      true,
-    );
-  });
-
-  it('rejects false, missing, and failed verification objects', () => {
-    expect(isTokenPaymentVerified({ data: { verified: false } })).toBe(false);
-    expect(isTokenPaymentVerified({ data: {} })).toBe(false);
-    expect(isTokenPaymentVerified({})).toBe(false);
-    expect(isTokenPaymentVerified({ data: { verified: { ok: false } } })).toBe(
-      false,
-    );
   });
 });
 

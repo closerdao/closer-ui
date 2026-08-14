@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { ReactNode, useState } from 'react';
@@ -12,13 +13,16 @@ import {
 } from '../../constants/volunteerApplication';
 import type { VolunteerInfo } from '../../types/booking';
 import type { Project } from '../../types/api';
+import { cdn } from '../../utils/api';
+import { toPhotoId } from '../../utils/events.helpers';
 import { hasFlaggedHealthAnswers } from '../../utils/volunteerApplication.helpers';
 import Modal from '../Modal';
 import Tag from '../Tag';
-import BookingSurface from '../booking/bookingSurface';
+import BookingSurface, {
+  BookingSectionEyebrow,
+} from '../booking/bookingSurface';
 import { Button } from '../ui';
 import Heading from '../ui/Heading';
-import HeadingRow from '../ui/HeadingRow';
 
 interface Props {
   volunteerInfo: VolunteerInfo;
@@ -32,6 +36,87 @@ interface Props {
   applicantName?: string;
   onRequestCall?: (message: string) => Promise<void>;
 }
+
+const PROJECT_STATUS_STYLE: Record<string, 'green' | 'orange' | 'neutral'> = {
+  open: 'green',
+  'in-progress': 'orange',
+  done: 'neutral',
+};
+
+/**
+ * A residence application is made *for* a project, so the project it is about
+ * leads the card. Ids with no matching project still link out — the record may
+ * simply be out of the fetched list.
+ */
+const ProjectPreview = ({
+  projectId,
+  project,
+}: {
+  projectId: string;
+  project?: Project;
+}) => {
+  const t = useTranslations();
+  const [imgError, setImgError] = useState(false);
+  const photoId = toPhotoId(project?.photo);
+  const showImage = Boolean(photoId) && !imgError;
+
+  const start = project?.start ? dayjs(project.start) : null;
+  const end = project?.end ? dayjs(project.end) : null;
+  const dateRange = start?.isValid()
+    ? `${start.format('MMM D, YYYY')}${
+        end?.isValid() ? ` – ${end.format('MMM D, YYYY')}` : ''
+      }`
+    : '';
+
+  const status = project?.status;
+  const statusLabel = status
+    ? t(
+        status === 'done'
+          ? 'projects_status_done'
+          : status === 'in-progress'
+            ? 'projects_status_in_progress'
+            : 'projects_status_open',
+      )
+    : '';
+
+  return (
+    <BookingSurface
+      as={Link}
+      href={`/projects/${project?.slug ?? projectId}`}
+      tone="inset"
+      padding="sm"
+      className="flex items-center gap-3 no-underline transition-shadow hover:shadow-md"
+    >
+      {showImage && (
+        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-muted">
+          <Image
+            src={`${cdn}${photoId}-post-md.jpg`}
+            alt={project?.name || ''}
+            fill
+            sizes="64px"
+            className="object-cover"
+            onError={() => setImgError(true)}
+          />
+        </div>
+      )}
+      <div className="flex min-w-0 flex-col gap-1">
+        <span className="truncate text-sm font-semibold">
+          {project?.name || projectId}
+        </span>
+        {dateRange && (
+          <span className="text-xs text-complimentary-light">{dateRange}</span>
+        )}
+        {statusLabel && (
+          <span className="flex">
+            <Tag size="small" color={PROJECT_STATUS_STYLE[status || 'open']}>
+              {statusLabel}
+            </Tag>
+          </span>
+        )}
+      </div>
+    </BookingSurface>
+  );
+};
 
 const Row = ({
   label,
@@ -71,6 +156,7 @@ const VolunteerApplicationDetail = ({
   const agreement = application?.agreement;
   const review = application?.review;
   const isFlagged = hasFlaggedHealthAnswers(volunteerInfo);
+  const appliedProjectIds = volunteerInfo.projectId || [];
 
   const hearAboutUsLabel = about?.hearAboutUs
     ? about.hearAboutUs === 'other'
@@ -108,26 +194,49 @@ const VolunteerApplicationDetail = ({
   };
 
   return (
-    <section className="flex flex-col gap-4">
-      <HeadingRow>
-        {volunteerInfo.bookingType === 'residence'
-          ? t('projects_residence_application_title')
-          : t('projects_volunteer_application_title')}
-      </HeadingRow>
-
-      <div className="flex flex-wrap gap-2 items-center">
-        {review?.status && (
-          <Tag color="primary" size="small">
-            {t(`volunteer_application_review_status_${review.status}`)}
-          </Tag>
-        )}
-        {canViewHealth && isFlagged && (
-          <span className="inline-flex items-center gap-1 text-sm text-accent">
-            <Flag className="w-4 h-4" aria-hidden="true" />
-            {t('volunteer_application_health_flag')}
-          </span>
-        )}
+    <BookingSurface
+      tone="elevated"
+      padding="lg"
+      className="flex flex-col gap-4 md:gap-5"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <Heading
+          level={3}
+          className="!mt-0 max-w-[85%] flex-1 text-xl md:text-2xl"
+        >
+          {volunteerInfo.bookingType === 'residence'
+            ? t('projects_residence_application_title')
+            : t('projects_volunteer_application_title')}
+        </Heading>
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          {review?.status && (
+            <Tag color="primary" size="small">
+              {t(`volunteer_application_review_status_${review.status}`)}
+            </Tag>
+          )}
+          {canViewHealth && isFlagged && (
+            <span className="inline-flex items-center gap-1 text-sm text-accent">
+              <Flag className="w-4 h-4" aria-hidden="true" />
+              {t('volunteer_application_health_flag')}
+            </span>
+          )}
+        </div>
       </div>
+
+      {appliedProjectIds.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <BookingSectionEyebrow>
+            {t('projects_build_title')}
+          </BookingSectionEyebrow>
+          {appliedProjectIds.map((projectId) => (
+            <ProjectPreview
+              key={projectId}
+              projectId={projectId}
+              project={projects?.find((item) => item._id === projectId)}
+            />
+          ))}
+        </div>
+      )}
 
       {onRequestCall && (
         <div className="flex flex-wrap gap-2">
@@ -145,7 +254,7 @@ const VolunteerApplicationDetail = ({
       )}
 
       {about && (
-        <BookingSurface tone="soft" padding="md">
+        <BookingSurface tone="inset" padding="md">
           <Heading level={4} className="!mt-0 text-base mb-2">
             {t('volunteer_application_step_about_title')}
           </Heading>
@@ -184,7 +293,7 @@ const VolunteerApplicationDetail = ({
         </BookingSurface>
       )}
 
-      <BookingSurface tone="soft" padding="md">
+      <BookingSurface tone="inset" padding="md">
         <Heading level={4} className="!mt-0 text-base mb-2">
           {t('volunteer_application_step_experience_title')}
         </Heading>
@@ -234,30 +343,11 @@ const VolunteerApplicationDetail = ({
             {volunteerInfo.suggestions}
           </Row>
         )}
-        {volunteerInfo.projectId && volunteerInfo.projectId.length > 0 && (
-          <Row label={t('projects_build_title')}>
-            <span className="flex flex-col gap-1">
-              {volunteerInfo.projectId.map((projectId) => {
-                const project = projects?.find(
-                  (item) => item._id === projectId,
-                );
-                return (
-                  <Link
-                    key={projectId}
-                    href={`/projects/${project?.slug ?? projectId}`}
-                  >
-                    {project?.name ?? projectId}
-                  </Link>
-                );
-              })}
-            </span>
-          </Row>
-        )}
       </BookingSurface>
 
       {health &&
         (canViewHealth ? (
-          <BookingSurface tone="soft" padding="md">
+          <BookingSurface tone="inset" padding="md">
             <Heading level={4} className="!mt-0 text-base mb-1">
               {t('volunteer_application_step_health_title')}
             </Heading>
@@ -298,7 +388,7 @@ const VolunteerApplicationDetail = ({
             </Row>
           </BookingSurface>
         ) : (
-          <BookingSurface tone="soft" padding="md">
+          <BookingSurface tone="inset" padding="md">
             <p className="text-sm text-complimentary-light inline-flex items-center gap-2">
               <Lock className="w-4 h-4" aria-hidden="true" />
               {t('volunteer_application_health_hidden')}
@@ -307,7 +397,7 @@ const VolunteerApplicationDetail = ({
         ))}
 
       {agreement?.acceptedAt && (
-        <BookingSurface tone="soft" padding="md">
+        <BookingSurface tone="inset" padding="md">
           <Heading level={4} className="!mt-0 text-base mb-2">
             {t('volunteer_application_step_agreement_title')}
           </Heading>
@@ -359,7 +449,7 @@ const VolunteerApplicationDetail = ({
           </div>
         </Modal>
       )}
-    </section>
+    </BookingSurface>
   );
 };
 

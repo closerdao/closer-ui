@@ -10,7 +10,7 @@ import { buildStayCreateListingHref } from '../utils/stayRouting.helpers';
 import { useConfig } from '../hooks/useConfig';
 import { Listing } from '../types';
 import { IconHome } from './BookingIcons';
-import api from '../utils/api';
+import { checkStayListingAvailability } from '../utils/stays.api';
 import {
   dateToPropertyTimeZone,
   getLocalTimeAvailability,
@@ -143,20 +143,18 @@ const SummaryDates = ({
     listingId?: string | null,
   ) => {
     try {
-      const {
-        data: { results, availability },
-      } = await api.post('/bookings/listing/availability', {
-        start: isHourlyBooking ? startDate : formatDate(startDate),
-        end: isHourlyBooking ? endDate : formatDate(endDate),
-        listing: listingId,
-        adults: totalGuests,
-        children: kids,
-        infants,
-        pets,
-        useTokens: false,
-        isFriendsBooking,
-        ...(eventId && { eventId }),
-      });
+      const { results, availability } = await checkStayListingAvailability(
+        String(listingId),
+        {
+          start: (isHourlyBooking
+            ? startDate
+            : formatDate(startDate)) as string,
+          end: (isHourlyBooking ? endDate : formatDate(endDate)) as string,
+          adults: totalGuests,
+          isFriendsBooking,
+          ...(eventId && { eventId }),
+        },
+      );
 
       return { results, availability };
     } catch (error) {
@@ -174,7 +172,9 @@ const SummaryDates = ({
         listingId,
       );
 
-      setHourAvailability(getLocalTimeAvailability(availability, TIME_ZONE));
+      setHourAvailability(
+        getLocalTimeAvailability(availability ?? [], TIME_ZONE),
+      );
     })();
   }, [
     startDate,
