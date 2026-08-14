@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Contract, providers } from 'ethers';
 import { useTranslations } from 'next-intl';
 
-import { allNetworkConfigs } from '../../config_blockchain';
+import { allNetworkConfigs, resolveNetwork } from '../../config_blockchain';
 import { useWalletState } from '../../contexts/wallet/hooks';
 
 type NetworkKey = keyof typeof allNetworkConfigs;
@@ -287,11 +287,9 @@ const ContractInteraction = () => {
   const t = useTranslations();
   const { library } = useWalletState();
 
-  const [selectedNetwork, setSelectedNetwork] = useState<NetworkKey>(() => {
-    const env = process.env.NEXT_PUBLIC_NETWORK;
-    if (env === 'celo' || env === 'celoSepolia') return env;
-    return 'celo';
-  });
+  const [selectedNetwork, setSelectedNetwork] = useState<NetworkKey>(() =>
+    resolveNetwork(),
+  );
 
   const [selectedContractIdx, setSelectedContractIdx] = useState(0);
   const [filterText, setFilterText] = useState('');

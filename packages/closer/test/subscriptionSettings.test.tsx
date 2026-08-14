@@ -239,8 +239,12 @@ describe('SubscriptionSettings', () => {
 
       // 3 is their subscription; 5 is what the plan sells for today and
       // belongs in the offer, not in the headline.
-      expect(await screen.findByText(/^3[.,]00/)).toBeTruthy();
-      expect(screen.getByText(/this plan is now 5[.,]00/i)).toBeTruthy();
+      // Locale-agnostic: '3,00 €' (pt-PT) or '€3.00' (the neutral en-US
+      // default now that schema defaults carry no country, #946).
+      expect(await screen.findByText(/^[€$]?\s?3[.,]00/)).toBeTruthy();
+      expect(
+        screen.getByText(/this plan is now [€$]?\s?5[.,]00/i),
+      ).toBeTruthy();
     });
 
     it('moves them to the current price of the same plan', async () => {

@@ -42,7 +42,6 @@ import {
 } from '../../../types';
 import type { Event } from '../../../types/event';
 import type { Stay } from '../../../types/stay';
-import api from '../../../utils/api';
 import {
   bookingGuestNightsMetricPoint,
   buildBookingAccomodationUrl,
@@ -63,7 +62,10 @@ import {
   computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
+  isStayCheckoutDraft,
   isStayShapedBooking,
+  sendStayToFriends,
+  submitStay,
 } from '../../../utils/stays.api';
 
 interface Props extends BaseBookingParams {
@@ -169,6 +171,7 @@ const Summary = ({
   const [loading, setLoading] = useState(false);
   const [emailSuccess, setEmailSuccess] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [invalidEmails, setInvalidEmails] = useState<string[]>([]);
   const [apiLoading, setApiLoading] = useState(false);
 
   const onComply = (isComplete: boolean) => setCompliance(isComplete);
@@ -375,35 +378,31 @@ const Summary = ({
 
   const handleSendToFriends = async () => {
     setEmailError(null);
+    setInvalidEmails([]);
     setApiLoading(true);
 
     try {
-      const res = await api.post(`/bookings/${booking?._id}/send-to-friend`, {
-        friendEmails: booking?.friendEmails,
-      });
-
-      if (res.status === 200) {
-        const p = bookingGuestNightsMetricPoint(duration, adults);
-        void logMetric({
-          event: 'booking-friends-send-success',
-          category: 'booking',
-          value: 'friends',
-          point: p,
-          ...bookingMetricFields,
-        });
-        setEmailSuccess(true);
-      } else {
-        const p = bookingGuestNightsMetricPoint(duration, adults);
-        void logMetric({
-          event: 'booking-friends-send-error',
-          category: 'booking',
-          value: 'friends',
-          point: p,
-          ...bookingMetricFields,
-        });
-        setEmailSuccess(false);
-        setEmailError(res.data.error);
+      // Sending no longer confirms the stay as a side effect — submitting is
+      // now a precondition, and the server 400s when the stay is still a draft.
+      if (booking?._id && isStayCheckoutDraft(booking)) {
+        await submitStay(booking._id);
       }
+
+      const results = await sendStayToFriends(
+        String(booking?._id),
+        booking?.friendEmails,
+      );
+
+      const p = bookingGuestNightsMetricPoint(duration, adults);
+      void logMetric({
+        event: 'booking-friends-send-success',
+        category: 'booking',
+        value: 'friends',
+        point: p,
+        ...bookingMetricFields,
+      });
+      setEmailSuccess(true);
+      setInvalidEmails(results?.invalidEmails ?? []);
     } catch (error) {
       const p = bookingGuestNightsMetricPoint(duration, adults);
       void logMetric({
@@ -490,6 +489,14 @@ const Summary = ({
             <div className="text-green-600 text-sm font-medium inline-flex items-center gap-2">
               <IconCheckCircle className="shrink-0" />
               {t('friends_booking_checkout_sent')}
+            </div>
+          )}
+
+          {invalidEmails.length > 0 && (
+            <div className="text-amber-700 text-sm">
+              {t('friends_booking_invalid_emails_skipped', {
+                emails: invalidEmails.join(', '),
+              })}
             </div>
           )}
 

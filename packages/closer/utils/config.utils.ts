@@ -153,6 +153,31 @@ export function mergePaymentValueWithBookingCurrencyFallback(
   return { ...payment, fiatCur: curStr, utilityFiatCur: curStr };
 }
 
+/**
+ * A schema field without an explicit `default` gets a neutral "type zero"
+ * instead of `undefined`: text-like fields become `''`, numbers `0`, booleans
+ * `false`, lists `[]`, maps `{}`. This is what lets identity/branding fields
+ * omit their defaults (see #946) — a village that has saved nothing renders
+ * blank rather than inheriting another village's name, address or payment
+ * details.
+ */
+export const synthesizeTypeZeroDefault = (type: unknown): any => {
+  if (Array.isArray(type)) return [];
+  switch (type) {
+    case 'number':
+      return 0;
+    case 'boolean':
+      return false;
+    case 'vat-by-product-type':
+      return {};
+    case 'multiselect':
+      return [];
+    default:
+      // text, long-text, select, image, time, readonly-text, …
+      return '';
+  }
+};
+
 export const getDefaultConfigValue = (
   slug: string,
   configDescriptions: any[],
@@ -183,7 +208,10 @@ export const getDefaultConfigValue = (
           : [];
       }
     } else {
-      configOutput[key] = def.default;
+      configOutput[key] =
+        def.default !== undefined
+          ? def.default
+          : synthesizeTypeZeroDefault(defaultConfigData);
     }
   }
   return configOutput;

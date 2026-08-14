@@ -33,6 +33,7 @@ import { formatStakeBookingErrorEnglish } from './stakeBookingError.helpers';
 import {
   accommodationTokenTotalFromPriceLock,
   inferPaymentChoiceFromStay,
+  stakeStayTokens,
 } from './stays.api';
 
 const DEFAULT_TIMEZONE = 'Europe/Berlin';
@@ -46,24 +47,6 @@ export const UNSYNCED_ON_CHAIN_TOKEN_STAKE_MESSAGE =
   'Your tokens are staked on the blockchain but this booking is not updated yet. Please refresh the page and try again.';
 
 const ACCOMMODATION_EPSILON = 0.005;
-
-type TokenPaymentApiResponse = {
-  data?: {
-    verified?: boolean | { ok?: boolean };
-    results?: { status?: string };
-  };
-};
-
-export function isTokenPaymentVerified(res: TokenPaymentApiResponse): boolean {
-  const verified = res?.data?.verified;
-  if (verified === true) {
-    return true;
-  }
-  if (verified && typeof verified === 'object' && verified.ok === true) {
-    return true;
-  }
-  return false;
-}
 
 type TokenPaymentSyncResult =
   | {
@@ -82,10 +65,11 @@ async function confirmTokenPaymentWithServer(
   transactionId: string,
 ): Promise<TokenPaymentSyncResult> {
   try {
-    const res = await api.post(`/bookings/${bookingId}/token-payment`, {
+    const { booking, verified } = await stakeStayTokens(
+      bookingId,
       transactionId,
-    });
-    if (!isTokenPaymentVerified(res)) {
+    );
+    if (!verified) {
       return {
         success: null,
         error: STAKING_VERIFICATION_FAILED_MESSAGE,
@@ -94,7 +78,7 @@ async function confirmTokenPaymentWithServer(
     return {
       success: true,
       error: null,
-      booking: res?.data?.results,
+      booking,
     };
   } catch (err) {
     const message = parseMessageFromError(err);
@@ -245,6 +229,25 @@ export const areNumberArraysEqual = (
     return false;
   }
   return aa.every((value, index) => value === bb[index]);
+};
+
+/**
+ * `booking.fields` holds one single-key object per questionnaire question, keyed
+ * by the question label the guest was shown. Returns the answered ones only.
+ */
+export const getBookingAnswers = (
+  fields?: { [key: string]: string }[] | null,
+): { question: string; answer: string }[] => {
+  if (!Array.isArray(fields)) {
+    return [];
+  }
+  return fields
+    .map((field) => {
+      const question = Object.keys(field || {})[0];
+      const answer = question ? field[question] : '';
+      return { question, answer: typeof answer === 'string' ? answer : '' };
+    })
+    .filter(({ question, answer }) => Boolean(question) && answer.trim() !== '');
 };
 
 export function bookingGuestNightsMetricPoint(
@@ -1388,7 +1391,11 @@ export function getBookingTokenCurrency(
   web3Config?: { bookingToken?: string } | null,
   bookingConfig?: { utilityTokenCur?: string } | null,
 ): string {
-  return web3Config?.bookingToken ?? bookingConfig?.utilityTokenCur ?? 'TDF';
+  // No branded fallback: a village that has configured no token must not
+  // inherit another village's token symbol (#946). `||` not `??`: the neutral
+  // schema seeds bookingToken as '', which must not shadow a configured
+  // utilityTokenCur.
+  return web3Config?.bookingToken || bookingConfig?.utilityTokenCur || '';
 }
 
 export interface BookingStepUrlParams {
@@ -1445,10 +1452,7 @@ export function buildBookingDatesUrl(params: BookingStepUrlParams): string {
   if (params.isFriendsBooking) q.set('isFriendsBooking', 'true');
   if (params.friendEmails != null && params.friendEmails !== '')
     q.set('friendEmails', params.friendEmails);
-  if (params.eventId != null && params.eventId !== '') {
-    return `/stay/create?${q.toString()}`;
-  }
-  return `/bookings/create/dates?${q.toString()}`;
+  return `/stay/create?${q.toString()}`;
 }
 
 export function getBookingListingRefId(listingRef: unknown): string | null {
@@ -1653,16 +1657,22 @@ export function buildBookingAccomodationUrl(
     q.set('friendEmails', params.friendEmails);
   if (params.discountCode != null && params.discountCode !== '')
     q.set('discountCode', normalizeDiscountCode(params.discountCode));
-  return `/bookings/create/accomodation?${q.toString()}`;
+  // Dates and accommodation used to be two pages; /stay/create is both, so the
+  // two steps resolve to the same href.
+  return `/stay/create?${q.toString()}`;
 }
 
+/**
+ * Adds the caller to the stay's managedBy, which is what grants them
+ * GET /stays/:id and the checkout pair. Idempotent, so re-visiting an already
+ * claimed stay is harmless.
+ *
+ * Rejects rather than swallowing: a 403 means the caller's email is not on the
+ * invite list, and the caller must show that instead of a blank page.
+ */
 export async function claimBookingAsFriend(
   bookingId: string,
   requestConfig?: AxiosRequestConfig,
 ): Promise<void> {
-  try {
-    await api.post(`/bookings/${bookingId}/claim-as-friend`, {}, requestConfig);
-  } catch {
-    return;
-  }
+  await api.post(`/stays/${bookingId}/claim-as-friend`, {}, requestConfig);
 }

@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import ConfirmationCelebrationOverlay, {
   CONFIRMATION_CELEBRATION_DURATION_MS,
 } from '../../../components/ConfirmationCelebrationOverlay';
+import EventPreview from '../../../components/EventPreview';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageError from '../../../components/PageError';
 import { ErrorMessage } from '../../../components/ui';
@@ -24,6 +25,7 @@ import { useConfig } from '../../../hooks/useConfig';
 import { useRedirectLegacyListingStayRoute } from '../../../hooks/useRedirectLegacyListingStayRoute';
 import { BookingSettings, GeneralConfig } from '../../../types/api';
 import { Listing } from '../../../types/booking';
+import { Event } from '../../../types/event';
 import { Stay } from '../../../types/stay';
 import api, { cdn } from '../../../utils/api';
 import { parseMessageFromError } from '../../../utils/common';
@@ -62,6 +64,7 @@ const StayConfirmationPage = ({
 
   const [stay, setStay] = useState<Stay | null>(null);
   const [listing, setListing] = useState<Listing | null>(null);
+  const [event, setEvent] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [pageError, setPageError] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(true);
@@ -76,14 +79,23 @@ const StayConfirmationPage = ({
         const next = await getStay(stayId);
         if (cancelled) return;
         setStay(next);
-        if (next.listing) {
-          try {
-            const { data } = await api.get(`/listing/${next.listing}`);
-            if (!cancelled) setListing(data?.results ?? null);
-          } catch (err) {
-            console.warn('Could not load listing', err);
-          }
-        }
+        const [listingRes, eventRes] = await Promise.all([
+          next.listing
+            ? api.get(`/listing/${next.listing}`).catch((err) => {
+                console.warn('Could not load listing', err);
+                return null;
+              })
+            : null,
+          next.eventId
+            ? api.get(`/event/${next.eventId}`).catch((err) => {
+                console.warn('Could not load event', err);
+                return null;
+              })
+            : null,
+        ]);
+        if (cancelled) return;
+        setListing(listingRes?.data?.results ?? null);
+        setEvent(eventRes?.data?.results ?? null);
       } catch (err) {
         if (!cancelled) setPageError(parseMessageFromError(err));
       } finally {
@@ -268,6 +280,25 @@ const StayConfirmationPage = ({
               : t(`stay_status_${stay.status}_description`)}
           </p>
         </div>
+
+        {event && (
+          <section
+            aria-labelledby="confirmation-event-heading"
+            className="mb-6"
+          >
+            <h2
+              id="confirmation-event-heading"
+              className="text-xs font-semibold uppercase text-gray-500 tracking-wide mb-3"
+            >
+              {t('stay_create_event_section_title')}
+            </h2>
+            <div role="list">
+              <EventPreview
+                event={{ ...event, slug: event.slug || event._id }}
+              />
+            </div>
+          </section>
+        )}
 
         <article
           aria-labelledby="confirmation-listing-heading"

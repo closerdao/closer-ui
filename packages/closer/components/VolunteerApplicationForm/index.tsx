@@ -42,6 +42,8 @@ interface Props {
   /** Dates carried over from the listing, if the applicant came from one. */
   start?: string;
   end?: string;
+  /** Comma separated project ids a residence applicant already picked. */
+  projectId?: string;
   guestRateLabel?: string;
   onExit: () => void;
 }
@@ -58,6 +60,7 @@ const VolunteerApplicationForm = ({
   platformName,
   start,
   end,
+  projectId,
   guestRateLabel,
   onExit,
 }: Props) => {
@@ -66,12 +69,14 @@ const VolunteerApplicationForm = ({
   const { user } = useAuth();
   const { platform } = usePlatform() as any;
 
+  const projectIds = useMemo(() => splitConfigList(projectId), [projectId]);
+
   const [volunteerInfo, setVolunteerInfo] = useState<VolunteerInfo>(() => ({
     bookingType,
     skills: [],
     diet: [],
     suggestions: '',
-    projectId: [],
+    projectId: projectIds,
     application: emptyVolunteerApplication(),
   }));
   const [stepId, setStepId] = useState<VolunteerApplicationStepId>('about');
@@ -100,7 +105,13 @@ const VolunteerApplicationForm = ({
     if (isHydrated || !user?._id) return;
     const draft = readVolunteerApplicationDraft(user._id, bookingType);
     if (draft) {
-      setVolunteerInfo({ ...draft.volunteerInfo, bookingType });
+      setVolunteerInfo({
+        ...draft.volunteerInfo,
+        bookingType,
+        projectId: draft.volunteerInfo.projectId?.length
+          ? draft.volunteerInfo.projectId
+          : projectIds,
+      });
       setStepId(draft.step);
       setSavedAt(draft.savedAt);
     } else {
@@ -226,6 +237,7 @@ const VolunteerApplicationForm = ({
       bookingType,
       ...(start ? { start } : {}),
       ...(end ? { end } : {}),
+      ...(projectIds.length ? { projectId: projectIds.join(',') } : {}),
     });
     router.push(`/stay/create?${params.toString()}`);
   };

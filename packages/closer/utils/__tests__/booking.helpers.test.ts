@@ -3,7 +3,9 @@ import { CloserCurrencies } from '../../types';
 import { PaymentType } from '../../types/booking';
 import {
   getAccommodationTotal,
+  getBookingAnswers,
   getBookingPaymentType,
+  getBookingTokenCurrency,
   getDisplayTotalFromComponents,
   getFiatTotal,
   getFoodTotal,
@@ -13,12 +15,43 @@ import {
   getUtilityTotal,
   hasOnChainAccommodationStake,
   isFullAccommodationCoveredByTokens,
-  isTokenPaymentVerified,
   isUnsyncedOnChainTokenStakeError,
   resolveCheckoutFiatTotal,
   resolveTokensStakedVal,
   userCanCreateTeamBooking,
 } from '../booking.helpers';
+
+describe('getBookingAnswers', () => {
+  it('pairs each question label with its answer', () => {
+    expect(
+      getBookingAnswers([
+        { 'Why are you coming?': 'to rest' },
+        { 'Dietary needs': 'vegan' },
+      ]),
+    ).toEqual([
+      { question: 'Why are you coming?', answer: 'to rest' },
+      { question: 'Dietary needs', answer: 'vegan' },
+    ]);
+  });
+
+  it('drops unanswered and blank questions', () => {
+    expect(
+      getBookingAnswers([
+        { 'Why are you coming?': '' },
+        { 'Dietary needs': '   ' },
+        { Allergies: 'none' },
+      ]),
+    ).toEqual([{ question: 'Allergies', answer: 'none' }]);
+  });
+
+  it('returns an empty list for missing or malformed fields', () => {
+    expect(getBookingAnswers(undefined)).toEqual([]);
+    expect(getBookingAnswers(null)).toEqual([]);
+    expect(getBookingAnswers([])).toEqual([]);
+    expect(getBookingAnswers([{}] as any)).toEqual([]);
+    expect(getBookingAnswers([{ Question: 42 }] as any)).toEqual([]);
+  });
+});
 
 describe('userCanCreateTeamBooking', () => {
   it('returns true for staff roles that may create team bookings', () => {
@@ -905,20 +938,22 @@ describe('isFullAccommodationCoveredByTokens', () => {
   });
 });
 
-describe('isTokenPaymentVerified', () => {
-  it('accepts boolean true and verified objects with ok true', () => {
-    expect(isTokenPaymentVerified({ data: { verified: true } })).toBe(true);
-    expect(isTokenPaymentVerified({ data: { verified: { ok: true } } })).toBe(
-      true,
-    );
+describe('getBookingTokenCurrency', () => {
+  it('prefers a configured booking token', () => {
+    expect(
+      getBookingTokenCurrency({ bookingToken: 'ABC' }, { utilityTokenCur: 'XYZ' }),
+    ).toBe('ABC');
   });
 
-  it('rejects false, missing, and failed verification objects', () => {
-    expect(isTokenPaymentVerified({ data: { verified: false } })).toBe(false);
-    expect(isTokenPaymentVerified({ data: {} })).toBe(false);
-    expect(isTokenPaymentVerified({})).toBe(false);
-    expect(isTokenPaymentVerified({ data: { verified: { ok: false } } })).toBe(
-      false,
-    );
+  it("falls through a neutral-seeded '' bookingToken to the configured utility token", () => {
+    expect(
+      getBookingTokenCurrency({ bookingToken: '' }, { utilityTokenCur: 'XYZ' }),
+    ).toBe('XYZ');
+  });
+
+  it('returns empty — never a branded symbol — when nothing is configured', () => {
+    expect(getBookingTokenCurrency()).toBe('');
+    expect(getBookingTokenCurrency(null, null)).toBe('');
+    expect(getBookingTokenCurrency({ bookingToken: '' }, { utilityTokenCur: '' })).toBe('');
   });
 });

@@ -29,6 +29,7 @@ export const BLOCK_TYPE_LABEL_KEYS: Partial<Record<SectionType, string>> = {
   financedTokensStart: 'pages_editor_block_financed_tokens',
   cohousingApplication: 'pages_editor_block_cohousing_application',
   volunteerCta: 'pages_editor_block_volunteer_cta',
+  projectList: 'pages_editor_block_project_list',
   dailyContribution: 'pages_editor_block_daily_contribution',
   subscriptionPlans: 'pages_editor_block_subscription_plans',
   fundraiser: 'pages_editor_block_fundraiser',

@@ -10,7 +10,10 @@ import ProgressBar from '../../components/ui/ProgressBar';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { BOOKING_STEPS } from '../../constants';
+import {
+  VOLUNTEER_APPLICATION_FUNNEL_STEPS,
+  VOLUNTEER_APPLICATION_STEP_TITLE_KEYS,
+} from '../../constants/volunteerApplication';
 import { useAuth } from '../../contexts/auth';
 import { GeneralConfig, Project, VolunteerConfig } from '../../types';
 import api from '../../utils/api';
@@ -72,7 +75,17 @@ const ProjectApplicationPage = ({ error, projects }: Props) => {
         <Heading level={1} className="pb-4 mt-8">
           {t('projects_application_title')}
         </Heading>
-        <ProgressBar steps={BOOKING_STEPS} />
+        {/* The same funnel the application form shows next, so accommodation
+            reads as the step it is — after every form, not before them. */}
+        <ProgressBar
+          steps={VOLUNTEER_APPLICATION_FUNNEL_STEPS}
+          stepTitleKeys={VOLUNTEER_APPLICATION_FUNNEL_STEPS.map(
+            (step) =>
+              VOLUNTEER_APPLICATION_STEP_TITLE_KEYS[
+                step as keyof typeof VOLUNTEER_APPLICATION_STEP_TITLE_KEYS
+              ],
+          ).filter(Boolean)}
+        />
 
         <VolunteerOrResidenceApplication
           volunteerConfig={volunteerConfig}

@@ -1,0 +1,730 @@
+{
+  "title": "_i18n_home_hero_title",
+  "slug": "/",
+  "description": "_i18n_home_meta_description",
+  "ogImage": "https://cdn.oasa.co/tdf/tdf-invest-og.jpg",
+  "sections": [
+    {
+      "type": "hero",
+      "data": {
+        "settings": {
+          "alignText": "center",
+          "isInverted": false,
+          "isCompact": false
+        },
+        "background": "white",
+        "content": {
+          "eyebrow": "",
+          "title": "_i18n_home_hero_title",
+          "body": "_i18n_home_hero_subtitle",
+          "imageUrl": "",
+          "cta": {
+            "text": "_i18n_home_hero_cta_explore",
+            "url": "/token"
+          },
+          "secondaryCta": {
+            "text": "_i18n_home_hero_cta_report",
+            "url": "/pdf/2025-TDF-report.pdf"
+          }
+        }
+      }
+    },
+    {
+      "type": "stats",
+      "data": {
+        "settings": {},
+        "background": "white",
+        "content": {
+          "eyebrow": "",
+          "title": "",
+          "items": [
+            {
+              "value": "280+",
+              "label": "_i18n_home_stats_token_holders"
+            },
+            {
+              "value": "25",
+              "label": "_i18n_home_stats_hectares"
+            },
+            {
+              "value": "€1.25M+",
+              "label": "_i18n_home_stats_total_capital"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "gallery",
+      "data": {
+        "settings": {
+          "size": "featured"
+        },
+        "content": {
+          "title": "",
+          "items": [
+            {
+              "imageUrl": "/images/landing-page/compressed/cafe.jpg",
+              "width": 1200,
+              "height": 800,
+              "alt": "Cafe at Traditional Dream Factory"
+            },
+            {
+              "imageUrl": "/images/landing-page/compressed/sheep.jpg",
+              "width": 1200,
+              "height": 800,
+              "alt": "Sheep grazing on the land"
+            },
+            {
+              "imageUrl": "/images/landing-page/compressed/event-hall.jpg",
+              "width": 1200,
+              "height": 800,
+              "alt": "Event hall"
+            },
+            {
+              "imageUrl": "/images/landing-page/compressed/group.jpg",
+              "width": 1200,
+              "height": 800,
+              "alt": "Community gathering"
+            },
+            {
+              "imageUrl": "/images/landing-page/compressed/lake.jpg",
+              "width": 1200,
+              "height": 800,
+              "alt": "Lake on the property"
+            },
+            {
+              "imageUrl": "/images/landing-page/compressed/chicken-coop.jpg",
+              "width": 1200,
+              "height": 800,
+              "alt": "Chicken coop"
+            },
+            {
+              "imageUrl": "/images/landing-page/compressed/sauna.jpg",
+              "width": 1200,
+              "height": 800,
+              "alt": "Sauna"
+            },
+            {
+              "imageUrl": "/images/landing-page/compressed/side-view.jpg",
+              "width": 1200,
+              "height": 800,
+              "alt": "Side view of the village"
+            },
+            {
+              "imageUrl": "/images/landing-page/compressed/spreading-seed.jpg",
+              "width": 1200,
+              "height": 800,
+              "alt": "Spreading seed on the land"
+            },
+            {
+              "imageUrl": "/images/landing-page/compressed/workshop-2.jpg",
+              "width": 1200,
+              "height": 800,
+              "alt": "Workshop in progress"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "pressPublications",
+      "data": {
+        "settings": {},
+        "content": {
+          "eyebrow": "_i18n_home_press_label",
+          "items": [
+            {
+              "name": "Thomson Reuters"
+            },
+            {
+              "name": "TyN Magazine"
+            },
+            {
+              "name": "Jornal Económico"
+            },
+            {
+              "name": "The Portugal News"
+            },
+            {
+              "name": "Expresso"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "textBlock",
+      "data": {
+        "settings": {
+          "imagePosition": "none"
+        },
+        "background": "white",
+        "content": {
+          "title": "_i18n_home_community_section_title",
+          "body": "_i18n_home_community_section_intro_1\n\n_i18n_home_community_section_intro_2\n\n_i18n_home_community_section_intro_3\n\n**_i18n_home_community_section_intro_4**",
+          "imageUrl": "",
+          "imageAlt": ""
+        }
+      }
+    },
+    {
+      "type": "features",
+      "data": {
+        "settings": {
+          "numColumns": 3,
+          "isSmallImage": true,
+          "isColorful": false
+        },
+        "background": "white",
+        "content": {
+          "title": "_i18n_home_community_section_subtitle",
+          "description": "",
+          "items": [
+            {
+              "title": "_i18n_home_community_land_stewards_title",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "leaf"
+            },
+            {
+              "title": "_i18n_home_community_nest_builders_title",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "home"
+            },
+            {
+              "title": "_i18n_home_community_healers_title",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "heart"
+            },
+            {
+              "title": "_i18n_home_community_creatives_title",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "star"
+            },
+            {
+              "title": "_i18n_home_community_systems_thinkers_title",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "zap"
+            },
+            {
+              "title": "_i18n_home_community_nature_lovers_title",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "sun"
+            },
+            {
+              "title": "_i18n_home_community_families_title",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "users"
+            },
+            {
+              "title": "_i18n_home_community_remote_workers_title",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "wifi"
+            },
+            {
+              "title": "_i18n_home_community_curious_souls_title",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "sparkles"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "cta",
+      "data": {
+        "settings": {
+          "style": "default"
+        },
+        "content": {
+          "eyebrow": "_i18n_home_community_section_label",
+          "title": "",
+          "text": "",
+          "primaryText": "_i18n_home_community_cta_volunteer",
+          "primaryLink": "/volunteer",
+          "secondaryText": "_i18n_join_community_telegram_button",
+          "secondaryLink": "https://t.me/traditionaldreamfactor"
+        }
+      }
+    },
+    {
+      "type": "features",
+      "data": {
+        "settings": {
+          "numColumns": 3,
+          "isSmallImage": true,
+          "isColorful": false
+        },
+        "background": "gray-50",
+        "content": {
+          "title": "_i18n_home_token_section_title",
+          "description": "_i18n_home_token_section_subtitle",
+          "items": [
+            {
+              "title": "_i18n_home_token_feature_unlock_title",
+              "text": "<p>_i18n_home_token_feature_unlock_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_home_token_feature_voice_title",
+              "text": "<p>_i18n_home_token_feature_voice_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_home_token_feature_longterm_title",
+              "text": "<p>_i18n_home_token_feature_longterm_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "tokenStats",
+      "data": {
+        "settings": {
+          "showCta": true
+        },
+        "content": {
+          "eyebrow": "_i18n_home_token_section_label",
+          "title": "_i18n_home_token_name",
+          "description": "",
+          "ctaText": "_i18n_home_token_buy_cta",
+          "ctaLink": "/token"
+        }
+      }
+    },
+    {
+      "type": "cta",
+      "data": {
+        "settings": {
+          "style": "default"
+        },
+        "content": {
+          "eyebrow": "",
+          "title": "_i18n_home_token_citizenship_title",
+          "text": "_i18n_home_token_citizenship_desc",
+          "primaryText": "_i18n_home_token_citizenship_cta",
+          "primaryLink": "/citizenship",
+          "secondaryText": "",
+          "secondaryLink": ""
+        }
+      }
+    },
+    {
+      "type": "media",
+      "data": {
+        "settings": {
+          "mediaType": "image"
+        },
+        "background": "white",
+        "content": {
+          "imageUrl": "/images/landing/land-plan.png",
+          "videoEmbedId": "",
+          "alt": "_i18n_home_land_plan_alt",
+          "caption": ""
+        }
+      }
+    },
+    {
+      "type": "features",
+      "data": {
+        "settings": {
+          "numColumns": 2,
+          "isSmallImage": true,
+          "isColorful": false
+        },
+        "background": "white",
+        "content": {
+          "title": "",
+          "description": "",
+          "items": [
+            {
+              "title": "_i18n_home_land_food_title",
+              "text": "<p>_i18n_home_land_food_desc</p>",
+              "imageUrl": "",
+              "visualType": "none",
+              "cta": {
+                "text": "_i18n_home_land_food_cta",
+                "url": "/pages/regenerative-agriculture"
+              }
+            },
+            {
+              "title": "_i18n_home_land_ecology_title",
+              "text": "<p>_i18n_home_land_ecology_desc</p>",
+              "imageUrl": "",
+              "visualType": "none",
+              "cta": {
+                "text": "_i18n_home_land_ecology_cta",
+                "url": "/pages/ecology"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "features",
+      "data": {
+        "settings": {
+          "numColumns": 3,
+          "isSmallImage": true,
+          "isColorful": false
+        },
+        "background": "gray-50",
+        "content": {
+          "title": "_i18n_home_build_section_title",
+          "description": "_i18n_home_build_section_subtitle",
+          "items": [
+            {
+              "title": "_i18n_home_build_item_suites",
+              "text": "<p>_i18n_home_build_item_suites_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_home_build_item_flex",
+              "text": "<p>_i18n_home_build_item_flex_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_home_build_item_studios",
+              "text": "<p>_i18n_home_build_item_studios_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_home_build_item_restaurant",
+              "text": "<p>_i18n_home_build_item_restaurant_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_home_build_item_mushroom",
+              "text": "<p>_i18n_home_build_item_mushroom_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_home_build_item_wellness",
+              "text": "<p>_i18n_home_build_item_wellness_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "timeline",
+      "data": {
+        "settings": {},
+        "background": "gray-50",
+        "content": {
+          "title": "_i18n_home_built_title",
+          "description": "_i18n_home_built_subtitle",
+          "items": [
+            {
+              "phase": "2023",
+              "title": "_i18n_roadmap_2023_title",
+              "text": "<ul><li>_i18n_roadmap_2023_bullet_1</li><li>_i18n_roadmap_2023_bullet_2</li></ul>",
+              "status": "done"
+            },
+            {
+              "phase": "2024",
+              "title": "_i18n_roadmap_2024_fundraising",
+              "text": "<ul><li>_i18n_roadmap_2024_bullet_1</li><li>_i18n_roadmap_2024_bullet_2</li></ul>",
+              "status": "done"
+            },
+            {
+              "phase": "2025",
+              "title": "_i18n_roadmap_2025_title",
+              "text": "<ul><li>_i18n_roadmap_2025_bullet_4</li><li>_i18n_roadmap_2025_bullet_6</li></ul>",
+              "status": "done"
+            },
+            {
+              "phase": "2026",
+              "title": "_i18n_roadmap_2026_title",
+              "text": "<ul><li>_i18n_roadmap_2026_bullet_1</li></ul>",
+              "status": "current"
+            },
+            {
+              "phase": "2027",
+              "title": "_i18n_roadmap_2027_title",
+              "text": "<ul><li>_i18n_roadmap_2027_bullet_1</li></ul>",
+              "status": "upcoming"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "cta",
+      "data": {
+        "settings": {
+          "style": "default"
+        },
+        "content": {
+          "eyebrow": "_i18n_home_build_section_label",
+          "title": "",
+          "text": "",
+          "primaryText": "_i18n_home_built_roadmap_cta",
+          "primaryLink": "/roadmap",
+          "secondaryText": "",
+          "secondaryLink": ""
+        }
+      }
+    },
+    {
+      "type": "fundraiserProgress",
+      "data": {
+        "settings": {},
+        "content": {}
+      }
+    },
+    {
+      "type": "cta",
+      "data": {
+        "settings": {
+          "style": "accent"
+        },
+        "content": {
+          "eyebrow": "_i18n_home_fundraising_preview_label",
+          "title": "_i18n_home_fundraising_preview_title",
+          "text": "_i18n_home_fundraising_preview_desc",
+          "primaryText": "_i18n_home_fundraising_preview_cta",
+          "primaryLink": "/fundraiser",
+          "secondaryText": "",
+          "secondaryLink": ""
+        }
+      }
+    },
+    {
+      "type": "features",
+      "data": {
+        "settings": {
+          "numColumns": 2,
+          "isSmallImage": true,
+          "isColorful": false
+        },
+        "background": "white",
+        "content": {
+          "title": "_i18n_home_cohousing_section_title",
+          "description": "_i18n_home_cohousing_section_desc",
+          "items": [
+            {
+              "title": "_i18n_home_cohousing_stat_title",
+              "text": "<p>_i18n_home_cohousing_feature_houses</p>",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "home"
+            },
+            {
+              "title": "_i18n_home_cohousing_section_label",
+              "text": "<p>_i18n_home_cohousing_feature_neighbors</p>",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "users"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "cta",
+      "data": {
+        "settings": {
+          "style": "default"
+        },
+        "content": {
+          "eyebrow": "_i18n_home_cohousing_section_label",
+          "title": "",
+          "text": "_i18n_home_cohousing_stat_desc",
+          "primaryText": "_i18n_home_cohousing_cta",
+          "primaryLink": "/cohousing",
+          "secondaryText": "",
+          "secondaryLink": ""
+        }
+      }
+    },
+    {
+      "type": "features",
+      "data": {
+        "settings": {
+          "numColumns": 2,
+          "isSmallImage": true,
+          "isColorful": false
+        },
+        "background": "gray-50",
+        "content": {
+          "title": "_i18n_home_investment_opportunities_title",
+          "description": "",
+          "items": [
+            {
+              "title": "_i18n_home_invest_tokens_title",
+              "text": "<p>_i18n_home_invest_tokens_desc</p>",
+              "imageUrl": "",
+              "visualType": "none",
+              "cta": {
+                "text": "_i18n_home_invest_tokens_cta",
+                "url": "/token"
+              }
+            },
+            {
+              "title": "_i18n_home_invest_lending_title",
+              "text": "<p>_i18n_home_invest_lending_desc</p>",
+              "imageUrl": "",
+              "visualType": "none",
+              "cta": {
+                "text": "_i18n_home_invest_lending_cta",
+                "url": "/dataroom"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "features",
+      "data": {
+        "settings": {
+          "numColumns": 3,
+          "isSmallImage": true,
+          "isColorful": false
+        },
+        "background": "white",
+        "content": {
+          "title": "_i18n_home_authority_section_title",
+          "description": "",
+          "items": [
+            {
+              "title": "_i18n_home_authority_swiss_title",
+              "text": "<p>_i18n_home_authority_swiss_desc</p>",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "shield"
+            },
+            {
+              "title": "_i18n_home_authority_academic_title",
+              "text": "<p>_i18n_home_authority_academic_desc</p>",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "fileSpreadsheet"
+            },
+            {
+              "title": "_i18n_home_authority_transparency_title",
+              "text": "<p>_i18n_home_authority_transparency_desc</p>",
+              "imageUrl": "",
+              "visualType": "icon",
+              "iconId": "fileText"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "testimonials",
+      "data": {
+        "settings": {},
+        "background": "white",
+        "content": {
+          "eyebrow": "_i18n_home_authority_section_label",
+          "title": "",
+          "items": [
+            {
+              "quote": "_i18n_home_authority_quote_1",
+              "name": "_i18n_home_authority_quote_1_source",
+              "role": "",
+              "avatar": ""
+            },
+            {
+              "quote": "_i18n_home_authority_quote_2",
+              "name": "_i18n_home_authority_quote_2_source",
+              "role": "",
+              "avatar": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "documents",
+      "data": {
+        "settings": {
+          "numColumns": 4
+        },
+        "background": "white",
+        "content": {
+          "eyebrow": "",
+          "title": "_i18n_home_authority_reports_title",
+          "description": "_i18n_home_authority_reports_intro",
+          "items": [
+            {
+              "title": "_i18n_home_reports_2025",
+              "href": "/pdf/2025-TDF-report.pdf",
+              "downloadLabel": "",
+              "icon": "fileText"
+            },
+            {
+              "title": "_i18n_home_reports_2024",
+              "href": "/pdf/2024-TDF-report.pdf",
+              "downloadLabel": "",
+              "icon": "fileText"
+            },
+            {
+              "title": "_i18n_home_reports_2022",
+              "href": "/pdf/2022-TDF-report.pdf",
+              "downloadLabel": "",
+              "icon": "fileText"
+            },
+            {
+              "title": "_i18n_home_reports_2021",
+              "href": "/pdf/2021-TDF-report.pdf",
+              "downloadLabel": "",
+              "icon": "fileText"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "webinar",
+      "data": {
+        "settings": {
+          "tags": ["landing-page", "investor-webinar"],
+          "analyticsCategory": "HomePage"
+        },
+        "content": {}
+      }
+    },
+    {
+      "type": "upcomingEvents",
+      "data": {
+        "settings": {},
+        "content": {}
+      }
+    }
+  ]
+}

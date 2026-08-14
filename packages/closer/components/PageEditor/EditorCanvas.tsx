@@ -391,6 +391,7 @@ const PLACEHOLDER_BLOCK_KEYS: Record<string, string> = {
   bookAStay: 'pages_editor_block_book_a_stay',
   staySearch: 'pages_editor_block_book_a_stay',
   citizenProgressBar: 'pages_editor_block_citizen_progress',
+  projectList: 'pages_editor_block_project_list',
 };
 
 function ControlBtn({

@@ -22,6 +22,7 @@ export const DYNAMIC_BLOCK_TYPES: SectionType[] = [
   'cohousingApplication',
   'listingsPreviews',
   'volunteerCta',
+  'projectList',
   'dailyContribution',
   'subscriptionPlans',
   'teamStructure',

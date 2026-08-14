@@ -3,9 +3,12 @@ import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { TicketOption } from '../../types';
-import api from '../../utils/api';
 import { normalizeDiscountCode } from '../../utils/discountCode';
 import { priceFormat } from '../../utils/helpers';
+import {
+  DiscountProbeResult,
+  validateDiscountCode,
+} from '../../utils/stays.api';
 import { Button } from '../ui';
 import Input from '../ui/Input';
 
@@ -13,31 +16,29 @@ interface Props {
   setDiscountCode: Dispatch<SetStateAction<string>>;
   discountCode: string;
   eventId?: string;
+  /** Preferred over eventId once the stay exists — the server reads the event
+   * and the ticket option off the stay. */
+  stayId?: string;
   selectedTicketOption?: TicketOption;
   onDiscountValidated?: (code: string) => void;
-}
-
-interface DiscountResult {
-  status: string;
-  reason?: string;
-  applicableTicketName?: string;
-  discountType: string;
-  discountVal: number;
-  discountPercent: number;
 }
 
 const DiscountCode = ({
   setDiscountCode,
   discountCode,
   eventId,
+  stayId,
   selectedTicketOption,
   onDiscountValidated,
 }: Props) => {
   const t = useTranslations();
-  const [discountResult, setDiscountResult] = useState<DiscountResult>();
+  const [discountResult, setDiscountResult] = useState<DiscountProbeResult>();
+  // Distinct from a rejected code: this means the probe request itself failed.
+  const [requestError, setRequestError] = useState(false);
 
   useEffect(() => {
     setDiscountResult(undefined);
+    setRequestError(false);
   }, [selectedTicketOption?.name, discountCode]);
 
   const handleApplyDiscountCode = async () => {
@@ -45,14 +46,26 @@ const DiscountCode = ({
     if (normalizedCode !== discountCode) {
       setDiscountCode(normalizedCode);
     }
-    const res = await api.post('/bookings/validate-discount-code', {
-      discountCode: normalizedCode,
-      eventId,
-      ticketOption: selectedTicketOption,
-    });
-    setDiscountResult({ ...res.data });
-    if (res.data?.status === 'success' && normalizedCode) {
-      onDiscountValidated?.(normalizedCode);
+    setRequestError(false);
+    try {
+      // A rejected code comes back as a 200 with status: 'fail' — only a
+      // non-2xx lands in the catch below.
+      const results = await validateDiscountCode(
+        stayId
+          ? { discountCode: normalizedCode, stayId }
+          : {
+              discountCode: normalizedCode,
+              eventId,
+              ticketOption: selectedTicketOption,
+            },
+      );
+      setDiscountResult(results);
+      if (results?.status === 'success' && normalizedCode) {
+        onDiscountValidated?.(normalizedCode);
+      }
+    } catch {
+      setDiscountResult(undefined);
+      setRequestError(true);
     }
   };
 
@@ -93,7 +106,7 @@ const DiscountCode = ({
             {discountResult.discountType === 'val' &&
               ` ${priceFormat(
                 discountResult.discountVal,
-                selectedTicketOption?.currency,
+                discountResult.currency ?? selectedTicketOption?.currency,
               )} `}
             {t('events_slug_checkout_discount_success_message_part_2')}
           </p>
@@ -112,6 +125,11 @@ const DiscountCode = ({
               {t('listings_slug_checkout_discount_error')}
             </p>
           )}
+        {requestError && (
+          <p className="rounded-md bg-red-50 text-red-500 px-4 py-2 mt-6">
+            {t('discount_code_request_error')}
+          </p>
+        )}
       </div>
     </div>
   );

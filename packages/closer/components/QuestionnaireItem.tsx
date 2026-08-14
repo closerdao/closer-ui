@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import { useTranslations } from 'next-intl';
 
@@ -19,51 +19,34 @@ const QuestionnaireItem = ({
 }: Props) => {
   const t = useTranslations();
   const [answer, setAnswer] = React.useState(savedAnswer || '');
-  const [isSaving, setIsSaving] = useState(false);
-  const [lastSavedAnswer, setLastSavedAnswer] = useState(savedAnswer || '');
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const debouncedAnswer = useDebounce(answer, 300); // Reduced from 500ms to 300ms
+  const debouncedAnswer = useDebounce(answer, 300);
 
-  // Track when we're in the middle of saving
-  const isCurrentlySaving = useRef(false);
+  // The answer we last reported up, and the last value the prop itself held.
+  // Both are refs so they never re-trigger the effects below.
+  const reportedAnswerRef = useRef(savedAnswer || '');
+  const savedAnswerPropRef = useRef(savedAnswer || '');
+  const handleAnswerRef = useRef(handleAnswer);
+  handleAnswerRef.current = handleAnswer;
 
   useEffect(() => {
-    // Only save if the answer has actually changed and we're not already saving
-    if (debouncedAnswer !== lastSavedAnswer && !isCurrentlySaving.current) {
-      setIsSaving(true);
-      isCurrentlySaving.current = true;
-
-      // Clear any existing timeout
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-
-      // Add a small delay to ensure we don't have race conditions
-      saveTimeoutRef.current = setTimeout(() => {
-        handleAnswer(name, debouncedAnswer);
-        setLastSavedAnswer(debouncedAnswer);
-        setIsSaving(false);
-        isCurrentlySaving.current = false;
-      }, 100);
+    if (debouncedAnswer === reportedAnswerRef.current) {
+      return;
     }
-  }, [debouncedAnswer, lastSavedAnswer, handleAnswer, name]);
+    reportedAnswerRef.current = debouncedAnswer;
+    handleAnswerRef.current(name, debouncedAnswer);
+  }, [debouncedAnswer, name]);
 
-  // Cleanup timeout on unmount
+  // Adopt the saved answer only when the prop itself changes (e.g. the booking
+  // finished loading). Never sync off local state — that would wipe typing.
   useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  // Update local state when savedAnswer prop changes (from parent)
-  useEffect(() => {
-    if (savedAnswer !== lastSavedAnswer) {
-      setAnswer(savedAnswer || '');
-      setLastSavedAnswer(savedAnswer || '');
+    const incoming = savedAnswer || '';
+    if (incoming === savedAnswerPropRef.current) {
+      return;
     }
-  }, [savedAnswer, lastSavedAnswer]);
+    savedAnswerPropRef.current = incoming;
+    reportedAnswerRef.current = incoming;
+    setAnswer(incoming);
+  }, [savedAnswer]);
 
   if (!type || !name) {
     return null;
@@ -87,22 +70,15 @@ const QuestionnaireItem = ({
         {required && <span className="text-accent ml-1">*</span>}
       </label>
       {type === 'text' && (
-        <>
-          <Input
-            id={name}
-            type="text"
-            placeholder={t('generic_input_placeholder')}
-            className="" // TO DO how to resolve class clash with forms.css?
-            value={answer}
-            onChange={handleInputChange}
-            isRequired={required}
-          />
-          {isSaving && (
-            <div className="text-sm text-gray-500 mt-1">
-              {t('saving') || 'Saving...'}
-            </div>
-          )}
-        </>
+        <Input
+          id={name}
+          type="text"
+          placeholder={t('generic_input_placeholder')}
+          className="" // TO DO how to resolve class clash with forms.css?
+          value={answer}
+          onChange={handleInputChange}
+          isRequired={required}
+        />
       )}
       {type === 'select' && options && (
         <div className="relative">
@@ -119,11 +95,6 @@ const QuestionnaireItem = ({
               </option>
             ))}
           </select>
-          {isSaving && (
-            <div className="text-sm text-gray-500 mt-1">
-              {t('saving') || 'Saving...'}
-            </div>
-          )}
         </div>
       )}
     </div>
