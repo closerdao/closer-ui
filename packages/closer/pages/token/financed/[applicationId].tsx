@@ -920,16 +920,18 @@ const FinancedTokenApplicationPage = () => {
                 </p>
               </div>
 
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-                <p className="text-sm text-amber-950 leading-relaxed">
-                  {t('token_financed_cancel_deposit_warning', {
-                    deposit: formatIsoFiatAmount(
-                      cancellationSummary.depositAmount,
-                      'EUR',
-                    ),
-                  })}
-                </p>
-              </div>
+              {cancellationSummary.isDepositPaid ? (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                  <p className="text-sm text-amber-950 leading-relaxed">
+                    {t('token_financed_cancel_deposit_warning', {
+                      deposit: formatIsoFiatAmount(
+                        cancellationSummary.depositAmount,
+                        'EUR',
+                      ),
+                    })}
+                  </p>
+                </div>
+              ) : null}
 
               <div className="flex flex-col gap-1.5">
                 <label

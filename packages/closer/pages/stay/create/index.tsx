@@ -534,18 +534,19 @@ const StayCreatePage = ({
     : {};
 
   const handleDayTicketContinue = async () => {
-    const params: StaySearchBarParams = activeParams || {
-      start: formatDate(
-        (savedStart as string) || eventProp?.start || defaultDateRange.start,
-      ),
-      end: formatDate(
-        (savedEnd as string) || eventProp?.end || defaultDateRange.end,
-      ),
-      adults: initialAdults,
-      children: initialChildren,
-      infants: initialInfants,
-      pets: initialPets,
-    };
+    const params: StaySearchBarParams = pendingParams ||
+      activeParams || {
+        start: formatDate(
+          (savedStart as string) || eventProp?.start || defaultDateRange.start,
+        ),
+        end: formatDate(
+          (savedEnd as string) || eventProp?.end || defaultDateRange.end,
+        ),
+        adults: initialAdults,
+        children: initialChildren,
+        infants: initialInfants,
+        pets: initialPets,
+      };
 
     if (!selectedTicketOption) {
       setSearchError(t('bookings_error_no_ticket_option'));

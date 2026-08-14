@@ -40,6 +40,7 @@ const StayCoGuests = ({
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const currentIdsRef = useRef<string[]>([]);
+  const guestsRef = useRef<BookingCoGuestUser[]>([]);
   const saveChainRef = useRef(Promise.resolve());
   const saveVersionRef = useRef(0);
   const seededKeyRef = useRef<string | null>(null);
@@ -57,19 +58,20 @@ const StayCoGuests = ({
     seededKeyRef.current = seedKey;
     currentIdsRef.current = coGuestIds;
     if (coGuestIds.length === 0) {
+      guestsRef.current = [];
       setGuests([]);
       return;
     }
     let cancelled = false;
     fetchUsersByIds(coGuestIds).then((users) => {
       if (cancelled) return;
-      setGuests(
-        users.map((user) => ({
-          _id: user._id,
-          screenname: user.screenname,
-          photo: user.photo,
-        })),
-      );
+      const nextGuests = users.map((user) => ({
+        _id: user._id,
+        screenname: user.screenname,
+        photo: user.photo,
+      }));
+      guestsRef.current = nextGuests;
+      setGuests(nextGuests);
     });
     return () => {
       cancelled = true;
@@ -80,7 +82,7 @@ const StayCoGuests = ({
   const runSave = useCallback(
     (nextIds: string[], request: () => Promise<unknown>) => {
       const previousIds = [...currentIdsRef.current];
-      const previousGuests = guests;
+      const previousGuests = guestsRef.current;
       currentIdsRef.current = nextIds;
       seededKeyRef.current = `${stayId}:${nextIds.join(',')}`;
       setIsSaving(true);
@@ -96,6 +98,7 @@ const StayCoGuests = ({
           } catch (err) {
             if (version !== saveVersionRef.current) return;
             currentIdsRef.current = previousIds;
+            guestsRef.current = previousGuests;
             seededKeyRef.current = `${stayId}:${previousIds.join(',')}`;
             setGuests(previousGuests);
             onGuestsChange?.(previousIds);
@@ -107,7 +110,7 @@ const StayCoGuests = ({
           }
         });
     },
-    [guests, onGuestsChange, stayId],
+    [onGuestsChange, stayId],
   );
 
   const handleAdd = (hit: SearchUserHit) => {
@@ -120,24 +123,26 @@ const StayCoGuests = ({
     if (!next) {
       return false;
     }
-    setGuests((prev) =>
-      prev.some((guest) => guest._id === hit._id)
-        ? prev
-        : [
-            ...prev,
-            { _id: hit._id, screenname: hit.screenname, photo: hit.photo },
-          ],
-    );
     runSave(next, () => addStayGuest(stayId, hit._id));
+    const nextGuests = guestsRef.current.some((guest) => guest._id === hit._id)
+      ? guestsRef.current
+      : [
+          ...guestsRef.current,
+          { _id: hit._id, screenname: hit.screenname, photo: hit.photo },
+        ];
+    guestsRef.current = nextGuests;
+    setGuests(nextGuests);
     return true;
   };
 
   const handleRemove = (userId: string) => {
-    setGuests((prev) => prev.filter((guest) => guest._id !== userId));
     runSave(
       currentIdsRef.current.filter((id) => id !== userId),
       () => removeStayGuest(stayId, userId),
     );
+    const nextGuests = guestsRef.current.filter((guest) => guest._id !== userId);
+    guestsRef.current = nextGuests;
+    setGuests(nextGuests);
   };
 
   return (

@@ -292,8 +292,9 @@ const StaySearchBar = ({
     const next = coGuests.filter((guest) => guest._id !== userId);
     if (next.length === coGuests.length) return;
     onCoGuestsChange(next);
-    // Naming a guest raised the count, so dropping them gives the spot back.
-    setAdults((current) => Math.max(1, current - 1));
+    setAdults((current) =>
+      current > coGuests.length + 1 ? current : Math.max(1, next.length + 1),
+    );
   };
 
   const handleSearch = () => {
