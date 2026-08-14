@@ -658,6 +658,7 @@
   "booking_details_checked_out_at": "Check-out",
   "booking_details_stay_arrival_change_not_supported": "Alterar a data de check-in não é possível aqui. Contacte o anfitrião.",
   "booking_details_extension_pending": "Um prolongamento da estadia aguarda aprovação do anfitrião.",
+  "booking_details_questionnaire_title": "Respostas do questionário",
   "booking_details_approve_extension": "Aprovar prolongamento",
   "booking_details_reject_extension": "Recusar prolongamento",
   "current_booking_table_guest": "Hóspede",
