@@ -239,7 +239,11 @@ const OnboardingPage = () => {
         next === -1
           ? questRefs.current.finale
           : questRefs.current[quests[next].id];
-      scrollTarget?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Scrolling is a convenience; never let a missing implementation break a
+      // claim that has already been awarded and stored.
+      if (typeof scrollTarget?.scrollIntoView === 'function') {
+        scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     } finally {
       setClaimingQuestId(null);
     }

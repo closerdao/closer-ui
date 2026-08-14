@@ -39,7 +39,7 @@ const UnlockStaysPage = ({ subscriptionsConfig, bookingConfig }: Props) => {
 
   useEffect(() => {
     if (user?.roles?.includes('member')) {
-      router.push('/bookings/create/dates');
+      router.push('/stay/create');
     }
   }, [user]);
 

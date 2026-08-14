@@ -942,7 +942,7 @@ export const PlatformProvider = ({ children }) => {
         return res;
       }),
     confirm: (_id) =>
-      api.post(`/bookings/${_id}/confirm`).then((res) => {
+      api.post(`/stays/${_id}/approve`, {}).then((res) => {
         const results = fromJS(res.data.results);
         const action = {
           results,
@@ -954,7 +954,7 @@ export const PlatformProvider = ({ children }) => {
         return action;
       }),
     reject: (_id) =>
-      api.post(`/bookings/${_id}/reject`).then((res) => {
+      api.post(`/stays/${_id}/reject`, {}).then((res) => {
         const results = fromJS(res.data.results);
         const action = {
           results,
@@ -966,7 +966,7 @@ export const PlatformProvider = ({ children }) => {
         return action;
       }),
     checkIn: (_id) =>
-      api.post(`/bookings/${_id}/check-in`).then((res) => {
+      api.post(`/stays/${_id}/check-in`, {}).then((res) => {
         const results = fromJS(res.data.results);
         const action = {
           results,
@@ -978,7 +978,7 @@ export const PlatformProvider = ({ children }) => {
         return action;
       }),
     checkOut: (_id) =>
-      api.post(`/bookings/${_id}/check-out`).then((res) => {
+      api.post(`/stays/${_id}/check-out`, {}).then((res) => {
         const results = fromJS(res.data.results);
         const action = {
           results,

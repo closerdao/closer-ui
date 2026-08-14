@@ -1,7 +1,7 @@
 /**
- * Who may create build projects. `steward` has always had this; space hosts,
- * team members and admins were added so the crew running the build can add
- * projects without going through a steward.
+ * Who may create and edit build projects. `steward` has always had this; space
+ * hosts, team members and admins were added so the crew running the build can
+ * manage projects without going through a steward.
  */
 export const PROJECT_MANAGER_ROLES = [
   'steward',

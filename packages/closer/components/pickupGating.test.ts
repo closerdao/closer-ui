@@ -24,10 +24,6 @@ const CODE_EXT = /\.(js|jsx|ts|tsx)$/;
  */
 const ALLOWED = new Map([
   [
-    'pages/bookings/create/accomodation.tsx',
-    'Data-only: passes doesNeedPickup through the booking payload, renders no pickup UI.',
-  ],
-  [
     'components/SummaryDates.tsx',
     'Gated by contract: renders only when doesNeedPickup !== undefined, and every caller passes undefined when the flag is off.',
   ],

@@ -410,9 +410,8 @@ const StayCreatePage = ({
     setSearchError(null);
     try {
       const day = params.start;
-      const {
-        data: { results: newBooking },
-      } = await api.post('/bookings/request', {
+      // No listingId: a day ticket grants event access, not a space.
+      const stay = await createStay({
         start: day,
         end: day,
         adults: params.adults,
@@ -421,11 +420,11 @@ const StayCreatePage = ({
         children: params.children,
         eventId,
         ticketOption: selectedTicketOption.name,
-        discountCode: normalizeDiscountCode(discountCode) || undefined,
+        eventDiscount: normalizeDiscountCode(discountCode) || undefined,
         isDayTicket: true,
         ...eventFoodPayload,
       });
-      router.push(`/bookings/${newBooking._id}/food`);
+      router.push(`/stay/create/${stay._id}`);
     } catch (err) {
       setSearchError(parseMessageFromError(err));
       setIsCreatingDayTicket(false);
@@ -923,7 +922,7 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
 
     if (eventId) {
       const [ticketsAvailable, event] = await Promise.all([
-        api.get(`/bookings/event/${eventId}/availability`).catch(() => null),
+        api.get(`/stays/event/${eventId}/availability`).catch(() => null),
         api.get(`/event/${eventId}`).catch(() => null),
       ]);
 

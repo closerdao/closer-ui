@@ -24,9 +24,12 @@ const NewBooking = ({ bookingConfig }: Props) => {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
 
+  // The two-step /bookings/create flow was replaced by /stay/create, which
+  // covers both dates and accommodation. This route stays as a redirect so old
+  // links keep working.
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/bookings/create/dates');
+      router.replace('/stay/create');
     }
   }, [isAuthenticated]);
 

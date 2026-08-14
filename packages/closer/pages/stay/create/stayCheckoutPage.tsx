@@ -529,7 +529,7 @@ const StayCheckoutContent = ({
         const [eventRes, availabilityRes] = await Promise.all([
           api.get(`/event/${currentStay.eventId}`),
           api
-            .get(`/bookings/event/${currentStay.eventId}/availability`)
+            .get(`/stays/event/${currentStay.eventId}/availability`)
             .catch(() => null),
         ]);
         if (cancelled) return;

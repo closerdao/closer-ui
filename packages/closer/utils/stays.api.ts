@@ -415,6 +415,8 @@ export const checkStayListingAvailability = async (
      * and use the volunteering minimum stay.
      */
     bookingType?: StayBookingType | null;
+    isFriendsBooking?: boolean;
+    eventId?: string | null;
   },
 ): Promise<{
   results: boolean;
@@ -429,7 +431,8 @@ export const checkStayListingAvailability = async (
 };
 
 export type CreateStayPayload = {
-  listingId: string;
+  /** Required except for day tickets, which reserve no space. */
+  listingId?: string;
   start: string;
   end: string;
   adults: number;
@@ -465,6 +468,26 @@ export const createStay = async (payload: CreateStayPayload): Promise<Stay> => {
 export const getStay = async (id: string): Promise<Stay> => {
   const { data } = await api.get(`/stays/${id}`, { cache: false } as any);
   return (data as ApiOk<Stay>).results;
+};
+
+export type CreateAdminStayPayload = {
+  listingId: string;
+  start: string;
+  end: string;
+  adults: number;
+  adminBookingReason?: string;
+  isTeamBooking?: boolean;
+};
+
+/**
+ * Host-only manual booking. The server zeroes the payment targets, so the stay
+ * lands on 'paid' without going through checkout.
+ */
+export const createAdminStay = async (
+  payload: CreateAdminStayPayload,
+): Promise<Stay> => {
+  const { data } = await api.post('/stays/admin', payload);
+  return unwrapStayMutationResult(data);
 };
 
 const zeroStayMoney = (money: StayMoney): StayMoney => ({

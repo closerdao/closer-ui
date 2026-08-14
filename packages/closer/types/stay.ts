@@ -63,7 +63,8 @@ export type PendingExtension = {
 export type Stay = {
   _id: string;
   status: StayStatus;
-  listing: string;
+  /** Absent on day tickets, which grant event access rather than a space. */
+  listing?: string | null;
   start: string;
   end: string;
   duration: number;

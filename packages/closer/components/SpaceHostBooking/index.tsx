@@ -4,8 +4,11 @@ import { Button, Information, Input, Spinner } from '../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
-import api from '../../utils/api';
 import { formatDate } from '../../utils/listings.helpers';
+import {
+  checkStayListingAvailability,
+  createAdminStay,
+} from '../../utils/stays.api';
 import Counter from '../Counter';
 import ListingDateSelector from '../ListingDateSelector';
 import Modal from '../Modal';
@@ -57,14 +60,14 @@ const SpaceHostBooking = ({ listingOptions }: Props) => {
     listingId?: string | null,
   ) => {
     try {
-      const {
-        data: { results, availability },
-      } = await api.post('/bookings/listing/availability', {
-        start: formatDate(startDate),
-        end: formatDate(endDate),
-        listing: listingId,
-        adults,
-      });
+      const { results, availability } = await checkStayListingAvailability(
+        String(listingId),
+        {
+          start: formatDate(startDate) as string,
+          end: formatDate(endDate) as string,
+          adults,
+        },
+      );
 
       return { results, availability };
     } catch (error) {
@@ -77,11 +80,11 @@ const SpaceHostBooking = ({ listingOptions }: Props) => {
     try {
       setIsLoading(true);
       setHasCreatedBooking(false);
-      await api.post('/bookings/admin', {
-        start: formatDate(start),
-        end: formatDate(end),
+      await createAdminStay({
+        start: formatDate(start) as string,
+        end: formatDate(end) as string,
         adults,
-        listingId,
+        listingId: String(listingId),
         adminBookingReason,
       });
       setHasCreatedBooking(true);

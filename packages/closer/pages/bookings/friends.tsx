@@ -123,7 +123,7 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
             <p className="mb-6">
               {t('friends_booking_no_active_booking_message')}
             </p>
-            <Button onClick={() => router.push('/bookings/create/dates')}>
+            <Button onClick={() => router.push('/stay/create')}>
               {t('friends_booking_book_stay_button')}
             </Button>
           </div>
@@ -185,7 +185,7 @@ const FriendsBooking = ({ bookingConfig }: Props) => {
 
       // Redirect to booking flow with isFriendsBooking=true and friend emails
       router.push(
-        `/bookings/create/dates?isFriendsBooking=true&friendEmails=${encodeURIComponent(
+        `/stay/create?isFriendsBooking=true&friendEmails=${encodeURIComponent(
           emailParam,
         )}`,
       );

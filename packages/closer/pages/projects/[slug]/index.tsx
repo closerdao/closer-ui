@@ -5,9 +5,8 @@ import { convert } from 'html-to-text';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { Project, VolunteerConfig } from '../../../types/api';
+import { Project } from '../../../types/api';
 import api from '../../../utils/api';
-import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import NotFoundPage from '../../not-found';
 
 interface Props {
@@ -16,7 +15,6 @@ interface Props {
 }
 
 const ProjectPage = ({ project, descriptionText }: Props) => {
-  const volunteerConfig = getCachedConfig('volunteering') as VolunteerConfig | null;
   const t = useTranslations();
   const { photo, name } = project || {};
 
@@ -30,10 +28,7 @@ const ProjectPage = ({ project, descriptionText }: Props) => {
         title={name}
         description={descriptionText || ''}
       />
-      <ProjectView
-        project={project}
-        timeFrame={volunteerConfig?.residenceTimeFrame || ''}
-      />
+      <ProjectView project={project} />
     </>
   );
 };

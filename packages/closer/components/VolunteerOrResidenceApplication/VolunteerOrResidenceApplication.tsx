@@ -110,7 +110,7 @@ const VolunteerOrResidenceApplication = ({
       console.error(error);
     } finally {
       setLoading(false);
-      router.push(`/bookings/create/dates?${params}`);
+      router.push(`/stay/create?${params}`);
     }
   };
 

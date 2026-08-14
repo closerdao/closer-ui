@@ -5,6 +5,7 @@ import { FC, ReactNode, useState } from 'react';
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
+import { userRolesCanManageProjects } from '../../constants/projectAccess';
 import { useAuth } from '../../contexts/auth';
 import { Project } from '../../types';
 import { cdn } from '../../utils/api';
@@ -18,7 +19,6 @@ import Heading from '../ui/Heading';
 
 interface Props {
   project: Project;
-  timeFrame?: string;
 }
 
 const STATUS_STYLE: Record<string, 'green' | 'orange' | 'neutral'> = {
@@ -42,7 +42,7 @@ const DetailRow = ({
   </div>
 );
 
-const ProjectView: FC<Props> = ({ project, timeFrame }) => {
+const ProjectView: FC<Props> = ({ project }) => {
   const t = useTranslations();
 
   const {
@@ -62,7 +62,7 @@ const ProjectView: FC<Props> = ({ project, timeFrame }) => {
 
   const { user, isAuthenticated } = useAuth();
   const [photo, setPhoto] = useState<string | null>(project?.photo ?? null);
-  const hasStewardRole = user?.roles?.includes('steward');
+  const canManageProject = userRolesCanManageProjects(user?.roles);
   if (!project) {
     return null;
   }
@@ -104,8 +104,15 @@ const ProjectView: FC<Props> = ({ project, timeFrame }) => {
             setPhoto={setPhoto}
           />
 
-          {hasStewardRole && (
-            <div className="absolute right-0 bottom-0 p-8 flex flex-col gap-4">
+          {canManageProject && (
+            // With no photo `EventPhoto` renders nothing and the wrapper
+            // collapses, so the controls only float over the image when there
+            // is one to float over.
+            <div
+              className={`flex flex-col gap-4 ${
+                photo ? 'absolute right-0 bottom-0 p-8' : 'items-end pt-4'
+              }`}
+            >
               <LinkButton
                 size="small"
                 href={project.slug && `/projects/${project.slug}/edit`}
@@ -169,19 +176,14 @@ const ProjectView: FC<Props> = ({ project, timeFrame }) => {
                 </DetailRow>
               ) : null}
               {dateRange ? (
-                <DetailRow label={t('projects_dates_label')}>
+                <DetailRow label={t('projects_residency_window_label')}>
                   {dateRange}
                   {hasEnded ? (
                     <span className="text-disabled">
                       {' '}
-                      · {t('project_opportunity_ended')}
+                      · {t('volunteer_opportunity_ended')}
                     </span>
                   ) : null}
-                </DetailRow>
-              ) : null}
-              {timeFrame ? (
-                <DetailRow label={t('projects_residency_window_label')}>
-                  {timeFrame}
                 </DetailRow>
               ) : null}
               <DetailRow label={t('projects_managed_by_label')}>

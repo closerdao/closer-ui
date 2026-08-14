@@ -50,8 +50,7 @@ const withPreview = (project: Project, managers: Map<string, any>): Project => (
 const CustomProjectList = ({ settings, content }: Props) => {
   const t = useTranslations();
   const { user } = useAuth();
-  const hasStewardRole = user?.roles?.includes('steward') || false;
-  const canAddProject = userRolesCanManageProjects(user?.roles);
+  const canManageProjects = userRolesCanManageProjects(user?.roles);
 
   const [projects, setProjects] = useState<Project[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -119,7 +118,7 @@ const CustomProjectList = ({ settings, content }: Props) => {
         <ProjectCard
           key={project.slug}
           project={project}
-          hasStewardRole={hasStewardRole}
+          canManageProject={canManageProjects}
         />
       ))}
     </div>
@@ -131,7 +130,7 @@ const CustomProjectList = ({ settings, content }: Props) => {
         <div className="flex flex-col gap-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             {title ? <Heading level={2}>{title}</Heading> : null}
-            {canAddProject && (
+            {canManageProjects && (
               <LinkButton
                 size="small"
                 variant="secondary"

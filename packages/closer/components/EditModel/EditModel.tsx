@@ -314,10 +314,13 @@ const EditModel: FC<Props> = ({
   }
 
   const isEvent = endpoint === '/event';
+  // Endpoints that get the event form's date selector: collapsed to a summary
+  // until opened, with the selected span spelled out beside it.
+  const usesCollapsedDatePicker = isEvent || endpoint === '/project';
   const isPrimaryField = (field: any) => field.type === 'longtext';
 
-  const eventDurationLabel = (() => {
-    if (!isEvent || !data.start || !data.end) return undefined;
+  const durationLabel = (() => {
+    if (!usesCollapsedDatePicker || !data.start || !data.end) return undefined;
     const start = dayjs(data.start);
     const end = dayjs(data.end);
     if (start.isSame(end, 'day')) {
@@ -366,8 +369,8 @@ const EditModel: FC<Props> = ({
                     savedEndDate={data.end && data.end}
                     defaultMonth={new Date()}
                     timeZone={timeZone}
-                    startCollapsed={isEvent}
-                    durationLabel={isEvent ? eventDurationLabel : undefined}
+                    startCollapsed={usesCollapsedDatePicker}
+                    durationLabel={durationLabel}
                   />
                 ) : null;
               const tabFields = filterFields(fieldsByTab[key], data);
@@ -436,7 +439,7 @@ const EditModel: FC<Props> = ({
           </>
         )}
 
-        {(endpoint === '/volunteer' || endpoint === '/projects') && (
+        {(endpoint === '/volunteer' || endpoint === '/project') && (
           <div>
             <DateTimePicker
               setStartDate={setStartDate}
@@ -446,6 +449,8 @@ const EditModel: FC<Props> = ({
               savedEndDate={data.end}
               defaultMonth={new Date()}
               timeZone={timeZone}
+              startCollapsed={usesCollapsedDatePicker}
+              durationLabel={durationLabel}
             />
           </div>
         )}
