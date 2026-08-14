@@ -13,7 +13,10 @@
  */
 const fs = require('fs');
 
-const { BASE_LOCALES, SNAPSHOT_PATH } = require('./syncBuildLocales.cjs');
+// localeConstants.cjs, not syncBuildLocales.cjs: this module is loaded by the
+// village-app's next.config.js, and config resolution must not pull in the
+// sync script (whose require runs ensureBuildLocalesExist as a side effect).
+const { BASE_LOCALES, SNAPSHOT_PATH } = require('./localeConstants.cjs');
 
 function readSnapshot(snapshotPath = SNAPSHOT_PATH, log = console) {
   try {

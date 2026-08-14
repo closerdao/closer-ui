@@ -3,33 +3,14 @@ require('./ensureBuildLocalesExist.cjs');
 const fs = require('fs');
 const path = require('path');
 
-const LOCALES_ROOT = path.join(__dirname, '..', 'locales');
+const {
+  BASE_LOCALES,
+  LOCALES_ROOT,
+  SNAPSHOT_PATH,
+  listBaseLocales,
+} = require('./localeConstants.cjs');
+
 const OUT_ROOT = path.join(__dirname, '..', 'generated', 'locales');
-const SNAPSHOT_PATH = path.join(
-  __dirname,
-  '..',
-  'generated',
-  'appConfig.snapshot.json',
-);
-
-/**
- * Every locale that has a locales/base-<locale>.json file. Adding a new base
- * translation file automatically extends the village bundle to that locale.
- */
-function listBaseLocales(localesRoot = LOCALES_ROOT) {
-  const locales = fs
-    .readdirSync(localesRoot)
-    .map((name) => {
-      const match = /^base-([a-z]{2}(?:-[a-z0-9]+)?)\.json$/i.exec(name);
-      return match ? match[1].toLowerCase() : null;
-    })
-    .filter(Boolean)
-    .sort();
-  // English first: it is the fallback underlay and the default locale.
-  return ['en', ...locales.filter((locale) => locale !== 'en')];
-}
-
-const BASE_LOCALES = listBaseLocales();
 
 const APP_LOCALES = {
   lios: ['en', 'pl'],
