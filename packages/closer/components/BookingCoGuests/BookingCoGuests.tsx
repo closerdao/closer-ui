@@ -162,13 +162,17 @@ const BookingCoGuests = ({
                 <button
                   key={hit._id}
                   type="button"
+                  disabled={isSaving}
                   onClick={() => {
+                    if (isSaving) {
+                      return;
+                    }
                     onAdd(hit);
                     setSearch('');
                     setIsOpen(false);
                     setResults([]);
                   }}
-                  className="flex w-full flex-col gap-0.5 px-3 py-2 text-left hover:bg-accent-light/70"
+                  className="flex w-full flex-col gap-0.5 px-3 py-2 text-left hover:bg-accent-light/70 disabled:opacity-50"
                 >
                   <span className="text-sm font-medium text-foreground">
                     {hit.screenname}

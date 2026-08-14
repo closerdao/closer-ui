@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import BookingCoGuests from '../../../components/BookingCoGuests/BookingCoGuests';
 import BookingRequestButtons from '../../../components/BookingRequestButtons';
@@ -276,6 +276,10 @@ const StayBookingSummaryPage = ({
   const [coGuests, setCoGuests] = useState<User[]>([]);
   const [coGuestError, setCoGuestError] = useState<string | null>(null);
   const [isSavingCoGuests, setIsSavingCoGuests] = useState(false);
+  const visibleByRef = useRef(getBookingVisibleByIds(booking?.visibleBy));
+  const lastSavedVisibleByRef = useRef(visibleByRef.current);
+  const coGuestSaveChainRef = useRef(Promise.resolve());
+  const coGuestSaveVersionRef = useRef(0);
   const [modalAdults, setModalAdults] = useState(adults);
   const [modalChildren, setModalChildren] = useState(children ?? 0);
   const [modalInfants, setModalInfants] = useState(infants ?? 0);
@@ -353,6 +357,15 @@ const StayBookingSummaryPage = ({
       cancelled = true;
     };
   }, [coGuestIdsKey, createdBy]);
+
+  useEffect(() => {
+    if (isSavingCoGuests) {
+      return;
+    }
+    const ids = getBookingVisibleByIds(bookingView?.visibleBy);
+    visibleByRef.current = ids;
+    lastSavedVisibleByRef.current = ids;
+  }, [bookingView?.visibleBy, isSavingCoGuests]);
 
   const stayGuestEditableStatuses = ['confirmed', 'pending-payment', 'paid'];
 
@@ -989,41 +1002,47 @@ const StayBookingSummaryPage = ({
     }
   };
 
-  const persistVisibleBy = async (nextVisibleBy: string[]) => {
-    const previous = getBookingVisibleByIds(bookingView?.visibleBy);
+  const persistVisibleBy = (nextVisibleBy: string[]) => {
     const normalized = normalizeBookingVisibleBy(nextVisibleBy, createdBy);
+    visibleByRef.current = normalized;
+    setIsSavingCoGuests(true);
+    setCoGuestError(null);
     setLiveBooking((prev) => ({
       ...(prev ?? booking),
       visibleBy: normalized,
     }));
-    setIsSavingCoGuests(true);
-    setCoGuestError(null);
-    try {
-      await api.patch(`/booking/${_id}`, { visibleBy: normalized });
-    } catch (error) {
-      setLiveBooking((prev) => ({
-        ...(prev ?? booking),
-        visibleBy: previous,
-      }));
-      setCoGuestError(parseMessageFromError(error));
-    } finally {
-      setIsSavingCoGuests(false);
-    }
+    const version = ++coGuestSaveVersionRef.current;
+
+    coGuestSaveChainRef.current = coGuestSaveChainRef.current
+      .catch(() => undefined)
+      .then(async () => {
+        const toSave = visibleByRef.current;
+        try {
+          await api.patch(`/booking/${_id}`, { visibleBy: toSave });
+          lastSavedVisibleByRef.current = toSave;
+        } catch (error) {
+          if (version === coGuestSaveVersionRef.current) {
+            visibleByRef.current = lastSavedVisibleByRef.current;
+            setLiveBooking((prev) => ({
+              ...(prev ?? booking),
+              visibleBy: lastSavedVisibleByRef.current,
+            }));
+            setCoGuestError(parseMessageFromError(error));
+          }
+        } finally {
+          if (version === coGuestSaveVersionRef.current) {
+            setIsSavingCoGuests(false);
+          }
+        }
+      });
   };
 
   const handleAddCoGuest = (hit: SearchUserHit) => {
-    void persistVisibleBy([
-      ...getBookingVisibleByIds(bookingView?.visibleBy),
-      hit._id,
-    ]);
+    void persistVisibleBy([...visibleByRef.current, hit._id]);
   };
 
   const handleRemoveCoGuest = (userId: string) => {
-    void persistVisibleBy(
-      getBookingVisibleByIds(bookingView?.visibleBy).filter(
-        (id) => id !== userId,
-      ),
-    );
+    void persistVisibleBy(visibleByRef.current.filter((id) => id !== userId));
   };
 
   if (!isBookingEnabled) {

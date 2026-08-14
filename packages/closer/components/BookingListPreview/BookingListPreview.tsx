@@ -391,7 +391,7 @@ const BookingListPreview = ({
           </Button>
         )}
 
-        {!isCoGuestView && (
+        {(!isCoGuestView || canManageBooking) && (
           <BookingRequestButtons
             listPreview
             hideCheckoutButton
