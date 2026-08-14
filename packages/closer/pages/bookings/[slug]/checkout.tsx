@@ -430,6 +430,9 @@ const Checkout = ({
       booking?.paymentDelta?.fiat?.val &&
       booking?.paymentDelta?.fiat?.val > 0,
   );
+  const hasTokenStakeRecorded = status === 'tokens-staked';
+  const shouldCollectTokenStake =
+    Boolean(useTokens) && !hasTokenStakeRecorded && !isAdditionalFiatPayment;
 
   const [paymentType, setPaymentType] = useState<PaymentType>(
     getPaymentType({
@@ -521,7 +524,7 @@ const Checkout = ({
     process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' &&
     rentalToken &&
     rentalToken?.val > 0 &&
-    useTokens;
+    shouldCollectTokenStake;
 
   useEffect(() => {
     if (!useTokens || isUserCurrencyChangeRef.current) {
@@ -593,12 +596,20 @@ const Checkout = ({
 
       case PaymentType.FULL_CREDITS:
       case PaymentType.PARTIAL_CREDITS:
-        if (useTokens && !isUserCurrencyChangeRef.current) {
+        if (
+          useTokens &&
+          !isAdditionalFiatPayment &&
+          !isUserCurrencyChangeRef.current
+        ) {
           void switchToFiat(type);
         }
         break;
       case PaymentType.FIAT:
-        if (useTokens && !isUserCurrencyChangeRef.current) {
+        if (
+          useTokens &&
+          !isAdditionalFiatPayment &&
+          !isUserCurrencyChangeRef.current
+        ) {
           void switchToFiat(type);
         }
         break;
@@ -1610,7 +1621,7 @@ const Checkout = ({
                   >
                     <CheckoutTotal
                       total={totalToPayInFiat}
-                      useTokens={accommodationCoveredByTokens}
+                      useTokens={shouldCollectTokenStake}
                       useCredits={
                         (useCredits && status !== 'credits-paid') || false
                       }
@@ -1652,28 +1663,26 @@ const Checkout = ({
                     </div>
                   </div>
                 )}
-                {status === 'tokens-staked' &&
-                  rentalToken &&
-                  !residualFiatAfterTokenStake && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-0">
-                      <div className="flex ">
-                        <IconCheckCircle className="text-green-600 mr-2" />
-                        <p className="text-green-800 font-medium text-sm">
-                          {t.rich('bookings_checkout_tokens_staked_message', {
-                            tokens: String(
-                              priceFormat({
-                                val:
-                                  paymentType === PaymentType.PARTIAL_TOKENS
-                                    ? partialPriceInTokens
-                                    : rentalToken.val,
-                                cur: rentalToken.cur,
-                              }),
-                            ),
-                          })}
-                        </p>
-                      </div>
+                {status === 'tokens-staked' && rentalToken && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-0">
+                    <div className="flex ">
+                      <IconCheckCircle className="text-green-600 mr-2" />
+                      <p className="text-green-800 font-medium text-sm">
+                        {t.rich('bookings_checkout_tokens_staked_message', {
+                          tokens: String(
+                            priceFormat({
+                              val:
+                                paymentType === PaymentType.PARTIAL_TOKENS
+                                  ? partialPriceInTokens
+                                  : rentalToken.val,
+                              cur: rentalToken.cur,
+                            }),
+                          ),
+                        })}
+                      </p>
                     </div>
-                  )}
+                  </div>
+                )}
                 {fiatPaymentBlocked && (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-0">
                     <p className="text-amber-900 font-medium text-sm">
@@ -1713,13 +1722,13 @@ const Checkout = ({
                           availabilityCheckLoading ||
                           isListingAvailable === false ||
                           fiatPaymentBlocked ||
-                          (useTokens &&
+                          (shouldCollectTokenStake &&
                             (!hasAgreedToWalletDisclaimer ||
                               (isNotEnoughBalance &&
                                 booking?.status !== 'tokens-staked'))) ||
                           false
                         }
-                        useTokens={useTokens || false}
+                        useTokens={shouldCollectTokenStake}
                         useCredits={useCredits}
                         totalToPayInFiat={totalToPayInFiat}
                         dailyTokenValue={dailyRentalToken?.val || 0}

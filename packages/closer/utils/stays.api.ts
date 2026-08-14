@@ -323,6 +323,7 @@ export const accommodationTokenTotalFromPriceLock = (
 
 export const canChangeStayPaymentMethod = (stay: Stay): boolean => {
   if (isStayTerminal(stay)) return false;
+  if (isStayAwaitingHostApproval(stay)) return false;
   if ((stay.creditsPaid?.val ?? 0) > 0) return false;
   if ((stay.tokensStaked?.val ?? 0) > 0) return false;
   return true;
