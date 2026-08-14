@@ -16,6 +16,8 @@ export function financeApplicationStatusBadgeVariant(
     case 'completed':
       return 'default';
     case 'cancelled':
+    // The API has answered with either spelling.
+    case 'canceled':
     case 'delinquent':
       return 'destructive';
     case 'pending':
@@ -46,6 +48,8 @@ export function financeApplicationStatusLabelKey(status: string): string {
     'pending-payment': 'order_status_pending_payment',
     paid: 'order_status_paid',
     cancelled: 'order_status_cancelled',
+    // The API has answered with either spelling.
+    canceled: 'order_status_cancelled',
     completed: 'order_status_completed',
     pending: 'order_status_pending',
     delinquent: 'order_status_delinquent',
