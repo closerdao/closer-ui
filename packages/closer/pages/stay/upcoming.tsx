@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl';
 import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import { useAuth } from '../../contexts/auth';
 import { BookingConfig } from '../../types';
+import { buildMyBookingsAccessOr } from '../../utils/bookingCoGuests.helpers';
 import config from '../../configCached';
 import { parseMessageFromError } from '../../utils/common';
 import PageNotFound from '../not-found';
@@ -30,19 +31,7 @@ const StayUpcomingBookingsPage = ({ bookingConfig }: Props) => {
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
-  const friendOrSelfOr = user
-    ? [
-        { createdBy: user._id },
-        {
-          $and: [
-            { isFriendsBooking: { $eq: true } },
-            { friendEmails: { $exists: true } },
-            { friendEmails: { $ne: [] } },
-            { friendEmails: { $in: [user.email] } },
-          ],
-        },
-      ]
-    : [];
+  const friendOrSelfOr = user ? buildMyBookingsAccessOr(user) : [];
 
   const filter =
     user &&

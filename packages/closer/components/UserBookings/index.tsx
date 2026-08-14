@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 
 import { User } from '../../contexts/auth/types';
 import { BookingConfig } from '../../types/api';
+import { buildMyBookingsAccessOr } from '../../utils/bookingCoGuests.helpers';
 import Bookings from '../Bookings';
 import Tabs from '../Tabs';
 
@@ -26,17 +27,7 @@ const UserBookingsComponent = ({
   const [upcomingPage, setUpcomingPage] = useState(1);
   const [pastPage, setPastPage] = useState(1);
 
-  const friendOrSelfOr = [
-    { createdBy: user._id },
-    {
-      $and: [
-        { isFriendsBooking: { $eq: true } },
-        { friendEmails: { $exists: true } },
-        { friendEmails: { $ne: [] } },
-        { friendEmails: { $in: [user.email] } },
-      ],
-    },
-  ];
+  const friendOrSelfOr = buildMyBookingsAccessOr(user);
 
   const filters = {
     myBookings: user && {
@@ -81,6 +72,7 @@ const UserBookingsComponent = ({
                 bookingConfig={bookingConfig}
                 hideExportCsv={hideExportCsv}
                 previewAsAdmin={Boolean(isSpaceHostView)}
+                bookingDetailHrefPrefix="/stay"
               />
             ),
           },
@@ -95,6 +87,7 @@ const UserBookingsComponent = ({
                 bookingConfig={bookingConfig}
                 hideExportCsv={hideExportCsv}
                 previewAsAdmin={Boolean(isSpaceHostView)}
+                bookingDetailHrefPrefix="/stay"
               />
             ),
           },
