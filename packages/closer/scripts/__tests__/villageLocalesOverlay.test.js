@@ -260,41 +260,83 @@ describe('BASE_LOCALES / importVillageLocale sync guard', () => {
 });
 
 describe('resolveVillageI18n', () => {
-  it('defaults to en when no language is configured', () => {
-    expect(resolveVillageI18n({})).toEqual({
-      locales: BASE_LOCALES,
-      defaultLocale: 'en',
-    });
-    expect(resolveVillageI18n({ general: {} })).toEqual({
-      locales: BASE_LOCALES,
+  it('is English-only when general.locales is absent or empty', () => {
+    const expected = { locales: ['en'], defaultLocale: 'en' };
+    expect(resolveVillageI18n({})).toEqual(expected);
+    expect(resolveVillageI18n({ general: {} })).toEqual(expected);
+    expect(resolveVillageI18n({ general: { locales: [] } })).toEqual(expected);
+  });
+
+  it('stays English-only when general.language is set but no locales are enabled', () => {
+    const log = silentLog();
+    expect(resolveVillageI18n({ general: { language: 'pt' } }, log)).toEqual({
+      locales: ['en'],
       defaultLocale: 'en',
     });
   });
 
-  it('uses general.language as the default locale when a bundle exists', () => {
-    expect(resolveVillageI18n({ general: { language: 'pt' } })).toEqual({
-      locales: BASE_LOCALES,
-      defaultLocale: 'pt',
-    });
+  it('enables the configured locales and defaults to general.language', () => {
     expect(
-      resolveVillageI18n({ general: { language: ' PL ' } }).defaultLocale,
-    ).toBe('pl');
+      resolveVillageI18n({
+        general: { locales: ['en', 'pt'], language: 'pt' },
+      }),
+    ).toEqual({ locales: ['en', 'pt'], defaultLocale: 'pt' });
   });
 
-  it('warns and falls back to en for a language with no base bundle', () => {
+  it('normalizes locale casing and whitespace', () => {
+    expect(
+      resolveVillageI18n({
+        general: { locales: [' PT ', 'En'], language: ' PT ' },
+      }),
+    ).toEqual({ locales: ['pt', 'en'], defaultLocale: 'pt' });
+  });
+
+  it('defaults to en when general.language is not enabled', () => {
     const log = silentLog();
     expect(
-      resolveVillageI18n({ general: { language: 'xx' } }, log),
-    ).toEqual({ locales: BASE_LOCALES, defaultLocale: 'en' });
+      resolveVillageI18n(
+        { general: { locales: ['en', 'pl'], language: 'pt' } },
+        log,
+      ),
+    ).toEqual({ locales: ['en', 'pl'], defaultLocale: 'en' });
     expect(log.warn).toHaveBeenCalledTimes(1);
   });
 
-  it('tolerates malformed snapshots', () => {
+  it('defaults to the first locale when en is not enabled', () => {
+    expect(resolveVillageI18n({ general: { locales: ['pt', 'pl'] } })).toEqual({
+      locales: ['pt', 'pl'],
+      defaultLocale: 'pt',
+    });
+  });
+
+  it('warns and drops a locales entry with no base bundle', () => {
+    const log = silentLog();
+    expect(
+      resolveVillageI18n({ general: { locales: ['en', 'xx'] } }, log),
+    ).toEqual({ locales: ['en'], defaultLocale: 'en' });
+    expect(log.warn).toHaveBeenCalledTimes(1);
+    expect(log.warn.mock.calls[0][0]).toContain('"xx"');
+    expect(log.warn.mock.calls[0][0]).toContain('no base locale bundle');
+  });
+
+  it('never throws on malformed snapshots or locale values', () => {
     const log = silentLog();
     // `undefined` is excluded: it would trigger the default parameter, which
     // reads whatever snapshot happens to be on disk.
-    for (const bad of [null, 'nope', 42, { general: { language: 7 } }]) {
-      expect(resolveVillageI18n(bad, log).defaultLocale).toBe('en');
+    for (const bad of [
+      null,
+      'nope',
+      42,
+      { general: { language: 7 } },
+      { general: { locales: 'pt' } },
+      { general: { locales: { en: true } } },
+      { general: { locales: [42, null, {}, ''] } },
+      { general: { locales: ['xx'], language: 'xx' } },
+    ]) {
+      expect(resolveVillageI18n(bad, log)).toEqual({
+        locales: ['en'],
+        defaultLocale: 'en',
+      });
     }
   });
 });
