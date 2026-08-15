@@ -7,7 +7,9 @@ const {
   BASE_LOCALES,
   LOCALES_ROOT,
   SNAPSHOT_PATH,
-  listBaseLocales,
+  normalizeLocale,
+  readJson,
+  warnNoBaseBundle,
 } = require('./localeConstants.cjs');
 
 const OUT_ROOT = path.join(__dirname, '..', 'generated', 'locales');
@@ -19,50 +21,18 @@ const APP_LOCALES = {
   'per-auset': ['en'],
   earthbound: ['en'],
   closer: ['en'],
-  // No locales/village/ overlay directory exists on purpose: every village
-  // shares the same brand-neutral base bundle. Per-village customization
-  // arrives exclusively through the build-time config snapshot's `locales`
-  // bucket (see readVillageLocalesOverlay) so a village's strings live in its
-  // own DB, never in this repo. The bundle is built for every base locale so
-  // a village's configured language (general.language) can pick one.
   village: BASE_LOCALES,
 };
-
-function readJson(filePath) {
-  if (!fs.existsSync(filePath)) {
-    return {};
-  }
-  const raw = fs.readFileSync(filePath, 'utf8');
-  try {
-    return JSON.parse(raw);
-  } catch (e) {
-    console.error(`[sync-build-locales] Invalid JSON: ${filePath}`);
-    throw e;
-  }
-}
 
 function isPlainObject(value) {
   return value != null && typeof value === 'object' && !Array.isArray(value);
 }
 
-/**
- * Extract the per-locale message overlay a village stores in its own config
- * (the `locales` bucket of the /config payload snapshotted by
- * syncBuildConfig.cjs). Expected shape:
- *
- *   { "locales": { "en": { "key": "message", ... }, "pt": { ... } } }
- *
- * Absent bucket (every current village) → {} and the pure-base bundle ships
- * exactly as today. A malformed bucket, locale, or message value is warned
- * about and skipped — a bad overlay row must never fail the build.
- */
 function readVillageLocalesOverlay(snapshot, log = console) {
   if (!isPlainObject(snapshot)) return {};
   const bucket = snapshot.locales;
   if (bucket == null) return {};
   if (!isPlainObject(bucket)) {
-    // The whole overlay is being dropped — make that impossible to miss in a
-    // build log, without failing the build.
     log.warn(
       [
         '[sync-build-locales] ============================================================',
@@ -81,12 +51,7 @@ function readVillageLocalesOverlay(snapshot, log = console) {
   }
   const overlay = {};
   for (const [rawLocale, messages] of Object.entries(bucket)) {
-    // Normalize the locale key the same way general.language is normalized
-    // (villageI18n.cjs), so a "PT" or " pt " bucket still applies.
-    const locale =
-      typeof rawLocale === 'string'
-        ? rawLocale.trim().toLowerCase()
-        : rawLocale;
+    const locale = normalizeLocale(rawLocale);
     if (!isPlainObject(messages)) {
       log.warn(
         `[sync-build-locales] Ignoring config locales overlay for "${locale}": expected an object of messages, got ` +
@@ -95,12 +60,11 @@ function readVillageLocalesOverlay(snapshot, log = console) {
       continue;
     }
     if (!BASE_LOCALES.includes(locale)) {
-      // Only base locales are built (APP_LOCALES.village), so this overlay
-      // would otherwise vanish without a trace.
-      log.warn(
-        `[sync-build-locales] Config locales overlay for "${locale}" has no base locale bundle (${BASE_LOCALES.join(
-          ', ',
-        )}); its messages will not appear in any built bundle.`,
+      warnNoBaseBundle(
+        log,
+        '[sync-build-locales]',
+        `Config locales overlay for "${locale}"`,
+        'its messages will not appear in any built bundle.',
       );
     }
     const clean = {};
@@ -166,9 +130,6 @@ if (require.main === module) {
 
 module.exports = {
   APP_LOCALES,
-  BASE_LOCALES,
-  SNAPSHOT_PATH,
-  listBaseLocales,
   mergeMessages,
   readVillageLocalesOverlay,
 };

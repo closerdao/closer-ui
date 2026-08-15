@@ -1,27 +1,19 @@
-/**
- * Village locale bundles: base languages + village-owned config overlay.
- *
- * The village bundle is built for every base locale, with base-en underlaid
- * beneath partial translations, and a village's own `locales` config bucket
- * (fetched into generated/appConfig.snapshot.json at build) merged on top.
- * An absent bucket must produce exactly today's pure-base bundle, and a
- * malformed bucket must warn and be skipped — never fail the build.
- */
 const fs = require('fs');
 const path = require('path');
 
 const {
-  APP_LOCALES,
   BASE_LOCALES,
   listBaseLocales,
+  readJson,
+} = require('../localeConstants.cjs');
+const {
+  APP_LOCALES,
   mergeMessages,
   readVillageLocalesOverlay,
 } = require('../syncBuildLocales.cjs');
 const { readSnapshot, resolveVillageI18n } = require('../villageI18n.cjs');
 
 const LOCALES_ROOT = path.join(__dirname, '..', '..', 'locales');
-
-const readJson = (filePath) => JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
 const silentLog = () => ({ warn: jest.fn() });
 
@@ -76,8 +68,6 @@ describe('readVillageLocalesOverlay', () => {
       const log = silentLog();
       expect(readVillageLocalesOverlay({ locales: bad }, log)).toEqual({});
       expect(log.warn).toHaveBeenCalledTimes(1);
-      // The whole overlay is dropped here, so the warning must be findable in
-      // a noisy build log: multi-line with an unmistakable marker.
       const message = log.warn.mock.calls[0][0];
       expect(message).toContain('VILLAGE LOCALES OVERLAY IGNORED');
       expect(message.split('\n').length).toBeGreaterThan(3);
@@ -122,8 +112,6 @@ describe('readVillageLocalesOverlay', () => {
       { locales: { fr: { stay_title: 'Réservez un lit' } } },
       log,
     );
-    // The messages are kept in the overlay (harmless), but no fr bundle is
-    // built, so the build must say the customization goes nowhere.
     expect(overlay).toEqual({ fr: { stay_title: 'Réservez un lit' } });
     expect(log.warn).toHaveBeenCalledTimes(1);
     expect(log.warn.mock.calls[0][0]).toContain('"fr"');
@@ -241,10 +229,6 @@ describe('readSnapshot', () => {
 });
 
 describe('BASE_LOCALES / importVillageLocale sync guard', () => {
-  // The set of village locales lives in three places: locales/base-<locale>.json
-  // files (→ BASE_LOCALES), APP_LOCALES.village (asserted above), and the
-  // static-import switch in utils/locale.helpers.ts (Next.js needs literal
-  // import paths, so it cannot be derived). Catch the third one drifting.
   it('locale.helpers.ts imports a village bundle for exactly the base locales', () => {
     const source = fs.readFileSync(
       path.join(__dirname, '..', '..', 'utils', 'locale.helpers.ts'),

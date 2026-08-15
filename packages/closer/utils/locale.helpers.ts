@@ -51,14 +51,6 @@ export async function loadLocaleData(
       case 'village':
         return importVillageLocale(localeKey);
       default:
-        // Any app name outside the legacy list is a provisioned village slug
-        // (NEXT_PUBLIC_APP_NAME, see #948): serve the shared village bundle
-        // in the requested locale. This is the correct path, not an error —
-        // only a missing appName (handled below) warrants a warning. The
-        // bundle exists for every base locale (syncBuildLocales.cjs builds
-        // village/<locale>.json from locales/base-<locale>.json); adding a
-        // new base language means adding a case here too, since Next.js
-        // needs static import paths.
         return importVillageLocale(localeKey);
     }
   }

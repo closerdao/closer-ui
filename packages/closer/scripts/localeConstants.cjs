@@ -12,11 +12,6 @@ const path = require('path');
 
 const LOCALES_ROOT = path.join(__dirname, '..', 'locales');
 
-/**
- * Where syncBuildConfig.cjs writes the per-app config snapshot and where the
- * locale overlay + village i18n resolution read it back. Single definition so
- * writer and readers can never drift apart.
- */
 const SNAPSHOT_PATH = path.join(
   __dirname,
   '..',
@@ -24,10 +19,6 @@ const SNAPSHOT_PATH = path.join(
   'appConfig.snapshot.json',
 );
 
-/**
- * Every locale that has a locales/base-<locale>.json file. Adding a new base
- * translation file automatically extends the village bundle to that locale.
- */
 function listBaseLocales(localesRoot = LOCALES_ROOT) {
   const locales = fs
     .readdirSync(localesRoot)
@@ -37,10 +28,44 @@ function listBaseLocales(localesRoot = LOCALES_ROOT) {
     })
     .filter(Boolean)
     .sort();
-  // English first: it is the fallback underlay and the default locale.
   return ['en', ...locales.filter((locale) => locale !== 'en')];
 }
 
 const BASE_LOCALES = listBaseLocales();
 
-module.exports = { BASE_LOCALES, LOCALES_ROOT, SNAPSHOT_PATH, listBaseLocales };
+function normalizeLocale(value) {
+  return typeof value === 'string' ? value.trim().toLowerCase() : null;
+}
+
+function readJson(filePath, failureMessage, log = console) {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch (error) {
+    if (failureMessage) {
+      log.warn(
+        `${failureMessage} (${error && error.message ? error.message : error})`,
+      );
+      return {};
+    }
+    if (error.code === 'ENOENT') return {};
+    throw new Error(`Invalid JSON: ${filePath} (${error.message})`);
+  }
+}
+
+function warnNoBaseBundle(log, prefix, subject, consequence) {
+  log.warn(
+    `${prefix} ${subject} has no base locale bundle (${BASE_LOCALES.join(
+      ', ',
+    )}); ${consequence}`,
+  );
+}
+
+module.exports = {
+  BASE_LOCALES,
+  LOCALES_ROOT,
+  SNAPSHOT_PATH,
+  listBaseLocales,
+  normalizeLocale,
+  readJson,
+  warnNoBaseBundle,
+};

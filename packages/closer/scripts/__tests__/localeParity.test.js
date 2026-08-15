@@ -1,23 +1,9 @@
-/**
- * Locale parity guard.
- *
- * Every generated English bundle must contain every key that the Closer bundle
- * contains. Apps are free to ADD keys in their own overlay, but a key that only
- * exists in one overlay is invisible to every other app — next-intl silently
- * renders the raw key path when a message is missing, so the regression is only
- * caught by eyeballing a live page.
- *
- * The village bundle has no overlay directory on purpose — per-village
- * strings arrive only via the build-time config snapshot's `locales` bucket —
- * so this effectively asserts that every shared key lives in
- * locales/base-en.json.
- */
 const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+const { SNAPSHOT_PATH, readJson } = require('../localeConstants.cjs');
 const {
-  SNAPSHOT_PATH,
   mergeMessages,
   readVillageLocalesOverlay,
 } = require('../syncBuildLocales.cjs');
@@ -32,8 +18,6 @@ execFileSync(
   [path.join(__dirname, '..', 'syncBuildLocales.cjs')],
   { stdio: 'ignore' },
 );
-
-const readJson = (filePath) => JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
 const generatedApps = fs
   .readdirSync(GENERATED_ROOT, { withFileTypes: true })
@@ -68,10 +52,9 @@ describe('generated locale bundles', () => {
   });
 
   it('generated bundles are in sync with locales/ (run pnpm build:locales)', () => {
-    const villageOverlay = readVillageLocalesOverlay(
-      fs.existsSync(SNAPSHOT_PATH) ? readJson(SNAPSHOT_PATH) : {},
-      { warn: () => {} },
-    );
+    const villageOverlay = readVillageLocalesOverlay(readJson(SNAPSHOT_PATH), {
+      warn: () => {},
+    });
     for (const app of generatedApps) {
       const expected = mergeMessages(app, 'en', villageOverlay);
       const actual = readJson(path.join(GENERATED_ROOT, app, 'en.json'));
