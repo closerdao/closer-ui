@@ -37,7 +37,10 @@ import {
   formatIsoFiatAmount,
   isIso4217Currency,
 } from '../../../utils/currencyFormat';
-import { getFinancedMonthlyAmountDue } from '../../../utils/financeApplicationMonthlyDue';
+import {
+  getFinancedMonthlyAmountDue,
+  getScheduleMonthAmountDue,
+} from '../../../utils/financeApplicationMonthlyDue';
 import {
   canCancelFinanceApplication,
   getFinanceCancellationSummary,
@@ -72,6 +75,7 @@ const getScheduleEntries = (
     .map(([month, value]) => ({
       month,
       status: value.status,
+      amountDue: value.amountDue,
       amountPaid: value.amountPaid,
       paymentDate: value.paymentDate ? new Date(value.paymentDate) : null,
     }));
@@ -793,7 +797,23 @@ const FinancedTokenApplicationPage = () => {
                           )}
                         </p>
                         <p className="text-xs">
-                          {formatIsoFiatAmount(monthlyInstallmentDue, 'EUR')}
+                          {formatIsoFiatAmount(
+                            getScheduleMonthAmountDue(
+                              row,
+                              monthlyInstallmentDue,
+                            ),
+                            'EUR',
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between gap-3 mt-1">
+                        <p className="text-xs text-gray-500">
+                          {t(
+                            'token_sales_dashboard_financed_schedule_amount_paid',
+                          )}
+                        </p>
+                        <p className="text-xs">
+                          {formatIsoFiatAmount(Number(row.amountPaid || 0), 'EUR')}
                         </p>
                       </div>
                     </div>

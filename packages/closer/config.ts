@@ -876,8 +876,27 @@ export const configDescription: ConfigType[] = [
         type: 'number',
         default: 0,
       },
-      // Comma separated list of the repayment terms buyers can pick from. A
-      // single entry hides the picker and just uses that term.
+      // Hard ceiling on how long a financed purchase may be stretched
+      // (e.g. 6, 180 for 15y, 360 for 30y). Buyers may still pick a shorter term.
+      maxFinancingMonths: {
+        type: 'number',
+        default: 36,
+      },
+      // Annual percentage rate applied to the financed principal when quoting
+      // and writing monthly dues into the contract schedule.
+      financingAprPercent: {
+        type: 'number',
+        default: 0,
+      },
+      // Floor on the quoted monthly installment. Packages that amortise below
+      // this at the chosen term cannot be contracted.
+      minMonthlyPayment: {
+        type: 'number',
+        default: 0,
+      },
+      // Optional comma-separated preset terms buyers can pick from. Values
+      // above maxFinancingMonths are ignored; when empty the UI offers a
+      // free-form months input up to the max.
       financingDurationsMonths: {
         type: 'text',
         default: '36',

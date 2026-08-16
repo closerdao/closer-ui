@@ -32,7 +32,10 @@ import { financeApplicationIdFromCreateResponse } from '../../../utils/financeAp
 import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
 import {
   getDownPaymentPercent,
+  getFinancingAprPercent,
   getFinancingDurations,
+  getMaxFinancingMonths,
+  getMinMonthlyPayment,
 } from '../../../utils/tokenFinancing';
 import PageNotFound from '../../not-found';
 
@@ -45,10 +48,11 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
 
-  const MIN_TOKENS_TO_FINANCE = 30;
-
   const durations = getFinancingDurations(tokenConfig);
+  const maxFinancingMonths = getMaxFinancingMonths(tokenConfig);
   const downPaymentPercent = getDownPaymentPercent(tokenConfig);
+  const aprPercent = getFinancingAprPercent(tokenConfig);
+  const minMonthlyPayment = getMinMonthlyPayment(tokenConfig);
 
   const areSubscriptionsEnabled =
     subscriptionsConfig?.enabled &&
@@ -69,7 +73,8 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
     Partial<FinanceApplicationCreateRequest>
   >({
     iban: '',
-    tokensToFinance: MIN_TOKENS_TO_FINANCE,
+    tokensToFinance: 1,
+    durationInMonths: durations[0] || maxFinancingMonths,
     why: user?.citizenship?.why || '',
   });
 
@@ -137,18 +142,28 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
     key: keyof FinanceApplicationCreateRequest,
     value: any,
   ) => {
-    setApplication((prev) => ({ ...prev, [key]: value }));
+    setApplication((prev) => {
+      if (prev[key] === value) {
+        return prev;
+      }
+      return { ...prev, [key]: value };
+    });
   };
 
   const financedTokenApply = async (isCitizenApplication: boolean) => {
     try {
+      const durationInMonths = Math.min(
+        application.durationInMonths || durations[0] || maxFinancingMonths,
+        maxFinancingMonths,
+      );
       const res = await api.post('/token/finance-application', {
         tokensToFinance: application.tokensToFinance!,
         totalToPayInFiat: application.totalToPayInFiat!,
         iban: application.iban!,
-        // The picker is hidden when only one term is offered, so the default
-        // still has to be sent explicitly.
-        durationInMonths: application.durationInMonths || durations[0],
+        durationInMonths,
+        monthlyPaymentAmount: application.monthlyPaymentAmount,
+        downPaymentAmount: application.downPaymentAmount,
+        aprPercent: application.aprPercent ?? aprPercent,
         isCitizenApplication,
         why: application?.why,
       } as FinanceApplicationCreateRequest);
@@ -227,6 +242,9 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
       tokenPriceModifierPercent={tokenConfig?.tokenPriceModifierPercent || 0}
       downPaymentPercent={downPaymentPercent}
       durations={durations}
+      maxFinancingMonths={maxFinancingMonths}
+      aprPercent={aprPercent}
+      minMonthlyPayment={minMonthlyPayment}
       isAgreementAccepted={isAgreementAccepted}
       setIsAgreementAccepted={setIsAgreementAccepted}
       isTokenTermsAccepted={isTokenTermsAccepted}

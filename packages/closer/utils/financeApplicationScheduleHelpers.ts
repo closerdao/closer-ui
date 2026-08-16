@@ -3,6 +3,8 @@ import { FinanceApplication } from '../types/subscriptions';
 export type FinanceScheduleRow = {
   month: string;
   status: 'pending' | 'paid';
+  amountDue?: number;
+  amountPaid?: number;
   paymentDate: Date | null;
 };
 
@@ -14,6 +16,8 @@ export function getFinanceScheduleRows(
     .map(([month, value]) => ({
       month,
       status: value.status,
+      amountDue: value.amountDue,
+      amountPaid: value.amountPaid,
       paymentDate: value.paymentDate ? new Date(value.paymentDate) : null,
     }));
 }

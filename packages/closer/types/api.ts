@@ -263,7 +263,13 @@ export type TokenConfig = {
   maxSupply?: number | string;
   downPaymentPercent?: number;
   tokenPriceModifierPercent?: number;
-  /** Comma separated months, e.g. `'12,24,36'`. */
+  /** Hard ceiling on repayment length in months (e.g. 6, 180, 360). */
+  maxFinancingMonths?: number;
+  /** Annual percentage rate applied to the financed principal. */
+  financingAprPercent?: number;
+  /** Minimum allowed monthly installment in fiat. */
+  minMonthlyPayment?: number;
+  /** Optional comma separated preset months, e.g. `'12,24,36'`. */
   financingDurationsMonths?: string;
 };
 

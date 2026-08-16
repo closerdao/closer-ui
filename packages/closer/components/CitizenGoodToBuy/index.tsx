@@ -1,6 +1,5 @@
 import { useTranslations } from 'next-intl';
 
-import { roundUpToFinancingIncrement } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import {
   CitizenApplication,
@@ -34,9 +33,9 @@ const CitizenGoodToBuy = ({
       ? tokensRequired - balanceTotal
       : tokensRequired;
 
-  // Financing is only sold in whole blocks of 30, so the label has to promise
-  // an amount people can actually pick on `/token/finance`.
-  const tokensToFinance = roundUpToFinancingIncrement(tokensToBuy);
+  // Finance any positive token count; min monthly payment is enforced on
+  // `/token/finance` from the admin token financing config.
+  const tokensToFinance = Math.max(1, Math.ceil(tokensToBuy));
 
   const options: {
     id: keyof CitizenTokenIntent;

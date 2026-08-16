@@ -2,8 +2,14 @@ import { buildMergedConfig } from '../config.utils';
 import {
   DEFAULT_DOWN_PAYMENT_PERCENT,
   DEFAULT_FINANCING_DURATION_MONTHS,
+  applyPaymentWithCarryover,
+  buildFinanceQuote,
+  calculateAmortizedMonthlyPayment,
   getDownPaymentPercent,
+  getFinancingAprPercent,
   getFinancingDurations,
+  getMaxFinancingMonths,
+  getMinMonthlyPayment,
   parseFinancingDurations,
 } from '../tokenFinancing';
 
@@ -50,6 +56,97 @@ describe('getDownPaymentPercent', () => {
   });
 });
 
+describe('max financing length, APR, and min monthly payment', () => {
+  it('reads maxFinancingMonths and falls back to the largest preset', () => {
+    expect(
+      getMaxFinancingMonths({ enabled: true, maxFinancingMonths: 180 }),
+    ).toBe(180);
+    expect(
+      getMaxFinancingMonths({
+        enabled: true,
+        financingDurationsMonths: '6,12,24',
+      }),
+    ).toBe(24);
+  });
+
+  it('filters duration presets by the configured max', () => {
+    expect(
+      getFinancingDurations({
+        enabled: true,
+        maxFinancingMonths: 12,
+        financingDurationsMonths: '6,12,24,36',
+      }),
+    ).toEqual([6, 12]);
+  });
+
+  it('reads APR and minimum monthly payment', () => {
+    expect(
+      getFinancingAprPercent({ enabled: true, financingAprPercent: 5 }),
+    ).toBe(5);
+    expect(
+      getMinMonthlyPayment({ enabled: true, minMonthlyPayment: 250 }),
+    ).toBe(250);
+  });
+});
+
+describe('amortized monthly payment', () => {
+  it('splits principal evenly when APR is zero', () => {
+    expect(calculateAmortizedMonthlyPayment(2340, 0, 6)).toBe(390);
+  });
+
+  it('quotes a 10-token package against max term and min monthly', () => {
+    const quote = buildFinanceQuote({
+      totalToPayInFiat: 2600,
+      downPaymentPercent: 0,
+      durationInMonths: 6,
+      aprPercent: 0,
+      minMonthlyPayment: 250,
+    });
+
+    expect(quote.monthlyPaymentAmount).toBe(433.33);
+    expect(quote.meetsMinMonthlyPayment).toBe(true);
+  });
+
+  it('rejects quotes below the minimum monthly payment', () => {
+    const quote = buildFinanceQuote({
+      totalToPayInFiat: 500,
+      downPaymentPercent: 0,
+      durationInMonths: 6,
+      aprPercent: 0,
+      minMonthlyPayment: 250,
+    });
+
+    expect(quote.monthlyPaymentAmount).toBeCloseTo(83.33, 2);
+    expect(quote.meetsMinMonthlyPayment).toBe(false);
+  });
+});
+
+describe('applyPaymentWithCarryover', () => {
+  it('flows overpayment into the next month', () => {
+    const updated = applyPaymentWithCarryover(
+      [
+        { amountDue: 250, amountPaid: 0, status: 'pending' },
+        { amountDue: 250, amountPaid: 0, status: 'pending' },
+        { amountDue: 250, amountPaid: 0, status: 'pending' },
+      ],
+      400,
+    );
+
+    expect(updated[0]).toMatchObject({
+      amountPaid: 250,
+      status: 'paid',
+    });
+    expect(updated[1]).toMatchObject({
+      amountPaid: 150,
+      status: 'pending',
+    });
+    expect(updated[2]).toMatchObject({
+      amountPaid: 0,
+      status: 'pending',
+    });
+  });
+});
+
 describe('token config legacy fallback', () => {
   it('inherits a stored web3 document and the old citizenship financing terms', () => {
     const merged = buildMergedConfig([
@@ -85,6 +182,9 @@ describe('token config legacy fallback', () => {
           maxSupply: 22000,
           tokenPriceModifierPercent: 0,
           financingDurationsMonths: '24,36',
+          maxFinancingMonths: 36,
+          financingAprPercent: 4,
+          minMonthlyPayment: 250,
         },
       },
     ]);
@@ -92,8 +192,12 @@ describe('token config legacy fallback', () => {
     expect(merged.token).toMatchObject({
       maxSupply: 22000,
       tokenPriceModifierPercent: 0,
+      maxFinancingMonths: 36,
+      financingAprPercent: 4,
+      minMonthlyPayment: 250,
     });
     expect(getFinancingDurations(merged.token as any)).toEqual([24, 36]);
+    expect(getMaxFinancingMonths(merged.token as any)).toBe(36);
   });
 
   it('falls back to schema defaults when nothing is stored', () => {
@@ -103,6 +207,9 @@ describe('token config legacy fallback', () => {
       downPaymentPercent: 10,
       tokenPriceModifierPercent: 0,
       financingDurationsMonths: '36',
+      maxFinancingMonths: 36,
+      financingAprPercent: 0,
+      minMonthlyPayment: 0,
     });
   });
 });

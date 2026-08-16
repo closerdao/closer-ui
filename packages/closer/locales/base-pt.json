@@ -3362,7 +3362,7 @@
   "config_label_discountsMonthly": "Desconto mensal",
   "config_label_discountsWeekly": "Desconto semanal",
   "config_label_downPaymentPercent": "Entrada (%)",
-  "config_label_financingDurationsMonths": "Prazos de financiamento (meses, separados por vírgula)",
+  "config_label_financingDurationsMonths": "Prazos de financiamento predefinidos (meses, separados por vírgula)",
   "config_label_emoji": "Emoji",
   "config_label_end": "Fim",
   "config_label_ethereumWalletAddress": "Morada da carteira Ethereum",
@@ -3746,5 +3746,13 @@
   "deploy_queue_empty_title": "Fila vazia",
   "deploy_queue_requested_at": "Pedido a {date}",
   "map_page_headline": "Todas as aldeias,",
-  "villages_page_headline": "Aldeias regenerativas,"
+  "villages_page_headline": "Aldeias regenerativas,",
+  "subscriptions_citizen_finance_tokens_details_apr": "{percent}% de TAEG sobre o saldo financiado",
+  "subscriptions_citizen_finance_tokens_details_min_monthly": "Pagamento mensal mínimo €{amount}",
+  "subscriptions_citizen_finance_tokens_max_duration_hint": "O prazo máximo de financiamento é {months} meses.",
+  "subscriptions_citizen_finance_tokens_min_monthly_error": "O pagamento mensal €{monthly} está abaixo do mínimo €{min}. Escolha mais tokens ou um prazo mais curto.",
+  "token_sales_dashboard_financed_schedule_amount_paid": "Valor pago",
+  "config_label_maxFinancingMonths": "Prazo máximo de financiamento (meses)",
+  "config_label_financingAprPercent": "TAEG de financiamento (%)",
+  "config_label_minMonthlyPayment": "Pagamento mensal mínimo"
 }

@@ -3419,7 +3419,7 @@
   "config_label_discountsMonthly": "Monthly discounts",
   "config_label_discountsWeekly": "Weekly discounts",
   "config_label_downPaymentPercent": "Down payment (%)",
-  "config_label_financingDurationsMonths": "Financing terms (months, comma separated)",
+  "config_label_financingDurationsMonths": "Financing term presets (months, comma separated)",
   "config_label_emoji": "Emoji",
   "config_label_end": "End",
   "config_label_ethereumWalletAddress": "Ethereum wallet address",
@@ -3803,5 +3803,13 @@
   "deploy_queue_empty_title": "Queue is clear",
   "deploy_queue_requested_at": "Requested {date}",
   "map_page_headline": "Every village,",
-  "villages_page_headline": "Regenerative villages,"
+  "villages_page_headline": "Regenerative villages,",
+  "subscriptions_citizen_finance_tokens_details_apr": "{percent}% APR on the financed balance",
+  "subscriptions_citizen_finance_tokens_details_min_monthly": "Minimum monthly payment €{amount}",
+  "subscriptions_citizen_finance_tokens_max_duration_hint": "Maximum financing length is {months} months.",
+  "subscriptions_citizen_finance_tokens_min_monthly_error": "Monthly payment €{monthly} is below the minimum €{min}. Choose more tokens or a shorter term.",
+  "token_sales_dashboard_financed_schedule_amount_paid": "Amount paid",
+  "config_label_maxFinancingMonths": "Max financing length (months)",
+  "config_label_financingAprPercent": "Financing APR (%)",
+  "config_label_minMonthlyPayment": "Minimum monthly payment"
 }
