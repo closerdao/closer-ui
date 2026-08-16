@@ -568,7 +568,9 @@ const CitizenshipPage = ({
                 </p>
                 <p className="flex items-start gap-2">
                   <Check className="mt-1 h-5 w-5 text-accent" />
-                  {t('citizenship_financed_tokens_2')}
+                  {t('citizenship_financed_tokens_2', {
+                    percent: downPaymentPercent,
+                  })}
                 </p>
                 <p className="flex items-start gap-2">
                   <Check className="mt-1 h-5 w-5 text-accent" />

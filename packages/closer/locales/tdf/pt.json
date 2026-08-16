@@ -1084,7 +1084,7 @@
   "citizenship_pathway_agreement_desc": "Confirme responsabilidades e direitos (ver Guia do Jogo).",
   "citizenship_financed_tokens_title": "Tokens Financiados — Entrada Flexível",
   "citizenship_financed_tokens_1": "Disponível para cidadania (planos de 30, 60, 90, 120 tokens ao longo de 36 meses).",
-  "citizenship_financed_tokens_2": "10% de entrada, TAEG sobre o saldo financiado.",
+  "citizenship_financed_tokens_2": "{percent}% de entrada, TAEG sobre o saldo financiado.",
   "citizenship_financed_tokens_3": "Utilidade instantânea desbloqueada de todos os tokens.",
   "citizenship_loading_token_prices": "A carregar preços de tokens...",
   "citizenship_from": "A partir de",

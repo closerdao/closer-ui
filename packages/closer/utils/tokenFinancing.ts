@@ -155,10 +155,15 @@ export const buildFinanceQuote = ({
     aprPercent,
     durationInMonths,
   );
-  const totalRepayable = roundFiat(
+  const scheduledRepayable = roundFiat(
     downPaymentAmount + monthlyPaymentAmount * durationInMonths,
   );
-  const carryingCost = roundFiat(Math.max(0, totalRepayable - totalToPayInFiat));
+  const totalRepayable =
+    aprPercent > 0 ? scheduledRepayable : roundFiat(totalToPayInFiat);
+  const carryingCost =
+    aprPercent > 0
+      ? roundFiat(Math.max(0, totalRepayable - totalToPayInFiat))
+      : 0;
 
   return {
     totalToPayInFiat: roundFiat(totalToPayInFiat),

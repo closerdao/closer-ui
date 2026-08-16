@@ -129,6 +129,20 @@ describe('amortized monthly payment', () => {
     expect(quote.carryingCost).toBe(0);
   });
 
+  it('does not treat 0% APR cent rounding as a carrying cost', () => {
+    const quote = buildFinanceQuote({
+      totalToPayInFiat: 2,
+      downPaymentPercent: 0,
+      durationInMonths: 3,
+      aprPercent: 0,
+      minMonthlyPayment: 0,
+    });
+
+    expect(quote.monthlyPaymentAmount).toBe(0.67);
+    expect(quote.carryingCost).toBe(0);
+    expect(quote.totalRepayable).toBe(2);
+  });
+
   it('rejects quotes below the minimum monthly payment', () => {
     const quote = buildFinanceQuote({
       totalToPayInFiat: 500,

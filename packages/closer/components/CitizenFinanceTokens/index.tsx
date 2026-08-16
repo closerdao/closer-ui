@@ -355,25 +355,27 @@ const CitizenFinanceTokens = ({
               var: quote.monthlyPaymentAmount,
             })}{' '}
           </li>
-          {quote.carryingCost > 0 && (
-            <li className="pl-2">
-              <span className="font-bold">
-                {t('subscriptions_citizen_finance_tokens_carrying_cost')}
-              </span>{' '}
-              {t('subscriptions_citizen_finance_tokens_carrying_cost_amount', {
-                amount: quote.carryingCost,
-                percent: aprPercent,
-              })}
-            </li>
+          {aprPercent > 0 && (
+            <>
+              <li className="pl-2">
+                <span className="font-bold">
+                  {t('subscriptions_citizen_finance_tokens_carrying_cost')}
+                </span>{' '}
+                {t('subscriptions_citizen_finance_tokens_carrying_cost_amount', {
+                  amount: quote.carryingCost,
+                  percent: aprPercent,
+                })}
+              </li>
+              <li className="pl-2">
+                <span className="font-bold">
+                  {t('subscriptions_citizen_finance_tokens_total_repayable')}
+                </span>{' '}
+                {t('subscriptions_citizen_finance_tokens_total_repayable_amount', {
+                  var: quote.totalRepayable,
+                })}
+              </li>
+            </>
           )}
-          <li className="pl-2">
-            <span className="font-bold">
-              {t('subscriptions_citizen_finance_tokens_total_repayable')}
-            </span>{' '}
-            {t('subscriptions_citizen_finance_tokens_total_repayable_amount', {
-              var: quote.totalRepayable,
-            })}
-          </li>
           <li className="pl-2">
             <span className="font-bold">
               {t('subscriptions_citizen_finance_tokens_cost_per_token')}

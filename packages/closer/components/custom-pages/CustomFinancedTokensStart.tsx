@@ -4,7 +4,10 @@ import { useTranslations } from 'next-intl';
 
 import { Heading, LinkButton } from '../ui';
 import { useAuth } from '../../contexts/auth';
+import { TokenConfig } from '../../types/api';
 import { resolveBlockText } from '../../utils/blockI18n';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { getDownPaymentPercent } from '../../utils/tokenFinancing';
 
 interface Props {
   settings?: Record<string, unknown>;
@@ -20,22 +23,28 @@ interface Props {
 const CustomFinancedTokensStart = ({ content }: Props) => {
   const t = useTranslations();
   const { user } = useAuth();
+  const tokenConfig = (getCachedConfig('token') ?? {}) as TokenConfig;
+  const downPaymentValues = {
+    percent: getDownPaymentPercent(tokenConfig),
+  };
 
   const pick = (raw: string | undefined, fallback: string) =>
     raw != null && String(raw).trim() !== ''
-      ? resolveBlockText(raw, t)
+      ? resolveBlockText(raw, t, downPaymentValues)
       : fallback;
 
   const title = pick(content?.title, t('citizenship_financed_tokens_title'));
   const description = content?.description?.trim()
-    ? resolveBlockText(content.description, t)
+    ? resolveBlockText(content.description, t, downPaymentValues)
     : '';
   const items =
     Array.isArray(content?.items) && content.items.length > 0
-      ? content.items.map((item) => resolveBlockText(item, t))
+      ? content.items.map((item) =>
+          resolveBlockText(item, t, downPaymentValues),
+        )
       : [
           t('citizenship_financed_tokens_1'),
-          t('citizenship_financed_tokens_2'),
+          t('citizenship_financed_tokens_2', downPaymentValues),
           t('citizenship_financed_tokens_3'),
         ];
   const ctaText = pick(content?.ctaText, t('citizenship_start_financed_plan'));

@@ -1610,7 +1610,7 @@
   "citizenship_pathway_agreement_desc": "Confirm responsibilities & rights (see Game Guide).",
   "citizenship_financed_tokens_title": "Financed Tokens — Flexible Entry",
   "citizenship_financed_tokens_1": "Available for citizenship (30, 60, 90, 120 token plans over 36 months).",
-  "citizenship_financed_tokens_2": "10% downpayment, carrying APR on the financed balance.",
+  "citizenship_financed_tokens_2": "{percent}% downpayment, carrying APR on the financed balance.",
   "citizenship_financed_tokens_3": "Instant utility unlocked from all tokens.",
   "citizenship_loading_token_prices": "Loading token prices...",
   "citizenship_from": "From",

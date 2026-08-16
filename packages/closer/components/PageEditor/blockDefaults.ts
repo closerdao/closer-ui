@@ -488,11 +488,7 @@ export const createSection = (type: SectionType): PageSection => {
           content: {
             title: 'Financed Tokens — Flexible Entry',
             description: '',
-            items: [
-              'Available for citizenship (30, 60, 90, 120 token plans over 36 months).',
-              '10% downpayment, carrying APR on the financed balance.',
-              'Instant utility unlocked from all tokens.',
-            ],
+            items: [],
             ctaText: 'Start Financed Plan',
             ctaLink: '/token/finance',
           },
