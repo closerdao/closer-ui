@@ -1687,5 +1687,20 @@
   "subscriptions_citizen_finance_tokens_carrying_cost": "Carrying cost (APR):",
   "subscriptions_citizen_finance_tokens_carrying_cost_amount": "€{amount} at {percent}% APR.",
   "subscriptions_citizen_finance_tokens_total_repayable": "Total repayable:",
-  "subscriptions_citizen_finance_tokens_total_repayable_amount": "€{var}."
+  "subscriptions_citizen_finance_tokens_total_repayable_amount": "€{var}.",
+  "token_sales_dashboard_financed_apply_payment_title": "Apply payment",
+  "token_sales_dashboard_financed_apply_payment_intro": "Record a manual payment against this contract. A proof of payment (image or PDF) is required.",
+  "token_sales_dashboard_financed_apply_payment_amount": "Amount",
+  "token_sales_dashboard_financed_apply_payment_date": "Payment date",
+  "token_sales_dashboard_financed_apply_payment_note": "Note",
+  "token_sales_dashboard_financed_apply_payment_note_placeholder": "Optional reference or memo",
+  "token_sales_dashboard_financed_apply_payment_proof": "Proof of payment",
+  "token_sales_dashboard_financed_apply_payment_proof_hint": "Click to upload an image or PDF",
+  "token_sales_dashboard_financed_apply_payment_proof_clear": "Remove file",
+  "token_sales_dashboard_financed_apply_payment_proof_invalid": "Please upload an image or PDF proof of payment.",
+  "token_sales_dashboard_financed_apply_payment_uploading": "Uploading proof…",
+  "token_sales_dashboard_financed_apply_payment_submit": "Apply payment",
+  "token_sales_dashboard_financed_apply_payment_success": "Payment applied successfully.",
+  "token_sales_dashboard_financed_charge_proof": "Proof",
+  "token_sales_dashboard_financed_charge_proof_view": "View"
 }

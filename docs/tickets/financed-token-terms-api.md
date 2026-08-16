@@ -135,3 +135,5 @@ Apply carryover as above and return the updated application (including
   amount is below €250.
 - A €400 payment against €250 dues marks the first month paid and leaves €150
   paid on the second month.
+- Admin can manually apply a payment with a required proof upload; the charge
+  stores `meta.proofOfPaymentUrl` and the schedule updates with carryover.

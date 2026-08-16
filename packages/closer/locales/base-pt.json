@@ -3757,5 +3757,20 @@
   "subscriptions_citizen_finance_tokens_carrying_cost": "Custo de financiamento (TAEG):",
   "subscriptions_citizen_finance_tokens_carrying_cost_amount": "€{amount} a {percent}% de TAEG.",
   "subscriptions_citizen_finance_tokens_total_repayable": "Total a reembolsar:",
-  "subscriptions_citizen_finance_tokens_total_repayable_amount": "€{var}."
+  "subscriptions_citizen_finance_tokens_total_repayable_amount": "€{var}.",
+  "token_sales_dashboard_financed_apply_payment_title": "Registar pagamento",
+  "token_sales_dashboard_financed_apply_payment_intro": "Registe um pagamento manual neste contrato. É obrigatório um comprovativo (imagem ou PDF).",
+  "token_sales_dashboard_financed_apply_payment_amount": "Montante",
+  "token_sales_dashboard_financed_apply_payment_date": "Data do pagamento",
+  "token_sales_dashboard_financed_apply_payment_note": "Nota",
+  "token_sales_dashboard_financed_apply_payment_note_placeholder": "Referência ou memo opcional",
+  "token_sales_dashboard_financed_apply_payment_proof": "Comprovativo de pagamento",
+  "token_sales_dashboard_financed_apply_payment_proof_hint": "Clique para carregar uma imagem ou PDF",
+  "token_sales_dashboard_financed_apply_payment_proof_clear": "Remover ficheiro",
+  "token_sales_dashboard_financed_apply_payment_proof_invalid": "Carregue um comprovativo em imagem ou PDF.",
+  "token_sales_dashboard_financed_apply_payment_uploading": "A carregar comprovativo…",
+  "token_sales_dashboard_financed_apply_payment_submit": "Registar pagamento",
+  "token_sales_dashboard_financed_apply_payment_success": "Pagamento registado com sucesso.",
+  "token_sales_dashboard_financed_charge_proof": "Comprovativo",
+  "token_sales_dashboard_financed_charge_proof_view": "Ver"
 }
