@@ -129,6 +129,23 @@ const CitizenFinanceTokens = ({
   };
 
   useEffect(() => {
+    const next = application?.tokensToFinance;
+    if (typeof next !== 'number' || next <= 0) {
+      return;
+    }
+    setTokensInput((current) => {
+      if (current === String(next)) {
+        return current;
+      }
+      const parsed = Number(current);
+      if (Number.isInteger(parsed) && parsed > 0) {
+        return String(next);
+      }
+      return current;
+    });
+  }, [application?.tokensToFinance]);
+
+  useEffect(() => {
     if (isConfigReady) {
       (async () => {
         try {
@@ -173,6 +190,11 @@ const CitizenFinanceTokens = ({
   ]);
 
   const showPresetDurations = durations.length > 1;
+  const parsedTokensInput = Number(tokensInput);
+  const tokensInputMatchesApplication =
+    Number.isInteger(parsedTokensInput) &&
+    parsedTokensInput > 0 &&
+    parsedTokensInput === tokensToFinance;
   const canSubmit =
     isAgreementAccepted === isCitizenApplication &&
     isTokenTermsAccepted &&
@@ -180,7 +202,7 @@ const CitizenFinanceTokens = ({
     Boolean(application?.iban) &&
     !isPending &&
     Boolean(totalToPayInFiat) &&
-    tokensToFinance > 0 &&
+    tokensInputMatchesApplication &&
     quote.meetsMinMonthlyPayment &&
     isValid(application?.iban || '');
 

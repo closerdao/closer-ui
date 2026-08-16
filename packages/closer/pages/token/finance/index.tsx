@@ -39,6 +39,14 @@ import {
 } from '../../../utils/tokenFinancing';
 import PageNotFound from '../../not-found';
 
+const parseTokensQuery = (
+  tokens: string | string[] | undefined,
+): number | null => {
+  const raw = Array.isArray(tokens) ? tokens[0] : tokens;
+  const parsed = Number(raw);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
 const SubscriptionsCitizenApplyPage: NextPage = () => {
   const subscriptionsConfig = getCachedConfig('subscriptions') as {
     enabled: boolean;
@@ -62,7 +70,7 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
   const { platform } = usePlatform();
   const router = useRouter();
 
-  const { citizenApplication } = router.query;
+  const { citizenApplication, tokens } = router.query;
 
   const isCitizenApplication = citizenApplication === 'true';
 
@@ -73,7 +81,7 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
     Partial<FinanceApplicationCreateRequest>
   >({
     iban: '',
-    tokensToFinance: 1,
+    tokensToFinance: parseTokensQuery(tokens) ?? 1,
     durationInMonths: durations[0] || maxFinancingMonths,
     why: user?.citizenship?.why || '',
   });
@@ -85,6 +93,22 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
+
+  useEffect(() => {
+    if (!router.isReady) {
+      return;
+    }
+    const parsed = parseTokensQuery(tokens);
+    if (parsed === null) {
+      return;
+    }
+    setApplication((prev) => {
+      if (prev.tokensToFinance === parsed) {
+        return prev;
+      }
+      return { ...prev, tokensToFinance: parsed };
+    });
+  }, [router.isReady, tokens]);
 
   useEffect(() => {
     if (isLoading) return;
