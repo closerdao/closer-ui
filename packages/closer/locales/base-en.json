@@ -3507,7 +3507,6 @@
   "config_label_tiersAvailable": "Tiers available",
   "config_label_time": "Time",
   "config_label_timeZone": "Time zone",
-  "config_label_tokenPriceModifierPercent": "Token price modifier (%)",
   "config_label_tokenSaleCommissionPercent": "Token sale commission (%)",
   "config_label_tokens": "Tokens",
   "config_label_tokensRequired": "Tokens required for citizenship",
@@ -3804,12 +3803,16 @@
   "deploy_queue_requested_at": "Requested {date}",
   "map_page_headline": "Every village,",
   "villages_page_headline": "Regenerative villages,",
-  "subscriptions_citizen_finance_tokens_details_apr": "{percent}% APR on the financed balance",
+  "subscriptions_citizen_finance_tokens_details_apr": "{percent}% carrying APR per annum on the financed balance",
   "subscriptions_citizen_finance_tokens_details_min_monthly": "Minimum monthly payment €{amount}",
   "subscriptions_citizen_finance_tokens_max_duration_hint": "Maximum financing length is {months} months.",
   "subscriptions_citizen_finance_tokens_min_monthly_error": "Monthly payment €{monthly} is below the minimum €{min}. Choose more tokens or a shorter term.",
   "token_sales_dashboard_financed_schedule_amount_paid": "Amount paid",
   "config_label_maxFinancingMonths": "Max financing length (months)",
-  "config_label_financingAprPercent": "Financing APR (%)",
-  "config_label_minMonthlyPayment": "Minimum monthly payment"
+  "config_label_financingAprPercent": "Carrying APR (% per annum)",
+  "config_label_minMonthlyPayment": "Minimum monthly payment",
+  "subscriptions_citizen_finance_tokens_carrying_cost": "Carrying cost (APR):",
+  "subscriptions_citizen_finance_tokens_carrying_cost_amount": "€{amount} at {percent}% APR.",
+  "subscriptions_citizen_finance_tokens_total_repayable": "Total repayable:",
+  "subscriptions_citizen_finance_tokens_total_repayable_amount": "€{var}."
 }

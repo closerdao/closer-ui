@@ -263,7 +263,6 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
       isCitizenApplication={isCitizenApplication}
       application={application}
       updateApplication={updateApplication}
-      tokenPriceModifierPercent={tokenConfig?.tokenPriceModifierPercent || 0}
       downPaymentPercent={downPaymentPercent}
       durations={durations}
       maxFinancingMonths={maxFinancingMonths}

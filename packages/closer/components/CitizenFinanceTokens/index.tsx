@@ -20,7 +20,6 @@ interface CitizenFinanceTokensProps {
     key: keyof FinanceApplicationCreateRequest,
     value: any,
   ) => void;
-  tokenPriceModifierPercent: number;
   downPaymentPercent: number;
   durations: number[];
   maxFinancingMonths: number;
@@ -38,7 +37,6 @@ interface CitizenFinanceTokensProps {
 const CitizenFinanceTokens = ({
   application,
   updateApplication,
-  tokenPriceModifierPercent,
   downPaymentPercent,
   durations,
   maxFinancingMonths,
@@ -158,10 +156,10 @@ const CitizenFinanceTokens = ({
             return;
           }
 
-          const calculatedTotalToPayInFiat =
-            Number(
-              (totalCost * (1 + tokenPriceModifierPercent / 100)).toFixed(2),
-            ) || 0;
+          // Spot bonding-curve price is the financed principal base. Carrying
+          // cost comes from financingAprPercent in the monthly quote, not a
+          // flat token price markup.
+          const calculatedTotalToPayInFiat = Number(totalCost.toFixed(2)) || 0;
           updateApplication('totalToPayInFiat', calculatedTotalToPayInFiat);
         } catch (error) {
           console.error('Error in supply/price calculation:', error);
@@ -248,13 +246,11 @@ const CitizenFinanceTokens = ({
             percent: downPaymentPercent,
           })}
         </li>
-        {aprPercent > 0 && (
-          <li>
-            {t('subscriptions_citizen_finance_tokens_details_apr', {
-              percent: aprPercent,
-            })}
-          </li>
-        )}
+        <li>
+          {t('subscriptions_citizen_finance_tokens_details_apr', {
+            percent: aprPercent,
+          })}
+        </li>
         {minMonthlyPayment > 0 && (
           <li>
             {t('subscriptions_citizen_finance_tokens_details_min_monthly', {
@@ -358,6 +354,25 @@ const CitizenFinanceTokens = ({
             {t('subscriptions_citizen_finance_tokens_monthly_payment_amount', {
               var: quote.monthlyPaymentAmount,
             })}{' '}
+          </li>
+          {quote.carryingCost > 0 && (
+            <li className="pl-2">
+              <span className="font-bold">
+                {t('subscriptions_citizen_finance_tokens_carrying_cost')}
+              </span>{' '}
+              {t('subscriptions_citizen_finance_tokens_carrying_cost_amount', {
+                amount: quote.carryingCost,
+                percent: aprPercent,
+              })}
+            </li>
+          )}
+          <li className="pl-2">
+            <span className="font-bold">
+              {t('subscriptions_citizen_finance_tokens_total_repayable')}
+            </span>{' '}
+            {t('subscriptions_citizen_finance_tokens_total_repayable_amount', {
+              var: quote.totalRepayable,
+            })}
           </li>
           <li className="pl-2">
             <span className="font-bold">

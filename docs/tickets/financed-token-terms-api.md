@@ -11,16 +11,20 @@ and fall back to `monthlyPaymentAmount` for older contracts
 
 ## Why
 
-Admins can now set **max financing length**, **APR**, and **minimum monthly
-payment** on the `token` config. Buyers pick any token count (no more fixed
-30/60/90/120 blocks) and a term up to that max. The monthly installment is
-calculated with standard amortisation and must clear the minimum.
+Admins set a **carrying APR** (`financingAprPercent`, e.g. 7% per annum) on the
+`token` config instead of a flat token price markup. The financed principal is
+the spot bonding-curve total (minus down payment); the monthly installment is
+standard amortisation at that APR. Admins also set **max financing length** and
+**minimum monthly payment**.
+
+Buyers pick any token count and a term up to the max. The monthly installment
+must clear the minimum and is locked into the create payload.
 
 Two backend behaviours are required for the contract to match what the buyer
 agreed to:
 
 1. **Write monthly dues at contract creation time** — do not recompute them later
-   from `totalToPayInFiat / duration`.
+   from `totalToPayInFiat / duration` (that would ignore APR).
 2. **Carry overpayments into later months** — paying €400 against a €250 due
    marks month N paid and leaves €150 on month N+1.
 
@@ -29,11 +33,12 @@ agreed to:
 | key | type | meaning |
 | --- | --- | --- |
 | `maxFinancingMonths` | number | Hard ceiling (e.g. `6`, `180`, `360`) |
-| `financingAprPercent` | number | Annual APR applied to financed principal |
+| `financingAprPercent` | number | Carrying APR (% per annum) on financed principal — replaces the old flat `tokenPriceModifierPercent` markup |
 | `minMonthlyPayment` | number | Floor on the quoted monthly installment |
 | `financingDurationsMonths` | text | Optional presets, filtered by the max |
 | `downPaymentPercent` | number | Unchanged |
-| `tokenPriceModifierPercent` | number | Unchanged |
+
+`tokenPriceModifierPercent` is no longer used for financed quotes.
 
 ## Endpoints
 
@@ -46,10 +51,10 @@ Body now also sends:
   "tokensToFinance": 10,
   "totalToPayInFiat": 2600,
   "iban": "PT50...",
-  "durationInMonths": 6,
-  "monthlyPaymentAmount": 433.33,
-  "downPaymentAmount": 0,
-  "aprPercent": 0,
+  "durationInMonths": 36,
+  "monthlyPaymentAmount": 72.25,
+  "downPaymentAmount": 260,
+  "aprPercent": 7,
   "isCitizenApplication": false
 }
 ```
@@ -57,10 +62,12 @@ Body now also sends:
 Required behaviour:
 
 - Cap `durationInMonths` at the platform `token.maxFinancingMonths`.
+- Treat `totalToPayInFiat` as the spot token total (no flat price markup).
 - Recompute / verify the monthly installment with the same amortisation rules
   (`principal = total - down`, zero-APR → equal split, otherwise standard
-  `P * r(1+r)^n / ((1+r)^n - 1)` with `r = apr/100/12`). Reject with `400` if
-  the verified monthly amount is below `token.minMonthlyPayment`.
+  `P * r(1+r)^n / ((1+r)^n - 1)` with `r = apr/100/12` from
+  `token.financingAprPercent`). Reject with `400` if the verified monthly
+  amount is below `token.minMonthlyPayment`.
 - Persist on the application: `monthlyPaymentAmount`, `downPaymentAmount`,
   `aprPercent`, `durationInMonths`.
 - When building `paymentsScheduled`, write each month with an explicit
@@ -73,7 +80,7 @@ Example schedule month:
 {
   "2026-09": {
     "status": "pending",
-    "amountDue": 433.33,
+    "amountDue": 72.25,
     "amountPaid": 0,
     "paymentDate": "2026-09-15T00:00:00.000Z"
   }
@@ -120,6 +127,8 @@ Apply carryover as above and return the updated application (including
 
 ## Acceptance checks
 
+- Admin sets carrying APR `7`; financed principal uses spot token total (no flat
+  markup); monthly installment is amortised at 7% and written as `amountDue`.
 - Admin sets max `6`, APR `0`, min monthly `250`; 10 tokens at €260 each with 0%
   down quotes ~€433.33/mo and creates a schedule of six `amountDue: 433.33` rows.
 - Same config rejects (or frontend disables) a package whose amortised monthly

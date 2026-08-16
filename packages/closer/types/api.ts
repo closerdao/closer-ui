@@ -262,10 +262,14 @@ export type TokenConfig = {
   bookingToken?: string;
   maxSupply?: number | string;
   downPaymentPercent?: number;
+  /**
+   * @deprecated Financed carrying cost is `financingAprPercent`. Kept optional
+   * so legacy stored documents still type-check; ignored by the finance quote.
+   */
   tokenPriceModifierPercent?: number;
   /** Hard ceiling on repayment length in months (e.g. 6, 180, 360). */
   maxFinancingMonths?: number;
-  /** Annual percentage rate applied to the financed principal. */
+  /** Carrying APR (% per annum) applied to the financed principal. */
   financingAprPercent?: number;
   /** Minimum allowed monthly installment in fiat. */
   minMonthlyPayment?: number;

@@ -124,6 +124,8 @@ export type FinanceQuote = {
   principal: number;
   durationInMonths: number;
   monthlyPaymentAmount: number;
+  totalRepayable: number;
+  carryingCost: number;
   meetsMinMonthlyPayment: boolean;
 };
 
@@ -153,6 +155,10 @@ export const buildFinanceQuote = ({
     aprPercent,
     durationInMonths,
   );
+  const totalRepayable = roundFiat(
+    downPaymentAmount + monthlyPaymentAmount * durationInMonths,
+  );
+  const carryingCost = roundFiat(Math.max(0, totalRepayable - totalToPayInFiat));
 
   return {
     totalToPayInFiat: roundFiat(totalToPayInFiat),
@@ -160,6 +166,8 @@ export const buildFinanceQuote = ({
     principal,
     durationInMonths,
     monthlyPaymentAmount,
+    totalRepayable,
+    carryingCost,
     meetsMinMonthlyPayment: monthlyPaymentAmount + Number.EPSILON >= minMonthlyPayment,
   };
 };

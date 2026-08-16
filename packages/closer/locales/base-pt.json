@@ -3450,7 +3450,6 @@
   "config_label_tiersAvailable": "Níveis disponíveis",
   "config_label_time": "Hora",
   "config_label_timeZone": "Fuso horário",
-  "config_label_tokenPriceModifierPercent": "Modificador do preço do token (%)",
   "config_label_tokenSaleCommissionPercent": "Comissão sobre venda de tokens (%)",
   "config_label_tokens": "Tokens",
   "config_label_tokensRequired": "Tokens necessários para cidadania",
@@ -3747,12 +3746,16 @@
   "deploy_queue_requested_at": "Pedido a {date}",
   "map_page_headline": "Todas as aldeias,",
   "villages_page_headline": "Aldeias regenerativas,",
-  "subscriptions_citizen_finance_tokens_details_apr": "{percent}% de TAEG sobre o saldo financiado",
+  "subscriptions_citizen_finance_tokens_details_apr": "{percent}% de TAEG anual sobre o saldo financiado",
   "subscriptions_citizen_finance_tokens_details_min_monthly": "Pagamento mensal mínimo €{amount}",
   "subscriptions_citizen_finance_tokens_max_duration_hint": "O prazo máximo de financiamento é {months} meses.",
   "subscriptions_citizen_finance_tokens_min_monthly_error": "O pagamento mensal €{monthly} está abaixo do mínimo €{min}. Escolha mais tokens ou um prazo mais curto.",
   "token_sales_dashboard_financed_schedule_amount_paid": "Valor pago",
   "config_label_maxFinancingMonths": "Prazo máximo de financiamento (meses)",
   "config_label_financingAprPercent": "TAEG de financiamento (%)",
-  "config_label_minMonthlyPayment": "Pagamento mensal mínimo"
+  "config_label_minMonthlyPayment": "Pagamento mensal mínimo",
+  "subscriptions_citizen_finance_tokens_carrying_cost": "Custo de financiamento (TAEG):",
+  "subscriptions_citizen_finance_tokens_carrying_cost_amount": "€{amount} a {percent}% de TAEG.",
+  "subscriptions_citizen_finance_tokens_total_repayable": "Total a reembolsar:",
+  "subscriptions_citizen_finance_tokens_total_repayable_amount": "€{var}."
 }

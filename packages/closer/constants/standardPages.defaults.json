@@ -1157,7 +1157,7 @@
             "description": "",
             "items": [
               "Available for citizenship (30, 60, 90, 120 token plans over 36 months).",
-              "10% downpayment, 5% above bonding curve price.",
+              "10% downpayment, carrying APR on the financed balance.",
               "Instant utility unlocked from all tokens."
             ],
             "ctaText": "Start Financed Plan",
