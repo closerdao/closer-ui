@@ -146,12 +146,17 @@ const CitizenFinanceTokens = ({
   }, [application?.tokensToFinance]);
 
   useEffect(() => {
+    let cancelled = false;
     if (isConfigReady) {
       (async () => {
         try {
           const totalCost = await getTotalCostWithoutWallet(
             (application?.tokensToFinance || 0).toString(),
           );
+
+          if (cancelled) {
+            return;
+          }
 
           const calculatedTotalToPayInFiat =
             Number(
@@ -163,6 +168,9 @@ const CitizenFinanceTokens = ({
         }
       })();
     }
+    return () => {
+      cancelled = true;
+    };
   }, [isConfigReady, application?.tokensToFinance]);
 
   useEffect(() => {
