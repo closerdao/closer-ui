@@ -13,18 +13,28 @@ const FAIL_COLORS = ['#6b7280', '#9ca3af', '#4b5563', '#374151', '#d1d5db'];
 
 type ConfettiVariant = 'celebrate' | 'fail' | 'vote';
 
+export interface ConfettiOrigin {
+  x: number;
+  y: number;
+}
+
 interface GovernanceConfettiProps {
   active: boolean;
   intensity?: number;
   variant?: ConfettiVariant;
   durationMs?: number;
+  /**
+   * Viewport coordinates the burst radiates from. Defaults to the middle of
+   * the screen when omitted.
+   */
+  origin?: ConfettiOrigin | null;
   onComplete?: () => void;
 }
 
 interface ConfettiParticle {
   id: number;
-  left: number;
-  top: number;
+  left: string;
+  top: string;
   color: string;
   tx: number;
   ty: number;
@@ -38,6 +48,7 @@ const clampIntensity = (value: number) => Math.min(1, Math.max(0, value));
 const createParticles = (
   count: number,
   variant: ConfettiVariant,
+  origin?: ConfettiOrigin | null,
 ): ConfettiParticle[] => {
   const colors = variant === 'fail' ? FAIL_COLORS : CONFETTI_COLORS;
 
@@ -53,10 +64,18 @@ const createParticles = (
         ? 120 + Math.random() * 280
         : Math.sin(angle) * distance - (variant === 'celebrate' ? 40 : 0);
 
+    // Jitter keeps the burst from looking like it fires out of a single pixel.
+    const jitterX = (Math.random() - 0.5) * 12;
+    const jitterY = (Math.random() - 0.5) * 12;
+
     return {
       id: index,
-      left: 40 + Math.random() * 20,
-      top: variant === 'vote' ? 70 + Math.random() * 10 : 45 + Math.random() * 10,
+      left: origin
+        ? `${origin.x + jitterX}px`
+        : `${40 + Math.random() * 20}%`,
+      top: origin
+        ? `${origin.y + jitterY}px`
+        : `${variant === 'vote' ? 70 + Math.random() * 10 : 45 + Math.random() * 10}%`,
       color: colors[index % colors.length],
       tx,
       ty,
@@ -72,6 +91,7 @@ const GovernanceConfetti = ({
   intensity = 0.5,
   variant = 'celebrate',
   durationMs = 2200,
+  origin = null,
   onComplete,
 }: GovernanceConfettiProps) => {
   const [burstKey, setBurstKey] = useState(0);
@@ -105,8 +125,9 @@ const GovernanceConfetti = ({
   }, [normalizedIntensity, variant]);
 
   const particles = useMemo(
-    () => createParticles(particleCount, variant),
-    [burstKey, particleCount, variant],
+    () => createParticles(particleCount, variant, origin),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [burstKey, particleCount, variant, origin?.x, origin?.y],
   );
 
   if (!active) {
@@ -125,10 +146,12 @@ const GovernanceConfetti = ({
             key={particle.id}
             className={`governance-confetti__particle governance-confetti__particle--${variant}`}
             style={{
-              left: `${particle.left}%`,
-              top: `${particle.top}%`,
+              left: particle.left,
+              top: particle.top,
               width: `${particle.size}px`,
               height: `${particle.size}px`,
+              marginLeft: `${-particle.size / 2}px`,
+              marginTop: `${-particle.size / 2}px`,
               background: particle.color,
               animationDelay: `${particle.delay}s`,
               ['--tx' as string]: `${particle.tx}px`,
@@ -152,8 +175,6 @@ const GovernanceConfetti = ({
         }
         .governance-confetti__particle {
           position: absolute;
-          margin-left: -4px;
-          margin-top: -4px;
           border-radius: 2px;
           opacity: 0;
         }

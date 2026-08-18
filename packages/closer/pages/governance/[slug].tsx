@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 import { proposalMarkdownComponents } from 'closer/components/display';
@@ -15,8 +15,9 @@ import { ErrorMessage, api } from 'closer';
 import { useAuth } from 'closer/contexts/auth';
 import { usePlatform } from 'closer/contexts/platform';
 import { WalletDispatch, WalletState } from 'closer/contexts/wallet';
+import { useHasMounted } from 'closer/hooks/useHasMounted';
 import { useVotingWeight } from 'closer/hooks/useVotingWeight';
-import { Proposal, ProposalReward } from 'closer/types';
+import { Proposal, ProposalReward, ProposalVote } from 'closer/types';
 import { parseMessageFromError, slugify } from 'closer/utils/common';
 import {
   getEffectiveStatus as getProposalEffectiveStatus,
@@ -36,6 +37,64 @@ interface ProposalDetailPageProps {
   error?: string;
 }
 
+// How often an open proposal re-reads its tally, so votes cast elsewhere
+// show up without a reload.
+const LIVE_RESULTS_POLL_MS = 30000;
+
+type UserVoteSummary = {
+  castWeight: number;
+  lastVote: 'yes' | 'no' | 'abstain' | null;
+};
+
+// What a user has committed to a proposal. Votes can be cast incrementally, so
+// the same user may appear more than once across the three buckets.
+const getUserVoteSummary = (
+  proposal: Proposal | null | undefined,
+  userId: string | undefined,
+): UserVoteSummary => {
+  const emptySummary: UserVoteSummary = { castWeight: 0, lastVote: null };
+
+  if (!proposal?.votes || !userId) {
+    return emptySummary;
+  }
+
+  return (['yes', 'no', 'abstain'] as const).reduce((summary, option) => {
+    const optionVotes = proposal.votes?.[option] || [];
+
+    return optionVotes
+      .filter((vote) => vote.userId === userId)
+      .reduce(
+        (accumulator, vote) => ({
+          castWeight: accumulator.castWeight + (vote.weight || 0),
+          lastVote: option,
+        }),
+        summary,
+      );
+  }, emptySummary);
+};
+
+// The vote endpoint may answer with the updated proposal, with just the vote it
+// recorded, or with nothing meaningful. Only the first is useful here.
+const proposalFromVoteResponse = (data: any): Proposal | null => {
+  const candidate = data?.results || data?.proposal || data;
+
+  return candidate?.votes && candidate?._id ? (candidate as Proposal) : null;
+};
+
+const appendVote = (
+  proposal: Proposal,
+  option: 'yes' | 'no' | 'abstain',
+  vote: ProposalVote,
+): Proposal => ({
+  ...proposal,
+  votes: {
+    yes: proposal.votes?.yes || [],
+    no: proposal.votes?.no || [],
+    abstain: proposal.votes?.abstain || [],
+    [option]: [...(proposal.votes?.[option] || []), vote],
+  },
+});
+
 const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   proposal,
   proposalCreator,
@@ -48,6 +107,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   const { platform } = usePlatform() as any;
   const { votingWeight } = useVotingWeight();
   const t = useTranslations();
+  const hasMounted = useHasMounted();
   const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Closer';
 
   const hasLoadedConfig = useRef(false);
@@ -91,7 +151,8 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     null,
   );
   const [showVoteSuccess, setShowVoteSuccess] = useState(false);
-  const [selectedVoteAmount, setSelectedVoteAmount] = useState(1);
+  const [selectedVoteAmount, setSelectedVoteAmount] = useState(0);
+  const [isCastingMoreVotes, setIsCastingMoreVotes] = useState(false);
   const [voteConfettiIntensity, setVoteConfettiIntensity] = useState(0.5);
   const [forceResultCelebration, setForceResultCelebration] = useState(false);
   const [error, setError] = useState<string | null>(propError || null);
@@ -201,12 +262,6 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     });
   };
 
-  useEffect(() => {
-    if (votingWeight > 0) {
-      setSelectedVoteAmount(parseFloat(votingWeight.toFixed(2)));
-    }
-  }, [votingWeight]);
-
   // Initialize edit data when proposal loads
   useEffect(() => {
     if (currentProposal && !isEditing) {
@@ -229,19 +284,129 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     }
   }, [editData.title, editData.slug, isEditing]);
 
-  // Helper function to get the most up-to-date proposal data
+  // Helper function to get the most up-to-date proposal data. The polled
+  // platform cache is usually ahead of local state, but not while it is still
+  // catching up with a vote this session just cast — prefer local state then,
+  // so the tally never drops a vote the voter has already been told landed.
   const getCurrentProposalData = () => {
     if (currentProposal?.slug) {
       const platformProposal = platform.proposal.findOne(currentProposal.slug);
       if (platformProposal && platformProposal.toJS) {
-        return platformProposal.toJS();
+        const cached = platformProposal.toJS() as Proposal;
+
+        if (isNotBehindOnOwnVote(cached, currentProposal)) {
+          return cached;
+        }
       }
     }
     return currentProposal;
   };
 
+  const existingUserVote = useMemo(
+    () => getUserVoteSummary(currentProposal, user?._id),
+    [currentProposal, user?._id],
+  );
+
+  const castVoteWeight = parseFloat(existingUserVote.castWeight.toFixed(2));
+  const remainingVoteWeight = Math.max(
+    0,
+    parseFloat(((votingWeight || 0) - castVoteWeight).toFixed(2)),
+  );
+  const hasUnspentVotes = remainingVoteWeight > 0;
+
+  // Reflect votes cast in an earlier session, so a reload does not offer the
+  // form again for weight that is already spent.
+  useEffect(() => {
+    if (castVoteWeight > 0) {
+      setHasVoted(true);
+      setUserVote(existingUserVote.lastVote);
+    }
+  }, [castVoteWeight, existingUserVote.lastVote]);
+
+  // Same condition as `isActive` below, but computed before the early returns
+  // so the polling hook can depend on it.
+  const votingEndsAt = currentProposal?.endDate
+    ? new Date(currentProposal.endDate).getTime()
+    : null;
+  const isVotingOpen =
+    currentProposal?.status === 'active' &&
+    !!votingEndsAt &&
+    Date.now() < votingEndsAt;
+
+  const handleCastMoreVotes = () => {
+    setSelectedVoteAmount(0);
+    setSelectedVote(existingUserVote.lastVote);
+    setError(null);
+    setIsCastingMoreVotes(true);
+  };
+
+  // A read that has not yet caught up with this session's own vote must never
+  // replace what we already know — see the vote response handling below.
+  const isNotBehindOnOwnVote = (next: Proposal, previous: Proposal | null) =>
+    !previous ||
+    getUserVoteSummary(next, user?._id).castWeight >=
+      getUserVoteSummary(previous, user?._id).castWeight;
+
+  const refreshProposal = useCallback(async () => {
+    const slug = currentProposal?.slug;
+
+    if (!slug || !platform?.proposal) {
+      return;
+    }
+
+    try {
+      // `force` matters: getOne otherwise answers from a 5 minute in-memory
+      // cache, which would make this poll return the same tally every time.
+      const refreshed = await platform.proposal.getOne(slug, { force: true });
+
+      if (!refreshed?.results) {
+        return;
+      }
+
+      const next = refreshed.results.toJS() as Proposal;
+
+      setCurrentProposal((previous) =>
+        isNotBehindOnOwnVote(next, previous) ? next : previous,
+      );
+    } catch (err) {
+      // A dropped poll is not worth putting in front of the voter; the next
+      // tick tries again.
+      console.error('Proposal refresh failed:', err);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentProposal?.slug, platform?.proposal, user?._id]);
+
+  // Poll the tally while voting is open, so votes cast by other members appear
+  // without a reload. Paused while the tab is hidden, and caught up as soon as
+  // it comes back.
+  useEffect(() => {
+    if (!isVotingOpen) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        refreshProposal();
+      }
+    }, LIVE_RESULTS_POLL_MS);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshProposal();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isVotingOpen, refreshProposal]);
+
   const handleVote = async () => {
     if (!currentProposal || !selectedVote || !isWalletReady || !account) return;
+    if (selectedVoteAmount <= 0) return;
 
     setIsSubmitting(true);
     setError(null);
@@ -262,7 +427,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     }
 
     // Create vote data with signature hash
-    const voteAmount = selectedVoteAmount || votingWeight || 1;
+    const voteAmount = Math.min(selectedVoteAmount, remainingVoteWeight);
     const voteData = {
       votingWeight: voteAmount,
       signature: voteSignatureHash,
@@ -270,7 +435,28 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     };
     try {
       // Submit vote to platform context
-      await api.post(`/proposals/${currentProposal._id}/vote`, voteData);
+      const voteResponse = await api.post(
+        `/proposals/${currentProposal._id}/vote`,
+        voteData,
+      );
+
+      // The vote we just cast, as it should appear on the proposal.
+      const castVote: ProposalVote = {
+        userId: user?._id || '',
+        signature: voteSignatureHash,
+        weight: voteAmount,
+        votedAt: new Date().toISOString(),
+      };
+
+      // Prefer the proposal the vote endpoint hands back — it is the only
+      // response guaranteed to already include this vote. Falling back to a
+      // local append keeps the cast/remaining totals correct against backends
+      // that return just the vote, or nothing useful at all.
+      const votedProposal =
+        proposalFromVoteResponse(voteResponse?.data) ||
+        appendVote(currentProposal, selectedVote, castVote);
+
+      setCurrentProposal(votedProposal);
 
       // Update local state
       setHasVoted(true);
@@ -279,15 +465,24 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
         Math.min(1, voteAmount / Math.max(votingWeight || 1, 1)),
       );
       setShowVoteSuccess(true);
+      setIsCastingMoreVotes(false);
+      setSelectedVoteAmount(0);
 
       // Refresh the proposal data from the platform context
       const refreshedProposal = await platform.proposal.getOne(
         currentProposal.slug,
+        { force: true },
       );
 
-      // Update local state with the refreshed data
+      // Only adopt the refreshed copy if it has caught up with the vote we just
+      // cast — a read that lands before the write is visible would otherwise
+      // roll the totals back to zero until the next page load.
       if (refreshedProposal?.results) {
-        setCurrentProposal(refreshedProposal.results.toJS());
+        const refreshed = refreshedProposal.results.toJS() as Proposal;
+
+        if (isNotBehindOnOwnVote(refreshed, votedProposal)) {
+          setCurrentProposal(refreshed);
+        }
       }
     } catch (err: any) {
       console.error('Vote submission error:', err);
@@ -410,7 +605,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       }
 
       // Refresh the proposal data from the platform context
-      platform.proposal.getOne(currentProposal.slug);
+      platform.proposal.getOne(currentProposal.slug, { force: true });
 
       // Also refresh the proposals list to ensure updated data is visible
       platform.proposal.get({});
@@ -468,7 +663,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
         setCurrentProposal(response.data.results);
         // Update the proposal state with the new data
         // Refresh the proposal data from the platform context
-        platform.proposal.getOne(currentProposal.slug);
+        platform.proposal.getOne(currentProposal.slug, { force: true });
         setEditData({
           title: response.data.results.title || '',
           slug: response.data.results.slug || '',
@@ -558,7 +753,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       }
 
       // Refresh the proposal data from the platform context
-      platform.proposal.getOne(currentProposal.slug);
+      platform.proposal.getOne(currentProposal.slug, { force: true });
 
       // Also refresh the proposals list to ensure updated data is visible
       platform.proposal.get({});
@@ -573,7 +768,12 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     }
   };
 
+  // Formatted in the viewer's timezone, which the server cannot know, so the
+  // output is held back until mount to keep the SSR markup and the first
+  // client render identical. Same reason for getTimeRemaining below and for
+  // ProposalCountdownTimer.
   const formatDate = (date: string) => {
+    if (!hasMounted) return '';
     if (!date) return t('governance_not_available');
     const dateObj = new Date(date);
     if (isNaN(dateObj.getTime())) return t('governance_not_available');
@@ -587,6 +787,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   };
 
   const getTimeRemaining = (endDate: string) => {
+    if (!hasMounted) return '';
     const now = new Date();
     const end = new Date(endDate);
     const diff = end.getTime() - now.getTime();
@@ -614,7 +815,10 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       return;
     }
 
-    const refreshedProposal = await platform.proposal.getOne(currentProposal.slug);
+    const refreshedProposal = await platform.proposal.getOne(
+      currentProposal.slug,
+      { force: true },
+    );
     if (refreshedProposal?.results) {
       setCurrentProposal(refreshedProposal.results.toJS());
     }
@@ -787,24 +991,22 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
           </div>
 
           {isActive && (
-            <div className="flex flex-col gap-4">
-              <div className="rounded-xl border border-gray-900 bg-gray-900 p-4 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{t('governance_voting_is_active')}</p>
-                    <p className="text-sm text-gray-200">
-                      {getTimeRemaining(String(freshProposalData?.endDate || ''))}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium">
-                      {totalVotes} {t('governance_votes')}
-                    </p>
-                    <p className="text-sm text-gray-200">
-                      {t('governance_ends')}{' '}
-                      {formatDate(String(freshProposalData?.endDate || ''))}
-                    </p>
-                  </div>
+            <div className="rounded-xl border border-gray-900 bg-gray-900 p-4 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{t('governance_voting_is_active')}</p>
+                  <p className="text-sm text-gray-200">
+                    {getTimeRemaining(String(freshProposalData?.endDate || ''))}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-medium">
+                    {totalVotes} {t('governance_votes')}
+                  </p>
+                  <p className="text-sm text-gray-200">
+                    {t('governance_ends')}{' '}
+                    {formatDate(String(freshProposalData?.endDate || ''))}
+                  </p>
                 </div>
               </div>
               {freshProposalData?.endDate && (
@@ -897,30 +1099,49 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
             {isActive && isWalletReady && isCitizen() && (
               <div className="rounded-xl border border-gray-200 bg-white p-6">
                 <h2 className="text-xl font-semibold mb-4">
-                  {hasVoted ? t('governance_your_vote') : t('governance_cast_your_vote')}
+                  {hasVoted && !isCastingMoreVotes
+                    ? t('governance_your_vote')
+                    : t('governance_cast_your_vote')}
                 </h2>
 
-                {hasVoted ? (
+                {hasVoted && !isCastingMoreVotes ? (
                   <div className="rounded-lg border border-gray-300 bg-gray-100 p-4">
                     <p className="font-medium text-gray-900">
                       {t('governance_you_voted')} <span className="capitalize">{userVote}</span>
                     </p>
                     <p className="mt-1 text-sm text-gray-600">
                       {t('governance_vote_submitted_with_weight', {
-                        weight: selectedVoteAmount.toFixed(2),
+                        weight: castVoteWeight.toFixed(2),
                       })}
                     </p>
                     <p className="mt-1 text-sm text-gray-600">
                       {t('governance_thank_you_participating')}
                     </p>
+                    {hasUnspentVotes && (
+                      <div className="mt-3 border-t border-gray-300 pt-3">
+                        <p className="text-sm text-gray-600">
+                          {t('governance_votes_remaining', {
+                            remaining: remainingVoteWeight.toFixed(2),
+                          })}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={handleCastMoreVotes}
+                          className="mt-1 text-sm font-semibold text-gray-900 underline underline-offset-2 hover:text-black"
+                        >
+                          {t('governance_cast_more_votes')}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div>
                     <div className="mb-6">
                       <VoteAmountSelector
-                        totalWeight={votingWeight || 1}
+                        totalWeight={remainingVoteWeight}
                         value={selectedVoteAmount}
                         onChange={setSelectedVoteAmount}
+                        alreadyCastWeight={castVoteWeight}
                       />
                     </div>
 
@@ -967,11 +1188,23 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
 
                     <button
                       onClick={handleVote}
-                      disabled={!selectedVote || isSubmitting}
+                      disabled={
+                        !selectedVote || isSubmitting || selectedVoteAmount <= 0
+                      }
                       className="w-full rounded-lg bg-gray-900 px-4 py-3 font-semibold text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:bg-gray-300"
                     >
                       {isSubmitting ? t('governance_submitting_vote') : t('governance_submit_vote')}
                     </button>
+
+                    {isCastingMoreVotes && (
+                      <button
+                        type="button"
+                        onClick={() => setIsCastingMoreVotes(false)}
+                        className="mt-3 w-full text-sm text-gray-600 underline underline-offset-2 hover:text-gray-900"
+                      >
+                        {t('governance_cancel')}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

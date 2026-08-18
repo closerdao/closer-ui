@@ -1,14 +1,21 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
-import GovernanceConfetti from './GovernanceConfetti';
+import GovernanceConfetti, { ConfettiOrigin } from './GovernanceConfetti';
 
 interface VoteAmountSelectorProps {
+  /** Voting weight still available to spend on this proposal. */
   totalWeight: number;
   value: number;
   onChange: (value: number) => void;
+  /** Weight the user has already committed to this proposal, if any. */
+  alreadyCastWeight?: number;
 }
+
+// Keep in sync with the ::-webkit-slider-thumb size below — the confetti origin
+// is derived from it, so a mismatch shifts the burst off the handle.
+const THUMB_SIZE = 20;
 
 const roundWeight = (value: number) => parseFloat(value.toFixed(2));
 
@@ -16,37 +23,60 @@ const VoteAmountSelector = ({
   totalWeight,
   value,
   onChange,
+  alreadyCastWeight = 0,
 }: VoteAmountSelectorProps) => {
   const t = useTranslations();
-  const previousValueRef = useRef(value);
+  const sliderRef = useRef<HTMLInputElement>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiIntensity, setConfettiIntensity] = useState(0.2);
-  const maxWeight = Math.max(roundWeight(totalWeight), 1);
+  const [confettiOrigin, setConfettiOrigin] = useState<ConfettiOrigin | null>(
+    null,
+  );
+  const maxWeight = Math.max(roundWeight(totalWeight), 0);
   const step = maxWeight <= 10 ? 0.1 : maxWeight <= 100 ? 1 : 5;
 
-  useEffect(() => {
-    if (value > previousValueRef.current) {
-      setConfettiIntensity(Math.min(1, value / maxWeight));
-      setShowConfetti(true);
+  const getThumbOrigin = (nextValue: number): ConfettiOrigin | null => {
+    const slider = sliderRef.current;
+
+    if (!slider) {
+      return null;
     }
 
-    previousValueRef.current = value;
-  }, [maxWeight, value]);
+    const rect = slider.getBoundingClientRect();
+    const fraction =
+      maxWeight > 0 ? Math.min(1, Math.max(0, nextValue / maxWeight)) : 0;
+    const travel = Math.max(0, rect.width - THUMB_SIZE);
+
+    return {
+      x: rect.left + THUMB_SIZE / 2 + fraction * travel,
+      y: rect.top + rect.height / 2,
+    };
+  };
 
   const handleChange = (nextValue: number) => {
     const clampedValue = roundWeight(
-      Math.min(maxWeight, Math.max(step, nextValue)),
+      Math.min(maxWeight, Math.max(0, nextValue)),
     );
+
+    if (clampedValue > value) {
+      setConfettiOrigin(getThumbOrigin(clampedValue));
+      setConfettiIntensity(
+        maxWeight > 0 ? Math.min(1, clampedValue / maxWeight) : 0.2,
+      );
+      setShowConfetti(true);
+    }
+
     onChange(clampedValue);
   };
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-gray-50 p-4">
+    <div className="relative rounded-xl border border-gray-200 bg-gray-50 p-4">
       <GovernanceConfetti
         active={showConfetti}
         intensity={confettiIntensity}
         variant="vote"
         durationMs={1400}
+        origin={confettiOrigin}
         onComplete={() => setShowConfetti(false)}
       />
 
@@ -61,6 +91,13 @@ const VoteAmountSelector = ({
                 total: maxWeight.toFixed(2),
               })}
             </p>
+            {alreadyCastWeight > 0 && (
+              <p className="text-xs text-gray-500">
+                {t('governance_vote_amount_already_cast', {
+                  cast: alreadyCastWeight.toFixed(2),
+                })}
+              </p>
+            )}
           </div>
           <div className="text-right">
             <p className="text-2xl font-semibold text-gray-900">
@@ -71,14 +108,22 @@ const VoteAmountSelector = ({
         </div>
 
         <input
+          ref={sliderRef}
           type="range"
-          min={step}
+          min={0}
           max={maxWeight}
           step={step}
           value={value}
+          aria-label={t('governance_vote_amount_label')}
           onChange={(event) => handleChange(parseFloat(event.target.value))}
-          className="h-2 w-full cursor-pointer appearance-none rounded-full bg-gray-200 accent-gray-900"
+          className="governance-vote-slider w-full cursor-pointer"
         />
+
+        {value === 0 && (
+          <p className="-mt-2 text-xs text-gray-500">
+            {t('governance_vote_amount_drag_hint')}
+          </p>
+        )}
 
         <div className="flex items-center justify-between gap-3">
           <button
@@ -104,6 +149,44 @@ const VoteAmountSelector = ({
           </button>
         </div>
       </div>
+
+      <style jsx global>{`
+        .governance-vote-slider {
+          -webkit-appearance: none;
+          appearance: none;
+          height: ${THUMB_SIZE}px;
+          background: transparent;
+        }
+        .governance-vote-slider::-webkit-slider-runnable-track {
+          height: 8px;
+          border-radius: 9999px;
+          background: #e5e7eb;
+        }
+        .governance-vote-slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: ${THUMB_SIZE}px;
+          height: ${THUMB_SIZE}px;
+          margin-top: ${(8 - THUMB_SIZE) / 2}px;
+          border-radius: 9999px;
+          border: 2px solid #ffffff;
+          background: #111827;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        .governance-vote-slider::-moz-range-track {
+          height: 8px;
+          border-radius: 9999px;
+          background: #e5e7eb;
+        }
+        .governance-vote-slider::-moz-range-thumb {
+          width: ${THUMB_SIZE - 4}px;
+          height: ${THUMB_SIZE - 4}px;
+          border-radius: 9999px;
+          border: 2px solid #ffffff;
+          background: #111827;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+      `}</style>
     </div>
   );
 };
