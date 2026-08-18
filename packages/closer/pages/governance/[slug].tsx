@@ -5,7 +5,11 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 import { proposalMarkdownComponents } from 'closer/components/display';
+import GovernanceConfetti from 'closer/components/Governance/GovernanceConfetti';
 import ProposalComments from 'closer/components/Governance/ProposalComments';
+import ProposalCountdownTimer from 'closer/components/Governance/ProposalCountdownTimer';
+import ProposalResultCelebration from 'closer/components/Governance/ProposalResultCelebration';
+import VoteAmountSelector from 'closer/components/Governance/VoteAmountSelector';
 
 import { ErrorMessage, api } from 'closer';
 import { useAuth } from 'closer/contexts/auth';
@@ -14,6 +18,10 @@ import { WalletDispatch, WalletState } from 'closer/contexts/wallet';
 import { useVotingWeight } from 'closer/hooks/useVotingWeight';
 import { Proposal, ProposalReward } from 'closer/types';
 import { parseMessageFromError, slugify } from 'closer/utils/common';
+import {
+  getEffectiveStatus as getProposalEffectiveStatus,
+  getVoteCounts,
+} from 'closer/utils/proposalStatus';
 import {
   createProposalSignatureHash,
   createVoteSignatureHash,
@@ -83,6 +91,9 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     null,
   );
   const [showVoteSuccess, setShowVoteSuccess] = useState(false);
+  const [selectedVoteAmount, setSelectedVoteAmount] = useState(1);
+  const [voteConfettiIntensity, setVoteConfettiIntensity] = useState(0.5);
+  const [forceResultCelebration, setForceResultCelebration] = useState(false);
   const [error, setError] = useState<string | null>(propError || null);
   const [isEditing, setIsEditing] = useState(false);
   const [currentProposal, setCurrentProposal] = useState<Proposal | null>(
@@ -190,6 +201,12 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     });
   };
 
+  useEffect(() => {
+    if (votingWeight > 0) {
+      setSelectedVoteAmount(parseFloat(votingWeight.toFixed(2)));
+    }
+  }, [votingWeight]);
+
   // Initialize edit data when proposal loads
   useEffect(() => {
     if (currentProposal && !isEditing) {
@@ -245,8 +262,9 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     }
 
     // Create vote data with signature hash
+    const voteAmount = selectedVoteAmount || votingWeight || 1;
     const voteData = {
-      votingWeight: votingWeight || 1,
+      votingWeight: voteAmount,
       signature: voteSignatureHash,
       vote: selectedVote,
     };
@@ -257,6 +275,9 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       // Update local state
       setHasVoted(true);
       setUserVote(selectedVote);
+      setVoteConfettiIntensity(
+        Math.min(1, voteAmount / Math.max(votingWeight || 1, 1)),
+      );
       setShowVoteSuccess(true);
 
       // Refresh the proposal data from the platform context
@@ -268,11 +289,6 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       if (refreshedProposal?.results) {
         setCurrentProposal(refreshedProposal.results.toJS());
       }
-
-      // Hide success message after 3 seconds
-      setTimeout(() => {
-        setShowVoteSuccess(false);
-      }, 3000);
     } catch (err: any) {
       console.error('Vote submission error:', err);
       console.error('Error response data:', err?.response?.data);
@@ -584,91 +600,26 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     return t('governance_hours_remaining', { hours });
   };
 
-  // Get effective status for display (draft > active > passed/failed)
-  const getEffectiveStatus = (proposal: Proposal | null): {
-    status: 'draft' | 'active' | 'passed' | 'failed';
-    displayText: string;
-  } => {
-    if (!proposal) {
-      return { status: 'draft', displayText: t('governance_status_unknown') };
+  const getEffectiveStatus = (proposal: Proposal | null) =>
+    getProposalEffectiveStatus(proposal, {
+      draft: t('governance_status_draft'),
+      active: t('governance_status_active'),
+      passed: t('governance_status_passed'),
+      failed: t('governance_status_failed'),
+      unknown: t('governance_status_unknown'),
+    });
+
+  const handleVotingPeriodEnded = async () => {
+    if (!currentProposal?.slug) {
+      return;
     }
 
-    const currentStatus = proposal.status;
-    const endDate = proposal.endDate;
-
-    // If draft, always show draft
-    if (currentStatus === 'draft') {
-      return { status: 'draft', displayText: t('governance_status_draft') };
+    const refreshedProposal = await platform.proposal.getOne(currentProposal.slug);
+    if (refreshedProposal?.results) {
+      setCurrentProposal(refreshedProposal.results.toJS());
     }
 
-    // If already passed or rejected, show that
-    if (currentStatus === 'passed') {
-      return { status: 'passed', displayText: t('governance_status_passed') };
-    }
-    if (currentStatus === 'rejected') {
-      return { status: 'failed', displayText: t('governance_status_failed') };
-    }
-
-    // If active, check if voting has ended
-    if (currentStatus === 'active') {
-      const now = new Date();
-      const end = endDate ? new Date(endDate) : null;
-
-      // If no end date or voting hasn't ended, show active
-      if (!end || end.getTime() > now.getTime()) {
-        return { status: 'active', displayText: t('governance_status_active') };
-      }
-
-      // Voting has ended, determine if passed or failed
-      const results = proposal.results;
-      const votes = proposal.votes;
-
-      let voteCounts = { yes: 0, no: 0, abstain: 0 };
-
-      if (results !== undefined && results !== null) {
-        voteCounts = Object.assign(
-          { yes: 0, no: 0, abstain: 0 },
-          results,
-        );
-      } else if (votes) {
-        if (Array.isArray(votes.yes)) {
-          voteCounts.yes = votes.yes.reduce(
-            (sum: number, vote: any) => sum + (vote.weight || 0),
-            0,
-          );
-        } else {
-          voteCounts.yes = votes.yes || 0;
-        }
-
-        if (Array.isArray(votes.no)) {
-          voteCounts.no = votes.no.reduce(
-            (sum: number, vote: any) => sum + (vote.weight || 0),
-            0,
-          );
-        } else {
-          voteCounts.no = votes.no || 0;
-        }
-
-        if (Array.isArray(votes.abstain)) {
-          voteCounts.abstain = votes.abstain.reduce(
-            (sum: number, vote: any) => sum + (vote.weight || 0),
-            0,
-          );
-        } else {
-          voteCounts.abstain = votes.abstain || 0;
-        }
-      }
-
-      // Passed if yes > no, failed otherwise
-      if (voteCounts.yes > voteCounts.no) {
-        return { status: 'passed', displayText: t('governance_status_passed') };
-      } else {
-        return { status: 'failed', displayText: t('governance_status_failed') };
-      }
-    }
-
-    // Default fallback
-    return { status: 'draft', displayText: currentStatus?.toUpperCase() || t('governance_status_unknown') };
+    setForceResultCelebration(true);
   };
 
   const getStatusColor = (status: 'draft' | 'active' | 'passed' | 'failed'): string => {
@@ -726,12 +677,13 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
 
   // Get the most up-to-date proposal data for voting results
   const freshProposalData = getCurrentProposalData();
-  const voteCounts = Object.assign({ yes: 0, no: 0, abstain: 0 }, freshProposalData?.results);
+  const voteCounts = getVoteCounts(freshProposalData || currentProposal);
   const totalVotes = voteCounts.yes + voteCounts.no + voteCounts.abstain;
   const isActive =
     freshProposalData?.status === 'active' &&
     freshProposalData?.endDate &&
     new Date() < new Date(freshProposalData.endDate);
+  const effectiveStatus = getEffectiveStatus(freshProposalData || currentProposal);
 
   return (
     <>
@@ -742,6 +694,26 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
           content={currentProposal.description?.substring(0, 160) || ''}
         />
       </Head>
+
+      <GovernanceConfetti
+        active={showVoteSuccess}
+        intensity={voteConfettiIntensity}
+        variant="celebrate"
+        durationMs={2800}
+        onComplete={() => setShowVoteSuccess(false)}
+      />
+      <ProposalResultCelebration
+        proposalId={currentProposal._id}
+        endDate={
+          freshProposalData?.endDate
+            ? String(freshProposalData.endDate)
+            : currentProposal.endDate
+              ? String(currentProposal.endDate)
+              : undefined
+        }
+        effectiveStatus={effectiveStatus.status}
+        forceShow={forceResultCelebration}
+      />
 
       <div className="min-h-screen bg-gray-50/70">
         <div className="container mx-auto px-4 py-8">
@@ -815,23 +787,32 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
           </div>
 
           {isActive && (
-            <div className="rounded-xl border border-gray-900 bg-gray-900 p-4 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">{t('governance_voting_is_active')}</p>
-                  <p className="text-sm text-gray-200">
-                    {getTimeRemaining(String(freshProposalData?.endDate || ''))}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium">
-                    {totalVotes} {t('governance_votes')}
-                  </p>
-                  <p className="text-sm text-gray-200">
-                    {t('governance_ends')} {formatDate(String(freshProposalData?.endDate || ''))}
-                  </p>
+            <div className="flex flex-col gap-4">
+              <div className="rounded-xl border border-gray-900 bg-gray-900 p-4 text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">{t('governance_voting_is_active')}</p>
+                    <p className="text-sm text-gray-200">
+                      {getTimeRemaining(String(freshProposalData?.endDate || ''))}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">
+                      {totalVotes} {t('governance_votes')}
+                    </p>
+                    <p className="text-sm text-gray-200">
+                      {t('governance_ends')}{' '}
+                      {formatDate(String(freshProposalData?.endDate || ''))}
+                    </p>
+                  </div>
                 </div>
               </div>
+              {freshProposalData?.endDate && (
+                <ProposalCountdownTimer
+                  endDate={String(freshProposalData.endDate)}
+                  onComplete={handleVotingPeriodEnded}
+                />
+              )}
             </div>
           )}
         </div>
@@ -919,18 +900,15 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                   {hasVoted ? t('governance_your_vote') : t('governance_cast_your_vote')}
                 </h2>
 
-                {showVoteSuccess && (
-                  <div className="mb-4 rounded-lg border border-gray-300 bg-gray-100 p-4">
-                    <p className="font-medium text-gray-900">
-                      {t('governance_vote_submitted_success')}
-                    </p>
-                  </div>
-                )}
-
                 {hasVoted ? (
                   <div className="rounded-lg border border-gray-300 bg-gray-100 p-4">
                     <p className="font-medium text-gray-900">
                       {t('governance_you_voted')} <span className="capitalize">{userVote}</span>
+                    </p>
+                    <p className="mt-1 text-sm text-gray-600">
+                      {t('governance_vote_submitted_with_weight', {
+                        weight: selectedVoteAmount.toFixed(2),
+                      })}
                     </p>
                     <p className="mt-1 text-sm text-gray-600">
                       {t('governance_thank_you_participating')}
@@ -938,6 +916,14 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                   </div>
                 ) : (
                   <div>
+                    <div className="mb-6">
+                      <VoteAmountSelector
+                        totalWeight={votingWeight || 1}
+                        value={selectedVoteAmount}
+                        onChange={setSelectedVoteAmount}
+                      />
+                    </div>
+
                     <div className="space-y-3 mb-6">
                       {(['yes', 'no', 'abstain'] as const).map((option) => (
                         <label
