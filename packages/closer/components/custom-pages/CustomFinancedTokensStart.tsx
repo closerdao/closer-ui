@@ -7,7 +7,10 @@ import { useAuth } from '../../contexts/auth';
 import { TokenConfig } from '../../types/api';
 import { resolveBlockText } from '../../utils/blockI18n';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
-import { getDownPaymentPercent } from '../../utils/tokenFinancing';
+import {
+  getDownPaymentPercent,
+  getMaxFinancingMonths,
+} from '../../utils/tokenFinancing';
 
 interface Props {
   settings?: Record<string, unknown>;
@@ -26,6 +29,7 @@ const CustomFinancedTokensStart = ({ content }: Props) => {
   const tokenConfig = (getCachedConfig('token') ?? {}) as TokenConfig;
   const downPaymentValues = {
     percent: getDownPaymentPercent(tokenConfig),
+    months: getMaxFinancingMonths(tokenConfig),
   };
 
   const pick = (raw: string | undefined, fallback: string) =>
@@ -43,7 +47,7 @@ const CustomFinancedTokensStart = ({ content }: Props) => {
           resolveBlockText(item, t, downPaymentValues),
         )
       : [
-          t('citizenship_financed_tokens_1'),
+          t('citizenship_financed_tokens_1', downPaymentValues),
           t('citizenship_financed_tokens_2', downPaymentValues),
           t('citizenship_financed_tokens_3'),
         ];

@@ -54,6 +54,7 @@ import {
   getDownPaymentPercent,
   getFinancingAprPercent,
   getFinancingDurations,
+  getMaxFinancingMonths,
   getMinMonthlyPayment,
 } from '../../utils/tokenFinancing';
 import PageNotFound from '../not-found';
@@ -84,6 +85,7 @@ const CitizenshipPage = ({
   const downPaymentPercent = getDownPaymentPercent(tokenConfig);
   const aprPercent = getFinancingAprPercent(tokenConfig);
   const minMonthlyPayment = getMinMonthlyPayment(tokenConfig);
+  const maxFinancingMonths = getMaxFinancingMonths(tokenConfig);
   // This page only advertises a single headline monthly payment, so it quotes
   // the shortest term on offer.
   const durationInMonths = getFinancingDurations(tokenConfig)[0];
@@ -564,7 +566,9 @@ const CitizenshipPage = ({
               <CardContent className="space-y-3 text-foreground">
                 <p className="flex items-start gap-2">
                   <Check className="mt-1 h-5 w-5 text-accent" />
-                  {t('citizenship_financed_tokens_1')}
+                  {t('citizenship_financed_tokens_1', {
+                    months: maxFinancingMonths,
+                  })}
                 </p>
                 <p className="flex items-start gap-2">
                   <Check className="mt-1 h-5 w-5 text-accent" />

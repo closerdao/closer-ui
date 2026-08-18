@@ -571,7 +571,7 @@
   "subscriptions_citizen_you_are_on_your_way_finance": "Woohoo - you are on your way to financing $TDF tokens! ",
   "subscriptions_citizen_back_to_homepage": "Back to homepage",
   "subscriptions_citizen_finance_tokens": "💰 Finance your Tokens",
-  "subscriptions_citizen_finance_tokens_details": "You can choose to finance 30, 60, 90 or 120 tokens. Here are a few details about it:",
+  "subscriptions_citizen_finance_tokens_details": "You can choose how many tokens to finance. Here are a few details about it:",
   "subscriptions_citizen_finance_tokens_details_months": "Paid over {months} months via bank transfers",
   "subscriptions_citizen_finance_tokens_duration_question": "Over how many months would you like to pay?",
   "subscriptions_citizen_finance_tokens_months": "months",

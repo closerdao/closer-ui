@@ -31,6 +31,7 @@ import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { financeApplicationIdFromCreateResponse } from '../../../utils/financeApplicationIdFromResponse';
 import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
 import {
+  buildFinanceQuote,
   getDownPaymentPercent,
   getFinancingAprPercent,
   getFinancingDurations,
@@ -180,13 +181,20 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
         application.durationInMonths || durations[0] || maxFinancingMonths,
         maxFinancingMonths,
       );
+      const quote = buildFinanceQuote({
+        totalToPayInFiat: application.totalToPayInFiat || 0,
+        downPaymentPercent,
+        durationInMonths,
+        aprPercent,
+        minMonthlyPayment,
+      });
       const res = await api.post('/token/finance-application', {
         tokensToFinance: application.tokensToFinance!,
         totalToPayInFiat: application.totalToPayInFiat!,
         iban: application.iban!,
         durationInMonths,
-        monthlyPaymentAmount: application.monthlyPaymentAmount,
-        downPaymentAmount: application.downPaymentAmount,
+        monthlyPaymentAmount: quote.monthlyPaymentAmount,
+        downPaymentAmount: quote.downPaymentAmount,
         aprPercent: application.aprPercent ?? aprPercent,
         isCitizenApplication,
         why: application?.why,

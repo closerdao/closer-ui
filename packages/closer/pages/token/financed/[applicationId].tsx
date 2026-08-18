@@ -41,6 +41,7 @@ import {
   getFinancedMonthlyAmountDue,
   getScheduleMonthAmountDue,
 } from '../../../utils/financeApplicationMonthlyDue';
+import { getNextPaymentDueDateForFinance } from '../../../utils/financeApplicationScheduleHelpers';
 import {
   canCancelFinanceApplication,
   getFinanceCancellationSummary,
@@ -79,18 +80,6 @@ const getScheduleEntries = (
       amountPaid: value.amountPaid,
       paymentDate: value.paymentDate ? new Date(value.paymentDate) : null,
     }));
-
-const getNextPaymentDueDate = (application: FinanceApplication) => {
-  const schedule = getScheduleEntries(application.paymentsScheduled);
-  const now = new Date();
-  const pendingSorted = schedule.filter(
-    (item) => item.status === 'pending' && item.paymentDate,
-  );
-  const nextFuture = pendingSorted.find(
-    (item) => item.paymentDate && item.paymentDate >= now,
-  );
-  return nextFuture?.paymentDate || pendingSorted[0]?.paymentDate || null;
-};
 
 const formatDate = (date: Date | string | null | undefined) => {
   if (!date) return '-';
@@ -303,7 +292,7 @@ const FinancedTokenApplicationPage = () => {
   const paidMonths = scheduleRows.filter((row) => row.status === 'paid').length;
   const pendingMonths = scheduleRows.length - paidMonths;
   const nextPaymentDate = application
-    ? getNextPaymentDueDate(application)
+    ? getNextPaymentDueDateForFinance(application)
     : null;
   const cancellationSummary = useMemo(
     () => getFinanceCancellationSummary(application),
@@ -588,12 +577,14 @@ const FinancedTokenApplicationPage = () => {
                   {t(financeApplicationStatusLabelKey(application.status))}
                 </Badge>
               </div>
-              <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">
-                  {t('token_sales_dashboard_financed_next_payment_date')}
-                </p>
-                <p className="text-sm">{formatDate(nextPaymentDate)}</p>
-              </div>
+              {!isCancelled && (
+                <div className="flex items-center justify-between gap-3">
+                  <p className="card-feature">
+                    {t('token_sales_dashboard_financed_next_payment_date')}
+                  </p>
+                  <p className="text-sm">{formatDate(nextPaymentDate)}</p>
+                </div>
+              )}
               <div className="flex items-center justify-between gap-3">
                 <p className="card-feature">
                   {t('token_sales_dashboard_financed_pending_months')}

@@ -210,6 +210,8 @@ const CitizenFinanceTokens = ({
     Boolean(totalToPayInFiat) &&
     tokensInputMatchesApplication &&
     quote.meetsMinMonthlyPayment &&
+    application?.monthlyPaymentAmount === quote.monthlyPaymentAmount &&
+    application?.downPaymentAmount === quote.downPaymentAmount &&
     isValid(application?.iban || '');
 
   return (

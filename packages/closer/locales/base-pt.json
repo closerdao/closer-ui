@@ -1516,7 +1516,7 @@
   "subscriptions_citizen_you_are_on_your_way_finance": "Woohoo - está a caminho de financiar tokens $TDF! ",
   "subscriptions_citizen_back_to_homepage": "Voltar à página inicial",
   "subscriptions_citizen_finance_tokens": "💰 Financie os seus Tokens",
-  "subscriptions_citizen_finance_tokens_details": "Pode escolher financiar 30, 60, 90 ou 120 tokens. Aqui estão alguns detalhes sobre isso:",
+  "subscriptions_citizen_finance_tokens_details": "Pode escolher quantos tokens financiar. Aqui estão alguns detalhes sobre isso:",
   "subscriptions_citizen_finance_tokens_details_months": "Pago ao longo de {months} meses via transferências bancárias",
   "subscriptions_citizen_finance_tokens_details_stay_credits": "Recebe <link>créditos de estadia</link> para poder usufruir da utilidade de todos os tokens antes de os possuir",
   "subscriptions_citizen_finance_tokens_details_down_payment": "Pagamento inicial de {percent}% (não reembolsável)",
