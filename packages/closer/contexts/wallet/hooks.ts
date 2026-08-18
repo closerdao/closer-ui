@@ -18,6 +18,7 @@ const defaultWalletState = {
   bookedDates: null,
   error: null,
   library: null,
+  walletProvider: null,
   chainId: null,
 };
 

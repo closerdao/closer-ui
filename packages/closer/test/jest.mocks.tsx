@@ -1,5 +1,9 @@
 import React from 'react';
 
+import { TextDecoder, TextEncoder } from 'util';
+
+Object.assign(global, { TextDecoder, TextEncoder });
+
 // setup env variables globally
 process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING = 'true';
 process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET = 'true';
@@ -79,4 +83,3 @@ jest.mock('../utils/api', () => {
     setOnSessionInvalid: mockApi.setOnSessionInvalid,
   };
 });
-

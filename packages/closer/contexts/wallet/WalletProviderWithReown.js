@@ -494,6 +494,7 @@ const WalletProviderInner = ({ children }) => {
         bookedDates,
         error,
         library,
+        walletProvider,
         chainId,
       }}
     >

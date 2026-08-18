@@ -1,8 +1,9 @@
+import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 
 import Wallet from '../../components/Wallet';
 import { BackButton, Button, Heading, ProgressBar } from '../../components/ui';
@@ -11,15 +12,20 @@ import { useTranslations } from 'next-intl';
 
 import { TOKEN_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
-import { WalletState } from '../../contexts/wallet';
+import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import { useConfig } from '../../hooks/useConfig';
 import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+import { getReserveTokenDisplay } from '../../utils/config.utils';
 import { logMetric } from '../../utils/metrics';
 import { fetchTokenSaleQuantityForMetric } from '../../utils/tokenSale.helpers';
-import { getReserveTokenDisplay } from '../../utils/config.utils';
 import PageNotFound from '../not-found';
+
+const MultiCurrencyPaymentModal = dynamic(
+  () => import('../../components/token-sale/MultiCurrencyPaymentModal'),
+  { ssr: false },
+);
 
 const ChecklistCryptoPage = () => {
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
@@ -38,13 +44,75 @@ const ChecklistCryptoPage = () => {
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
 
   const { isLoading, user } = useAuth();
-  const { isWalletReady, balanceCeloAvailable, balanceCeurAvailable } =
-    useContext(WalletState);
+  const {
+    account,
+    hasSameConnectedAccount,
+    isWalletConnected,
+    isWalletReady,
+    balanceCeloAvailable,
+    balanceCeurAvailable,
+  } = useContext(WalletState);
+  const { connectWallet, updateCeurBalance } = useContext(WalletDispatch);
 
   const doesHaveCelo = balanceCeloAvailable > 0.1;
   const doesHaveCeur = balanceCeurAvailable > 250;
-  const isChecklistComplete = isWalletReady && doesHaveCelo && doesHaveCeur;
+  const isMultiCurrencyEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE_MULTI_CURRENCY === 'true' &&
+    Number(defaultConfig.BLOCKCHAIN_NETWORK_ID) === 42220;
+  const isChecklistComplete =
+    isWalletReady && (isMultiCurrencyEnabled || (doesHaveCelo && doesHaveCeur));
   const [visibleChecks, setVisibleChecks] = useState([false, false, false]);
+  const [isSwapPreviewOpen, setIsSwapPreviewOpen] = useState(false);
+
+  const handleOpenSwapPreview = useCallback(async () => {
+    if (!account || !isWalletConnected || !hasSameConnectedAccount) {
+      await connectWallet();
+      return;
+    }
+
+    setIsSwapPreviewOpen(true);
+    void logMetric({
+      event: 'token-swap-preview-opened',
+      category: 'token',
+      value: 'checklist-crypto',
+    });
+  }, [account, connectWallet, hasSameConnectedAccount, isWalletConnected]);
+
+  const handleSwapPreviewCompleted = useCallback(() => {
+    void updateCeurBalance();
+    void logMetric({
+      event: 'token-swap-preview-completed',
+      category: 'token',
+      value: 'checklist-crypto',
+    });
+  }, [updateCeurBalance]);
+
+  const handleSwapPreviewFailed = useCallback(() => {
+    void logMetric({
+      event: 'token-swap-preview-failed',
+      category: 'token',
+      value: 'checklist-crypto',
+    });
+  }, []);
+
+  const handleSwapPreviewStarted = useCallback(() => {
+    void logMetric({
+      event: 'token-swap-preview-started',
+      category: 'token',
+      value: 'checklist-crypto',
+    });
+  }, []);
+
+  const handleSwapSourceSelected = useCallback(
+    ({ chainId }: { chainId: number }) => {
+      void logMetric({
+        event: 'token-swap-preview-source-selected',
+        category: 'token',
+        value: String(chainId),
+      });
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -54,9 +122,18 @@ const ChecklistCryptoPage = () => {
 
   useEffect(() => {
     const timers = [
-      window.setTimeout(() => setVisibleChecks((prev) => [true, prev[1], prev[2]]), 1000),
-      window.setTimeout(() => setVisibleChecks((prev) => [prev[0], true, prev[2]]), 1500),
-      window.setTimeout(() => setVisibleChecks((prev) => [prev[0], prev[1], true]), 2000),
+      window.setTimeout(
+        () => setVisibleChecks((prev) => [true, prev[1], prev[2]]),
+        1000,
+      ),
+      window.setTimeout(
+        () => setVisibleChecks((prev) => [prev[0], true, prev[2]]),
+        1500,
+      ),
+      window.setTimeout(
+        () => setVisibleChecks((prev) => [prev[0], prev[1], true]),
+        2000,
+      ),
     ];
     return () => {
       timers.forEach((timer) => window.clearTimeout(timer));
@@ -69,7 +146,8 @@ const ChecklistCryptoPage = () => {
     void logMetric({
       event: 'continue-checklist-crypto',
       category: 'token',
-      value: 'checklist-continue', point: point,
+      value: 'checklist-continue',
+      point: point,
     });
     const encodedSaleId = encodeURIComponent(sid);
     router.push(
@@ -105,13 +183,13 @@ const ChecklistCryptoPage = () => {
         <main className="pt-0 pb-24 flex flex-col gap-4">
           <div>
             <ul className="flex flex-col gap-2">
-              <li
-                className="mb-1.5"
-              >
+              <li className="mb-1.5">
                 <span
                   className={`mr-2 mt-1 inline-flex h-4 w-4 items-center justify-center rounded-full border text-[10px] align-top transition-all duration-300 ${
                     isWalletReady
-                      ? (visibleChecks[0] ? 'opacity-100 scale-100' : 'opacity-0 scale-75')
+                      ? visibleChecks[0]
+                        ? 'opacity-100 scale-100'
+                        : 'opacity-0 scale-75'
                       : 'opacity-100 scale-100'
                   } ${
                     isWalletReady
@@ -127,16 +205,16 @@ const ChecklistCryptoPage = () => {
                     : t('token_sale_before_you_begin_checklist_1_connect')}
                 </span>
               </li>
-              <li
-                className="mb-1.5"
-              >
+              <li className="mb-1.5">
                 <span
                   className={`mr-2 mt-1 inline-flex h-4 w-4 items-center justify-center rounded-full border text-[10px] align-top transition-all duration-300 ${
-                    doesHaveCelo
-                      ? (visibleChecks[1] ? 'opacity-100 scale-100' : 'opacity-0 scale-75')
+                    doesHaveCelo || isMultiCurrencyEnabled
+                      ? visibleChecks[1]
+                        ? 'opacity-100 scale-100'
+                        : 'opacity-0 scale-75'
                       : 'opacity-100 scale-100'
                   } ${
-                    doesHaveCelo
+                    doesHaveCelo || isMultiCurrencyEnabled
                       ? 'border-accent bg-accent text-white'
                       : 'border-gray-300 bg-gray-100 text-transparent'
                   }`}
@@ -146,6 +224,8 @@ const ChecklistCryptoPage = () => {
                 <span className="inline">
                   {doesHaveCelo
                     ? t('token_sale_before_you_begin_checklist_2_gas_fees')
+                    : isMultiCurrencyEnabled
+                    ? t('token_sale_eurm_gas_fallback', { reserveToken })
                     : t.rich(
                         'token_sale_before_you_begin_checklist_2_buy_on_binance_or_coinbase',
                         {
@@ -174,16 +254,16 @@ const ChecklistCryptoPage = () => {
                 </span>
               </li>
 
-              <li
-                className="mb-1.5"
-              >
+              <li className="mb-1.5">
                 <span
                   className={`mr-2 mt-1 inline-flex h-4 w-4 items-center justify-center rounded-full border text-[10px] align-top transition-all duration-300 ${
-                    doesHaveCeur
-                      ? (visibleChecks[2] ? 'opacity-100 scale-100' : 'opacity-0 scale-75')
+                    doesHaveCeur || isMultiCurrencyEnabled
+                      ? visibleChecks[2]
+                        ? 'opacity-100 scale-100'
+                        : 'opacity-0 scale-75'
                       : 'opacity-100 scale-100'
                   } ${
-                    doesHaveCeur
+                    doesHaveCeur || isMultiCurrencyEnabled
                       ? 'border-accent bg-accent text-white'
                       : 'border-gray-300 bg-gray-100 text-transparent'
                   }`}
@@ -193,6 +273,14 @@ const ChecklistCryptoPage = () => {
                 <span className="inline">
                   {doesHaveCeur ? (
                     t('token_sale_before_you_begin_checklist_3_hold_eurm')
+                  ) : isMultiCurrencyEnabled ? (
+                    <button
+                      type="button"
+                      className="font-bold text-accent underline"
+                      onClick={handleOpenSwapPreview}
+                    >
+                      {t('token_sale_multi_currency_preview_button')}
+                    </button>
                   ) : (
                     <a
                       className="underline"
@@ -200,7 +288,9 @@ const ChecklistCryptoPage = () => {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      {t('token_sale_before_you_begin_checklist_3_cta', { reserveToken })}
+                      {t('token_sale_before_you_begin_checklist_3_cta', {
+                        reserveToken,
+                      })}
                     </a>
                   )}
                 </span>
@@ -224,7 +314,10 @@ const ChecklistCryptoPage = () => {
               {t('token_sale_button_continue')}
             </Button>
             {isChecklistComplete && (
-              <span className="absolute inset-0 pointer-events-none" aria-hidden>
+              <span
+                className="absolute inset-0 pointer-events-none"
+                aria-hidden
+              >
                 <span
                   className="absolute animate-sparkle-float text-[10px] left-1/2 top-0"
                   style={{ animationDelay: '0s' }}
@@ -286,6 +379,22 @@ const ChecklistCryptoPage = () => {
           </div>
         </main>
       </div>
+      {isSwapPreviewOpen && account && (
+        <MultiCurrencyPaymentModal
+          account={account}
+          locale={router.locale}
+          previewMode
+          toAmount="1"
+          onClose={() => setIsSwapPreviewOpen(false)}
+          onConnect={() => {
+            void connectWallet();
+          }}
+          onRouteStarted={handleSwapPreviewStarted}
+          onRouteCompleted={handleSwapPreviewCompleted}
+          onRouteFailed={handleSwapPreviewFailed}
+          onSourceSelected={handleSwapSourceSelected}
+        />
+      )}
     </>
   );
 };

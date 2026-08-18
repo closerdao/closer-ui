@@ -20,6 +20,7 @@ export interface WalletStateContext {
   balanceNativeAvailable: string;
   account?: string | null;
   library: any;
+  walletProvider?: any;
   chainId?: number;
   error?: any;
   bookedDates: any;

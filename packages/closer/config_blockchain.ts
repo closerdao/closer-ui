@@ -17,8 +17,8 @@ const celoConfig = {
   },
   BLOCKCHAIN_CEUR_TOKEN: {
     address: '0xD8763CBa276a3738E6DE85b4b3bF5FDed6D6cA73',
-    name: 'cEUR',
-    symbol: 'cEUR',
+    name: 'EURm',
+    symbol: 'EURm',
     decimals: 18,
   },
   BLOCKCHAIN_CELO_TOKEN: {

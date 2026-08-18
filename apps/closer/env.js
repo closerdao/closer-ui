@@ -56,6 +56,7 @@ export const closerAppEnvShape = {
   NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: optionalString,
   NEXT_PUBLIC_NETWORK: optionalString,
   NEXT_PUBLIC_BOOK_ACCOMMODATION_GAS_LIMIT: optionalString,
+  NEXT_PUBLIC_LIFI_INTEGRATOR: optionalString,
 
   // Behaviour
   NEXT_PUBLIC_REGISTRATION_MODE: optionalString,
@@ -77,6 +78,8 @@ export const closerAppEnvShape = {
   NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS: optionalBooleanString.default('false'),
   NEXT_PUBLIC_FEATURE_SUPPORT_US: optionalBooleanString.default('true'),
   NEXT_PUBLIC_FEATURE_TOKEN_SALE: optionalBooleanString.default('false'),
+  NEXT_PUBLIC_FEATURE_TOKEN_SALE_MULTI_CURRENCY:
+    optionalBooleanString.default('false'),
   NEXT_PUBLIC_FEATURE_VOLUNTEERING: optionalBooleanString.default('false'),
   NEXT_PUBLIC_FEATURE_WEB3_BOOKING: optionalBooleanString.default('false'),
   NEXT_PUBLIC_FEATURE_WEB3_WALLET: optionalBooleanString.default('false'),

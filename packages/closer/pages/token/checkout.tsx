@@ -1,8 +1,16 @@
+import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import Wallet from '../../components/Wallet';
 import {
@@ -16,27 +24,39 @@ import {
 } from '../../components/ui';
 
 import { useTranslations } from 'next-intl';
+import { formatUnits } from 'viem';
 
 import { MIN_CELO_FOR_GAS, TOKEN_SALE_STEPS } from '../../constants';
 import { useAuth } from '../../contexts/auth';
-import { WalletState } from '../../contexts/wallet';
+import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import { useBuyTokens } from '../../hooks/useBuyTokens';
-import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { useConfig } from '../../hooks/useConfig';
+import { useSalePaidRedirect } from '../../hooks/useSalePaidRedirect';
 import { GeneralConfig } from '../../types';
 import { TokenSale } from '../../types/api';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
+import { getReserveTokenDisplay } from '../../utils/config.utils';
+import { formatIntlNumberTwoDecimals } from '../../utils/currencyFormat';
+import { logMetric } from '../../utils/metrics';
 import {
   checkoutTokensFromSaleQuantity,
   fetchTokenSaleById,
   rawQuantityFromSale,
   waitForTokenSalePaidStatus,
 } from '../../utils/tokenSale.helpers';
-import { logMetric } from '../../utils/metrics';
-import { formatIntlNumberTwoDecimals } from '../../utils/currencyFormat';
-import { getReserveTokenDisplay } from '../../utils/config.utils';
+import {
+  EURM_GAS_RESERVE,
+  calculateEurmTopUpAmount,
+  formatWidgetTokenAmount,
+  safeParseTokenAmount,
+} from '../../utils/tokenSalePayment';
 import PageNotFound from '../not-found';
+
+const MultiCurrencyPaymentModal = dynamic(
+  () => import('../../components/token-sale/MultiCurrencyPaymentModal'),
+  { ssr: false },
+);
 
 interface Props {
   generalConfig: GeneralConfig | null;
@@ -96,24 +116,42 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   const reserveToken = getReserveTokenDisplay(config);
   const {
     buyTokens,
-    getTotalCost,
+    getTotalCostRawWithoutWallet,
+    getCeurBalanceWithoutWallet,
     isCeurApproved,
     approveCeur,
     isPending,
     isConfigReady,
   } = useBuyTokens();
   const [total, setTotal] = useState<number>(0);
+  const [totalRaw, setTotalRaw] = useState<string>('0');
   const [isApproved, setIsApproved] = useState<boolean>(false);
 
   const { isAuthenticated, isLoading } = useAuth();
-  const { isWalletReady, balanceCeurAvailable, balanceCeloAvailable } =
-    useContext(WalletState);
+  const {
+    account,
+    hasSameConnectedAccount,
+    isWalletConnected,
+    isWalletReady,
+    balanceCeurAvailable,
+    balanceNativeAvailable,
+  } = useContext(WalletState);
+  const { connectWallet, switchNetwork, updateCeurBalance } =
+    useContext(WalletDispatch);
 
   const [web3Error, setWeb3Error] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
-  const [pendingValidationTxHash, setPendingValidationTxHash] = useState<string | null>(null);
+  const [pendingValidationTxHash, setPendingValidationTxHash] = useState<
+    string | null
+  >(null);
 
   const [isMetamaskLoading, setIsMetamaskLoading] = useState(false);
+  const [isSwapModalOpen, setIsSwapModalOpen] = useState(false);
+  const [isSwapPreviewOpen, setIsSwapPreviewOpen] = useState(false);
+  const [swapTopUpAmount, setSwapTopUpAmount] = useState<bigint>(0n);
+  const [swapStatus, setSwapStatus] = useState<
+    'idle' | 'executing' | 'settling' | 'ready' | 'failed'
+  >('idle');
 
   const tokenCheckoutViewMetricRef = useRef<string | null>(null);
   useEffect(() => {
@@ -125,7 +163,8 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     void logMetric({
       event: 'token-checkout-viewed',
       category: 'token',
-      value: 'checkout-view', point: pt,
+      value: 'checkout-view',
+      point: pt,
     });
   }, [router.isReady, saleIdTrimmed, saleLoading, sale, tokensForCheckout]);
 
@@ -188,22 +227,223 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
   }, [router.isReady, saleIdTrimmed, t]);
 
   useEffect(() => {
-    if (!isWalletReady || !isConfigReady || !tokensForCheckout) {
-      return;
-    }
-    (async () => {
-      const totalCost = await getTotalCost(tokensForCheckout);
-      setTotal(totalCost);
-      const isAllowanceSufficient = await isCeurApproved(tokensForCheckout);
-      setIsApproved(isAllowanceSufficient);
+    if (!isConfigReady || !tokensForCheckout) return;
+
+    let cancelled = false;
+    void (async () => {
+      const exactTotal = await getTotalCostRawWithoutWallet(tokensForCheckout);
+      if (cancelled) return;
+      setTotalRaw(exactTotal);
+      setTotal(Number(formatUnits(BigInt(exactTotal), 18)));
     })();
-  }, [isWalletReady, isConfigReady, tokensForCheckout]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isConfigReady, tokensForCheckout]);
+
+  useEffect(() => {
+    if (!isWalletReady || !isConfigReady || !tokensForCheckout) return;
+
+    let cancelled = false;
+    void (async () => {
+      const isAllowanceSufficient = await isCeurApproved(tokensForCheckout);
+      if (!cancelled) setIsApproved(isAllowanceSufficient);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isWalletReady, isConfigReady, tokensForCheckout, totalRaw]);
 
   useEffect(() => {
     if (tokensForCheckout) return;
     setTotal(0);
+    setTotalRaw('0');
     setIsApproved(false);
   }, [tokensForCheckout]);
+
+  const isCeloMainnet = Number(config.BLOCKCHAIN_NETWORK_ID) === 42220;
+  const isMultiCurrencyFeatureEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE_MULTI_CURRENCY === 'true';
+  const isMultiCurrencyEnabled = isMultiCurrencyFeatureEnabled && isCeloMainnet;
+  const isLowNativeCelo =
+    Number(balanceNativeAvailable ?? 0) < MIN_CELO_FOR_GAS;
+  const needsEurmGas = isCeloMainnet && isLowNativeCelo;
+  const totalAmountRaw = useMemo(() => {
+    try {
+      return BigInt(totalRaw || '0');
+    } catch {
+      return 0n;
+    }
+  }, [totalRaw]);
+  const walletEurmBalanceRaw = useMemo(
+    () => safeParseTokenAmount(balanceCeurAvailable),
+    [balanceCeurAvailable],
+  );
+  const currentTopUpAmount = useMemo(
+    () =>
+      calculateEurmTopUpAmount({
+        balance: walletEurmBalanceRaw,
+        totalCost: totalAmountRaw,
+        needsEurmGas,
+      }),
+    [needsEurmGas, totalAmountRaw, walletEurmBalanceRaw],
+  );
+  const requiredPurchaseBalance =
+    totalAmountRaw + (needsEurmGas ? EURM_GAS_RESERVE : 0n);
+  const hasPurchaseFunds = walletEurmBalanceRaw >= requiredPurchaseBalance;
+
+  const handleOpenSwap = useCallback(async () => {
+    setWeb3Error(null);
+    if (!account || !isWalletConnected || !hasSameConnectedAccount) {
+      await connectWallet();
+      return;
+    }
+    if (currentTopUpAmount <= 0n) {
+      setWeb3Error(t('token_sale_multi_currency_already_funded'));
+      return;
+    }
+
+    setSwapTopUpAmount(currentTopUpAmount);
+    setSwapStatus('idle');
+    setIsSwapModalOpen(true);
+    void logMetric({
+      event: 'token-swap-opened',
+      category: 'token',
+      value: 'multi-currency',
+    });
+  }, [
+    account,
+    connectWallet,
+    currentTopUpAmount,
+    hasSameConnectedAccount,
+    isWalletConnected,
+    t,
+  ]);
+
+  const handleCloseSwap = useCallback(() => {
+    if (swapStatus === 'executing' || swapStatus === 'settling') {
+      void logMetric({
+        event: 'token-swap-abandoned',
+        category: 'token',
+        value: swapStatus,
+      });
+    }
+    setIsSwapModalOpen(false);
+  }, [swapStatus]);
+
+  const handleOpenSwapPreview = useCallback(async () => {
+    setWeb3Error(null);
+    if (!account || !isWalletConnected || !hasSameConnectedAccount) {
+      await connectWallet();
+      return;
+    }
+
+    setSwapStatus('idle');
+    setIsSwapPreviewOpen(true);
+    void logMetric({
+      event: 'token-swap-preview-opened',
+      category: 'token',
+      value: 'multi-currency-preview',
+    });
+  }, [account, connectWallet, hasSameConnectedAccount, isWalletConnected]);
+
+  const handleCloseSwapPreview = useCallback(() => {
+    setIsSwapPreviewOpen(false);
+  }, []);
+
+  const handleSwapStarted = useCallback(() => {
+    setSwapStatus('executing');
+    void logMetric({
+      event: 'token-swap-route-started',
+      category: 'token',
+      value: 'route-started',
+    });
+  }, []);
+
+  const handleSwapFailed = useCallback(() => {
+    setSwapStatus('failed');
+    void logMetric({
+      event: 'token-swap-route-failed',
+      category: 'token',
+      value: 'route-failed',
+    });
+  }, []);
+
+  const handleSwapPreviewCompleted = useCallback(() => {
+    setSwapStatus('ready');
+    void logMetric({
+      event: 'token-swap-preview-completed',
+      category: 'token',
+      value: 'mainnet-preview',
+    });
+  }, []);
+
+  const handleSwapSourceSelected = useCallback(
+    ({ chainId }: { chainId: number; tokenAddress: string }) => {
+      void logMetric({
+        event: 'token-swap-source-selected',
+        category: 'token',
+        value: String(chainId),
+      });
+    },
+    [],
+  );
+
+  const handleSwapCompleted = useCallback(() => {
+    if (!account || !tokensForCheckout) return;
+    setSwapStatus('settling');
+    void logMetric({
+      event: 'token-swap-route-completed',
+      category: 'token',
+      value: 'route-completed',
+    });
+
+    void (async () => {
+      await switchNetwork();
+
+      for (let attempt = 0; attempt < 20; attempt += 1) {
+        const [latestCostRaw, latestBalanceRaw] = await Promise.all([
+          getTotalCostRawWithoutWallet(tokensForCheckout),
+          getCeurBalanceWithoutWallet(account),
+        ]);
+        const latestCost = BigInt(latestCostRaw || '0');
+        const latestBalance = BigInt(latestBalanceRaw || '0');
+        const requiredBalance =
+          latestCost + (needsEurmGas ? EURM_GAS_RESERVE : 0n);
+
+        if (latestBalance >= requiredBalance) {
+          setTotalRaw(latestCostRaw);
+          setTotal(Number(formatUnits(latestCost, 18)));
+          setIsApproved(false);
+          await updateCeurBalance();
+          setSwapStatus('ready');
+          setIsSwapModalOpen(false);
+          void logMetric({
+            event: 'token-swap-balance-settled',
+            category: 'token',
+            value: 'eurm-ready',
+          });
+          return;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 3_000));
+      }
+
+      setSwapStatus('failed');
+      setWeb3Error(t('token_sale_multi_currency_balance_pending'));
+    })();
+  }, [
+    account,
+    getCeurBalanceWithoutWallet,
+    getTotalCostRawWithoutWallet,
+    needsEurmGas,
+    switchNetwork,
+    t,
+    tokensForCheckout,
+    updateCeurBalance,
+  ]);
 
   const goBack = async () => {
     router.push(
@@ -225,24 +465,39 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     void logMetric({
       event: 'token-approval-started',
       category: 'token',
-      value: 'approval-started', point: tokenPoint,
+      value: 'approval-started',
+      point: tokenPoint,
     });
 
-    const { success, errorCode, userMessage } = await approveCeur(total);
+    const { success, errorCode, userMessage, gasPayment } = await approveCeur(
+      total,
+      totalRaw,
+    );
     if (success) {
       setIsApproved(true);
       void logMetric({
         event: 'approve',
         category: 'token',
-        value: 'approve', point: tokenPoint,
+        value: 'approve',
+        point: tokenPoint,
       });
+      if (gasPayment) {
+        void logMetric({
+          event: 'token-sale-gas-payment',
+          category: 'token',
+          value: gasPayment,
+        });
+      }
     } else {
       void logMetric({
         event: 'approve-error',
         category: 'token',
-        value: 'approval-error', point: tokenPoint,
+        value: 'approval-error',
+        point: tokenPoint,
       });
-      if (userMessage) {
+      if (errorCode === 'EURM_FEE_UNSUPPORTED') {
+        setWeb3Error(t('token_sale_eurm_gas_unsupported'));
+      } else if (userMessage) {
         setWeb3Error(
           t('token_sale_approval_error_reason', {
             reason: userMessage,
@@ -269,22 +524,31 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     void logMetric({
       event: 'token-crypto-payment-started',
       category: 'token',
-      value: 'payment-started', point: tokenPoint,
+      value: 'payment-started',
+      point: tokenPoint,
     });
 
     if (!normalizedSaleId) {
       void logMetric({
         event: 'purchase-error',
         category: 'token',
-        value: 'error', point: tokenPoint,
+        value: 'error',
+        point: tokenPoint,
       });
       setApiError(t('donate_create_invalid_response'));
       setIsMetamaskLoading(false);
       return;
     }
-    const { success, txHash, errorCode, userMessage } =
+    const { success, txHash, errorCode, userMessage, gasPayment } =
       await buyTokens(tokensForCheckout);
     if (success) {
+      if (gasPayment) {
+        void logMetric({
+          event: 'token-sale-gas-payment',
+          category: 'token',
+          value: gasPayment,
+        });
+      }
       try {
         await api.post(
           `/sale/${encodeURIComponent(normalizedSaleId)}/confirm-token-sale`,
@@ -296,7 +560,8 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
         void logMetric({
           event: 'purchase-validation-error',
           category: 'token',
-          value: 'validation-error', point: tokenPoint,
+          value: 'validation-error',
+          point: tokenPoint,
         });
         setPendingValidationTxHash(txHash || null);
         setApiError(
@@ -312,16 +577,20 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
       void logMetric({
         event: 'purchase-complete-crypto',
         category: 'token',
-        value: 'sale', point: tokenPoint,
+        value: 'sale',
+        point: tokenPoint,
       });
       router.push(`/sale/${encodeURIComponent(normalizedSaleId)}`);
     } else {
       void logMetric({
         event: 'purchase-error',
         category: 'token',
-        value: 'error', point: tokenPoint,
+        value: 'error',
+        point: tokenPoint,
       });
-      if (errorCode === 'MAX_SUPPLY') {
+      if (errorCode === 'EURM_FEE_UNSUPPORTED') {
+        setWeb3Error(t('token_sale_eurm_gas_unsupported'));
+      } else if (errorCode === 'MAX_SUPPLY') {
         setWeb3Error(t('token_sale_buy_error_max_supply'));
       } else if (errorCode === 'INSUFFICIENT_BALANCE') {
         setWeb3Error(
@@ -355,7 +624,8 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
       void logMetric({
         event: 'purchase-validation-error',
         category: 'token',
-        value: 'validation-error', point: retryTokenPoint,
+        value: 'validation-error',
+        point: retryTokenPoint,
       });
       setApiError(t('donate_create_invalid_response'));
       setIsMetamaskLoading(false);
@@ -363,22 +633,27 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
     }
 
     try {
-      await api.post(`/sale/${encodeURIComponent(normalizedSaleId)}/confirm-token-sale`, {
-        txHash: pendingValidationTxHash,
-      });
+      await api.post(
+        `/sale/${encodeURIComponent(normalizedSaleId)}/confirm-token-sale`,
+        {
+          txHash: pendingValidationTxHash,
+        },
+      );
       setPendingValidationTxHash(null);
       await waitForTokenSalePaidStatus(normalizedSaleId);
       void logMetric({
         event: 'purchase-complete-crypto',
         category: 'token',
-        value: 'sale', point: retryTokenPoint,
+        value: 'sale',
+        point: retryTokenPoint,
       });
       router.push(`/sale/${encodeURIComponent(normalizedSaleId)}`);
     } catch (error: unknown) {
       void logMetric({
         event: 'purchase-validation-error',
         category: 'token',
-        value: 'validation-error', point: retryTokenPoint,
+        value: 'validation-error',
+        point: retryTokenPoint,
       });
       setApiError(
         t('token_sale_validation_failed_error', {
@@ -452,9 +727,34 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
 
         <ProgressBar steps={TOKEN_SALE_STEPS} />
 
+        {isMultiCurrencyFeatureEnabled && (
+          <div className="mt-6 flex flex-col gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4">
+            <div>
+              <p className="font-medium text-amber-950">
+                🧪 {t('token_sale_multi_currency_preview_heading')}
+              </p>
+              <p className="mt-1 text-sm text-amber-900">
+                {t('token_sale_multi_currency_preview_description')}
+              </p>
+            </div>
+            <Button
+              variant="secondary"
+              className="normal-case tracking-normal"
+              onClick={handleOpenSwapPreview}
+              isEnabled={!isPending && !isMetamaskLoading}
+            >
+              {!isWalletReady
+                ? t('token_sale_multi_currency_connect_wallet')
+                : t('token_sale_multi_currency_preview_button')}
+            </Button>
+          </div>
+        )}
+
         {missingSaleId && (
           <div className="mt-6">
-            <ErrorMessage error={t('token_sale_checkout_error_missing_sale_id')} />
+            <ErrorMessage
+              error={t('token_sale_checkout_error_missing_sale_id')}
+            />
           </div>
         )}
         {saleFetchError && (
@@ -499,32 +799,97 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
             </div>
           </div>
 
+          {isMultiCurrencyEnabled && totalAmountRaw > 0n && (
+            <div>
+              <Heading level={3} hasBorder={true}>
+                💱 {t('token_sale_multi_currency_pay_with')}
+              </Heading>
+              <div className="flex flex-col gap-4 rounded-lg border border-gray-200 bg-white p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-medium">
+                      {t('token_sale_multi_currency_direct_label', {
+                        reserveToken,
+                      })}
+                    </p>
+                    <p className="mt-1 text-sm text-gray-600">
+                      {t('token_sale_multi_currency_description', {
+                        reserveToken,
+                      })}
+                    </p>
+                  </div>
+                  {isWalletReady && (
+                    <span className="shrink-0 text-sm text-gray-600">
+                      {formatIntlNumberTwoDecimals(
+                        Number(balanceCeurAvailable ?? 0),
+                        router.locale || undefined,
+                      )}{' '}
+                      {reserveToken}
+                    </span>
+                  )}
+                </div>
+
+                <Button
+                  variant="secondary"
+                  className="normal-case tracking-normal"
+                  onClick={handleOpenSwap}
+                  isEnabled={
+                    !isPending &&
+                    !isMetamaskLoading &&
+                    (!isWalletReady || currentTopUpAmount > 0n)
+                  }
+                >
+                  {!isWalletReady
+                    ? t('token_sale_multi_currency_connect_wallet')
+                    : currentTopUpAmount > 0n
+                    ? t('token_sale_multi_currency_other_crypto_button')
+                    : t('token_sale_multi_currency_already_funded')}
+                </Button>
+
+                {isWalletReady && currentTopUpAmount > 0n && (
+                  <p className="text-center text-xs text-gray-500">
+                    {t('token_sale_multi_currency_top_up_amount', {
+                      amount: formatWidgetTokenAmount(currentTopUpAmount),
+                      reserveToken,
+                    })}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           {isWalletEnabled &&
             isWalletReady &&
-            (Number(balanceCeloAvailable ?? 0) < MIN_CELO_FOR_GAS ||
-              (total > 0 &&
-                Number(balanceCeurAvailable ?? 0) < total)) && (
+            (isLowNativeCelo || walletEurmBalanceRaw < totalAmountRaw) && (
               <div className="flex flex-col gap-4">
-                {Number(balanceCeloAvailable ?? 0) < MIN_CELO_FOR_GAS && (
+                {isLowNativeCelo && (
                   <div
                     className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-amber-800"
                     role="alert"
                   >
-                    <span className="text-amber-500 text-xl shrink-0" aria-hidden>
+                    <span
+                      className="text-amber-500 text-xl shrink-0"
+                      aria-hidden
+                    >
                       ⚠️
                     </span>
                     <p className="text-sm font-medium">
-                      {t('insufficient_celo_for_gas')}
+                      {isCeloMainnet
+                        ? t('token_sale_eurm_gas_fallback', { reserveToken })
+                        : t('insufficient_celo_for_gas')}
                     </p>
                   </div>
                 )}
-                {total > 0 &&
-                  Number(balanceCeurAvailable ?? 0) < total && (
+                {totalAmountRaw > 0n &&
+                  walletEurmBalanceRaw < totalAmountRaw && (
                     <div
                       className="flex items-start gap-2 rounded-lg border border-amber-400 bg-amber-50 p-3 text-amber-800"
                       role="alert"
                     >
-                      <span className="text-amber-500 text-xl shrink-0" aria-hidden>
+                      <span
+                        className="text-amber-500 text-xl shrink-0"
+                        aria-hidden
+                      >
                         ⚠️
                       </span>
                       <p className="text-sm font-medium">
@@ -553,7 +918,7 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
                     !isPending &&
                     !isMetamaskLoading &&
                     (pendingValidationTxHash !== null ||
-                      balanceCeurAvailable > total)
+                      (isWalletReady && hasPurchaseFunds))
                   }
                 >
                   {isPending || isMetamaskLoading ? (
@@ -574,7 +939,8 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
                   isEnabled={
                     !isPending &&
                     !isMetamaskLoading &&
-                    balanceCeurAvailable > total
+                    isWalletReady &&
+                    hasPurchaseFunds
                   }
                 >
                   {isPending || isMetamaskLoading ? (
@@ -594,6 +960,37 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
           {isWalletEnabled && <Wallet />}
         </main>
       </div>
+      {isSwapModalOpen && account && (
+        <MultiCurrencyPaymentModal
+          account={account}
+          locale={router.locale}
+          toAmount={formatWidgetTokenAmount(swapTopUpAmount)}
+          onClose={handleCloseSwap}
+          onConnect={() => {
+            void connectWallet();
+          }}
+          onRouteStarted={handleSwapStarted}
+          onRouteCompleted={handleSwapCompleted}
+          onRouteFailed={handleSwapFailed}
+          onSourceSelected={handleSwapSourceSelected}
+        />
+      )}
+      {isSwapPreviewOpen && account && (
+        <MultiCurrencyPaymentModal
+          account={account}
+          locale={router.locale}
+          previewMode
+          toAmount="1"
+          onClose={handleCloseSwapPreview}
+          onConnect={() => {
+            void connectWallet();
+          }}
+          onRouteStarted={handleSwapStarted}
+          onRouteCompleted={handleSwapPreviewCompleted}
+          onRouteFailed={handleSwapFailed}
+          onSourceSelected={handleSwapSourceSelected}
+        />
+      )}
     </>
   );
 };
