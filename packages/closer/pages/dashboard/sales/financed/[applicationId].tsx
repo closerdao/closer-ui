@@ -21,6 +21,7 @@ import api from '../../../../utils/api';
 import { parseMessageFromError } from '../../../../utils/common';
 import { formatIsoFiatAmount } from '../../../../utils/currencyFormat';
 import { getFinancedMonthlyAmountDue, getScheduleMonthAmountDue } from '../../../../utils/financeApplicationMonthlyDue';
+import { isFinanceApplicationCancelled } from '../../../../utils/financeCancellation';
 import {
   financeApplicationStatusBadgeVariant,
   financeApplicationStatusLabelKey,
@@ -419,23 +420,24 @@ const FinancedApplicationDetailPage = () => {
                 </div>
               </Card>
 
-              {user.roles.includes('admin') && (
-                <Card className="flex flex-col gap-3">
-                  <FinancedApplyPaymentForm
-                    applicationId={String(applicationId)}
-                    application={application}
-                    onApplied={async (updated) => {
-                      if (updated && platform?.financeapplication?.set) {
-                        platform.financeapplication.set(updated);
-                      }
-                      await platform?.financeapplication?.getOne(
-                        applicationId as string,
-                        { force: true },
-                      );
-                    }}
-                  />
-                </Card>
-              )}
+              {user.roles.includes('admin') &&
+                !isFinanceApplicationCancelled(application) && (
+                  <Card className="flex flex-col gap-3">
+                    <FinancedApplyPaymentForm
+                      applicationId={String(applicationId)}
+                      application={application}
+                      onApplied={async (updated) => {
+                        if (updated && platform?.financeapplication?.set) {
+                          platform.financeapplication.set(updated);
+                        }
+                        await platform?.financeapplication?.getOne(
+                          applicationId as string,
+                          { force: true },
+                        );
+                      }}
+                    />
+                  </Card>
+                )}
 
               {user.roles.includes('admin') && (
                 <Card className="flex flex-col gap-3">
