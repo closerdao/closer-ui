@@ -92,22 +92,6 @@ export const getEffectiveStatus = (
   };
 };
 
-export const isProposalVotingActive = (proposal: Proposal | null): boolean => {
-  if (!proposal || proposal.status !== 'active' || !proposal.endDate) {
-    return false;
-  }
-
-  return new Date() < new Date(proposal.endDate);
-};
-
-export const getMsUntilVotingEnds = (endDate?: Date | string): number => {
-  if (!endDate) {
-    return 0;
-  }
-
-  return new Date(endDate).getTime() - Date.now();
-};
-
 export const isWithinResultCelebrationWindow = (
   endDate?: Date | string,
 ): boolean => {
