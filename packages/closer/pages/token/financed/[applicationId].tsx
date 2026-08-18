@@ -7,9 +7,14 @@ import Wallet from '../../../components/Wallet';
 import {
   Button,
   Card,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   ErrorMessage,
   Heading,
   Spinner,
+  Textarea,
 } from '../../../components/ui';
 import { Badge } from '../../../components/ui/badge';
 
@@ -33,6 +38,11 @@ import {
   isIso4217Currency,
 } from '../../../utils/currencyFormat';
 import { getFinancedMonthlyAmountDue } from '../../../utils/financeApplicationMonthlyDue';
+import {
+  canCancelFinanceApplication,
+  getFinanceCancellationSummary,
+  isFinanceApplicationCancelled,
+} from '../../../utils/financeCancellation';
 import { resolveDepositTokenSaleForFinanceApplication } from '../../../utils/financeDepositSaleResolve';
 import {
   financeApplicationStatusBadgeVariant,
@@ -116,6 +126,11 @@ const FinancedTokenApplicationPage = () => {
   const [linkedChargesLoading, setLinkedChargesLoading] = useState(false);
   const [chargesExpanded, setChargesExpanded] = useState(false);
   const [scheduleExpanded, setScheduleExpanded] = useState(false);
+  const [reloadToken, setReloadToken] = useState(0);
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAuthLoading || !router.isReady) return;
@@ -174,7 +189,15 @@ const FinancedTokenApplicationPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [isAuthLoading, router.isReady, user?._id, id, router.asPath, t]);
+  }, [
+    isAuthLoading,
+    router.isReady,
+    user?._id,
+    id,
+    router.asPath,
+    t,
+    reloadToken,
+  ]);
 
   useEffect(() => {
     if (
@@ -278,20 +301,17 @@ const FinancedTokenApplicationPage = () => {
   const nextPaymentDate = application
     ? getNextPaymentDueDate(application)
     : null;
-  const paidChargesTotal = (application?.charges || [])
-    .filter((charge: { status?: string }) => charge?.status === 'paid')
-    .reduce(
-      (total: number, charge: { amount?: { total?: { val?: number } } }) =>
-        total + (charge?.amount?.total?.val || 0),
-      0,
-    );
-  const depositAmount = Number(application?.downPaymentAmount || 0);
-  const isDepositPaid =
-    !!application &&
-    depositAmount > 0 &&
-    (application.isDownPaymentMade === true ||
-      (application.status !== 'pending-payment' &&
-        application.status !== 'pending'));
+  const cancellationSummary = useMemo(
+    () => getFinanceCancellationSummary(application),
+    [application],
+  );
+  const {
+    totalPaid: paidChargesTotal,
+    depositAmount,
+    isDepositPaid,
+  } = cancellationSummary;
+  const canCancel = canCancelFinanceApplication(application);
+  const isCancelled = isFinanceApplicationCancelled(application);
   const visibleScheduleRows = useMemo(() => {
     if (scheduleExpanded || scheduleRows.length <= COLLAPSED_ITEMS_LIMIT) {
       return scheduleRows;
@@ -397,6 +417,36 @@ const FinancedTokenApplicationPage = () => {
       </p>
     </div>
   ) : null;
+
+  const handleCancelDialogOpenChange = (open: boolean) => {
+    if (open) {
+      setCancelReason('');
+      setCancelError(null);
+    }
+    setIsCancelDialogOpen(open);
+  };
+
+  const handleConfirmCancellation = async () => {
+    const reason = cancelReason.trim();
+    if (!application?._id || !reason) {
+      return;
+    }
+    setIsCancelling(true);
+    setCancelError(null);
+    try {
+      await api.post(
+        `/token/finance/${encodeURIComponent(application._id)}/cancel`,
+        { reason },
+      );
+      setIsCancelDialogOpen(false);
+      setCancelReason('');
+      setReloadToken((value) => value + 1);
+    } catch (err: unknown) {
+      setCancelError(parseMessageFromError(err));
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   if (process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP !== 'true') {
     return <PageNotFound error="" />;
@@ -703,7 +753,7 @@ const FinancedTokenApplicationPage = () => {
               )}
             </Card>
 
-            {scheduleRows.length > 0 && (
+            {scheduleRows.length > 0 && !isCancelled && (
               <Card className="p-4 flex flex-col gap-3">
                 <Heading level={3} className="mb-0">
                   {t('token_sales_dashboard_financed_payment_schedule')}
@@ -783,6 +833,22 @@ const FinancedTokenApplicationPage = () => {
                 ) : null}
               </Card>
             )}
+            {canCancel ? (
+              <Card className="p-4 flex flex-col gap-3">
+                <Heading level={3} className="mb-0">
+                  {t('token_financed_cancel_section_title')}
+                </Heading>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {t('token_financed_cancel_section_intro')}
+                </p>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleCancelDialogOpenChange(true)}
+                >
+                  {t('token_financed_cancel_contract')}
+                </Button>
+              </Card>
+            ) : null}
           </>
         )}
         <Button
@@ -791,6 +857,119 @@ const FinancedTokenApplicationPage = () => {
         >
           {t('token_financed_back_to_list')}
         </Button>
+
+        <Dialog
+          open={isCancelDialogOpen}
+          onOpenChange={handleCancelDialogOpenChange}
+        >
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {t('token_financed_cancel_dialog_title')}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col gap-4">
+              <p className="text-sm text-gray-700 leading-relaxed">
+                {t('token_financed_cancel_dialog_intro')}
+              </p>
+
+              <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 flex flex-col gap-2">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-gray-600">
+                    {t('token_financed_cancel_total_paid')}
+                  </span>
+                  <span className="text-sm font-semibold tabular-nums">
+                    {formatIsoFiatAmount(cancellationSummary.totalPaid, 'EUR')}
+                  </span>
+                </div>
+                {cancellationSummary.isDepositPaid ? (
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm text-gray-600">
+                      {t('token_financed_cancel_deposit_forfeited')}
+                    </span>
+                    <span className="text-sm font-semibold tabular-nums">
+                      -
+                      {formatIsoFiatAmount(
+                        cancellationSummary.depositAmount,
+                        'EUR',
+                      )}
+                    </span>
+                  </div>
+                ) : null}
+                <div className="flex items-center justify-between gap-3 border-t border-gray-200 pt-2">
+                  <span className="text-sm text-gray-900">
+                    {t('token_financed_cancel_amount_to_convert')}
+                  </span>
+                  <span className="text-sm font-semibold tabular-nums">
+                    {formatIsoFiatAmount(
+                      cancellationSummary.amountToConvert,
+                      'EUR',
+                    )}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-gray-600">
+                    {t('token_financed_cancel_estimated_tokens')}
+                  </span>
+                  <span className="text-sm font-semibold tabular-nums">
+                    {cancellationSummary.estimatedTokens}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  {t('token_financed_cancel_estimate_note')}
+                </p>
+              </div>
+
+              {cancellationSummary.isDepositPaid ? (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                  <p className="text-sm text-amber-950 leading-relaxed">
+                    {t('token_financed_cancel_deposit_warning', {
+                      deposit: formatIsoFiatAmount(
+                        cancellationSummary.depositAmount,
+                        'EUR',
+                      ),
+                    })}
+                  </p>
+                </div>
+              ) : null}
+
+              <div className="flex flex-col gap-1.5">
+                <label
+                  htmlFor="finance-cancel-reason"
+                  className="text-sm font-medium text-gray-900"
+                >
+                  {t('token_financed_cancel_reason_label')}
+                </label>
+                <Textarea
+                  id="finance-cancel-reason"
+                  value={cancelReason}
+                  onChange={(event) => setCancelReason(event.target.value)}
+                  placeholder={t('token_financed_cancel_reason_placeholder')}
+                  disabled={isCancelling}
+                />
+              </div>
+
+              {cancelError ? <ErrorMessage error={cancelError} /> : null}
+
+              <div className="flex flex-col gap-2">
+                <Button
+                  onClick={handleConfirmCancellation}
+                  isEnabled={!isCancelling && cancelReason.trim().length > 0}
+                  isLoading={isCancelling}
+                >
+                  {t('token_financed_cancel_confirm')}
+                </Button>
+                <Button
+                  variant="secondary"
+                  isEnabled={!isCancelling}
+                  onClick={() => handleCancelDialogOpenChange(false)}
+                >
+                  {t('token_financed_cancel_keep_contract')}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );

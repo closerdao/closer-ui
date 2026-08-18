@@ -101,9 +101,9 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
 
             const userId = b.get('createdBy');
             const guest = users?.find((u) => u._id?.toString() === userId);
-            const visibleBy = b.get('visibleBy')?.toJS
-              ? b.get('visibleBy').toJS()
-              : b.get('visibleBy') || [];
+            const guests = b.get('guests')?.toJS
+              ? b.get('guests').toJS()
+              : b.get('guests') || [];
 
             // let user =
             //   allUsers && allUsers.find((user) => user.get('_id') === userId);
@@ -151,7 +151,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
               userId,
               guestName: guest?.screenname,
               guestEmail: guest?.email,
-              visibleBy,
+              guests,
               // paidBy,
               doesNeedPickup,
               doesNeedSeparateBeds,
@@ -194,8 +194,8 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
           const paidBy = booking.paidBy;
           if (createdBy) userIds.add(createdBy);
           if (paidBy) userIds.add(paidBy);
-          const visibleBy = booking.visibleBy || [];
-          visibleBy.forEach((id) => {
+          const guests = booking.guests || [];
+          guests.forEach((id) => {
             if (id) userIds.add(id);
           });
         });
@@ -340,7 +340,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                   (user) => user._id.toString() === b.userId,
                 );
 
-                const guestInfos = (b.visibleBy || [])
+                const guestInfos = (b.guests || [])
                   .filter((guestId) => guestId && guestId !== b.userId)
                   .map((guestId) =>
                     users?.find((listed) => listed._id.toString() === guestId),

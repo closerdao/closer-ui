@@ -616,10 +616,10 @@ const models = {
       label: 'Available for',
       ownerVisible: true,
       editable: true,
-      enum: ['volunteer', 'guests', 'team', 'events'],
+      enum: ['volunteer', 'guests', 'team', 'events', 'resident'],
       default: [],
       type: 'multi-select',
-      options: ['guests', 'volunteer', 'team', 'events'],
+      options: ['guests', 'volunteer', 'team', 'events', 'resident'],
     },
     {
       name: 'priceDuration',

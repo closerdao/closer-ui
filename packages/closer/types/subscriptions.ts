@@ -96,6 +96,8 @@ export interface FinanceApplication {
     | 'pending-payment'
     | 'paid'
     | 'cancelled'
+    // The API has answered with either spelling.
+    | 'canceled'
     | 'completed'
     | 'pending'
     | 'delinquent'

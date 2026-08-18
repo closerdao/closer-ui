@@ -1090,6 +1090,7 @@ const StayCheckoutContent = ({
     setActionError(null);
     let stayForStake = currentStay;
     let planForRecovery: StayTokenStakePlan | null = null;
+    let isLeavingPage = false;
     try {
       const pendingPayload = pendingTokenPaymentPayloadRef.current;
       if (pendingPayload) {
@@ -1111,6 +1112,7 @@ const StayCheckoutContent = ({
         if (isStayAwaitingHostApproval(submitted)) {
           setIsStakeModalOpen(false);
           setStakePlan(null);
+          isLeavingPage = true;
           router.replace(`/stay/${submitted._id}/pending`);
           return;
         }
@@ -1283,7 +1285,7 @@ const StayCheckoutContent = ({
       }
       setStakeModalError(msg);
     } finally {
-      setIsVerifyingStake(false);
+      if (!isLeavingPage) setIsVerifyingStake(false);
     }
   };
 
@@ -1318,6 +1320,7 @@ const StayCheckoutContent = ({
     setCreditsModalError(null);
     setActionError(null);
     setIsApplyingCredits(true);
+    let isLeavingPage = false;
     try {
       const payload =
         creditsAmountToApply >= tokenAccommodationVal
@@ -1336,13 +1339,14 @@ const StayCheckoutContent = ({
 
       setCurrentStay(editableStay);
       if (isStayAwaitingHostApproval(editableStay)) {
+        isLeavingPage = true;
         router.replace(`/stay/${editableStay._id}/pending`);
       }
       setIsCreditsModalOpen(false);
     } catch (err) {
       setCreditsModalError(parseMessageFromError(err));
     } finally {
-      setIsApplyingCredits(false);
+      if (!isLeavingPage) setIsApplyingCredits(false);
     }
   };
 
@@ -1353,6 +1357,7 @@ const StayCheckoutContent = ({
     setCreditsModalError(null);
     setActionError(null);
     setIsRevertingTokenPayment(true);
+    let isLeavingPage = false;
     try {
       const targetStay = currentStay;
       const updated = await setStayPaymentMethod(targetStay._id, {
@@ -1366,12 +1371,13 @@ const StayCheckoutContent = ({
 
       setCurrentStay(editableStay);
       if (isStayAwaitingHostApproval(editableStay)) {
+        isLeavingPage = true;
         router.replace(`/stay/${editableStay._id}/pending`);
       }
     } catch (err) {
       setActionError(parseMessageFromError(err));
     } finally {
-      setIsRevertingTokenPayment(false);
+      if (!isLeavingPage) setIsRevertingTokenPayment(false);
     }
   };
 
@@ -1645,6 +1651,10 @@ const StayCheckoutContent = ({
     }
     setActionError(null);
     setIsProcessing(true);
+    // Router navigation is async, so releasing the button in `finally` would
+    // hand it back enabled for the frames before the next page paints — long
+    // enough for a second click to POST /stays/:id/submit again.
+    let isLeavingPage = false;
     const stayPaymentPoint =
       Math.round(
         Number(currentStay.duration ?? currentStay.adults ?? 0) || 0,
@@ -1664,11 +1674,13 @@ const StayCheckoutContent = ({
       }
 
       if (isStayAwaitingHostApproval(workingStay)) {
+        isLeavingPage = true;
         router.replace(`/stay/${workingStay._id}/pending`);
         return;
       }
 
       if (isStayPaid(workingStay)) {
+        isLeavingPage = true;
         router.push(`/stay/${workingStay._id}/confirmation`);
         return;
       }
@@ -1716,6 +1728,7 @@ const StayCheckoutContent = ({
 
       const refreshed = await refetchStay();
       if (refreshed && isStayPaid(refreshed)) {
+        isLeavingPage = true;
         router.push(`/stay/${refreshed._id}/confirmation`);
       } else if (refreshed && isStayAwaitingPayment(refreshed)) {
         setActionError(
@@ -1733,7 +1746,7 @@ const StayCheckoutContent = ({
     } catch (err) {
       setActionError(parseMessageFromError(err));
     } finally {
-      setIsProcessing(false);
+      if (!isLeavingPage) setIsProcessing(false);
     }
   };
 

@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 
 import { useEffect, useMemo, useState } from 'react';
 
+import { type BookingCoGuestUser } from '../../../components/BookingCoGuests/BookingCoGuests';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import Modal from '../../../components/Modal';
 import PageError from '../../../components/PageError';
@@ -45,7 +46,13 @@ import {
   CalendarBlockingEvent,
   getCalendarBlockingEventsInRange,
 } from '../../../utils/events.helpers';
+import { buildCreateStayGuestsPayload } from '../../../utils/bookingCoGuests.helpers';
 import { getSiteUrl } from '../../../utils/siteUrl';
+import {
+  clearStayCoGuestsDraft,
+  readStayCoGuestsDraft,
+  writeStayCoGuestsDraft,
+} from '../../../utils/stayCoGuestsDraft';
 import { createStay, searchStays } from '../../../utils/stays.api';
 import { buildVolunteerInfo } from '../../../utils/volunteerApplication.helpers';
 import {
@@ -77,8 +84,21 @@ const readQueryParam = (value: string | string[] | undefined) =>
   typeof value === 'string'
     ? value
     : Array.isArray(value)
-      ? value[0]
-      : undefined;
+    ? value[0]
+    : undefined;
+
+const areSearchParamsEqual = (
+  a: StaySearchBarParams | null,
+  b: StaySearchBarParams | null,
+) =>
+  !!a &&
+  !!b &&
+  a.start === b.start &&
+  a.end === b.end &&
+  a.adults === b.adults &&
+  a.children === b.children &&
+  a.infants === b.infants &&
+  a.pets === b.pets;
 
 const splitProjectIds = (value: string | undefined) =>
   value
@@ -255,14 +275,29 @@ const StayCreatePage = ({
     (!dayjs(String(savedStart)).isBefore(dayjs(projectWindow.start)) &&
       !dayjs(String(savedEnd)).isAfter(dayjs(projectWindow.end)));
 
-  const hasUrlDates = Boolean(savedStart && savedEnd) && urlDatesFitProjectWindow;
+  const hasUrlDates =
+    Boolean(savedStart && savedEnd) && urlDatesFitProjectWindow;
+
+  // Collected in the guests popover and posted with the booking: a draft stay
+  // rejects edits, so this is the only chance to send them. Restored from the
+  // session because an unauthenticated guest is sent through /signup first.
+  const [coGuests, setCoGuests] = useState<BookingCoGuestUser[]>([]);
+
+  useEffect(() => {
+    const stored = readStayCoGuestsDraft();
+    if (stored.length > 0) setCoGuests(stored);
+  }, []);
+
+  useEffect(() => {
+    writeStayCoGuestsDraft(coGuests);
+  }, [coGuests]);
 
   const [activeParams, setActiveParams] = useState<StaySearchBarParams | null>(
     () => {
       if (hasUrlDates) {
         return {
-          start: String(savedStart),
-          end: String(savedEnd),
+          start: formatDate(String(savedStart)),
+          end: formatDate(String(savedEnd)),
           adults: initialAdults,
           children: initialChildren,
           infants: initialInfants,
@@ -272,6 +307,10 @@ const StayCreatePage = ({
       return null;
     },
   );
+
+  /** What the search bar currently holds — may be ahead of the last search. */
+  const [pendingParams, setPendingParams] =
+    useState<StaySearchBarParams | null>(null);
 
   const [searchDuration, setSearchDuration] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
@@ -343,6 +382,15 @@ const StayCreatePage = ({
     ],
   );
 
+  /**
+   * The dates or guests were edited after the last search, so the listings on
+   * screen — and the prices on them — are for a stay the guest no longer wants.
+   */
+  const hasPendingChanges =
+    !!activeParams &&
+    !!pendingParams &&
+    !areSearchParamsEqual(activeParams, pendingParams);
+
   const hasBookableResult =
     !usedListingFallback &&
     Boolean(results?.some((listing) => listing.available !== false));
@@ -350,6 +398,7 @@ const StayCreatePage = ({
   const showEventBlockNotice =
     didSearchOnce &&
     !isSearching &&
+    !hasPendingChanges &&
     !!results &&
     !hasBookableResult &&
     blockingEventsForRange.length > 0;
@@ -398,7 +447,14 @@ const StayCreatePage = ({
     );
   };
 
-  const runSearch = async (params: StaySearchBarParams) => {
+  const runSearch = async (rawParams: StaySearchBarParams) => {
+    // Normalised so the comparison against the search bar's selection, which is
+    // always YYYY-MM-DD, never reports a change that did not happen.
+    const params: StaySearchBarParams = {
+      ...rawParams,
+      start: formatDate(rawParams.start),
+      end: formatDate(rawParams.end),
+    };
     if (isDayTicketOnlyEvent) {
       setActiveParams(params);
       syncUrl(params);
@@ -465,6 +521,8 @@ const StayCreatePage = ({
     router.push(`/signup?back=${back}`);
   };
 
+  const coGuestPayload = () => buildCreateStayGuestsPayload(coGuests);
+
   const eventFoodPayload = eventProp?.foodOption
     ? {
         foodOption: eventProp.foodOption,
@@ -476,18 +534,19 @@ const StayCreatePage = ({
     : {};
 
   const handleDayTicketContinue = async () => {
-    const params: StaySearchBarParams = activeParams || {
-      start: formatDate(
-        (savedStart as string) || eventProp?.start || defaultDateRange.start,
-      ),
-      end: formatDate(
-        (savedEnd as string) || eventProp?.end || defaultDateRange.end,
-      ),
-      adults: initialAdults,
-      children: initialChildren,
-      infants: initialInfants,
-      pets: initialPets,
-    };
+    const params: StaySearchBarParams = pendingParams ||
+      activeParams || {
+        start: formatDate(
+          (savedStart as string) || eventProp?.start || defaultDateRange.start,
+        ),
+        end: formatDate(
+          (savedEnd as string) || eventProp?.end || defaultDateRange.end,
+        ),
+        adults: initialAdults,
+        children: initialChildren,
+        infants: initialInfants,
+        pets: initialPets,
+      };
 
     if (!selectedTicketOption) {
       setSearchError(t('bookings_error_no_ticket_option'));
@@ -514,8 +573,10 @@ const StayCreatePage = ({
         ticketOption: selectedTicketOption.name,
         eventDiscount: normalizeDiscountCode(discountCode) || undefined,
         isDayTicket: true,
+        ...coGuestPayload(),
         ...eventFoodPayload,
       });
+      clearStayCoGuestsDraft();
       router.push(`/stay/create/${stay._id}`);
     } catch (err) {
       setSearchError(parseMessageFromError(err));
@@ -562,6 +623,7 @@ const StayCreatePage = ({
         children: activeParams.children,
         infants: activeParams.infants,
         pets: activeParams.pets,
+        ...coGuestPayload(),
         ...volunteerPayload,
         ...(eventId ? { eventId } : {}),
         ...(isEventBooking && eventProp?.foodOption
@@ -578,6 +640,7 @@ const StayCreatePage = ({
       if (isVolunteerApplication) {
         clearVolunteerApplicationDraft(user?._id, bookingType);
       }
+      clearStayCoGuestsDraft();
       router.push(`/stay/create/${stay._id}`);
     } catch (err) {
       setSearchError(parseMessageFromError(err));
@@ -697,12 +760,12 @@ const StayCreatePage = ({
             {isEventBooking
               ? t('stay_create_event_subtitle')
               : projectNames
-                ? t('stay_create_residence_project_subtitle', {
-                    project: projectNames,
-                  })
-                : isVolunteerApplication
-                  ? t('volunteer_application_accommodation_subtitle')
-                  : t('stay_create_subtitle')}
+              ? t('stay_create_residence_project_subtitle', {
+                  project: projectNames,
+                })
+              : isVolunteerApplication
+              ? t('volunteer_application_accommodation_subtitle')
+              : t('stay_create_subtitle')}
           </p>
           {projectWindow && (
             <p className="text-sm text-gray-600 mt-2">
@@ -746,6 +809,7 @@ const StayCreatePage = ({
             isSearching={isSearching}
             externalError={searchError}
             onSearch={runSearch}
+            onParamsChange={setPendingParams}
             skipMinDuration={isEventBooking}
             canSelectDates={!isEventBooking || canSelectDates}
             eventStartDate={
@@ -759,6 +823,8 @@ const StayCreatePage = ({
                 : undefined
             }
             hideSearchButton={isDayTicketOnlyEvent}
+            coGuests={coGuests}
+            onCoGuestsChange={setCoGuests}
             minDate={projectWindow?.start}
             maxDate={projectWindow?.end}
             minNightsOverride={isEventBooking ? null : volunteerMinNights}
@@ -804,6 +870,20 @@ const StayCreatePage = ({
               </div>
             )}
 
+            {!isSearching && hasPendingChanges && (
+              <div
+                className="text-center py-12 border border-dashed rounded-xl"
+                role="status"
+              >
+                <Heading level={2} className="text-lg mb-2">
+                  {t('stay_create_stale_search_title')}
+                </Heading>
+                <p className="text-gray-600 max-w-md mx-auto">
+                  {t('stay_create_stale_search_description')}
+                </p>
+              </div>
+            )}
+
             {showEventBlockNotice && (
               <div className="mb-6 rounded-2xl border border-yellow-200 bg-yellow-50/60 p-4 md:p-6">
                 <StayEventBlockedNotice events={blockingEventsForRange} />
@@ -812,6 +892,7 @@ const StayCreatePage = ({
 
             {!isSearching &&
               didSearchOnce &&
+              !hasPendingChanges &&
               !showEventBlockNotice &&
               results &&
               results.length === 0 && (
@@ -828,56 +909,59 @@ const StayCreatePage = ({
                 </div>
               )}
 
-            {!isSearching && results && results.length > 0 && (
-              <>
-                {listingId && results.length === 1 && (
-                  <Heading
-                    level={2}
-                    className="text-xl mb-4 md:mb-6 text-center md:text-left"
+            {!isSearching &&
+              !hasPendingChanges &&
+              results &&
+              results.length > 0 && (
+                <>
+                  {listingId && results.length === 1 && (
+                    <Heading
+                      level={2}
+                      className="text-xl mb-4 md:mb-6 text-center md:text-left"
+                    >
+                      {t('stay_create_focused_results_heading', {
+                        name: results[0].name,
+                      })}
+                    </Heading>
+                  )}
+                  {listingId && results.length === 1 && (
+                    <p className="text-gray-600 mb-6 max-w-2xl mx-auto text-center md:text-left">
+                      {t('stay_create_focused_results_intro')}
+                    </p>
+                  )}
+                  {!listingId && (
+                    <Heading
+                      level={2}
+                      className="text-lg mb-4 md:mb-6 text-center md:text-left"
+                    >
+                      {t('stay_create_results_title', {
+                        count: results.length,
+                      })}
+                    </Heading>
+                  )}
+                  <ul
+                    className={
+                      listingId && results.length === 1
+                        ? 'max-w-2xl mx-auto flex flex-col gap-6 list-none p-0 w-full'
+                        : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 list-none p-0'
+                    }
                   >
-                    {t('stay_create_focused_results_heading', {
-                      name: results[0].name,
-                    })}
-                  </Heading>
-                )}
-                {listingId && results.length === 1 && (
-                  <p className="text-gray-600 mb-6 max-w-2xl mx-auto text-center md:text-left">
-                    {t('stay_create_focused_results_intro')}
-                  </p>
-                )}
-                {!listingId && (
-                  <Heading
-                    level={2}
-                    className="text-lg mb-4 md:mb-6 text-center md:text-left"
-                  >
-                    {t('stay_create_results_title', {
-                      count: results.length,
-                    })}
-                  </Heading>
-                )}
-                <ul
-                  className={
-                    listingId && results.length === 1
-                      ? 'max-w-2xl mx-auto flex flex-col gap-6 list-none p-0 w-full'
-                      : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 list-none p-0'
-                  }
-                >
-                  {results.map((listing) => (
-                    <li key={listing._id} className="contents">
-                      <ListingResultCard
-                        listing={listing}
-                        duration={searchDuration}
-                        onPick={handlePickListing}
-                        isCreating={isCreatingDraft === listing._id}
-                        layoutFocused={Boolean(
-                          listingId && results.length === 1,
-                        )}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
+                    {results.map((listing) => (
+                      <li key={listing._id} className="contents">
+                        <ListingResultCard
+                          listing={listing}
+                          duration={searchDuration}
+                          onPick={handlePickListing}
+                          isCreating={isCreatingDraft === listing._id}
+                          layoutFocused={Boolean(
+                            listingId && results.length === 1,
+                          )}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
           </section>
         )}
       </main>
@@ -1024,9 +1108,7 @@ StayCreatePage.getInitialProps = async (context: NextPageContext) => {
     const residenceProjects: Project[] = projectIds.length
       ? (
           await Promise.all(
-            projectIds.map((id) =>
-              api.get(`/project/${id}`).catch(() => null),
-            ),
+            projectIds.map((id) => api.get(`/project/${id}`).catch(() => null)),
           )
         )
           .map((res) => res?.data?.results as Project | undefined)

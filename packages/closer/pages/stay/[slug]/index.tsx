@@ -1,11 +1,9 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import BookingCoGuests, {
-  type BookingCoGuestUser,
-} from '../../../components/BookingCoGuests/BookingCoGuests';
+import StayCoGuests from '../../../components/BookingCoGuests/StayCoGuests';
 import BookingRequestButtons from '../../../components/BookingRequestButtons';
 import BookingStatusTag from '../../../components/BookingStatusTag';
 import BookingGuests from '../../../components/BookingGuests';
@@ -66,16 +64,11 @@ import {
   getBookingPaymentType,
 } from '../../../utils/booking.helpers';
 import {
-  appendBookingCoGuest,
   canEditBookingCoGuests,
   canViewBookingAsGuest,
-  getBookingCoGuestIds,
-  getBookingVisibleByIds,
+  getBookingGuestIds,
   isBookingCoGuest,
-  normalizeBookingVisibleBy,
 } from '../../../utils/bookingCoGuests.helpers';
-import type { SearchUserHit } from '../../../utils/searchUser';
-import { fetchUsersByIds } from '../../../utils/village.utils';
 import { parseMessageFromError } from '../../../utils/common';
 import {
   isStayMongoId,
@@ -277,13 +270,6 @@ const StayBookingSummaryPage = ({
   const [isShortenModalOpen, setIsShortenModalOpen] = useState(false);
   const [isAccommodationModalOpen, setIsAccommodationModalOpen] =
     useState(false);
-  const [coGuests, setCoGuests] = useState<BookingCoGuestUser[]>([]);
-  const [coGuestError, setCoGuestError] = useState<string | null>(null);
-  const [isSavingCoGuests, setIsSavingCoGuests] = useState(false);
-  const visibleByRef = useRef(getBookingVisibleByIds(booking?.visibleBy));
-  const lastSavedVisibleByRef = useRef(visibleByRef.current);
-  const coGuestSaveChainRef = useRef(Promise.resolve());
-  const coGuestSaveVersionRef = useRef(0);
   const [modalAdults, setModalAdults] = useState(adults);
   const [modalChildren, setModalChildren] = useState(children ?? 0);
   const [modalInfants, setModalInfants] = useState(infants ?? 0);
@@ -323,7 +309,7 @@ const StayBookingSummaryPage = ({
     {
       createdBy,
       paidBy: bookingView?.paidBy,
-      visibleBy: bookingView?.visibleBy,
+      guests: bookingView?.guests,
     },
     user?._id,
   );
@@ -331,51 +317,16 @@ const StayBookingSummaryPage = ({
     {
       createdBy,
       paidBy: bookingView?.paidBy,
-      visibleBy: bookingView?.visibleBy,
+      guests: bookingView?.guests,
     },
     user?._id,
     canManageBooking,
   );
 
-  const coGuestIdsKey = getBookingCoGuestIds({
-    createdBy,
-    visibleBy: bookingView?.visibleBy,
-  }).join(',');
-
-  useEffect(() => {
-    const ids = getBookingCoGuestIds({
-      createdBy,
-      visibleBy: bookingView?.visibleBy,
-    });
-    if (ids.length === 0) {
-      setCoGuests([]);
-      return;
-    }
-    let cancelled = false;
-    fetchUsersByIds(ids).then((users) => {
-      if (!cancelled) {
-        setCoGuests(
-          users.map((user) => ({
-            _id: user._id,
-            screenname: user.screenname,
-            photo: user.photo,
-          })),
-        );
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [coGuestIdsKey, createdBy]);
-
-  useEffect(() => {
-    if (isSavingCoGuests) {
-      return;
-    }
-    const ids = getBookingVisibleByIds(bookingView?.visibleBy);
-    visibleByRef.current = ids;
-    lastSavedVisibleByRef.current = ids;
-  }, [bookingView?.visibleBy, isSavingCoGuests]);
+  const coGuestIds = useMemo(
+    () => getBookingGuestIds(bookingView?.guests),
+    [bookingView?.guests],
+  );
 
   const stayGuestEditableStatuses = ['confirmed', 'pending-payment', 'paid'];
 
@@ -686,7 +637,7 @@ const StayBookingSummaryPage = ({
       const freshBooking = fresh as unknown as Booking;
       setLiveBooking((prev) => ({
         ...freshBooking,
-        visibleBy: freshBooking.visibleBy ?? prev?.visibleBy ?? booking?.visibleBy ?? [],
+        guests: freshBooking.guests ?? prev?.guests ?? booking?.guests ?? [],
       }));
       setStatus(fresh.status);
       setUpdatedStatus(fresh.status);
@@ -1012,75 +963,11 @@ const StayBookingSummaryPage = ({
     }
   };
 
-  const persistVisibleBy = (nextVisibleBy: string[]) => {
-    const normalized = normalizeBookingVisibleBy(nextVisibleBy, createdBy);
-    const guestsSnapshot = coGuests;
-    visibleByRef.current = normalized;
-    setIsSavingCoGuests(true);
-    setCoGuestError(null);
+  const handleCoGuestsChange = (guestIds: string[]) => {
     setLiveBooking((prev) => ({
       ...(prev ?? booking),
-      visibleBy: normalized,
+      guests: guestIds,
     }));
-    const version = ++coGuestSaveVersionRef.current;
-
-    coGuestSaveChainRef.current = coGuestSaveChainRef.current
-      .catch(() => undefined)
-      .then(async () => {
-        const toSave = [...visibleByRef.current];
-        try {
-          await api.patch(`/booking/${_id}`, { visibleBy: toSave });
-          lastSavedVisibleByRef.current = toSave;
-        } catch (error) {
-          if (version === coGuestSaveVersionRef.current) {
-            const rolledBack = [...lastSavedVisibleByRef.current];
-            visibleByRef.current = rolledBack;
-            setLiveBooking((prev) => ({
-              ...(prev ?? booking),
-              visibleBy: rolledBack,
-            }));
-            setCoGuests(
-              guestsSnapshot.filter((guest) => rolledBack.includes(guest._id)),
-            );
-            setCoGuestError(parseMessageFromError(error));
-          }
-        } finally {
-          if (version === coGuestSaveVersionRef.current) {
-            setIsSavingCoGuests(false);
-          }
-        }
-      });
-  };
-
-  const handleAddCoGuest = (hit: SearchUserHit) => {
-    const next = appendBookingCoGuest(
-      visibleByRef.current,
-      hit._id,
-      createdBy,
-      adults,
-    );
-    if (!next) {
-      return false;
-    }
-    setCoGuests((prev) =>
-      prev.some((guest) => guest._id === hit._id)
-        ? prev
-        : [
-            ...prev,
-            {
-              _id: hit._id,
-              screenname: hit.screenname,
-              photo: hit.photo,
-            },
-          ],
-    );
-    persistVisibleBy(next);
-    return true;
-  };
-
-  const handleRemoveCoGuest = (userId: string) => {
-    setCoGuests((prev) => prev.filter((guest) => guest._id !== userId));
-    persistVisibleBy(visibleByRef.current.filter((id) => id !== userId));
   };
 
   if (!isBookingEnabled) {
@@ -1093,7 +980,7 @@ const StayBookingSummaryPage = ({
         {
           createdBy: booking.createdBy,
           paidBy: booking.paidBy,
-          visibleBy: booking.visibleBy,
+          guests: booking.guests,
         },
         user?._id,
       ) &&
@@ -1310,18 +1197,27 @@ const StayBookingSummaryPage = ({
                 )}
               </div>
             )}
-            <BookingCoGuests
-              guests={coGuests}
-              canEdit={canEditCoGuests}
-              excludeUserIds={[createdBy, bookingView?.paidBy].filter(
-                (id): id is string => Boolean(id),
+            <div className="mt-1 flex flex-col gap-1.5">
+              {canEditCoGuests && (
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-sm font-medium text-foreground">
+                    {t('booking_co_guests_add_title')}
+                  </p>
+                  <p className="text-xs leading-snug text-disabled">
+                    {t('booking_co_guests_add_smallprint')}
+                  </p>
+                </div>
               )}
-              adults={adults}
-              isSaving={isSavingCoGuests}
-              error={coGuestError}
-              onAdd={handleAddCoGuest}
-              onRemove={handleRemoveCoGuest}
-            />
+              <StayCoGuests
+                stayId={_id}
+                createdBy={createdBy}
+                paidBy={bookingView?.paidBy}
+                guestIds={coGuestIds}
+                adults={adults}
+                canEdit={canEditCoGuests}
+                onGuestsChange={handleCoGuestsChange}
+              />
+            </div>
           </div>
 
           <div className="flex flex-col gap-3">
@@ -1697,7 +1593,7 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
     const booking = stay
       ? {
           ...stay,
-          visibleBy: stay.visibleBy ?? bookingDoc?.visibleBy ?? [],
+          guests: stay.guests ?? bookingDoc?.guests ?? [],
         }
       : bookingDoc;
     const bookingConfig = config.booking;

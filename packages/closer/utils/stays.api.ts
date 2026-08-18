@@ -444,6 +444,11 @@ export type CreateStayPayload = {
   isDayTicket?: boolean;
   isFriendsBooking?: boolean;
   friendEmails?: string;
+  /**
+   * Co-guest user ids. Only settable at creation: a draft stay rejects edits,
+   * and afterwards the list moves through addStayGuest/removeStayGuest.
+   */
+  guests?: string[];
   eventId?: string | null;
   /**
    * Shorthand the server folds into volunteerInfo when there are no application
@@ -794,6 +799,8 @@ export const upgradeStayListing = async (
   return unwrapStayMutationResult(data);
 };
 
+/** Changes the head counts. Shares its path with the co-guest endpoints below,
+ * which the server tells apart by the userId in the body. */
 export const updateStayGuests = async (
   id: string,
   payload: {
@@ -804,6 +811,28 @@ export const updateStayGuests = async (
   },
 ): Promise<Stay> => {
   const { data } = await api.post(`/stays/${id}/guests`, payload);
+  return unwrapStayMutationResult(data);
+};
+
+/**
+ * Co-guest membership lives on booking.guests, which PATCH /booking/:id
+ * refuses to write — these are the only way to change it.
+ */
+export const addStayGuest = async (
+  id: string,
+  userId: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/guests`, { userId });
+  return unwrapStayMutationResult(data);
+};
+
+export const removeStayGuest = async (
+  id: string,
+  userId: string,
+): Promise<Stay> => {
+  const { data } = await api.delete(`/stays/${id}/guests`, {
+    data: { userId },
+  });
   return unwrapStayMutationResult(data);
 };
 
