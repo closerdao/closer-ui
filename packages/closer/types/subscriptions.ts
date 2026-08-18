@@ -110,6 +110,16 @@ export interface FinanceApplication {
   downPaymentAmount: number;
   /** APR locked into the contract when it was written. */
   aprPercent?: number;
+  /** Pricing inputs and derived figures stamped at contract creation. */
+  pricingContext?: {
+    /** Deposit plus every installment, carrying cost included. */
+    totalRepayable?: number;
+    carryingCost?: number;
+    principal?: number;
+    aprPercent?: number;
+    durationInMonths?: number;
+    [key: string]: unknown;
+  };
   charges: any[];
   isCitizenApplication?: boolean;
   durationInMonths?: number;

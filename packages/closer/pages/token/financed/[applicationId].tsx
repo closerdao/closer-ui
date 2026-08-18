@@ -41,6 +41,11 @@ import {
   getFinancedMonthlyAmountDue,
   getScheduleMonthAmountDue,
 } from '../../../utils/financeApplicationMonthlyDue';
+import { getNextPaymentDueDateForFinance } from '../../../utils/financeApplicationScheduleHelpers';
+import {
+  getFinanceRepaymentProgress,
+  getFinanceTotalRepayable,
+} from '../../../utils/financeApplicationTotals';
 import {
   canCancelFinanceApplication,
   getFinanceCancellationSummary,
@@ -80,18 +85,6 @@ const getScheduleEntries = (
       paymentDate: value.paymentDate ? new Date(value.paymentDate) : null,
     }));
 
-const getNextPaymentDueDate = (application: FinanceApplication) => {
-  const schedule = getScheduleEntries(application.paymentsScheduled);
-  const now = new Date();
-  const pendingSorted = schedule.filter(
-    (item) => item.status === 'pending' && item.paymentDate,
-  );
-  const nextFuture = pendingSorted.find(
-    (item) => item.paymentDate && item.paymentDate >= now,
-  );
-  return nextFuture?.paymentDate || pendingSorted[0]?.paymentDate || null;
-};
-
 const formatDate = (date: Date | string | null | undefined) => {
   if (!date) return '-';
   const d = new Date(date);
@@ -105,8 +98,9 @@ const formatDate = (date: Date | string | null | undefined) => {
 
 const FinancedTokenApplicationPage = () => {
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
-  const accountingEntitiesConfig =
-    getCachedConfig('accounting-entities') as AccountingEntitiesConfig | null;
+  const accountingEntitiesConfig = getCachedConfig(
+    'accounting-entities',
+  ) as AccountingEntitiesConfig | null;
   const t = useTranslations();
   const defaultConfig = useConfig();
   const platformName =
@@ -130,6 +124,7 @@ const FinancedTokenApplicationPage = () => {
   const [linkedChargesLoading, setLinkedChargesLoading] = useState(false);
   const [chargesExpanded, setChargesExpanded] = useState(false);
   const [scheduleExpanded, setScheduleExpanded] = useState(false);
+  const [contractDetailsExpanded, setContractDetailsExpanded] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
@@ -303,8 +298,25 @@ const FinancedTokenApplicationPage = () => {
   const paidMonths = scheduleRows.filter((row) => row.status === 'paid').length;
   const pendingMonths = scheduleRows.length - paidMonths;
   const nextPaymentDate = application
-    ? getNextPaymentDueDate(application)
+    ? getNextPaymentDueDateForFinance(application)
     : null;
+  // Pair the amount with the date so the headline figure comes from the same
+  // installment, rather than a generic monthly average.
+  const nextPaymentAmount = useMemo(() => {
+    if (!nextPaymentDate) {
+      return 0;
+    }
+    const due = nextPaymentDate.getTime();
+    const row = scheduleRows.find(
+      (item) =>
+        item.paymentDate?.getTime() === due && item.status === 'pending',
+    );
+    return getScheduleMonthAmountDue(row, monthlyInstallmentDue);
+  }, [nextPaymentDate, scheduleRows, monthlyInstallmentDue]);
+  const totalRepayable = useMemo(
+    () => getFinanceTotalRepayable(application),
+    [application],
+  );
   const cancellationSummary = useMemo(
     () => getFinanceCancellationSummary(application),
     [application],
@@ -314,6 +326,10 @@ const FinancedTokenApplicationPage = () => {
     depositAmount,
     isDepositPaid,
   } = cancellationSummary;
+  const repaymentProgress = getFinanceRepaymentProgress(
+    paidChargesTotal,
+    totalRepayable,
+  );
   const canCancel = canCancelFinanceApplication(application);
   const isCancelled = isFinanceApplicationCancelled(application);
   const visibleScheduleRows = useMemo(() => {
@@ -568,14 +584,49 @@ const FinancedTokenApplicationPage = () => {
               </Card>
             ) : null}
 
-            <Card className="p-4 flex flex-col gap-3">
-              <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">
-                  {t('token_sales_dashboard_financed_application_id')}
-                </p>
-                <p className="text-xs font-mono">{application._id}</p>
+            <Card className="p-4 flex flex-col gap-4">
+              {nextPaymentDate ? (
+                <div className="flex flex-col gap-1 border-b pb-4">
+                  <p className="card-feature">
+                    {t('token_financed_next_payment_due')}
+                  </p>
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                    <p className="text-2xl font-bold">
+                      {formatIsoFiatAmount(nextPaymentAmount, 'EUR')}
+                    </p>
+                    <p className="text-base">{formatDate(nextPaymentDate)}</p>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4">
+                  <p className="card-feature">
+                    {t('token_financed_repaid_label')}
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-bold">
+                      {formatIsoFiatAmount(paidChargesTotal, 'EUR')}
+                    </span>
+                    {' / '}
+                    {formatIsoFiatAmount(totalRepayable, 'EUR')}
+                  </p>
+                </div>
+                <div
+                  className="h-2 w-full overflow-hidden rounded-full bg-neutral"
+                  role="progressbar"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.round(repaymentProgress * 100)}
+                  aria-label={t('token_financed_repaid_label')}
+                >
+                  <div
+                    className="h-full bg-accent"
+                    style={{ width: `${repaymentProgress * 100}%` }}
+                  />
+                </div>
               </div>
-              {!showDepositBankReminder ? financedMemoReferenceBlock : null}
+
               <div className="flex items-center justify-between gap-3">
                 <p className="card-feature">
                   {t('token_sales_dashboard_status')}
@@ -588,71 +639,6 @@ const FinancedTokenApplicationPage = () => {
                   {t(financeApplicationStatusLabelKey(application.status))}
                 </Badge>
               </div>
-              <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">
-                  {t('token_sales_dashboard_financed_next_payment_date')}
-                </p>
-                <p className="text-sm">{formatDate(nextPaymentDate)}</p>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">
-                  {t('token_sales_dashboard_financed_pending_months')}
-                </p>
-                <p className="text-sm">{pendingMonths}</p>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">
-                  {t('token_sales_dashboard_financed_paid_months')}
-                </p>
-                <p className="text-sm">{paidMonths}</p>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">
-                  {t('token_sales_dashboard_financed_total_contract_tokens')}
-                </p>
-                <p className="text-sm font-semibold">
-                  {application.tokensToFinance || 0}
-                </p>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">
-                  {t('token_sales_dashboard_financed_tokens_accrued')}
-                </p>
-                <p className="text-sm">{tokensAccrued}</p>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">
-                  {t('token_sales_dashboard_financed_tokens_distributed')}
-                </p>
-                <p className="text-sm">{tokensDistributed}</p>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">
-                  {t(
-                    'token_sales_dashboard_financed_tokens_available_to_distribute',
-                  )}
-                </p>
-                <p className="text-sm">{tokensAvailable}</p>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">
-                  {t('token_sales_dashboard_financed_total_contract_eur')}
-                </p>
-                <p className="text-sm font-semibold">
-                  {formatIsoFiatAmount(
-                    application.totalToPayInFiat || 0,
-                    'EUR',
-                  )}
-                </p>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <p className="card-feature">
-                  {t('token_financed_amount_paid')}
-                </p>
-                <p className="text-sm">
-                  {formatIsoFiatAmount(paidChargesTotal, 'EUR')}
-                </p>
-              </div>
               {isDepositPaid ? (
                 <div className="flex items-center justify-between gap-3">
                   <p className="card-feature">
@@ -661,6 +647,87 @@ const FinancedTokenApplicationPage = () => {
                   <p className="text-sm font-semibold">
                     {formatIsoFiatAmount(depositAmount, 'EUR')}
                   </p>
+                </div>
+              ) : null}
+              {!showDepositBankReminder ? financedMemoReferenceBlock : null}
+
+              <button
+                type="button"
+                className={financedExpandToggleClassName}
+                aria-expanded={contractDetailsExpanded}
+                onClick={() =>
+                  setContractDetailsExpanded(!contractDetailsExpanded)
+                }
+              >
+                {t('token_financed_contract_details')}
+                {contractDetailsExpanded ? (
+                  <ChevronUp className="w-3 h-3" />
+                ) : (
+                  <ChevronDown className="w-3 h-3" />
+                )}
+              </button>
+
+              {contractDetailsExpanded ? (
+                <div className="flex flex-col gap-3 border-t pt-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="card-feature">
+                      {t('token_sales_dashboard_financed_application_id')}
+                    </p>
+                    <p className="text-xs font-mono">{application._id}</p>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="card-feature">
+                      {t('token_sales_dashboard_financed_pending_months')}
+                    </p>
+                    <p className="text-sm">{pendingMonths}</p>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="card-feature">
+                      {t('token_sales_dashboard_financed_paid_months')}
+                    </p>
+                    <p className="text-sm">{paidMonths}</p>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="card-feature">
+                      {t(
+                        'token_sales_dashboard_financed_total_contract_tokens',
+                      )}
+                    </p>
+                    <p className="text-sm font-semibold">
+                      {application.tokensToFinance || 0}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="card-feature">
+                      {t('token_sales_dashboard_financed_tokens_accrued')}
+                    </p>
+                    <p className="text-sm">{tokensAccrued}</p>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="card-feature">
+                      {t('token_sales_dashboard_financed_tokens_distributed')}
+                    </p>
+                    <p className="text-sm">{tokensDistributed}</p>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="card-feature">
+                      {t(
+                        'token_sales_dashboard_financed_tokens_available_to_distribute',
+                      )}
+                    </p>
+                    <p className="text-sm">{tokensAvailable}</p>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="card-feature">
+                      {t('token_sales_dashboard_financed_total_contract_eur')}
+                    </p>
+                    <p className="text-sm font-semibold">
+                      {formatIsoFiatAmount(
+                        application.totalToPayInFiat || 0,
+                        'EUR',
+                      )}
+                    </p>
+                  </div>
                 </div>
               ) : null}
             </Card>
@@ -813,7 +880,10 @@ const FinancedTokenApplicationPage = () => {
                           )}
                         </p>
                         <p className="text-xs">
-                          {formatIsoFiatAmount(Number(row.amountPaid || 0), 'EUR')}
+                          {formatIsoFiatAmount(
+                            Number(row.amountPaid || 0),
+                            'EUR',
+                          )}
                         </p>
                       </div>
                     </div>

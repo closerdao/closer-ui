@@ -7,7 +7,6 @@ import CitizenFinanceTokens from '../../../components/CitizenFinanceTokens';
 import FinanceApplicationSummaryCard from '../../../components/FinanceApplicationSummaryCard';
 import {
   BackButton,
-  Button,
   Heading,
   ProgressBar,
   Spinner,
@@ -88,7 +87,6 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
 
   const [applications, setApplications] = useState<FinanceApplication[]>([]);
   const [isLoadingApplications, setIsLoadingApplications] = useState(true);
-  const [isApplyingForAnother, setIsApplyingForAnother] = useState(false);
 
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
@@ -113,7 +111,7 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
   useEffect(() => {
     if (isLoading) return;
     if (!user) {
-      router.push(`/signup?back=${router.asPath}`);
+      router.push(`/signup?back=${encodeURIComponent(router.asPath)}`);
       return;
     }
     const finance = platform?.financeapplication;
@@ -264,7 +262,6 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
       application={application}
       updateApplication={updateApplication}
       downPaymentPercent={downPaymentPercent}
-      durations={durations}
       maxFinancingMonths={maxFinancingMonths}
       aprPercent={aprPercent}
       minMonthlyPayment={minMonthlyPayment}
@@ -296,15 +293,15 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
 
         <ProgressBar steps={SUBSCRIPTION_CITIZEN_STEPS} />
 
-        <main className="pt-14 pb-24 flex flex-col gap-8">
+        <main className="pt-14 pb-24 flex flex-col gap-12">
+          {router.isReady && financeForm}
+
           {isLoadingApplications ? (
             <div className="flex justify-center">
               <Spinner />
             </div>
-          ) : applications.length === 0 ? (
-            financeForm
           ) : (
-            <>
+            applications.length > 0 && (
               <div className="flex flex-col gap-4">
                 <Heading level={3} className="mb-0">
                   {t('token_finance_your_contracts_title')}
@@ -319,17 +316,7 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
                   />
                 ))}
               </div>
-              {isApplyingForAnother ? (
-                financeForm
-              ) : (
-                <Button
-                  variant="secondary"
-                  onClick={() => setIsApplyingForAnother(true)}
-                >
-                  {t('token_finance_apply_for_another')}
-                </Button>
-              )}
-            </>
+            )
           )}
         </main>
       </div>
