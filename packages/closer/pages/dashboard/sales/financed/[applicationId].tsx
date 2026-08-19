@@ -6,6 +6,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { NextPageContext } from 'next';
 
 import AdminLayout from '../../../../components/Dashboard/AdminLayout';
+import FinancedApplyPaymentForm from '../../../../components/FinancedApplyPaymentForm';
 import { Button, Card, Heading, Input } from '../../../../components/ui';
 import { Badge } from '../../../../components/ui/badge';
 
@@ -19,7 +20,8 @@ import { FinanceApplication, Subscriptions } from '../../../../types/subscriptio
 import api from '../../../../utils/api';
 import { parseMessageFromError } from '../../../../utils/common';
 import { formatIsoFiatAmount } from '../../../../utils/currencyFormat';
-import { getFinancedMonthlyAmountDue } from '../../../../utils/financeApplicationMonthlyDue';
+import { getFinancedMonthlyAmountDue, getScheduleMonthAmountDue } from '../../../../utils/financeApplicationMonthlyDue';
+import { isFinanceApplicationCancelled } from '../../../../utils/financeCancellation';
 import {
   financeApplicationStatusBadgeVariant,
   financeApplicationStatusLabelKey,
@@ -35,6 +37,7 @@ const getScheduleRows = (
     .map(([month, value]) => ({
       month,
       status: value.status,
+      amountDue: value.amountDue,
       amountPaid: value.amountPaid,
       paymentDate: value.paymentDate ? new Date(value.paymentDate) : null,
     }));
@@ -269,6 +272,9 @@ const FinancedApplicationDetailPage = () => {
                           {t('token_sales_dashboard_financed_schedule_amount_due')}
                         </th>
                         <th className="text-left p-3">
+                          {t('token_sales_dashboard_financed_schedule_amount_paid')}
+                        </th>
+                        <th className="text-left p-3">
                           {t('token_sales_dashboard_financed_schedule_payment_date')}
                         </th>
                       </tr>
@@ -284,7 +290,14 @@ const FinancedApplicationDetailPage = () => {
                           </td>
                           <td className="p-3">
                             {formatIsoFiatAmount(
-                              monthlyInstallmentDue,
+                              getScheduleMonthAmountDue(row, monthlyInstallmentDue),
+                              platformCurrency,
+                              intlLocale,
+                            )}
+                          </td>
+                          <td className="p-3">
+                            {formatIsoFiatAmount(
+                              Number(row.amountPaid || 0),
                               platformCurrency,
                               intlLocale,
                             )}
@@ -319,10 +332,18 @@ const FinancedApplicationDetailPage = () => {
                         <th className="text-left p-3">
                           {t('token_sales_dashboard_financed_charge_amount')}
                         </th>
+                        <th className="text-left p-3">
+                          {t('token_sales_dashboard_financed_charge_proof')}
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {charges.map((charge: any) => (
+                      {charges.map((charge: any) => {
+                        const proofUrl =
+                          charge?.meta?.proofOfPaymentUrl ||
+                          charge?.meta?.uploadedDocumentUrl ||
+                          null;
+                        return (
                         <tr key={charge.id || charge._id} className="border-b border-border">
                           <td className="p-3">
                             {formatDate(charge.date, intlLocale)}
@@ -336,8 +357,23 @@ const FinancedApplicationDetailPage = () => {
                               intlLocale,
                             )}
                           </td>
+                          <td className="p-3">
+                            {proofUrl ? (
+                              <a
+                                href={proofUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-accent underline"
+                              >
+                                {t('token_sales_dashboard_financed_charge_proof_view')}
+                              </a>
+                            ) : (
+                              '-'
+                            )}
+                          </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -383,6 +419,25 @@ const FinancedApplicationDetailPage = () => {
                   </table>
                 </div>
               </Card>
+
+              {user.roles.includes('admin') &&
+                !isFinanceApplicationCancelled(application) && (
+                  <Card className="flex flex-col gap-3">
+                    <FinancedApplyPaymentForm
+                      applicationId={String(applicationId)}
+                      application={application}
+                      onApplied={async (updated) => {
+                        if (updated && platform?.financeapplication?.set) {
+                          platform.financeapplication.set(updated);
+                        }
+                        await platform?.financeapplication?.getOne(
+                          applicationId as string,
+                          { force: true },
+                        );
+                      }}
+                    />
+                  </Card>
+                )}
 
               {user.roles.includes('admin') && (
                 <Card className="flex flex-col gap-3">

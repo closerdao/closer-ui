@@ -128,6 +128,7 @@ export type Charge = {
     stripeConnectFeeRefunded?: number;
     fractionToRefund?: number;
     uploadedDocumentUrl?: string | null;
+    proofOfPaymentUrl?: string | null;
     toconlineData?: any;
 
     comment?: string;

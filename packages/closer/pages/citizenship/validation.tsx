@@ -150,7 +150,12 @@ const ValidationCitizenPage: NextPage = () => {
     }
 
     if (application.intent.iWantToFinanceTokens) {
-      router.push('/token/finance?citizenApplication=true');
+      const tokensMissing = tokensRequired - (balanceTotal || 0);
+      const tokensToBuy = tokensMissing > 0 ? tokensMissing : tokensRequired;
+      const tokensToFinance = Math.max(1, Math.ceil(tokensToBuy));
+      router.push(
+        `/token/finance?citizenApplication=true&tokens=${tokensToFinance}`,
+      );
       return;
     }
 

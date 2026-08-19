@@ -72,12 +72,11 @@ export const getPreparedInputValue = (value: string) => {
 };
 
 /**
- * The `token` config was called `web3`, and the financed-purchase terms
- * (`downPaymentPercent`, `tokenPriceModifierPercent`) used to live on
- * `citizenship`. Stored config documents still carry the old slugs, so read
- * through to them: anything explicitly set on a `token` document still wins.
- *
- * Returns the values a `token` document should be layered on top of.
+ * The `token` config was called `web3`, and financed down-payment terms used
+ * to live on `citizenship`. Stored config documents still carry the old
+ * slugs, so read through to them: anything explicitly set on a `token`
+ * document still wins. The old flat `tokenPriceModifierPercent` markup is no
+ * longer used for financed quotes (carrying cost is `financingAprPercent`).
  */
 export const getLegacyTokenConfigValue = (
   apiBySlug: Record<string, Record<string, any>>,
@@ -85,11 +84,9 @@ export const getLegacyTokenConfigValue = (
   const legacyCitizenship = apiBySlug['citizenship'];
 
   const inherited: Record<string, any> = { ...(apiBySlug['web3'] || {}) };
-  ['downPaymentPercent', 'tokenPriceModifierPercent'].forEach((key) => {
-    if (legacyCitizenship && key in legacyCitizenship) {
-      inherited[key] = legacyCitizenship[key];
-    }
-  });
+  if (legacyCitizenship && 'downPaymentPercent' in legacyCitizenship) {
+    inherited.downPaymentPercent = legacyCitizenship.downPaymentPercent;
+  }
 
   return inherited;
 };
