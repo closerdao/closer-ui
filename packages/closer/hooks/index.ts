@@ -11,6 +11,7 @@ export { useLocalStorage } from './useLocalStorage';
 export { useNavigationMetrics } from './useNavigationMetrics';
 export { useOutsideClick } from './useOutsideClick';
 export { usePresenceToken } from './usePresenceToken';
+export { useQuestLiveData } from './useQuestLiveData';
 export { useRBAC } from './useRBAC';
 export { useRedirectLegacyListingStayRoute } from './useRedirectLegacyListingStayRoute';
 export { useRedirectPaidBookingToDetail } from './useRedirectPaidBookingToDetail';

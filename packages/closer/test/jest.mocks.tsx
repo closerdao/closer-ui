@@ -77,6 +77,7 @@ jest.mock('../utils/api', () => {
     cdn,
     refreshTokensProactively: mockApi.refreshTokensProactively,
     setOnSessionInvalid: mockApi.setOnSessionInvalid,
+    invalidateGetCache: jest.fn(),
   };
 });
 
