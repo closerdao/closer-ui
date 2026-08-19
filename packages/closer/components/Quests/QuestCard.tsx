@@ -7,33 +7,39 @@ import { useTranslations } from 'next-intl';
 
 import type { Quest } from '../../types/quest';
 import { cdn } from '../../utils/api';
+import { parseMessageFromError } from '../../utils/common';
 import { publishQuest } from '../../utils/quests.api';
 import {
   getAwardLabel,
   getQuestDateRange,
   getRankedPrizeEntries,
 } from '../../utils/quests.helpers';
+import { ErrorMessage } from '../ui';
 import QuestStatusBadge from './QuestStatusBadge';
 
 interface Props {
   quest: Quest;
   /** Adds the inline edit shortcut for quest admins. */
   isAdmin?: boolean;
-  onPublished?: () => void;
+  onPublished?: (quest?: Quest | null) => void;
 }
 
 const QuestCard = ({ quest, isAdmin, onPublished }: Props) => {
   const t = useTranslations();
   const [isPublishing, setIsPublishing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const canPublish =
     isAdmin && (quest.status === 'draft' || quest.status === 'scheduled');
 
   const handlePublish = async () => {
     if (isPublishing) return;
     setIsPublishing(true);
+    setError(null);
     try {
-      await publishQuest(quest.slug, quest.status);
-      onPublished?.();
+      const published = await publishQuest(quest.slug, quest.status);
+      onPublished?.(published);
+    } catch (err) {
+      setError(parseMessageFromError(err));
     } finally {
       setIsPublishing(false);
     }
@@ -131,6 +137,11 @@ const QuestCard = ({ quest, isAdmin, onPublished }: Props) => {
           </div>
         </div>
       </Link>
+      {error && (
+        <div className="mt-2">
+          <ErrorMessage error={error} />
+        </div>
+      )}
     </div>
   );
 };

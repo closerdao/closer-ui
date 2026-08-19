@@ -13,6 +13,8 @@ import { slugify } from './common';
 /** Where the quest sits relative to now, regardless of its stored status. */
 export type QuestPhase = 'upcoming' | 'open' | 'closed';
 
+export type QuestListSection = 'live' | 'upcoming' | 'drafts' | 'past';
+
 export const getQuestPhase = (quest: Quest): QuestPhase => {
   if (quest.status === 'locked' || quest.status === 'settled') return 'closed';
   const now = dayjs();
@@ -20,6 +22,22 @@ export const getQuestPhase = (quest: Quest): QuestPhase => {
   // end is exclusive: entries close there.
   if (quest.end && !now.isBefore(dayjs(quest.end))) return 'closed';
   return 'open';
+};
+
+/** List sections follow stored status; the clock only closes a live window. */
+export const getQuestListSection = (quest: Quest): QuestListSection | null => {
+  switch (quest.status) {
+    case 'cancelled':
+      return null;
+    case 'draft':
+      return 'drafts';
+    case 'scheduled':
+      return 'upcoming';
+    case 'live':
+      return getQuestPhase(quest) === 'closed' ? 'past' : 'live';
+    default:
+      return 'past';
+  }
 };
 
 export const isQuestOpen = (quest: Quest): boolean =>

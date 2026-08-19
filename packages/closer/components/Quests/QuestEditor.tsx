@@ -161,10 +161,15 @@ const QuestEditor = ({
     });
   };
 
-  const needsEventList = data.raffleConfig.ticketSources.some(
-    (source) =>
-      getQuestTriggerEvent(source.trigger?.event)?.requires === 'event',
-  );
+  const triggerNeedsEventList = (event?: string) => {
+    const trigger = getQuestTriggerEvent(event);
+    return trigger?.requires === 'event' || Boolean(trigger?.acceptsEvent);
+  };
+
+  const needsEventList =
+    data.raffleConfig.ticketSources.some((source) =>
+      triggerNeedsEventList(source.trigger?.event),
+    ) || triggerNeedsEventList(data.actionConfig.trigger.event);
 
   // The booking trigger filters on a specific event, so offer the real ones.
   useEffect(() => {

@@ -20,7 +20,7 @@ import type { GeneralConfig } from '../../types';
 import type { Quest } from '../../types/quest';
 import { parseMessageFromError } from '../../utils/common';
 import { getQuests } from '../../utils/quests.api';
-import { getQuestPhase } from '../../utils/quests.helpers';
+import { getQuestListSection } from '../../utils/quests.helpers';
 
 interface QuestsConfig {
   enabled: boolean;
@@ -69,7 +69,7 @@ const QuestsPage = ({ quests, generalConfig, questsConfig, error }: Props) => {
 
   const allQuests = useMemo(() => {
     const byId = new Map<string, Quest>();
-    [...(quests || []), ...adminQuests].forEach((quest) =>
+    [...adminQuests, ...(quests || [])].forEach((quest) =>
       byId.set(quest._id, quest),
     );
     return [...byId.values()];
@@ -84,15 +84,8 @@ const QuestsPage = ({ quests, generalConfig, questsConfig, error }: Props) => {
     } = { live: [], upcoming: [], drafts: [], past: [] };
 
     allQuests.forEach((quest) => {
-      if (quest.status === 'cancelled') return;
-      if (quest.status === 'draft') {
-        groups.drafts.push(quest);
-        return;
-      }
-      const phase = getQuestPhase(quest);
-      if (phase === 'open' && quest.status === 'live') groups.live.push(quest);
-      else if (phase === 'upcoming') groups.upcoming.push(quest);
-      else groups.past.push(quest);
+      const section = getQuestListSection(quest);
+      if (section) groups[section].push(quest);
     });
 
     // Open and upcoming quests read best by what closes/opens first.
@@ -131,7 +124,16 @@ const QuestsPage = ({ quests, generalConfig, questsConfig, error }: Props) => {
               key={quest._id}
               quest={quest}
               isAdmin={isQuestAdmin}
-              onPublished={() => router.replace(router.asPath)}
+              onPublished={(published) => {
+                if (published) {
+                  setAdminQuests((current) =>
+                    current.map((item) =>
+                      item._id === published._id ? published : item,
+                    ),
+                  );
+                }
+                router.replace(router.asPath);
+              }}
             />
           ))}
         </div>
