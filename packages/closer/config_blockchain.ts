@@ -44,6 +44,14 @@ const celoConfig = {
     '0xEaa00a0e0D29D1F883485E8f98A0E8FfD75B23FB',
   BLOCKCHAIN_DAO_DIAMOND_ADDRESS: '0x475398EeE0E22cb6fe5403ffA294Fb10Ad989e17',
   CEUR_TOKEN_ADDRESS: '0xd8763cba276a3738e6de85b4b3bf5fded6d6ca73',
+  // TDF Membersheep — the ERC-721 "accepted Member" registry (Unlock Protocol
+  // PublicLock). Only deployed on Celo mainnet today.
+  BLOCKCHAIN_CITIZEN_NFT: {
+    address: '0x6b4121DE536c7B31352D1044963c28f6f543e10a',
+    name: 'TDF Membersheep',
+    symbol: 'MEMBERSHEEP',
+    decimals: 0,
+  },
 };
 
 const celoSepoliaConfig = {
@@ -4215,7 +4223,23 @@ const celoABIs = {
       stateMutability: 'payable',
       type: 'constructor',
     },
-  ]
+  ],
+  BLOCKCHAIN_CITIZEN_NFT_ABI: [
+    {
+      inputs: [{ internalType: 'address', name: 'owner', type: 'address' }],
+      name: 'balanceOf',
+      outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
+      name: 'totalSupply',
+      outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+  ],
 };
 const celoSepoliaABIs = {
   BLOCKCHAIN_DAO_TOKEN_ABI: [
