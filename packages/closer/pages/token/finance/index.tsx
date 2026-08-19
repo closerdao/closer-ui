@@ -87,6 +87,13 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
 
   const [applications, setApplications] = useState<FinanceApplication[]>([]);
   const [isLoadingApplications, setIsLoadingApplications] = useState(true);
+  // On a hard reload / direct link, router.query is empty on the first render,
+  // so the ?tokens=N value is only resolved inside the effect below. The buy
+  // widget seeds its own state (and its debounced price lookup) once at mount
+  // and never re-reads the prop, so we must delay mounting the form until the
+  // query has been applied — otherwise it mounts priced for 1 token while
+  // application.tokensToFinance ends up N, producing an underpriced contract.
+  const [isTokensQueryResolved, setIsTokensQueryResolved] = useState(false);
 
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
@@ -97,15 +104,17 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
       return;
     }
     const parsed = parseTokensQuery(tokens);
-    if (parsed === null) {
-      return;
+    if (parsed !== null) {
+      setApplication((prev) => {
+        if (prev.tokensToFinance === parsed) {
+          return prev;
+        }
+        return { ...prev, tokensToFinance: parsed };
+      });
     }
-    setApplication((prev) => {
-      if (prev.tokensToFinance === parsed) {
-        return prev;
-      }
-      return { ...prev, tokensToFinance: parsed };
-    });
+    // Latch (never reverts) so a later in-widget amount change does not
+    // unmount the form.
+    setIsTokensQueryResolved(true);
   }, [router.isReady, tokens]);
 
   useEffect(() => {
@@ -294,7 +303,7 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
         <ProgressBar steps={SUBSCRIPTION_CITIZEN_STEPS} />
 
         <main className="pt-14 pb-24 flex flex-col gap-12">
-          {router.isReady && financeForm}
+          {router.isReady && isTokensQueryResolved && financeForm}
 
           {isLoadingApplications ? (
             <div className="flex justify-center">
