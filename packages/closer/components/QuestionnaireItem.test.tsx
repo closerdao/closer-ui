@@ -99,4 +99,35 @@ describe('QuestionnaireItem', () => {
     expect(handleAnswer).toHaveBeenCalledTimes(1);
     expect(input.value).toBe('to rest');
   });
+
+  test('flush does not get overwritten by an older debounced value', () => {
+    const handleAnswer = jest.fn();
+    const ref = createRef<QuestionnaireItemHandle>();
+    const { getByRole } = renderWithNextIntl(
+      <QuestionnaireItem
+        ref={ref}
+        question={question}
+        savedAnswer=""
+        handleAnswer={handleAnswer}
+      />,
+    );
+
+    const input = getByRole('textbox') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'first value' } });
+
+    act(() => {
+      jest.advanceTimersByTime(100);
+    });
+
+    fireEvent.change(input, { target: { value: 'second value' } });
+    ref.current?.flush();
+
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    expect(handleAnswer).toHaveBeenCalledTimes(1);
+    expect(handleAnswer).toHaveBeenLastCalledWith(question.name, 'second value');
+    expect(input.value).toBe('second value');
+  });
 });

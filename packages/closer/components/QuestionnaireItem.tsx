@@ -58,6 +58,9 @@ const QuestionnaireItem = forwardRef<QuestionnaireItemHandle, Props>(
     }));
 
     useEffect(() => {
+      if (debouncedAnswer !== answerRef.current) {
+        return;
+      }
       if (debouncedAnswer === reportedAnswerRef.current) {
         return;
       }

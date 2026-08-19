@@ -144,6 +144,8 @@ const Questionnaire = ({
   // Booking and event both load asynchronously, so answers cannot be seeded in
   // the useState initializer — it runs before either is available.
   const [answers, setAnswers] = useState<Record<string, string>[]>([]);
+  const answersRef = useRef(answers);
+  answersRef.current = answers;
   const seededBookingIdRef = useRef<string | null>(null);
   const seededFromFieldsRef = useRef(false);
 
@@ -285,11 +287,12 @@ const Questionnaire = ({
   );
 
   const flushPendingQuestionnaireAnswers = () => {
-    let next = answers;
+    let next = answersRef.current;
     questionnaireItemRefs.current.forEach((item) => {
       const { name, value } = item.flush();
       next = upsertQuestionnaireAnswer(next, name, value);
     });
+    answersRef.current = next;
     setAnswers(next);
     return next;
   };
@@ -328,9 +331,11 @@ const Questionnaire = ({
   };
 
   const handleAnswer = (name: string, value: string) => {
-    setAnswers((previousAnswers) =>
-      upsertQuestionnaireAnswer(previousAnswers, name, value),
-    );
+    setAnswers((previousAnswers) => {
+      const nextAnswers = upsertQuestionnaireAnswer(previousAnswers, name, value);
+      answersRef.current = nextAnswers;
+      return nextAnswers;
+    });
   };
 
   const stepUrlParams =
