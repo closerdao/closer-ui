@@ -27,6 +27,7 @@ import {
   BaseBookingParams,
   BookingConfig,
   Question,
+  QuestionnaireItemHandle,
   VolunteerConfig,
 } from '../../../types';
 import config from '../../../configCached';
@@ -47,6 +48,21 @@ const prepareQuestions = (eventQuestions: any) => {
     return question;
   });
   return preparedQuestions;
+};
+
+const upsertQuestionnaireAnswer = (
+  previousAnswers: Record<string, string>[] | undefined,
+  name: string,
+  value: string,
+): Record<string, string>[] => {
+  const current = previousAnswers ?? [];
+  const hasEntry = current.some((answer) => Object.keys(answer)[0] === name);
+  if (!hasEntry) {
+    return [...current, { [name]: value }];
+  }
+  return current.map((answer) =>
+    Object.keys(answer)[0] === name ? { [name]: value } : answer,
+  );
 };
 
 interface Props extends BaseBookingParams {
@@ -264,11 +280,26 @@ const Questionnaire = ({
     [],
   );
 
+  const questionnaireItemRefs = useRef(
+    new Map<string, QuestionnaireItemHandle>(),
+  );
+
+  const flushPendingQuestionnaireAnswers = () => {
+    let next = answers;
+    questionnaireItemRefs.current.forEach((item) => {
+      const { name, value } = item.flush();
+      next = upsertQuestionnaireAnswer(next, name, value);
+    });
+    setAnswers(next);
+    return next;
+  };
+
   const handleSubmit = async () => {
     try {
       await flushPendingSuperpowerSave();
+      const fields = flushPendingQuestionnaireAnswers();
       await platform.booking.patch(booking?._id, {
-        fields: answers,
+        fields,
       });
       const pt = bookingGuestNightsMetricPoint(
         booking?.duration,
@@ -297,18 +328,9 @@ const Questionnaire = ({
   };
 
   const handleAnswer = (name: string, value: string) => {
-    setAnswers((previousAnswers) => {
-      const current = previousAnswers ?? [];
-      const hasEntry = current.some(
-        (answer) => Object.keys(answer)[0] === name,
-      );
-      if (!hasEntry) {
-        return [...current, { [name]: value }];
-      }
-      return current.map((answer) =>
-        Object.keys(answer)[0] === name ? { [name]: value } : answer,
-      );
-    });
+    setAnswers((previousAnswers) =>
+      upsertQuestionnaireAnswer(previousAnswers, name, value),
+    );
   };
 
   const stepUrlParams =
@@ -428,6 +450,13 @@ const Questionnaire = ({
               key={question.name}
               handleAnswer={handleAnswer}
               savedAnswer={getAnswer(booking?.fields, question.name) || ''}
+              ref={(instance) => {
+                if (instance) {
+                  questionnaireItemRefs.current.set(question.name, instance);
+                } else {
+                  questionnaireItemRefs.current.delete(question.name);
+                }
+              }}
             />
           ))}
 

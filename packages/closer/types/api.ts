@@ -79,6 +79,10 @@ export type Question = {
   options?: string[];
 };
 
+export type QuestionnaireItemHandle = {
+  flush: () => { name: string; value: string };
+};
+
 export type BookingSettings = {
   utilityFiatVal: number;
   utilityFiatCur: CloserCurrencies;
