@@ -1,24 +1,24 @@
-import React from 'react';
-import { NextPage, NextPageContext } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
-import { MessageCircle } from 'lucide-react';
+
+import React from 'react';
+
 import { ProposalList } from 'closer/components/Governance';
 import WalletAndVoting from 'closer/components/Governance/WalletAndVoting';
+
+import { BarChart3, MessageCircle } from 'lucide-react';
+import { NextPage, NextPageContext } from 'next';
+import { useTranslations } from 'next-intl';
 
 const GovernancePage: NextPage = () => {
   const t = useTranslations();
   const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Closer';
-  
+
   return (
     <>
       <Head>
         <title>{`${t('governance_title')} - ${appName}`}</title>
-        <meta
-          name="description"
-          content={t('governance_meta_description')}
-        />
+        <meta name="description" content={t('governance_meta_description')} />
       </Head>
       <div className="min-h-screen bg-gray-50/70">
         <div className="container mx-auto px-4 py-8 md:py-10">
@@ -46,6 +46,23 @@ const GovernancePage: NextPage = () => {
 
             <div className="space-y-6">
               <WalletAndVoting />
+
+              <Link
+                href="/governance/weight"
+                className="flex items-start gap-3 rounded-xl border border-gray-200 bg-white p-5 transition-colors hover:border-gray-300"
+              >
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-gray-900">
+                  <BarChart3 className="h-4 w-4 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="mb-1 text-sm font-semibold text-gray-900">
+                    {t('governance_weight_nav_title')}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    {t('governance_weight_nav_description')}
+                  </p>
+                </div>
+              </Link>
 
               <div className="rounded-xl border border-gray-200 bg-white p-5">
                 <div className="flex items-start gap-3">
@@ -83,11 +100,10 @@ export default GovernancePage;
 
 GovernancePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    return {
-    };
+    return {};
   } catch (err) {
     return {
       error: err,
-      };
+    };
   }
 };
