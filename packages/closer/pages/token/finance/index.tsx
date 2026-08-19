@@ -4,7 +4,14 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import CitizenFinanceTokens from '../../../components/CitizenFinanceTokens';
-import { BackButton, Heading, ProgressBar } from '../../../components/ui';
+import FinanceApplicationSummaryCard from '../../../components/FinanceApplicationSummaryCard';
+import {
+  BackButton,
+  Button,
+  Heading,
+  ProgressBar,
+  Spinner,
+} from '../../../components/ui';
 
 import { NextPage } from 'next';
 import { useTranslations } from 'next-intl';
@@ -24,10 +31,22 @@ import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { financeApplicationIdFromCreateResponse } from '../../../utils/financeApplicationIdFromResponse';
 import { financeApplicationListFromGetAction } from '../../../utils/platformFinanceApplication';
 import {
+  buildFinanceQuote,
   getDownPaymentPercent,
+  getFinancingAprPercent,
   getFinancingDurations,
+  getMaxFinancingMonths,
+  getMinMonthlyPayment,
 } from '../../../utils/tokenFinancing';
 import PageNotFound from '../../not-found';
+
+const parseTokensQuery = (
+  tokens: string | string[] | undefined,
+): number | null => {
+  const raw = Array.isArray(tokens) ? tokens[0] : tokens;
+  const parsed = Number(raw);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
 
 const SubscriptionsCitizenApplyPage: NextPage = () => {
   const subscriptionsConfig = getCachedConfig('subscriptions') as {
@@ -38,10 +57,11 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const t = useTranslations();
 
-  const MIN_TOKENS_TO_FINANCE = 30;
-
   const durations = getFinancingDurations(tokenConfig);
+  const maxFinancingMonths = getMaxFinancingMonths(tokenConfig);
   const downPaymentPercent = getDownPaymentPercent(tokenConfig);
+  const aprPercent = getFinancingAprPercent(tokenConfig);
+  const minMonthlyPayment = getMinMonthlyPayment(tokenConfig);
 
   const areSubscriptionsEnabled =
     subscriptionsConfig?.enabled &&
@@ -51,7 +71,7 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
   const { platform } = usePlatform();
   const router = useRouter();
 
-  const { citizenApplication } = router.query;
+  const { citizenApplication, tokens } = router.query;
 
   const isCitizenApplication = citizenApplication === 'true';
 
@@ -62,39 +82,78 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
     Partial<FinanceApplicationCreateRequest>
   >({
     iban: '',
-    tokensToFinance: MIN_TOKENS_TO_FINANCE,
+    tokensToFinance: parseTokensQuery(tokens) ?? 1,
+    durationInMonths: durations[0] || maxFinancingMonths,
     why: user?.citizenship?.why || '',
   });
 
-  const [activeApplications, setActiveApplications] = useState<
-    FinanceApplication[]
-  >([]);
+  const [applications, setApplications] = useState<FinanceApplication[]>([]);
+  const [isLoadingApplications, setIsLoadingApplications] = useState(true);
+  const [isApplyingForAnother, setIsApplyingForAnother] = useState(false);
 
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!router.isReady) {
+      return;
+    }
+    const parsed = parseTokensQuery(tokens);
+    if (parsed === null) {
+      return;
+    }
+    setApplication((prev) => {
+      if (prev.tokensToFinance === parsed) {
+        return prev;
+      }
+      return { ...prev, tokensToFinance: parsed };
+    });
+  }, [router.isReady, tokens]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!user) {
       router.push(`/signup?back=${router.asPath}`);
+      return;
     }
-    if (user && !isLoading && platform?.financeapplication) {
-      (async () => {
-        const params = { where: { userId: user._id } };
-        const action = await platform.financeapplication.get(params, {
-          force: true,
-        });
-        const financeApplications = financeApplicationListFromGetAction(action);
-
-        const activeApplications = financeApplications.filter(
-          (application: FinanceApplication) =>
-            ['pending-payment', 'paid'].includes(application.status),
-        );
-
-        setActiveApplications(activeApplications);
-      })();
+    const finance = platform?.financeapplication;
+    if (!finance) {
+      setIsLoadingApplications(false);
+      return;
     }
-  }, [user, isLoading, router, platform?.financeapplication]);
+    let cancelled = false;
+
+    (async () => {
+      setIsLoadingApplications(true);
+      try {
+        const params = {
+          where: { userId: user._id },
+          limit: 50,
+          sort_by: '-created' as const,
+        };
+        const action = await finance.get(params, { force: true });
+        const rows = financeApplicationListFromGetAction(action);
+        if (!cancelled) {
+          setApplications(rows);
+        }
+      } catch (err) {
+        console.error('error loading finance applications:', err);
+        if (!cancelled) {
+          setApplications([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingApplications(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?._id, isLoading, platform?.financeapplication]);
 
   const goBack = () => {
     router.push('/citizenship/why');
@@ -108,19 +167,35 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
     key: keyof FinanceApplicationCreateRequest,
     value: any,
   ) => {
-    setApplication((prev) => ({ ...prev, [key]: value }));
+    setApplication((prev) => {
+      if (prev[key] === value) {
+        return prev;
+      }
+      return { ...prev, [key]: value };
+    });
   };
 
   const financedTokenApply = async (isCitizenApplication: boolean) => {
     try {
-      setLoading(true);
+      const durationInMonths = Math.min(
+        application.durationInMonths || durations[0] || maxFinancingMonths,
+        maxFinancingMonths,
+      );
+      const quote = buildFinanceQuote({
+        totalToPayInFiat: application.totalToPayInFiat || 0,
+        downPaymentPercent,
+        durationInMonths,
+        aprPercent,
+        minMonthlyPayment,
+      });
       const res = await api.post('/token/finance-application', {
         tokensToFinance: application.tokensToFinance!,
         totalToPayInFiat: application.totalToPayInFiat!,
         iban: application.iban!,
-        // The picker is hidden when only one term is offered, so the default
-        // still has to be sent explicitly.
-        durationInMonths: application.durationInMonths || durations[0],
+        durationInMonths,
+        monthlyPaymentAmount: quote.monthlyPaymentAmount,
+        downPaymentAmount: quote.downPaymentAmount,
+        aprPercent: application.aprPercent ?? aprPercent,
         isCitizenApplication,
         why: application?.why,
       } as FinanceApplicationCreateRequest);
@@ -141,25 +216,74 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
         success: false,
         error,
       };
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  // Older API versions answer the create call without echoing the new record,
+  // so fall back to reading back the newest contract for this user.
+  const fetchLatestApplicationId = async () => {
+    const finance = platform?.financeapplication;
+    if (!finance || !user?._id) {
+      return '';
+    }
+    try {
+      const action = await finance.get(
+        {
+          where: { userId: user._id },
+          limit: 1,
+          sort_by: '-created' as const,
+        },
+        { force: true },
+      );
+      const rows = financeApplicationListFromGetAction(action);
+      return rows[0]?._id || '';
+    } catch (err) {
+      console.error('error loading the new finance application:', err);
+      return '';
     }
   };
 
   const handleNext = async () => {
-    const res = await financedTokenApply(isCitizenApplication);
-    if (res?.success) {
-      if (res.applicationId) {
-        router.push(`/token/financed/${encodeURIComponent(res.applicationId)}`);
+    setLoading(true);
+    try {
+      const res = await financedTokenApply(isCitizenApplication);
+      if (!res?.success) {
+        return;
+      }
+      const newApplicationId =
+        res.applicationId || (await fetchLatestApplicationId());
+      if (newApplicationId) {
+        router.push(`/token/financed/${encodeURIComponent(newApplicationId)}`);
         return;
       }
       router.push(`/token/financed?afterApply=${Date.now()}`);
+    } finally {
+      setLoading(false);
     }
   };
 
   if (process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP !== 'true') {
     return <PageNotFound error="" />;
   }
+
+  const financeForm = (
+    <CitizenFinanceTokens
+      isCitizenApplication={isCitizenApplication}
+      application={application}
+      updateApplication={updateApplication}
+      downPaymentPercent={downPaymentPercent}
+      durations={durations}
+      maxFinancingMonths={maxFinancingMonths}
+      aprPercent={aprPercent}
+      minMonthlyPayment={minMonthlyPayment}
+      isAgreementAccepted={isAgreementAccepted}
+      setIsAgreementAccepted={setIsAgreementAccepted}
+      isTokenTermsAccepted={isTokenTermsAccepted}
+      setIsTokenTermsAccepted={setIsTokenTermsAccepted}
+      handleNext={handleNext}
+      loading={loading}
+    />
+  );
 
   return (
     <>
@@ -181,34 +305,39 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
         <ProgressBar steps={SUBSCRIPTION_CITIZEN_STEPS} />
 
         <main className="pt-14 pb-24 flex flex-col gap-8">
-          {activeApplications.length > 0 ? (
-            <div className="bg-yellow-100 py-2 px-3 rounded-md flex items-center justify-between gap-3">
-              <span>{t('subscriptions_citizen_active_applications')}</span>
-              <button
-                type="button"
-                className="text-sm underline"
-                onClick={() => router.push('/token/financed')}
-              >
-                {t('token_financed_view_contract')}
-              </button>
+          {isLoadingApplications ? (
+            <div className="flex justify-center">
+              <Spinner />
             </div>
+          ) : applications.length === 0 ? (
+            financeForm
           ) : (
-            <CitizenFinanceTokens
-              isCitizenApplication={isCitizenApplication}
-              application={application}
-              updateApplication={updateApplication}
-              tokenPriceModifierPercent={
-                tokenConfig?.tokenPriceModifierPercent || 0
-              }
-              downPaymentPercent={downPaymentPercent}
-              durations={durations}
-              isAgreementAccepted={isAgreementAccepted}
-              setIsAgreementAccepted={setIsAgreementAccepted}
-              isTokenTermsAccepted={isTokenTermsAccepted}
-              setIsTokenTermsAccepted={setIsTokenTermsAccepted}
-              handleNext={handleNext}
-              loading={loading}
-            />
+            <>
+              <div className="flex flex-col gap-4">
+                <Heading level={3} className="mb-0">
+                  {t('token_finance_your_contracts_title')}
+                </Heading>
+                <p className="text-sm text-gray-600">
+                  {t('token_finance_your_contracts_subtitle')}
+                </p>
+                {applications.map((financeApplication) => (
+                  <FinanceApplicationSummaryCard
+                    key={financeApplication._id}
+                    application={financeApplication}
+                  />
+                ))}
+              </div>
+              {isApplyingForAnother ? (
+                financeForm
+              ) : (
+                <Button
+                  variant="secondary"
+                  onClick={() => setIsApplyingForAnother(true)}
+                >
+                  {t('token_finance_apply_for_another')}
+                </Button>
+              )}
+            </>
           )}
         </main>
       </div>

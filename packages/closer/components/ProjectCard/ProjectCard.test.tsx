@@ -49,6 +49,17 @@ describe('ProjectCard', () => {
     expect(screen.getByText('Seed project')).toBeInTheDocument();
   });
 
+  it('always offers a link to view the project', () => {
+    renderWithNextIntl(
+      <ProjectCard project={baseProject} canManageProject={false} />,
+    );
+
+    expect(screen.getByRole('link', { name: /view project/i })).toHaveAttribute(
+      'href',
+      '/projects/seed-project',
+    );
+  });
+
   it('shows the edit link only to people who can manage projects', () => {
     const { rerender } = renderWithNextIntl(
       <ProjectCard project={baseProject} canManageProject={false} />,

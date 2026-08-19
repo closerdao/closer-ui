@@ -128,6 +128,7 @@ export type Charge = {
     stripeConnectFeeRefunded?: number;
     fractionToRefund?: number;
     uploadedDocumentUrl?: string | null;
+    proofOfPaymentUrl?: string | null;
     toconlineData?: any;
 
     comment?: string;
@@ -175,7 +176,8 @@ export type Booking = {
   dailyUtilityFiat: Price<CloserCurrencies.EUR>;
   dailyRentalToken: Price<CloserCurrencies.TDF | CloserCurrencies.ETH>;
   fields: { [key: string]: string }[];
-  visibleBy: string[];
+  /** Co-guests sharing the booking. Read-only through PATCH /booking/:id. */
+  guests?: string[];
   createdBy: string;
   updated: string;
   created: string;

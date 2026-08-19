@@ -96,6 +96,8 @@ export interface FinanceApplication {
     | 'pending-payment'
     | 'paid'
     | 'cancelled'
+    // The API has answered with either spelling.
+    | 'canceled'
     | 'completed'
     | 'pending'
     | 'delinquent'
@@ -106,6 +108,8 @@ export interface FinanceApplication {
   totalToPayInFiat: number;
   monthlyPaymentAmount: number;
   downPaymentAmount: number;
+  /** APR locked into the contract when it was written. */
+  aprPercent?: number;
   charges: any[];
   isCitizenApplication?: boolean;
   durationInMonths?: number;
@@ -115,6 +119,8 @@ export interface FinanceApplication {
     string,
     {
       status: 'pending' | 'paid';
+      /** Monthly due written at contract creation time. */
+      amountDue?: number;
       amountPaid: number;
       paymentDate: string | Date;
     }
@@ -140,8 +146,12 @@ export interface FinanceApplicationCreateRequest {
   tokensToFinance: number;
   totalToPayInFiat: number;
   iban: string;
-  /** Repayment term, chosen from the `token` config's offered durations. */
+  /** Repayment term, capped by the `token` config's max financing length. */
   durationInMonths?: number;
+  /** Monthly installment locked in when the contract is written. */
+  monthlyPaymentAmount?: number;
+  downPaymentAmount?: number;
+  aprPercent?: number;
   isCitizenApplication: boolean;
   why?: string;
 }
