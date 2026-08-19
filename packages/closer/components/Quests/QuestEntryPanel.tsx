@@ -6,8 +6,11 @@ import { useTranslations } from 'next-intl';
 import type { Quest, QuestMe } from '../../types/quest';
 import {
   formatOdds,
+  formatQuestCurrency,
+  getEarnedFromActions,
   getMyTicketCount,
   getPotentialTickets,
+  getQuestActionCta,
   getTicketSourceAction,
   getTicketSources,
   getTicketsForSource,
@@ -53,10 +56,23 @@ const QuestEntryPanel = ({
   const isWithdrawn = me?.entry?.status === 'withdrawn';
   const isDisqualified = me?.entry?.status === 'disqualified';
   const ticketsWithinReach = Math.max(0, potentialTickets - myTickets);
-  const score = isRaffle ? myTickets : me?.entry?.points || 0;
+  const points = me?.entry?.points || 0;
+  /** What their actions actually earned, when that can be totalled. */
+  const earned = isRaffle ? null : getEarnedFromActions(quest, me);
+  const score = isRaffle ? myTickets : points;
   const progress = potentialTickets
     ? Math.min(100, Math.round((myTickets / potentialTickets) * 100))
     : 0;
+
+  /**
+   * A counted quest gives a member nowhere to submit, so the panel has to point
+   * them at wherever the action actually happens.
+   */
+  const actionCta = getQuestActionCta(quest, { eventsById, bookingToken });
+  const actionsUsed = me?.entry?.actionCount ?? null;
+  const maxActions = quest.actionConfig?.maxActionsPerUser;
+  const hasRoomForMore =
+    !maxActions || actionsUsed === null || actionsUsed < maxActions;
 
   /** A source is worth pointing at while it still has tickets left in it. */
   const openSources = isRaffle
@@ -111,11 +127,17 @@ const QuestEntryPanel = ({
       <div className="p-6">
         <div className="flex items-baseline gap-2">
           <span className="text-5xl leading-none font-semibold tabular-nums">
-            {isLoading && !me ? '–' : score}
+            {isLoading && !me
+              ? '–'
+              : earned
+              ? formatQuestCurrency(earned.amount, earned.cur)
+              : score}
           </span>
           <span className="text-sm text-gray-500">
             {isRaffle
               ? t('quests_entry_tickets_unit', { count: score })
+              : earned
+              ? t('quests_entry_earned_label')
               : t('quests_entry_points')}
           </span>
         </div>
@@ -140,12 +162,18 @@ const QuestEntryPanel = ({
           </>
         )}
 
-        {(me?.rank || odds) && (
+        {/* Odds only mean something when there is a draw to win. */}
+        {(me?.rank || (isRaffle && odds) || earned) && (
           <div className="flex gap-2 mt-4">
             {me?.rank ? (
               <Stat label={t('quests_entry_rank')} value={`#${me.rank}`} />
             ) : null}
-            {odds ? <Stat label={t('quests_entry_odds')} value={odds} /> : null}
+            {isRaffle && odds ? (
+              <Stat label={t('quests_entry_odds')} value={odds} />
+            ) : null}
+            {earned ? (
+              <Stat label={t('quests_entry_points')} value={String(points)} />
+            ) : null}
           </div>
         )}
 
@@ -238,11 +266,30 @@ const QuestEntryPanel = ({
         {isOpen && !isWithdrawn && !isDisqualified && (
           <p className="text-xs text-gray-500 mt-4">
             {quest.roleRequired?.length
-              ? t('quests_entry_automatic_roles', {
-                  roles: quest.roleRequired.join(', '),
-                })
-              : t('quests_entry_automatic')}
+              ? t(
+                  isRaffle
+                    ? 'quests_entry_automatic_roles'
+                    : 'quests_entry_automatic_action_roles',
+                  { roles: quest.roleRequired.join(', ') },
+                )
+              : t(
+                  isRaffle
+                    ? 'quests_entry_automatic'
+                    : actionCta
+                    ? 'quests_entry_automatic_counted'
+                    : 'quests_entry_automatic_action',
+                )}
           </p>
+        )}
+
+        {isOpen && actionCta && hasRoomForMore && (
+          <Link
+            href={actionCta.href}
+            className="mt-5 block w-full text-center rounded-full px-4 py-3 text-sm font-bold uppercase tracking-wide border-2 bg-accent border-accent text-accent-foreground hover:bg-accent-dark hover:border-accent-dark"
+          >
+            {t(actionCta.labelKey as string, actionCta.values)}
+            <ArrowRight className="w-4 h-4 inline-block ml-1.5 -mt-0.5" />
+          </Link>
         )}
 
         {isOpen && openSources.length > 0 && (

@@ -209,18 +209,22 @@ export interface TicketSourceAction {
  * into somewhere a member can go and do it. Sources verified by hand have no
  * destination — those are submitted on the quest page itself.
  */
-export const getTicketSourceAction = (
-  source: QuestTicketSource,
-  {
-    eventsById = {},
-    bookingToken,
-  }: {
-    eventsById?: Record<string, { slug?: string; name?: string }>;
-    bookingToken?: string;
-  } = {},
+export interface TriggerActionOptions {
+  eventsById?: Record<string, { slug?: string; name?: string }>;
+  bookingToken?: string;
+}
+
+/**
+ * Turns a trigger back into somewhere a member can go and cause it. `custom`
+ * has no destination — that one is submitted on the quest page itself.
+ */
+export const getTriggerAction = (
+  trigger: { event?: string; filter?: Record<string, unknown> } | undefined,
+  { eventsById = {}, bookingToken }: TriggerActionOptions = {},
 ): TicketSourceAction | null => {
-  const event = source.trigger?.event;
-  if (!event || source.verification !== 'automatic') return null;
+  const event = trigger?.event;
+  if (!event || event === 'custom') return null;
+  const source = { trigger } as QuestTicketSource;
 
   switch (event) {
     case 'booking.confirmed': {
@@ -255,10 +259,71 @@ export const getTicketSourceAction = (
   }
 };
 
-/** The event ids a quest's ticket sources point at, for resolving their pages. */
+/** Ticket sources verified by hand are submitted, not visited. */
+export const getTicketSourceAction = (
+  source: QuestTicketSource,
+  options: TriggerActionOptions = {},
+): TicketSourceAction | null => {
+  if (source.verification !== 'automatic') return null;
+  return getTriggerAction(source.trigger, options);
+};
+
+/** True when the backend counts the quest's actions rather than members submitting them. */
+export const isQuestActionCounted = (quest: Quest): boolean => {
+  if (quest.type !== 'singleAction') return false;
+  const event = quest.actionConfig?.trigger?.event;
+  return Boolean(event) && event !== 'custom';
+};
+
+/** Where a member goes to perform a counted singleAction quest's action. */
+export const getQuestActionCta = (
+  quest: Quest,
+  options: TriggerActionOptions = {},
+): TicketSourceAction | null => {
+  if (!isQuestActionCounted(quest)) return null;
+  return getTriggerAction(quest.actionConfig?.trigger, options);
+};
+
+/** The event ids a quest's triggers point at, for resolving their pages. */
 export const getLinkedEventIds = (quest: Quest): string[] => {
-  const ids = getTicketSources(quest)
-    .map((source) => source.trigger?.filter?.eventId)
-    .filter((id): id is string => typeof id === 'string' && id.length > 0);
+  const ids = [
+    ...getTicketSources(quest).map((source) => source.trigger?.filter?.eventId),
+    quest.actionConfig?.trigger?.filter?.eventId,
+  ].filter((id): id is string => typeof id === 'string' && id.length > 0);
   return [...new Set(ids)];
+};
+
+/**
+ * On a singleAction quest the number that means something to a member is what
+ * their actions have earned, not the abstract points behind the ranking. Only
+ * a per-action currency award can be totalled this way — a perk or a credit has
+ * no running total.
+ */
+export const getEarnedFromActions = (
+  quest: Quest,
+  me: QuestMe | null | undefined,
+): { amount: number; cur: string } | null => {
+  const award = quest.prize?.eachAction;
+  if (!award || award.kind !== 'currency') return null;
+
+  const actionCount = getVerifiedActionCount(quest, me);
+  if (actionCount === null) return null;
+
+  return { amount: actionCount * award.val, cur: award.cur };
+};
+
+/** The API reports the count directly when it can; points are the fallback. */
+export const getVerifiedActionCount = (
+  quest: Quest,
+  me: QuestMe | null | undefined,
+): number | null => {
+  const entry = me?.entry;
+  if (!entry) return null;
+  if (typeof entry.actionCount === 'number') return entry.actionCount;
+
+  const pointsPerAction = quest.actionConfig?.pointsPerAction;
+  if (typeof entry.points === 'number' && pointsPerAction) {
+    return Math.floor(entry.points / pointsPerAction);
+  }
+  return null;
 };

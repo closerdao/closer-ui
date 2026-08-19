@@ -12,6 +12,7 @@ import objectPath from 'object-path';
 import {
   QUEST_AUTOMATIC_TRIGGER_EVENTS,
   QUEST_MANUAL_TRIGGER_EVENT,
+  QUEST_TRIGGER_EVENTS,
   getQuestAwardCurrencies,
   getQuestStatusOptions,
   getQuestTriggerEvent,
@@ -84,8 +85,11 @@ const buildInitialData = (quest?: Quest | null, defaultTimezone?: string) => ({
     proofType: quest?.actionConfig?.proofType || 'url',
     proofPrompt: quest?.actionConfig?.proofPrompt || '',
     maxActionsPerUser: quest?.actionConfig?.maxActionsPerUser ?? '',
-    pointsPerAction: quest?.actionConfig?.pointsPerAction ?? 10,
     requiresApproval: quest?.actionConfig?.requiresApproval !== false,
+    trigger: {
+      event: quest?.actionConfig?.trigger?.event || QUEST_MANUAL_TRIGGER_EVENT,
+      filter: quest?.actionConfig?.trigger?.filter || {},
+    },
   },
   prizeNotes: quest?.prize?.notes || '',
   eligibility: {
@@ -228,8 +232,21 @@ const QuestEditor = ({
             count: Number(data.raffleConfig.winnerCount),
           });
         }
-      } else if (!data.actionConfig.actionLabel.trim()) {
-        next['actionConfig.actionLabel'] = t('quests_editor_error_required');
+      } else {
+        if (!data.actionConfig.actionLabel.trim()) {
+          next['actionConfig.actionLabel'] = t('quests_editor_error_required');
+        }
+        const actionTrigger = getQuestTriggerEvent(
+          data.actionConfig.trigger.event,
+        );
+        if (
+          actionTrigger?.requires === 'event' &&
+          !data.actionConfig.trigger.filter?.eventId
+        ) {
+          next['actionConfig.trigger.filter.eventId'] = t(
+            'quests_editor_error_required',
+          );
+        }
       }
 
       // The API only permits token prizes on tokenGrowth quests.
@@ -265,6 +282,26 @@ const QuestEditor = ({
 
   const errorFor = (name: string) => (hasSubmitted ? errors[name] || '' : '');
 
+  /** Scopes a trigger only with what that trigger actually accepts. */
+  const buildTriggerFilter = (
+    event: string,
+    filter: Record<string, unknown> = {},
+  ) => {
+    const definition = getQuestTriggerEvent(event);
+    const next: Record<string, unknown> = { ...filter };
+
+    if (event === 'token.purchased') {
+      if (bookingToken) next.token = bookingToken;
+      next.withinQuestWindow = true;
+    }
+    // Optional scopes stay off the filter entirely when they are not set.
+    if (definition?.acceptsEvent && !next.eventId) delete next.eventId;
+    if (definition?.acceptsFullDuration && !next.fullDuration) {
+      delete next.fullDuration;
+    }
+    return next;
+  };
+
   /**
    * A source nothing can count automatically carries the `custom` trigger —
    * that is what `POST …/action` accepts, and without it a member could never
@@ -278,23 +315,12 @@ const QuestEditor = ({
       return { trigger: { event: QUEST_MANUAL_TRIGGER_EVENT, filter: {} } };
     }
     if (!source.trigger?.event) return {};
-
-    const definition = getQuestTriggerEvent(source.trigger.event);
-    const filter: Record<string, unknown> = {
-      ...(source.trigger.filter || {}),
+    return {
+      trigger: {
+        event: source.trigger.event,
+        filter: buildTriggerFilter(source.trigger.event, source.trigger.filter),
+      },
     };
-
-    if (source.trigger.event === 'token.purchased') {
-      if (bookingToken) filter.token = bookingToken;
-      filter.withinQuestWindow = true;
-    }
-    // Optional scopes stay off the filter entirely when they are not set.
-    if (definition?.acceptsEvent && !filter.eventId) delete filter.eventId;
-    if (definition?.acceptsFullDuration && !filter.fullDuration) {
-      delete filter.fullDuration;
-    }
-
-    return { trigger: { event: source.trigger.event, filter } };
   };
 
   const buildPayload = (): Partial<Quest> => {
@@ -374,17 +400,37 @@ const QuestEditor = ({
         leaderboardSize: Number(data.raffleConfig.leaderboardSize) || 5,
       };
     } else {
+      const actionTrigger = data.actionConfig.trigger.event;
+      const isManualAction = actionTrigger === QUEST_MANUAL_TRIGGER_EVENT;
+
       terms.actionConfig = {
         actionLabel: data.actionConfig.actionLabel.trim(),
-        proofType: data.actionConfig.proofType,
-        proofPrompt: data.actionConfig.proofPrompt.trim() || undefined,
+        // Nothing is submitted when the backend counts it, so there is no
+        // proof to ask for and nothing to approve.
+        proofType: isManualAction ? data.actionConfig.proofType : 'automatic',
+        ...(isManualAction && data.actionConfig.proofPrompt.trim()
+          ? { proofPrompt: data.actionConfig.proofPrompt.trim() }
+          : {}),
         ...(data.actionConfig.maxActionsPerUser === ''
           ? {}
           : {
               maxActionsPerUser: Number(data.actionConfig.maxActionsPerUser),
             }),
-        pointsPerAction: Number(data.actionConfig.pointsPerAction) || 0,
-        requiresApproval: data.actionConfig.requiresApproval,
+        // Actions are not weighted against each other, so a point is an action
+        // and the leaderboard reads as a count.
+        pointsPerAction: 1,
+        requiresApproval: isManualAction
+          ? data.actionConfig.requiresApproval
+          : false,
+        trigger: {
+          event: actionTrigger,
+          filter: isManualAction
+            ? {}
+            : buildTriggerFilter(
+                actionTrigger,
+                data.actionConfig.trigger.filter,
+              ),
+        },
       };
     }
 
@@ -447,6 +493,20 @@ const QuestEditor = ({
         value: option.value,
       })),
     ],
+    [t],
+  );
+
+  /** A singleAction quest can be counted the same ways a raffle source is. */
+  const actionTrigger = getQuestTriggerEvent(data.actionConfig.trigger.event);
+  const isManualActionTrigger =
+    data.actionConfig.trigger.event === QUEST_MANUAL_TRIGGER_EVENT;
+
+  const actionTriggerOptions = useMemo(
+    () =>
+      QUEST_TRIGGER_EVENTS.map((option) => ({
+        label: t(option.labelKey as string),
+        value: option.value,
+      })),
     [t],
   );
 
@@ -898,59 +958,104 @@ const QuestEditor = ({
               placeholder="Publish a story"
               error={errorFor('actionConfig.actionLabel')}
             />
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
               <FormField
                 data={data}
-                update={update}
+                update={(name: string, value: unknown) => {
+                  // A different trigger invalidates its filter.
+                  update('actionConfig.trigger.filter', {});
+                  update(name, value);
+                }}
                 isDisabled={areTermsFrozen}
-                name="actionConfig.proofType"
-                label={t('quests_editor_proof_type')}
+                name="actionConfig.trigger.event"
+                label={t('quests_editor_action_trigger')}
                 type="select"
-                options={[
-                  { label: 'url', value: 'url' },
-                  { label: 'text', value: 'text' },
-                  { label: 'image', value: 'image' },
-                  { label: 'automatic', value: 'automatic' },
-                ]}
+                required
+                options={actionTriggerOptions}
+                hint={t('quests_editor_action_trigger_hint')}
               />
-              <FormField
-                data={data}
-                update={update}
-                isDisabled={areTermsFrozen}
-                name="actionConfig.proofPrompt"
-                label={t('quests_editor_proof_prompt')}
-                type="text"
-              />
+              {(actionTrigger?.requires === 'event' ||
+                actionTrigger?.acceptsEvent) && (
+                <FormField
+                  data={data}
+                  update={update}
+                  isDisabled={areTermsFrozen}
+                  name="actionConfig.trigger.filter.eventId"
+                  label={
+                    actionTrigger?.requires === 'event'
+                      ? t('quests_editor_source_which_event')
+                      : t('quests_editor_source_which_event_opt')
+                  }
+                  type="select"
+                  required={actionTrigger?.requires === 'event'}
+                  options={eventOptions}
+                  error={errorFor('actionConfig.trigger.filter.eventId')}
+                />
+              )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+
+            {actionTrigger?.acceptsFullDuration && (
               <FormField
                 data={data}
                 update={update}
                 isDisabled={areTermsFrozen}
-                name="actionConfig.maxActionsPerUser"
-                label={t('quests_editor_max_actions')}
-                type="number"
-                min={1}
-                hint={t('quests_editor_blank_none')}
+                name="actionConfig.trigger.filter.fullDuration"
+                label={t('quests_editor_source_full_duration')}
+                type="switch"
               />
-              <FormField
-                data={data}
-                update={update}
-                isDisabled={areTermsFrozen}
-                name="actionConfig.pointsPerAction"
-                label={t('quests_editor_points_per_action')}
-                type="number"
-                min={0}
-              />
-            </div>
+            )}
+
+            {isManualActionTrigger && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                <FormField
+                  data={data}
+                  update={update}
+                  isDisabled={areTermsFrozen}
+                  name="actionConfig.proofType"
+                  label={t('quests_editor_proof_type')}
+                  type="select"
+                  options={[
+                    { label: 'url', value: 'url' },
+                    { label: 'text', value: 'text' },
+                    { label: 'image', value: 'image' },
+                    { label: 'automatic', value: 'automatic' },
+                  ]}
+                />
+                <FormField
+                  data={data}
+                  update={update}
+                  isDisabled={areTermsFrozen}
+                  name="actionConfig.proofPrompt"
+                  label={t('quests_editor_proof_prompt')}
+                  type="text"
+                />
+              </div>
+            )}
             <FormField
               data={data}
               update={update}
               isDisabled={areTermsFrozen}
-              name="actionConfig.requiresApproval"
-              label={t('quests_editor_requires_approval')}
-              type="switch"
+              name="actionConfig.maxActionsPerUser"
+              label={t('quests_editor_max_actions')}
+              type="number"
+              min={1}
+              hint={t('quests_editor_blank_none')}
             />
+            {isManualActionTrigger ? (
+              <FormField
+                data={data}
+                update={update}
+                isDisabled={areTermsFrozen}
+                name="actionConfig.requiresApproval"
+                label={t('quests_editor_requires_approval')}
+                type="switch"
+              />
+            ) : (
+              <p className="text-xs text-gray-500">
+                {t('quests_editor_action_trigger_automatic_note')}
+              </p>
+            )}
           </>
         )}
       </FieldSet>

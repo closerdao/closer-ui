@@ -78,6 +78,14 @@ export interface QuestRaffleConfig {
 
 export interface QuestActionConfig {
   actionLabel: string;
+  /**
+   * What scores the action. `custom` means the member submits proof by hand;
+   * anything else is counted from the same source types a raffle listens for.
+   */
+  trigger?: {
+    event: string;
+    filter?: Record<string, unknown>;
+  };
   proofType: 'url' | 'text' | 'image' | 'automatic' | string;
   proofPrompt?: string;
   maxActionsPerUser?: number;

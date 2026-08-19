@@ -253,3 +253,87 @@ describe('QuestEditor — ticket source triggers', () => {
   });
 });
 
+describe('QuestEditor — singleAction triggers', () => {
+  const typeSelect = () =>
+    [...document.querySelectorAll('select')].find((select) =>
+      [...select.options].some((option) => option.value === 'singleAction'),
+    ) as HTMLSelectElement;
+
+  const actionTriggerSelect = () =>
+    [...document.querySelectorAll('select')].find((select) =>
+      [...select.options].some((option) => option.value === 'custom'),
+    ) as HTMLSelectElement;
+
+  const asActionQuest = async () => {
+    renderWithNextIntl(<QuestEditor />);
+    fireEvent.change(typeSelect(), { target: { value: 'singleAction' } });
+    await waitFor(() => expect(actionTriggerSelect()).toBeDefined());
+  };
+
+  test('offers the same sources a raffle listens for, plus custom', async () => {
+    await asActionQuest();
+    expect([...actionTriggerSelect().options].map((o) => o.value)).toEqual([
+      'booking.confirmed',
+      'stay.completed',
+      'token.purchased',
+      'custom',
+    ]);
+  });
+
+  test('defaults to custom — proof submitted by hand, as it always was', async () => {
+    await asActionQuest();
+    expect(actionTriggerSelect().value).toBe('custom');
+    expect(screen.getByText('Proof type')).toBeInTheDocument();
+    expect(
+      screen.getByText('Review each submission before it scores'),
+    ).toBeInTheDocument();
+  });
+
+  test('a counted trigger asks for no proof and nothing to review', async () => {
+    await asActionQuest();
+    fireEvent.change(actionTriggerSelect(), {
+      target: { value: 'token.purchased' },
+    });
+
+    await waitFor(() =>
+      expect(screen.queryByText('Proof type')).not.toBeInTheDocument(),
+    );
+    expect(
+      screen.queryByText('Review each submission before it scores'),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/The backend counts these/)).toBeInTheDocument();
+  });
+
+  test('a booked event still demands which event', async () => {
+    await asActionQuest();
+    fireEvent.change(actionTriggerSelect(), {
+      target: { value: 'booking.confirmed' },
+    });
+
+    await waitFor(() =>
+      expect(screen.getByText('Which event')).toBeInTheDocument(),
+    );
+
+    fireEvent.submit(document.querySelector('form') as HTMLFormElement);
+    await waitFor(() =>
+      expect(
+        screen.getAllByText('This one is required.').length,
+      ).toBeGreaterThan(0),
+    );
+  });
+
+  test('a completed stay can be scoped to full duration', async () => {
+    await asActionQuest();
+    fireEvent.change(actionTriggerSelect(), {
+      target: { value: 'stay.completed' },
+    });
+
+    await waitFor(() =>
+      expect(
+        screen.getByText('Only when they stay the full duration'),
+      ).toBeInTheDocument(),
+    );
+    expect(screen.getByText('Which event (optional)')).toBeInTheDocument();
+  });
+});
+

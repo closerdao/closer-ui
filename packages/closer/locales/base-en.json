@@ -3098,7 +3098,6 @@
   "quests_how_winners": "{count, plural, one {# winner is} other {# winners are}} drawn once entries close.",
   "quests_how_verifiable": "The draw is seeded and published, so anyone can re-run it.",
   "quests_how_action": "Do this to score: {label}.",
-  "quests_how_points": "{count, plural, one {# point} other {# points}} per action.",
   "quests_how_max_actions": "{count, plural, one {# action} other {# actions}} per member.",
   "quests_how_approval": "Each submission is reviewed before it scores.",
   "quests_how_roles": "Open to: {roles}.",
@@ -3168,7 +3167,6 @@
   "quests_editor_proof_type": "Proof type",
   "quests_editor_proof_prompt": "Proof prompt",
   "quests_editor_max_actions": "Max actions per member",
-  "quests_editor_points_per_action": "Points per action",
   "quests_editor_requires_approval": "Review each submission before it scores",
   "quests_editor_award_kind": "Award",
   "quests_editor_award_currency": "Currency",
@@ -3261,5 +3259,13 @@
   "quests_trigger_custom": "Member submits proof",
   "quests_editor_source_which_event_opt": "Which event (optional)",
   "quests_editor_source_full_duration": "Only when they stay the full duration",
-  "quests_editor_source_manual_note": "Members submit proof for this source on the quest page, and it scores once you verify it."
+  "quests_editor_source_manual_note": "Members submit proof for this source on the quest page, and it scores once you verify it.",
+  "quests_entry_earned_label": "earned so far",
+  "quests_entry_automatic_action": "You are entered automatically — everything you submit counts as soon as it is verified.",
+  "quests_entry_automatic_action_roles": "Open to {roles}. If that is you, you are entered automatically — everything you submit counts as soon as it is verified.",
+  "quests_editor_action_trigger": "What counts as an action",
+  "quests_editor_action_trigger_hint": "Pick a source to score it automatically, or let members submit proof",
+  "quests_editor_action_trigger_automatic_note": "The backend counts these, so members submit nothing and there is nothing to review.",
+  "quests_entry_automatic_counted": "You are entered automatically, and this is counted for you — just go and do it.",
+  "quests_how_counted": "Counted for you automatically; there is nothing to submit."
 }

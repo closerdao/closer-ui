@@ -5,7 +5,10 @@ import { useTranslations } from 'next-intl';
 import type { Quest, QuestAction, QuestMe } from '../../types/quest';
 import { parseMessageFromError } from '../../utils/common';
 import { submitQuestAction } from '../../utils/quests.api';
-import { getTicketSources } from '../../utils/quests.helpers';
+import {
+  getTicketSources,
+  isQuestActionCounted,
+} from '../../utils/quests.helpers';
 import { Button, ErrorMessage, Input, Textarea } from '../ui';
 
 interface Props {
@@ -36,6 +39,8 @@ const QuestActionForm = ({ quest, me, myActions, onSubmitted }: Props) => {
 
   if (isRaffle && !manualSources.length) return null;
   if (!isRaffle && !quest.actionConfig) return null;
+  // A counted quest is tallied backend-side, so there is nothing to submit.
+  if (isQuestActionCounted(quest)) return null;
 
   const proofType = isRaffle ? 'url' : quest.actionConfig?.proofType || 'text';
   const needsProof = proofType !== 'automatic';

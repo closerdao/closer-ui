@@ -2,7 +2,10 @@ import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
 
 import type { Quest } from '../../types/quest';
-import { getTicketSources } from '../../utils/quests.helpers';
+import {
+  getTicketSources,
+  isQuestActionCounted,
+} from '../../utils/quests.helpers';
 
 interface Props {
   quest: Quest;
@@ -39,11 +42,6 @@ const QuestHowItWorks = ({ quest }: Props) => {
     steps.push(
       t('quests_how_action', { label: quest.actionConfig.actionLabel }),
     );
-    if (quest.actionConfig.pointsPerAction) {
-      steps.push(
-        t('quests_how_points', { count: quest.actionConfig.pointsPerAction }),
-      );
-    }
     if (quest.actionConfig.maxActionsPerUser) {
       steps.push(
         t('quests_how_max_actions', {
@@ -51,7 +49,9 @@ const QuestHowItWorks = ({ quest }: Props) => {
         }),
       );
     }
-    if (quest.actionConfig.requiresApproval) {
+    if (isQuestActionCounted(quest)) {
+      steps.push(t('quests_how_counted'));
+    } else if (quest.actionConfig.requiresApproval) {
       steps.push(t('quests_how_approval'));
     }
   }

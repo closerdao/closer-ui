@@ -115,13 +115,31 @@ The trigger dropdown offers only the source types the backend aggregates:
 | `token.purchased` | Token purchased | `{ token: <web3.bookingToken>, withinQuestWindow: true }` |
 | `custom` | — never offered | `{}` — set automatically, see below |
 
-`custom` is not in the dropdown on purpose. It follows from the source's
+On a **raffle** source, `custom` is not in the dropdown on purpose. It follows from the source's
 **verification** instead: choosing *Admin review* writes
 `trigger: { event: 'custom', filter: {} }`, since that is the only trigger
 `POST …/action` accepts and the only way a source can take member-submitted
 proof. Tying the two together means an admin cannot build the broken
 combination — an admin-reviewed source with an automatic trigger, or a `custom`
 source nothing can submit against.
+
+On a **singleAction** quest the same four values are offered directly as
+`actionConfig.trigger`, defaulting to `custom` — which is the behaviour that
+shipped before, so an existing quest with no trigger keeps working. Picking a
+counted source sends `proofType: 'automatic'`, no `proofPrompt` and
+`requiresApproval: false`, since there is nothing submitted and nothing to
+review. The member side follows: the submit form disappears entirely and the
+entry panel shows a link to wherever the action happens (`/token`, `/stay`, the
+event's page) instead.
+
+`pointsPerAction` is no longer an admin field — every action on a quest is worth
+the same, so the UI always sends **1** and the leaderboard reads as a count of
+actions. `entry.points` and `entry.actionCount` are then interchangeable, which
+is what the entry panel relies on to total a per-action carrot award.
+
+**Ask:** `actionConfig.trigger` is not in the API reference — please confirm the
+field name and that `singleAction` scoring honours it, or tell us what it should
+be called.
 
 **Ask:** if you add or rename a source type, tell us — the list lives
 in `packages/closer/constants/quests.constants.ts` and has to be updated by hand.
