@@ -6,22 +6,34 @@ import ReactMarkdown from 'react-markdown';
 
 import { proposalMarkdownComponents } from 'closer/components/display';
 import GovernanceConfetti from 'closer/components/Governance/GovernanceConfetti';
+import PlatformVotingPower from 'closer/components/Governance/PlatformVotingPower';
+import CopyableHash from 'closer/components/Governance/CopyableHash';
+import ProposalAttestation from 'closer/components/Governance/ProposalAttestation';
 import ProposalComments from 'closer/components/Governance/ProposalComments';
 import ProposalCountdownTimer from 'closer/components/Governance/ProposalCountdownTimer';
 import ProposalResultCelebration from 'closer/components/Governance/ProposalResultCelebration';
 import VoteAmountSelector from 'closer/components/Governance/VoteAmountSelector';
 
-import { ErrorMessage, api } from 'closer';
+import { ErrorMessage, Spinner, api } from 'closer';
 import { useAuth } from 'closer/contexts/auth';
 import { usePlatform } from 'closer/contexts/platform';
 import { WalletDispatch, WalletState } from 'closer/contexts/wallet';
+import { useConfig } from 'closer/hooks/useConfig';
 import { useHasMounted } from 'closer/hooks/useHasMounted';
+import { useVotingPeriodEnd } from 'closer/hooks/useVotingPeriodEnd';
+import { useVotingPowerSupply } from 'closer/hooks/useVotingPowerSupply';
 import { useVotingWeight } from 'closer/hooks/useVotingWeight';
 import { Proposal, ProposalReward, ProposalVote } from 'closer/types';
 import { parseMessageFromError, slugify } from 'closer/utils/common';
 import {
   getEffectiveStatus as getProposalEffectiveStatus,
+  getFinalizeDelay,
+  getFrozenResult,
+  getVoteAllowance,
   getVoteCounts,
+  hasMetQuorum,
+  isVotingOpen as isProposalVotingOpen,
+  needsFinalizing as proposalNeedsFinalizing,
 } from 'closer/utils/proposalStatus';
 import {
   createProposalSignatureHash,
@@ -29,7 +41,7 @@ import {
 } from 'closer/utils/crypto';
 import { getBearerAuthHeaders } from 'closer/utils/authHeaders.helpers';
 import { NextApiRequest, NextPage, NextPageContext } from 'next';
-import { useTranslations } from 'next-intl';
+import { useFormatter, useTranslations } from 'next-intl';
 
 interface ProposalDetailPageProps {
   proposal: Proposal | null;
@@ -40,6 +52,12 @@ interface ProposalDetailPageProps {
 // How often an open proposal re-reads its tally, so votes cast elsewhere
 // show up without a reload.
 const LIVE_RESULTS_POLL_MS = 30000;
+
+// The API decides whether voting has closed from its own clock. A finalize sent
+// the instant the countdown hits zero can land while the proposal is, by a
+// second or two of clock skew, still open - a 409 the citizen would have to
+// reload to get past. Waiting a beat makes the call boring.
+const FINALIZE_DELAY_MS = 5000;
 
 type UserVoteSummary = {
   castWeight: number;
@@ -71,6 +89,14 @@ const getUserVoteSummary = (
         summary,
       );
   }, emptySummary);
+};
+
+// The lifecycle endpoints (/proposals/:id/publish, /proposals/:id/finalize)
+// answer with the proposal itself, under whichever envelope the API uses.
+const proposalFromResponse = (data: any): Proposal | null => {
+  const candidate = data?.results || data?.proposal || data;
+
+  return candidate?._id ? (candidate as Proposal) : null;
 };
 
 // The vote endpoint may answer with the updated proposal, with just the vote it
@@ -106,41 +132,14 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   const { user } = useAuth();
   const { platform } = usePlatform() as any;
   const { votingWeight } = useVotingWeight();
+  const platformVotingPower = useVotingPowerSupply();
   const t = useTranslations();
+  const format = useFormatter();
   const hasMounted = useHasMounted();
   const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Closer';
 
-  const hasLoadedConfig = useRef(false);
-  const configLoadError = useRef(false);
-
-  // Load governance config (only once, with error handling)
-  useEffect(() => {
-    if (!platform?.config || hasLoadedConfig.current || configLoadError.current) {
-      return;
-    }
-
-    // Check if config already exists in cache
-    const existingConfig = platform.config.findOne('governance');
-    if (existingConfig) {
-      hasLoadedConfig.current = true;
-      return;
-    }
-
-    // Try to load config, but only once
-    hasLoadedConfig.current = true;
-    platform.config
-      .getOne('governance')
-      .catch((error: any) => {
-        // If 404 or similar error, mark as failed and don't retry
-        if (error?.response?.status === 404 || error?.response?.status >= 400) {
-          configLoadError.current = true;
-          console.log('Governance config not found, using default quorum percentage');
-        } else {
-          // For other errors, allow retry by resetting the flag
-          hasLoadedConfig.current = false;
-        }
-      });
-  }, [platform?.config]);
+  const { governance } = (useConfig() as any) || {};
+  const quorumPercent = Number(governance?.quorumPercent) || 0;
 
   const [selectedVote, setSelectedVote] = useState<
     'yes' | 'no' | 'abstain' | null
@@ -154,7 +153,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   const [selectedVoteAmount, setSelectedVoteAmount] = useState(0);
   const [isCastingMoreVotes, setIsCastingMoreVotes] = useState(false);
   const [voteConfettiIntensity, setVoteConfettiIntensity] = useState(0.5);
-  const [forceResultCelebration, setForceResultCelebration] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false);
   const [error, setError] = useState<string | null>(propError || null);
   const [isEditing, setIsEditing] = useState(false);
   const [currentProposal, setCurrentProposal] = useState<Proposal | null>(
@@ -294,7 +293,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       if (platformProposal && platformProposal.toJS) {
         const cached = platformProposal.toJS() as Proposal;
 
-        if (isNotBehindOnOwnVote(cached, currentProposal)) {
+        if (canAdoptProposal(cached, currentProposal)) {
           return cached;
         }
       }
@@ -307,12 +306,24 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     [currentProposal, user?._id],
   );
 
-  const castVoteWeight = parseFloat(existingUserVote.castWeight.toFixed(2));
-  const remainingVoteWeight = Math.max(
-    0,
-    parseFloat(((votingWeight || 0) - castVoteWeight).toFixed(2)),
+  // What the vote endpoint will actually accept: once a citizen has voted, the
+  // API measures them against the weight it snapshotted then, not against a
+  // balance that has grown since.
+  const voteAllowance = useMemo(
+    () => getVoteAllowance(currentProposal, user?._id, votingWeight),
+    [currentProposal, user?._id, votingWeight],
   );
+
+  const castVoteWeight = voteAllowance.castWeight;
+  const remainingVoteWeight = voteAllowance.remainingWeight;
   const hasUnspentVotes = remainingVoteWeight > 0;
+
+  // Votes cast elsewhere shrink the allowance under a selection already made.
+  useEffect(() => {
+    setSelectedVoteAmount((current) =>
+      current > remainingVoteWeight ? remainingVoteWeight : current,
+    );
+  }, [remainingVoteWeight]);
 
   // Reflect votes cast in an earlier session, so a reload does not offer the
   // form again for weight that is already spent.
@@ -325,13 +336,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
 
   // Same condition as `isActive` below, but computed before the early returns
   // so the polling hook can depend on it.
-  const votingEndsAt = currentProposal?.endDate
-    ? new Date(currentProposal.endDate).getTime()
-    : null;
-  const isVotingOpen =
-    currentProposal?.status === 'active' &&
-    !!votingEndsAt &&
-    Date.now() < votingEndsAt;
+  const isVotingOpen = isProposalVotingOpen(currentProposal);
 
   const handleCastMoreVotes = () => {
     setSelectedVoteAmount(0);
@@ -346,6 +351,10 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     !previous ||
     getUserVoteSummary(next, user?._id).castWeight >=
       getUserVoteSummary(previous, user?._id).castWeight;
+
+  const canAdoptProposal = (next: Proposal, previous: Proposal | null) =>
+    isNotBehindOnOwnVote(next, previous) &&
+    (!getFrozenResult(previous) || Boolean(getFrozenResult(next)));
 
   const refreshProposal = useCallback(async () => {
     const slug = currentProposal?.slug;
@@ -366,7 +375,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       const next = refreshed.results.toJS() as Proposal;
 
       setCurrentProposal((previous) =>
-        isNotBehindOnOwnVote(next, previous) ? next : previous,
+        canAdoptProposal(next, previous) ? next : previous,
       );
     } catch (err) {
       // A dropped poll is not worth putting in front of the voter; the next
@@ -407,6 +416,16 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   const handleVote = async () => {
     if (!currentProposal || !selectedVote || !isWalletReady || !account) return;
     if (selectedVoteAmount <= 0) return;
+
+    // Say so rather than quietly casting less than the citizen asked for.
+    if (selectedVoteAmount > remainingVoteWeight) {
+      setError(
+        t('governance_vote_exceeds_remaining', {
+          remaining: remainingVoteWeight.toFixed(2),
+        }),
+      );
+      return;
+    }
 
     setIsSubmitting(true);
     setError(null);
@@ -576,13 +595,14 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     setError(null);
 
     try {
+      // Only the editable fields: `status`, `results`, `votes`, `quorum` and
+      // `lockState` are the DAO's record and are written by the lifecycle
+      // endpoints alone - an admin PATCH carrying them is refused outright.
       const updatedData = {
-        ...currentProposal,
         title: editData.title,
         slug: editData.slug,
         description: editData.description,
         rewards: editData.rewards.length > 0 ? editData.rewards : undefined,
-        updated: new Date().toISOString(),
       };
 
       const response = await platform.proposal.patch(
@@ -601,7 +621,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
         });
       } else {
         // Fallback: update local state with the data we sent
-        setCurrentProposal(updatedData);
+        setCurrentProposal({ ...currentProposal, ...updatedData });
       }
 
       // Refresh the proposal data from the platform context
@@ -614,76 +634,6 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     } catch (err) {
       setError(
         err instanceof Error ? err.message : t('governance_failed_update_proposal'),
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleMoveToReady = async () => {
-    if (!currentProposal || !isWalletReady || !account) return;
-
-    setIsSubmitting(true);
-    setError(null);
-
-    try {
-      // Create proposal description hash
-      const descriptionHash = createProposalSignatureHash(editData.description);
-
-      // Sign the proposal description hash for author verification
-      const authorSignature = await signMessage(descriptionHash, account);
-
-      if (!authorSignature) {
-        throw new Error(t('governance_failed_sign_proposal'));
-      }
-
-      const updatedData = {
-        ...currentProposal,
-        ...editData,
-        status: 'active' as const,
-        authorAddress: account,
-        authorSignature: authorSignature,
-        startDate: new Date().toISOString(),
-        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days default
-        votes: {
-          yes: [],
-          no: [],
-          abstain: [],
-        },
-        updated: new Date().toISOString(),
-      };
-
-      const response = await platform.proposal.patch(
-        currentProposal._id,
-        updatedData,
-      );
-
-      // Update local state with the response data
-      if (response?.data?.results) {
-        setCurrentProposal(response.data.results);
-        // Update the proposal state with the new data
-        // Refresh the proposal data from the platform context
-        platform.proposal.getOne(currentProposal.slug, { force: true });
-        setEditData({
-          title: response.data.results.title || '',
-          slug: response.data.results.slug || '',
-          description: response.data.results.description || '',
-          rewards: response.data.results.rewards || [],
-        });
-      } else {
-        // Fallback: update local state with the data we sent
-        setCurrentProposal(updatedData);
-      }
-
-      // Also refresh the proposals list to ensure updated data is visible
-      platform.proposal.get({});
-
-      setIsEditing(false);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : t('governance_failed_move_to_ready'),
       );
     } finally {
       setIsSubmitting(false);
@@ -721,35 +671,26 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
         throw new Error(t('governance_failed_sign_proposal'));
       }
 
-      // Update proposal data to active status
-      const updatedData = {
-        ...currentProposal,
-        ...editData,
-        status: 'active' as const,
-        authorAddress: account,
-        authorSignature: authorSignature,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        votes: {
-          yes: [],
-          no: [],
-          abstain: [],
+      // One write, not a PATCH and then a publish. Publishing is what freezes
+      // startDate/endDate and stamps the quorum against the voting power that
+      // exists right now, so the window has to arrive with it - saving it first
+      // leaves the proposal one failed request away from being open for voting
+      // on dates nobody can fix any more. `status` is not writable, so this is
+      // also the only way a draft becomes active.
+      const { data } = await api.post(
+        `/proposals/${currentProposal._id}/publish`,
+        {
+          ...editData,
+          authorAddress: account,
+          authorSignature,
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
         },
-        updated: new Date().toISOString(),
-      };
-
-      // Use platform context to update the proposal
-      const response = await platform.proposal.patch(
-        currentProposal._id,
-        updatedData,
       );
+      const published = proposalFromResponse(data);
 
-      // Update local proposal state with the response data
-      if (response?.data?.results) {
-        setCurrentProposal(response.data.results);
-      } else {
-        // Fallback: update local state with the data we sent
-        setCurrentProposal(updatedData);
+      if (published) {
+        setCurrentProposal(published);
       }
 
       // Refresh the proposal data from the platform context
@@ -792,6 +733,9 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     const end = new Date(endDate);
     const diff = end.getTime() - now.getTime();
 
+    // A proposal with no voting window has no time remaining to report.
+    if (Number.isNaN(diff)) return '';
+
     if (diff <= 0) return t('governance_voting_ended');
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -801,30 +745,109 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     return t('governance_hours_remaining', { hours });
   };
 
-  const getEffectiveStatus = (proposal: Proposal | null) =>
-    getProposalEffectiveStatus(proposal, {
-      draft: t('governance_status_draft'),
-      active: t('governance_status_active'),
-      passed: t('governance_status_passed'),
-      failed: t('governance_status_failed'),
-      unknown: t('governance_status_unknown'),
-    });
+  const getEffectiveStatus = (
+    proposal: Proposal | null,
+    resolvedQuorum?: number,
+  ) =>
+    getProposalEffectiveStatus(
+      proposal,
+      {
+        draft: t('governance_status_draft'),
+        active: t('governance_status_active'),
+        passed: t('governance_status_passed'),
+        failed: t('governance_status_failed'),
+        unknown: t('governance_status_unknown'),
+      },
+      resolvedQuorum,
+    );
 
-  const handleVotingPeriodEnded = async () => {
-    if (!currentProposal?.slug) {
+  // Closing the count is an endpoint, not something the page works out for
+  // itself: it freezes the tally, the quorum test and one proof per vote into
+  // `lockState`. Any signed-in citizen may call it, and every call after the
+  // first reads the same frozen record back, so whoever is watching when the
+  // clock runs out is the one who publishes the result.
+  const finalizeProposal = useCallback(async () => {
+    const id = currentProposal?._id;
+
+    if (!id) {
       return;
     }
 
-    const refreshedProposal = await platform.proposal.getOne(
-      currentProposal.slug,
-      { force: true },
+    setIsFinalizing(true);
+
+    // Never call before the API's own clock can agree that voting is over.
+    const msToWait = getFinalizeDelay(
+      currentProposal?.endDate,
+      FINALIZE_DELAY_MS,
     );
-    if (refreshedProposal?.results) {
-      setCurrentProposal(refreshedProposal.results.toJS());
+
+    if (msToWait > 0) {
+      await new Promise((resolve) => {
+        window.setTimeout(resolve, msToWait);
+      });
     }
 
-    setForceResultCelebration(true);
+    try {
+      const { data } = await api.post(`/proposals/${id}/finalize`);
+      const finalized = proposalFromResponse(data);
+
+      if (finalized) {
+        setCurrentProposal(finalized);
+      }
+    } catch (err) {
+      // A 409 means voting is still open or someone else got there first;
+      // either way the proposal itself has the answer.
+      console.error('Proposal finalize failed:', err);
+    } finally {
+      setIsFinalizing(false);
+    }
+
+    await refreshProposal();
+  }, [currentProposal?._id, currentProposal?.endDate, refreshProposal]);
+
+  // A proposal whose voting window has closed without a frozen result is one
+  // nobody has finalized yet - the first citizen to open the page does it.
+  const needsFinalizing = proposalNeedsFinalizing(currentProposal);
+
+  const finalizeAttemptedFor = useRef<string | null>(null);
+
+  const requestFinalize = useCallback(async () => {
+    const id = currentProposal?._id;
+
+    if (!user || !id || finalizeAttemptedFor.current === id) {
+      return;
+    }
+
+    finalizeAttemptedFor.current = id;
+    await finalizeProposal();
+  }, [currentProposal?._id, finalizeProposal, user]);
+
+  useEffect(() => {
+    const id = currentProposal?._id;
+
+    if (!needsFinalizing || !user || !id) {
+      return;
+    }
+
+    requestFinalize();
+  }, [currentProposal?._id, needsFinalizing, requestFinalize, user]);
+
+  const handleVotingPeriodEnded = async () => {
+    if (!currentProposal?._id) {
+      return;
+    }
+
+    await requestFinalize();
   };
+
+  // The countdown only renders in the last 24 hours and only inside the "voting
+  // is active" card, so it cannot be the only thing that notices voting close.
+  useVotingPeriodEnd(
+    isVotingOpen && currentProposal?.endDate
+      ? String(currentProposal.endDate)
+      : undefined,
+    handleVotingPeriodEnded,
+  );
 
   const getStatusColor = (status: 'draft' | 'active' | 'passed' | 'failed'): string => {
     switch (status) {
@@ -845,6 +868,11 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   const roundToTwoDecimals = (value: number): number => {
     return parseFloat(value.toFixed(2));
   };
+
+  // Vote weights run into the thousands, so they are grouped for the page's
+  // locale rather than printed as a bare run of digits.
+  const formatVotes = (value: number): string =>
+    format.number(value, { maximumFractionDigits: 2 });
 
   const getVotePercentage = (votes: number, total: number) => {
     if (total === 0) return 0;
@@ -883,15 +911,40 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   const freshProposalData = getCurrentProposalData();
   const voteCounts = getVoteCounts(freshProposalData || currentProposal);
   const totalVotes = voteCounts.yes + voteCounts.no + voteCounts.abstain;
-  const quorum = freshProposalData?.quorum || 0;
-  const isQuorumReached = quorum > 0 && totalVotes >= quorum;
+  // Distinct people, not vote weight: votes can be cast incrementally, so the
+  // same citizen appears once per vote they placed. A finalized proposal
+  // carries the count that was frozen with the tally.
+  const citizensVoted =
+    getFrozenResult(freshProposalData)?.voterCount ??
+    new Set(
+      (['yes', 'no', 'abstain'] as const).flatMap((option) =>
+        (freshProposalData?.votes?.[option] || []).map((vote) => vote.userId),
+      ),
+    ).size;
+  // Proposals created before the API started storing a quorum come back with
+  // `quorum: 0`, which would hide the quorum row entirely. Those fall back to
+  // the configured percentage of the platform's voting power - the same total
+  // the breakdown below the proposal is built from.
+  const derivedQuorum =
+    platformVotingPower.total && quorumPercent > 0
+      ? roundToTwoDecimals((platformVotingPower.total * quorumPercent) / 100)
+      : 0;
+  const frozenResult = getFrozenResult(freshProposalData);
+  const quorum =
+    frozenResult?.quorum || freshProposalData?.quorum || derivedQuorum;
+  // Only support counts towards quorum - votes against a proposal cannot carry
+  // it over the line. Once finalized the frozen verdict is the answer; the page
+  // does not get to recompute it.
+  const isQuorumReached = frozenResult
+    ? frozenResult.quorumMet
+    : hasMetQuorum(voteCounts.yes, quorum);
   const quorumProgress =
-    quorum > 0 ? Math.min(100, Math.round((totalVotes / quorum) * 100)) : 0;
-  const isActive =
-    freshProposalData?.status === 'active' &&
-    freshProposalData?.endDate &&
-    new Date() < new Date(freshProposalData.endDate);
-  const effectiveStatus = getEffectiveStatus(freshProposalData || currentProposal);
+    quorum > 0 ? Math.min(100, Math.round((voteCounts.yes / quorum) * 100)) : 0;
+  const isActive = isProposalVotingOpen(freshProposalData || currentProposal);
+  const effectiveStatus = getEffectiveStatus(
+    freshProposalData || currentProposal,
+    quorum,
+  );
 
   return (
     <>
@@ -920,7 +973,11 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
               : undefined
         }
         effectiveStatus={effectiveStatus.status}
-        forceShow={forceResultCelebration}
+        isFinalized={
+          Boolean(frozenResult) ||
+          currentProposal.status === 'passed' ||
+          currentProposal.status === 'rejected'
+        }
       />
 
       <div className="min-h-screen bg-gray-50/70">
@@ -948,10 +1005,10 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                 <span>•</span>
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                    getEffectiveStatus(freshProposalData || currentProposal).status,
+                    effectiveStatus.status,
                   )}`}
                 >
-                  {getEffectiveStatus(freshProposalData || currentProposal).displayText}
+                  {effectiveStatus.displayText}
                 </span>
               </div>
             </div>
@@ -979,15 +1036,6 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     >
                       {t('governance_save')}
                     </button>
-                    {isWalletReady && (
-                      <button
-                        onClick={handleMoveToReady}
-                        disabled={isSubmitting}
-                        className="rounded-md bg-gray-900 px-4 py-2 text-sm text-white hover:bg-black disabled:opacity-50"
-                      >
-                        {t('governance_move_to_ready')}
-                      </button>
-                    )}
                   </div>
                 )}
               </div>
@@ -1005,12 +1053,14 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                 </div>
                 <div className="text-right">
                   <p className="font-medium">
-                    {totalVotes} {t('governance_votes')}
+                    {formatVotes(totalVotes)} {t('governance_votes')}
                   </p>
-                  <p className="text-sm text-gray-200">
-                    {t('governance_ends')}{' '}
-                    {formatDate(String(freshProposalData?.endDate || ''))}
-                  </p>
+                  {freshProposalData?.endDate && (
+                    <p className="text-sm text-gray-200">
+                      {t('governance_ends')}{' '}
+                      {formatDate(String(freshProposalData.endDate))}
+                    </p>
+                  )}
                 </div>
               </div>
               {freshProposalData?.endDate && (
@@ -1461,12 +1511,19 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
               <div className="rounded-xl border border-gray-200 bg-white p-6">
                 <h3 className="text-lg font-semibold mb-4">{t('governance_voting_results')}</h3>
 
+                {isFinalizing && (
+                  <div className="mb-4 flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-700">
+                    <Spinner />
+                    <span>{t('governance_finalizing')}</span>
+                  </div>
+                )}
+
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <span className="font-medium text-gray-800">{t('governance_yes')}</span>
                       <span className="text-sm text-gray-600">
-                        {roundToTwoDecimals(voteCounts.yes)} (
+                        {formatVotes(voteCounts.yes)} (
                         {getVotePercentage(voteCounts.yes, totalVotes)}
                         %)
                       </span>
@@ -1488,7 +1545,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     <div className="flex justify-between items-center mb-2">
                       <span className="font-medium text-gray-700">{t('governance_no')}</span>
                       <span className="text-sm text-gray-600">
-                        {roundToTwoDecimals(voteCounts.no)} (
+                        {formatVotes(voteCounts.no)} (
                         {getVotePercentage(voteCounts.no, totalVotes)}
                         %)
                       </span>
@@ -1510,7 +1567,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-gray-600 font-medium">{t('governance_abstain')}</span>
                       <span className="text-sm text-gray-600">
-                        {roundToTwoDecimals(voteCounts.abstain)} (
+                        {formatVotes(voteCounts.abstain)} (
                         {getVotePercentage(voteCounts.abstain, totalVotes)}
                         %)
                       </span>
@@ -1529,43 +1586,61 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                   </div>
                 </div>
 
+                {quorum > 0 && (
+                  <div className="mt-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium text-gray-800">
+                        {t('governance_quorum_label')}
+                      </span>
+                      <span className="text-sm text-gray-600">
+                        {formatVotes(voteCounts.yes)} / {formatVotes(quorum)} (
+                        {quorumProgress}%)
+                      </span>
+                    </div>
+                    <div
+                      className="w-full bg-gray-200 rounded-full h-2"
+                      role="progressbar"
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={quorumProgress}
+                      aria-label={t('governance_quorum_label')}
+                    >
+                      <div
+                        className={`h-2 rounded-full transition-all duration-300 ${
+                          isQuorumReached ? 'bg-success' : 'bg-primary'
+                        }`}
+                        style={{ width: `${quorumProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">{t('governance_total_votes')}</span>
-                    <span className="font-medium">{roundToTwoDecimals(totalVotes)}</span>
+                    <span className="text-gray-600">
+                      {t('governance_total_votes')}
+                    </span>
+                    <span className="font-medium">{formatVotes(totalVotes)}</span>
                   </div>
-                  {quorum > 0 && (
-                    <div className="pt-1">
-                      <div className="flex justify-between text-sm mb-2">
-                        <span className="text-black italic">{t('governance_quorum_label')}</span>
-                        <span className="text-black italic font-medium">
-                          {roundToTwoDecimals(totalVotes)} / {roundToTwoDecimals(quorum)}
-                        </span>
-                      </div>
-                      {isQuorumReached ? (
-                        <div className="flex items-center gap-1.5 text-sm font-medium text-gray-900">
-                          <span aria-hidden="true">✓</span>
-                          <span>{t('governance_quorum_reached')}</span>
-                        </div>
-                      ) : (
-                        <div
-                          className="w-full bg-gray-200 rounded-full h-2"
-                          role="progressbar"
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                          aria-valuenow={quorumProgress}
-                          aria-label={t('governance_quorum_label')}
-                        >
-                          <div
-                            className="h-2 rounded-full bg-gray-900 transition-all duration-300"
-                            style={{ width: `${quorumProgress}%` }}
-                          ></div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">
+                      {t('governance_turnout')}
+                    </span>
+                    <span className="font-medium">
+                      {formatVotes(citizensVoted)}
+                    </span>
+                  </div>
                 </div>
               </div>
+            )}
+
+            {/* Once the tally is frozen, how to check it against the chain. */}
+            {frozenResult && (
+              <ProposalAttestation
+                proposal={freshProposalData || currentProposal}
+                lockState={frozenResult}
+                userId={user?._id}
+              />
             )}
 
             {/* Proposal Info */}
@@ -1586,10 +1661,10 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                   <span className="text-gray-600">{t('governance_status')}:</span>
                   <span
                     className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                      getEffectiveStatus(freshProposalData || currentProposal).status,
+                      effectiveStatus.status,
                     )}`}
                   >
-                    {getEffectiveStatus(freshProposalData || currentProposal).displayText}
+                    {effectiveStatus.displayText}
                   </span>
                 </div>
                 <div>
@@ -1622,31 +1697,40 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     </span>
                   </div>
                 )}
+                {currentProposal.authorAddress && (
+                  <div className="flex flex-wrap items-center gap-x-2">
+                    <span className="text-gray-600">
+                      {t('governance_author_address_label')}
+                    </span>
+                    <CopyableHash
+                      value={currentProposal.authorAddress}
+                      copyLabel={t('governance_copy_author_address')}
+                      lead={8}
+                      tail={6}
+                      className="text-xs text-gray-800"
+                    />
+                  </div>
+                )}
+                {currentProposal.authorSignature && (
+                  <div className="flex flex-wrap items-center gap-x-2">
+                    <span className="text-gray-600">
+                      {t('governance_author_signature_label')}
+                    </span>
+                    <CopyableHash
+                      value={currentProposal.authorSignature}
+                      copyLabel={t('governance_copy_author_signature')}
+                      lead={10}
+                      tail={8}
+                      className="text-xs text-gray-800"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Verification Info */}
-            {currentProposal.authorSignature && (
-              <div className="rounded-xl border border-gray-200 bg-white p-6">
-                <h3 className="text-lg font-semibold mb-4">{t('governance_verification')}</h3>
 
-                <div className="space-y-3 text-sm  ">
-                  <div>
-                    <span className="text-gray-600">{t('governance_author_signature_label')}</span>
-                    <div className="mt-1 p-2 bg-gray-100 rounded text-xs font-mono break-all">
-                      {currentProposal.authorSignature}
-                    </div>
-                  </div>
-
-                  <div>
-                    <span className="text-gray-600 mr-2">{t('governance_author_address_label')}</span>
-                    <div className="mt-1 p-2 bg-gray-100 rounded text-xs font-mono break-all">
-                      {currentProposal.authorAddress}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Platform-wide voting power, the base the quorum is a share of */}
+            <PlatformVotingPower />
           </div>
         </div>
       </div>
