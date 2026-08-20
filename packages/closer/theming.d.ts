@@ -1,7 +1,7 @@
 export interface ThemeFont {
   id: string;
   label: string;
-  googleFamily: string;
+  googleFamily?: string;
   stack: string[];
   serif?: boolean;
 }
@@ -80,9 +80,11 @@ export declare function buildThemeColors(
 ): Record<string, string>;
 export declare function buildThemeFonts(
   theming?: ThemingConfigValue | null,
+  appFonts?: Record<string, string[]>,
 ): Record<string, string[]>;
 export declare function buildTheme(
   theming?: ThemingConfigValue | null,
+  appFonts?: Record<string, string[]>,
 ): TailwindThemeLike;
 export declare function getThemingFromSnapshot(
   snapshot?: Record<string, unknown> | null,

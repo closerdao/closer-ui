@@ -122,9 +122,10 @@ function readableOn(color, background, target = 4.5) {
 /* ------------------------------------------------------------------ fonts */
 
 /**
- * Fonts an admin can choose. Every one is on Google Fonts, which is what
- * `ThemeStyles` loads them from — a font that is not here has no stylesheet to
- * request, so the stack would silently fall through to the system default.
+ * Fonts an admin can choose. Google families are loaded by `ThemeStyles`.
+ * Local faces (`cabinet`, `hoover`, `sincopa`) use next/font CSS variables
+ * that Layout still injects — they cannot be fetched from Google Fonts, so
+ * without an entry here those brands cannot be selected in /dashboard/theming.
  * `stack` is what lands in the compiled Tailwind `fontFamily`.
  */
 const THEME_FONTS = [
@@ -135,6 +136,12 @@ const THEME_FONTS = [
     label: 'Raleway',
     googleFamily: 'Raleway',
     stack: ['Raleway'],
+  },
+  {
+    id: 'alegreya-sans',
+    label: 'Alegreya Sans',
+    googleFamily: 'Alegreya Sans',
+    stack: ['Alegreya Sans'],
   },
   { id: 'lato', label: 'Lato', googleFamily: 'Lato', stack: ['Lato'] },
   {
@@ -196,6 +203,21 @@ const THEME_FONTS = [
     stack: ['Crimson Pro'],
     serif: true,
   },
+  {
+    id: 'cabinet',
+    label: 'Cabinet Grotesk',
+    stack: ['var(--font-cabinet)'],
+  },
+  {
+    id: 'hoover',
+    label: 'Hoover',
+    stack: ['var(--font-hoover)'],
+  },
+  {
+    id: 'sincopa',
+    label: 'Sincopa',
+    stack: ['var(--font-sincopa)'],
+  },
 ];
 
 const SANS_FALLBACKS = [
@@ -238,7 +260,7 @@ function getGoogleFontsUrl(theming) {
     ...THEME_FONT_SLOTS.map((slot) => value[fontSlotConfigKey(slot)]),
   ]
     .map((id) => findFont(id))
-    .filter(Boolean)
+    .filter((font) => font && font.googleFamily)
     .map((font) => font.googleFamily);
   const unique = [...new Set(families)];
   if (unique.length === 0) return null;
@@ -495,27 +517,29 @@ function buildThemeColors(theming) {
 
 /**
  * The `fontFamily` map for a `theming` config. With no font configured this is
- * the neutral system stack rather than a downloaded face, so a default install
- * makes no external font request at all.
+ * the app's own Layout-injected stack (`appFonts`) when one is supplied, else
+ * the neutral system stack — a default install makes no external font request.
  *
  * `accent` and `display` follow the heading font: both are used for the
  * emphatic, uppercase treatments (nav CTAs, hero headings) that a heading face
  * is picked for.
  */
-function buildThemeFonts(theming) {
+function buildThemeFonts(theming, appFonts) {
   const value = theming || {};
-  const body = resolveFontStack(value.fontFamilyBody) || SANS_FALLBACKS;
-  const heading = resolveFontStack(value.fontFamilyHeading) || body;
+  const defaults = appFonts || {};
+  const bodyConfigured = resolveFontStack(value.fontFamilyBody);
+  const headingConfigured = resolveFontStack(value.fontFamilyHeading);
+  const body =
+    bodyConfigured || defaults.sans || defaults.body || SANS_FALLBACKS;
+  const heading = headingConfigured || bodyConfigured;
 
   const fonts = {
     sans: body,
-    body,
-    serif: resolveFontStack(value.fontFamilyHeading)
-      ? heading
-      : SERIF_FALLBACKS,
-    display: heading,
-    accent: heading,
-    'accent-alt': heading,
+    body: bodyConfigured || defaults.body || body,
+    serif: headingConfigured || defaults.serif || SERIF_FALLBACKS,
+    display: heading || defaults.display || body,
+    accent: heading || defaults.accent || body,
+    'accent-alt': heading || defaults['accent-alt'] || body,
   };
 
   // Per-slot overrides, so a community can keep a distinct display face
@@ -562,7 +586,7 @@ const BASE_THEME_EXTEND = {
  * palette is assembled — `theme.js` just feeds it the build-time snapshot, and
  * every app consumes the result unchanged.
  */
-function buildTheme(theming) {
+function buildTheme(theming, appFonts) {
   const colors = buildThemeColors(theming);
 
   return {
@@ -576,7 +600,7 @@ function buildTheme(theming) {
       // the accent itself, and every `text-*` variant - hover, group-hover -
       // follows this scale automatically.
       textColor: { ...colors, accent: colors['accent-text'] },
-      fontFamily: buildThemeFonts(theming),
+      fontFamily: buildThemeFonts(theming, appFonts),
     },
     plugins: [],
   };

@@ -210,6 +210,36 @@ describe('buildThemeFonts', () => {
     );
     expect(resolveFontStack(undefined)).toBeNull();
   });
+
+  it('keeps Layout-injected faces when no font is configured', () => {
+    const fonts = buildThemeFonts(
+      {},
+      {
+        sans: ['var(--font-cabinet)'],
+        accent: ['var(--font-hoover)'],
+        'accent-alt': ['var(--font-sincopa)'],
+      },
+    );
+    expect(fonts.sans[0]).toBe('var(--font-cabinet)');
+    expect(fonts.accent[0]).toBe('var(--font-hoover)');
+    expect(fonts['accent-alt'][0]).toBe('var(--font-sincopa)');
+  });
+
+  it('lets a configured body font override the app default', () => {
+    const fonts = buildThemeFonts(
+      { fontFamilyBody: 'inter' },
+      { sans: ['var(--font-cabinet)'], accent: ['var(--font-hoover)'] },
+    );
+    expect(fonts.sans[0]).toBe('Inter');
+    expect(fonts.accent[0]).toBe('Inter');
+  });
+
+  it('resolves the local faces Layout still loads', () => {
+    expect(resolveFontStack('cabinet')?.[0]).toBe('var(--font-cabinet)');
+    expect(resolveFontStack('hoover')?.[0]).toBe('var(--font-hoover)');
+    expect(resolveFontStack('sincopa')?.[0]).toBe('var(--font-sincopa)');
+    expect(resolveFontStack('alegreya-sans')?.[0]).toBe('Alegreya Sans');
+  });
 });
 
 describe('getGoogleFontsUrl', () => {
@@ -229,6 +259,13 @@ describe('getGoogleFontsUrl', () => {
       fontFamilyHeading: 'lora',
     }) as string;
     expect(url.match(/family=/g)).toHaveLength(2);
+  });
+
+  it('does not request a Google stylesheet for a local face', () => {
+    expect(getGoogleFontsUrl({ fontFamilyBody: 'cabinet' })).toBeNull();
+    expect(getGoogleFontsUrl({ fontFamilyBody: 'alegreya-sans' })).toContain(
+      'Alegreya',
+    );
   });
 });
 
@@ -274,9 +311,9 @@ describe('buildTheme', () => {
 
 describe('getThemingFromSnapshot', () => {
   it('reads the theming bucket and shrugs off anything else', () => {
-    expect(getThemingFromSnapshot({ theming: { primaryColor: '#fff' } })).toEqual(
-      { primaryColor: '#fff' },
-    );
+    expect(
+      getThemingFromSnapshot({ theming: { primaryColor: '#fff' } }),
+    ).toEqual({ primaryColor: '#fff' });
     expect(getThemingFromSnapshot({})).toEqual({});
     expect(getThemingFromSnapshot(null)).toEqual({});
     expect(getThemingFromSnapshot({ theming: [] } as any)).toEqual({});
@@ -287,8 +324,7 @@ describe('getThemingFromSnapshot', () => {
 describe('per-token overrides', () => {
   it('exposes at least as many options as the hardcoded themes declared', () => {
     // The old theme.js files declared 33 colours and 5 fontFamily slots.
-    const options =
-      4 + THEME_COLOR_TOKENS.length + 2 + THEME_FONT_SLOTS.length;
+    const options = 4 + THEME_COLOR_TOKENS.length + 2 + THEME_FONT_SLOTS.length;
     expect(options).toBeGreaterThanOrEqual(38);
     // The catalogue may grow - a token that goes missing is the failure, since
     // it takes both the config field and the editor row with it.

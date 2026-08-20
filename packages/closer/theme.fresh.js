@@ -47,8 +47,8 @@ function readSnapshot() {
 }
 
 /** Build the Tailwind theme from whatever the snapshot says right now. */
-function buildThemeFromSnapshot() {
-  return buildTheme(getThemingFromSnapshot(readSnapshot()));
+function buildThemeFromSnapshot(appFonts) {
+  return buildTheme(getThemingFromSnapshot(readSnapshot()), appFonts);
 }
 
 module.exports = buildThemeFromSnapshot;
