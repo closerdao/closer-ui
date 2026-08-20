@@ -1,9 +1,12 @@
 import { Proposal, ProposalLockState } from '../types';
 import {
+  getEffectiveStatus,
   getFinalizeDelay,
   getFrozenResult,
   getVoteCounts,
   getVoteAllowance,
+  hasMetQuorum,
+  hasPassingTally,
   isVotingOpen,
   needsFinalizing,
 } from '../utils/proposalStatus';
@@ -332,5 +335,104 @@ describe('getVoteCounts', () => {
     });
 
     expect(getVoteCounts(proposal)).toEqual({ yes: 2, no: 0, abstain: 0 });
+  });
+});
+
+const STATUS_LABELS = {
+  draft: 'Draft',
+  active: 'Active',
+  passed: 'Passed',
+  failed: 'Failed',
+  unknown: 'Unknown',
+};
+
+describe('hasMetQuorum', () => {
+  it('requires yes weight to meet a configured quorum', () => {
+    expect(hasMetQuorum(9, 10)).toBe(false);
+    expect(hasMetQuorum(10, 10)).toBe(true);
+    expect(hasMetQuorum(12, 10)).toBe(true);
+  });
+
+  it('treats a quorum of 0 as not configured, not already met', () => {
+    expect(hasMetQuorum(100, 0)).toBe(false);
+  });
+});
+
+describe('hasPassingTally', () => {
+  it('passes only with both a yes majority and quorum', () => {
+    expect(hasPassingTally({ yes: 12, no: 3, abstain: 0 }, 10)).toBe(true);
+    expect(hasPassingTally({ yes: 12, no: 3, abstain: 0 }, 20)).toBe(false);
+    expect(hasPassingTally({ yes: 5, no: 8, abstain: 0 }, 4)).toBe(false);
+  });
+});
+
+describe('getEffectiveStatus', () => {
+  it('keeps an open proposal active', () => {
+    const proposal = buildProposal({
+      endDate: new Date(Date.now() + HOUR_MS).toISOString(),
+      results: { yes: 20, no: 0, abstain: 0 },
+      quorum: 10,
+    });
+
+    expect(getEffectiveStatus(proposal, STATUS_LABELS).status).toBe('active');
+  });
+
+  it('does not treat a yes-majority as passed when quorum was not met', () => {
+    const proposal = buildProposal({
+      results: { yes: 8, no: 1, abstain: 0 },
+      quorum: 10,
+    });
+
+    expect(getEffectiveStatus(proposal, STATUS_LABELS).status).toBe('failed');
+  });
+
+  it('treats an ended live tally as passed when yes leads and quorum is met', () => {
+    const proposal = buildProposal({
+      results: { yes: 12, no: 1, abstain: 0 },
+      quorum: 10,
+    });
+
+    expect(getEffectiveStatus(proposal, STATUS_LABELS).status).toBe('passed');
+  });
+
+  it('uses a supplied quorum when the proposal itself has none', () => {
+    const proposal = buildProposal({
+      results: { yes: 8, no: 1, abstain: 0 },
+      quorum: 0,
+    });
+
+    expect(getEffectiveStatus(proposal, STATUS_LABELS).status).toBe('failed');
+    expect(getEffectiveStatus(proposal, STATUS_LABELS, 5).status).toBe(
+      'passed',
+    );
+  });
+
+  it('trusts a frozen rejection even when yes outnumbers no', () => {
+    const proposal = buildProposal({
+      results: { yes: 8, no: 1, abstain: 0 },
+      quorum: 10,
+      lockState: {
+        ...lockState,
+        outcome: 'rejected',
+        quorum: 10,
+        quorumMet: false,
+        results: { yes: 8, no: 1, abstain: 0 },
+      } as ProposalLockState,
+    });
+
+    expect(getEffectiveStatus(proposal, STATUS_LABELS).status).toBe('failed');
+  });
+
+  it('is not fooled by the empty lockState skeleton', () => {
+    const proposal = buildProposal({
+      results: { yes: 8, no: 1, abstain: 0 },
+      quorum: 10,
+      lockState: {
+        finalizedAt: null,
+        outcome: null,
+      } as unknown as ProposalLockState,
+    });
+
+    expect(getEffectiveStatus(proposal, STATUS_LABELS).status).toBe('failed');
   });
 });

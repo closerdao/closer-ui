@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 
 import { useAuth } from 'closer/contexts/auth';
 import { usePlatform } from 'closer/contexts/platform';
+import { getEffectiveStatus as getProposalEffectiveStatus } from 'closer/utils/proposalStatus';
 import { useTranslations } from 'next-intl';
 
 interface ProposalListProps {
@@ -127,81 +128,14 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
     return `${hours}h`;
   };
 
-  // Get effective status for display (draft > active > passed/failed)
-  const getEffectiveStatus = (proposal: any): {
-    status: 'draft' | 'active' | 'passed' | 'failed';
-    displayText: string;
-  } => {
-    const currentStatus = proposal.get('status');
-    const endDate = proposal.get('endDate');
-
-    // If draft, always show draft
-    if (currentStatus === 'draft') {
-      return { status: 'draft', displayText: t('governance_status_draft') };
-    }
-
-    // If already passed or rejected, show that
-    if (currentStatus === 'passed') {
-      return { status: 'passed', displayText: t('governance_status_passed') };
-    }
-    if (currentStatus === 'rejected') {
-      return { status: 'failed', displayText: t('governance_status_failed') };
-    }
-
-    // If active, check if voting has ended
-    if (currentStatus === 'active') {
-      const now = new Date();
-      const end = endDate ? new Date(endDate) : null;
-
-      // If no end date or voting hasn't ended, show active
-      if (!end || end.getTime() > now.getTime()) {
-        return { status: 'active', displayText: t('governance_status_active') };
-      }
-
-      // Voting has ended, determine if passed or failed
-      const results = proposal.get('results');
-      const votes = proposal.get('votes');
-
-      let voteCounts = { yes: 0, no: 0, abstain: 0 };
-
-      if (results !== undefined && results !== null) {
-        const resultsObj = results.toJS ? results.toJS() : results;
-        voteCounts = Object.assign(
-          { yes: 0, no: 0, abstain: 0 },
-          resultsObj,
-        );
-      } else if (votes) {
-        const votesObj = votes.toJS ? votes.toJS() : votes;
-        if (Array.isArray(votesObj.yes)) {
-          voteCounts.yes = votesObj.yes.reduce(
-            (sum: number, vote: any) => sum + (vote.weight || 0),
-            0,
-          );
-        } else {
-          voteCounts.yes = votesObj.yes || 0;
-        }
-
-        if (Array.isArray(votesObj.no)) {
-          voteCounts.no = votesObj.no.reduce(
-            (sum: number, vote: any) => sum + (vote.weight || 0),
-            0,
-          );
-        } else {
-          voteCounts.no = votesObj.no || 0;
-        }
-      }
-
-      // Passed if yes > no, failed otherwise
-      if (voteCounts.yes > voteCounts.no) {
-        return { status: 'passed', displayText: t('governance_status_passed') };
-      } else {
-        return { status: 'failed', displayText: t('governance_status_failed') };
-      }
-    }
-
-    // Default fallback
-    return { status: 'draft', displayText: currentStatus?.toUpperCase() || t('governance_status_unknown') };
-  };
+  const getEffectiveStatus = (proposal: any) =>
+    getProposalEffectiveStatus(proposal?.toJS ? proposal.toJS() : proposal, {
+      draft: t('governance_status_draft'),
+      active: t('governance_status_active'),
+      passed: t('governance_status_passed'),
+      failed: t('governance_status_failed'),
+      unknown: t('governance_status_unknown'),
+    });
 
   const proposalItems = Array.from(proposalsMap.values()).filter(
     (proposal: any) => {

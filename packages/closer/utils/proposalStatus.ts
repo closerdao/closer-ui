@@ -25,6 +25,24 @@ export const getFrozenResult = (
   return lockState?.finalizedAt ? lockState : null;
 };
 
+/**
+ * Only support counts towards quorum - votes against a proposal cannot carry
+ * it over the line. A quorum of 0 is "not configured", not "already met".
+ */
+export const hasMetQuorum = (yesVotes: number, quorum: number): boolean =>
+  quorum > 0 && yesVotes >= quorum;
+
+/**
+ * The same test finalize applies: a majority of yes over no, and enough yes
+ * weight to clear the quorum. Used while the tally is still live so the page
+ * does not toast a yes-majority that the frozen record will reject.
+ */
+export const hasPassingTally = (
+  voteCounts: VoteCounts,
+  quorum: number,
+): boolean =>
+  voteCounts.yes > voteCounts.no && hasMetQuorum(voteCounts.yes, quorum);
+
 export const getVoteCounts = (proposal: Proposal | null): VoteCounts => {
   if (!proposal) {
     return { yes: 0, no: 0, abstain: 0 };
@@ -115,9 +133,8 @@ export const getEffectiveStatus = (
 
     const voteCounts = getVoteCounts(proposal);
     const quorum = resolvedQuorum ?? proposal.quorum ?? 0;
-    const quorumMet = quorum > 0 && voteCounts.yes >= quorum;
 
-    if (voteCounts.yes > voteCounts.no && quorumMet) {
+    if (hasPassingTally(voteCounts, quorum)) {
       return { status: 'passed', displayText: labels.passed };
     }
 

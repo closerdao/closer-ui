@@ -31,6 +31,7 @@ import {
   getFrozenResult,
   getVoteAllowance,
   getVoteCounts,
+  hasMetQuorum,
   isVotingOpen as isProposalVotingOpen,
   needsFinalizing as proposalNeedsFinalizing,
 } from 'closer/utils/proposalStatus';
@@ -835,7 +836,8 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
 
     // Held from the moment voting closes, through the wait inside
     // `finalizeProposal` and the call itself, so the page says what it is doing
-    // instead of sitting on a stale tally.
+    // instead of sitting on a stale tally. The overlay waits for the frozen
+    // record: a yes-majority that missed quorum is a rejection.
     setIsFinalizing(true);
 
     await requestFinalize();
@@ -938,7 +940,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   // does not get to recompute it.
   const isQuorumReached = frozenResult
     ? frozenResult.quorumMet
-    : quorum > 0 && voteCounts.yes >= quorum;
+    : hasMetQuorum(voteCounts.yes, quorum);
   const quorumProgress =
     quorum > 0 ? Math.min(100, Math.round((voteCounts.yes / quorum) * 100)) : 0;
   const isActive = isProposalVotingOpen(freshProposalData || currentProposal);
