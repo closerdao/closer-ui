@@ -424,6 +424,45 @@ export type SaleMeta = {
   [key: string]: unknown;
 };
 
+// A charge row as returned by GET /charge for a given saleId - the sale's
+// payment trail, which is what an admin checks the sale against.
+export type SaleChargeRecord = {
+  _id: string;
+  id?: string;
+  type?: string;
+  method?: string;
+  status?: string;
+  date?: string;
+  created?: string;
+  entity?: string;
+  amount?: {
+    total?: { val?: number; cur?: string };
+  };
+  taxAmount?: { val?: number; cur?: string };
+  platformRevenue?: { val?: number; cur?: string };
+  netRevenue?: { val?: number; cur?: string };
+  meta?: SaleChargeMeta;
+};
+
+// Billing snapshot stored on the sale when it was created - private, so only
+// admins and stewards get it back from the API.
+export type SaleKyc = {
+  userName?: string;
+  email?: string;
+  legalName?: string;
+  TIN?: string;
+  address1?: string;
+  address2?: string;
+  postalCode?: string;
+  city?: string;
+  state?: string;
+  countryCode?: string;
+  country?: string;
+  kycStatus?: string;
+  walletAddress?: string;
+  recordedAt?: string;
+};
+
 export type SaleBuyer = {
   email: string;
   screenname: string;
@@ -449,12 +488,13 @@ export type Sale = {
   quantity?: number;
   entity?: string;
   memoCode?: string;
-  paymentMethod?: 'bank' | 'card' | 'crypto';
+  paymentMethod?: 'bank' | 'card' | 'crypto' | 'cash' | 'third-party';
   charge?: SaleCharge;
   chargeId?: string;
   charges?: string[];
   tx_hash?: string;
   meta?: SaleMeta;
+  kyc?: SaleKyc;
   visibility: 'public' | 'private';
   visibleBy: string[];
   createdBy?: string;

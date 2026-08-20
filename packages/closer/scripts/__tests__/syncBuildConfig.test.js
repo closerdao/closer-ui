@@ -8,7 +8,11 @@ const {
   FETCH_TIMEOUT_MS,
   MAX_ATTEMPTS,
   RETRY_DELAYS_MS,
+  touchTailwindConfigs,
 } = require('../syncBuildConfig.cjs');
+
+const fs = require('fs');
+const path = require('path');
 
 const URL = 'https://api.example.closer.earth/config?limit=500';
 
@@ -334,5 +338,50 @@ describe('getMissingExpectedSlugs', () => {
   it('reports everything missing for an empty or absent payload', () => {
     expect(getMissingExpectedSlugs({})).toEqual(EXPECTED_CONFIG_SLUGS);
     expect(getMissingExpectedSlugs(undefined)).toEqual(EXPECTED_CONFIG_SLUGS);
+  });
+});
+
+/**
+ * A colour saved in /dashboard/theming only reaches a running dev server if
+ * something tells Tailwind to rebuild. Tailwind watches its own config file and
+ * nothing else in the chain, so the snapshot write has to nudge it — without
+ * this, `yarn build:config` updates the JSON and the browser keeps the palette
+ * the server booted with.
+ */
+describe('touchTailwindConfigs', () => {
+  const appsDir = path.join(__dirname, '..', '..', '..', '..', 'apps');
+
+  it('bumps the mtime of every app tailwind config it can find', () => {
+    const before = fs
+      .readdirSync(appsDir, { withFileTypes: true })
+      .filter((e) => e.isDirectory())
+      .map((e) => path.join(appsDir, e.name, 'tailwind.config.js'))
+      .filter((p) => fs.existsSync(p))
+      .map((p) => ({ p, mtime: fs.statSync(p).mtimeMs }));
+
+    expect(before.length).toBeGreaterThan(0);
+
+    const touched = touchTailwindConfigs({ log: () => {} });
+    expect(touched.length).toBe(before.length);
+
+    for (const { p, mtime } of before) {
+      expect(fs.statSync(p).mtimeMs).toBeGreaterThanOrEqual(mtime);
+    }
+  });
+
+  it('leaves the file contents alone — it is a signal, not an edit', () => {
+    const target = path.join(appsDir, 'tdf', 'tailwind.config.js');
+    const before = fs.readFileSync(target, 'utf8');
+    touchTailwindConfigs({ log: () => {} });
+    expect(fs.readFileSync(target, 'utf8')).toBe(before);
+  });
+
+  it('does not throw when the apps directory is unreadable', () => {
+    const spy = jest.spyOn(fs, 'readdirSync').mockImplementation(() => {
+      throw new Error('nope');
+    });
+    expect(() => touchTailwindConfigs({ log: () => {} })).not.toThrow();
+    expect(touchTailwindConfigs({ log: () => {} })).toEqual([]);
+    spy.mockRestore();
   });
 });

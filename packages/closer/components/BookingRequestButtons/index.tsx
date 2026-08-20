@@ -31,7 +31,6 @@ interface Props {
   listPreview?: boolean;
   hideCheckoutButton?: boolean;
   hideCancelButton?: boolean;
-  stayShaped?: boolean;
   paymentDelta?: Booking['paymentDelta'] | null;
   useTokens?: boolean;
 }
@@ -50,7 +49,6 @@ const BookingRequestButtons = ({
   listPreview = false,
   hideCheckoutButton = false,
   hideCancelButton = false,
-  stayShaped = false,
   paymentDelta,
   useTokens = false,
 }: Props) => {
@@ -84,7 +82,6 @@ const BookingRequestButtons = ({
 
   const checkoutHref = getBookingPaymentCheckoutPath({
     bookingId: _id,
-    stayShaped,
     status,
     paymentDelta,
     useTokens,

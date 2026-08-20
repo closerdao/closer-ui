@@ -48,7 +48,6 @@ import {
   isStayAwaitingHostApproval,
   isStayCollectingRemainingFiat,
   isStayPaid,
-  isStayShapedBooking,
   isStayTerminal,
 } from '../../../utils/stays.api';
 
@@ -94,9 +93,6 @@ function StayPaymentInner({
     if (isStayAwaitingHostApproval(stay))
       return `/stay/${stay._id}/pending` as const;
     if (stay.status === 'draft') return `/stay/create/${stay._id}` as const;
-    if (!isStayShapedBooking(stay as unknown as Record<string, unknown>)) {
-      return `/bookings/${stay._id}/checkout` as const;
-    }
     if (!isStayCollectingRemainingFiat(stay)) {
       return `/stay/create/${stay._id}` as const;
     }

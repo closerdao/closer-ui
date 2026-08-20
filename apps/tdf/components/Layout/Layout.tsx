@@ -33,7 +33,7 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
     return (
       <>
         <Navigation />
-        <div className="flex flex-col relative mx-auto mt-20 w-full h-[calc(100vh-5rem)] bg-white overflow-hidden">
+        <div className="flex flex-col relative mx-auto mt-20 w-full h-[calc(100vh-5rem)] bg-background overflow-hidden">
           {children}
         </div>
       </>
@@ -42,7 +42,7 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
 
   if (isDashboard) {
     return (
-      <div className="flex-1 flex flex-col relative mx-auto mt-20 w-full min-h-screen bg-white">
+      <div className="flex-1 flex flex-col relative mx-auto mt-20 w-full min-h-screen bg-background">
         <Navigation />
         <Prompts />
         {children}
@@ -51,7 +51,7 @@ export const Layout: FC<PropsWithChildren> = ({ children }) => {
   }
 
   return (
-    <div className="flex-1 flex flex-col relative mx-auto mt-20 w-full bg-white">
+    <div className="flex-1 flex flex-col relative mx-auto mt-20 w-full bg-background">
       {!hideFloatingPrompt && <PromptFixedBottom />}
       <Navigation />
       <Prompts />

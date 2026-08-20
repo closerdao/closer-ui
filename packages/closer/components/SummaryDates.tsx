@@ -64,6 +64,9 @@ interface SummaryDatesProps {
   onToggleDatesEditor?: () => void;
   compact?: boolean;
   isFriendsBooking?: boolean;
+  /** Team stays ignore event calendar blocks, so the editor must ask for the
+   *  same calendar the server will accept. */
+  isTeamBooking?: boolean;
   eventId?: string;
 }
 
@@ -97,6 +100,7 @@ const SummaryDates = ({
   onToggleDatesEditor,
   compact = false,
   isFriendsBooking = false,
+  isTeamBooking = false,
   eventId,
 }: SummaryDatesProps) => {
   const t = useTranslations();
@@ -152,6 +156,7 @@ const SummaryDates = ({
           end: (isHourlyBooking ? endDate : formatDate(endDate)) as string,
           adults: totalGuests,
           isFriendsBooking,
+          ...(isTeamBooking && { isTeamBooking: true }),
           ...(eventId && { eventId }),
         },
       );
@@ -181,6 +186,7 @@ const SummaryDates = ({
     endDate,
     listingId,
     isFriendsBooking,
+    isTeamBooking,
     eventId,
     isEditMode,
     isHourlyBooking,

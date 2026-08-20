@@ -29,7 +29,18 @@ export type OnboardingGate =
       correctIndex: number;
       ok: string;
     }
-  | { type: 'check'; ask: string; items: string[]; ok: string };
+  | { type: 'check'; ask: string; items: string[]; ok: string }
+  /**
+   * Ticked by the wallet itself, not by the member. Saying "yes I connected"
+   * is worth nothing when the app can simply look.
+   */
+  | {
+      type: 'wallet';
+      ask: string;
+      checks: { connected: string; network: string; linked: string };
+      ok: string;
+      waiting: string;
+    };
 
 export interface OnboardingQuest {
   /** Stable id — progress is stored against it, so never renumber these. */
@@ -53,6 +64,12 @@ export interface TokenOnboardingContext {
   gasToken: string;
   /** Bare domain members should bookmark, e.g. `traditionaldreamfactory.com`. */
   semanticUrl: string;
+  /**
+   * Whether this app can actually connect a wallet. When it cannot, the final
+   * quest falls back to a checklist — otherwise the flow would dead-end on a
+   * gate nobody could ever pass.
+   */
+  canConnectWallet: boolean;
 }
 
 /** The whole flow is worth exactly this many carrots. */
@@ -64,6 +81,7 @@ export const getTokenOnboardingQuests = ({
   networkName,
   gasToken,
   semanticUrl,
+  canConnectWallet,
 }: TokenOnboardingContext): OnboardingQuest[] => {
   const token = `$${tokenSymbol}`;
 
@@ -336,7 +354,7 @@ export const getTokenOnboardingQuests = ({
         {
           type: 'steps',
           items: [
-            `On your profile, click **Connect wallet**. MetaMask opens and asks which account to share. Pick yours.`,
+            'Click **Connect wallet** in the panel at the bottom of this quest, or the same button on your profile. MetaMask opens and asks which account to share. Pick yours.',
             `Approve the switch to the **${networkName}** network when prompted. If you would rather add it by hand, the details are in the wallet guide below.`,
             'Sign the message that appears. This is a signature, not a payment. It costs nothing and proves the address is yours.',
             `Keep a small amount of **${gasToken}** in the wallet for network fees. A euro lasts a long time. You can top up during checkout.`,
@@ -351,16 +369,29 @@ export const getTokenOnboardingQuests = ({
           text: 'Once connected, your profile shows your balance, your nights, and your Presence and Sweat as they accumulate.',
         },
       ],
-      gate: {
-        type: 'check',
-        ask: 'Tick what is true for you:',
-        items: [
-          'My wallet is connected to my profile',
-          `I am on the ${networkName} network`,
-          'I know a signature is free and a transaction costs a fee',
-        ],
-        ok: 'Onboarded. You can read a wallet, a contract and a scam. That is genuinely most of it.',
-      },
+      gate: canConnectWallet
+        ? {
+            type: 'wallet',
+            ask: 'No boxes to tick here — we read this straight from your wallet:',
+            checks: {
+              connected: 'Wallet connected to this browser',
+              network: `Wallet on the ${networkName} network`,
+              linked: `Address saved to your ${platformName} profile`,
+            },
+            ok: 'Onboarded. You can read a wallet, a contract and a scam. That is genuinely most of it.',
+            waiting:
+              'Connect below and this unlocks on its own — nothing else to do.',
+          }
+        : {
+            type: 'check',
+            ask: 'Tick what is true for you:',
+            items: [
+              'My wallet is connected to my profile',
+              `I am on the ${networkName} network`,
+              'I know a signature is free and a transaction costs a fee',
+            ],
+            ok: 'Onboarded. You can read a wallet, a contract and a scam. That is genuinely most of it.',
+          },
     },
   ];
 };

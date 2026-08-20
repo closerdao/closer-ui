@@ -235,11 +235,14 @@ const BankTransferPage = ({ generalConfig }: Props) => {
           : parseInt(String(rawQty ?? ''), 10);
       const point = Number.isFinite(tokenQty) ? tokenQty : 0;
 
+      // Passing saleId lets the API complete the sale created by /sale/init
+      // instead of logging a second Sale for the same purchase.
       const res = await api.post('/token/bank-transfer-application', {
         ibanNumber: ibanNumber.replace(/\s/g, ''),
         totalFiat: sale.total_price,
         userId: user?._id,
         tokens: String(sale.quantity ?? ''),
+        saleId: resolvedSaleId.trim(),
       });
 
       if (res.data.status === 'success') {

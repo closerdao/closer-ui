@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 
 import { ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -28,8 +28,11 @@ import {
   tokenSaleStatusLabelKey,
 } from '../../utils/orderStatusBadge';
 import EmailDisplay from '../display/emailDisplay';
+import IdDisplay from '../display/idDisplay';
 import WalletDisplay from '../display/walletDisplay';
+import ManualSaleModal from './ManualSaleModal';
 import MintSweatModal from './MintSweatModal';
+import SaleDetails from './SaleDetails';
 import Modal from '../Modal';
 import Pagination from '../Pagination';
 import { Input, Spinner } from '../ui/';
@@ -121,8 +124,11 @@ const SalesListDashboard = ({
   const [isMatchBuyerSuccess, setIsMatchBuyerSuccess] = useState(false);
   const isAdmin = currentUser?.roles.includes('admin');
   const isSpaceHost = currentUser?.roles?.includes('space-host');
+  const isTeam = currentUser?.roles?.includes('team');
 
   const [isMintSweatModalOpen, setIsMintSweatModalOpen] = useState(false);
+  const [isManualSaleModalOpen, setIsManualSaleModalOpen] = useState(false);
+  const [expandedSaleId, setExpandedSaleId] = useState<string | null>(null);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
   const actionsMenuRef = useRef<HTMLDivElement>(null);
 
@@ -388,12 +394,18 @@ const SalesListDashboard = ({
   );
 
   const canMintSweatAction = Boolean(isSpaceHost);
+  // POST /sale/manual is restricted to admin and team on the API side.
+  const canAddManualSale = Boolean(isAdmin || isTeam);
   const canBatchSafeTxAction =
     saleCategory === 'tokens' &&
     statusFilter === 'paid' &&
     isAdmin &&
     paidSalesWithWallet.length > 0;
-  const hasHeaderActions = canMintSweatAction || canBatchSafeTxAction;
+  const hasHeaderActions =
+    canMintSweatAction || canBatchSafeTxAction || canAddManualSale;
+
+  const toggleSaleDetails = (saleId: string) =>
+    setExpandedSaleId((current) => (current === saleId ? null : saleId));
 
   const renderParticipant = (sale: Sale) => {
     const participant = getSaleParticipant(sale);
@@ -610,6 +622,19 @@ const SalesListDashboard = ({
                     role="menu"
                     className="absolute right-0 z-50 mt-1 min-w-[12rem] rounded-md border border-border bg-background py-1 shadow-md"
                   >
+                    {canAddManualSale && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="flex w-full px-3 py-2 text-left text-sm hover:bg-muted"
+                        onClick={() => {
+                          setActionsMenuOpen(false);
+                          setIsManualSaleModalOpen(true);
+                        }}
+                      >
+                        {t('manual_sale_add_button')}
+                      </button>
+                    )}
                     {canMintSweatAction && (
                       <button
                         type="button"
@@ -716,6 +741,29 @@ const SalesListDashboard = ({
                   </span>
                   <div className="flex gap-2">{renderSaleActions(sale)}</div>
                 </div>
+                <div className="flex items-center justify-between gap-2 border-t border-border pt-2">
+                  <IdDisplay
+                    value={sale._id}
+                    className="text-xs text-muted-foreground"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => toggleSaleDetails(sale._id)}
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                    aria-expanded={expandedSaleId === sale._id}
+                  >
+                    {t('sale_details_toggle')}
+                    <ChevronDown
+                      className={`h-3.5 w-3.5 shrink-0 transition-transform ${
+                        expandedSaleId === sale._id ? 'rotate-180' : ''
+                      }`}
+                      aria-hidden
+                    />
+                  </button>
+                </div>
+                {expandedSaleId === sale._id && (
+                  <SaleDetails sale={sale} locale={intlLocale} />
+                )}
               </div>
             );
           })}
@@ -744,6 +792,12 @@ const SalesListDashboard = ({
                 <th className="text-left p-4 font-medium align-top">
                   {t('token_sales_dashboard_created')}
                 </th>
+                <th className="text-left p-4 font-medium align-top">
+                  {t('sale_details_sale_id')}
+                </th>
+                <th className="w-10 p-4">
+                  <span className="sr-only">{t('sale_details_toggle')}</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -751,37 +805,68 @@ const SalesListDashboard = ({
                 const typeLabel = t(
                   saleCategoryLabelKey(resolveSaleCategory(sale)),
                 );
+                const isExpanded = expandedSaleId === sale._id;
                 return (
-                  <tr
-                    key={sale._id}
-                    className={`${rowHighlightClass(sale)} border-b border-border hover:bg-muted/50`}
-                  >
-                    <td className="p-4 font-medium align-top">
-                      <Badge variant="outline" className="mb-1 text-[10px]">
-                        {typeLabel}
-                      </Badge>
-                      <div>{getSaleProductTitle(sale, typeLabel)}</div>
-                      {sale.entity ? (
-                        <div className="text-xs text-muted-foreground font-normal mt-0.5">
-                          {sale.entity}
+                  <Fragment key={sale._id}>
+                    <tr
+                      className={`${rowHighlightClass(sale)} border-b border-border hover:bg-muted/50`}
+                    >
+                      <td className="p-4 font-medium align-top">
+                        <Badge variant="outline" className="mb-1 text-[10px]">
+                          {typeLabel}
+                        </Badge>
+                        <div>{getSaleProductTitle(sale, typeLabel)}</div>
+                        {sale.entity ? (
+                          <div className="text-xs text-muted-foreground font-normal mt-0.5">
+                            {sale.entity}
+                          </div>
+                        ) : null}
+                      </td>
+                      <td className="p-4 align-top">{renderParticipant(sale)}</td>
+                      <td className="p-4 align-top">{renderQuantity(sale)}</td>
+                      <td className="p-4 font-mono align-top">
+                        {formatAmount(sale)}
+                      </td>
+                      <td className="p-4 align-top">
+                        <div className="flex flex-col gap-2">
+                          {getStatusBadge(sale.status)}
+                          {renderSaleActions(sale)}
                         </div>
-                      ) : null}
-                    </td>
-                    <td className="p-4 align-top">{renderParticipant(sale)}</td>
-                    <td className="p-4 align-top">{renderQuantity(sale)}</td>
-                    <td className="p-4 font-mono align-top">
-                      {formatAmount(sale)}
-                    </td>
-                    <td className="p-4 align-top">
-                      <div className="flex flex-col gap-2">
-                        {getStatusBadge(sale.status)}
-                        {renderSaleActions(sale)}
-                      </div>
-                    </td>
-                    <td className="p-4 text-sm text-muted-foreground align-top whitespace-nowrap">
-                      {formatDate(sale.created)}
-                    </td>
-                  </tr>
+                      </td>
+                      <td className="p-4 text-sm text-muted-foreground align-top whitespace-nowrap">
+                        {formatDate(sale.created)}
+                      </td>
+                      <td className="p-4 align-top">
+                        <IdDisplay
+                          value={sale._id}
+                          className="text-xs text-muted-foreground"
+                        />
+                      </td>
+                      <td className="p-4 align-top">
+                        <button
+                          type="button"
+                          onClick={() => toggleSaleDetails(sale._id)}
+                          className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                          aria-expanded={isExpanded}
+                          aria-label={t('sale_details_toggle')}
+                        >
+                          <ChevronDown
+                            className={`h-4 w-4 shrink-0 transition-transform ${
+                              isExpanded ? 'rotate-180' : ''
+                            }`}
+                            aria-hidden
+                          />
+                        </button>
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <tr className="border-b border-border bg-muted/20">
+                        <td colSpan={8} className="p-4">
+                          <SaleDetails sale={sale} locale={intlLocale} />
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 );
               })}
             </tbody>
@@ -877,6 +962,14 @@ const SalesListDashboard = ({
       )}
       {isMintSweatModalOpen && (
         <MintSweatModal onClose={() => setIsMintSweatModalOpen(false)} />
+      )}
+
+      {isManualSaleModalOpen && (
+        <ManualSaleModal
+          onClose={() => setIsManualSaleModalOpen(false)}
+          onCreated={onRefetch}
+          defaultCurrency={platformDefaultCurrency}
+        />
       )}
 
       {isMatchBuyerModalOpen && (

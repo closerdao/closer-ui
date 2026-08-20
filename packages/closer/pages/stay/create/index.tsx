@@ -11,6 +11,7 @@ import Slider from '../../../components/Slider';
 import StaySearchBar, {
   StaySearchBarParams,
 } from '../../../components/StaySearchBar';
+import Switch from '../../../components/Switch';
 import TicketOptions from '../../../components/TicketOptions';
 import StayEventBlockedNotice from '../../../components/booking/stayEventBlockedNotice';
 import StayListingAccommodationPrice from '../../../components/booking/stayListingAccommodationPrice';
@@ -39,6 +40,7 @@ import api, { cdn } from '../../../utils/api';
 import {
   getDefaultSelectedFoodOptionId,
   getFoodOptionsForBookingContext,
+  userCanCreateTeamBooking,
 } from '../../../utils/booking.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { normalizeDiscountCode } from '../../../utils/discountCode';
@@ -119,7 +121,7 @@ const StayCreatePage = ({
 }: Props) => {
   const t = useTranslations();
   const router = useRouter();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading: isAuthLoading } = useAuth();
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
@@ -141,6 +143,7 @@ const StayCreatePage = ({
     ticketOption: ticketOptionQuery,
     discountCode: discountCodeQuery,
     projectId: projectIdQuery,
+    isTeamBooking: isTeamBookingQuery,
   } = router.query || {};
 
   const readParam = readQueryParam;
@@ -155,6 +158,7 @@ const StayCreatePage = ({
       : undefined;
   const isVolunteerApplication = Boolean(bookingType);
   const isEventBooking = Boolean(eventId);
+  const wantsTeamBookingFromUrl = readParam(isTeamBookingQuery) === 'true';
   const projectIdParam = readParam(projectIdQuery);
   const projectIds = useMemo(
     () => splitProjectIds(projectIdParam),
@@ -327,6 +331,14 @@ const StayCreatePage = ({
   const [dismissedEventBlockKey, setDismissedEventBlockKey] = useState<
     string | null
   >(null);
+  /**
+   * Staff booking for the team. Kept in the URL so it survives the /signup
+   * detour and a shared link, and re-read on every search because a team stay
+   * ignores the event calendar blocks a guest stay respects.
+   */
+  const [wantsTeamBooking, setWantsTeamBooking] = useState(
+    wantsTeamBookingFromUrl,
+  );
   /** True when the shown listing came from /listing rather than the search — its availability is unproven. */
   const [usedListingFallback, setUsedListingFallback] = useState(false);
 
@@ -354,6 +366,13 @@ const StayCreatePage = ({
     });
   }, [isDayTicketOnlyEvent, availableTickets, ticketOptionQuery]);
 
+  /** The server ignores the flag from anyone else, so the notice and the results
+   *  would otherwise disagree for a non-staff caller carrying it in the URL. */
+  const canCreateTeamBooking = userCanCreateTeamBooking(user?.roles);
+  const isTeamBooking = canCreateTeamBooking && wantsTeamBooking;
+  const canPickTeamBooking =
+    canCreateTeamBooking && !isVolunteerApplication && !isDayTicketOnlyEvent;
+
   const canSelectDates = eventProp?.canSelectDates !== false;
   const hasValidDayTicket =
     !isDayTicketOnlyEvent || Boolean(selectedTicketOption);
@@ -361,12 +380,13 @@ const StayCreatePage = ({
   /**
    * Events flagged `blocksBookingCalendar` make /stays/search return every
    * listing as unavailable, so guests otherwise face a grid of greyed out
-   * options with no reason given. Stays booked for an event and volunteer
-   * stays are exempt from the block, so the notice never applies to them.
+   * options with no reason given. Stays booked for an event, volunteer stays
+   * and team stays are exempt from the block, so the notice never applies to
+   * them.
    */
   const blockingEventsForRange = useMemo(
     () =>
-      isEventBooking || isVolunteerApplication
+      isEventBooking || isVolunteerApplication || isTeamBooking
         ? []
         : getCalendarBlockingEventsInRange(
             calendarBlockingEvents,
@@ -379,6 +399,7 @@ const StayCreatePage = ({
       activeParams?.end,
       isEventBooking,
       isVolunteerApplication,
+      isTeamBooking,
     ],
   );
 
@@ -417,12 +438,16 @@ const StayCreatePage = ({
       : ''
   }`;
 
-  const buildQueryParams = (params: StaySearchBarParams) => {
+  const buildQueryParams = (
+    params: StaySearchBarParams,
+    teamBooking: boolean = isTeamBooking,
+  ) => {
     const out: Record<string, string> = {
       start: params.start,
       end: params.end,
       adults: String(params.adults),
     };
+    if (teamBooking) out.isTeamBooking = 'true';
     if (params.children) out.children = String(params.children);
     if (params.infants) out.infants = String(params.infants);
     if (params.pets) out.pets = String(params.pets);
@@ -439,15 +464,28 @@ const StayCreatePage = ({
     return out;
   };
 
-  const syncUrl = (params: StaySearchBarParams) => {
+  const syncUrl = (
+    params: StaySearchBarParams,
+    teamBooking: boolean = isTeamBooking,
+  ) => {
     router.replace(
-      { pathname: '/stay/create', query: buildQueryParams(params) },
+      {
+        pathname: '/stay/create',
+        query: buildQueryParams(params, teamBooking),
+      },
       undefined,
       { shallow: true },
     );
   };
 
-  const runSearch = async (rawParams: StaySearchBarParams) => {
+  const runSearch = async (
+    rawParams: StaySearchBarParams,
+    // The toggle searches with the value it just set, which the state does not
+    // hold yet on this render.
+    teamBookingOverride?: boolean,
+  ) => {
+    const teamBooking =
+      canCreateTeamBooking && (teamBookingOverride ?? wantsTeamBooking);
     // Normalised so the comparison against the search bar's selection, which is
     // always YYYY-MM-DD, never reports a change that did not happen.
     const params: StaySearchBarParams = {
@@ -457,7 +495,7 @@ const StayCreatePage = ({
     };
     if (isDayTicketOnlyEvent) {
       setActiveParams(params);
-      syncUrl(params);
+      syncUrl(params, teamBooking);
       setResults([]);
       setDidSearchOnce(true);
       setSearchError(null);
@@ -467,7 +505,7 @@ const StayCreatePage = ({
     setIsSearching(true);
     setActiveParams(params);
     setDismissedEventBlockKey(null);
-    syncUrl(params);
+    syncUrl(params, teamBooking);
     try {
       const searchResponse = await searchStays({
         start: params.start,
@@ -476,6 +514,7 @@ const StayCreatePage = ({
         children: params.children,
         ...(bookingType ? { bookingType } : {}),
         ...(eventId ? { eventId } : {}),
+        ...(teamBooking ? { isTeamBooking: true } : {}),
       });
       const apiDuration = Number(searchResponse.duration) || 0;
       setSearchDuration(apiDuration);
@@ -511,6 +550,13 @@ const StayCreatePage = ({
     } finally {
       setIsSearching(false);
     }
+  };
+
+  const handleTeamBookingChange = (nextValue: boolean) => {
+    setWantsTeamBooking(nextValue);
+    const params = pendingParams || activeParams;
+    if (!params) return;
+    void runSearch(params, nextValue);
   };
 
   const redirectToSignup = (params: StaySearchBarParams) => {
@@ -626,6 +672,7 @@ const StayCreatePage = ({
         ...coGuestPayload(),
         ...volunteerPayload,
         ...(eventId ? { eventId } : {}),
+        ...(isTeamBooking ? { isTeamBooking: true } : {}),
         ...(isEventBooking && eventProp?.foodOption
           ? eventFoodPayload
           : bookingSettings?.foodOptionEnabled &&
@@ -651,6 +698,9 @@ const StayCreatePage = ({
   useEffect(() => {
     if (!router.isReady) return;
     if (didSearchOnce) return;
+    // The flag only counts for staff, so the first search has to wait for the
+    // roles rather than search once as a guest and once as a team.
+    if (wantsTeamBookingFromUrl && isAuthLoading) return;
     if (isDayTicketOnlyEvent) {
       const params: StaySearchBarParams = {
         start: String(savedStart || defaultDateRange.start),
@@ -693,6 +743,8 @@ const StayCreatePage = ({
     savedEnd,
     isEventBooking,
     isDayTicketOnlyEvent,
+    wantsTeamBookingFromUrl,
+    isAuthLoading,
   ]);
 
   if (error) return <PageError error={error} />;
@@ -839,6 +891,26 @@ const StayCreatePage = ({
                 : undefined
             }
           />
+          {canPickTeamBooking && (
+            <div className="mt-4 flex flex-row items-center justify-end gap-3 [&_.switch]:mb-0">
+              <span id="stay-search-team-booking-label" className="text-sm">
+                {t('stay_create_search_team_booking')}
+              </span>
+              <Switch
+                name="stay-search-team-booking"
+                label=""
+                labelledBy="stay-search-team-booking-label"
+                checked={wantsTeamBooking}
+                disabled={isSearching}
+                onChange={handleTeamBookingChange}
+              />
+            </div>
+          )}
+          {canPickTeamBooking && wantsTeamBooking && (
+            <p className="mt-1 text-sm text-gray-600 text-right">
+              {t('stay_create_search_team_booking_hint')}
+            </p>
+          )}
         </div>
 
         {isDayTicketOnlyEvent && (
