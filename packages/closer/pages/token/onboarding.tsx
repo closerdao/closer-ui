@@ -334,9 +334,6 @@ const OnboardingPage = () => {
       </Head>
 
       <div className="w-full max-w-screen-sm mx-auto py-8 px-4">
-        <BackButton handleClick={() => router.push('/token')}>
-          {t('buttons_back')}
-        </BackButton>
 
         <Heading level={1} className="mb-6">
           🥕 {t('token_onboarding_title')}

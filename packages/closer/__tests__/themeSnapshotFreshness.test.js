@@ -1,5 +1,6 @@
 const { execFileSync } = require('child_process');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
 /**
@@ -23,7 +24,23 @@ const path = require('path');
  * the Node semantics that actually govern a Tailwind build.
  */
 const REPO_ROOT = path.join(__dirname, '..', '..', '..');
-const SNAPSHOT = path.join(__dirname, '..', 'generated', 'appConfig.snapshot.json');
+const REAL_SNAPSHOT = path.join(
+  __dirname,
+  '..',
+  'generated',
+  'appConfig.snapshot.json',
+);
+/**
+ * These cases rewrite the snapshot, and one of them writes a deliberately
+ * broken file. Doing that to the real one breaks every other worker in the run:
+ * `utils/buildTimeConfig.helpers.ts` imports it, so a suite that happens to load
+ * while the file is garbage fails outright. Work on a copy instead, and point
+ * the theme builder at it through CLOSER_CONFIG_SNAPSHOT.
+ */
+const SNAPSHOT = path.join(
+  fs.mkdtempSync(path.join(os.tmpdir(), 'closer-snapshot-')),
+  'appConfig.snapshot.json',
+);
 const APPS = [
   'closer',
   'earthbound',
@@ -42,6 +59,7 @@ const runNode = (source) =>
     execFileSync(process.execPath, ['-e', source], {
       cwd: REPO_ROOT,
       encoding: 'utf8',
+      env: { ...process.env, CLOSER_CONFIG_SNAPSHOT: SNAPSHOT },
     }),
   );
 
@@ -70,10 +88,10 @@ describe('theme snapshot freshness', () => {
   let original;
 
   beforeAll(() => {
-    original = fs.readFileSync(SNAPSHOT, 'utf8');
+    original = fs.readFileSync(REAL_SNAPSHOT, 'utf8');
   });
 
-  afterEach(() => {
+  beforeEach(() => {
     fs.writeFileSync(SNAPSHOT, original);
   });
 

@@ -104,11 +104,25 @@ const cancelledSubscriber = {
 const routerPush = () =>
   (useRouter as unknown as jest.Mock).mock.results[0].value.push as jest.Mock;
 
+// Rejecting api.post for a whole test also fails the metric the page posts on
+// mount, which logs. That log is part of the case under test, not a surprise.
+let consoleError: jest.SpyInstance | null = null;
+const expectFailureLogs = () => {
+  consoleError = jest
+    .spyOn(console, 'error')
+    .mockImplementation(() => undefined);
+};
+
 describe('SubscriptionSettings', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     process.env.NEXT_PUBLIC_FEATURE_SUBSCRIPTIONS = 'true';
     api.post.mockResolvedValue({ data: {} });
+  });
+
+  afterEach(() => {
+    consoleError?.mockRestore();
+    consoleError = null;
   });
 
   it('points a member without a subscription at the plans', async () => {
@@ -335,6 +349,7 @@ describe('SubscriptionSettings', () => {
 
   it('falls back to the Stripe portal when the backend has no endpoint yet', async () => {
     setUser(activeSubscriber);
+    expectFailureLogs();
     api.post.mockRejectedValue({ response: { status: 404 } });
     api.get.mockResolvedValue({
       data: { sessionUrl: 'https://billing.stripe.com/session' },
@@ -359,6 +374,7 @@ describe('SubscriptionSettings', () => {
 
   it('surfaces a real backend failure without leaving the page', async () => {
     setUser(activeSubscriber);
+    expectFailureLogs();
     api.post.mockRejectedValue({
       response: { status: 500, data: { error: 'Stripe is unhappy' } },
     });

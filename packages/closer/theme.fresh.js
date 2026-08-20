@@ -24,11 +24,14 @@ const path = require('path');
 
 const { buildTheme, getThemingFromSnapshot } = require('./theming');
 
-const SNAPSHOT_PATH = path.join(
-  __dirname,
-  'generated',
-  'appConfig.snapshot.json',
-);
+/**
+ * The build always reads the snapshot the sync script writes. The override is
+ * for tests, which need to mutate a snapshot — including to a half-written one —
+ * without racing every other worker that imports the real file.
+ */
+const SNAPSHOT_PATH =
+  process.env.CLOSER_CONFIG_SNAPSHOT ||
+  path.join(__dirname, 'generated', 'appConfig.snapshot.json');
 
 /**
  * A missing or half-written snapshot must not take the build down — the neutral
