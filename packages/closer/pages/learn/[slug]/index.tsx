@@ -26,7 +26,7 @@ import config from '../../../configCached';
 import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { getVideoParams } from '../../../utils/learn.helpers';
-import { prepareSubscriptions } from '../../../utils/subscriptions.helpers';
+import { getPaidSubscriptionPlans } from '../../../utils/subscriptions.helpers';
 import PageNotFound from '../../not-found';
 
 const MIN_SUBSCRIPTION_PLAN = 'Wanderer';
@@ -55,7 +55,7 @@ const LessonPage = ({
 }: Props) => {
   const t = useTranslations();
   const subscriptions = subscriptionsConfig
-    ? prepareSubscriptions(subscriptionsConfig)
+    ? getPaidSubscriptionPlans(subscriptionsConfig, { availableOnly: false })
     : null;
   const { asPath } = useRouter();
   const { user, refetchUser } = useAuth();

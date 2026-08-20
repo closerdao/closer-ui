@@ -101,6 +101,9 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
 
             const userId = b.get('createdBy');
             const guest = users?.find((u) => u._id?.toString() === userId);
+            const guests = b.get('guests')?.toJS
+              ? b.get('guests').toJS()
+              : b.get('guests') || [];
 
             // let user =
             //   allUsers && allUsers.find((user) => user.get('_id') === userId);
@@ -148,6 +151,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
               userId,
               guestName: guest?.screenname,
               guestEmail: guest?.email,
+              guests,
               // paidBy,
               doesNeedPickup,
               doesNeedSeparateBeds,
@@ -190,6 +194,10 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
           const paidBy = booking.paidBy;
           if (createdBy) userIds.add(createdBy);
           if (paidBy) userIds.add(paidBy);
+          const guests = booking.guests || [];
+          guests.forEach((id) => {
+            if (id) userIds.add(id);
+          });
         });
       }
 
@@ -332,6 +340,17 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                   (user) => user._id.toString() === b.userId,
                 );
 
+                const guestInfos = (b.guests || [])
+                  .filter((guestId) => guestId && guestId !== b.userId)
+                  .map((guestId) =>
+                    users?.find((listed) => listed._id.toString() === guestId),
+                  )
+                  .filter(Boolean)
+                  .map((guest) => ({
+                    name: guest.screenname || t('current_booking_unknown_user'),
+                    id: guest._id,
+                  }));
+
 
 
                 return (
@@ -374,6 +393,20 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                           )}
                         </div>
                       </div>
+                      {guestInfos.length > 0 && (
+                        <div className="mt-1 flex flex-col gap-1">
+                          {guestInfos.map((guest) => (
+                            <LinkButton
+                              target="_blank"
+                              className="w-fit h-fit py-0 px-1 text-xs min-h-0"
+                              href={`/members/${guest.id || ''}`}
+                              key={guest.id}
+                            >
+                              {guest.name}
+                            </LinkButton>
+                          ))}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       <div>

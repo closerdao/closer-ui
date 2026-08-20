@@ -323,6 +323,7 @@ export const accommodationTokenTotalFromPriceLock = (
 
 export const canChangeStayPaymentMethod = (stay: Stay): boolean => {
   if (isStayTerminal(stay)) return false;
+  if (isStayAwaitingHostApproval(stay)) return false;
   if ((stay.creditsPaid?.val ?? 0) > 0) return false;
   if ((stay.tokensStaked?.val ?? 0) > 0) return false;
   return true;
@@ -415,6 +416,8 @@ export const checkStayListingAvailability = async (
      * and use the volunteering minimum stay.
      */
     bookingType?: StayBookingType | null;
+    isFriendsBooking?: boolean;
+    eventId?: string | null;
   },
 ): Promise<{
   results: boolean;
@@ -429,7 +432,8 @@ export const checkStayListingAvailability = async (
 };
 
 export type CreateStayPayload = {
-  listingId: string;
+  /** Required except for day tickets, which reserve no space. */
+  listingId?: string;
   start: string;
   end: string;
   adults: number;
@@ -440,6 +444,11 @@ export type CreateStayPayload = {
   isDayTicket?: boolean;
   isFriendsBooking?: boolean;
   friendEmails?: string;
+  /**
+   * Co-guest user ids. Only settable at creation: a draft stay rejects edits,
+   * and afterwards the list moves through addStayGuest/removeStayGuest.
+   */
+  guests?: string[];
   eventId?: string | null;
   /**
    * Shorthand the server folds into volunteerInfo when there are no application
@@ -465,6 +474,26 @@ export const createStay = async (payload: CreateStayPayload): Promise<Stay> => {
 export const getStay = async (id: string): Promise<Stay> => {
   const { data } = await api.get(`/stays/${id}`, { cache: false } as any);
   return (data as ApiOk<Stay>).results;
+};
+
+export type CreateAdminStayPayload = {
+  listingId: string;
+  start: string;
+  end: string;
+  adults: number;
+  adminBookingReason?: string;
+  isTeamBooking?: boolean;
+};
+
+/**
+ * Host-only manual booking. The server zeroes the payment targets, so the stay
+ * lands on 'paid' without going through checkout.
+ */
+export const createAdminStay = async (
+  payload: CreateAdminStayPayload,
+): Promise<Stay> => {
+  const { data } = await api.post('/stays/admin', payload);
+  return unwrapStayMutationResult(data);
 };
 
 const zeroStayMoney = (money: StayMoney): StayMoney => ({
@@ -540,6 +569,8 @@ export type StayOptionsPayload = Partial<{
   gift: string;
   about: string;
   volunteerInfo: VolunteerInfo;
+  ticketOption: string | null;
+  eventDiscount: string | null;
 }>;
 
 export const updateStayOptions = async (
@@ -768,6 +799,8 @@ export const upgradeStayListing = async (
   return unwrapStayMutationResult(data);
 };
 
+/** Changes the head counts. Shares its path with the co-guest endpoints below,
+ * which the server tells apart by the userId in the body. */
 export const updateStayGuests = async (
   id: string,
   payload: {
@@ -778,6 +811,28 @@ export const updateStayGuests = async (
   },
 ): Promise<Stay> => {
   const { data } = await api.post(`/stays/${id}/guests`, payload);
+  return unwrapStayMutationResult(data);
+};
+
+/**
+ * Co-guest membership lives on booking.guests, which PATCH /booking/:id
+ * refuses to write — these are the only way to change it.
+ */
+export const addStayGuest = async (
+  id: string,
+  userId: string,
+): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/guests`, { userId });
+  return unwrapStayMutationResult(data);
+};
+
+export const removeStayGuest = async (
+  id: string,
+  userId: string,
+): Promise<Stay> => {
+  const { data } = await api.delete(`/stays/${id}/guests`, {
+    data: { userId },
+  });
   return unwrapStayMutationResult(data);
 };
 
@@ -813,6 +868,80 @@ export const approveStayRequest = async (id: string): Promise<Stay> => {
 export const rejectStayRequest = async (id: string): Promise<Stay> => {
   const { data } = await api.post(`/stays/${id}/reject`, {});
   return unwrapStayMutationResult(data);
+};
+
+export type DiscountProbeResult = {
+  status: 'success' | 'fail';
+  reason: '' | 'invalid_code' | 'ticket_mismatch';
+  applicableTicketName: string;
+  discount: {
+    code: string;
+    name?: string;
+    percent?: number;
+    val?: number;
+  } | null;
+  currency?: CloserCurrencies;
+  discountType: '' | 'percent' | 'val';
+  discountVal: number;
+  discountPercent: number;
+};
+
+/**
+ * Probes a discount code. A rejected code is a 200 with status: 'fail' — only a
+ * non-2xx means the request itself failed. Runs the same validator as the
+ * eventDiscount write on PATCH /stays/:id/options.
+ */
+export const validateDiscountCode = async (payload: {
+  discountCode: string;
+  eventId?: string;
+  stayId?: string;
+  ticketOption?: unknown;
+}): Promise<DiscountProbeResult> => {
+  const { data } = await api.post('/stays/validate-discount-code', payload);
+  return (data as ApiOk<DiscountProbeResult>).results;
+};
+
+export type SendStayToFriendsResult = {
+  emailsSent: number;
+  emails: string[];
+  /** Malformed addresses skipped server-side; the rest were still sent. */
+  invalidEmails?: string[];
+  totalEmailsProcessed: number;
+};
+
+/**
+ * Unlike the legacy endpoint, this no longer confirms the stay as a side
+ * effect — submit the stay first or the server answers 400.
+ *
+ * Accepts the comma-separated string the stay stores as well as an array; omit
+ * it entirely to let the server use the stay's own friendEmails.
+ */
+export const sendStayToFriends = async (
+  id: string,
+  friendEmails?: string[] | string | null,
+): Promise<SendStayToFriendsResult> => {
+  const emails =
+    typeof friendEmails === 'string'
+      ? friendEmails
+          .split(',')
+          .map((email) => email.trim())
+          .filter(Boolean)
+      : friendEmails ?? undefined;
+  const { data } = await api.post(
+    `/stays/${id}/send-to-friend`,
+    emails?.length ? { friendEmails: emails } : {},
+  );
+  return (data as ApiOk<SendStayToFriendsResult>).results;
+};
+
+/**
+ * Adds the caller to the stay's managedBy, which is what grants them
+ * GET /stays/:id and the checkout pair. Idempotent; 403 when the caller's email
+ * is not on the invite list.
+ */
+export const claimStayAsFriend = async (id: string): Promise<Stay> => {
+  const { data } = await api.post(`/stays/${id}/claim-as-friend`, {});
+  return (data as ApiOk<Stay>).results;
 };
 
 export const checkInStay = async (id: string): Promise<Stay> => {

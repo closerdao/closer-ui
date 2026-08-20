@@ -6,4 +6,8 @@ export { default as VotingWeight } from './VotingWeight';
 export { default as WalletAndVoting } from './WalletAndVoting';
 export { default as PastVotes } from './PastVotes';
 export { default as ProposalComments } from './ProposalComments';
+export { default as VoteAmountSelector } from './VoteAmountSelector';
+export { default as ProposalCountdownTimer } from './ProposalCountdownTimer';
+export { default as ProposalResultCelebration } from './ProposalResultCelebration';
+export { default as GovernanceConfetti } from './GovernanceConfetti';
 

@@ -50,7 +50,7 @@ const EventTickets = ({ event, eventsConfig }: Props) => {
 
   const tickets = platform.ticket.find(paginatedFilter);
 
-  const isEventsEnabled = eventsConfig?.enabled !== false;
+  const isEventsEnabled = eventsConfig?.enabled === true;
 
   const loadData = async () => {
     const [countRes] = await Promise.all([

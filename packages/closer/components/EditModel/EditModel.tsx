@@ -314,10 +314,13 @@ const EditModel: FC<Props> = ({
   }
 
   const isEvent = endpoint === '/event';
+  // Endpoints that get the event form's date selector: collapsed to a summary
+  // until opened, with the selected span spelled out beside it.
+  const usesCollapsedDatePicker = isEvent || endpoint === '/project';
   const isPrimaryField = (field: any) => field.type === 'longtext';
 
-  const eventDurationLabel = (() => {
-    if (!isEvent || !data.start || !data.end) return undefined;
+  const durationLabel = (() => {
+    if (!usesCollapsedDatePicker || !data.start || !data.end) return undefined;
     const start = dayjs(data.start);
     const end = dayjs(data.end);
     if (start.isSame(end, 'day')) {
@@ -333,7 +336,7 @@ const EditModel: FC<Props> = ({
   })();
 
   return (
-    <div className="card rounded-lg p-4 shadow-sm border border-neutral-dark/20">
+    <div className="card rounded-2xl p-5 sm:p-6 shadow-sm border border-gray-200">
       <form
         action="#"
         onSubmit={(e) => {
@@ -366,8 +369,8 @@ const EditModel: FC<Props> = ({
                     savedEndDate={data.end && data.end}
                     defaultMonth={new Date()}
                     timeZone={timeZone}
-                    startCollapsed={isEvent}
-                    durationLabel={isEvent ? eventDurationLabel : undefined}
+                    startCollapsed={usesCollapsedDatePicker}
+                    durationLabel={durationLabel}
                   />
                 ) : null;
               const tabFields = filterFields(fieldsByTab[key], data);
@@ -406,7 +409,7 @@ const EditModel: FC<Props> = ({
                     {isGeneralEvent ? (
                       <>
                         {titleOnly.map(renderField)}
-                        {datePickerEl}
+                        <div className="mb-5">{datePickerEl}</div>
                         {restFields.map(renderField)}
                       </>
                     ) : (
@@ -436,7 +439,7 @@ const EditModel: FC<Props> = ({
           </>
         )}
 
-        {(endpoint === '/volunteer' || endpoint === '/projects') && (
+        {(endpoint === '/volunteer' || endpoint === '/project') && (
           <div>
             <DateTimePicker
               setStartDate={setStartDate}
@@ -446,11 +449,13 @@ const EditModel: FC<Props> = ({
               savedEndDate={data.end}
               defaultMonth={new Date()}
               timeZone={timeZone}
+              startCollapsed={usesCollapsedDatePicker}
+              durationLabel={durationLabel}
             />
           </div>
         )}
 
-        <div className="pt-6 mt-6 flex items-center justify-between border-t border-neutral-dark/20 gap-4 flex-wrap">
+        <div className="pt-3 mt-2 flex items-center justify-between border-t border-gray-100 gap-4 flex-wrap">
           <button
             type="submit"
             className="btn-primary min-h-[44px] px-6 inline-flex items-center justify-center"

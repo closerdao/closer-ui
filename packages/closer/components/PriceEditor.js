@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { CURRENCIES_WITH_LABELS } from '../constants';
+
+const DEFAULT_CURRENCY = CURRENCIES_WITH_LABELS[0].value;
 
 const getCurrencyDisplay = (cur) => {
   const found = CURRENCIES_WITH_LABELS.find((opt) => opt.value === cur);
@@ -25,76 +27,72 @@ const parseDecimalInput = (raw) => {
   return Number.isFinite(n) ? n : null;
 };
 
+const toNumber = (val) =>
+  val === undefined || val === null || Number.isNaN(Number(val))
+    ? 0
+    : Number(val);
+
+// The price itself lives in the parent — mirroring it into local state and
+// syncing that mirror back from `value` loops forever, because callers pass a
+// fresh object literal on every render. Only the in-progress text is local.
 const PriceEditor = ({
-  value = { val: 0.0, cur: CURRENCIES_WITH_LABELS[0].value },
+  value = /** @type {any} */ (undefined),
   onChange = /** @type {any} */ (undefined),
   placeholder,
   required,
   fixedCurrency = /** @type {any} */ (null),
 }) => {
-  const effectiveCur =
-    fixedCurrency || (value && value.cur) || CURRENCIES_WITH_LABELS[0].value;
-  const [price, setPrice] = useState(
-    value && (value.val !== undefined || value.val === 0)
-      ? { ...value, cur: fixedCurrency || value.cur }
-      : { val: 0.0, cur: effectiveCur },
-  );
-  const [valDraft, setValDraft] = useState(() => formatValForDisplay(value?.val));
+  const cur = fixedCurrency || value?.cur || DEFAULT_CURRENCY;
+  const val = value?.val;
+
+  const [valDraft, setValDraft] = useState(() => formatValForDisplay(val));
   const [valFocused, setValFocused] = useState(false);
 
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
   const emitChange = (next) => {
-    setPrice(next);
     if (onChange) onChange(next);
   };
 
+  // Push the fixed currency back up once, when the stored record disagrees with
+  // it. Depends on primitives only, so a new `value` identity can't re-trigger
+  // it. A field the user has never filled in has nothing to normalise.
   useEffect(() => {
-    if (!fixedCurrency && !(value && value.cur)) {
-      setPrice((prev) => ({
-        val: prev?.val ?? 0,
-        cur: CURRENCIES_WITH_LABELS[0].value,
-      }));
-    }
-  }, [CURRENCIES_WITH_LABELS, fixedCurrency, value]);
-
-  useEffect(() => {
-    if (!value || valFocused) return;
-    const nextCur = fixedCurrency || value.cur;
-    const hasVal = value.val !== undefined && value.val !== null;
-    const next = hasVal ? { ...value, cur: nextCur } : { val: 0.0, cur: nextCur };
-    setPrice(next);
-    setValDraft(formatValForDisplay(hasVal ? value.val : ''));
-  }, [value, fixedCurrency, valFocused]);
-
-  useEffect(() => {
-    if (!fixedCurrency || !onChange || !value) return;
-    if (value.cur === fixedCurrency) return;
-    const hasVal = value.val !== undefined && value.val !== null;
-    onChange({
-      ...value,
+    const current = valueRef.current;
+    if (!fixedCurrency || !current || current.cur === fixedCurrency) return;
+    if (!onChangeRef.current) return;
+    const isEmpty =
+      (current.cur === undefined || current.cur === null) &&
+      (current.val === undefined || current.val === null);
+    if (isEmpty) return;
+    onChangeRef.current({
+      ...current,
       cur: fixedCurrency,
-      val: hasVal ? Number(value.val) : 0,
+      val: toNumber(current.val),
     });
-  }, [fixedCurrency, value?.cur, value?.val, onChange]);
+  }, [fixedCurrency, value?.cur]);
 
   const commitDraft = () => {
     const parsed = parseDecimalInput(valDraft);
     const num = parsed === null ? 0 : parsed;
-    const next = { ...price, val: num, cur: fixedCurrency || price.cur };
-    emitChange(next);
+    emitChange({ ...(value || {}), val: num, cur });
     setValDraft(formatValForDisplay(num));
   };
 
   const handleValChange = (e) => {
-    let raw = e.target.value.replace(',', '.');
+    const raw = e.target.value.replace(',', '.');
     if (raw !== '' && !DECIMAL_INPUT_PATTERN.test(raw)) return;
     setValDraft(raw);
     const parsed = parseDecimalInput(raw);
     if (parsed !== null) {
-      emitChange({ ...price, val: parsed, cur: fixedCurrency || price.cur });
+      emitChange({ ...(value || {}), val: parsed, cur });
     }
   };
 
-  const displayValue = valFocused ? valDraft : formatValForDisplay(price.val);
+  const displayValue = valFocused ? valDraft : formatValForDisplay(val);
 
   return (
     <div className="currency-group flex justify-start items-center">
@@ -104,12 +102,14 @@ const PriceEditor = ({
         </span>
       ) : (
         <select
-          value={price.cur}
-          onChange={(e) => {
-            const cur = e.target.value;
-            const next = { ...price, cur };
-            emitChange(next);
-          }}
+          value={cur}
+          onChange={(e) =>
+            emitChange({
+              ...(value || {}),
+              val: toNumber(val),
+              cur: e.target.value,
+            })
+          }
           className="w-64 mr-3"
         >
           {CURRENCIES_WITH_LABELS.map((opt) => (
@@ -128,7 +128,7 @@ const PriceEditor = ({
         placeholder={placeholder}
         onFocus={() => {
           setValFocused(true);
-          setValDraft(formatValForDisplay(price.val));
+          setValDraft(formatValForDisplay(val));
         }}
         onBlur={() => {
           setValFocused(false);

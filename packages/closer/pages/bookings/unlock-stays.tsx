@@ -17,7 +17,7 @@ import { parseMessageFromError } from '../../utils/common';
 import { getCurrencySymbol } from '../../utils/helpers';
 import { parseSubscriptionPerks } from '../../utils/subscriptionPerks';
 import { sanitizeSubscriptionPerkHtml } from '../../utils/sanitizeSubscriptionPerkHtml';
-import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
+import { getPaidSubscriptionPlans } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
 interface Props {
@@ -31,7 +31,7 @@ const UnlockStaysPage = ({ subscriptionsConfig, bookingConfig }: Props) => {
     bookingConfig?.enabled &&
     process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
 
-  const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
+  const subscriptionPlans = getPaidSubscriptionPlans(subscriptionsConfig);
   const allowedSubscriptionPlan = subscriptionPlans[0];
 
   const router = useRouter();
@@ -39,7 +39,7 @@ const UnlockStaysPage = ({ subscriptionsConfig, bookingConfig }: Props) => {
 
   useEffect(() => {
     if (user?.roles?.includes('member')) {
-      router.push('/bookings/create/dates');
+      router.push('/stay/create');
     }
   }, [user]);
 

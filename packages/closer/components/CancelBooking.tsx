@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 
 import { PaymentType, Price } from '../types';
 import { CloserCurrencies } from '../types/currency';
-import api from '../utils/api';
+import { cancelStay } from '../utils/stays.api';
 import DisplayPrice from './DisplayPrice';
 import Spinner from './Spinner';
 import CalculatorIcon from './icons/CalculatorIcon';
@@ -44,7 +44,7 @@ const CancelBooking = ({
   const cancelBooking = async () => {
     try {
       setSendingCancelRequest(true);
-      await api.post(`/bookings/${bookingId}/cancel`);
+      await cancelStay(bookingId);
       setCancelCompleted(true);
     } catch (err: any) {
       console.error('Error===', err.message);

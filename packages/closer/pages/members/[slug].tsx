@@ -3,18 +3,21 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import EmailDisplay from '../../components/display/emailDisplay';
-import WalletDisplay from '../../components/display/walletDisplay';
+import AmbassadorBadge from '../../components/AmbassadorBadge';
 import CitizenSubscriptionProgress from '../../components/CitizenSubscriptionProgress';
 import EventsList from '../../components/EventsList';
 import FinancedTokenProgress from '../../components/FinancedTokenProgress';
 import Modal from '../../components/Modal';
+import RoleTag, { getRoleTagKey } from '../../components/RoleTag';
+import SubscriptionBadge from '../../components/SubscriptionBadge';
 import UploadPhoto from '../../components/UploadPhoto';
 import UserAvatarPlaceholder from '../../components/UserAvatarPlaceholder';
 import UserBookings from '../../components/UserBookings';
 import Vouching from '../../components/Vouching';
+import EmailDisplay from '../../components/display/emailDisplay';
+import WalletDisplay from '../../components/display/walletDisplay';
 import { Card } from '../../components/ui';
 import Button from '../../components/ui/Button';
 import Heading from '../../components/ui/Heading';
@@ -26,7 +29,6 @@ import {
   Link as LinkIcon,
   Linkedin,
   Music,
-  Settings,
   Trash2,
   Twitter,
   Youtube,
@@ -34,17 +36,18 @@ import {
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import config from '../../configCached';
 import { useAuth } from '../../contexts/auth';
 import { User, UserLink } from '../../contexts/auth/types';
 import { usePlatform } from '../../contexts/platform';
+import { useAttendedEvents } from '../../hooks/useAttendedEvents';
 import { FinanceApplication } from '../../types';
 import { BookingConfig } from '../../types/api';
 import { GeneralConfig } from '../../types/api';
-import config from '../../configCached';
 import api, { cdn } from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
-import { getUrlDisplayString } from '../../utils/display.helpers';
 import { parseMessageFromError } from '../../utils/common';
+import { getUrlDisplayString } from '../../utils/display.helpers';
 import PageNotFound from '../not-found';
 
 const ConnectedWallet =
@@ -54,6 +57,9 @@ const ConnectedWallet =
         { ssr: false },
       )
     : () => null;
+
+/** Stamps are small, so the whole attendance history fits without paging. */
+const MAX_ATTENDED_EVENTS_TO_SHOW = 200;
 
 interface MemberPageProps {
   member: User;
@@ -103,6 +109,63 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
   const [activeApplications, setActiveApplications] = useState<
     FinanceApplication[]
   >([]);
+  const [about, setAbout] = useState<string>(member?.about || '');
+  const [aboutDraft, setAboutDraft] = useState<string>(member?.about || '');
+  const [isEditingAbout, setIsEditingAbout] = useState(false);
+  const [isSavingAbout, setIsSavingAbout] = useState(false);
+
+  // Affiliates wear the ambassador chip without carrying the role, so they get
+  // an unlinked one — the rest of the row filters the member list by role.
+  const isAffiliateOnly = Boolean(
+    member?.affiliate && !member?.roles?.includes('ambassador'),
+  );
+
+  // `member` and `citizen` render as the same tag, so keep one of each and let
+  // ambassador lead — it is the standing people look for first.
+  const rolesToShow = useMemo(() => {
+    const seen = new Set<string>();
+    return (member?.roles || [])
+      .filter((role) => {
+        const key = getRoleTagKey(role);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .sort((a, b) => Number(b === 'ambassador') - Number(a === 'ambassador'));
+  }, [member?.roles]);
+
+  const { eventIds: attendedEventIds } = useAttendedEvents(member?._id);
+
+  // Pinned on mount: a fresh `new Date()` per render would change the query on
+  // every pass and refetch the same events.
+  const [pastEventsCutoff] = useState(() => new Date());
+
+  // Attendance is recorded either on the event (RSVPs) or on the member's
+  // bookings and tickets, so the stamps are the union of both.
+  const pastEventsWhere = useMemo(() => {
+    const attendanceClauses: Record<string, unknown>[] = [
+      { attendees: member?._id },
+    ];
+    if (attendedEventIds.length) {
+      attendanceClauses.push({ _id: { $in: attendedEventIds } });
+    }
+
+    return {
+      $or: attendanceClauses,
+      visibility: 'public',
+      end: { $lt: pastEventsCutoff },
+    };
+  }, [member?._id, attendedEventIds, pastEventsCutoff]);
+
+  // Re-sync `about`/`aboutDraft` when navigating between member profiles.
+  // This page uses getInitialProps and stays mounted across
+  // /members/[slug] -> /members/[slug] client-side navigations, so the
+  // useState initializers only run once. Without this, the About section would
+  // keep showing the previously viewed member's text.
+  useEffect(() => {
+    setAbout(member?.about || '');
+    setAboutDraft(member?.about || '');
+  }, [member?._id]);
 
   useEffect(() => {
     if (hasSaved) {
@@ -138,6 +201,21 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
     }
   }, [currentUser, isLoading]);
 
+  const saveAbout = async () => {
+    try {
+      setIsSavingAbout(true);
+      await platform.user.patch(currentUser?._id, { about: aboutDraft });
+      setAbout(aboutDraft);
+      setIsEditingAbout(false);
+      setErrors(null);
+      await refetchUser();
+    } catch (err: unknown) {
+      setErrors(parseMessageFromError(err));
+    } finally {
+      setIsSavingAbout(false);
+    }
+  };
+
   const deleteLink = async (link: UserLink) => {
     try {
       const { data } = await platform.user.patch(currentUser?._id, {
@@ -164,8 +242,10 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
 
   const checkIfReported = async () => {
     try {
+      // The endpoint answers with `{ results: { reported: boolean } }` — the
+      // envelope itself is always truthy, so read the flag inside it.
       const { data } = await api.get(`/report/user/${member._id}`);
-      setHasReported(!!data.results);
+      setHasReported(Boolean(data?.results?.reported));
     } catch (err) {
       console.error('Error checking if user is reported:', err);
     }
@@ -306,27 +386,34 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
 
                 {/* Profile Info */}
                 <div className="flex flex-col flex-grow md:ml-4">
-                  <h3 className="font-medium text-4xl md:text-5xl text-center md:text-left">
-                    {member.screenname}
-                  </h3>
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                    <h3 className="font-medium text-4xl md:text-5xl text-center md:text-left">
+                      {member.screenname}
+                      <SubscriptionBadge
+                        subscription={member?.subscription}
+                        size="large"
+                      />
+                    </h3>
+                  </div>
 
                   {/* Roles Tags */}
-                  <div className="mt-3 mb-4">
-                    {member.roles && (
-                      <div className="text-sm tags flex flex-wrap justify-center md:justify-start gap-2">
-                        {member.roles.map((role) => (
+                  {(rolesToShow.length > 0 || isAffiliateOnly) && (
+                    <div className="mt-3 mb-4">
+                      <div className="flex flex-wrap justify-center md:justify-start gap-2">
+                        {isAffiliateOnly && <AmbassadorBadge />}
+                        {rolesToShow.map((role) => (
                           <Link
                             as={`/members?role=${encodeURIComponent(role)}`}
                             href="/members"
                             key={role}
-                            className="tag bg-gray-400 hover:bg-gray-200 px-2 py-1 rounded-full"
+                            className="rounded-full transition-opacity hover:opacity-75"
                           >
-                            {role}
+                            <RoleTag role={role} />
                           </Link>
                         ))}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   {/* Action Buttons */}
                   {isAuthenticated && member?._id !== currentUser?._id && (
@@ -378,19 +465,6 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                       {t('members_slug_wallet')}
                     </h4>
                     <ConnectedWallet />
-                  </div>
-                )}
-
-                {/* Edit Profile Link - Only show when viewing own profile */}
-                {isAuthenticated && member?._id === currentUser?._id && (
-                  <div className="mb-6">
-                    <Link
-                      href="/settings"
-                      className="flex items-center gap-2 px-4 py-2 bg-black text-white text-sm rounded hover:bg-gray-800 transition-colors w-full justify-center"
-                    >
-                      <Settings className="w-4 h-4" />
-                      {t('buttons_edit_profile')}
-                    </Link>
                   </div>
                 )}
 
@@ -596,16 +670,88 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
 
               {/* Right Column - Main Content */}
               <div className="md:col-span-2">
-                {/* Vouching Section */}
-                {(isMember || isAdmin || isSpaceHost) && !isOwnProfile && (
+                {/* About Section — hidden entirely for other people's empty
+                    profiles, but an obvious prompt to fill in on your own. */}
+                {(about || isOwnProfile) && (
                   <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h4 className="font-medium text-xl mb-4">
-                      {t('members_slug_vouching')}
-                    </h4>
+                    <div className="flex justify-between items-center mb-4">
+                      <h4 className="font-medium text-xl">
+                        {t('members_slug_about')}
+                      </h4>
+                      {isOwnProfile && about && !isEditingAbout && (
+                        <button
+                          onClick={() => {
+                            setAboutDraft(about);
+                            setIsEditingAbout(true);
+                          }}
+                          className="text-sm text-accent hover:underline"
+                        >
+                          {t('members_slug_edit')}
+                        </button>
+                      )}
+                    </div>
+
+                    {isEditingAbout ? (
+                      <div className="flex flex-col gap-3">
+                        <textarea
+                          className="w-full p-3 border border-gray-300 rounded-md focus:ring-accent focus:border-accent"
+                          rows={5}
+                          autoFocus
+                          value={aboutDraft}
+                          placeholder={t(
+                            'settings_tell_us_more_about_yourself',
+                          )}
+                          onChange={(event) =>
+                            setAboutDraft(event.target.value)
+                          }
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={saveAbout}
+                            isEnabled={!isSavingAbout}
+                            size="small"
+                            isFullWidth={false}
+                          >
+                            {t('generic_save_button')}
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setAboutDraft(about);
+                              setIsEditingAbout(false);
+                            }}
+                            variant="secondary"
+                            size="small"
+                            isFullWidth={false}
+                          >
+                            {t('generic_cancel')}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : about ? (
+                      <p className="whitespace-pre-line">{about}</p>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setAboutDraft('');
+                          setIsEditingAbout(true);
+                        }}
+                        className="w-full text-left border-2 border-dashed border-accent/50 rounded-md p-4 text-accent hover:bg-accent-light transition-colors"
+                      >
+                        {t('members_slug_add_about')}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Vouching Section — every citizen sees it, including on
+                    their own profile, where it lists who vouched for them. */}
+                {(isMember || isAdmin || isSpaceHost) && (
+                  <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
                     <Vouching
                       vouchData={member?.vouched || []}
                       myId={currentUser?._id}
                       userId={member._id}
+                      memberName={member.screenname}
                       minVouchingStayDuration={
                         Number(generalConfig?.minVouchingStayDuration) || 14
                       }
@@ -765,15 +911,15 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                 {/* Events Section */}
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <h4 className="font-medium text-xl mb-4">
-                    {t('members_slug_my_events')}
+                    {t('members_slug_past_events')}
                   </h4>
                   <EventsList
-                    limit={7}
+                    limit={MAX_ATTENDED_EVENTS_TO_SHOW}
                     showPagination={false}
-                    where={{
-                      attendees: member?._id,
-                      visibility: 'public',
-                    }}
+                    isStampView={true}
+                    sort_by="-start"
+                    where={pastEventsWhere}
+                    emptyLabel={t('members_slug_no_past_events')}
                   />
                 </div>
               </div>
@@ -1198,7 +1344,7 @@ MemberPage.getInitialProps = async (context: NextPageContext) => {
     return {
       loadError: parseMessageFromError(err),
       bookingConfig: null,
-      };
+    };
   }
 };
 

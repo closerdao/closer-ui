@@ -1,12 +1,20 @@
 import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
+import {
+  CitizenApplication,
+  CitizenTokenIntent,
+} from '../../types/subscriptions';
 
 interface Props {
-  updateApplication: (key: string, value: any) => void;
-  application: any;
+  updateApplication: (
+    key: keyof CitizenApplication,
+    value: CitizenApplication[keyof CitizenApplication],
+  ) => void;
+  application: CitizenApplication;
   buyMore?: boolean;
   balanceTotal?: number;
+  tokensRequired: number;
 }
 
 const CitizenGoodToBuy = ({
@@ -14,101 +22,109 @@ const CitizenGoodToBuy = ({
   application,
   buyMore,
   balanceTotal,
+  tokensRequired,
 }: Props) => {
   const t = useTranslations();
   const { user } = useAuth();
   const isMember = user?.roles?.includes('member');
 
+  const tokensToBuy =
+    balanceTotal && balanceTotal < tokensRequired
+      ? tokensRequired - balanceTotal
+      : tokensRequired;
+
+  // Finance any positive token count; min monthly payment is enforced on
+  // `/token/finance` from the admin token financing config.
+  const tokensToFinance = Math.max(1, Math.ceil(tokensToBuy));
+
+  const options: {
+    id: keyof CitizenTokenIntent;
+    label: string;
+    intent: CitizenTokenIntent;
+  }[] = [
+    ...(buyMore && !isMember
+      ? [
+          {
+            id: 'iWantToApply' as const,
+            label: t('subscriptions_citizen_i_own_tokens', {
+              var: tokensRequired,
+            }),
+            intent: {
+              iWantToApply: true,
+              iWantToBuyTokens: false,
+              iWantToFinanceTokens: false,
+            },
+          },
+        ]
+      : []),
+    {
+      id: 'iWantToFinanceTokens',
+      label: buyMore
+        ? t('subscriptions_citizen_i_own_tokens_and_wish_to_finance_tokens', {
+            var: tokensRequired,
+            amount: tokensToFinance,
+          })
+        : t('subscriptions_citizen_i_wish_to_finance_tokens', {
+            var: tokensToFinance,
+          }),
+      intent: {
+        iWantToApply: false,
+        iWantToBuyTokens: false,
+        iWantToFinanceTokens: true,
+      },
+    },
+    {
+      id: 'iWantToBuyTokens',
+      label: buyMore
+        ? t('subscriptions_citizen_i_own_tokens_and_wish_to_buy_now', {
+            var: tokensRequired,
+            amount: tokensToBuy,
+          })
+        : t('subscriptions_citizen_i_wish_to_buy_now', { var: tokensToBuy }),
+      intent: {
+        iWantToApply: false,
+        iWantToBuyTokens: true,
+        iWantToFinanceTokens: false,
+      },
+    },
+  ];
+
   return (
-    <div className="space-y-4">
-      <p>{t('subscriptions_citizen_good_how')}</p>
+    <div className="flex flex-col gap-3">
+      <p className="text-sm text-gray-600">
+        {t('subscriptions_citizen_good_how')}
+      </p>
 
-     
-      <div className="space-y-2">
-        {buyMore && !isMember && (
-          <div className="flex items-center gap-2">
-            <input
-              type="radio"
-              id="iWantToApply"
-              name="tokenChoice"
-              className="w-4 h-4"
-              checked={application?.intent?.iWantToApply}
-              onChange={() =>
-                updateApplication('intent', {
-                  iWantToApply: true,
-                  iWantToBuyTokens: false,
-                  iWantToFinanceTokens: false,
-                })
-              }
-            />
-            <label htmlFor="iWantToApply" className="whitespace-nowrap">
-              {t('subscriptions_citizen_i_own_tokens')}
+      <div className="flex flex-col gap-2">
+        {options.map((option) => {
+          const isSelected = Boolean(application?.intent?.[option.id]);
+
+          return (
+            <label
+              key={option.id}
+              htmlFor={option.id}
+              // Neutral borders only: these sit inside a quest card that turns
+              // accent-bordered once a token intent is picked, and an accent
+              // border inside an accent border reads as boxes in boxes. The
+              // accent radio dot carries the selected state instead.
+              className={`flex cursor-pointer items-center gap-3 rounded-xl border bg-white p-3 text-sm transition-colors ${
+                isSelected
+                  ? 'border-gray-400 font-bold shadow-sm'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <input
+                type="radio"
+                id={option.id}
+                name="tokenChoice"
+                className="h-4 w-4 shrink-0 accent-accent"
+                checked={isSelected}
+                onChange={() => updateApplication('intent', option.intent)}
+              />
+              {option.label}
             </label>
-          </div>
-        )}
-
-        <div className="flex items-center gap-2 p2">
-          <input
-            type="radio"
-            id="iWantToFinanceTokens"
-            name="tokenChoice"
-            className="w-4 h-4"
-            checked={application?.intent?.iWantToFinanceTokens}
-            onChange={() =>
-              updateApplication('intent', {
-                iWantToApply: false,
-                iWantToBuyTokens: false,
-                iWantToFinanceTokens: true,
-              })
-            }
-          />
-          <label htmlFor="iWantToFinanceTokens" className="whitespace-nowrap">
-            {buyMore
-              ? t(
-                  'subscriptions_citizen_i_own_tokens_and_wish_to_finance_tokens',
-              )
-              
-              :
-
-            
-               t('subscriptions_citizen_i_wish_to_finance_tokens')
-            
-            }
-          </label>
-        </div>
-        <div className="flex items-center gap-2">
-          <input
-            type="radio"
-            id="iWantToBuyTokens"
-            name="tokenChoice"
-            className="w-4 h-4"
-            checked={application?.intent?.iWantToBuyTokens}
-            onChange={() =>
-              updateApplication('intent', {
-                iWantToApply: false,
-                iWantToBuyTokens: true,
-                iWantToFinanceTokens: false,
-              })
-            }
-          />
-
-      
-          <label htmlFor="iWantToBuyTokens" className="whitespace-nowrap">
-            {buyMore
-              ? t('subscriptions_citizen_i_own_tokens_and_wish_to_buy_now')
-              :
-              
-              // t('subscriptions_citizen_i_wish_to_buy_now')
-
-              t('subscriptions_citizen_i_wish_to_buy_now', {
-                var: balanceTotal && balanceTotal < 30 ? (30 - balanceTotal) : 30,
-              })
-            
-            
-            
-            }
-          </label>
-        </div>
+          );
+        })}
       </div>
     </div>
   );

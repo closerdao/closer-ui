@@ -2,10 +2,10 @@ import { configDescription } from '../config';
 import { Config } from '../types';
 
 export const getReserveTokenDisplay = (config: any): string =>
-  config?.web3?.reserveToken ?? 'cEUR';
+  config?.token?.reserveToken ?? config?.web3?.reserveToken ?? 'cEUR';
 
 export const getGasTokenDisplay = (config: any): string =>
-  config?.web3?.gasToken ?? 'CELO';
+  config?.token?.gasToken ?? config?.web3?.gasToken ?? 'CELO';
 
 export const getEnabledConfigs = (configs: any, allConfigs: string[]) => {
   const enabledConfigs = allConfigs.filter((configName) => {
@@ -17,7 +17,7 @@ export const getEnabledConfigs = (configs: any, allConfigs: string[]) => {
     });
     const isDefaultEnabled =
       configDescription.find((config) => config.slug === configName)?.value
-        ?.enabled?.default ?? true;
+        ?.enabled?.default ?? false;
     const isEnabled = (!isConfigDefined && isDefaultEnabled) || isConfigEnabled;
 
     return isEnabled;
@@ -71,6 +71,26 @@ export const getPreparedInputValue = (value: string) => {
   return String(value);
 };
 
+/**
+ * The `token` config was called `web3`, and financed down-payment terms used
+ * to live on `citizenship`. Stored config documents still carry the old
+ * slugs, so read through to them: anything explicitly set on a `token`
+ * document still wins. The old flat `tokenPriceModifierPercent` markup is no
+ * longer used for financed quotes (carrying cost is `financingAprPercent`).
+ */
+export const getLegacyTokenConfigValue = (
+  apiBySlug: Record<string, Record<string, any>>,
+): Record<string, any> => {
+  const legacyCitizenship = apiBySlug['citizenship'];
+
+  const inherited: Record<string, any> = { ...(apiBySlug['web3'] || {}) };
+  if (legacyCitizenship && 'downPaymentPercent' in legacyCitizenship) {
+    inherited.downPaymentPercent = legacyCitizenship.downPaymentPercent;
+  }
+
+  return inherited;
+};
+
 export const buildMergedConfig = (
   apiConfigs: Array<{ slug: string; value?: Record<string, any> }>,
 ): Record<string, Record<string, any>> => {
@@ -78,11 +98,17 @@ export const buildMergedConfig = (
   (apiConfigs || []).forEach((c) => {
     apiBySlug[c.slug] = c.value || {};
   });
+  const legacyToken = getLegacyTokenConfigValue(apiBySlug);
   const result: Record<string, Record<string, any>> = {};
   configDescription.forEach((desc) => {
     const slug = desc.slug;
     const defaults = getDefaultConfigValue(slug, configDescription);
-    result[slug] = Object.assign({}, defaults, apiBySlug[slug] || {});
+    result[slug] = Object.assign(
+      {},
+      defaults,
+      slug === 'token' ? legacyToken : {},
+      apiBySlug[slug] || {},
+    );
   });
   Object.keys(apiBySlug).forEach((slug) => {
     if (!result[slug]) result[slug] = apiBySlug[slug];
@@ -124,6 +150,31 @@ export function mergePaymentValueWithBookingCurrencyFallback(
   return { ...payment, fiatCur: curStr, utilityFiatCur: curStr };
 }
 
+/**
+ * A schema field without an explicit `default` gets a neutral "type zero"
+ * instead of `undefined`: text-like fields become `''`, numbers `0`, booleans
+ * `false`, lists `[]`, maps `{}`. This is what lets identity/branding fields
+ * omit their defaults (see #946) — a village that has saved nothing renders
+ * blank rather than inheriting another village's name, address or payment
+ * details.
+ */
+export const synthesizeTypeZeroDefault = (type: unknown): any => {
+  if (Array.isArray(type)) return [];
+  switch (type) {
+    case 'number':
+      return 0;
+    case 'boolean':
+      return false;
+    case 'vat-by-product-type':
+      return {};
+    case 'multiselect':
+      return [];
+    default:
+      // text, long-text, select, image, time, readonly-text, …
+      return '';
+  }
+};
+
 export const getDefaultConfigValue = (
   slug: string,
   configDescriptions: any[],
@@ -154,7 +205,10 @@ export const getDefaultConfigValue = (
           : [];
       }
     } else {
-      configOutput[key] = def.default;
+      configOutput[key] =
+        def.default !== undefined
+          ? def.default
+          : synthesizeTypeZeroDefault(defaultConfigData);
     }
   }
   return configOutput;
@@ -164,13 +218,24 @@ export const prepareConfigs = (
   myConfigs: Config[],
   configDescriptions: any,
 ): Array<{ slug: string; value: Record<string, any> }> => {
+  const apiBySlug: Record<string, Record<string, any>> = {};
+  (myConfigs || []).forEach((c) => {
+    apiBySlug[c.slug] = (c.value as Record<string, any>) || {};
+  });
+  const legacyToken = getLegacyTokenConfigValue(apiBySlug);
+
   return configDescriptions.map((desc: any) => {
     const slug = desc.slug;
     const defaults = getDefaultConfigValue(slug, configDescriptions);
-    const apiValue = myConfigs.find((c) => c.slug === slug)?.value || {};
+    const apiValue = apiBySlug[slug] || {};
     return {
       slug,
-      value: Object.assign({}, defaults, apiValue),
+      value: Object.assign(
+        {},
+        defaults,
+        slug === 'token' ? legacyToken : {},
+        apiValue,
+      ),
     };
   });
 };

@@ -10,11 +10,11 @@ type TranslationFunction = (key: string) => string;
 
 interface DashboardLinksConfig {
   isBookingEnabled?: boolean;
-  isGovernanceEnabled?: boolean;
   isLearningHubEnabled?: boolean;
   isAffiliateEnabled?: boolean;
   isTokenEnabled?: boolean;
   isApplicationsEnabled?: boolean;
+  isFederationEnabled?: boolean;
 }
 
 export const getDashboardLinks = (
@@ -23,11 +23,11 @@ export const getDashboardLinks = (
 ): DashboardLink[] => {
   const {
     isBookingEnabled = false,
-    isGovernanceEnabled = false,
     isLearningHubEnabled = true,
     isAffiliateEnabled = process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true',
     isTokenEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true',
     isApplicationsEnabled = false,
+    isFederationEnabled = process.env.NEXT_PUBLIC_FEATURE_FEDERATION === 'true',
   } = config;
 
   const baseLinks: DashboardLink[] = [
@@ -51,13 +51,6 @@ export const getDashboardLinks = (
       rbacPage: 'Revenue',
       enabled: true,
       roles: ['admin', 'team'],
-    },
-    {
-      label: t('navigation_governance'),
-      url: '/governance',
-      rbacPage: 'Governance',
-      enabled: isGovernanceEnabled,
-      roles: ['member'],
     },
     {
       label: t('navigation_sales'),
@@ -200,6 +193,13 @@ export const getDashboardLinks = (
       rbacPage: 'AffiliateSettings',
       enabled: isAffiliateEnabled,
       roles: [],
+    },
+    {
+      label: t('navigation_deploy_queue'),
+      url: '/dashboard/deploy-queue',
+      rbacPage: 'AffiliateSettings',
+      enabled: isFederationEnabled,
+      roles: ['admin', 'affiliate-manager'],
     },
   ];
 

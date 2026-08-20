@@ -17,6 +17,11 @@ interface Props {
   doesNeedSeparateBeds?: boolean;
   setDoesNeedSeparateBeds?: (value: boolean) => void;
   shouldHideTitle?: boolean;
+  /**
+   * Floor for the adult count. Raised by flows that name their co-guests, so
+   * the counter cannot drop below the people already on the booking.
+   */
+  minAdults?: number;
   isPrivate?: boolean;
   friendsBookingMaxGuests?: number;
   isFriendsBooking?: boolean;
@@ -34,6 +39,7 @@ const BookingGuests = ({
   doesNeedSeparateBeds,
   setDoesNeedSeparateBeds,
   shouldHideTitle,
+  minAdults = 1,
   isPrivate = false,
   friendsBookingMaxGuests,
   isFriendsBooking,
@@ -59,7 +65,7 @@ const BookingGuests = ({
           <Counter
             value={adults}
             setFn={setAdults}
-            minValue={1}
+            minValue={Math.max(1, minAdults)}
             maxValue={isFriendsBooking ? friendsBookingMaxGuests : undefined}
           />
         </div>

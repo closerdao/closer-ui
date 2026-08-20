@@ -12,6 +12,7 @@ import AcceptCookies from 'closer/components/AcceptCookies';
 import {
   AuthProvider,
   ConfigProvider,
+  FaviconLinks,
   LocaleMessagesNextIntlBridge,
   PlatformProvider,
   appGetInitialPropsWithMessages,
@@ -74,6 +75,8 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
         />
       </Head>
 
+      <FaviconLinks favicon={config?.FAVICON} />
+
       <Script
         id="fb-pixel"
         strategy="afterInteractive"
@@ -97,8 +100,7 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
         config={{
           ...config,
           ...blockchainConfig,
-          ...getAppConfigFromEnv(),
-          APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'earthbound',
+          ...getAppConfigFromEnv('earthbound'),
         }}
       >
         <ErrorBoundary>

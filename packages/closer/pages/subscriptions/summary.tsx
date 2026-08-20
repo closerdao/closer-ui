@@ -32,8 +32,11 @@ import {
   getVatInfo,
   priceFormat,
 } from '../../utils/helpers';
-import { prepareSubscriptions } from '../../utils/subscriptions.helpers';
 import { logMetric } from '../../utils/metrics';
+import {
+  getPaidSubscriptionPlans,
+  isSubscriptionActive,
+} from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
 interface Props {
@@ -65,7 +68,9 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
 
-  const subscriptionPlans = prepareSubscriptions(subscriptionsConfig);
+  const subscriptionPlans = getPaidSubscriptionPlans(subscriptionsConfig, {
+    availableOnly: false,
+  });
 
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
 
@@ -92,7 +97,7 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   }, [selectedPlan]);
 
   useEffect(() => {
-    if (user?.subscription && user?.subscription?.priceId && new Date(user?.subscription?.validUntil || '') > new Date()) {
+    if (isSubscriptionActive(user?.subscription)) {
       router.push('/subscriptions');
     }
   }, []);

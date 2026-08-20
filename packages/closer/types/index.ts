@@ -21,3 +21,4 @@ export * from './volunteerApplication';
 export * from './wallet';
 export * from './engagement';
 export * from './interaction';
+export * from './village';

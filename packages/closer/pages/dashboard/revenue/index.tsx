@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
+import DashboardPageHeader from '../../../components/Dashboard/DashboardPageHeader';
 import ChargesTable from '../../../components/Dashboard/ChargesTable';
 import RevenueTimeFrameSelector from '../../../components/Dashboard/RevenueTimeFrameSelector';
 import Pagination from '../../../components/Pagination';
@@ -18,6 +19,10 @@ import { DEFAULT_CURRENCY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import useRBAC from '../../../hooks/useRBAC';
 import { BookingConfig } from '../../../types/api';
+import {
+  RevenueCategorySums,
+  RevenueHeadlineTotals,
+} from '../../../types/dashboard';
 import { ExpenseTrackingCombinedEntry } from '../../../types/expense';
 import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
@@ -29,6 +34,7 @@ import {
   sortCombinedExpenseEntriesByDateDesc,
 } from '../../../utils/expenseTracking.helpers';
 import { getStartAndEndDate } from '../../../utils/performance.utils';
+import { parseStatResponse } from '../../../utils/dashboardStats.helpers';
 
 const ENTRIES_PER_PAGE = 50;
 const CHARGE_DOWNLOAD_LIMIT = 3000;
@@ -69,30 +75,28 @@ const RevenuePage = () => {
   const [moneriumLoading, setMoneriumLoading] = useState<boolean>(false);
   const [cryptoLoading, setCryptoLoading] = useState<boolean>(false);
 
-  const [categorySums, setCategorySums] = useState<{
-    tokenSales: number;
-    cryptoTokenSales: number;
-    events: number;
-    rental: number;
-    food: number;
-    utilities: number;
-    subscriptions: number;
-    refunds: number;
-    connectFee: number;
-    stripeProcessingFee: number;
-    other: number;
-  }>({
-    tokenSales: 0,
-    cryptoTokenSales: 0,
-    events: 0,
-    rental: 0,
-    food: 0,
-    utilities: 0,
-    subscriptions: 0,
-    refunds: 0,
-    connectFee: 0,
-    stripeProcessingFee: 0,
-    other: 0,
+  const [categorySums, setCategorySums] = useState<RevenueCategorySums>({
+    tokenSales: null,
+    cryptoTokenSales: null,
+    events: null,
+    rental: null,
+    food: null,
+    utilities: null,
+    subscriptions: null,
+    refunds: null,
+    connectFee: null,
+    stripeProcessingFee: null,
+    other: null,
+  });
+  /**
+   * Headline figures resolved by the API's aggregation endpoints rather than
+   * by summing the downloaded entry list, so they stay exact past the
+   * download limit.
+   */
+  const [revenueTotals, setRevenueTotals] = useState<RevenueHeadlineTotals>({
+    netRevenue: 0,
+    tax: 0,
+    transactions: 0,
   });
   const [sumsLoading, setSumsLoading] = useState<boolean>(false);
 
@@ -282,6 +286,10 @@ const RevenuePage = () => {
         $lte: endDateStr,
       };
 
+      const parseCategorySum = (
+        res: { data?: unknown } | null,
+      ): number | null => (res ? parseStatResponse(res.data) : null);
+
       const [
         tokenSalesRes,
         cryptoTokenSalesRes,
@@ -293,6 +301,9 @@ const RevenuePage = () => {
         refundsRes,
         connectFeeRes,
         stripeFeeRes,
+        netRevenueRes,
+        taxRes,
+        transactionCountRes,
       ] = await Promise.all([
         api
           .get('/sum/charge/amount.total.val', {
@@ -305,7 +316,7 @@ const RevenuePage = () => {
               },
             },
           })
-          .catch(() => ({ data: { sum: 0 } })),
+          .catch(() => null),
         api
           .get('/sum/charge/amount.total.val', {
             params: {
@@ -317,7 +328,7 @@ const RevenuePage = () => {
               },
             },
           })
-          .catch(() => ({ data: { sum: 0 } })),
+          .catch(() => null),
         api
           .get('/sum/charge/amount.event.val', {
             params: {
@@ -335,7 +346,7 @@ const RevenuePage = () => {
               },
             },
           })
-          .catch(() => ({ data: { sum: 0 } })),
+          .catch(() => null),
         api
           .get('/sum/charge/amount.rental.val', {
             params: {
@@ -353,7 +364,7 @@ const RevenuePage = () => {
               },
             },
           })
-          .catch(() => ({ data: { sum: 0 } })),
+          .catch(() => null),
         api
           .get('/sum/charge/amount.food.val', {
             params: {
@@ -371,7 +382,7 @@ const RevenuePage = () => {
               },
             },
           })
-          .catch(() => ({ data: { sum: 0 } })),
+          .catch(() => null),
         api
           .get('/sum/charge/amount.utilities.val', {
             params: {
@@ -389,7 +400,7 @@ const RevenuePage = () => {
               },
             },
           })
-          .catch(() => ({ data: { sum: 0 } })),
+          .catch(() => null),
         api
           .get('/sum/charge/amount.total.val', {
             params: {
@@ -400,14 +411,14 @@ const RevenuePage = () => {
               },
             },
           })
-          .catch(() => ({ data: { sum: 0 } })),
+          .catch(() => null),
         api
           .get('/sum/charge/amount.total.val', {
             params: {
               where: { date: dateFilter, status: 'refunded' },
             },
           })
-          .catch(() => ({ data: { sum: 0 } })),
+          .catch(() => null),
         api
           .get('/sum/charge/meta.stripeConnectFee', {
             params: {
@@ -418,7 +429,7 @@ const RevenuePage = () => {
               },
             },
           })
-          .catch(() => ({ data: { sum: 0 } })),
+          .catch(() => null),
         api
           .get('/sum/charge/meta.stripeProcessingFee', {
             params: {
@@ -429,21 +440,48 @@ const RevenuePage = () => {
               },
             },
           })
-          .catch(() => ({ data: { sum: 0 } })),
+          .catch(() => null),
+        api
+          .get('/sum/charge/netRevenue.val', {
+            params: {
+              where: { date: dateFilter, status: { $ne: 'refunded' } },
+            },
+          })
+          .catch(() => ({ data: { results: 0 } })),
+        api
+          .get('/sum/charge/taxAmount.val', {
+            params: {
+              where: { date: dateFilter, status: { $ne: 'refunded' } },
+            },
+          })
+          .catch(() => ({ data: { results: 0 } })),
+        api
+          .get('/count/charge', {
+            params: {
+              where: { date: dateFilter, status: { $ne: 'refunded' } },
+            },
+          })
+          .catch(() => ({ data: { results: 0 } })),
       ]);
 
       setCategorySums({
-        tokenSales: tokenSalesRes.data?.sum || 0,
-        cryptoTokenSales: cryptoTokenSalesRes.data?.sum || 0,
-        events: eventsRes.data?.sum || 0,
-        rental: rentalRes.data?.sum || 0,
-        food: foodRes.data?.sum || 0,
-        utilities: utilitiesRes.data?.sum || 0,
-        subscriptions: subscriptionsRes.data?.sum || 0,
-        refunds: refundsRes.data?.sum || 0,
-        connectFee: connectFeeRes.data?.sum || 0,
-        stripeProcessingFee: stripeFeeRes.data?.sum || 0,
-        other: 0,
+        tokenSales: parseCategorySum(tokenSalesRes),
+        cryptoTokenSales: parseCategorySum(cryptoTokenSalesRes),
+        events: parseCategorySum(eventsRes),
+        rental: parseCategorySum(rentalRes),
+        food: parseCategorySum(foodRes),
+        utilities: parseCategorySum(utilitiesRes),
+        subscriptions: parseCategorySum(subscriptionsRes),
+        refunds: parseCategorySum(refundsRes),
+        connectFee: parseCategorySum(connectFeeRes),
+        stripeProcessingFee: parseCategorySum(stripeFeeRes),
+        other: null,
+      });
+
+      setRevenueTotals({
+        netRevenue: parseStatResponse(netRevenueRes?.data),
+        tax: parseStatResponse(taxRes?.data),
+        transactions: parseStatResponse(transactionCountRes?.data),
       });
     } catch (error) {
       console.error('Error fetching category sums:', error);
@@ -685,43 +723,56 @@ const RevenuePage = () => {
 
   const totalDisplayCount = allEntriesSorted.length;
 
+  /**
+   * The API's `/sum` aggregation is the source of truth: it covers every
+   * matching charge, while the entry list it used to be derived from stops at
+   * the download limit. A successful aggregate of 0 means the period has no
+   * matching charges for that category. Client-side figures stay only as a
+   * fallback when a sum request fails (`null`).
+   */
   const getCategoryTotals = () => {
-    const totals = {
-      tokenSales: Math.max(
+    const preferServer = (server: number | null, fromEntries: number) =>
+      server != null ? server : fromEntries;
+
+    const connectFee = preferServer(
+      categorySums.connectFee,
+      categorySumsFromEntries.connectFee,
+    );
+    const processingFee = preferServer(
+      categorySums.stripeProcessingFee,
+      categorySumsFromEntries.stripeProcessingFee,
+    );
+
+    return {
+      tokenSales: preferServer(
         categorySums.tokenSales,
         categorySumsFromEntries.tokenSales,
       ),
-      cryptoTokenSales: Math.max(
+      cryptoTokenSales: preferServer(
         categorySums.cryptoTokenSales,
         categorySumsFromEntries.cryptoTokenSales,
       ),
-      events: Math.max(categorySums.events, categorySumsFromEntries.events),
-      rental: Math.max(categorySums.rental, categorySumsFromEntries.rental),
-      food: Math.max(categorySums.food, categorySumsFromEntries.food),
-      utilities: Math.max(
+      events: preferServer(categorySums.events, categorySumsFromEntries.events),
+      rental: preferServer(categorySums.rental, categorySumsFromEntries.rental),
+      food: preferServer(categorySums.food, categorySumsFromEntries.food),
+      utilities: preferServer(
         categorySums.utilities,
         categorySumsFromEntries.utilities,
       ),
-      connectFee: Math.max(
-        categorySums.connectFee,
-        categorySumsFromEntries.connectFee,
-      ),
-      subscriptions: Math.max(
+      connectFee,
+      subscriptions: preferServer(
         categorySums.subscriptions,
         categorySumsFromEntries.subscriptions,
       ),
-      refunds: Math.max(categorySums.refunds, categorySumsFromEntries.refunds),
-      other: Math.max(categorySums.other, categorySumsFromEntries.other),
-      stripeFee: Math.max(
-        0,
-        Math.max(
-          categorySums.stripeProcessingFee,
-          categorySumsFromEntries.stripeProcessingFee,
-        ) -
-          Math.max(categorySums.connectFee, categorySumsFromEntries.connectFee),
+      refunds: preferServer(
+        categorySums.refunds,
+        categorySumsFromEntries.refunds,
       ),
+      // `other` has no server equivalent: it is the part of a charge total that
+      // the category breakdown does not account for.
+      other: categorySumsFromEntries.other,
+      stripeFee: Math.max(0, processingFee - connectFee),
     };
-    return totals;
   };
 
   const categoryTotals = getCategoryTotals();
@@ -753,8 +804,7 @@ const RevenuePage = () => {
         <meta name="robots" content="noindex, nofollow" />
       </Head>
       <AdminLayout>
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-          <Heading level={2}>{t('dashboard_revenue_title')}</Heading>
+        <DashboardPageHeader title={t('dashboard_revenue_title')}>
           <RevenueTimeFrameSelector
             timeFrame={timeFrame}
             setTimeFrame={handleTimeFrameChange}
@@ -763,7 +813,7 @@ const RevenuePage = () => {
             toDate={toDate}
             setToDate={setToDate}
           />
-        </div>
+        </DashboardPageHeader>
 
         <div className="space-y-4 mt-6">
           {/* Summary Cards */}
@@ -893,6 +943,87 @@ const RevenuePage = () => {
                     ) : (
                       formatIsoFiatAmount(
                         categoryTotals.refunds,
+                        DEFAULT_CURRENCY,
+                      )
+                    )}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+
+          {/* Figures the API aggregates for us, exact regardless of how many
+              charges fall in the period. */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
+              <div className="p-3">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    {t('dashboard_revenue_net')}
+                  </dt>
+                  <dd className="text-lg font-semibold text-gray-900">
+                    {sumsLoading ? (
+                      <div className="animate-pulse bg-gray-200 h-6 w-20 rounded" />
+                    ) : (
+                      formatIsoFiatAmount(
+                        revenueTotals.netRevenue,
+                        DEFAULT_CURRENCY,
+                      )
+                    )}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
+              <div className="p-3">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    {t('dashboard_revenue_tax_collected')}
+                  </dt>
+                  <dd className="text-lg font-semibold text-gray-900">
+                    {sumsLoading ? (
+                      <div className="animate-pulse bg-gray-200 h-6 w-20 rounded" />
+                    ) : (
+                      formatIsoFiatAmount(revenueTotals.tax, DEFAULT_CURRENCY)
+                    )}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
+              <div className="p-3">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    {t('dashboard_revenue_transactions')}
+                  </dt>
+                  <dd className="text-lg font-semibold text-gray-900">
+                    {sumsLoading ? (
+                      <div className="animate-pulse bg-gray-200 h-6 w-20 rounded" />
+                    ) : (
+                      revenueTotals.transactions.toLocaleString()
+                    )}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg min-w-0">
+              <div className="p-3">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    {t('dashboard_revenue_average_transaction')}
+                  </dt>
+                  <dd className="text-lg font-semibold text-gray-900">
+                    {sumsLoading ? (
+                      <div className="animate-pulse bg-gray-200 h-6 w-20 rounded" />
+                    ) : (
+                      formatIsoFiatAmount(
+                        revenueTotals.transactions > 0
+                          ? revenueTotals.netRevenue /
+                              revenueTotals.transactions
+                          : 0,
                         DEFAULT_CURRENCY,
                       )
                     )}

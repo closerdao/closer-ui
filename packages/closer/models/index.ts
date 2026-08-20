@@ -616,10 +616,10 @@ const models = {
       label: 'Available for',
       ownerVisible: true,
       editable: true,
-      enum: ['volunteer', 'guests', 'team', 'events'],
+      enum: ['volunteer', 'guests', 'team', 'events', 'resident'],
       default: [],
       type: 'multi-select',
-      options: ['guests', 'volunteer', 'team', 'events'],
+      options: ['guests', 'volunteer', 'team', 'events', 'resident'],
     },
     {
       name: 'priceDuration',
@@ -910,20 +910,9 @@ const models = {
       editable: true,
       type: 'longtext',
     },
-    {
-      name: 'start',
-      label: 'Start date',
-      public: true,
-      editable: true,
-      type: 'datetime',
-    },
-    {
-      name: 'end',
-      label: 'End date',
-      public: true,
-      editable: true,
-      type: 'datetime',
-    },
+    // `start` and `end` are edited by the DateTimePicker that EditModel renders
+    // for this endpoint, not as form fields — `datetime` has no FormField
+    // renderer, so listing them here only produced two empty labelled rows.
     {
       name: 'visibility',
       label: 'Visibility',

@@ -4,6 +4,7 @@ export interface SearchUserHit {
   _id: string;
   screenname: string;
   email?: string;
+  photo?: string;
   walletAddress?: string;
 }
 
@@ -39,6 +40,7 @@ function normalizeSearchUserResponse(data: unknown): SearchUserHit[] {
           ? o.screenname.trim()
           : id,
       email: typeof o.email === 'string' ? o.email : undefined,
+      photo: typeof o.photo === 'string' ? o.photo : undefined,
       walletAddress:
         typeof o.walletAddress === 'string' ? o.walletAddress : undefined,
     });

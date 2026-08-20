@@ -11,6 +11,11 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
 import { Project, VolunteerConfig } from '../../types';
+import {
+  emptyVolunteerApplication,
+  readVolunteerApplicationDraft,
+  writeVolunteerApplicationDraft,
+} from '../../utils/volunteerApplicationDraft';
 import MultiSelect from '../ui/Select/MultiSelect';
 
 interface Props {
@@ -72,24 +77,34 @@ const VolunteerOrResidenceApplication = ({
   };
 
   const handleNext = async () => {
+    const projectIds = Array.isArray(volunteerData.projectId)
+      ? volunteerData.projectId
+      : volunteerData.projectId
+        ? [volunteerData.projectId]
+        : [];
+
     const params = new URLSearchParams({
-      skills:
-        (Array.isArray(volunteerData.skills)
-          ? volunteerData.skills.join(',')
-          : volunteerData.skills) || '',
-      diet:
-        (Array.isArray(volunteerData.diet)
-          ? volunteerData.diet.join(',')
-          : volunteerData.diet) || '',
-      suggestions: (volunteerData.suggestions as string) || '',
       bookingType: type,
-      ...(volunteerData?.projectId &&
-        volunteerData.projectId.length > 0 && {
-          projectId: Array.isArray(volunteerData.projectId)
-            ? volunteerData.projectId.join(',')
-            : volunteerData.projectId,
-        }),
+      ...(projectIds.length > 0 && { projectId: projectIds.join(',') }),
     } as Record<string, string>);
+
+    // Skills, diet and suggestions go into the application draft rather than the
+    // URL: the next step reads that draft, and it is where the rest of the
+    // answers already live. An application in progress keeps its own answers.
+    const draft = readVolunteerApplicationDraft(user?._id, type);
+    writeVolunteerApplicationDraft(user?._id, type, {
+      step: draft?.step || 'about',
+      volunteerInfo: {
+        ...draft?.volunteerInfo,
+        bookingType: type,
+        skills: (volunteerData.skills as string[]) || [],
+        diet: (volunteerData.diet as string[]) || [],
+        suggestions: (volunteerData.suggestions as string) || '',
+        projectId: projectIds,
+        application:
+          draft?.volunteerInfo.application || emptyVolunteerApplication(),
+      },
+    });
 
     const updatedUser = {
       ...user,
@@ -110,7 +125,9 @@ const VolunteerOrResidenceApplication = ({
       console.error(error);
     } finally {
       setLoading(false);
-      router.push(`/bookings/create/dates?${params}`);
+      // The whole application is filled in before an accommodation is picked,
+      // same as the volunteer flow — /stay/create comes after the last step.
+      router.push(`/volunteer/apply?${params}`);
     }
   };
 

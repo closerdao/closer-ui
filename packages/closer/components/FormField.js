@@ -24,6 +24,12 @@ const FIAT_PRICE_FIELDS = ['fiatPrice', 'fiatHourlyPrice'];
  * The shared field renderer for EditModel-style forms. Everything except the
  * data/update pair is optional, so callers only pass what a field needs.
  */
+const controlClassName =
+  'new-input w-full rounded-xl border border-gray-200 !bg-gray-50 px-3.5 py-2.5 text-[15px] leading-snug text-gray-900 placeholder:text-gray-400 outline-none transition-colors focus:border-accent focus:!bg-white focus:ring-2 focus:ring-accent/20 disabled:opacity-50 disabled:cursor-not-allowed';
+
+const selectClassName =
+  'new-input w-full rounded-xl border border-gray-200 !bg-gray-50 px-3.5 py-2.5 text-[15px] leading-snug text-gray-900 outline-none transition-colors focus:border-accent focus:!bg-white focus:ring-2 focus:ring-accent/20 appearance-none bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-10';
+
 const FormField = ({
   data,
   update,
@@ -62,21 +68,28 @@ const FormField = ({
 
   const [addTag, setAddTag] = useState('');
 
+  // A record saved before the field existed — or one that simply never had a
+  // value set — has no array here at all, so read it as an empty selection.
+  const getSelectedValues = () => {
+    const value = objectPath.get(data, name);
+    return Array.isArray(value) ? value : [];
+  };
+
   const handleCheckboxChange = (optionValue) => {
-    if (objectPath.get(data, name).includes(optionValue)) {
+    const selected = getSelectedValues();
+    if (selected.includes(optionValue)) {
       update(
         name,
-        objectPath.get(data, name).filter((value) => value !== optionValue),
+        selected.filter((value) => value !== optionValue),
       );
     } else {
-      update(name, [...objectPath.get(data, name), optionValue]);
+      update(name, [...selected, optionValue]);
     }
   };
 
-  const labelClass = isSecondary
-    ? 'block text-foreground/70 text-xs font-medium mb-1.5'
-    : 'block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2';
-  const fieldWrapperClass = isSecondary ? 'mb-4' : 'mb-6';
+  const labelClass =
+    'block text-[11px] uppercase tracking-[0.12em] text-gray-400 font-medium mb-1.5';
+  const fieldWrapperClass = isSecondary ? 'mb-4' : 'mb-5';
 
   // Global form CSS strips borders off number/date/email inputs, so the boxed
   // styling has to override it explicitly.
@@ -98,11 +111,11 @@ const FormField = ({
       {
         <>
           {type === 'note' && headingKey && messageKey && (
-            <div className="border-t border-neutral-dark/20 pt-6 mt-2 space-y-2">
-              <p className="uppercase tracking-wide text-gray-700 text-xs font-bold">
+            <div className="border-t border-gray-100 pt-5 mt-1 space-y-2">
+              <p className="text-[11px] uppercase tracking-[0.12em] text-gray-400 font-medium">
                 {t(headingKey)}
               </p>
-              <p className="text-sm text-gray-600">{t(messageKey)}</p>
+              <p className="text-sm text-gray-600 leading-relaxed">{t(messageKey)}</p>
             </div>
           )}
           {['text', 'email', 'phone', 'hidden', 'number', 'date'].includes(
@@ -115,9 +128,7 @@ const FormField = ({
               placeholder={placeholder}
               min={min}
               max={max}
-              className={`${boxedClass} ${isSecondary ? 'text-sm' : ''} ${
-                className || ''
-              }`}
+              className={`${controlClassName} ${isSecondary ? 'text-sm py-2' : ''} ${className || ''}`}
               onChange={(e) => update(name, e.target.value)}
               required={required}
               disabled={isDisabled}
@@ -142,9 +153,7 @@ const FormField = ({
               value={objectPath.get(data, name) || ''}
               placeholder={placeholder}
               rows={4}
-              className={`${boxedClass} text-sm resize-y min-h-[80px] ${
-                className || ''
-              }`}
+              className={`${controlClassName} resize-y min-h-[96px] ${className || ''}`}
               onChange={(e) => update(name, e.target.value)}
               required={required}
               disabled={isDisabled}
@@ -175,12 +184,13 @@ const FormField = ({
             />
           )}
           {type === 'currencies' && (
-            <div className="currencies-group">
+            <div className="currencies-group flex flex-col gap-3">
               {(objectPath.get(data, name) || []).map(
                 (currencyGroup, index) => (
-                  <div className="currency-group" key={`${name}.${index}.cur`}>
+                  <div className="currency-group flex flex-wrap items-center gap-2" key={`${name}.${index}.cur`}>
                     <select
                       value={objectPath.get(data, name)?.cur}
+                      className={`${selectClassName} max-w-[200px]`}
                       onChange={(e) =>
                         update(`${name}.${index}.cur`, e.target.value)
                       }
@@ -195,6 +205,7 @@ const FormField = ({
                       type={type}
                       value={objectPath.get(data, name)[index]?.val || ''}
                       placeholder={placeholder}
+                      className={`${controlClassName} max-w-[160px]`}
                       onChange={(e) =>
                         update(`${name}.${index}.val`, e.target.value)
                       }
@@ -203,6 +214,7 @@ const FormField = ({
                     {index > 0 && (
                       <a
                         href="#"
+                        className="text-sm text-gray-500 hover:text-gray-800 underline underline-offset-2"
                         onClick={(e) => {
                           e.preventDefault();
                           update(
@@ -221,6 +233,7 @@ const FormField = ({
               )}
               <a
                 href="#"
+                className="text-sm font-medium text-accent hover:text-accent-dark"
                 onClick={(e) => {
                   e.preventDefault();
                   update(
@@ -240,9 +253,11 @@ const FormField = ({
               <select
                 value={objectPath.get(data, name) ?? ''}
                 onChange={(e) => update(name, e.target.value)}
-                className={`${boxedClass} min-w-[180px] ${className || ''}`}
-                disabled={isDisabled}
-                aria-invalid={error ? 'true' : undefined}
+                className={`${selectClassName} ${className || ''}`}
+                style={{
+                  backgroundImage:
+                    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\")",
+                }}
               >
                 {(dynamicField?.name === name
                   ? dynamicField?.options
@@ -256,28 +271,20 @@ const FormField = ({
             </>
           )}
           {type === 'multi-select' && (
-            <div className="flex flex-wrap gap-4 my-6">
-              {dynamicField?.name === name
-                ? dynamicField?.options.map((option) => (
-                    <Checkbox
-                      key={option}
-                      onChange={() => handleCheckboxChange(option)}
-                      checked={objectPath.get(data, name).includes(option)}
-                      className="mb-4"
-                    >
-                      {option}
-                    </Checkbox>
-                  ))
-                : options.map((option) => (
-                    <Checkbox
-                      key={option}
-                      onChange={() => handleCheckboxChange(option)}
-                      checked={objectPath.get(data, name).includes(option)}
-                      className="mb-4"
-                    >
-                      {option}
-                    </Checkbox>
-                  ))}
+            <div className="flex flex-wrap gap-3 my-2">
+              {(dynamicField?.name === name
+                ? dynamicField?.options
+                : options
+              )?.map((option) => (
+                <Checkbox
+                  key={option}
+                  onChange={() => handleCheckboxChange(option)}
+                  checked={getSelectedValues().includes(option)}
+                  className="mb-0"
+                >
+                  {option}
+                </Checkbox>
+              ))}
             </div>
           )}
 
@@ -311,7 +318,7 @@ const FormField = ({
                 ))}
               <input
                 type="text"
-                className="mt-2"
+                className={`${controlClassName} mt-2`}
                 placeholder={placeholder || 'Add tag'}
                 value={addTag}
                 title="Press enter to add"

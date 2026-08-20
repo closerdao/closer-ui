@@ -30,6 +30,9 @@ const nextConfig = {
       { source: '/bookings/:slug([0-9a-fA-F]{24})', destination: '/stay/:slug', permanent: true },
       { source: '/cohousing/application/:id/admin', destination: '/dashboard/cohousing/:id', permanent: true },
       { source: '/cohousing/applications', destination: '/dashboard/cohousing', permanent: true },
+      { source: '/subscriptions/citizen/why', destination: '/citizenship/why', permanent: true },
+      { source: '/subscriptions/citizen/validation', destination: '/citizenship/validation', permanent: true },
+      { source: '/subscriptions/citizen/success', destination: '/citizenship/success', permanent: true },
       { source: '/dashboard/token-sales', destination: '/dashboard/sales/financed', permanent: true },
       { source: '/dashboard/token-sales/financed/:applicationId', destination: '/dashboard/sales/financed/:applicationId', permanent: true },
     ];

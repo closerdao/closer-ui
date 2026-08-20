@@ -78,6 +78,11 @@ import { parseMessageFromError } from '../../../utils/common';
 import { priceFormat } from '../../../utils/helpers';
 import { formatDate } from '../../../utils/listings.helpers';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
+import {
+  isStayCheckoutDraft,
+  sendStayToFriends,
+  submitStay,
+} from '../../../utils/stays.api';
 
 dayjs.extend(dayOfYear);
 
@@ -106,6 +111,7 @@ const Checkout = ({
   const isFriend = normalizeIsFriendsBooking(router.query.isFriend);
   const t = useTranslations();
   const { platform }: any = usePlatform();
+  const [friendClaimDenied, setFriendClaimDenied] = useState(false);
 
   useEffect(() => {
     if (!router.isReady || !slug) return;
@@ -116,11 +122,19 @@ const Checkout = ({
     }
 
     void (async () => {
+      // Read first — the stay is only readable once the caller is in managedBy,
+      // so a successful read means this friend has already claimed it.
       await platform.booking.getOne(slug, { force: true });
       if (platform.booking.findOne(slug)) {
         return;
       }
-      await claimBookingAsFriend(slug);
+      try {
+        await claimBookingAsFriend(slug);
+      } catch {
+        // 403: the logged-in email is not on the invite list.
+        setFriendClaimDenied(true);
+        return;
+      }
       await platform.booking.getOne(slug, { force: true });
     })();
   }, [router.isReady, slug, isFriend, platform]);
@@ -381,6 +395,7 @@ const Checkout = ({
 
   const [emailSuccess, setEmailSuccess] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [invalidEmails, setInvalidEmails] = useState<string[]>([]);
   const [isApplyingCredits, setIsApplyingCredits] = useState(false);
   const [isListingAvailable, setIsListingAvailable] = useState<boolean | null>(
     null,
@@ -415,6 +430,9 @@ const Checkout = ({
       booking?.paymentDelta?.fiat?.val &&
       booking?.paymentDelta?.fiat?.val > 0,
   );
+  const hasTokenStakeRecorded = status === 'tokens-staked';
+  const shouldCollectTokenStake =
+    Boolean(useTokens) && !hasTokenStakeRecorded && !isAdditionalFiatPayment;
 
   const [paymentType, setPaymentType] = useState<PaymentType>(
     getPaymentType({
@@ -506,7 +524,7 @@ const Checkout = ({
     process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true' &&
     rentalToken &&
     rentalToken?.val > 0 &&
-    useTokens;
+    shouldCollectTokenStake;
 
   useEffect(() => {
     if (!useTokens || isUserCurrencyChangeRef.current) {
@@ -578,12 +596,20 @@ const Checkout = ({
 
       case PaymentType.FULL_CREDITS:
       case PaymentType.PARTIAL_CREDITS:
-        if (useTokens && !isUserCurrencyChangeRef.current) {
+        if (
+          useTokens &&
+          !isAdditionalFiatPayment &&
+          !isUserCurrencyChangeRef.current
+        ) {
           void switchToFiat(type);
         }
         break;
       case PaymentType.FIAT:
-        if (useTokens && !isUserCurrencyChangeRef.current) {
+        if (
+          useTokens &&
+          !isAdditionalFiatPayment &&
+          !isUserCurrencyChangeRef.current
+        ) {
           void switchToFiat(type);
         }
         break;
@@ -1127,34 +1153,27 @@ const Checkout = ({
       setProcessing(true);
       setPaymentError(null);
       setEmailError(null);
+      setInvalidEmails([]);
+
+      // Sending no longer confirms the stay as a side effect — submitting is
+      // now a precondition, and the server 400s when the stay is still a draft.
+      if (_id && isStayCheckoutDraft(booking)) {
+        await submitStay(_id);
+      }
 
       // Send checkout link to friend
-      const res = await api.post(`/bookings/${_id}/send-to-friend`, {
-        friendEmails: booking?.friendEmails,
-      });
+      const results = await sendStayToFriends(_id, booking?.friendEmails);
 
-      if (res.status === 200) {
-        const p = bookingPaymentMetricPoint();
-        void logMetric({
-          event: 'booking-friends-send-success',
-          category: 'booking',
-          value: 'friends',
-          point: p,
-          ...bookingMetricFields,
-        });
-        setEmailSuccess(true);
-      } else {
-        const p = bookingPaymentMetricPoint();
-        void logMetric({
-          event: 'booking-friends-send-error',
-          category: 'booking',
-          value: 'friends',
-          point: p,
-          ...bookingMetricFields,
-        });
-        setEmailSuccess(false);
-        setEmailError(res.data.error);
-      }
+      const p = bookingPaymentMetricPoint();
+      void logMetric({
+        event: 'booking-friends-send-success',
+        category: 'booking',
+        value: 'friends',
+        point: p,
+        ...bookingMetricFields,
+      });
+      setEmailSuccess(true);
+      setInvalidEmails(results?.invalidEmails ?? []);
     } catch (error) {
       const p = bookingPaymentMetricPoint();
       void logMetric({
@@ -1335,6 +1354,26 @@ const Checkout = ({
 
   if (error) {
     return <PageError error={error} />;
+  }
+
+  if (friendClaimDenied) {
+    return (
+      <div className="w-full max-w-screen-sm mx-auto p-4 md:p-6 text-center">
+        <Heading level={1} className="text-2xl md:text-3xl">
+          {t('stay_friend_claim_not_invited_title')}
+        </Heading>
+        <p className="mt-3 mb-6 text-muted-foreground">
+          {t('stay_friend_claim_not_invited_description')}
+        </p>
+        <Button
+          onClick={() => router.push('/login')}
+          isFullWidth={false}
+          className="min-h-[44px]"
+        >
+          {t('stay_friend_claim_switch_account')}
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -1582,7 +1621,7 @@ const Checkout = ({
                   >
                     <CheckoutTotal
                       total={totalToPayInFiat}
-                      useTokens={accommodationCoveredByTokens}
+                      useTokens={shouldCollectTokenStake}
                       useCredits={
                         (useCredits && status !== 'credits-paid') || false
                       }
@@ -1624,28 +1663,26 @@ const Checkout = ({
                     </div>
                   </div>
                 )}
-                {status === 'tokens-staked' &&
-                  rentalToken &&
-                  !residualFiatAfterTokenStake && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-0">
-                      <div className="flex ">
-                        <IconCheckCircle className="text-green-600 mr-2" />
-                        <p className="text-green-800 font-medium text-sm">
-                          {t.rich('bookings_checkout_tokens_staked_message', {
-                            tokens: String(
-                              priceFormat({
-                                val:
-                                  paymentType === PaymentType.PARTIAL_TOKENS
-                                    ? partialPriceInTokens
-                                    : rentalToken.val,
-                                cur: rentalToken.cur,
-                              }),
-                            ),
-                          })}
-                        </p>
-                      </div>
+                {status === 'tokens-staked' && rentalToken && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-0">
+                    <div className="flex ">
+                      <IconCheckCircle className="text-green-600 mr-2" />
+                      <p className="text-green-800 font-medium text-sm">
+                        {t.rich('bookings_checkout_tokens_staked_message', {
+                          tokens: String(
+                            priceFormat({
+                              val:
+                                paymentType === PaymentType.PARTIAL_TOKENS
+                                  ? partialPriceInTokens
+                                  : rentalToken.val,
+                              cur: rentalToken.cur,
+                            }),
+                          ),
+                        })}
+                      </p>
                     </div>
-                  )}
+                  </div>
+                )}
                 {fiatPaymentBlocked && (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-0">
                     <p className="text-amber-900 font-medium text-sm">
@@ -1685,13 +1722,13 @@ const Checkout = ({
                           availabilityCheckLoading ||
                           isListingAvailable === false ||
                           fiatPaymentBlocked ||
-                          (useTokens &&
+                          (shouldCollectTokenStake &&
                             (!hasAgreedToWalletDisclaimer ||
                               (isNotEnoughBalance &&
                                 booking?.status !== 'tokens-staked'))) ||
                           false
                         }
-                        useTokens={useTokens || false}
+                        useTokens={shouldCollectTokenStake}
                         useCredits={useCredits}
                         totalToPayInFiat={totalToPayInFiat}
                         dailyTokenValue={dailyRentalToken?.val || 0}
@@ -1744,6 +1781,14 @@ const Checkout = ({
                       <div className="text-green-600 text-sm font-medium inline-flex items-center gap-2">
                         <IconCheckCircle className="shrink-0 text-green-600" />
                         {t('friends_booking_checkout_sent')}
+                      </div>
+                    )}
+
+                    {invalidEmails.length > 0 && (
+                      <div className="text-amber-700 text-sm">
+                        {t('friends_booking_invalid_emails_skipped', {
+                          emails: invalidEmails.join(', '),
+                        })}
                       </div>
                     )}
 

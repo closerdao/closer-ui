@@ -195,10 +195,9 @@ export type ApplicationsConfig = {
 export type CitizenshipConfig = {
   enabled: boolean;
   isSpaceHostVouchRequired: boolean;
-  downPaymentPercent: number;
-  tokenPriceModifierPercent: number;
   minVouches: number;
   minVouchingStayDuration: number;
+  tokensRequired: number;
 };
 
 export type AffiliateConfig = {
@@ -260,12 +259,26 @@ export type PaymentConfig = {
   vatRate: number;
 };
 
-export type Web3Config = {
+export type TokenConfig = {
   enabled: boolean;
   reserveToken?: string;
   gasToken?: string;
   bookingToken?: string;
   maxSupply?: number | string;
+  downPaymentPercent?: number;
+  /**
+   * @deprecated Financed carrying cost is `financingAprPercent`. Kept optional
+   * so legacy stored documents still type-check; ignored by the finance quote.
+   */
+  tokenPriceModifierPercent?: number;
+  /** Hard ceiling on repayment length in months (e.g. 6, 180, 360). */
+  maxFinancingMonths?: number;
+  /** Carrying APR (% per annum) applied to the financed principal. */
+  financingAprPercent?: number;
+  /** Minimum allowed monthly installment in fiat. */
+  minMonthlyPayment?: number;
+  /** Optional comma separated preset months, e.g. `'12,24,36'`. */
+  financingDurationsMonths?: string;
 };
 
 export type VolunteerConfig = {
@@ -275,6 +288,10 @@ export type VolunteerConfig = {
   skills?: string;
   residenceTimeFrame?: string;
   diet?: string;
+};
+
+export type CohousingConfig = {
+  enabled: boolean;
 };
 
 export type MilestoneStatus = 'pending' | 'active' | 'completed';

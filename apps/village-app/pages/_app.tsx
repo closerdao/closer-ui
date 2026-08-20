@@ -13,6 +13,7 @@ import AcceptCookies from 'closer/components/AcceptCookies';
 import {
   AuthProvider,
   ConfigProvider,
+  FaviconLinks,
   LocaleMessagesNextIntlBridge,
   PlatformProvider,
   appGetInitialPropsWithMessages,
@@ -31,6 +32,7 @@ import {
 } from 'closer/utils/app.helpers';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
 
+import { villageConfigDefaults } from '../config';
 import { appConfigFromEnv, env } from '../env';
 import '../styles/index.css';
 
@@ -45,7 +47,16 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
   const referral = query.referral;
 
   const [config] = useState<any>(() => {
-    const mergedGeneral = mergeGeneralConfigWithDefaults(configKeyed.general);
+    // mergeGeneralConfigWithDefaults layers the *shared* config defaults under
+    // the fetched config, and the shared default for platformName is TDF's own
+    // name. A village that has not set one must not inherit it — fall back to
+    // the single neutral default in ../config instead.
+    const mergedGeneral = mergeGeneralConfigWithDefaults({
+      ...configKeyed.general,
+      platformName:
+        configKeyed.general?.platformName ||
+        villageConfigDefaults.general.platformName,
+    });
     applyCurrencyLocaleFromGeneralConfig(mergedGeneral);
     return {
       ...prepareGeneralConfig(mergedGeneral),
@@ -74,11 +85,14 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
         />
       </Head>
 
-      <Script
-        id="fb-pixel"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
+      <FaviconLinks favicon={config?.FAVICON} />
+
+      {FACEBOOK_PIXEL_ID && (
+        <Script
+          id="fb-pixel"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
   !function(f,b,e,v,n,t,s)
   {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
   n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -90,8 +104,9 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
   fbq('init', '${FACEBOOK_PIXEL_ID}');
   fbq('track', 'PageView');
   `,
-        }}
-      />
+          }}
+        />
+      )}
 
       <ConfigProvider
         config={{

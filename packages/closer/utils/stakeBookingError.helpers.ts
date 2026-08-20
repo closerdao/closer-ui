@@ -1,4 +1,7 @@
+import { utils as ethersUtils } from 'ethers';
+
 import { parseMessageFromError } from './common';
+import { parseLaterYearStakeConflictError } from './laterYearStakeConflict.helpers';
 
 const ACCOMMODATION_YEAR_NOT_ACTIVE_PREFIX = 'ACCOMMODATION_YEAR_NOT_ACTIVE:';
 
@@ -12,6 +15,16 @@ export type StakeBookingErrorTranslator = (
 
 const sanitizeIntlPlaceholder = (value: string, maxLen: number): string =>
   value.replace(/[{}]/g, ' ').slice(0, maxLen).trim();
+
+const formatTokensFromWei = (wei: string): string => {
+  try {
+    const formatted = Number(ethersUtils.formatUnits(wei, 18));
+    if (!Number.isFinite(formatted)) return wei;
+    return formatted.toFixed(2);
+  } catch {
+    return wei;
+  }
+};
 
 const isUserRejectedWalletError = (err: unknown, messageLower: string): boolean => {
   if (
@@ -40,6 +53,11 @@ export function formatStakeBookingErrorEnglish(err: unknown): string {
   if (m.startsWith(BOOK_ACCOMMODATION_TX_REVERTED_PREFIX)) {
     return 'The on-chain stake transaction was mined but reverted. No tokens were locked for these nights. Check the transaction in your wallet’s block explorer, or confirm allowance, balance, and that token booking is enabled for this year.';
   }
+  const laterYearConflict = parseLaterYearStakeConflictError(m);
+  if (laterYearConflict) {
+    const amount = formatTokensFromWei(laterYearConflict.laterYearStakeWei);
+    return `You already have ${amount} $TDF locked on-chain for nights after ${laterYearConflict.bookingYear}. The booking contract cannot stake ${laterYearConflict.bookingYear} nights while a larger amount is locked for a later year. Cancel those later bookings first, then stake these nights again.`;
+  }
   return parseMessageFromError(err);
 }
 
@@ -61,6 +79,14 @@ export function formatStakeBookingErrorForUi(
   }
   if (m.startsWith(BOOK_ACCOMMODATION_TX_REVERTED_PREFIX)) {
     return t('stay_create_token_stake_tx_reverted');
+  }
+
+  const laterYearConflict = parseLaterYearStakeConflictError(m);
+  if (laterYearConflict) {
+    return t('stay_create_token_stake_later_year_conflict', {
+      amount: formatTokensFromWei(laterYearConflict.laterYearStakeWei),
+      year: laterYearConflict.bookingYear,
+    });
   }
 
   const raw = parseMessageFromError(err as Parameters<typeof parseMessageFromError>[0]);

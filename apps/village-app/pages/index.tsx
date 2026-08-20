@@ -10,8 +10,7 @@ import type { PageDoc } from 'closer/types/page';
 import api, { formatSearch } from 'closer/utils/api';
 import { parseMessageFromError } from 'closer/utils/common';
 
-import { villageConfigDefaults } from '../config';
-import { env } from '../env';
+import { humanizeVillageSlug, villageConfigDefaults } from '../config';
 
 interface Props {
   generalConfig: GeneralConfig | null;
@@ -28,8 +27,7 @@ const toCustomSectionsPage = (page: PageDoc): Page => ({
 
 const getVillageName = (generalConfig: GeneralConfig | null) =>
   generalConfig?.platformName ||
-  generalConfig?.appName ||
-  env.NEXT_PUBLIC_PLATFORM_NAME ||
+  humanizeVillageSlug(generalConfig?.appName) ||
   villageConfigDefaults.general.platformName;
 
 const ComingSoon = ({

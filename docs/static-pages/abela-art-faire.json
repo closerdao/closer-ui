@@ -1,0 +1,58 @@
+{
+  "title": "Abela Art Faire - a regenerative art faire in the Traditional Dream Factory, Abela, Portugal.",
+  "slug": "/abela-art-faire",
+  "description": "Traditional Dream Factory (TDF) is a regenerative playground in Abela, Portugal.",
+  "ogImage": "/images/landing/art-faire.png",
+  "sections": [
+    {
+      "type": "hero",
+      "data": {
+        "settings": {
+          "alignText": "bottom-left",
+          "isInverted": false,
+          "isCompact": false
+        },
+        "content": {
+          "title": "Abela Art Faire",
+          "body": "Residency Open Call · May 22nd to September 22nd, 2024",
+          "imageUrl": "/images/landing/art-faire.png",
+          "cta": {
+            "text": "Email us your application",
+            "url": "mailto:play@traditionaldreamfactory.com?subject=ArtFaireResidencyOpenCall"
+          }
+        }
+      }
+    },
+    {
+      "type": "textBlock",
+      "data": {
+        "settings": {
+          "imagePosition": "none"
+        },
+        "content": {
+          "title": "Residency Open Call",
+          "body": "Calling all artists and creatives! We are excited to announce the Abela Art Faire Residency Open Call, hosted by Traditional Dream Factory (TDF) in Abela, Portugal. This is a unique opportunity for guest artists to immerse themselves in the vibrant and regenerative community of TDF while showcasing their artistic talents.\n\nDuring the residency, selected artists will have the chance to collaborate with our diverse community of residents, volunteers, and local stakeholders. You will have access to our special facilities, including a lab, atelier, wood workshop, and more, to bring your artistic vision to life.\n\nAs a resident, you will be invited to contribute your expertise and knowledge to the TDF project. In exchange for your stay at TDF, we ask for a clear deliverable and timeline for your project. This could be in the form of an artwork, installation, performance, or any other creative expression that aligns with our values of sustainability, authenticity, respect, and creativity.\n\nThe residency duration is 4 months. We encourage artists to fully immerse themselves in the TDF community and take advantage of the beautiful surroundings, including the reforestation, food forest, hills, valleys that inspire creativity and connection.\n\nTo apply, please submit a proposal that includes your artistic background, project concept, and how it aligns with TDF's values. We also welcome any ideas for community engagement or collaboration during your residency.\n\nLet your creativity flourish in this regenerative playground.",
+          "imageUrl": "",
+          "imageAlt": ""
+        }
+      }
+    },
+    {
+      "type": "cta",
+      "data": {
+        "settings": {
+          "style": "accent"
+        },
+        "content": {
+          "eyebrow": "",
+          "title": "Apply to the residency",
+          "text": "Email your proposal to play@traditionaldreamfactory.com",
+          "primaryText": "Email us your application",
+          "primaryLink": "mailto:play@traditionaldreamfactory.com?subject=ArtFaireResidencyOpenCall",
+          "secondaryText": "",
+          "secondaryLink": ""
+        }
+      }
+    }
+  ]
+}

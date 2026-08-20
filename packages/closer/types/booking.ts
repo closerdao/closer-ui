@@ -4,9 +4,7 @@ import { Discount, TicketOption } from './event';
 import type { PendingExtension, PriceLock, StayMoney } from './stay';
 import type { VolunteerApplication } from './volunteerApplication';
 
-// we set those as url params on
-// - /bookings/create/dates
-// - /bookings/create/accomodation
+// we set those as url params on /stay/create
 export interface BaseBookingParams {
   eventId?: string;
   volunteerId?: string;
@@ -130,6 +128,7 @@ export type Charge = {
     stripeConnectFeeRefunded?: number;
     fractionToRefund?: number;
     uploadedDocumentUrl?: string | null;
+    proofOfPaymentUrl?: string | null;
     toconlineData?: any;
 
     comment?: string;
@@ -177,7 +176,8 @@ export type Booking = {
   dailyUtilityFiat: Price<CloserCurrencies.EUR>;
   dailyRentalToken: Price<CloserCurrencies.TDF | CloserCurrencies.ETH>;
   fields: { [key: string]: string }[];
-  visibleBy: string[];
+  /** Co-guests sharing the booking. Read-only through PATCH /booking/:id. */
+  guests?: string[];
   createdBy: string;
   updated: string;
   created: string;

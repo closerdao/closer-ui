@@ -319,11 +319,15 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     router.push('/');
   };
 
+  // Callers refetch right after mutating the user (subscribing, changing or
+  // cancelling a plan, saving settings), so this must skip the GET cache —
+  // otherwise the page re-renders with the pre-mutation user for up to the
+  // cache TTL and keeps offering actions the member already took.
   const refetchUser = useCallback(async () => {
     try {
       const {
         data: { results: user },
-      } = await api.get('/mine/user');
+      } = await api.get('/mine/user', { cache: false } as any);
       if (user) {
         setUser(user);
       }

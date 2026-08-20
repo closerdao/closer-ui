@@ -5,6 +5,7 @@ import {
   getAccommodationTotal,
   getBookingAnswers,
   getBookingPaymentType,
+  getBookingTokenCurrency,
   getDisplayTotalFromComponents,
   getFiatTotal,
   getFoodTotal,
@@ -14,7 +15,6 @@ import {
   getUtilityTotal,
   hasOnChainAccommodationStake,
   isFullAccommodationCoveredByTokens,
-  isTokenPaymentVerified,
   isUnsyncedOnChainTokenStakeError,
   resolveCheckoutFiatTotal,
   resolveTokensStakedVal,
@@ -938,20 +938,22 @@ describe('isFullAccommodationCoveredByTokens', () => {
   });
 });
 
-describe('isTokenPaymentVerified', () => {
-  it('accepts boolean true and verified objects with ok true', () => {
-    expect(isTokenPaymentVerified({ data: { verified: true } })).toBe(true);
-    expect(isTokenPaymentVerified({ data: { verified: { ok: true } } })).toBe(
-      true,
-    );
+describe('getBookingTokenCurrency', () => {
+  it('prefers a configured booking token', () => {
+    expect(
+      getBookingTokenCurrency({ bookingToken: 'ABC' }, { utilityTokenCur: 'XYZ' }),
+    ).toBe('ABC');
   });
 
-  it('rejects false, missing, and failed verification objects', () => {
-    expect(isTokenPaymentVerified({ data: { verified: false } })).toBe(false);
-    expect(isTokenPaymentVerified({ data: {} })).toBe(false);
-    expect(isTokenPaymentVerified({})).toBe(false);
-    expect(isTokenPaymentVerified({ data: { verified: { ok: false } } })).toBe(
-      false,
-    );
+  it("falls through a neutral-seeded '' bookingToken to the configured utility token", () => {
+    expect(
+      getBookingTokenCurrency({ bookingToken: '' }, { utilityTokenCur: 'XYZ' }),
+    ).toBe('XYZ');
+  });
+
+  it('returns empty — never a branded symbol — when nothing is configured', () => {
+    expect(getBookingTokenCurrency()).toBe('');
+    expect(getBookingTokenCurrency(null, null)).toBe('');
+    expect(getBookingTokenCurrency({ bookingToken: '' }, { utilityTokenCur: '' })).toBe('');
   });
 });

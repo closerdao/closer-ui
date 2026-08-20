@@ -7,6 +7,8 @@ interface Props {
   settings?: {
     tags?: string[];
     analyticsCategory?: string;
+    /** Anchor id, so CTAs elsewhere on the page can link to the webinar. */
+    id?: string;
   };
   content?: Record<string, unknown>;
 }
@@ -24,6 +26,7 @@ const CustomWebinar = ({ settings }: Props) => {
 
   return (
     <Webinar
+      id={settings?.id}
       tags={settings?.tags ?? ['landing-page', 'investor-webinar']}
       analyticsCategory={settings?.analyticsCategory ?? 'CustomPage'}
       schedule={config.webinar}

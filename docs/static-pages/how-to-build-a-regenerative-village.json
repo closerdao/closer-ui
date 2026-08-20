@@ -1,0 +1,92 @@
+{
+  "title": "_i18n_reg_village_title",
+  "slug": "/how-to-build-a-regenerative-village",
+  "description": "_i18n_reg_village_meta_description",
+  "ogImage": "/images/products/how-to-build-a-regenerative-village.jpg",
+  "sections": [
+    {
+      "type": "textBlock",
+      "data": {
+        "settings": {
+          "imagePosition": "left"
+        },
+        "content": {
+          "title": "_i18n_reg_village_heading",
+          "body": "_i18n_reg_village_subheading\n\n_i18n_reg_village_intro",
+          "imageUrl": "/images/products/how-to-build-a-regenerative-village.jpg",
+          "imageAlt": "_i18n_reg_village_img_alt"
+        }
+      }
+    },
+    {
+      "type": "cta",
+      "data": {
+        "settings": {
+          "style": "accent"
+        },
+        "content": {
+          "eyebrow": "",
+          "title": "_i18n_reg_village_heading",
+          "text": "_i18n_reg_village_price_note",
+          "primaryText": "_i18n_reg_village_buy_cta",
+          "primaryLink": "https://payhip.com/buy?link=OxFHQ",
+          "secondaryText": "",
+          "secondaryLink": ""
+        }
+      }
+    },
+    {
+      "type": "features",
+      "data": {
+        "settings": {
+          "numColumns": 1,
+          "isSmallImage": true,
+          "isColorful": false,
+          "hasBorder": true
+        },
+        "content": {
+          "title": "_i18n_reg_village_chapters_heading",
+          "description": "",
+          "items": [
+            {
+              "title": "_i18n_reg_village_chapter_1_title",
+              "text": "<p>_i18n_reg_village_chapter_1_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_reg_village_chapter_2_title",
+              "text": "<p>_i18n_reg_village_chapter_2_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_reg_village_chapter_3_title",
+              "text": "<p>_i18n_reg_village_chapter_3_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_reg_village_chapter_4_title",
+              "text": "<p>_i18n_reg_village_chapter_4_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_reg_village_chapter_5_title",
+              "text": "<p>_i18n_reg_village_chapter_5_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_reg_village_chapter_6_title",
+              "text": "<p>_i18n_reg_village_chapter_6_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

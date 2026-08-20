@@ -4,7 +4,7 @@
  */
 
 // Import network configuration
-import { blockchainConfig } from 'closer';
+import { blockchainConfig, resolveNetwork } from 'closer';
 
 // Define the network type
 type Network = 'celo' | 'celoSepolia';
@@ -47,10 +47,7 @@ const abiCache: Record<string, Record<string, any>> = {
 /**
  * Determines the current network from environment or defaults to celo
  */
-export const getCurrentNetwork = (): Network => {
-  const network = process.env.NEXT_PUBLIC_NETWORK;
-  return (network === 'celo' || network === 'celoSepolia') ? network as Network : 'celo';
-};
+export const getCurrentNetwork = (): Network => resolveNetwork();
 
 /**
  * Gets all available contract names for a specific network

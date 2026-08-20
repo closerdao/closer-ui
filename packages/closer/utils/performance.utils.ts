@@ -141,6 +141,42 @@ export const generateBookingFilter = ({
   };
 };
 
+export type ApplicationStatus =
+  | 'open'
+  | 'conversation'
+  | 'approved'
+  | 'rejected';
+
+export const generateApplicationFilter = ({
+  fromDate,
+  toDate,
+  timeFrame,
+  status,
+}: {
+  fromDate: string;
+  toDate: string;
+  timeFrame: string;
+  status?: ApplicationStatus[];
+}) => {
+  const { startDate, endDate } = getStartAndEndDate(
+    timeFrame,
+    fromDate,
+    toDate,
+  );
+
+  return {
+    where: {
+      ...(status && status.length > 0 && { status: { $in: status } }),
+      ...(timeFrame !== 'allTime' && {
+        created: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      }),
+    },
+  };
+};
+
 export const generateTokenSalesFilter = ({
   fromDate,
   toDate,

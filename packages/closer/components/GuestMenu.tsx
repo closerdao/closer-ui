@@ -7,9 +7,12 @@ import { ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import configCached from '../configCached';
+import { normalizePageSlug } from '../constants/standardPages';
 import { useBuyTokens } from '../hooks/useBuyTokens';
 import { useConfig } from '../hooks/useConfig';
+import { usePageMenuSections } from '../hooks/usePageMenuSections';
 import useRBAC from '../hooks/useRBAC';
+import { fetchMenuPages, toNavigationSections } from '../utils/pageMenu';
 import { getCurrentUnitPrice } from '../utils/bondingCurve';
 import { getReserveTokenDisplay } from '../utils/config.utils';
 import ReportABug from './ReportABug';
@@ -35,8 +38,10 @@ const GuestMenu = () => {
   const { hasAccess, rbacLiveRevision } = useRBAC();
   const router = useRouter();
   const { getCurrentSupplyWithoutWallet } = useBuyTokens();
+  const pageMenuSections = usePageMenuSections();
 
   const [menuSections, setMenuSections] = useState<MenuSection[]>([]);
+  const [dbPageSlugs, setDbPageSlugs] = useState<Set<string>>(new Set());
   const [currentSupply, setCurrentSupply] = useState<number | null>(null);
   const [tokenPrice, setTokenPrice] = useState<number | null>(null);
   const [isLoadingTokenData, setIsLoadingTokenData] = useState(false);
@@ -60,6 +65,7 @@ const GuestMenu = () => {
     isBlogEnabled: boolean,
     isCitizenshipEnabled: boolean,
     isFaqEnabled: boolean,
+    isCohousingEnabled: boolean,
   ): MenuSection[] => {
     // TDF-specific navigation structure
     if (APP_NAME?.toLowerCase() === 'tdf') {
@@ -93,7 +99,7 @@ const GuestMenu = () => {
             {
               label: t('menu_cohousing'),
               url: '/cohousing',
-              enabled: true,
+              enabled: isCohousingEnabled,
             },
             {
               label: t('menu_regenerative_agriculture'),
@@ -317,6 +323,21 @@ const GuestMenu = () => {
             rbacPage: 'Token',
           },
           {
+            label: t('menu_team'),
+            url: '/team',
+            enabled: dbPageSlugs.has('/team'),
+          },
+          {
+            label: t('menu_press'),
+            url: '/press',
+            enabled: dbPageSlugs.has('/press'),
+          },
+          {
+            label: t('menu_cohousing'),
+            url: '/cohousing',
+            enabled: isCohousingEnabled,
+          },
+          {
             label: 'Become a Citizen',
             url: '/citizenship',
             enabled: isCitizenshipEnabled,
@@ -370,6 +391,19 @@ const GuestMenu = () => {
   };
 
   useEffect(() => {
+    let cancelled = false;
+    void fetchMenuPages().then((pages) => {
+      if (cancelled) return;
+      setDbPageSlugs(
+        new Set(pages.map((page) => normalizePageSlug(page.slug))),
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     const volunteerConfig = configCached.volunteering;
     const bookingConfig = configCached.booking;
     const governanceConfig = configCached.governance;
@@ -395,21 +429,28 @@ const GuestMenu = () => {
       citizenshipConfig?.enabled === true &&
       process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
     const isFaqEnabled = Boolean(generalConfig?.faqsGoogleSheetId);
+    const isCohousingEnabled = configCached.cohousing?.enabled === true;
 
-    const sections = getMenuSections(
-      isBookingEnabled,
-      isVolunteeringEnabled,
-      isGovernanceEnabled,
-      isLearningHubEnabled,
-      isBlogEnabled,
-      isCitizenshipEnabled,
-      isFaqEnabled,
-    );
+    // Pages flagged with `showInMenu` define the menu. The hand-written
+    // sections below are the fallback for sites that have not set any yet.
+    const sections =
+      pageMenuSections.length > 0
+        ? toNavigationSections(pageMenuSections)
+        : getMenuSections(
+            isBookingEnabled,
+            isVolunteeringEnabled,
+            isGovernanceEnabled,
+            isLearningHubEnabled,
+            isBlogEnabled,
+            isCitizenshipEnabled,
+            isFaqEnabled,
+            isCohousingEnabled,
+          );
 
     const filteredSections = filterMenuSections(sections);
 
     setMenuSections(filteredSections);
-  }, [router.locale, rbacLiveRevision]);
+  }, [router.locale, rbacLiveRevision, pageMenuSections, dbPageSlugs]);
 
   useEffect(() => {
     if (

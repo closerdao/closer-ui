@@ -1,16 +1,20 @@
-import { createAppKit } from '@reown/appkit/react';
 import { Ethers5Adapter } from '@reown/appkit-adapter-ethers5';
 import { celo, celoSepolia } from '@reown/appkit/networks';
+import { createAppKit } from '@reown/appkit/react';
 
-const networks: [typeof celo, typeof celoSepolia] = [celo, celoSepolia]
+import { getSiteUrl } from './utils/siteUrl';
+
+const networks: [typeof celo, typeof celoSepolia] = [celo, celoSepolia];
 
 const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || '';
+
+const siteUrl = getSiteUrl();
 
 const metadata = {
   name: 'Closer',
   description: 'Closer - Regenerative Communities',
-  url: typeof window !== 'undefined' ? window.location.origin : 'https://closer.earth',
-  icons: ['https://closer.earth/favicon.ico'],
+  url: typeof window !== 'undefined' ? window.location.origin : siteUrl,
+  icons: siteUrl ? [`${siteUrl}/favicon.ico`] : [],
 };
 
 declare global {
@@ -36,7 +40,4 @@ if (typeof window !== 'undefined') {
   }
 }
 
-export { 
-  celo as celoMainnet, 
-  celoSepolia 
-};
+export { celo as celoMainnet, celoSepolia };

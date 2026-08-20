@@ -8,7 +8,9 @@ import PageEditor from '../../../components/PageEditor/PageEditor';
 import { useAuth } from '../../../contexts/auth';
 import useRBAC from '../../../hooks/useRBAC';
 import type { PageDoc } from '../../../types/page';
+import { resolveEditorRouteParam } from '../../../constants/standardPages';
 import api from '../../../utils/api';
+import { resolveStandardOrDbPage } from '../../../utils/standardPages';
 import PageNotFound from '../../not-found';
 
 interface Props {
@@ -27,7 +29,7 @@ const DashboardPagesEdit = ({ initialPage, pages }: Props) => {
 
   if (!initialPage) {
     return (
-      <AdminLayout>
+      <AdminLayout flush>
         <p className="p-4">{t('pages_editor_page_not_found')}</p>
       </AdminLayout>
     );
@@ -50,24 +52,13 @@ DashboardPagesEdit.getInitialProps = async (context: NextPageContext) => {
     return { initialPage: null, pages: [] };
   }
   try {
-    const [oneRes, listRes] = await Promise.all([
-      api.get(`/page/${id}`).catch(() => null),
+    const decodedId = resolveEditorRouteParam(id);
+    const [page, listRes] = await Promise.all([
+      resolveStandardOrDbPage(decodedId, { context: 'editor' }),
       api.get('/page', { params: { limit: 100 } }).catch(() => ({ data: {} })),
     ]);
-    const raw = oneRes?.data?.results;
     const list = listRes?.data?.results ?? [];
-    if (!raw) {
-      return { initialPage: null, pages: list };
-    }
-    const initialPage: PageDoc = {
-      _id: String(raw._id ?? id),
-      title: String(raw.title ?? ''),
-      slug: String(raw.slug ?? '/'),
-      description: raw.description != null ? String(raw.description) : '',
-      ogImage: raw.ogImage != null ? String(raw.ogImage) : '',
-      sections: Array.isArray(raw.sections) ? raw.sections : [],
-    };
-    return { initialPage, pages: list };
+    return { initialPage: page, pages: list };
   } catch {
     return { initialPage: null, pages: [] };
   }

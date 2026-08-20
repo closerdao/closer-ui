@@ -7826,17 +7826,32 @@ const celoSepoliaABIs = {
   ]
 };
 
-const getNetworkConfig = () => {
-  const network = process.env.NEXT_PUBLIC_NETWORK;
+export type BlockchainNetwork = 'celo' | 'celoSepolia';
+
+// Networks that have been decommissioned and now resolve to Celo Sepolia.
+const RETIRED_TESTNETS = ['alfajores'];
+
+export const resolveNetwork = (
+  network: string | undefined = process.env.NEXT_PUBLIC_NETWORK,
+): BlockchainNetwork => {
   if (network === 'celoSepolia') {
+    return 'celoSepolia';
+  }
+  if (network && RETIRED_TESTNETS.includes(network)) {
+    return 'celoSepolia';
+  }
+  return 'celo';
+};
+
+const getNetworkConfig = () => {
+  if (resolveNetwork() === 'celoSepolia') {
     return celoSepoliaConfig;
   }
   return celoConfig;
 };
 
 const getABIs = () => {
-  const network = process.env.NEXT_PUBLIC_NETWORK || 'celo';
-  if (network === 'celoSepolia') {
+  if (resolveNetwork() === 'celoSepolia') {
     return celoSepoliaABIs;
   }
   return celoABIs;

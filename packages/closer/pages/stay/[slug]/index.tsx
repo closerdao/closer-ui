@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 
 import React, { useEffect, useMemo, useState } from 'react';
 
+import StayCoGuests from '../../../components/BookingCoGuests/StayCoGuests';
 import BookingRequestButtons from '../../../components/BookingRequestButtons';
 import BookingStatusTag from '../../../components/BookingStatusTag';
 import BookingGuests from '../../../components/BookingGuests';
@@ -62,6 +63,12 @@ import {
   getBookingPaymentCheckoutPath,
   getBookingPaymentType,
 } from '../../../utils/booking.helpers';
+import {
+  canEditBookingCoGuests,
+  canViewBookingAsGuest,
+  getBookingGuestIds,
+  isBookingCoGuest,
+} from '../../../utils/bookingCoGuests.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import {
   isStayMongoId,
@@ -261,7 +268,8 @@ const StayBookingSummaryPage = ({
   const [isGuestsModalOpen, setIsGuestsModalOpen] = useState(false);
   const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
   const [isShortenModalOpen, setIsShortenModalOpen] = useState(false);
-  const [isAccommodationModalOpen, setIsAccommodationModalOpen] = useState(false);
+  const [isAccommodationModalOpen, setIsAccommodationModalOpen] =
+    useState(false);
   const [modalAdults, setModalAdults] = useState(adults);
   const [modalChildren, setModalChildren] = useState(children ?? 0);
   const [modalInfants, setModalInfants] = useState(infants ?? 0);
@@ -297,6 +305,28 @@ const StayBookingSummaryPage = ({
 
   const isBookingOwnerEditor =
     user?._id === createdBy || user?._id === bookingView?.paidBy;
+  const isCoGuestViewer = isBookingCoGuest(
+    {
+      createdBy,
+      paidBy: bookingView?.paidBy,
+      guests: bookingView?.guests,
+    },
+    user?._id,
+  );
+  const canEditCoGuests = canEditBookingCoGuests(
+    {
+      createdBy,
+      paidBy: bookingView?.paidBy,
+      guests: bookingView?.guests,
+    },
+    user?._id,
+    canManageBooking,
+  );
+
+  const coGuestIds = useMemo(
+    () => getBookingGuestIds(bookingView?.guests),
+    [bookingView?.guests],
+  );
 
   const stayGuestEditableStatuses = ['confirmed', 'pending-payment', 'paid'];
 
@@ -604,7 +634,11 @@ const StayBookingSummaryPage = ({
   const syncBookingFromServer = async () => {
     try {
       const fresh = await getStay(_id);
-      setLiveBooking(fresh as unknown as Booking);
+      const freshBooking = fresh as unknown as Booking;
+      setLiveBooking((prev) => ({
+        ...freshBooking,
+        guests: freshBooking.guests ?? prev?.guests ?? booking?.guests ?? [],
+      }));
       setStatus(fresh.status);
       setUpdatedStatus(fresh.status);
       setUpdatedRoomNumbers(fresh.roomOrBedNumbers ?? []);
@@ -929,16 +963,28 @@ const StayBookingSummaryPage = ({
     }
   };
 
+  const handleCoGuestsChange = (guestIds: string[]) => {
+    setLiveBooking((prev) => ({
+      ...(prev ?? booking),
+      guests: guestIds,
+    }));
+  };
+
   if (!isBookingEnabled) {
     return <FeatureNotEnabled feature="booking" />;
   }
 
   if (
-   ( !booking ||
-    (user?._id !== booking.createdBy &&
-      user?._id !== booking.paidBy &&
-        !canManageBooking) )
-      &&
+    (!booking ||
+      (!canViewBookingAsGuest(
+        {
+          createdBy: booking.createdBy,
+          paidBy: booking.paidBy,
+          guests: booking.guests,
+        },
+        user?._id,
+      ) &&
+        !canManageBooking)) &&
     !isFriendBookingForCurrentUser
   ) {
     return <PageNotFound />;
@@ -988,6 +1034,12 @@ const StayBookingSummaryPage = ({
               )}
             </div>
           </div>
+
+          {isCoGuestViewer && !canManageBooking && (
+            <BookingSurface tone="banner" padding="sm">
+              {t('booking_co_guests_read_only')}
+            </BookingSurface>
+          )}
 
           <div className="flex flex-col gap-0.5 text-xs text-disabled">
             <p>{createdFormatted}</p>
@@ -1145,6 +1197,27 @@ const StayBookingSummaryPage = ({
                 )}
               </div>
             )}
+            <div className="mt-1 flex flex-col gap-1.5">
+              {canEditCoGuests && (
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-sm font-medium text-foreground">
+                    {t('booking_co_guests_add_title')}
+                  </p>
+                  <p className="text-xs leading-snug text-disabled">
+                    {t('booking_co_guests_add_smallprint')}
+                  </p>
+                </div>
+              )}
+              <StayCoGuests
+                stayId={_id}
+                createdBy={createdBy}
+                paidBy={bookingView?.paidBy}
+                guestIds={coGuestIds}
+                adults={adults}
+                canEdit={canEditCoGuests}
+                onGuestsChange={handleCoGuestsChange}
+              />
+            </div>
           </div>
 
           <div className="flex flex-col gap-3">
@@ -1314,31 +1387,33 @@ const StayBookingSummaryPage = ({
           </BookingSurface>
         )}
 
-        <section className="flex flex-col gap-3">
-          <BookingRequestButtons
-            isFiatBooking={
-              !bookingView?.useCredits && !bookingView?.useTokens
-            }
-            openCheckout={
-              status !== 'cancelled' && isBookingOwnerEditor
-                ? openBookingCheckout
-                : undefined
-            }
-            checkoutLoading={isLoading}
-            hideCheckoutButton={status === 'cancelled'}
-            stayShaped={stayShaped}
-            paymentDelta={bookingView?.paymentDelta}
-            useTokens={useTokens}
-            _id={_id}
-            status={status}
-            createdBy={createdBy}
-            paidBy={bookingView?.paidBy}
-            end={bookingEnd}
-            start={bookingStart}
-            confirmBooking={confirmBooking}
-            rejectBooking={rejectBooking}
-          />
-        </section>
+        {!(isCoGuestViewer && !canManageBooking) && (
+          <section className="flex flex-col gap-3">
+            <BookingRequestButtons
+              isFiatBooking={
+                !bookingView?.useCredits && !bookingView?.useTokens
+              }
+              openCheckout={
+                status !== 'cancelled' && isBookingOwnerEditor
+                  ? openBookingCheckout
+                  : undefined
+              }
+              checkoutLoading={isLoading}
+              hideCheckoutButton={status === 'cancelled'}
+              stayShaped={stayShaped}
+              paymentDelta={bookingView?.paymentDelta}
+              useTokens={useTokens}
+              _id={_id}
+              status={status}
+              createdBy={createdBy}
+              paidBy={bookingView?.paidBy}
+              end={bookingEnd}
+              start={bookingStart}
+              confirmBooking={confirmBooking}
+              rejectBooking={rejectBooking}
+            />
+          </section>
+        )}
 
         {status === 'confirmed' && (
           <BookingSurface tone="soft" padding="md" className="text-sm">
@@ -1493,10 +1568,15 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
   }
 
   try {
-    const [bookingRes, listingRes, foodRes, projectsRes] =
+    const [stayRes, bookingDocRes, listingRes, foodRes, projectsRes] =
       await Promise.all([
         api
           .get(`/stays/${slug}`, {
+            headers: getBearerAuthHeaders(req as NextApiRequest),
+          })
+          .catch(() => null),
+        api
+          .get(`/booking/${slug}`, {
             headers: getBearerAuthHeaders(req as NextApiRequest),
           })
           .catch(() => null),
@@ -1508,7 +1588,14 @@ StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
         api.get('/food').catch(() => null),
         api.get('/project').catch(() => null),
       ]);
-    const booking = bookingRes?.data?.results;
+    const stay = stayRes?.data?.results;
+    const bookingDoc = bookingDocRes?.data?.results;
+    const booking = stay
+      ? {
+          ...stay,
+          guests: stay.guests ?? bookingDoc?.guests ?? [],
+        }
+      : bookingDoc;
     const bookingConfig = config.booking;
     const generalConfig = config.general;
     const listings = listingRes?.data?.results;

@@ -18,6 +18,10 @@ import {
   getBookingListingEmbedded,
   getBookingListingRefId,
 } from '../utils/booking.helpers';
+import {
+  getBookingCoGuestIds,
+  isBookingCoGuest,
+} from '../utils/bookingCoGuests.helpers';
 import { csvCell } from '../utils/csv';
 
 interface Props {
@@ -44,6 +48,7 @@ const Bookings = ({
   const t = useTranslations();
   const { platform }: any = usePlatform();
   const { user } = useAuth();
+  const currentUserId = user?._id;
 
   const isSpaceHost = user?.roles?.includes('space-host');
 
@@ -272,6 +277,24 @@ const Bookings = ({
 
                   const userToShow = payer || user;
 
+                  const guests =
+                    allUsers &&
+                    allUsers.toJS().filter((listedUser: any) =>
+                      getBookingCoGuestIds({
+                        createdBy: booking.get('createdBy'),
+                        guests: booking.get('guests'),
+                      }).includes(listedUser._id),
+                    );
+
+                  const isCoGuestView = isBookingCoGuest(
+                    {
+                      createdBy: booking.get('createdBy'),
+                      paidBy,
+                      guests: booking.get('guests'),
+                    },
+                    currentUserId,
+                  );
+
                   const isPrivateListing =
                     (listing && listing.get('private')) ?? embedded.private;
                   const isHourlyListing =
@@ -294,6 +317,12 @@ const Bookings = ({
                           email: userToShow.email,
                         }
                       }
+                      guestInfo={guests?.map((guest: any) => ({
+                        name: guest.screenname,
+                        photo: guest.photo,
+                        id: guest._id,
+                      }))}
+                      isCoGuestView={isCoGuestView}
                       eventName={currentEvent && currentEvent.get('name')}
                       eventChatLink={currentEvent && currentEvent.get('chatLink')}
                       volunteerName={

@@ -1,0 +1,3066 @@
+{
+  "/": {
+    "title": "Welcome",
+    "slug": "/",
+    "description": "A place to visit, stay, and build together.",
+    "ogImage": "",
+    "sections": [
+      {
+        "type": "hero",
+        "data": {
+          "settings": {
+            "alignText": "center",
+            "isInverted": false,
+            "isCompact": false
+          },
+          "content": {
+            "eyebrow": "",
+            "title": "Welcome",
+            "body": "We are building a place where land is held in common, community is intentional, and belonging is not left to chance.",
+            "imageUrl": "",
+            "cta": {
+              "text": "Join us",
+              "url": "/signup"
+            },
+            "secondaryCta": {
+              "text": "Plan a visit",
+              "url": "/stay"
+            }
+          }
+        }
+      },
+      {
+        "type": "features",
+        "data": {
+          "settings": {
+            "numColumns": 3,
+            "isSmallImage": true,
+            "isColorful": false
+          },
+          "background": "neutral-light",
+          "content": {
+            "title": "What happens here",
+            "description": "",
+            "items": [
+              {
+                "title": "Stay with us",
+                "text": "<p>Book a room, a cabin or a camping spot and experience daily life on the land.</p>",
+                "imageUrl": "",
+                "visualType": "none",
+                "cta": {
+                  "text": "Book a stay",
+                  "url": "/stay"
+                }
+              },
+              {
+                "title": "Join an event",
+                "text": "<p>Workshops, gatherings and residencies run throughout the year.</p>",
+                "imageUrl": "",
+                "visualType": "none",
+                "cta": {
+                  "text": "See what's on",
+                  "url": "/events"
+                }
+              },
+              {
+                "title": "Become part of it",
+                "text": "<p>Members and citizens shape how this place is governed and cared for.</p>",
+                "imageUrl": "",
+                "visualType": "none",
+                "cta": {
+                  "text": "Learn more",
+                  "url": "/citizenship"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "upcomingEvents",
+        "data": {
+          "settings": {},
+          "content": {}
+        }
+      },
+      {
+        "type": "cta",
+        "data": {
+          "settings": {
+            "style": "accent"
+          },
+          "content": {
+            "eyebrow": "",
+            "title": "Come and see for yourself",
+            "text": "Create an account to book a stay, join events and follow what we are building.",
+            "primaryText": "Create an account",
+            "primaryLink": "/signup",
+            "secondaryText": "Plan a visit",
+            "secondaryLink": "/stay"
+          }
+        }
+      }
+    ]
+  },
+  "/volunteer": {
+    "title": "Seasonal Volunteers, Open Call",
+    "slug": "/volunteer",
+    "description": "Join Traditional Dream Factory as a seasonal volunteer in Abela, Alentejo. Spring and fall seasons on a regenerative farm and co-living development.",
+    "ogImage": "",
+    "sections": [
+      {
+        "type": "hero",
+        "data": {
+          "settings": {
+            "alignText": "center",
+            "isInverted": false,
+            "isCompact": false
+          },
+          "content": {
+            "title": "Seasonal Volunteers, Open Call",
+            "body": "",
+            "imageUrl": "/images/tdf-volunteers-open-call.jpg",
+            "cta": {
+              "text": "Apply",
+              "url": "/volunteer/apply"
+            }
+          }
+        }
+      },
+      {
+        "type": "textBlock",
+        "data": {
+          "settings": {
+            "imagePosition": "none"
+          },
+          "content": {
+            "title": "Spring and fall seasons, Abela, Alentejo",
+            "body": "We are excited to invite volunteers to join us through our seasons at the Traditional Dream Factory, supporting every area of the regenerative farm and co-living development in Abela, Alentejo, Portugal.\n\nWe are looking for enthusiastic individuals who are interested in living, learning, and contributing to a vibrant and growing community based on respect for the land and each other. As a volunteer at TDF, you will have the chance to participate in a variety of activities, events, and workshops happening throughout the season.",
+            "imageUrl": "",
+            "imageAlt": ""
+          }
+        }
+      },
+      {
+        "type": "features",
+        "data": {
+          "settings": {
+            "numColumns": 2,
+            "isSmallImage": true,
+            "isColorful": false,
+            "hasBorder": true
+          },
+          "content": {
+            "title": "",
+            "description": "",
+            "items": [
+              {
+                "title": "Spring season",
+                "text": "<p>February to end of June</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Fall season",
+                "text": "<p>September to end of November</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "features",
+        "data": {
+          "settings": {
+            "numColumns": 1,
+            "isSmallImage": true,
+            "isColorful": false,
+            "hasBorder": true
+          },
+          "content": {
+            "title": "What to know before applying",
+            "description": "",
+            "items": [
+              {
+                "title": "Volunteering is rooted in genuine contribution",
+                "text": "<p>TDF is a living, working regenerative project, and the energy and care people bring here is what keeps it alive. We welcome volunteers who are excited to roll up their sleeves and actively participate in the work of regeneration, whether that is in the garden, the kitchen, or hospitality. This is not a place to escape or to stay cheaply. It is a place to show up fully for the vision of a bigger, brighter future.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Minimum stay",
+                "text": "<p>This allows enough time to truly settle in, find your rhythm with the community, and make a meaningful contribution to the work here. Shorter stays do not give enough space for the kind of depth and trust that makes the experience worthwhile, for you, for us, and for the land.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Arrivals are on Tuesday mornings",
+                "text": "<p>New volunteers always arrive on Tuesday morning for an onboarding session, followed by a landing circle. Please plan your travel around this.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Portuguese wage earners",
+                "text": "<p>We know the cost of living keeps climbing here, and we want to make it possible for more people from this land to stay with us. If you are living in Portugal on a genuinely low Portuguese income, write to us before you apply and we will find an arrangement that works.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Working hours are 9am to 1pm, daily",
+                "text": "<p>We keep to this schedule. The day starts with a playful 9am stand-up where we decide on the tasks together. These hours are not flexible, because they hold the group flow in the mornings. If you have morning meetings or commitments, this may not be the right opportunity for you right now.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Coming with children",
+                "text": "<p>If you are coming with children, please ask the space host about whether this can be organised in parallel with volunteering.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "From volunteer to resident",
+                "text": "<p>Full work exchanges, which we call residencies, are for specific skilled roles and require a one to three month full-time commitment. Anyone hoping to become a resident at TDF must first complete a volunteer stay, so we can get to know each other.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Rituals and community life",
+                "text": "<p>Our volunteer program offers insight into the weekly rituals of our community, with sharing spaces for deep listening, community care, and co-created workshops and skill swaps.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "dailyContribution",
+        "data": {
+          "settings": {
+            "bookingContext": "volunteer",
+            "showAccommodation": true
+          },
+          "content": {
+            "title": "Daily contribution",
+            "description": "A daily contribution helps keep everything running. VAT included. In return for your work hours you receive a dorm bed, a camping spot or a van parking spot, and you will be fed really well.",
+            "foodLabel": "Food",
+            "utilitiesLabel": "Utilities",
+            "accommodationLabel": "Accommodation",
+            "totalLabel": "Total",
+            "freeLabel": "Free",
+            "perDayLabel": "per day",
+            "selectionLabel": "Selection"
+          }
+        }
+      },
+      {
+        "type": "features",
+        "data": {
+          "settings": {
+            "numColumns": 3,
+            "isSmallImage": true,
+            "isColorful": false,
+            "hasBorder": true
+          },
+          "content": {
+            "title": "Skills and qualifications that can support us",
+            "description": "",
+            "items": [
+              {
+                "title": "Gardening",
+                "text": "<p>Syntropic beds, nursery, care</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Hospitality",
+                "text": "<p>Guest care, spaces, events</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Kitchen and cooking",
+                "text": "<p>Three meals a day, together</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Building projects",
+                "text": "<p>Natural build, carpentry</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Mushroom farm",
+                "text": "<p>Substrate, flushes, harvest</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Marketing and content",
+                "text": "<p>Social media, photo, video</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "textBlock",
+        "data": {
+          "settings": {
+            "imagePosition": "none"
+          },
+          "content": {
+            "title": "Before you apply",
+            "body": "- [Read the Pink Paper](https://docs.google.com/document/d/177JkHCy0AhplsaEEYpFHBsiI6d4uLk0TgURSKfBIewE/edit?tab=t.0)\n- [Read the visitors guide](https://docs.google.com/document/d/198vWYEQCC1lELQa8f76Jcw3l3UDiPcBKt04PGFKnUvg/edit?tab=t.0)\n- Any specific questions, write to the space host at space@traditionaldreamfactory.com",
+            "imageUrl": "",
+            "imageAlt": ""
+          }
+        }
+      },
+      {
+        "type": "volunteerCta",
+        "data": {
+          "settings": {},
+          "content": {
+            "title": "Seasonal Volunteers, Open Call",
+            "description": "Applying opens the volunteer application form.",
+            "ctaText": "Apply",
+            "ctaLink": "/volunteer/apply"
+          }
+        }
+      }
+    ]
+  },
+  "/projects": {
+    "title": "Builders Residency Open Call",
+    "slug": "/projects",
+    "description": "Join the build at Traditional Dream Factory. Take on a self-build project in Abela, Alentejo, earn token rewards, and live with the crew putting up TDF V2.",
+    "ogImage": "",
+    "sections": [
+      {
+        "type": "hero",
+        "data": {
+          "settings": {
+            "alignText": "center",
+            "isInverted": false,
+            "isCompact": false
+          },
+          "content": {
+            "eyebrow": "",
+            "title": "Builders Residency Open Call",
+            "body": "Pick a project, bring your hands, and help build TDF V2.",
+            "imageUrl": "/images/builders-l.png"
+          }
+        }
+      },
+      {
+        "type": "textBlock",
+        "data": {
+          "settings": {
+            "imagePosition": "none"
+          },
+          "content": {
+            "title": "We are starting to build",
+            "body": "TDF has secured funding to start major renovations. The first phase of accommodation runs with a professional contractor, and alongside that we are self-building the projects that open TDF V2.\n\nEvery project below is a real piece of that build, with its own scope, budget and reward. Find one that matches your skills and apply to it directly.",
+            "imageUrl": "",
+            "imageAlt": ""
+          }
+        }
+      },
+      {
+        "type": "features",
+        "data": {
+          "settings": {
+            "numColumns": 1,
+            "isSmallImage": true,
+            "isColorful": false,
+            "hasBorder": true
+          },
+          "content": {
+            "title": "What the residency offers",
+            "description": "",
+            "items": [
+              {
+                "title": "Requirements",
+                "text": "<p>6 hours per day, 1 month minimum. Free accommodation and food — glamping tents and dorms available, or bring your van.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Token rewards for completed projects",
+                "text": "<p>We offer tokens to builders who take a project from start to completion. Each project lists its reward, and the final terms are agreed with the team before you start.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Community culture",
+                "text": "<p>Experience co-living with fellow builders and the TDF team: regular community activities, saunas, experiential dinners, music jams, embodiment practices, yoga, massage and more.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "projectList",
+        "data": {
+          "settings": {
+            "showInProgress": true,
+            "showCompleted": true
+          },
+          "content": {
+            "title": "Open projects",
+            "inProgressTitle": "Being built right now",
+            "completedTitle": "Completed"
+          }
+        }
+      },
+      {
+        "type": "textBlock",
+        "data": {
+          "settings": {
+            "imagePosition": "none"
+          },
+          "content": {
+            "title": "Skills & qualifications",
+            "body": "You do not need all of these — most projects need one or two.\n\n- Practical build skills\n- Electrical\n- Plumbing\n- Cement & plastering\n- Carpentry\n- Painting & decorating\n- Stoneworks\n- Tools & machinery operation\n- Design & drawing skills",
+            "imageUrl": "",
+            "imageAlt": ""
+          }
+        }
+      },
+      {
+        "type": "textBlock",
+        "data": {
+          "settings": {
+            "imagePosition": "none"
+          },
+          "content": {
+            "title": "Planning your stay",
+            "body": "Open a project above to see its dates, scope and reward, then apply from that page — your application is tied to the project you pick.\n\nPlease try to book your stay starting from the 1st or the 15th of the month, so you arrive alongside other people and we can onboard you together.",
+            "imageUrl": "",
+            "imageAlt": ""
+          }
+        }
+      }
+    ]
+  },
+  "/cohousing": {
+    "title": "Build Your Life in Thriving Nature",
+    "slug": "/cohousing",
+    "description": "Join Europe's first tokenized regenerative village. Two new neighborhoods: Earthpods in the forest and Townhouses for families. Applications now open.",
+    "ogImage": "",
+    "sections": [
+      {
+        "type": "hero",
+        "data": {
+          "settings": {
+            "alignText": "center",
+            "isInverted": false,
+            "isCompact": false
+          },
+          "content": {
+            "title": "Build Your Life in Thriving Nature",
+            "body": "",
+            "imageUrl": "",
+            "cta": {
+              "text": "Open your application",
+              "url": "/cohousing/application"
+            }
+          }
+        }
+      },
+      {
+        "type": "cohousingApplication",
+        "data": {
+          "settings": {},
+          "content": {
+            "title": "Ready to Join?",
+            "description": "We're running a co-housing program for the first cohort now. Join the waitlist to be notified when applications open.",
+            "ctaText": "Open your application",
+            "ctaLink": "/cohousing/application"
+          }
+        }
+      }
+    ]
+  },
+  "/events": {
+    "title": "Events",
+    "slug": "/events",
+    "description": "Discover upcoming and past community events.",
+    "ogImage": "",
+    "sections": [
+      {
+        "type": "eventsCalendar",
+        "data": {
+          "settings": {
+            "showCreateCta": true,
+            "upcomingLimit": 100,
+            "pastLimit": 50
+          },
+          "content": {}
+        }
+      }
+    ]
+  },
+  "/stay": {
+    "title": "Experience regenerative living at ",
+    "slug": "/stay",
+    "description": "Experience regenerative living at TDF, a place for collaboration and innovation.",
+    "ogImage": "",
+    "sections": [
+      {
+        "type": "bookAStay",
+        "data": {
+          "settings": {},
+          "content": {
+            "title": "Experience regenerative living at ",
+            "subtitle": "Experience regenerative living at TDF, a place for collaboration and innovation."
+          }
+        }
+      },
+      {
+        "type": "listingsPreviews",
+        "data": {
+          "settings": {},
+          "content": {
+            "title": "Chose your accommodation"
+          }
+        }
+      },
+      {
+        "type": "reviews",
+        "data": {
+          "settings": {
+            "shuffle": true,
+            "limit": 3
+          },
+          "content": {
+            "title": "Words from people who've stayed",
+            "items": [
+              {
+                "name": "Daria",
+                "content": "TDF feels like a healing sanctuary in connection with nature — a playground for dreamers and a home for community.",
+                "photo": "/images/reviews/daria.jpg"
+              },
+              {
+                "name": "Charlotte",
+                "content": "One of my favorite ecovillage projects out there!",
+                "photo": "/images/reviews/charlotte.png"
+              },
+              {
+                "name": "Kyle",
+                "content": "A place for bohemian makers, the intersection of Permaculture and crypto. My kind of place.",
+                "photo": "/images/reviews/kyle.png"
+              },
+              {
+                "name": "Rim",
+                "content": "A special place with character. The charm of TDF is unique. Everything enchants you. You come out different. I will come back next year for sure!",
+                "photo": "/images/reviews/rim.jpg"
+              },
+              {
+                "name": "Vinay",
+                "content": "Don't come here. The community is way too kind. The nature is way too peaceful. The ideas are way too beautiful. It'll ruin your life. But maybe that's exactly what you're looking for.",
+                "photo": "/images/reviews/vinay.png"
+              },
+              {
+                "name": "Chavis",
+                "content": "I couldn't stop thinking about TDF after my first visit. It was a rare sort of experience that left me genuinely inspired about the future.",
+                "photo": "/images/reviews/chavis.jpg"
+              },
+              {
+                "name": "Marcelina",
+                "content": "I joined TDF for couple of weeks last fall and it was truly great experience! I believe in the vision of this place and I am sure there is huge potential for growth and development.",
+                "photo": "/images/reviews/marcelina.png"
+              },
+              {
+                "name": "Elizabeth",
+                "content": "My time at Traditional Dream Factory was a life-changing experience, and the people I met there will hold a special place in my heart forever.",
+                "photo": "/images/reviews/elizabeth.jpg"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "/token": {
+    "title": "Gain access to a thriving, regenerative village",
+    "slug": "/token",
+    "description": "1 $TDF token = 1 night stay, every year, forever (based on accomodation type and availability)",
+    "ogImage": "https://cdn.oasa.co/tdf/tdf-invest-og.jpg",
+    "sections": [
+      {
+        "type": "hero",
+        "data": {
+          "settings": {
+            "alignText": "center",
+            "isInverted": false,
+            "isCompact": false
+          },
+          "content": {
+            "eyebrow": "$TDF Token",
+            "title": "Gain access to a thriving, regenerative village",
+            "body": "1 $TDF token = 1 night stay, every year, forever (based on accomodation type and availability)",
+            "imageUrl": "https://cdn.oasa.co/tdf/tdf-invest-og.jpg",
+            "cta": {
+              "text": "Buy Tokens",
+              "url": "/token/before-you-begin"
+            },
+            "secondaryCta": {
+              "text": "Whitepaper",
+              "url": "https://oasa.earth/papers/OASA-Whitepaper-V1.2.pdf"
+            }
+          }
+        }
+      },
+      {
+        "type": "tokenStats",
+        "data": {
+          "settings": {
+            "showCta": true
+          },
+          "content": {
+            "eyebrow": "$TDF Token",
+            "title": "Liquid access & governance, powered by blockchain",
+            "description": "Think of $TDF as a perpetual digital access right — simple to buy, easy to hold. It turns guests into co-stewards and gives every holder a say in how the village grows.",
+            "ctaText": "Buy Tokens",
+            "ctaLink": "/token/before-you-begin"
+          }
+        }
+      },
+      {
+        "type": "floatingBuyTokens",
+        "data": {
+          "settings": {},
+          "content": {
+            "title": "Buy Tokens",
+            "ctaText": "Buy Tokens"
+          }
+        }
+      },
+      {
+        "type": "features",
+        "data": {
+          "settings": {
+            "numColumns": 3,
+            "isSmallImage": true,
+            "isColorful": false,
+            "hasBorder": true
+          },
+          "content": {
+            "title": "Token Utility",
+            "description": "$TDF converts directly into nights of stay at TDF.",
+            "items": [
+              {
+                "title": "Accommodation Access",
+                "text": "<p>1 $TDF = 1 night per year in standard lodging (utility fee applies).</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Governance Rights",
+                "text": "<p>1 token = 1 vote</p><p>Each token carries voting rights within the TDF DAO.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Citizenship Qualification",
+                "text": "<p>30 tokens</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Event Access",
+                "text": "<p>Priority access</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Bookings require Space-Host approval; Citizens benefit from instant booking.",
+                "text": "<p>Tokens unlock your preferred room; the utility fee sustains services and operations.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Secondary Market",
+                "text": "<p>Post Go-Live</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "textBlock",
+        "data": {
+          "settings": {
+            "imagePosition": "right"
+          },
+          "content": {
+            "title": "Transform Tokens into Lifetime Stay Rights",
+            "body": "$TDF converts directly into nights of stay at TDF.\n\n1 $TDF = 1 night per year in standard lodging (utility fee applies).\n\nTokens unlock your preferred room; the utility fee sustains services and operations.\n\nSupplies, insurance, energy,",
+            "imageUrl": "https://cdn.oasa.co/gallery/renders/suite.jpg",
+            "imageAlt": "Traditional Dream Factory accommodation"
+          }
+        }
+      },
+      {
+        "type": "listingsPreviews",
+        "data": {
+          "settings": {},
+          "content": {
+            "title": "Traditional Dream Factory accommodation"
+          }
+        }
+      },
+      {
+        "type": "gallery",
+        "data": {
+          "settings": {
+            "size": "large"
+          },
+          "content": {
+            "title": "Modern Co-Living",
+            "items": [
+              {
+                "imageUrl": "https://cdn.oasa.co/gallery/renders/coliving.jpg",
+                "width": 1200,
+                "height": 800,
+                "alt": "Modern Co-Living"
+              },
+              {
+                "imageUrl": "https://cdn.oasa.co/gallery/renders/coworking.jpg",
+                "width": 1200,
+                "height": 800,
+                "alt": "Biomorphic co-working garden"
+              },
+              {
+                "imageUrl": "https://cdn.oasa.co/gallery/renders/greenhouse.jpg",
+                "width": 1200,
+                "height": 800,
+                "alt": "Natural pool & Greenhouse"
+              },
+              {
+                "imageUrl": "https://cdn.oasa.co/gallery/renders/suite.jpg",
+                "width": 1200,
+                "height": 800,
+                "alt": "12x suites + dorm + house"
+              },
+              {
+                "imageUrl": "https://cdn.oasa.co/gallery/renders/plan-full-res.png",
+                "width": 1200,
+                "height": 800,
+                "alt": ""
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "timeline",
+        "data": {
+          "settings": {},
+          "content": {
+            "title": "How to Purchase Guide",
+            "description": "",
+            "items": [
+              {
+                "phase": "01",
+                "title": "Create Account",
+                "text": "<p>Sign up for a free account to begin your token purchase journey.</p>",
+                "status": "current"
+              },
+              {
+                "phase": "02",
+                "title": "Choose Amount",
+                "text": "<p>Select the number of tokens you'd like to purchase (minimum 1 token).</p>",
+                "status": "upcoming"
+              },
+              {
+                "phase": "03",
+                "title": "Complete Payment",
+                "text": "<p>Pay securely using cryptocurrency (cEUR) or bank transfer.</p>",
+                "status": "upcoming"
+              },
+              {
+                "phase": "04",
+                "title": "Receive Tokens",
+                "text": "<p>Your tokens will be delivered to your wallet and you'll gain immediate access rights.</p>",
+                "status": "upcoming"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "cta",
+        "data": {
+          "settings": {
+            "style": "accent"
+          },
+          "content": {
+            "eyebrow": "",
+            "title": "Ready to buy $TDF?",
+            "text": "Create an account, choose your amount, and unlock yearly stay rights at the village.",
+            "primaryText": "Start Purchase",
+            "primaryLink": "/token/before-you-begin",
+            "secondaryText": "Whitepaper",
+            "secondaryLink": "https://oasa.earth/papers/OASA-Whitepaper-V1.2.pdf"
+          }
+        }
+      },
+      {
+        "type": "supplyGraph",
+        "data": {
+          "settings": {},
+          "content": {}
+        }
+      },
+      {
+        "type": "priceHistory",
+        "data": {
+          "settings": {},
+          "content": {}
+        }
+      },
+      {
+        "type": "cta",
+        "data": {
+          "settings": {
+            "style": "default"
+          },
+          "content": {
+            "eyebrow": "",
+            "title": "OASA Whitepaper",
+            "text": "Complete technical details of the $TDF token, governance model, and OASA ecosystem",
+            "primaryText": "Whitepaper",
+            "primaryLink": "https://oasa.earth/papers/OASA-Whitepaper-V1.2.pdf",
+            "secondaryText": "Investment Data Room",
+            "secondaryLink": "/dataroom"
+          }
+        }
+      },
+      {
+        "type": "textBlock",
+        "data": {
+          "settings": {
+            "imagePosition": "none"
+          },
+          "content": {
+            "title": "Secondary Market Information",
+            "body": "After the Go-Live phase, $TDF tokens will be tradeable on secondary markets, providing liquidity and flexibility for token holders.\n\n**Important:** Secondary market trading will be enabled after the Go-Live milestone. Tokens cannot be transferred or sold until this phase is reached.\n\n- Trade tokens with other community members\n- Transfer tokens to compatible wallets\n- Liquidity through decentralized exchanges",
+            "imageUrl": "",
+            "imageAlt": ""
+          }
+        }
+      },
+      {
+        "type": "textBlock",
+        "data": {
+          "settings": {
+            "imagePosition": "none"
+          },
+          "background": "neutral-light",
+          "content": {
+            "title": "Legal Framework",
+            "body": "All token sales are conducted in compliance with applicable regulations. Review our legal documentation and terms.",
+            "imageUrl": "",
+            "imageAlt": ""
+          }
+        }
+      },
+      {
+        "type": "collapsibleFaq",
+        "data": {
+          "settings": {},
+          "content": {
+            "title": "Token FAQ",
+            "description": "",
+            "items": [
+              {
+                "title": "What do I get with $TDF?",
+                "text": "1 $TDF = 1 night per year in standard lodging (utility fee applies). Each token also carries voting rights within the TDF DAO."
+              },
+              {
+                "title": "How do I buy tokens?",
+                "text": "Create a free account, choose how many tokens you want, pay with crypto or bank transfer, and receive tokens in your wallet with immediate access rights."
+              },
+              {
+                "title": "Can I sell my tokens later?",
+                "text": "Secondary market trading will be enabled after the Go-Live milestone. Tokens cannot be transferred or sold until this phase is reached."
+              },
+              {
+                "title": "Where can I read the full details?",
+                "text": "Download the OASA Whitepaper for the full economic model, legal framework, and village roadmap — or explore the Investment Data Room."
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "webinar",
+        "data": {
+          "settings": {
+            "tags": [
+              "token-sale-page",
+              "investor-webinar"
+            ],
+            "analyticsCategory": "TokenSalePage"
+          },
+          "content": {}
+        }
+      },
+      {
+        "type": "cta",
+        "data": {
+          "settings": {
+            "style": "accent"
+          },
+          "content": {
+            "eyebrow": "$TDF Token",
+            "title": "Gain access to a thriving, regenerative village",
+            "text": "1 $TDF token = 1 night stay, every year, forever (based on accomodation type and availability)",
+            "primaryText": "Buy Tokens",
+            "primaryLink": "/token/before-you-begin",
+            "secondaryText": "Follow on Telegram",
+            "secondaryLink": "https://t.me/traditionaldreamfactory"
+          }
+        }
+      }
+    ]
+  },
+  "/subscriptions": {
+    "title": "Subscriptions",
+    "slug": "/subscriptions",
+    "description": "Choose a subscription plan that fits your regenerative lifestyle.",
+    "ogImage": "",
+    "sections": [
+      {
+        "type": "subscriptionPlans",
+        "data": {
+          "settings": {},
+          "content": {}
+        }
+      },
+      {
+        "type": "webinar",
+        "data": {
+          "settings": {
+            "tags": [
+              "landing-page",
+              "investor-webinar"
+            ],
+            "analyticsCategory": "SubscriptionsPage"
+          },
+          "content": {}
+        }
+      }
+    ]
+  },
+  "/citizenship": {
+    "title": "Become a Citizen of",
+    "slug": "/citizenship",
+    "description": "Citizenship at Traditional Dream Factory: belonging, governance, and access through tokens.",
+    "ogImage": "https://cdn.oasa.co/tdf/tdf-invest-og.jpg",
+    "sections": [
+      {
+        "type": "hero",
+        "data": {
+          "settings": {
+            "alignText": "left",
+            "isInverted": false,
+            "isCompact": false
+          },
+          "content": {
+            "eyebrow": "Founding Cohort",
+            "title": "Become a Citizen of",
+            "body": "Join 300 founding citizens co‑creating the first blockchain powered regenerative village. Citizenship blends commons‑based access, tokenized governance, and hands‑on land stewardship.",
+            "imageUrl": "",
+            "cta": {
+              "text": "Become a Citizen",
+              "url": "/citizenship/why"
+            },
+            "secondaryCta": {
+              "text": "Learn about $TDF",
+              "url": "/token"
+            }
+          }
+        }
+      },
+      {
+        "type": "cta",
+        "data": {
+          "settings": {
+            "style": "default"
+          },
+          "content": {
+            "eyebrow": "",
+            "title": "",
+            "text": "",
+            "primaryText": "Read the Game Guide",
+            "primaryLink": "https://traditionaldreamfactory.gitbook.io/game-guide/02_roles-and-stakeholders/citizen",
+            "secondaryText": "",
+            "secondaryLink": ""
+          }
+        }
+      },
+      {
+        "type": "citizenProgressBar",
+        "data": {
+          "settings": {
+            "citizenTarget": 300
+          },
+          "content": {
+            "title": "Citizens joined"
+          }
+        }
+      },
+      {
+        "type": "features",
+        "data": {
+          "settings": {
+            "numColumns": 2,
+            "isSmallImage": true,
+            "isColorful": false,
+            "hasBorder": true
+          },
+          "content": {
+            "title": "",
+            "description": "",
+            "items": [
+              {
+                "title": "What's here today",
+                "text": "<p>5 hectares under regeneration: agroforestry, orchards, rewilding.</p><p>Natural pool & rain‑water infrastructure underway.</p><p>Gardens, chickens, and food systems feeding community life.</p><p>Glamping tents, co-working, industrial kitchen and more.</p><p>Token‑powered governance with real citizen participation.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Roadmap",
+                "text": "<p>Complete 14 guest rooms & farm‑to‑table restaurant.</p><p>Expand food forests & water systems for long‑term abundance.</p><p>Launch 23‑home regenerative co‑housing neighborhood.</p><p>Consolidate assets, secure EU co‑financing & bank support.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "features",
+        "data": {
+          "settings": {
+            "numColumns": 3,
+            "isSmallImage": true,
+            "isColorful": false,
+            "hasBorder": true
+          },
+          "background": "white",
+          "content": {
+            "title": "What Citizenship Unlocks",
+            "description": "",
+            "items": [
+              {
+                "title": "Belonging & Community",
+                "text": "<p>Perpetual entry to TDF spaces, membership NFT as proof of citizenship, access to TDF Members page, exclusive Telegram group, and citizen-only programs.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Governance & Voice",
+                "text": "<p>Submit forum proposals, vote on decisions, participate in community calls, and co-create via tokenized, transparent governance systems.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Flexible Booking & Stays",
+                "text": "<p>Book up to 1 year in advance, extended stays up to 180 days, shorter minimum stay requirements, and instant booking capabilities.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Priority Access & Events",
+                "text": "<p>Priority access to events in both participant and creator modes, early co-housing opportunities, and exclusive citizen gatherings.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Financial Benefits",
+                "text": "<p>Access to financed token plans with flexible payment options, earn stay credits for volunteering work, and reduced fees for citizen activities.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "Make Real Impact",
+                "text": "<p>Bring projects forward, earn recognition via Proof of Presence & Sweat systems, directly regenerate land and community, and shape the future of TDF.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "timeline",
+        "data": {
+          "settings": {},
+          "content": {
+            "title": "Citizen Pathway",
+            "description": "A simple journey from first contact to full participation. Details live in the Game Guide.",
+            "items": [
+              {
+                "phase": "01",
+                "title": "Cultural Onboarding",
+                "text": "<p>Learn TDF culture, governance and shared agreements.</p>",
+                "status": "current"
+              },
+              {
+                "phase": "02",
+                "title": "Spend 14 Days on Land",
+                "text": "<p>Establish your Proof of Presence and meet the community.</p>",
+                "status": "upcoming"
+              },
+              {
+                "phase": "03",
+                "title": "Hold 30+ $TDF",
+                "text": "<p>Buy outright or choose a financed plan (utility unlocked instantly).</p>",
+                "status": "upcoming"
+              },
+              {
+                "phase": "04",
+                "title": "Get Vouched (3+)",
+                "text": "<p>Fellow members vouch for your alignment and care.</p>",
+                "status": "upcoming"
+              },
+              {
+                "phase": "05",
+                "title": "Sign Citizen Agreement",
+                "text": "<p>Confirm responsibilities & rights (see Game Guide).</p>",
+                "status": "future"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "financedTokensStart",
+        "data": {
+          "settings": {},
+          "content": {
+            "title": "Financed Tokens — Flexible Entry",
+            "description": "",
+            "items": [],
+            "ctaText": "Start Financed Plan",
+            "ctaLink": "/token/finance"
+          }
+        }
+      },
+      {
+        "type": "features",
+        "data": {
+          "settings": {
+            "numColumns": 1,
+            "isSmallImage": true,
+            "isColorful": false,
+            "hasBorder": true
+          },
+          "background": "white",
+          "content": {
+            "title": "Responsibilities & Rituals",
+            "description": "",
+            "items": [
+              {
+                "title": "",
+                "text": "<p>Attend ≥1 community call per quarter; join the annual Citizen Gathering.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "",
+                "text": "<p>Presence guideline: visit 2+ weeks per year; keep Proof of Presence active.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              },
+              {
+                "title": "",
+                "text": "<p>Live the culture: care for land, people, and projects; uphold agreements.</p>",
+                "imageUrl": "",
+                "visualType": "none"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "cta",
+        "data": {
+          "settings": {
+            "style": "default"
+          },
+          "content": {
+            "eyebrow": "",
+            "title": "",
+            "text": "",
+            "primaryText": "Read Full Responsibilities",
+            "primaryLink": "https://traditionaldreamfactory.gitbook.io/game-guide/02_roles-and-stakeholders/citizen",
+            "secondaryText": "",
+            "secondaryLink": ""
+          }
+        }
+      },
+      {
+        "type": "cta",
+        "data": {
+          "settings": {
+            "style": "accent"
+          },
+          "content": {
+            "eyebrow": "",
+            "title": "Ready to claim your place as a founding citizen?",
+            "text": "Step into agency, belonging, and impact. Help us complete the village and grow the commons.",
+            "primaryText": "Become a Citizen",
+            "primaryLink": "/citizenship/why",
+            "secondaryText": "Learn about $TDF",
+            "secondaryLink": "/token"
+          }
+        }
+      },
+      {
+        "type": "collapsibleFaq",
+        "data": {
+          "settings": {},
+          "background": "white",
+          "content": {
+            "title": "FAQ",
+            "description": "",
+            "items": [
+              {
+                "title": "How many tokens do I need for citizenship?",
+                "text": "Citizenship is unlocked at 30+ $TDF held. Financed options let you build towards this over time with instant utility unlocked from day one."
+              },
+              {
+                "title": "Do I have to live in Portugal?",
+                "text": "No. Many citizens spend seasons at TDF and contribute remotely between visits. Minimum presence guideline is 2+ weeks per year to stay in sync with the culture."
+              },
+              {
+                "title": "What if I'm new to land stewardship?",
+                "text": "Great. We have cultural onboarding, hands-on workdays, and an education program so you can learn by doing."
+              },
+              {
+                "title": "Can I resell or transfer $TDF?",
+                "text": "$TDF tokens are locked until Go-Live event. See the token page for mechanics, bonding curve, and current pricing."
+              },
+              {
+                "title": "Where can I read the full responsibilities/rights?",
+                "text": "See the Game Guide (Citizenship) for detailed roles, expectations, rituals, and governance processes."
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "cta",
+        "data": {
+          "settings": {
+            "style": "default"
+          },
+          "content": {
+            "eyebrow": "",
+            "title": "Don't miss any updates!",
+            "text": "Follow our Telegram channel for announcements, events, and TDF news.",
+            "primaryText": "Follow on Telegram",
+            "primaryLink": "https://t.me/traditionaldreamfactory",
+            "secondaryText": "",
+            "secondaryLink": ""
+          }
+        }
+      }
+    ]
+  },
+  "/fundraiser": {
+    "title": "Help Build Traditional Dream Factory",
+    "slug": "/fundraiser",
+    "description": "Support the Traditional Dream Factory fundraising campaign and help build regenerative infrastructure in Portugal.",
+    "ogImage": "",
+    "sections": [
+      {
+        "type": "hero",
+        "data": {
+          "settings": {
+            "alignText": "center",
+            "isInverted": false,
+            "isCompact": false
+          },
+          "content": {
+            "title": "Help Build Traditional Dream Factory",
+            "body": "Join mission-aligned supporters funding core infrastructure for a regenerative village.",
+            "imageUrl": "",
+            "cta": {
+              "text": "Support TDF",
+              "url": "#support"
+            }
+          }
+        }
+      },
+      {
+        "type": "fundraiser",
+        "data": {
+          "settings": {
+            "showTitle": true
+          },
+          "content": {
+            "eyebrow": "Fundraising campaign",
+            "title": "Help Build Traditional Dream Factory",
+            "description": "Join mission-aligned supporters funding core infrastructure for a regenerative village.",
+            "ctaText": "Support TDF",
+            "ctaLink": "/fundraiser"
+          }
+        }
+      },
+      {
+        "type": "fundraiserProgress",
+        "data": {
+          "settings": {},
+          "content": {}
+        }
+      },
+      {
+        "type": "fundraiserMilestones",
+        "data": {
+          "settings": {},
+          "content": {}
+        }
+      },
+      {
+        "type": "fundraiserRewards",
+        "data": {
+          "settings": {},
+          "content": {}
+        }
+      },
+      {
+        "type": "webinar",
+        "data": {
+          "settings": {
+            "tags": [
+              "landing-page",
+              "investor-webinar"
+            ],
+            "analyticsCategory": "FundraiserPage"
+          },
+          "content": {}
+        }
+      }
+    ]
+  },
+  "/team": {
+    "title": "Team — Traditional Dream Factory",
+    "slug": "/team",
+    "description": "Meet the team building Europe's first regenerative village",
+    "ogImage": "",
+    "sections": [
+      {
+        "type": "hero",
+        "data": {
+          "settings": {
+            "alignText": "center",
+            "isInverted": false,
+            "isCompact": false
+          },
+          "content": {
+            "title": "Our Team",
+            "body": "A decentralized collective of builders, dreamers, and land stewards creating a tokenized regenerative village.",
+            "imageUrl": "",
+            "cta": {
+              "text": "",
+              "url": ""
+            }
+          }
+        }
+      },
+      {
+        "type": "teamStructure",
+        "data": {
+          "settings": {},
+          "content": {
+            "items": [
+              {
+                "icon": "landmark",
+                "title": "OASA Association",
+                "description": "Swiss non-profit overseeing land conservation and governance across the network"
+              },
+              {
+                "icon": "vote",
+                "title": "TDF DAO",
+                "description": "Community governance through token holders, citizens, and the citizen assembly"
+              },
+              {
+                "icon": "zap",
+                "title": "Executive Team",
+                "description": "Day-to-day operations, development, and strategic direction"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "teamMembers",
+        "data": {
+          "settings": {},
+          "content": {
+            "eyebrow": "Executive Team",
+            "title": "Leadership",
+            "description": "Strategic real estate development and operational direction given by the DAO.",
+            "members": [
+              {
+                "name": "Samuel Delesque",
+                "role": "Executive Director",
+                "bio": "Franco-Danish entrepreneur and former software engineer. Founded TDF with a vision of moving \"from ownership to stewardship.\"",
+                "twitterUrl": "https://twitter.com/samdelesque",
+                "linkedinUrl": "https://www.linkedin.com/in/samdelesque/"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "teamDepartments",
+        "data": {
+          "settings": {},
+          "content": {
+            "eyebrow": "Operations",
+            "title": "On-the-Ground Teams",
+            "description": "The people making magic happen every day at TDF.",
+            "departments": [
+              {
+                "title": "Hospitality Team",
+                "subtitle": "Assembled over 2026",
+                "description": "Run a profitable rural tourism operation with high guest satisfaction.",
+                "members": [
+                  {
+                    "name": "Luna Mangan",
+                    "role": "Hospitality Manager"
+                  },
+                  {
+                    "name": "Kitchen Lead",
+                    "role": "Position open",
+                    "isOpen": true
+                  },
+                  {
+                    "name": "Kitchen Support",
+                    "role": "Position open",
+                    "isOpen": true
+                  },
+                  {
+                    "name": "Housekeeping",
+                    "role": "2 positions",
+                    "isOpen": true
+                  },
+                  {
+                    "name": "Maintenance",
+                    "role": "0.5x position",
+                    "isOpen": true
+                  }
+                ]
+              },
+              {
+                "title": "Ecology & Food Production",
+                "description": "Produce food for 50+ people, increase soil fertility, and retain water (OASA metrics).",
+                "members": [
+                  {
+                    "name": "Ofer Carmon",
+                    "role": "Land Steward"
+                  },
+                  {
+                    "name": "Joao Baranov",
+                    "role": "Land Steward"
+                  },
+                  {
+                    "name": "Land Steward",
+                    "role": "1 additional position",
+                    "isOpen": true
+                  },
+                  {
+                    "name": "Volunteers",
+                    "role": "2 rotating positions",
+                    "isOpen": true
+                  }
+                ]
+              },
+              {
+                "title": "Internal Build Team",
+                "description": "Create unique accommodations and beautify the land for human use.",
+                "members": [
+                  {
+                    "name": "Julia Aust",
+                    "role": "Carpentry"
+                  }
+                ]
+              },
+              {
+                "title": "Mushroom Farm",
+                "description": "Produce edible mushrooms for 3 restaurants and medicinal products.",
+                "members": [
+                  {
+                    "name": "Richard Olson",
+                    "role": "Mycology Lead (0.25x)"
+                  },
+                  {
+                    "name": "Tonya Gorman",
+                    "role": "Mycology Ops (1x)"
+                  },
+                  {
+                    "name": "Mycology Assistants",
+                    "role": "2 positions",
+                    "isOpen": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "teamPartners",
+        "data": {
+          "settings": {},
+          "content": {
+            "eyebrow": "Partners & Contractors",
+            "title": "External Partners",
+            "description": "Professional partners and service providers supporting TDF and OASA.",
+            "partners": [
+              {
+                "name": "Coin Finance",
+                "role": "Token & Web3"
+              },
+              {
+                "name": "Lars Schlichting",
+                "role": "Legal"
+              },
+              {
+                "name": "CRU Architecture",
+                "role": "Architecture"
+              },
+              {
+                "name": "SCARD",
+                "role": "Engineering"
+              },
+              {
+                "name": "White Rabbit",
+                "role": "Development"
+              },
+              {
+                "name": "Kinterra",
+                "role": "Regenerative systems sourcing"
+              },
+              {
+                "name": "TBD Construction",
+                "role": "Construction"
+              },
+              {
+                "name": "CAAC Accounting",
+                "role": "Accounting"
+              },
+              {
+                "name": "Start PME",
+                "role": "Grant Support"
+              },
+              {
+                "name": "Fieldfisher Law",
+                "role": "Legal (PT)"
+              },
+              {
+                "name": "Crédito Agrícola",
+                "role": "Banking"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "teamGovernance",
+        "data": {
+          "settings": {},
+          "content": {
+            "eyebrow": "Governance",
+            "title": "TDF DAO",
+            "description": "Decentralized governance through our token holder community.",
+            "items": [
+              {
+                "title": "Citizens",
+                "description": "Members who have completed the onboarding process and embody TDF values."
+              },
+              {
+                "title": "Citizen Assembly",
+                "description": "Regular gatherings to discuss proposals and shape the community direction."
+              },
+              {
+                "title": "Treasury",
+                "description": "Community-controlled funds for development and operations."
+              },
+              {
+                "title": "$TDF Token Holders",
+                "description": "280+ holders with governance rights and accommodation access."
+              },
+              {
+                "title": "$SWEAT Holders",
+                "description": "Contributors rewarded with tokens for work on the project."
+              },
+              {
+                "title": "$PRESENCE Holders",
+                "description": "Proof of presence tokens earned through time spent at TDF."
+              }
+            ],
+            "governsTitle": "What TDF DAO Governs",
+            "governsItems": [
+              "Game Guide (living agreement)",
+              "Land Plan (build master plan)",
+              "Executive team elections"
+            ]
+          }
+        }
+      },
+      {
+        "type": "teamJoinCta",
+        "data": {
+          "settings": {},
+          "content": {
+            "title": "Join the Team",
+            "description": "We're always looking for passionate people to join our regenerative community. Whether as a steward, volunteer, or contributor.",
+            "primaryText": "View Open Positions",
+            "primaryLink": "/roles",
+            "secondaryText": "Volunteer Program",
+            "secondaryLink": "/volunteer"
+          }
+        }
+      }
+    ]
+  },
+  "/press": {
+    "title": "Press & Media",
+    "slug": "/press",
+    "description": "Media coverage and press mentions of Traditional Dream Factory, Europe's first regenerative village DAO.",
+    "ogImage": "https://cdn.oasa.co/tdf/tdf-invest-og.jpg",
+    "sections": [
+      {
+        "type": "hero",
+        "data": {
+          "settings": {
+            "alignText": "center",
+            "isInverted": false,
+            "isCompact": false
+          },
+          "content": {
+            "title": "Press & Media",
+            "body": "Europe's first regenerative village DAO has been featured in 80+ publications across Portugal, Spain, France, UK, and international Web3 media.",
+            "imageUrl": "",
+            "cta": {
+              "text": "",
+              "url": ""
+            }
+          }
+        }
+      },
+      {
+        "type": "pressStats",
+        "data": {
+          "settings": {},
+          "content": {
+            "items": [
+              {
+                "value": "80+",
+                "label": "Press Articles"
+              },
+              {
+                "value": "40+",
+                "label": "Portuguese Media"
+              },
+              {
+                "value": "25+",
+                "label": "Spanish Media"
+              },
+              {
+                "value": "7",
+                "label": "Podcast Appearances"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "pressPublications",
+        "data": {
+          "settings": {},
+          "content": {
+            "eyebrow": "Featured in",
+            "items": [
+              {
+                "name": "Expresso"
+              },
+              {
+                "name": "Forbes Portugal"
+              },
+              {
+                "name": "Diário de Notícias"
+              },
+              {
+                "name": "Jornal Económico"
+              },
+              {
+                "name": "EFE Verde"
+              },
+              {
+                "name": "Idealista"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "testimonials",
+        "data": {
+          "settings": {},
+          "content": {
+            "eyebrow": "",
+            "title": "",
+            "items": [
+              {
+                "quote": "A regeneração é a nossa estrela polar, a convivência cria cultura e a blockchain fornece a coluna vertebral organizacional.",
+                "name": "Samuel Delesque, Founder",
+                "role": "OpenHub News",
+                "avatar": ""
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "pressHighlights",
+        "data": {
+          "settings": {},
+          "content": {
+            "eyebrow": "Highlight Coverage",
+            "items": [
+              {
+                "outlet": "Expresso",
+                "date": "June 26, 2025",
+                "title": "Nómadas digitais criam aldeia tecnológica no Alentejo",
+                "url": "https://expresso.pt/economia/economia_imobiliario/2025-06-26-nomadas-digitais-criam-aldeia-tecnologica-no-alentejo-354f740a"
+              },
+              {
+                "outlet": "Forbes Portugal",
+                "date": "August 26, 2025",
+                "title": "Portugal é o sétimo destino favorito dos nómadas digitais",
+                "url": "https://www.forbespt.com/portugal-e-o-setimo-destino-favorito-dos-nomadas-digitais/"
+              },
+              {
+                "outlet": "Diário de Notícias",
+                "date": "August 24, 2025",
+                "title": "Alentejo vê nascer primeira aldeia regenerativa da Europa financiada com tokens",
+                "url": "https://www.dn.pt/edicao-impressa/alentejo-v%C3%AA-nascer-primeira-aldeia-regenerativa-da-europa-financiada-com-tokens"
+              },
+              {
+                "outlet": "EFE Verde",
+                "date": "September 21, 2025",
+                "title": "Regenerar para avanzar: el futuro del campo pasa por la innovación social y ecológica",
+                "url": "https://efeverde.com/regenerar-para-avanzar-el-futuro-del-campo-pasa-por-la-innovacion-social-y-ecologica-por-samuel-delesque-traditional-dream-factory-tdf/"
+              },
+              {
+                "outlet": "Idealista",
+                "date": "December 18, 2025",
+                "title": "Primeira aldeia regenerativa tokenizada da Europa nasce no Alentejo",
+                "url": "https://www.idealista.pt/news/imobiliario/habitacao/2025/12/18/73120-primeira-aldeia-regenerativa-tokenizada-da-europa-nasce-no-alentejo"
+              },
+              {
+                "outlet": "Jornal Económico",
+                "date": "2025",
+                "title": "48% dos portugueses sonham trocar a cidade pelo campo",
+                "url": "https://jornaleconomico.sapo.pt/noticias/48-dos-portugueses-sonham-trocar-a-cidade-pelo-campo/"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "pressPodcasts",
+        "data": {
+          "settings": {},
+          "content": {
+            "eyebrow": "Podcast appearances",
+            "description": "Founder Samuel Delesque on regenerative finance and village building.",
+            "items": [
+              {
+                "title": "Green Planet Blue Planet",
+                "date": "January 2023 • 44 min",
+                "url": "https://podcasts.apple.com/gb/podcast/ep-322-sam-delesque-regenerative-entrepreneur-developing/id1265643891?i=1000595309300"
+              },
+              {
+                "title": "ReFi Podcast",
+                "date": "October 2023 • 55 min",
+                "url": "https://blog.refidao.com/building-regenerative-villages-with-samuel-delesque-season-3-episode-8/"
+              },
+              {
+                "title": "Crypto Altruism",
+                "date": "January 2023",
+                "url": "https://www.cryptoaltruism.org/blog/crypto-altruism-podcast-episode84-oasa-using-web3-to-build-for-a-regenerative-future"
+              },
+              {
+                "title": "The Blockchain Socialist",
+                "date": "January 2024",
+                "url": "https://theblockchainsocialist.com/a-regenerative-village-as-a-dao-in-portugal-traditional-dream-factory/"
+              },
+              {
+                "title": "The New Movement",
+                "date": "42 min",
+                "url": "https://thenewmvt.com/podcast/sam-delesque/"
+              },
+              {
+                "title": "Primal Gathering",
+                "date": "November 2021 • 59 min",
+                "url": "https://podcasts.apple.com/ng/podcast/from-ownership-to-stewardship-samuel-delesque-founder/id1591874552?i=1000540529193"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "pressContact",
+        "data": {
+          "settings": {},
+          "content": {
+            "title": "Press Contact",
+            "description": "For media inquiries, interview requests, or press materials, please contact:",
+            "email": "press@traditionaldreamfactory.com"
+          }
+        }
+      }
+    ]
+  },
+  "/dataroom": {
+    "title": "_i18n_dataroom_hero_subtitle",
+    "slug": "/dataroom",
+    "description": "_i18n_dataroom_page_description",
+    "ogImage": "https://cdn.oasa.co/tdf/tdf-invest-og.jpg",
+    "sections": [
+      {
+        "type": "hero",
+        "data": {
+          "background": "gradient-accent",
+          "settings": {
+            "alignText": "center",
+            "isInverted": false,
+            "isCompact": false
+          },
+          "content": {
+            "eyebrow": "_i18n_dataroom_hero_label",
+            "title": "_i18n_dataroom_hero_subtitle",
+            "body": "_i18n_dataroom_hero_description",
+            "imageUrl": "",
+            "cta": {
+              "text": "_i18n_dataroom_executive_cta_secondary_1",
+              "url": "#webinar"
+            }
+          }
+        }
+      },
+      {
+        "type": "stats",
+        "data": {
+          "background": "white",
+          "settings": {},
+          "content": {
+            "eyebrow": "",
+            "title": "",
+            "items": [
+              {
+                "value": "€450K",
+                "label": "_i18n_dataroom_stat_total_funding"
+              },
+              {
+                "value": "€1.24M",
+                "label": "_i18n_dataroom_stat_construction_budget"
+              },
+              {
+                "value": "€653k",
+                "label": "_i18n_dataroom_stat_revenue_target"
+              },
+              {
+                "value": "25ha",
+                "label": "_i18n_dataroom_stat_land_stewardship"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "emailGate",
+        "data": {
+          "background": "white",
+          "settings": {
+            "placement": "dataroom"
+          },
+          "content": {
+            "eyebrow": "",
+            "title": "_i18n_dataroom_gate_title",
+            "description": "_i18n_dataroom_gate_description",
+            "ctaText": "_i18n_dataroom_gate_cta"
+          }
+        }
+      },
+      {
+        "type": "stats",
+        "data": {
+          "background": "white",
+          "settings": {
+            "gatedByEmail": true
+          },
+          "content": {
+            "eyebrow": "_i18n_dataroom_loan_terms_label",
+            "title": "_i18n_dataroom_loan_terms_title",
+            "items": [
+              {
+                "value": "€450K",
+                "label": "_i18n_dataroom_terms_amount"
+              },
+              {
+                "value": "5%",
+                "label": "_i18n_dataroom_terms_rate"
+              },
+              {
+                "value": "4 yr",
+                "label": "_i18n_dataroom_terms_term"
+              },
+              {
+                "value": "€50K",
+                "label": "_i18n_dataroom_terms_minimum"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "features",
+        "data": {
+          "background": "white",
+          "settings": {
+            "numColumns": 2,
+            "hasBorder": true,
+            "gatedByEmail": true
+          },
+          "content": {
+            "title": "",
+            "description": "",
+            "items": [
+              {
+                "title": "_i18n_dataroom_terms_security_label",
+                "text": "<p>_i18n_dataroom_terms_security_desc</p>",
+                "visualType": "none"
+              },
+              {
+                "title": "_i18n_dataroom_terms_conversion_label",
+                "text": "<p>_i18n_dataroom_terms_conversion_desc</p>",
+                "visualType": "none"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "textBlock",
+        "data": {
+          "background": "white",
+          "settings": {
+            "imagePosition": "none",
+            "gatedByEmail": true
+          },
+          "content": {
+            "title": "",
+            "body": "_i18n_dataroom_terms_note"
+          }
+        }
+      },
+      {
+        "type": "flowDiagram",
+        "data": {
+          "background": "gray-50",
+          "settings": {
+            "gatedByEmail": true
+          },
+          "content": {
+            "eyebrow": "_i18n_dataroom_legal_structure_label",
+            "title": "_i18n_dataroom_legal_structure_title",
+            "description": "",
+            "nodes": [
+              {
+                "title": "OASA Association",
+                "subtitle": "Non-Profit • Switzerland",
+                "connectorLabel": "",
+                "icon": "landmark",
+                "style": "default"
+              },
+              {
+                "title": "Enseada Sonhadora S.A.",
+                "subtitle": "SPV • Portugal",
+                "connectorLabel": "holds equity in",
+                "icon": "building",
+                "style": "dark"
+              },
+              {
+                "title": "Land + Buildings",
+                "subtitle": "25ha • Abela",
+                "connectorLabel": "owns",
+                "icon": "mapPin",
+                "style": "dashed"
+              },
+              {
+                "title": "Private Debt",
+                "subtitle": "Your Investment • €450K",
+                "connectorLabel": "secures",
+                "icon": "wallet",
+                "style": "accent"
+              }
+            ],
+            "note": "_i18n_dataroom_legal_structure_desc"
+          }
+        }
+      },
+      {
+        "type": "dataTable",
+        "data": {
+          "background": "white",
+          "settings": {
+            "gatedByEmail": true
+          },
+          "content": {
+            "eyebrow": "_i18n_dataroom_investment_overview_label",
+            "title": "_i18n_dataroom_investment_highlights_title",
+            "description": "_i18n_dataroom_investment_highlights_description",
+            "columns": [
+              {
+                "label": "_i18n_dataroom_collateral_title",
+                "align": "left"
+              },
+              {
+                "label": "_i18n_dataroom_amount",
+                "align": "right"
+              }
+            ],
+            "rows": [
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_land_acquisition_title",
+                    "note": "_i18n_dataroom_collateral_land_desc"
+                  },
+                  {
+                    "text": "_i18n_dataroom_land_acquisition_amount_550k"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_buildings_portfolio_title",
+                    "note": "_i18n_dataroom_collateral_buildings_desc"
+                  },
+                  {
+                    "text": "_i18n_dataroom_buildings_portfolio_amount"
+                  }
+                ]
+              }
+            ],
+            "footer": {
+              "cells": [
+                {
+                  "text": "_i18n_dataroom_collateral_total",
+                  "note": "_i18n_dataroom_collateral_note"
+                },
+                {
+                  "text": "~€1.0M+"
+                }
+              ]
+            },
+            "note": ""
+          }
+        }
+      },
+      {
+        "type": "features",
+        "data": {
+          "background": "white",
+          "settings": {
+            "numColumns": 2,
+            "hasBorder": true,
+            "isSmallImage": true,
+            "gatedByEmail": true
+          },
+          "content": {
+            "title": "_i18n_dataroom_why_now_title",
+            "description": "",
+            "items": [
+              {
+                "title": "_i18n_dataroom_why_now_1",
+                "text": "",
+                "visualType": "icon",
+                "iconId": "check"
+              },
+              {
+                "title": "_i18n_dataroom_why_now_2",
+                "text": "",
+                "visualType": "icon",
+                "iconId": "landmark"
+              },
+              {
+                "title": "_i18n_dataroom_why_now_3",
+                "text": "",
+                "visualType": "icon",
+                "iconId": "fileSpreadsheet"
+              },
+              {
+                "title": "_i18n_dataroom_why_now_4",
+                "text": "",
+                "visualType": "icon",
+                "iconId": "users"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "cta",
+        "data": {
+          "background": "gray-50",
+          "settings": {
+            "style": "default",
+            "gatedByEmail": true
+          },
+          "content": {
+            "eyebrow": "_i18n_dataroom_track_record_label",
+            "title": "_i18n_dataroom_track_record_title",
+            "text": "_i18n_dataroom_track_record_subtitle",
+            "primaryText": "_i18n_dataroom_detailed_roadmap",
+            "primaryLink": "/roadmap"
+          }
+        }
+      },
+      {
+        "type": "timeline",
+        "data": {
+          "background": "gray-50",
+          "settings": {
+            "gatedByEmail": true
+          },
+          "content": {
+            "title": "_i18n_dataroom_completed_milestones_title",
+            "description": "",
+            "items": [
+              {
+                "phase": "",
+                "title": "_i18n_dataroom_milestone_1_title",
+                "text": "<p>_i18n_dataroom_milestone_1_content</p>",
+                "status": "done"
+              },
+              {
+                "phase": "",
+                "title": "_i18n_dataroom_milestone_2_title",
+                "text": "<p>_i18n_dataroom_milestone_2_content</p>",
+                "status": "done"
+              },
+              {
+                "phase": "",
+                "title": "_i18n_dataroom_milestone_3_title",
+                "text": "<p>_i18n_dataroom_milestone_3_content</p>",
+                "status": "done"
+              },
+              {
+                "phase": "",
+                "title": "_i18n_dataroom_milestone_4_title",
+                "text": "<p>_i18n_dataroom_milestone_4_content</p>",
+                "status": "done"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "timeline",
+        "data": {
+          "background": "gray-50",
+          "settings": {
+            "gatedByEmail": true
+          },
+          "content": {
+            "title": "_i18n_dataroom_growth_opportunities_title",
+            "description": "",
+            "items": [
+              {
+                "phase": "",
+                "title": "_i18n_dataroom_opportunity_1_title",
+                "text": "<p>_i18n_dataroom_opportunity_1_content</p>",
+                "status": "upcoming"
+              },
+              {
+                "phase": "",
+                "title": "_i18n_dataroom_opportunity_2_title",
+                "text": "<p>_i18n_dataroom_opportunity_2_content</p>",
+                "status": "upcoming"
+              },
+              {
+                "phase": "",
+                "title": "_i18n_dataroom_opportunity_3_title",
+                "text": "<p>_i18n_dataroom_opportunity_3_content</p>",
+                "status": "upcoming"
+              },
+              {
+                "phase": "",
+                "title": "_i18n_dataroom_opportunity_4_title",
+                "text": "<p>_i18n_dataroom_opportunity_4_content</p>",
+                "status": "upcoming"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "features",
+        "data": {
+          "background": "gray-50",
+          "settings": {
+            "numColumns": 2,
+            "hasBorder": true,
+            "gatedByEmail": true
+          },
+          "content": {
+            "title": "",
+            "description": "",
+            "items": [
+              {
+                "title": "_i18n_dataroom_building_permits_title",
+                "text": "<p>_i18n_dataroom_building_permits_content</p>",
+                "visualType": "none"
+              },
+              {
+                "title": "_i18n_dataroom_zoning_phase_title",
+                "text": "<p>_i18n_dataroom_zoning_phase_content</p>",
+                "visualType": "none"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "dataTable",
+        "data": {
+          "background": "white",
+          "settings": {
+            "gatedByEmail": true
+          },
+          "content": {
+            "eyebrow": "_i18n_home_financial_section_label",
+            "title": "_i18n_home_financial_section_title",
+            "description": "_i18n_home_financial_section_subtitle",
+            "columns": [
+              {
+                "label": "_i18n_dataroom_revenue_composition_title",
+                "align": "left"
+              },
+              {
+                "label": "_i18n_dataroom_amount",
+                "align": "right"
+              }
+            ],
+            "rows": [
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_revenue_stream_commercial"
+                  },
+                  {
+                    "text": "€371,828"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_revenue_stream_community"
+                  },
+                  {
+                    "text": "€135,778"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_revenue_stream_unique"
+                  },
+                  {
+                    "text": "€115,260"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_revenue_stream_events_other"
+                  },
+                  {
+                    "text": "€30,000"
+                  }
+                ]
+              }
+            ],
+            "footer": {
+              "cells": [
+                {
+                  "text": "_i18n_dataroom_revenue_total"
+                },
+                {
+                  "text": "€652,866"
+                }
+              ]
+            },
+            "note": ""
+          }
+        }
+      },
+      {
+        "type": "barChart",
+        "data": {
+          "background": "white",
+          "settings": {
+            "gatedByEmail": true
+          },
+          "content": {
+            "eyebrow": "",
+            "title": "_i18n_dataroom_revenue_projection_title",
+            "description": "",
+            "items": [
+              {
+                "label": "2028",
+                "value": "€653k",
+                "amount": 653
+              },
+              {
+                "label": "2029",
+                "value": "€701k",
+                "amount": 701
+              },
+              {
+                "label": "2030",
+                "value": "€752k",
+                "amount": 752
+              },
+              {
+                "label": "2031",
+                "value": "€801k",
+                "amount": 801
+              },
+              {
+                "label": "2032",
+                "value": "€843k",
+                "amount": 843
+              }
+            ],
+            "note": "_i18n_dataroom_revenue_projection_note"
+          }
+        }
+      },
+      {
+        "type": "dataTable",
+        "data": {
+          "background": "gray-50",
+          "settings": {
+            "gatedByEmail": true
+          },
+          "content": {
+            "eyebrow": "_i18n_dataroom_financial_plan_label",
+            "title": "_i18n_dataroom_use_of_funds_title",
+            "description": "_i18n_dataroom_use_of_funds_description",
+            "columns": [
+              {
+                "label": "_i18n_dataroom_source",
+                "align": "left"
+              },
+              {
+                "label": "_i18n_dataroom_amount",
+                "align": "right"
+              }
+            ],
+            "rows": [
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_source_bank_loans",
+                    "note": "_i18n_dataroom_bank_loans_note"
+                  },
+                  {
+                    "text": "€700,000"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_source_private_loans",
+                    "note": "_i18n_dataroom_private_loans_note"
+                  },
+                  {
+                    "text": "€450,000"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_source_token_sales",
+                    "note": "_i18n_dataroom_token_sales_note"
+                  },
+                  {
+                    "text": "€400,000"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_source_current_cash",
+                    "note": "_i18n_dataroom_current_cash_note"
+                  },
+                  {
+                    "text": "€160,000"
+                  }
+                ]
+              }
+            ],
+            "footer": {
+              "cells": [
+                {
+                  "text": "_i18n_dataroom_total_sources",
+                  "note": "_i18n_dataroom_grant_bonus",
+                  "tone": "positive"
+                },
+                {
+                  "text": "€1,710,000",
+                  "note": "+€660K",
+                  "tone": "positive"
+                }
+              ]
+            },
+            "note": ""
+          }
+        }
+      },
+      {
+        "type": "dataTable",
+        "data": {
+          "background": "gray-50",
+          "settings": {
+            "gatedByEmail": true
+          },
+          "content": {
+            "eyebrow": "",
+            "title": "_i18n_dataroom_uses_title",
+            "description": "",
+            "columns": [
+              {
+                "label": "_i18n_dataroom_use",
+                "align": "left"
+              },
+              {
+                "label": "_i18n_dataroom_amount",
+                "align": "right"
+              }
+            ],
+            "rows": [
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_use_building_acquisition",
+                    "note": "_i18n_dataroom_building_acquisition_note"
+                  },
+                  {
+                    "text": "€216,000"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_use_construction",
+                    "note": "_i18n_dataroom_construction_breakdown_note"
+                  },
+                  {
+                    "text": "€1,168,628"
+                  }
+                ]
+              }
+            ],
+            "footer": {
+              "cells": [
+                {
+                  "text": "_i18n_dataroom_total_uses"
+                },
+                {
+                  "text": "€1,384,628"
+                }
+              ]
+            },
+            "note": ""
+          }
+        }
+      },
+      {
+        "type": "dataTable",
+        "data": {
+          "background": "white",
+          "settings": {
+            "gatedByEmail": true
+          },
+          "content": {
+            "eyebrow": "_i18n_dataroom_repayment_label",
+            "title": "_i18n_dataroom_repayment_title",
+            "description": "_i18n_dataroom_repayment_subtitle",
+            "columns": [
+              {
+                "label": "_i18n_dataroom_repayment_year",
+                "align": "left"
+              },
+              {
+                "label": "_i18n_dataroom_repayment_activity",
+                "align": "left"
+              },
+              {
+                "label": "_i18n_dataroom_repayment_balance",
+                "align": "right"
+              }
+            ],
+            "rows": [
+              {
+                "cells": [
+                  {
+                    "text": "2026"
+                  },
+                  {
+                    "text": "_i18n_dataroom_repayment_2026",
+                    "tone": "muted"
+                  },
+                  {
+                    "text": "€450,000"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "2027"
+                  },
+                  {
+                    "text": "_i18n_dataroom_repayment_2027",
+                    "tone": "muted"
+                  },
+                  {
+                    "text": "~€400,000"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "2028"
+                  },
+                  {
+                    "text": "_i18n_dataroom_repayment_2028",
+                    "tone": "muted"
+                  },
+                  {
+                    "text": "~€250,000"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "2029"
+                  },
+                  {
+                    "text": "_i18n_dataroom_repayment_2029",
+                    "tone": "muted"
+                  },
+                  {
+                    "text": "~€100,000"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "2030"
+                  },
+                  {
+                    "text": "_i18n_dataroom_repayment_2030",
+                    "tone": "muted"
+                  },
+                  {
+                    "text": "€0",
+                    "tone": "positive"
+                  }
+                ]
+              }
+            ],
+            "footer": {
+              "cells": []
+            },
+            "note": "_i18n_dataroom_repayment_note"
+          }
+        }
+      },
+      {
+        "type": "dataTable",
+        "data": {
+          "background": "gray-50",
+          "settings": {
+            "gatedByEmail": true
+          },
+          "content": {
+            "eyebrow": "_i18n_dataroom_risks_label",
+            "title": "_i18n_dataroom_risks_title",
+            "description": "",
+            "columns": [
+              {
+                "label": "_i18n_dataroom_risks_risk",
+                "align": "left"
+              },
+              {
+                "label": "_i18n_dataroom_risks_mitigation",
+                "align": "left"
+              }
+            ],
+            "rows": [
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_risk_construction"
+                  },
+                  {
+                    "text": "_i18n_dataroom_risk_construction_mitigation",
+                    "tone": "muted"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_risk_financing"
+                  },
+                  {
+                    "text": "_i18n_dataroom_risk_financing_mitigation",
+                    "tone": "muted"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_risk_demand"
+                  },
+                  {
+                    "text": "_i18n_dataroom_risk_demand_mitigation",
+                    "tone": "muted"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_risk_operational"
+                  },
+                  {
+                    "text": "_i18n_dataroom_risk_operational_mitigation",
+                    "tone": "muted"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_risk_repayment"
+                  },
+                  {
+                    "text": "_i18n_dataroom_risk_repayment_mitigation",
+                    "tone": "muted"
+                  }
+                ]
+              }
+            ],
+            "footer": {
+              "cells": []
+            },
+            "note": ""
+          }
+        }
+      },
+      {
+        "type": "teamMembers",
+        "data": {
+          "settings": {
+            "gatedByEmail": true
+          },
+          "content": {
+            "eyebrow": "_i18n_dataroom_team_label",
+            "title": "_i18n_dataroom_team_title",
+            "description": "",
+            "members": [
+              {
+                "name": "_i18n_dataroom_team_sam_name",
+                "role": "_i18n_dataroom_team_sam_role",
+                "bio": "_i18n_dataroom_team_sam_bio"
+              },
+              {
+                "name": "_i18n_dataroom_team_luna_name",
+                "role": "_i18n_dataroom_team_luna_role",
+                "bio": "_i18n_dataroom_team_luna_bio"
+              },
+              {
+                "name": "_i18n_dataroom_team_builders_name",
+                "role": "_i18n_dataroom_team_builders_role",
+                "bio": "_i18n_dataroom_team_builders_bio"
+              },
+              {
+                "name": "_i18n_dataroom_team_ofer_name",
+                "role": "_i18n_dataroom_team_ofer_role",
+                "bio": "_i18n_dataroom_team_ofer_bio"
+              },
+              {
+                "name": "_i18n_dataroom_team_joao_name",
+                "role": "_i18n_dataroom_team_joao_role",
+                "bio": "_i18n_dataroom_team_joao_bio"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "teamPartners",
+        "data": {
+          "settings": {
+            "gatedByEmail": true
+          },
+          "content": {
+            "eyebrow": "",
+            "title": "_i18n_dataroom_team_partners_title",
+            "description": "",
+            "partners": [
+              {
+                "name": "CRU Architecture",
+                "role": "Architecture"
+              },
+              {
+                "name": "SCARD",
+                "role": "Engineering"
+              },
+              {
+                "name": "Coin Finance",
+                "role": "Token & Web3"
+              },
+              {
+                "name": "CAAC",
+                "role": "Accounting"
+              },
+              {
+                "name": "Fieldfisher",
+                "role": "Legal (PT)"
+              },
+              {
+                "name": "Lars Schlichting",
+                "role": "Legal (CH)"
+              },
+              {
+                "name": "Start PME",
+                "role": "Grant Support"
+              },
+              {
+                "name": "Crédito Agrícola",
+                "role": "Banking"
+              },
+              {
+                "name": "White Rabbit",
+                "role": "Marketing & PR"
+              },
+              {
+                "name": "Kinterra",
+                "role": "Regen Systems"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "dataTable",
+        "data": {
+          "background": "white",
+          "settings": {
+            "gatedByEmail": true
+          },
+          "content": {
+            "eyebrow": "_i18n_dataroom_investment_breakdown_label",
+            "title": "_i18n_dataroom_investment_map_title",
+            "description": "_i18n_dataroom_investment_map_subtitle",
+            "columns": [
+              {
+                "label": "_i18n_dataroom_investment_map_description",
+                "align": "left"
+              },
+              {
+                "label": "_i18n_dataroom_investment_map_total",
+                "align": "right"
+              }
+            ],
+            "rows": [
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_map_fiscal",
+                    "tone": "muted"
+                  },
+                  {
+                    "text": "€19,600"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_map_architecture",
+                    "tone": "muted"
+                  },
+                  {
+                    "text": "€25,000"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_map_engineering",
+                    "tone": "muted"
+                  },
+                  {
+                    "text": "€10,000"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_map_construction_rooms",
+                    "tone": "muted"
+                  },
+                  {
+                    "text": "€767,242"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_map_kitchen",
+                    "tone": "muted"
+                  },
+                  {
+                    "text": "€81,239"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_map_solar",
+                    "tone": "muted"
+                  },
+                  {
+                    "text": "€52,065"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_map_smart_locks",
+                    "tone": "muted"
+                  },
+                  {
+                    "text": "€22,902"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_map_heating",
+                    "tone": "muted"
+                  },
+                  {
+                    "text": "€65,700"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_map_windows",
+                    "tone": "muted"
+                  },
+                  {
+                    "text": "€22,200"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_map_greenhouse",
+                    "tone": "muted"
+                  },
+                  {
+                    "text": "€17,680"
+                  }
+                ]
+              },
+              {
+                "cells": [
+                  {
+                    "text": "_i18n_dataroom_map_studios",
+                    "tone": "muted"
+                  },
+                  {
+                    "text": "€85,000"
+                  }
+                ]
+              }
+            ],
+            "footer": {
+              "cells": [
+                {
+                  "text": "_i18n_dataroom_investment_map_total"
+                },
+                {
+                  "text": "€1,168,628"
+                }
+              ]
+            },
+            "note": ""
+          }
+        }
+      },
+      {
+        "type": "documents",
+        "data": {
+          "background": "gray-50",
+          "settings": {
+            "numColumns": 4,
+            "gatedByEmail": true
+          },
+          "content": {
+            "eyebrow": "_i18n_dataroom_documentation_label",
+            "title": "_i18n_dataroom_documents_title",
+            "description": "_i18n_dataroom_documents_subtitle",
+            "items": [
+              {
+                "title": "_i18n_dataroom_financial_plan_title",
+                "href": "/dataroom/tdf-financial-plan.xlsx",
+                "downloadLabel": "_i18n_dataroom_download_file",
+                "icon": "fileSpreadsheet"
+              },
+              {
+                "title": "_i18n_dataroom_area_map_title",
+                "href": "/dataroom/tdf-area-map.kml",
+                "downloadLabel": "_i18n_dataroom_download_file",
+                "icon": "map"
+              },
+              {
+                "title": "_i18n_dataroom_architecture_title",
+                "href": "/dataroom/tdf-architecture.pdf",
+                "downloadLabel": "_i18n_dataroom_download_pdf",
+                "icon": "building"
+              },
+              {
+                "title": "_i18n_dataroom_report_2021_title",
+                "href": "/pdf/2021-TDF-report.pdf",
+                "downloadLabel": "_i18n_dataroom_download_pdf",
+                "icon": "barChart"
+              },
+              {
+                "title": "_i18n_dataroom_report_2022_title",
+                "href": "/pdf/2022-TDF-report.pdf",
+                "downloadLabel": "_i18n_dataroom_download_pdf",
+                "icon": "leaf"
+              },
+              {
+                "title": "_i18n_dataroom_report_2024_title",
+                "href": "/pdf/2024-TDF-report.pdf",
+                "downloadLabel": "_i18n_dataroom_download_pdf",
+                "icon": "droplets"
+              },
+              {
+                "title": "_i18n_dataroom_report_2025_title",
+                "href": "/pdf/2025-TDF-report.pdf",
+                "downloadLabel": "_i18n_dataroom_download_pdf",
+                "icon": "rocket"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "webinar",
+        "data": {
+          "settings": {
+            "id": "webinar",
+            "tags": [
+              "dataroom",
+              "investor-webinar"
+            ],
+            "analyticsCategory": "Dataroom"
+          },
+          "content": {}
+        }
+      },
+      {
+        "type": "cta",
+        "data": {
+          "settings": {
+            "style": "dark"
+          },
+          "content": {
+            "eyebrow": "",
+            "title": "_i18n_dataroom_cta_title",
+            "text": "_i18n_dataroom_cta_description",
+            "primaryText": "_i18n_dataroom_executive_cta_secondary_1",
+            "primaryLink": "#webinar"
+          }
+        }
+      },
+      {
+        "type": "textBlock",
+        "data": {
+          "background": "dark",
+          "settings": {
+            "imagePosition": "none"
+          },
+          "content": {
+            "title": "",
+            "body": "_i18n_dataroom_cta_tagline"
+          }
+        }
+      }
+    ]
+  }
+}

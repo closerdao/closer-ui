@@ -46,6 +46,8 @@ interface Props {
   booking: any;
   listingName: string;
   userInfo: any;
+  guestInfo?: { name: string; photo: string; id: string }[];
+  isCoGuestView?: boolean;
   eventName: string;
   volunteerName: string;
   link: string | null;
@@ -61,6 +63,8 @@ const BookingListPreview = ({
   booking: bookingMapItem,
   listingName,
   userInfo,
+  guestInfo,
+  isCoGuestView = false,
   eventName,
   volunteerName,
   link,
@@ -217,6 +221,11 @@ const BookingListPreview = ({
               {t('friends_booking_title')}
             </span>
           )}
+          {isCoGuestView && (
+            <span className="inline-flex items-center rounded-full bg-neutral px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-foreground">
+              {t('booking_co_guest_badge')}
+            </span>
+          )}
         </div>
       </div>
 
@@ -265,6 +274,16 @@ const BookingListPreview = ({
       )}
 
       <UserInfoButton variant="preview" userInfo={userInfo} createdBy={paidBy || createdBy} />
+
+      {guestInfo &&
+        guestInfo.map((guest) => (
+          <UserInfoButton
+            key={guest.id}
+            variant="preview"
+            userInfo={{ name: guest.name, photo: guest.photo }}
+            createdBy={guest.id}
+          />
+        ))}
 
       <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
         <div>
@@ -321,7 +340,7 @@ const BookingListPreview = ({
           </Button>
         </Link>
 
-        {userInfo?.email && !isOwnBooking && (
+        {userInfo?.email && !isOwnBooking && canManageBooking && (
           <LinkButton variant="secondary" size="small" className={previewSecondaryCn} href={`mailto:${userInfo.email}`}>
             {t('booking_card_email_user')}
           </LinkButton>
@@ -378,22 +397,24 @@ const BookingListPreview = ({
           </Button>
         )}
 
-        <BookingRequestButtons
-          listPreview
-          hideCheckoutButton
-          hideCancelButton
-          stayShaped={stayShaped}
-          paymentDelta={paymentDelta}
-          useTokens={Boolean(useTokens)}
-          _id={_id}
-          status={status}
-          createdBy={createdBy}
-          paidBy={bookingMapItem.get('paidBy')}
-          end={end}
-          start={start}
-          confirmBooking={confirmBooking}
-          rejectBooking={rejectBooking}
-        />
+        {(!isCoGuestView || canManageBooking) && (
+          <BookingRequestButtons
+            listPreview
+            hideCheckoutButton
+            hideCancelButton
+            stayShaped={stayShaped}
+            paymentDelta={paymentDelta}
+            useTokens={Boolean(useTokens)}
+            _id={_id}
+            status={status}
+            createdBy={createdBy}
+            paidBy={bookingMapItem.get('paidBy')}
+            end={end}
+            start={start}
+            confirmBooking={confirmBooking}
+            rejectBooking={rejectBooking}
+          />
+        )}
       </div>
     </BookingSurface>
   );

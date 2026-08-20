@@ -1,0 +1,139 @@
+{
+  "title": "_i18n_webinar_page_hero_title",
+  "slug": "/webinar",
+  "description": "_i18n_webinar_page_meta_description",
+  "ogImage": "https://cdn.oasa.co/tdf/tdf-invest-og.jpg",
+  "sections": [
+    {
+      "type": "hero",
+      "data": {
+        "settings": {
+          "alignText": "center",
+          "isInverted": false,
+          "isCompact": false
+        },
+        "content": {
+          "eyebrow": "_i18n_webinar_page_hero_label",
+          "title": "_i18n_webinar_page_hero_title",
+          "body": "_i18n_webinar_page_hero_subtitle",
+          "imageUrl": "https://cdn.oasa.co/tdf/tdf-invest-og.jpg",
+          "cta": {
+            "text": "_i18n_webinar_page_hero_primary_cta",
+            "url": "#webinar-signup"
+          },
+          "secondaryCta": {
+            "text": "_i18n_webinar_page_hero_secondary_cta",
+            "url": "/dataroom"
+          }
+        }
+      }
+    },
+    {
+      "type": "webinar",
+      "data": {
+        "settings": {
+          "tags": [
+            "webinar-page",
+            "ad-landing",
+            "investor-webinar"
+          ],
+          "analyticsCategory": "WebinarPage"
+        },
+        "content": {}
+      }
+    },
+    {
+      "type": "features",
+      "data": {
+        "settings": {
+          "numColumns": 3,
+          "isSmallImage": true,
+          "isColorful": false,
+          "hasBorder": true
+        },
+        "content": {
+          "title": "",
+          "description": "",
+          "items": [
+            {
+              "title": "_i18n_webinar_page_highlight_1_title",
+              "text": "<p>_i18n_webinar_page_highlight_1_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_webinar_page_highlight_2_title",
+              "text": "<p>_i18n_webinar_page_highlight_2_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_webinar_page_highlight_3_title",
+              "text": "<p>_i18n_webinar_page_highlight_3_desc</p>",
+              "imageUrl": "",
+              "visualType": "none"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "features",
+      "data": {
+        "settings": {
+          "numColumns": 2,
+          "isSmallImage": true,
+          "isColorful": false,
+          "hasBorder": true
+        },
+        "content": {
+          "title": "_i18n_webinar_page_agenda_title",
+          "description": "",
+          "items": [
+            {
+              "title": "_i18n_webinar_page_agenda_item_1",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_webinar_page_agenda_item_2",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_webinar_page_agenda_item_3",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "none"
+            },
+            {
+              "title": "_i18n_webinar_page_agenda_item_4",
+              "text": "",
+              "imageUrl": "",
+              "visualType": "none"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "cta",
+      "data": {
+        "settings": {
+          "style": "accent"
+        },
+        "content": {
+          "eyebrow": "_i18n_webinar_page_hero_label",
+          "title": "_i18n_webinar_page_hero_title",
+          "text": "_i18n_webinar_page_hero_subtitle",
+          "primaryText": "_i18n_webinar_page_hero_primary_cta",
+          "primaryLink": "#webinar-signup",
+          "secondaryText": "_i18n_token_legal_dataroom_link",
+          "secondaryLink": "/dataroom"
+        }
+      }
+    }
+  ]
+}

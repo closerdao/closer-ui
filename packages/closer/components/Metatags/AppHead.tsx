@@ -5,11 +5,18 @@ import { FC } from 'react';
 
 import { useConfig } from '../../hooks/useConfig';
 import { theme } from '../../tailwind.config';
+import { FaviconLinks } from './FaviconLinks';
 
 export const AppHead: FC = () => {
   const router = useRouter();
-  const { DEFAULT_TITLE, FB_DOMAIN_VERIFICATION, SEMANTIC_URL, PLATFORM_NAME, LOGO_HEADER } =
-    useConfig() || {};
+  const {
+    DEFAULT_TITLE,
+    FB_DOMAIN_VERIFICATION,
+    SEMANTIC_URL,
+    PLATFORM_NAME,
+    LOGO_HEADER,
+    FAVICON,
+  } = useConfig() || {};
 
   const fullUrl = `${SEMANTIC_URL}${router.asPath}`;
   const defaultDescription = 'The operating system for regenerative communities. Manage guests, spaces, events and resources through one intuitive platform designed specifically for land-based projects.';
@@ -20,12 +27,13 @@ export const AppHead: FC = () => {
     : `${SEMANTIC_URL}/images/logo.png`;
 
   return (
+    <>
     <Head>
       <title>{DEFAULT_TITLE}</title>
       <meta charSet="utf-8" />
       <meta name="description" content={defaultDescription} />
       <meta name="keywords" content="regenerative communities, community management, booking system, event management, DAO, decentralized governance, ecovillage, intentional community" />
-      <meta name="author" content={PLATFORM_NAME || 'Closer'} />
+      {PLATFORM_NAME && <meta name="author" content={PLATFORM_NAME} />}
       <meta name="robots" content="index, follow" />
       <link rel="canonical" href={fullUrl} />
       
@@ -34,7 +42,9 @@ export const AppHead: FC = () => {
       <meta property="og:url" content={fullUrl} />
       <meta property="og:type" content="website" />
       <meta property="og:image" content={ogImage} />
-      <meta property="og:site_name" content={PLATFORM_NAME || 'Closer'} />
+      {PLATFORM_NAME && (
+        <meta property="og:site_name" content={PLATFORM_NAME} />
+      )}
       <meta property="og:locale" content="en_US" />
       
       <meta name="twitter:card" content="summary_large_image" />
@@ -54,13 +64,14 @@ export const AppHead: FC = () => {
           content={String(FB_DOMAIN_VERIFICATION)}
         />
       )}
-      <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
-      {LOGO_HEADER && (
-        <>
-          <link rel="icon" type="image/png" href={LOGO_HEADER} />
-          <link rel="apple-touch-icon" href={LOGO_HEADER} />
-        </>
-      )}
     </Head>
+    {/*
+      Icon links live in their own Head instance so `_app.tsx` can mount them
+      without AppHead. They are never derived from LOGO_HEADER — a wide header
+      logo is unreadable at 16px. LOGO_HEADER stays the og:image, which is the
+      one place a wide logo is right.
+    */}
+    <FaviconLinks favicon={FAVICON} />
+    </>
   );
 };

@@ -58,16 +58,23 @@
     @apply p-2 text-foreground block border-0 border-b-2 ;
   } */
 
-  input[type='email'],
+  /*
+   * `.new-input` is the opt-out for the legacy underline treatment. It was only
+   * honoured for text/password/select, so a boxed field silently reverted to an
+   * underline as soon as it declared type="email" or type="number" — these
+   * element+attribute selectors outrank the utility classes on the element.
+   * Honour the opt-out for every type instead.
+   */
+  input[type='email']:not(.new-input),
   input[type='password']:not(.new-input),
   input[type='text']:not(.new-input),
-  input[type='phone'],
-  input[type='number'],
-  input[type='date'] {
+  input[type='phone']:not(.new-input),
+  input[type='number']:not(.new-input),
+  input[type='date']:not(.new-input) {
     @apply p-2 text-foreground block border-0 border-b-2 border-transparent ring-transparent focus:outline-none focus:border-accent;
   }
 
-  select {
+  select:not(.new-input) {
     @apply text-base border-gray-200 border-2 rounded-lg ring-transparent appearance-none focus:border-accent outline-none max-w-full;
   }
 

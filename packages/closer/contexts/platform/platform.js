@@ -36,6 +36,7 @@ export const models = [
   'vote',
   'cohousingapplication',
   'engagementopportunity',
+  'village',
 ];
 
 const filterToKey = (filter) => JSON.stringify(filter) || '__';
@@ -274,6 +275,52 @@ const reducer = (state, action) => {
     case constants.GET_GRAPH_SUCCESS:
       return state.setIn(
         [action.model, 'graph', action.filterKey],
+        Map({
+          data: action.results,
+          loading: false,
+          error: null,
+          receivedAt: Date.now(),
+        }),
+      );
+    case constants.GET_AGGREGATE_INIT:
+      return state.setIn(
+        [action.model, 'aggregate', action.filterKey, 'loading'],
+        true,
+      );
+    case constants.GET_AGGREGATE_ERROR:
+      return state.mergeIn(
+        [action.model, 'aggregate', action.filterKey],
+        Map({
+          error: action.error,
+          loading: false,
+        }),
+      );
+    case constants.GET_AGGREGATE_SUCCESS:
+      return state.setIn(
+        [action.model, 'aggregate', action.filterKey],
+        Map({
+          data: action.results,
+          loading: false,
+          error: null,
+          receivedAt: Date.now(),
+        }),
+      );
+    case constants.GET_SUM_INIT:
+      return state.setIn(
+        [action.model, 'sum', action.filterKey, 'loading'],
+        true,
+      );
+    case constants.GET_SUM_ERROR:
+      return state.mergeIn(
+        [action.model, 'sum', action.filterKey],
+        Map({
+          error: action.error,
+          loading: false,
+        }),
+      );
+    case constants.GET_SUM_SUCCESS:
+      return state.setIn(
+        [action.model, 'sum', action.filterKey],
         Map({
           data: action.results,
           loading: false,
@@ -525,6 +572,80 @@ export const PlatformProvider = ({ children }) => {
               filterKey,
               model,
               type: constants.GET_GRAPH_ERROR,
+            }),
+          );
+      },
+      getAggregate: (params) => {
+        const filterKey = filterToKey(params);
+        dispatch({ type: constants.GET_AGGREGATE_INIT, model, filterKey });
+        if (
+          stateRef.current.getIn([model, 'aggregate', filterKey, 'receivedAt']) >
+          Date.now() - CACHE_DURATION_MS
+        ) {
+          return new Promise((resolve) =>
+            resolve({
+              type: constants.GET_AGGREGATE_SUCCESS,
+              fromCache: true,
+              results: stateRef.current.getIn([model, 'aggregate', filterKey, 'data']),
+            }),
+          );
+        }
+        return api
+          .get(`/a/${model}`, { params })
+          .then((res) => {
+            const results = fromJS(res.data.results);
+            const action = {
+              results,
+              filterKey,
+              model,
+              type: constants.GET_AGGREGATE_SUCCESS,
+            };
+            dispatch(action);
+            return action;
+          })
+          .catch((error) =>
+            dispatch({
+              error,
+              filterKey,
+              model,
+              type: constants.GET_AGGREGATE_ERROR,
+            }),
+          );
+      },
+      getSum: (params) => {
+        const filterKey = filterToKey(params);
+        dispatch({ type: constants.GET_SUM_INIT, model, filterKey });
+        if (
+          stateRef.current.getIn([model, 'sum', filterKey, 'receivedAt']) >
+          Date.now() - CACHE_DURATION_MS
+        ) {
+          return new Promise((resolve) =>
+            resolve({
+              type: constants.GET_SUM_SUCCESS,
+              fromCache: true,
+              results: stateRef.current.getIn([model, 'sum', filterKey, 'data']),
+            }),
+          );
+        }
+        return api
+          .get(`/sum/${model}`, { params })
+          .then((res) => {
+            const results = fromJS(res.data.results);
+            const action = {
+              results,
+              filterKey,
+              model,
+              type: constants.GET_SUM_SUCCESS,
+            };
+            dispatch(action);
+            return action;
+          })
+          .catch((error) =>
+            dispatch({
+              error,
+              filterKey,
+              model,
+              type: constants.GET_SUM_ERROR,
             }),
           );
       },
@@ -821,7 +942,7 @@ export const PlatformProvider = ({ children }) => {
         return res;
       }),
     confirm: (_id) =>
-      api.post(`/bookings/${_id}/confirm`).then((res) => {
+      api.post(`/stays/${_id}/approve`, {}).then((res) => {
         const results = fromJS(res.data.results);
         const action = {
           results,
@@ -833,7 +954,7 @@ export const PlatformProvider = ({ children }) => {
         return action;
       }),
     reject: (_id) =>
-      api.post(`/bookings/${_id}/reject`).then((res) => {
+      api.post(`/stays/${_id}/reject`, {}).then((res) => {
         const results = fromJS(res.data.results);
         const action = {
           results,
@@ -845,7 +966,7 @@ export const PlatformProvider = ({ children }) => {
         return action;
       }),
     checkIn: (_id) =>
-      api.post(`/bookings/${_id}/check-in`).then((res) => {
+      api.post(`/stays/${_id}/check-in`, {}).then((res) => {
         const results = fromJS(res.data.results);
         const action = {
           results,
@@ -857,7 +978,7 @@ export const PlatformProvider = ({ children }) => {
         return action;
       }),
     checkOut: (_id) =>
-      api.post(`/bookings/${_id}/check-out`).then((res) => {
+      api.post(`/stays/${_id}/check-out`, {}).then((res) => {
         const results = fromJS(res.data.results);
         const action = {
           results,

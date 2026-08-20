@@ -38,7 +38,7 @@ const Article = ({ article, error }: Props) => {
   const isAdmin = user?.roles.includes('admin');
   const isContentCreator = user?.roles.includes('content-creator');
 
-  const isBlogEnabled = blogConfig?.enabled !== false;
+  const isBlogEnabled = blogConfig?.enabled === true;
 
   const photo = article && article?.photo;
 

@@ -17,6 +17,7 @@ export interface SubscriptionPlan {
   emoji?: string;
   description: string;
   priceId: string;
+  productId?: string;
   tier: number;
   monthlyCredits?: number;
   price: number;
@@ -27,19 +28,48 @@ export interface SubscriptionPlan {
   tiers?: string;
   variants?: SubscriptionVariant;
   note?: string;
+  /** Shown next to the member's avatar. Falls back to `emoji` when empty. */
+  badge?: string;
 }
 
-export interface Tier {
-  unitPrice: number;
-  minAmount: number;
-  maxAmount: number;
+export interface SubscriptionsConfig {
+  enabled: boolean;
+  elements: SubscriptionPlan[];
+  /** Whether member badges are rendered next to avatars. Defaults to on. */
+  showBadges?: boolean;
 }
 
 export interface Subscriptions {
-  config: {
+  enabled: boolean;
+  elements: SubscriptionPlan[];
+  config?: {
     currency: string;
     symbol: string;
   };
+}
+
+export interface SubscriptionPlanSyncInput {
+  slug: string;
+  title: string;
+  emoji?: string;
+  description: string;
+  priceId?: string;
+  productId?: string;
+  tier: number;
+  monthlyCredits?: number;
+  price: number;
+  available: boolean;
+  tiersAvailable: boolean;
+  perks: string;
+  billingPeriod: string;
+}
+
+export interface SubscriptionPlansSyncRequest {
+  elements: SubscriptionPlanSyncInput[];
+  currency: string;
+}
+
+export interface SubscriptionPlansSyncResponse {
   elements: SubscriptionPlan[];
 }
 
@@ -66,6 +96,8 @@ export interface FinanceApplication {
     | 'pending-payment'
     | 'paid'
     | 'cancelled'
+    // The API has answered with either spelling.
+    | 'canceled'
     | 'completed'
     | 'pending'
     | 'delinquent'
@@ -76,6 +108,8 @@ export interface FinanceApplication {
   totalToPayInFiat: number;
   monthlyPaymentAmount: number;
   downPaymentAmount: number;
+  /** APR locked into the contract when it was written. */
+  aprPercent?: number;
   charges: any[];
   isCitizenApplication?: boolean;
   durationInMonths?: number;
@@ -85,6 +119,8 @@ export interface FinanceApplication {
     string,
     {
       status: 'pending' | 'paid';
+      /** Monthly due written at contract creation time. */
+      amountDue?: number;
       amountPaid: number;
       paymentDate: string | Date;
     }
@@ -110,6 +146,12 @@ export interface FinanceApplicationCreateRequest {
   tokensToFinance: number;
   totalToPayInFiat: number;
   iban: string;
+  /** Repayment term, capped by the `token` config's max financing length. */
+  durationInMonths?: number;
+  /** Monthly installment locked in when the contract is written. */
+  monthlyPaymentAmount?: number;
+  downPaymentAmount?: number;
+  aprPercent?: number;
   isCitizenApplication: boolean;
   why?: string;
 }
@@ -117,4 +159,17 @@ export interface FinanceApplicationCreateRequest {
 export interface FinanceApplicationResponse {
   results: FinanceApplication[];
   count?: number;
+}
+
+export interface CitizenTokenIntent {
+  iWantToApply: boolean;
+  iWantToBuyTokens: boolean;
+  iWantToFinanceTokens: boolean;
+}
+
+export interface CitizenApplication {
+  ownsRequiredTokens: boolean;
+  why: string;
+  hasSelectedTokenIntent: boolean;
+  intent: CitizenTokenIntent;
 }

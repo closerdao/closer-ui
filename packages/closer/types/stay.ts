@@ -63,7 +63,8 @@ export type PendingExtension = {
 export type Stay = {
   _id: string;
   status: StayStatus;
-  listing: string;
+  /** Absent on day tickets, which grant event access rather than a space. */
+  listing?: string | null;
   start: string;
   end: string;
   duration: number;
@@ -90,6 +91,8 @@ export type Stay = {
   gift?: string;
   roomOrBedNumbers?: number[];
   createdBy: string;
+  /** Co-guests sharing the stay. Read-only through PATCH; see addStayGuest. */
+  guests?: string[];
   created: string;
   updated: string;
   useTokens?: boolean;
