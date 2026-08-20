@@ -16,6 +16,13 @@ import { isQuestOpen } from '../utils/quests.helpers';
 /** How often an open quest re-pulls the standings. */
 const POLL_INTERVAL_MS = 30 * 1000;
 
+/**
+ * Sentinel returned by a fetch that threw. Distinct from a legitimately empty
+ * result (`null`/`[]`) so a transient failure can preserve the last good value
+ * instead of wiping the standings the member is currently looking at.
+ */
+const FETCH_FAILED = Symbol('quest-fetch-failed');
+
 interface Options {
   quest: Quest | null;
   isAuthenticated: boolean;
@@ -57,19 +64,25 @@ export const useQuestLiveData = ({
       if (!quiet) setIsLoading(true);
       try {
         const [meResults, leaderboardResults, actions] = await Promise.all([
-          isAuthenticated ? getQuestMe(slug).catch(() => null) : null,
+          isAuthenticated
+            ? getQuestMe(slug).catch(() => FETCH_FAILED)
+            : null,
           showLeaderboard
             ? getQuestLeaderboard(slug, { limit: leaderboardSize }).catch(
-                () => null,
+                () => FETCH_FAILED,
               )
             : null,
           isAuthenticated && questId
-            ? getMyQuestActions(questId).catch(() => [])
+            ? getMyQuestActions(questId).catch(() => FETCH_FAILED)
             : [],
         ]);
-        setMe(meResults);
-        setLeaderboard(leaderboardResults);
-        setMyActions(actions);
+        // A failed fetch keeps the last good value rather than blanking the UI;
+        // this matters most for background polls, where a transient blip would
+        // otherwise flash the standings back to their empty state.
+        if (meResults !== FETCH_FAILED) setMe(meResults);
+        if (leaderboardResults !== FETCH_FAILED)
+          setLeaderboard(leaderboardResults);
+        if (actions !== FETCH_FAILED) setMyActions(actions);
         setLastUpdated(Date.now());
       } finally {
         isFetchingRef.current = false;
