@@ -204,6 +204,7 @@ export { default as StripeConnectPage } from './pages/stripe-connect';
 export { default as StripeConnectCallbackPage } from './pages/stripe-connect/callback';
 export { default as SubscriptionsCheckoutPage } from './pages/subscriptions/checkout';
 export { default as ContractsPage } from './pages/token/contracts';
+export { default as GovernanceWeightPage } from './pages/token/governance-weight';
 
 export { default as CitizenshipPage } from './pages/citizenship/index';
 export { default as ExpenseTrackingDashboardPage } from './pages/dashboard/expense-tracking';
