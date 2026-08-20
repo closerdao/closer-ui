@@ -510,6 +510,13 @@ export const SALES_CONFIG = {
   MAX_TOKENS_PER_TRANSACTION: 100,
 };
 
+/**
+ * Financed contracts are not settled on-chain in a single purchase, so the
+ * per-transaction cap does not apply — this is only a sanity ceiling on the
+ * amount a single financing contract can cover.
+ */
+export const MAX_TOKENS_TO_FINANCE = 1000;
+
 export const MIN_CELO_FOR_GAS = 1;
 
 export const DEFAULT_BOOK_ACCOMMODATION_GAS_LIMIT = 6_000_000;

@@ -1,18 +1,20 @@
-import Link from 'next/link';
-
-import { useEffect, useMemo, useState, ChangeEvent } from 'react';
+import { ChangeEvent, useEffect, useMemo, useState } from 'react';
 
 import { isValid } from 'iban-ts';
 import { useTranslations } from 'next-intl';
 
-import { TOKEN_PURCHASE_TERMS_DOC_URL } from '../../constants';
-import { useBuyTokens } from '../../hooks/useBuyTokens';
-import { FinanceApplicationCreateRequest } from '../../types';
 import {
-  buildFinanceQuote,
-  roundFiat,
-} from '../../utils/tokenFinancing';
+  MAX_TOKENS_TO_FINANCE,
+  TOKEN_PURCHASE_TERMS_DOC_URL,
+} from '../../constants';
+import { FinanceApplicationCreateRequest } from '../../types';
+import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import { buildFinanceQuote, roundFiat } from '../../utils/tokenFinancing';
+import TokenBuyWidget from '../TokenBuyWidget';
 import { Button, Card, Checkbox, Heading, Input, Spinner } from '../ui';
+
+/** Slider floor — a single instalment is a purchase, not a financing plan. */
+const MIN_FINANCING_MONTHS = 2;
 
 interface CitizenFinanceTokensProps {
   application: Partial<FinanceApplicationCreateRequest>;
@@ -21,7 +23,6 @@ interface CitizenFinanceTokensProps {
     value: any,
   ) => void;
   downPaymentPercent: number;
-  durations: number[];
   maxFinancingMonths: number;
   aprPercent: number;
   minMonthlyPayment: number;
@@ -38,7 +39,6 @@ const CitizenFinanceTokens = ({
   application,
   updateApplication,
   downPaymentPercent,
-  durations,
   maxFinancingMonths,
   aprPercent,
   minMonthlyPayment,
@@ -52,24 +52,31 @@ const CitizenFinanceTokens = ({
 }: CitizenFinanceTokensProps) => {
   const t = useTranslations();
   const [ibanError, setIbanError] = useState<string | null>(null);
-  const [tokensInput, setTokensInput] = useState(
-    String(application?.tokensToFinance || 1),
-  );
 
-  const { isConfigReady, getTotalCostWithoutWallet, isPending } =
-    useBuyTokens();
+  // The buy widget owns the debounced bonding-curve lookup; its state is
+  // mirrored into the application so the quote and the contract agree.
+  const [tokensToBuy, setTokensToBuy] = useState<number>(
+    application?.tokensToFinance || 1,
+  );
+  const [tokensToSpend, setTokensToSpend] = useState(0);
+  const [isCalculationPending, setIsCalculationPending] = useState(false);
 
   const totalToPayInFiat = application?.totalToPayInFiat || 0;
   const tokensToFinance = application?.tokensToFinance || 0;
 
   const averagePricePerToken =
-    tokensToFinance > 0
-      ? roundFiat(totalToPayInFiat / tokensToFinance)
-      : 0;
+    tokensToFinance > 0 ? roundFiat(totalToPayInFiat / tokensToFinance) : 0;
 
+  // The configured ceiling always wins — the page caps the submitted term at
+  // it, so offering a longer one on the slider would quietly mislead.
+  const maxDurationMonths = maxFinancingMonths;
+  const minDurationMonths = Math.min(MIN_FINANCING_MONTHS, maxDurationMonths);
   const durationInMonths = Math.min(
-    application?.durationInMonths || durations[0] || maxFinancingMonths,
-    maxFinancingMonths,
+    Math.max(
+      application?.durationInMonths || maxDurationMonths,
+      minDurationMonths,
+    ),
+    maxDurationMonths,
   );
 
   const quote = useMemo(
@@ -89,6 +96,22 @@ const CitizenFinanceTokens = ({
       minMonthlyPayment,
     ],
   );
+
+  const formatDuration = (months: number) => {
+    const years = Math.floor(months / 12);
+    const remainingMonths = months % 12;
+
+    if (years === 0) {
+      return t('token_finance_duration_months', { count: months });
+    }
+    if (remainingMonths === 0) {
+      return t('token_finance_duration_years', { count: years });
+    }
+    return t('token_finance_duration_years_and_months', {
+      years: t('token_finance_duration_years', { count: years }),
+      months: t('token_finance_duration_months', { count: remainingMonths }),
+    });
+  };
 
   const validateIban = (iban: string) => {
     if (!iban.trim()) {
@@ -112,64 +135,31 @@ const CitizenFinanceTokens = ({
     validateIban(value);
   };
 
-  const handleTokensChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    setTokensInput(raw);
-    const parsed = Number(raw);
-    if (Number.isInteger(parsed) && parsed > 0) {
-      updateApplication('tokensToFinance', parsed);
-    }
-  };
-
-  const handleDurationChange = (months: number) => {
-    const capped = Math.min(Math.max(1, months), maxFinancingMonths);
-    updateApplication('durationInMonths', capped);
-  };
-
-  useEffect(() => {
-    const next = application?.tokensToFinance;
-    if (typeof next !== 'number' || next <= 0) {
+  const handleDurationChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const parsed = Number(e.target.value);
+    if (!Number.isFinite(parsed)) {
       return;
     }
-    setTokensInput((current) => {
-      if (current === String(next)) {
-        return current;
-      }
-      const parsed = Number(current);
-      if (Number.isInteger(parsed) && parsed > 0) {
-        return String(next);
-      }
-      return current;
-    });
-  }, [application?.tokensToFinance]);
+    updateApplication(
+      'durationInMonths',
+      Math.min(
+        Math.max(minDurationMonths, Math.round(parsed)),
+        maxDurationMonths,
+      ),
+    );
+  };
 
   useEffect(() => {
-    let cancelled = false;
-    if (isConfigReady) {
-      (async () => {
-        try {
-          const totalCost = await getTotalCostWithoutWallet(
-            (application?.tokensToFinance || 0).toString(),
-          );
-
-          if (cancelled) {
-            return;
-          }
-
-          // Spot bonding-curve price is the financed principal base. Carrying
-          // cost comes from financingAprPercent in the monthly quote, not a
-          // flat token price markup.
-          const calculatedTotalToPayInFiat = Number(totalCost.toFixed(2)) || 0;
-          updateApplication('totalToPayInFiat', calculatedTotalToPayInFiat);
-        } catch (error) {
-          console.error('Error in supply/price calculation:', error);
-        }
-      })();
+    if (Number.isFinite(tokensToBuy) && tokensToBuy > 0) {
+      updateApplication('tokensToFinance', tokensToBuy);
     }
-    return () => {
-      cancelled = true;
-    };
-  }, [isConfigReady, application?.tokensToFinance]);
+  }, [tokensToBuy]);
+
+  useEffect(() => {
+    // Spot bonding-curve price is the financed principal base. Carrying cost
+    // comes from financingAprPercent in the monthly quote, not a token markup.
+    updateApplication('totalToPayInFiat', roundFiat(tokensToSpend));
+  }, [tokensToSpend]);
 
   useEffect(() => {
     if (application?.monthlyPaymentAmount !== quote.monthlyPaymentAmount) {
@@ -195,18 +185,16 @@ const CitizenFinanceTokens = ({
     application?.durationInMonths,
   ]);
 
-  const showPresetDurations = durations.length > 1;
-  const parsedTokensInput = Number(tokensInput);
   const tokensInputMatchesApplication =
-    Number.isInteger(parsedTokensInput) &&
-    parsedTokensInput > 0 &&
-    parsedTokensInput === tokensToFinance;
+    Number.isFinite(tokensToBuy) &&
+    tokensToBuy > 0 &&
+    tokensToBuy === tokensToFinance;
   const canSubmit =
     isAgreementAccepted === isCitizenApplication &&
     isTokenTermsAccepted &&
     !loading &&
     Boolean(application?.iban) &&
-    !isPending &&
+    !isCalculationPending &&
     Boolean(totalToPayInFiat) &&
     tokensInputMatchesApplication &&
     quote.meetsMinMonthlyPayment &&
@@ -214,203 +202,97 @@ const CitizenFinanceTokens = ({
     application?.downPaymentAmount === quote.downPaymentAmount &&
     isValid(application?.iban || '');
 
+  const summaryRows = [
+    {
+      label: t('token_finance_summary_token_amount'),
+      value: `${tokensToFinance} ${t('token_sale_token_symbol')}`,
+    },
+    {
+      label: t('token_finance_summary_duration'),
+      value: formatDuration(durationInMonths),
+    },
+    {
+      label: t('token_finance_summary_monthly_cost'),
+      value: formatIsoFiatAmount(quote.monthlyPaymentAmount, 'EUR'),
+    },
+    {
+      label: t('token_finance_summary_down_payment'),
+      value: formatIsoFiatAmount(quote.downPaymentAmount, 'EUR'),
+    },
+  ];
+
   return (
-    <section className="space-y-6">
+    <section className="space-y-8">
       {isCitizenApplication && (
         <Heading level={2} className="border-b pb-2 mb-6 text-xl">
           {t('subscriptions_citizen_finance_tokens')}
         </Heading>
       )}
 
-      <p>{t('subscriptions_citizen_finance_tokens_details')}</p>
-      <ul className="list-disc ml-4 font-bold">
-        <li>
-          {t('subscriptions_citizen_finance_tokens_details_months', {
-            months: durationInMonths,
-          })}
-        </li>
-        <li>
-          {t.rich('subscriptions_citizen_finance_tokens_details_stay_credits', {
-            link: (chunks) => (
-              <a
-                href="/settings/credits"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ textDecoration: 'underline' }}
-              >
-                {chunks}
-              </a>
-            ),
-          })}
-        </li>
-        <li>
-          {t('subscriptions_citizen_finance_tokens_details_down_payment', {
-            percent: downPaymentPercent,
-          })}
-        </li>
-        <li>
-          {t('subscriptions_citizen_finance_tokens_details_apr', {
-            percent: aprPercent,
-          })}
-        </li>
-        {minMonthlyPayment > 0 && (
-          <li>
-            {t('subscriptions_citizen_finance_tokens_details_min_monthly', {
-              amount: minMonthlyPayment,
-            })}
-          </li>
-        )}
-        <li>
-          {t('subscriptions_citizen_finance_tokens_details_tokens_accrued')}
-        </li>
-      </ul>
-      <p>{t('subscriptions_citizen_finance_tokens_details_tokens_how_many')}</p>
-      <Input
-        label={t('subscriptions_citizen_finance_tokens_tokens')}
-        value={tokensInput}
-        onChange={handleTokensChange}
-        type="number"
-        min={1}
+      <TokenBuyWidget
+        tokensToBuy={tokensToBuy}
+        setTokensToBuy={setTokensToBuy}
+        tokensToSpend={tokensToSpend}
+        setTokensToSpend={setTokensToSpend}
+        setIsCalculationPending={setIsCalculationPending}
+        maxTokens={MAX_TOKENS_TO_FINANCE}
+        showGasFeesNote={false}
       />
 
-      {showPresetDurations ? (
-        <>
-          <p>{t('subscriptions_citizen_finance_tokens_duration_question')}</p>
-          <fieldset className="flex flex-col gap-2">
-            {durations.map((months) => (
-              <div key={months} className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  id={`duration${months}`}
-                  name="durationChoice"
-                  className="w-4 h-4"
-                  checked={durationInMonths === months}
-                  onChange={() => handleDurationChange(months)}
-                />
-                <label
-                  htmlFor={`duration${months}`}
-                  className="whitespace-nowrap"
-                >
-                  {months} {t('subscriptions_citizen_finance_tokens_months')}
-                </label>
-              </div>
-            ))}
-          </fieldset>
-        </>
-      ) : (
-        <Input
-          label={t('subscriptions_citizen_finance_tokens_duration_question')}
-          value={String(durationInMonths)}
-          onChange={(e) => {
-            const parsed = Number(e.target.value);
-            if (Number.isInteger(parsed) && parsed > 0) {
-              handleDurationChange(parsed);
-            }
-          }}
-          type="number"
-          min={1}
-          max={maxFinancingMonths}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-3">
+          <label htmlFor="financingDuration" className="font-bold">
+            {t('subscriptions_citizen_finance_tokens_duration_question')}
+          </label>
+          <span className="text-sm font-bold tabular-nums bg-accent-light px-3 py-1 rounded-full whitespace-nowrap">
+            {formatDuration(durationInMonths)}
+          </span>
+        </div>
+        <input
+          id="financingDuration"
+          type="range"
+          min={minDurationMonths}
+          max={maxDurationMonths}
+          step={1}
+          value={durationInMonths}
+          onChange={handleDurationChange}
+          className="w-full accent-accent"
         />
-      )}
-      <p className="text-sm text-gray-600">
-        {t('subscriptions_citizen_finance_tokens_max_duration_hint', {
-          months: maxFinancingMonths,
-        })}
-      </p>
+        <div className="flex justify-between text-xs text-gray-500">
+          <span>{formatDuration(minDurationMonths)}</span>
+          <span>{formatDuration(maxDurationMonths)}</span>
+        </div>
+      </div>
 
-      <p>
-        {t.rich('subscriptions_citizen_finance_tokens_you_have_chosen', {
-          b: (chunks) => <strong>{chunks}</strong>,
-          var: tokensToFinance,
-        })}
-      </p>
-
-      {isPending ? (
+      {isCalculationPending ? (
         <Card className="flex flex-row justify-start items-center gap-2 bg-accent-light">
           <Spinner />
           <p>{t('subscriptions_citizen_finance_tokens_calculating')}</p>
         </Card>
       ) : (
-        <ul className="list-disc ml-4">
-          <li className="pl-2">
-            <span className="font-bold">
-              {t('subscriptions_citizen_finance_tokens_total_cost')}
-            </span>{' '}
-            {t('subscriptions_citizen_finance_tokens_total_cost_months', {
-              var: totalToPayInFiat,
-              months: durationInMonths,
-            })}
-          </li>
-          <li className="pl-2">
-            <span className="font-bold">
-              {t('subscriptions_citizen_finance_tokens_down_payment')}
-            </span>{' '}
-            {t('subscriptions_citizen_finance_tokens_down_payment_amount', {
-              var: quote.downPaymentAmount,
-            })}
-          </li>
-          <li className="pl-2">
-            <span className="font-bold">
-              {t('subscriptions_citizen_finance_tokens_monthly_payment')}
-            </span>{' '}
-            {t('subscriptions_citizen_finance_tokens_monthly_payment_amount', {
-              var: quote.monthlyPaymentAmount,
-            })}{' '}
-          </li>
-          {aprPercent > 0 && (
-            <>
-              <li className="pl-2">
-                <span className="font-bold">
-                  {t('subscriptions_citizen_finance_tokens_carrying_cost')}
-                </span>{' '}
-                {t('subscriptions_citizen_finance_tokens_carrying_cost_amount', {
-                  amount: quote.carryingCost,
-                  percent: aprPercent,
-                })}
-              </li>
-              <li className="pl-2">
-                <span className="font-bold">
-                  {t('subscriptions_citizen_finance_tokens_total_repayable')}
-                </span>{' '}
-                {t('subscriptions_citizen_finance_tokens_total_repayable_amount', {
-                  var: quote.totalRepayable,
-                })}
-              </li>
-            </>
-          )}
-          <li className="pl-2">
-            <span className="font-bold">
-              {t('subscriptions_citizen_finance_tokens_cost_per_token')}
-            </span>{' '}
-            {t('subscriptions_citizen_finance_tokens_monthly_payment_amount', {
-              var: averagePricePerToken,
-            })}{' '}
-          </li>
-        </ul>
+        <Card className="p-4 flex flex-col gap-3">
+          {summaryRows.map((row) => (
+            <div
+              key={row.label}
+              className="flex items-center justify-between gap-3"
+            >
+              <p className="card-feature">{row.label}</p>
+              <p className="text-sm font-semibold tabular-nums">{row.value}</p>
+            </div>
+          ))}
+        </Card>
       )}
 
-      {!quote.meetsMinMonthlyPayment && totalToPayInFiat > 0 && !isPending && (
-        <p className="text-sm text-red-700">
-          {t('subscriptions_citizen_finance_tokens_min_monthly_error', {
-            monthly: quote.monthlyPaymentAmount,
-            min: minMonthlyPayment,
-          })}
-        </p>
-      )}
-
-      <p>
-        <span className="italic">
-          {t('subscriptions_citizen_finance_tokens_hint')}
-        </span>{' '}
-        <Link
-          target="_blank"
-          rel="noopener noreferrer"
-          href="/token/before-you-begin?citizenApplication=true"
-          className=" underline"
-        >
-          {t('subscriptions_citizen_finance_tokens_hint_here')}
-        </Link>
-      </p>
+      {!quote.meetsMinMonthlyPayment &&
+        totalToPayInFiat > 0 &&
+        !isCalculationPending && (
+          <p className="text-sm text-red-700">
+            {t('subscriptions_citizen_finance_tokens_min_monthly_error', {
+              monthly: quote.monthlyPaymentAmount,
+              min: minMonthlyPayment,
+            })}
+          </p>
+        )}
 
       <Input
         label={t('subscriptions_citizen_finance_tokens_bank_account')}
@@ -427,19 +309,8 @@ const CitizenFinanceTokens = ({
             : undefined
         }
       />
-      <div className="space-y-6">
-        <p className="font-bold">
-          {t('subscriptions_citizen_finance_tokens_disclaimer')}
-        </p>
-        <ol className="list-decimal ml-4">
-          <li>{t('subscriptions_citizen_finance_tokens_disclaimer_1')}</li>
-          <li>
-            {t('subscriptions_citizen_finance_tokens_disclaimer_2', {
-              var: quote.monthlyPaymentAmount,
-            })}
-          </li>
-        </ol>
 
+      <div className="space-y-6">
         {isCitizenApplication && (
           <div className="flex items-start gap-1">
             <Checkbox
@@ -505,6 +376,97 @@ const CitizenFinanceTokens = ({
             ? t('subscriptions_citizen_become_citizen')
             : t('subscriptions_citizen_finance_tokens_button')}
         </Button>
+      </div>
+
+      <div className="border-t pt-6 space-y-2 text-xs text-gray-500">
+        <p className="font-bold uppercase tracking-wide">
+          {t('token_finance_fineprint_title')}
+        </p>
+        <ul className="list-disc ml-4 space-y-1">
+          <li>
+            {t('subscriptions_citizen_finance_tokens_total_cost')}{' '}
+            {t('subscriptions_citizen_finance_tokens_total_cost_months', {
+              var: totalToPayInFiat,
+              months: durationInMonths,
+            })}
+          </li>
+          <li>
+            {t('subscriptions_citizen_finance_tokens_cost_per_token')}{' '}
+            {t('subscriptions_citizen_finance_tokens_monthly_payment_amount', {
+              var: averagePricePerToken,
+            })}
+          </li>
+          {aprPercent > 0 && (
+            <>
+              <li>
+                {t('subscriptions_citizen_finance_tokens_carrying_cost')}{' '}
+                {t(
+                  'subscriptions_citizen_finance_tokens_carrying_cost_amount',
+                  {
+                    amount: quote.carryingCost,
+                    percent: aprPercent,
+                  },
+                )}
+              </li>
+              <li>
+                {t('subscriptions_citizen_finance_tokens_total_repayable')}{' '}
+                {t(
+                  'subscriptions_citizen_finance_tokens_total_repayable_amount',
+                  { var: quote.totalRepayable },
+                )}
+              </li>
+            </>
+          )}
+          <li>
+            {t('subscriptions_citizen_finance_tokens_details_down_payment', {
+              percent: downPaymentPercent,
+            })}
+          </li>
+          <li>
+            {t('subscriptions_citizen_finance_tokens_details_apr', {
+              percent: aprPercent,
+            })}
+          </li>
+          {minMonthlyPayment > 0 && (
+            <li>
+              {t('subscriptions_citizen_finance_tokens_details_min_monthly', {
+                amount: minMonthlyPayment,
+              })}
+            </li>
+          )}
+          <li>
+            {t('subscriptions_citizen_finance_tokens_max_duration_hint', {
+              months: maxDurationMonths,
+            })}
+          </li>
+          <li>
+            {t.rich(
+              'subscriptions_citizen_finance_tokens_details_stay_credits',
+              {
+                link: (chunks) => (
+                  <a
+                    href="/settings/credits"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ textDecoration: 'underline' }}
+                  >
+                    {chunks}
+                  </a>
+                ),
+              },
+            )}
+          </li>
+          <li>
+            {t('subscriptions_citizen_finance_tokens_details_tokens_accrued')}
+          </li>
+          <li>{t('subscriptions_citizen_finance_tokens_disclaimer')}</li>
+          <li>{t('subscriptions_citizen_finance_tokens_disclaimer_1')}</li>
+          <li>
+            {t('subscriptions_citizen_finance_tokens_disclaimer_2', {
+              var: quote.monthlyPaymentAmount,
+            })}
+          </li>
+        </ul>
       </div>
     </section>
   );
