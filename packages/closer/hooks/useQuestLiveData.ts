@@ -82,7 +82,13 @@ export const useQuestLiveData = ({
         if (leaderboardResults !== FETCH_FAILED)
           setLeaderboard(leaderboardResults);
         if (actions !== FETCH_FAILED) setMyActions(actions);
-        setLastUpdated(Date.now());
+        if (
+          meResults !== FETCH_FAILED ||
+          leaderboardResults !== FETCH_FAILED ||
+          actions !== FETCH_FAILED
+        ) {
+          setLastUpdated(Date.now());
+        }
       } finally {
         isFetchingRef.current = false;
         if (!quiet) setIsLoading(false);
