@@ -183,7 +183,10 @@ export const getQuestAudit = async (
   slug: string,
   options: RequestOptions = {},
 ): Promise<QuestAudit | null> => {
-  const res = await api.get(`/quest/${slug}/audit`, withHeaders(options));
+  const res = await api.get(`/quest/${slug}/audit`, {
+    ...noCache,
+    ...withHeaders(options),
+  });
   return res?.data?.results || null;
 };
 
