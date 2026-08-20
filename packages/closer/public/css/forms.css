@@ -78,6 +78,16 @@
     @apply text-base border-gray-200 border-2 rounded-lg ring-transparent appearance-none focus:border-accent outline-none max-w-full;
   }
 
+  /*
+   * Opting out of the underline treatment above also opted `.new-input` out of
+   * a focus style, leaving the browser default (an amber ring on some
+   * platforms). Give it the themed ring. `:where()` holds this at one class of
+   * specificity, so a component that declares its own focus utilities wins.
+   */
+  .new-input:where(:focus, :focus-visible) {
+    @apply outline-none border-accent ring-[3px] ring-accent/30;
+  }
+
   .switch .label {
     @apply mb-0 ml-2;
   }

@@ -22,13 +22,17 @@ jest.mock('../api', () => ({
   },
 }));
 
-const quests = getTokenOnboardingQuests({
-  tokenSymbol: 'TDF',
-  platformName: 'Traditional Dream Factory',
-  networkName: 'Celo',
-  gasToken: 'CELO',
-  semanticUrl: 'traditionaldreamfactory.com',
-});
+const buildQuests = (canConnectWallet = true) =>
+  getTokenOnboardingQuests({
+    tokenSymbol: 'TDF',
+    platformName: 'Traditional Dream Factory',
+    networkName: 'Celo',
+    gasToken: 'CELO',
+    semanticUrl: 'traditionaldreamfactory.com',
+    canConnectWallet,
+  });
+
+const quests = buildQuests();
 
 const allIds = quests.map((quest) => quest.id);
 
@@ -54,6 +58,21 @@ describe('token onboarding carrot totals', () => {
 
   it('ignores unknown ids when summing', () => {
     expect(carrotsEarned(['not-a-quest'], quests)).toBe(0);
+  });
+});
+
+describe('the final quest gate', () => {
+  const finalGate = (canConnectWallet: boolean) => {
+    const built = buildQuests(canConnectWallet);
+    return built[built.length - 1].gate;
+  };
+
+  it('is checked against the wallet where one can be connected', () => {
+    expect(finalGate(true).type).toBe('wallet');
+  });
+
+  it('falls back to a checklist where wallets are switched off', () => {
+    expect(finalGate(false).type).toBe('check');
   });
 });
 

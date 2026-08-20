@@ -10,6 +10,23 @@ jest.mock('../../components/Wallet', () => ({
   default: () => <div data-testid="wallet" />,
 }));
 
+jest.mock('../../components/WalletActions', () => ({
+  __esModule: true,
+  default: () => <div data-testid="wallet-actions" />,
+}));
+
+const disconnectedWallet = {
+  isWalletConnected: false,
+  isCorrectNetwork: false,
+  hasSameConnectedAccount: false,
+  account: null,
+};
+let mockWallet: Record<string, unknown> = { ...disconnectedWallet };
+
+jest.mock('../../contexts/wallet/hooks', () => ({
+  useWalletState: () => mockWallet,
+}));
+
 jest.mock('../../utils/tokenOnboarding.api', () => ({
   awardOnboardingCarrots: jest.fn(),
 }));
@@ -30,10 +47,28 @@ jest.mock('../../contexts/platform', () => ({
   usePlatform: () => ({ platform: { user: { patch } } }),
 }));
 
-const member = (settings: Record<string, unknown> = {}) => ({
+const member = (
+  settings: Record<string, unknown> = {},
+  extra: Record<string, unknown> = {},
+) => ({
   _id: 'user-1',
   settings,
+  ...extra,
 });
+
+/** Everything but the last quest, so the wallet quest is the open one. */
+const upToTheWalletQuest = {
+  token_onboarding_progress: {
+    completed: [
+      'why-web3',
+      'what-is-a-wallet',
+      'create-wallet',
+      'protect-the-phrase',
+      'smart-contracts',
+      'multisig',
+    ],
+  },
+};
 
 const claimButton = () =>
   screen.getByRole('button', { name: /^Claim/i });
@@ -52,7 +87,10 @@ describe('/token/onboarding', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     window.localStorage.clear();
+    mockWallet = { ...disconnectedWallet };
     mockUser = member();
+    // jsdom has no scrolling; without a stub every claim logs "not implemented".
+    window.scrollTo = jest.fn() as unknown as typeof window.scrollTo;
     (awardOnboardingCarrots as jest.Mock).mockResolvedValue({
       status: 'awarded',
     });
@@ -175,6 +213,36 @@ describe('/token/onboarding', () => {
     expect(claimButton()).toBeEnabled();
   });
 
+  it('scrolls the next quest up to just under the navigation', async () => {
+    const scrollTo = jest.fn();
+    window.scrollTo = scrollTo as unknown as typeof window.scrollTo;
+    Object.defineProperty(window, 'scrollY', {
+      value: 200,
+      configurable: true,
+    });
+    const rect = jest
+      .spyOn(Element.prototype, 'getBoundingClientRect')
+      .mockReturnValue({ top: 500 } as DOMRect);
+
+    renderWithNextIntl(<OnboardingPage />);
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /the access token/ }),
+    );
+    await userEvent.click(claimButton());
+
+    // 500 in the viewport + 200 already scrolled - the 96px navigation gap.
+    await waitFor(() =>
+      expect(scrollTo).toHaveBeenCalledWith({
+        top: 604,
+        behavior: 'smooth',
+      }),
+    );
+
+    rect.mockRestore();
+    Object.defineProperty(window, 'scrollY', { value: 0, configurable: true });
+  });
+
   it('unlocks the purchase only once all five carrots are earned', () => {
     mockUser = member({
       token_onboarding_progress: {
@@ -197,5 +265,105 @@ describe('/token/onboarding', () => {
     expect(
       screen.getByRole('button', { name: /Buy tokens/i }),
     ).toBeEnabled();
+  });
+
+  describe('the connect-wallet quest', () => {
+    const originalWalletFlag = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET;
+
+    beforeAll(() => {
+      process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET = 'true';
+    });
+
+    afterAll(() => {
+      process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET = originalWalletFlag;
+    });
+
+    beforeEach(() => {
+      mockUser = member(upToTheWalletQuest);
+    });
+
+    it('reads the wallet rather than asking the member to tick a box', () => {
+      renderWithNextIntl(<OnboardingPage />);
+
+      expect(screen.getByText('Quest 7 of 7')).toBeInTheDocument();
+      expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
+      expect(
+        screen.getByText('Wallet connected to this browser'),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId('wallet-actions')).toBeInTheDocument();
+      expect(claimButton()).toBeDisabled();
+    });
+
+    it('stays shut while the wallet is on the wrong network', () => {
+      mockUser = member(upToTheWalletQuest, {
+        walletAddress: '0xabc',
+      });
+      mockWallet = {
+        isWalletConnected: true,
+        isCorrectNetwork: false,
+        hasSameConnectedAccount: true,
+        account: '0xabc',
+      };
+
+      renderWithNextIntl(<OnboardingPage />);
+
+      expect(claimButton()).toBeDisabled();
+    });
+
+    it('stays shut when the connected address is not the saved one', () => {
+      mockUser = member(upToTheWalletQuest, {
+        walletAddress: '0xabc',
+      });
+      mockWallet = {
+        isWalletConnected: true,
+        isCorrectNetwork: true,
+        hasSameConnectedAccount: false,
+        account: '0xdef',
+      };
+
+      renderWithNextIntl(<OnboardingPage />);
+
+      expect(claimButton()).toBeDisabled();
+      expect(
+        screen.getByText(/different from the one saved in your profile/i),
+      ).toBeInTheDocument();
+    });
+
+    it('opens the claim by itself once the wallet checks out', async () => {
+      mockUser = member(upToTheWalletQuest, {
+        walletAddress: '0xabc',
+      });
+      mockWallet = {
+        isWalletConnected: true,
+        isCorrectNetwork: true,
+        hasSameConnectedAccount: true,
+        account: '0xabc',
+      };
+
+      renderWithNextIntl(<OnboardingPage />);
+
+      expect(claimButton()).toBeEnabled();
+      expect(screen.queryByTestId('wallet-actions')).not.toBeInTheDocument();
+
+      await userEvent.click(claimButton());
+
+      await waitFor(() =>
+        expect(screen.getByText('5 / 5 🥕')).toBeInTheDocument(),
+      );
+      expect(
+        screen.getByRole('button', { name: /Buy tokens/i }),
+      ).toBeEnabled();
+    });
+
+    it('falls back to a checklist where wallets cannot be connected', () => {
+      process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET = 'false';
+
+      renderWithNextIntl(<OnboardingPage />);
+
+      expect(screen.getAllByRole('checkbox')).toHaveLength(3);
+      expect(screen.queryByTestId('wallet-actions')).not.toBeInTheDocument();
+
+      process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET = 'true';
+    });
   });
 });

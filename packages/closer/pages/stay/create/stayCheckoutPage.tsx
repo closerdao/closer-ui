@@ -706,7 +706,6 @@ const StayCheckoutContent = ({
     () =>
       getBookingPaymentCheckoutPath({
         bookingId: currentStay._id,
-        stayShaped: true,
         status: currentStay.status,
         paymentDelta: currentStay.paymentDelta,
         useTokens:

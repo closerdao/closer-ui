@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 
 import { renderWithNextIntl } from '../../test/utils';
 import Vouching from './index';
@@ -75,8 +75,13 @@ const vouchData = [
   },
 ];
 
+// Vouching fetches the guest's stay nights on mount. Tests that only assert on
+// the first render still have to let that promise settle, or its state updates
+// land after the test has ended and React warns about updates outside act().
+const settleMountFetch = () => act(async () => undefined);
+
 describe('Vouching', () => {
-  it('lists each voucher with a link to their profile and their vouch', () => {
+  it('lists each voucher with a link to their profile and their vouch', async () => {
     renderWithNextIntl(
       <Vouching
         userId="member-1"
@@ -86,6 +91,7 @@ describe('Vouching', () => {
         minVouchingStayDuration={14}
       />,
     );
+    await settleMountFetch();
 
     expect(screen.getByRole('link', { name: 'Ana' })).toHaveAttribute(
       'href',
@@ -104,7 +110,7 @@ describe('Vouching', () => {
     expect(screen.getByText('2 vouches')).toBeInTheDocument();
   });
 
-  it('encourages a citizen who has not vouched yet', () => {
+  it('encourages a citizen who has not vouched yet', async () => {
     renderWithNextIntl(
       <Vouching
         userId="member-1"
@@ -114,11 +120,12 @@ describe('Vouching', () => {
         minVouchingStayDuration={14}
       />,
     );
+    await settleMountFetch();
 
     expect(screen.getByText(/Do you know Sam\?/i)).toBeInTheDocument();
   });
 
-  it('encourages being the first voucher when there are no vouches', () => {
+  it('encourages being the first voucher when there are no vouches', async () => {
     renderWithNextIntl(
       <Vouching
         userId="member-1"
@@ -128,13 +135,14 @@ describe('Vouching', () => {
         minVouchingStayDuration={14}
       />,
     );
+    await settleMountFetch();
 
     expect(
       screen.getByText(/Be the first to vouch for them/i),
     ).toBeInTheDocument();
   });
 
-  it('lets the voucher edit or delete their own vouch instead of nudging them again', () => {
+  it('lets the voucher edit or delete their own vouch instead of nudging them again', async () => {
     renderWithNextIntl(
       <Vouching
         userId="member-1"
@@ -144,6 +152,7 @@ describe('Vouching', () => {
         minVouchingStayDuration={14}
       />,
     );
+    await settleMountFetch();
 
     expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
@@ -153,7 +162,7 @@ describe('Vouching', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('does not let you edit or delete someone elses vouch', () => {
+  it('does not let you edit or delete someone elses vouch', async () => {
     renderWithNextIntl(
       <Vouching
         userId="member-1"
@@ -163,12 +172,13 @@ describe('Vouching', () => {
         minVouchingStayDuration={14}
       />,
     );
+    await settleMountFetch();
 
     expect(screen.getAllByRole('button', { name: /edit/i })).toHaveLength(1);
     expect(screen.getAllByRole('button', { name: /delete/i })).toHaveLength(1);
   });
 
-  it('shows vouches on your own profile without asking you to vouch', () => {
+  it('shows vouches on your own profile without asking you to vouch', async () => {
     renderWithNextIntl(
       <Vouching
         userId="member-1"
@@ -178,6 +188,7 @@ describe('Vouching', () => {
         minVouchingStayDuration={14}
       />,
     );
+    await settleMountFetch();
 
     expect(screen.getByRole('link', { name: 'Ana' })).toBeInTheDocument();
     expect(screen.queryByText(/Do you know Sam\?/i)).not.toBeInTheDocument();

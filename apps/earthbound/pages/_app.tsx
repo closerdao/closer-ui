@@ -15,6 +15,7 @@ import {
   FaviconLinks,
   LocaleMessagesNextIntlBridge,
   PlatformProvider,
+  ThemeStyles,
   appGetInitialPropsWithMessages,
   useNavigationMetrics,
 } from 'closer';
@@ -76,6 +77,8 @@ const MyApp = ({ Component, pageProps, messages }: AppOwnProps) => {
       </Head>
 
       <FaviconLinks favicon={config?.FAVICON} />
+
+      <ThemeStyles theming={config?.theming} />
 
       <Script
         id="fb-pixel"

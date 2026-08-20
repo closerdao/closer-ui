@@ -9,6 +9,16 @@ import {
   upgradeStandardPageFromDefaults,
 } from '../standardPages';
 
+// These cover the resolution rules, not the API. Without this the DB lookups
+// they trigger go out over the wire and every miss resolves api.example.com
+// for real, which is slow and fills the run with connection errors.
+jest.mock('../api', () => ({
+  __esModule: true,
+  default: { get: jest.fn(async () => ({ data: { results: [] } })) },
+  formatSearch: () => '',
+  cdn: '',
+}));
+
 const ENV_KEYS = [
   'NEXT_PUBLIC_APP_NAME',
   'NEXT_PUBLIC_FEATURE_TOKEN_SALE',

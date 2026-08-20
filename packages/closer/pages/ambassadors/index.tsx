@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import AmbassadorBadge from '../../components/AmbassadorBadge';
 import {
@@ -12,7 +12,8 @@ import {
   btnSecondary,
   btnSmall,
 } from '../../components/VillageUI';
-import { ErrorMessage } from '../../components/ui';
+import { ErrorMessage, Input } from '../../components/ui';
+import { Textarea } from '../../components/ui/textarea';
 
 import { useTranslations } from 'next-intl';
 
@@ -22,25 +23,40 @@ import {
   PLATFORM_SUBSCRIPTION_PRICE_EUR,
 } from '../../constants/village.constants';
 import { useAuth } from '../../contexts/auth';
-import { usePlatform } from '../../contexts/platform';
+import api from '../../utils/api';
 import { logMetric } from '../../utils/metrics';
 import { reportIssue } from '../../utils/reporting.utils';
 
 const AmbassadorLandingPage = () => {
   const t = useTranslations();
   const { user, refetchUser, isAuthenticated } = useAuth();
-  const { platform } = usePlatform() as { platform: any };
   const router = useRouter();
   const [isApiLoading, setIsApiLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [reason, setReason] = useState('');
+  const [projects, setProjects] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const isAmbassador = Boolean(
     user?.affiliate || user?.roles?.includes(AMBASSADOR_ROLE),
   );
+  // Applying no longer grants anything - approval from /dashboard/affiliate does.
+  const isPendingReview =
+    !isAmbassador && user?.affiliateApplication?.status === 'pending';
 
-  const becomeAmbassador = async () => {
+  const reasonRef = useRef<HTMLTextAreaElement>(null);
+
+  // The form opens in the hero, so the closing CTA at the foot of the page has
+  // to bring the reader back up to it.
+  useEffect(() => {
+    if (!isFormOpen) return;
+    reasonRef.current?.scrollIntoView({ block: 'center' });
+    reasonRef.current?.focus();
+  }, [isFormOpen]);
+
+  const startApplication = () => {
     if (!isAuthenticated) {
       router.push('/login?back=/ambassadors');
       return;
@@ -51,8 +67,13 @@ const AmbassadorLandingPage = () => {
       return;
     }
 
-    if (!user?._id || !platform?.user?.patch) {
-      setError(t('ambassadors_error_system'));
+    setError(null);
+    setIsFormOpen(true);
+  };
+
+  const applyToProgram = async () => {
+    if (!reason.trim()) {
+      setError(t('ambassadors_apply_reason_required'));
       return;
     }
 
@@ -60,27 +81,30 @@ const AmbassadorLandingPage = () => {
       setIsApiLoading(true);
       setError(null);
 
-      const nextRoles = Array.from(
-        new Set([...(user.roles || []), AMBASSADOR_ROLE]),
-      );
-
-      await platform.user.patch(user._id, {
-        affiliate: new Date(),
-        roles: nextRoles,
+      // `program` is what tells the reviewer which page an application came
+      // from - /affiliate and /ambassadors share one queue.
+      await api.post('/affiliates/apply', {
+        reason: reason.trim(),
+        program: 'ambassador',
+        ...(projects.trim() && { projects: projects.trim() }),
       });
       await refetchUser();
 
       void logMetric({
         event: 'ambassador-signup',
         category: 'affiliate',
-        value: 'signup',
+        value: 'application',
         number: 1,
       });
 
+      setIsFormOpen(false);
       setSuccess(true);
     } catch (err) {
       console.error(err);
-      reportIssue(`Error adding ambassador to user: ${user?._id}`, user?.email);
+      reportIssue(
+        `Error submitting ambassador application: ${user?._id}`,
+        user?.email,
+      );
       setError(t('ambassadors_error_signup'));
     } finally {
       setIsApiLoading(false);
@@ -157,7 +181,7 @@ const AmbassadorLandingPage = () => {
               {t('ambassadors_page_intro')}
             </p>
 
-            {success ? (
+            {success || isPendingReview ? (
               <div className="mt-9 animate-fade-in-up rounded-[22px] border border-[#C2F0DA] bg-white p-8 max-w-lg mx-auto shadow-[0_14px_36px_rgba(15,169,104,0.12)]">
                 <div className="w-12 h-12 rounded-full bg-[#3EE08F] text-[#07351F] text-xl font-bold flex items-center justify-center mx-auto animate-checkmark-pop">
                   ✓
@@ -169,11 +193,8 @@ const AmbassadorLandingPage = () => {
                   {t('ambassadors_signup_success')}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center mt-7">
-                  <Link href="/villages/create" className={btnPrimary}>
-                    {t('ambassadors_toolkit_add_village')}
-                  </Link>
-                  <Link href="/settings/affiliate" className={btnSecondary}>
-                    {t('ambassadors_cta_dashboard')}
+                  <Link href="/map" className={btnSecondary}>
+                    {t('ambassadors_cta_map')}
                   </Link>
                 </div>
               </div>
@@ -203,18 +224,66 @@ const AmbassadorLandingPage = () => {
                   ) : null}
                 </div>
               </div>
+            ) : isFormOpen ? (
+              <div className="mt-9 rounded-[22px] border border-[#C2F0DA] bg-white p-7 md:p-8 max-w-2xl mx-auto text-left shadow-[0_10px_30px_rgba(15,169,104,0.08)]">
+                <h2 className="font-serif text-2xl">
+                  {t('ambassadors_apply_title')}
+                </h2>
+                <div className="flex flex-col gap-4 mt-5">
+                  <div className="flex flex-col gap-1">
+                    <label
+                      className="text-[13.5px] font-semibold"
+                      htmlFor="ambassador-reason"
+                    >
+                      {t('ambassadors_apply_reason_label')}
+                    </label>
+                    <Textarea
+                      id="ambassador-reason"
+                      ref={reasonRef}
+                      value={reason}
+                      onChange={(event) => setReason(event.target.value)}
+                      placeholder={t('ambassadors_apply_reason_placeholder')}
+                    />
+                  </div>
+                  <Input
+                    id="ambassador-projects"
+                    label={t('ambassadors_apply_projects_label')}
+                    value={projects}
+                    onChange={(event) => setProjects(event.target.value)}
+                    placeholder={t('ambassadors_apply_projects_placeholder')}
+                  />
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={applyToProgram}
+                      disabled={isApiLoading || !reason.trim()}
+                      className={btnPrimary}
+                    >
+                      {isApiLoading
+                        ? t('ambassadors_cta_joining')
+                        : t('ambassadors_apply_submit')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsFormOpen(false)}
+                      disabled={isApiLoading}
+                      className={btnSecondary}
+                    >
+                      {t('ambassadors_apply_cancel')}
+                    </button>
+                  </div>
+                </div>
+              </div>
             ) : (
               <>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center mt-9">
                   <button
                     type="button"
-                    onClick={becomeAmbassador}
+                    onClick={startApplication}
                     disabled={isApiLoading}
                     className={btnPrimary}
                   >
-                    {isApiLoading
-                      ? t('ambassadors_cta_joining')
-                      : t('ambassadors_cta_join')}
+                    {t('ambassadors_cta_join')}
                   </button>
                   <Link href="/map" className={btnSecondary}>
                     {t('ambassadors_cta_map')}
@@ -414,7 +483,7 @@ const AmbassadorLandingPage = () => {
         </section>
 
         {/* CLOSING CTA */}
-        {!isAmbassador && !success ? (
+        {!isAmbassador && !success && !isPendingReview ? (
           <section className="text-center py-24 px-6 bg-[radial-gradient(circle_560px_at_50%_130%,rgba(62,224,143,0.24),transparent)]">
             <div className="max-w-3xl mx-auto">
               <h2 className="font-serif text-4xl md:text-6xl mb-5 leading-[1.08]">
@@ -428,13 +497,11 @@ const AmbassadorLandingPage = () => {
               </p>
               <button
                 type="button"
-                onClick={becomeAmbassador}
+                onClick={startApplication}
                 disabled={isApiLoading}
                 className={btnPrimary}
               >
-                {isApiLoading
-                  ? t('ambassadors_cta_joining')
-                  : t('ambassadors_cta_join')}
+                {t('ambassadors_cta_join')}
               </button>
             </div>
           </section>

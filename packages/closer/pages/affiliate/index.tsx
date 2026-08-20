@@ -1,30 +1,61 @@
 import Head from 'next/head';
-import Image from 'next/image';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import CollapsibleFaq from '../../components/CollapsibleFaq';
-import { Button, Heading, LinkButton } from '../../components/ui';
+import { Button, Heading, Input } from '../../components/ui';
 import ErrorMessage from '../../components/ui/ErrorMessage';
+import { Textarea } from '../../components/ui/textarea';
 
-import { PageNotFound, useAuth, usePlatform } from 'closer';
-import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import { useAuth } from '../../contexts/auth';
+import { useConfig } from '../../hooks/useConfig';
+import { AffiliateConfig, GeneralConfig } from '../../types/api';
+import api from '../../utils/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
+import { formatIsoFiatAmount } from '../../utils/currencyFormat';
 import { logMetric } from '../../utils/metrics';
 import { reportIssue } from '../../utils/reporting.utils';
+import PageNotFound from '../not-found';
+
+/**
+ * Program terms that are the same for every platform running Closer. The
+ * commission rates below them are per-platform and come from the `affiliate`
+ * config bucket, so nothing on this page names a particular community.
+ */
+const ATTRIBUTION_WINDOW_MONTHS = 12;
+const PAYOUT_THRESHOLD_EUR = 100;
 
 const AffiliateLandingPage = () => {
   const t = useTranslations();
   const { user, refetchUser } = useAuth();
-  const { platform } = usePlatform() as { platform: any };
   const router = useRouter();
+
+  const defaultConfig = useConfig();
+  const generalConfig = getCachedConfig('general') as GeneralConfig | null;
+  const affiliateConfig = getCachedConfig('affiliate') as AffiliateConfig | null;
+
+  const platform =
+    generalConfig?.platformName || defaultConfig?.PLATFORM_NAME || 'Closer';
+  const contactEmail =
+    generalConfig?.teamEmail || defaultConfig?.TEAM_EMAIL || '';
+  const payoutThreshold = formatIsoFiatAmount(PAYOUT_THRESHOLD_EUR, 'EUR');
 
   const [isApiLoading, setIsApiLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [reason, setReason] = useState('');
+  const [audience, setAudience] = useState('');
+
+  const reasonRef = useRef<HTMLTextAreaElement>(null);
+
+  const applicationStatus = user?.affiliateApplication?.status;
+  // Approval is what grants `affiliate` - until then the application only waits.
+  const isPendingReview = !user?.affiliate && applicationStatus === 'pending';
 
   useEffect(() => {
     void logMetric({
@@ -35,43 +66,142 @@ const AffiliateLandingPage = () => {
     });
   }, [user?._id]);
 
-  const faqs = [
+  // The form opens inside the hero, so the closing CTA at the foot of the page
+  // has to bring the reader back up to it.
+  useEffect(() => {
+    if (!isFormOpen) return;
+    reasonRef.current?.scrollIntoView({ block: 'center' });
+    reasonRef.current?.focus();
+  }, [isFormOpen]);
+
+  // Only rates the platform actually pays are worth a card - a community that
+  // sells no tokens should not advertise a token commission.
+  const commissionRates = [
     {
-      question: 'How do I create a tracking link?',
-      answer:
-        'Use the link builder in your Affiliate Dashboard, or contact us if you need help.',
+      label: t('affiliate_landing_rate_stays'),
+      percent: affiliateConfig?.staysCommissionPercent,
     },
     {
-      question: 'How long do I earn commission after someone signs up?',
-      answer: '12 months after their first click on your affiliate link.',
+      label: t('affiliate_landing_rate_events'),
+      percent: affiliateConfig?.eventsCommissionPercent,
     },
     {
-      question: 'When do I get paid?',
-      answer: 'On the 15th of each month, once you reach €100 in commissions.',
+      label: t('affiliate_landing_rate_subscriptions'),
+      percent: affiliateConfig?.subscriptionCommissionPercent,
     },
     {
-      question: 'Can I offer my audience a discount code?',
-      answer: 'Yes, affiliates can request personalized coupon codes.',
+      label: t('affiliate_landing_rate_products'),
+      percent: affiliateConfig?.productsCommissionPercent,
     },
     {
-      question: 'Who do I contact with questions?',
-      answer: 'Email affiliate@traditionaldreamfactory.com',
+      label: t('affiliate_landing_rate_tokens'),
+      percent: affiliateConfig?.tokenSaleCommissionPercent,
+    },
+  ].filter((rate) => Number(rate.percent) > 0);
+
+  const steps = [
+    {
+      number: '01',
+      title: t('affiliate_landing_step_1_title'),
+      body: t('affiliate_landing_step_1_body'),
+    },
+    {
+      number: '02',
+      title: t('affiliate_landing_step_2_title'),
+      body: t('affiliate_landing_step_2_body', { platform }),
+    },
+    {
+      number: '03',
+      title: t('affiliate_landing_step_3_title'),
+      body: t('affiliate_landing_step_3_body', { amount: payoutThreshold }),
     },
   ];
 
-  const becomeAffiliate = async () => {
+  const benefits = [
+    {
+      icon: '💸',
+      title: t('affiliate_landing_benefit_commissions_title'),
+      body: t('affiliate_landing_benefit_commissions_body', {
+        months: ATTRIBUTION_WINDOW_MONTHS,
+      }),
+    },
+    {
+      icon: '📊',
+      title: t('affiliate_landing_benefit_dashboard_title'),
+      body: t('affiliate_landing_benefit_dashboard_body'),
+    },
+    {
+      icon: '🎨',
+      title: t('affiliate_landing_benefit_materials_title'),
+      body: t('affiliate_landing_benefit_materials_body'),
+    },
+    {
+      icon: '🌱',
+      title: t('affiliate_landing_benefit_impact_title'),
+      body: t('affiliate_landing_benefit_impact_body', { platform }),
+    },
+  ];
+
+  const rules = [
+    t('affiliate_landing_rule_tracking'),
+    t('affiliate_landing_rule_spam'),
+    t('affiliate_landing_rule_disclose'),
+    t('affiliate_landing_rule_brand', { platform }),
+    t('affiliate_landing_rule_bidding', { platform }),
+    t('affiliate_landing_rule_reselling'),
+    t('affiliate_landing_rule_coupons'),
+    t('affiliate_landing_rule_breach'),
+  ];
+
+  const faqs = [
+    {
+      question: t('affiliate_landing_faq_link_q'),
+      answer: t('affiliate_landing_faq_link_a'),
+    },
+    {
+      question: t('affiliate_landing_faq_window_q'),
+      answer: t('affiliate_landing_faq_window_a', {
+        months: ATTRIBUTION_WINDOW_MONTHS,
+      }),
+    },
+    {
+      question: t('affiliate_landing_faq_payout_q'),
+      answer: t('affiliate_landing_faq_payout_a', { amount: payoutThreshold }),
+    },
+    {
+      question: t('affiliate_landing_faq_coupon_q'),
+      answer: t('affiliate_landing_faq_coupon_a'),
+    },
+    ...(contactEmail
+      ? [
+          {
+            question: t('affiliate_landing_faq_contact_q'),
+            answer: t('affiliate_landing_faq_contact_a', {
+              email: contactEmail,
+            }),
+          },
+        ]
+      : []),
+  ];
+
+  const startApplication = () => {
     if (user?.affiliate) {
       router.push('/settings/affiliate');
       return;
     }
 
     if (!user?._id) {
-      setError('User not found. Please try logging in again.');
+      router.push(`/login?back=${encodeURIComponent(router.asPath)}`);
       return;
     }
 
-    if (!platform?.user?.patch) {
-      setError('System not ready. Please refresh the page and try again.');
+    setError(null);
+    setIsFormOpen(true);
+  };
+
+  const applyToProgram = async () => {
+    if (!reason.trim()) {
+      setError(t('affiliate_landing_apply_reason_required'));
       return;
     }
 
@@ -80,29 +210,35 @@ const AffiliateLandingPage = () => {
       setError(null);
       setSuccess(false);
 
-      await platform.user.patch(user._id, {
-        affiliate: new Date(),
+      // `program` is what tells the reviewer which page an application came
+      // from - /affiliate and /ambassadors share one queue.
+      await api.post('/affiliates/apply', {
+        reason: reason.trim(),
+        program: 'affiliate',
+        ...(audience.trim() && { audience: audience.trim() }),
       });
 
+      // The application lands on the user record, so the pending state below
+      // survives a reload rather than living only in this component.
       await refetchUser();
 
       void logMetric({
         event: 'affiliate-signup',
         category: 'affiliate',
-        value: 'signup',
+        value: 'application',
         number: 1,
       });
 
+      setIsFormOpen(false);
       setSuccess(true);
-
-      setTimeout(() => {
-        router.push('/settings/affiliate');
-      }, 2000);
     } catch (error) {
       const errorMessage = parseMessageFromError(error);
       setError(errorMessage);
-      console.error('Error adding affiliate to user:', error);
-      reportIssue(`Error adding affiliate to user: ${user?._id}`, user?.email);
+      console.error('Error submitting affiliate application:', error);
+      reportIssue(
+        `Error submitting affiliate application: ${user?._id}`,
+        user?.email,
+      );
     } finally {
       setIsApiLoading(false);
     }
@@ -112,290 +248,326 @@ const AffiliateLandingPage = () => {
     return <PageNotFound />;
   }
 
+  const hasApplied = success || isPendingReview;
+  const pageTitle = t('affiliate_landing_page_title', { platform });
+
   return (
     <>
       <Head>
-        <title>Join the Traditional Dream Factory Affiliate Program</title>
-        <meta name="robots" content="noindex, nofollow" />
-        <meta name="googlebot" content="noindex, nofollow" />
+        <title>{pageTitle}</title>
+        <meta
+          name="description"
+          content={t('affiliate_landing_hero_intro', {
+            platform,
+            months: ATTRIBUTION_WINDOW_MONTHS,
+          })}
+        />
       </Head>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
-        <Image
-          src="/images/affiliate-hero.png"
-          alt="Join the Traditional Dream Factory Affiliate Program"
-          width={896}
-          height={400}
-        />
-        <section className="flex flex-col gap-6">
-          <Heading level={1} className="text-2xl font-bold">
-            Join the Traditional Dream Factory Affiliate Program
-          </Heading>
+      <div className="w-full text-foreground">
+        {/* HERO */}
+        <section className="px-4 sm:px-6 pt-10 pb-14 md:pt-16 md:pb-20 bg-gradient-to-b from-accent-light to-transparent rounded-b-[32px]">
+          <div className="max-w-3xl mx-auto text-center flex flex-col items-center gap-5">
+            <span className="text-xs font-bold uppercase tracking-[0.14em] text-accent bg-background/80 border border-accent/20 rounded-full px-4 py-1.5">
+              {t('affiliate_landing_hero_eyebrow')}
+            </span>
 
-          <p className="">
-            Welcome to the Traditional Dream Factory (TDF) Affiliate Program! We
-            are excited to collaborate with partners who are dedicated to
-            promoting regenerative living. By joining our program, you can
-            nurture and regenerate the earth&apos;s ecosystems while enjoying
-            lucrative benefits. As an affiliate, you&apos;ll earn commissions
-            when people book events, stays, or buy digital products and tokens
-            through your referral links.
-          </p>
-
-          <Heading level={2} className="text-lg font-bold mt-4">
-            Why you should join
-          </Heading>
-
-          <ul className="list-disc pl-6 space-y-4">
-            <li>
-              <span className="font-bold">GENEROUS COMMISSIONS:</span> Earn up
-              to 30% commission on all digital income generated through your
-              referral links, such as memberships & digital products, and 10% on
-              bookings for events and stays, and 3% of token sales. Commissions
-              will keep cashing in from purchases made by users you referred for
-              12 months after they sign up!
-            </li>
-            <li>
-              <span className="font-bold">EXCLUSIVE ACCESS:</span> As an
-              affiliate, you&apos;ll get exclusive access to our facilities for
-              content creation, subject to availability and prior arrangement.
-            </li>
-            <li>
-              <span className="font-bold">PROMOTIONAL SUPPORT:</span> We provide
-              you with all necessary promotional materials, including
-              high-quality images, logos, and detailed product information,
-              ensuring you have everything you need to succeed.
-            </li>
-            <li>
-              <span className="font-bold">EARLY INFORMATION:</span> Get early
-              notifications about upcoming events, new projects, and exclusive
-              opportunities within TDF, giving you an edge in content creation
-              and audience engagement.
-            </li>
-            <li>
-              <span className="font-bold">REGENERATIVE IMPACT:</span> Align with
-              a cause that matters. By promoting TDF, you are supporting the
-              conservation of land, and transition into regenerative land
-              stewardship, promoting biodiversity, restoring water cycles, and
-              helping create a regenerative paradigm.
-            </li>
-          </ul>
-
-          <Heading level={2} className="text-lg font-bold mt-4">
-            What You Can Earn Commission On:
-          </Heading>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-6">
-            <div className="rounded-md shadow-xl p-4 flex flex-col justify-center items-center gap-2 border border-accent">
-              <p className="text-3xl font-bold text-pink-500">10%</p>
-              <p className="text-xl font-semibold text-center">
-                Stays & Events
-              </p>
-            </div>
-            <div className="rounded-md shadow-xl p-4 flex flex-col justify-center items-center gap-2 border border-accent">
-              <p className="text-3xl font-bold text-pink-500">30%</p>
-              <p className="text-xl font-semibold text-center">
-                Digital Products & Subscriptions
-              </p>
-            </div>
-            <div className="rounded-md shadow-xl p-4 flex flex-col justify-center items-center gap-2 border border-accent">
-              <p className="text-3xl font-bold text-pink-500">3%</p>
-              <p className="text-xl font-semibold text-center">Token Sales</p>
-            </div>
-          </div>
-
-          <Heading level={2} className="text-lg font-bold mt-4">
-            HOW IT WORKS?
-          </Heading>
-
-          <ol className="list-decimal pl-6 space-y-4">
-            <li>
-              <span className="font-bold">PROMOTE TDF:</span> Share your unique
-              link through your digital platforms. Use our promotional materials
-              or create your content that resonates with your audience.
-            </li>
-            <li>
-              <span className="font-bold">EARN COMMISSIONS:</span> When someone
-              books a stay, an event or subscribes or buy tokens, you&apos;ll
-              earn a portion of the revenue generated.
-            </li>
-            <li>
-              <span className="font-bold">RECEIVE PAYMENTS:</span> Commissions
-              are paid out monthly, once you reach €100. Payments to be made in
-              $TDF, or to a Euro account. You&apos;ll need to provide us with a
-              simple invoice.
-            </li>
-          </ol>
-
-          <Heading level={2} className="text-lg font-bold mt-4">
-            WHO IS THIS FOR?
-          </Heading>
-
-          <p className="text-lg">
-            We are looking for influencers & partners (10k+ followers)
-            interested in the regenerative lifestyle, who can drive the right
-            kind of audience. It&apos;s not just about selling, it&apos;s about
-            bringing the right kind of people. All referrals are based on humans
-            you introduce to our ecosystem. TDF has been bootstrapped from the
-            ground up with a thriving community of members, and we are now
-            aiming to make the project commercially viable while bringing
-            together a trusted community of dreamers and shapers who believe we
-            can change the way we live. We are especially excited to welcome
-            regenerative entrepreneurs who can help us build a thriving economy
-            while supporting us to restore ecosystems.
-          </p>
-
-          <Heading level={2} className="text-lg font-bold mt-4">
-            What are our Affiliate Program Rules that you agree to by joining:
-          </Heading>
-
-          <ul className="list-disc pl-6 space-y-4">
-            <li>
-              If you forgot to use your tracking code, we cannot pay commissions
-              on any referrals
-            </li>
-            <li>No spamming, cookie stuffing, or misleading promotions.</li>
-            <li>
-              Be transparent – disclose your affiliate relationship when
-              required.
-            </li>
-            <li>
-              Respect TDF&apos;s brand and values in your promotions. You can
-              find logos and copy swipes in your affiliate resources
-            </li>
-            <li>
-              You&apos;re not allowed to represent our brand wrongfully or give
-              wrong information about our product, service or prices.
-            </li>
-            <li>
-              You&apos;re not allowed to bid on our Brand or audience, TDF or
-              Traditional Dream Factory, in any paid campaigns via Google Ads,
-              Bing Ads or similar, as well as on Social Media channels, unless
-              you have been given explicit authorisation by the Affiliate
-              Manager of TDF. This rule includes close variations or
-              misspellings.
-            </li>
-            <li>
-              You are not allowed to &quot;Resell&quot; our product. Orders or
-              bookings of your audience have to be made by themselves on our own
-              website
-            </li>
-            <li>
-              You are not allowed to willfully promote non-existent or expired
-              Discounts or Coupon codes.
-            </li>
-            <li>
-              If we encounter any of the above, we reserve the right to
-              deactivate your Affiliate account at any time, without prior
-              warning and you will not receive any commission payouts of pending
-              commissions.
-            </li>
-          </ul>
-
-          <Heading level={2} className="text-lg font-bold mt-4">
-            Affiliate Resources:
-          </Heading>
-
-          <ul className="list-disc pl-6 space-y-2">
-            <li>
-              Copy Swipes (emails, social media posts, descriptions you can use)
-            </li>
-            <li>Affiliate Dashboard (track clicks, sales, and commissions)</li>
-            <li>Brand Assets (logos, images)</li>
-            <li>
-              Dedicated Affiliate Manager (email:
-              affiliate@traditionaldreamfactory.com)
-            </li>
-          </ul>
-
-          <Heading level={2} className="text-lg font-bold mt-4">
-            FAQs:
-          </Heading>
-
-          <div className="mt-6">
-            <CollapsibleFaq items={faqs} />
-          </div>
-
-          <LinkButton
-            target="_blank"
-            className="mx-auto mt-6 px-4 bg-white text-accent   w-fit"
-            href="https://drive.google.com/drive/folders/11i6UBGqEyC8aw0ufJybnbjueSpE3s8f-"
-            onClick={() => {
-              void logMetric({
-                event: 'affiliate-promo-materials-click',
-                category: 'affiliate',
-                value: 'promo-materials',
-                number: 1,
-              });
-            }}
-          >
-            {t('dashboard_affiliate_promo_materials')}
-          </LinkButton>
-          <div className="mt-8 text-center bg-accent-light rounded-md p-8 w-full">
-            <Heading level={2} className="text-2xl font-bold mb-6">
-              READY TO JOIN?
+            <Heading
+              level={1}
+              className="text-4xl md:text-5xl leading-[1.1] font-bold"
+            >
+              {t('affiliate_landing_hero_title')}{' '}
+              <span className="text-accent">
+                {t('affiliate_landing_hero_accent')}
+              </span>
             </Heading>
 
+            <p className="text-lg text-foreground/70 max-w-xl leading-relaxed">
+              {t('affiliate_landing_hero_intro', {
+                platform,
+                months: ATTRIBUTION_WINDOW_MONTHS,
+              })}
+            </p>
+
             {error && (
-              <div className="mb-4">
+              <div className="w-full max-w-lg text-left">
                 <ErrorMessage error={error} />
-                <div className="text-center mt-2">
+              </div>
+            )}
+
+            {user?.affiliate ? (
+              <Button
+                onClick={() => router.push('/settings/affiliate')}
+                variant="primary"
+                color="accent"
+                className="max-w-xs"
+              >
+                {t('affiliate_landing_cta_dashboard')}
+              </Button>
+            ) : hasApplied ? (
+              <div className="w-full max-w-lg bg-background border border-accent/20 rounded-2xl shadow-xl p-8">
+                <div className="w-12 h-12 rounded-full bg-accent text-accent-foreground text-xl font-bold flex items-center justify-center mx-auto">
+                  ✓
+                </div>
+                <Heading level={2} className="text-xl mt-4">
+                  {t('affiliate_landing_success_title')}
+                </Heading>
+                <p className="text-sm text-foreground/70 mt-2">
+                  {t('affiliate_landing_success_body', {
+                    email: user?.email || '',
+                  })}
+                </p>
+              </div>
+            ) : isFormOpen ? (
+              <div className="w-full max-w-lg bg-background border border-accent/20 rounded-2xl shadow-xl p-6 md:p-8 text-left flex flex-col gap-4">
+                <Heading level={2} className="text-xl">
+                  {t('affiliate_landing_apply_title')}
+                </Heading>
+                <div className="flex flex-col gap-1">
+                  <label
+                    className="font-bold text-sm"
+                    htmlFor="affiliate-reason"
+                  >
+                    {t('affiliate_landing_apply_reason_label')}
+                  </label>
+                  <Textarea
+                    id="affiliate-reason"
+                    ref={reasonRef}
+                    value={reason}
+                    onChange={(event) => setReason(event.target.value)}
+                    placeholder={t('affiliate_landing_apply_reason_placeholder', {
+                      platform,
+                    })}
+                  />
+                </div>
+                <Input
+                  id="affiliate-audience"
+                  label={t('affiliate_landing_apply_audience_label', {
+                    platform,
+                  })}
+                  value={audience}
+                  onChange={(event) => setAudience(event.target.value)}
+                  placeholder={t(
+                    'affiliate_landing_apply_audience_placeholder',
+                  )}
+                />
+                <div className="flex gap-2 justify-end">
                   <Button
-                    onClick={becomeAffiliate}
+                    onClick={() => setIsFormOpen(false)}
                     variant="secondary"
                     color="accent"
-                    className="max-w-xs mx-auto"
-                    isLoading={isApiLoading}
+                    isFullWidth={false}
                     isEnabled={!isApiLoading}
                   >
-                    Try Again
+                    {t('affiliate_landing_apply_cancel')}
+                  </Button>
+                  <Button
+                    onClick={applyToProgram}
+                    variant="primary"
+                    color="accent"
+                    isFullWidth={false}
+                    isLoading={isApiLoading}
+                    isEnabled={!isApiLoading && Boolean(reason.trim())}
+                  >
+                    {t('affiliate_landing_apply_submit')}
                   </Button>
                 </div>
               </div>
-            )}
-
-            {success && (
-              <div className="text-center py-4 mb-4">
-                <div className="text-green-600 text-4xl mb-2">✓</div>
-                <p className="text-green-600 font-semibold mb-2">
-                  Welcome to the TDF Affiliate Program!
+            ) : (
+              <>
+                <Button
+                  onClick={startApplication}
+                  variant="primary"
+                  color="accent"
+                  className="max-w-xs"
+                  isEnabled={!isApiLoading}
+                >
+                  {t('affiliate_landing_cta_apply')}
+                </Button>
+                <p className="text-sm text-foreground/60">
+                  {t('affiliate_landing_hero_footnote')}
                 </p>
-                <p className="text-gray-600 text-sm">
-                  Redirecting you to your affiliate dashboard...
-                </p>
-              </div>
-            )}
-
-            {!error && !success && (
-              <Button
-                onClick={becomeAffiliate}
-                variant="primary"
-                color="accent"
-                className="max-w-xs mx-auto"
-                isLoading={isApiLoading}
-                isEnabled={!isApiLoading}
-              >
-                {user?.affiliate
-                  ? 'Go to Affiliate dashboard'
-                  : '👉 Join the TDF Affiliate Program Today'}
-              </Button>
+              </>
             )}
           </div>
         </section>
+
+        {/* COMMISSION RATES */}
+        {commissionRates.length > 0 && (
+          <section className="px-4 sm:px-6 py-14 md:py-20">
+            <div className="max-w-5xl mx-auto flex flex-col gap-8">
+              <div className="text-center flex flex-col gap-3">
+                <Heading level={2} className="text-2xl md:text-3xl">
+                  {t('affiliate_landing_rates_title')}
+                </Heading>
+                <p className="text-foreground/70">
+                  {t('affiliate_landing_rates_note', { platform })}
+                </p>
+              </div>
+
+              {/* Flex rather than grid so an odd number of rates - which is
+                  what most platforms have - centres its last row. */}
+              <div className="flex flex-wrap justify-center gap-4">
+                {commissionRates.map((rate) => (
+                  <div
+                    key={rate.label}
+                    className="bg-background border border-line/40 rounded-2xl p-6 flex flex-col items-center justify-center gap-1 text-center shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all basis-[calc(50%-0.5rem)] lg:basis-[calc(33.333%-0.75rem)] grow-0"
+                  >
+                    <p className="text-4xl font-bold text-accent">
+                      {rate.percent}%
+                    </p>
+                    <p className="font-medium text-sm md:text-base">
+                      {rate.label}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* HOW IT WORKS */}
+        <section className="px-4 sm:px-6 py-14 md:py-20 bg-neutral-light">
+          <div className="max-w-5xl mx-auto flex flex-col gap-10">
+            <div className="text-center flex flex-col gap-3">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent">
+                {t('affiliate_landing_steps_eyebrow')}
+              </p>
+              <Heading level={2} className="text-2xl md:text-3xl">
+                {t('affiliate_landing_steps_title')}
+              </Heading>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {steps.map((step) => (
+                <div
+                  key={step.number}
+                  className="relative bg-background border border-line/40 rounded-2xl p-7 pt-9"
+                >
+                  <span className="absolute -top-4 left-6 bg-accent text-accent-foreground rounded-full w-9 h-9 flex items-center justify-center font-bold text-sm">
+                    {step.number}
+                  </span>
+                  <Heading level={3} className="text-lg mb-2">
+                    {step.title}
+                  </Heading>
+                  <p className="text-foreground/70 leading-relaxed">
+                    {step.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* WHY JOIN */}
+        <section className="px-4 sm:px-6 py-14 md:py-20">
+          <div className="max-w-5xl mx-auto flex flex-col gap-10">
+            <div className="text-center flex flex-col gap-3">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-accent">
+                {t('affiliate_landing_benefits_eyebrow')}
+              </p>
+              <Heading level={2} className="text-2xl md:text-3xl">
+                {t('affiliate_landing_benefits_title', { platform })}
+              </Heading>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              {benefits.map((benefit) => (
+                <div
+                  key={benefit.title}
+                  className="bg-accent-light/40 border border-accent/15 rounded-2xl p-7 flex gap-4"
+                >
+                  <span className="text-2xl leading-none" aria-hidden="true">
+                    {benefit.icon}
+                  </span>
+                  <div className="flex flex-col gap-1.5">
+                    <Heading level={3} className="text-lg">
+                      {benefit.title}
+                    </Heading>
+                    <p className="text-foreground/70 leading-relaxed">
+                      {benefit.body}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* RULES */}
+        <section className="px-4 sm:px-6 py-14 md:py-20 bg-neutral-light">
+          <div className="max-w-4xl mx-auto flex flex-col gap-8">
+            <div className="text-center flex flex-col gap-3">
+              <Heading level={2} className="text-2xl md:text-3xl">
+                {t('affiliate_landing_rules_title')}
+              </Heading>
+              <p className="text-foreground/70">
+                {t('affiliate_landing_rules_intro')}
+              </p>
+            </div>
+
+            <ul className="bg-background border border-line/40 rounded-2xl divide-y divide-line/30">
+              {rules.map((rule) => (
+                <li
+                  key={rule}
+                  className="flex gap-3 px-6 py-4 text-foreground/80 leading-relaxed"
+                >
+                  <span className="text-accent font-bold" aria-hidden="true">
+                    →
+                  </span>
+                  <span>{rule}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="px-4 sm:px-6 py-14 md:py-20">
+          <div className="max-w-3xl mx-auto">
+            <CollapsibleFaq
+              title={t('affiliate_landing_faq_title')}
+              items={faqs}
+            />
+          </div>
+        </section>
+
+        {/* CLOSING CTA */}
+        {!user?.affiliate && !hasApplied && (
+          <section className="px-4 sm:px-6 pb-16 md:pb-24">
+            <div className="max-w-4xl mx-auto bg-accent-light rounded-3xl px-6 py-14 text-center flex flex-col items-center gap-5">
+              <Heading level={2} className="text-2xl md:text-4xl max-w-xl">
+                {t('affiliate_landing_closing_title', { platform })}
+              </Heading>
+              <p className="text-foreground/70 max-w-md">
+                {t('affiliate_landing_closing_body')}
+              </p>
+              <Button
+                onClick={startApplication}
+                variant="primary"
+                color="accent"
+                className="max-w-xs"
+                isEnabled={!isApiLoading}
+              >
+                {t('affiliate_landing_cta_apply_short')}
+              </Button>
+              {contactEmail && (
+                <p className="text-sm text-foreground/60">
+                  {t('affiliate_landing_contact')}{' '}
+                  <a
+                    className="text-accent font-medium underline underline-offset-2"
+                    href={`mailto:${contactEmail}`}
+                  >
+                    {contactEmail}
+                  </a>
+                </p>
+              )}
+            </div>
+          </section>
+        )}
       </div>
     </>
   );
-};
-
-AffiliateLandingPage.getInitialProps = async (context: NextPageContext) => {
-  try {
-
-    return {
-    };
-  } catch (err: unknown) {
-    return {
-      };
-  }
 };
 
 export default AffiliateLandingPage;

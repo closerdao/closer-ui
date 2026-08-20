@@ -30,7 +30,6 @@ function stayPaymentDeltaHasPayableDue(
 
 export type StayPaymentRoutingParams = {
   bookingId: string;
-  stayShaped: boolean;
   status: string;
   paymentDelta?: PaymentDeltaInput;
   useTokens?: boolean;
@@ -56,7 +55,6 @@ export function getBookingPaymentCheckoutPath(
 ): string {
   const {
     bookingId,
-    stayShaped,
     status,
     paymentDelta,
     useTokens = false,
@@ -64,12 +62,6 @@ export function getBookingPaymentCheckoutPath(
     tokensOwed = 0,
     creditsOwed = 0,
   } = params;
-
-  if (!stayShaped) {
-    return status === 'open'
-      ? `/bookings/${bookingId}/summary`
-      : `/bookings/${bookingId}/checkout`;
-  }
 
   if (status === 'open') {
     return `/stay/create/${bookingId}`;

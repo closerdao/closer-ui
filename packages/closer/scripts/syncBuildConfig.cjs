@@ -35,6 +35,47 @@ const path = require('path');
 
 const OUT = path.join(__dirname, '..', 'generated', 'appConfig.snapshot.json');
 
+const APPS_DIR = path.join(__dirname, '..', '..', '..', 'apps');
+
+/**
+ * Tailwind rebuilds its CSS when `tailwind.config.js` changes, and that config
+ * builds the palette from the snapshot this script writes — but the snapshot is
+ * a plain require, not something Tailwind watches. So writing a new colour into
+ * it leaves a running dev server compiling the palette it started with, and the
+ * only way out is restarting the process.
+ *
+ * Bumping each config's mtime is the signal Tailwind is already listening for.
+ * It leaves file contents untouched, and only runs when the snapshot actually
+ * changed, so a no-op sync does not trigger a rebuild.
+ */
+function touchTailwindConfigs(log = console) {
+  let entries;
+  try {
+    entries = fs.readdirSync(APPS_DIR, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+
+  const now = new Date();
+  const touched = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const configPath = path.join(APPS_DIR, entry.name, 'tailwind.config.js');
+    try {
+      fs.utimesSync(configPath, now, now);
+      touched.push(entry.name);
+    } catch {
+      // No config, or not writable — nothing to invalidate for this app.
+    }
+  }
+  if (touched.length > 0) {
+    log.log(
+      `[sync-build-config] theme changed, nudged tailwind config for: ${touched.join(', ')}`,
+    );
+  }
+  return touched;
+}
+
 /**
  * Config buckets that closer-api's ensureConfigs seeds on boot for every
  * deployment, so their absence from a /config response always indicates a
@@ -275,8 +316,18 @@ async function main() {
     process.exit(1);
   }
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
-  fs.writeFileSync(OUT, `${JSON.stringify(bySlug)}\n`, 'utf8');
+  const next = `${JSON.stringify(bySlug)}\n`;
+  let previous = null;
+  try {
+    previous = fs.readFileSync(OUT, 'utf8');
+  } catch {
+    // First run — no snapshot to compare against.
+  }
+  fs.writeFileSync(OUT, next, 'utf8');
   console.log('[sync-build-config] wrote', OUT);
+  if (previous !== next) {
+    touchTailwindConfigs();
+  }
 }
 
 if (require.main === module) {
@@ -290,6 +341,7 @@ if (require.main === module) {
 
 module.exports = {
   configPayloadToSlugMap,
+  touchTailwindConfigs,
   fetchWithRetry,
   getMissingExpectedSlugs,
   isStaleSnapshotAllowed,

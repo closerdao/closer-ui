@@ -17,6 +17,7 @@ export interface MemberMenuFeatureFlags {
   isFaqEnabled: boolean;
   isAffiliateEnabled: boolean;
   isCohousingEnabled: boolean;
+  isApplicationsEnabled: boolean;
 }
 
 const inactiveFlags = (): Omit<
@@ -36,6 +37,7 @@ const inactiveFlags = (): Omit<
   isFaqEnabled: false,
   isAffiliateEnabled: false,
   isCohousingEnabled: false,
+  isApplicationsEnabled: false,
 });
 
 export function deriveMemberMenuFeatureFlags(
@@ -86,6 +88,7 @@ export function deriveMemberMenuFeatureFlags(
     config.affiliate?.enabled === true &&
     process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true';
   const isCohousingEnabled = config.cohousing?.enabled === true;
+  const isApplicationsEnabled = config.applications?.enabled === true;
 
   return {
     ready: true,
@@ -104,5 +107,6 @@ export function deriveMemberMenuFeatureFlags(
     isFaqEnabled,
     isAffiliateEnabled,
     isCohousingEnabled,
+    isApplicationsEnabled,
   };
 }

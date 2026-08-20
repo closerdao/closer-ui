@@ -1,7 +1,7 @@
 import React from 'react';
 
 import dayjs from 'dayjs';
-import { useTranslations } from 'next-intl';
+import { useFormatter, useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { useCitizenQuests } from '../../hooks/useCitizenQuests';
@@ -36,14 +36,20 @@ const Card = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-const BalanceTile = ({ label, value }: { label: string; value: number }) => (
-  <div className="flex-1 rounded-xl bg-accent-light/40 p-4">
-    <p className="text-2xl font-bold text-accent">
-      {value.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-    </p>
-    <p className="text-xs uppercase tracking-wider text-gray-500">{label}</p>
-  </div>
-);
+const BalanceTile = ({ label, value }: { label: string; value: number }) => {
+  // Format for the language the page is in. `toLocaleString` without a locale
+  // follows whatever machine is rendering, so the same balance came out `7.5`
+  // or `7,5` depending on the reader's OS rather than on the chosen locale.
+  const format = useFormatter();
+  return (
+    <div className="flex-1 rounded-xl bg-accent-light/40 p-4">
+      <p className="text-2xl font-bold text-accent">
+        {format.number(value, { maximumFractionDigits: 2 })}
+      </p>
+      <p className="text-xs uppercase tracking-wider text-gray-500">{label}</p>
+    </div>
+  );
+};
 
 /**
  * Shows where the visitor stands on the citizenship journey: already a citizen,

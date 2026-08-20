@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl';
 import { OnboardingQuest } from '../../constants/tokenOnboardingQuests';
 import { formatCarrots } from '../../utils/tokenOnboarding.helpers';
 import Button from '../ui/Button';
+import WalletGate, { WalletGateStatus } from './WalletGate';
 
 export interface QuestGateState {
   /** Option the member last picked on a quiz gate. */
@@ -11,6 +12,11 @@ export interface QuestGateState {
   wrongPicks: number[];
   /** One flag per item on a checklist gate. */
   checks: boolean[];
+  /**
+   * Set from the wallet itself on a wallet gate, never by the member. The page
+   * refreshes it on every render, so it is always the live answer.
+   */
+  isWalletVerified: boolean;
 }
 
 export const emptyGateState = (quest: OnboardingQuest): QuestGateState => ({
@@ -18,6 +24,7 @@ export const emptyGateState = (quest: OnboardingQuest): QuestGateState => ({
   wrongPicks: [],
   checks:
     quest.gate.type === 'check' ? quest.gate.items.map(() => false) : [],
+  isWalletVerified: false,
 });
 
 export const isGatePassed = (
@@ -26,6 +33,9 @@ export const isGatePassed = (
 ): boolean => {
   if (quest.gate.type === 'quiz') {
     return state.picked === quest.gate.correctIndex;
+  }
+  if (quest.gate.type === 'wallet') {
+    return state.isWalletVerified;
   }
   return (
     state.checks.length === quest.gate.items.length &&
@@ -36,6 +46,7 @@ export const isGatePassed = (
 interface QuestGateProps {
   quest: OnboardingQuest;
   state: QuestGateState;
+  walletStatus: WalletGateStatus;
   isClaimed: boolean;
   isClaiming: boolean;
   hasPendingCarrots: boolean;
@@ -47,6 +58,7 @@ interface QuestGateProps {
 const QuestGate = ({
   quest,
   state,
+  walletStatus,
   isClaimed,
   isClaiming,
   hasPendingCarrots,
@@ -62,7 +74,13 @@ const QuestGate = ({
     <div className="mt-7 rounded-lg border border-line/40 p-5">
       <p className="mb-3.5 text-lg font-bold">{quest.gate.ask}</p>
 
-      {quest.gate.type === 'quiz' ? (
+      {quest.gate.type === 'wallet' ? (
+        <WalletGate
+          gate={quest.gate}
+          status={walletStatus}
+          isClaimed={isClaimed}
+        />
+      ) : quest.gate.type === 'quiz' ? (
         <div className="flex flex-col gap-2">
           {quest.gate.options.map((option, optionIndex) => {
             const isRight = isPassed && state.picked === optionIndex;

@@ -11,6 +11,10 @@ import QuestGate, {
   emptyGateState,
   isGatePassed,
 } from '../../components/TokenOnboarding/QuestGate';
+import {
+  WalletGateStatus,
+  isWalletGatePassed,
+} from '../../components/TokenOnboarding/WalletGate';
 import Wallet from '../../components/Wallet';
 import { BackButton, Button, Heading } from '../../components/ui';
 
@@ -24,8 +28,10 @@ import {
 } from '../../constants/tokenOnboardingQuests';
 import { useAuth } from '../../contexts/auth';
 import { usePlatform } from '../../contexts/platform';
+import { useWalletState } from '../../contexts/wallet/hooks';
 import { useConfig } from '../../hooks/useConfig';
 import { GeneralConfig } from '../../types';
+import { userHasLinkedWallet } from '../../utils/auth.helpers';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { getGasTokenDisplay } from '../../utils/config.utils';
 import { logMetric } from '../../utils/metrics';
@@ -45,6 +51,28 @@ const SUPPORT_CHANNEL_URL = 'https://t.me/+bW0K8E7ZGVE4ZjBh';
 const progressStorageKey = (userId: string) =>
   `token-onboarding-progress-${userId}`;
 
+/** The navigation bar is fixed at 80px; clear it plus a little air. */
+const SCROLL_OFFSET = 96;
+
+/**
+ * Put the top of the section just under the navigation, so the member reads a
+ * quest from its title rather than landing in the middle of it.
+ */
+const scrollToHead = (element: HTMLElement | null | undefined) => {
+  if (!element) return;
+  if (typeof element.getBoundingClientRect === 'function') {
+    const top =
+      element.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET;
+    window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
+    return;
+  }
+  // Scrolling is a convenience; never let a missing implementation break a
+  // claim that has already been awarded and stored.
+  if (typeof element.scrollIntoView === 'function') {
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+};
+
 /** 'CELO SEPOLIA' reads as shouting in prose. */
 const humanNetworkName = (name: string) =>
   name.toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -56,6 +84,12 @@ const OnboardingPage = () => {
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
   const { user, refetchUser } = useAuth();
   const { platform }: any = usePlatform();
+  const {
+    isWalletConnected,
+    isCorrectNetwork,
+    hasSameConnectedAccount,
+    account,
+  } = useWalletState();
 
   const PLATFORM_NAME =
     generalConfig?.platformName || defaultConfig.platformName;
@@ -79,9 +113,20 @@ const OnboardingPage = () => {
         networkName: humanNetworkName(blockchainConfig.BLOCKCHAIN_NAME),
         gasToken,
         semanticUrl,
+        canConnectWallet: isWalletEnabled,
       }),
-    [PLATFORM_NAME, gasToken, semanticUrl],
+    [PLATFORM_NAME, gasToken, semanticUrl, isWalletEnabled],
   );
+
+  // The last quest is claimed against this, not against a box the member ticks.
+  const walletStatus: WalletGateStatus = {
+    isWalletConnected: Boolean(isWalletConnected),
+    isCorrectNetwork: Boolean(isCorrectNetwork),
+    isLinkedToProfile: Boolean(
+      userHasLinkedWallet(user) && hasSameConnectedAccount,
+    ),
+    account,
+  };
 
   const [completed, setCompleted] = useState<string[]>([]);
   const [isRestored, setIsRestored] = useState(false);
@@ -141,10 +186,16 @@ const OnboardingPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?._id, quests]);
 
+  const isWalletVerified = isWalletGatePassed(walletStatus);
+
   const gateStateFor = useCallback(
-    (quest: OnboardingQuest): QuestGateState =>
-      gateStates[quest.id] ?? emptyGateState(quest),
-    [gateStates],
+    (quest: OnboardingQuest): QuestGateState => {
+      const state = gateStates[quest.id] ?? emptyGateState(quest);
+      return quest.gate.type === 'wallet'
+        ? { ...state, isWalletVerified }
+        : state;
+    },
+    [gateStates, isWalletVerified],
   );
 
   const updateGateState = (
@@ -233,17 +284,24 @@ const OnboardingPage = () => {
       const next = nextQuestIndex(nextCompleted, quests);
       setOpenQuestId(next === -1 ? null : quests[next].id);
 
-      await persistProgress(nextCompleted, user._id);
-
-      const scrollTarget =
+      // Scroll before persisting: the member should be looking at the next
+      // quest immediately, not once a network round trip comes back. One frame
+      // is enough for this quest to collapse and the next one to open, so the
+      // head we measure is where it will actually be.
+      await new Promise<void>((resolve) => {
+        if (typeof requestAnimationFrame === 'function') {
+          requestAnimationFrame(() => resolve());
+        } else {
+          resolve();
+        }
+      });
+      scrollToHead(
         next === -1
           ? questRefs.current.finale
-          : questRefs.current[quests[next].id];
-      // Scrolling is a convenience; never let a missing implementation break a
-      // claim that has already been awarded and stored.
-      if (typeof scrollTarget?.scrollIntoView === 'function') {
-        scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+          : questRefs.current[quests[next].id],
+      );
+
+      await persistProgress(nextCompleted, user._id);
     } finally {
       setClaimingQuestId(null);
     }
@@ -276,9 +334,6 @@ const OnboardingPage = () => {
       </Head>
 
       <div className="w-full max-w-screen-sm mx-auto py-8 px-4">
-        <BackButton handleClick={() => router.push('/token')}>
-          {t('buttons_back')}
-        </BackButton>
 
         <Heading level={1} className="mb-6">
           🥕 {t('token_onboarding_title')}
@@ -391,6 +446,7 @@ const OnboardingPage = () => {
                           handleToggleCheck(quest, itemIndex)
                         }
                         onClaim={() => handleClaim(quest)}
+                        walletStatus={walletStatus}
                       />
                     </div>
                   )}

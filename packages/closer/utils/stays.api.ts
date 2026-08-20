@@ -395,6 +395,12 @@ export type StaySearchPayload = {
    */
   bookingType?: StayBookingType | null;
   isFriendsBooking?: boolean;
+  /**
+   * Team stays ignore event calendar blocks, so without it the search greys out
+   * dates POST /stays accepts. Role-gated server-side (space-host, steward,
+   * land manager, team, admin) — everyone else gets the regular calendar back.
+   */
+  isTeamBooking?: boolean;
 };
 
 export const searchStays = async (
@@ -416,6 +422,12 @@ export const checkStayListingAvailability = async (
      * and use the volunteering minimum stay.
      */
     bookingType?: StayBookingType | null;
+    /**
+     * Same story as volunteer stays for a stay booked for the team: the block is
+     * ignored by POST /stays, so the calendar has to ignore it too. Role-gated
+     * server-side and ignored for anyone else.
+     */
+    isTeamBooking?: boolean;
     isFriendsBooking?: boolean;
     eventId?: string | null;
   },
@@ -693,21 +705,6 @@ export const cancelStay = async (
   const { data } = await api.post(`/stays/${id}/cancel`, {});
   return (data as ApiOk<{ booking: Stay; refund: any }>).results;
 };
-
-export function isStayShapedBooking(
-  record: Record<string, unknown> | null | undefined,
-): boolean {
-  if (!record) return false;
-  return (
-    record.priceLock != null ||
-    record.fiatTarget != null ||
-    record.creditsTarget != null ||
-    record.tokensTarget != null ||
-    record.fiatPaid != null ||
-    record.creditsPaid != null ||
-    record.tokensStaked != null
-  );
-}
 
 function unwrapStayMutationResult(data: { results?: unknown }): Stay {
   const r = data?.results as { booking?: Stay } | Stay;

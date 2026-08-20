@@ -332,11 +332,11 @@ const SalesDashboardPage = () => {
   }
 
   const hubTabs: { id: SalesHubTab; label: string }[] = [
-    { id: 'financed', label: t('token_sales_dashboard_tab_financed') },
     ...visibleProductTabs.map((tab) => ({
       id: tab,
       label: t(saleCategoryLabelKey(tab)),
     })),
+    { id: 'financed', label: t('token_sales_dashboard_tab_financed') },
   ];
 
   return (

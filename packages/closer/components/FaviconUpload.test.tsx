@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 
 import { renderWithNextIntl } from '../test/utils';
 import FaviconUpload from './FaviconUpload';
@@ -34,7 +34,9 @@ const drop = (file: File) => {
     'input[type="file"]',
   ) as HTMLInputElement;
   Object.defineProperty(input, 'files', { value: [file] });
-  input.dispatchEvent(new Event('change', { bubbles: true }));
+  // fireEvent wraps the dispatch in act(), so react-dropzone's state update
+  // lands inside the render cycle instead of warning after it.
+  fireEvent.change(input);
 };
 
 beforeEach(() => {
@@ -129,7 +131,9 @@ describe('FaviconUpload', () => {
     );
 
     // The dropzone root also carries role="button", so target the real element.
-    (container.querySelector('button[type="button"]') as HTMLButtonElement).click();
+    fireEvent.click(
+      container.querySelector('button[type="button"]') as HTMLButtonElement,
+    );
 
     await waitFor(() => {
       expect(onChange).toHaveBeenCalledWith('');

@@ -1405,6 +1405,7 @@
   "governance_passed_status": "Passed",
   "governance_failed_status": "Failed",
   "governance_quorum_label": "Quorum:",
+  "governance_quorum_reached": "Quorum reached",
   "governance_proposal_not_found": "Proposal Not Found",
   "governance_proposal_not_found_message": "The requested proposal could not be found.",
   "governance_by": "by",

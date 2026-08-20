@@ -1129,6 +1129,7 @@
   "governance_passed_status": "Aprovado",
   "governance_failed_status": "Rejeitado",
   "governance_quorum_label": "Quórum:",
+  "governance_quorum_reached": "Quórum atingido",
   "governance_proposal_not_found": "Proposta Não Encontrada",
   "governance_proposal_not_found_message": "A proposta solicitada não foi encontrada.",
   "governance_by": "por",

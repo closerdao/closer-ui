@@ -109,6 +109,15 @@ export type User = {
   referrals?: number;
   actions?: any;
   affiliate?: Date;
+  /** Written by POST /affiliates/apply; reviewed from /dashboard/affiliate. */
+  affiliateApplication?: {
+    reason?: string;
+    status?: 'pending' | 'approved' | 'removed';
+    appliedAt?: string;
+    reviewedBy?: string;
+    reviewedAt?: string;
+    [field: string]: unknown;
+  };
   kycData?: {
     IP: string;
     dateRecorded: Date;

@@ -1,6 +1,38 @@
 import { ACCOUNTING_ENTITY_PRODUCT_SLUGS } from './constants/accountingEntities.constants';
 import { ISO_COUNTRY_CODES_FOR_CONFIG } from './constants/countryLocales';
 import { ConfigType } from './types/config';
+import {
+  THEME_COLOR_TOKENS,
+  THEME_DEFAULTS,
+  THEME_FONTS,
+  THEME_FONT_SLOTS,
+  colorTokenConfigKey,
+  fontSlotConfigKey,
+} from './theming';
+
+const THEME_FONT_IDS = THEME_FONTS.map((font) => font.id);
+
+/**
+ * Per-token colour overrides, one field per token the compiled theme declares.
+ * They default to '' meaning "use the value derived from the source colours" —
+ * which is what keeps a village on a coherent palette until it deliberately
+ * reaches for a single token. Generated from the same catalogue the theme is
+ * built from, so a token can never exist in one and not the other.
+ */
+const THEME_TOKEN_OVERRIDE_FIELDS = Object.fromEntries(
+  THEME_COLOR_TOKENS.map(({ token }) => [
+    colorTokenConfigKey(token),
+    { type: 'color', default: '' },
+  ]),
+);
+
+/** Font-slot overrides (`serif`, `display`, `accent`, `accent-alt`). */
+const THEME_FONT_SLOT_FIELDS = Object.fromEntries(
+  THEME_FONT_SLOTS.map((slot) => [
+    fontSlotConfigKey(slot),
+    { type: 'select', enum: THEME_FONT_IDS, default: '' },
+  ]),
+);
 
 export const CURRENCY_ISO_SYMBOL = {
   AED: 'AED',
@@ -1154,6 +1186,49 @@ export const configDescription: ConfigType[] = [
         type: 'boolean',
         default: false,
       },
+    },
+  },
+  /**
+   * Edited in /dashboard/theming rather than the generic config form, and
+   * expanded into the whole Tailwind palette by `buildTheme`. The defaults are
+   * the neutral greyscale in `theming.js` — the single place those values are
+   * written, so the schema, the editor and the compiled theme cannot drift.
+   */
+  {
+    slug: 'theming',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: true,
+      },
+      primaryColor: {
+        type: 'color',
+        default: THEME_DEFAULTS.primaryColor,
+      },
+      secondaryColor: {
+        type: 'color',
+        default: THEME_DEFAULTS.secondaryColor,
+      },
+      backgroundColor: {
+        type: 'color',
+        default: THEME_DEFAULTS.backgroundColor,
+      },
+      foregroundColor: {
+        type: 'color',
+        default: THEME_DEFAULTS.foregroundColor,
+      },
+      fontFamilyBody: {
+        type: 'select',
+        enum: THEME_FONT_IDS,
+        default: THEME_DEFAULTS.fontFamilyBody,
+      },
+      fontFamilyHeading: {
+        type: 'select',
+        enum: THEME_FONT_IDS,
+        default: THEME_DEFAULTS.fontFamilyHeading,
+      },
+      ...THEME_FONT_SLOT_FIELDS,
+      ...THEME_TOKEN_OVERRIDE_FIELDS,
     },
   },
 ];
