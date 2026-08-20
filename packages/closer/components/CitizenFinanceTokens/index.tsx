@@ -150,7 +150,7 @@ const CitizenFinanceTokens = ({
   };
 
   useEffect(() => {
-    if (Number.isInteger(tokensToBuy) && tokensToBuy > 0) {
+    if (Number.isFinite(tokensToBuy) && tokensToBuy > 0) {
       updateApplication('tokensToFinance', tokensToBuy);
     }
   }, [tokensToBuy]);
@@ -185,6 +185,10 @@ const CitizenFinanceTokens = ({
     application?.durationInMonths,
   ]);
 
+  const tokensInputMatchesApplication =
+    Number.isFinite(tokensToBuy) &&
+    tokensToBuy > 0 &&
+    tokensToBuy === tokensToFinance;
   const canSubmit =
     isAgreementAccepted === isCitizenApplication &&
     isTokenTermsAccepted &&
@@ -192,7 +196,7 @@ const CitizenFinanceTokens = ({
     Boolean(application?.iban) &&
     !isCalculationPending &&
     Boolean(totalToPayInFiat) &&
-    tokensToFinance > 0 &&
+    tokensInputMatchesApplication &&
     quote.meetsMinMonthlyPayment &&
     application?.monthlyPaymentAmount === quote.monthlyPaymentAmount &&
     application?.downPaymentAmount === quote.downPaymentAmount &&

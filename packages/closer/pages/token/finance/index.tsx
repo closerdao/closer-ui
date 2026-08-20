@@ -44,7 +44,7 @@ const parseTokensQuery = (
 ): number | null => {
   const raw = Array.isArray(tokens) ? tokens[0] : tokens;
   const parsed = Number(raw);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 };
 
 const SubscriptionsCitizenApplyPage: NextPage = () => {
