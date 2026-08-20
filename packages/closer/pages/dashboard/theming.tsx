@@ -21,6 +21,7 @@ import {
   colorTokenConfigKey,
   contrastOn,
   fontSlotConfigKey,
+  fontStackToCss,
   isHexColor,
   resolveFontStack,
 } from '../../theming';
@@ -85,11 +86,6 @@ const SECTIONS: {
     fields: TOKEN_OVERRIDE_FIELDS,
   },
 ];
-
-const fontStackToCss = (stack: string[] | null): string | undefined =>
-  stack
-    ?.map((family) => (family.includes(' ') ? `'${family}'` : family))
-    .join(',');
 
 /**
  * Every field always has a value now that the schema ships neutral defaults, so

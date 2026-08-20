@@ -1,7 +1,8 @@
 export interface ThemeFont {
   id: string;
   label: string;
-  googleFamily: string;
+  googleFamily?: string;
+  cssVariable?: string;
   stack: string[];
   serif?: boolean;
 }
@@ -58,6 +59,9 @@ export declare function readableOn(
   target?: number,
 ): string;
 export declare function resolveFontStack(fontId?: string): string[] | null;
+export declare function fontStackToCss(
+  stack?: string[] | null,
+): string | undefined;
 export declare function getGoogleFontsUrl(
   theming?: ThemingConfigValue | null,
 ): string | null;
@@ -80,9 +84,11 @@ export declare function buildThemeColors(
 ): Record<string, string>;
 export declare function buildThemeFonts(
   theming?: ThemingConfigValue | null,
+  layoutFonts?: Record<string, string>,
 ): Record<string, string[]>;
 export declare function buildTheme(
   theming?: ThemingConfigValue | null,
+  layoutFonts?: Record<string, string>,
 ): TailwindThemeLike;
 export declare function getThemingFromSnapshot(
   snapshot?: Record<string, unknown> | null,

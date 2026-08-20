@@ -2,6 +2,7 @@ import {
   SYSTEM_COLORS,
   THEME_COLOR_TOKENS,
   THEME_DEFAULTS,
+  THEME_FONTS,
   THEME_FONT_SLOTS,
   colorTokenConfigKey,
   fontSlotConfigKey,
@@ -10,6 +11,7 @@ import {
   buildThemeFonts,
   contrastOn,
   contrastRatio,
+  fontStackToCss,
   getGoogleFontsUrl,
   getThemingFromSnapshot,
   isHexColor,
@@ -186,8 +188,9 @@ describe('buildThemeFonts', () => {
       fontFamilyBody: 'inter',
       fontFamilyHeading: 'playfair-display',
     });
-    expect(fonts.sans[0]).toBe('Inter');
-    expect(fonts.body[0]).toBe('Inter');
+    expect(fonts.sans[0]).toBe('var(--font-inter, Inter)');
+    expect(fonts.sans).toContain('Inter');
+    expect(fonts.body[0]).toBe('var(--font-inter, Inter)');
     expect(fonts.display[0]).toBe('Playfair Display');
     // `font-accent` is used for nav CTAs and hero copy in shared components.
     expect(fonts.accent[0]).toBe('Playfair Display');
@@ -210,6 +213,47 @@ describe('buildThemeFonts', () => {
     );
     expect(resolveFontStack(undefined)).toBeNull();
   });
+
+  it('lists the Layout-injected brand faces so they can be restored in /dashboard/theming', () => {
+    const ids = THEME_FONTS.map((font) => font.id);
+    expect(ids).toEqual(
+      expect.arrayContaining(['cabinet', 'hoover', 'sincopa', 'alegreya-sans']),
+    );
+  });
+
+  it('prefers the Layout CSS variable so next/font faces actually apply', () => {
+    expect(resolveFontStack('cabinet')?.[0]).toBe(
+      "var(--font-cabinet, 'Cabinet Grotesk')",
+    );
+    expect(resolveFontStack('alegreya-sans')?.[0]).toBe(
+      "var(--font-alegreya-sans, 'Alegreya Sans')",
+    );
+  });
+
+  it('keeps Layout-injected faces when theming has not chosen a body font', () => {
+    const fonts = buildThemeFonts(
+      {},
+      { sans: 'cabinet', accent: 'hoover', 'accent-alt': 'sincopa' },
+    );
+    expect(fonts.sans[0]).toBe("var(--font-cabinet, 'Cabinet Grotesk')");
+    expect(fonts.accent[0]).toBe('var(--font-hoover, Hoover)');
+    expect(fonts['accent-alt'][0]).toBe('var(--font-sincopa, Sincopa)');
+  });
+
+  it('lets a dashboard pick replace the Layout default', () => {
+    const fonts = buildThemeFonts(
+      { fontFamilyBody: 'lato' },
+      { sans: 'cabinet', accent: 'hoover' },
+    );
+    expect(fonts.sans[0]).toBe('Lato');
+    expect(fonts.accent[0]).toBe('Lato');
+  });
+
+  it('does not quote CSS variables when serialising a stack', () => {
+    expect(fontStackToCss(resolveFontStack('inter'))).toMatch(
+      /^var\(--font-inter, Inter\)/,
+    );
+  });
 });
 
 describe('getGoogleFontsUrl', () => {
@@ -229,6 +273,25 @@ describe('getGoogleFontsUrl', () => {
       fontFamilyHeading: 'lora',
     }) as string;
     expect(url.match(/family=/g)).toHaveLength(2);
+  });
+
+  it('does not request Google Fonts for a local-only face', () => {
+    expect(getGoogleFontsUrl({ fontFamilyBody: 'cabinet' })).toBeNull();
+    expect(
+      getGoogleFontsUrl({
+        fontFamilyBody: 'cabinet',
+        fontFamilyHeading: 'hoover',
+      }),
+    ).toBeNull();
+  });
+
+  it('still requests a Google family when mixed with a local face', () => {
+    const url = getGoogleFontsUrl({
+      fontFamilyBody: 'cabinet',
+      fontFamilyHeading: 'lora',
+    }) as string;
+    expect(url.match(/family=/g)).toHaveLength(1);
+    expect(url).toContain('Lora');
   });
 });
 
@@ -269,6 +332,12 @@ describe('buildTheme', () => {
     expect(buildTheme({ primaryColor: '#111111' })).not.toEqual(
       buildTheme({ primaryColor: '#222222' }),
     );
+  });
+
+  it('compiles Layout font variables into font-sans when they are passed through', () => {
+    const theme = buildTheme({}, { sans: 'alegreya-sans' });
+    const sans = (theme.extend?.fontFamily as Record<string, string[]>).sans;
+    expect(sans[0]).toContain('--font-alegreya-sans');
   });
 });
 
@@ -343,8 +412,8 @@ describe('font slot overrides', () => {
       [fontSlotConfigKey('accent')]: 'space-grotesk',
     });
     expect(fonts.accent[0]).toBe('Space Grotesk');
-    expect(fonts.sans[0]).toBe('Inter');
-    expect(fonts.display[0]).toBe('Inter');
+    expect(fonts.sans[0]).toBe('var(--font-inter, Inter)');
+    expect(fonts.display[0]).toBe('var(--font-inter, Inter)');
   });
 
   it('loads a slot-only font from Google too, or it would never render', () => {
