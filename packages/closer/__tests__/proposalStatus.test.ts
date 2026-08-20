@@ -227,6 +227,17 @@ describe('isVotingOpen', () => {
 describe('getFinalizeDelay', () => {
   const GRACE_MS = 5000;
 
+  // The delay is measured against the clock the moment it is asked for, so a
+  // real clock ticking between building the end date and the call turns an
+  // exact 4000 into 3999.
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   it('waits out the grace for a window that just closed', () => {
     const endDate = new Date(Date.now() - 1000).toISOString();
 
