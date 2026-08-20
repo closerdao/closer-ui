@@ -3774,7 +3774,7 @@
   "quests_editor_action_trigger_hint": "Pick a source to score it automatically, or let members submit proof",
   "quests_editor_action_trigger_automatic_note": "The backend counts these, so members submit nothing and there is nothing to review.",
   "quests_entry_automatic_counted": "You are entered automatically, and this is counted for you — just go and do it.",
-  "quests_how_counted": "Counted for you automatically; there is nothing to submit."
+  "quests_how_counted": "Counted for you automatically; there is nothing to submit.",
   "config_label_badge": "Badge",
   "config_label_label": "Label",
   "config_label_options": "Options (comma separated)",
