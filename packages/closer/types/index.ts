@@ -11,6 +11,7 @@ export * from './food';
 export * from './metrics';
 export * from './metricsDashboard';
 export * from './proposal';
+export * from './quest';
 export * from './page';
 export * from './stay';
 export * from './subscriptions';

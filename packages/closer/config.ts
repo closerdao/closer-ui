@@ -1063,6 +1063,15 @@ export const configDescription: ConfigType[] = [
     },
   },
   {
+    slug: 'quests',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: true,
+      }
+    },
+  },
+  {
     slug: 'cohousing',
     value: {
       enabled: {

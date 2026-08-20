@@ -19,6 +19,20 @@ export { default as Navigation } from './components/Navigation';
 export { default as Newsletter } from './components/Newsletter';
 export { default as PhotoEditor } from './components/PhotoEditor';
 export { default as Prompts } from './components/Prompts';
+export {
+  QuestActionForm,
+  QuestAdminPanel,
+  QuestAdminStats,
+  QuestCard,
+  QuestCountdown,
+  QuestEditor,
+  QuestEntryPanel,
+  QuestHowItWorks,
+  QuestLeaderboard,
+  QuestPrizes,
+  QuestStatusBadge,
+  QuestWinners,
+} from './components/Quests';
 export { default as Resources } from './components/Resources';
 export { default as SubscriptionCards } from './components/SubscriptionCards';
 export { default as SubscriptionCheckoutForm } from './components/SubscriptionCheckoutForm';
@@ -182,6 +196,11 @@ export { default as EditProject } from './pages/projects/[slug]/edit';
 export { default as ProjectApplicationPage } from './pages/projects/apply';
 export { default as CreateProject } from './pages/projects/create';
 export { default as ProjectsPage } from './pages/projects/index';
+export { default as QuestsPage } from './pages/quests/index';
+export { default as QuestPage } from './pages/quests/[slug]/index';
+export { default as EditQuestPage } from './pages/quests/[slug]/edit';
+export { default as QuestAuditPage } from './pages/quests/[slug]/audit';
+export { default as CreateQuestPage } from './pages/quests/create';
 export { default as RolesPage } from './pages/roles/';
 export { default as EditRole } from './pages/roles/[id]/edit';
 export { default as CreateRole } from './pages/roles/create';
