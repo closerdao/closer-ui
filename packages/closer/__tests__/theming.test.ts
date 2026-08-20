@@ -13,6 +13,7 @@ import {
   contrastRatio,
   fontStackToCss,
   getGoogleFontsUrl,
+  getSelectableThemeFonts,
   getThemingFromSnapshot,
   isHexColor,
   resolveFontStack,
@@ -218,6 +219,22 @@ describe('buildThemeFonts', () => {
     const ids = THEME_FONTS.map((font) => font.id);
     expect(ids).toEqual(
       expect.arrayContaining(['cabinet', 'hoover', 'sincopa', 'alegreya-sans']),
+    );
+  });
+
+  it('offers local Layout faces only on the apps that inject them', () => {
+    const idsOnLios = getSelectableThemeFonts('lios').map((font) => font.id);
+    expect(idsOnLios).toEqual(
+      expect.arrayContaining(['cabinet', 'hoover', 'sincopa', 'inter']),
+    );
+
+    const idsOnTdf = getSelectableThemeFonts('tdf').map((font) => font.id);
+    expect(idsOnTdf).not.toContain('cabinet');
+    expect(idsOnTdf).not.toContain('hoover');
+    expect(idsOnTdf).not.toContain('sincopa');
+    expect(idsOnTdf).toContain('inter');
+    expect(getSelectableThemeFonts().map((font) => font.id)).not.toContain(
+      'cabinet',
     );
   });
 

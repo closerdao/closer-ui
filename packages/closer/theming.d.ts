@@ -5,6 +5,7 @@ export interface ThemeFont {
   cssVariable?: string;
   stack: string[];
   serif?: boolean;
+  apps?: string[];
 }
 
 export interface ThemeColorField {
@@ -65,6 +66,7 @@ export declare function fontStackToCss(
 export declare function getGoogleFontsUrl(
   theming?: ThemingConfigValue | null,
 ): string | null;
+export declare function getSelectableThemeFonts(appName?: string): ThemeFont[];
 export declare const THEME_DEFAULTS: Required<
   Pick<
     ThemingConfigValue,

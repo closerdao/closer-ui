@@ -124,10 +124,10 @@ function readableOn(color, background, target = 4.5) {
 /**
  * Fonts an admin can choose. `googleFamily` is what `ThemeStyles` requests from
  * Google Fonts; omit it for faces Layout already injects as next/font CSS
- * variables (Cabinet, Hoover, Sincopa). `cssVariable` is the Layout variable
- * the compiled stack prefers, with the named family as the `var()` fallback so
- * an app that does not inject that variable still lands on a real face.
- * `stack` is what lands in the compiled Tailwind `fontFamily`.
+ * variables (Cabinet, Hoover, Sincopa). `apps` limits those local faces to the
+ * platforms that actually inject the files. `cssVariable` is the Layout
+ * variable the compiled stack prefers, with the named family as the `var()`
+ * fallback. `stack` is what lands in the compiled Tailwind `fontFamily`.
  */
 const THEME_FONTS = [
   {
@@ -218,18 +218,21 @@ const THEME_FONTS = [
     label: 'Cabinet Grotesk',
     cssVariable: '--font-cabinet',
     stack: ['Cabinet Grotesk'],
+    apps: ['lios'],
   },
   {
     id: 'hoover',
     label: 'Hoover',
     cssVariable: '--font-hoover',
     stack: ['Hoover'],
+    apps: ['lios'],
   },
   {
     id: 'sincopa',
     label: 'Sincopa',
     cssVariable: '--font-sincopa',
     stack: ['Sincopa'],
+    apps: ['lios'],
   },
 ];
 
@@ -248,6 +251,14 @@ const SERIF_FALLBACKS = ['ui-serif', 'Georgia', 'Cambria', 'serif'];
 function findFont(fontId) {
   if (!fontId || typeof fontId !== 'string') return null;
   return THEME_FONTS.find((font) => font.id === fontId) || null;
+}
+
+function getSelectableThemeFonts(appName) {
+  const name = typeof appName === 'string' ? appName.toLowerCase() : '';
+  return THEME_FONTS.filter((font) => {
+    if (!font.apps || font.apps.length === 0) return true;
+    return font.apps.some((app) => app.toLowerCase() === name);
+  });
 }
 
 function cssVarFamily(cssVariable, fallbackName) {
@@ -699,6 +710,7 @@ module.exports = {
   contrastRatio,
   fontStackToCss,
   getGoogleFontsUrl,
+  getSelectableThemeFonts,
   getThemingFromSnapshot,
   isHexColor,
   mix,
