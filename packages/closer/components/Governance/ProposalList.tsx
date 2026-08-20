@@ -5,6 +5,8 @@ import React, { useEffect, useMemo, useRef } from 'react';
 
 import { useAuth } from 'closer/contexts/auth';
 import { usePlatform } from 'closer/contexts/platform';
+import { useConfig } from 'closer/hooks/useConfig';
+import { useVotingPowerSupply } from 'closer/hooks/useVotingPowerSupply';
 import { getEffectiveStatus as getProposalEffectiveStatus } from 'closer/utils/proposalStatus';
 import { useTranslations } from 'next-intl';
 
@@ -16,8 +18,11 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
   const router = useRouter();
   const { user } = useAuth();
   const { platform } = usePlatform() as any;
+  const { governance } = (useConfig() as any) || {};
+  const platformVotingPower = useVotingPowerSupply();
   const t = useTranslations();
   const hasLoaded = useRef(false);
+  const quorumPercent = Number(governance?.quorumPercent) || 0;
 
   // Get filter from URL query params
   const filter = (router.query.filter as string) || 'all';
@@ -128,14 +133,28 @@ const ProposalList: React.FC<ProposalListProps> = ({ className }) => {
     return `${hours}h`;
   };
 
-  const getEffectiveStatus = (proposal: any) =>
-    getProposalEffectiveStatus(proposal?.toJS ? proposal.toJS() : proposal, {
-      draft: t('governance_status_draft'),
-      active: t('governance_status_active'),
-      passed: t('governance_status_passed'),
-      failed: t('governance_status_failed'),
-      unknown: t('governance_status_unknown'),
-    });
+  const derivedQuorum =
+    platformVotingPower.total && quorumPercent > 0
+      ? parseFloat(
+          ((platformVotingPower.total * quorumPercent) / 100).toFixed(2),
+        )
+      : 0;
+
+  const getEffectiveStatus = (proposal: any) => {
+    const data = proposal?.toJS ? proposal.toJS() : proposal;
+
+    return getProposalEffectiveStatus(
+      data,
+      {
+        draft: t('governance_status_draft'),
+        active: t('governance_status_active'),
+        passed: t('governance_status_passed'),
+        failed: t('governance_status_failed'),
+        unknown: t('governance_status_unknown'),
+      },
+      data?.quorum || derivedQuorum,
+    );
+  };
 
   const proposalItems = Array.from(proposalsMap.values()).filter(
     (proposal: any) => {

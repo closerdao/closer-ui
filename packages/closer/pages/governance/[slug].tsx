@@ -293,7 +293,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       if (platformProposal && platformProposal.toJS) {
         const cached = platformProposal.toJS() as Proposal;
 
-        if (isNotBehindOnOwnVote(cached, currentProposal)) {
+        if (canAdoptProposal(cached, currentProposal)) {
           return cached;
         }
       }
@@ -352,6 +352,10 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     getUserVoteSummary(next, user?._id).castWeight >=
       getUserVoteSummary(previous, user?._id).castWeight;
 
+  const canAdoptProposal = (next: Proposal, previous: Proposal | null) =>
+    isNotBehindOnOwnVote(next, previous) &&
+    (!getFrozenResult(previous) || Boolean(getFrozenResult(next)));
+
   const refreshProposal = useCallback(async () => {
     const slug = currentProposal?.slug;
 
@@ -371,7 +375,7 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       const next = refreshed.results.toJS() as Proposal;
 
       setCurrentProposal((previous) =>
-        isNotBehindOnOwnVote(next, previous) ? next : previous,
+        canAdoptProposal(next, previous) ? next : previous,
       );
     } catch (err) {
       // A dropped poll is not worth putting in front of the voter; the next
@@ -789,7 +793,6 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
 
       if (finalized) {
         setCurrentProposal(finalized);
-        return;
       }
     } catch (err) {
       // A 409 means voting is still open or someone else got there first;
@@ -811,13 +814,13 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   const requestFinalize = useCallback(async () => {
     const id = currentProposal?._id;
 
-    if (!id || finalizeAttemptedFor.current === id) {
+    if (!user || !id || finalizeAttemptedFor.current === id) {
       return;
     }
 
     finalizeAttemptedFor.current = id;
     await finalizeProposal();
-  }, [currentProposal?._id, finalizeProposal]);
+  }, [currentProposal?._id, finalizeProposal, user]);
 
   useEffect(() => {
     const id = currentProposal?._id;
