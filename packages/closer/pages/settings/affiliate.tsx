@@ -24,6 +24,7 @@ import { useAuth } from '../../contexts/auth';
 import { User } from '../../contexts/auth/types';
 import { calculateAffiliateRevenue } from '../../utils/affiliate.utils';
 import { formatIsoFiatAmount } from '../../utils/currencyFormat';
+import { useConfig } from '../../hooks/useConfig';
 import { logMetric } from '../../utils/metrics';
 import { getStartAndEndDate } from '../../utils/performance.utils';
 
@@ -31,6 +32,8 @@ const AffiliatePage = () => {
   const affiliateConfig = getCachedConfig('affiliate') as AffiliateConfig | null;
   const formatEurAmount = (amount: number) => formatIsoFiatAmount(amount || 0, 'EUR');
   const t = useTranslations();
+  const { TEAM_EMAIL } = useConfig() || {};
+  const teamEmail = TEAM_EMAIL || '';
   const { platform }: any = usePlatform() || {};
   const { user } = useAuth() || {};
   const router = useRouter();
@@ -315,15 +318,17 @@ const AffiliatePage = () => {
               <p className="text-sm text-gray-600">
                 {t('affiliate_dashboard_support_intro')}
               </p>
-              <div className="flex items-center gap-2">
-                <span className="font-medium">{t('affiliate_dashboard_support_email_label')}</span>
-                <a 
-                  href="mailto:affiliates@traditionaldreamfactory.com"
-                  className="text-accent hover:text-accent-dark font-medium"
-                >
-                  affiliates@traditionaldreamfactory.com
-                </a>
-              </div>
+              {teamEmail && (
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{t('affiliate_dashboard_support_email_label')}</span>
+                  <a
+                    href={`mailto:${teamEmail}`}
+                    className="text-accent hover:text-accent-dark font-medium"
+                  >
+                    {teamEmail}
+                  </a>
+                </div>
+              )}
               <p className="text-xs text-gray-500">
                 {t('affiliate_dashboard_support_response_time')}
               </p>

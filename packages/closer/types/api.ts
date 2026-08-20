@@ -207,6 +207,7 @@ export type AffiliateConfig = {
   subscriptionCommissionPercent: number;
   staysCommissionPercent: number;
   eventsCommissionPercent: number;
+  productsCommissionPercent: number;
 };
 
 export type EngagementConfig = {

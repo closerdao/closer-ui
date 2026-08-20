@@ -90,6 +90,35 @@ function contrastOn(color) {
   return relativeLuminance(color) > 0.45 ? shade(color, 0.75) : '#ffffff';
 }
 
+/** WCAG contrast ratio between two hex colours. */
+function contrastRatio(color, other) {
+  const a = relativeLuminance(color);
+  const b = relativeLuminance(other);
+  const [lighter, darker] = a > b ? [a, b] : [b, a];
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+/**
+ * `color` adjusted until it is legible *as text* on `background`.
+ *
+ * The same brand colour has to work as a button fill and as a link, and one
+ * value cannot always do both: mint behind white button text is fine and
+ * unreadable on a white page (~1.6:1). Darken (or lighten, on a dark
+ * background) in small steps until the pair clears AA for body text. A colour
+ * that already passes comes back untouched, so a platform whose accent is
+ * readable sees no change at all.
+ */
+function readableOn(color, background, target = 4.5) {
+  if (!isHexColor(color) || !isHexColor(background)) return color;
+  const darken = relativeLuminance(background) > 0.5;
+  let candidate = color;
+  for (let step = 0; step < 24; step += 1) {
+    if (contrastRatio(candidate, background) >= target) return candidate;
+    candidate = darken ? shade(candidate, 0.06) : tint(candidate, 0.06);
+  }
+  return candidate;
+}
+
 /* ------------------------------------------------------------------ fonts */
 
 /**
@@ -327,6 +356,7 @@ const THEME_COLOR_TOKENS = [
   { token: 'accent-medium', group: 'primary', derivedFrom: 'primaryColor' },
   { token: 'accent-light', group: 'primary', derivedFrom: 'primaryColor' },
   { token: 'accent-foreground', group: 'primary', derivedFrom: 'primaryColor' },
+  { token: 'accent-text', group: 'primary', derivedFrom: 'primaryColor' },
   { token: 'primary', group: 'primary', derivedFrom: 'primaryColor' },
   { token: 'primary-light', group: 'primary', derivedFrom: 'primaryColor' },
   {
@@ -446,6 +476,12 @@ function buildThemeColors(theming) {
     }
   }
 
+  // Derived here rather than in THEME_COLOR_FIELDS because it needs two of
+  // the source colours: `.text-accent` maps to this token in the shared
+  // stylesheet, so links and accented headings stay legible on the configured
+  // background whatever the admin picks as their fill colour.
+  colors['accent-text'] = readableOn(colors.accent, colors.background);
+
   // An explicit per-token override wins over whatever was derived for it.
   for (const { token } of THEME_COLOR_TOKENS) {
     const override = (theming || {})[colorTokenConfigKey(token)];
@@ -527,10 +563,19 @@ const BASE_THEME_EXTEND = {
  * every app consumes the result unchanged.
  */
 function buildTheme(theming) {
+  const colors = buildThemeColors(theming);
+
   return {
     extend: {
       ...BASE_THEME_EXTEND,
-      colors: buildThemeColors(theming),
+      colors,
+      // The one utility that must not take the fill colour: `text-accent` is
+      // links and accented headings, which have to stay legible on the page
+      // even when the brand colour is pale (see `accent-text`). Tailwind reads
+      // `textColor` for `text-*` only, so fills, borders and rings still get
+      // the accent itself, and every `text-*` variant - hover, group-hover -
+      // follows this scale automatically.
+      textColor: { ...colors, accent: colors['accent-text'] },
       fontFamily: buildThemeFonts(theming),
     },
     plugins: [],
@@ -561,10 +606,12 @@ module.exports = {
   buildThemeColors,
   buildThemeFonts,
   contrastOn,
+  contrastRatio,
   getGoogleFontsUrl,
   getThemingFromSnapshot,
   isHexColor,
   mix,
+  readableOn,
   resolveFontStack,
   shade,
   tint,

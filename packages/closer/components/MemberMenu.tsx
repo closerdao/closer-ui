@@ -13,8 +13,8 @@ import useRBAC from '../hooks/useRBAC';
 import { NavigationLink } from '../types/nav';
 import api, { formatSearch } from '../utils/api';
 import { getCurrentUnitPrice } from '../utils/bondingCurve';
-import { toNavigationSections } from '../utils/pageMenu';
 import type { MemberMenuFeatureFlags } from '../utils/memberMenuFeatureFlags';
+import { toNavigationSections } from '../utils/pageMenu';
 import FinancedTokenMenuWidget from './FinancedTokenMenuWidget';
 import Profile from './Profile';
 import ReportABug from './ReportABug';
@@ -49,6 +49,7 @@ const MemberMenu = ({
   isFaqEnabled,
   isAffiliateEnabled,
   isCohousingEnabled,
+  isApplicationsEnabled,
 }: MemberMenuFeatureFlags) => {
   const t = useTranslations();
   const APP_NAME = appName;
@@ -73,6 +74,238 @@ const MemberMenu = ({
           : section,
       ),
     );
+  };
+
+  /**
+   * Every dashboard page, grouped into categories. Both the TDF menu and the
+   * generic one render this same section so the two never drift apart.
+   */
+  const getDashboardSection = ({
+    isBookingEnabled,
+    isGovernanceEnabled,
+    isLearningHubEnabled,
+    isAffiliateEnabled,
+    isApplicationsEnabled,
+    isTokenEnabled,
+  }: {
+    isBookingEnabled: boolean;
+    isGovernanceEnabled: boolean;
+    isLearningHubEnabled: boolean;
+    isAffiliateEnabled: boolean;
+    isApplicationsEnabled: boolean;
+    isTokenEnabled: boolean;
+  }): MenuSection => {
+    const overview = t('menu_group_overview');
+    const finance = t('menu_group_finance');
+    const community = t('menu_group_community');
+    const bookings = t('menu_section_bookings');
+    const settings = t('menu_group_settings');
+
+    return {
+      label: t('menu_section_dashboard'),
+      kind: 'account' as const,
+      isOpen: false,
+      items: [
+        {
+          group: overview,
+          label: t('navigation_dashboard'),
+          url: '/dashboard',
+          enabled: true,
+          roles: ['admin', 'team'],
+          rbacPage: 'Dashboard',
+        },
+        {
+          group: overview,
+          label: t('navigation_performance'),
+          url: '/dashboard/performance',
+          enabled: true,
+          roles: ['admin', 'team'],
+          rbacPage: 'Performance',
+        },
+        {
+          group: overview,
+          label: t('navigation_metrics'),
+          url: '/dashboard/metrics',
+          enabled: true,
+          roles: ['admin', 'team', 'space-host'],
+          rbacPage: 'MetricsDashboard',
+        },
+        {
+          group: finance,
+          label: t('navigation_revenue'),
+          url: '/dashboard/revenue',
+          enabled: true,
+          roles: ['admin', 'team'],
+          rbacPage: 'Revenue',
+        },
+        {
+          group: finance,
+          label: t('navigation_sales'),
+          url: '/dashboard/sales',
+          enabled: isTokenEnabled,
+          roles: ['admin', 'team'],
+          rbacPage: 'TokenSales',
+        },
+        {
+          group: finance,
+          label: t('navigation_expense_tracking'),
+          url: '/dashboard/expense-tracking',
+          enabled: true,
+          roles: ['admin', 'team', 'accounting'],
+          rbacPage: 'ExpenseTracking',
+        },
+        {
+          group: community,
+          label: t('navigation_engagement'),
+          url: '/dashboard/engagement',
+          enabled: true,
+          roles: ['admin', 'community-curator', 'space-host', 'team'],
+          rbacPage: 'Engagement',
+        },
+        {
+          group: community,
+          label: t('navigation_applications'),
+          url: '/dashboard/applications',
+          enabled: isApplicationsEnabled,
+          roles: ['admin', 'community-curator', 'team'],
+          rbacPage: 'Applications',
+        },
+        {
+          group: community,
+          label: t('navigation_cohousing'),
+          url: '/dashboard/cohousing',
+          enabled: true,
+          roles: ['admin', 'community-curator', 'team'],
+          rbacPage: 'Dashboard',
+        },
+        {
+          group: community,
+          label: t('navigation_user_list'),
+          url: '/dashboard/admin/manage-users',
+          enabled: true,
+          roles: ['admin', 'team'],
+          rbacPage: 'UserManagement',
+        },
+        {
+          group: community,
+          label: t('navigation_governance'),
+          url: '/governance',
+          enabled: isGovernanceEnabled,
+          roles: ['member'],
+          rbacPage: 'Governance',
+        },
+        {
+          group: bookings,
+          label: t('navigation_booking_requests'),
+          url: '/bookings/requests',
+          enabled: isBookingEnabled,
+          roles: ['admin', 'team', 'space-host'],
+          rbacPage: 'Bookings',
+        },
+        {
+          group: bookings,
+          label: t('navigation_all_bookings'),
+          url: '/bookings/all',
+          enabled: isBookingEnabled,
+          roles: ['admin', 'team', 'space-host'],
+          rbacPage: 'Bookings',
+        },
+        {
+          group: bookings,
+          label: t('navigation_edit_listings'),
+          url: '/listings',
+          enabled: isBookingEnabled,
+          roles: ['admin', 'team', 'space-host'],
+          rbacPage: 'Listings',
+        },
+        {
+          group: bookings,
+          label: t('navigation_food'),
+          url: '/food',
+          enabled: isBookingEnabled,
+          roles: ['admin', 'team', 'space-host'],
+          rbacPage: 'Food',
+        },
+        {
+          group: bookings,
+          label: t('navigation_my_bookings'),
+          url: '/stay/upcoming',
+          enabled: isBookingEnabled,
+          rbacPage: 'MyBookings',
+        },
+        {
+          group: bookings,
+          label: t('navigation_book_friend'),
+          url: '/bookings/friends',
+          enabled: isBookingEnabled,
+          rbacPage: 'FriendsBooking',
+        },
+        {
+          group: settings,
+          label: t('navigation_platform_settings'),
+          url: '/dashboard/admin/config',
+          enabled: true,
+          roles: ['admin'],
+          rbacPage: 'PlatformSettings',
+        },
+        {
+          group: settings,
+          label: t('navigation_email_templates'),
+          url: '/dashboard/admin/emails',
+          enabled: true,
+          roles: ['admin'],
+          rbacPage: 'PlatformSettings',
+        },
+        {
+          group: settings,
+          label: t('navigation_pages'),
+          url: '/dashboard/pages',
+          enabled: true,
+          roles: ['admin'],
+          rbacPage: 'PlatformSettings',
+        },
+        {
+          group: settings,
+          label: t('navigation_theming'),
+          url: '/dashboard/theming',
+          enabled: true,
+          roles: ['admin'],
+          rbacPage: 'PlatformSettings',
+        },
+        {
+          group: settings,
+          label: t('navigation_rbac'),
+          url: '/dashboard/admin/rbac',
+          enabled: true,
+          roles: ['admin'],
+          rbacPage: 'RBAC',
+        },
+        {
+          group: settings,
+          label: t('navigation_learn_settings'),
+          url: '/dashboard/admin/learn',
+          enabled: isLearningHubEnabled,
+          roles: ['admin'],
+          rbacPage: 'LearnSettings',
+        },
+        {
+          group: settings,
+          label: t('navigation_affiliate_settings'),
+          url: '/dashboard/affiliate',
+          enabled: isAffiliateEnabled,
+          roles: ['admin', 'team'],
+          rbacPage: 'AffiliateSettings',
+        },
+        {
+          group: settings,
+          label: t('navigation_deploy_queue'),
+          url: '/dashboard/deploy-queue',
+          enabled: process.env.NEXT_PUBLIC_FEATURE_FEDERATION === 'true',
+          roles: ['admin', 'affiliate-manager'],
+          rbacPage: 'AffiliateSettings',
+        },
+      ],
+    };
   };
 
   const getMenuSections = (
@@ -223,144 +456,14 @@ const MemberMenu = ({
             },
           ],
         },
-        {
-          label: t('menu_section_dashboard'),
-          kind: 'account' as const,
-          isOpen: false,
-          items: [
-            {
-              label: t('navigation_dashboard'),
-              url: '/dashboard',
-              enabled: true,
-              roles: ['admin', 'team'],
-              rbacPage: 'Dashboard',
-            },
-            {
-              label: t('navigation_performance'),
-              url: '/dashboard/performance',
-              enabled: true,
-              roles: ['admin', 'team'],
-              rbacPage: 'Performance',
-            },
-            {
-              label: t('navigation_revenue'),
-              url: '/dashboard/revenue',
-              enabled: true,
-              roles: ['admin', 'team'],
-              rbacPage: 'Revenue',
-            },
-            {
-              label: t('navigation_governance'),
-              url: '/governance',
-              enabled: isGovernanceEnabled,
-              roles: ['member'],
-              rbacPage: 'Governance',
-            },
-            {
-              label: t('navigation_sales'),
-              url: '/dashboard/sales',
-              enabled: isWalletEnabled,
-              roles: ['admin', 'team'],
-              rbacPage: 'TokenSales',
-            },
-            {
-              label: t('navigation_expense_tracking'),
-              url: '/dashboard/expense-tracking',
-              enabled: true,
-              roles: ['admin', 'team', 'accounting'],
-              rbacPage: 'ExpenseTracking',
-            },
-            {
-              label: t('navigation_metrics'),
-              url: '/dashboard/metrics',
-              enabled: true,
-              roles: ['admin', 'team', 'space-host'],
-              rbacPage: 'MetricsDashboard',
-            },
-            {
-              label: t('navigation_booking_requests'),
-              url: '/bookings/requests',
-              enabled: isBookingEnabled,
-              roles: ['admin', 'team', 'space-host'],
-              rbacPage: 'Bookings',
-            },
-            {
-              label: t('navigation_all_bookings'),
-              url: '/bookings/all',
-              enabled: isBookingEnabled,
-              roles: ['admin', 'team', 'space-host'],
-              rbacPage: 'Bookings',
-            },
-            {
-              label: t('navigation_edit_listings'),
-              url: '/listings',
-              enabled: isBookingEnabled,
-              roles: ['admin', 'team', 'space-host'],
-              rbacPage: 'Listings',
-            },
-            {
-              label: t('navigation_food'),
-              url: '/food',
-              enabled: isBookingEnabled,
-              roles: ['admin', 'team', 'space-host'],
-              rbacPage: 'Food',
-            },
-            {
-              label: t('navigation_my_bookings'),
-              url: '/stay/upcoming',
-              enabled: isBookingEnabled,
-              rbacPage: 'MyBookings',
-            },
-            {
-              label: t('navigation_book_friend'),
-              url: '/bookings/friends',
-              enabled: isBookingEnabled,
-              rbacPage: 'FriendsBooking',
-            },
-            {
-              label: t('navigation_user_list'),
-              url: '/dashboard/admin/manage-users',
-              enabled: true,
-              roles: ['admin', 'team'],
-              rbacPage: 'UserManagement',
-            },
-            {
-              label: t('navigation_platform_settings'),
-              url: '/dashboard/admin/config',
-              enabled: true,
-              roles: ['admin'],
-              rbacPage: 'PlatformSettings',
-            },
-            {
-              label: t('navigation_email_templates'),
-              url: '/dashboard/admin/emails',
-              enabled: true,
-              roles: ['admin'],
-              rbacPage: 'PlatformSettings',
-            },
-            {
-              label: t('navigation_pages'),
-              url: '/dashboard/pages',
-              enabled: true,
-              roles: ['admin'],
-              rbacPage: 'PlatformSettings',
-            },
-            {
-              label: t('navigation_rbac'),
-              url: '/dashboard/admin/rbac',
-              enabled: true,
-              roles: ['admin'],
-              rbacPage: 'RBAC',
-            },
-            {
-              label: t('navigation_learn_settings'),
-              url: '/dashboard/admin/learn',
-              enabled: isLearningHubEnabled,
-              roles: ['admin'],
-              rbacPage: 'LearnSettings',
-            },
-          ],
-        },
+        getDashboardSection({
+          isBookingEnabled,
+          isGovernanceEnabled,
+          isLearningHubEnabled,
+          isAffiliateEnabled,
+          isApplicationsEnabled,
+          isTokenEnabled: isWalletEnabled,
+        }),
       ];
     }
 
@@ -529,125 +632,14 @@ const MemberMenu = ({
             : []),
         ],
       },
-      {
-        label: t('menu_section_dashboard'),
-        kind: 'account' as const,
-        isOpen: false,
-        items: [
-          {
-            label: t('navigation_dashboard'),
-            url: '/dashboard',
-            enabled: true,
-            roles: ['admin', 'team'],
-            rbacPage: 'Dashboard',
-          },
-          {
-            label: t('navigation_performance'),
-            url: '/dashboard/performance',
-            enabled: true,
-            roles: ['admin', 'team'],
-            rbacPage: 'Performance',
-          },
-          {
-            label: t('navigation_revenue'),
-            url: '/dashboard/revenue',
-            enabled: true,
-            roles: ['admin', 'team'],
-            rbacPage: 'Revenue',
-          },
-          {
-            label: t('navigation_governance'),
-            url: '/governance',
-            enabled: isGovernanceEnabled,
-            roles: ['member'],
-            rbacPage: 'Governance',
-          },
-          {
-            label: t('navigation_sales'),
-            url: '/dashboard/sales',
-            enabled: true,
-            roles: ['admin', 'team'],
-            rbacPage: 'TokenSales',
-          },
-          {
-            label: t('navigation_expense_tracking'),
-            url: '/dashboard/expense-tracking',
-            enabled: true,
-            roles: ['admin', 'team', 'accounting'],
-            rbacPage: 'ExpenseTracking',
-          },
-          {
-            label: t('navigation_metrics'),
-            url: '/dashboard/metrics',
-            enabled: true,
-            roles: ['admin', 'team', 'space-host'],
-            rbacPage: 'MetricsDashboard',
-          },
-          {
-            label: t('navigation_booking_requests'),
-            url: '/bookings/requests',
-            enabled: true,
-            roles: ['admin', 'team', 'space-host'],
-            rbacPage: 'Bookings',
-          },
-          {
-            label: t('navigation_all_bookings'),
-            url: '/bookings/all',
-            enabled: true,
-            roles: ['admin', 'team', 'space-host'],
-            rbacPage: 'Bookings',
-          },
-          {
-            label: t('navigation_edit_listings'),
-            url: '/listings',
-            enabled: true,
-            roles: ['admin', 'team', 'space-host'],
-            rbacPage: 'Listings',
-          },
-          {
-            label: t('navigation_user_list'),
-            url: '/dashboard/admin/manage-users',
-            enabled: true,
-            roles: ['admin', 'team'],
-            rbacPage: 'UserManagement',
-          },
-          {
-            label: t('navigation_platform_settings'),
-            url: '/dashboard/admin/config',
-            enabled: true,
-            roles: ['admin'],
-            rbacPage: 'PlatformSettings',
-          },
-          {
-            label: t('navigation_email_templates'),
-            url: '/dashboard/admin/emails',
-            enabled: true,
-            roles: ['admin'],
-            rbacPage: 'PlatformSettings',
-          },
-          {
-            label: t('navigation_pages'),
-            url: '/dashboard/pages',
-            enabled: true,
-            roles: ['admin'],
-            rbacPage: 'PlatformSettings',
-          },
-          {
-            label: t('navigation_rbac'),
-            url: '/dashboard/admin/rbac',
-            enabled: true,
-            roles: ['admin'],
-            rbacPage: 'RBAC',
-          },
-          {
-            label: t('navigation_learn_settings'),
-            url: '/dashboard/admin/learn',
-            enabled: true,
-            roles: ['admin'],
-            rbacPage: 'LearnSettings',
-          },
-        ],
-      },
+      getDashboardSection({
+        isBookingEnabled,
+        isGovernanceEnabled,
+        isLearningHubEnabled,
+        isAffiliateEnabled,
+        isApplicationsEnabled,
+        isTokenEnabled: isWalletEnabled,
+      }),
     ];
 
     // Bookings section (only if booking is enabled)
@@ -771,9 +763,7 @@ const MemberMenu = ({
       pageMenuSections.length > 0
         ? [
             ...toNavigationSections(pageMenuSections),
-            ...builtInSections.filter(
-              (section) => section.kind === 'account',
-            ),
+            ...builtInSections.filter((section) => section.kind === 'account'),
           ]
         : builtInSections;
     const filteredSections = filterMenuSections(sections, user?.roles || []);
@@ -930,21 +920,38 @@ const MemberMenu = ({
               {/* Section items (only shown if section is open) */}
               {section.isOpen && (
                 <div className="pl-2 border-l border-gray-200 ml-2 overflow-hidden transition-all duration-200 ease-out animate-in slide-in-from-top-2">
-                  {section.items.map((item: NavigationLink) => (
-                    <Link
-                      key={item.url}
-                      href={item.url || ''}
-                      target={item.target}
-                      className="flex items-center justify-between py-1 hover:bg-accent-light px-2 rounded text-black"
-                    >
-                      <span>{item.label}</span>
-                      {item.url === '/social' && socialUnreadCount > 0 && (
-                        <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-accent rounded-full">
-                          {socialUnreadCount > 99 ? '99+' : socialUnreadCount}
-                        </span>
-                      )}
-                    </Link>
-                  ))}
+                  {section.items.map((item: NavigationLink, itemIndex) => {
+                    // A category heading is drawn by the first item that
+                    // survived filtering in each group, so groups emptied by
+                    // RBAC or feature flags leave no orphan heading behind.
+                    const isNewGroup =
+                      item.group &&
+                      item.group !== section.items[itemIndex - 1]?.group;
+
+                    return (
+                      <div key={item.url}>
+                        {isNewGroup && (
+                          <div className="px-2 pt-2 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                            {item.group}
+                          </div>
+                        )}
+                        <Link
+                          href={item.url || ''}
+                          target={item.target}
+                          className="flex items-center justify-between py-1 hover:bg-accent-light px-2 rounded text-black"
+                        >
+                          <span>{item.label}</span>
+                          {item.url === '/social' && socialUnreadCount > 0 && (
+                            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-accent rounded-full">
+                              {socialUnreadCount > 99
+                                ? '99+'
+                                : socialUnreadCount}
+                            </span>
+                          )}
+                        </Link>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </>

@@ -9,6 +9,7 @@ import {
   buildThemeColors,
   buildThemeFonts,
   contrastOn,
+  contrastRatio,
   getGoogleFontsUrl,
   getThemingFromSnapshot,
   isHexColor,
@@ -79,6 +80,30 @@ describe('buildThemeColors', () => {
       const missing = REQUIRED_TOKENS.filter((token) => !(token in colors));
       expect({ theming, missing }).toEqual({ theming, missing: [] });
     }
+  });
+
+  it('darkens the text form of a pale accent so links stay legible', () => {
+    const colors = buildThemeColors({ primaryColor: '#3ee08f' });
+    // Mint is ~1.6:1 as text on white, which is why this token exists.
+    expect(colors['accent-text']).not.toBe(colors.accent);
+    expect(
+      contrastRatio(colors['accent-text'], colors.background),
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('leaves an accent that already reads as text untouched', () => {
+    const colors = buildThemeColors({ primaryColor: '#0b5c3a' });
+    expect(colors['accent-text']).toBe(colors.accent);
+  });
+
+  it('lightens the text accent on a dark background rather than darkening it', () => {
+    const colors = buildThemeColors({
+      primaryColor: '#1c3f8f',
+      backgroundColor: '#101010',
+    });
+    expect(
+      contrastRatio(colors['accent-text'], colors.background),
+    ).toBeGreaterThanOrEqual(4.5);
   });
 
   it('falls back to the neutral defaults when nothing is configured', () => {
@@ -218,6 +243,25 @@ describe('buildTheme', () => {
     expect(theme.extend?.keyframes).toHaveProperty('fade-in');
   });
 
+  it('gives `text-accent` the readable variant while fills keep the brand colour', () => {
+    const theme = buildTheme({ primaryColor: '#3ee08f' });
+    // A mint button stays mint; the links on the page do not.
+    expect(theme.extend?.colors?.accent).toBe('#3ee08f');
+    expect((theme.extend as any)?.textColor?.accent).toBe(
+      (theme.extend as any)?.colors?.['accent-text'],
+    );
+    expect((theme.extend as any)?.textColor?.accent).not.toBe('#3ee08f');
+  });
+
+  it('carries a pinned accent-text through to the text utilities', () => {
+    const theme = buildTheme({
+      primaryColor: '#3ee08f',
+      [colorTokenConfigKey('accent-text')]: '#123456',
+    });
+    expect((theme.extend as any)?.textColor?.accent).toBe('#123456');
+    expect(theme.extend?.colors?.accent).toBe('#3ee08f');
+  });
+
   it('is what every app compiles, so two apps agree unless their config differs', () => {
     expect(buildTheme({ primaryColor: '#111111' })).toEqual(
       buildTheme({ primaryColor: '#111111' }),
@@ -246,7 +290,12 @@ describe('per-token overrides', () => {
     const options =
       4 + THEME_COLOR_TOKENS.length + 2 + THEME_FONT_SLOTS.length;
     expect(options).toBeGreaterThanOrEqual(38);
-    expect(THEME_COLOR_TOKENS.length).toBe(REQUIRED_TOKENS.length);
+    // The catalogue may grow - a token that goes missing is the failure, since
+    // it takes both the config field and the editor row with it.
+    const tokens = THEME_COLOR_TOKENS.map(({ token }) => token);
+    expect(REQUIRED_TOKENS.filter((token) => !tokens.includes(token))).toEqual(
+      [],
+    );
   });
 
   it('lets an explicit token override beat what the source colour derived', () => {

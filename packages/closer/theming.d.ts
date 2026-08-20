@@ -51,6 +51,12 @@ export declare function mix(color: string, target: string, amount: number): stri
 export declare function tint(color: string, amount: number): string;
 export declare function shade(color: string, amount: number): string;
 export declare function contrastOn(color: string): string | undefined;
+export declare function contrastRatio(color: string, other: string): number;
+export declare function readableOn(
+  color: string,
+  background: string,
+  target?: number,
+): string;
 export declare function resolveFontStack(fontId?: string): string[] | null;
 export declare function getGoogleFontsUrl(
   theming?: ThemingConfigValue | null,
