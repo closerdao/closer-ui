@@ -10,6 +10,7 @@ import { useAuth } from '../contexts/auth';
 import { usePlatform } from '../contexts/platform';
 import { useDebounce } from '../hooks/useDebounce';
 import { cdn } from '../utils/api';
+import { isStayCheckedIn, isStayCheckedOut } from '../utils/booking.helpers';
 import { matchesBookingSearchTerm } from '../utils/bookingSearch.helpers';
 import { priceFormat } from '../utils/helpers';
 import BookingsSearchBar from './BookingsSearchBar';
@@ -87,6 +88,8 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
             const doesNeedPickup = b.get('doesNeedPickup') ?? false;
             const doesNeedSeparateBeds = b.get('doesNeedSeparateBeds') ?? false;
             const status = b.get('status') ?? 'unknown';
+            const checkedIn = b.get('checkedIn') || null;
+            const checkedOut = b.get('checkedOut') || null;
             const eventId = b.get('eventId');
             const volunteerId = b.get('volunteerId');
             const duration = b.get('duration') ?? 0;
@@ -156,6 +159,8 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
               doesNeedPickup,
               doesNeedSeparateBeds,
               status,
+              checkedIn,
+              checkedOut,
               eventId,
               volunteerId,
               isListingPrivate,
@@ -335,6 +340,8 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                   b.status === 'credits-paid' ||
                   b.status === 'tokens-staked';
                 const isLoading = loadingBookings[b._id];
+                const isCheckedIn = isStayCheckedIn(b);
+                const isCheckedOut = isStayCheckedOut(b);
 
                 const userInfo = users?.find(
                   (user) => user._id.toString() === b.userId,
@@ -358,10 +365,10 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                     key={b._id}
                     className={`${
                       title === t('current_bookings_people_here') &&
-                      b?.status == 'paid'
+                      !isCheckedIn
                         ? 'bg-red-100'
                         : title === t('current_bookings_just_left') &&
-                          b?.status !== 'checked-out'
+                          !isCheckedOut
                         ? 'bg-red-100'
                         : ''
                     }`}
@@ -524,7 +531,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                           isSpaceHost &&
                           dayjs(b.end).isAfter(dayjs()) &&
                           dayjs(b.start).isSameOrBefore(dayjs(), 'day') &&
-                          b.status !== 'checked-in' && (
+                          !isCheckedIn && (
                             <Button
                               className="text-xs py-1 px-1 w-fit border-none enabled:bg-transparent bg-transparent"
                               variant="secondary"
@@ -539,7 +546,8 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
 
                         {/* Check-out button for "being here" section */}
                         {title === t('current_bookings_people_here') &&
-                          b.status === 'checked-in' &&
+                          isCheckedIn &&
+                          !isCheckedOut &&
                           (isSpaceHost || isOwnBooking) && (
                             <Button
                               className="text-xs py-1 px-1 w-fit border-none enabled:bg-transparent bg-transparent"
@@ -559,7 +567,7 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
                           isSpaceHost &&
                           dayjs(b.end).isAfter(dayjs()) &&
                           dayjs(b.start).isSameOrBefore(dayjs(), 'day') &&
-                          b.status !== 'checked-in' && (
+                          !isCheckedIn && (
                             <Button
                               className="text-xs py-1 px-1 w-fit border-none enabled:bg-transparent bg-transparent"
                               variant="secondary"
@@ -574,7 +582,8 @@ const CurrentBooking = ({ leftAfter, arriveBefore, bookingConfig }) => {
 
                         {/* Check-out button for "just left" section */}
                         {title === t('current_bookings_just_left') &&
-                          b.status === 'checked-in' &&
+                          isCheckedIn &&
+                          !isCheckedOut &&
                           (isSpaceHost || isOwnBooking) && (
                             <Button
                               className="text-xs py-1 px-1 w-fit border-none enabled:bg-transparent bg-transparent"

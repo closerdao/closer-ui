@@ -15,11 +15,50 @@ import {
   getUtilityTotal,
   hasOnChainAccommodationStake,
   isFullAccommodationCoveredByTokens,
+  isStayCheckedIn,
+  isStayCheckedOut,
   isUnsyncedOnChainTokenStakeError,
   resolveCheckoutFiatTotal,
   resolveTokensStakedVal,
   userCanCreateTeamBooking,
 } from '../booking.helpers';
+
+describe('isStayCheckedIn / isStayCheckedOut', () => {
+  it('reads the arrival state off the dates, not the payment status', () => {
+    const arrived = { status: 'paid', checkedIn: '2026-08-20T12:00:00.000Z' };
+
+    expect(isStayCheckedIn(arrived)).toBe(true);
+    expect(isStayCheckedOut(arrived)).toBe(false);
+  });
+
+  it('treats a paid stay without a check-in date as not yet arrived', () => {
+    expect(isStayCheckedIn({ status: 'paid' })).toBe(false);
+    expect(isStayCheckedOut({ status: 'paid' })).toBe(false);
+  });
+
+  it('reports a departure once checkedOut is set', () => {
+    const left = {
+      status: 'paid',
+      checkedIn: '2026-08-20T12:00:00.000Z',
+      checkedOut: '2026-08-24T09:00:00.000Z',
+    };
+
+    expect(isStayCheckedIn(left)).toBe(true);
+    expect(isStayCheckedOut(left)).toBe(true);
+  });
+
+  it('falls back to the legacy statuses when the dates are missing', () => {
+    expect(isStayCheckedIn({ status: 'checked-in' })).toBe(true);
+    expect(isStayCheckedOut({ status: 'checked-in' })).toBe(false);
+    expect(isStayCheckedIn({ status: 'checked-out' })).toBe(true);
+    expect(isStayCheckedOut({ status: 'checked-out' })).toBe(true);
+  });
+
+  it('handles a missing stay', () => {
+    expect(isStayCheckedIn(undefined)).toBe(false);
+    expect(isStayCheckedOut(null)).toBe(false);
+  });
+});
 
 describe('getBookingAnswers', () => {
   it('pairs each question label with its answer', () => {
