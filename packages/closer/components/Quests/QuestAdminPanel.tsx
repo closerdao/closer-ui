@@ -87,8 +87,10 @@ const QuestAdminPanel = ({ quest, onChanged }: Props) => {
     );
 
   const handleDraw = () =>
-    run('draw', () => drawQuest(quest.slug, seed ? { seed } : {}));
-
+    run('draw', () => {
+      const trimmedSeed = seed.trim();
+      return drawQuest(quest.slug, trimmedSeed ? { seed: trimmedSeed } : {});
+    });
   const handleSettle = () => run('settle', () => settleQuest(quest.slug));
 
   return (
