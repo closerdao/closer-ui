@@ -20,6 +20,7 @@ interface ProposalResultCelebrationProps {
   endDate?: string;
   effectiveStatus: EffectiveProposalStatus;
   forceShow?: boolean;
+  isFinalized?: boolean;
 }
 
 const ProposalResultCelebration = ({
@@ -27,11 +28,12 @@ const ProposalResultCelebration = ({
   endDate,
   effectiveStatus,
   forceShow = false,
+  isFinalized = false,
 }: ProposalResultCelebrationProps) => {
   const t = useTranslations();
   const [show, setShow] = useState(false);
-  const isPassed = effectiveStatus === 'passed';
-  const isFailed = effectiveStatus === 'failed';
+  const isPassed = isFinalized && effectiveStatus === 'passed';
+  const isFailed = isFinalized && effectiveStatus === 'failed';
 
   useEffect(() => {
     if (!isPassed && !isFailed) {

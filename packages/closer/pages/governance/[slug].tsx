@@ -152,7 +152,6 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   const [selectedVoteAmount, setSelectedVoteAmount] = useState(0);
   const [isCastingMoreVotes, setIsCastingMoreVotes] = useState(false);
   const [voteConfettiIntensity, setVoteConfettiIntensity] = useState(0.5);
-  const [forceResultCelebration, setForceResultCelebration] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [error, setError] = useState<string | null>(propError || null);
   const [isEditing, setIsEditing] = useState(false);
@@ -741,14 +740,21 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
     return t('governance_hours_remaining', { hours });
   };
 
-  const getEffectiveStatus = (proposal: Proposal | null) =>
-    getProposalEffectiveStatus(proposal, {
-      draft: t('governance_status_draft'),
-      active: t('governance_status_active'),
-      passed: t('governance_status_passed'),
-      failed: t('governance_status_failed'),
-      unknown: t('governance_status_unknown'),
-    });
+  const getEffectiveStatus = (
+    proposal: Proposal | null,
+    resolvedQuorum?: number,
+  ) =>
+    getProposalEffectiveStatus(
+      proposal,
+      {
+        draft: t('governance_status_draft'),
+        active: t('governance_status_active'),
+        passed: t('governance_status_passed'),
+        failed: t('governance_status_failed'),
+        unknown: t('governance_status_unknown'),
+      },
+      resolvedQuorum,
+    );
 
   // Closing the count is an endpoint, not something the page works out for
   // itself: it freezes the tally, the quorum test and one proof per vote into
@@ -801,31 +807,38 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
 
   const finalizeAttemptedFor = useRef<string | null>(null);
 
-  useEffect(() => {
+  const requestFinalize = useCallback(async () => {
     const id = currentProposal?._id;
 
-    if (!needsFinalizing || !user || !id || finalizeAttemptedFor.current === id) {
+    if (!id || finalizeAttemptedFor.current === id) {
       return;
     }
 
     finalizeAttemptedFor.current = id;
-    finalizeProposal();
-  }, [currentProposal?._id, finalizeProposal, needsFinalizing, user]);
+    await finalizeProposal();
+  }, [currentProposal?._id, finalizeProposal]);
+
+  useEffect(() => {
+    const id = currentProposal?._id;
+
+    if (!needsFinalizing || !user || !id) {
+      return;
+    }
+
+    requestFinalize();
+  }, [currentProposal?._id, needsFinalizing, requestFinalize, user]);
 
   const handleVotingPeriodEnded = async () => {
     if (!currentProposal?._id) {
       return;
     }
 
-    // Celebrate first: the result is decided by the clock, so a call that
-    // fails or hangs must not be what stands between the voter and the result.
-    setForceResultCelebration(true);
     // Held from the moment voting closes, through the wait inside
     // `finalizeProposal` and the call itself, so the page says what it is doing
     // instead of sitting on a stale tally.
     setIsFinalizing(true);
 
-    await finalizeProposal();
+    await requestFinalize();
   };
 
   // The countdown only renders in the last 24 hours and only inside the "voting
@@ -929,7 +942,10 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   const quorumProgress =
     quorum > 0 ? Math.min(100, Math.round((voteCounts.yes / quorum) * 100)) : 0;
   const isActive = isProposalVotingOpen(freshProposalData || currentProposal);
-  const effectiveStatus = getEffectiveStatus(freshProposalData || currentProposal);
+  const effectiveStatus = getEffectiveStatus(
+    freshProposalData || currentProposal,
+    quorum,
+  );
 
   return (
     <>
@@ -958,7 +974,11 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
               : undefined
         }
         effectiveStatus={effectiveStatus.status}
-        forceShow={forceResultCelebration}
+        isFinalized={
+          Boolean(frozenResult) ||
+          currentProposal.status === 'passed' ||
+          currentProposal.status === 'rejected'
+        }
       />
 
       <div className="min-h-screen bg-gray-50/70">
@@ -986,10 +1006,10 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                 <span>•</span>
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                    getEffectiveStatus(freshProposalData || currentProposal).status,
+                    effectiveStatus.status,
                   )}`}
                 >
-                  {getEffectiveStatus(freshProposalData || currentProposal).displayText}
+                  {effectiveStatus.displayText}
                 </span>
               </div>
             </div>
@@ -1642,10 +1662,10 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                   <span className="text-gray-600">{t('governance_status')}:</span>
                   <span
                     className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                      getEffectiveStatus(freshProposalData || currentProposal).status,
+                      effectiveStatus.status,
                     )}`}
                   >
-                    {getEffectiveStatus(freshProposalData || currentProposal).displayText}
+                    {effectiveStatus.displayText}
                   </span>
                 </div>
                 <div>

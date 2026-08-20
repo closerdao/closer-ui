@@ -74,6 +74,7 @@ export const getEffectiveStatus = (
     failed: string;
     unknown: string;
   },
+  resolvedQuorum?: number,
 ): { status: EffectiveProposalStatus; displayText: string } => {
   if (!proposal) {
     return { status: 'draft', displayText: labels.unknown };
@@ -102,9 +103,21 @@ export const getEffectiveStatus = (
       return { status: 'active', displayText: labels.active };
     }
 
-    const voteCounts = getVoteCounts(proposal);
+    const frozenResult = getFrozenResult(proposal);
 
-    if (voteCounts.yes > voteCounts.no) {
+    if (frozenResult) {
+      if (frozenResult.outcome === 'passed') {
+        return { status: 'passed', displayText: labels.passed };
+      }
+
+      return { status: 'failed', displayText: labels.failed };
+    }
+
+    const voteCounts = getVoteCounts(proposal);
+    const quorum = resolvedQuorum ?? proposal.quorum ?? 0;
+    const quorumMet = quorum > 0 && voteCounts.yes >= quorum;
+
+    if (voteCounts.yes > voteCounts.no && quorumMet) {
       return { status: 'passed', displayText: labels.passed };
     }
 
