@@ -834,12 +834,6 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
       return;
     }
 
-    // Held from the moment voting closes, through the wait inside
-    // `finalizeProposal` and the call itself, so the page says what it is doing
-    // instead of sitting on a stale tally. The overlay waits for the frozen
-    // record: a yes-majority that missed quorum is a rejection.
-    setIsFinalizing(true);
-
     await requestFinalize();
   };
 
