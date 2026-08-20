@@ -1141,6 +1141,15 @@ export const configDescription: ConfigType[] = [
     },
   },
   {
+    slug: 'quests',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: true,
+      },
+    },
+  },
+  {
     slug: 'engagement',
     value: {
       enabled: {

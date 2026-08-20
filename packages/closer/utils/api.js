@@ -53,6 +53,23 @@ function cloneResponseData(data) {
   }
 }
 
+/**
+ * Drops cached GETs whose url starts with the given prefix, so a mutation can
+ * make the reads it invalidates go back to the network. Without a prefix the
+ * whole GET cache goes.
+ */
+export function invalidateGetCache(urlPrefix) {
+  if (!urlPrefix) {
+    getResponseCache.clear();
+    return;
+  }
+  for (const key of [...getResponseCache.keys()]) {
+    if (key.split('\u0000')[0].startsWith(urlPrefix)) {
+      getResponseCache.delete(key);
+    }
+  }
+}
+
 function omitCacheOption(config) {
   if (!config || config.cache === undefined) return config;
   const next = { ...config };
