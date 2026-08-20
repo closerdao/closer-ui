@@ -24,14 +24,12 @@ const FinancedTokenMenuWidget = () => {
   const router = useRouter();
   const { user } = useAuth();
   const { platform } = usePlatform();
-  const [application, setApplication] = useState<FinanceApplication | null>(
-    null,
-  );
+  const [applications, setApplications] = useState<FinanceApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!user?._id) {
-      setApplication(null);
+      setApplications([]);
       setIsLoading(false);
       return;
     }
@@ -47,18 +45,17 @@ const FinancedTokenMenuWidget = () => {
             userId: user._id,
             status: { $in: OPEN_FINANCE_STATUSES },
           },
-          limit: 1,
+          limit: 50,
           sort_by: '-created' as const,
         };
         const action = await platform.financeapplication.get(params);
         const rows = financeApplicationListFromGetAction(action);
-        const first = (rows[0] || null) as FinanceApplication | null;
         if (!cancelled) {
-          setApplication(first);
+          setApplications(rows);
         }
       } catch {
         if (!cancelled) {
-          setApplication(null);
+          setApplications([]);
         }
       } finally {
         if (!cancelled) {
@@ -74,12 +71,16 @@ const FinancedTokenMenuWidget = () => {
   if (
     process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP !== 'true' ||
     isLoading ||
-    !application
+    applications.length === 0
   ) {
     return null;
   }
 
-  const highlight = getFinanceMenuHighlight(application);
+  const hasMultipleApplications = applications.length > 1;
+  const application = applications[0];
+  const highlight = hasMultipleApplications
+    ? null
+    : getFinanceMenuHighlight(application);
   const tokensAccrued = application.tokensAccrued ?? 0;
 
   const formatMenuDate = (d: Date) =>
@@ -100,19 +101,19 @@ const FinancedTokenMenuWidget = () => {
             {t('member_menu_financed_widget_title')}
           </span>
         </div>
-        {highlight.kind === 'deposit' ? (
+        {highlight?.kind === 'deposit' ? (
           <p className="text-xs text-amber-800 font-medium">
             {t('member_menu_financed_status_deposit')}
           </p>
         ) : null}
-        {highlight.kind === 'overdue' ? (
+        {highlight?.kind === 'overdue' ? (
           <p className="text-xs text-red-800 font-medium">
             {t('member_menu_financed_status_overdue', {
               date: formatMenuDate(highlight.dueDate),
             })}
           </p>
         ) : null}
-        {highlight.kind === 'next' ? (
+        {highlight?.kind === 'next' ? (
           <p className="text-xs text-gray-700">
             {t('member_menu_financed_status_next', {
               date: formatMenuDate(highlight.date),
@@ -121,17 +122,28 @@ const FinancedTokenMenuWidget = () => {
         ) : null}
         <div className="flex items-baseline justify-between gap-2 pt-0.5 border-t border-gray-100">
           <span className="text-xs text-gray-500">
-            {t('member_menu_financed_tokens_accrued')}
+            {hasMultipleApplications
+              ? t('member_menu_financed_open_contracts')
+              : t('member_menu_financed_tokens_accrued')}
           </span>
           <span className="text-sm font-semibold text-gray-900 tabular-nums">
-            {tokensAccrued.toLocaleString(router.locale || 'en')}
+            {(hasMultipleApplications
+              ? applications.length
+              : tokensAccrued
+            ).toLocaleString(router.locale || 'en')}
           </span>
         </div>
         <Link
-          href={`/token/financed/${encodeURIComponent(application._id)}`}
+          href={
+            hasMultipleApplications
+              ? '/token/financed'
+              : `/token/financed/${encodeURIComponent(application._id)}`
+          }
           className="block w-full py-2 px-3 bg-accent hover:bg-accent-dark text-white text-center text-sm font-medium rounded-full uppercase tracking-wide transition-colors"
         >
-          {t('member_menu_financed_view')}
+          {hasMultipleApplications
+            ? t('member_menu_financed_view_contracts')
+            : t('member_menu_financed_view')}
         </Link>
       </div>
     </div>

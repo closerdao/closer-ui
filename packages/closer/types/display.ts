@@ -16,6 +16,14 @@ export interface ExternalLinkDisplayProps {
   maxDisplayLength?: number;
 }
 
+export interface IdDisplayProps {
+  value: string;
+  className?: string;
+  head?: number;
+  tail?: number;
+  showCopy?: boolean;
+}
+
 export interface EmailDisplayProps {
   email: string;
   className?: string;

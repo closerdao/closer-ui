@@ -1,20 +1,21 @@
 import Head from 'next/head';
 import Link from 'next/link';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
+import { useTranslations } from 'next-intl';
+import { ChevronDown } from 'lucide-react';
+import process from 'process';
 
 import StatsCard from '../../../components/Affiliate';
 import AdminLayout from '../../../components/Dashboard/AdminLayout';
+import AffiliateApplications from '../../../components/Dashboard/AffiliateApplications';
 import Modal from '../../../components/Modal';
 import { ErrorMessage, Information } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
 import Input from '../../../components/ui/Input';
 import Spinner from '../../../components/ui/Spinner';
-
-import { useTranslations } from 'next-intl';
-import process from 'process';
-
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import PageNotAllowed from '../../../pages/401';
@@ -43,22 +44,25 @@ const AffiliateDashboardPage = () => {
   const [isInfoModalOpened, setIsInfoModalOpened] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [selectedAffiliate, setSelectedAffiliate] = useState<any>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [affiliateToRemove, setAffiliateToRemove] = useState<any>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
 
-  const affiliateFilter = { where: { affiliate: { $ne: null, $exists: true } } };
+  // Memoized so the effect below does not re-run (and re-dispatch) on every render.
+  const affiliateFilter = useMemo(
+    () => ({ where: { affiliate: { $ne: null, $exists: true } } }),
+    [],
+  );
+  const affiliatePageViewFilter = useMemo(
+    () => ({ where: { event: 'affiliate-page-view' } }),
+    [],
+  );
+  const affiliateLinkGeneratedFilter = useMemo(
+    () => ({ where: { event: 'affiliate-link-generated' } }),
+    [],
+  );
+
   const affiliateCount = platform.user.findCount(affiliateFilter);
-
-  const affiliatePageViewFilter = { 
-    where: { 
-      event: 'affiliate-page-view'
-    } 
-  };
-  const affiliateLinkGeneratedFilter = { 
-    where: { 
-      event: 'affiliate-link-generated'
-    } 
-  };
-
   const affiliatePageViewCount = platform.metric.findCount(affiliatePageViewFilter) || 0;
   const affiliateLinkGeneratedCount = platform.metric.findCount(affiliateLinkGeneratedFilter) || 0;
 
@@ -80,6 +84,17 @@ const AffiliateDashboardPage = () => {
     setSelectedAffiliate(null);
   };
 
+  const loadAffiliateData = useCallback(async () => {
+    try {
+      const affiliateDataRes = await api.get('/charges/affiliate');
+      const { affiliateData, payoutData } = affiliateDataRes.data.results;
+
+      setData({ affiliateData, payoutData });
+    } catch (error) {
+      setError(parseMessageFromError(error));
+    }
+  }, []);
+
   const recordPayout = async (payoutUserId: string) => {
     try {
       setIsSuccess(false);
@@ -89,6 +104,7 @@ const AffiliateDashboardPage = () => {
         userId: payoutUserId,
       });
       setIsSuccess(true);
+      await loadAffiliateData();
     } catch (error) {
       setError(parseMessageFromError(error));
     } finally {
@@ -96,28 +112,44 @@ const AffiliateDashboardPage = () => {
     }
   };
 
+  const loadCounts = useCallback(() => {
+    platform.user.getCount(affiliateFilter);
+    platform.metric.getCount(affiliatePageViewFilter);
+    platform.metric.getCount(affiliateLinkGeneratedFilter);
+  }, [
+    platform,
+    affiliateFilter,
+    affiliatePageViewFilter,
+    affiliateLinkGeneratedFilter,
+  ]);
+
+  const removeAffiliate = async (affiliateUserId: string) => {
+    setIsRemoving(true);
+    setError(null);
+    try {
+      await api.post('/affiliates/remove', { userId: affiliateUserId });
+      setAffiliateToRemove(null);
+      setExpandedId(null);
+      await loadAffiliateData();
+      loadCounts();
+    } catch (error) {
+      setError(parseMessageFromError(error));
+    } finally {
+      setIsRemoving(false);
+    }
+  };
+
   useEffect(() => {
     if (user) {
-      (async () => {
-        try {
-          const affiliateDataRes = await api.get('/charges/affiliate');
-          const { affiliateData, payoutData } = affiliateDataRes.data.results;
-
-          setData({ affiliateData, payoutData });
-        } catch (error) {
-          setError(parseMessageFromError(error));
-        }
-      })();
+      loadAffiliateData();
     }
-  }, [user]);
+  }, [user, loadAffiliateData]);
 
   useEffect(() => {
     if (platform) {
-      platform.user.getCount(affiliateFilter);
-      platform.metric.getCount(affiliatePageViewFilter);
-      platform.metric.getCount(affiliateLinkGeneratedFilter);
+      loadCounts();
     }
-  }, [platform, affiliateFilter, affiliatePageViewFilter, affiliateLinkGeneratedFilter]);
+  }, [platform, loadCounts]);
 
   if (!user?.roles.includes('admin') && !user?.roles.includes('affiliate-manager')) {
     return <PageNotAllowed />;
@@ -132,6 +164,15 @@ const AffiliateDashboardPage = () => {
       <AdminLayout>
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           <Heading level={2}>{t('dashboard_affiliate_title')}</Heading>
+        </div>
+
+        <div className="mt-6">
+          <AffiliateApplications
+            onReviewed={() => {
+              loadAffiliateData();
+              loadCounts();
+            }}
+          />
         </div>
 
         <section className="mt-6">
@@ -185,13 +226,14 @@ const AffiliateDashboardPage = () => {
               </thead>
 
               {data?.affiliateData?.map((affiliate: any) => {
+                const affiliateUserId = affiliate?.user?._id;
+                const isExpanded = expandedId === affiliateUserId;
                 const rowRevenue = Number(affiliate?.totalRevenue) || 0;
-                const rowPaid =
-                  Number(
-                    data?.payoutData?.find((p: any) => {
-                      return p?.user?._id === affiliate?.user?._id;
-                    })?.totalPaid,
-                  ) || 0;
+                const rowPayouts =
+                  data?.payoutData?.find((p: any) => {
+                    return p?.user?._id === affiliateUserId;
+                  });
+                const rowPaid = Number(rowPayouts?.totalPaid) || 0;
                 const rowUnpaid = rowRevenue - rowPaid;
 
                 return (
@@ -208,78 +250,30 @@ const AffiliateDashboardPage = () => {
                       {formatEurAmount(rowUnpaid)}
                     </td>
                     <td className="px-3 py-2">
-                      {data?.payoutData
-                        ?.find((user: any) => {
-                          return user?.user?._id === affiliate?.user?._id;
-                        })
-                        ?.payouts.at(-1)
-                        ?.created.slice(0, 10)}
+                      {rowPayouts?.payouts?.at(-1)?.created.slice(0, 10)}
                     </td>
                     <td className="px-3 py-2 flex justify-end gap-2">
-                      <Button
-                        size="small"
-                        className="flex gap-2 h-[24px] w-fit"
-                        isEnabled={!isLoading}
-                        onClick={() => {
-                          setSelectedAffiliate(affiliate);
-                          setIsInfoModalOpened(true);
-                        }}
+                      <button
+                        type="button"
+                        aria-expanded={isExpanded}
+                        className="flex items-center gap-1 h-[24px] px-3 rounded-full border border-accent text-accent text-xs uppercase tracking-wide"
+                        onClick={() =>
+                          setExpandedId(isExpanded ? null : affiliateUserId)
+                        }
                       >
-                        {t('affiliate_dashboard_record_payout')}
-                      </Button>
-                      <Button
-                        size="small"
-                        className="flex gap-2 h-[24px] w-fit"
-                        isEnabled={!isLoading}
-                        onClick={() => {
-                          setSelectedAffiliate(affiliate);
-                          setIsExpanded(true);
-                        }}
-                      >
-                        {t('affiliate_dashboard_expand')}
-                      </Button>
-                      {isInfoModalOpened && selectedAffiliate && (
-                        <Modal closeModal={closeModal}>
-                          <div className="flex flex-col gap-6 py-4 text-left">
-                            <div>
-                              <Heading level={3}>
-                                {selectedAffiliate?.user?.screenname}
-                              </Heading>
-                              <p>{selectedAffiliate?.user?.email}</p>
-                            </div>
-                            <Input
-                              type="number"
-                              label={t('affiliate_dashboard_payout_amount')}
-                              value={payoutAmount.toString()}
-                              onChange={(e) =>
-                                setPayoutAmount(Number(e.target.value))
-                              }
-                            />
-                            <Button
-                              size="small"
-                              className="flex gap-2"
-                              isEnabled={!isLoading}
-                              onClick={() =>
-                                recordPayout(selectedAffiliate?.user?._id)
-                              }
-                            >
-                              {isLoading && <Spinner />}{' '}
-                              {t('affiliate_dashboard_record_payout')}
-                            </Button>
-                            {isSuccess && (
-                              <Information>
-                                {t('affiliate_dashboard_payout_success')}
-                              </Information>
-                            )}
-                          </div>
-                        </Modal>
-                      )}
+                        {t('affiliate_dashboard_details')}
+                        <ChevronDown
+                          className={`h-3 w-3 transition-transform duration-200 ${
+                            isExpanded ? 'rotate-180' : ''
+                          }`}
+                        />
+                      </button>
                     </td>
                   </tr>
-                  {isExpanded &&
-                    selectedAffiliate?._id === affiliate?.user?._id && (
+                  {isExpanded && (
                       <tr>
                         <td colSpan={6} className="bg-white border p-3 py-5">
+                          <div className="flex flex-col gap-6">
                           <div className="flex gap-10">
                             <div className="flex flex-col gap-2 w-1/2">
                               <Heading level={3} className="text-md uppercase">
@@ -343,13 +337,8 @@ const AffiliateDashboardPage = () => {
                                     {t('affiliate_dashboard_date')}
                                   </p>
                                 </div>
-                                {data?.payoutData
-                                  ?.find((user: any) => {
-                                    return (
-                                      user?.user?._id === affiliate?.user?._id
-                                    );
-                                  })
-                                  ?.payouts.slice()
+                                {rowPayouts?.payouts
+                                  ?.slice()
                                   .reverse()
                                   .map((payout: any) => (
                                     <div
@@ -367,6 +356,36 @@ const AffiliateDashboardPage = () => {
                               </div>
                             </div>
                           </div>
+
+                          <div className="flex flex-wrap gap-4 items-center justify-end border-t pt-4">
+                            {affiliate?.user?.slug && (
+                              <Link
+                                className="text-accent underline text-sm"
+                                href={`/members/${affiliate.user.slug}`}
+                              >
+                                {t('affiliate_dashboard_view_profile')}
+                              </Link>
+                            )}
+                            <button
+                              type="button"
+                              className="text-accent underline text-sm"
+                              onClick={() => {
+                                setPayoutAmount(0);
+                                setSelectedAffiliate(affiliate);
+                                setIsInfoModalOpened(true);
+                              }}
+                            >
+                              {t('affiliate_dashboard_record_payout')}
+                            </button>
+                            <button
+                              type="button"
+                              className="text-error underline text-sm"
+                              onClick={() => setAffiliateToRemove(affiliate)}
+                            >
+                              {t('affiliate_dashboard_remove')}
+                            </button>
+                          </div>
+                          </div>
                         </td>
                       </tr>
                     )}
@@ -375,6 +394,77 @@ const AffiliateDashboardPage = () => {
               })}
             </table>
         </section>
+
+        {isInfoModalOpened && selectedAffiliate && (
+          <Modal closeModal={closeModal}>
+            <div className="flex flex-col gap-6 py-4 text-left">
+              <div>
+                <Heading level={3}>
+                  {selectedAffiliate?.user?.screenname}
+                </Heading>
+                <p>{selectedAffiliate?.user?.email}</p>
+              </div>
+              <Input
+                type="number"
+                label={t('affiliate_dashboard_payout_amount')}
+                value={payoutAmount.toString()}
+                onChange={(e) => setPayoutAmount(Number(e.target.value))}
+              />
+              <Button
+                size="small"
+                className="flex gap-2"
+                isEnabled={!isLoading}
+                onClick={() => recordPayout(selectedAffiliate?.user?._id)}
+              >
+                {isLoading && <Spinner />}{' '}
+                {t('affiliate_dashboard_record_payout')}
+              </Button>
+              {isSuccess && (
+                <Information>
+                  {t('affiliate_dashboard_payout_success')}
+                </Information>
+              )}
+            </div>
+          </Modal>
+        )}
+
+        {affiliateToRemove && (
+          <Modal closeModal={() => setAffiliateToRemove(null)}>
+            <div className="flex flex-col gap-6 py-4 text-left">
+              <Heading level={3}>{t('affiliate_dashboard_remove')}</Heading>
+              <p>
+                {t('affiliate_dashboard_remove_confirm', {
+                  name:
+                    affiliateToRemove?.user?.screenname ||
+                    affiliateToRemove?.user?.email ||
+                    '',
+                })}
+              </p>
+              <div className="flex gap-2 justify-end">
+                <Button
+                  size="small"
+                  variant="secondary"
+                  isFullWidth={false}
+                  isEnabled={!isRemoving}
+                  onClick={() => setAffiliateToRemove(null)}
+                >
+                  {t('generic_cancel')}
+                </Button>
+                <Button
+                  size="small"
+                  isFullWidth={false}
+                  isEnabled={!isRemoving}
+                  isLoading={isRemoving}
+                  onClick={() =>
+                    removeAffiliate(affiliateToRemove?.user?._id)
+                  }
+                >
+                  {t('affiliate_dashboard_remove')}
+                </Button>
+              </div>
+            </div>
+          </Modal>
+        )}
       </AdminLayout>
     </>
   );

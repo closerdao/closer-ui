@@ -883,6 +883,10 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
   const freshProposalData = getCurrentProposalData();
   const voteCounts = getVoteCounts(freshProposalData || currentProposal);
   const totalVotes = voteCounts.yes + voteCounts.no + voteCounts.abstain;
+  const quorum = freshProposalData?.quorum || 0;
+  const isQuorumReached = quorum > 0 && totalVotes >= quorum;
+  const quorumProgress =
+    quorum > 0 ? Math.min(100, Math.round((totalVotes / quorum) * 100)) : 0;
   const isActive =
     freshProposalData?.status === 'active' &&
     freshProposalData?.endDate &&
@@ -1530,12 +1534,34 @@ const ProposalDetailPage: NextPage<ProposalDetailPageProps> = ({
                     <span className="text-gray-600">{t('governance_total_votes')}</span>
                     <span className="font-medium">{roundToTwoDecimals(totalVotes)}</span>
                   </div>
-                  {freshProposalData?.quorum && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-black italic">{t('governance_quorum_label')}</span>
-                      <span className="text-black italic font-medium">
-                        {roundToTwoDecimals(totalVotes)} / {roundToTwoDecimals(freshProposalData.quorum)}
-                      </span>
+                  {quorum > 0 && (
+                    <div className="pt-1">
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="text-black italic">{t('governance_quorum_label')}</span>
+                        <span className="text-black italic font-medium">
+                          {roundToTwoDecimals(totalVotes)} / {roundToTwoDecimals(quorum)}
+                        </span>
+                      </div>
+                      {isQuorumReached ? (
+                        <div className="flex items-center gap-1.5 text-sm font-medium text-gray-900">
+                          <span aria-hidden="true">✓</span>
+                          <span>{t('governance_quorum_reached')}</span>
+                        </div>
+                      ) : (
+                        <div
+                          className="w-full bg-gray-200 rounded-full h-2"
+                          role="progressbar"
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={quorumProgress}
+                          aria-label={t('governance_quorum_label')}
+                        >
+                          <div
+                            className="h-2 rounded-full bg-gray-900 transition-all duration-300"
+                            style={{ width: `${quorumProgress}%` }}
+                          ></div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

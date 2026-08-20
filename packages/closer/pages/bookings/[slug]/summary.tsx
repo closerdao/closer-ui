@@ -63,7 +63,6 @@ import {
   computeFiatOwed,
   computeTokensOwed,
   isStayCheckoutDraft,
-  isStayShapedBooking,
   sendStayToFriends,
   submitStay,
 } from '../../../utils/stays.api';
@@ -236,9 +235,6 @@ const Summary = ({
 
   const isHourlyBooking = listing?.priceDuration === 'hour';
 
-  const stayShaped = booking
-    ? isStayShapedBooking(booking as Record<string, unknown>)
-    : false;
   const stayLike = booking as unknown as Stay;
 
   const resolvePostSummaryCheckoutPath = (nextStatus: string) => {
@@ -247,13 +243,12 @@ const Summary = ({
     }
     return getBookingPaymentCheckoutPath({
       bookingId: booking._id,
-      stayShaped,
       status: nextStatus,
       paymentDelta: booking.paymentDelta,
       useTokens: Boolean(booking.useTokens),
-      fiatOwed: stayShaped ? computeFiatOwed(stayLike) : 0,
-      tokensOwed: stayShaped ? computeTokensOwed(stayLike) : 0,
-      creditsOwed: stayShaped ? computeCreditsOwed(stayLike) : 0,
+      fiatOwed: computeFiatOwed(stayLike),
+      tokensOwed: computeTokensOwed(stayLike),
+      creditsOwed: computeCreditsOwed(stayLike),
     });
   };
 
@@ -591,6 +586,7 @@ const Summary = ({
                 listingId={listing?._id}
                 eventName={event?.name}
                 isFriendsBooking={Boolean(booking?.isFriendsBooking)}
+                isTeamBooking={Boolean(booking?.isTeamBooking)}
                 eventId={booking?.eventId}
                 ticketOption={ticketOption?.name}
                 priceDuration={listing?.priceDuration}

@@ -27,6 +27,11 @@ export const handlers = [
     }
     return res(ctx.status(404), ctx.json({ results: null }));
   }),
+  // Anything that renders a public form calls this on mount; without a handler
+  // it falls through to the real network and fails DNS mid-run.
+  rest.post('*/interaction/init', (req, res, ctx) =>
+    res(ctx.status(200), ctx.json({ results: { sessionkey: 'test-session' } })),
+  ),
   rest.get('*/config/webinar', (req, res, ctx) =>
     res(ctx.status(200), ctx.json({ results: {} })),
   ),

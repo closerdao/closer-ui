@@ -3,31 +3,19 @@ import { getBookingPaymentCheckoutPath } from '../stayPaymentRouting.helpers';
 describe('getBookingPaymentCheckoutPath', () => {
   const bookingId = 'booking_1';
 
-  it('routes non-stay-shaped open bookings to classic summary', () => {
+  it('routes open bookings back to the stay checkout', () => {
     expect(
       getBookingPaymentCheckoutPath({
         bookingId,
-        stayShaped: false,
         status: 'open',
       }),
-    ).toBe(`/bookings/${bookingId}/summary`);
+    ).toBe(`/stay/create/${bookingId}`);
   });
 
-  it('routes non-stay-shaped confirmed bookings to classic checkout', () => {
+  it('routes tokens-staked bookings with fiat due to stay payment', () => {
     expect(
       getBookingPaymentCheckoutPath({
         bookingId,
-        stayShaped: false,
-        status: 'confirmed',
-      }),
-    ).toBe(`/bookings/${bookingId}/checkout`);
-  });
-
-  it('routes tokens-staked stay-shaped bookings with fiat due to stay payment', () => {
-    expect(
-      getBookingPaymentCheckoutPath({
-        bookingId,
-        stayShaped: true,
         status: 'tokens-staked',
         useTokens: true,
         fiatOwed: 24,
@@ -39,7 +27,6 @@ describe('getBookingPaymentCheckoutPath', () => {
     expect(
       getBookingPaymentCheckoutPath({
         bookingId,
-        stayShaped: true,
         status: 'tokens-staked',
         useTokens: true,
         fiatOwed: 24,
@@ -51,34 +38,31 @@ describe('getBookingPaymentCheckoutPath', () => {
     ).toBe(`/stay/${bookingId}/payment`);
   });
 
-  it('routes credits-paid stay-shaped bookings with fiat due to stay payment', () => {
+  it('routes credits-paid bookings with fiat due to stay payment', () => {
     expect(
       getBookingPaymentCheckoutPath({
         bookingId,
-        stayShaped: true,
         status: 'credits-paid',
         fiatOwed: 15,
       }),
     ).toBe(`/stay/${bookingId}/payment`);
   });
 
-  it('routes tokens-staked event booking to classic checkout when not stay-shaped', () => {
+  it('routes tokens-staked with nothing left in fiat back to the stay checkout', () => {
     expect(
       getBookingPaymentCheckoutPath({
         bookingId,
-        stayShaped: false,
         status: 'tokens-staked',
         useTokens: true,
-        fiatOwed: 24,
+        fiatOwed: 0,
       }),
-    ).toBe(`/bookings/${bookingId}/checkout`);
+    ).toBe(`/stay/create/${bookingId}`);
   });
 
-  it('routes stay-shaped confirmed with only fiat owed to stay payment', () => {
+  it('routes confirmed with only fiat owed to stay payment', () => {
     expect(
       getBookingPaymentCheckoutPath({
         bookingId,
-        stayShaped: true,
         status: 'confirmed',
         fiatOwed: 50,
         tokensOwed: 0,
@@ -87,11 +71,10 @@ describe('getBookingPaymentCheckoutPath', () => {
     ).toBe(`/stay/${bookingId}/payment`);
   });
 
-  it('routes stay-shaped confirmed with token delta due back to create flow', () => {
+  it('routes confirmed with a token delta due back to the stay checkout', () => {
     expect(
       getBookingPaymentCheckoutPath({
         bookingId,
-        stayShaped: true,
         status: 'confirmed',
         useTokens: true,
         paymentDelta: {

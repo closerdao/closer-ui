@@ -85,7 +85,6 @@ import {
   computeTokensOwed,
   extendStay,
   getStay,
-  isStayShapedBooking,
   mapStayQuoteToUpdatedPrices,
   quoteStay,
   rejectStayRequest,
@@ -164,11 +163,6 @@ const StayBookingSummaryPage = ({
   }, [booking?._id]);
 
   const bookingView = liveBooking ?? booking;
-
-  const stayShaped = useMemo(
-    () => isStayShapedBooking(bookingView as unknown as Record<string, unknown>),
-    [bookingView],
-  );
 
   const {
     utilityFiat,
@@ -330,20 +324,14 @@ const StayBookingSummaryPage = ({
 
   const stayGuestEditableStatuses = ['confirmed', 'pending-payment', 'paid'];
 
-  const canStayGuestEdit =
-    stayShaped &&
+  // Hourly bookings still edit through the legacy platform.bookings path, which
+  // has no guest-facing editor.
+  const canGuestEditBookingDetails =
     !isHourlyBooking &&
     Boolean(isBookingOwnerEditor) &&
     !canManageBooking &&
     canEditBooking &&
     stayGuestEditableStatuses.includes(String(bookingView?.status ?? ''));
-
-  const canGuestEditBookingDetails =
-    canStayGuestEdit ||
-    (!stayShaped &&
-      Boolean(isBookingOwnerEditor) &&
-      !canManageBooking &&
-      canEditBooking);
 
   const checkInTime = bookingConfig?.checkinTime || 14;
   const checkOutTime = bookingConfig?.checkoutTime || 11;
@@ -434,7 +422,7 @@ const StayBookingSummaryPage = ({
 
     const fetchUpdatedPrice = async () => {
       try {
-        if (stayShaped && !isHourlyBooking) {
+        if (!isHourlyBooking) {
           const origListing =
             getBookingListingRefId(bookingView.listing as unknown) ??
             bookingView.listing;
@@ -504,7 +492,6 @@ const StayBookingSummaryPage = ({
     canManageBooking,
     canGuestEditBookingDetails,
     isEditMode,
-    stayShaped,
     isHourlyBooking,
     bookingView?.listing,
   ]);
@@ -795,7 +782,7 @@ const StayBookingSummaryPage = ({
   };
 
   const persistBookingUpdate = async (): Promise<boolean> => {
-    if (stayShaped && !isHourlyBooking) {
+    if (!isHourlyBooking) {
       return persistStayBookingUpdate();
     }
     try {
@@ -819,15 +806,14 @@ const StayBookingSummaryPage = ({
     const stayLike = bookingView as unknown as Stay;
     return getBookingPaymentCheckoutPath({
       bookingId: _id,
-      stayShaped,
       status: String(status ?? ''),
       paymentDelta: bookingView?.paymentDelta,
       useTokens,
-      fiatOwed: stayShaped ? computeFiatOwed(stayLike) : 0,
-      tokensOwed: stayShaped ? computeTokensOwed(stayLike) : 0,
-      creditsOwed: stayShaped ? computeCreditsOwed(stayLike) : 0,
+      fiatOwed: computeFiatOwed(stayLike),
+      tokensOwed: computeTokensOwed(stayLike),
+      creditsOwed: computeCreditsOwed(stayLike),
     });
-  }, [_id, stayShaped, status, bookingView?.paymentDelta, useTokens, bookingView]);
+  }, [_id, status, bookingView?.paymentDelta, useTokens, bookingView]);
 
   const openBookingCheckout = async () => {
     await router.push(bookingCheckoutPath);
@@ -897,7 +883,6 @@ const StayBookingSummaryPage = ({
 
   const editableStayStatuses = ['confirmed', 'pending-payment', 'paid'];
   const canUseStayEditActions =
-    stayShaped &&
     !isHourlyBooking &&
     (isBookingOwnerEditor || canManageBooking) &&
     editableStayStatuses.includes(String(status ?? ''));
@@ -1064,7 +1049,7 @@ const StayBookingSummaryPage = ({
                   end: dayjs(bookingView.pendingExtension.end).format('LL'),
                 })}
               </p>
-              {isSpaceHost && stayShaped && (
+              {isSpaceHost && (
                 <div className="flex flex-wrap gap-2">
                   <Button
                     variant="secondary"
@@ -1094,6 +1079,7 @@ const StayBookingSummaryPage = ({
             <SummaryDates
               isDayTicket={bookingView?.isDayTicket}
               isFriendsBooking={Boolean(bookingView?.isFriendsBooking)}
+              isTeamBooking={Boolean(bookingView?.isTeamBooking)}
               eventId={bookingView?.eventId}
               totalGuests={
                 canManageBooking || canGuestEditBookingDetails
@@ -1224,8 +1210,7 @@ const StayBookingSummaryPage = ({
             <BookingSectionEyebrow>
               {t('bookings_checkout_step_payment_title')}
             </BookingSectionEyebrow>
-            {stayShaped &&
-              (bv.checkedIn != null || bv.checkedOut != null) && (
+            {(bv.checkedIn != null || bv.checkedOut != null) && (
               <BookingSurface
                 tone="inset"
                 padding="md"
@@ -1400,7 +1385,6 @@ const StayBookingSummaryPage = ({
               }
               checkoutLoading={isLoading}
               hideCheckoutButton={status === 'cancelled'}
-              stayShaped={stayShaped}
               paymentDelta={bookingView?.paymentDelta}
               useTokens={useTokens}
               _id={_id}

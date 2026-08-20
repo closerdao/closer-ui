@@ -14,6 +14,7 @@ export { default as JoinCommunityCTA } from './components/JoinCommunityCTA';
 export { default as CollapsibleFaq } from './components/CollapsibleFaq';
 export { default as Metatags } from './components/Metatags/';
 export { FaviconLinks } from './components/Metatags/FaviconLinks';
+export { ThemeStyles } from './components/Theming/ThemeStyles';
 export { default as Modal } from './components/Modal';
 export { default as Navigation } from './components/Navigation';
 export { default as Newsletter } from './components/Newsletter';
@@ -149,6 +150,7 @@ export { default as CreditCheckoutPage } from './pages/credits/checkout';
 export { default as DashboardPage } from './pages/dashboard';
 export { default as AffiliateDashboardPage } from './pages/dashboard/affiliate';
 export { default as DashboardPagesIndex } from './pages/dashboard/pages';
+export { default as DashboardThemingPage } from './pages/dashboard/theming';
 export { default as DashboardPagesEdit } from './pages/dashboard/pages/[id]';
 export { default as PerformancePage } from './pages/dashboard/performance/index';
 export {

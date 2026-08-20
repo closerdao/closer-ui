@@ -247,6 +247,8 @@
   "member_menu_financed_status_next": "Next payment · {date}",
   "member_menu_financed_tokens_accrued": "Tokens accrued",
   "member_menu_financed_view": "View details",
+  "member_menu_financed_open_contracts": "Open contracts",
+  "member_menu_financed_view_contracts": "View contracts",
   "navigation_blog": "Blog",
   "navigation_see_courses": "See courses",
   "navigation_see_events": "See events",

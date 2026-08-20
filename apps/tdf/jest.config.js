@@ -8,6 +8,12 @@ const createJestConfig = nextJest({
 
 // Add any custom config to be passed to Jest
 const customJestConfig = {
+  // The monorepo runs every package's suite in parallel under turbo, so a worker
+  // can be starved for seconds at a time. Give tests room rather than failing
+  // on machine load.
+  testTimeout: 30000,
+  // Half the cores each, so closer + tdf together do not oversubscribe the box.
+  maxWorkers: '50%',
   // Add more setup options before each test is run
   setupFilesAfterEnv: ['<rootDir>/test/jest.setup.ts'],
   setupFiles: ['<rootDir>/test/jest.mocks.tsx'],

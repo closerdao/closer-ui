@@ -1,18 +1,6 @@
 @import '../../../packages/closer/public/styles.css';
 
 /*
- * The accent is now mint (#3EE08F), which works as a button fill but is
- * unreadable as text on white (~1.6:1). `text-accent` is used for links and
- * hover states in ~140 shared components, so remap just the text form to the
- * darker mint from the brand palette rather than editing every call site.
- */
-.text-accent,
-.hover\:text-accent:hover,
-.group:hover .group-hover\:text-accent {
-  color: #0b7a4c;
-}
-
-/*
  * The Layout no longer wraps page content in `pt-8 px-4`, so the landing and
  * other full-bleed pages can run edge to edge. Shared platform pages that
  * relied on that gutter mark their body with `.main-content`, so give the
@@ -22,18 +10,6 @@
   padding-top: 2rem;
   padding-left: 1rem;
   padding-right: 1rem;
-}
-
-/*
- * `.new-input` fields are explicitly excluded from the shared input focus
- * styles, so they fall back to the browser's default focus ring (amber on
- * some platforms). Give them the brand ring instead.
- */
-.new-input:focus,
-.new-input:focus-visible {
-  outline: none;
-  border-color: #3ee08f;
-  box-shadow: 0 0 0 3px rgba(62, 224, 143, 0.3);
 }
 
 /* Landing page marquee strip */

@@ -30,7 +30,6 @@ import {
   computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
-  isStayShapedBooking,
 } from '../../utils/stays.api';
 import { hasFlaggedHealthAnswers } from '../../utils/volunteerApplication.helpers';
 
@@ -119,14 +118,11 @@ const BookingListPreview = ({
   const isOwnBooking =
     createdBy === user?._id || bookingMapItem.get('paidBy') === user?._id;
 
-  const stayShaped = isStayShapedBooking(raw as Record<string, unknown>);
-  const oweds = stayShaped
-    ? {
-        fiatOwed: computeFiatOwed(raw as Stay),
-        tokensOwed: computeTokensOwed(raw as Stay),
-        creditsOwed: computeCreditsOwed(raw as Stay),
-      }
-    : { fiatOwed: 0, tokensOwed: 0, creditsOwed: 0 };
+  const oweds = {
+    fiatOwed: computeFiatOwed(raw as Stay),
+    tokensOwed: computeTokensOwed(raw as Stay),
+    creditsOwed: computeCreditsOwed(raw as Stay),
+  };
 
   const flagPickup =
     bookingConfig?.pickUpEnabled &&
@@ -350,7 +346,6 @@ const BookingListPreview = ({
           <Link
             href={getBookingPaymentCheckoutPath({
               bookingId: _id,
-              stayShaped,
               status,
               paymentDelta,
               useTokens: Boolean(useTokens),
@@ -402,7 +397,6 @@ const BookingListPreview = ({
             listPreview
             hideCheckoutButton
             hideCancelButton
-            stayShaped={stayShaped}
             paymentDelta={paymentDelta}
             useTokens={Boolean(useTokens)}
             _id={_id}

@@ -25,9 +25,23 @@ Object.defineProperty(window, 'matchMedia', {
 jest.mock('next/image', () => ({
   __esModule: true,
   default: (props: any) => {
-    return <img {...props} />;
+    // `fill` and `priority` are next/image's own props, not img attributes.
+    const { fill, priority, ...imgProps } = props;
+    return <img {...imgProps} />;
   },
 }));
+
+// The real interaction session POSTs to the API with raw axios, so it escapes
+// the mocked `utils/api` and resolves api.example.com for real in every suite
+// that renders a form. Keep the pure helpers, stub the network.
+jest.mock('../utils/interactionSession', () => {
+  const actual = jest.requireActual('../utils/interactionSession');
+  return {
+    ...actual,
+    ensureInteractionSession: jest.fn(async () => undefined),
+    refreshInteractionSession: jest.fn(async () => undefined),
+  };
+});
 
 jest.mock('next/router', () => ({
   useRouter: jest.fn().mockReturnValue({

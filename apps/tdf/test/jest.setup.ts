@@ -1,8 +1,12 @@
 import '@testing-library/jest-dom';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { syncCurrencyLocaleFromCountryCode } from 'closer/utils/currencyFormat';
 
 import { server } from './server';
+
+// findBy*/waitFor default to 1s, which a starved worker blows through when the
+// whole monorepo's suites run in parallel.
+configure({ asyncUtilTimeout: 5000 });
 
 // In production TDF's saved config (`general.country: 'PT'`) drives the
 // currency locale via applyCurrencyLocaleFromGeneralConfig. The schema
