@@ -4153,7 +4153,7 @@
   "theming_clear": "Clear",
   "theming_invalid_color": "Enter a hex colour, for example #ff0055.",
   "theming_fonts": "Fonts",
-  "theming_fonts_hint": "Fonts are loaded from Google Fonts and applied to headings and body text.",
+  "theming_fonts_hint": "Google Fonts are loaded when needed. Brand fonts bundled with the app can also be chosen.",
   "theming_font_default": "Platform default",
   "theming_preview": "Preview",
   "theming_preview_heading": "A heading in your theme",

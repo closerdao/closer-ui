@@ -124,4 +124,46 @@ describe('theme snapshot freshness', () => {
     );
     expect(accent).toBe(THEME_DEFAULTS.primaryColor);
   });
+
+  it('lios still compiles Layout font variables when theming has no body font', () => {
+    fs.writeFileSync(
+      SNAPSHOT,
+      JSON.stringify({ theming: { primaryColor: '#111111' } }),
+    );
+    const fonts = runNode(`
+      process.stdout.write(JSON.stringify(require(${JSON.stringify(
+        configPathFor('lios'),
+      )}).theme.extend.fontFamily))
+    `);
+    expect(fonts.sans[0]).toContain('--font-cabinet');
+    expect(fonts.accent[0]).toContain('--font-hoover');
+    expect(fonts['accent-alt'][0]).toContain('--font-sincopa');
+  });
+
+  it('per-auset still compiles Layout font variables when theming has no body font', () => {
+    fs.writeFileSync(
+      SNAPSHOT,
+      JSON.stringify({ theming: { primaryColor: '#111111' } }),
+    );
+    const fonts = runNode(`
+      process.stdout.write(JSON.stringify(require(${JSON.stringify(
+        configPathFor('per-auset'),
+      )}).theme.extend.fontFamily))
+    `);
+    expect(fonts.sans[0]).toContain('--font-alegreya-sans');
+  });
+
+  it('closer still compiles Layout font variables when theming has no body font', () => {
+    fs.writeFileSync(
+      SNAPSHOT,
+      JSON.stringify({ theming: { primaryColor: '#111111' } }),
+    );
+    const fonts = runNode(`
+      process.stdout.write(JSON.stringify(require(${JSON.stringify(
+        configPathFor('closer'),
+      )}).theme.extend.fontFamily))
+    `);
+    expect(fonts.sans[0]).toContain('--font-inter');
+    expect(fonts.serif[0]).toContain('--font-instrument-serif');
+  });
 });

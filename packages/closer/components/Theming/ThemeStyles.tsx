@@ -2,7 +2,11 @@ import Head from 'next/head';
 
 import { FC } from 'react';
 
-import { getGoogleFontsUrl, resolveFontStack } from '../../theming';
+import {
+  fontStackToCss,
+  getGoogleFontsUrl,
+  resolveFontStack,
+} from '../../theming';
 
 interface Props {
   /**
@@ -23,33 +27,35 @@ interface Props {
  */
 export const ThemeStyles: FC<Props> = ({ theming }) => {
   const fontsUrl = getGoogleFontsUrl(theming as any);
-  const headingStack = resolveFontStack(
-    (theming as { fontFamilyHeading?: string })?.fontFamilyHeading,
+  const headingCss = fontStackToCss(
+    resolveFontStack(
+      (theming as { fontFamilyHeading?: string })?.fontFamilyHeading,
+    ),
   );
 
-  if (!fontsUrl) return null;
-
-  const headingCss = headingStack
-    ? `h1,h2,h3,h4,h5,h6{font-family:${headingStack
-        .map((family) => (family.includes(' ') ? `'${family}'` : family))
-        .join(',')};}`
-    : null;
+  if (!fontsUrl && !headingCss) return null;
 
   return (
     <Head>
-      <link
-        key="theme-fonts-preconnect"
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossOrigin="anonymous"
-      />
-      <link key="theme-fonts" rel="stylesheet" href={fontsUrl} />
-      {headingCss && (
+      {fontsUrl ? (
+        <link
+          key="theme-fonts-preconnect"
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+      ) : null}
+      {fontsUrl ? (
+        <link key="theme-fonts" rel="stylesheet" href={fontsUrl} />
+      ) : null}
+      {headingCss ? (
         <style
           key="theme-heading-font"
-          dangerouslySetInnerHTML={{ __html: headingCss }}
+          dangerouslySetInnerHTML={{
+            __html: `h1,h2,h3,h4,h5,h6{font-family:${headingCss};}`,
+          }}
         />
-      )}
+      ) : null}
     </Head>
   );
 };

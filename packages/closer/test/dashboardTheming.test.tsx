@@ -88,6 +88,20 @@ describe('ThemingPage', () => {
     expect(screen.queryByLabelText('Primary colour')).not.toBeInTheDocument();
   });
 
+  it('does not offer local Layout faces this app does not inject', async () => {
+    setup();
+
+    renderWithNextIntl(<ThemingPage />);
+
+    await userEvent.click(screen.getAllByText('Fonts')[0]);
+
+    const bodyFont = screen.getByLabelText('Body font');
+    expect(bodyFont).toHaveTextContent('Inter');
+    expect(bodyFont).not.toHaveTextContent('Cabinet Grotesk');
+    expect(bodyFont).not.toHaveTextContent('Hoover');
+    expect(bodyFont).not.toHaveTextContent('Sincopa');
+  });
+
   it('tracks how many fields each section has set', async () => {
     setup([
       {
