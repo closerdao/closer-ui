@@ -21,7 +21,10 @@ const POLL_INTERVAL_MS = 30 * 1000;
  * result (`null`/`[]`) so a transient failure can preserve the last good value
  * instead of wiping the standings the member is currently looking at.
  */
-const FETCH_FAILED = Symbol('quest-fetch-failed');
+const FETCH_FAILED: unique symbol = Symbol('quest-fetch-failed');
+
+const orFailed = <T>(promise: Promise<T>): Promise<T | typeof FETCH_FAILED> =>
+  promise.catch((): typeof FETCH_FAILED => FETCH_FAILED);
 
 interface Options {
   quest: Quest | null;
@@ -64,16 +67,12 @@ export const useQuestLiveData = ({
       if (!quiet) setIsLoading(true);
       try {
         const [meResults, leaderboardResults, actions] = await Promise.all([
-          isAuthenticated
-            ? getQuestMe(slug).catch(() => FETCH_FAILED)
-            : null,
+          isAuthenticated ? orFailed(getQuestMe(slug)) : null,
           showLeaderboard
-            ? getQuestLeaderboard(slug, { limit: leaderboardSize }).catch(
-                () => FETCH_FAILED,
-              )
+            ? orFailed(getQuestLeaderboard(slug, { limit: leaderboardSize }))
             : null,
           isAuthenticated && questId
-            ? getMyQuestActions(questId).catch(() => FETCH_FAILED)
+            ? orFailed(getMyQuestActions(questId))
             : [],
         ]);
         // A failed fetch keeps the last good value rather than blanking the UI;
