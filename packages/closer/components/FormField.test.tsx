@@ -79,3 +79,40 @@ describe('FormField multi-select', () => {
     expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
   });
 });
+
+describe('FormField select', () => {
+  const categoryField = {
+    name: 'category',
+    type: 'select',
+    label: 'Category',
+    options: [
+      { label: 'Connection', value: 'connection' },
+      { label: 'Knowledge', value: 'knowledge' },
+    ],
+  };
+
+  it('stays changeable unless isDisabled is set', () => {
+    renderWithNextIntl(
+      <FormField
+        {...categoryField}
+        data={{ category: 'connection' }}
+        update={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('combobox')).not.toBeDisabled();
+  });
+
+  it('honours isDisabled the same way text and switch fields do', () => {
+    renderWithNextIntl(
+      <FormField
+        {...categoryField}
+        data={{ category: 'connection' }}
+        update={jest.fn()}
+        isDisabled
+      />,
+    );
+
+    expect(screen.getByRole('combobox')).toBeDisabled();
+  });
+});
