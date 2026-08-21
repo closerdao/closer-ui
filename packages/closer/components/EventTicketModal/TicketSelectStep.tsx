@@ -119,6 +119,8 @@ const TicketSelectStep = ({
   useEffect(() => {
     if (!selectedOption) {
       onQuoteChange(null);
+      setQuoteError(null);
+      setIsQuoting(false);
       return;
     }
     let cancelled = false;
