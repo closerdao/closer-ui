@@ -660,9 +660,14 @@ export const submitStay = async (id: string): Promise<Stay> => {
 
 export const checkoutStay = async (
   id: string,
-  paymentMethod: string,
+  paymentMethod?: string,
 ): Promise<StayCheckoutResponse> => {
-  const { data } = await api.post(`/stays/${id}/checkout`, { paymentMethod });
+  const trimmed =
+    typeof paymentMethod === 'string' ? paymentMethod.trim() : '';
+  const { data } = await api.post(
+    `/stays/${id}/checkout`,
+    trimmed ? { paymentMethod: trimmed } : {},
+  );
   return (data as ApiOk<StayCheckoutResponse>).results;
 };
 
