@@ -17,26 +17,28 @@ import { useConfig } from '../../../hooks/useConfig';
 import useRBAC from '../../../hooks/useRBAC';
 import models from '../../../models';
 import { GeneralConfig } from '../../../types';
+import { Village } from '../../../types/village';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
+import {
+  Application,
+  fetchVillagesByApplicationIds,
+} from '../../../utils/villageApplication.utils';
 import PageNotFound from '../../not-found';
 
 const LIST_LIMIT = 20;
+
+/**
+ * A federation curates villages rather than members, so each application is a
+ * candidate listing on the map — everywhere else the applications dashboard is
+ * unchanged. Read at call time rather than at module load so the flag can be
+ * flipped per app without the bundle caching a stale value.
+ */
+const isFederation = () => process.env.NEXT_PUBLIC_IS_FEDERATION === 'true';
 
 const STATUSES = ['open', 'conversation', 'approved', 'rejected'] as const;
 
 type ApplicationStatus = (typeof STATUSES)[number];
 type StatusFilter = ApplicationStatus | 'all';
-
-interface Application {
-  _id: string;
-  name?: string;
-  email?: string;
-  phone?: string;
-  status?: ApplicationStatus;
-  created?: string;
-  fields?: Record<string, unknown>;
-  [key: string]: unknown;
-}
 
 /** Fields rendered in the card header rather than in the answers list. */
 const HEADER_FIELDS = ['name', 'email', 'phone'];
@@ -128,6 +130,9 @@ const ApplicationsDashboardPage = () => {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [villagesByApplication, setVillagesByApplication] = useState<
+    Record<string, Village>
+  >({});
 
   const hasAccessToApplications =
     hasAccess('Applications') && isApplicationsEnabled;
@@ -155,6 +160,18 @@ const ApplicationsDashboardPage = () => {
 
       const count = Number(countAction?.results);
       setTotal(Number.isNaN(count) ? rows.length : count);
+
+      if (isFederation()) {
+        // Looked up in one request for the whole page, so a village that was
+        // already created shows as a link instead of a duplicate invitation.
+        setVillagesByApplication(
+          await fetchVillagesByApplicationIds(
+            rows
+              .map((row: Application) => row._id)
+              .filter((id: string | undefined): id is string => Boolean(id)),
+          ),
+        );
+      }
     } catch {
       setError(t('dashboard_applications_error_load'));
       setApplications([]);
@@ -298,10 +315,17 @@ const ApplicationsDashboardPage = () => {
           ) : (
             <div className="flex flex-col gap-4">
               {applications.map((application) => {
-                const status = application.status || 'open';
+                // `status` arrives as a free string; anything unrecognised
+                // reads as open rather than blanking the badge.
+                const status: ApplicationStatus = STATUSES.includes(
+                  application.status as ApplicationStatus,
+                )
+                  ? (application.status as ApplicationStatus)
+                  : 'open';
                 const isExpanded = expandedId === application._id;
                 const isSaving = savingId === application._id;
                 const answers = isExpanded ? getAnswers(application) : [];
+                const village = villagesByApplication[application._id];
 
                 return (
                   <div
@@ -368,6 +392,29 @@ const ApplicationsDashboardPage = () => {
                           {t('dashboard_applications_email_button')}
                         </LinkButton>
                       )}
+
+                      {isFederation() &&
+                        (village ? (
+                          <LinkButton
+                            href={`/villages/${village.slug || village._id}`}
+                            variant="inline"
+                            size="small"
+                            isFullWidth={false}
+                          >
+                            {t('dashboard_applications_view_village')}
+                          </LinkButton>
+                        ) : (
+                          <LinkButton
+                            href={`/villages/create?applicationId=${encodeURIComponent(
+                              application._id,
+                            )}`}
+                            variant="inline"
+                            size="small"
+                            isFullWidth={false}
+                          >
+                            {t('dashboard_applications_create_village')}
+                          </LinkButton>
+                        ))}
 
                       {status === 'open' && (
                         <Button

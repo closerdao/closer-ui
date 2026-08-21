@@ -81,6 +81,9 @@ export type Stay = {
   volunteerId?: string;
   volunteerInfo?: VolunteerInfo;
   ticketOption?: { name?: string } | null;
+  /** PATCH options writes a bare code; the stay comes back carrying the whole
+   * matched discount, so both shapes have to be read. */
+  eventDiscount?: string | { code?: string } | null;
   foodOption?: string;
   foodOptionId?: string | null;
   doesNeedPickup?: boolean;

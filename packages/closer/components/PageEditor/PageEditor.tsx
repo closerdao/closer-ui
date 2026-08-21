@@ -67,7 +67,7 @@ interface Props {
   pages: PageListItem[];
 }
 
-const PAGES_FILTER = {};
+const PAGES_FILTER = { limit: 200 };
 
 function toPlain<T>(x: T): T {
   if (x != null && typeof (x as { toJS?: () => T }).toJS === 'function') {

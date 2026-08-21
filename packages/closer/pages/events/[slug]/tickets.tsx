@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { useEffect, useState } from 'react';
 
+import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import Pagination from '../../../components/Pagination';
 import TicketListPreview from '../../../components/TicketListPreview';
 import Heading from '../../../components/ui/Heading';
@@ -11,16 +12,15 @@ import { ArrowLeft } from 'lucide-react';
 import { NextApiRequest, NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
-import { TICKETS_PER_PAGE } from '../../../constants';
 import PageNotAllowed from '../../401';
+import config from '../../../configCached';
+import { TICKETS_PER_PAGE } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
 import { Event } from '../../../types';
-import config from '../../../configCached';
 import api from '../../../utils/api';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageNotFound from '../../not-found';
 
 interface EventsConfig {
@@ -111,7 +111,10 @@ const EventTickets = ({ event, eventsConfig }: Props) => {
           {event.name}
         </Link>
         <div className="mb-10">
-          <Heading level={2} className="text-2xl md:text-3xl font-semibold text-gray-900">
+          <Heading
+            level={2}
+            className="text-2xl md:text-3xl font-semibold text-gray-900"
+          >
             {t('events_slug_tickets_title')}
           </Heading>
           {totalTickets > 0 && (
@@ -123,12 +126,17 @@ const EventTickets = ({ event, eventsConfig }: Props) => {
         {tickets && tickets.count() > 0 ? (
           <div className="space-y-4">
             {tickets.map((ticket: any) => (
-              <TicketListPreview key={ticket.get('_id')} ticket={ticket} />
+              <TicketListPreview
+                key={ticket.get('_id')}
+                ticket={ticket.toJS()}
+              />
             ))}
           </div>
         ) : (
           <div className="bg-gray-50 rounded-xl border border-gray-100 p-12 text-center">
-            <p className="text-gray-500 italic">{t('events_slug_tickets_error')}</p>
+            <p className="text-gray-500 italic">
+              {t('events_slug_tickets_error')}
+            </p>
           </div>
         )}
         <div className="mt-10">
@@ -147,13 +155,13 @@ EventTickets.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
   try {
     const eventRes = await api
-        .get(`/event/${query.slug}`, {
-          headers: getBearerAuthHeaders(req as NextApiRequest),
-        })
-        .catch((err) => {
-          console.error('Error fetching event:', err);
-          return null;
-        })
+      .get(`/event/${query.slug}`, {
+        headers: getBearerAuthHeaders(req as NextApiRequest),
+      })
+      .catch((err) => {
+        console.error('Error fetching event:', err);
+        return null;
+      });
 
     const event = eventRes?.data?.results;
     const eventsConfig = config.events;

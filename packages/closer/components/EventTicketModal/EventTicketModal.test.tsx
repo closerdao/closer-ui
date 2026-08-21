@@ -1,0 +1,384 @@
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+
+import { renderWithNextIntl } from '../../test/utils';
+import EventTicketModal from './EventTicketModal';
+
+jest.mock('../../utils/api.js', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn(() => Promise.resolve({ data: { results: [] } })),
+    post: jest.fn(() => Promise.resolve({ data: {} })),
+    patch: jest.fn(() => Promise.resolve({ data: {} })),
+    delete: jest.fn(() => Promise.resolve({ data: {} })),
+  },
+  cdn: '',
+  formatSearch: (where: unknown) => JSON.stringify(where),
+}));
+
+// Stripe only matters once a card is in play; the free and hand-off paths
+// never touch it, and the card path is driven through this mock.
+const confirmCardPayment = jest.fn();
+
+jest.mock('@stripe/stripe-js', () => ({
+  loadStripe: jest.fn(() => Promise.resolve(null)),
+}));
+
+jest.mock('@stripe/react-stripe-js', () => ({
+  Elements: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useStripe: () => ({ confirmCardPayment }),
+  useElements: () => ({ getElement: () => ({}) }),
+  CardElement: ({ onChange }: { onChange: (e: any) => void }) => (
+    <button
+      type="button"
+      data-testid="card-element"
+      onClick={() => onChange({ empty: false, error: null })}
+    >
+      card
+    </button>
+  ),
+}));
+
+const api = jest.requireMock('../../utils/api.js').default as {
+  get: jest.Mock;
+  post: jest.Mock;
+};
+
+const routerPush = jest.fn();
+
+jest.mock('next/router', () => ({
+  useRouter: () => ({
+    query: {},
+    pathname: '/events/confluencia',
+    asPath: '/events/confluencia',
+    isReady: true,
+    replace: jest.fn(),
+    push: routerPush,
+    prefetch: jest.fn(),
+    events: { on: jest.fn(), off: jest.fn(), emit: jest.fn() },
+  }),
+}));
+
+let mockUser: any = null;
+
+jest.mock('../../contexts/auth', () => ({
+  useAuth: () => ({ isAuthenticated: !!mockUser, user: mockUser }),
+}));
+
+const event = {
+  _id: 'event-1',
+  name: 'Confluência',
+  slug: 'confluencia',
+  paid: true,
+  start: '2026-09-24T14:00:00.000Z',
+  end: '2026-09-27T13:00:00.000Z',
+  ticketOptions: [],
+} as any;
+
+const ticketOptions = [
+  {
+    name: '3-day Ticket (At Cost)',
+    price: 60,
+    currency: 'EUR',
+    limit: 52,
+    available: 52,
+  },
+  {
+    name: 'Day Ticket - Saturday',
+    price: 45,
+    currency: 'EUR',
+    limit: 40,
+    available: 40,
+    isDayTicket: true,
+  },
+];
+
+const coveringBooking = {
+  _id: 'booking-1',
+  start: '2026-09-23T14:00:00.000Z',
+  end: '2026-09-28T11:00:00.000Z',
+  status: 'paid',
+  listing: 'listing-1',
+};
+
+const quoteFor = (unit: number, quantity = 1) => ({
+  eventId: 'event-1',
+  quantity,
+  currency: 'EUR',
+  listUnitPrice: { val: unit, cur: 'EUR' },
+  unitPrice: { val: unit, cur: 'EUR' },
+  total: { val: unit * quantity, cur: 'EUR' },
+  discountApplied: false,
+  discountRejected: false,
+});
+
+const mockApi = ({
+  bookings = [] as unknown[],
+  quote = quoteFor(60),
+  init = {
+    ticketId: 'ticket-9',
+    status: 'pending-payment',
+    paymentMethod: 'card',
+    total: { val: 60, cur: 'EUR' },
+    clientSecret: 'secret',
+    paymentIntentId: 'pi_1',
+  },
+} = {}) => {
+  api.get.mockImplementation((url: string) => {
+    if (url.includes('/tickets/event/')) {
+      return Promise.resolve({ data: { results: { ticketOptions } } });
+    }
+    if (url === '/booking') {
+      return Promise.resolve({ data: { results: bookings } });
+    }
+    return Promise.resolve({ data: { results: [] } });
+  });
+  api.post.mockImplementation((url: string) => {
+    if (url === '/tickets/quote') {
+      return Promise.resolve({ data: { results: quote } });
+    }
+    if (url === '/tickets/init') {
+      return Promise.resolve({ data: { results: init } });
+    }
+    if (url.includes('/confirm-card')) {
+      return Promise.resolve({
+        data: { results: { status: 'success', ticketId: 'ticket-9' } },
+      });
+    }
+    return Promise.resolve({ data: { results: {} } });
+  });
+};
+
+const renderModal = () =>
+  renderWithNextIntl(<EventTicketModal event={event} closeModal={jest.fn()} />);
+
+const pickTicket = async (name: string) =>
+  userEvent.click(await screen.findByText(name));
+
+const clickButton = (name: RegExp) =>
+  userEvent.click(screen.getByRole('button', { name }));
+
+describe('EventTicketModal', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUser = { _id: 'user-1', email: 'guest@example.com', roles: [] };
+    confirmCardPayment.mockResolvedValue({
+      paymentIntent: { id: 'pi_1', status: 'succeeded' },
+    });
+    mockApi();
+  });
+
+  it('lists day tickets alongside overnight tickets', async () => {
+    renderModal();
+
+    expect(
+      await screen.findByText('Day Ticket - Saturday'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('3-day Ticket (At Cost)')).toBeInTheDocument();
+  });
+
+  it('prices the selection on the server rather than in the client', async () => {
+    renderModal();
+    await pickTicket('3-day Ticket (At Cost)');
+
+    await waitFor(() =>
+      expect(api.post).toHaveBeenCalledWith('/tickets/quote', {
+        eventId: 'event-1',
+        ticketOption: '3-day Ticket (At Cost)',
+        quantity: 1,
+      }),
+    );
+  });
+
+  it('hands an overnight ticket to the booking flow with the ticket chosen', async () => {
+    renderModal();
+    await pickTicket('3-day Ticket (At Cost)');
+
+    expect(
+      screen.getByText(/pick where to sleep for the 3 nights/i),
+    ).toBeInTheDocument();
+
+    await clickButton(/choose accommodation/i);
+
+    const url = routerPush.mock.calls[0][0] as string;
+    expect(url).toContain('/stay/create');
+    expect(url).toContain('eventId=event-1');
+    expect(url).toContain('ticketOption=3-day+Ticket+%28At+Cost%29');
+  });
+
+  it('carries the tickets bought into the booking flow as the party size', async () => {
+    renderModal();
+    await pickTicket('3-day Ticket (At Cost)');
+
+    await userEvent.selectOptions(screen.getByLabelText(/tickets/i), '3');
+    await clickButton(/choose accommodation/i);
+
+    const url = routerPush.mock.calls[0][0] as string;
+    expect(url).toContain('adults=3');
+  });
+
+  it('books one bed when the guest never touches the quantity', async () => {
+    renderModal();
+    await pickTicket('3-day Ticket (At Cost)');
+    await clickButton(/choose accommodation/i);
+
+    expect(routerPush.mock.calls[0][0]).toContain('adults=1');
+  });
+
+  it('sells a day ticket without leaving the modal', async () => {
+    mockApi({ quote: quoteFor(45) });
+    renderModal();
+    await pickTicket('Day Ticket - Saturday');
+
+    expect(screen.getByText(/don't need accommodation/i)).toBeInTheDocument();
+
+    await clickButton(/continue to payment/i);
+
+    expect(routerPush).not.toHaveBeenCalled();
+    expect(await screen.findByText(/pay for your ticket/i)).toBeInTheDocument();
+  });
+
+  it('sells a ticket alone when a booking already covers the event', async () => {
+    mockApi({ bookings: [coveringBooking] });
+    renderModal();
+    await pickTicket('3-day Ticket (At Cost)');
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(/already covers accommodation/i),
+      ).toBeInTheDocument(),
+    );
+
+    await clickButton(/continue to payment/i);
+
+    expect(routerPush).not.toHaveBeenCalled();
+    expect(await screen.findByText(/pay for your ticket/i)).toBeInTheDocument();
+  });
+
+  it('still asks for accommodation when the booking only partly overlaps', async () => {
+    mockApi({
+      bookings: [{ ...coveringBooking, end: '2026-09-26T11:00:00.000Z' }],
+    });
+    renderModal();
+    await pickTicket('3-day Ticket (At Cost)');
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(/pick where to sleep for the 3 nights/i),
+      ).toBeInTheDocument(),
+    );
+
+    await clickButton(/choose accommodation/i);
+    expect(routerPush.mock.calls[0][0]).toContain('/stay/create');
+  });
+
+  it('pays by card and lands on the celebration', async () => {
+    mockApi({ quote: quoteFor(45) });
+    renderModal();
+    await pickTicket('Day Ticket - Saturday');
+    await clickButton(/continue to payment/i);
+
+    await userEvent.click(await screen.findByTestId('card-element'));
+    await clickButton(/pay now/i);
+
+    await waitFor(() =>
+      expect(api.post).toHaveBeenCalledWith('/tickets/init', {
+        eventId: 'event-1',
+        ticketOption: 'Day Ticket - Saturday',
+        quantity: 1,
+        paymentMethod: 'card',
+        email: 'guest@example.com',
+      }),
+    );
+    expect(confirmCardPayment).toHaveBeenCalledWith(
+      'secret',
+      expect.anything(),
+    );
+    await waitFor(() =>
+      expect(api.post).toHaveBeenCalledWith('/tickets/ticket-9/confirm-card', {
+        paymentIntentId: 'pi_1',
+      }),
+    );
+    // Twice: the confetti overlay and the modal underneath it.
+    expect(await screen.findAllByText(/you're going to/i)).toHaveLength(2);
+  });
+
+  it('claims a free ticket without asking for a card', async () => {
+    mockApi({
+      quote: quoteFor(0),
+      init: {
+        ticketId: 'ticket-free',
+        status: 'approved',
+        paymentMethod: 'free',
+        total: { val: 0, cur: 'EUR' },
+      } as any,
+    });
+    renderModal();
+    await pickTicket('Day Ticket - Saturday');
+    await clickButton(/continue to payment/i);
+
+    await clickButton(/get my ticket/i);
+
+    await waitFor(() =>
+      expect(api.post).toHaveBeenCalledWith('/tickets/init', {
+        eventId: 'event-1',
+        ticketOption: 'Day Ticket - Saturday',
+        quantity: 1,
+        email: 'guest@example.com',
+      }),
+    );
+    // Twice: the confetti overlay and the modal underneath it.
+    expect(await screen.findAllByText(/you're going to/i)).toHaveLength(2);
+  });
+
+  it('gives the held seat back when the guest backs out of payment', async () => {
+    mockApi({ quote: quoteFor(45) });
+    renderModal();
+    await pickTicket('Day Ticket - Saturday');
+    await clickButton(/continue to payment/i);
+
+    await userEvent.click(await screen.findByTestId('card-element'));
+    // Start the purchase, then leave before paying.
+    confirmCardPayment.mockResolvedValueOnce({
+      error: { message: 'Card declined' },
+    });
+    await clickButton(/pay now/i);
+    await screen.findByText('Card declined');
+
+    await clickButton(/back to tickets/i);
+
+    await waitFor(() =>
+      expect(api.post).toHaveBeenCalledWith('/tickets/ticket-9/cancel', {
+        reason: 'checkout abandoned',
+      }),
+    );
+  });
+
+  it('never asks a virtual event for accommodation', async () => {
+    renderWithNextIntl(
+      <EventTicketModal
+        event={{ ...event, virtual: true }}
+        closeModal={jest.fn()}
+      />,
+    );
+    await pickTicket('3-day Ticket (At Cost)');
+
+    await clickButton(/continue to payment/i);
+
+    expect(routerPush).not.toHaveBeenCalled();
+    expect(await screen.findByText(/pay for your ticket/i)).toBeInTheDocument();
+  });
+
+  it('sends a signed out guest to log in and back to the event', async () => {
+    mockUser = null;
+    mockApi({ quote: quoteFor(45) });
+    renderModal();
+    await pickTicket('Day Ticket - Saturday');
+
+    await clickButton(/login/i);
+
+    const url = routerPush.mock.calls[0][0] as string;
+    expect(url).toContain('/login?back=');
+    expect(url).toContain('confluencia');
+  });
+});

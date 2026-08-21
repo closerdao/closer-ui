@@ -244,6 +244,10 @@ export const getSample = (field) => {
       ];
     case 'fields':
       return [];
+    // Every bucket is optional — an event that sets nothing falls back to the
+    // booking settings, so a fresh event must not post an empty policy object.
+    case 'cancellationPolicy':
+      return undefined;
     case 'discounts':
       return [
         {

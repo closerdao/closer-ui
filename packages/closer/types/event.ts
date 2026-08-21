@@ -27,6 +27,8 @@ export type Event = {
   partners: Partner[];
   transportOptions: TransportOption[];
   discounts: Discount[];
+  cancellationPolicy?: CancellationPolicy;
+  cancellationPolicyDisclaimer?: string;
   capacity: number;
   used: string;
   start: string;
@@ -41,6 +43,23 @@ export type Event = {
   visual?: string;
   featured?: boolean;
 };
+/**
+ * Per-event override of the platform cancellation policy. Buckets hold the
+ * fraction of the ticket price refunded — 1 is a full refund, 0 nothing — and
+ * any bucket left unset falls back to the booking settings.
+ */
+export type CancellationPolicy = {
+  refundable?: boolean;
+  /** More than 30 days before the event starts. */
+  default?: number;
+  /** 30 to 8 days before. */
+  lastmonth?: number;
+  /** 7 to 2 days before. */
+  lastweek?: number;
+  /** Less than 2 days before. */
+  lastday?: number;
+};
+
 export type TicketOption = {
   name: string;
   icon: unknown | null;
