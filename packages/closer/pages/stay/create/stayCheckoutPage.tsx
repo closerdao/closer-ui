@@ -119,6 +119,7 @@ import {
   submitStay,
   updateStayOptions,
 } from '../../../utils/stays.api';
+import { getStayEventTicketDiscount } from '../../../utils/tickets.helpers';
 
 dayjs.extend(dayOfYear);
 
@@ -130,6 +131,9 @@ const stripePromise = process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY
 
 const formatModalTwoDecimals = (value: number) =>
   Number.isFinite(value) ? value.toFixed(2) : '0.00';
+
+const readQueryParam = (value: string | string[] | undefined) =>
+  Array.isArray(value) ? value[0] : value;
 
 const StayCheckoutFoodPhotoPreview = ({
   option,
@@ -594,17 +598,23 @@ const StayCheckoutContent = ({
         setStayEvent(event);
         const rawOptions: TicketOption[] =
           availabilityRes?.data?.ticketOptions || event?.ticketOptions || [];
-        const overnight = rawOptions.filter(
-          (option) => !option.isDayTicket && option.available > 0,
+        // A stay that holds a listing is an overnight stay, so a day ticket
+        // would not match it. A stay without one buys event access only and
+        // can carry either kind — a day ticket, or a full ticket for a guest
+        // whose own booking already covers the nights.
+        const relevant = rawOptions.filter(
+          (option) =>
+            option.available > 0 &&
+            (currentStay.listing ? !option.isDayTicket : true),
         );
-        setEventTicketOptions(overnight);
+        setEventTicketOptions(relevant);
         const savedName = currentStay.ticketOption?.name;
         const matched = savedName
-          ? overnight.find((option) => option.name === savedName) || null
+          ? relevant.find((option) => option.name === savedName) || null
           : null;
         setSelectedTicketOption((prev) => {
           if (matched) return matched;
-          if (prev && overnight.some((option) => option.name === prev.name)) {
+          if (prev && relevant.some((option) => option.name === prev.name)) {
             return prev;
           }
           return null;
@@ -622,7 +632,7 @@ const StayCheckoutContent = ({
     return () => {
       cancelled = true;
     };
-  }, [currentStay.eventId]);
+  }, [currentStay.eventId, currentStay.listing]);
 
   useEffect(() => {
     if (isStayPaid(currentStay)) {
@@ -792,11 +802,55 @@ const StayCheckoutContent = ({
   );
 
   const stayEventId = currentStay.eventId;
+  const queryTicketName = readQueryParam(router.query.ticketOption);
+  const queryDiscountCode = normalizeDiscountCode(
+    readQueryParam(router.query.discountCode) || '',
+  );
+  /**
+   * A ticket named in the URL is only worth trusting while it could still be
+   * bought — a sold out or renamed option has to fall back to the picker rather
+   * than leave the guest with a ticket that no longer exists.
+   */
+  const isQueryTicketUsable =
+    Boolean(queryTicketName) &&
+    (isLoadingEventTickets ||
+      eventTicketOptions.some((option) => option.name === queryTicketName));
+  /** Chosen in the event page ticket modal, and carried here on the stay or,
+   * for a stay created before the ticket could be written to it, in the URL. */
+  const preChosenTicketName =
+    currentStay.ticketOption?.name ||
+    (isQueryTicketUsable ? queryTicketName : undefined);
+  // Re-asking for a ticket the guest already picked is the same interaction
+  // twice, so the picker only appears when nothing is on the stay yet.
   const showEventTicketSelection =
-    !isFriend && Boolean(stayEventId) && Boolean(stayEvent?.paid);
+    !isFriend &&
+    Boolean(stayEventId) &&
+    Boolean(stayEvent?.paid) &&
+    !preChosenTicketName;
   const hasValidEventTicket =
     !stayEvent?.paid ||
-    Boolean(selectedTicketOption?.name || currentStay.ticketOption?.name);
+    Boolean(selectedTicketOption?.name || preChosenTicketName);
+  const appliedEventDiscountCode =
+    normalizeDiscountCode(currentStay.eventDiscount) ||
+    normalizeDiscountCode(eventDiscountCode) ||
+    queryDiscountCode ||
+    null;
+  const eventPriceDetail = useMemo(
+    () =>
+      getStayEventTicketDiscount({
+        eventLine: currentStay.priceLock?.lines.event,
+        ticketName: currentStay.ticketOption?.name || preChosenTicketName,
+        ticketOptions: eventTicketOptions,
+        discountCode: appliedEventDiscountCode,
+      }),
+    [
+      currentStay.priceLock,
+      currentStay.ticketOption?.name,
+      preChosenTicketName,
+      eventTicketOptions,
+      appliedEventDiscountCode,
+    ],
+  );
   const eventFoodOptionSet = Boolean(
     stayEvent?.foodOption === 'food_package'
       ? stayEvent?.foodOptionId
@@ -1411,6 +1465,41 @@ const StayCheckoutContent = ({
     }
   };
 
+  /**
+   * The stay is created before the guest lands here, so a ticket chosen on the
+   * event page can arrive in the URL without ever being written to the stay.
+   * Save it once the options confirm it is real, so checkout prices the ticket
+   * the guest actually picked.
+   */
+  const healedTicketRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!stayEventId || isFriend) return;
+    if (currentStay.ticketOption?.name) return;
+    if (!queryTicketName || isLoadingEventTickets) return;
+    const match = eventTicketOptions.find(
+      (option) => option.name === queryTicketName,
+    );
+    if (!match) return;
+    const key = `${currentStay._id}_${queryTicketName}`;
+    if (healedTicketRef.current === key) return;
+    healedTicketRef.current = key;
+    setSelectedTicketOption(match);
+    if (queryDiscountCode) setEventDiscountCode(queryDiscountCode);
+    void persistEventTicketOptions({
+      ticketOption: queryTicketName,
+      ...(queryDiscountCode ? { eventDiscount: queryDiscountCode } : {}),
+    });
+  }, [
+    stayEventId,
+    isFriend,
+    currentStay._id,
+    currentStay.ticketOption?.name,
+    queryTicketName,
+    queryDiscountCode,
+    isLoadingEventTickets,
+    eventTicketOptions,
+  ]);
+
   const handleSelectTicketOption = (ticket: object) => {
     const next = ticket as TicketOption;
     setSelectedTicketOption(next);
@@ -1933,6 +2022,23 @@ const StayCheckoutContent = ({
               )}
           </div>
         </BookingSurface>
+
+        {/* The ticket is already decided — shown, not asked for again. */}
+        {!isFriend &&
+          Boolean(stayEventId) &&
+          Boolean(stayEvent?.paid) &&
+          preChosenTicketName && (
+            <BookingSurface as="section" tone="elevated" padding="lg">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-sm text-gray-600">
+                  {t('bookings_dates_step_tickets_title')}
+                </span>
+                <strong className="text-sm">
+                  {preChosenTicketName.split('_').join(' ')}
+                </strong>
+              </div>
+            </BookingSurface>
+          )}
 
         {showEventTicketSelection && (
           <BookingSurface as="section" tone="elevated" padding="lg">
@@ -2488,10 +2594,39 @@ const StayCheckoutContent = ({
                 />
               )}
               {priceLock.lines.event.val > 0 && (
-                <Row
-                  label={t('stay_create_line_event')}
-                  value={formatStayMoney(priceLock.lines.event)}
-                />
+                <div className="flex flex-col gap-1">
+                  <div className="flex justify-between items-baseline gap-2">
+                    <span className="text-gray-600">
+                      {t('stay_create_line_event')}
+                    </span>
+                    <div className="text-right text-gray-900">
+                      {eventPriceDetail ? (
+                        <div className="flex flex-col items-end gap-0.5">
+                          <span className="line-through text-gray-500">
+                            {formatStayMoney(eventPriceDetail.gross)}
+                          </span>
+                          <span>{formatStayMoney(eventPriceDetail.net)}</span>
+                        </div>
+                      ) : (
+                        <span>{formatStayMoney(priceLock.lines.event)}</span>
+                      )}
+                    </div>
+                  </div>
+                  {eventPriceDetail && (
+                    <div className="flex justify-end gap-2 text-xs text-gray-600">
+                      <span>
+                        {eventPriceDetail.code
+                          ? t('ticket_list_discount_with_code', {
+                              code: eventPriceDetail.code,
+                            })
+                          : t('ticket_list_discount')}
+                      </span>
+                      <span className="text-success">
+                        -{formatStayMoney(eventPriceDetail.savings)}
+                      </span>
+                    </div>
+                  )}
+                </div>
               )}
               {/* platformFee is carved out of the lines above, not added on top
                   of them — its own row read as an extra charge. */}

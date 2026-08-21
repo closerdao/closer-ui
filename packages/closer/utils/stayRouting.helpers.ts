@@ -90,6 +90,32 @@ export function buildStayCreateEventHref(
   return `/stay/create?${q.toString()}`;
 }
 
+export type StayCheckoutHrefParams = {
+  ticketOption?: string | null;
+  discountCode?: string | null;
+};
+
+/**
+ * The checkout page loads the stay by id, so anything the guest chose before
+ * the stay existed — the event ticket, the discount code that goes with it —
+ * only reaches it through the URL. Carrying it here lets checkout write it onto
+ * the stay instead of asking for it a second time.
+ */
+export function buildStayCheckoutHref(
+  stayId: string,
+  params: StayCheckoutHrefParams = {},
+): string {
+  const q = new URLSearchParams();
+  if (params.ticketOption) {
+    q.set('ticketOption', params.ticketOption);
+  }
+  if (params.discountCode) {
+    q.set('discountCode', normalizeDiscountCode(params.discountCode));
+  }
+  const qs = q.toString();
+  return `/stay/create/${stayId}${qs ? `?${qs}` : ''}`;
+}
+
 export function buildStayCreateHrefFromStay(stay: Stay): string {
   const q = new URLSearchParams();
   if (stay.start) {

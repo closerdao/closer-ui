@@ -28,6 +28,7 @@ const PAYMENT_METHOD_OPTIONS = [
   { value: 'crypto', labelKey: 'manual_sale_payment_method_crypto' },
   { value: 'cash', labelKey: 'manual_sale_payment_method_cash' },
   { value: 'third-party', labelKey: 'manual_sale_payment_method_third_party' },
+  { value: 'other', labelKey: 'manual_sale_payment_method_other' },
 ] as const;
 
 const STATUS_OPTIONS = [

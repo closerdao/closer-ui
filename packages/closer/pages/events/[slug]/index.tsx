@@ -7,7 +7,9 @@ import { useEffect, useRef, useState } from 'react';
 import EventAttendees from '../../../components/EventAttendees';
 import EventDescription from '../../../components/EventDescription';
 import EventPhotoUploadSection from '../../../components/EventPhotoUpload';
+import EventTicketModal from '../../../components/EventTicketModal';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
+import MyEventTickets from '../../../components/MyEventTickets';
 import Photo from '../../../components/Photo';
 import SignupModal from '../../../components/SignupModal';
 import UserAvatarPlaceholder from '../../../components/UserAvatarPlaceholder';
@@ -30,13 +32,11 @@ import { CloserCurrencies } from '../../../types/currency';
 import api, { cdn } from '../../../utils/api';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
-import { getAccommodationPriceRange } from '../../../utils/events.helpers';
 import {
-  getBookingRate,
-  getDiscountRate,
-  prependHttp,
-  priceFormat,
-} from '../../../utils/helpers';
+  getAccommodationPriceRange,
+  getEventNights,
+} from '../../../utils/events.helpers';
+import { prependHttp, priceFormat } from '../../../utils/helpers';
 import { linkedMetricFields, logMetric } from '../../../utils/metrics';
 import { getSiteUrl } from '../../../utils/siteUrl';
 import PageNotFound from '../../not-found';
@@ -79,6 +79,9 @@ const EventPage = ({
   const [isShowingEvent, setIsShowingEvent] = useState(true);
   const [passwordError] = useState<null | string>(null);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
+  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+  /** Bumped after a purchase so the tickets card picks the new one up. */
+  const [ticketsRefreshKey, setTicketsRefreshKey] = useState(0);
   const [apiError, setApiError] = useState<string | null>(null);
 
   const eventDetailMetricLoggedRef = useRef<string | null>(null);
@@ -99,13 +102,6 @@ const EventPage = ({
     ? user?._id === event?.createdBy || user?.roles.includes('admin')
     : false;
 
-  const myTicketFilter = event && {
-    where: {
-      event: event?._id,
-      status: 'approved',
-      email: user && user.email,
-    },
-  };
   const allTicketFilter = event && {
     where: {
       event: event._id,
@@ -119,13 +115,7 @@ const EventPage = ({
   const isThisYear = dayjs().isSame(start, 'year');
   const dateFormat = isThisYear ? 'MMM D' : 'YYYY MMMM';
 
-  const durationInDays = dayjs(end).diff(dayjs(start), 'day');
-
-  const durationName = getBookingRate(durationInDays);
-
-  const discountRate = settings
-    ? 1 - getDiscountRate(durationName, settings)
-    : 0;
+  const durationInDays = getEventNights(event?.start, event?.end);
 
   const {
     min: minAccommodationPrice,
@@ -133,7 +123,13 @@ const EventPage = ({
     currency: accommodationCurrency,
   } = getAccommodationPriceRange(settings, listings, durationInDays, start);
 
-  const myTickets = platform.ticket.find(myTicketFilter);
+  /** Nothing worth showing when no event listing carries a price. */
+  const hasAccommodationPrice = maxAccommodationPrice > 0;
+
+  const hasTicketOptions = Boolean(event?.paid && event?.ticketOptions?.length);
+  const stayCreateHref = `/stay/create?eventId=${event?._id}&start=${
+    start ? start.format('YYYY-MM-DD') : ''
+  }&end=${end ? end.format('YYYY-MM-DD') : ''}`;
 
   const ticketsCount = event?.ticketOptions
     ? (platform.ticket.findCount(allTicketFilter) || event?.attendees?.length) -
@@ -172,7 +168,6 @@ const EventPage = ({
       await Promise.all([
         // Load attendees list
         platform.user.get(params),
-        platform.ticket.get(myTicketFilter),
         platform.ticket.getCount(allTicketFilter),
       ]);
     }
@@ -399,6 +394,17 @@ const EventPage = ({
               </div>
             )}
           </section>
+
+          {isAuthenticated && (
+            <section className="w-full flex justify-center px-4 sm:px-0">
+              <div className="max-w-4xl w-full">
+                <MyEventTickets
+                  eventId={event._id}
+                  refreshKey={ticketsRefreshKey}
+                />
+              </div>
+            </section>
+          )}
 
           <section className=" w-full flex justify-center">
             <div className="max-w-4xl w-full">
@@ -640,6 +646,7 @@ const EventPage = ({
                               );
                             })()}
                             {durationInDays > 0 &&
+                              hasAccommodationPrice &&
                               APP_NAME &&
                               APP_NAME !== 'lios' &&
                               !(
@@ -661,22 +668,20 @@ const EventPage = ({
                                   },
                                 )
                               ) && (
-                                <>
-                                  <div className="text-sm">
-                                    {t('events_accommodation')}{' '}
-                                    <strong>
-                                      {priceFormat(
-                                        minAccommodationPrice * discountRate,
-                                        accommodationCurrency as CloserCurrencies,
-                                      )}{' '}
-                                      -{' '}
-                                      {priceFormat(
-                                        maxAccommodationPrice * discountRate,
-                                        accommodationCurrency as CloserCurrencies,
-                                      )}
-                                    </strong>
-                                  </div>
-                                </>
+                                <div className="text-sm">
+                                  {t('events_accommodation')}{' '}
+                                  <strong>
+                                    {priceFormat(
+                                      minAccommodationPrice,
+                                      accommodationCurrency as CloserCurrencies,
+                                    )}{' '}
+                                    -{' '}
+                                    {priceFormat(
+                                      maxAccommodationPrice,
+                                      accommodationCurrency as CloserCurrencies,
+                                    )}
+                                  </strong>
+                                </div>
                               )}
                             <div>
                               {/* Event uses an external ticketing system */}
@@ -693,26 +698,6 @@ const EventPage = ({
                                 </Link>
                               ) : event.paid || durationInDays > 0 ? (
                                 <>
-                                  {myTickets && (
-                                    <div>
-                                      <Heading level={4}>Tickets</Heading>
-                                      <ul className="space-y-2 divide-y mb-3">
-                                        {myTickets.map((ticket: any) => (
-                                          <li key={ticket.get('_id')}>
-                                            <Link
-                                              href={`/tickets/${ticket.get(
-                                                '_id',
-                                              )}`}
-                                              className="text-accent"
-                                            >
-                                              {ticket.get('name')} x{' '}
-                                              {ticket.get('quantity') || 1}
-                                            </Link>
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  )}
                                   {end &&
                                     end.isAfter(dayjs()) &&
                                     (event.stripePub ||
@@ -738,49 +723,35 @@ const EventPage = ({
                                       )
                                     ) && (
                                       <>
-                                        {event.requireApproval && (
-                                          <p className="text-sm text-gray-600 mb-2">
-                                            {t(
-                                              'bookings_event_requires_approval',
-                                            )}
-                                          </p>
+                                        {/* Which ticket the guest wants decides
+                                            whether they need a bed at all, so a
+                                            paid event asks for the ticket first
+                                            instead of opening on the
+                                            accommodation search. */}
+                                        {hasTicketOptions ? (
+                                          <Button
+                                            onClick={() =>
+                                              setIsTicketModalOpen(true)
+                                            }
+                                          >
+                                            {t('events_buy_ticket_button')}
+                                          </Button>
+                                        ) : (
+                                          <LinkButton
+                                            href={
+                                              isAuthenticated
+                                                ? stayCreateHref
+                                                : `/login?back=${encodeURIComponent(
+                                                    stayCreateHref,
+                                                  )}`
+                                            }
+                                            className=""
+                                          >
+                                            {isAuthenticated
+                                              ? t('events_buy_ticket_button')
+                                              : t('events_login_to_book')}
+                                          </LinkButton>
                                         )}
-                                        <LinkButton
-                                          href={
-                                            isAuthenticated
-                                              ? `/stay/create?eventId=${
-                                                  event._id
-                                                }&start=${
-                                                  start
-                                                    ? start.format('YYYY-MM-DD')
-                                                    : ''
-                                                }&end=${
-                                                  end
-                                                    ? end.format('YYYY-MM-DD')
-                                                    : ''
-                                                }`
-                                              : `/login?back=${encodeURIComponent(
-                                                  `/stay/create?eventId=${
-                                                    event._id
-                                                  }&start=${
-                                                    start
-                                                      ? start.format(
-                                                          'YYYY-MM-DD',
-                                                        )
-                                                      : ''
-                                                  }&end=${
-                                                    end
-                                                      ? end.format('YYYY-MM-DD')
-                                                      : ''
-                                                  }`,
-                                                )}`
-                                          }
-                                          className=""
-                                        >
-                                          {isAuthenticated
-                                            ? t('events_buy_ticket_button')
-                                            : t('events_login_to_book')}
-                                        </LinkButton>
                                       </>
                                     )}
                                 </>
@@ -993,6 +964,15 @@ const EventPage = ({
         onSuccess={handleSignupSuccess}
         eventId={event._id || ''}
       />
+      {isTicketModalOpen && (
+        <EventTicketModal
+          event={event}
+          closeModal={() => {
+            setIsTicketModalOpen(false);
+            setTicketsRefreshKey((key) => key + 1);
+          }}
+        />
+      )}
     </>
   );
 };

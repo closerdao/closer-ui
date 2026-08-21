@@ -35,6 +35,7 @@ export type SectionType =
   | 'fundraiserRewards'
   | 'teamStructure'
   | 'teamMembers'
+  | 'teamDirectory'
   | 'teamDepartments'
   | 'teamPartners'
   | 'teamGovernance'

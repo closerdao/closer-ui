@@ -27,6 +27,10 @@ import {
 } from '../../utils/authStorage';
 import { parseMessageFromError } from '../../utils/common';
 import { clearInteractionSession } from '../../utils/interactionSession';
+import {
+  formatErrorForReport,
+  reportIssue,
+} from '../../utils/reporting.utils';
 import { AuthenticationContext, User } from './types';
 
 export const AuthContext = createContext<AuthenticationContext | null>(null);
@@ -233,6 +237,14 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
             console.error(
               'Failed to subscribe email during signup:',
               subscribeErr,
+            );
+            // A silent subscribe failure loses the member from the mailing
+            // list without anyone noticing, so surface it in the issue feed.
+            await reportIssue(
+              `Error with /subscribe during signup: ${formatErrorForReport(
+                subscribeErr,
+              )} (signupEmail: ${data.email})`,
+              data.email,
             );
           }
         }

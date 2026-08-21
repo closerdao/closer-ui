@@ -38,6 +38,7 @@ export const BLOCK_TYPE_LABEL_KEYS: Partial<Record<SectionType, string>> = {
   fundraiserRewards: 'pages_editor_block_fundraiser_rewards',
   teamStructure: 'pages_editor_block_team_structure',
   teamMembers: 'pages_editor_block_team_members',
+  teamDirectory: 'pages_editor_block_team_directory',
   teamDepartments: 'pages_editor_block_team_departments',
   teamPartners: 'pages_editor_block_team_partners',
   teamGovernance: 'pages_editor_block_team_governance',

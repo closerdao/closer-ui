@@ -37,6 +37,7 @@ import CustomSupplyGraph from './CustomSupplyGraph';
 import CustomTeamDepartments from './CustomTeamDepartments';
 import CustomTeamGovernance from './CustomTeamGovernance';
 import CustomTeamJoinCta from './CustomTeamJoinCta';
+import CustomTeamDirectory from './CustomTeamDirectory';
 import CustomTeamMembers from './CustomTeamMembers';
 import CustomTeamPartners from './CustomTeamPartners';
 import CustomTeamStructure from './CustomTeamStructure';
@@ -109,6 +110,7 @@ const componentRegistry: Record<string, React.ComponentType<any>> = {
   subscriptionPlans: CustomSubscriptionPlans,
   teamStructure: CustomTeamStructure,
   teamMembers: CustomTeamMembers,
+  teamDirectory: CustomTeamDirectory,
   teamDepartments: CustomTeamDepartments,
   teamPartners: CustomTeamPartners,
   teamGovernance: CustomTeamGovernance,

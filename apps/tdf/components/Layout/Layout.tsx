@@ -6,22 +6,14 @@ import { Footer } from '@/components/Footer/Footer';
 import PromptFixedBottom from 'closer/components/PromptFixedBottom';
 
 import { Navigation, Prompts } from 'closer';
-
-const ROUTES_WITHOUT_FLOATING_PROMPT = [
-  '/events/[slug]',
-  '/stay/[slug]',
-  '/signup',
-  '/subscriptions',
-];
+import { shouldHideFloatingPrompt } from 'closer/utils/floatingPrompt.helpers';
 
 const isDashboardRoute = (pathname: string) =>
   pathname === '/dashboard' || pathname.startsWith('/dashboard/');
 
 export const Layout: FC<PropsWithChildren> = ({ children }) => {
   const router = useRouter();
-  const hideFloatingPrompt = ROUTES_WITHOUT_FLOATING_PROMPT.includes(
-    router.pathname,
-  );
+  const hideFloatingPrompt = shouldHideFloatingPrompt(router.pathname);
   const isDashboard = isDashboardRoute(router.pathname);
 
   const isPagesEditor =

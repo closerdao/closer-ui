@@ -105,6 +105,8 @@ export type Village = {
   contact?: VillageContact;
   referredBy?: string | null;
   ambassadorId?: string | null;
+  /** The application this village was created from, when it came from one. */
+  applicationId?: string;
   verificationBadge?: VillageVerificationBadge;
   onboardingStatus?: VillageOnboardingStatus;
   criteria?: VillageCriteria;
@@ -205,6 +207,7 @@ export type CreateVillageInput = {
   projectManager?: VillageManagerInfo;
   referredBy?: string;
   ambassadorId?: string;
+  applicationId?: string;
   managedBy?: string[];
   verificationBadge?: VillageVerificationBadge;
   onboardingStatus?: VillageOnboardingStatus;

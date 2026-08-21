@@ -8,6 +8,7 @@ import { usePlatform } from '../contexts/platform';
 import { useConfig } from '../hooks/useConfig';
 import useRBAC from '../hooks/useRBAC';
 import ApplicationsDashboardPage from '../pages/dashboard/applications';
+import { fetchVillagesByApplicationIds } from '../utils/villageApplication.utils';
 import { renderWithNextIntl } from './utils';
 
 jest.mock('../components/Dashboard/AdminLayout', () => ({
@@ -36,6 +37,11 @@ jest.mock('../utils/cachedConfig.helpers', () => ({
 
 jest.mock('../hooks/useConfig', () => ({
   useConfig: jest.fn(() => ({ applications: { enabled: true } })),
+}));
+
+jest.mock('../utils/villageApplication.utils', () => ({
+  ...jest.requireActual('../utils/villageApplication.utils'),
+  fetchVillagesByApplicationIds: jest.fn(async () => ({})),
 }));
 
 const applications = [
@@ -73,8 +79,16 @@ const makePlatform = () => ({
 
 describe('ApplicationsDashboardPage', () => {
   let platform: ReturnType<typeof makePlatform>;
+  const federationFlag = process.env.NEXT_PUBLIC_IS_FEDERATION;
+
+  afterEach(() => {
+    process.env.NEXT_PUBLIC_IS_FEDERATION = federationFlag;
+  });
 
   beforeEach(() => {
+    delete process.env.NEXT_PUBLIC_IS_FEDERATION;
+    (fetchVillagesByApplicationIds as jest.Mock).mockClear();
+    (fetchVillagesByApplicationIds as jest.Mock).mockResolvedValue({});
     platform = makePlatform();
     (useAuth as jest.Mock).mockReturnValue({
       user: { _id: 'user-1', roles: ['admin'] },
@@ -146,6 +160,69 @@ describe('ApplicationsDashboardPage', () => {
     expect(
       screen.queryByText('What does home mean to you?'),
     ).not.toBeInTheDocument();
+  });
+
+  it('does not offer village creation outside a federation', async () => {
+    renderWithNextIntl(<ApplicationsDashboardPage />);
+
+    await screen.findByText('Ada Lovelace');
+
+    expect(
+      screen.queryByRole('link', { name: 'Create village' }),
+    ).not.toBeInTheDocument();
+    expect(fetchVillagesByApplicationIds).not.toHaveBeenCalled();
+  });
+
+  describe('in a federation', () => {
+    beforeEach(() => {
+      process.env.NEXT_PUBLIC_IS_FEDERATION = 'true';
+    });
+
+    it('offers to create a village pre-filled from the application', async () => {
+      renderWithNextIntl(<ApplicationsDashboardPage />);
+
+      await screen.findByText('Ada Lovelace');
+
+      const links = await screen.findAllByRole('link', {
+        name: 'Create village',
+      });
+      expect(links[0]).toHaveAttribute(
+        'href',
+        '/villages/create?applicationId=app-1',
+      );
+      expect(links).toHaveLength(2);
+    });
+
+    it('links to the village once one has been created', async () => {
+      (fetchVillagesByApplicationIds as jest.Mock).mockResolvedValue({
+        'app-1': { _id: 'v1', slug: 'riverbank', applicationId: 'app-1' },
+      });
+
+      renderWithNextIntl(<ApplicationsDashboardPage />);
+
+      await screen.findByText('Ada Lovelace');
+
+      expect(
+        await screen.findByRole('link', { name: 'View village' }),
+      ).toHaveAttribute('href', '/villages/riverbank');
+      // The application without a village still offers to create one.
+      expect(
+        screen.getAllByRole('link', { name: 'Create village' }),
+      ).toHaveLength(1);
+    });
+
+    it('looks every application on the page up in one request', async () => {
+      renderWithNextIntl(<ApplicationsDashboardPage />);
+
+      await screen.findByText('Ada Lovelace');
+
+      await waitFor(() => {
+        expect(fetchVillagesByApplicationIds).toHaveBeenCalledWith([
+          'app-1',
+          'app-2',
+        ]);
+      });
+    });
   });
 
   it('denies access when the user lacks the Applications permission', () => {

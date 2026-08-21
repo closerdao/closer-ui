@@ -1,6 +1,21 @@
 import type { SectionType } from '../../../types/page';
 import type { ContentListInspectorConfig } from './ContentListInspector';
 
+const TEAM_DIRECTORY_ROLE_OPTIONS = [
+  { value: 'team', labelKey: 'pages_editor_role_team' },
+  { value: 'space-host', labelKey: 'pages_editor_role_space_host' },
+  { value: 'steward', labelKey: 'pages_editor_role_steward' },
+  { value: 'land-manager', labelKey: 'pages_editor_role_land_manager' },
+  { value: 'community-curator', labelKey: 'pages_editor_role_community_curator' },
+  { value: 'ambassador', labelKey: 'pages_editor_role_ambassador' },
+  { value: 'event-creator', labelKey: 'pages_editor_role_event_creator' },
+  { value: 'content-creator', labelKey: 'pages_editor_role_content_creator' },
+  { value: 'affiliate-manager', labelKey: 'pages_editor_role_affiliate_manager' },
+  { value: 'accounting', labelKey: 'pages_editor_role_accounting' },
+  { value: 'admin', labelKey: 'pages_editor_role_admin' },
+  { value: 'member', labelKey: 'pages_editor_role_member' },
+];
+
 export const BLOCK_INSPECTOR_CONFIGS: Partial<
   Record<SectionType, ContentListInspectorConfig>
 > = {
@@ -131,6 +146,40 @@ export const BLOCK_INSPECTOR_CONFIGS: Partial<
         key: 'linkedinUrl',
         labelKey: 'pages_editor_field_linkedin_url',
         type: 'url',
+      },
+    ],
+  },
+  teamDirectory: {
+    hint: 'pages_editor_hint_team_directory',
+    settingsFields: [
+      {
+        key: 'limit',
+        labelKey: 'pages_editor_field_max_people',
+        type: 'number',
+        defaultValue: 24,
+      },
+    ],
+    fields: [
+      { key: 'title', labelKey: 'pages_editor_field_title' },
+      {
+        key: 'description',
+        labelKey: 'pages_editor_field_description',
+        type: 'textarea',
+      },
+      { key: 'ctaText', labelKey: 'pages_editor_field_cta_text' },
+      { key: 'email', labelKey: 'pages_editor_field_email' },
+    ],
+    listKey: 'roles',
+    listLabelKey: 'pages_editor_field_roles',
+    listAddLabelKey: 'pages_editor_add_role',
+    minItems: 1,
+    defaultItem: { role: 'team' },
+    listItemFields: [
+      {
+        key: 'role',
+        labelKey: 'pages_editor_field_role',
+        type: 'select',
+        options: TEAM_DIRECTORY_ROLE_OPTIONS,
       },
     ],
   },

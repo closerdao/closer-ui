@@ -269,7 +269,8 @@ const Login = () => {
       <Head>
         <title>{t('login_title')}</title>
       </Head>
-      <main className="flex flex-col items-center w-full min-w-0 px-0">
+      {/* Matches the signup panel — see the note there on `accent-alt-light`. */}
+      <main className="flex flex-col items-center w-full min-w-0 px-0 rounded-2xl bg-accent-alt-light min-h-[80vh]">
         <section className="w-full max-w-md flex flex-col gap-6 py-10 sm:py-16 px-4 sm:px-6">
           <Heading
             level={1}
@@ -295,7 +296,7 @@ const Login = () => {
             </p>
           )}
 
-          <Card className="w-full pb-12">
+          <Card className="w-full bg-background p-5 sm:p-7">
             {(router.query.session_expired
               ? t('auth_session_expired')
               : error) && (
@@ -352,7 +353,7 @@ const Login = () => {
                       <div className="w-full border-t border-gray-200" />
                     </div>
                     <div className="relative flex justify-center text-sm">
-                      <span className="bg-white px-2 text-gray-500">
+                      <span className="bg-background px-2 text-gray-500">
                         {t('or')}
                       </span>
                     </div>

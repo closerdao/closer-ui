@@ -676,6 +676,22 @@ export const createSection = (type: SectionType): PageSection => {
           },
         },
       };
+    case 'teamDirectory':
+      return {
+        _localId,
+        type: 'teamDirectory',
+        data: {
+          settings: { limit: 24 },
+          content: {
+            title: 'Meet the team',
+            description:
+              'The people who live and work here will welcome you, show you around and help you make the most of your stay.',
+            roles: [{ role: 'team' }],
+            ctaText: 'Send us a message',
+            email: '',
+          },
+        },
+      };
     case 'teamDepartments':
       return {
         _localId,
