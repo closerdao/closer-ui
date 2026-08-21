@@ -1774,14 +1774,26 @@ const StayCheckoutContent = ({
       }
 
       const liveFiatOwed = computeFiatOwed(workingStay);
-      const card = elements?.getElement(CardElement) ?? null;
-      if (isMember && liveFiatOwed > 0 && !card) {
-        setActionError(t('stay_create_card_required'));
-        return;
-      }
-
       let stripePaymentMethodId = '';
-      if (isMember && liveFiatOwed > 0 && stripe && card) {
+
+      if (liveFiatOwed > 0.005) {
+        if (!isMember) {
+          isLeavingPage = true;
+          router.push(`/stay/${workingStay._id}/payment`);
+          return;
+        }
+
+        if (!stripe) {
+          setActionError(t('stay_create_stripe_not_ready'));
+          return;
+        }
+
+        const card = elements?.getElement(CardElement) ?? null;
+        if (!card) {
+          setActionError(t('stay_create_card_required'));
+          return;
+        }
+
         const { paymentMethod, error: pmError } =
           await stripe.createPaymentMethod({
             type: 'card',
