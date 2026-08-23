@@ -10,6 +10,7 @@ export { useDebounce } from './useDebounce';
 export { useFaqs } from './useFaqs';
 export { useHasMounted } from './useHasMounted';
 export { useInteractionIsHuman } from './useInteractionIsHuman';
+export { useIntroOfferEligibility } from './useIntroOfferEligibility';
 export { useLocalStorage } from './useLocalStorage';
 export { useNavigationMetrics } from './useNavigationMetrics';
 export { useOutsideClick } from './useOutsideClick';

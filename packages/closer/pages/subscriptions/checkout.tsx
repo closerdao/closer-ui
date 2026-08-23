@@ -25,6 +25,7 @@ import {
 } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import { useIntroOfferEligibility } from '../../hooks/useIntroOfferEligibility';
 import { GeneralConfig, PaymentConfig } from '../../types';
 import {
   SelectedPlan,
@@ -40,6 +41,7 @@ import {
 import { logMetric } from '../../utils/metrics';
 import {
   getPaidSubscriptionPlans,
+  isFirstMonthFreePlan,
   isSubscriptionActive,
 } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
@@ -71,6 +73,7 @@ const SubscriptionsCheckoutPage: NextPage = () => {
     availableOnly: false,
   });
   const { isAuthenticated, isLoading, user } = useAuth();
+  const { eligibleForIntro } = useIntroOfferEligibility();
   const router = useRouter();
   const { priceId, monthlyCredits, source } = router.query;
   const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
@@ -78,6 +81,8 @@ const SubscriptionsCheckoutPage: NextPage = () => {
   const vatRate = vatRateFromConfig || defaultVatRate;
 
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
+  const [selectedSubscription, setSelectedSubscription] =
+    useState<SubscriptionPlan>();
 
   const monthlyCreditsSelected = Math.min(
     parseFloat(monthlyCredits as string) || selectedPlan?.monthlyCredits || 0,
@@ -125,15 +130,16 @@ const SubscriptionsCheckoutPage: NextPage = () => {
 
   useEffect(() => {
     if (priceId && subscriptionPlans) {
-      const selectedSubscription = subscriptionPlans.find(
+      const selectedSubscriptionPlan = subscriptionPlans.find(
         (plan: SubscriptionPlan) => plan.priceId.includes(priceId as string),
       );
 
+      setSelectedSubscription(selectedSubscriptionPlan);
       setSelectedPlan({
-        title: selectedSubscription?.title as string,
-        monthlyCredits: selectedSubscription?.monthlyCredits as number,
-        price: selectedSubscription?.price as number,
-        tiersAvailable: selectedSubscription?.tiersAvailable as boolean,
+        title: selectedSubscriptionPlan?.title as string,
+        monthlyCredits: selectedSubscriptionPlan?.monthlyCredits as number,
+        price: selectedSubscriptionPlan?.price as number,
+        tiersAvailable: selectedSubscriptionPlan?.tiersAvailable as boolean,
       });
     }
   }, [priceId]);
@@ -152,6 +158,9 @@ const SubscriptionsCheckoutPage: NextPage = () => {
     selectedPlan,
     monthlyCreditsSelected,
   );
+  const firstMonthFree =
+    isFirstMonthFreePlan(selectedSubscription) && eligibleForIntro;
+  const dueToday = firstMonthFree ? 0 : total;
 
   return (
     <>
@@ -187,17 +196,23 @@ const SubscriptionsCheckoutPage: NextPage = () => {
                     : ''
                 }  `}
                 value={`${
-                  selectedPlan && priceFormat(total, DEFAULT_CURRENCY)
+                  selectedPlan && priceFormat(dueToday, DEFAULT_CURRENCY)
                 }`}
-                additionalInfo={`${t(
-                  'bookings_checkout_step_total_description',
-                )} ${getVatInfo(
-                  {
-                    val: total,
-                    cur: DEFAULT_CURRENCY,
-                  },
-                  vatRate,
-                )} ${t('subscriptions_summary_per_month')}`}
+                additionalInfo={
+                  firstMonthFree
+                    ? t('subscriptions_recurring_after_first_month', {
+                        amount: priceFormat(total, DEFAULT_CURRENCY),
+                      })
+                    : `${t(
+                        'bookings_checkout_step_total_description',
+                      )} ${getVatInfo(
+                        {
+                          val: total,
+                          cur: DEFAULT_CURRENCY,
+                        },
+                        vatRate,
+                      )} ${t('subscriptions_summary_per_month')}`
+                }
               />
             }
           </div>
@@ -215,6 +230,7 @@ const SubscriptionsCheckoutPage: NextPage = () => {
                     priceId={priceId}
                     monthlyCredits={Number(monthlyCredits)}
                     source={source as string}
+                    firstMonthFree={firstMonthFree}
                     tierMetricEvent={
                       selectedPlan?.title?.toLowerCase() === 'wanderer'
                         ? 'tier-1-first-payment'

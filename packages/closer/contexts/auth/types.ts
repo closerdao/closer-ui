@@ -94,9 +94,11 @@ export type User = {
     plan: string;
     tier: string;
     createdAt?: Date;
+    paidAt?: Date;
     validUntil?: Date;
     cancelledAt?: Date;
     priceId: string;
+    subscriptionId?: string;
     monthlyPrice: { val: number; cur: string };
     monthlyCredits: number;
     stripeCustomerEmail: string;

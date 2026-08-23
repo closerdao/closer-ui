@@ -2,6 +2,7 @@ import { ChangeEvent } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { normalizeSubscriptionBillingPeriod } from '../../utils/subscriptions.helpers';
 import ConfigImageUpload from '../ConfigImageUpload';
 import { Button, Card, ErrorMessage } from '../ui';
 
@@ -59,11 +60,23 @@ const ArrayConfig = ({
           if (!elementType) {
             return null;
           }
+          const billingPeriod = normalizeSubscriptionBillingPeriod(
+            currentValue[index]?.billingPeriod,
+          );
+          const isMonthlyPlan = billingPeriod === 'month';
           return (
             <Card key={index}>
               {Object.entries(elementType).map(([innerKey]) => {
                 const inputType = elementType[innerKey];
                 const fieldValue = currentValue[index]?.[innerKey];
+
+                if (
+                  isSubscriptionsConfig &&
+                  innerKey === 'firstMonthFree' &&
+                  !isMonthlyPlan
+                ) {
+                  return null;
+                }
 
                 return (
                   <div
@@ -90,7 +103,7 @@ const ArrayConfig = ({
                             type="radio"
                             name={`${innerKey}-${index}`}
                             value="false"
-                            checked={fieldValue === false}
+                            checked={fieldValue !== true}
                             onChange={(event) =>
                               handleChange(event, elementsKey, index)
                             }
@@ -118,6 +131,11 @@ const ArrayConfig = ({
                         {innerKey === 'priceId' && (
                           <p className="text-xs text-foreground/60">
                             {t('config_subscriptions_price_id_help')}
+                          </p>
+                        )}
+                        {innerKey === 'couponId' && (
+                          <p className="text-xs text-foreground/60">
+                            {t('config_subscriptions_coupon_id_help')}
                           </p>
                         )}
                       </div>
@@ -171,7 +189,11 @@ const ArrayConfig = ({
                     {inputType?.type === 'select' && (
                       <select
                         className="px-2 py-1"
-                        value={String(fieldValue ?? '')}
+                        value={
+                          innerKey === 'billingPeriod'
+                            ? billingPeriod
+                            : String(fieldValue ?? '')
+                        }
                         onChange={(event) =>
                           handleChange(event, elementsKey, index)
                         }
@@ -180,9 +202,15 @@ const ArrayConfig = ({
                         data-lpignore="true"
                       >
                         {inputType.enum.map((option: string) => {
+                          const labelKey =
+                            innerKey === 'billingPeriod'
+                              ? `config_subscriptions_billing_period_${option}`
+                              : null;
                           return (
                             <option value={option} key={option}>
-                              {option}
+                              {labelKey && t.has(labelKey)
+                                ? t(labelKey)
+                                : option}
                             </option>
                           );
                         })}

@@ -22,6 +22,7 @@ import {
 } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import { useIntroOfferEligibility } from '../../hooks/useIntroOfferEligibility';
 import { GeneralConfig, PaymentConfig } from '../../types';
 import {
   SelectedPlan,
@@ -35,6 +36,7 @@ import {
 import { logMetric } from '../../utils/metrics';
 import {
   getPaidSubscriptionPlans,
+  isFirstMonthFreePlan,
   isSubscriptionActive,
 } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
@@ -54,6 +56,7 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
 }) => {
   const t = useTranslations();
   const { isAuthenticated, isLoading, user } = useAuth();
+  const { eligibleForIntro } = useIntroOfferEligibility();
   const router = useRouter();
   const defaultConfig = useConfig();
   const { priceId, monthlyCredits } = router.query;
@@ -71,6 +74,9 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
   const subscriptionPlans = getPaidSubscriptionPlans(subscriptionsConfig, {
     availableOnly: false,
   });
+
+  const [selectedSubscription, setSelectedSubscription] =
+    useState<SubscriptionPlan>();
 
   const [selectedPlan, setSelectedPlan] = useState<SelectedPlan>();
 
@@ -104,17 +110,20 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
 
   useEffect(() => {
     if (priceId && subscriptionPlans) {
-      const selectedSubscription = subscriptionPlans.find(
+      const selectedSubscriptionPlan = subscriptionPlans.find(
         (plan: SubscriptionPlan) => plan.priceId.includes(priceId as string),
       );
 
-      setMonthlyCreditsSelected(selectedSubscription?.monthlyCredits ? 1 : 0);
+      setSelectedSubscription(selectedSubscriptionPlan);
+      setMonthlyCreditsSelected(
+        selectedSubscriptionPlan?.monthlyCredits ? 1 : 0,
+      );
 
       setSelectedPlan({
-        title: selectedSubscription?.title as string,
-        monthlyCredits: selectedSubscription?.monthlyCredits ? 1 : 0,
-        price: selectedSubscription?.price as number,
-        tiersAvailable: selectedSubscription?.tiersAvailable as boolean,
+        title: selectedSubscriptionPlan?.title as string,
+        monthlyCredits: selectedSubscriptionPlan?.monthlyCredits ? 1 : 0,
+        price: selectedSubscriptionPlan?.price as number,
+        tiersAvailable: selectedSubscriptionPlan?.tiersAvailable as boolean,
       });
     }
   }, [priceId, monthlyCredits]);
@@ -153,6 +162,9 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
     selectedPlan,
     monthlyCreditsSelected,
   );
+  const firstMonthFree =
+    isFirstMonthFreePlan(selectedSubscription) && eligibleForIntro;
+  const dueToday = firstMonthFree ? 0 : total;
 
   return (
     <>
@@ -214,16 +226,22 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
             <div className="mb-10">
               <Row
                 rowKey={t('subscriptions_summary_subscription')}
-                value={`${priceFormat(total, DEFAULT_CURRENCY)}`}
-                additionalInfo={`${t(
-                  'bookings_checkout_step_total_description',
-                )} ${getVatInfo(
-                  {
-                    val: total,
-                    cur: DEFAULT_CURRENCY,
-                  },
-                  vatRate,
-                )} ${t('subscriptions_summary_per_month')}`}
+                value={`${priceFormat(dueToday, DEFAULT_CURRENCY)}`}
+                additionalInfo={
+                  firstMonthFree
+                    ? t('subscriptions_recurring_after_first_month', {
+                        amount: priceFormat(total, DEFAULT_CURRENCY),
+                      })
+                    : `${t(
+                        'bookings_checkout_step_total_description',
+                      )} ${getVatInfo(
+                        {
+                          val: total,
+                          cur: DEFAULT_CURRENCY,
+                        },
+                        vatRate,
+                      )} ${t('subscriptions_summary_per_month')}`
+                }
               />
             </div>
             <Button className="mt-3" onClick={handleCheckout}>
