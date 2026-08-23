@@ -1,4 +1,4 @@
-import React, { ComponentType } from 'react';
+import React, { ComponentType, ReactElement } from 'react';
 
 import PageError from '../PageError';
 import ErrorBoundary from './ErrorBoundary';
@@ -24,7 +24,7 @@ const toMessage = (err: unknown): string => {
  *
  * Static members such as `getInitialProps` are copied onto the wrapper.
  */
-type PageWithStatics<P> = ((props: P) => JSX.Element) & {
+type PageWithStatics<P> = ((props: P) => ReactElement) & {
   displayName?: string;
   getInitialProps?: (ctx: any) => Promise<any> | any;
 };
