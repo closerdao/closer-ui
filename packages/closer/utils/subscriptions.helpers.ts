@@ -20,26 +20,26 @@ export const isMonthlySubscriptionPlan = (
 export const isFirstMonthFreePlan = (plan?: SubscriptionPlan | null): boolean =>
   Boolean(plan?.firstMonthFree) && isMonthlySubscriptionPlan(plan);
 
+type IntroSubscriptionHistory = {
+  createdAt?: Date | string;
+  paidAt?: Date | string;
+  subscriptionId?: string;
+  introClaimedAt?: Date | string;
+} | null;
+
 export const hasConsumedFirstMonthFree = (
-  subscription?: {
-    createdAt?: Date | string;
-    paidAt?: Date | string;
-    subscriptionId?: string;
-  } | null,
+  subscription?: IntroSubscriptionHistory,
 ): boolean =>
   Boolean(
     subscription?.createdAt ||
       subscription?.paidAt ||
-      subscription?.subscriptionId,
+      subscription?.subscriptionId ||
+      subscription?.introClaimedAt,
   );
 
 export const isEligibleForFirstMonthFree = (
   plan?: SubscriptionPlan | null,
-  subscription?: {
-    createdAt?: Date | string;
-    paidAt?: Date | string;
-    subscriptionId?: string;
-  } | null,
+  subscription?: IntroSubscriptionHistory,
   customerEligible = true,
 ): boolean =>
   isFirstMonthFreePlan(plan) &&
