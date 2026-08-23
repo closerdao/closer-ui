@@ -27,6 +27,7 @@ export const DYNAMIC_BLOCK_TYPES: SectionType[] = [
   'subscriptionPlans',
   'teamStructure',
   'teamMembers',
+  'teamDirectory',
   'teamDepartments',
   'teamPartners',
   'teamGovernance',

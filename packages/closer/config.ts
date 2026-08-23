@@ -1028,6 +1028,27 @@ export const configDescription: ConfigType[] = [
       },
     },
   },
+  /**
+   * Controls the language switcher in the navigation. The locales a platform
+   * can offer are fixed at build time by `next.config.js` (`i18n.locales`);
+   * `languages` narrows that list to the ones the switcher shows. An empty
+   * list means every built locale. The toggle defaults to the legacy
+   * `NEXT_PUBLIC_FEATURE_LOCALE_SWITCH` flag so existing platforms keep their
+   * switcher until an admin changes the setting.
+   */
+  {
+    slug: 'localization',
+    value: {
+      enabled: {
+        type: 'boolean',
+        default: process.env.NEXT_PUBLIC_FEATURE_LOCALE_SWITCH === 'true',
+      },
+      languages: {
+        type: ['text'],
+        default: [],
+      },
+    },
+  },
   {
     slug: 'photo-gallery',
     value: {

@@ -143,6 +143,56 @@ describe.each(['tdf', 'moos'])('MemberMenu dashboard section (%s)', (app) => {
   });
 });
 
+describe.each(['tdf', 'moos'])('MemberMenu my stays section (%s)', (app) => {
+  const renderAsGuest = () => {
+    (useAuth as jest.Mock).mockReturnValue({
+      user: { _id: 'guest-1', roles: [] },
+      logout: jest.fn(),
+    });
+    (useRBAC as jest.Mock).mockReturnValue({
+      hasAccess: () => true,
+      rbacLiveRevision: 0,
+    });
+    renderWithNextIntl(<MemberMenu {...flags} appName={app} />);
+  };
+
+  it('gives a signed-in guest their own bookings and tickets', async () => {
+    renderAsGuest();
+
+    const heading = await screen.findByText('My stays');
+    const section = heading.closest('div.mb-1') as HTMLElement;
+    await userEvent.click(heading);
+
+    const hrefs = within(section)
+      .getAllByRole('link')
+      .map((link) => link.getAttribute('href'));
+
+    expect(hrefs).toEqual([
+      '/stay/upcoming',
+      '/stay/past',
+      '/tickets',
+      '/bookings/friends',
+    ]);
+  });
+
+  it('sits above the dashboard rather than inside it', async () => {
+    renderAsGuest();
+
+    const labels = Array.from(
+      document.querySelectorAll('div.mb-1 > div > span'),
+    ).map((node) => node.textContent);
+
+    expect(labels.indexOf('My stays')).toBeGreaterThan(-1);
+    // A plain guest has no dashboard links left, so it is enough that the
+    // guest's own section is not nested under one.
+    expect(labels.indexOf('My stays')).toBeLessThan(
+      labels.indexOf('Dashboard') === -1
+        ? labels.length
+        : labels.indexOf('Dashboard'),
+    );
+  });
+});
+
 describe('MemberMenu dashboard section — filtering', () => {
   it('drops a category whose links are all hidden by RBAC', async () => {
     (useAuth as jest.Mock).mockReturnValue({

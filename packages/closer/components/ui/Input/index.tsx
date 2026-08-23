@@ -31,6 +31,8 @@ const inputStyles = cva('new-input px-4 py-3 rounded-lg', {
 
 interface InputProps extends VariantProps<typeof inputStyles> {
   id?: string;
+  name?: string;
+  autoComplete?: string;
   label?: string;
   ariaLabel?: string;
   value?: string;
@@ -58,6 +60,8 @@ interface InputProps extends VariantProps<typeof inputStyles> {
 const Input = React.memo(
   ({
     id,
+    name,
+    autoComplete,
     label,
     ariaLabel,
     value,
@@ -200,6 +204,8 @@ const Input = React.memo(
             min={min}
             max={max}
             id={id}
+            name={name}
+            autoComplete={autoComplete}
             type={type}
             value={isInstantSave ? localValue : value}
             onChange={isInstantSave ? handleChange : onChange}

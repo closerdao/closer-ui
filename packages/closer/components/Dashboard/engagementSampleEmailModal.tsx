@@ -32,7 +32,8 @@ const EngagementSampleEmailModal = ({
 }: EngagementSampleEmailModalProps) => {
   const t = useTranslations();
   const [loading, setLoading] = useState(false);
-  const [useAi, setUseAi] = useState(false);
+  /** The endpoint drafts with Claude by default; the template is the fallback. */
+  const [useAi, setUseAi] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<EngagementSampleEmailResults | null>(
     null,
@@ -77,10 +78,10 @@ const EngagementSampleEmailModal = ({
     if (!opportunity) {
       setResults(null);
       setError(null);
-      setUseAi(false);
+      setUseAi(true);
       return;
     }
-    loadPreview(false);
+    loadPreview(true);
   }, [loadPreview, opportunity]);
 
   if (!opportunity) return null;
@@ -129,6 +130,23 @@ const EngagementSampleEmailModal = ({
           <p className="text-sm text-gray-600">{t('engagement_preview_loading')}</p>
         ) : null}
 
+        {results?.aiMeta?.voice?.exampleIds?.length ? (
+          <details className="text-xs text-gray-500">
+            <summary className="cursor-pointer">
+              {t('engagement_voice_why')}
+            </summary>
+            <p className="pt-1.5 leading-relaxed">
+              {t('engagement_voice_explainer')}
+              {results.aiMeta.voice.tags?.length
+                ? ` · ${results.aiMeta.voice.tags.join(', ')}`
+                : ''}
+            </p>
+            <p className="pt-1 font-mono break-all">
+              {results.aiMeta.voice.exampleIds.join(', ')}
+            </p>
+          </details>
+        ) : null}
+
         {results?.aiMeta?.risks?.length ? (
           <ul className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-md px-3 py-2 list-disc list-inside flex flex-col gap-1">
             {results.aiMeta.risks.map((risk) => (
@@ -174,9 +192,10 @@ const EngagementSampleEmailModal = ({
             variant="secondary"
             isFullWidth={false}
             isEnabled={!loading}
+            isLoading={loading && !useAi}
             onClick={() => loadPreview(false)}
           >
-            {t('engagement_action_preview_refresh')}
+            {t('engagement_action_preview_template')}
           </Button>
         </div>
       </div>

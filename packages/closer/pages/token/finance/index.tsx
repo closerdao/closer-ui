@@ -7,7 +7,6 @@ import CitizenFinanceTokens from '../../../components/CitizenFinanceTokens';
 import FinanceApplicationSummaryCard from '../../../components/FinanceApplicationSummaryCard';
 import {
   BackButton,
-  Button,
   Heading,
   ProgressBar,
   Spinner,
@@ -45,7 +44,7 @@ const parseTokensQuery = (
 ): number | null => {
   const raw = Array.isArray(tokens) ? tokens[0] : tokens;
   const parsed = Number(raw);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 };
 
 const SubscriptionsCitizenApplyPage: NextPage = () => {
@@ -89,7 +88,13 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
 
   const [applications, setApplications] = useState<FinanceApplication[]>([]);
   const [isLoadingApplications, setIsLoadingApplications] = useState(true);
-  const [isApplyingForAnother, setIsApplyingForAnother] = useState(false);
+  // On a hard reload / direct link, router.query is empty on the first render,
+  // so the ?tokens=N value is only resolved inside the effect below. The buy
+  // widget seeds its own state (and its debounced price lookup) once at mount
+  // and never re-reads the prop, so we must delay mounting the form until the
+  // query has been applied — otherwise it mounts priced for 1 token while
+  // application.tokensToFinance ends up N, producing an underpriced contract.
+  const [isTokensQueryResolved, setIsTokensQueryResolved] = useState(false);
 
   const defaultConfig = useConfig();
   const PLATFORM_NAME =
@@ -100,21 +105,23 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
       return;
     }
     const parsed = parseTokensQuery(tokens);
-    if (parsed === null) {
-      return;
+    if (parsed !== null) {
+      setApplication((prev) => {
+        if (prev.tokensToFinance === parsed) {
+          return prev;
+        }
+        return { ...prev, tokensToFinance: parsed };
+      });
     }
-    setApplication((prev) => {
-      if (prev.tokensToFinance === parsed) {
-        return prev;
-      }
-      return { ...prev, tokensToFinance: parsed };
-    });
+    // Latch (never reverts) so a later in-widget amount change does not
+    // unmount the form.
+    setIsTokensQueryResolved(true);
   }, [router.isReady, tokens]);
 
   useEffect(() => {
     if (isLoading) return;
     if (!user) {
-      router.push(`/signup?back=${router.asPath}`);
+      router.push(`/signup?back=${encodeURIComponent(router.asPath)}`);
       return;
     }
     const finance = platform?.financeapplication;
@@ -272,7 +279,6 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
       application={application}
       updateApplication={updateApplication}
       downPaymentPercent={downPaymentPercent}
-      durations={durations}
       maxFinancingMonths={maxFinancingMonths}
       aprPercent={aprPercent}
       minMonthlyPayment={minMonthlyPayment}
@@ -304,15 +310,15 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
 
         <ProgressBar steps={SUBSCRIPTION_CITIZEN_STEPS} />
 
-        <main className="pt-14 pb-24 flex flex-col gap-8">
+        <main className="pt-14 pb-24 flex flex-col gap-12">
+          {router.isReady && isTokensQueryResolved && financeForm}
+
           {isLoadingApplications ? (
             <div className="flex justify-center">
               <Spinner />
             </div>
-          ) : applications.length === 0 ? (
-            financeForm
           ) : (
-            <>
+            applications.length > 0 && (
               <div className="flex flex-col gap-4">
                 <Heading level={3} className="mb-0">
                   {t('token_finance_your_contracts_title')}
@@ -327,17 +333,7 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
                   />
                 ))}
               </div>
-              {isApplyingForAnother ? (
-                financeForm
-              ) : (
-                <Button
-                  variant="secondary"
-                  onClick={() => setIsApplyingForAnother(true)}
-                >
-                  {t('token_finance_apply_for_another')}
-                </Button>
-              )}
-            </>
+            )
           )}
         </main>
       </div>

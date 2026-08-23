@@ -489,7 +489,7 @@ export type Sale = {
   quantity?: number;
   entity?: string;
   memoCode?: string;
-  paymentMethod?: 'bank' | 'card' | 'crypto' | 'cash' | 'third-party';
+  paymentMethod?: 'bank' | 'card' | 'crypto' | 'cash' | 'third-party' | 'other';
   charge?: SaleCharge;
   chargeId?: string;
   charges?: string[];

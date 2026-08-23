@@ -294,6 +294,13 @@ const BLOCK_TYPES: BlockTypeDef[] = [
     featureKey: 'team',
   },
   {
+    type: 'teamDirectory',
+    labelKey: 'pages_editor_block_team_directory',
+    descKey: 'pages_editor_block_team_directory_desc',
+    category: 'team',
+    featureKey: 'team',
+  },
+  {
     type: 'teamDepartments',
     labelKey: 'pages_editor_block_team_departments',
     descKey: 'pages_editor_block_team_departments_desc',

@@ -77,6 +77,42 @@ const MemberMenu = ({
   };
 
   /**
+   * The guest's own things — their stays, their tickets. Everything here is
+   * about the signed-in person rather than about running the place, which is
+   * what keeps it out of the (largely role-gated) dashboard section.
+   */
+  const getMyStaysSection = (isBookingEnabled: boolean): MenuSection => ({
+    label: t('menu_section_my_stays'),
+    kind: 'account' as const,
+    isOpen: false,
+    items: [
+      {
+        label: t('navigation_my_bookings'),
+        url: '/stay/upcoming',
+        enabled: isBookingEnabled,
+        rbacPage: 'MyBookings',
+      },
+      {
+        label: t('navigation_past_bookings'),
+        url: '/stay/past',
+        enabled: isBookingEnabled,
+        rbacPage: 'MyBookings',
+      },
+      {
+        label: t('navigation_my_tickets'),
+        url: '/tickets',
+        enabled: isEventsEnabled,
+      },
+      {
+        label: t('navigation_book_friend'),
+        url: '/bookings/friends',
+        enabled: isBookingEnabled,
+        rbacPage: 'FriendsBooking',
+      },
+    ],
+  });
+
+  /**
    * Every dashboard page, grouped into categories. Both the TDF menu and the
    * generic one render this same section so the two never drift apart.
    */
@@ -225,20 +261,6 @@ const MemberMenu = ({
           enabled: isBookingEnabled,
           roles: ['admin', 'team', 'space-host'],
           rbacPage: 'Food',
-        },
-        {
-          group: bookings,
-          label: t('navigation_my_bookings'),
-          url: '/stay/upcoming',
-          enabled: isBookingEnabled,
-          rbacPage: 'MyBookings',
-        },
-        {
-          group: bookings,
-          label: t('navigation_book_friend'),
-          url: '/bookings/friends',
-          enabled: isBookingEnabled,
-          rbacPage: 'FriendsBooking',
         },
         {
           group: settings,
@@ -456,6 +478,7 @@ const MemberMenu = ({
             },
           ],
         },
+        getMyStaysSection(isBookingEnabled),
         getDashboardSection({
           isBookingEnabled,
           isGovernanceEnabled,
@@ -632,6 +655,7 @@ const MemberMenu = ({
             : []),
         ],
       },
+      getMyStaysSection(isBookingEnabled),
       getDashboardSection({
         isBookingEnabled,
         isGovernanceEnabled,
@@ -690,18 +714,6 @@ const MemberMenu = ({
             enabled: isBookingEnabled,
             roles: ['space-host'],
             rbacPage: 'Food',
-          },
-          {
-            label: t('navigation_my_bookings'),
-            url: '/stay/upcoming',
-            enabled: isBookingEnabled,
-            rbacPage: 'MyBookings',
-          },
-          {
-            label: t('navigation_book_friend'),
-            url: '/bookings/friends',
-            enabled: isBookingEnabled,
-            rbacPage: 'FriendsBooking',
           },
         ],
       });

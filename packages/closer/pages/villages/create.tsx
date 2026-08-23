@@ -2,6 +2,8 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
+import { useEffect, useState } from 'react';
+
 import VillageForm from '../../components/VillageForm';
 import {
   Eyebrow,
@@ -9,19 +11,63 @@ import {
   btnPrimary,
   btnSecondary,
 } from '../../components/VillageUI';
+import { Spinner } from '../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
 import Page401 from '../401';
 import { AMBASSADOR_ROLE } from '../../constants/village.constants';
 import { useAuth } from '../../contexts/auth';
-import { CreateVillageInput } from '../../types/village';
+import { CreateVillageInput, Village } from '../../types/village';
 import { canReviewVillage, createVillage } from '../../utils/village.utils';
+import {
+  applicationToVillage,
+  fetchApplication,
+} from '../../utils/villageApplication.utils';
 
 const CreateVillagePage = () => {
   const t = useTranslations();
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
+
+  // Reached from the applications dashboard: the listing opens pre-filled with
+  // whatever the applicant already told us, and the created village points back
+  // at the application it came from.
+  const applicationId =
+    typeof router.query.applicationId === 'string'
+      ? router.query.applicationId
+      : undefined;
+  const [initial, setInitial] = useState<Partial<Village> | null>(null);
+  // `VillageForm` reads `initial` once, at mount, so the form must not render
+  // until the application has been fetched.
+  const [isLoadingApplication, setIsLoadingApplication] = useState(
+    Boolean(applicationId),
+  );
+  const [applicationError, setApplicationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!applicationId) {
+      setIsLoadingApplication(false);
+      return;
+    }
+    let isCurrent = true;
+    setIsLoadingApplication(true);
+    fetchApplication(applicationId).then((application) => {
+      if (!isCurrent) return;
+      if (application) {
+        setInitial(applicationToVillage(application));
+      } else {
+        // The village is still worth creating by hand, so link it to the
+        // application anyway rather than blocking on the failed fetch.
+        setInitial({ applicationId });
+        setApplicationError(t('villages_create_application_error'));
+      }
+      setIsLoadingApplication(false);
+    });
+    return () => {
+      isCurrent = false;
+    };
+  }, [applicationId, t]);
 
   const canCreate =
     isAuthenticated &&
@@ -67,6 +113,7 @@ const CreateVillagePage = () => {
   const handleSubmit = async (payload: CreateVillageInput) => {
     const created = await createVillage({
       ...payload,
+      ...(applicationId ? { applicationId } : {}),
       referredBy: user?._id,
       ambassadorId: user?._id,
       managedBy: user?._id ? [user._id] : [],
@@ -90,11 +137,23 @@ const CreateVillagePage = () => {
             {t('villages_create_intro')}
           </p>
         </header>
-        <VillageForm
-          submitLabel={t('villages_create_submit')}
-          onSubmit={handleSubmit}
-          isReviewer={canReviewVillage(user?.roles)}
-        />
+        {applicationError && (
+          <p className="text-[14.5px] text-[#B4361C] mb-6" role="alert">
+            {applicationError}
+          </p>
+        )}
+        {isLoadingApplication ? (
+          <div className="flex justify-center py-16">
+            <Spinner />
+          </div>
+        ) : (
+          <VillageForm
+            initial={initial || undefined}
+            submitLabel={t('villages_create_submit')}
+            onSubmit={handleSubmit}
+            isReviewer={canReviewVillage(user?.roles)}
+          />
+        )}
       </PageShell>
     </>
   );

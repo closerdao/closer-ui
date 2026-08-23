@@ -5,6 +5,7 @@ import objectPath from 'object-path';
 
 import { CURRENCIES_WITH_LABELS } from '../constants';
 import Autocomplete from './Autocomplete';
+import CancellationPolicyEditor from './CancellationPolicyEditor';
 import Checkbox from './Checkbox';
 import DiscountsEditor from './DiscountsEditor';
 import FieldsEditor from './FieldsEditor';
@@ -392,6 +393,12 @@ const FormField = ({
           )}
           {type === 'discounts' && (
             <DiscountsEditor
+              value={objectPath.get(data, name)}
+              onChange={(value) => update(name, value)}
+            />
+          )}
+          {type === 'cancellationPolicy' && (
+            <CancellationPolicyEditor
               value={objectPath.get(data, name)}
               onChange={(value) => update(name, value)}
             />

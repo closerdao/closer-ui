@@ -22,4 +22,7 @@ export { useRedirectPaidBookingToDetail } from './useRedirectPaidBookingToDetail
 export { useStayCreditsEligibility } from './useStayCreditsEligibility';
 export { useSweatToken } from './useSweatToken';
 export { useTokenSales } from './useTokenSales';
+export { useProposalAttestation } from './useProposalAttestation';
+export { useVotingPeriodEnd } from './useVotingPeriodEnd';
+export { useVotingPowerSupply } from './useVotingPowerSupply';
 export { useVotingWeight } from './useVotingWeight';

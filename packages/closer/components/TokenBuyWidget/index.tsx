@@ -27,6 +27,10 @@ interface Props {
   tokensToSpend: number;
   setTokensToSpend: Dispatch<SetStateAction<number>>;
   setIsCalculationPending?: Dispatch<SetStateAction<boolean>>;
+  /** Ceiling on the amount, defaults to the per-transaction purchase cap. */
+  maxTokens?: number;
+  /** Gas is only paid on crypto checkout, so fiat flows can hide the note. */
+  showGasFeesNote?: boolean;
 }
 
 const TokenBuyWidget: FC<Props> = ({
@@ -35,6 +39,8 @@ const TokenBuyWidget: FC<Props> = ({
   tokensToSpend,
   setTokensToSpend,
   setIsCalculationPending,
+  maxTokens = MAX_TOKENS_PER_TRANSACTION,
+  showGasFeesNote = true,
 }) => {
   const t = useTranslations();
   const config = useConfig() || {};
@@ -259,13 +265,9 @@ const TokenBuyWidget: FC<Props> = ({
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const newValue = Number(event.target.value);
-    const attemptedAboveMax =
-      Number.isFinite(newValue) && newValue > MAX_TOKENS_PER_TRANSACTION;
+    const attemptedAboveMax = Number.isFinite(newValue) && newValue > maxTokens;
     setShowMaxAmountWarning(attemptedAboveMax);
-    const clampedValue =
-      newValue > MAX_TOKENS_PER_TRANSACTION
-        ? MAX_TOKENS_PER_TRANSACTION
-        : newValue;
+    const clampedValue = newValue > maxTokens ? maxTokens : newValue;
 
     setTokensToBuy(clampedValue);
 
@@ -325,7 +327,8 @@ const TokenBuyWidget: FC<Props> = ({
       <div className="flex flex-col sm:flex-row gap-2 items-left sm:items-center mb-8">
         <p className=" whitespace-normal text-sm">
           This amount will give you right of staying{' '}
-          <strong>{nightsPerYear}</strong> nights a year in a{' '}
+          <strong>{Math.round(nightsPerYear * 100) / 100}</strong> nights a year
+          in a{' '}
         </p>
 
         <div>
@@ -341,10 +344,14 @@ const TokenBuyWidget: FC<Props> = ({
       </div>
 
       <div className="flex flex-col gap-4">
-        <Information>{t('token_sale_gas_fees_note', { reserveToken })}</Information>
+        {showGasFeesNote && (
+          <Information>
+            {t('token_sale_gas_fees_note', { reserveToken })}
+          </Information>
+        )}
         {showMaxAmountWarning && (
           <Information>
-            {`Max ${MAX_TOKENS_PER_TRANSACTION} tokens per purchase. Contact the team for larger allocations.`}
+            {`Max ${maxTokens} tokens per purchase. Contact the team for larger allocations.`}
           </Information>
         )}
         <Information>{t('token_sale_price_disclaimer', { reserveToken })}</Information>

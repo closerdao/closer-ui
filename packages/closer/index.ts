@@ -239,6 +239,7 @@ export { default as TasksPage } from './pages/tasks';
 export { default as TaskPage } from './pages/tasks/[slug]';
 export { default as CreateTaskPage } from './pages/tasks/create';
 export { default as EditTaskPage } from './pages/tasks/edit/[slug]';
+export { default as MyTicketsPage } from './pages/tickets/index';
 export { default as TicketPage } from './pages/tickets/[slug]/index';
 export { default as TicketsInvoicePage } from './pages/tickets/[slug]/invoice';
 export { default as BankTransferPage } from './pages/token/bank-transfer';

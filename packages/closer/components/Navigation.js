@@ -97,6 +97,19 @@ const Navigation = () => {
 
   const router = useRouter();
 
+  const localizationConfig = config?.localization ?? {};
+  const enabledLanguages = Array.isArray(localizationConfig.languages)
+    ? localizationConfig.languages
+    : [];
+  // The switcher can only offer locales that were built (next.config.js);
+  // an empty `languages` list means all of them.
+  const switchableLocales = (router.locales ?? []).filter(
+    (locale) =>
+      enabledLanguages.length === 0 || enabledLanguages.includes(locale),
+  );
+  const isLocaleSwitchEnabled =
+    Boolean(localizationConfig.enabled) && switchableLocales.length > 1;
+
   useEffect(() => {
     router.events.on('routeChangeComplete', closeNav);
     router.events.on('routeChangeError', closeNav);
@@ -231,11 +244,9 @@ const Navigation = () => {
                   </div>
                 )}
 
-              {configLoaded &&
-              router.locales?.length > 1 &&
-              process.env.NEXT_PUBLIC_FEATURE_LOCALE_SWITCH === 'true' ? (
+              {configLoaded && isLocaleSwitchEnabled ? (
                 <ul className="flex">
-                  {router.locales.map((locale) => {
+                  {switchableLocales.map((locale) => {
                     return (
                       <li
                         className="uppercase  border-r border-gray-200 last:border-r-0 px-1"
@@ -275,7 +286,7 @@ const Navigation = () => {
                   if (cta === 'custom' && !primaryCtaCustomUrl?.trim())
                     return null;
                   const buttonClass =
-                    router?.locales?.length > 1 ? 'hidden sm:block' : '';
+                    isLocaleSwitchEnabled ? 'hidden sm:block' : '';
                   if (cta === 'login') {
                     return (
                       <Button

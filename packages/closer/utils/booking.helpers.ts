@@ -946,6 +946,26 @@ export const dateToPropertyTimeZone = (
   return dayjs.utc(date).tz(timeZone).format('YYYY-MM-DD HH:mm');
 };
 
+type StayCheckState = {
+  checkedIn?: string | null;
+  checkedOut?: string | null;
+  status?: string | null;
+};
+
+/**
+ * `checkedIn` / `checkedOut` are the source of truth for where a guest is in
+ * their stay. The stay keeps its payment status (`paid`, `credits-paid`, ...)
+ * while it runs, so `status` no longer tells us whether anyone arrived. The
+ * status fallback only covers stays checked in before the dates were stored.
+ */
+export const isStayCheckedIn = (stay: StayCheckState | null | undefined) =>
+  Boolean(stay?.checkedIn) ||
+  stay?.status === 'checked-in' ||
+  stay?.status === 'checked-out';
+
+export const isStayCheckedOut = (stay: StayCheckState | null | undefined) =>
+  Boolean(stay?.checkedOut) || stay?.status === 'checked-out';
+
 export const payTokens = async (
   bookingId: string | undefined,
   dailyRentalTokenVal: number | undefined,

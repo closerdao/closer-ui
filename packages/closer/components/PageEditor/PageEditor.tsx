@@ -1,19 +1,44 @@
+import { useRouter } from 'next/router';
+
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Menu, PanelRight, X } from 'lucide-react';
-import { useRouter } from 'next/router';
 import { useTranslations } from 'next-intl';
 
-import AdminLayout from '../Dashboard/AdminLayout';
-
-import BlockPicker from './BlockPicker';
 import {
-  createSection,
-  ensureSectionIds,
-  mergeSectionLocalIds,
-  newLocalId,
-  stripForApi,
-} from './blockDefaults';
+  buildDefaultStandardPageDoc,
+  editorHrefForPage,
+  getStandardPageDefinition,
+  isStandardPageVirtualId,
+} from '../../constants/standardPages';
+import { useAuth } from '../../contexts/auth';
+import { usePlatform } from '../../contexts/platform';
+import { useConfig } from '../../hooks/useConfig';
+import useRBAC from '../../hooks/useRBAC';
+import PageNotFound from '../../pages/not-found';
+import type { PageDoc, PageSection, SectionType } from '../../types/page';
+import api from '../../utils/api';
+import {
+  type BlockI18nTranslate,
+  materializePageI18n,
+} from '../../utils/blockI18n';
+import { parseMessageFromError } from '../../utils/common';
+import {
+  type PageMenuMeta,
+  clearMenuPagesCache,
+  normalizeMenuSection,
+  readPageMenuMeta,
+} from '../../utils/pageMenu';
+import {
+  type PageListItem,
+  canRenderDefaultStandardPage,
+  fetchPageBySlug,
+  mergeEditorPages,
+  readPagePublishState,
+  upgradeStandardPageFromDefaults,
+} from '../../utils/standardPages';
+import AdminLayout from '../Dashboard/AdminLayout';
+import BlockPicker from './BlockPicker';
 import EditorCanvas from './EditorCanvas';
 import Inspector from './Inspector';
 import JsonDrawer from './JsonDrawer';
@@ -22,52 +47,26 @@ import NewPageDialog, {
   buildPostPayloadFromGenerateResult,
 } from './NewPageDialog';
 import PagesSidebar, { type PageMenuUpdate } from './PagesSidebar';
+import PromptEditDialog from './PromptEditDialog';
+import {
+  createSection,
+  ensureSectionIds,
+  mergeSectionLocalIds,
+  newLocalId,
+  stripForApi,
+} from './blockDefaults';
 import {
   pagesMatchPersistTarget,
   shouldApplyPersistSnapshot,
 } from './persistHelpers';
-import {
-  formatPageSaveError,
-  validatePageSections,
-} from './sectionValidation';
-
-import { useAuth } from '../../contexts/auth';
-import { usePlatform } from '../../contexts/platform';
-import { useConfig } from '../../hooks/useConfig';
-import useRBAC from '../../hooks/useRBAC';
-import {
-  buildDefaultStandardPageDoc,
-  editorHrefForPage,
-  getStandardPageDefinition,
-  isStandardPageVirtualId,
-} from '../../constants/standardPages';
-import type { PageDoc, PageSection, SectionType } from '../../types/page';
-import api from '../../utils/api';
-import {
-  materializePageI18n,
-  type BlockI18nTranslate,
-} from '../../utils/blockI18n';
-import { parseMessageFromError } from '../../utils/common';
-import {
-  fetchPageBySlug,
-  mergeEditorPages,
-  upgradeStandardPageFromDefaults,
-  type PageListItem,
-} from '../../utils/standardPages';
-import {
-  clearMenuPagesCache,
-  normalizeMenuSection,
-  readPageMenuMeta,
-  type PageMenuMeta,
-} from '../../utils/pageMenu';
-import PageNotFound from '../../pages/not-found';
+import { formatPageSaveError, validatePageSections } from './sectionValidation';
 
 interface Props {
   initialPage: PageDoc;
   pages: PageListItem[];
 }
 
-const PAGES_FILTER = {};
+const PAGES_FILTER = { limit: 200 };
 
 function toPlain<T>(x: T): T {
   if (x != null && typeof (x as { toJS?: () => T }).toJS === 'function') {
@@ -83,10 +82,26 @@ function getStorePages(platform: Record<string, any>): PageListItem[] | null {
   return Array.isArray(plain) ? plain : null;
 }
 
+export interface PublishResult {
+  results?: unknown;
+  localization?: { locales?: string[]; errors?: Record<string, string> };
+}
+
+/**
+ * The editor always works on the draft: `sections` here is the working copy
+ * (the server's `draftSections` when there are unpublished changes, otherwise
+ * the live `sections`). Live sections only change through publish.
+ */
 function normalizePage(raw: Record<string, unknown>): PageDoc {
-  const sections = Array.isArray(raw.sections)
-    ? ensureSectionIds(raw.sections as PageSection[])
+  const publishState = readPagePublishState(raw);
+  const liveSections = Array.isArray(raw.sections)
+    ? (raw.sections as PageSection[])
     : [];
+  const workingSections =
+    publishState.needsPublishing && publishState.draftSections
+      ? publishState.draftSections
+      : liveSections;
+  const sections = ensureSectionIds(workingSections);
   const aiMeta =
     raw.aiMeta != null &&
     typeof raw.aiMeta === 'object' &&
@@ -103,10 +118,29 @@ function normalizePage(raw: Record<string, unknown>): PageDoc {
     description: raw.description != null ? String(raw.description) : '',
     ogImage: raw.ogImage != null ? String(raw.ogImage) : '',
     sections,
+    liveSections,
+    ...publishState,
     ...(aiMeta !== undefined ? { aiMeta } : {}),
     ...readPageMenuMeta(raw),
     isStandard,
     isDefault: raw.isDefault === true,
+  };
+}
+
+/**
+ * Splits the editor payload into what autosave may write: the working copy
+ * goes to `draftSections`; everything else (title, slug, menu, description,
+ * OG image) is page settings the backend keeps live.
+ */
+export function buildDraftPatch(page: PageDoc): {
+  draftSections: unknown[];
+  settings: Record<string, unknown>;
+} {
+  const payload = stripForApi(page);
+  const { sections, _id: _omit, ...settings } = payload;
+  return {
+    draftSections: Array.isArray(sections) ? sections : [],
+    settings,
   };
 }
 
@@ -155,6 +189,14 @@ const PageEditor = ({ initialPage, pages }: Props) => {
   const [isCreatingPage, setIsCreatingPage] = useState(false);
   const [newPageError, setNewPageError] = useState<string | null>(null);
   const [saveErrorMessage, setSaveErrorMessage] = useState<string | null>(null);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
+  const [localizationErrors, setLocalizationErrors] = useState<
+    Record<string, string>
+  >({});
+  const [promptOpen, setPromptOpen] = useState(false);
+  const [isApplyingPrompt, setIsApplyingPrompt] = useState(false);
+  const [promptError, setPromptError] = useState<string | null>(null);
   const [menuOverrides, setMenuOverrides] = useState<
     Record<string, PageMenuMeta>
   >({});
@@ -167,6 +209,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
   const persistInFlightRef = useRef(false);
   const pendingPersistRef = useRef(false);
   const loadedPageIdRef = useRef(initialPage._id);
+  const applyingPromptRef = useRef(false);
   const mountedRef = useRef(true);
   useEffect(
     () => () => {
@@ -177,6 +220,12 @@ const PageEditor = ({ initialPage, pages }: Props) => {
 
   const isStandardPage = Boolean(
     page.isStandard || getStandardPageDefinition(page.slug),
+  );
+
+  const defaultLocale = router.defaultLocale ?? 'en';
+  const translationLocales = useMemo(
+    () => (router.locales ?? []).filter((l) => l !== defaultLocale),
+    [router.locales, defaultLocale],
   );
 
   const persist = useCallback(
@@ -229,16 +278,43 @@ const PageEditor = ({ initialPage, pages }: Props) => {
           }
         }
 
-        const action = creating
-          ? await platform.page.post(payload)
-          : await platform.page.put(targetId, payload);
+        const { draftSections, settings } = buildDraftPatch(current);
+        let action: { results?: unknown; error?: unknown } | undefined;
+        if (creating) {
+          // A standard page is created with what visitors already see live —
+          // its shipped defaults where those render publicly, otherwise
+          // nothing — and the edits land in the draft until published.
+          const defaults = canRenderDefaultStandardPage(current.slug)
+            ? buildDefaultStandardPageDoc(current.slug)
+            : null;
+          const liveSections = defaults
+            ? (stripForApi(defaults).sections as unknown[])
+            : [];
+          action = (await platform.page.post({
+            ...settings,
+            sections: liveSections,
+          })) as { results?: unknown; error?: unknown } | undefined;
+          const createdId = toPlain(
+            action?.results as { _id?: string } | undefined,
+          )?._id;
+          if (!action?.error && createdId) {
+            action = (await platform.page.patch(createdId, {
+              draftSections,
+            })) as { results?: unknown; error?: unknown } | undefined;
+          }
+        } else {
+          action = (await platform.page.patch(targetId, {
+            ...settings,
+            draftSections,
+          })) as { results?: unknown; error?: unknown } | undefined;
+        }
         const stillOnSamePage = pagesMatchPersistTarget(
           pageRef.current._id,
           targetId,
           creatingAtStart,
           isStandardPageVirtualId,
         );
-        const actionError = (action as { error?: unknown })?.error;
+        const actionError = action?.error;
         if (actionError) {
           if (mountedRef.current && stillOnSamePage) {
             const raw = parseMessageFromError(actionError);
@@ -247,7 +323,7 @@ const PageEditor = ({ initialPage, pages }: Props) => {
           }
           return false;
         }
-        const updated = toPlain((action as { results?: unknown })?.results);
+        const updated = toPlain(action?.results);
         const applySnapshot = shouldApplyPersistSnapshot(
           snapshotRevision,
           editRevisionRef.current,
@@ -351,6 +427,8 @@ const PageEditor = ({ initialPage, pages }: Props) => {
   const scheduleSave = useCallback(() => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     setSaveStatus('unsaved');
+    // An AI edit is about to replace the working copy; saving now would race it.
+    if (applyingPromptRef.current) return;
     saveTimerRef.current = setTimeout(() => {
       saveTimerRef.current = null;
       void persistRef.current(false);
@@ -405,6 +483,9 @@ const PageEditor = ({ initialPage, pages }: Props) => {
       setIsDirty(false);
       setSaveStatus('saved');
       setSaveErrorMessage(null);
+      setPublishError(null);
+      setLocalizationErrors({});
+      setPromptError(null);
     };
     void loadNextPage();
     return () => {
@@ -494,8 +575,8 @@ const PageEditor = ({ initialPage, pages }: Props) => {
     sidebarStorePages == null
       ? pages
       : sidebarStorePages.length > 0 || pages.length === 0
-        ? sidebarStorePages
-        : pages;
+      ? sidebarStorePages
+      : pages;
   const editorPages = useMemo(() => {
     const merged = mergeEditorPages(sidebarPages, config);
     return merged.map((item) => {
@@ -564,7 +645,10 @@ const PageEditor = ({ initialPage, pages }: Props) => {
     bumpDirty();
   };
 
-  const updateSectionData = (localId: string, data: Record<string, unknown>) => {
+  const updateSectionData = (
+    localId: string,
+    data: Record<string, unknown>,
+  ) => {
     setPage((p) => ({
       ...p,
       sections: p.sections.map((s) =>
@@ -736,6 +820,214 @@ const PageEditor = ({ initialPage, pages }: Props) => {
     [platform],
   );
 
+  /**
+   * Makes sure the server holds the current working copy (and that the page
+   * exists) before publish / AI edit. Resolves with the real page id.
+   */
+  const flushDraft = useCallback(async (): Promise<string | null> => {
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+    if (isDirtyRef.current || isStandardPageVirtualId(pageRef.current._id)) {
+      const ok = await persistRef.current(true);
+      if (!ok || isDirtyRef.current) return null;
+    }
+    const id = pageRef.current._id;
+    return id && !isStandardPageVirtualId(id) ? id : null;
+  }, []);
+
+  const applyServerPage = useCallback(
+    (raw: Record<string, unknown>) => {
+      const normalized = normalizePage({
+        ...raw,
+        isStandard: isStandardPage,
+        isDefault: false,
+      });
+      const nextPage = {
+        ...normalized,
+        sections: mergeSectionLocalIds(
+          pageRef.current.sections,
+          normalized.sections,
+        ),
+      };
+      editRevisionRef.current += 1;
+      pageRef.current = nextPage;
+      setPage(nextPage);
+      isDirtyRef.current = false;
+      setIsDirty(false);
+      setSaveStatus('saved');
+      setSaveErrorMessage(null);
+    },
+    [isStandardPage],
+  );
+
+  const handlePublish = useCallback(
+    async (options?: { localize?: boolean; locales?: string[] }) => {
+      if (isPublishing || applyingPromptRef.current) return;
+      setIsPublishing(true);
+      setPublishError(null);
+      try {
+        const id = await flushDraft();
+        if (!id) {
+          if (mountedRef.current) {
+            setPublishError(t('pages_editor_publish_flush_error'));
+          }
+          return;
+        }
+        const localize = options?.localize !== false;
+        const locales = options?.locales ?? translationLocales;
+        const res = await api.post(`/pages/${id}/publish`, {
+          locales: localize ? locales : [],
+          localize,
+        });
+        if (!mountedRef.current || pageRef.current._id !== id) return;
+        const body = (res?.data ?? {}) as PublishResult;
+        const results = toPlain(body.results) as
+          | Record<string, unknown>
+          | undefined;
+        if (results && typeof results === 'object' && results._id) {
+          applyServerPage(results);
+        } else {
+          const next = {
+            ...pageRef.current,
+            needsPublishing: false,
+            publishedAt: new Date().toISOString(),
+          };
+          pageRef.current = next;
+          setPage(next);
+        }
+        const errors = body.localization?.errors ?? {};
+        if (options?.locales) {
+          // Retry of a subset: keep the other locales' earlier outcome.
+          setLocalizationErrors((prev) => {
+            const next = { ...prev };
+            options.locales?.forEach((l) => delete next[l]);
+            return { ...next, ...errors };
+          });
+        } else {
+          setLocalizationErrors(errors);
+        }
+        await platform.page.get(PAGES_FILTER, { force: true });
+        clearMenuPagesCache();
+      } catch (err) {
+        if (!mountedRef.current) return;
+        const raw = parseMessageFromError(err);
+        setPublishError(
+          formatPageSaveError(raw) || raw || t('pages_editor_publish_error'),
+        );
+      } finally {
+        if (mountedRef.current) setIsPublishing(false);
+      }
+    },
+    [
+      applyServerPage,
+      flushDraft,
+      isPublishing,
+      platform,
+      t,
+      translationLocales,
+    ],
+  );
+
+  /**
+   * Discards the draft: the working copy goes back to what visitors see. The
+   * server marks any draft write as needing publish, so a no-op publish
+   * (without translations — content is unchanged) clears the flag again.
+   */
+  const handleResetDraft = useCallback(async () => {
+    if (isPublishing || applyingPromptRef.current) return;
+    if (!window.confirm(t('pages_editor_reset_draft_confirm'))) return;
+    const id = pageRef.current._id;
+    if (!id || isStandardPageVirtualId(id)) {
+      // Never saved: the live copy is the defaults the editor opened with.
+      window.location.reload();
+      return;
+    }
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+    setIsPublishing(true);
+    setPublishError(null);
+    try {
+      const live = pageRef.current.liveSections ?? [];
+      const draftSections = stripForApi({
+        ...pageRef.current,
+        sections: live,
+      }).sections;
+      const patch = (await platform.page.patch(id, { draftSections })) as
+        | { error?: unknown }
+        | undefined;
+      if (patch?.error) throw patch.error;
+      const res = await api.post(`/pages/${id}/publish`, {
+        localize: false,
+        locales: [],
+      });
+      if (!mountedRef.current || pageRef.current._id !== id) return;
+      const results = toPlain(res?.data?.results) as
+        | Record<string, unknown>
+        | undefined;
+      if (results && typeof results === 'object' && results._id) {
+        applyServerPage(results);
+      }
+      setSelectedLocalId(null);
+      await platform.page.get(PAGES_FILTER, { force: true });
+      clearMenuPagesCache();
+    } catch (err) {
+      if (!mountedRef.current) return;
+      const raw = parseMessageFromError(err);
+      setPublishError(
+        formatPageSaveError(raw) || raw || t('pages_editor_reset_draft_error'),
+      );
+    } finally {
+      if (mountedRef.current) setIsPublishing(false);
+    }
+  }, [applyServerPage, isPublishing, platform, t]);
+
+  const handlePromptEdit = useCallback(
+    async (prompt: string) => {
+      const trimmed = prompt.trim();
+      if (!trimmed || applyingPromptRef.current) return;
+      applyingPromptRef.current = true;
+      setIsApplyingPrompt(true);
+      setPromptError(null);
+      try {
+        const id = await flushDraft();
+        if (!id) {
+          if (mountedRef.current) {
+            setPromptError(t('pages_editor_publish_flush_error'));
+          }
+          return;
+        }
+        const res = await api.post(`/pages/${id}/edit`, { prompt: trimmed });
+        if (!mountedRef.current || pageRef.current._id !== id) return;
+        const results = toPlain(res?.data?.results) as
+          | Record<string, unknown>
+          | undefined;
+        if (!results || typeof results !== 'object' || !results._id) {
+          setPromptError(t('pages_editor_prompt_edit_error'));
+          return;
+        }
+        applyServerPage(results);
+        setSelectedLocalId(null);
+        setPromptOpen(false);
+      } catch (err) {
+        if (!mountedRef.current) return;
+        const raw = parseMessageFromError(err);
+        setPromptError(
+          formatPageSaveError(raw) ||
+            raw ||
+            t('pages_editor_prompt_edit_error'),
+        );
+      } finally {
+        applyingPromptRef.current = false;
+        if (mountedRef.current) setIsApplyingPrompt(false);
+      }
+    },
+    [applyServerPage, flushDraft, t],
+  );
+
   const handleTabChange = (next: 'block' | 'page') => {
     setTab(next);
     if (next !== 'block') setSelectedLocalId(null);
@@ -894,6 +1186,25 @@ const PageEditor = ({ initialPage, pages }: Props) => {
               saveStatus={saveStatus}
               saveErrorMessage={saveErrorMessage}
               onDismissSaveError={() => setSaveErrorMessage(null)}
+              needsPublishing={page.needsPublishing === true}
+              publishedAt={page.publishedAt}
+              onPublish={() => void handlePublish()}
+              isPublishing={isPublishing}
+              publishError={publishError}
+              onDismissPublishError={() => setPublishError(null)}
+              localizationErrors={localizationErrors}
+              onRetryLocalization={(locales) => void handlePublish({ locales })}
+              onDismissLocalizationErrors={() => setLocalizationErrors({})}
+              onResetDraft={
+                page.needsPublishing || isDirty
+                  ? () => void handleResetDraft()
+                  : undefined
+              }
+              onOpenPromptEdit={() => {
+                setPromptError(null);
+                setPromptOpen(true);
+              }}
+              isApplyingPrompt={isApplyingPrompt}
             />
           </div>
           <div
@@ -914,6 +1225,12 @@ const PageEditor = ({ initialPage, pages }: Props) => {
               onResetToDefault={handleResetToDefault}
               isStandardPage={isStandardPage}
               menuSections={menuSectionNames}
+              needsPublishing={page.needsPublishing === true}
+              publishedAt={page.publishedAt}
+              isPublishing={isPublishing}
+              onPublish={(localize) => void handlePublish({ localize })}
+              translationLocales={translationLocales}
+              localizations={page.localizations}
               showClose
               onClose={() => setInspectorOpen(false)}
             />
@@ -929,6 +1246,17 @@ const PageEditor = ({ initialPage, pages }: Props) => {
         open={jsonOpen}
         onClose={() => setJsonOpen(false)}
         payload={stripForApi(page)}
+      />
+      <PromptEditDialog
+        open={promptOpen}
+        onClose={() => {
+          if (isApplyingPrompt) return;
+          setPromptOpen(false);
+          setPromptError(null);
+        }}
+        isSubmitting={isApplyingPrompt}
+        submitError={promptError}
+        onSubmit={(prompt) => void handlePromptEdit(prompt)}
       />
       <NewPageDialog
         open={newPageOpen}

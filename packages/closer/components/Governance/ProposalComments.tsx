@@ -25,6 +25,10 @@ interface Comment {
   replyCount?: number;
 }
 
+// Stable empty stand-in so an unloaded filter does not change identity every
+// render and re-trigger the memos below.
+const EMPTY_COLLECTION: any = new Map();
+
 const ProposalComments: React.FC<ProposalCommentsProps> = ({
   proposal,
   className = '',
@@ -38,8 +42,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
   const [replyContent, setReplyContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [replyVersion, setReplyVersion] = useState(0);
-  const [expandedComments, setExpandedComments] = useState<Set<string>>(
+  const [collapsedComments, setCollapsedComments] = useState<Set<string>>(
     new Set(),
   );
   const hasLoaded = useRef(false);
@@ -53,11 +56,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
     limit: 1000,
   };
 
-  const getReplyFilter = (commentId: string) => ({
-    where: { parentType: 'post', parentId: commentId },
-  });
-
-  const commentsMap = platform.post.find(commentFilter) || new Map();
+  const commentsMap = platform.post.find(commentFilter) || EMPTY_COLLECTION;
   const isLoading = platform.post.areLoading(commentFilter);
 
   useEffect(() => {
@@ -69,46 +68,73 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
     }
   }, [proposal._id, platform, commentsMap.size]);
 
-  useEffect(() => {
-    if (!platform?.post || commentsMap.size === 0) return;
-    Array.from(commentsMap.values()).forEach((comment: any) => {
-      const commentId = comment.get('_id');
-      if (commentId) {
-        platform.post.getCount(getReplyFilter(commentId));
-      }
-    });
-  }, [commentsMap, platform?.post, replyVersion]);
+  const commentIds = useMemo(
+    () =>
+      Array.from(commentsMap.values())
+        .map((comment: any) => comment.get('_id'))
+        .filter(Boolean)
+        .sort(),
+    [commentsMap],
+  );
+
+  // Every reply of every comment is fetched in a single request, so threads
+  // and their counts are visible without expanding anything first.
+  const repliesFilter = useMemo(
+    () =>
+      commentIds.length > 0
+        ? {
+            where: { parentType: 'post', parentId: { $in: commentIds } },
+            limit: 1000,
+          }
+        : null,
+    [commentIds],
+  );
 
   useEffect(() => {
-    if (!platform?.post || expandedComments.size === 0) return;
-    expandedComments.forEach((commentId) => {
-      platform.post.get(getReplyFilter(commentId));
+    if (!platform?.post || !repliesFilter) return;
+    platform.post.get(repliesFilter);
+  }, [platform?.post, repliesFilter]);
+
+  const repliesMap =
+    (repliesFilter && platform.post.find(repliesFilter)) || EMPTY_COLLECTION;
+
+  const repliesByParent = useMemo(() => {
+    const grouped = new Map<string, Comment[]>();
+
+    Array.from(repliesMap.values()).forEach((reply: any) => {
+      const parentId = reply.get('parentId');
+      if (!parentId) return;
+
+      const entry: Comment = {
+        _id: reply.get('_id'),
+        content: reply.get('content'),
+        createdBy: reply.get('createdBy'),
+        created: reply.get('created'),
+        parentType: reply.get('parentType'),
+        parentId,
+      };
+
+      const existing = grouped.get(parentId);
+      if (existing) {
+        existing.push(entry);
+      } else {
+        grouped.set(parentId, [entry]);
+      }
     });
-  }, [expandedComments, platform?.post, replyVersion]);
+
+    grouped.forEach((replies) =>
+      replies.sort(
+        (a, b) => new Date(a.created).getTime() - new Date(b.created).getTime(),
+      ),
+    );
+
+    return grouped;
+  }, [repliesMap]);
 
   const commentsWithReplies = useMemo(() => {
     const comments = Array.from(commentsMap.values()).map((comment: any) => {
       const commentId = comment.get('_id');
-      const replyCount = platform.post.findCount(getReplyFilter(commentId));
-
-      let replies: Comment[] = [];
-      if (expandedComments.has(commentId)) {
-        const repliesMap =
-          platform.post.find(getReplyFilter(commentId)) || new Map();
-        replies = Array.from(repliesMap.values())
-          .map((reply: any) => ({
-            _id: reply.get('_id'),
-            content: reply.get('content'),
-            createdBy: reply.get('createdBy'),
-            created: reply.get('created'),
-            parentType: reply.get('parentType'),
-            parentId: reply.get('parentId'),
-          }))
-          .sort(
-            (a, b) =>
-              new Date(a.created).getTime() - new Date(b.created).getTime(),
-          );
-      }
+      const replies = repliesByParent.get(commentId) || [];
 
       return {
         _id: commentId,
@@ -118,7 +144,7 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
         parentType: comment.get('parentType'),
         parentId: comment.get('parentId'),
         replies,
-        replyCount: typeof replyCount === 'number' ? replyCount : 0,
+        replyCount: replies.length,
       };
     });
 
@@ -126,7 +152,26 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
       (a, b) =>
         new Date(a.created).getTime() - new Date(b.created).getTime(),
     );
-  }, [commentsMap, platform.post, expandedComments, replyVersion]);
+  }, [commentsMap, repliesByParent]);
+
+  const showReplies = (commentId: string) =>
+    setCollapsedComments((prev) => {
+      if (!prev.has(commentId)) return prev;
+      const next = new Set(prev);
+      next.delete(commentId);
+      return next;
+    });
+
+  const toggleReplies = (commentId: string) =>
+    setCollapsedComments((prev) => {
+      const next = new Set(prev);
+      if (next.has(commentId)) {
+        next.delete(commentId);
+      } else {
+        next.add(commentId);
+      }
+      return next;
+    });
 
   useEffect(() => {
     if (!platform?.user || commentsWithReplies.length === 0) return;
@@ -253,15 +298,13 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
       await platform.post.post(replyData);
 
       setReplyContent('');
+      showReplies(parentCommentId);
 
-      setExpandedComments((prev) => new Set(prev).add(parentCommentId));
-
-      await Promise.all([
-        platform.post.get(getReplyFilter(parentCommentId)),
-        platform.post.getCount(getReplyFilter(parentCommentId)),
-      ]);
-
-      setReplyVersion((v) => v + 1);
+      // The bulk replies filter uses $in, which the platform cache cannot
+      // match against a freshly posted reply, so refetch it.
+      if (repliesFilter) {
+        await platform.post.get(repliesFilter, { force: true });
+      }
     } catch (err) {
       console.error('ProposalComments: Error submitting reply:', err);
       setError(t('governance_failed_submit_reply'));
@@ -318,6 +361,8 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
 
   const renderComment = (comment: Comment, isReply = false) => {
     const author = getUserData(comment.createdBy);
+    const replyCount = comment.replyCount ?? 0;
+    const areRepliesHidden = collapsedComments.has(comment._id);
 
     return (
       <div key={comment._id}>
@@ -355,70 +400,67 @@ const ProposalComments: React.FC<ProposalCommentsProps> = ({
               </div>
             </div>
             {!isReply && (
-              <div className="flex items-center pl-3 pt-0.5">
+              <div className="flex items-center gap-3 pl-3 pt-0.5">
                 <button
                   onClick={() => {
-                    const isExpanding = !expandedComments.has(comment._id);
-                    setExpandedComments((prev) => {
-                      const next = new Set(prev);
-                      if (isExpanding) {
-                        next.add(comment._id);
-                      } else {
-                        next.delete(comment._id);
-                      }
-                      return next;
-                    });
-                    setReplyingTo(isExpanding ? comment._id : null);
-                    if (!isExpanding) setReplyContent('');
+                    setReplyingTo((prev) =>
+                      prev === comment._id ? null : comment._id,
+                    );
+                    setReplyContent('');
+                    showReplies(comment._id);
                   }}
                   className="text-[11px] font-semibold text-gray-500 hover:text-gray-900"
                 >
-                  {expandedComments.has(comment._id)
-                    ? t('governance_hide_replies')
-                    : (comment.replyCount ?? 0) > 0
-                      ? `${t('governance_show_replies')} (${comment.replyCount})`
-                      : t('governance_reply')}
+                  {t('governance_reply')}
                 </button>
+                {replyCount > 0 && (
+                  <button
+                    onClick={() => toggleReplies(comment._id)}
+                    className="text-[11px] font-semibold text-accent hover:underline"
+                  >
+                    {areRepliesHidden
+                      ? t('governance_show_replies_count', {
+                          count: replyCount,
+                        })
+                      : t('governance_hide_replies')}
+                  </button>
+                )}
               </div>
             )}
           </div>
         </div>
 
-        {expandedComments.has(comment._id) && (
-          <div className="ml-5 border-l-2 border-gray-200 pl-4 pt-1">
-            {comment.replies && comment.replies.length > 0 && (
-              <div className="flex flex-col gap-1.5 pb-1.5">
-                {comment.replies.map((reply) => renderComment(reply, true))}
-              </div>
-            )}
+        {!isReply && !areRepliesHidden && replyCount > 0 && (
+          <div className="ml-5 flex flex-col gap-1.5 border-l-2 border-gray-200 pl-4 pt-1">
+            {comment.replies?.map((reply) => renderComment(reply, true))}
+          </div>
+        )}
 
-            {replyingTo === comment._id && (
-              <form
-                onSubmit={(e) => handleSubmitReply(e, comment._id)}
-                className="flex items-center gap-2 py-1"
+        {!isReply && replyingTo === comment._id && (
+          <div className="ml-5 border-l-2 border-gray-200 pl-4 pt-1">
+            <form
+              onSubmit={(e) => handleSubmitReply(e, comment._id)}
+              className="flex items-center gap-2 py-1"
+            >
+              {renderAvatar(user?.screenname || user?.email, user?.photo, 'sm')}
+              <input
+                type="text"
+                value={replyContent}
+                onChange={(e) => setReplyContent(e.target.value)}
+                className="flex-1 rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-[13px] placeholder-gray-400 focus:border-gray-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-ring"
+                placeholder={t('governance_write_reply')}
+              />
+              <button
+                type="submit"
+                disabled={isSubmitting || !replyContent.trim()}
+                aria-label={
+                  isSubmitting ? t('governance_posting') : t('governance_reply')
+                }
+                className="shrink-0 rounded-full bg-gray-900 px-3 py-1.5 text-[12px] font-medium text-white hover:bg-black disabled:opacity-30"
               >
-                {renderAvatar(
-                  user?.screenname || user?.email,
-                  user?.photo,
-                  'sm',
-                )}
-                <input
-                  type="text"
-                  value={replyContent}
-                  onChange={(e) => setReplyContent(e.target.value)}
-                  className="flex-1 rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-[13px] placeholder-gray-400 focus:border-gray-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-ring"
-                  placeholder={t('governance_write_reply')}
-                />
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !replyContent.trim()}
-                  aria-label={isSubmitting ? t('governance_posting') : t('governance_reply')}
-                  className="shrink-0 rounded-full bg-gray-900 px-3 py-1.5 text-[12px] font-medium text-white hover:bg-black disabled:opacity-30"
-                >
-                  {isSubmitting ? t('governance_posting') : t('governance_reply')}
-                </button>
-              </form>
-            )}
+                {isSubmitting ? t('governance_posting') : t('governance_reply')}
+              </button>
+            </form>
           </div>
         )}
       </div>

@@ -196,19 +196,22 @@ export const canShowStayTokenCreditPaymentOptions = (
   );
 };
 
-export const computeFiatOwed = (stay: Stay): number => {
-  const target = stay.fiatTarget?.val ?? stay.priceLock?.total.val ?? 0;
+export const computeFiatOwed = (stay?: Stay | null): number => {
+  if (!stay) return 0;
+  const target = stay.fiatTarget?.val ?? stay.priceLock?.total?.val ?? 0;
   const paid = stay.fiatPaid?.val ?? 0;
   return Math.max(0, target - paid);
 };
 
-export const computeCreditsOwed = (stay: Stay): number => {
+export const computeCreditsOwed = (stay?: Stay | null): number => {
+  if (!stay) return 0;
   const target = stay.creditsTarget?.val ?? 0;
   const paid = stay.creditsPaid?.val ?? 0;
   return Math.max(0, target - paid);
 };
 
-export const computeTokensOwed = (stay: Stay): number => {
+export const computeTokensOwed = (stay?: Stay | null): number => {
+  if (!stay) return 0;
   const target = stay.tokensTarget?.val ?? 0;
   const staked = stay.tokensStaked?.val ?? 0;
   const raw = Math.max(0, target - staked);
@@ -660,9 +663,14 @@ export const submitStay = async (id: string): Promise<Stay> => {
 
 export const checkoutStay = async (
   id: string,
-  paymentMethod: string,
+  paymentMethod?: string,
 ): Promise<StayCheckoutResponse> => {
-  const { data } = await api.post(`/stays/${id}/checkout`, { paymentMethod });
+  const trimmed =
+    typeof paymentMethod === 'string' ? paymentMethod.trim() : '';
+  const { data } = await api.post(
+    `/stays/${id}/checkout`,
+    trimmed ? { paymentMethod: trimmed } : {},
+  );
   return (data as ApiOk<StayCheckoutResponse>).results;
 };
 

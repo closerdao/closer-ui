@@ -55,7 +55,7 @@ DashboardPagesEdit.getInitialProps = async (context: NextPageContext) => {
     const decodedId = resolveEditorRouteParam(id);
     const [page, listRes] = await Promise.all([
       resolveStandardOrDbPage(decodedId, { context: 'editor' }),
-      api.get('/page', { params: { limit: 100 } }).catch(() => ({ data: {} })),
+      api.get('/page', { params: { limit: 200 } }).catch(() => ({ data: {} })),
     ]);
     const list = listRes?.data?.results ?? [];
     return { initialPage: page, pages: list };

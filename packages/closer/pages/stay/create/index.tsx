@@ -42,19 +42,20 @@ import {
   getFoodOptionsForBookingContext,
   userCanCreateTeamBooking,
 } from '../../../utils/booking.helpers';
+import { buildCreateStayGuestsPayload } from '../../../utils/bookingCoGuests.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import { normalizeDiscountCode } from '../../../utils/discountCode';
 import {
   CalendarBlockingEvent,
   getCalendarBlockingEventsInRange,
 } from '../../../utils/events.helpers';
-import { buildCreateStayGuestsPayload } from '../../../utils/bookingCoGuests.helpers';
 import { getSiteUrl } from '../../../utils/siteUrl';
 import {
   clearStayCoGuestsDraft,
   readStayCoGuestsDraft,
   writeStayCoGuestsDraft,
 } from '../../../utils/stayCoGuestsDraft';
+import { buildStayCheckoutHref } from '../../../utils/stayRouting.helpers';
 import { createStay, searchStays } from '../../../utils/stays.api';
 import { buildVolunteerInfo } from '../../../utils/volunteerApplication.helpers';
 import {
@@ -141,6 +142,7 @@ const StayCreatePage = ({
     bookingType: bookingTypeQuery,
     eventId: eventIdQuery,
     ticketOption: ticketOptionQuery,
+    ticketOnly: ticketOnlyQuery,
     discountCode: discountCodeQuery,
     projectId: projectIdQuery,
     isTeamBooking: isTeamBookingQuery,
@@ -175,6 +177,16 @@ const StayCreatePage = ({
     if (availableTickets.length === 0) return false;
     return availableTickets.every((option) => option.isDayTicket);
   }, [isEventBooking, eventProp?.paid, availableTickets]);
+
+  /**
+   * A stay that buys event access and nothing else — no listing, no search.
+   * Either every ticket on the event is a day ticket, or the guest already told
+   * the ticket modal they need no bed (a day ticket, or accommodation their own
+   * booking already covers), which arrives as ?ticketOnly=true.
+   */
+  const isTicketOnlyStay =
+    isEventBooking &&
+    (isDayTicketOnlyEvent || readParam(ticketOnlyQuery) === 'true');
 
   const initialAdults = Number(savedAdults) || 1;
   const initialChildren = Number(savedChildren || savedKids) || 0;
@@ -319,7 +331,8 @@ const StayCreatePage = ({
   const [searchDuration, setSearchDuration] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
   const [isCreatingDraft, setIsCreatingDraft] = useState<string | null>(null);
-  const [isCreatingDayTicket, setIsCreatingDayTicket] = useState(false);
+  const [isCreatingTicketOnlyStay, setIsCreatingTicketOnlyStay] =
+    useState(false);
   const [results, setResults] = useState<StaySearchListing[] | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [didSearchOnce, setDidSearchOnce] = useState(false);
@@ -343,7 +356,7 @@ const StayCreatePage = ({
   const [usedListingFallback, setUsedListingFallback] = useState(false);
 
   useEffect(() => {
-    if (!isDayTicketOnlyEvent) {
+    if (!isTicketOnlyStay) {
       selectTicketOption(null);
       return;
     }
@@ -364,18 +377,22 @@ const StayCreatePage = ({
       }
       return availableTickets[0] || null;
     });
-  }, [isDayTicketOnlyEvent, availableTickets, ticketOptionQuery]);
+  }, [isTicketOnlyStay, availableTickets, ticketOptionQuery]);
 
   /** The server ignores the flag from anyone else, so the notice and the results
    *  would otherwise disagree for a non-staff caller carrying it in the URL. */
   const canCreateTeamBooking = userCanCreateTeamBooking(user?.roles);
   const isTeamBooking = canCreateTeamBooking && wantsTeamBooking;
   const canPickTeamBooking =
-    canCreateTeamBooking && !isVolunteerApplication && !isDayTicketOnlyEvent;
+    canCreateTeamBooking && !isVolunteerApplication && !isTicketOnlyStay;
 
   const canSelectDates = eventProp?.canSelectDates !== false;
-  const hasValidDayTicket =
-    !isDayTicketOnlyEvent || Boolean(selectedTicketOption);
+  const hasSelectedTicket = !isTicketOnlyStay || Boolean(selectedTicketOption);
+
+  /** In accommodation mode nothing on this page picks a ticket, so the choice
+   *  made in the event page modal is only in the URL. */
+  const ticketOptionName =
+    selectedTicketOption?.name || readParam(ticketOptionQuery) || '';
 
   /**
    * Events flagged `blocksBookingCalendar` make /stays/search return every
@@ -455,12 +472,12 @@ const StayCreatePage = ({
     if (bookingType) out.bookingType = bookingType;
     if (projectIds.length) out.projectId = projectIds.join(',');
     if (eventId) out.eventId = eventId;
-    if (isDayTicketOnlyEvent && selectedTicketOption?.name) {
-      out.ticketOption = selectedTicketOption.name;
-    }
-    if (isDayTicketOnlyEvent && discountCode) {
-      out.discountCode = normalizeDiscountCode(discountCode);
-    }
+    // The ticket the guest chose on the event page rides along in every mode:
+    // it has to survive the /signup detour and reach the checkout even when
+    // accommodation is picked in between.
+    if (ticketOptionName) out.ticketOption = ticketOptionName;
+    if (isTicketOnlyStay) out.ticketOnly = 'true';
+    if (discountCode) out.discountCode = normalizeDiscountCode(discountCode);
     return out;
   };
 
@@ -493,7 +510,7 @@ const StayCreatePage = ({
       start: formatDate(rawParams.start),
       end: formatDate(rawParams.end),
     };
-    if (isDayTicketOnlyEvent) {
+    if (isTicketOnlyStay) {
       setActiveParams(params);
       syncUrl(params, teamBooking);
       setResults([]);
@@ -579,7 +596,7 @@ const StayCreatePage = ({
       }
     : {};
 
-  const handleDayTicketContinue = async () => {
+  const handleTicketOnlyContinue = async () => {
     const params: StaySearchBarParams = pendingParams ||
       activeParams || {
         start: formatDate(
@@ -603,14 +620,15 @@ const StayCreatePage = ({
       return;
     }
 
-    setIsCreatingDayTicket(true);
+    setIsCreatingTicketOnlyStay(true);
     setSearchError(null);
     try {
-      const day = params.start;
-      // No listingId: a day ticket grants event access, not a space.
+      // No listingId: this stay buys event access, not a space. A day ticket
+      // is for one day; any other ticket bought without accommodation still
+      // spans the event, so the stay carries the dates the guest attends.
       const stay = await createStay({
-        start: day,
-        end: day,
+        start: params.start,
+        end: selectedTicketOption.isDayTicket ? params.start : params.end,
         adults: params.adults,
         infants: params.infants,
         pets: params.pets,
@@ -623,10 +641,15 @@ const StayCreatePage = ({
         ...eventFoodPayload,
       });
       clearStayCoGuestsDraft();
-      router.push(`/stay/create/${stay._id}`);
+      router.push(
+        buildStayCheckoutHref(stay._id, {
+          ticketOption: selectedTicketOption.name,
+          discountCode,
+        }),
+      );
     } catch (err) {
       setSearchError(parseMessageFromError(err));
-      setIsCreatingDayTicket(false);
+      setIsCreatingTicketOnlyStay(false);
     }
   };
 
@@ -672,6 +695,12 @@ const StayCreatePage = ({
         ...coGuestPayload(),
         ...volunteerPayload,
         ...(eventId ? { eventId } : {}),
+        ...(eventId && ticketOptionName
+          ? { ticketOption: ticketOptionName }
+          : {}),
+        ...(eventId && discountCode
+          ? { eventDiscount: normalizeDiscountCode(discountCode) }
+          : {}),
         ...(isTeamBooking ? { isTeamBooking: true } : {}),
         ...(isEventBooking && eventProp?.foodOption
           ? eventFoodPayload
@@ -688,7 +717,13 @@ const StayCreatePage = ({
         clearVolunteerApplicationDraft(user?._id, bookingType);
       }
       clearStayCoGuestsDraft();
-      router.push(`/stay/create/${stay._id}`);
+      // The ticket was chosen before the stay existed, so checkout only learns
+      // about it from the stay or from here.
+      router.push(
+        buildStayCheckoutHref(stay._id, {
+          ...(eventId ? { ticketOption: ticketOptionName, discountCode } : {}),
+        }),
+      );
     } catch (err) {
       setSearchError(parseMessageFromError(err));
       setIsCreatingDraft(null);
@@ -701,7 +736,7 @@ const StayCreatePage = ({
     // The flag only counts for staff, so the first search has to wait for the
     // roles rather than search once as a guest and once as a team.
     if (wantsTeamBookingFromUrl && isAuthLoading) return;
-    if (isDayTicketOnlyEvent) {
+    if (isTicketOnlyStay) {
       const params: StaySearchBarParams = {
         start: String(savedStart || defaultDateRange.start),
         end: String(savedEnd || defaultDateRange.end),
@@ -742,7 +777,7 @@ const StayCreatePage = ({
     savedStart,
     savedEnd,
     isEventBooking,
-    isDayTicketOnlyEvent,
+    isTicketOnlyStay,
     wantsTeamBookingFromUrl,
     isAuthLoading,
   ]);
@@ -809,7 +844,9 @@ const StayCreatePage = ({
               : t('stay_create_title')}
           </Heading>
           <p className="text-base md:text-lg text-gray-600 max-w-xl mx-auto">
-            {isEventBooking
+            {isTicketOnlyStay
+              ? t('stay_create_ticket_only_subtitle')
+              : isEventBooking
               ? t('stay_create_event_subtitle')
               : projectNames
               ? t('stay_create_residence_project_subtitle', {
@@ -834,18 +871,20 @@ const StayCreatePage = ({
           )}
         </div>
 
-        {isDayTicketOnlyEvent && availableTickets.length > 0 && (
-          <div className="mb-8 md:mb-10 max-w-2xl mx-auto">
-            <TicketOptions
-              items={availableTickets}
-              selectTicketOption={selectTicketOption as any}
-              selectedTicketOption={selectedTicketOption}
-              discountCode={discountCode}
-              setDiscountCode={setDiscountCode}
-              eventId={eventId}
-            />
-          </div>
-        )}
+        {isTicketOnlyStay &&
+          availableTickets.length > 0 &&
+          !readParam(ticketOptionQuery) && (
+            <div className="mb-8 md:mb-10 max-w-2xl mx-auto">
+              <TicketOptions
+                items={availableTickets}
+                selectTicketOption={selectTicketOption as any}
+                selectedTicketOption={selectedTicketOption}
+                discountCode={discountCode}
+                setDiscountCode={setDiscountCode}
+                eventId={eventId}
+              />
+            </div>
+          )}
 
         <div className="mb-8 md:mb-10">
           <StaySearchBar
@@ -874,7 +913,7 @@ const StayCreatePage = ({
                 ? String(eventProp.end)
                 : undefined
             }
-            hideSearchButton={isDayTicketOnlyEvent}
+            hideSearchButton={isTicketOnlyStay}
             coGuests={coGuests}
             onCoGuestsChange={setCoGuests}
             minDate={projectWindow?.start}
@@ -913,19 +952,19 @@ const StayCreatePage = ({
           )}
         </div>
 
-        {isDayTicketOnlyEvent && (
+        {isTicketOnlyStay && (
           <div className="mb-8 max-w-md mx-auto">
             <Button
-              onClick={handleDayTicketContinue}
-              isEnabled={hasValidDayTicket && !isCreatingDayTicket}
-              isLoading={isCreatingDayTicket}
+              onClick={handleTicketOnlyContinue}
+              isEnabled={hasSelectedTicket && !isCreatingTicketOnlyStay}
+              isLoading={isCreatingTicketOnlyStay}
             >
               {t('booking_button_continue')}
             </Button>
           </div>
         )}
 
-        {!isDayTicketOnlyEvent && (
+        {!isTicketOnlyStay && (
           <section
             aria-label={t('stay_create_results_region_label')}
             aria-live="polite"

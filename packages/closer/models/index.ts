@@ -242,6 +242,31 @@ const models = {
       ],
     },
     {
+      name: 'cancellationPolicy',
+      label: 'Ticket cancellation policy',
+      type: 'cancellationPolicy',
+      tab: 'tickets',
+      showIf: [
+        {
+          field: 'paid',
+          value: true,
+        },
+      ],
+    },
+    {
+      name: 'cancellationPolicyDisclaimer',
+      label: 'Cancellation policy note',
+      type: 'textarea',
+      tab: 'tickets',
+      placeholder: 'Shown next to the cancel button on the ticket.',
+      showIf: [
+        {
+          field: 'paid',
+          value: true,
+        },
+      ],
+    },
+    {
       name: 'stripePub',
       label: 'Custom Stripe Public Key',
       type: 'text',

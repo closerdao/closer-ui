@@ -157,7 +157,8 @@
     "volunteerCommitment": "Volunteer commitment",
     "volunteeringMinStay": "Volunteering minimum stay (nights)",
     "weekDay": "Weekday",
-    "weekPosition": "Week position"
+    "weekPosition": "Week position",
+    "languages": "Languages"
   },
   "pt": {
     "badge": "Distintivo",
@@ -317,6 +318,7 @@
     "volunteerCommitment": "Compromisso de voluntariado",
     "volunteeringMinStay": "Estadia mínima de voluntariado (noites)",
     "weekDay": "Dia da semana",
-    "weekPosition": "Posição na semana"
+    "weekPosition": "Posição na semana",
+    "languages": "Idiomas"
   }
 }
