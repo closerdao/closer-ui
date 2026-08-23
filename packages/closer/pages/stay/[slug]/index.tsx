@@ -9,6 +9,7 @@ import BookingStatusTag from '../../../components/BookingStatusTag';
 import BookingGuests from '../../../components/BookingGuests';
 import BookingQuestionnaireAnswers from '../../../components/BookingQuestionnaireAnswers';
 import Modal from '../../../components/Modal';
+import { withPageErrorBoundary } from '../../../components/ErrorBoundary';
 import PageError from '../../../components/PageError';
 import SummaryCosts from '../../../components/SummaryCosts';
 import SummaryDates from '../../../components/SummaryDates';
@@ -125,7 +126,7 @@ interface Props {
   projects: Project[];
 }
 
-const StayBookingSummaryPage = ({
+const StayBookingSummaryContent = ({
   booking,
   listing,
   event,
@@ -1516,6 +1517,11 @@ const StayBookingSummaryPage = ({
     </>
   );
 };
+
+const StayBookingSummaryPage = withPageErrorBoundary(
+  StayBookingSummaryContent,
+  'StayBookingSummaryPage',
+);
 
 StayBookingSummaryPage.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;

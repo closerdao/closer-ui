@@ -1,13 +1,17 @@
 import Head from 'next/head';
 
 import { NextPageContext } from 'next';
+import { useRouter } from 'next/router';
 import { useTranslations } from 'next-intl';
 
 import CustomSectionComponent from '../components/custom-pages/CustomSectionComponent';
 import type { PageDoc, PageSection } from '../types/page';
 import { resolveBlockText } from '../utils/blockI18n';
 import { parseMessageFromError } from '../utils/common';
-import { resolveStandardOrDbPage } from '../utils/standardPages';
+import {
+  localizePageForVisitor,
+  resolveStandardOrDbPage,
+} from '../utils/standardPages';
 import PageNotFound from './not-found';
 
 export interface Props {
@@ -60,12 +64,21 @@ export const loadCustomPageProps = async (
   }
 };
 
-export const CustomPageView = ({ page, error }: Props) => {
+export const CustomPageView = ({ page: rawPage, error }: Props) => {
   const t = useTranslations();
+  const router = useRouter();
 
-  if (!page) {
+  if (!rawPage) {
     return <PageNotFound error={error} />;
   }
+
+  // Visitors always see the published copy, translated for their locale when
+  // the page has been published with that locale.
+  const page = localizePageForVisitor(
+    rawPage,
+    router?.locale,
+    router?.defaultLocale,
+  );
 
   const platformUrl = process.env.NEXT_PUBLIC_PLATFORM_URL || '';
   const normalizedSlug = page.slug?.startsWith('/')
