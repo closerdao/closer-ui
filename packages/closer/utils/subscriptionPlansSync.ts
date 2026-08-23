@@ -34,11 +34,11 @@ export const SUBSCRIPTION_PLANS_SYNC_PATH =
  */
 const MISSING_STRIPE_OBJECT_PATTERNS = [
   /was not found on the stripe connected account/i,
-  /no such (price|product|plan)/i,
+  /no such (price|product|plan|coupon)/i,
   /resource_missing/i,
 ];
 
-const STRIPE_ID_PATTERN = /\b(?:price|prod)_[A-Za-z0-9]+/g;
+const STRIPE_ID_PATTERN = /\b(?:price|prod|coupon)_[A-Za-z0-9]+/g;
 
 const isMissingStripeObjectError = (message: string): boolean =>
   MISSING_STRIPE_OBJECT_PATTERNS.some((pattern) => pattern.test(message));
@@ -67,18 +67,30 @@ const mergeSyncedPlanIds = (
     const localProductId = isStale(staleIds, plan.productId)
       ? ''
       : plan.productId;
+    const localCouponId = isStale(staleIds, plan.couponId) ? '' : plan.couponId;
 
     if (!synced) {
-      return { ...plan, priceId: localPriceId, productId: localProductId };
+      return {
+        ...plan,
+        priceId: localPriceId,
+        productId: localProductId,
+        couponId: localCouponId,
+      };
     }
     return {
       ...plan,
       priceId: synced.priceId || localPriceId,
       productId: synced.productId || localProductId,
+      couponId: synced.couponId || localCouponId,
+      firstMonthFree:
+        typeof synced.firstMonthFree === 'boolean'
+          ? synced.firstMonthFree
+          : plan.firstMonthFree,
       price:
         typeof synced.price === 'number' && !Number.isNaN(synced.price)
           ? synced.price
           : plan.price,
+      billingPeriod: synced.billingPeriod || plan.billingPeriod,
     };
   });
 };
@@ -96,6 +108,8 @@ const buildSyncElements = (
     productId: isStale(staleIds, plan.productId)
       ? undefined
       : plan.productId || undefined,
+    couponId: isStale(staleIds, plan.couponId) ? undefined : plan.couponId || undefined,
+    firstMonthFree: Boolean(plan.firstMonthFree),
     tier: Number(plan.tier) || 0,
     monthlyCredits: Number(plan.monthlyCredits) || 0,
     price: Number(plan.price) || 0,
@@ -118,7 +132,7 @@ export const syncSubscriptionPlansWithStripe = async (
 
   const sentIds = new Set(
     plansToSync
-      .flatMap((plan) => [plan.priceId, plan.productId])
+      .flatMap((plan) => [plan.priceId, plan.productId, plan.couponId])
       .filter((id): id is string => Boolean(id)),
   );
   const staleIds = new Set<string>();

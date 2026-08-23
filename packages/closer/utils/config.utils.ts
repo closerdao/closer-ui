@@ -196,7 +196,9 @@ export const getDefaultConfigValue = (
           defaultConfigData[0] === 'number' ||
           defaultConfigData[0] === 'boolean');
       if (isPrimitiveArray) {
-        configOutput[key] = Array.isArray(defaultArray) ? [...defaultArray] : [];
+        configOutput[key] = Array.isArray(defaultArray)
+          ? [...defaultArray]
+          : [];
       } else {
         configOutput[key] = Array.isArray(defaultArray)
           ? defaultArray.map((el: any) =>
@@ -246,11 +248,27 @@ export const getUpdatedArray = (
   name: string,
   inputValue: string | number | boolean,
 ) => {
-  // Strip the index from the name if it exists at the end
-  const strippedName = name.replace(/\d+$/, '');
+  const strippedName = name.replace(/-?\d+$/, '');
 
-  const updatedArray = value.map((item: any[], idx: number) =>
-    idx === index ? { ...item, [strippedName]: inputValue } : item,
+  const updatedArray = value.map(
+    (item: Record<string, unknown>, idx: number) => {
+      if (idx !== index) {
+        return item;
+      }
+      const nextItem: Record<string, unknown> = {
+        ...item,
+        [strippedName]: inputValue,
+      };
+      if (strippedName === 'billingPeriod') {
+        const period = String(inputValue || '')
+          .trim()
+          .toLowerCase();
+        if (period === 'year' || period === 'yearly') {
+          nextItem.firstMonthFree = false;
+        }
+      }
+      return nextItem;
+    },
   );
   return updatedArray;
 };

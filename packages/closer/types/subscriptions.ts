@@ -25,6 +25,8 @@ export interface SubscriptionPlan {
   tiersAvailable: boolean;
   perks: string;
   billingPeriod: string;
+  firstMonthFree?: boolean;
+  couponId?: string;
   tiers?: string;
   variants?: SubscriptionVariant;
   note?: string;
@@ -62,6 +64,8 @@ export interface SubscriptionPlanSyncInput {
   tiersAvailable: boolean;
   perks: string;
   billingPeriod: string;
+  firstMonthFree?: boolean;
+  couponId?: string;
 }
 
 export interface SubscriptionPlansSyncRequest {
