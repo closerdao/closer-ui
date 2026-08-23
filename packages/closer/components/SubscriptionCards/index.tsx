@@ -5,12 +5,17 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import { useIntroOfferEligibility } from '../../hooks/useIntroOfferEligibility';
 import { SubscriptionPlan } from '../../types/subscriptions';
 import { slugify } from '../../utils/common';
 import { getCurrencySymbol } from '../../utils/helpers';
-import { parseSubscriptionPerks } from '../../utils/subscriptionPerks';
 import { sanitizeSubscriptionPerkHtml } from '../../utils/sanitizeSubscriptionPerkHtml';
-import { filterPaidSubscriptionPlans, isFirstMonthFreePlan, normalizeSubscriptionBillingPeriod } from '../../utils/subscriptions.helpers';
+import { parseSubscriptionPerks } from '../../utils/subscriptionPerks';
+import {
+  filterPaidSubscriptionPlans,
+  isFirstMonthFreePlan,
+  normalizeSubscriptionBillingPeriod,
+} from '../../utils/subscriptions.helpers';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Heading from '../ui/Heading';
@@ -34,6 +39,7 @@ const SubscriptionCards = ({
 }: SubscriptionCardsProps) => {
   const t = useTranslations();
   const { isAuthenticated } = useAuth();
+  const { eligibleForIntro } = useIntroOfferEligibility();
 
   const { APP_NAME } = useConfig();
 
@@ -127,7 +133,9 @@ const SubscriptionCards = ({
                             }}
                           />
                         ) : (
-                          <span className="block font-medium">{perk.title}</span>
+                          <span className="block font-medium">
+                            {perk.title}
+                          </span>
                         )}
                         {perk.description ? (
                           perk.description.includes('<') ? (
@@ -150,7 +158,7 @@ const SubscriptionCards = ({
                   ))}
                 </ul>
                 <div className="text-accent">
-                  {isFirstMonthFreePlan(plan) && (
+                  {isFirstMonthFreePlan(plan) && eligibleForIntro && (
                     <span className="block font-semibold mb-1">
                       {t('subscriptions_first_month_free')}
                     </span>
@@ -173,8 +181,9 @@ const SubscriptionCards = ({
                       {plan.price}
                     </div>
                     <p className="text-sm font-normal">
-                      {normalizeSubscriptionBillingPeriod(plan?.billingPeriod) ===
-                      'year'
+                      {normalizeSubscriptionBillingPeriod(
+                        plan?.billingPeriod,
+                      ) === 'year'
                         ? t('subscriptions_summary_per_year')
                         : t('subscriptions_summary_per_month')}
                     </p>

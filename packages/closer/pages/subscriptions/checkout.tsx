@@ -25,6 +25,7 @@ import {
 } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import { useIntroOfferEligibility } from '../../hooks/useIntroOfferEligibility';
 import { GeneralConfig, PaymentConfig } from '../../types';
 import {
   SelectedPlan,
@@ -72,6 +73,7 @@ const SubscriptionsCheckoutPage: NextPage = () => {
     availableOnly: false,
   });
   const { isAuthenticated, isLoading, user } = useAuth();
+  const { eligibleForIntro } = useIntroOfferEligibility();
   const router = useRouter();
   const { priceId, monthlyCredits, source } = router.query;
   const defaultVatRate = Number(process.env.NEXT_PUBLIC_VAT_RATE) || 0;
@@ -156,7 +158,8 @@ const SubscriptionsCheckoutPage: NextPage = () => {
     selectedPlan,
     monthlyCreditsSelected,
   );
-  const firstMonthFree = isFirstMonthFreePlan(selectedSubscription);
+  const firstMonthFree =
+    isFirstMonthFreePlan(selectedSubscription) && eligibleForIntro;
   const dueToday = firstMonthFree ? 0 : total;
 
   return (

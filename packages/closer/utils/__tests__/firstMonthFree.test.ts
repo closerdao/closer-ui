@@ -1,5 +1,7 @@
 import { getUpdatedArray } from '../config.utils';
 import {
+  hasConsumedFirstMonthFree,
+  isEligibleForFirstMonthFree,
   isFirstMonthFreePlan,
   isMonthlySubscriptionPlan,
   normalizeSubscriptionBillingPeriod,
@@ -54,6 +56,34 @@ describe('isMonthlySubscriptionPlan', () => {
     expect(isMonthlySubscriptionPlan({ billingPeriod: 'monthly' } as any)).toBe(
       true,
     );
+  });
+});
+
+describe('isEligibleForFirstMonthFree', () => {
+  const monthlyFreePlan = {
+    slug: 'wanderer',
+    title: 'Wanderer',
+    description: '',
+    priceId: 'price_1',
+    tier: 1,
+    price: 10,
+    available: true,
+    tiersAvailable: false,
+    perks: '',
+    billingPeriod: 'month',
+    firstMonthFree: true,
+  };
+
+  it('is false after a prior Closer subscription', () => {
+    expect(hasConsumedFirstMonthFree({})).toBe(false);
+    expect(hasConsumedFirstMonthFree({ subscriptionId: 'sub_1' })).toBe(true);
+    expect(isEligibleForFirstMonthFree(monthlyFreePlan, {})).toBe(true);
+    expect(
+      isEligibleForFirstMonthFree(monthlyFreePlan, {
+        createdAt: new Date().toISOString(),
+      }),
+    ).toBe(false);
+    expect(isEligibleForFirstMonthFree(monthlyFreePlan, {}, false)).toBe(false);
   });
 });
 

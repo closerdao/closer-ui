@@ -12,11 +12,39 @@ export const normalizeSubscriptionBillingPeriod = (
   return 'month';
 };
 
-export const isMonthlySubscriptionPlan = (plan?: SubscriptionPlan | null): boolean =>
+export const isMonthlySubscriptionPlan = (
+  plan?: SubscriptionPlan | null,
+): boolean =>
   normalizeSubscriptionBillingPeriod(plan?.billingPeriod) === 'month';
 
 export const isFirstMonthFreePlan = (plan?: SubscriptionPlan | null): boolean =>
   Boolean(plan?.firstMonthFree) && isMonthlySubscriptionPlan(plan);
+
+export const hasConsumedFirstMonthFree = (
+  subscription?: {
+    createdAt?: Date | string;
+    paidAt?: Date | string;
+    subscriptionId?: string;
+  } | null,
+): boolean =>
+  Boolean(
+    subscription?.createdAt ||
+      subscription?.paidAt ||
+      subscription?.subscriptionId,
+  );
+
+export const isEligibleForFirstMonthFree = (
+  plan?: SubscriptionPlan | null,
+  subscription?: {
+    createdAt?: Date | string;
+    paidAt?: Date | string;
+    subscriptionId?: string;
+  } | null,
+  customerEligible = true,
+): boolean =>
+  isFirstMonthFreePlan(plan) &&
+  !hasConsumedFirstMonthFree(subscription) &&
+  customerEligible;
 
 export const isPaidSubscriptionPlan = (
   plan?: SubscriptionPlan | null,
