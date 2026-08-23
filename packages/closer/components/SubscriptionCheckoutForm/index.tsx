@@ -20,6 +20,7 @@ interface SubscriptionCheckoutFormProps {
   priceId: string | string[] | undefined;
   monthlyCredits?: number;
   source?: string;
+  firstMonthFree?: boolean;
   tierMetricEvent?: 'tier-1-first-payment' | 'tier-2-first-payment';
 }
 
@@ -28,6 +29,7 @@ function SubscriptionCheckoutForm({
   priceId,
   monthlyCredits,
   source,
+  firstMonthFree = false,
   tierMetricEvent = 'tier-1-first-payment',
 }: SubscriptionCheckoutFormProps) {
   const t = useTranslations();
@@ -203,7 +205,9 @@ function SubscriptionCheckoutForm({
         isEnabled={isSubmitEnabled && hasAcceptedConditions && !isLoading}
         isLoading={isLoading}
       >
-        {t('subscriptions_checkout_pay_button')}
+        {firstMonthFree
+          ? t('subscriptions_checkout_start_free_button')
+          : t('subscriptions_checkout_pay_button')}
       </Button>
     </form>
   );

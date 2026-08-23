@@ -1,5 +1,23 @@
 import { SubscriptionPlan, SubscriptionsConfig } from '../types/subscriptions';
 
+export const normalizeSubscriptionBillingPeriod = (
+  billingPeriod?: string | null,
+): 'month' | 'year' => {
+  const value = String(billingPeriod || 'month')
+    .trim()
+    .toLowerCase();
+  if (value === 'year' || value === 'yearly') {
+    return 'year';
+  }
+  return 'month';
+};
+
+export const isMonthlySubscriptionPlan = (plan?: SubscriptionPlan | null): boolean =>
+  normalizeSubscriptionBillingPeriod(plan?.billingPeriod) === 'month';
+
+export const isFirstMonthFreePlan = (plan?: SubscriptionPlan | null): boolean =>
+  Boolean(plan?.firstMonthFree) && isMonthlySubscriptionPlan(plan);
+
 export const isPaidSubscriptionPlan = (
   plan?: SubscriptionPlan | null,
 ): plan is SubscriptionPlan => {

@@ -10,7 +10,7 @@ import { slugify } from '../../utils/common';
 import { getCurrencySymbol } from '../../utils/helpers';
 import { parseSubscriptionPerks } from '../../utils/subscriptionPerks';
 import { sanitizeSubscriptionPerkHtml } from '../../utils/sanitizeSubscriptionPerkHtml';
-import { filterPaidSubscriptionPlans } from '../../utils/subscriptions.helpers';
+import { filterPaidSubscriptionPlans, isFirstMonthFreePlan, normalizeSubscriptionBillingPeriod } from '../../utils/subscriptions.helpers';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Heading from '../ui/Heading';
@@ -150,6 +150,11 @@ const SubscriptionCards = ({
                   ))}
                 </ul>
                 <div className="text-accent">
+                  {isFirstMonthFreePlan(plan) && (
+                    <span className="block font-semibold mb-1">
+                      {t('subscriptions_first_month_free')}
+                    </span>
+                  )}
                   {plan?.note && <span>{plan?.note}</span>}
                 </div>
               </div>
@@ -168,7 +173,8 @@ const SubscriptionCards = ({
                       {plan.price}
                     </div>
                     <p className="text-sm font-normal">
-                      {plan?.billingPeriod === 'yearly'
+                      {normalizeSubscriptionBillingPeriod(plan?.billingPeriod) ===
+                      'year'
                         ? t('subscriptions_summary_per_year')
                         : t('subscriptions_summary_per_month')}
                     </p>
