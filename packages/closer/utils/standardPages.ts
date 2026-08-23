@@ -64,6 +64,78 @@ export interface PageListItem extends PageMenuMeta {
   isDefault?: boolean;
 }
 
+/**
+ * Server-managed draft/publish/localization fields. Read-only on the client:
+ * the editor only ever writes `draftSections` and the publish endpoint
+ * moves it live.
+ */
+export const readPagePublishState = (
+  raw: Record<string, unknown>,
+): Pick<
+  PageDoc,
+  'draftSections' | 'needsPublishing' | 'publishedAt' | 'localizations'
+> => {
+  const out: Pick<
+    PageDoc,
+    'draftSections' | 'needsPublishing' | 'publishedAt' | 'localizations'
+  > = {};
+  if (Array.isArray(raw.draftSections)) {
+    out.draftSections = raw.draftSections as PageSection[];
+  }
+  if (typeof raw.needsPublishing === 'boolean') {
+    out.needsPublishing = raw.needsPublishing;
+  }
+  if (raw.publishedAt != null && String(raw.publishedAt)) {
+    out.publishedAt = String(raw.publishedAt);
+  }
+  if (
+    raw.localizations != null &&
+    typeof raw.localizations === 'object' &&
+    !Array.isArray(raw.localizations)
+  ) {
+    out.localizations = raw.localizations as PageDoc['localizations'];
+  }
+  return out;
+};
+
+/**
+ * Picks the published copy a visitor should see for `locale`. Falls back to
+ * the English page when there is no localization for that locale (never
+ * published since it was added, or translation failed).
+ */
+export const localizePageForVisitor = (
+  page: PageDoc,
+  locale?: string | null,
+  defaultLocale?: string | null,
+): PageDoc => {
+  if (!locale || locale === (defaultLocale ?? 'en')) return page;
+  const localized = page.localizations?.[locale];
+  if (!localized) return page;
+  const baseSections = page.sections ?? [];
+  const localizedSections = Array.isArray(localized.sections)
+    ? localized.sections
+    : null;
+  // Translations mirror the published sections one-to-one; a mismatch means a
+  // stale translation, so keep the English sections rather than mixing.
+  const sections =
+    localizedSections && localizedSections.length === baseSections.length
+      ? localizedSections.map((section, i) => ({
+          ...baseSections[i],
+          ...section,
+          _id: baseSections[i]?._id ?? section._id,
+          type: baseSections[i]?.type ?? section.type,
+        }))
+      : baseSections;
+  return {
+    ...page,
+    title: localized.title?.trim() ? localized.title : page.title,
+    description: localized.description?.trim()
+      ? localized.description
+      : page.description,
+    sections,
+  };
+};
+
 const toPageDoc = (
   raw: Record<string, unknown>,
   extras?: { isStandard?: boolean; isDefault?: boolean },
@@ -79,6 +151,7 @@ const toPageDoc = (
     sections: Array.isArray(raw.sections)
       ? (raw.sections as PageSection[])
       : [],
+    ...readPagePublishState(raw),
     ...(raw.aiMeta != null &&
     typeof raw.aiMeta === 'object' &&
     !Array.isArray(raw.aiMeta)
