@@ -4,6 +4,7 @@ import Link from 'next/link';
 
 import { useEffect, useRef, useState } from 'react';
 
+import { withPageErrorBoundary } from '../../../components/ErrorBoundary';
 import EventAttendees from '../../../components/EventAttendees';
 import EventDescription from '../../../components/EventDescription';
 import EventPhotoUploadSection from '../../../components/EventPhotoUpload';
@@ -57,7 +58,7 @@ interface Props {
   eventsConfig: EventsConfig | null;
 }
 
-const EventPage = ({
+const EventPageContent = ({
   event,
   eventCreator,
   error,
@@ -142,6 +143,26 @@ const EventPage = ({
   const soldTickets =
     filteredTickets &&
     filteredTickets.map((ticket: any) => ticket.toJS()).toArray();
+
+  // `paid` can be set on an event that has no ticket options yet, and sold
+  // tickets (RSVPs, legacy rows) do not always carry an `option` — neither may
+  // take the page down.
+  const ticketOptions: any[] = Array.isArray(event?.ticketOptions)
+    ? event.ticketOptions
+    : [];
+  const countSold = (optionName: string) =>
+    soldTickets
+      ? soldTickets.filter((ticket: any) => ticket?.option?.name === optionName)
+          .length
+      : 0;
+  const allTicketsSoldOut =
+    Boolean(event?.paid) &&
+    ticketOptions.length > 0 &&
+    ticketOptions.every(
+      (ticketOption: any) =>
+        ticketOption.limit !== 0 &&
+        ticketOption.limit - countSold(ticketOption.name) <= 0,
+    );
 
   useEffect(() => {
     const eventPassword = localStorage.getItem('eventPassword') as string;
@@ -573,26 +594,6 @@ const EventPage = ({
                         {end && !end.isBefore(dayjs()) && (
                           <div className="space-y-3">
                             {(() => {
-                              // Check if all tickets are sold out
-                              const allTicketsSoldOut =
-                                event.paid &&
-                                event.ticketOptions.every(
-                                  (ticketOption: any) => {
-                                    const availableTickets =
-                                      soldTickets &&
-                                      ticketOption.limit -
-                                        soldTickets.filter(
-                                          (ticket: any) =>
-                                            ticket.option.name ===
-                                            ticketOption.name,
-                                        ).length;
-                                    return (
-                                      availableTickets === 0 &&
-                                      ticketOption.limit !== 0
-                                    );
-                                  },
-                                );
-
                               return allTicketsSoldOut ? (
                                 <div className="text-center py-6 px-3">
                                   <p className="font-bold text-lg">
@@ -606,15 +607,10 @@ const EventPage = ({
                                 event.paid &&
                                   (() => {
                                     const availableOptions =
-                                      event.ticketOptions.filter((opt: any) => {
-                                        const sold =
-                                          soldTickets?.filter(
-                                            (t: any) =>
-                                              t.option?.name === opt.name,
-                                          ).length || 0;
+                                      ticketOptions.filter((opt: any) => {
                                         return (
                                           opt.limit === 0 ||
-                                          opt.limit - sold > 0
+                                          opt.limit - countSold(opt.name) > 0
                                         );
                                       });
                                     if (availableOptions.length === 0)
@@ -649,25 +645,7 @@ const EventPage = ({
                               hasAccommodationPrice &&
                               APP_NAME &&
                               APP_NAME !== 'lios' &&
-                              !(
-                                event.paid &&
-                                event.ticketOptions.every(
-                                  (ticketOption: any) => {
-                                    const availableTickets =
-                                      soldTickets &&
-                                      ticketOption.limit -
-                                        soldTickets.filter(
-                                          (ticket: any) =>
-                                            ticket.option.name ===
-                                            ticketOption.name,
-                                        ).length;
-                                    return (
-                                      availableTickets === 0 &&
-                                      ticketOption.limit !== 0
-                                    );
-                                  },
-                                )
-                              ) && (
+                              !allTicketsSoldOut && (
                                 <div className="text-sm">
                                   {t('events_accommodation')}{' '}
                                   <strong>
@@ -703,25 +681,7 @@ const EventPage = ({
                                     (event.stripePub ||
                                       process.env
                                         .NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) &&
-                                    !(
-                                      event.paid &&
-                                      event.ticketOptions.every(
-                                        (ticketOption: any) => {
-                                          const availableTickets =
-                                            soldTickets &&
-                                            ticketOption.limit -
-                                              soldTickets.filter(
-                                                (ticket: any) =>
-                                                  ticket.option.name ===
-                                                  ticketOption.name,
-                                              ).length;
-                                          return (
-                                            availableTickets === 0 &&
-                                            ticketOption.limit !== 0
-                                          );
-                                        },
-                                      )
-                                    ) && (
+                                    !allTicketsSoldOut && (
                                       <>
                                         {/* Which ticket the guest wants decides
                                             whether they need a bed at all, so a
@@ -976,6 +936,8 @@ const EventPage = ({
     </>
   );
 };
+
+const EventPage = withPageErrorBoundary(EventPageContent, 'EventPage');
 
 EventPage.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;
