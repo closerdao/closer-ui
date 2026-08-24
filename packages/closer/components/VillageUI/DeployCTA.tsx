@@ -92,7 +92,8 @@ export const DeployCTA: FC<{
   /** False renders every state read-only — no button, no retry. */
   canDeploy?: boolean;
   /** Called with the village the route returned (202) so the page can adopt it. */
-  onDeployed?: (village: Village) => void;
+  /** Village is omitted when the response carried none — refetch instead. */
+  onDeployed?: (village?: Village) => void;
   /** Injectable so tests can drive the route without a backend. */
   deploy?: (id: string) => Promise<DeployVillageResult>;
   className?: string;
@@ -121,7 +122,8 @@ export const DeployCTA: FC<{
       setWarning(null);
       const result = await deploy(village._id);
       // A 202 with a warning still recorded the request — procurement just did
-      // not answer. Adopt the village either way, then say which one it was.
+      // not answer. It may come back without a village, so pass through what
+      // there is and let the page refetch rather than adopting a non-village.
       setWarning(result.warning || null);
       onDeployed?.(result.village);
     } catch (err) {

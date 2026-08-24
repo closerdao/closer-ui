@@ -409,7 +409,7 @@ const VillageDetailPage = () => {
                 village={village}
                 canDeploy={canDeploy}
                 onDeployed={(updated) => {
-                  setVillage(updated);
+                  if (updated) setVillage(updated);
                   void refresh();
                 }}
               />

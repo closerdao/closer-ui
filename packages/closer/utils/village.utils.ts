@@ -229,7 +229,12 @@ export class DeployVillageError extends Error {
  * than a clean hand-off.
  */
 export type DeployVillageResult = {
-  village: Village;
+  /**
+   * Absent when the response carried no village — the warning path can answer
+   * without one. Callers must fall back to refetching rather than adopting
+   * whatever shape came back.
+   */
+  village?: Village;
   warning?: string;
 };
 
@@ -249,8 +254,17 @@ export async function deployVillage(
       notes ? { notes } : {},
     );
     const body = data?.results || data || {};
+    // Only adopt something that actually looks like a Village. The old
+    // `body.village || body.results || body` chain ended in the raw response
+    // body, so a 202 that carried only a `warning` handed the page an object
+    // with no name or slug to render.
+    const candidate = body.village || body.results || body;
+    const village =
+      candidate && typeof candidate === 'object' && '_id' in candidate
+        ? (candidate as Village)
+        : undefined;
     return {
-      village: (body.village || body.results || body) as Village,
+      village,
       warning: typeof data?.warning === 'string' ? data.warning : undefined,
     };
   } catch (err) {

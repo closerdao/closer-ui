@@ -60,7 +60,7 @@ describe('deployVillage', () => {
 
     const result = await deployVillage('v1');
 
-    expect(result.village.onboardingStatus).toBe('deploy_requested');
+    expect(result.village?.onboardingStatus).toBe('deploy_requested');
     expect(result.warning).toBeUndefined();
   });
 
@@ -74,7 +74,21 @@ describe('deployVillage', () => {
 
     const result = await deployVillage('v1');
 
-    expect(result.village.onboardingStatus).toBe('deploy_requested');
+    expect(result.village?.onboardingStatus).toBe('deploy_requested');
+    expect(result.warning).toBe('procurement_unreachable');
+  });
+
+  // The warning path can answer without a village. The old fallback chain
+  // ended in the raw response body, so the page adopted an object with no
+  // name or slug and rendered it as a village.
+  it('returns no village when the response carries none', async () => {
+    api.post.mockResolvedValue({
+      data: { warning: 'procurement_unreachable' },
+    });
+
+    const result = await deployVillage('v1');
+
+    expect(result.village).toBeUndefined();
     expect(result.warning).toBe('procurement_unreachable');
   });
 
