@@ -8,8 +8,6 @@ import {
   PEOPLE_COUNT_MAX,
   PEOPLE_COUNT_MIN,
   ROOMS_COUNT_MIN,
-  VILLAGE_ADMIN_SETTABLE_STATUSES,
-  VILLAGE_PROCUREMENT_ONLY_STATUSES,
 } from '../../constants/village.constants';
 import {
   CreateVillageInput,
@@ -22,6 +20,7 @@ import {
   isVillageSlugFrozen,
   meetsHardCriteria,
   toLeafletCoords,
+  villageAdminSettableStatuses,
 } from '../../utils/village.utils';
 import CommunityMap from '../CommunityMap';
 import { Eyebrow, btnPrimary, inputClass, labelClass } from '../VillageUI';
@@ -161,14 +160,23 @@ const VillageForm = ({
   const [slug, setSlug] = useState(initial?.slug || '');
   const [onboardingStatus, setOnboardingStatus] =
     useState<VillageOnboardingStatus>(initial?.onboardingStatus || 'map_only');
-  // Procurement owns the status while a deploy is in flight; nobody moves a
-  // village into (or out of) one of those by hand — the API rejects the PATCH.
-  const isStatusLocked = (
-    VILLAGE_PROCUREMENT_ONLY_STATUSES as readonly string[]
-  ).includes(onboardingStatus);
+  // Procurement owns the deploy pipeline, and on a managed village the deploy
+  // outcome too, so those stages are not on the menu. An unmanaged village
+  // keeps the full set — hand-setting one to `live` is how a village that
+  // already runs Closer gets recorded.
+  const settableStatuses = villageAdminSettableStatuses(initial);
+  // Anything off that menu is procurement's to write, not ours to edit.
+  const isStatusLocked = !settableStatuses.includes(onboardingStatus);
   // The slug is procurement's join key from `deploy_requested` onwards, so it
-  // is read-only from then on rather than merely validated on submit.
-  const isSlugFrozen = isVillageSlugFrozen(initial);
+  // is read-only from then on rather than merely validated on submit. The
+  // *pending* status counts: picking a frozen stage must freeze the slug in the
+  // same edit, or this PATCH could rename the join key on its way in.
+  const isSlugFrozen =
+    isVillageSlugFrozen(initial) ||
+    isVillageSlugFrozen({
+      onboardingStatus,
+      managed: initial?.managed === true,
+    });
   const [criteria, setCriteria] = useState<VillageCriteria>({
     ...emptyCriteria,
     ...(initial?.criteria || {}),
@@ -715,7 +723,7 @@ const VillageForm = ({
                   {t(`village_status_${onboardingStatus}`)}
                 </option>
               ) : null}
-              {VILLAGE_ADMIN_SETTABLE_STATUSES.map((status) => (
+              {settableStatuses.map((status) => (
                 <option key={status} value={status}>
                   {t(`village_status_${status}`)}
                 </option>
