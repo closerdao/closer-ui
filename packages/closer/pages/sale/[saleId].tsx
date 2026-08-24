@@ -24,7 +24,7 @@ import { resolveAccountingEntityFromSale } from '../../utils/accountingEntityRes
 import api, { formatSearch } from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { linkedMetricFields, logMetric } from '../../utils/metrics';
-import { trackTokenPurchaseOnce } from '../../utils/tokenPurchaseAnalytics';
+import { reportTokenSaleSuccess } from '../../utils/tokenPurchaseAnalytics';
 import { parseMessageFromError } from '../../utils/common';
 import {
   formatIsoFiatAmount,
@@ -149,20 +149,22 @@ const SaleSummaryPage = () => {
   }, [sale, router.isReady, showCelebrationShell]);
 
   useEffect(() => {
-    if (!sale?._id || sale.product_type !== 'token') return;
-    gaEvent('token_success', {
-      category: 'sales',
-      label: 'token',
+    if (!sale) return;
+    reportTokenSaleSuccess(sale, {
+      trackGa: () =>
+        gaEvent('token_success', {
+          category: 'sales',
+          label: 'token',
+        }),
+      logPlatformMetric: () => {
+        void logMetric({
+          event: 'token-sale-success',
+          category: 'token',
+          value: 'sale', point: sale.quantity,
+          ...linkedMetricFields('TokenSale', sale._id),
+        });
+      },
     });
-    const qty = sale.quantity;
-    if (trackTokenPurchaseOnce(sale)) {
-      void logMetric({
-        event: 'token-sale-success',
-        category: 'token',
-        value: 'sale', point: qty,
-        ...linkedMetricFields('TokenSale', sale._id),
-      });
-    }
   }, [sale]);
 
   const createdAt = useMemo(() => {

@@ -508,6 +508,11 @@ export type Sale = {
   buyer?: SaleBuyer | null;
 };
 
+export type TrackableTokenSale = Pick<
+  Sale,
+  '_id' | 'product_type' | 'status' | 'quantity' | 'paymentMethod'
+>;
+
 export type TokenSale = Sale & {
   product_type: 'token';
   createdBy: string;
