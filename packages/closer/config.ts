@@ -400,6 +400,10 @@ export const configDescription: ConfigType[] = [
         type: 'boolean',
         default: true,
       },
+      successPage: {
+        type: 'text',
+        default: '',
+      },
       elements: {
         type: [
           {
@@ -679,6 +683,10 @@ export const configDescription: ConfigType[] = [
         default: '',
       },
       governanceUrl: {
+        type: 'text',
+        default: '',
+      },
+      callBookingLink: {
         type: 'text',
         default: '',
       },

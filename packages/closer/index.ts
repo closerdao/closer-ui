@@ -138,6 +138,7 @@ export { default as VillagesPage } from './pages/villages/index';
 export { default as CreateVillagePage } from './pages/villages/create';
 export { default as VillagePage } from './pages/villages/[slug]/index';
 export { default as EditVillagePage } from './pages/villages/[slug]/edit';
+export { default as LaunchVillagePage } from './pages/village/launch';
 export { default as DeployQueuePage } from './pages/dashboard/deploy-queue/index';
 export { default as AmbassadorBadge } from './components/AmbassadorBadge';
 export { default as RoleTag, getRoleTagKey } from './components/RoleTag';

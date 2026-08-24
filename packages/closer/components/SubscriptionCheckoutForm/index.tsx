@@ -12,6 +12,7 @@ import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { logMetric } from '../../utils/metrics';
 import { reportIssue } from '../../utils/reporting.utils';
+import { getSubscriptionSuccessUrl } from '../../utils/subscriptions.helpers';
 import SubscriptionConditions from '../SubscriptionConditions';
 import { Button, ErrorMessage } from '../ui/';
 
@@ -20,6 +21,7 @@ interface SubscriptionCheckoutFormProps {
   priceId: string | string[] | undefined;
   monthlyCredits?: number;
   source?: string;
+  successPage?: string;
   firstMonthFree?: boolean;
   tierMetricEvent?: 'tier-1-first-payment' | 'tier-2-first-payment';
 }
@@ -29,6 +31,7 @@ function SubscriptionCheckoutForm({
   priceId,
   monthlyCredits,
   source,
+  successPage,
   firstMonthFree = false,
   tierMetricEvent = 'tier-1-first-payment',
 }: SubscriptionCheckoutFormProps) {
@@ -72,7 +75,10 @@ function SubscriptionCheckoutForm({
       router.push(source);
     } else {
       router.push(
-        `/subscriptions/success?subscriptionId=${subscriptionId}&priceId=${priceId}`,
+        getSubscriptionSuccessUrl(successPage, {
+          subscriptionId,
+          priceId: Array.isArray(priceId) ? priceId[0] : priceId,
+        }),
       );
     }
   };

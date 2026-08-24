@@ -17,6 +17,11 @@ import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageError from '../../../components/PageError';
 import BookingSurface from '../../../components/booking/bookingSurface';
 import BookingUnitsNote from '../../../components/booking/bookingUnitsNote';
+import {
+  StayCryptoPaymentSection,
+  StayPaymentMethodTabs,
+  type StayPaymentMethodTab,
+} from '../../../components/booking/stayCryptoPaymentSection';
 import { StayPaymentTokenCreditControls } from '../../../components/booking/stayPaymentTokenCreditControls';
 import { ErrorMessage, Information } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
@@ -86,6 +91,10 @@ function StayPaymentInner({
 
   const [actionError, setActionError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentTab, setPaymentTab] = useState<StayPaymentMethodTab>('card');
+
+  const isWeb3BookingEnabled =
+    process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
 
   const redirectTarget = useMemo(() => {
     if (isStayPaid(stay)) return `/stay/${stay._id}/confirmation` as const;
@@ -512,25 +521,43 @@ function StayPaymentInner({
           <Heading level={2} className="text-lg mb-4">
             {t('stay_create_card_title')}
           </Heading>
-          <div className="rounded-xl border border-gray-200 px-4 py-3.5 bg-white">
-            <CardElement
-              options={{
-                hidePostalCode: true,
-                style: {
-                  base: {
-                    fontSize: '16px',
-                    color: '#111827',
-                    fontFamily: 'inherit',
-                    '::placeholder': { color: '#9ca3af' },
-                  },
-                  invalid: { color: '#9f1f42' },
-                },
-              }}
+          {isWeb3BookingEnabled && fiatOwed > 0.005 && (
+            <StayPaymentMethodTabs
+              active={paymentTab}
+              onChange={setPaymentTab}
+              className="mb-4"
             />
+          )}
+          {/* The card element is hidden, not unmounted, so a typed card number
+              survives a peek at the crypto tab. */}
+          <div
+            className={
+              isWeb3BookingEnabled && paymentTab === 'crypto' ? 'hidden' : ''
+            }
+          >
+            <div className="rounded-xl border border-gray-200 px-4 py-3.5 bg-white">
+              <CardElement
+                options={{
+                  hidePostalCode: true,
+                  style: {
+                    base: {
+                      fontSize: '16px',
+                      color: '#111827',
+                      fontFamily: 'inherit',
+                      '::placeholder': { color: '#9ca3af' },
+                    },
+                    invalid: { color: '#9f1f42' },
+                  },
+                }}
+              />
+            </div>
+            <p className="mt-2 text-xs text-gray-500">
+              {t('stay_create_card_disclaimer')}
+            </p>
           </div>
-          <p className="mt-2 text-xs text-gray-500">
-            {t('stay_create_card_disclaimer')}
-          </p>
+          {isWeb3BookingEnabled && paymentTab === 'crypto' && (
+            <p className="text-sm text-gray-600">{t('stay_crypto_tab_intro')}</p>
+          )}
 
           <div role="alert" aria-live="assertive" className="empty:hidden">
             {actionError && (
@@ -542,14 +569,23 @@ function StayPaymentInner({
 
           <div className="mt-6 flex flex-col gap-3">
             {fiatOwed > 0.005 ? (
-              <Button
-                isEnabled={!isProcessing}
-                isLoading={isProcessing}
-                onClick={() => void handlePay()}
-                className="min-h-[48px]"
-              >
-                {t('stay_payment_page_pay_button')}
-              </Button>
+              isWeb3BookingEnabled && paymentTab === 'crypto' ? (
+                <StayCryptoPaymentSection
+                  stay={stay}
+                  onStayUpdated={() => void refetchStay()}
+                  isEnabled={!isProcessing}
+                  buttonVariant="primary"
+                />
+              ) : (
+                <Button
+                  isEnabled={!isProcessing}
+                  isLoading={isProcessing}
+                  onClick={() => void handlePay()}
+                  className="min-h-[48px]"
+                >
+                  {t('stay_payment_page_pay_button')}
+                </Button>
+              )
             ) : null}
             <Link
               href={`/stay/create/${stay._id}`}

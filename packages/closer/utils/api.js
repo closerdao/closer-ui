@@ -5,6 +5,8 @@ import {
   getAccessToken,
   getAccessTokenExpiryMs,
   getRefreshToken,
+  getStoredAccountId,
+  setStoredAccountId,
   setTokens,
 } from './authStorage';
 import { invalidateConfigCache } from './configCache';
@@ -226,7 +228,25 @@ function doRefresh() {
           results,
         } = res?.data ?? {};
         if (newAccess && newRefresh) {
+          // The refresh token lives in localStorage, which is shared across
+          // tabs and can hold a token from a different account than the one
+          // this session belongs to. Never let a refresh silently switch
+          // accounts: if the refreshed identity doesn't match, drop the
+          // session and force a fresh login.
+          const storedAccountId = getStoredAccountId();
+          const refreshedAccountId = results?._id;
+          if (
+            storedAccountId &&
+            refreshedAccountId &&
+            storedAccountId !== refreshedAccountId
+          ) {
+            notifySessionInvalid();
+            throw new Error('Refresh token belongs to a different account');
+          }
           setTokens(newAccess, newRefresh);
+          if (refreshedAccountId) {
+            setStoredAccountId(refreshedAccountId);
+          }
           return { access_token: newAccess, results };
         }
         throw new Error('Invalid refresh response');

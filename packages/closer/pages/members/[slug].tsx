@@ -15,6 +15,7 @@ import SubscriptionBadge from '../../components/SubscriptionBadge';
 import UploadPhoto from '../../components/UploadPhoto';
 import UserAvatarPlaceholder from '../../components/UserAvatarPlaceholder';
 import UserBookings from '../../components/UserBookings';
+import VillageCard from '../../components/VillageCard';
 import Vouching from '../../components/Vouching';
 import EmailDisplay from '../../components/display/emailDisplay';
 import WalletDisplay from '../../components/display/walletDisplay';
@@ -48,6 +49,10 @@ import api, { cdn } from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { getUrlDisplayString } from '../../utils/display.helpers';
+import {
+  VillageConnection,
+  fetchUserVillageConnections,
+} from '../../utils/village.utils';
 import PageNotFound from '../not-found';
 
 const ConnectedWallet =
@@ -60,6 +65,9 @@ const ConnectedWallet =
 
 /** Stamps are small, so the whole attendance history fits without paging. */
 const MAX_ATTENDED_EVENTS_TO_SHOW = 200;
+
+const isFederationEnabled =
+  process.env.NEXT_PUBLIC_FEATURE_FEDERATION === 'true';
 
 interface MemberPageProps {
   member: User;
@@ -108,6 +116,9 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
   const [deleteReportSuccess, setDeleteReportSuccess] = useState(false);
   const [activeApplications, setActiveApplications] = useState<
     FinanceApplication[]
+  >([]);
+  const [villageConnections, setVillageConnections] = useState<
+    VillageConnection[]
   >([]);
   const [about, setAbout] = useState<string>(member?.about || '');
   const [aboutDraft, setAboutDraft] = useState<string>(member?.about || '');
@@ -165,6 +176,22 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
   useEffect(() => {
     setAbout(member?.about || '');
     setAboutDraft(member?.about || '');
+  }, [member?._id]);
+
+  // Federation profiles list the villages this member is tied to — as
+  // ambassador, manager, creator or referrer. Reset on navigation for the same
+  // reason as the About re-sync above.
+  useEffect(() => {
+    setVillageConnections([]);
+    if (!isFederationEnabled || !member?._id) return;
+    let cancelled = false;
+    (async () => {
+      const connections = await fetchUserVillageConnections(member._id);
+      if (!cancelled) setVillageConnections(connections);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [member?._id]);
 
   useEffect(() => {
@@ -740,6 +767,34 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                         {t('members_slug_add_about')}
                       </button>
                     )}
+                  </div>
+                )}
+
+                {/* Villages Section — federation only: where this member is
+                    ambassador, manager, creator or referrer. Hidden when there
+                    is nothing to show. */}
+                {isFederationEnabled && villageConnections.length > 0 && (
+                  <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <h4 className="font-medium text-xl mb-4">
+                      {t('members_slug_villages')}
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      {villageConnections.map(({ village, roles }) => (
+                        <div key={village._id} className="flex flex-col gap-2">
+                          <VillageCard village={village} />
+                          <div className="flex flex-wrap gap-1.5">
+                            {roles.map((role) => (
+                              <span
+                                key={role}
+                                className="text-xs text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full"
+                              >
+                                {t(`village_connection_${role}`)}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 

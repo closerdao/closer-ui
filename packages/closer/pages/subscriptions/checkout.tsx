@@ -30,6 +30,7 @@ import { GeneralConfig, PaymentConfig } from '../../types';
 import {
   SelectedPlan,
   SubscriptionPlan, // Tier,
+  SubscriptionsConfig,
 } from '../../types/subscriptions';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { mergePaymentValueWithBookingCurrencyFallback } from '../../utils/config.utils';
@@ -54,10 +55,9 @@ const stripePromise = loadStripe(
 );
 
 const SubscriptionsCheckoutPage: NextPage = () => {
-  const subscriptionsConfig = getCachedConfig('subscriptions') as {
-    enabled: boolean;
-    elements: SubscriptionPlan[];
-  };
+  const subscriptionsConfig = getCachedConfig(
+    'subscriptions',
+  ) as SubscriptionsConfig | null;
   const paymentConfig = (mergePaymentValueWithBookingCurrencyFallback(
     getCachedConfig('payment'),
     getCachedConfig('booking'),
@@ -230,6 +230,7 @@ const SubscriptionsCheckoutPage: NextPage = () => {
                     priceId={priceId}
                     monthlyCredits={Number(monthlyCredits)}
                     source={source as string}
+                    successPage={subscriptionsConfig?.successPage}
                     firstMonthFree={firstMonthFree}
                     tierMetricEvent={
                       selectedPlan?.title?.toLowerCase() === 'wanderer'

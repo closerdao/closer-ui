@@ -152,6 +152,7 @@ export type GeneralConfig = {
   expenseCategories?: string;
   discordUrl: string;
   telegramUrl: string;
+  callBookingLink?: string;
   primaryCtaVisitor?: string;
   primaryCtaMember?: string;
   primaryCtaCustomUrl?: string;

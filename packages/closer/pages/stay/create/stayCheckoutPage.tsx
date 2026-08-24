@@ -29,6 +29,11 @@ import Switch from '../../../components/Switch';
 import TicketOptions from '../../../components/TicketOptions';
 import BookingSurface from '../../../components/booking/bookingSurface';
 import BookingUnitsNote from '../../../components/booking/bookingUnitsNote';
+import {
+  StayCryptoPaymentSection,
+  StayPaymentMethodTabs,
+  type StayPaymentMethodTab,
+} from '../../../components/booking/stayCryptoPaymentSection';
 import { StayQuoteFiatDiscountPreview } from '../../../components/booking/stayQuoteFiatDiscountPreview';
 import { ErrorMessage, Information } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
@@ -514,6 +519,7 @@ const StayCheckoutContent = ({
   );
   const [isApplyingCredits, setIsApplyingCredits] = useState(false);
   const [isRevertingTokenPayment, setIsRevertingTokenPayment] = useState(false);
+  const [paymentTab, setPaymentTab] = useState<StayPaymentMethodTab>('card');
   const [preferencesError, setPreferencesError] = useState<string | null>(null);
   const [isSavingPreferences, setIsSavingPreferences] = useState(false);
   const [isSavingStayMessage, setIsSavingStayMessage] = useState(false);
@@ -961,6 +967,7 @@ const StayCheckoutContent = ({
     !isFriend && !!bookingSettings?.foodOptionEnabled && !shouldSkipFood;
 
   const isWeb3Enabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_BOOKING === 'true';
+  const showPaymentTabs = showStripeCardInput && isWeb3Enabled;
   const needsTokenStakeCompletion =
     showTokenCreditPaymentOptions &&
     isWeb3Enabled &&
@@ -2892,25 +2899,45 @@ const StayCheckoutContent = ({
           )}
           {showStripeCardInput && (
             <>
-              <div className="rounded-xl border border-gray-200 px-4 py-3.5 bg-white">
-                <CardElement
-                  options={{
-                    hidePostalCode: true,
-                    style: {
-                      base: {
-                        fontSize: '16px',
-                        color: '#111827',
-                        fontFamily: 'inherit',
-                        '::placeholder': { color: '#9ca3af' },
-                      },
-                      invalid: { color: '#9f1f42' },
-                    },
-                  }}
+              {showPaymentTabs && (
+                <StayPaymentMethodTabs
+                  active={paymentTab}
+                  onChange={setPaymentTab}
+                  className="mb-4"
                 />
+              )}
+              {/* The card element is hidden, not unmounted, so a typed card
+                  number survives a peek at the crypto tab. */}
+              <div
+                className={
+                  showPaymentTabs && paymentTab === 'crypto' ? 'hidden' : ''
+                }
+              >
+                <div className="rounded-xl border border-gray-200 px-4 py-3.5 bg-white">
+                  <CardElement
+                    options={{
+                      hidePostalCode: true,
+                      style: {
+                        base: {
+                          fontSize: '16px',
+                          color: '#111827',
+                          fontFamily: 'inherit',
+                          '::placeholder': { color: '#9ca3af' },
+                        },
+                        invalid: { color: '#9f1f42' },
+                      },
+                    }}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-gray-500">
+                  {t('stay_create_card_disclaimer')}
+                </p>
               </div>
-              <p className="mt-2 text-xs text-gray-500">
-                {t('stay_create_card_disclaimer')}
-              </p>
+              {showPaymentTabs && paymentTab === 'crypto' && (
+                <p className="text-sm text-gray-600">
+                  {t('stay_crypto_tab_intro')}
+                </p>
+              )}
             </>
           )}
 
@@ -2961,6 +2988,15 @@ const StayCheckoutContent = ({
               >
                 {t('stay_checkout_cta_card_shortcut_button')}
               </Button>
+            ) : showPaymentTabs && paymentTab === 'crypto' ? (
+              <StayCryptoPaymentSection
+                stay={currentStay}
+                onStayUpdated={setCurrentStay}
+                isEnabled={
+                  hasAcceptedTerms && !isProcessing && hasValidEventTicket
+                }
+                buttonVariant="primary"
+              />
             ) : (
               <Button
                 isEnabled={

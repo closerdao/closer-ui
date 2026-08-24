@@ -23,6 +23,7 @@ import {
   clearTokens,
   getAccessToken,
   getRefreshToken,
+  setStoredAccountId,
   setTokens,
 } from '../../utils/authStorage';
 import { parseMessageFromError } from '../../utils/common';
@@ -63,6 +64,12 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
           data: { results: user },
         } = await api.get('/mine/user');
         if (user) {
+          // Sessions created before account ids were stored have no record of
+          // which account the tokens belong to; backfill it so the refresh
+          // flow can detect account mismatches.
+          if (user._id) {
+            setStoredAccountId(user._id);
+          }
           setUser(user);
         }
       } else {
@@ -183,8 +190,14 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
     refreshToken?: string,
   ) => {
     if (accessToken) {
+      // Wipe the previous account's tokens before writing the new ones so a
+      // login/signup can never inherit another account's refresh token.
+      clearTokens();
       setTokens(accessToken, refreshToken);
       if (user) {
+        if (user._id) {
+          setStoredAccountId(user._id);
+        }
         setUser(user);
       }
     }

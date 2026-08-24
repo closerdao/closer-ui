@@ -12,6 +12,28 @@ export const normalizeSubscriptionBillingPeriod = (
   return 'month';
 };
 
+export const getSubscriptionSuccessUrl = (
+  successPage: string | null | undefined,
+  {
+    subscriptionId,
+    priceId,
+  }: { subscriptionId?: string; priceId?: string } = {},
+): string => {
+  const configured = successPage?.trim();
+  if (configured) {
+    return configured;
+  }
+  const params = new URLSearchParams();
+  if (subscriptionId) {
+    params.set('subscriptionId', subscriptionId);
+  }
+  if (priceId) {
+    params.set('priceId', priceId);
+  }
+  const query = params.toString();
+  return `/subscriptions/success${query ? `?${query}` : ''}`;
+};
+
 export const isMonthlySubscriptionPlan = (
   plan?: SubscriptionPlan | null,
 ): boolean =>

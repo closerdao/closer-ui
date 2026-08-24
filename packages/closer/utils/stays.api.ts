@@ -18,6 +18,8 @@ import type {
   StayPaymentMethod,
   StayQuoteResponse,
   StayStatus,
+  StayTokenPaymentConfirmResponse,
+  StayTokenPaymentQuote,
   StayTokenStakePlan,
 } from '../types/stay';
 import api from './api';
@@ -683,6 +685,43 @@ export const confirmStayCheckout = async (
   });
   return (data as ApiOk<Stay>).results;
 };
+
+/**
+ * Crypto rail for the fiat leg — alternative to the Stripe /checkout pair.
+ * Empty body: re-verifies availability, pre-assigns beds and returns the
+ * stablecoin transfer quote. Credits and token-stake legs are unaffected.
+ */
+export const quoteStayTokenPayment = async (
+  id: string,
+): Promise<StayTokenPaymentQuote> => {
+  const { data } = await api.post(`/stays/${id}/token-payment`, {});
+  return (data as ApiOk<StayTokenPaymentQuote>).results;
+};
+
+/**
+ * Step 2: pass the hash of the client-side stablecoin transfer. Idempotent on
+ * txHash (scoped per booking). A 400 "could not be verified" usually means the
+ * explorer has not indexed the tx yet — see isStayTokenPaymentNotIndexedError.
+ */
+export const confirmStayTokenPayment = async (
+  id: string,
+  txHash: string,
+): Promise<StayTokenPaymentConfirmResponse> => {
+  const { data } = await api.post(`/stays/${id}/token-payment`, { txHash });
+  const results = (
+    data as ApiOk<{ booking?: Stay | null; verified?: boolean }>
+  )?.results;
+  if (results?.booking) {
+    return { booking: results.booking, verified: Boolean(results.verified) };
+  }
+  const booking = await getStay(id);
+  return { booking, verified: Boolean(results?.verified) };
+};
+
+/** True for the 400 the server answers while the block explorer has not
+ * indexed the transfer yet — safe to retry after a few seconds. */
+export const isStayTokenPaymentNotIndexedError = (message: string): boolean =>
+  /could not be verified/i.test(message);
 
 export type StakeStayTokensOptions = {
   syncBookingAlreadyOnChain?: boolean;
