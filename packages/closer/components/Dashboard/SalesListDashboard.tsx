@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
 import { ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -10,12 +10,17 @@ import { blockchainConfig } from '../../config_blockchain';
 import { useAuth } from '../../contexts/auth';
 import { Sale, SaleBuyer } from '../../types/api';
 import api, { formatSearch } from '../../utils/api';
+import { getApiErrorDetails } from '../../utils/apiError';
 import { parseTokenUnits } from '../../utils/currencyFormat';
 import {
+  tokenSaleStatusBadgeVariant,
+  tokenSaleStatusLabelKey,
+} from '../../utils/orderStatusBadge';
+import {
+  type SaleCategory,
   isTokenProductSale,
   resolveSaleCategory,
   saleCategoryLabelKey,
-  type SaleCategory,
 } from '../../utils/saleCategory';
 import { formatSaleAmount } from '../../utils/saleCurrency';
 import {
@@ -23,18 +28,11 @@ import {
   getSaleProductTitle,
   saleNeedsAttentionHighlight,
 } from '../../utils/saleParticipant';
-import {
-  tokenSaleStatusBadgeVariant,
-  tokenSaleStatusLabelKey,
-} from '../../utils/orderStatusBadge';
+import Modal from '../Modal';
+import Pagination from '../Pagination';
 import EmailDisplay from '../display/emailDisplay';
 import IdDisplay from '../display/idDisplay';
 import WalletDisplay from '../display/walletDisplay';
-import ManualSaleModal from './ManualSaleModal';
-import MintSweatModal from './MintSweatModal';
-import SaleDetails from './SaleDetails';
-import Modal from '../Modal';
-import Pagination from '../Pagination';
 import { Input, Spinner } from '../ui/';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
@@ -46,15 +44,48 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
+import BurnSweatModal from './BurnSweatModal';
+import ManualSaleModal from './ManualSaleModal';
+import MintSweatModal from './MintSweatModal';
+import SaleDetails from './SaleDetails';
+import TransferTdfModal from './TransferTdfModal';
 
 const SALES_PER_PAGE = 20;
 const DEFAULT_STATUS_TO_SHOW = 'paid';
+const EVM_TRANSACTION_HASH_PATTERN = /^0x[a-f\d]{64}$/i;
 
 type BuyerRecord = {
   _id: string;
   email?: string;
   screenname?: string;
   walletAddress?: string;
+};
+
+type TokenDistributionStatus = {
+  saleId: string;
+  id: string;
+  status: string;
+  active: boolean;
+  safeTxHash: string;
+  safeUrl: string;
+  confirmationsSubmitted: number;
+  confirmationsRequired: number;
+  executionTxHash: string;
+  explorerUrl: string;
+  lastError: string;
+  entryLastError: string;
+};
+
+type TokenDistributionSyncResult = {
+  checked: number;
+  newlyFinalized: number;
+  pending: number;
+  inProgress: number;
+  completed: number;
+  completedWithWarnings: number;
+  failed: number;
+  superseded: number;
+  needsReview: number;
 };
 
 function enrichSalesWithBuyers<T extends { createdBy?: string }>(
@@ -116,10 +147,12 @@ const SalesListDashboard = ({
   const [enrichedSales, setEnrichedSales] = useState<Sale[]>([]);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [manualDistributionError, setManualDistributionError] = useState('');
 
   const [isMatchBuyerModalOpen, setIsMatchBuyerModalOpen] = useState(false);
   const [matchableSales, setMatchableSales] = useState<Sale[]>([]);
-  const [selectedMatchedSaleId, setSelectedMatchedSaleId] = useState<string>('');
+  const [selectedMatchedSaleId, setSelectedMatchedSaleId] =
+    useState<string>('');
   const [isLoadingMatchableSales, setIsLoadingMatchableSales] = useState(false);
   const [isMatchBuyerSuccess, setIsMatchBuyerSuccess] = useState(false);
   const isAdmin = currentUser?.roles.includes('admin');
@@ -129,6 +162,25 @@ const SalesListDashboard = ({
   const [isMintSweatModalOpen, setIsMintSweatModalOpen] = useState(false);
   const [isManualSaleModalOpen, setIsManualSaleModalOpen] = useState(false);
   const [expandedSaleId, setExpandedSaleId] = useState<string | null>(null);
+  const [isBurnSweatModalOpen, setIsBurnSweatModalOpen] = useState(false);
+  const [isTransferTdfModalOpen, setIsTransferTdfModalOpen] = useState(false);
+  const [isCreatingSafeProposal, setIsCreatingSafeProposal] = useState(false);
+  const [safeProposalUrl, setSafeProposalUrl] = useState('');
+  const [safeProposalError, setSafeProposalError] = useState('');
+  const [safeProposalSummary, setSafeProposalSummary] = useState('');
+  const [safeProposalSkipped, setSafeProposalSkipped] = useState<
+    Array<{ saleId: string; reason: string }>
+  >([]);
+  const [distributionStatuses, setDistributionStatuses] = useState<
+    Record<string, TokenDistributionStatus>
+  >({});
+  const [isSyncingDistributions, setIsSyncingDistributions] = useState(false);
+  const [distributionSyncSummary, setDistributionSyncSummary] = useState('');
+  const [distributionSyncError, setDistributionSyncError] = useState('');
+  const safeProposalIdempotencyRef = useRef<{
+    fingerprint: string;
+    requestId: string;
+  } | null>(null);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
   const actionsMenuRef = useRef<HTMLDivElement>(null);
 
@@ -188,6 +240,37 @@ const SalesListDashboard = ({
         (localCurrentPage - 1) * itemsPerPage,
         localCurrentPage * itemsPerPage,
       );
+  const visibleSaleIds = currentSales.map((sale) => sale._id).join(',');
+
+  const fetchDistributionStatuses = useCallback(async () => {
+    if (!isAdmin || saleCategory !== 'tokens' || !visibleSaleIds) {
+      setDistributionStatuses({});
+      return;
+    }
+    try {
+      const response = await api.get('/safe/token-distribution-batches', {
+        params: {
+          chainId: blockchainConfig.BLOCKCHAIN_NETWORK_ID,
+          saleIds: visibleSaleIds,
+        },
+        cache: false,
+      } as any);
+      const statuses = (response.data.results ??
+        response.data) as TokenDistributionStatus[];
+      setDistributionStatuses(
+        Object.fromEntries(statuses.map((status) => [status.saleId, status])),
+      );
+    } catch (error) {
+      console.error(
+        'Error fetching automatic token distribution statuses:',
+        error,
+      );
+    }
+  }, [isAdmin, saleCategory, visibleSaleIds]);
+
+  useEffect(() => {
+    void fetchDistributionStatuses();
+  }, [fetchDistributionStatuses]);
 
   // Handle filter changes
   const handleStatusFilterChange = (newFilter: string) => {
@@ -234,7 +317,13 @@ const SalesListDashboard = ({
 
   const handleDistributeTokens = (saleId: string) => {
     setSelectedSaleId(saleId);
-    setTransactionId('');
+    const automaticStatus = distributionStatuses[saleId];
+    setTransactionId(
+      automaticStatus?.status === 'needs-review'
+        ? automaticStatus.executionTxHash
+        : '',
+    );
+    setManualDistributionError('');
     setIsModalOpen(true);
   };
 
@@ -265,7 +354,9 @@ const SalesListDashboard = ({
         return;
       }
       const buyersRes = await api.get(
-        `/user?where=${encodeURIComponent(JSON.stringify({ _id: { $in: uniqueBuyerIds } }))}&includePrivate=true`,
+        `/user?where=${encodeURIComponent(
+          JSON.stringify({ _id: { $in: uniqueBuyerIds } }),
+        )}&includePrivate=true`,
       );
       const buyers = (buyersRes.data?.results ?? []) as BuyerRecord[];
       setMatchableSales(
@@ -313,10 +404,12 @@ const SalesListDashboard = ({
     setTransactionId('');
     setIsSuccess(false);
     setIsLoading(false);
+    setManualDistributionError('');
   };
 
   const handleSubmitTransaction = async () => {
     setIsSuccess(false);
+    setManualDistributionError('');
     if (!transactionId.trim()) {
       return;
     }
@@ -326,24 +419,21 @@ const SalesListDashboard = ({
       const res = await api.post('/token-distribution-confirmation', {
         saleId: selectedSaleId,
         txHash: transactionId,
-        buyerEmail: enrichedSales?.find((sale: Sale) => sale._id === selectedSaleId)
-          ?.buyer?.email,
-        numTokens: enrichedSales?.find((sale: Sale) => sale._id === selectedSaleId)
-          ?.quantity,
-        buyerName: enrichedSales?.find((sale: Sale) => sale._id === selectedSaleId)
-          ?.buyer?.screenname,
       });
       if (res.status === 200) {
         setIsSuccess(true);
         onSuccess?.();
+        await fetchDistributionStatuses();
+        await onRefetch?.();
       } else {
         setIsSuccess(false);
       }
     } catch (error) {
-      console.error(
-        'Error submitting  token distribution confirmation:',
+      const details = getApiErrorDetails(
         error,
+        t('token_sales_dashboard_onchain_error'),
       );
+      setManualDistributionError(details.message);
     } finally {
       setIsLoading(false);
     }
@@ -361,7 +451,9 @@ const SalesListDashboard = ({
         saleId: selectedSaleId,
         matchedSaleId: selectedMatchedSaleId,
       });
-      const matchedSale = matchableSales.find((s) => s._id === selectedMatchedSaleId);
+      const matchedSale = matchableSales.find(
+        (s) => s._id === selectedMatchedSaleId,
+      );
       const buyerToApply = matchedSale?.buyer ?? null;
       setEnrichedSales((prev) =>
         prev.map((sale) =>
@@ -393,19 +485,27 @@ const SalesListDashboard = ({
       sale.quantity,
   );
 
-  const canMintSweatAction = Boolean(isSpaceHost);
+  const canMintSweatAction = Boolean(isSpaceHost || isAdmin);
   // POST /sale/manual is restricted to admin and team on the API side.
   const canAddManualSale = Boolean(isAdmin || isTeam);
   const canBatchSafeTxAction =
     saleCategory === 'tokens' &&
     statusFilter === 'paid' &&
     isAdmin &&
-    paidSalesWithWallet.length > 0;
+    totalSalesCount > 0;
   const hasHeaderActions =
-    canMintSweatAction || canBatchSafeTxAction || canAddManualSale;
+    canMintSweatAction || Boolean(isAdmin) || canAddManualSale;
 
   const toggleSaleDetails = (saleId: string) =>
     setExpandedSaleId((current) => (current === saleId ? null : saleId));
+  const selectedDistributionStatus = distributionStatuses[selectedSaleId];
+  const manualDistributionBlocked = Boolean(
+    selectedDistributionStatus?.active &&
+      selectedDistributionStatus.status !== 'needs-review',
+  );
+  const hasValidManualTransactionHash = EVM_TRANSACTION_HASH_PATTERN.test(
+    transactionId.trim(),
+  );
 
   const renderParticipant = (sale: Sale) => {
     const participant = getSaleParticipant(sale);
@@ -438,9 +538,14 @@ const SalesListDashboard = ({
         ) : null}
         {isTokenProductSale(sale) && sale.buyer?.walletAddress && isAdmin ? (
           <div className="min-w-0 text-xs text-muted-foreground">
-            <WalletDisplay address={sale.buyer.walletAddress} className="text-xs" />
+            <WalletDisplay
+              address={sale.buyer.walletAddress}
+              className="text-xs"
+            />
           </div>
-        ) : isTokenProductSale(sale) && sale.buyer && !sale.buyer.walletAddress ? (
+        ) : isTokenProductSale(sale) &&
+          sale.buyer &&
+          !sale.buyer.walletAddress ? (
           <div className="text-xs text-muted-foreground">
             {t('token_sales_dashboard_no_wallet_address')}
           </div>
@@ -451,9 +556,31 @@ const SalesListDashboard = ({
 
   const renderQuantity = (sale: Sale) => {
     if (isTokenProductSale(sale)) {
-      return sale.createdBy ? (sale.quantity ?? 0) : 'N/A';
+      return sale.createdBy ? sale.quantity ?? 0 : 'N/A';
     }
     return sale.quantity ?? '—';
+  };
+
+  const distributionStatusLabel = (status: TokenDistributionStatus) => {
+    if (status.status === 'pending' || status.status === 'creating') {
+      return t('token_sales_dashboard_safe_automatic_pending', {
+        submitted: status.confirmationsSubmitted,
+        required: status.confirmationsRequired,
+      });
+    }
+    if (status.status === 'finalizing') {
+      return t('token_sales_dashboard_safe_automatic_finalizing');
+    }
+    if (status.status === 'needs-review') {
+      return t('token_sales_dashboard_safe_automatic_review');
+    }
+    if (status.status === 'completed-with-warnings') {
+      return t('token_sales_dashboard_safe_automatic_completed_warning');
+    }
+    if (status.status === 'failed' || status.status === 'superseded') {
+      return t('token_sales_dashboard_safe_automatic_failed');
+    }
+    return t('token_sales_dashboard_safe_automatic_completed');
   };
 
   const renderSaleActions = (sale: Sale) => {
@@ -467,10 +594,45 @@ const SalesListDashboard = ({
         </Link>
       );
     }
+    const automaticStatus = distributionStatuses[sale._id];
     return (
-      <>
+      <div className="flex flex-col items-start gap-2">
+        {automaticStatus && (
+          <div
+            className={`max-w-xs rounded border px-2 py-1 text-xs ${
+              automaticStatus.status === 'needs-review' ||
+              automaticStatus.status === 'completed-with-warnings' ||
+              automaticStatus.status === 'failed' ||
+              automaticStatus.status === 'superseded'
+                ? 'border-amber-300 bg-amber-50 text-amber-800'
+                : 'border-blue-200 bg-blue-50 text-blue-800'
+            }`}
+          >
+            <div>{distributionStatusLabel(automaticStatus)}</div>
+            <div className="flex flex-col items-start gap-1">
+              {automaticStatus.safeUrl && (
+                <a
+                  href={automaticStatus.safeUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline"
+                >
+                  {t('token_sales_dashboard_open_safe')}
+                </a>
+              )}
+              {(automaticStatus.entryLastError ||
+                automaticStatus.lastError) && (
+                <span>
+                  {automaticStatus.entryLastError || automaticStatus.lastError}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
         {sale.status !== 'matched' &&
-          sale.status === 'paid' &&
+          (sale.status === 'paid' ||
+            (sale.status === 'completed' &&
+              automaticStatus?.status === 'needs-review')) &&
           sale.buyer && (
             <Button
               size="small"
@@ -489,7 +651,7 @@ const SalesListDashboard = ({
             {t('token_sales_dashboard_match_buyer_manually')}
           </Button>
         )}
-      </>
+      </div>
     );
   };
 
@@ -523,9 +685,12 @@ const SalesListDashboard = ({
     };
   }, [actionsMenuOpen]);
 
-  const handleCreateBatchSafeTx = () => {
-    const { address: tokenAddress, symbol: tokenSymbol, decimals: tokenDecimals } =
-      blockchainConfig.BLOCKCHAIN_DAO_TOKEN;
+  const handleExportBatchSafeTx = () => {
+    const {
+      address: tokenAddress,
+      symbol: tokenSymbol,
+      decimals: tokenDecimals,
+    } = blockchainConfig.BLOCKCHAIN_DAO_TOKEN;
     const chainId = String(blockchainConfig.BLOCKCHAIN_NETWORK_ID);
 
     const transactions = paidSalesWithWallet.map((sale) => {
@@ -569,11 +734,102 @@ const SalesListDashboard = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `batch-safe-tx-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `batch-safe-tx-${new Date()
+      .toISOString()
+      .slice(0, 10)}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+
+  const handleCreateBatchSafeTx = async () => {
+    setIsCreatingSafeProposal(true);
+    setSafeProposalError('');
+    setSafeProposalUrl('');
+    setSafeProposalSummary('');
+    setSafeProposalSkipped([]);
+    try {
+      const fingerprint = 'all-untracked-paid-token-sales';
+      if (safeProposalIdempotencyRef.current?.fingerprint !== fingerprint) {
+        safeProposalIdempotencyRef.current = {
+          fingerprint,
+          requestId:
+            window.crypto?.randomUUID?.() ??
+            `tdf-mint-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        };
+      }
+      const response = await api.post('/safe/token-distribution-batches', {
+        requestId: safeProposalIdempotencyRef.current.requestId,
+        chainId: blockchainConfig.BLOCKCHAIN_NETWORK_ID,
+      });
+      const result = response.data.results ?? response.data;
+      const batches = result.batches ?? [];
+      const skipped = result.skipped ?? [];
+      const saleCount = batches.reduce(
+        (total: number, batch: { saleCount?: number }) =>
+          total + Number(batch.saleCount || 0),
+        0,
+      );
+      const safeUrl = batches.find(
+        (batch: { safeUrl?: string }) => batch.safeUrl,
+      )?.safeUrl;
+      setSafeProposalUrl(safeUrl ?? '');
+      setSafeProposalSkipped(skipped);
+      setSafeProposalSummary(
+        batches.length > 0
+          ? t('token_sales_dashboard_safe_batch_created_summary', {
+              batches: batches.length,
+              sales: saleCount,
+            })
+          : t('token_sales_dashboard_safe_batch_no_eligible'),
+      );
+      if (safeUrl) {
+        window.open(safeUrl, '_blank', 'noopener,noreferrer');
+      }
+      safeProposalIdempotencyRef.current = null;
+      await fetchDistributionStatuses();
+    } catch (proposalError) {
+      setSafeProposalError(
+        getApiErrorDetails(
+          proposalError,
+          t('token_sales_dashboard_onchain_error'),
+        ).message,
+      );
+    } finally {
+      setIsCreatingSafeProposal(false);
+    }
+  };
+
+  const handleSyncTokenDistributions = async () => {
+    setIsSyncingDistributions(true);
+    setDistributionSyncError('');
+    setDistributionSyncSummary('');
+    try {
+      const response = await api.post('/safe/token-distribution-batches/sync', {
+        chainId: blockchainConfig.BLOCKCHAIN_NETWORK_ID,
+      });
+      const result = (response.data.results ??
+        response.data) as TokenDistributionSyncResult;
+      setDistributionSyncSummary(
+        t('token_sales_dashboard_safe_sync_summary', {
+          checked: result.checked,
+          finalized: result.newlyFinalized,
+          pending: result.inProgress ?? result.pending,
+          review: result.needsReview,
+          warnings: result.completedWithWarnings,
+        }),
+      );
+      await fetchDistributionStatuses();
+      await onRefetch?.();
+    } catch (syncError) {
+      setDistributionSyncError(
+        getApiErrorDetails(syncError, t('token_sales_dashboard_onchain_error'))
+          .message,
+      );
+    } finally {
+      setIsSyncingDistributions(false);
+    }
   };
 
   return (
@@ -599,6 +855,21 @@ const SalesListDashboard = ({
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            {isAdmin && saleCategory === 'tokens' && (
+              <Button
+                type="button"
+                size="small"
+                variant="secondary"
+                onClick={() => void handleSyncTokenDistributions()}
+                isEnabled={!isSyncingDistributions}
+                isLoading={isSyncingDistributions}
+                className="text-xs rounded-full h-fit py-1"
+              >
+                {isSyncingDistributions
+                  ? t('token_sales_dashboard_safe_syncing')
+                  : t('token_sales_dashboard_safe_sync_now')}
+              </Button>
+            )}
             {hasHeaderActions && (
               <div className="relative" ref={actionsMenuRef}>
                 <Button
@@ -648,6 +919,32 @@ const SalesListDashboard = ({
                         {t('token_sales_dashboard_mint_sweat_button')}
                       </button>
                     )}
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="flex w-full px-3 py-2 text-left text-sm hover:bg-muted"
+                        onClick={() => {
+                          setActionsMenuOpen(false);
+                          setIsBurnSweatModalOpen(true);
+                        }}
+                      >
+                        {t('token_sales_dashboard_burn_sweat_button')}
+                      </button>
+                    )}
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="flex w-full px-3 py-2 text-left text-sm hover:bg-muted"
+                        onClick={() => {
+                          setActionsMenuOpen(false);
+                          setIsTransferTdfModalOpen(true);
+                        }}
+                      >
+                        {t('token_sales_dashboard_transfer_tdf_button')}
+                      </button>
+                    )}
                     {canBatchSafeTxAction && (
                       <button
                         type="button"
@@ -655,17 +952,35 @@ const SalesListDashboard = ({
                         className="flex w-full px-3 py-2 text-left text-sm hover:bg-muted"
                         onClick={() => {
                           setActionsMenuOpen(false);
-                          handleCreateBatchSafeTx();
+                          void handleCreateBatchSafeTx();
+                        }}
+                        disabled={isCreatingSafeProposal}
+                      >
+                        {isCreatingSafeProposal
+                          ? t('token_sales_dashboard_creating_safe_proposal')
+                          : t('token_sales_dashboard_create_batch_safe_tx')}
+                      </button>
+                    )}
+                    {canBatchSafeTxAction && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="flex w-full px-3 py-2 text-left text-sm hover:bg-muted"
+                        onClick={() => {
+                          setActionsMenuOpen(false);
+                          handleExportBatchSafeTx();
                         }}
                       >
-                        {t('token_sales_dashboard_create_batch_safe_tx')}
+                        {t('token_sales_dashboard_export_tdf_mint_json')}
                       </button>
                     )}
                   </div>
                 )}
               </div>
             )}
-            <span className="text-sm">{t('token_sales_dashboard_select_status')}</span>
+            <span className="text-sm">
+              {t('token_sales_dashboard_select_status')}
+            </span>
             <Select
               value={statusFilter}
               onValueChange={handleStatusFilterChange}
@@ -698,6 +1013,59 @@ const SalesListDashboard = ({
             </Select>
           </div>
         </div>
+        {(safeProposalUrl ||
+          safeProposalError ||
+          safeProposalSummary ||
+          safeProposalSkipped.length > 0) && (
+          <div
+            className={`mt-3 rounded-lg border p-3 text-sm ${
+              safeProposalError
+                ? 'border-red-300 bg-red-50 text-red-700'
+                : 'border-green-300 bg-green-50 text-green-800'
+            }`}
+          >
+            {safeProposalError ||
+              safeProposalSummary ||
+              t('token_sales_dashboard_safe_proposal_created')}
+            {safeProposalUrl && (
+              <a
+                href={safeProposalUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="ml-2 underline"
+              >
+                {t('token_sales_dashboard_open_safe')}
+              </a>
+            )}
+            {safeProposalSkipped.length > 0 && (
+              <div className="mt-2">
+                <p>
+                  {t('token_sales_dashboard_safe_batch_skipped', {
+                    count: safeProposalSkipped.length,
+                  })}
+                </p>
+                <ul className="mt-1 list-disc pl-5">
+                  {safeProposalSkipped.slice(0, 10).map((item) => (
+                    <li key={item.saleId}>
+                      {item.saleId}: {item.reason}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+        {(distributionSyncSummary || distributionSyncError) && (
+          <div
+            className={`mt-3 rounded-lg border p-3 text-sm ${
+              distributionSyncError
+                ? 'border-red-300 bg-red-50 text-red-700'
+                : 'border-blue-200 bg-blue-50 text-blue-800'
+            }`}
+          >
+            {distributionSyncError || distributionSyncSummary}
+          </div>
+        )}
         {/* Mobile card layout */}
         <div className="md:hidden space-y-3">
           {currentSales.map((sale: Sale) => {
@@ -707,7 +1075,9 @@ const SalesListDashboard = ({
             return (
               <div
                 key={sale._id}
-                className={`${rowHighlightClass(sale)} border border-border rounded-lg p-4 space-y-3`}
+                className={`${rowHighlightClass(
+                  sale,
+                )} border border-border rounded-lg p-4 space-y-3`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -809,7 +1179,9 @@ const SalesListDashboard = ({
                 return (
                   <Fragment key={sale._id}>
                     <tr
-                      className={`${rowHighlightClass(sale)} border-b border-border hover:bg-muted/50`}
+                      className={`${rowHighlightClass(
+                        sale,
+                      )} border-b border-border hover:bg-muted/50`}
                     >
                       <td className="p-4 font-medium align-top">
                         <Badge variant="outline" className="mb-1 text-[10px]">
@@ -822,7 +1194,9 @@ const SalesListDashboard = ({
                           </div>
                         ) : null}
                       </td>
-                      <td className="p-4 align-top">{renderParticipant(sale)}</td>
+                      <td className="p-4 align-top">
+                        {renderParticipant(sale)}
+                      </td>
                       <td className="p-4 align-top">{renderQuantity(sale)}</td>
                       <td className="p-4 font-mono align-top">
                         {formatAmount(sale)}
@@ -907,30 +1281,68 @@ const SalesListDashboard = ({
               </p>
               <p>
                 {
-                  enrichedSales?.find((sale: Sale) => sale._id === selectedSaleId)
-                    ?.buyer?.screenname
+                  enrichedSales?.find(
+                    (sale: Sale) => sale._id === selectedSaleId,
+                  )?.buyer?.screenname
                 }
               </p>
             </div>
 
-            <div className="space-y-2">
-              <label
-                htmlFor="transactionId"
-                className="block text-sm font-medium"
-              >
-                {t('token_sales_dashboard_transaction_id')}
-              </label>
-              <Input
-                id="transactionId"
-                type="text"
-                value={transactionId}
-                onChange={(e) => setTransactionId(e.target.value)}
-                placeholder={t(
-                  'token_sales_dashboard_enter_transaction_id_placeholder',
+            {selectedDistributionStatus && (
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+                <p className="font-medium">
+                  {distributionStatusLabel(selectedDistributionStatus)}
+                </p>
+                <p className="mt-1">
+                  {manualDistributionBlocked
+                    ? t('token_sales_dashboard_safe_manual_automatic_notice')
+                    : t('token_sales_dashboard_safe_manual_recovery_notice')}
+                </p>
+                {selectedDistributionStatus.safeUrl && (
+                  <a
+                    href={selectedDistributionStatus.safeUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 inline-block underline"
+                  >
+                    {t('token_sales_dashboard_open_safe')}
+                  </a>
                 )}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-              />
-            </div>
+                {(selectedDistributionStatus.entryLastError ||
+                  selectedDistributionStatus.lastError) && (
+                  <p className="mt-1">
+                    {selectedDistributionStatus.entryLastError ||
+                      selectedDistributionStatus.lastError}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {!manualDistributionBlocked && (
+              <div className="space-y-2">
+                <label
+                  htmlFor="transactionId"
+                  className="block text-sm font-medium"
+                >
+                  {t('token_sales_dashboard_transaction_id')}
+                </label>
+                <Input
+                  id="transactionId"
+                  type="text"
+                  value={transactionId}
+                  onChange={(e) => setTransactionId(e.target.value)}
+                  placeholder={t(
+                    'token_sales_dashboard_enter_transaction_id_placeholder',
+                  )}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                />
+                {transactionId.trim() && !hasValidManualTransactionHash && (
+                  <p className="text-sm text-red-500">
+                    {t('token_sales_dashboard_invalid_transaction_hash')}
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
               <Button
@@ -940,18 +1352,31 @@ const SalesListDashboard = ({
               >
                 {t('token_sales_dashboard_cancel')}
               </Button>
-              <Button
-                onClick={handleSubmitTransaction}
-                isEnabled={
-                  Boolean(transactionId.trim()) && !isLoading && !isSuccess
-                }
-                isLoading={isLoading}
-              >
-                {isLoading
-                  ? t('token_sales_dashboard_distributing')
-                  : t('token_sales_dashboard_distribute_tokens_button')}
-              </Button>
+              {manualDistributionBlocked ? (
+                <Button
+                  onClick={() => void handleSyncTokenDistributions()}
+                  isEnabled={!isSyncingDistributions}
+                  isLoading={isSyncingDistributions}
+                >
+                  {t('token_sales_dashboard_safe_sync_now')}
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleSubmitTransaction}
+                  isEnabled={
+                    hasValidManualTransactionHash && !isLoading && !isSuccess
+                  }
+                  isLoading={isLoading}
+                >
+                  {isLoading
+                    ? t('token_sales_dashboard_distributing')
+                    : t('token_sales_dashboard_distribute_tokens_button')}
+                </Button>
+              )}
             </div>
+            {manualDistributionError && (
+              <div className="text-red-500">{manualDistributionError}</div>
+            )}
             {isSuccess && (
               <div className="text-green-500">
                 {t('token_sales_dashboard_success_message')}
@@ -962,6 +1387,12 @@ const SalesListDashboard = ({
       )}
       {isMintSweatModalOpen && (
         <MintSweatModal onClose={() => setIsMintSweatModalOpen(false)} />
+      )}
+      {isBurnSweatModalOpen && (
+        <BurnSweatModal onClose={() => setIsBurnSweatModalOpen(false)} />
+      )}
+      {isTransferTdfModalOpen && (
+        <TransferTdfModal onClose={() => setIsTransferTdfModalOpen(false)} />
       )}
 
       {isManualSaleModalOpen && (
@@ -1027,7 +1458,10 @@ const SalesListDashboard = ({
                             )}
                           </div>
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>{t('token_sales_dashboard_quantity')}: {sale.createdBy ? (sale.quantity ?? 0) : 'N/A'}</span>
+                            <span>
+                              {t('token_sales_dashboard_quantity')}:{' '}
+                              {sale.createdBy ? sale.quantity ?? 0 : 'N/A'}
+                            </span>
                             <span>{formatDate(sale.created)}</span>
                           </div>
                         </button>
@@ -1083,7 +1517,7 @@ const SalesListDashboard = ({
                                 )}
                               </td>
                               <td className="p-2">
-                                {sale.createdBy ? (sale.quantity ?? 0) : 'N/A'}
+                                {sale.createdBy ? sale.quantity ?? 0 : 'N/A'}
                               </td>
                               <td className="p-2">
                                 {getStatusBadge(sale.status)}
@@ -1100,11 +1534,12 @@ const SalesListDashboard = ({
               )}
 
               {!isLoadingMatchableSales &&
-                matchableSales.filter((s) => s._id !== selectedSaleId).length === 0 && (
+                matchableSales.filter((s) => s._id !== selectedSaleId)
+                  .length === 0 && (
                   <p className="text-muted-foreground">
                     {t('token_sales_dashboard_match_buyer_no_sales')}
                   </p>
-              )}
+                )}
 
               <div className="flex justify-end gap-3">
                 <Button

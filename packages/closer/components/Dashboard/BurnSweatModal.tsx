@@ -10,52 +10,32 @@ import { Input } from '../ui/';
 import Button from '../ui/Button';
 import TokenUserSearchInput, { TokenUserResult } from './TokenUserSearchInput';
 
-export interface SweatEntry {
+interface BurnEntry {
   id: string;
-  user: TokenUserResult | null;
   amount: string;
   contributionDate: string;
 }
 
-interface MintSweatModalProps {
-  onClose: () => void;
-}
-
-interface TransactionResult {
-  transactionHash?: string;
-  explorerUrl?: string;
-  status?: string;
-}
-
 let entryIdCounter = 0;
-const generateEntryId = () => `sweat-entry-${++entryIdCounter}`;
 const today = () => new Date().toISOString().slice(0, 10);
-
-const newEntry = (): SweatEntry => ({
-  id: generateEntryId(),
-  user: null,
+const newEntry = (): BurnEntry => ({
+  id: `sweat-burn-${++entryIdCounter}`,
   amount: '',
   contributionDate: today(),
 });
-
 const createRequestId = () =>
   window.crypto?.randomUUID?.() ??
-  `sweat-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  `sweat-burn-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-export const buildMintSweatSubmissionEntries = (entries: SweatEntry[]) =>
-  entries.map((entry) => ({
-    userId: entry.user!._id,
-    amount: entry.amount,
-    contributionDate: entry.contributionDate,
-  }));
-
-const MintSweatModal = ({ onClose }: MintSweatModalProps) => {
+const BurnSweatModal = ({ onClose }: { onClose: () => void }) => {
   const t = useTranslations();
-  const [entries, setEntries] = useState<SweatEntry[]>([newEntry()]);
+  const [user, setUser] = useState<TokenUserResult | null>(null);
+  const [entries, setEntries] = useState<BurnEntry[]>([newEntry()]);
+  const [confirmed, setConfirmed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [errorExplorerUrl, setErrorExplorerUrl] = useState('');
-  const [result, setResult] = useState<TransactionResult | null>(null);
+  const [explorerUrl, setExplorerUrl] = useState('');
   const idempotencyRef = useRef<{
     fingerprint: string;
     requestId: string;
@@ -63,18 +43,11 @@ const MintSweatModal = ({ onClose }: MintSweatModalProps) => {
 
   const validEntries = entries.filter(
     (entry) =>
-      entry.user?._id &&
-      entry.amount &&
-      Number(entry.amount) > 0 &&
-      entry.contributionDate,
+      entry.amount && Number(entry.amount) > 0 && entry.contributionDate,
   );
   const allEntriesComplete = validEntries.length === entries.length;
-  const totalAmount = entries.reduce(
-    (sum, entry) => sum + (Number(entry.amount) || 0),
-    0,
-  );
 
-  const updateEntry = (id: string, patch: Partial<SweatEntry>) => {
+  const updateEntry = (id: string, patch: Partial<BurnEntry>) => {
     setEntries((previous) =>
       previous.map((entry) =>
         entry.id === id ? { ...entry, ...patch } : entry,
@@ -83,26 +56,33 @@ const MintSweatModal = ({ onClose }: MintSweatModalProps) => {
   };
 
   const submit = async () => {
-    if (!allEntriesComplete) return;
+    if (!user?.walletAddress || !confirmed || !allEntriesComplete) return;
     setIsSubmitting(true);
     setError('');
     setErrorExplorerUrl('');
-    setResult(null);
     try {
-      const submissionEntries = buildMintSweatSubmissionEntries(entries);
-      const fingerprint = JSON.stringify(submissionEntries);
+      const submissionEntries = entries.map(({ amount, contributionDate }) => ({
+        amount,
+        contributionDate,
+      }));
+      const fingerprint = JSON.stringify({
+        walletAddress: user.walletAddress,
+        entries: submissionEntries,
+      });
       if (idempotencyRef.current?.fingerprint !== fingerprint) {
         idempotencyRef.current = {
           fingerprint,
           requestId: createRequestId(),
         };
       }
-      const response = await api.post('/sweat/mints', {
+      const response = await api.post('/sweat/burns', {
         requestId: idempotencyRef.current.requestId,
         chainId: blockchainConfig.BLOCKCHAIN_NETWORK_ID,
+        walletAddress: user.walletAddress,
         entries: submissionEntries,
       });
-      setResult(response.data.results ?? response.data);
+      const result = response.data.results ?? response.data;
+      setExplorerUrl(result.explorerUrl ?? 'submitted');
     } catch (submissionError) {
       const details = getApiErrorDetails(
         submissionError,
@@ -116,37 +96,40 @@ const MintSweatModal = ({ onClose }: MintSweatModalProps) => {
   };
 
   return (
-    <Modal closeModal={onClose} className="md:w-[780px] md:max-w-[90vw]">
+    <Modal closeModal={onClose} className="md:w-[680px] md:max-w-[90vw]">
       <div className="flex flex-col max-h-[85vh]">
-        <div className="flex-shrink-0 mb-4">
+        <div className="mb-4">
           <h2 className="text-lg md:text-xl font-semibold">
-            {t('token_sales_dashboard_mint_sweat_title')}
+            {t('token_sales_dashboard_burn_sweat_title')}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            {t('token_sales_dashboard_mint_sweat_description')}
+            {t('token_sales_dashboard_burn_sweat_description')}
           </p>
         </div>
 
+        <div className="mb-4">
+          <label className="block text-xs font-medium text-muted-foreground mb-1">
+            {t('token_sales_dashboard_mint_sweat_user')}
+          </label>
+          <TokenUserSearchInput
+            selectedUser={user}
+            onSelect={setUser}
+            onClear={() => setUser(null)}
+            placeholder={t('token_sales_dashboard_mint_sweat_search_user')}
+          />
+          {user && !user.walletAddress && (
+            <p className="text-xs text-red-500 mt-1">
+              {t('token_sales_dashboard_mint_sweat_no_wallet_warning')}
+            </p>
+          )}
+        </div>
+
         <div className="flex-1 overflow-y-auto space-y-3 mb-4">
-          {entries.map((entry, index) => (
+          {entries.map((entry) => (
             <div
               key={entry.id}
-              className="grid gap-2 p-3 border border-border rounded-lg bg-muted/20 sm:grid-cols-[minmax(0,1fr)_8rem_10rem_auto] sm:items-end"
+              className="grid gap-2 p-3 border border-border rounded-lg bg-muted/20 sm:grid-cols-[1fr_1fr_auto] sm:items-end"
             >
-              <div className="min-w-0">
-                <label className="block text-xs font-medium text-muted-foreground mb-1">
-                  {t('token_sales_dashboard_mint_sweat_user')} #{index + 1}
-                </label>
-                <TokenUserSearchInput
-                  selectedUser={entry.user}
-                  onSelect={(user) => updateEntry(entry.id, { user })}
-                  onClear={() => updateEntry(entry.id, { user: null })}
-                  placeholder={t(
-                    'token_sales_dashboard_mint_sweat_search_user',
-                  )}
-                  requiresWallet={false}
-                />
-              </div>
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1">
                   {t('token_sales_dashboard_mint_sweat_amount')}
@@ -159,7 +142,6 @@ const MintSweatModal = ({ onClose }: MintSweatModalProps) => {
                   onChange={(event) =>
                     updateEntry(entry.id, { amount: event.target.value })
                   }
-                  placeholder="0"
                   className="w-full px-3 py-2 text-sm"
                 />
               </div>
@@ -189,7 +171,7 @@ const MintSweatModal = ({ onClose }: MintSweatModalProps) => {
                   )
                 }
                 disabled={entries.length <= 1}
-                className="p-2 text-muted-foreground hover:text-red-500 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="p-2 text-muted-foreground hover:text-red-500 disabled:opacity-30"
                 aria-label={t('generic_remove')}
               >
                 ✕
@@ -198,15 +180,23 @@ const MintSweatModal = ({ onClose }: MintSweatModalProps) => {
           ))}
         </div>
 
-        <div className="flex-shrink-0 space-y-3">
+        <div className="space-y-3">
           <button
             type="button"
             onClick={() => setEntries((previous) => [...previous, newEntry()])}
-            className="w-full py-2 border border-dashed border-gray-300 rounded-lg text-sm text-muted-foreground hover:border-accent hover:text-accent transition-colors"
+            className="w-full py-2 border border-dashed border-gray-300 rounded-lg text-sm text-muted-foreground hover:border-accent hover:text-accent"
           >
-            + {t('token_sales_dashboard_mint_sweat_add_entry')}
+            + {t('token_sales_dashboard_burn_add_entry')}
           </button>
-
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={confirmed}
+              onChange={(event) => setConfirmed(event.target.checked)}
+              className="mt-1"
+            />
+            <span>{t('token_sales_dashboard_burn_confirmation')}</span>
+          </label>
           {!allEntriesComplete && (
             <p className="text-sm text-amber-700">
               {t('token_sales_dashboard_complete_all_rows')}
@@ -227,12 +217,12 @@ const MintSweatModal = ({ onClose }: MintSweatModalProps) => {
               )}
             </div>
           )}
-          {result && (
+          {explorerUrl && (
             <div className="rounded-lg border border-green-300 bg-green-50 p-3 text-sm text-green-800">
               <p>{t('token_sales_dashboard_sweat_transaction_submitted')}</p>
-              {result.explorerUrl && (
+              {explorerUrl !== 'submitted' && (
                 <a
-                  href={result.explorerUrl}
+                  href={explorerUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="underline"
@@ -242,30 +232,23 @@ const MintSweatModal = ({ onClose }: MintSweatModalProps) => {
               )}
             </div>
           )}
-
-          <div className="flex flex-col gap-3 text-sm border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-col gap-1 text-muted-foreground">
-              <span>
-                {t('token_sales_dashboard_mint_sweat_total')}: {totalAmount}{' '}
-                {blockchainConfig.BLOCKCHAIN_SWEAT_TOKEN.symbol}
-              </span>
-              <span>
-                {validEntries.length}{' '}
-                {t('token_sales_dashboard_mint_sweat_valid_entries')}
-              </span>
-            </div>
-            <div className="flex gap-2 self-end">
-              <Button variant="secondary" onClick={onClose}>
-                {t('token_sales_dashboard_cancel')}
-              </Button>
-              <Button
-                onClick={submit}
-                isEnabled={allEntriesComplete && !isSubmitting && !result}
-                isLoading={isSubmitting}
-              >
-                {t('token_sales_dashboard_mint_sweat_submit')}
-              </Button>
-            </div>
+          <div className="flex justify-end gap-2 border-t border-border pt-3">
+            <Button variant="secondary" onClick={onClose}>
+              {t('token_sales_dashboard_cancel')}
+            </Button>
+            <Button
+              onClick={submit}
+              isEnabled={
+                Boolean(user?.walletAddress) &&
+                allEntriesComplete &&
+                confirmed &&
+                !isSubmitting &&
+                !explorerUrl
+              }
+              isLoading={isSubmitting}
+            >
+              {t('token_sales_dashboard_burn_sweat_submit')}
+            </Button>
           </div>
         </div>
       </div>
@@ -273,4 +256,4 @@ const MintSweatModal = ({ onClose }: MintSweatModalProps) => {
   );
 };
 
-export default MintSweatModal;
+export default BurnSweatModal;
