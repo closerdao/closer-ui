@@ -5,8 +5,10 @@ import {
   PEOPLE_COUNT_MAX,
   PEOPLE_COUNT_MIN,
   ROOMS_COUNT_MIN,
+  VILLAGE_ADMIN_SETTABLE_STATUSES,
   VILLAGE_COLLECTION,
   VILLAGE_DEPLOYER_ROLES,
+  VILLAGE_MANAGED_ONLY_STATUSES,
   VILLAGE_ONBOARDING_STATUSES,
   VILLAGE_REVIEWER_ROLES,
   VILLAGE_SLUG_FROZEN_FROM,
@@ -20,6 +22,7 @@ import {
   VillageCriteria,
   VillageEvent,
   VillageMapItem,
+  VillageOnboardingStatus,
   VillageSearchParams,
   VillageSearchResponse,
   VillageSocialNetwork,
@@ -335,6 +338,27 @@ export function isVillageSlugFrozen(
   const statuses = VILLAGE_ONBOARDING_STATUSES as readonly string[];
   const rank = statuses.indexOf(village.onboardingStatus || '');
   return rank >= 0 && rank >= statuses.indexOf(VILLAGE_SLUG_FROZEN_FROM);
+}
+
+/**
+ * The onboarding stages an admin may pick by hand for this village.
+ *
+ * Procurement provisions a *managed* village and its reconciler owns the
+ * deployment outcome, so `failed` / `live` / `suspended` are not on offer
+ * there — a manual edit would be overwritten within a minute. An unmanaged
+ * village is one already running Closer that procurement never touched, and
+ * hand-setting it to `live` is exactly how that is recorded, so the full set
+ * stays available. `deploy_requested` / `deploying` are off the list for
+ * everyone; the API rejects a PATCH that tries.
+ */
+export function villageAdminSettableStatuses(
+  village: Pick<Village, 'managed'> | null | undefined,
+): VillageOnboardingStatus[] {
+  if (village?.managed !== true) return [...VILLAGE_ADMIN_SETTABLE_STATUSES];
+  return VILLAGE_ADMIN_SETTABLE_STATUSES.filter(
+    (status) =>
+      !(VILLAGE_MANAGED_ONLY_STATUSES as readonly string[]).includes(status),
+  );
 }
 
 /**

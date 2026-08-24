@@ -6,6 +6,7 @@ import {
   getDeployReadiness,
   isVillageSlugFrozen,
   resolveFounderEmail,
+  villageAdminSettableStatuses,
 } from '../village.utils';
 
 // jest.config maps the bare "../utils/api" specifier to test/__mocks__/api.js,
@@ -222,5 +223,45 @@ describe('isVillageSlugFrozen', () => {
         village({ onboardingStatus: 'subscribed', managed: true }),
       ),
     ).toBe(true);
+  });
+});
+
+describe('villageAdminSettableStatuses', () => {
+  it('lets an admin record an unmanaged village as live, failed or suspended', () => {
+    const statuses = villageAdminSettableStatuses(
+      village({ onboardingStatus: 'subscribed' }),
+    );
+
+    expect(statuses).toEqual(
+      expect.arrayContaining(['failed', 'live', 'suspended']),
+    );
+  });
+
+  it('withholds the deploy outcomes on a managed village', () => {
+    const statuses = villageAdminSettableStatuses(
+      village({ onboardingStatus: 'subscribed', managed: true }),
+    );
+
+    expect(statuses).not.toEqual(
+      expect.arrayContaining(['failed', 'live', 'suspended']),
+    );
+    expect(statuses).toEqual([
+      'map_only',
+      'pre_assessed',
+      'intro_scheduled',
+      'subscribed',
+    ]);
+  });
+
+  it('never offers the in-flight stages', () => {
+    for (const managed of [true, false]) {
+      expect(villageAdminSettableStatuses(village({ managed }))).not.toEqual(
+        expect.arrayContaining(['deploy_requested', 'deploying']),
+      );
+    }
+  });
+
+  it('treats a missing village as unmanaged', () => {
+    expect(villageAdminSettableStatuses(undefined)).toContain('live');
   });
 });

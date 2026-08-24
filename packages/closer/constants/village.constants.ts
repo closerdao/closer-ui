@@ -42,6 +42,21 @@ export const VILLAGE_PROCUREMENT_ONLY_STATUSES = [
   'deploying',
 ] as const;
 
+/**
+ * Deployment outcomes. On a *managed* village procurement owns them — its
+ * reconciler rewrites the status within a minute, so offering an admin the
+ * control would be a lie. On an unmanaged village (one already running Closer
+ * that procurement never provisioned, e.g. TDF) `live` is precisely how an
+ * admin records the fact, so they stay hand-settable there. Gate with
+ * `villageAdminSettableStatuses`, never by removing them outright.
+ */
+export const VILLAGE_MANAGED_ONLY_STATUSES = [
+  'failed',
+  'live',
+  'suspended',
+] as const;
+
+/** Hand-settable on an unmanaged village. Narrow with `villageAdminSettableStatuses`. */
 export const VILLAGE_ADMIN_SETTABLE_STATUSES =
   VILLAGE_ONBOARDING_STATUSES.filter(
     (status) =>
