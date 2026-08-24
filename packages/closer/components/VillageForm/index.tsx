@@ -8,7 +8,8 @@ import {
   PEOPLE_COUNT_MAX,
   PEOPLE_COUNT_MIN,
   ROOMS_COUNT_MIN,
-  VILLAGE_ONBOARDING_STATUSES,
+  VILLAGE_ADMIN_SETTABLE_STATUSES,
+  VILLAGE_PROCUREMENT_ONLY_STATUSES,
 } from '../../constants/village.constants';
 import {
   CreateVillageInput,
@@ -17,7 +18,11 @@ import {
   VillageCriteria,
   VillageOnboardingStatus,
 } from '../../types/village';
-import { meetsHardCriteria, toLeafletCoords } from '../../utils/village.utils';
+import {
+  isVillageSlugFrozen,
+  meetsHardCriteria,
+  toLeafletCoords,
+} from '../../utils/village.utils';
 import CommunityMap from '../CommunityMap';
 import { Eyebrow, btnPrimary, inputClass, labelClass } from '../VillageUI';
 import { ErrorMessage } from '../ui';
@@ -153,8 +158,17 @@ const VillageForm = ({
   const [pmRole, setPmRole] = useState(initial?.projectManager?.role || '');
   const [appUrl, setAppUrl] = useState(initial?.appUrl || '');
   const [apiUrl, setApiUrl] = useState(initial?.apiUrl || '');
+  const [slug, setSlug] = useState(initial?.slug || '');
   const [onboardingStatus, setOnboardingStatus] =
     useState<VillageOnboardingStatus>(initial?.onboardingStatus || 'map_only');
+  // Procurement owns the status while a deploy is in flight; nobody moves a
+  // village into (or out of) one of those by hand — the API rejects the PATCH.
+  const isStatusLocked = (
+    VILLAGE_PROCUREMENT_ONLY_STATUSES as readonly string[]
+  ).includes(onboardingStatus);
+  // The slug is procurement's join key from `deploy_requested` onwards, so it
+  // is read-only from then on rather than merely validated on submit.
+  const isSlugFrozen = isVillageSlugFrozen(initial);
   const [criteria, setCriteria] = useState<VillageCriteria>({
     ...emptyCriteria,
     ...(initial?.criteria || {}),
@@ -282,6 +296,9 @@ const VillageForm = ({
       // sending empty form state would blank whatever an admin had set. Sent as
       // a plain trimmed string for admins so emptying a field actually clears it.
       ...(isAdmin ? { appUrl: appUrl.trim(), apiUrl: apiUrl.trim() } : {}),
+      // A frozen slug is not sent at all: the API would reject the write, and
+      // the field the admin sees is read-only anyway.
+      ...(isAdmin && !isSlugFrozen && slug.trim() ? { slug: slug.trim() } : {}),
     };
 
     try {
@@ -684,20 +701,47 @@ const VillageForm = ({
             <select
               className={inputClass}
               value={onboardingStatus}
+              disabled={isStatusLocked}
               onChange={(event) =>
                 setOnboardingStatus(
                   event.target.value as VillageOnboardingStatus,
                 )
               }
             >
-              {VILLAGE_ONBOARDING_STATUSES.map((status) => (
+              {/* The in-flight value stays selectable so the form can round-trip
+                  a village mid-deploy; it just cannot be picked for any other. */}
+              {isStatusLocked ? (
+                <option value={onboardingStatus}>
+                  {t(`village_status_${onboardingStatus}`)}
+                </option>
+              ) : null}
+              {VILLAGE_ADMIN_SETTABLE_STATUSES.map((status) => (
                 <option key={status} value={status}>
                   {t(`village_status_${status}`)}
                 </option>
               ))}
             </select>
             <span className="text-[12px] text-[#9BAAA2]">
-              {t('villages_form_onboarding_status_hint')}
+              {isStatusLocked
+                ? t('villages_form_onboarding_status_locked')
+                : t('villages_form_onboarding_status_hint')}
+            </span>
+          </label>
+
+          <label className="flex flex-col gap-2 max-w-sm">
+            <span className={labelClass}>{t('villages_form_slug')}</span>
+            <input
+              className={inputClass}
+              value={slug}
+              readOnly={isSlugFrozen}
+              disabled={isSlugFrozen}
+              onChange={(event) => setSlug(event.target.value)}
+              placeholder="riverbank"
+            />
+            <span className="text-[12px] text-[#9BAAA2]">
+              {isSlugFrozen
+                ? t('villages_form_slug_frozen')
+                : t('villages_form_slug_hint')}
             </span>
           </label>
 
