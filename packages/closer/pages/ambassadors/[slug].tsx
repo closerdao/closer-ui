@@ -51,7 +51,6 @@ const AmbassadorProfilePage = () => {
           all.filter(
             (village) =>
               village.referredBy === user._id ||
-              village.ambassadorId === user._id ||
               village.createdBy === user._id ||
               village.managedBy?.includes(user._id),
           ),

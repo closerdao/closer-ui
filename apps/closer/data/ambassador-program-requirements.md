@@ -41,11 +41,11 @@ flowchart LR
 
 **Product fields on Village:**
 
-- `referredBy` / `ambassadorId` — affiliate attribution after the village is live on Closer
+- `referredBy` — affiliate attribution after the village is live on Closer
 - Project manager profile fields (`projectManager`)
 - Verification / resonance badge (`unverified` | `pending` | `verified` | `resonant`)
 - Soft-fit metadata (`criteria`) for Appendix A
-- `onboardingStatus`, `platformSubscription`, `deployRequest` for Tier 0→1
+- `onboardingStatus`, `deployRequest` for Tier 0→1
 
 ---
 

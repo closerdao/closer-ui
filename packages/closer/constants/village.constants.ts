@@ -15,15 +15,50 @@ export const VILLAGE_VERIFICATION_BADGES = [
   'resonant',
 ] as const;
 
+/**
+ * In pipeline order — index comparisons against it decide whether the slug has
+ * frozen, so nothing may be reordered without checking `isVillageSlugFrozen`.
+ * Mirrors `ONBOARDING_STATUSES` in closer-api's village model.
+ */
 export const VILLAGE_ONBOARDING_STATUSES = [
   'map_only',
   'pre_assessed',
+  'intro_scheduled',
   'subscribed',
   'deploy_requested',
   'deploying',
+  'failed',
   'live',
-  'intro_scheduled',
+  'suspended',
 ] as const;
+
+/**
+ * Statuses procurement owns. An admin cannot move a village *into* these by
+ * hand — only the deploy route (→ `deploy_requested`) and procurement's own
+ * writes (→ `deploying`) do, and the API rejects a PATCH that tries.
+ */
+export const VILLAGE_PROCUREMENT_ONLY_STATUSES = [
+  'deploy_requested',
+  'deploying',
+] as const;
+
+export const VILLAGE_ADMIN_SETTABLE_STATUSES =
+  VILLAGE_ONBOARDING_STATUSES.filter(
+    (status) =>
+      !(VILLAGE_PROCUREMENT_ONLY_STATUSES as readonly string[]).includes(
+        status,
+      ),
+  );
+
+/** From this status onwards the slug is procurement's join key and cannot move. */
+export const VILLAGE_SLUG_FROZEN_FROM = 'deploy_requested';
+
+/**
+ * Roles that may press Deploy on any village. A village's own `managedBy`
+ * members may too; founders (`createdBy`) may not until the subscription gate
+ * lands on the API side.
+ */
+export const VILLAGE_DEPLOYER_ROLES = ['team', 'admin'];
 
 export const PLATFORM_SUBSCRIPTION_PRICE_EUR = 49;
 export const PLATFORM_SETUP_FEE_EUR = 0;
