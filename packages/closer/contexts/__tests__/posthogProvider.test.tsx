@@ -19,18 +19,20 @@ jest.mock('../../utils/posthog', () => ({
 }));
 
 let mockUser: any = null;
+let mockIsLoading = false;
 jest.mock('../auth', () => ({
-  useAuth: () => ({ user: mockUser }),
+  useAuth: () => ({ user: mockUser, isLoading: mockIsLoading }),
 }));
 
 beforeEach(() => {
   mockUser = null;
+  mockIsLoading = false;
   identifyUser.mockClear();
   resetUser.mockClear();
   initPostHog.mockClear();
 });
 
-it('initialises on mount and does not identify anonymous visitors', () => {
+it('initialises on mount and clears a persisted identity after auth resolves anonymous', () => {
   render(
     <PostHogProvider>
       <div />
@@ -38,7 +40,24 @@ it('initialises on mount and does not identify anonymous visitors', () => {
   );
   expect(initPostHog).toHaveBeenCalledTimes(1);
   expect(identifyUser).not.toHaveBeenCalled();
+  expect(resetUser).toHaveBeenCalledTimes(1);
+});
+
+it('waits for auth hydration before clearing a persisted identity', () => {
+  mockIsLoading = true;
+  const { rerender } = render(
+    <PostHogProvider>
+      <div />
+    </PostHogProvider>,
+  );
   expect(resetUser).not.toHaveBeenCalled();
+  mockIsLoading = false;
+  rerender(
+    <PostHogProvider>
+      <div />
+    </PostHogProvider>,
+  );
+  expect(resetUser).toHaveBeenCalledTimes(1);
 });
 
 it('identifies on login (id + roles only) and resets on logout', () => {
@@ -81,5 +100,5 @@ it('identifies on login (id + roles only) and resets on logout', () => {
       <div />
     </PostHogProvider>,
   );
-  expect(resetUser).toHaveBeenCalledTimes(1);
+  expect(resetUser).toHaveBeenCalledTimes(2);
 });

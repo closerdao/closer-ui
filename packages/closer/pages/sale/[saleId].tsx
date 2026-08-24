@@ -24,7 +24,7 @@ import { resolveAccountingEntityFromSale } from '../../utils/accountingEntityRes
 import api, { formatSearch } from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { linkedMetricFields, logMetric } from '../../utils/metrics';
-import { AnalyticsEvents, trackEvent } from '../../utils/posthog';
+import { trackTokenPurchaseOnce } from '../../utils/tokenPurchaseAnalytics';
 import { parseMessageFromError } from '../../utils/common';
 import {
   formatIsoFiatAmount,
@@ -155,12 +155,7 @@ const SaleSummaryPage = () => {
       label: 'token',
     });
     const qty = sale.quantity;
-    if (typeof qty === 'number' && Number.isFinite(qty) && qty > 0) {
-      trackEvent(AnalyticsEvents.TOKEN_PURCHASED, {
-        quantity: qty,
-        saleId: sale._id,
-        method: 'fiat',
-      });
+    if (trackTokenPurchaseOnce(sale)) {
       void logMetric({
         event: 'token-sale-success',
         category: 'token',
@@ -168,7 +163,7 @@ const SaleSummaryPage = () => {
         ...linkedMetricFields('TokenSale', sale._id),
       });
     }
-  }, [sale?._id, sale?.product_type]);
+  }, [sale]);
 
   const createdAt = useMemo(() => {
     if (!sale?.created) return '-';

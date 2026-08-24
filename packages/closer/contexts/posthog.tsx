@@ -18,7 +18,7 @@ import { useAuth } from './auth';
  * React flag hooks, and keeps the PostHog identity in sync with auth.
  */
 export const PostHogProvider: FC<PropsWithChildren> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const lastIdentified = useRef<string | null>(null);
 
   useEffect(() => {
@@ -26,6 +26,7 @@ export const PostHogProvider: FC<PropsWithChildren> = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    if (isLoading) return;
     const id = user?._id ? String(user._id) : null;
     const roles = user?.roles ?? [];
     // Include roles so a mid-session role change re-identifies with fresh data.
@@ -33,11 +34,11 @@ export const PostHogProvider: FC<PropsWithChildren> = ({ children }) => {
     if (identity && identity !== lastIdentified.current) {
       identifyUser(id as string, { roles });
       lastIdentified.current = identity;
-    } else if (!identity && lastIdentified.current) {
+    } else if (!identity) {
       resetUser();
       lastIdentified.current = null;
     }
-  }, [user?._id, user?.roles]);
+  }, [isLoading, user?._id, user?.roles]);
 
   return (
     <PostHogReactProvider client={posthog}>{children}</PostHogReactProvider>
