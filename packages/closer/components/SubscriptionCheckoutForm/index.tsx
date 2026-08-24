@@ -11,6 +11,7 @@ import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { logMetric } from '../../utils/metrics';
+import { AnalyticsEvents, trackEvent } from '../../utils/posthog';
 import { reportIssue } from '../../utils/reporting.utils';
 import SubscriptionConditions from '../SubscriptionConditions';
 import { Button, ErrorMessage } from '../ui/';
@@ -136,6 +137,11 @@ function SubscriptionCheckoutForm({
             if (validationResponse.data.results.status === 'succeeded') {
               await refetchUser();
 
+              trackEvent(AnalyticsEvents.SUBSCRIPTION_STARTED, {
+                tier: tierMetricEvent,
+                priceId,
+                monthlyCredits,
+              });
               void logMetric({
                 event: tierMetricEvent,
                 category: 'subscriptions',
@@ -163,6 +169,11 @@ function SubscriptionCheckoutForm({
         if (validationResponse.data.results.status === 'succeeded') {
           await refetchUser();
 
+          trackEvent(AnalyticsEvents.SUBSCRIPTION_STARTED, {
+            tier: tierMetricEvent,
+            priceId,
+            monthlyCredits,
+          });
           void logMetric({
             event: tierMetricEvent,
             category: 'subscriptions',

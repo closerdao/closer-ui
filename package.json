@@ -28,17 +28,17 @@
     "build:config": "node packages/closer/scripts/syncBuildConfig.cjs"
   },
   "devDependencies": {
-    "@types/sanitize-html": "^2.16.0",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^14.0.0",
     "@testing-library/user-event": "^14.4.3",
+    "@types/sanitize-html": "^2.16.0",
+    "chokidar": "^4.0.3",
     "dotenv-cli": "^7.0.0",
     "eslint-config-custom": "*",
     "msw": "^1.2.1",
     "next-router-mock": "^0.9.3",
     "prettier": "latest",
-    "turbo": "^2.9.6",
-    "chokidar": "^4.0.3"
+    "turbo": "^2.9.6"
   },
   "resolutions": {
     "postcss": "^8.5.10",
@@ -72,6 +72,7 @@
     "jimp": "^1.6.0",
     "next": "15.5.21",
     "next-intl": "^3.26.5",
-    "nextjs-google-analytics": "^2.3.7"
+    "nextjs-google-analytics": "^2.3.7",
+    "posthog-js": "^1.418.10"
   }
 }

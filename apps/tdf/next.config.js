@@ -14,8 +14,15 @@ const withMDX = require('@next/mdx')({
   },
 });
 
+const { posthogRewrites } = require('closer/next/posthogRewrites');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // PostHog same-origin proxy (see packages/closer/next/posthogRewrites.js).
+  skipTrailingSlashRedirect: true,
+  async rewrites() {
+    return posthogRewrites();
+  },
   experimental: {
     largePageDataBytes: 512 * 1024,
   },

@@ -34,6 +34,7 @@ import {
   waitForTokenSalePaidStatus,
 } from '../../utils/tokenSale.helpers';
 import { logMetric } from '../../utils/metrics';
+import { AnalyticsEvents, trackEvent } from '../../utils/posthog';
 import { formatIntlNumberTwoDecimals } from '../../utils/currencyFormat';
 import { getReserveTokenDisplay } from '../../utils/config.utils';
 import PageNotFound from '../not-found';
@@ -309,6 +310,11 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
       }
 
       await waitForTokenSalePaidStatus(normalizedSaleId);
+      trackEvent(AnalyticsEvents.TOKEN_PURCHASED, {
+        quantity: tokenPoint,
+        saleId: normalizedSaleId,
+        method: 'crypto',
+      });
       void logMetric({
         event: 'purchase-complete-crypto',
         category: 'token',
@@ -368,6 +374,11 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
       });
       setPendingValidationTxHash(null);
       await waitForTokenSalePaidStatus(normalizedSaleId);
+      trackEvent(AnalyticsEvents.TOKEN_PURCHASED, {
+        quantity: retryTokenPoint,
+        saleId: normalizedSaleId,
+        method: 'crypto',
+      });
       void logMetric({
         event: 'purchase-complete-crypto',
         category: 'token',

@@ -20,6 +20,7 @@ import { GeneralConfig } from '../../types';
 import { CitizenshipConfig } from '../../types/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { logMetric } from '../../utils/metrics';
+import { AnalyticsEvents, trackEvent } from '../../utils/posthog';
 import PageNotFound from '../not-found';
 
 const SuccessCitizenPage: NextPage = () => {
@@ -69,6 +70,15 @@ const SuccessCitizenPage: NextPage = () => {
   useEffect(() => {
     if (intent === 'finance' && user?.citizenship?.tokensToFinance) {
       const n = user.citizenship.tokensToFinance;
+      // The success page can be reloaded; only count the purchase once.
+      const firedKey = `ph-token-financed-${user._id}`;
+      if (!sessionStorage.getItem(firedKey)) {
+        sessionStorage.setItem(firedKey, '1');
+        trackEvent(AnalyticsEvents.TOKEN_PURCHASED, {
+          quantity: n,
+          method: 'financed',
+        });
+      }
       void logMetric({
         event: 'financed-token-purchase-completed',
         category: 'citizenship',

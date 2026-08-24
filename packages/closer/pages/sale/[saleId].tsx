@@ -24,6 +24,7 @@ import { resolveAccountingEntityFromSale } from '../../utils/accountingEntityRes
 import api, { formatSearch } from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { linkedMetricFields, logMetric } from '../../utils/metrics';
+import { AnalyticsEvents, trackEvent } from '../../utils/posthog';
 import { parseMessageFromError } from '../../utils/common';
 import {
   formatIsoFiatAmount,
@@ -155,6 +156,11 @@ const SaleSummaryPage = () => {
     });
     const qty = sale.quantity;
     if (typeof qty === 'number' && Number.isFinite(qty) && qty > 0) {
+      trackEvent(AnalyticsEvents.TOKEN_PURCHASED, {
+        quantity: qty,
+        saleId: sale._id,
+        method: 'fiat',
+      });
       void logMetric({
         event: 'token-sale-success',
         category: 'token',
