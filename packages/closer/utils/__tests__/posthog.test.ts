@@ -8,6 +8,7 @@ jest.mock('posthog-js', () => ({
     reset: jest.fn(),
     register: jest.fn(),
     set_config: jest.fn(),
+    opt_in_capturing: jest.fn(),
     debug: jest.fn(),
   },
 }));
@@ -64,6 +65,7 @@ describe('isPostHogEnabled / initPostHog', () => {
 
   it('falls back to the baked-in project key when no env override is set', () => {
     process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
+    document.cookie = 'CookieConsent=true';
     const ph = load();
     expect(ph.getPostHogKey()).toBe(ph.DEFAULT_POSTHOG_KEY);
     expect(ph.DEFAULT_POSTHOG_KEY).toMatch(/^phc_/);
@@ -77,6 +79,7 @@ describe('isPostHogEnabled / initPostHog', () => {
   it('inits once with ENABLED=true and a key, via the /ingest proxy', () => {
     process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
     process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test';
+    document.cookie = 'CookieConsent=true';
     const ph = load();
     expect(ph.initPostHog()).toBe(true);
     expect(ph.initPostHog()).toBe(true);
@@ -87,14 +90,17 @@ describe('isPostHogEnabled / initPostHog', () => {
     expect(config.ui_host).toBe('https://eu.posthog.com');
     expect(config.person_profiles).toBe('identified_only');
     expect(config.capture_exceptions).toBe(true);
+    expect(config.enable_recording_console_log).toBe(false);
     expect(config.session_recording.maskAllInputs).toBe(true);
     expect(config.session_recording.maskTextSelector).toBe('[data-ph-mask]');
+    expect(config.session_recording.blockSelector).toBe('[data-ph-mask]');
   });
 
   it('registers the app super-property on load', () => {
     process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
     process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test';
     process.env.NEXT_PUBLIC_APP_NAME = 'moos';
+    document.cookie = 'CookieConsent=true';
     load().initPostHog();
     const { loaded } = mocked.init.mock.calls[0][1];
     loaded(posthog);
@@ -102,15 +108,28 @@ describe('isPostHogEnabled / initPostHog', () => {
   });
 });
 
-describe('cookie consent → persistence', () => {
+describe('cookie consent → capture and persistence', () => {
   beforeEach(() => {
     process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
     process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test';
   });
 
-  it('starts in memory persistence without consent', () => {
-    load().initPostHog();
-    expect(mocked.init.mock.calls[0][1].persistence).toBe('memory');
+  it('does not initialise or capture without explicit true consent', () => {
+    const ph = load();
+    expect(ph.initPostHog()).toBe(false);
+    document.cookie = 'CookieConsent=false';
+    expect(ph.initPostHog()).toBe(false);
+    ph.trackEvent('booking_created');
+    expect(mocked.init).not.toHaveBeenCalled();
+    expect(mocked.capture).not.toHaveBeenCalled();
+  });
+
+  it('does not trust an already-loaded SDK without consent', () => {
+    const ph = load();
+    posthog.__loaded = true;
+    expect(ph.initPostHog()).toBe(false);
+    expect(mocked.init).not.toHaveBeenCalled();
+    delete posthog.__loaded;
   });
 
   it('starts persisted when consent cookie already exists', () => {
@@ -123,11 +142,17 @@ describe('cookie consent → persistence', () => {
 
   it('upgrades persistence when consent is granted after init', () => {
     const ph = load();
-    ph.initPostHog();
+    ph.identifyUser('u1', { roles: ['member'] });
+    document.cookie = 'CookieConsent=true';
     ph.applyConsentPersistence();
+    expect(mocked.init).toHaveBeenCalledTimes(1);
     expect(mocked.set_config).toHaveBeenCalledWith({
       persistence: 'localStorage+cookie',
     });
+    const { loaded } = mocked.init.mock.calls[0][1];
+    loaded(posthog);
+    expect(mocked.opt_in_capturing).toHaveBeenCalled();
+    expect(mocked.identify).toHaveBeenCalledWith('u1', { roles: ['member'] });
   });
 
   it('does not touch posthog when consent is granted but disabled', () => {
@@ -152,6 +177,7 @@ describe('identify / reset / track', () => {
     process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
     process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test';
     process.env.NEXT_PUBLIC_APP_NAME = 'lios';
+    document.cookie = 'CookieConsent=true';
     const ph = load();
     ph.initPostHog();
     ph.identifyUser('u1', { roles: ['member'] });
@@ -165,6 +191,7 @@ describe('identify / reset / track', () => {
     });
     ph.resetUser();
     expect(mocked.reset).toHaveBeenCalled();
+    expect(mocked.register).toHaveBeenLastCalledWith({ app: 'lios' });
   });
 });
 
@@ -172,12 +199,13 @@ describe('logMetric mirror', () => {
   it('captures every platform metric in PostHog', async () => {
     process.env.NEXT_PUBLIC_POSTHOG_ENABLED = 'true';
     process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test';
+    document.cookie = 'CookieConsent=true';
     jest.doMock('../api', () => ({
       __esModule: true,
       default: { post: jest.fn().mockResolvedValue({}) },
     }));
     const ph = load();
-      const { logMetric } = require('../metrics') as typeof import('../metrics');
+    const { logMetric } = require('../metrics') as typeof import('../metrics');
     ph.initPostHog();
     await logMetric({
       event: 'signup-completed',

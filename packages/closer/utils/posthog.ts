@@ -39,13 +39,14 @@ export const hasCookieConsent = (): boolean => {
   if (typeof document === 'undefined') return false;
   return document.cookie
     .split(';')
-    .some((c) => c.trim().startsWith(`${COOKIE_CONSENT_KEY}=`));
+    .some((c) => c.trim() === `${COOKIE_CONSENT_KEY}=true`);
 };
 
 export const getAppName = (): string | undefined =>
   process.env.NEXT_PUBLIC_APP_NAME || undefined;
 
 let initialised = false;
+let pendingIdentity: { userId: string; properties: Properties } | null = null;
 
 export const buildPostHogConfig = (
   overrides: Partial<PostHogConfig> = {},
@@ -57,20 +58,20 @@ export const buildPostHogConfig = (
   // pageleave, strict minimum replay duration, etc.
   defaults: '2026-05-30',
   person_profiles: 'identified_only',
-  // Cookieless until the visitor accepts the cookie banner; AcceptCookies
-  // upgrades persistence via applyConsentPersistence().
-  persistence: hasCookieConsent() ? 'localStorage+cookie' : 'memory',
+  persistence: 'localStorage+cookie',
+  opt_out_capturing_by_default: true,
   autocapture: true,
   rageclick: true,
   capture_dead_clicks: true,
   capture_heatmaps: true,
   capture_performance: { web_vitals: true },
   capture_exceptions: true,
-  enable_recording_console_log: true,
+  enable_recording_console_log: false,
   mask_personal_data_properties: true,
   session_recording: {
     maskAllInputs: true,
     maskTextSelector: POSTHOG_MASK_SELECTOR,
+    blockSelector: POSTHOG_MASK_SELECTOR,
     recordCrossOriginIframes: false,
   },
   ...overrides,
@@ -82,19 +83,22 @@ export const buildPostHogConfig = (
  */
 export const initPostHog = (): boolean => {
   if (typeof window === 'undefined') return false;
+  if (!isPostHogEnabled() || !hasCookieConsent()) return false;
   // Fast refresh reloads this module (resetting `initialised`) without
   // resetting the posthog-js singleton — trust the SDK's own flag too.
   if (initialised || (posthog as { __loaded?: boolean }).__loaded) {
     initialised = true;
     return true;
   }
-  if (!isPostHogEnabled()) return false;
-
   posthog.init(getPostHogKey(), {
     ...buildPostHogConfig(),
     loaded: (ph) => {
       const appName = getAppName();
       if (appName) ph.register({ app: appName });
+      ph.opt_in_capturing();
+      if (pendingIdentity) {
+        ph.identify(pendingIdentity.userId, pendingIdentity.properties);
+      }
       const host = window.location.hostname;
       if (host === 'localhost' || host === '127.0.0.1') ph.debug();
     },
@@ -105,26 +109,35 @@ export const initPostHog = (): boolean => {
 
 /** Called once the visitor accepts cookies: keep identity across sessions. */
 export const applyConsentPersistence = (): void => {
-  if (!initialised) return;
+  if (!hasCookieConsent()) return;
+  if (!initialised && !initPostHog()) return;
   posthog.set_config({ persistence: 'localStorage+cookie' });
+  posthog.opt_in_capturing();
 };
 
 export const identifyUser = (
   userId: string,
   properties: Properties = {},
 ): void => {
-  if (!initialised) return;
-  posthog.identify(userId, { ...properties, app: getAppName() });
+  pendingIdentity = {
+    userId,
+    properties: { ...properties, app: getAppName() },
+  };
+  if (!initialised || !hasCookieConsent()) return;
+  posthog.identify(pendingIdentity.userId, pendingIdentity.properties);
 };
 
 export const resetUser = (): void => {
+  pendingIdentity = null;
   if (!initialised) return;
   posthog.reset();
+  const appName = getAppName();
+  if (appName) posthog.register({ app: appName });
 };
 
 /** Custom event capture; safe to call anywhere, no-op when disabled. */
 export const trackEvent = (event: string, properties?: Properties): void => {
-  if (!initialised) return;
+  if (!initialised || !hasCookieConsent()) return;
   posthog.capture(event, properties);
 };
 
@@ -144,6 +157,7 @@ export const AnalyticsEvents = {
 /** Test-only: forget that init ran. */
 export const __resetPostHogForTests = (): void => {
   initialised = false;
+  pendingIdentity = null;
 };
 
 export { posthog };
