@@ -116,9 +116,18 @@ const AffiliateApplications = ({ onReviewed }: Props) => {
         endpoint === 'approve' &&
         process.env.NEXT_PUBLIC_FEATURE_FEDERATION === 'true'
       ) {
-        const roles =
-          applicants.find((applicant) => applicant._id === userId)?.roles ?? [];
-        if (!roles.includes(AMBASSADOR_ROLE)) {
+        const listedRoles = applicants.find(
+          (applicant) => applicant._id === userId,
+        )?.roles;
+        let roles = Array.isArray(listedRoles) ? listedRoles : undefined;
+        if (!roles) {
+          const action = await platform.user.getOne(userId, { force: true });
+          const fetched = action?.results?.toJS?.();
+          if (fetched) {
+            roles = Array.isArray(fetched.roles) ? fetched.roles : [];
+          }
+        }
+        if (roles && !roles.includes(AMBASSADOR_ROLE)) {
           await platform.user.patch(userId, {
             roles: roles.concat(AMBASSADOR_ROLE),
           });

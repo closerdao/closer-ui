@@ -469,6 +469,34 @@ export function villageAdminSettableStatuses(
 }
 
 /**
+ * Files the deploy request under the chosen address. The subdomain becomes the
+ * village's slug — the one identity it keeps across the map, the directory and
+ * its own instance — and `appUrl` records where the instance will answer once
+ * the team has built it. The address is PATCHed first so
+ * `POST /village/:id/deploy` can freeze the slug and call procurement;
+ * `deploy_requested` is not settable by PATCH.
+ */
+export async function deployVillageToCloser(
+  id: string,
+  subdomain: string,
+): Promise<Village> {
+  const host = `${subdomain}.${CLOSER_DEPLOY_DOMAIN}`;
+  const notes = `Requested address: ${host}`;
+  const patched = await updateVillage(id, {
+    slug: subdomain,
+    appUrl: `https://${host}`,
+  });
+  const { village } = await deployVillage(id, notes);
+  if (village) return village;
+  return (
+    (await getVillage(id)) ?? {
+      ...patched,
+      onboardingStatus: 'deploy_requested',
+    }
+  );
+}
+
+/**
  * The one village this user has launched, if any. `/village/launch` allows a
  * single village per member, and `createdBy` (set by the API from the token)
  * is what marks it as theirs.
