@@ -5,7 +5,6 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import CommunityMap from '../../../components/CommunityMap';
-import VillageDeployModal from '../../../components/VillageDeployModal';
 import VillageEvents from '../../../components/VillageEvents';
 import {
   CloserPill,
@@ -21,6 +20,7 @@ import {
   inputClass,
   labelClass,
 } from '../../../components/VillageUI';
+import DeployCTA from '../../../components/VillageUI/DeployCTA';
 import { ErrorMessage, Spinner } from '../../../components/ui';
 
 import { useTranslations } from 'next-intl';
@@ -33,11 +33,10 @@ import {
   VillageSocialNetwork,
   VillageVerificationBadge,
 } from '../../../types/village';
-import { isSubscriptionActive } from '../../../utils/subscriptions.helpers';
 import {
   canCoordinateVillage,
+  canDeployVillage,
   canManageVillage,
-  canRequestDeploy,
   fetchAmbassadors,
   fetchUsersByIds,
   getVillage,
@@ -70,7 +69,6 @@ const VillageDetailPage = () => {
   // The public email is kept behind a click so it is not sitting in the page
   // source for every scraper that walks the map.
   const [isEmailRevealed, setIsEmailRevealed] = useState(false);
-  const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
 
   // Derived above the early returns below so the effects that depend on them
   // stay unconditional — hooks cannot sit after a conditional return.
@@ -143,17 +141,16 @@ const VillageDetailPage = () => {
   }
 
   const isManager = canManageVillage(village, user?._id);
-  const hasActiveSubscription = isSubscriptionActive(user?.subscription);
-  // "Not deployed on Closer" is belt and braces on top of the onboarding
-  // stage — a village already running its own instance never offers a deploy.
-  const canDeploy = canRequestDeploy(village, user?._id) && !village.closer;
+  // Admin | team | assigned ambassador. Founders (createdBy) do not get the
+  // button until the API's subscription gate lands — they see the card only.
+  const canDeploy = canDeployVillage(village, user);
   const isAwaitingDeploy =
     village.onboardingStatus === 'deploy_requested' ||
     village.onboardingStatus === 'deploying';
   const isLive = village.onboardingStatus === 'live';
   const mapItem = villageToMapItem(village);
   const villagePath = `/villages/${village.slug || village._id}`;
-  const hasActionPanels = Boolean(isManager || isAdmin);
+  const hasActionPanels = Boolean(isManager || isAdmin || canDeploy);
   // "Closer" and "Live on Closer" are the same claim twice over. Managers keep
   // the status pill only while it still says something the Closer pill doesn't.
   const showStatusPill =
@@ -405,6 +402,20 @@ const VillageDetailPage = () => {
             {/* UPCOMING EVENTS — pulled from the village's own instance. */}
             <VillageEvents apiUrl={village.apiUrl} appUrl={village.appUrl} />
 
+            {/* DEPLOY — the one control that talks to procurement. Read-only
+                for anyone who may see the panel but not press the button. */}
+            {hasActionPanels ? (
+              <DeployCTA
+                village={village}
+                canDeploy={canDeploy}
+                isAdmin={isAdmin}
+                onDeployed={(updated) => {
+                  if (updated) setVillage(updated);
+                  void refresh();
+                }}
+              />
+            ) : null}
+
             {/* MANAGER ACTIONS */}
             {isManager ? (
               <Panel
@@ -412,8 +423,6 @@ const VillageDetailPage = () => {
                 title={
                   isAwaitingDeploy
                     ? t('villages_next_step_waiting_title')
-                    : canDeploy
-                    ? t('villages_next_step_deploy_title')
                     : isLive
                     ? t('villages_next_step_live_title')
                     : t('villages_next_step_intro_title')
@@ -421,33 +430,12 @@ const VillageDetailPage = () => {
                 description={
                   isAwaitingDeploy
                     ? t('villages_deploy_pending')
-                    : canDeploy && !hasActiveSubscription
-                    ? t('villages_next_step_subscribe_body')
-                    : canDeploy
-                    ? t('villages_next_step_deploy_body')
                     : isLive
                     ? t('villages_next_step_live_body')
                     : t('villages_next_step_intro_body')
                 }
               >
                 <div className="flex flex-wrap gap-3">
-                  {/* Deploying starts billing work on our side, so the CTA only
-                      unlocks for managers with an active subscription — the
-                      others are pointed at the plans first. */}
-                  {canDeploy && hasActiveSubscription ? (
-                    <button
-                      type="button"
-                      className={btnPrimary}
-                      disabled={isActing}
-                      onClick={() => setIsDeployModalOpen(true)}
-                    >
-                      {t('villages_request_deploy_cta')}
-                    </button>
-                  ) : canDeploy ? (
-                    <Link href="/subscriptions" className={btnPrimary}>
-                      {t('villages_deploy_subscribe_cta')}
-                    </Link>
-                  ) : null}
                   <Link href={`${villagePath}/edit`} className={btnSmall}>
                     {t('villages_edit_cta')}
                   </Link>
@@ -610,7 +598,8 @@ const VillageDetailPage = () => {
                 ) : null}
                 {/* The deploy queue itself is an admin dashboard, so only link
                     coordinators who can actually open it. */}
-                {isAdmin && isAwaitingDeploy ? (
+                {isAdmin &&
+                (isAwaitingDeploy || village.onboardingStatus === 'failed') ? (
                   <Link
                     href="/dashboard/deploy-queue"
                     className="inline-block mt-5 text-[13.5px] font-semibold text-[#0B7A4C] underline underline-offset-[3px]"
@@ -675,20 +664,6 @@ const VillageDetailPage = () => {
             </div>
           </aside>
         </div>
-
-        {isDeployModalOpen ? (
-          <VillageDeployModal
-            village={village}
-            onClose={() => setIsDeployModalOpen(false)}
-            onDeployed={(updated) => {
-              setIsDeployModalOpen(false);
-              setVillage(updated);
-              // The chosen subdomain became the village's slug, so move the
-              // address bar (and the slug-keyed fetch) onto the new identity.
-              router.replace(`/villages/${updated.slug || updated._id}`);
-            }}
-          />
-        ) : null}
       </PageShell>
     </>
   );

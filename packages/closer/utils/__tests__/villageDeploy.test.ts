@@ -2,15 +2,14 @@ jest.mock('../api', () => ({
   __esModule: true,
   default: {
     get: jest.fn(() => Promise.resolve({ data: { results: [] } })),
-    patch: jest.fn(() => Promise.resolve({ data: {} })),
   },
   formatSearch: (where: unknown) => encodeURIComponent(JSON.stringify(where)),
+  invalidateGetCache: jest.fn(),
   cdn: '',
 }));
 
 import api from '../api';
 import {
-  deployVillageToCloser,
   fetchVillageCreatedBy,
   isValidVillageSubdomain,
   isVillageSubdomainTaken,
@@ -21,12 +20,15 @@ import { Village } from '../../types/village';
 
 const mockedGet = api.get as jest.Mock;
 const mockedPatch = api.patch as jest.Mock;
+const mockedPost = api.post as jest.Mock;
 
 beforeEach(() => {
   mockedGet.mockReset();
   mockedGet.mockResolvedValue({ data: { results: [] } });
   mockedPatch.mockReset();
   mockedPatch.mockResolvedValue({ data: {} });
+  mockedPost.mockReset();
+  mockedPost.mockResolvedValue({ data: {} });
 });
 
 describe('normalizeVillageSubdomain', () => {
@@ -95,19 +97,83 @@ describe('deployVillageToCloser', () => {
     mockedPatch.mockResolvedValueOnce({
       data: { results: { _id: 'v1', slug: 'tdf' } },
     });
+    mockedPost.mockResolvedValueOnce({
+      data: {
+        results: {
+          _id: 'v1',
+          slug: 'tdf',
+          onboardingStatus: 'deploy_requested',
+        },
+      },
+    });
 
     const result = await deployVillageToCloser('v1', 'tdf');
 
-    expect(mockedPatch).toHaveBeenCalledWith(
-      '/village/v1',
-      expect.objectContaining({
-        slug: 'tdf',
-        appUrl: 'https://tdf.closer.earth',
-        onboardingStatus: 'deploy_requested',
-        deployRequest: expect.objectContaining({ status: 'requested' }),
-      }),
-    );
-    expect(result).toEqual({ _id: 'v1', slug: 'tdf' });
+    expect(mockedPatch).toHaveBeenCalledWith('/village/v1', {
+      slug: 'tdf',
+      appUrl: 'https://tdf.closer.earth',
+    });
+    expect(mockedPost).toHaveBeenCalledWith('/village/v1/deploy', {
+      notes: 'Requested address: tdf.closer.earth',
+    });
+    expect(result).toEqual({
+      _id: 'v1',
+      slug: 'tdf',
+      onboardingStatus: 'deploy_requested',
+    });
+  });
+
+  it('refetches when the deploy response carries no village', async () => {
+    mockedPatch.mockResolvedValueOnce({
+      data: {
+        results: {
+          _id: 'v1',
+          slug: 'tdf',
+          onboardingStatus: 'subscribed',
+        },
+      },
+    });
+    mockedPost.mockResolvedValueOnce({
+      data: { warning: 'procurement_unreachable' },
+    });
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        results: {
+          _id: 'v1',
+          slug: 'tdf',
+          onboardingStatus: 'deploy_requested',
+        },
+      },
+    });
+
+    const result = await deployVillageToCloser('v1', 'tdf');
+
+    expect(result.onboardingStatus).toBe('deploy_requested');
+    expect(mockedGet).toHaveBeenCalledWith('/village/v1');
+  });
+
+  it('does not keep the pre-deploy status when refetch also fails', async () => {
+    mockedPatch.mockResolvedValueOnce({
+      data: {
+        results: {
+          _id: 'v1',
+          slug: 'tdf',
+          onboardingStatus: 'subscribed',
+        },
+      },
+    });
+    mockedPost.mockResolvedValueOnce({
+      data: { warning: 'procurement_unreachable' },
+    });
+    mockedGet.mockRejectedValueOnce(new Error('offline'));
+
+    const result = await deployVillageToCloser('v1', 'tdf');
+
+    expect(result).toEqual({
+      _id: 'v1',
+      slug: 'tdf',
+      onboardingStatus: 'deploy_requested',
+    });
   });
 });
 

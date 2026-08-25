@@ -77,6 +77,9 @@ describe('isEligibleForFirstMonthFree', () => {
   it('is false after a prior Closer subscription', () => {
     expect(hasConsumedFirstMonthFree({})).toBe(false);
     expect(hasConsumedFirstMonthFree({ subscriptionId: 'sub_1' })).toBe(true);
+    expect(
+      hasConsumedFirstMonthFree({ introClaimedAt: new Date().toISOString() }),
+    ).toBe(true);
     expect(isEligibleForFirstMonthFree(monthlyFreePlan, {})).toBe(true);
     expect(
       isEligibleForFirstMonthFree(monthlyFreePlan, {

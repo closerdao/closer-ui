@@ -3,7 +3,11 @@ import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 
 import type { Quest, QuestAward } from '../../types/quest';
-import { formatQuestCurrency, getQuestPhase } from '../../utils/quests.helpers';
+import {
+  formatQuestCurrency,
+  getQuestPhase,
+  normalizeQuestCurrency,
+} from '../../utils/quests.helpers';
 
 interface Props {
   quests: Quest[];
@@ -11,7 +15,11 @@ interface Props {
 
 /** Best case a single quest can pay out in one currency, ignoring perks/credits. */
 const awardValue = (award: QuestAward | undefined, cur: string): number =>
-  award && award.kind === 'currency' && award.cur === cur ? award.val : 0;
+  award &&
+  award.kind === 'currency' &&
+  normalizeQuestCurrency(award.cur) === cur
+    ? award.val
+    : 0;
 
 const questPayout = (quest: Quest, cur: string): number => {
   const { ranked, eachAction, participation } = quest.prize || {};

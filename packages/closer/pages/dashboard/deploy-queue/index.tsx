@@ -9,20 +9,26 @@ import {
   PageShell,
   VillageStatusPill,
   btnSmall,
-  btnSmallPrimary,
 } from '../../../components/VillageUI';
-import { ErrorMessage, Spinner } from '../../../components/ui';
+import { Spinner } from '../../../components/ui';
 
 import { useTranslations } from 'next-intl';
 
 import Page401 from '../../401';
 import { useAuth } from '../../../contexts/auth';
 import { Village } from '../../../types/village';
-import { fetchVillages, updateVillage } from '../../../utils/village.utils';
+import { fetchVillages } from '../../../utils/village.utils';
 
+/**
+ * Read-only since the deploy CTA landed (#1027): procurement writes the
+ * outcome onto the Village itself, so there is nothing here left to mark by
+ * hand. `failed` is in the list because a stuck deploy is exactly what an
+ * admin opens this page to find.
+ */
 const isPending = (village: Village) =>
   village.onboardingStatus === 'deploy_requested' ||
   village.onboardingStatus === 'deploying' ||
+  village.onboardingStatus === 'failed' ||
   village.deployRequest?.status === 'requested';
 
 const formatDate = (value?: string) => {
@@ -41,8 +47,6 @@ const DeployQueuePage = () => {
   const { user, isAuthenticated } = useAuth();
   const [villages, setVillages] = useState<Village[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [actingId, setActingId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const canAccess =
     isAuthenticated &&
@@ -61,42 +65,6 @@ const DeployQueuePage = () => {
   }, [canAccess, load]);
 
   if (!isAuthenticated || !canAccess) return <Page401 />;
-
-  const runAction = async (village: Village, payload: Partial<Village>) => {
-    try {
-      setActingId(village._id);
-      setError(null);
-      await updateVillage(village._id, payload);
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('villages_action_error'));
-    } finally {
-      setActingId(null);
-    }
-  };
-
-  const markDeploying = (village: Village) =>
-    runAction(village, {
-      onboardingStatus: 'deploying',
-      deployRequest: {
-        ...(village.deployRequest || {}),
-        status: 'approved',
-        processedAt: new Date().toISOString(),
-        processedBy: user?._id,
-      },
-    } as Partial<Village>);
-
-  const markLive = (village: Village) =>
-    runAction(village, {
-      onboardingStatus: 'live',
-      closer: true,
-      deployRequest: {
-        ...(village.deployRequest || {}),
-        status: 'completed',
-        processedAt: new Date().toISOString(),
-        processedBy: user?._id,
-      },
-    } as Partial<Village>);
 
   return (
     <>
@@ -121,12 +89,6 @@ const DeployQueuePage = () => {
           </p>
         ) : null}
 
-        {error ? (
-          <div className="mt-6">
-            <ErrorMessage error={error} />
-          </div>
-        ) : null}
-
         <div className="mt-6">
           {isLoading ? (
             <div className="flex justify-center py-16">
@@ -144,7 +106,6 @@ const DeployQueuePage = () => {
                 const requestedAt = formatDate(
                   village.deployRequest?.requestedAt,
                 );
-                const isBusy = actingId === village._id;
                 return (
                   <li
                     key={village._id}
@@ -175,27 +136,20 @@ const DeployQueuePage = () => {
                           {village.deployRequest.notes}
                         </p>
                       ) : null}
+                      {village.deployError ? (
+                        <p className="text-[12.5px] font-mono text-[#9B2C2C] mt-3 break-words">
+                          {village.deployError}
+                        </p>
+                      ) : null}
                     </div>
 
                     <div className="flex flex-wrap gap-2.5 lg:flex-none">
-                      {village.onboardingStatus !== 'deploying' ? (
-                        <button
-                          type="button"
-                          className={btnSmall}
-                          disabled={isBusy}
-                          onClick={() => markDeploying(village)}
-                        >
-                          {t('deploy_queue_mark_deploying')}
-                        </button>
-                      ) : null}
-                      <button
-                        type="button"
-                        className={btnSmallPrimary}
-                        disabled={isBusy}
-                        onClick={() => markLive(village)}
+                      <Link
+                        href={`/villages/${village.slug || village._id}`}
+                        className={btnSmall}
                       >
-                        {t('deploy_queue_mark_live')}
-                      </button>
+                        {t('deploy_queue_open_village')}
+                      </Link>
                     </div>
                   </li>
                 );

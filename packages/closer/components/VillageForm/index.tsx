@@ -8,7 +8,6 @@ import {
   PEOPLE_COUNT_MAX,
   PEOPLE_COUNT_MIN,
   ROOMS_COUNT_MIN,
-  VILLAGE_ONBOARDING_STATUSES,
 } from '../../constants/village.constants';
 import {
   CreateVillageInput,
@@ -17,7 +16,12 @@ import {
   VillageCriteria,
   VillageOnboardingStatus,
 } from '../../types/village';
-import { meetsHardCriteria, toLeafletCoords } from '../../utils/village.utils';
+import {
+  isVillageSlugFrozen,
+  meetsHardCriteria,
+  toLeafletCoords,
+  villageAdminSettableStatuses,
+} from '../../utils/village.utils';
 import CommunityMap from '../CommunityMap';
 import { Eyebrow, btnPrimary, inputClass, labelClass } from '../VillageUI';
 import { ErrorMessage } from '../ui';
@@ -153,8 +157,26 @@ const VillageForm = ({
   const [pmRole, setPmRole] = useState(initial?.projectManager?.role || '');
   const [appUrl, setAppUrl] = useState(initial?.appUrl || '');
   const [apiUrl, setApiUrl] = useState(initial?.apiUrl || '');
+  const [slug, setSlug] = useState(initial?.slug || '');
   const [onboardingStatus, setOnboardingStatus] =
     useState<VillageOnboardingStatus>(initial?.onboardingStatus || 'map_only');
+  // Procurement owns the deploy pipeline, and on a managed village the deploy
+  // outcome too, so those stages are not on the menu. An unmanaged village
+  // keeps the full set — hand-setting one to `live` is how a village that
+  // already runs Closer gets recorded.
+  const settableStatuses = villageAdminSettableStatuses(initial);
+  // Anything off that menu is procurement's to write, not ours to edit.
+  const isStatusLocked = !settableStatuses.includes(onboardingStatus);
+  // The slug is procurement's join key from `deploy_requested` onwards, so it
+  // is read-only from then on rather than merely validated on submit. The
+  // *pending* status counts: picking a frozen stage must freeze the slug in the
+  // same edit, or this PATCH could rename the join key on its way in.
+  const isSlugFrozen =
+    isVillageSlugFrozen(initial) ||
+    isVillageSlugFrozen({
+      onboardingStatus,
+      managed: initial?.managed === true,
+    });
   const [criteria, setCriteria] = useState<VillageCriteria>({
     ...emptyCriteria,
     ...(initial?.criteria || {}),
@@ -282,6 +304,9 @@ const VillageForm = ({
       // sending empty form state would blank whatever an admin had set. Sent as
       // a plain trimmed string for admins so emptying a field actually clears it.
       ...(isAdmin ? { appUrl: appUrl.trim(), apiUrl: apiUrl.trim() } : {}),
+      // A frozen slug is not sent at all: the API would reject the write, and
+      // the field the admin sees is read-only anyway.
+      ...(isAdmin && !isSlugFrozen && slug.trim() ? { slug: slug.trim() } : {}),
     };
 
     try {
@@ -684,20 +709,47 @@ const VillageForm = ({
             <select
               className={inputClass}
               value={onboardingStatus}
+              disabled={isStatusLocked}
               onChange={(event) =>
                 setOnboardingStatus(
                   event.target.value as VillageOnboardingStatus,
                 )
               }
             >
-              {VILLAGE_ONBOARDING_STATUSES.map((status) => (
+              {/* The in-flight value stays selectable so the form can round-trip
+                  a village mid-deploy; it just cannot be picked for any other. */}
+              {isStatusLocked ? (
+                <option value={onboardingStatus}>
+                  {t(`village_status_${onboardingStatus}`)}
+                </option>
+              ) : null}
+              {settableStatuses.map((status) => (
                 <option key={status} value={status}>
                   {t(`village_status_${status}`)}
                 </option>
               ))}
             </select>
             <span className="text-[12px] text-[#9BAAA2]">
-              {t('villages_form_onboarding_status_hint')}
+              {isStatusLocked
+                ? t('villages_form_onboarding_status_locked')
+                : t('villages_form_onboarding_status_hint')}
+            </span>
+          </label>
+
+          <label className="flex flex-col gap-2 max-w-sm">
+            <span className={labelClass}>{t('villages_form_slug')}</span>
+            <input
+              className={inputClass}
+              value={slug}
+              readOnly={isSlugFrozen}
+              disabled={isSlugFrozen}
+              onChange={(event) => setSlug(event.target.value)}
+              placeholder="riverbank"
+            />
+            <span className="text-[12px] text-[#9BAAA2]">
+              {isSlugFrozen
+                ? t('villages_form_slug_frozen')
+                : t('villages_form_slug_hint')}
             </span>
           </label>
 

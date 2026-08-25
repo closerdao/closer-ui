@@ -102,6 +102,7 @@ export type User = {
     monthlyPrice: { val: number; cur: string };
     monthlyCredits: number;
     stripeCustomerEmail: string;
+    introClaimedAt?: Date;
   };
   presence?: number;
   tokensBought?: number;
