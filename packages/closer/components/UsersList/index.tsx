@@ -414,7 +414,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
   const handleSendCredits = async () => {
     setReasonToSendCredits('');
     try {
-      await api.post('/carrots/award/batch', {
+      await api.post('/credits/award/batch', {
         users: selectedUsers.map((user) => user.get('email')),
         amount: creditsToSend,
         reason: `${reasonToSendCredits}. Sent by: ${currentUser?.screenname}`,
@@ -490,7 +490,7 @@ const UsersList = ({ where, page, setPage, sortBy, setSortBy }: Props) => {
               )}
             </div>
           )}
-          {action === 'Send carrots' && (
+          {action === 'Send credits' && (
             <div className="flex flex-col gap-6">
               <Heading level={4}>{t('manage_users_send_credits')}</Heading>
 

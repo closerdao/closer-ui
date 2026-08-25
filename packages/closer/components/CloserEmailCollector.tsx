@@ -1,3 +1,5 @@
+import { useRouter } from 'next/router';
+
 import React, { useContext, useEffect, useRef, useState } from 'react';
 
 // Added api
@@ -7,9 +9,11 @@ import { Button, Heading, Input, api } from 'closer';
 // Import custom Dropdown
 import { REFERRAL_ID_LOCAL_STORAGE_KEY } from 'closer/constants';
 import { parseMessageFromError } from 'closer/utils/common';
-import { X } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { z } from 'zod';
 
+import { useAuth } from '../contexts/auth';
+import { saveApplicationAnswers } from '../utils/applicationAnswersStorage';
 import type { PromptGetInTouchContextType } from './PromptGetInTouchContext';
 import { PromptGetInTouchContext } from './PromptGetInTouchContext';
 
@@ -63,7 +67,39 @@ const labelForValue = (options: CountryOption[], value?: string) => {
   return (option?.label || value).replace(/^[^\p{L}\p{N}]+/u, '');
 };
 
+const LaunchStep = ({
+  status,
+  label,
+  hint,
+}: {
+  status: 'done' | 'active' | 'pending';
+  label: string;
+  hint?: string;
+}) => (
+  <li
+    className={`flex gap-3 items-start ${
+      status === 'pending' ? 'opacity-50' : ''
+    }`}
+  >
+    <span
+      className={`w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5 ${
+        status === 'done'
+          ? 'bg-[#0FA968] text-white'
+          : 'bg-[#E2FAEE] text-[#0B7A4C]'
+      }`}
+    >
+      {status === 'done' ? <Check className="w-3.5 h-3.5" /> : '●'}
+    </span>
+    <span className="flex flex-col text-left">
+      <span className="text-sm font-medium text-[#10201A]">{label}</span>
+      {hint && <span className="text-xs text-[#5C6E64] mt-0.5">{hint}</span>}
+    </span>
+  </li>
+);
+
 const CloserEmailCollector = () => {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const { isOpen, setIsOpen } = useContext(
     PromptGetInTouchContext,
   ) as PromptGetInTouchContextType;
@@ -162,21 +198,36 @@ const CloserEmailCollector = () => {
 
       // Only `name` and `email` are top-level columns on the application model;
       // everything else is a free-form answer, so it goes on `fields`.
-      const fields: Record<string, string> = {
-        projectCommunityName,
-        currentStage: labelForValue(currentStageOptions, rest.currentStage),
-        country: labelForValue(countries, rest.country),
-        communitySize: labelForValue(communitySizeOptions, rest.communitySize),
-      };
+      const fields: Record<string, string> = Object.fromEntries(
+        Object.entries({
+          projectCommunityName,
+          currentStage: labelForValue(currentStageOptions, rest.currentStage),
+          country: labelForValue(countries, rest.country),
+          communitySize: labelForValue(
+            communitySizeOptions,
+            rest.communitySize,
+          ),
+        }).filter(([, answer]) => answer),
+      );
 
-      await api.post('/application', {
+      const { data } = await api.post('/application', {
         name: fullName,
         email,
-        fields: Object.fromEntries(
-          Object.entries(fields).filter(([, answer]) => answer),
-        ),
+        fields,
         ...(referredBy && { referredBy }),
       });
+
+      const createdApplication = data?.results || data;
+      saveApplicationAnswers({
+        ...(typeof createdApplication?._id === 'string'
+          ? { _id: createdApplication._id }
+          : {}),
+        name: fullName,
+        email,
+        fields,
+      });
+
+      localStorage.setItem('email', email);
 
       setHasSentApplication(true);
     } catch (error) {
@@ -203,18 +254,77 @@ const CloserEmailCollector = () => {
             <div className="flex flex-col">
               <div className="mx-auto w-full px-7 py-9 flex flex-col">
                 {hasSentApplication ? (
-                  <div className="py-8 text-center">
-                    <div className="w-14 h-14 rounded-full bg-[#E2FAEE] text-[#0B7A4C] flex items-center justify-center mx-auto mb-5 text-2xl">
-                      🌱
+                  <div className="py-2">
+                    <div className="text-center mb-7">
+                      <div className="w-14 h-14 rounded-full bg-[#E2FAEE] text-[#0B7A4C] flex items-center justify-center mx-auto mb-5 text-2xl">
+                        🌱
+                      </div>
+                      <Heading level={3} className="mb-2">
+                        You&rsquo;re on the list
+                      </Heading>
+                      <p className="text-sm text-[#5C6E64]">
+                        We read every application. Expect a reply within a few
+                        days — we&rsquo;ll be in touch at{' '}
+                        <b className="text-[#10201A]">{formData.email}</b>.
+                      </p>
                     </div>
-                    <Heading level={3} className="mb-2">
-                      You&rsquo;re on the list
-                    </Heading>
-                    <p className="text-sm text-[#5C6E64]">
-                      We read every application. Expect a reply within a few
-                      days — we&rsquo;ll be in touch at{' '}
-                      <b className="text-[#10201A]">{formData.email}</b>.
-                    </p>
+
+                    <div className="border-t border-[#E4EFE8] pt-6">
+                      <span className="block text-xs font-bold uppercase tracking-[0.22em] text-[#0FA968] mb-2">
+                        Don&rsquo;t want to wait?
+                      </span>
+                      <p className="text-sm text-[#5C6E64] mb-5">
+                        Create your account and subscribe to launch your
+                        village directly — no need to wait for our reply.
+                      </p>
+                      <ol className="flex flex-col gap-4 mb-6">
+                        <LaunchStep status="done" label="Application received" />
+                        <LaunchStep
+                          status={isAuthenticated ? 'done' : 'active'}
+                          label={
+                            isAuthenticated
+                              ? 'You’re signed in'
+                              : 'Create your account'
+                          }
+                          hint={
+                            isAuthenticated
+                              ? undefined
+                              : 'Your email is already filled in — it takes a minute.'
+                          }
+                        />
+                        <LaunchStep
+                          status={isAuthenticated ? 'active' : 'pending'}
+                          label="Subscribe & launch your village"
+                          hint="Pick a plan and your platform goes live."
+                        />
+                      </ol>
+
+                      <Button
+                        variant="primary"
+                        size="medium"
+                        className="w-full rounded-xl border-transparent font-semibold normal-case tracking-normal shadow-[0_6px_20px_rgba(62,224,143,0.35)]"
+                        onClick={() => {
+                          setIsOpen(false);
+                          router.push(
+                            isAuthenticated
+                              ? '/subscriptions'
+                              : `/signup?back=${encodeURIComponent(
+                                  '/subscriptions',
+                                )}`,
+                          );
+                        }}
+                      >
+                        {isAuthenticated
+                          ? 'Choose a plan'
+                          : 'Create my account'}
+                      </Button>
+                      <button
+                        onClick={() => handleDrawerClose(false)}
+                        className="block text-sm underline mt-4 mx-auto text-[#5C6E64] hover:text-[#10201A]"
+                      >
+                        I&rsquo;ll wait for your reply
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <>

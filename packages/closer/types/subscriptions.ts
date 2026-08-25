@@ -39,6 +39,8 @@ export interface SubscriptionsConfig {
   elements: SubscriptionPlan[];
   /** Whether member badges are rendered next to avatars. Defaults to on. */
   showBadges?: boolean;
+  /** Page the member lands on after subscribing, e.g. /village/launch. Empty means /subscriptions/success. */
+  successPage?: string;
 }
 
 export interface Subscriptions {

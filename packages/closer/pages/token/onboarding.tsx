@@ -35,14 +35,19 @@ import { userHasLinkedWallet } from '../../utils/auth.helpers';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { getGasTokenDisplay } from '../../utils/config.utils';
 import { logMetric } from '../../utils/metrics';
-import { awardOnboardingCarrots } from '../../utils/tokenOnboarding.api';
 import {
+  OnboardingStepResponse,
+  submitOnboardingStep,
+} from '../../utils/tokenOnboarding.api';
+import {
+  OnboardingQuizScores,
   carrotsEarned,
   formatCarrots,
   isOnboardingComplete,
   isQuestUnlocked,
   nextQuestIndex,
   parseOnboardingProgress,
+  parseQuizScores,
 } from '../../utils/tokenOnboarding.helpers';
 import PageNotFound from '../not-found';
 
@@ -140,6 +145,22 @@ const OnboardingPage = () => {
   const [pendingCarrotQuestIds, setPendingCarrotQuestIds] = useState<string[]>(
     [],
   );
+  // Per-quest security-test scores, mirrored to user.settings on each claim.
+  const [quizScores, setQuizScores] = useState<OnboardingQuizScores>({});
+  // Whether any wallet extension is injected into this browser. The
+  // create-wallet quest reads this instead of asking the member to tick a box.
+  const [isWalletInstalled, setIsWalletInstalled] = useState(false);
+
+  useEffect(() => {
+    const check = () =>
+      setIsWalletInstalled(
+        Boolean((window as { ethereum?: unknown }).ethereum),
+      );
+    check();
+    // Installing an extension does not fire any event; poll until it shows up.
+    const timer = window.setInterval(check, 2000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const questRefs = useRef<Record<string, HTMLElement | null>>({});
   const entryMetricLogged = useRef(false);
@@ -176,6 +197,15 @@ const OnboardingPage = () => {
       .map((quest) => quest.id)
       .filter((id) => local.includes(id) || remote.includes(id));
 
+    setQuizScores(
+      parseQuizScores(
+        (
+          user.settings as
+            | { token_onboarding_quiz_scores?: unknown }
+            | undefined
+        )?.token_onboarding_quiz_scores,
+      ),
+    );
     setCompleted(merged);
     setOpenQuestId(
       quests[Math.max(nextQuestIndex(merged, quests), 0)]?.id ?? null,
@@ -191,11 +221,20 @@ const OnboardingPage = () => {
   const gateStateFor = useCallback(
     (quest: OnboardingQuest): QuestGateState => {
       const state = gateStates[quest.id] ?? emptyGateState(quest);
-      return quest.gate.type === 'wallet'
-        ? { ...state, isWalletVerified }
-        : state;
+      if (quest.gate.type === 'wallet') {
+        return { ...state, isWalletVerified };
+      }
+      if (quest.gate.type === 'walletDetect') {
+        // A connected wallet proves an installed one even if the injected
+        // provider is not visible to this page.
+        return {
+          ...state,
+          isWalletDetected: isWalletInstalled || Boolean(isWalletConnected),
+        };
+      }
+      return state;
     },
-    [gateStates, isWalletVerified],
+    [gateStates, isWalletVerified, isWalletInstalled, isWalletConnected],
   );
 
   const updateGateState = (
@@ -215,6 +254,10 @@ const OnboardingPage = () => {
     updateGateState(quest, (state) => ({
       ...state,
       picked: optionIndex,
+      misses:
+        !isRight && !state.wrongPicks.includes(optionIndex)
+          ? state.misses + 1
+          : state.misses,
       wrongPicks: isRight
         ? // Everything the member did not pick is now visibly ruled out.
           gate.options
@@ -226,6 +269,39 @@ const OnboardingPage = () => {
     }));
   };
 
+  const handlePickQuestion = (
+    quest: OnboardingQuest,
+    questionIndex: number,
+    optionIndex: number,
+  ) => {
+    const gate = quest.gate;
+    if (gate.type !== 'microQuiz') return;
+    const question = gate.questions[questionIndex];
+    if (!question) return;
+    const isRight = optionIndex === question.correctIndex;
+    updateGateState(quest, (state) => {
+      const answers = [...state.answers];
+      answers[questionIndex] = optionIndex;
+      const isNewMiss =
+        !isRight &&
+        !(state.questionWrongPicks[questionIndex] ?? []).includes(optionIndex);
+      const questionMisses = state.questionMisses.map((misses, index) =>
+        index === questionIndex && isNewMiss ? misses + 1 : misses,
+      );
+      const questionWrongPicks = state.questionWrongPicks.map((picks, index) => {
+        if (index !== questionIndex) return picks;
+        if (isRight) {
+          // Everything the member did not pick is now visibly ruled out.
+          return question.options
+            .map((_, option) => option)
+            .filter((option) => option !== optionIndex);
+        }
+        return picks.includes(optionIndex) ? picks : [...picks, optionIndex];
+      });
+      return { ...state, answers, questionWrongPicks, questionMisses };
+    });
+  };
+
   const handleToggleCheck = (quest: OnboardingQuest, itemIndex: number) => {
     updateGateState(quest, (state) => {
       const checks = [...state.checks];
@@ -234,7 +310,11 @@ const OnboardingPage = () => {
     });
   };
 
-  const persistProgress = async (nextCompleted: string[], userId: string) => {
+  const persistProgress = async (
+    nextCompleted: string[],
+    userId: string,
+    nextScores: OnboardingQuizScores,
+  ) => {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(
         progressStorageKey(userId),
@@ -243,12 +323,69 @@ const OnboardingPage = () => {
     }
     try {
       await platform.user.patch(userId, {
-        settings: { token_onboarding_progress: { completed: nextCompleted } },
+        settings: {
+          token_onboarding_progress: { completed: nextCompleted },
+          token_onboarding_quiz_scores: nextScores,
+        },
       });
       await refetchUser();
     } catch {
       // The local cache already holds the claim; a failed patch must not undo
       // a quest the member has finished.
+    }
+  };
+
+  /**
+   * The security-test tally for one quest: how many questions the member got
+   * right on the first try, out of how many were asked. Non-quiz gates score
+   * nothing.
+   */
+  const scoreForQuest = (
+    quest: OnboardingQuest,
+    state: QuestGateState,
+  ): { correct: number; total: number } | null => {
+    if (quest.gate.type === 'quiz') {
+      return { correct: state.misses === 0 ? 1 : 0, total: 1 };
+    }
+    if (quest.gate.type === 'microQuiz') {
+      const correct = quest.gate.questions.filter(
+        (_, index) => (state.questionMisses[index] ?? 0) === 0,
+      ).length;
+      return { correct, total: quest.gate.questions.length };
+    }
+    return null;
+  };
+
+  /** What the member actually did, submitted alongside the claim. */
+  const responseForQuest = (
+    quest: OnboardingQuest,
+    state: QuestGateState,
+  ): OnboardingStepResponse => {
+    switch (quest.gate.type) {
+      case 'quiz':
+        return {
+          picked: state.picked,
+          wrongPicks: state.wrongPicks,
+          score: scoreForQuest(quest, state),
+        };
+      case 'microQuiz':
+        return {
+          answers: state.answers,
+          wrongPicks: state.questionWrongPicks,
+          score: scoreForQuest(quest, state),
+        };
+      case 'check':
+        return { checks: state.checks };
+      case 'walletDetect':
+        return { walletDetected: true };
+      case 'wallet':
+        return {
+          connected: walletStatus.isWalletConnected,
+          network: walletStatus.isCorrectNetwork,
+          linked: walletStatus.isLinkedToProfile,
+        };
+      default:
+        return {};
     }
   };
 
@@ -258,11 +395,21 @@ const OnboardingPage = () => {
       return;
     }
     if (completed.includes(quest.id) || claimingQuestId) return;
-    if (!isGatePassed(quest, gateStateFor(quest))) return;
+    const gateState = gateStateFor(quest);
+    if (!isGatePassed(quest, gateState)) return;
 
     setClaimingQuestId(quest.id);
     try {
-      const award = await awardOnboardingCarrots(quest);
+      const score = scoreForQuest(quest, gateState);
+      const nextScores = score
+        ? { ...quizScores, [quest.id]: score }
+        : quizScores;
+      setQuizScores(nextScores);
+
+      const award = await submitOnboardingStep(
+        quest,
+        responseForQuest(quest, gateState),
+      );
       if (award.status === 'unavailable') {
         setPendingCarrotQuestIds((previous) =>
           previous.includes(quest.id) ? previous : [...previous, quest.id],
@@ -301,7 +448,7 @@ const OnboardingPage = () => {
           : questRefs.current[quests[next].id],
       );
 
-      await persistProgress(nextCompleted, user._id);
+      await persistProgress(nextCompleted, user._id, nextScores);
     } finally {
       setClaimingQuestId(null);
     }
@@ -311,9 +458,10 @@ const OnboardingPage = () => {
     setCompleted([]);
     setGateStates({});
     setPendingCarrotQuestIds([]);
+    setQuizScores({});
     setOpenQuestId(quests[0]?.id ?? null);
     if (user?._id) {
-      await persistProgress([], user._id);
+      await persistProgress([], user._id, {});
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -442,6 +590,9 @@ const OnboardingPage = () => {
                           quest.id,
                         )}
                         onPick={(optionIndex) => handlePick(quest, optionIndex)}
+                        onPickQuestion={(questionIndex, optionIndex) =>
+                          handlePickQuestion(quest, questionIndex, optionIndex)
+                        }
                         onToggleCheck={(itemIndex) =>
                           handleToggleCheck(quest, itemIndex)
                         }

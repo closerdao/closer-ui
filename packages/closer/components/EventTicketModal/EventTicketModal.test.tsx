@@ -112,9 +112,22 @@ const quoteFor = (unit: number, quantity = 1) => ({
   discountRejected: false,
 });
 
+const pendingTicket = {
+  _id: 'ticket-7',
+  status: 'pending-payment',
+  paymentMethod: 'card',
+  event: 'event-1',
+  quantity: 2,
+  option: { name: 'Day Ticket - Saturday' },
+  discount: { code: 'EARLYBIRD' },
+  unitPrice: { val: 45, cur: 'EUR' },
+  price: { val: 90, cur: 'EUR' },
+};
+
 const mockApi = ({
   bookings = [] as unknown[],
   quote = quoteFor(60),
+  ticket = pendingTicket as any,
   init = {
     ticketId: 'ticket-9',
     status: 'pending-payment',
@@ -130,6 +143,13 @@ const mockApi = ({
     }
     if (url === '/booking') {
       return Promise.resolve({ data: { results: bookings } });
+    }
+    if (url.startsWith('/tickets/')) {
+      return Promise.resolve({
+        data: {
+          results: { ticket, event: { _id: 'event-1' }, refundQuote: null },
+        },
+      });
     }
     return Promise.resolve({ data: { results: [] } });
   });
@@ -149,8 +169,10 @@ const mockApi = ({
   });
 };
 
-const renderModal = () =>
-  renderWithNextIntl(<EventTicketModal event={event} closeModal={jest.fn()} />);
+const renderModal = (props: Record<string, unknown> = {}) =>
+  renderWithNextIntl(
+    <EventTicketModal event={event} closeModal={jest.fn()} {...props} />,
+  );
 
 const pickTicket = async (name: string) =>
   userEvent.click(await screen.findByText(name));
@@ -380,5 +402,138 @@ describe('EventTicketModal', () => {
     const url = routerPush.mock.calls[0][0] as string;
     expect(url).toContain('/login?back=');
     expect(url).toContain('confluencia');
+  });
+
+  describe('opened by a deep link', () => {
+    it('preselects the ticket the link names', async () => {
+      mockApi({ quote: quoteFor(45) });
+      renderModal({ initialTicketOption: 'Day Ticket - Saturday' });
+
+      await waitFor(() =>
+        expect(api.post).toHaveBeenCalledWith('/tickets/quote', {
+          eventId: 'event-1',
+          ticketOption: 'Day Ticket - Saturday',
+          quantity: 1,
+        }),
+      );
+      expect(
+        screen.getByRole('button', { name: /continue to payment/i }),
+      ).toBeInTheDocument();
+    });
+
+    it('matches an option written with underscores in the link', async () => {
+      mockApi({ quote: quoteFor(45) });
+      renderModal({ initialTicketOption: 'day_ticket_-_saturday' });
+
+      await waitFor(() =>
+        expect(api.post).toHaveBeenCalledWith('/tickets/quote', {
+          eventId: 'event-1',
+          ticketOption: 'Day Ticket - Saturday',
+          quantity: 1,
+        }),
+      );
+    });
+
+    it('applies a linked discount code without waiting for Apply', async () => {
+      mockApi({ quote: quoteFor(45) });
+      renderModal({
+        initialTicketOption: 'Day Ticket - Saturday',
+        initialDiscountCode: 'earlybird',
+      });
+
+      await waitFor(() =>
+        expect(api.post).toHaveBeenCalledWith('/tickets/quote', {
+          eventId: 'event-1',
+          ticketOption: 'Day Ticket - Saturday',
+          quantity: 1,
+          discountCode: 'EARLYBIRD',
+        }),
+      );
+    });
+
+    it('opens on payment for a pending ticket, priced as it was bought', async () => {
+      mockApi({ quote: quoteFor(45, 2) });
+      renderModal({ initialTicketId: 'ticket-7' });
+
+      expect(await screen.findByText(/pay for your ticket/i)).toBeInTheDocument();
+      await waitFor(() =>
+        expect(api.post).toHaveBeenCalledWith('/tickets/quote', {
+          eventId: 'event-1',
+          ticketOption: 'Day Ticket - Saturday',
+          quantity: 2,
+          discountCode: 'EARLYBIRD',
+        }),
+      );
+      expect(api.get).toHaveBeenCalledWith('/tickets/ticket-7');
+      expect(screen.getByText('Day Ticket - Saturday × 2')).toBeInTheDocument();
+    });
+
+    it('pays the resumed ticket on the terms the ticket carries', async () => {
+      mockApi({ quote: quoteFor(45, 2) });
+      renderModal({ initialTicketId: 'ticket-7' });
+
+      await userEvent.click(await screen.findByTestId('card-element'));
+      await clickButton(/pay now/i);
+
+      await waitFor(() =>
+        expect(api.post).toHaveBeenCalledWith('/tickets/init', {
+          eventId: 'event-1',
+          ticketOption: 'Day Ticket - Saturday',
+          quantity: 2,
+          discountCode: 'EARLYBIRD',
+          paymentMethod: 'card',
+          email: 'guest@example.com',
+        }),
+      );
+    });
+
+    it('says so rather than charging again for a ticket already paid', async () => {
+      mockApi({ ticket: { ...pendingTicket, status: 'approved' } });
+      renderModal({ initialTicketId: 'ticket-7' });
+
+      expect(
+        await screen.findByText(/already paid for/i),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/pay for your ticket/i)).not.toBeInTheDocument();
+    });
+
+    it('refuses a ticket that belongs to another event', async () => {
+      mockApi({ ticket: { ...pendingTicket, event: 'event-2' } });
+      renderModal({ initialTicketId: 'ticket-7' });
+
+      expect(
+        await screen.findByText(/belongs to a different event/i),
+      ).toBeInTheDocument();
+    });
+
+    it('falls back to choosing a ticket when the link points at nothing', async () => {
+      mockApi();
+      api.get.mockImplementation((url: string) => {
+        if (url.includes('/tickets/event/')) {
+          return Promise.resolve({ data: { results: { ticketOptions } } });
+        }
+        if (url === '/booking') return Promise.resolve({ data: { results: [] } });
+        return Promise.reject(new Error('Ticket not found.'));
+      });
+      renderModal({ initialTicketId: 'ticket-gone' });
+
+      expect(
+        await screen.findByText(/could not pick that ticket back up/i),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Day Ticket - Saturday')).toBeInTheDocument();
+    });
+
+    it('sends a signed out guest to log in and back to the deep link', async () => {
+      mockUser = null;
+      mockApi({ quote: quoteFor(45) });
+      renderModal({ initialTicketId: 'ticket-7' });
+
+      await pickTicket('Day Ticket - Saturday');
+      await clickButton(/login/i);
+
+      expect(routerPush.mock.calls[0][0]).toContain(
+        encodeURIComponent('/events/confluencia'),
+      );
+    });
   });
 });

@@ -5,10 +5,12 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { PaymentMethodTabs } from '../../components/PaymentMethodTabs';
 import { BackButton, Button, ErrorMessage, Heading, Spinner } from '../../components/ui';
 import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import { getBlockchainNetworkName } from '../../utils/blockchainNetwork';
 import type {
   CreateDonationBankResult,
   CreateDonationCardResult,
@@ -320,41 +322,19 @@ function DonatePage() {
             <p className="text-sm font-semibold text-gray-900 mb-2">
               {t('donate_payment_method_label')}
             </p>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => selectMethod('bank')}
-                className={`px-3 py-2 rounded-xl border text-sm transition-colors ${
-                  method === 'bank'
-                    ? 'border-accent bg-accent text-white'
-                    : 'border-gray-200 hover:border-accent'
-                }`}
-              >
-                {t('donate_method_bank')}
-              </button>
-              <button
-                type="button"
-                onClick={() => selectMethod('card')}
-                className={`px-3 py-2 rounded-xl border text-sm transition-colors ${
-                  method === 'card'
-                    ? 'border-accent bg-accent text-white'
-                    : 'border-gray-200 hover:border-accent'
-                }`}
-              >
-                {t('donate_method_card')}
-              </button>
-              <button
-                type="button"
-                onClick={() => selectMethod('crypto')}
-                className={`px-3 py-2 rounded-xl border text-sm transition-colors ${
-                  method === 'crypto'
-                    ? 'border-accent bg-accent text-white'
-                    : 'border-gray-200 hover:border-accent'
-                }`}
-              >
-                {t('donate_method_crypto')}
-              </button>
-            </div>
+            <PaymentMethodTabs
+              active={method}
+              onChange={selectMethod}
+              withBank
+              isEnabled={!createLoading}
+            />
+            {method === 'crypto' && (
+              <p className="text-xs text-gray-500 mt-2">
+                {t('donate_method_crypto', {
+                  chain: getBlockchainNetworkName(),
+                })}
+              </p>
+            )}
           </div>
 
           <div>

@@ -361,7 +361,7 @@ export const USER_MEMBER_STATUS_OPTIONS = [
 ];
 
 export const ACTIONS = [
-  { label: 'Send carrots', value: 'Send carrots' },
+  { label: 'Send credits', value: 'Send credits' },
   { label: 'Export selected (CSV)', value: 'Export selected (CSV)' },
   { label: 'Add role', value: 'Add role' },
   { label: 'Remove role', value: 'Remove role' },
