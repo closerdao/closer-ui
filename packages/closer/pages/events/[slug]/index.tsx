@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { withPageErrorBoundary } from '../../../components/ErrorBoundary';
 import EventAttendees from '../../../components/EventAttendees';
 import EventDescription from '../../../components/EventDescription';
+import EventEmailAttendeesModal from '../../../components/EventEmailAttendeesModal';
 import EventPhotoUploadSection from '../../../components/EventPhotoUpload';
 import EventTicketModal from '../../../components/EventTicketModal';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
@@ -86,6 +87,8 @@ const EventPageContent = ({
   const [isShowingEvent, setIsShowingEvent] = useState(true);
   const [passwordError] = useState<null | string>(null);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
+  const [isEmailAttendeesModalOpen, setIsEmailAttendeesModalOpen] =
+    useState(false);
   /** Bumped after a purchase so the tickets card picks the new one up. */
   const [ticketsRefreshKey, setTicketsRefreshKey] = useState(0);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -463,6 +466,14 @@ const EventPageContent = ({
                 >
                   {t('event_view_report_button') || 'View Report'}
                 </LinkButton>
+                <Button
+                  size="small"
+                  variant="secondary"
+                  onClick={() => setIsEmailAttendeesModalOpen(true)}
+                  className="!w-auto rounded-lg border-gray-200 px-4 py-2 text-sm normal-case"
+                >
+                  {t('event_email_attendees_button')}
+                </Button>
                 <LinkButton
                   size="small"
                   href={event.slug && `/events/${event.slug}/edit`}
@@ -981,6 +992,12 @@ const EventPageContent = ({
         onSuccess={handleSignupSuccess}
         eventId={event._id || ''}
       />
+      {isEmailAttendeesModalOpen && canEditEvent && (
+        <EventEmailAttendeesModal
+          eventId={event._id}
+          closeModal={() => setIsEmailAttendeesModalOpen(false)}
+        />
+      )}
       {isTicketModalOpen && (
         <EventTicketModal
           event={event}
