@@ -23,14 +23,24 @@ export type VillageVerificationBadge =
   | 'verified'
   | 'resonant';
 
+/**
+ * One enum for the funnel and the deploy pipeline, in order. Closer moves a
+ * village up to `deploy_requested`; procurement writes `deploying`, `failed`,
+ * `live` and `suspended` straight onto the record.
+ *
+ * The order matters: `slug` freezes from `deploy_requested` onwards, and a
+ * suspended village keeps its subdomain because that is procurement's join key.
+ */
 export type VillageOnboardingStatus =
   | 'map_only'
   | 'pre_assessed'
+  | 'intro_scheduled'
   | 'subscribed'
   | 'deploy_requested'
   | 'deploying'
+  | 'failed'
   | 'live'
-  | 'intro_scheduled';
+  | 'suspended';
 
 export type VillageCapacity = {
   residents?: number;
@@ -66,15 +76,25 @@ export type VillageCriteria = {
   web3Openness?: boolean;
 };
 
+/**
+ * Written by the API's deploy route. There is no approve/reject step — pressing
+ * the CTA is the approval, so there is nobody to record as a `processedBy`.
+ * `processedAt` is set by procurement when it picks the request up.
+ */
 export type VillageDeployRequest = {
-  status?: 'none' | 'requested' | 'approved' | 'rejected' | 'completed';
+  status?: 'none' | 'requested' | 'completed' | 'failed';
   requestedAt?: string;
-  requestedBy?: string;
+  /** User id, or a populated user when the API expands it. */
+  requestedBy?: string | { _id?: string; screenname?: string; email?: string };
   notes?: string;
   processedAt?: string;
-  processedBy?: string;
 };
 
+/**
+ * Tier 0→1 platform subscription. Not on the API's Village model yet — the
+ * deploy route carries a `TODO(platformSubscription)` for the founder gate —
+ * so treat every field as optional and absent until that lands.
+ */
 export type VillageSubscription = {
   status?: 'none' | 'trialing' | 'active' | 'past_due' | 'cancelled';
   planPriceEur?: number;
@@ -103,7 +123,12 @@ export type Village = {
   capacity?: VillageCapacity;
   amenities?: string[];
   contact?: VillageContact;
+  /** The ambassador who brought the village in — attribution, not access. */
   referredBy?: string | null;
+  /**
+   * Optional alias of `referredBy` for the referring ambassador. Not on the API
+   * model, so read it alongside `referredBy`, never instead of it.
+   */
   ambassadorId?: string | null;
   /** The application this village was created from, when it came from one. */
   applicationId?: string;
@@ -112,6 +137,12 @@ export type Village = {
   criteria?: VillageCriteria;
   projectManager?: VillageManagerInfo;
   deployRequest?: VillageDeployRequest;
+  /** Procurement-written: the last provisioning error, or null. */
+  deployError?: string | null;
+  /** Procurement-written when the village reaches `live`. */
+  deployedAt?: string | null;
+  /** True once procurement owns this village's deployment. */
+  managed?: boolean;
   platformSubscription?: VillageSubscription;
   visibility?: string;
   visibleBy?: string[];
@@ -188,6 +219,8 @@ export type VillageSearchResponse = {
 
 export type CreateVillageInput = {
   name: string;
+  /** Admin-only, and only until the slug freezes. Generated from `name` on create. */
+  slug?: string;
   description: string;
   tags?: string[];
   country: string;

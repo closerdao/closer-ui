@@ -129,13 +129,14 @@ export const Panel: FC<{
   </section>
 );
 
-type PillTone = 'mint' | 'neutral' | 'amber' | 'forest';
+type PillTone = 'mint' | 'neutral' | 'amber' | 'forest' | 'rose';
 
 const pillTones: Record<PillTone, string> = {
   mint: 'bg-[#E2FAEE] text-[#0B7A4C] border-[#C2F0DA]',
   neutral: 'bg-[#F4F6F5] text-[#5C6E64] border-[#E3E8E5]',
   amber: 'bg-[#FDF4E3] text-[#8A6314] border-[#F1DFB8]',
   forest: 'bg-[#0E1E16] text-[#8EF0BE] border-[#0E1E16]',
+  rose: 'bg-[#FDECEC] text-[#9B2C2C] border-[#F5C6C6]',
 };
 
 export const Pill: FC<{
@@ -199,7 +200,10 @@ const statusToStepIndex: Record<VillageOnboardingStatus, number> = {
   subscribed: 2,
   deploy_requested: 3,
   deploying: 3,
+  // A failed deploy is still standing at the deploy milestone, not back a step.
+  failed: 3,
   live: 4,
+  suspended: 4,
 };
 
 export const getJourneyIndex = (status?: VillageOnboardingStatus): number =>
@@ -214,7 +218,11 @@ export const VillageStatusPill: FC<{
   const tone: PillTone =
     value === 'live'
       ? 'forest'
-      : value === 'deploy_requested' || value === 'deploying'
+      : value === 'failed'
+      ? 'rose'
+      : value === 'deploy_requested' ||
+        value === 'deploying' ||
+        value === 'suspended'
       ? 'amber'
       : value === 'map_only'
       ? 'neutral'
