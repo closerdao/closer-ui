@@ -14,8 +14,12 @@ import {
 } from 'closer';
 import { User } from 'closer/contexts/auth/types';
 import { Page } from 'closer/types/customPages';
+import type { PageDoc } from 'closer/types/page';
+import { formatSearch } from 'closer/utils/api';
 import { parseMessageFromError } from 'closer/utils/common';
 import { NextPageContext } from 'next';
+
+const HOMEPAGE_SLUG = '/';
 
 const getPage = ({
   hosts,
@@ -662,14 +666,19 @@ interface Props {
   generalConfig: GeneralConfig | null;
   listings: Listing[] | null;
   hosts: User[] | null;
+  cmsPage: PageDoc | null;
 }
 
-const HomePage = ({ generalConfig, listings, hosts }: Props) => {
-  const page = getPage({
-    listings,
-    hosts,
-    generalConfig,
-  });
+const HomePage = ({ generalConfig, listings, hosts, cmsPage }: Props) => {
+  // A homepage saved in the page editor (slug "/") takes precedence over the
+  // hardcoded fallback below.
+  const page: Page = cmsPage?.sections?.length
+    ? { isHomePage: true, sections: cmsPage.sections }
+    : getPage({
+        listings,
+        hosts,
+        generalConfig,
+      });
 
   const { platform }: any = usePlatform();
   const { user } = useAuth();
@@ -736,14 +745,22 @@ const HomePage = ({ generalConfig, listings, hosts }: Props) => {
     }
   }, []);
 
+  const title = cmsPage?.title || 'Earthbound Ecovillage & Community Sweden';
+  const description =
+    cmsPage?.description ||
+    'Earthbound is an Ecovillage, Think-Tank & living Community, based on conscious relationships, earth-centered awareness and regenerative living.';
+
   return (
     <div>
       <Head>
-        <title>Earthbound Ecovillage & Community Sweden</title>
-        <meta
-          name="description"
-          content="Earthbound is an Ecovillage, Think-Tank & living Community, based on conscious relationships, earth-centered awareness and regenerative living."
-        />
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        <meta property="og:title" content={title} />
+        <meta property="og:type" content="website" />
+        <meta property="og:description" content={description} />
+        {cmsPage?.ogImage ? (
+          <meta property="og:image" content={cmsPage.ogImage} />
+        ) : null}
       </Head>
       <CustomSections page={page} />
     </div>
@@ -752,7 +769,7 @@ const HomePage = ({ generalConfig, listings, hosts }: Props) => {
 
 HomePage.getInitialProps = async (context: NextPageContext) => {
   try {
-    const [listingsRes, hostsRes] = await Promise.all([
+    const [listingsRes, hostsRes, pageRes] = await Promise.all([
       api
         .get('/listing', {
           params: {
@@ -775,15 +792,31 @@ HomePage.getInitialProps = async (context: NextPageContext) => {
         .catch(() => {
           return null;
         }),
+      api
+        .get('/page', {
+          params: {
+            where: formatSearch({ slug: HOMEPAGE_SLUG }),
+            limit: 1,
+          },
+        })
+        .catch(() => {
+          return null;
+        }),
     ]);
 
     const generalConfig = getCachedConfig('general');
     const listings = listingsRes?.data?.results;
     const hosts = hostsRes?.data?.results;
+    const pageResults = pageRes?.data?.results;
+    const cmsPage =
+      Array.isArray(pageResults) && pageResults[0]
+        ? (pageResults[0] as PageDoc)
+        : null;
     return {
       generalConfig,
       listings,
       hosts,
+      cmsPage,
     };
   } catch (err: unknown) {
     return {
@@ -791,6 +824,7 @@ HomePage.getInitialProps = async (context: NextPageContext) => {
       error: parseMessageFromError(err),
       listings: null,
       hosts: null,
+      cmsPage: null,
     };
   }
 };

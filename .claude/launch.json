@@ -31,6 +31,18 @@
         "dev"
       ],
       "port": 3043
+    },
+    {
+      "name": "earthbound-app",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": [
+        "--cwd",
+        "apps/earthbound",
+        "dev",
+        "-p",
+        "3044"
+      ],
+      "port": 3044
     }
   ]
 }
