@@ -5,6 +5,7 @@ jest.mock('../api', () => ({
     patch: jest.fn(() => Promise.resolve({ data: {} })),
   },
   formatSearch: (where: unknown) => encodeURIComponent(JSON.stringify(where)),
+  invalidateGetCache: jest.fn(),
   cdn: '',
 }));
 
