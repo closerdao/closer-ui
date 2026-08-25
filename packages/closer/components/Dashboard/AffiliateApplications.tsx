@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import { AMBASSADOR_ROLE } from '../../constants/village.constants';
 import { usePlatform } from '../../contexts/platform';
 import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
@@ -30,6 +31,7 @@ interface Applicant {
   screenname?: string;
   email?: string;
   slug?: string;
+  roles?: string[];
   affiliateApplication?: AffiliateApplication;
 }
 
@@ -110,6 +112,18 @@ const AffiliateApplications = ({ onReviewed }: Props) => {
     setError(null);
     try {
       await api.post(`/affiliates/${endpoint}`, { userId });
+      if (
+        endpoint === 'approve' &&
+        process.env.NEXT_PUBLIC_FEATURE_FEDERATION === 'true'
+      ) {
+        const roles =
+          applicants.find((applicant) => applicant._id === userId)?.roles ?? [];
+        if (!roles.includes(AMBASSADOR_ROLE)) {
+          await platform.user.patch(userId, {
+            roles: roles.concat(AMBASSADOR_ROLE),
+          });
+        }
+      }
       // The reviewed user drops out of the pending list — take it off screen now
       // rather than waiting for the refetch so the button cannot be pressed twice.
       setApplicants((current) =>

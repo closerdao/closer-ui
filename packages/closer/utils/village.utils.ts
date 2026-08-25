@@ -27,7 +27,7 @@ import {
   VillageSearchResponse,
   VillageSocialNetwork,
 } from '../types/village';
-import api, { formatSearch } from './api';
+import api, { formatSearch, invalidateGetCache } from './api';
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value);
@@ -172,6 +172,13 @@ export async function getVillage(idOrSlug: string): Promise<Village | null> {
   }
 }
 
+/**
+ * Client GETs are cached for five minutes, so every write below has to drop
+ * the village reads it invalidates — otherwise an edit only shows up after a
+ * hard reload. The prefix also covers the plural `/villages/...` routes.
+ */
+const invalidateVillageReads = () => invalidateGetCache(`/${VILLAGE_COLLECTION}`);
+
 export async function createVillage(
   payload: CreateVillageInput,
 ): Promise<Village> {
@@ -182,6 +189,7 @@ export async function createVillage(
     verificationBadge: payload.verificationBadge || 'unverified',
     onboardingStatus: payload.onboardingStatus || 'map_only',
   });
+  invalidateVillageReads();
   return (data?.results || data) as Village;
 }
 
@@ -203,6 +211,7 @@ export async function updateVillage(
     body.coords = toApiCoords(coords);
   }
   const { data } = await api.patch(`/${VILLAGE_COLLECTION}/${id}`, body);
+  invalidateVillageReads();
   return (data?.results || data) as Village;
 }
 
@@ -256,6 +265,20 @@ export function normalizeVillageSubdomain(value: string): string {
     .replace(/-+/g, '-')
     .slice(0, 30)
     .replace(/^-+|-+$/g, '');
+}
+
+/**
+ * Lighter than `normalizeVillageSubdomain`, for sanitizing as the user types:
+ * edge hyphens survive so one can be typed mid-word — the strict pattern check
+ * at submit still rejects them if they are left dangling.
+ */
+export function sanitizeVillageSubdomainInput(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .slice(0, 30);
 }
 
 export function isValidVillageSubdomain(value: string): boolean {
@@ -322,6 +345,7 @@ export async function deployVillage(
       `/${VILLAGE_COLLECTION}/${id}/deploy`,
       notes ? { notes } : {},
     );
+    invalidateVillageReads();
     const body = data?.results || data || {};
     // Only adopt something that actually looks like a Village. The old
     // `body.village || body.results || body` chain ended in the raw response
@@ -500,6 +524,7 @@ export async function inviteVillageOwner(
   email: string,
 ): Promise<void> {
   await api.post(`/villages/${id}/invite-owner`, { email });
+  invalidateVillageReads();
 }
 
 /**

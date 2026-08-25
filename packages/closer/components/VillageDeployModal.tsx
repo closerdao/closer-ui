@@ -9,21 +9,9 @@ import {
   deployVillageToCloser,
   isValidVillageSubdomain,
   isVillageSubdomainTaken,
+  sanitizeVillageSubdomainInput,
   suggestVillageSubdomain,
 } from '../utils/village.utils';
-
-/**
- * Lighter than `normalizeVillageSubdomain`: edge hyphens survive so one can be
- * typed mid-word — the strict pattern check at submit still rejects them if
- * they are left dangling.
- */
-const sanitizeSubdomainInput = (value: string) =>
-  value
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '')
-    .replace(/-+/g, '-')
-    .slice(0, 30);
 import { ErrorMessage } from './ui';
 import { btnPrimary, btnSmall, inputClass, labelClass } from './VillageUI';
 
@@ -110,7 +98,7 @@ const VillageDeployModal = ({
                 value={subdomain}
                 autoFocus
                 onChange={(event) => {
-                  setSubdomain(sanitizeSubdomainInput(event.target.value));
+                  setSubdomain(sanitizeVillageSubdomainInput(event.target.value));
                   setError(null);
                 }}
                 placeholder={t('villages_deploy_modal_slug_placeholder')}
