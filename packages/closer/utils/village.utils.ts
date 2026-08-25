@@ -285,7 +285,7 @@ export function isValidVillageSubdomain(value: string): boolean {
   return SUBDOMAIN_PATTERN.test(value) && !RESERVED_SUBDOMAINS.includes(value);
 }
 
-/** What the deploy modal opens on: the village's own slug, else its name. */
+/** What the deploy review form opens on: the village's own slug, else its name. */
 export function suggestVillageSubdomain(village: Village): string {
   return normalizeVillageSubdomain(village.slug || village.name || '');
 }
@@ -466,29 +466,6 @@ export function villageAdminSettableStatuses(
     (status) =>
       !(VILLAGE_MANAGED_ONLY_STATUSES as readonly string[]).includes(status),
   );
-}
-
-/**
- * Files the deploy request under the chosen address. The subdomain becomes the
- * village's slug — the one identity it keeps across the map, the directory and
- * its own instance — and `appUrl` records where the instance will answer once
- * the team has built it.
- */
-export async function deployVillageToCloser(
-  id: string,
-  subdomain: string,
-): Promise<Village> {
-  const host = `${subdomain}.${CLOSER_DEPLOY_DOMAIN}`;
-  return updateVillage(id, {
-    slug: subdomain,
-    appUrl: `https://${host}`,
-    onboardingStatus: 'deploy_requested',
-    deployRequest: {
-      status: 'requested',
-      requestedAt: new Date().toISOString(),
-      notes: `Requested address: ${host}`,
-    },
-  } as Partial<Village>);
 }
 
 /**
@@ -686,23 +663,4 @@ export function canManageVillage(
   if (!village || !userId) return false;
   if (village.createdBy === userId) return true;
   return Boolean(village.managedBy?.includes(userId));
-}
-
-/**
- * Whether this village is still eligible to ask for a deploy: managed by the
- * user, and not yet handed to the deploy queue. The member-side subscription
- * requirement is layered on top by the page — this only answers for the
- * village's own stage.
- */
-export function canRequestDeploy(
-  village: Village | null | undefined,
-  userId?: string,
-): boolean {
-  if (!canManageVillage(village, userId) || !village) return false;
-  const status = village.onboardingStatus;
-  return (
-    status === 'subscribed' ||
-    status === 'pre_assessed' ||
-    status === 'map_only'
-  );
 }

@@ -2,7 +2,6 @@ jest.mock('../api', () => ({
   __esModule: true,
   default: {
     get: jest.fn(() => Promise.resolve({ data: { results: [] } })),
-    patch: jest.fn(() => Promise.resolve({ data: {} })),
   },
   formatSearch: (where: unknown) => encodeURIComponent(JSON.stringify(where)),
   invalidateGetCache: jest.fn(),
@@ -11,7 +10,6 @@ jest.mock('../api', () => ({
 
 import api from '../api';
 import {
-  deployVillageToCloser,
   fetchVillageCreatedBy,
   isValidVillageSubdomain,
   isVillageSubdomainTaken,
@@ -21,13 +19,10 @@ import {
 import { Village } from '../../types/village';
 
 const mockedGet = api.get as jest.Mock;
-const mockedPatch = api.patch as jest.Mock;
 
 beforeEach(() => {
   mockedGet.mockReset();
   mockedGet.mockResolvedValue({ data: { results: [] } });
-  mockedPatch.mockReset();
-  mockedPatch.mockResolvedValue({ data: {} });
 });
 
 describe('normalizeVillageSubdomain', () => {
@@ -88,27 +83,6 @@ describe('isVillageSubdomainTaken', () => {
   it('reads as free when the directory cannot be reached', async () => {
     mockedGet.mockRejectedValueOnce(new Error('offline'));
     await expect(isVillageSubdomainTaken('tdf')).resolves.toBe(false);
-  });
-});
-
-describe('deployVillageToCloser', () => {
-  it('files the deploy request under the chosen address', async () => {
-    mockedPatch.mockResolvedValueOnce({
-      data: { results: { _id: 'v1', slug: 'tdf' } },
-    });
-
-    const result = await deployVillageToCloser('v1', 'tdf');
-
-    expect(mockedPatch).toHaveBeenCalledWith(
-      '/village/v1',
-      expect.objectContaining({
-        slug: 'tdf',
-        appUrl: 'https://tdf.closer.earth',
-        onboardingStatus: 'deploy_requested',
-        deployRequest: expect.objectContaining({ status: 'requested' }),
-      }),
-    );
-    expect(result).toEqual({ _id: 'v1', slug: 'tdf' });
   });
 });
 

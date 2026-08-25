@@ -5,7 +5,6 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import CommunityMap from '../../../components/CommunityMap';
-import VillageDeployModal from '../../../components/VillageDeployModal';
 import VillageEvents from '../../../components/VillageEvents';
 import {
   CloserPill,
@@ -34,12 +33,10 @@ import {
   VillageSocialNetwork,
   VillageVerificationBadge,
 } from '../../../types/village';
-import { isSubscriptionActive } from '../../../utils/subscriptions.helpers';
 import {
   canCoordinateVillage,
   canDeployVillage,
   canManageVillage,
-  canRequestDeploy,
   fetchAmbassadors,
   fetchUsersByIds,
   getVillage,
@@ -72,7 +69,6 @@ const VillageDetailPage = () => {
   // The public email is kept behind a click so it is not sitting in the page
   // source for every scraper that walks the map.
   const [isEmailRevealed, setIsEmailRevealed] = useState(false);
-  const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
 
   // Derived above the early returns below so the effects that depend on them
   // stay unconditional — hooks cannot sit after a conditional return.
@@ -148,11 +144,6 @@ const VillageDetailPage = () => {
   // Admin | team | assigned ambassador. Founders (createdBy) do not get the
   // button until the API's subscription gate lands — they see the card only.
   const canDeploy = canDeployVillage(village, user);
-  const hasActiveSubscription = isSubscriptionActive(user?.subscription);
-  // "Not deployed on Closer" is belt and braces on top of the onboarding
-  // stage — a village already running its own instance never offers a deploy.
-  const canRequestManagedDeploy =
-    canRequestDeploy(village, user?._id) && !village.closer;
   const isAwaitingDeploy =
     village.onboardingStatus === 'deploy_requested' ||
     village.onboardingStatus === 'deploying';
@@ -439,33 +430,12 @@ const VillageDetailPage = () => {
                 description={
                   isAwaitingDeploy
                     ? t('villages_deploy_pending')
-                    : canRequestManagedDeploy && !hasActiveSubscription
-                    ? t('villages_next_step_subscribe_body')
-                    : canRequestManagedDeploy
-                    ? t('villages_next_step_deploy_body')
                     : isLive
                     ? t('villages_next_step_live_body')
                     : t('villages_next_step_intro_body')
                 }
               >
                 <div className="flex flex-wrap gap-3">
-                  {/* Deploying starts billing work on our side, so the CTA only
-                      unlocks for managers with an active subscription — the
-                      others are pointed at the plans first. */}
-                  {canRequestManagedDeploy && hasActiveSubscription ? (
-                    <button
-                      type="button"
-                      className={btnPrimary}
-                      disabled={isActing}
-                      onClick={() => setIsDeployModalOpen(true)}
-                    >
-                      {t('villages_request_deploy_cta')}
-                    </button>
-                  ) : canRequestManagedDeploy ? (
-                    <Link href="/subscriptions" className={btnPrimary}>
-                      {t('villages_deploy_subscribe_cta')}
-                    </Link>
-                  ) : null}
                   <Link href={`${villagePath}/edit`} className={btnSmall}>
                     {t('villages_edit_cta')}
                   </Link>
@@ -694,20 +664,6 @@ const VillageDetailPage = () => {
             </div>
           </aside>
         </div>
-
-        {isDeployModalOpen ? (
-          <VillageDeployModal
-            village={village}
-            onClose={() => setIsDeployModalOpen(false)}
-            onDeployed={(updated) => {
-              setIsDeployModalOpen(false);
-              setVillage(updated);
-              // The chosen subdomain became the village's slug, so move the
-              // address bar (and the slug-keyed fetch) onto the new identity.
-              router.replace(`/villages/${updated.slug || updated._id}`);
-            }}
-          />
-        ) : null}
       </PageShell>
     </>
   );
