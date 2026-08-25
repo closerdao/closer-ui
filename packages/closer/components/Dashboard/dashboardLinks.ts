@@ -57,7 +57,7 @@ export const getDashboardLinks = (
       url: '/dashboard/sales',
       rbacPage: 'TokenSales',
       enabled: isTokenEnabled,
-      roles: ['admin', 'team'],
+      roles: ['admin', 'team', 'space-host'],
     },
     {
       label: t('navigation_expense_tracking'),

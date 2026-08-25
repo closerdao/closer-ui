@@ -1,15 +1,24 @@
+import { useRouter } from 'next/router';
+
 import { useRef, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
 import { blockchainConfig } from '../../config_blockchain';
+import { SafeProposalResult, TokenUserResult } from '../../types/onchainAdmin';
 import api from '../../utils/api';
 import { getApiErrorDetails } from '../../utils/apiError';
-import { parseTokenUnits } from '../../utils/currencyFormat';
+import {
+  buildSweatMintTransaction,
+  buildTdfTransaction,
+  contributionDateToDaysAgo,
+  downloadTransactionBuilderJson,
+} from '../../utils/safeTransactionBuilder';
 import Modal from '../Modal';
 import { Input } from '../ui/';
 import Button from '../ui/Button';
-import TokenUserSearchInput, { TokenUserResult } from './TokenUserSearchInput';
+import OnchainTransactionSummary from './OnchainTransactionSummary';
+import TokenUserSearchInput from './TokenUserSearchInput';
 
 export interface TransferEntry {
   id: string;
@@ -18,27 +27,6 @@ export interface TransferEntry {
   mintSweat: boolean;
   contributionDate: string;
 }
-
-interface SafeProposalResult {
-  safeTxHash?: string;
-  safeUrl?: string;
-}
-
-type TransactionBuilderTransaction = {
-  to: string;
-  value: string;
-  data: null;
-  contractMethod: {
-    inputs: Array<{
-      internalType: string;
-      name: string;
-      type: string;
-    }>;
-    name: string;
-    payable: boolean;
-  };
-  contractInputsValues: Record<string, string>;
-};
 
 let entryIdCounter = 0;
 const today = () => new Date().toISOString().slice(0, 10);
@@ -52,37 +40,34 @@ const newEntry = (): TransferEntry => ({
 const createSafeRequestId = () =>
   window.crypto?.randomUUID?.() ??
   `tdf-transfer-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-const contributionDateToDaysAgo = (contributionDate: string) => {
-  const contributionDay = Date.parse(`${contributionDate}T00:00:00.000Z`);
-  const now = new Date();
-  const todayUtc = Date.UTC(
-    now.getUTCFullYear(),
-    now.getUTCMonth(),
-    now.getUTCDate(),
-  );
-  return Math.floor((todayUtc - contributionDay) / (24 * 60 * 60 * 1000));
-};
+
+const isCompleteWalletEntry = (entry: TransferEntry) =>
+  Boolean(entry.user?.hasWallet) &&
+  Boolean(entry.amount) &&
+  Number(entry.amount) > 0 &&
+  (!entry.mintSweat ||
+    contributionDateToDaysAgo(entry.contributionDate) != null);
 
 export const buildTransferSubmissionEntries = (entries: TransferEntry[]) => {
-  const isComplete = entries.every(
-    (entry) =>
-      Boolean(entry.user?.walletAddress) &&
-      Boolean(entry.amount) &&
-      Number(entry.amount) > 0 &&
-      (!entry.mintSweat || Boolean(entry.contributionDate)),
-  );
+  const validEntries = entries.filter(isCompleteWalletEntry);
+  const isComplete =
+    validEntries.length > 0 &&
+    !entries.some(
+      (entry) =>
+        !entry.user || (entry.user.hasWallet && !isCompleteWalletEntry(entry)),
+    );
   if (!isComplete) {
     return { transferEntries: [], sweatEntries: [], isComplete: false };
   }
   return {
-    transferEntries: entries.map((entry) => ({
-      walletAddress: entry.user!.walletAddress!,
+    transferEntries: validEntries.map((entry) => ({
+      userId: entry.user!._id,
       amount: entry.amount,
     })),
-    sweatEntries: entries
+    sweatEntries: validEntries
       .filter((entry) => entry.mintSweat)
       .map((entry) => ({
-        walletAddress: entry.user!.walletAddress!,
+        userId: entry.user!._id,
         amount: entry.amount,
         contributionDate: entry.contributionDate,
       })),
@@ -92,6 +77,7 @@ export const buildTransferSubmissionEntries = (entries: TransferEntry[]) => {
 
 const TransferTdfModal = ({ onClose }: { onClose: () => void }) => {
   const t = useTranslations();
+  const { locale } = useRouter();
   const [entries, setEntries] = useState<TransferEntry[]>([newEntry()]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -101,27 +87,28 @@ const TransferTdfModal = ({ onClose }: { onClose: () => void }) => {
     requestId: string;
   } | null>(null);
 
-  const validEntries = entries.filter(
-    (entry) =>
-      entry.user?.walletAddress && entry.amount && Number(entry.amount) > 0,
+  const validEntries = entries.filter(isCompleteWalletEntry);
+  const walletlessEntries = entries.filter(
+    (entry) => entry.user && !entry.user.hasWallet,
   );
-  const allEntriesComplete = entries.every(
+  const hasIncompleteActionableEntry = entries.some(
     (entry) =>
-      Boolean(entry.user?.walletAddress) &&
-      Boolean(entry.amount) &&
-      Number(entry.amount) > 0 &&
-      (!entry.mintSweat || Boolean(entry.contributionDate)),
+      !entry.user || (entry.user.hasWallet && !isCompleteWalletEntry(entry)),
   );
-  const totalAmount = entries.reduce(
-    (sum, entry) => sum + (Number(entry.amount) || 0),
+  const allEntriesComplete =
+    validEntries.length > 0 && !hasIncompleteActionableEntry;
+  const totalAmount = validEntries.reduce(
+    (sum, entry) => sum + Number(entry.amount),
     0,
   );
   const sweatEntries = validEntries.filter((entry) => entry.mintSweat);
   const totalSweatAmount = sweatEntries.reduce(
-    (sum, entry) => sum + (Number(entry.amount) || 0),
+    (sum, entry) => sum + Number(entry.amount),
     0,
   );
-  const submissionComplete = Boolean(safeResult);
+  const numberFormatter = new Intl.NumberFormat(locale, {
+    maximumFractionDigits: 18,
+  });
 
   const updateEntry = (id: string, patch: Partial<TransferEntry>) => {
     setEntries((previous) =>
@@ -132,106 +119,60 @@ const TransferTdfModal = ({ onClose }: { onClose: () => void }) => {
   };
 
   const exportJson = () => {
-    if (!allEntriesComplete) return;
-
-    const token = blockchainConfig.BLOCKCHAIN_DAO_TOKEN;
-    const transactions: TransactionBuilderTransaction[] = validEntries.map(
-      (entry) => ({
-        to: token.address,
-        value: '0',
-        data: null,
-        contractMethod: {
-          inputs: [
-            { internalType: 'address', name: 'to', type: 'address' },
-            { internalType: 'uint256', name: 'amount', type: 'uint256' },
-          ],
-          name: 'transfer',
-          payable: false,
-        },
-        contractInputsValues: {
-          to: entry.user!.walletAddress!,
-          amount: parseTokenUnits(entry.amount, token.decimals).toString(),
-        },
-      }),
+    if (!allEntriesComplete || safeResult) return;
+    const transactions = validEntries.map((entry) =>
+      buildTdfTransaction('transfer', entry.user!.walletAddress!, entry.amount),
     );
-    const sweatToken = blockchainConfig.BLOCKCHAIN_SWEAT_TOKEN;
-    sweatEntries.forEach((entry) => {
-      transactions.push({
-        to: sweatToken.address,
-        value: '0',
-        data: null,
-        contractMethod: {
-          inputs: [
-            { internalType: 'address', name: 'account', type: 'address' },
-            { internalType: 'uint256', name: 'amount', type: 'uint256' },
-            { internalType: 'uint256', name: 'daysAgo', type: 'uint256' },
-          ],
-          name: 'mint',
-          payable: false,
-        },
-        contractInputsValues: {
-          account: entry.user!.walletAddress!,
-          amount: parseTokenUnits(entry.amount, sweatToken.decimals).toString(),
-          daysAgo: String(contributionDateToDaysAgo(entry.contributionDate)),
-        },
-      });
-    });
-    const payload = {
-      version: '1.0',
-      chainId: String(blockchainConfig.BLOCKCHAIN_NETWORK_ID),
-      createdAt: Date.now(),
-      meta: {
-        name: `${token.symbol} Treasury Transfer`,
-        description: `Transfer ${totalAmount} ${token.symbol}${
-          sweatEntries.length > 0 ? ` and mint ${totalSweatAmount} SWEAT` : ''
-        }`,
-        txBuilderVersion: '1.16.5',
-        createdFromSafeAddress: '',
-        createdFromOwnerAddress: '',
-      },
+    if (sweatEntries.length > 0) {
+      transactions.push(
+        buildSweatMintTransaction(
+          sweatEntries.map((entry) => ({
+            walletAddress: entry.user!.walletAddress!,
+            amount: entry.amount,
+            contributionDate: entry.contributionDate,
+          })),
+        ),
+      );
+    }
+    downloadTransactionBuilderJson({
+      name: `${blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol} treasury transfer`,
+      description: `Transfer ${numberFormatter.format(totalAmount)} ${
+        blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol
+      }${
+        sweatEntries.length
+          ? ` and mint ${numberFormatter.format(totalSweatAmount)} SWEAT`
+          : ''
+      }`,
+      filename: `tdf-transfers-${today()}.json`,
       transactions,
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {
-      type: 'application/json',
     });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `tdf-transfers-${todayForFile()}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
   const submit = async () => {
-    if (!allEntriesComplete) return;
+    if (!allEntriesComplete || safeResult) return;
     setIsSubmitting(true);
     setError('');
     try {
       const { transferEntries, sweatEntries: sweatSubmissionEntries } =
         buildTransferSubmissionEntries(entries);
-
-      if (!safeResult) {
-        const safeFingerprint = JSON.stringify({
-          transferEntries,
-          sweatEntries: sweatSubmissionEntries,
-        });
-        if (safeIdempotencyRef.current?.fingerprint !== safeFingerprint) {
-          safeIdempotencyRef.current = {
-            fingerprint: safeFingerprint,
-            requestId: createSafeRequestId(),
-          };
-        }
-        const response = await api.post('/safe/proposals', {
-          requestId: safeIdempotencyRef.current.requestId,
-          chainId: blockchainConfig.BLOCKCHAIN_NETWORK_ID,
-          operation: 'tdfTransfer',
-          entries: transferEntries,
-          sweatEntries: sweatSubmissionEntries,
-        });
-        setSafeResult(response.data.results ?? response.data);
+      const fingerprint = JSON.stringify({
+        transferEntries,
+        sweatEntries: sweatSubmissionEntries,
+      });
+      if (safeIdempotencyRef.current?.fingerprint !== fingerprint) {
+        safeIdempotencyRef.current = {
+          fingerprint,
+          requestId: createSafeRequestId(),
+        };
       }
+      const response = await api.post('/safe/proposals', {
+        requestId: safeIdempotencyRef.current.requestId,
+        chainId: blockchainConfig.BLOCKCHAIN_NETWORK_ID,
+        operation: 'tdfTransfer',
+        entries: transferEntries,
+        sweatEntries: sweatSubmissionEntries,
+      });
+      setSafeResult(response.data.results ?? response.data);
     } catch (submissionError) {
       setError(
         getApiErrorDetails(
@@ -246,25 +187,25 @@ const TransferTdfModal = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <Modal closeModal={onClose} className="md:w-[960px] md:max-w-[95vw]">
-      <div className="flex flex-col max-h-[85vh]">
+      <div className="flex max-h-[85vh] flex-col">
         <div className="mb-4">
-          <h2 className="text-lg md:text-xl font-semibold">
+          <h2 className="text-lg font-semibold md:text-xl">
             {t('token_sales_dashboard_transfer_tdf_title')}
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="mt-1 text-sm text-muted-foreground">
             {t('token_sales_dashboard_transfer_tdf_description')}
           </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto space-y-3 mb-4">
+        <div className="mb-4 flex-1 space-y-3 overflow-y-auto">
           {entries.map((entry, index) => (
             <fieldset
               key={entry.id}
               disabled={Boolean(safeResult)}
-              className="grid gap-2 p-3 border border-border rounded-lg bg-muted/20 sm:grid-cols-[minmax(0,1fr)_8rem_7rem_10rem_auto] sm:items-end disabled:opacity-70"
+              className="grid gap-2 rounded-lg border border-border bg-muted/20 p-3 sm:grid-cols-[minmax(0,1fr)_8rem_7rem_10rem_auto] sm:items-end disabled:opacity-70"
             >
               <div className="min-w-0">
-                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">
                   {t('token_sales_dashboard_mint_sweat_user')} #{index + 1}
                 </label>
                 <TokenUserSearchInput
@@ -276,55 +217,63 @@ const TransferTdfModal = ({ onClose }: { onClose: () => void }) => {
                   )}
                 />
               </div>
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1">
-                  {t('token_sales_dashboard_mint_sweat_amount')}
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={entry.amount}
-                  onChange={(event) =>
-                    updateEntry(entry.id, { amount: event.target.value })
-                  }
-                  placeholder="0"
-                  className="w-full px-3 py-2 text-sm"
-                />
-              </div>
-              <label className="flex min-h-[42px] items-center gap-2 text-sm font-medium">
-                <input
-                  type="checkbox"
-                  checked={entry.mintSweat}
-                  onChange={(event) =>
-                    updateEntry(entry.id, {
-                      mintSweat: event.target.checked,
-                    })
-                  }
-                  className="h-4 w-4 accent-accent"
-                />
-                {t('token_sales_dashboard_transfer_tdf_mint_sweat')}
-              </label>
-              <div>
-                {entry.mintSweat && (
-                  <>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1">
-                      {t('token_sales_dashboard_contribution_date')}
+              {entry.user && !entry.user.hasWallet ? (
+                <p className="text-sm text-amber-700 sm:col-span-3">
+                  {t('token_sales_dashboard_mint_sweat_no_wallet_warning')}
+                </p>
+              ) : (
+                <>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      {t('token_sales_dashboard_mint_sweat_amount')}
                     </label>
-                    <Input
-                      type="date"
-                      max={today()}
-                      value={entry.contributionDate}
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={entry.amount}
                       onChange={(event) =>
-                        updateEntry(entry.id, {
-                          contributionDate: event.target.value,
-                        })
+                        updateEntry(entry.id, { amount: event.target.value })
                       }
+                      placeholder="0"
                       className="w-full px-3 py-2 text-sm"
                     />
-                  </>
-                )}
-              </div>
+                  </div>
+                  <label className="flex min-h-[42px] items-center gap-2 text-sm font-medium">
+                    <input
+                      type="checkbox"
+                      checked={entry.mintSweat}
+                      onChange={(event) =>
+                        updateEntry(entry.id, {
+                          mintSweat: event.target.checked,
+                        })
+                      }
+                      className="h-4 w-4 accent-accent"
+                    />
+                    {t('token_sales_dashboard_transfer_tdf_mint_sweat')}
+                  </label>
+                  <div>
+                    {entry.mintSweat && (
+                      <>
+                        <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                          {t('token_sales_dashboard_contribution_date')}
+                        </label>
+                        <Input
+                          type="date"
+                          max={today()}
+                          value={entry.contributionDate}
+                          onChange={(event) =>
+                            updateEntry(entry.id, {
+                              contributionDate: event.target.value,
+                            })
+                          }
+                          className="w-full px-3 py-2 text-sm"
+                        />
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
               <button
                 type="button"
                 onClick={() =>
@@ -349,11 +298,11 @@ const TransferTdfModal = ({ onClose }: { onClose: () => void }) => {
             type="button"
             onClick={() => setEntries((previous) => [...previous, newEntry()])}
             disabled={Boolean(safeResult)}
-            className="w-full py-2 border border-dashed border-gray-300 rounded-lg text-sm text-muted-foreground hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-lg border border-dashed border-border py-2 text-sm text-muted-foreground hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-50"
           >
             + {t('token_sales_dashboard_mint_sweat_add_entry')}
           </button>
-          {!allEntriesComplete && (
+          {hasIncompleteActionableEntry && (
             <p className="text-sm text-amber-700">
               {t('token_sales_dashboard_complete_all_rows')}
             </p>
@@ -372,26 +321,53 @@ const TransferTdfModal = ({ onClose }: { onClose: () => void }) => {
                   {t('token_sales_dashboard_open_safe')}
                 </a>
               )}
-            </div>
-          )}
-          <div className="flex flex-col gap-3 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-col text-sm text-muted-foreground">
-              <span>
-                {totalAmount} {blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol}
-              </span>
-              {sweatEntries.length > 0 && (
-                <span>
-                  {totalSweatAmount}{' '}
-                  {blockchainConfig.BLOCKCHAIN_SWEAT_TOKEN.symbol}{' '}
-                  {t('token_sales_dashboard_transfer_tdf_to_mint')}
-                </span>
+              {safeResult.skipped?.length > 0 && (
+                <p>
+                  {t('token_sales_dashboard_proposal_skipped_count', {
+                    count: safeResult.skipped.length,
+                  })}
+                </p>
               )}
             </div>
+          )}
+          <div className="space-y-3 border-t border-border pt-3">
+            <OnchainTransactionSummary
+              title={t('token_sales_dashboard_transaction_summary')}
+              items={[
+                {
+                  label: t('token_sales_dashboard_tdf_to_transfer'),
+                  value: `${numberFormatter.format(totalAmount)} ${
+                    blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol
+                  }`,
+                },
+                ...(sweatEntries.length > 0
+                  ? [
+                      {
+                        label: t('token_sales_dashboard_sweat_to_mint'),
+                        value: `${numberFormatter.format(totalSweatAmount)} ${
+                          blockchainConfig.BLOCKCHAIN_SWEAT_TOKEN.symbol
+                        }`,
+                      },
+                    ]
+                  : []),
+                {
+                  label: t('token_sales_dashboard_recipients_included'),
+                  value: String(validEntries.length),
+                },
+              ]}
+              warning={
+                walletlessEntries.length > 0
+                  ? t('token_sales_dashboard_walletless_excluded_count', {
+                      count: walletlessEntries.length,
+                    })
+                  : undefined
+              }
+            />
             <div className="flex flex-wrap justify-end gap-2">
               <Button
                 variant="secondary"
                 onClick={exportJson}
-                isEnabled={allEntriesComplete}
+                isEnabled={allEntriesComplete && !safeResult}
               >
                 {t('token_sales_dashboard_export_json')}
               </Button>
@@ -400,9 +376,7 @@ const TransferTdfModal = ({ onClose }: { onClose: () => void }) => {
               </Button>
               <Button
                 onClick={submit}
-                isEnabled={
-                  allEntriesComplete && !isSubmitting && !submissionComplete
-                }
+                isEnabled={allEntriesComplete && !isSubmitting && !safeResult}
                 isLoading={isSubmitting}
               >
                 {sweatEntries.length > 0
@@ -416,7 +390,5 @@ const TransferTdfModal = ({ onClose }: { onClose: () => void }) => {
     </Modal>
   );
 };
-
-const todayForFile = today;
 
 export default TransferTdfModal;

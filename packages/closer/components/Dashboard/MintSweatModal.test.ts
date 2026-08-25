@@ -11,6 +11,8 @@ describe('buildMintSweatSubmissionEntries', () => {
           user: {
             _id: '000000000000000000000001',
             screenname: 'Member',
+            hasWallet: true,
+            walletAddress: '0x1111111111111111111111111111111111111111',
           },
           amount: '12.5',
           contributionDate: '2026-08-15',
@@ -23,5 +25,23 @@ describe('buildMintSweatSubmissionEntries', () => {
         contributionDate: '2026-08-15',
       },
     ]);
+  });
+
+  it('excludes selected users without wallets', () => {
+    expect(
+      buildMintSweatSubmissionEntries([
+        {
+          id: 'entry-1',
+          user: {
+            _id: '000000000000000000000001',
+            screenname: 'Walletless member',
+            hasWallet: false,
+            walletAddress: null,
+          },
+          amount: '',
+          contributionDate: '',
+        },
+      ]),
+    ).toEqual([]);
   });
 });

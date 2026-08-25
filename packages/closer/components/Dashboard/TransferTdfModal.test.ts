@@ -13,6 +13,7 @@ const entry = (overrides: Partial<TransferEntry> = {}): TransferEntry => ({
   user: {
     _id: 'user-1',
     screenname: 'First user',
+    hasWallet: true,
     walletAddress: walletOne,
   },
   amount: '12.5',
@@ -30,6 +31,7 @@ describe('buildTransferSubmissionEntries', () => {
         user: {
           _id: 'user-2',
           screenname: 'Second user',
+          hasWallet: true,
           walletAddress: walletTwo,
         },
         amount: '3',
@@ -37,15 +39,37 @@ describe('buildTransferSubmissionEntries', () => {
     ]);
 
     expect(result.transferEntries).toEqual([
-      { walletAddress: walletOne, amount: '12.5' },
-      { walletAddress: walletTwo, amount: '3' },
+      { userId: 'user-1', amount: '12.5' },
+      { userId: 'user-2', amount: '3' },
     ]);
     expect(result.sweatEntries).toEqual([
       {
-        walletAddress: walletOne,
+        userId: 'user-1',
         amount: '12.5',
         contributionDate: '2026-08-15',
       },
+    ]);
+    expect(result.isComplete).toBe(true);
+  });
+
+  it('excludes a selected walletless user without blocking valid rows', () => {
+    const result = buildTransferSubmissionEntries([
+      entry(),
+      entry({
+        id: 'entry-2',
+        user: {
+          _id: 'user-2',
+          screenname: 'Walletless user',
+          hasWallet: false,
+          walletAddress: null,
+        },
+        amount: '',
+        contributionDate: '',
+      }),
+    ]);
+
+    expect(result.transferEntries).toEqual([
+      { userId: 'user-1', amount: '12.5' },
     ]);
     expect(result.isComplete).toBe(true);
   });

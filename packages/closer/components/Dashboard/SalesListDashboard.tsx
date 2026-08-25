@@ -9,13 +9,21 @@ import { useTranslations } from 'next-intl';
 import { blockchainConfig } from '../../config_blockchain';
 import { useAuth } from '../../contexts/auth';
 import { Sale, SaleBuyer } from '../../types/api';
+import {
+  SafeProposalSkipCode,
+  TokenDistributionStatus,
+  TokenUserResult,
+} from '../../types/onchainAdmin';
 import api, { formatSearch } from '../../utils/api';
 import { getApiErrorDetails } from '../../utils/apiError';
-import { parseTokenUnits } from '../../utils/currencyFormat';
 import {
   tokenSaleStatusBadgeVariant,
   tokenSaleStatusLabelKey,
 } from '../../utils/orderStatusBadge';
+import {
+  buildTdfTransaction,
+  downloadTransactionBuilderJson,
+} from '../../utils/safeTransactionBuilder';
 import {
   type SaleCategory,
   isTokenProductSale,
@@ -58,22 +66,7 @@ type BuyerRecord = {
   _id: string;
   email?: string;
   screenname?: string;
-  walletAddress?: string;
-};
-
-type TokenDistributionStatus = {
-  saleId: string;
-  id: string;
-  status: string;
-  active: boolean;
-  safeTxHash: string;
-  safeUrl: string;
-  confirmationsSubmitted: number;
-  confirmationsRequired: number;
-  executionTxHash: string;
-  explorerUrl: string;
-  lastError: string;
-  entryLastError: string;
+  walletAddress?: string | null;
 };
 
 type TokenDistributionSyncResult = {
@@ -94,16 +87,17 @@ function enrichSalesWithBuyers<T extends { createdBy?: string }>(
 ): (T & { buyer: SaleBuyer | null })[] {
   return salesArray.map((sale) => {
     const buyer = buyers.find((b) => b._id === sale.createdBy);
+    const existingBuyer = (sale as T & { buyer?: SaleBuyer | null }).buyer;
     return {
       ...sale,
       buyer: buyer
         ? {
-            email: buyer.email || '',
-            screenname: buyer.screenname || '',
+            email: existingBuyer?.email || buyer.email || '',
+            screenname: buyer.screenname || existingBuyer?.screenname || '',
             walletAddress: buyer.walletAddress || '',
             _id: buyer._id || '',
           }
-        : null,
+        : existingBuyer ?? null,
     };
   });
 }
@@ -158,6 +152,7 @@ const SalesListDashboard = ({
   const isAdmin = currentUser?.roles.includes('admin');
   const isSpaceHost = currentUser?.roles?.includes('space-host');
   const isTeam = currentUser?.roles?.includes('team');
+  const isTokenOperator = Boolean(isAdmin || isSpaceHost);
 
   const [isMintSweatModalOpen, setIsMintSweatModalOpen] = useState(false);
   const [isManualSaleModalOpen, setIsManualSaleModalOpen] = useState(false);
@@ -169,7 +164,7 @@ const SalesListDashboard = ({
   const [safeProposalError, setSafeProposalError] = useState('');
   const [safeProposalSummary, setSafeProposalSummary] = useState('');
   const [safeProposalSkipped, setSafeProposalSkipped] = useState<
-    Array<{ saleId: string; reason: string }>
+    Array<{ saleId: string; code: SafeProposalSkipCode; reason?: string }>
   >([]);
   const [distributionStatuses, setDistributionStatuses] = useState<
     Record<string, TokenDistributionStatus>
@@ -184,10 +179,11 @@ const SalesListDashboard = ({
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
   const actionsMenuRef = useRef<HTMLDivElement>(null);
 
-  // Fetch complete user data including private fields for admin users
+  // Fetch the narrow recipient view for token operators. Buyer matching remains
+  // admin-only and continues to use the richer user response below.
   useEffect(() => {
     const fetchEnrichedSales = async () => {
-      if (!sales || !isAdmin) {
+      if (!sales || !isTokenOperator || saleCategory !== 'tokens') {
         setEnrichedSales(sales || []);
         return;
       }
@@ -204,13 +200,19 @@ const SalesListDashboard = ({
           ...new Set(salesArray.map((sale: any) => sale.createdBy)),
         ].filter(Boolean); // Remove any null/undefined values
 
-        // Fetch users with private fields (admin only)
-        const buyersRes = await api.get(
-          `/user?where=${encodeURIComponent(
-            JSON.stringify({ _id: { $in: uniqueBuyerIds } }),
-          )}&includePrivate=true`,
+        if (uniqueBuyerIds.length === 0) {
+          setEnrichedSales(salesArray);
+          return;
+        }
+        const buyersRes = await api.get('/onchain-admin/recipients', {
+          params: { ids: uniqueBuyerIds.join(',') },
+        });
+        const buyers = (buyersRes.data.results as TokenUserResult[]).map(
+          (buyer) => ({
+            ...buyer,
+            walletAddress: buyer.hasWallet ? buyer.walletAddress : null,
+          }),
         );
-        const buyers = buyersRes.data.results as BuyerRecord[];
         setEnrichedSales(enrichSalesWithBuyers(salesArray, buyers));
       } catch (error) {
         console.error('Error fetching enriched sales data:', error);
@@ -219,7 +221,7 @@ const SalesListDashboard = ({
     };
 
     fetchEnrichedSales();
-  }, [sales, isAdmin]);
+  }, [sales, isTokenOperator, saleCategory]);
 
   // No client-side filtering needed - server handles it
 
@@ -243,7 +245,7 @@ const SalesListDashboard = ({
   const visibleSaleIds = currentSales.map((sale) => sale._id).join(',');
 
   const fetchDistributionStatuses = useCallback(async () => {
-    if (!isAdmin || saleCategory !== 'tokens' || !visibleSaleIds) {
+    if (!isTokenOperator || saleCategory !== 'tokens' || !visibleSaleIds) {
       setDistributionStatuses({});
       return;
     }
@@ -266,7 +268,7 @@ const SalesListDashboard = ({
         error,
       );
     }
-  }, [isAdmin, saleCategory, visibleSaleIds]);
+  }, [isTokenOperator, saleCategory, visibleSaleIds]);
 
   useEffect(() => {
     void fetchDistributionStatuses();
@@ -485,16 +487,15 @@ const SalesListDashboard = ({
       sale.quantity,
   );
 
-  const canMintSweatAction = Boolean(isSpaceHost || isAdmin);
+  const canTokenOperatorAction = saleCategory === 'tokens' && isTokenOperator;
   // POST /sale/manual is restricted to admin and team on the API side.
   const canAddManualSale = Boolean(isAdmin || isTeam);
   const canBatchSafeTxAction =
     saleCategory === 'tokens' &&
     statusFilter === 'paid' &&
-    isAdmin &&
+    isTokenOperator &&
     totalSalesCount > 0;
-  const hasHeaderActions =
-    canMintSweatAction || Boolean(isAdmin) || canAddManualSale;
+  const hasHeaderActions = canTokenOperatorAction || canAddManualSale;
 
   const toggleSaleDetails = (saleId: string) =>
     setExpandedSaleId((current) => (current === saleId ? null : saleId));
@@ -536,7 +537,9 @@ const SalesListDashboard = ({
             />
           </div>
         ) : null}
-        {isTokenProductSale(sale) && sale.buyer?.walletAddress && isAdmin ? (
+        {isTokenProductSale(sale) &&
+        sale.buyer?.walletAddress &&
+        isTokenOperator ? (
           <div className="min-w-0 text-xs text-muted-foreground">
             <WalletDisplay
               address={sale.buyer.walletAddress}
@@ -544,6 +547,7 @@ const SalesListDashboard = ({
             />
           </div>
         ) : isTokenProductSale(sale) &&
+          isTokenOperator &&
           sale.buyer &&
           !sale.buyer.walletAddress ? (
           <div className="text-xs text-muted-foreground">
@@ -562,25 +566,29 @@ const SalesListDashboard = ({
   };
 
   const distributionStatusLabel = (status: TokenDistributionStatus) => {
-    if (status.status === 'pending' || status.status === 'creating') {
-      return t('token_sales_dashboard_safe_automatic_pending', {
-        submitted: status.confirmationsSubmitted,
-        required: status.confirmationsRequired,
-      });
+    switch (status.status) {
+      case 'pending':
+      case 'creating':
+        return t('token_sales_dashboard_safe_automatic_pending', {
+          submitted: status.confirmationsSubmitted,
+          required: status.confirmationsRequired,
+        });
+      case 'finalizing':
+        return t('token_sales_dashboard_safe_automatic_finalizing');
+      case 'needs-review':
+        return t('token_sales_dashboard_safe_automatic_review');
+      case 'completed-with-warnings':
+        return t('token_sales_dashboard_safe_automatic_completed_warning');
+      case 'failed':
+      case 'superseded':
+        return t('token_sales_dashboard_safe_automatic_failed');
+      case 'completed':
+        return t('token_sales_dashboard_safe_automatic_completed');
+      default:
+        return t('token_sales_dashboard_safe_automatic_unknown', {
+          status: status.status,
+        });
     }
-    if (status.status === 'finalizing') {
-      return t('token_sales_dashboard_safe_automatic_finalizing');
-    }
-    if (status.status === 'needs-review') {
-      return t('token_sales_dashboard_safe_automatic_review');
-    }
-    if (status.status === 'completed-with-warnings') {
-      return t('token_sales_dashboard_safe_automatic_completed_warning');
-    }
-    if (status.status === 'failed' || status.status === 'superseded') {
-      return t('token_sales_dashboard_safe_automatic_failed');
-    }
-    return t('token_sales_dashboard_safe_automatic_completed');
   };
 
   const renderSaleActions = (sale: Sale) => {
@@ -629,7 +637,8 @@ const SalesListDashboard = ({
             </div>
           </div>
         )}
-        {sale.status !== 'matched' &&
+        {isTokenOperator &&
+          sale.status !== 'matched' &&
           (sale.status === 'paid' ||
             (sale.status === 'completed' &&
               automaticStatus?.status === 'needs-review')) &&
@@ -642,7 +651,7 @@ const SalesListDashboard = ({
               {t('token_sales_dashboard_distribute_tokens')}
             </Button>
           )}
-        {sale.status !== 'matched' && !getSaleParticipant(sale) && (
+        {isAdmin && sale.status !== 'matched' && !getSaleParticipant(sale) && (
           <Button
             size="small"
             onClick={() => handleShowMatchBuyerModal(sale._id)}
@@ -686,61 +695,33 @@ const SalesListDashboard = ({
   }, [actionsMenuOpen]);
 
   const handleExportBatchSafeTx = () => {
-    const {
-      address: tokenAddress,
-      symbol: tokenSymbol,
-      decimals: tokenDecimals,
-    } = blockchainConfig.BLOCKCHAIN_DAO_TOKEN;
-    const chainId = String(blockchainConfig.BLOCKCHAIN_NETWORK_ID);
-
-    const transactions = paidSalesWithWallet.map((sale) => {
-      const amountSmallestUnit = parseTokenUnits(sale.quantity!, tokenDecimals);
-      return {
-        to: tokenAddress,
-        value: '0',
-        data: null,
-        contractMethod: {
-          inputs: [
-            { internalType: 'address', name: 'to', type: 'address' },
-            { internalType: 'uint256', name: 'amount', type: 'uint256' },
-          ],
-          name: 'mint',
-          payable: false,
-        },
-        contractInputsValues: {
-          to: sale.buyer!.walletAddress,
-          amount: amountSmallestUnit.toString(),
-        },
-      };
-    });
-
-    const batchJson = {
-      version: '1.0',
-      chainId,
-      createdAt: Date.now(),
-      meta: {
-        name: `${tokenSymbol} Token Mint Batch`,
-        description: `Mint $${tokenSymbol} tokens to ${transactions.length} member addresses`,
-        txBuilderVersion: '1.16.5',
-        createdFromSafeAddress: '',
-        createdFromOwnerAddress: '',
-      },
+    const tokenSymbol = blockchainConfig.BLOCKCHAIN_DAO_TOKEN.symbol;
+    const transactions = paidSalesWithWallet.map((sale) =>
+      buildTdfTransaction(
+        'mint',
+        sale.buyer!.walletAddress!,
+        String(sale.quantity),
+      ),
+    );
+    downloadTransactionBuilderJson({
+      name: `${tokenSymbol} token mint batch`,
+      description: `Mint ${tokenSymbol} to ${transactions.length} member addresses`,
+      filename: `batch-safe-tx-${new Date().toISOString().slice(0, 10)}.json`,
       transactions,
-    };
-
-    const blob = new Blob([JSON.stringify(batchJson, null, 2)], {
-      type: 'application/json',
     });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `batch-safe-tx-${new Date()
-      .toISOString()
-      .slice(0, 10)}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  };
+
+  const skippedReason = (item: {
+    code: SafeProposalSkipCode;
+    reason?: string;
+  }) => {
+    const keys: Record<SafeProposalSkipCode, string> = {
+      USER_NOT_FOUND: 'token_sales_dashboard_skip_user_not_found',
+      NO_WALLET: 'token_sales_dashboard_skip_no_wallet',
+      INVALID_WALLET: 'token_sales_dashboard_skip_invalid_wallet',
+      INVALID_AMOUNT: 'token_sales_dashboard_skip_invalid_amount',
+    };
+    return keys[item.code] ? t(keys[item.code]) : item.reason || item.code;
   };
 
   const handleCreateBatchSafeTx = async () => {
@@ -855,21 +836,6 @@ const SalesListDashboard = ({
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {isAdmin && saleCategory === 'tokens' && (
-              <Button
-                type="button"
-                size="small"
-                variant="secondary"
-                onClick={() => void handleSyncTokenDistributions()}
-                isEnabled={!isSyncingDistributions}
-                isLoading={isSyncingDistributions}
-                className="text-xs rounded-full h-fit py-1"
-              >
-                {isSyncingDistributions
-                  ? t('token_sales_dashboard_safe_syncing')
-                  : t('token_sales_dashboard_safe_sync_now')}
-              </Button>
-            )}
             {hasHeaderActions && (
               <div className="relative" ref={actionsMenuRef}>
                 <Button
@@ -906,7 +872,7 @@ const SalesListDashboard = ({
                         {t('manual_sale_add_button')}
                       </button>
                     )}
-                    {canMintSweatAction && (
+                    {canTokenOperatorAction && (
                       <button
                         type="button"
                         role="menuitem"
@@ -919,7 +885,7 @@ const SalesListDashboard = ({
                         {t('token_sales_dashboard_mint_sweat_button')}
                       </button>
                     )}
-                    {isAdmin && (
+                    {canTokenOperatorAction && (
                       <button
                         type="button"
                         role="menuitem"
@@ -932,7 +898,7 @@ const SalesListDashboard = ({
                         {t('token_sales_dashboard_burn_sweat_button')}
                       </button>
                     )}
-                    {isAdmin && (
+                    {canTokenOperatorAction && (
                       <button
                         type="button"
                         role="menuitem"
@@ -972,6 +938,22 @@ const SalesListDashboard = ({
                         }}
                       >
                         {t('token_sales_dashboard_export_tdf_mint_json')}
+                      </button>
+                    )}
+                    {canTokenOperatorAction && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="flex w-full px-3 py-2 text-left text-sm hover:bg-muted disabled:opacity-50"
+                        onClick={() => {
+                          setActionsMenuOpen(false);
+                          void handleSyncTokenDistributions();
+                        }}
+                        disabled={isSyncingDistributions}
+                      >
+                        {isSyncingDistributions
+                          ? t('token_sales_dashboard_safe_syncing')
+                          : t('token_sales_dashboard_safe_sync_now')}
                       </button>
                     )}
                   </div>
@@ -1047,7 +1029,7 @@ const SalesListDashboard = ({
                 <ul className="mt-1 list-disc pl-5">
                   {safeProposalSkipped.slice(0, 10).map((item) => (
                     <li key={item.saleId}>
-                      {item.saleId}: {item.reason}
+                      {item.saleId}: {skippedReason(item)}
                     </li>
                   ))}
                 </ul>

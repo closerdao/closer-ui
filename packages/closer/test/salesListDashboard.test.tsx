@@ -151,9 +151,7 @@ describe('SalesListDashboard', () => {
       ),
     );
 
-    expect(
-      (await screen.findAllByTitle(CHARGE_ID)).length,
-    ).toBeGreaterThan(0);
+    expect((await screen.findAllByTitle(CHARGE_ID)).length).toBeGreaterThan(0);
     expect(
       screen.getAllByText(/tokenSale · monerium · OASA Verein/).length,
     ).toBeGreaterThan(0);
@@ -168,6 +166,57 @@ describe('SalesListDashboard', () => {
     expect(
       screen.queryByRole('menuitem', { name: 'Add manual sale' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('gives space hosts the token Safe controls and wallet view', async () => {
+    api.get.mockImplementation((url: string) => {
+      if (url === '/onchain-admin/recipients') {
+        return Promise.resolve({
+          data: {
+            results: [
+              {
+                _id: 'user-9',
+                screenname: 'Jeppe',
+                hasWallet: true,
+                walletAddress: '0x1111111111111111111111111111111111111111',
+              },
+            ],
+          },
+        });
+      }
+      return Promise.resolve({ data: { results: [] } });
+    });
+
+    renderDashboard(['space-host']);
+
+    await waitFor(() =>
+      expect(api.get).toHaveBeenCalledWith(
+        '/onchain-admin/recipients',
+        expect.objectContaining({ params: { ids: 'user-9' } }),
+      ),
+    );
+    expect((await screen.findAllByText(/0x1111.*1111/)).length).toBeGreaterThan(
+      0,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: /Actions/i }));
+    expect(
+      screen.getByRole('menuitem', { name: 'Mint Sweat' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('menuitem', { name: 'Burn SWEAT' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('menuitem', { name: 'Transfer TDF from Safe' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('menuitem', { name: 'Sync now' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('menuitem', {
+        name: 'Mint TDF for paid sales via Safe',
+      }),
+    ).toBeInTheDocument();
   });
 
   it('lets a team member record a manual token sale', async () => {

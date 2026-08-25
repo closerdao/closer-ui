@@ -38,7 +38,9 @@ function fetchLiveRbacOnce(): Promise<Record<string, unknown> | null> {
       .get('/config/rbac')
       .then((res) => {
         const v = res.data?.results?.value;
-        return v && typeof v === 'object' ? (v as Record<string, unknown>) : null;
+        return v && typeof v === 'object'
+          ? (v as Record<string, unknown>)
+          : null;
       })
       .catch(() => null);
   }
@@ -48,12 +50,12 @@ function fetchLiveRbacOnce(): Promise<Record<string, unknown> | null> {
 export const useRBAC = () => {
   const { user } = useAuth();
   const contextConfig = useConfig();
-  const snapshotRbac =
-    contextConfig?.rbacConfig ?? contextConfig?.rbac ?? null;
+  const snapshotRbac = contextConfig?.rbacConfig ?? contextConfig?.rbac ?? null;
 
-  const [liveRbacOverlay, setLiveRbacOverlay] = useState<
-    Record<string, unknown> | null
-  >(null);
+  const [liveRbacOverlay, setLiveRbacOverlay] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
   const [rbacLiveRevision, setRbacLiveRevision] = useState(0);
 
   useEffect(() => {
@@ -86,6 +88,13 @@ export const useRBAC = () => {
     (page: string): boolean => {
       if (!user || !user.roles || user.roles.length === 0) {
         return config.default && config.default[page] === true;
+      }
+
+      // Token operations are intentionally shared by admins and space hosts.
+      // Keep this aligned with the API's requireTokenOperator guard even when
+      // an older persisted RBAC snapshot still has TokenSales disabled.
+      if (page === 'TokenSales' && user.roles.includes('space-host')) {
+        return true;
       }
 
       const hasRoleAccess = user.roles.some((role) => {
