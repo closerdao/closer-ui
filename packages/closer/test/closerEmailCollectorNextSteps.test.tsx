@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { api } from 'closer';
 
 import CloserEmailCollector from '../components/CloserEmailCollector';
 import { PromptGetInTouchContext } from '../components/PromptGetInTouchContext';
@@ -24,7 +25,9 @@ jest.mock('closer', () => ({
   Input: jest.requireActual('../components/ui/Input').default,
   api: {
     get: jest.fn(() => Promise.resolve({ data: { results: [] } })),
-    post: jest.fn(() => Promise.resolve({ data: {} })),
+    post: jest.fn(() =>
+      Promise.resolve({ data: { results: { _id: 'app-1' } } }),
+    ),
   },
 }));
 
@@ -84,8 +87,15 @@ describe('CloserEmailCollector next steps', () => {
       screen.getByText('Subscribe & launch your village'),
     ).toBeInTheDocument();
 
-    // The signup form pre-fills from this key.
     expect(localStorage.getItem('email')).toBe('ada@example.com');
+    expect(
+      JSON.parse(localStorage.getItem('closer:application-answers') || ''),
+    ).toEqual({
+      _id: 'app-1',
+      name: 'Ada',
+      email: 'ada@example.com',
+      fields: { projectCommunityName: 'Solarpunk Village' },
+    });
 
     await user.click(screen.getByRole('button', { name: 'Create my account' }));
     expect(setIsOpen).toHaveBeenCalledWith(false);
@@ -119,5 +129,21 @@ describe('CloserEmailCollector next steps', () => {
     );
     expect(setIsOpen).toHaveBeenCalledWith(false);
     expect(pushMock()).not.toHaveBeenCalled();
+  });
+
+  it('still stores answers when the API does not return an application id', async () => {
+    mockedUseAuth.mockReturnValue({ isAuthenticated: false });
+    (api.post as jest.Mock).mockResolvedValueOnce({ data: {} });
+
+    renderModal();
+    await submitApplication();
+
+    expect(
+      JSON.parse(localStorage.getItem('closer:application-answers') || ''),
+    ).toEqual({
+      name: 'Ada',
+      email: 'ada@example.com',
+      fields: { projectCommunityName: 'Solarpunk Village' },
+    });
   });
 });
