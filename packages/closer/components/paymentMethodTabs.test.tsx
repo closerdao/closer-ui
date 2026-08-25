@@ -3,23 +3,20 @@ import { useState } from 'react';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { renderWithNextIntl } from '../../test/utils';
-import {
-  StayPaymentMethodTabs,
-  type StayPaymentMethodTab,
-} from './stayCryptoPaymentSection';
+import { renderWithNextIntl } from '../test/utils';
+import { type PaymentMethodTab, PaymentMethodTabs } from './PaymentMethodTabs';
 
-function Harness({ initial = 'card' }: { initial?: StayPaymentMethodTab }) {
-  const [active, setActive] = useState<StayPaymentMethodTab>(initial);
+function Harness({ initial = 'card' }: { initial?: PaymentMethodTab }) {
+  const [active, setActive] = useState<PaymentMethodTab>(initial);
   return (
     <>
-      <StayPaymentMethodTabs active={active} onChange={setActive} />
+      <PaymentMethodTabs active={active} onChange={setActive} />
       <p>{active === 'card' ? 'card-panel' : 'crypto-panel'}</p>
     </>
   );
 }
 
-describe('StayPaymentMethodTabs', () => {
+describe('PaymentMethodTabs', () => {
   it('renders card and crypto tabs with card selected by default', () => {
     renderWithNextIntl(<Harness />);
 

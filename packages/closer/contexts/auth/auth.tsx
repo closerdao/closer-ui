@@ -17,6 +17,7 @@ import { REFERRAL_ID_LOCAL_STORAGE_KEY } from '../../constants';
 import { signInWithGooglePopup, signOutFirebase } from '../../firebaseLazy';
 import api, {
   refreshTokensProactively,
+  revokeRefreshToken,
   setOnSessionInvalid,
 } from '../../utils/api';
 import {
@@ -336,6 +337,8 @@ export const AuthProvider: FC<PropsWithChildren> = ({ children }) => {
   };
 
   const logout = async () => {
+    // Revoke server-side first, while the tokens are still available.
+    await revokeRefreshToken();
     clearTokens();
     clearInteractionSession();
     setUser(null);

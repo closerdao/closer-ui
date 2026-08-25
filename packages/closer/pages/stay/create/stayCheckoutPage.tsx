@@ -25,15 +25,18 @@ import Conditions from '../../../components/Conditions';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import Modal from '../../../components/Modal';
 import PageError from '../../../components/PageError';
+import {
+  type PaymentMethodTab,
+  PaymentMethodTabs,
+} from '../../../components/PaymentMethodTabs';
 import Switch from '../../../components/Switch';
 import TicketOptions from '../../../components/TicketOptions';
+import WalletPayButton, {
+  WalletPayComplete,
+} from '../../../components/WalletPayButton';
 import BookingSurface from '../../../components/booking/bookingSurface';
 import BookingUnitsNote from '../../../components/booking/bookingUnitsNote';
-import {
-  StayCryptoPaymentSection,
-  StayPaymentMethodTabs,
-  type StayPaymentMethodTab,
-} from '../../../components/booking/stayCryptoPaymentSection';
+import { StayCryptoPaymentSection } from '../../../components/booking/stayCryptoPaymentSection';
 import { StayQuoteFiatDiscountPreview } from '../../../components/booking/stayQuoteFiatDiscountPreview';
 import { ErrorMessage, Information } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
@@ -74,6 +77,10 @@ import {
   StayTokenStakePlan,
 } from '../../../types/stay';
 import api, { cdn } from '../../../utils/api';
+import {
+  getBlockchainNetworkName,
+  getStablecoinSymbol,
+} from '../../../utils/blockchainNetwork';
 import {
   FoodBookingContext,
   getBookingPaymentCheckoutPath,
@@ -491,6 +498,10 @@ const StayCheckoutContent = ({
     VISITORS_GUIDE,
     APP_NAME,
   } = useConfig() || {};
+  // The crypto rail settles on whichever chain this build is pointed at, so the
+  // copy names it rather than assuming mainnet.
+  const cryptoChain = getBlockchainNetworkName();
+  const cryptoStablecoin = getStablecoinSymbol();
   const { user: authUser, refetchUser, setUser } = useAuth();
   const { platform }: any = usePlatform();
 
@@ -512,14 +523,21 @@ const StayCheckoutContent = ({
     number | null
   >(null);
   const [stakePlan, setStakePlan] = useState<StayTokenStakePlan | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionError, setActionErrorState] = useState<string | null>(null);
+  // Apple Pay has to know whether the payment failed before React re-renders,
+  // so the message is mirrored where it can be read straight after the await.
+  const actionErrorRef = useRef<string | null>(null);
+  const setActionError = useCallback((message: string | null) => {
+    actionErrorRef.current = message;
+    setActionErrorState(message);
+  }, []);
   const [isCreditsModalOpen, setIsCreditsModalOpen] = useState(false);
   const [creditsModalError, setCreditsModalError] = useState<string | null>(
     null,
   );
   const [isApplyingCredits, setIsApplyingCredits] = useState(false);
   const [isRevertingTokenPayment, setIsRevertingTokenPayment] = useState(false);
-  const [paymentTab, setPaymentTab] = useState<StayPaymentMethodTab>('card');
+  const [paymentTab, setPaymentTab] = useState<PaymentMethodTab>('card');
   const [preferencesError, setPreferencesError] = useState<string | null>(null);
   const [isSavingPreferences, setIsSavingPreferences] = useState(false);
   const [isSavingStayMessage, setIsSavingStayMessage] = useState(false);
@@ -1685,6 +1703,7 @@ const StayCheckoutContent = ({
   const handleStripeConfirmation = async (
     checkout: StayCheckoutResponse,
     paymentMethodId: string,
+    onReadyFor3ds?: () => void,
   ): Promise<boolean> => {
     if (!checkout.paymentIntent) return true;
     const intent = checkout.paymentIntent;
@@ -1700,6 +1719,7 @@ const StayCheckoutContent = ({
     }
 
     if (intent.status === 'requires_action' && intent.client_secret) {
+      onReadyFor3ds?.();
       const result = await stripe.confirmCardPayment(intent.client_secret, {
         payment_method: paymentMethodId,
       });
@@ -1720,6 +1740,7 @@ const StayCheckoutContent = ({
       intent.client_secret &&
       paymentMethodId
     ) {
+      onReadyFor3ds?.();
       const result = await stripe.confirmCardPayment(intent.client_secret, {
         payment_method: paymentMethodId,
       });
@@ -1739,7 +1760,15 @@ const StayCheckoutContent = ({
     return false;
   };
 
-  const handleConfirmAndPay = async () => {
+  /**
+   * `wallet` is set when Apple Pay authorised the stay instead of the card
+   * field: its payment method stands in for the one we would have built from
+   * the card, and its sheet has to come down before any 3DS challenge.
+   */
+  const handleConfirmAndPay = async (wallet?: {
+    paymentMethodId: string;
+    onReadyFor3ds: () => void;
+  }) => {
     if (!hasValidEventTicket) {
       setActionError(t('bookings_error_no_ticket_option'));
       return;
@@ -1795,23 +1824,27 @@ const StayCheckoutContent = ({
           return;
         }
 
-        const card = elements?.getElement(CardElement) ?? null;
-        if (!card) {
-          setActionError(t('stay_create_card_required'));
-          return;
-        }
+        if (wallet) {
+          stripePaymentMethodId = wallet.paymentMethodId;
+        } else {
+          const card = elements?.getElement(CardElement) ?? null;
+          if (!card) {
+            setActionError(t('stay_create_card_required'));
+            return;
+          }
 
-        const { paymentMethod, error: pmError } =
-          await stripe.createPaymentMethod({
-            type: 'card',
-            card,
-            billing_details: { email: userEmail, name: userName },
-          });
-        if (pmError || !paymentMethod) {
-          setActionError(pmError?.message || t('stay_create_card_error'));
-          return;
+          const { paymentMethod, error: pmError } =
+            await stripe.createPaymentMethod({
+              type: 'card',
+              card,
+              billing_details: { email: userEmail, name: userName },
+            });
+          if (pmError || !paymentMethod) {
+            setActionError(pmError?.message || t('stay_create_card_error'));
+            return;
+          }
+          stripePaymentMethodId = paymentMethod.id;
         }
-        stripePaymentMethodId = paymentMethod.id;
       }
 
       const checkout = await checkoutStay(
@@ -1823,6 +1856,7 @@ const StayCheckoutContent = ({
         const ok = await handleStripeConfirmation(
           checkout,
           stripePaymentMethodId,
+          wallet?.onReadyFor3ds,
         );
         if (!ok) return;
       }
@@ -1854,6 +1888,24 @@ const StayCheckoutContent = ({
       setActionError(parseMessageFromError(err));
     } finally {
       if (!isLeavingPage) setIsProcessing(false);
+    }
+  };
+
+  const handleWalletPayment = async (
+    paymentMethodId: string,
+    complete: WalletPayComplete,
+  ) => {
+    try {
+      await handleConfirmAndPay({
+        paymentMethodId,
+        onReadyFor3ds: () => complete('success'),
+      });
+      // `handleConfirmAndPay` reports its own failures through `actionError`,
+      // so the sheet follows whatever it put on screen.
+      complete(actionErrorRef.current ? 'fail' : 'success');
+    } catch (err) {
+      complete('fail');
+      setActionError(parseMessageFromError(err));
     }
   };
 
@@ -2900,7 +2952,7 @@ const StayCheckoutContent = ({
           {showStripeCardInput && (
             <>
               {showPaymentTabs && (
-                <StayPaymentMethodTabs
+                <PaymentMethodTabs
                   active={paymentTab}
                   onChange={setPaymentTab}
                   className="mb-4"
@@ -2935,7 +2987,10 @@ const StayCheckoutContent = ({
               </div>
               {showPaymentTabs && paymentTab === 'crypto' && (
                 <p className="text-sm text-gray-600">
-                  {t('stay_crypto_tab_intro')}
+                  {t('stay_crypto_tab_intro', {
+                    token: cryptoStablecoin,
+                    chain: cryptoChain,
+                  })}
                 </p>
               )}
             </>
@@ -2998,20 +3053,36 @@ const StayCheckoutContent = ({
                 buttonVariant="primary"
               />
             ) : (
-              <Button
-                isEnabled={
-                  hasAcceptedTerms && !isProcessing && hasValidEventTicket
-                }
-                isLoading={isProcessing}
-                onClick={handleConfirmAndPay}
-                className="min-h-[48px]"
-              >
-                {!isMember
-                  ? t('buttons_booking_request')
-                  : isFree
-                  ? t('stay_create_confirm_button')
-                  : t('stay_create_confirm_and_pay_button')}
-              </Button>
+              <>
+                {showStripeCardInput && (
+                  <WalletPayButton
+                    amount={fiatOwed}
+                    label={listing?.name || t('stay_create_card_title')}
+                    payerEmail={userEmail}
+                    isEnabled={
+                      hasAcceptedTerms && !isProcessing && hasValidEventTicket
+                    }
+                    hasCardFallback={false}
+                    className="mb-3"
+                    onPaymentMethod={handleWalletPayment}
+                    onError={setActionError}
+                  />
+                )}
+                <Button
+                  isEnabled={
+                    hasAcceptedTerms && !isProcessing && hasValidEventTicket
+                  }
+                  isLoading={isProcessing}
+                  onClick={() => handleConfirmAndPay()}
+                  className="min-h-[48px]"
+                >
+                  {!isMember
+                    ? t('buttons_booking_request')
+                    : isFree
+                    ? t('stay_create_confirm_button')
+                    : t('stay_create_confirm_and_pay_button')}
+                </Button>
+              </>
             )}
           </div>
         </BookingSurface>

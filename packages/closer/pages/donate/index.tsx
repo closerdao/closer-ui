@@ -9,6 +9,7 @@ import { BackButton, Button, ErrorMessage, Heading, Spinner } from '../../compon
 import { DEFAULT_CURRENCY } from '../../constants';
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
+import { getBlockchainNetworkName } from '../../utils/blockchainNetwork';
 import type {
   CreateDonationBankResult,
   CreateDonationCardResult,
@@ -352,7 +353,9 @@ function DonatePage() {
                     : 'border-gray-200 hover:border-accent'
                 }`}
               >
-                {t('donate_method_crypto')}
+                {t('donate_method_crypto', {
+                  chain: getBlockchainNetworkName(),
+                })}
               </button>
             </div>
           </div>

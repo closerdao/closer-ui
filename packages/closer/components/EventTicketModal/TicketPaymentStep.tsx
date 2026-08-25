@@ -8,6 +8,10 @@ import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import { useConfig } from '../../hooks/useConfig';
 import { CloserCurrencies } from '../../types';
 import type { TicketInitResult, TicketQuote } from '../../types/ticket';
+import {
+  getBlockchainNetworkName,
+  getStablecoinSymbol,
+} from '../../utils/blockchainNetwork';
 import { parseMessageFromError } from '../../utils/common';
 import {
   resolveDonationStablecoinAddress,
@@ -20,9 +24,12 @@ import {
   initTicket,
   releaseTicketSeat,
 } from '../../utils/tickets.api';
+import {
+  PaymentMethodTabs,
+  type PaymentMethodTab,
+} from '../PaymentMethodTabs';
+import WalletPayButton, { WalletPayComplete } from '../WalletPayButton';
 import { Button, ErrorMessage } from '../ui';
-
-type PaymentMethod = 'card' | 'crypto';
 
 interface Props {
   eventId: string;
@@ -77,7 +84,7 @@ const TicketPaymentStep = ({
     useContext(WalletState) || {};
   const { connectWallet, switchNetwork } = useContext(WalletDispatch) || {};
 
-  const [method, setMethod] = useState<PaymentMethod>('card');
+  const [method, setMethod] = useState<PaymentMethodTab>('card');
   const [initResult, setInitResult] = useState<TicketInitResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCardComplete, setIsCardComplete] = useState(false);
@@ -100,9 +107,11 @@ const TicketPaymentStep = ({
   const isFree = Boolean(total && total.val <= 0);
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
+  // Names the chain this build actually settles on — 'Celo Sepolia' in dev.
+  const chain = getBlockchainNetworkName(config as any);
 
   const startTicket = async (
-    paymentMethod?: PaymentMethod,
+    paymentMethod?: PaymentMethodTab,
   ): Promise<TicketInitResult> => {
     const result = await initTicket({
       eventId,
@@ -179,6 +188,78 @@ const TicketPaymentStep = ({
     }
   };
 
+  /**
+   * Apple Pay buys the same ticket the card form buys: the seat is held by
+   * `initTicket` first, then the wallet's payment method settles the intent.
+   * The sheet must be down before a 3DS challenge appears, so the first
+   * confirmation is told not to act on one.
+   */
+  const handleWalletPayment = async (
+    paymentMethodId: string,
+    complete: WalletPayComplete,
+  ) => {
+    if (!stripe) {
+      complete('fail');
+      return;
+    }
+    setError(null);
+    setHint(null);
+    setIsProcessing(true);
+    try {
+      const result = initResult?.clientSecret
+        ? initResult
+        : await startTicket('card');
+      if (!result.clientSecret) {
+        throw new Error(t('event_ticket_payment_failed'));
+      }
+
+      const { error: stripeError, paymentIntent } =
+        await stripe.confirmCardPayment(
+          result.clientSecret,
+          { payment_method: paymentMethodId },
+          { handleActions: false },
+        );
+
+      if (stripeError) {
+        complete('fail');
+        setError(stripeError.message || t('event_ticket_payment_failed'));
+        setIsProcessing(false);
+        return;
+      }
+
+      complete('success');
+
+      let confirmedIntent = paymentIntent;
+      if (confirmedIntent?.status === 'requires_action') {
+        const actionResult = await stripe.confirmCardPayment(
+          result.clientSecret,
+        );
+        if (actionResult.error) {
+          setError(
+            actionResult.error.message || t('event_ticket_payment_failed'),
+          );
+          setIsProcessing(false);
+          return;
+        }
+        confirmedIntent = actionResult.paymentIntent;
+      }
+
+      const paymentIntentId = confirmedIntent?.id || result.paymentIntentId;
+      if (!paymentIntentId) {
+        throw new Error(t('event_ticket_payment_failed'));
+      }
+
+      setHint(t('event_ticket_finalizing'));
+      await confirmTicketCard(result.ticketId, paymentIntentId);
+      unsettledTicketRef.current = null;
+      onPaid(result.ticketId);
+    } catch (err) {
+      complete('fail');
+      setError(parseMessageFromError(err));
+      setIsProcessing(false);
+    }
+  };
+
   const handleCrypto = async () => {
     setError(null);
     setHint(null);
@@ -223,7 +304,7 @@ const TicketPaymentStep = ({
   };
 
   /** Each rail needs its own ticket, so the abandoned one gives its seat back. */
-  const switchMethod = (next: PaymentMethod) => {
+  const switchMethod = (next: PaymentMethodTab) => {
     if (next === method) return;
     if (unsettledTicketRef.current) {
       releaseTicketSeat(unsettledTicketRef.current);
@@ -264,28 +345,27 @@ const TicketPaymentStep = ({
       ) : (
         <>
           {isWalletEnabled && (
-            <div className="flex gap-2 mb-4">
-              <Button
-                variant={method === 'card' ? 'primary' : 'secondary'}
-                size="small"
-                onClick={() => switchMethod('card')}
-                isEnabled={!isProcessing}
-              >
-                {t('event_ticket_pay_card')}
-              </Button>
-              <Button
-                variant={method === 'crypto' ? 'primary' : 'secondary'}
-                size="small"
-                onClick={() => switchMethod('crypto')}
-                isEnabled={!isProcessing}
-              >
-                {t('event_ticket_pay_crypto')}
-              </Button>
-            </div>
+            <PaymentMethodTabs
+              active={method}
+              onChange={switchMethod}
+              isEnabled={!isProcessing}
+              className="mb-4"
+            />
           )}
 
           {method === 'card' ? (
             <>
+              {total && (
+                <WalletPayButton
+                  amount={total.val}
+                  currency={total.cur}
+                  label={ticketOptionName}
+                  payerEmail={userEmail}
+                  isEnabled={!isProcessing}
+                  onPaymentMethod={handleWalletPayment}
+                  onError={setError}
+                />
+              )}
               <CardElement
                 onChange={(event) =>
                   setIsCardComplete(!event.empty && !event.error)
@@ -306,7 +386,9 @@ const TicketPaymentStep = ({
               <p className="text-sm text-gray-600 mb-4">
                 {t('event_ticket_crypto_description', {
                   amount: initResult?.expectedAmount ?? total?.val ?? 0,
-                  stablecoin: initResult?.stablecoin || 'cEUR',
+                  stablecoin:
+                    initResult?.stablecoin || getStablecoinSymbol(config as any),
+                  chain,
                 })}
               </p>
               <Button
@@ -317,7 +399,7 @@ const TicketPaymentStep = ({
                 {!isWalletConnected
                   ? t('event_ticket_connect_wallet')
                   : !isCorrectNetwork
-                  ? t('event_ticket_switch_network')
+                  ? t('event_ticket_switch_network', { chain })
                   : t('event_ticket_pay_now')}
               </Button>
               {account && (

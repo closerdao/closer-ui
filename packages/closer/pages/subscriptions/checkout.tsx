@@ -232,6 +232,7 @@ const SubscriptionsCheckoutPage: NextPage = () => {
                     source={source as string}
                     successPage={subscriptionsConfig?.successPage}
                     firstMonthFree={firstMonthFree}
+                    dueToday={dueToday}
                     tierMetricEvent={
                       selectedPlan?.title?.toLowerCase() === 'wanderer'
                         ? 'tier-1-first-payment'

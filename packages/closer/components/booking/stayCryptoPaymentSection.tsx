@@ -2,12 +2,12 @@ import { useRouter } from 'next/router';
 
 import { useContext, useState } from 'react';
 
-import { CreditCard, Wallet } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { WalletDispatch, WalletState } from '../../contexts/wallet';
 import { useConfig } from '../../hooks/useConfig';
 import type { Stay, StayTokenPaymentQuote } from '../../types/stay';
+import { getBlockchainNetworkName } from '../../utils/blockchainNetwork';
 import { parseMessageFromError } from '../../utils/common';
 import {
   resolveDonationStablecoinAddress,
@@ -20,9 +20,9 @@ import {
 } from '../../utils/stayCryptoPaymentPendingStorage';
 import {
   confirmStayTokenPayment,
+  isStayAwaitingHostApproval,
   isStayCheckoutDraft,
   isStayPaid,
-  isStayAwaitingHostApproval,
   isStayTokenPaymentNotIndexedError,
   quoteStayTokenPayment,
   submitStay,
@@ -48,54 +48,6 @@ async function copyToClipboard(text: string) {
   }
 }
 
-export type StayPaymentMethodTab = 'card' | 'crypto';
-
-/** Segmented card/crypto switcher shared by the checkout and payment pages. */
-export function StayPaymentMethodTabs({
-  active,
-  onChange,
-  className,
-}: {
-  active: StayPaymentMethodTab;
-  onChange: (tab: StayPaymentMethodTab) => void;
-  className?: string;
-}) {
-  const t = useTranslations();
-  const tabs: {
-    id: StayPaymentMethodTab;
-    label: string;
-    Icon: typeof CreditCard;
-  }[] = [
-    { id: 'card', label: t('stay_payment_tab_card'), Icon: CreditCard },
-    { id: 'crypto', label: t('stay_payment_tab_crypto'), Icon: Wallet },
-  ];
-  return (
-    <div
-      role="tablist"
-      aria-label={t('stay_create_card_title')}
-      className={`flex rounded-xl bg-gray-100 p-1 ${className || ''}`}
-    >
-      {tabs.map(({ id, label, Icon }) => (
-        <button
-          key={id}
-          type="button"
-          role="tab"
-          aria-selected={active === id}
-          onClick={() => onChange(id)}
-          className={`flex-1 flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors min-h-[40px] ${
-            active === id
-              ? 'bg-white text-gray-900 shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
-          {label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 export type StayCryptoPaymentSectionProps = {
   stay: Stay;
   /** Called with every fresh Stay the flow produces (submit, confirm). */
@@ -108,8 +60,9 @@ export type StayCryptoPaymentSectionProps = {
 };
 
 /**
- * "Pay with crypto" — settles the fiat leg of a stay in stablecoin (CEUR on
- * Celo) through POST /stays/:id/token-payment instead of the Stripe pair.
+ * "Pay with crypto" — settles the fiat leg of a stay in the configured
+ * stablecoin on the configured chain through POST /stays/:id/token-payment
+ * instead of the Stripe pair.
  * Credits and token-stake legs are unaffected.
  */
 export function StayCryptoPaymentSection({
@@ -126,6 +79,7 @@ export function StayCryptoPaymentSection({
     useContext(WalletState);
   const { connectWallet, switchNetwork, updateWalletBalance } =
     useContext(WalletDispatch);
+  const chain = getBlockchainNetworkName(config as any);
 
   const [isPreparing, setIsPreparing] = useState(false);
   const [quote, setQuote] = useState<StayTokenPaymentQuote | null>(null);
@@ -319,6 +273,7 @@ export function StayCryptoPaymentSection({
             <p className="text-sm text-gray-700">
               {t('stay_crypto_modal_description', {
                 token: quote.stablecoinSymbol,
+                chain,
               })}
             </p>
             <p className="text-sm text-gray-700">
@@ -396,7 +351,7 @@ export function StayCryptoPaymentSection({
                   {!isWalletConnected
                     ? t('donate_crypto_connect_wallet')
                     : !isCorrectNetwork
-                    ? t('donate_crypto_switch_network')
+                    ? t('donate_crypto_switch_network', { chain })
                     : t('donate_crypto_prepare_wallet')}
                 </Button>
               ) : (

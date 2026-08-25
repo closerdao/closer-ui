@@ -118,6 +118,7 @@ function DonateCardPage() {
             saleId={cardPayload.result.saleId}
             paymentIntentId={cardPayload.result.paymentIntentId}
             userEmail={user?.email}
+            amount={amount}
             metricAmount={amount}
             onPaid={handlePaid}
           />

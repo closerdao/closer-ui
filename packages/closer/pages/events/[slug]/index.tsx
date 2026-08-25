@@ -1,8 +1,9 @@
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { withPageErrorBoundary } from '../../../components/ErrorBoundary';
 import EventAttendees from '../../../components/EventAttendees';
@@ -33,6 +34,10 @@ import { CloserCurrencies } from '../../../types/currency';
 import api, { cdn } from '../../../utils/api';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import {
+  parseEventCheckoutLink,
+  withoutCheckoutQuery,
+} from '../../../utils/eventCheckout';
 import {
   getAccommodationPriceRange,
   getEventNights,
@@ -68,6 +73,7 @@ const EventPageContent = ({
   eventsConfig,
 }: Props) => {
   const t = useTranslations();
+  const router = useRouter();
   const { platform }: any = usePlatform();
   const { user, isAuthenticated, refetchUser } = useAuth();
   const { APP_NAME } = useConfig() || {};
@@ -80,7 +86,6 @@ const EventPageContent = ({
   const [isShowingEvent, setIsShowingEvent] = useState(true);
   const [passwordError] = useState<null | string>(null);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
-  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   /** Bumped after a purchase so the tickets card picks the new one up. */
   const [ticketsRefreshKey, setTicketsRefreshKey] = useState(0);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -98,6 +103,59 @@ const EventPageContent = ({
       ...linkedMetricFields('Event', event._id),
     });
   }, [event?._id, event?.slug]);
+
+  /**
+   * The ticket modal is a URL, not a piece of local state — `?checkout` opens
+   * it, `?ticketId=` opens it on payment, `#tickets` is the short form. That
+   * makes every step of a purchase linkable, and back closes the modal rather
+   * than leaving the page.
+   *
+   * The hash is read after mount because the server never sees it: deciding
+   * from it during render would make the first client render disagree with the
+   * markup that was sent.
+   */
+  const [locationHash, setLocationHash] = useState('');
+  useEffect(() => {
+    const readHash = () => setLocationHash(window.location.hash);
+    readHash();
+    window.addEventListener('hashchange', readHash);
+    return () => window.removeEventListener('hashchange', readHash);
+  }, []);
+
+  const checkout = useMemo(
+    () => parseEventCheckoutLink(router.query, locationHash),
+    [router.query, locationHash],
+  );
+  const isTicketModalOpen = checkout.isOpen;
+
+  const setCheckoutQuery = (
+    query: Record<string, string | string[] | undefined>,
+    method: 'push' | 'replace',
+  ) =>
+    router[method]({ pathname: router.pathname, query }, undefined, {
+      shallow: true,
+      scroll: false,
+    });
+
+  const openTicketModal = () =>
+    setCheckoutQuery({ ...router.query, checkout: '1' }, 'push');
+
+  const closeTicketModal = () => {
+    // Dropping the hash along with the query is the point — a reopened page
+    // should not reopen the modal behind the guest's back.
+    setLocationHash('');
+    setCheckoutQuery(withoutCheckoutQuery(router.query), 'replace');
+  };
+
+  // Any way out of the modal counts, the back button included — a ticket may
+  // have been bought before the guest left it.
+  const wasTicketModalOpenRef = useRef(false);
+  useEffect(() => {
+    if (wasTicketModalOpenRef.current && !isTicketModalOpen) {
+      setTicketsRefreshKey((key) => key + 1);
+    }
+    wasTicketModalOpenRef.current = isTicketModalOpen;
+  }, [isTicketModalOpen]);
 
   const canEditEvent = user
     ? user?._id === event?.createdBy || user?.roles.includes('admin')
@@ -421,6 +479,7 @@ const EventPageContent = ({
               <div className="max-w-4xl w-full">
                 <MyEventTickets
                   eventId={event._id}
+                  eventSlug={event.slug}
                   refreshKey={ticketsRefreshKey}
                 />
               </div>
@@ -690,9 +749,7 @@ const EventPageContent = ({
                                             accommodation search. */}
                                         {hasTicketOptions ? (
                                           <Button
-                                            onClick={() =>
-                                              setIsTicketModalOpen(true)
-                                            }
+                                            onClick={openTicketModal}
                                           >
                                             {t('events_buy_ticket_button')}
                                           </Button>
@@ -927,10 +984,10 @@ const EventPageContent = ({
       {isTicketModalOpen && (
         <EventTicketModal
           event={event}
-          closeModal={() => {
-            setIsTicketModalOpen(false);
-            setTicketsRefreshKey((key) => key + 1);
-          }}
+          closeModal={closeTicketModal}
+          initialTicketId={checkout.ticketId}
+          initialTicketOption={checkout.ticketOption}
+          initialDiscountCode={checkout.discountCode}
         />
       )}
     </>

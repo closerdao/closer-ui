@@ -753,6 +753,14 @@ export const cancelStay = async (
   return (data as ApiOk<{ booking: Stay; refund: any }>).results;
 };
 
+/**
+ * A draft stay was never submitted, so there is nothing to refund or unstake —
+ * the record is deleted outright instead of moving to `cancelled`.
+ */
+export const deleteDraftStay = async (id: string): Promise<void> => {
+  await api.delete(`/booking/${id}`);
+};
+
 function unwrapStayMutationResult(data: { results?: unknown }): Stay {
   const r = data?.results as { booking?: Stay } | Stay;
   if (

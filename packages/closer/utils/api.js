@@ -258,6 +258,32 @@ function doRefresh() {
   return refreshPromise;
 }
 
+// Best-effort server-side revocation of the current refresh token. Uses raw
+// axios rather than the api instance so a 401 here can never trigger the
+// refresh-and-retry interceptor mid-logout. Errors are swallowed: local
+// logout must always complete even if the endpoint is down or not deployed.
+export async function revokeRefreshToken() {
+  if (typeof window === 'undefined') return;
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return;
+  const accessToken = getAccessToken();
+  try {
+    await axios.post(
+      `${baseURL}/auth/logout`,
+      { refresh_token: refreshToken },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        timeout: 5000,
+      },
+    );
+  } catch (err) {
+    console.error('Failed to revoke refresh token on logout:', err);
+  }
+}
+
 export async function refreshTokensProactively() {
   if (typeof window === 'undefined') return null;
   if (!getRefreshToken()) return null;

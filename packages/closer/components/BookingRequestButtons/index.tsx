@@ -33,6 +33,8 @@ interface Props {
   hideCancelButton?: boolean;
   paymentDelta?: Booking['paymentDelta'] | null;
   useTokens?: boolean;
+  onCancelDraft?: () => void | Promise<void>;
+  cancelDraftLoading?: boolean;
 }
 
 const BookingRequestButtons = ({
@@ -51,12 +53,21 @@ const BookingRequestButtons = ({
   hideCancelButton = false,
   paymentDelta,
   useTokens = false,
+  onCancelDraft,
+  cancelDraftLoading = false,
 }: Props) => {
   const t = useTranslations();
   const { user } = useAuth();
   const isSpaceHost = user?.roles.includes('space-host');
 
   const isOwnBooking = user?._id === createdBy || user?._id === paidBy;
+
+  // A draft was never paid for, so the payment method is irrelevant — it is
+  // deleted rather than cancelled, which the caller handles via onCancelDraft.
+  const isDraftCancelable =
+    status === 'draft' &&
+    Boolean(onCancelDraft) &&
+    (isOwnBooking || isSpaceHost || Boolean(user?.roles.includes('admin')));
 
   const isBookingCancelable =
     (isOwnBooking || isSpaceHost) &&
@@ -195,6 +206,18 @@ const BookingRequestButtons = ({
             </Button>
           </Link>
         ))}
+
+      {!hideCancelButton && user && isDraftCancelable && (
+        <Button
+          variant="secondary"
+          size={size}
+          className={secondaryCn}
+          isLoading={cancelDraftLoading}
+          onClick={() => void onCancelDraft?.()}
+        >
+          {t('booking_cancel_button')}
+        </Button>
+      )}
 
       {!hideCancelButton &&
         user &&
