@@ -15,7 +15,6 @@ import {
 import { User } from 'closer/contexts/auth/types';
 import { Page } from 'closer/types/customPages';
 import type { PageDoc } from 'closer/types/page';
-import { formatSearch } from 'closer/utils/api';
 import { parseMessageFromError } from 'closer/utils/common';
 import { NextPageContext } from 'next';
 
@@ -795,7 +794,7 @@ HomePage.getInitialProps = async (context: NextPageContext) => {
       api
         .get('/page', {
           params: {
-            where: formatSearch({ slug: HOMEPAGE_SLUG }),
+            where: { slug: HOMEPAGE_SLUG },
             limit: 1,
           },
         })
