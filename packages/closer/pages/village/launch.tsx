@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { FormEvent, ReactNode, useEffect, useState } from 'react';
 
 import CommunityMap from '../../components/CommunityMap';
+import FeatureNotEnabled from '../../components/FeatureNotEnabled';
 import {
   Eyebrow,
   PageShell,
@@ -333,6 +334,11 @@ const LaunchVillagePage = () => {
       isCurrent = false;
     };
   }, [user?._id, hasActiveSubscription]);
+
+  // Read at render time so the flag can differ per environment (and per test).
+  if (process.env.NEXT_PUBLIC_FEATURE_FEDERATION !== 'true') {
+    return <FeatureNotEnabled feature="federation" />;
+  }
 
   if (isLoading) {
     return (
