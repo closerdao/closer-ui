@@ -57,7 +57,7 @@ const ReferralsPage = () => {
               where: formatSearch({ referredBy: user._id }),
             },
           }),
-          api.get('/stay', {
+          api.get('/credit', {
             params: {
               where: formatSearch({
                 userId: user._id,
@@ -65,7 +65,7 @@ const ReferralsPage = () => {
               }),
             },
           }),
-          api.get('/stay', {
+          api.get('/credit', {
             params: {
               where: formatSearch({
                 userId: user._id,

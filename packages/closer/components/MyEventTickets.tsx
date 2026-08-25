@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '../contexts/auth';
 import type { CloserCurrencies } from '../types/currency';
 import type { Ticket } from '../types/ticket';
+import { buildEventCheckoutHref } from '../utils/eventCheckout';
 import { priceFormat } from '../utils/helpers';
 import { getMyTickets } from '../utils/tickets.api';
 import { getTicketPriceBreakdown } from '../utils/tickets.helpers';
@@ -16,6 +17,8 @@ import Heading from './ui/Heading';
 
 interface Props {
   eventId: string;
+  /** Needed to link back into this event's checkout for an unpaid ticket. */
+  eventSlug?: string;
   /** Bump to refetch — a purchase elsewhere on the page changes this list. */
   refreshKey?: number;
 }
@@ -23,11 +26,14 @@ interface Props {
 /** Cancelled tickets let nobody in, so they are not what the guest holds. */
 const HOLDS_A_SEAT = ['approved', 'pending', 'pending-payment'];
 
+/** A held seat that still owes money — one click away from being paid. */
+const AWAITS_PAYMENT = ['pending', 'pending-payment'];
+
 /**
  * The tickets the signed-in guest already holds for this event, shown at the
  * top of the event page so they never have to wonder whether they bought one.
  */
-const MyEventTickets = ({ eventId, refreshKey = 0 }: Props) => {
+const MyEventTickets = ({ eventId, eventSlug, refreshKey = 0 }: Props) => {
   const t = useTranslations();
   const { user, isAuthenticated } = useAuth();
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -83,6 +89,19 @@ const MyEventTickets = ({ eventId, refreshKey = 0 }: Props) => {
                 {ticket.status !== 'approved' && (
                   <p className="text-xs text-gray-500">
                     {t(`ticket_status_${ticket.status}`)}
+                    {eventSlug && AWAITS_PAYMENT.includes(ticket.status) && (
+                      <>
+                        {' · '}
+                        <Link
+                          href={buildEventCheckoutHref(eventSlug, {
+                            ticketId: ticket._id,
+                          })}
+                          className="text-accent underline"
+                        >
+                          {t('event_ticket_complete_payment')}
+                        </Link>
+                      </>
+                    )}
                   </p>
                 )}
               </div>

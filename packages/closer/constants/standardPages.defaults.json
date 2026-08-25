@@ -1309,7 +1309,7 @@
         }
       },
       {
-        "type": "fundraiser",
+        "type": "fundraiserPromo",
         "data": {
           "settings": {
             "showTitle": true
@@ -1324,7 +1324,7 @@
         }
       },
       {
-        "type": "fundraiserProgress",
+        "type": "fundraiserDonate",
         "data": {
           "settings": {},
           "content": {}

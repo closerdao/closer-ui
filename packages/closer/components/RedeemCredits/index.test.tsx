@@ -15,7 +15,7 @@ describe('RedeemCredits', () => {
   it('should have correct heading in demo mode', () => {
     renderWithNextIntl(<RedeemCredits isDemo={true} />);
     const heading = screen.getByRole('heading', {
-      name: /redeem carrots \[demo\]/i,
+      name: /redeem credits \[demo\]/i,
     });
     expect(heading).toBeInTheDocument();
   });
@@ -28,7 +28,7 @@ describe('RedeemCredits', () => {
       />,
     );
     const heading = screen.getByRole('heading', {
-      name: /redeem carrots/i,
+      name: /redeem credits/i,
     });
     expect(heading).toBeInTheDocument();
   });
@@ -41,7 +41,7 @@ describe('RedeemCredits', () => {
       />,
     );
     const message = screen.getByText(
-      /Carrots applied! Accommodation updated/i,
+      /Credits applied! Accommodation updated/i,
     );
     expect(message).toBeInTheDocument();
   });

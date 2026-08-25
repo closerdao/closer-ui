@@ -338,11 +338,11 @@ const AirdropPage = ({ airdropConfig, volunteerConfig }: Props) => {
                     <div className="flex items-center gap-3 text-sm">
                       <Image
                         src="/images/carrot.png"
-                        alt="Carrots"
+                        alt="Credits"
                         width={24}
                         height={24}
                       />
-                      <span className="font-medium">555 Carrots</span>
+                      <span className="font-medium">555 Credits</span>
                     </div>
                   </div>
                 </div>

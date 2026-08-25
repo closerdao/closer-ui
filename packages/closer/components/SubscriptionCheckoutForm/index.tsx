@@ -12,7 +12,9 @@ import api from '../../utils/api';
 import { parseMessageFromError } from '../../utils/common';
 import { logMetric } from '../../utils/metrics';
 import { reportIssue } from '../../utils/reporting.utils';
+import { getSubscriptionSuccessUrl } from '../../utils/subscriptions.helpers';
 import SubscriptionConditions from '../SubscriptionConditions';
+import WalletPayButton, { WalletPayComplete } from '../WalletPayButton';
 import { Button, ErrorMessage } from '../ui/';
 
 interface SubscriptionCheckoutFormProps {
@@ -20,7 +22,10 @@ interface SubscriptionCheckoutFormProps {
   priceId: string | string[] | undefined;
   monthlyCredits?: number;
   source?: string;
+  successPage?: string;
   firstMonthFree?: boolean;
+  /** Charged today in major units — zero on a free first month. */
+  dueToday?: number;
   tierMetricEvent?: 'tier-1-first-payment' | 'tier-2-first-payment';
 }
 
@@ -29,7 +34,9 @@ function SubscriptionCheckoutForm({
   priceId,
   monthlyCredits,
   source,
+  successPage,
   firstMonthFree = false,
+  dueToday = 0,
   tierMetricEvent = 'tier-1-first-payment',
 }: SubscriptionCheckoutFormProps) {
   const t = useTranslations();
@@ -72,9 +79,100 @@ function SubscriptionCheckoutForm({
       router.push(source);
     } else {
       router.push(
-        `/subscriptions/success?subscriptionId=${subscriptionId}&priceId=${priceId}`,
+        getSubscriptionSuccessUrl(successPage, {
+          subscriptionId,
+          priceId: Array.isArray(priceId) ? priceId[0] : priceId,
+        }),
       );
     }
+  };
+
+  /**
+   * Starts the subscription with a payment method, whoever made it — the card
+   * form below or the wallet sheet above. `onReadyFor3ds` lets the wallet close
+   * its sheet before a challenge is raised, since the two cannot share the
+   * screen.
+   */
+  const subscribeWithPaymentMethod = async (
+    paymentMethodId: string,
+    onReadyFor3ds?: () => void,
+  ): Promise<boolean> => {
+    const response = await api.post('/subscription', {
+      email: userEmail,
+      paymentMethod: paymentMethodId,
+      priceId,
+      monthlyCredits,
+    });
+
+    const subscriptionId = response.data.results.subscription;
+
+    const validate = async () => {
+      const validationResponse = await api.post('/subscription/validation', {
+        subscriptionId,
+        monthlyCredits,
+        paymentMethod: paymentMethodId,
+      });
+
+      if (validationResponse.data.results.status !== 'succeeded') {
+        await reportIssue(
+          `Error with /subscription/validation: ${parseMessageFromError(
+            validationResponse.data.results.error,
+          )}`,
+          userEmail,
+        );
+        return false;
+      }
+
+      await refetchUser();
+
+      void logMetric({
+        event: tierMetricEvent,
+        category: 'subscriptions',
+        value: 'payment',
+      });
+
+      redirect(subscriptionId);
+      return true;
+    };
+
+    // 3d secure required for this payment
+    if (response.data.results.status === 'requires_action') {
+      onReadyFor3ds?.();
+      try {
+        const confirmationResult = await stripe?.confirmCardPayment(
+          response.data.results.clientSecret,
+        );
+        if (confirmationResult?.error) {
+          await reportIssue(
+            `Error with stripe?.confirmCardPayment: ${parseMessageFromError(
+              confirmationResult?.error,
+            )}`,
+            userEmail,
+          );
+
+          setError(confirmationResult?.error);
+          return false;
+        }
+        if (confirmationResult?.paymentIntent?.status === 'succeeded') {
+          return await validate();
+        }
+      } catch (err) {
+        await reportIssue(
+          `Error with /subscription/validation: ${parseMessageFromError(err)}`,
+          userEmail,
+        );
+
+        setError(err);
+      }
+      return false;
+    }
+
+    // 3d secure NOT required for this payment
+    if (response.data.results.status === 'active') {
+      return await validate();
+    }
+
+    return false;
   };
 
   const createSubscription = async (e: FormEvent<HTMLFormElement>) => {
@@ -100,84 +198,39 @@ function SubscriptionCheckoutForm({
         setError(createdPaymentMethod.error || '');
         return;
       }
-      const response = await api.post('/subscription', {
-        email: userEmail,
-        paymentMethod: createdPaymentMethod?.paymentMethod.id,
-        priceId,
-        monthlyCredits,
-      });
 
-      const subscriptionId = response.data.results.subscription;
-
-      // 3d secure required for this payment
-      if (response.data.results.status === 'requires_action') {
-        try {
-          const confirmationResult = await stripe?.confirmCardPayment(
-            response.data.results.clientSecret,
-          );
-          if (confirmationResult?.error) {
-            await reportIssue(
-              `Error with stripe?.confirmCardPayment: ${parseMessageFromError(
-                confirmationResult?.error,
-              )}`,
-              userEmail,
-            );
-
-            setError(confirmationResult?.error);
-          }
-          if (confirmationResult?.paymentIntent?.status === 'succeeded') {
-            const validationResponse = await api.post(
-              '/subscription/validation',
-              {
-                subscriptionId,
-                monthlyCredits,
-                paymentMethod: createdPaymentMethod?.paymentMethod.id,
-              },
-            );
-
-            if (validationResponse.data.results.status === 'succeeded') {
-              await refetchUser();
-
-              void logMetric({
-                event: tierMetricEvent,
-                category: 'subscriptions',
-                value: 'payment',
-              });
-
-              redirect(subscriptionId);
-            }
-          }
-        } catch (err) {
-          await reportIssue(`Error with /subscription/validation: ${parseMessageFromError(err)}`, userEmail);
-
-          setError(err);
-        }
-      }
-
-      // 3d secure NOT required for this payment
-      if (response.data.results.status === 'active') {
-        const validationResponse = await api.post('/subscription/validation', {
-          subscriptionId,
-          monthlyCredits,
-          paymentMethod: createdPaymentMethod?.paymentMethod.id,
-        });
-
-        if (validationResponse.data.results.status === 'succeeded') {
-          await refetchUser();
-
-          void logMetric({
-            event: tierMetricEvent,
-            category: 'subscriptions',
-            value: 'payment',
-          });
-
-          redirect(subscriptionId);
-        } else {
-          await reportIssue(`Error with /subscription/validation without 3d secure: ${parseMessageFromError(validationResponse.data.results.error)}`, userEmail);
-        }
-      }
+      await subscribeWithPaymentMethod(
+        createdPaymentMethod?.paymentMethod.id ?? '',
+      );
     } catch (err) {
-      await reportIssue(`Error with /subscription: ${parseMessageFromError(err)}`, userEmail);
+      await reportIssue(
+        `Error with /subscription: ${parseMessageFromError(err)}`,
+        userEmail,
+      );
+
+      setError(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleWalletPayment = async (
+    paymentMethodId: string,
+    complete: WalletPayComplete,
+  ) => {
+    setError('');
+    setIsLoading(true);
+    try {
+      const subscribed = await subscribeWithPaymentMethod(paymentMethodId, () =>
+        complete('success'),
+      );
+      complete(subscribed ? 'success' : 'fail');
+    } catch (err) {
+      complete('fail');
+      await reportIssue(
+        `Error with /subscription: ${parseMessageFromError(err)}`,
+        userEmail,
+      );
 
       setError(err);
     } finally {
@@ -200,6 +253,16 @@ function SubscriptionCheckoutForm({
           setHasAcceptedConditions={setHasAcceptedConditions}
         />
       </div>
+      <WalletPayButton
+        amount={dueToday}
+        label={t('subscriptions_checkout_title')}
+        payerEmail={userEmail}
+        isEnabled={hasAcceptedConditions && !isLoading}
+        hasCardFallback={false}
+        className="mb-4"
+        onPaymentMethod={handleWalletPayment}
+        onError={setError}
+      />
       <Button
         className="mt-3"
         isEnabled={isSubmitEnabled && hasAcceptedConditions && !isLoading}

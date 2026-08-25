@@ -48,7 +48,7 @@ const CreditsPage = () => {
               {t('carrots_your_balance')}
             </Heading>
             <Heading level={3} className="w-1/2 text-right">
-              {(platform.carrots.findBalance('carrots') || 0).toFixed(2)}{' '}
+              {(platform.credits.findBalance('credits') || 0).toFixed(2)}{' '}
               {t('carrots_balance')}
             </Heading>
           </div>

@@ -84,6 +84,7 @@ import {
   computeCreditsOwed,
   computeFiatOwed,
   computeTokensOwed,
+  deleteDraftStay,
   extendStay,
   getStay,
   mapStayQuoteToUpdatedPrices,
@@ -265,6 +266,9 @@ const StayBookingSummaryContent = ({
   const [isShortenModalOpen, setIsShortenModalOpen] = useState(false);
   const [isAccommodationModalOpen, setIsAccommodationModalOpen] =
     useState(false);
+  const [isCancelDraftModalOpen, setIsCancelDraftModalOpen] = useState(false);
+  const [isCancellingDraft, setIsCancellingDraft] = useState(false);
+  const [cancelDraftError, setCancelDraftError] = useState<string | null>(null);
   const [modalAdults, setModalAdults] = useState(adults);
   const [modalChildren, setModalChildren] = useState(children ?? 0);
   const [modalInfants, setModalInfants] = useState(infants ?? 0);
@@ -949,6 +953,25 @@ const StayBookingSummaryContent = ({
     }
   };
 
+  // A draft has no payment to reverse, so it is deleted rather than sent
+  // through the refund-aware cancellation flow.
+  const canCancelDraft =
+    status === 'draft' && (isBookingOwnerEditor || canManageBooking);
+
+  const handleCancelDraft = async () => {
+    try {
+      setIsCancellingDraft(true);
+      setCancelDraftError(null);
+      await deleteDraftStay(_id);
+      setIsCancelDraftModalOpen(false);
+      router.push('/stay/upcoming');
+    } catch (error) {
+      setCancelDraftError(parseMessageFromError(error));
+    } finally {
+      setIsCancellingDraft(false);
+    }
+  };
+
   const handleCoGuestsChange = (guestIds: string[]) => {
     setLiveBooking((prev) => ({
       ...(prev ?? booking),
@@ -1385,6 +1408,11 @@ const StayBookingSummaryContent = ({
                   : undefined
               }
               checkoutLoading={isLoading}
+              onCancelDraft={
+                canCancelDraft
+                  ? () => setIsCancelDraftModalOpen(true)
+                  : undefined
+              }
               hideCheckoutButton={status === 'cancelled'}
               paymentDelta={bookingView?.paymentDelta}
               useTokens={useTokens}
@@ -1404,6 +1432,40 @@ const StayBookingSummaryContent = ({
           <BookingSurface tone="soft" padding="md" className="text-sm">
             {t('bookings_confirmation')}
           </BookingSurface>
+        )}
+
+        {isCancelDraftModalOpen && (
+          <Modal
+            closeModal={() => setIsCancelDraftModalOpen(false)}
+            className="sm:max-w-lg"
+          >
+            <div className="flex flex-col gap-4">
+              <Heading level={3}>{t('booking_cancel_draft_title')}</Heading>
+              <p className="text-sm">{t('booking_cancel_draft_description')}</p>
+              {cancelDraftError && (
+                <Information className="border-error/30 bg-error/10 text-foreground">
+                  {cancelDraftError}
+                </Information>
+              )}
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button
+                  variant="secondary"
+                  className={modalButtonClass}
+                  isLoading={isCancellingDraft}
+                  onClick={() => void handleCancelDraft()}
+                >
+                  {t('booking_cancel_draft_confirm')}
+                </Button>
+                <Button
+                  variant="secondary"
+                  className={modalButtonClass}
+                  onClick={() => setIsCancelDraftModalOpen(false)}
+                >
+                  {t('generic_cancel')}
+                </Button>
+              </div>
+            </div>
+          </Modal>
         )}
 
         {isGuestsModalOpen && (

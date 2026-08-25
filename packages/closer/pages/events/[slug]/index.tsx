@@ -1,9 +1,11 @@
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { withPageErrorBoundary } from '../../../components/ErrorBoundary';
 import EventAttendees from '../../../components/EventAttendees';
 import EventDescription from '../../../components/EventDescription';
 import EventPhotoUploadSection from '../../../components/EventPhotoUpload';
@@ -33,6 +35,10 @@ import api, { cdn } from '../../../utils/api';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
 import {
+  parseEventCheckoutLink,
+  withoutCheckoutQuery,
+} from '../../../utils/eventCheckout';
+import {
   getAccommodationPriceRange,
   getEventNights,
 } from '../../../utils/events.helpers';
@@ -57,7 +63,7 @@ interface Props {
   eventsConfig: EventsConfig | null;
 }
 
-const EventPage = ({
+const EventPageContent = ({
   event,
   eventCreator,
   error,
@@ -67,6 +73,7 @@ const EventPage = ({
   eventsConfig,
 }: Props) => {
   const t = useTranslations();
+  const router = useRouter();
   const { platform }: any = usePlatform();
   const { user, isAuthenticated, refetchUser } = useAuth();
   const { APP_NAME } = useConfig() || {};
@@ -79,7 +86,6 @@ const EventPage = ({
   const [isShowingEvent, setIsShowingEvent] = useState(true);
   const [passwordError] = useState<null | string>(null);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
-  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   /** Bumped after a purchase so the tickets card picks the new one up. */
   const [ticketsRefreshKey, setTicketsRefreshKey] = useState(0);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -97,6 +103,59 @@ const EventPage = ({
       ...linkedMetricFields('Event', event._id),
     });
   }, [event?._id, event?.slug]);
+
+  /**
+   * The ticket modal is a URL, not a piece of local state — `?checkout` opens
+   * it, `?ticketId=` opens it on payment, `#tickets` is the short form. That
+   * makes every step of a purchase linkable, and back closes the modal rather
+   * than leaving the page.
+   *
+   * The hash is read after mount because the server never sees it: deciding
+   * from it during render would make the first client render disagree with the
+   * markup that was sent.
+   */
+  const [locationHash, setLocationHash] = useState('');
+  useEffect(() => {
+    const readHash = () => setLocationHash(window.location.hash);
+    readHash();
+    window.addEventListener('hashchange', readHash);
+    return () => window.removeEventListener('hashchange', readHash);
+  }, []);
+
+  const checkout = useMemo(
+    () => parseEventCheckoutLink(router.query, locationHash),
+    [router.query, locationHash],
+  );
+  const isTicketModalOpen = checkout.isOpen;
+
+  const setCheckoutQuery = (
+    query: Record<string, string | string[] | undefined>,
+    method: 'push' | 'replace',
+  ) =>
+    router[method]({ pathname: router.pathname, query }, undefined, {
+      shallow: true,
+      scroll: false,
+    });
+
+  const openTicketModal = () =>
+    setCheckoutQuery({ ...router.query, checkout: '1' }, 'push');
+
+  const closeTicketModal = () => {
+    // Dropping the hash along with the query is the point — a reopened page
+    // should not reopen the modal behind the guest's back.
+    setLocationHash('');
+    setCheckoutQuery(withoutCheckoutQuery(router.query), 'replace');
+  };
+
+  // Any way out of the modal counts, the back button included — a ticket may
+  // have been bought before the guest left it.
+  const wasTicketModalOpenRef = useRef(false);
+  useEffect(() => {
+    if (wasTicketModalOpenRef.current && !isTicketModalOpen) {
+      setTicketsRefreshKey((key) => key + 1);
+    }
+    wasTicketModalOpenRef.current = isTicketModalOpen;
+  }, [isTicketModalOpen]);
 
   const canEditEvent = user
     ? user?._id === event?.createdBy || user?.roles.includes('admin')
@@ -142,6 +201,26 @@ const EventPage = ({
   const soldTickets =
     filteredTickets &&
     filteredTickets.map((ticket: any) => ticket.toJS()).toArray();
+
+  // `paid` can be set on an event that has no ticket options yet, and sold
+  // tickets (RSVPs, legacy rows) do not always carry an `option` — neither may
+  // take the page down.
+  const ticketOptions: any[] = Array.isArray(event?.ticketOptions)
+    ? event.ticketOptions
+    : [];
+  const countSold = (optionName: string) =>
+    soldTickets
+      ? soldTickets.filter((ticket: any) => ticket?.option?.name === optionName)
+          .length
+      : 0;
+  const allTicketsSoldOut =
+    Boolean(event?.paid) &&
+    ticketOptions.length > 0 &&
+    ticketOptions.every(
+      (ticketOption: any) =>
+        ticketOption.limit !== 0 &&
+        ticketOption.limit - countSold(ticketOption.name) <= 0,
+    );
 
   useEffect(() => {
     const eventPassword = localStorage.getItem('eventPassword') as string;
@@ -400,6 +479,7 @@ const EventPage = ({
               <div className="max-w-4xl w-full">
                 <MyEventTickets
                   eventId={event._id}
+                  eventSlug={event.slug}
                   refreshKey={ticketsRefreshKey}
                 />
               </div>
@@ -573,26 +653,6 @@ const EventPage = ({
                         {end && !end.isBefore(dayjs()) && (
                           <div className="space-y-3">
                             {(() => {
-                              // Check if all tickets are sold out
-                              const allTicketsSoldOut =
-                                event.paid &&
-                                event.ticketOptions.every(
-                                  (ticketOption: any) => {
-                                    const availableTickets =
-                                      soldTickets &&
-                                      ticketOption.limit -
-                                        soldTickets.filter(
-                                          (ticket: any) =>
-                                            ticket.option.name ===
-                                            ticketOption.name,
-                                        ).length;
-                                    return (
-                                      availableTickets === 0 &&
-                                      ticketOption.limit !== 0
-                                    );
-                                  },
-                                );
-
                               return allTicketsSoldOut ? (
                                 <div className="text-center py-6 px-3">
                                   <p className="font-bold text-lg">
@@ -606,15 +666,10 @@ const EventPage = ({
                                 event.paid &&
                                   (() => {
                                     const availableOptions =
-                                      event.ticketOptions.filter((opt: any) => {
-                                        const sold =
-                                          soldTickets?.filter(
-                                            (t: any) =>
-                                              t.option?.name === opt.name,
-                                          ).length || 0;
+                                      ticketOptions.filter((opt: any) => {
                                         return (
                                           opt.limit === 0 ||
-                                          opt.limit - sold > 0
+                                          opt.limit - countSold(opt.name) > 0
                                         );
                                       });
                                     if (availableOptions.length === 0)
@@ -649,25 +704,7 @@ const EventPage = ({
                               hasAccommodationPrice &&
                               APP_NAME &&
                               APP_NAME !== 'lios' &&
-                              !(
-                                event.paid &&
-                                event.ticketOptions.every(
-                                  (ticketOption: any) => {
-                                    const availableTickets =
-                                      soldTickets &&
-                                      ticketOption.limit -
-                                        soldTickets.filter(
-                                          (ticket: any) =>
-                                            ticket.option.name ===
-                                            ticketOption.name,
-                                        ).length;
-                                    return (
-                                      availableTickets === 0 &&
-                                      ticketOption.limit !== 0
-                                    );
-                                  },
-                                )
-                              ) && (
+                              !allTicketsSoldOut && (
                                 <div className="text-sm">
                                   {t('events_accommodation')}{' '}
                                   <strong>
@@ -703,25 +740,7 @@ const EventPage = ({
                                     (event.stripePub ||
                                       process.env
                                         .NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY) &&
-                                    !(
-                                      event.paid &&
-                                      event.ticketOptions.every(
-                                        (ticketOption: any) => {
-                                          const availableTickets =
-                                            soldTickets &&
-                                            ticketOption.limit -
-                                              soldTickets.filter(
-                                                (ticket: any) =>
-                                                  ticket.option.name ===
-                                                  ticketOption.name,
-                                              ).length;
-                                          return (
-                                            availableTickets === 0 &&
-                                            ticketOption.limit !== 0
-                                          );
-                                        },
-                                      )
-                                    ) && (
+                                    !allTicketsSoldOut && (
                                       <>
                                         {/* Which ticket the guest wants decides
                                             whether they need a bed at all, so a
@@ -730,9 +749,7 @@ const EventPage = ({
                                             accommodation search. */}
                                         {hasTicketOptions ? (
                                           <Button
-                                            onClick={() =>
-                                              setIsTicketModalOpen(true)
-                                            }
+                                            onClick={openTicketModal}
                                           >
                                             {t('events_buy_ticket_button')}
                                           </Button>
@@ -967,15 +984,17 @@ const EventPage = ({
       {isTicketModalOpen && (
         <EventTicketModal
           event={event}
-          closeModal={() => {
-            setIsTicketModalOpen(false);
-            setTicketsRefreshKey((key) => key + 1);
-          }}
+          closeModal={closeTicketModal}
+          initialTicketId={checkout.ticketId}
+          initialTicketOption={checkout.ticketOption}
+          initialDiscountCode={checkout.discountCode}
         />
       )}
     </>
   );
 };
+
+const EventPage = withPageErrorBoundary(EventPageContent, 'EventPage');
 
 EventPage.getInitialProps = async (context: NextPageContext) => {
   const { query, req } = context;

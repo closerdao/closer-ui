@@ -21,7 +21,7 @@ import { AMBASSADOR_ROLE } from '../../constants/village.constants';
 import { User } from '../../contexts/auth/types';
 import { Village } from '../../types/village';
 import api from '../../utils/api';
-import { fetchVillages } from '../../utils/village.utils';
+import { fetchUserVillageConnections } from '../../utils/village.utils';
 import PageNotFound from '../not-found';
 
 const AmbassadorProfilePage = () => {
@@ -45,17 +45,9 @@ const AmbassadorProfilePage = () => {
         if (cancelled) return;
         setMember(user);
 
-        const all = await fetchVillages({ limit: 200 });
+        const connections = await fetchUserVillageConnections(user._id);
         if (cancelled) return;
-        setVillages(
-          all.filter(
-            (village) =>
-              village.referredBy === user._id ||
-              village.ambassadorId === user._id ||
-              village.createdBy === user._id ||
-              village.managedBy?.includes(user._id),
-          ),
-        );
+        setVillages(connections.map((connection) => connection.village));
       } catch (err) {
         if (!cancelled) setError(t('ambassadors_profile_not_found'));
       } finally {

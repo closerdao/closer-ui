@@ -5,12 +5,14 @@ import { useContext, useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import DonationSummary from '../../../components/Donate/DonationSummary';
 import Wallet from '../../../components/Wallet';
 import { BackButton, Button, ErrorMessage, Heading, Spinner } from '../../../components/ui';
 import { DEFAULT_CURRENCY } from '../../../constants';
 import { useAuth } from '../../../contexts/auth';
 import { WalletDispatch, WalletState } from '../../../contexts/wallet';
 import { useConfig } from '../../../hooks/useConfig';
+import { getBlockchainNetworkName } from '../../../utils/blockchainNetwork';
 import api from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
@@ -54,6 +56,7 @@ function DonateCryptoPage() {
 
   const isWalletEnabled =
     process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
+  const chain = getBlockchainNetworkName(config as any);
 
   useEffect(() => {
     if (!router.isReady || isAuthLoading) return;
@@ -195,6 +198,8 @@ function DonateCryptoPage() {
           })}
         </p>
 
+        <DonationSummary amount={amount} />
+
         {!cryptoReady ? (
           <ErrorMessage error={t('donate_crypto_config_error')} />
         ) : !isWalletEnabled ? (
@@ -221,7 +226,9 @@ function DonateCryptoPage() {
               </div>
             </div>
 
-            <p className="text-sm text-gray-600">{t('donate_crypto_wallet_hint')}</p>
+            <p className="text-sm text-gray-600">
+              {t('donate_crypto_wallet_hint', { chain })}
+            </p>
 
             <div className="my-2">
               <Wallet />
@@ -234,7 +241,7 @@ function DonateCryptoPage() {
                 {!isWalletConnected
                   ? t('donate_crypto_connect_wallet')
                   : !isCorrectNetwork
-                    ? t('donate_crypto_switch_network')
+                    ? t('donate_crypto_switch_network', { chain })
                     : t('donate_crypto_prepare_wallet')}
               </Button>
             ) : (

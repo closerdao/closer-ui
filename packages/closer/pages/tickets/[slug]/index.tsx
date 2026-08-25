@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { ReactNode, useState } from 'react';
 import QRCode from 'react-qr-code';
 
-import { Button, Card, ErrorMessage } from '../../../components/ui';
+import { Button, Card, ErrorMessage, LinkButton } from '../../../components/ui';
 import Heading from '../../../components/ui/Heading';
 
 import dayjs from 'dayjs';
@@ -19,6 +19,7 @@ import type { TicketWithEvent } from '../../../types/ticket';
 import api, { cdn } from '../../../utils/api';
 import { getBearerAuthHeaders } from '../../../utils/authHeaders.helpers';
 import { parseMessageFromError } from '../../../utils/common';
+import { buildEventCheckoutHref } from '../../../utils/eventCheckout';
 import { priceFormat } from '../../../utils/helpers';
 import { cancelTicket } from '../../../utils/tickets.api';
 import { getTicketPriceBreakdown } from '../../../utils/tickets.helpers';
@@ -39,6 +40,9 @@ const STATUS_TONE: Record<string, string> = {
   cancelled: 'bg-neutral text-gray-500',
   refunded: 'bg-neutral text-gray-500',
 };
+
+/** Statuses that still owe money — the ticket exists, the payment does not. */
+const AWAITS_PAYMENT = ['pending', 'pending-payment'];
 
 const Detail = ({
   label,
@@ -274,6 +278,25 @@ const Ticket = ({ ticket, event, refundQuote, error }: Props) => {
             </div>
           </div>
         </div>
+
+        {/* A held seat that was never paid for. The event page owns checkout,
+            so the link hands the ticket back to it rather than rebuilding the
+            payment form here. */}
+        {AWAITS_PAYMENT.includes(currentTicket.status) && event.slug && (
+          <Card className="bg-white mt-6 w-full">
+            <p className="text-sm text-gray-600">
+              {t('ticket_awaiting_payment_notice')}
+            </p>
+            <LinkButton
+              className="mt-3"
+              href={buildEventCheckoutHref(event.slug, {
+                ticketId: currentTicket._id,
+              })}
+            >
+              {t('event_ticket_complete_payment')}
+            </LinkButton>
+          </Card>
+        )}
 
         {/* A ticket bought with a stay has no refundQuote — the stay owns the
             money, and it is the stay that has to be cancelled. */}

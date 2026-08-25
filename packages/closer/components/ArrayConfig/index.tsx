@@ -192,6 +192,11 @@ const ArrayConfig = ({
                         value={
                           innerKey === 'billingPeriod'
                             ? billingPeriod
+                            : innerKey === 'stripeAccount'
+                            ? // Entities saved before this field existed have no
+                              // value; render them as "none" instead of a blank
+                              // controlled select.
+                              String(fieldValue || 'none')
                             : String(fieldValue ?? '')
                         }
                         onChange={(event) =>
@@ -205,12 +210,24 @@ const ArrayConfig = ({
                           const labelKey =
                             innerKey === 'billingPeriod'
                               ? `config_subscriptions_billing_period_${option}`
+                              : innerKey === 'stripeAccount'
+                              ? `config_stripe_account_${option}`
                               : null;
+                          let label =
+                            labelKey && t.has(labelKey) ? t(labelKey) : option;
+                          // Show which Stripe account "default" actually is.
+                          const connectedStripeAccount =
+                            process.env.NEXT_PUBLIC_STRIPE_CONNECTED_ACCOUNT;
+                          if (
+                            innerKey === 'stripeAccount' &&
+                            option === 'default' &&
+                            connectedStripeAccount
+                          ) {
+                            label = `${label} (${connectedStripeAccount})`;
+                          }
                           return (
                             <option value={option} key={option}>
-                              {labelKey && t.has(labelKey)
-                                ? t(labelKey)
-                                : option}
+                              {label}
                             </option>
                           );
                         })}
