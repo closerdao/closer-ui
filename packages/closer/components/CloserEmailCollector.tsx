@@ -13,6 +13,7 @@ import { Check, X } from 'lucide-react';
 import { z } from 'zod';
 
 import { useAuth } from '../contexts/auth';
+import { saveApplicationAnswers } from '../utils/applicationAnswersStorage';
 import type { PromptGetInTouchContextType } from './PromptGetInTouchContext';
 import { PromptGetInTouchContext } from './PromptGetInTouchContext';
 
@@ -197,24 +198,35 @@ const CloserEmailCollector = () => {
 
       // Only `name` and `email` are top-level columns on the application model;
       // everything else is a free-form answer, so it goes on `fields`.
-      const fields: Record<string, string> = {
-        projectCommunityName,
-        currentStage: labelForValue(currentStageOptions, rest.currentStage),
-        country: labelForValue(countries, rest.country),
-        communitySize: labelForValue(communitySizeOptions, rest.communitySize),
-      };
+      const fields: Record<string, string> = Object.fromEntries(
+        Object.entries({
+          projectCommunityName,
+          currentStage: labelForValue(currentStageOptions, rest.currentStage),
+          country: labelForValue(countries, rest.country),
+          communitySize: labelForValue(
+            communitySizeOptions,
+            rest.communitySize,
+          ),
+        }).filter(([, answer]) => answer),
+      );
 
-      await api.post('/application', {
+      const { data } = await api.post('/application', {
         name: fullName,
         email,
-        fields: Object.fromEntries(
-          Object.entries(fields).filter(([, answer]) => answer),
-        ),
+        fields,
         ...(referredBy && { referredBy }),
       });
 
-      // SignupForm pre-fills from this key, so the "launch now" path starts
-      // with the email the applicant just typed.
+      const createdApplication = data?.results || data;
+      saveApplicationAnswers({
+        ...(typeof createdApplication?._id === 'string'
+          ? { _id: createdApplication._id }
+          : {}),
+        name: fullName,
+        email,
+        fields,
+      });
+
       localStorage.setItem('email', email);
 
       setHasSentApplication(true);
