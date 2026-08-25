@@ -14,11 +14,11 @@ const sweatInterface = new ethers.utils.Interface([
 ]);
 
 describe('Safe Transaction Builder SWEAT transactions', () => {
-  it('uses UTC calendar days and rejects future contribution dates', () => {
+  it('uses UTC calendar days and clamps future contribution dates to today', () => {
     const now = new Date('2026-08-25T23:00:00.000Z');
 
     expect(contributionDateToDaysAgo('2026-08-24', now)).toBe(1);
-    expect(contributionDateToDaysAgo('2026-08-26', now)).toBeNull();
+    expect(contributionDateToDaysAgo('2026-08-26', now)).toBe(0);
     expect(contributionDateToDaysAgo('2026-02-30', now)).toBeNull();
   });
 

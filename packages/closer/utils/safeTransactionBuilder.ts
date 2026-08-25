@@ -34,8 +34,10 @@ export const contributionDateToDaysAgo = (
     now.getUTCMonth(),
     now.getUTCDate(),
   );
-  if (contributionDay > today) return null;
-  return Math.floor((today - contributionDay) / (24 * 60 * 60 * 1000));
+  return Math.max(
+    0,
+    Math.floor((today - contributionDay) / (24 * 60 * 60 * 1000)),
+  );
 };
 
 export const buildTdfTransaction = (
