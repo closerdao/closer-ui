@@ -45,4 +45,35 @@ describe('PaymentMethodTabs', () => {
     await user.click(screen.getByRole('tab', { name: /pay with card/i }));
     expect(screen.getByText('card-panel')).toBeInTheDocument();
   });
+
+  it('hides the bank tab unless withBank is set', () => {
+    renderWithNextIntl(<Harness />);
+
+    expect(
+      screen.queryByRole('tab', { name: /bank transfer/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders and selects the bank tab with withBank', async () => {
+    const user = userEvent.setup();
+
+    function BankHarness() {
+      const [active, setActive] = useState<PaymentMethodTab>('bank');
+      return (
+        <>
+          <PaymentMethodTabs active={active} onChange={setActive} withBank />
+          <p>{`${active}-panel`}</p>
+        </>
+      );
+    }
+    renderWithNextIntl(<BankHarness />);
+
+    expect(
+      screen.getByRole('tab', { name: /bank transfer/i }),
+    ).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByText('bank-panel')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: /pay with crypto/i }));
+    expect(screen.getByText('crypto-panel')).toBeInTheDocument();
+  });
 });

@@ -5,6 +5,7 @@ import { useContext, useEffect, useState } from 'react';
 
 import { useTranslations } from 'next-intl';
 
+import DonationSummary from '../../../components/Donate/DonationSummary';
 import Wallet from '../../../components/Wallet';
 import { BackButton, Button, ErrorMessage, Heading, Spinner } from '../../../components/ui';
 import { DEFAULT_CURRENCY } from '../../../constants';
@@ -196,6 +197,8 @@ function DonateCryptoPage() {
             token: cryptoBlock.stablecoin,
           })}
         </p>
+
+        <DonationSummary amount={amount} />
 
         {!cryptoReady ? (
           <ErrorMessage error={t('donate_crypto_config_error')} />

@@ -56,8 +56,8 @@ const QuestAdminStats = ({ quests }: Props) => {
       0,
     );
     const unsettled = quests.filter((quest) => quest.status !== 'settled');
-    const carrots = unsettled.reduce(
-      (total, quest) => total + questPayout(quest, 'carrots'),
+    const credits = unsettled.reduce(
+      (total, quest) => total + questPayout(quest, 'credits'),
       0,
     );
 
@@ -69,7 +69,7 @@ const QuestAdminStats = ({ quests }: Props) => {
       participants,
       tickets,
       actions,
-      carrots,
+      credits,
     };
   }, [quests]);
 
@@ -99,9 +99,9 @@ const QuestAdminStats = ({ quests }: Props) => {
       }),
     },
     {
-      key: 'carrots',
+      key: 'credits',
       label: t('quests_stats_payout'),
-      value: formatQuestCurrency(stats.carrots, 'carrots'),
+      value: formatQuestCurrency(stats.credits, 'credits'),
       sub: stats.pendingSettlement
         ? t('quests_stats_pending_settlement', {
             count: stats.pendingSettlement,

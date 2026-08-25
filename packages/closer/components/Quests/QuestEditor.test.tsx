@@ -10,7 +10,7 @@ const submit = () =>
  * currency picker by what it actually offers. */
 const findCurrencySelect = () =>
   [...document.querySelectorAll('select')].find((select) =>
-    [...select.options].some((option) => option.text.startsWith('Carrots')),
+    [...select.options].some((option) => option.text.startsWith('Credits')),
   ) as HTMLSelectElement | undefined;
 
 describe('QuestEditor', () => {
@@ -113,7 +113,7 @@ describe('QuestEditor — API conformance', () => {
     expect(select).toBeDefined();
     expect(
       [...(select as HTMLSelectElement).options].map((o) => o.text),
-    ).toEqual(['Carrots 🥕', '$TDF', 'EUR']);
+    ).toEqual(['Credits 🥕', '$TDF', 'EUR']);
   });
 
   test('refuses a token prize on a quest that is not about token growth', async () => {

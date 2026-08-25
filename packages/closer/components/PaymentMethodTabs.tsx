@@ -1,19 +1,22 @@
-import { CreditCard, Wallet } from 'lucide-react';
+import { CreditCard, Landmark, Wallet } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-export type PaymentMethodTab = 'card' | 'crypto';
+export type PaymentMethodTab = 'card' | 'crypto' | 'bank';
 
 /** Segmented card/crypto switcher shared by every checkout that offers both. */
 export function PaymentMethodTabs({
   active,
   onChange,
   isEnabled = true,
+  withBank = false,
   className,
 }: {
   active: PaymentMethodTab;
   onChange: (tab: PaymentMethodTab) => void;
   /** Held open while a payment is in flight, so a switch cannot orphan it. */
   isEnabled?: boolean;
+  /** Adds a bank-transfer tab (donations). */
+  withBank?: boolean;
   className?: string;
 }) {
   const t = useTranslations();
@@ -24,6 +27,9 @@ export function PaymentMethodTabs({
   }[] = [
     { id: 'card', label: t('payment_tab_card'), Icon: CreditCard },
     { id: 'crypto', label: t('payment_tab_crypto'), Icon: Wallet },
+    ...(withBank
+      ? [{ id: 'bank' as const, label: t('payment_tab_bank'), Icon: Landmark }]
+      : []),
   ];
   return (
     <div

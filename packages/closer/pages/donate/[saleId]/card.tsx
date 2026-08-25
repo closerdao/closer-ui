@@ -8,13 +8,12 @@ import { loadStripe } from '@stripe/stripe-js';
 import { useTranslations } from 'next-intl';
 
 import DonateCheckoutForm from '../../../components/Donate/DonateCheckoutForm';
-import { BackButton, Button, ErrorMessage, Heading, Row, Spinner } from '../../../components/ui';
-import { DEFAULT_CURRENCY } from '../../../constants';
+import DonationSummary from '../../../components/Donate/DonationSummary';
+import { BackButton, Button, ErrorMessage, Heading, Spinner } from '../../../components/ui';
 import { useAuth } from '../../../contexts/auth';
 import { useConfig } from '../../../hooks/useConfig';
 import { readDonationSession, type StoredDonationCard } from '../../../utils/donationSessionStorage';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
-import { priceFormat } from '../../../utils/helpers';
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY as string,
@@ -56,7 +55,6 @@ function DonateCardPage() {
   const cardPayload =
     session && typeof session === 'object' && session.kind === 'card' ? session : null;
   const amount = cardPayload?.amount ?? 0;
-  const formattedAmount = priceFormat(amount, DEFAULT_CURRENCY);
 
   const handlePaid = () => {
     if (!cardPayload) return;
@@ -110,7 +108,7 @@ function DonateCardPage() {
         <p className="text-sm font-semibold text-gray-900 pb-2 border-b border-gray-200">
           {t('donate_payment_summary_title')}
         </p>
-        <Row rowKey={t('donate_invoice_amount_label')} value={formattedAmount} />
+        <DonationSummary amount={amount} />
 
         <Elements stripe={stripePromise}>
           <DonateCheckoutForm

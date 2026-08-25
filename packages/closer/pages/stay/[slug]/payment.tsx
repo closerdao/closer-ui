@@ -11,6 +11,7 @@ import {
 } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
+import AccountingEntityFootnote from '../../../components/AccountingEntityFootnote';
 import BookingBackButton from '../../../components/BookingBackButton';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageError from '../../../components/PageError';
@@ -22,6 +23,7 @@ import BookingSurface from '../../../components/booking/bookingSurface';
 import BookingUnitsNote from '../../../components/booking/bookingUnitsNote';
 import { StayCryptoPaymentSection } from '../../../components/booking/stayCryptoPaymentSection';
 import { StayPaymentTokenCreditControls } from '../../../components/booking/stayPaymentTokenCreditControls';
+import StayVatSummary from '../../../components/StayVatSummary';
 import WalletPayButton, {
   WalletPayComplete,
 } from '../../../components/WalletPayButton';
@@ -478,6 +480,7 @@ function StayPaymentInner({
                     {formatStayMoney(stay.priceLock.total)}
                   </span>
                 </div>
+                <StayVatSummary priceLock={stay.priceLock} dense />
                 {showFiatPaidRow && stay.fiatPaid && (
                   <div className="flex justify-between gap-2 text-gray-600">
                     <span>{t('stay_payment_page_breakdown_card_paid')}</span>
@@ -568,6 +571,12 @@ function StayPaymentInner({
           <Heading level={2} className="text-lg mb-4">
             {t('stay_create_card_title')}
           </Heading>
+          {/* Pulls up under the heading; when it renders nothing the layout
+              is unchanged. */}
+          <AccountingEntityFootnote
+            productSlug="accommodations"
+            className="-mt-3 mb-4"
+          />
           {isWeb3BookingEnabled && fiatOwed > 0.005 && (
             <PaymentMethodTabs
               active={paymentTab}

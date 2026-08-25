@@ -3,9 +3,8 @@ import {
   getTokenOnboardingQuests,
 } from '../../constants/tokenOnboardingQuests';
 import api from '../api';
-import { awardOnboardingCarrots } from '../tokenOnboarding.api';
+import { submitOnboardingStep } from '../tokenOnboarding.api';
 import {
-  buildOnboardingAwardPayload,
   carrotsEarned,
   carrotsForQuests,
   formatCarrots,
@@ -46,8 +45,8 @@ describe('token onboarding carrot totals', () => {
     quests.forEach((quest) => {
       expect(quest.carrots).toBeGreaterThan(0);
       expect(quest.carrots).toBeLessThan(TOKEN_ONBOARDING_TOTAL_CARROTS);
-      // Quarter-carrot grid, so every amount renders as a clean fraction.
-      expect((quest.carrots * 4) % 1).toBe(0);
+      // Eighth-carrot grid, so every amount renders as a clean fraction.
+      expect((quest.carrots * 8) % 1).toBe(0);
     });
   });
 
@@ -77,11 +76,13 @@ describe('the final quest gate', () => {
 });
 
 describe('formatCarrots', () => {
-  it('renders quarters as fraction glyphs', () => {
+  it('renders quarters and eighths as fraction glyphs', () => {
+    expect(formatCarrots(0.125)).toBe('⅛');
     expect(formatCarrots(0.25)).toBe('¼');
     expect(formatCarrots(0.5)).toBe('½');
     expect(formatCarrots(0.75)).toBe('¾');
     expect(formatCarrots(1.25)).toBe('1¼');
+    expect(formatCarrots(2.75)).toBe('2¾');
     expect(formatCarrots(3.5)).toBe('3½');
   });
 
@@ -155,42 +156,37 @@ describe('quest sequencing', () => {
   });
 });
 
-describe('awardOnboardingCarrots', () => {
+describe('submitOnboardingStep', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('sends the quest id and its carrot amount', async () => {
+  it('sends the step id and the member response, not an amount', async () => {
     (api.post as jest.Mock).mockResolvedValue({ data: { results: {} } });
 
-    const result = await awardOnboardingCarrots(quests[0]);
+    const result = await submitOnboardingStep(quests[0], {
+      picked: 1,
+      score: { correct: 1, total: 1 },
+    });
 
-    expect(api.post).toHaveBeenCalledWith('/carrots/award/onboarding', {
-      questId: 'why-web3',
-      amount: 0.25,
-      currency: 'credits',
-      reason: `Token onboarding quest: ${quests[0].title}`,
+    expect(api.post).toHaveBeenCalledWith('/credits/claim/onboarding', {
+      step: 'why-web3',
+      response: { picked: 1, score: { correct: 1, total: 1 } },
     });
     expect(result).toEqual({ status: 'awarded' });
   });
 
   it('treats a conflict as an existing award', async () => {
     (api.post as jest.Mock).mockRejectedValue({ response: { status: 409 } });
-    await expect(awardOnboardingCarrots(quests[0])).resolves.toEqual({
+    await expect(submitOnboardingStep(quests[0], {})).resolves.toEqual({
       status: 'already-awarded',
     });
   });
 
   it('reports unavailable when the endpoint is missing', async () => {
     (api.post as jest.Mock).mockRejectedValue({ response: { status: 404 } });
-    await expect(awardOnboardingCarrots(quests[0])).resolves.toEqual({
+    await expect(submitOnboardingStep(quests[0], {})).resolves.toEqual({
       status: 'unavailable',
-    });
-  });
-
-  it('builds a payload that never claims more than the quest is worth', () => {
-    quests.forEach((quest) => {
-      expect(buildOnboardingAwardPayload(quest).amount).toBe(quest.carrots);
     });
   });
 });

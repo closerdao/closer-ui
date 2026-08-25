@@ -65,7 +65,7 @@ function CreditsCheckoutForm({ userEmail, credits, total = 0 }: Props) {
     paymentMethodId: string,
     paymentId: string,
   ) => {
-    const confirmationResponse = await api.post('/carrots/payment/confirmation', {
+    const confirmationResponse = await api.post('/credits/payment/confirmation', {
       paymentMethod: paymentMethodId,
       paymentId,
     });
@@ -87,7 +87,7 @@ function CreditsCheckoutForm({ userEmail, credits, total = 0 }: Props) {
   ) => {
     const {
       data: { results: payment },
-    } = await api.post('/carrots/payment', {
+    } = await api.post('/credits/payment', {
       creditsAmount: credits,
       email: userEmail,
       paymentMethod: paymentMethodId,

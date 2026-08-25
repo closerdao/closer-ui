@@ -21,6 +21,16 @@
         "dev"
       ],
       "port": 3042
+    },
+    {
+      "name": "tdf-app-alt",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": [
+        "--cwd",
+        "apps/tdf",
+        "dev"
+      ],
+      "port": 3043
     }
   ]
 }

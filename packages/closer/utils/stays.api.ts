@@ -70,7 +70,7 @@ export const formatStayMoney = (
 
 export const getCreditsBalance = async (): Promise<number> => {
   try {
-    const { data } = await api.get('/carrots/balance', { cache: false } as any);
+    const { data } = await api.get('/credits/balance', { cache: false } as any);
     const raw = data?.results;
     const num = typeof raw === 'number' ? raw : Number(raw);
     return Number.isFinite(num) ? num : 0;
@@ -79,7 +79,7 @@ export const getCreditsBalance = async (): Promise<number> => {
   }
 };
 
-export const checkCarrotsAvailability = async ({
+export const checkCreditsAvailability = async ({
   startDate,
   creditsAmount,
   minCreditsAmount,
@@ -89,7 +89,7 @@ export const checkCarrotsAvailability = async ({
   minCreditsAmount: number;
 }): Promise<boolean> => {
   try {
-    const { data } = await api.post('/carrots/availability', {
+    const { data } = await api.post('/credits/availability', {
       startDate,
       creditsAmount,
       minCreditsAmount,

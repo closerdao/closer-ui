@@ -23,7 +23,7 @@ interface Props {
   };
 }
 
-const CustomFundraiser = ({ settings, content }: Props) => {
+const CustomFundraiserPromo = ({ settings, content }: Props) => {
   const t = useTranslations();
   const config = useConfig() as
     | {
@@ -58,50 +58,60 @@ const CustomFundraiser = ({ settings, content }: Props) => {
   const ctaLink = content?.ctaLink ?? '/fundraiser';
   const showTitle = settings?.showTitle !== false;
 
+  const widget = (className: string) => (
+    <div className={`${className} space-y-3`}>
+      <FundraisingWidget
+        variant="hero"
+        milestones={config?.fundraiser?.milestones as never[]}
+        amountRaisedPreCampaign={config?.fundraiser?.amountRaisedPreCampaign}
+        loansCollectedTotal={config?.fundraiser?.loansCollectedTotal}
+      />
+      {ctaText && ctaLink ? (
+        <Link
+          href={ctaLink}
+          className="group flex items-center justify-center gap-2 w-full bg-accent hover:bg-accent-dark text-white font-medium py-2.5 px-4 rounded-lg transition-colors text-sm"
+        >
+          {ctaText}
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        </Link>
+      ) : null}
+    </div>
+  );
+
+  if (!showTitle) {
+    return (
+      <section className="py-14 md:py-20">
+        <div className="max-w-sm mx-auto px-4 sm:px-6">{widget('w-full')}</div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-14 md:py-20">
       <div className="max-w-2xl mx-auto px-4 sm:px-6">
         <div className="bg-white rounded-2xl border-2 border-accent/20 p-5 sm:p-6 shadow-lg">
           <div className="flex flex-col sm:flex-row gap-5 sm:gap-6 items-start">
-            {showTitle && (
-              <div className="flex-1 space-y-3">
-                {eyebrow ? (
-                  <p className="text-xs uppercase tracking-wider text-accent font-semibold">
-                    {eyebrow}
-                  </p>
-                ) : null}
-                {title ? (
-                  <Heading
-                    level={3}
-                    className="text-lg font-semibold text-gray-900"
-                  >
-                    {title}
-                  </Heading>
-                ) : null}
-                {description ? (
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    {description}
-                  </p>
-                ) : null}
-              </div>
-            )}
-            <div className="w-full sm:w-auto flex-shrink-0 space-y-3">
-              <FundraisingWidget
-                variant="hero"
-                milestones={config?.fundraiser?.milestones as never[]}
-                amountRaisedPreCampaign={config?.fundraiser?.amountRaisedPreCampaign}
-                loansCollectedTotal={config?.fundraiser?.loansCollectedTotal}
-              />
-              {ctaText && ctaLink ? (
-                <Link
-                  href={ctaLink}
-                  className="group flex items-center justify-center gap-2 w-full bg-accent hover:bg-accent-dark text-white font-medium py-2.5 px-4 rounded-lg transition-colors text-sm"
+            <div className="flex-1 space-y-3">
+              {eyebrow ? (
+                <p className="text-xs uppercase tracking-wider text-accent font-semibold">
+                  {eyebrow}
+                </p>
+              ) : null}
+              {title ? (
+                <Heading
+                  level={3}
+                  className="text-lg font-semibold text-gray-900"
                 >
-                  {ctaText}
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
+                  {title}
+                </Heading>
+              ) : null}
+              {description ? (
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {description}
+                </p>
               ) : null}
             </div>
+            {widget('w-full sm:w-auto flex-shrink-0')}
           </div>
         </div>
       </div>
@@ -109,4 +119,4 @@ const CustomFundraiser = ({ settings, content }: Props) => {
   );
 };
 
-export default CustomFundraiser;
+export default CustomFundraiserPromo;

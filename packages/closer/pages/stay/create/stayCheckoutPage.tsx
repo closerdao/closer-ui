@@ -20,6 +20,7 @@ import {
 } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
+import AccountingEntityFootnote from '../../../components/AccountingEntityFootnote';
 import BookingBackButton from '../../../components/BookingBackButton';
 import Conditions from '../../../components/Conditions';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
@@ -29,6 +30,7 @@ import {
   type PaymentMethodTab,
   PaymentMethodTabs,
 } from '../../../components/PaymentMethodTabs';
+import StayVatSummary from '../../../components/StayVatSummary';
 import Switch from '../../../components/Switch';
 import TicketOptions from '../../../components/TicketOptions';
 import WalletPayButton, {
@@ -2711,19 +2713,7 @@ const StayCheckoutContent = ({
                 label={t('stay_create_line_total')}
                 value={formatStayMoney(priceLock.total)}
               />
-              <div className="flex justify-between items-baseline">
-                <span className="italic text-gray-600">
-                  Including Tax (VAT)
-                </span>
-                <span className="text-gray-900">
-                  {formatStayMoney(
-                    priceLock.vat ?? {
-                      val: 0,
-                      cur: priceLock.total.cur,
-                    },
-                  )}
-                </span>
-              </div>
+              <StayVatSummary priceLock={priceLock} />
               {priceLock.appliedCredits.val > 0 && (
                 <Row
                   label={t('stay_create_line_credits_applied')}
@@ -2937,6 +2927,12 @@ const StayCheckoutContent = ({
               ? t('stay_create_request_review_title')
               : t('stay_create_card_title')}
           </Heading>
+          {showStripeCardInput && (
+            <AccountingEntityFootnote
+              productSlug="accommodations"
+              className="-mt-3 mb-4"
+            />
+          )}
           {useCardPaymentPrimaryCta && !isMember ? (
             <p className="text-sm text-muted-foreground mb-4">
               {t('stay_checkout_cta_card_shortcut_body')}

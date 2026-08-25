@@ -111,7 +111,8 @@ const TicketPaymentStep = ({
   const chain = getBlockchainNetworkName(config as any);
 
   const startTicket = async (
-    paymentMethod?: PaymentMethodTab,
+    // Tickets never offer the bank rail, so the request stays card/crypto.
+    paymentMethod?: Exclude<PaymentMethodTab, 'bank'>,
   ): Promise<TicketInitResult> => {
     const result = await initTicket({
       eventId,
