@@ -62,6 +62,7 @@ export { default as YoutubeEmbed } from './components/YoutubeEmbed';
 // Config
 export { blockchainConfig, resolveNetwork } from './config_blockchain';
 export * from './contexts/auth';
+export { PostHogProvider, useAnalytics } from './contexts/posthog';
 // Contexts
 export { useAuth } from './contexts/auth';
 export * from './contexts/config';

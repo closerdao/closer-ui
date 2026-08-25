@@ -5,7 +5,11 @@ import { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { useTranslations } from 'next-intl';
 
-const COOKIE_CONSENT_KEY = 'CookieConsent';
+import {
+  COOKIE_CONSENT_KEY,
+  applyConsentPersistence,
+} from '../../utils/posthog';
+
 const BODY_CLASS = 'has-cookie-bar';
 
 /**
@@ -35,6 +39,7 @@ const AcceptCookies = () => {
 
   const handleAccept = () => {
     Cookies.set(COOKIE_CONSENT_KEY, 'true', { expires: 365 });
+    applyConsentPersistence();
     setIsVisible(false);
     document.body.classList.remove(BODY_CLASS);
   };

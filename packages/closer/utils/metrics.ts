@@ -1,5 +1,6 @@
 import type { LinkedMetricObjectType } from '../types/metrics';
 import api from './api';
+import { trackEvent } from './posthog';
 
 export type LogMetricInput = {
   event: string;
@@ -28,6 +29,14 @@ export function linkedMetricFields(
 export async function logMetric(input: LogMetricInput): Promise<void> {
   const { event, value, category, linkedObjectType, linkedObjectId } = input;
   const point = input.point ?? 1;
+  // Mirror every platform metric into PostHog (no-op when disabled).
+  trackEvent(event, {
+    category,
+    value,
+    point,
+    linkedObjectType,
+    linkedObjectId,
+  });
   try {
     await api.post('/metric', {
       event,

@@ -51,6 +51,7 @@ const WalletDisplay = ({
           variant === 'inline' ? 'text-[13px]' : 'text-xs sm:text-sm',
         )}
         title={trimmed}
+        data-ph-mask
       >
         {label}
       </span>

@@ -34,6 +34,7 @@ import {
   waitForTokenSalePaidStatus,
 } from '../../utils/tokenSale.helpers';
 import { logMetric } from '../../utils/metrics';
+import { trackTokenPurchaseOnce } from '../../utils/tokenPurchaseAnalytics';
 import { formatIntlNumberTwoDecimals } from '../../utils/currencyFormat';
 import { getReserveTokenDisplay } from '../../utils/config.utils';
 import PageNotFound from '../not-found';
@@ -309,6 +310,13 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
       }
 
       await waitForTokenSalePaidStatus(normalizedSaleId);
+      trackTokenPurchaseOnce({
+        quantity: tokenPoint,
+        _id: normalizedSaleId,
+        product_type: 'token',
+        status: 'paid',
+        paymentMethod: 'crypto',
+      });
       void logMetric({
         event: 'purchase-complete-crypto',
         category: 'token',
@@ -368,6 +376,13 @@ const TokenSaleCheckoutPage = ({ generalConfig }: Props) => {
       });
       setPendingValidationTxHash(null);
       await waitForTokenSalePaidStatus(normalizedSaleId);
+      trackTokenPurchaseOnce({
+        quantity: retryTokenPoint,
+        _id: normalizedSaleId,
+        product_type: 'token',
+        status: 'paid',
+        paymentMethod: 'crypto',
+      });
       void logMetric({
         event: 'purchase-complete-crypto',
         category: 'token',

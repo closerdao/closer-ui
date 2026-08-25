@@ -14,8 +14,15 @@ const withMDX = require('@next/mdx')({
   },
 });
 
+const { posthogRewrites } = require('closer/next/posthogRewrites');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // PostHog same-origin proxy (see packages/closer/next/posthogRewrites.js).
+  skipTrailingSlashRedirect: true,
+  async rewrites() {
+    return posthogRewrites();
+  },
   // If set to true, there are some infinite loops occuring with our loadData
   // https://stackoverflow.com/questions/60618844/react-hooks-useeffect-is-called-twice-even-if-an-empty-array-is-used-as-an-ar
   i18n: {

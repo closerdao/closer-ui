@@ -21,11 +21,12 @@ const EmailDisplay = ({
         className,
       )}
       title={trimmed}
+      data-ph-mask
     >
       {showIcon && (
         <Mail className="h-3.5 w-3.5 shrink-0 opacity-80" strokeWidth={2} />
       )}
-      <span className="truncate">{trimmed}</span>
+      <span className="truncate" data-ph-mask>{trimmed}</span>
     </a>
   );
 };
