@@ -41,9 +41,12 @@ const EventTickets = ({ event, eventsConfig }: Props) => {
   const [page, setPage] = useState(1);
   const [totalTickets, setTotalTickets] = useState(0);
 
-  const ticketsFilter = { where: { event: event && event._id } };
+  // Organisers only need completed tickets, not pending/cancelled enquiries.
+  const ticketsFilter = {
+    where: { event: event && event._id, status: { $in: ['paid', 'approved'] } },
+  };
   const paginatedFilter = {
-    where: { event: event && event._id },
+    ...ticketsFilter,
     limit: TICKETS_PER_PAGE,
     page,
   };
