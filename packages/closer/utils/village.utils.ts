@@ -285,7 +285,7 @@ export function isValidVillageSubdomain(value: string): boolean {
   return SUBDOMAIN_PATTERN.test(value) && !RESERVED_SUBDOMAINS.includes(value);
 }
 
-/** What the deploy modal opens on: the village's own slug, else its name. */
+/** What the deploy review form opens on: the village's own slug, else its name. */
 export function suggestVillageSubdomain(village: Village): string {
   return normalizeVillageSubdomain(village.slug || village.name || '');
 }
@@ -691,23 +691,4 @@ export function canManageVillage(
   if (!village || !userId) return false;
   if (village.createdBy === userId) return true;
   return Boolean(village.managedBy?.includes(userId));
-}
-
-/**
- * Whether this village is still eligible to ask for a deploy: managed by the
- * user, and not yet handed to the deploy queue. The member-side subscription
- * requirement is layered on top by the page — this only answers for the
- * village's own stage.
- */
-export function canRequestDeploy(
-  village: Village | null | undefined,
-  userId?: string,
-): boolean {
-  if (!canManageVillage(village, userId) || !village) return false;
-  const status = village.onboardingStatus;
-  return (
-    status === 'subscribed' ||
-    status === 'pre_assessed' ||
-    status === 'map_only'
-  );
 }

@@ -2,8 +2,6 @@ jest.mock('../api', () => ({
   __esModule: true,
   default: {
     get: jest.fn(() => Promise.resolve({ data: { results: [] } })),
-    patch: jest.fn(() => Promise.resolve({ data: {} })),
-    post: jest.fn(() => Promise.resolve({ data: {} })),
   },
   formatSearch: (where: unknown) => encodeURIComponent(JSON.stringify(where)),
   invalidateGetCache: jest.fn(),
@@ -12,7 +10,6 @@ jest.mock('../api', () => ({
 
 import api from '../api';
 import {
-  deployVillageToCloser,
   fetchVillageCreatedBy,
   isValidVillageSubdomain,
   isVillageSubdomainTaken,
