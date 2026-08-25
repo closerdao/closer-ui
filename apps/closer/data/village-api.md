@@ -55,7 +55,8 @@ A 4xx from procurement is passed through verbatim as `{ error, code }` — surfa
 ```
 
 `referredBy` is the referring ambassador (attribution). Access is `managedBy`, the assigned
-ambassador. There is no `ambassadorId`.
+ambassador. `ambassadorId` is an optional alias on Village for the referring Ambassador; it is
+not on the model, so nothing returns it today.
 
 ## Identity
 
@@ -93,7 +94,9 @@ All of these are pipeline-owned: written by the deploy route or by procurement, 
   but predates procurement (e.g. TDF) — its status and URLs are admin-typed.
 - `appUrl` / `apiUrl`: procurement-authoritative once `managed`
 
-There is no `platformSubscription` on the Village.
+`platformSubscription`: `{ status, planPriceEur, trialStartedAt, subscribedAt, stripeSubscriptionId }`.
+Not on the model yet — the deploy route carries a `TODO(platformSubscription)` for the founder
+gate. The client type is in place ahead of it; nothing returns it today.
 
 ## ACL
 

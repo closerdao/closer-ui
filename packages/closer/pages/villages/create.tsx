@@ -115,6 +115,7 @@ const CreateVillagePage = () => {
       ...payload,
       ...(applicationId ? { applicationId } : {}),
       referredBy: user?._id,
+      ambassadorId: user?._id,
       managedBy: user?._id ? [user._id] : [],
     });
     const path = created.slug || created._id;

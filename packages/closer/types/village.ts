@@ -90,6 +90,19 @@ export type VillageDeployRequest = {
   processedAt?: string;
 };
 
+/**
+ * Tier 0→1 platform subscription. Not on the API's Village model yet — the
+ * deploy route carries a `TODO(platformSubscription)` for the founder gate —
+ * so treat every field as optional and absent until that lands.
+ */
+export type VillageSubscription = {
+  status?: 'none' | 'trialing' | 'active' | 'past_due' | 'cancelled';
+  planPriceEur?: number;
+  trialStartedAt?: string;
+  subscribedAt?: string;
+  stripeSubscriptionId?: string;
+};
+
 export type Village = {
   _id: string;
   slug?: string;
@@ -112,6 +125,11 @@ export type Village = {
   contact?: VillageContact;
   /** The ambassador who brought the village in — attribution, not access. */
   referredBy?: string | null;
+  /**
+   * Optional alias of `referredBy` for the referring ambassador. Not on the API
+   * model, so read it alongside `referredBy`, never instead of it.
+   */
+  ambassadorId?: string | null;
   /** The application this village was created from, when it came from one. */
   applicationId?: string;
   verificationBadge?: VillageVerificationBadge;
@@ -125,6 +143,7 @@ export type Village = {
   deployedAt?: string | null;
   /** True once procurement owns this village's deployment. */
   managed?: boolean;
+  platformSubscription?: VillageSubscription;
   visibility?: string;
   visibleBy?: string[];
   createdBy?: string;
@@ -220,6 +239,7 @@ export type CreateVillageInput = {
   criteria?: VillageCriteria;
   projectManager?: VillageManagerInfo;
   referredBy?: string;
+  ambassadorId?: string;
   applicationId?: string;
   managedBy?: string[];
   verificationBadge?: VillageVerificationBadge;
