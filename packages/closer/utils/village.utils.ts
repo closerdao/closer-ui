@@ -487,7 +487,13 @@ export async function deployVillageToCloser(
     appUrl: `https://${host}`,
   });
   const { village } = await deployVillage(id, notes);
-  return village ?? patched;
+  if (village) return village;
+  return (
+    (await getVillage(id)) ?? {
+      ...patched,
+      onboardingStatus: 'deploy_requested',
+    }
+  );
 }
 
 /**

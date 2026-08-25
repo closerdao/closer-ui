@@ -125,6 +125,59 @@ describe('deployVillageToCloser', () => {
       onboardingStatus: 'deploy_requested',
     });
   });
+
+  it('refetches when the deploy response carries no village', async () => {
+    mockedPatch.mockResolvedValueOnce({
+      data: {
+        results: {
+          _id: 'v1',
+          slug: 'tdf',
+          onboardingStatus: 'subscribed',
+        },
+      },
+    });
+    mockedPost.mockResolvedValueOnce({
+      data: { warning: 'procurement_unreachable' },
+    });
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        results: {
+          _id: 'v1',
+          slug: 'tdf',
+          onboardingStatus: 'deploy_requested',
+        },
+      },
+    });
+
+    const result = await deployVillageToCloser('v1', 'tdf');
+
+    expect(result.onboardingStatus).toBe('deploy_requested');
+    expect(mockedGet).toHaveBeenCalledWith('/village/v1');
+  });
+
+  it('does not keep the pre-deploy status when refetch also fails', async () => {
+    mockedPatch.mockResolvedValueOnce({
+      data: {
+        results: {
+          _id: 'v1',
+          slug: 'tdf',
+          onboardingStatus: 'subscribed',
+        },
+      },
+    });
+    mockedPost.mockResolvedValueOnce({
+      data: { warning: 'procurement_unreachable' },
+    });
+    mockedGet.mockRejectedValueOnce(new Error('offline'));
+
+    const result = await deployVillageToCloser('v1', 'tdf');
+
+    expect(result).toEqual({
+      _id: 'v1',
+      slug: 'tdf',
+      onboardingStatus: 'deploy_requested',
+    });
+  });
 });
 
 describe('fetchVillageCreatedBy', () => {
