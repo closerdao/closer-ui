@@ -256,9 +256,9 @@ describe('villageAdminSettableStatuses', () => {
       village({ onboardingStatus: 'subscribed', managed: true }),
     );
 
-    expect(statuses).not.toEqual(
-      expect.arrayContaining(['failed', 'live', 'suspended']),
-    );
+    for (const status of ['failed', 'live', 'suspended']) {
+      expect(statuses).not.toContain(status);
+    }
     expect(statuses).toEqual([
       'map_only',
       'pre_assessed',
@@ -269,9 +269,12 @@ describe('villageAdminSettableStatuses', () => {
 
   it('never offers the in-flight stages', () => {
     for (const managed of [true, false]) {
-      expect(villageAdminSettableStatuses(village({ managed }))).not.toEqual(
-        expect.arrayContaining(['deploy_requested', 'deploying']),
-      );
+      // One `not.toContain` per status: `not.toEqual(arrayContaining([a, b]))`
+      // passes as soon as ONE of them is missing, so it would let a regression
+      // that still offers `deploying` through.
+      const statuses = villageAdminSettableStatuses(village({ managed }));
+      expect(statuses).not.toContain('deploy_requested');
+      expect(statuses).not.toContain('deploying');
     }
   });
 
