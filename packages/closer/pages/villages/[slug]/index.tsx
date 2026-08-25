@@ -408,6 +408,7 @@ const VillageDetailPage = () => {
               <DeployCTA
                 village={village}
                 canDeploy={canDeploy}
+                isAdmin={isAdmin}
                 onDeployed={(updated) => {
                   if (updated) setVillage(updated);
                   void refresh();

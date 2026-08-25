@@ -400,6 +400,10 @@ export const configDescription: ConfigType[] = [
         type: 'boolean',
         default: true,
       },
+      successPage: {
+        type: 'text',
+        default: '',
+      },
       elements: {
         type: [
           {
@@ -679,6 +683,10 @@ export const configDescription: ConfigType[] = [
         default: '',
       },
       governanceUrl: {
+        type: 'text',
+        default: '',
+      },
+      callBookingLink: {
         type: 'text',
         default: '',
       },
@@ -1075,6 +1083,14 @@ export const configDescription: ConfigType[] = [
             legalName: 'text',
             taxNumber: 'text',
             iban: 'text',
+            walletAddress: 'text',
+            // Only one Stripe account can be connected per platform today, so
+            // this is effectively "use the platform Stripe account or not";
+            // the value stays a select so more accounts can join the enum later.
+            stripeAccount: {
+              type: 'select',
+              enum: ['none', 'default'],
+            },
             address: 'text',
             accountingDescription: 'text',
             products: {
@@ -1088,6 +1104,8 @@ export const configDescription: ConfigType[] = [
             legalName: '',
             taxNumber: '',
             iban: '',
+            walletAddress: '',
+            stripeAccount: 'none',
             address: '',
             products: [],
             accountingDescription: '',

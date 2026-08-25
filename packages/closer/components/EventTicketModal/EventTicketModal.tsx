@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
@@ -20,7 +20,11 @@ import {
   doesBookingCoverEvent,
   getEventNights,
 } from '../../utils/events.helpers';
-import { getEventTicketAvailability } from '../../utils/tickets.api';
+import {
+  getEventTicketAvailability,
+  getTicket,
+  quoteTicket,
+} from '../../utils/tickets.api';
 import Modal from '../Modal';
 import { ErrorMessage } from '../ui';
 import Heading from '../ui/Heading';
@@ -32,9 +36,18 @@ import TicketSuccessStep from './TicketSuccessStep';
 interface Props {
   event: Event;
   closeModal: () => void;
+  /** Ticket option to open on, by name — from `?checkout&ticket=`. */
+  initialTicketOption?: string;
+  /** Discount code to prefill and apply — from `?checkout&discountCode=`. */
+  initialDiscountCode?: string;
+  /** An unpaid ticket to settle — from `?checkout&ticketId=`. */
+  initialTicketId?: string;
 }
 
 type Step = 'select' | 'payment' | 'success';
+
+/** Statuses that still owe money, and so can be resumed from a deep link. */
+const RESUMABLE_STATUSES = ['pending', 'pending-payment'];
 
 const stripePromise = process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY, {
@@ -43,6 +56,22 @@ const stripePromise = process.env.NEXT_PUBLIC_PLATFORM_STRIPE_PUB_KEY
   : null;
 
 const formatDay = (value: string | Date) => dayjs(value).format('YYYY-MM-DD');
+
+/** Options are shown with underscores as spaces, so links may carry either. */
+const looseName = (name: string) =>
+  name.trim().toLowerCase().split('_').join(' ');
+
+const findOptionByName = (
+  options: TicketAvailabilityOption[],
+  name?: string,
+): TicketAvailabilityOption | null => {
+  if (!name) return null;
+  return (
+    options.find((option) => option.name === name) ||
+    options.find((option) => looseName(option.name) === looseName(name)) ||
+    null
+  );
+};
 
 /**
  * Buying a ticket for an event, start to finish: pick a ticket, pay, celebrate.
@@ -53,8 +82,19 @@ const formatDay = (value: string | Date) => dayjs(value).format('YYYY-MM-DD');
  * other ticket for an event that runs overnight needs accommodation, and that
  * is the one case the modal hands over to the booking flow, carrying the chosen
  * ticket in the URL so the guest is not asked for it twice.
+ *
+ * The modal can also be opened straight onto payment by a link carrying an
+ * unpaid ticket id (see utils/eventCheckout). Paying then re-runs
+ * `/tickets/init`, which expires the guest's earlier hold on the same event —
+ * so resuming settles the seat they already had rather than taking a second.
  */
-const EventTicketModal = ({ event, closeModal }: Props) => {
+const EventTicketModal = ({
+  event,
+  closeModal,
+  initialTicketOption,
+  initialDiscountCode,
+  initialTicketId,
+}: Props) => {
   const t = useTranslations();
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
@@ -67,12 +107,18 @@ const EventTicketModal = ({ event, closeModal }: Props) => {
   const [selectedOption, setSelectedOption] =
     useState<TicketAvailabilityOption | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [discountCode, setDiscountCode] = useState('');
+  const [discountCode, setDiscountCode] = useState(
+    normalizeDiscountCode(initialDiscountCode),
+  );
   const [quote, setQuote] = useState<TicketQuote | null>(null);
   const [coveringBooking, setCoveringBooking] =
     useState<AccommodationBooking | null>(null);
   const [paidTicketId, setPaidTicketId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /** True while a `?ticketId=` link is being turned into a payment step. */
+  const [isResuming, setIsResuming] = useState(Boolean(initialTicketId));
+  const [notice, setNotice] = useState<string | null>(null);
+  const resumedTicketRef = useRef<string | null>(null);
 
   // A virtual event has nowhere to sleep, so it is ticket-only however many
   // days it runs — no nights to cover, no accommodation step.
@@ -159,12 +205,109 @@ const EventTicketModal = ({ event, closeModal }: Props) => {
       ) {
         return previous;
       }
-      return availableTickets.length === 1 ? availableTickets[0] : null;
+      return (
+        findOptionByName(availableTickets, initialTicketOption) ||
+        (availableTickets.length === 1 ? availableTickets[0] : null)
+      );
     });
-  }, [availableTickets]);
+  }, [availableTickets, initialTicketOption]);
+
+  /**
+   * `?checkout&ticketId=` — settle a ticket the guest already started.
+   *
+   * The ticket itself is the source of truth for what was being bought, so its
+   * option, quantity and discount are read back rather than taken from the
+   * link. An option that has since sold out is still rebuilt from the ticket:
+   * the seat is already held under this guest's name, and init hands it back
+   * to them rather than counting it against availability twice.
+   */
+  useEffect(() => {
+    if (!initialTicketId) return;
+    if (!isAuthenticated) {
+      // Nothing to load until they sign in — the select step's login button
+      // brings them back to this same link.
+      setIsResuming(false);
+      return;
+    }
+    if (isLoadingTickets) return;
+    if (resumedTicketRef.current === initialTicketId) return;
+    resumedTicketRef.current = initialTicketId;
+
+    let cancelled = false;
+    (async () => {
+      setIsResuming(true);
+      setNotice(null);
+      try {
+        const { ticket } = await getTicket(initialTicketId);
+        if (cancelled) return;
+
+        if (String(ticket.event) !== String(event._id)) {
+          setNotice(t('event_ticket_resume_wrong_event'));
+          return;
+        }
+        if (!RESUMABLE_STATUSES.includes(ticket.status)) {
+          setNotice(
+            ticket.status === 'approved'
+              ? t('event_ticket_resume_already_paid')
+              : t('event_ticket_resume_unavailable'),
+          );
+          return;
+        }
+
+        const optionName = ticket.option?.name || '';
+        const option =
+          findOptionByName(availableTickets, optionName) ||
+          (optionName
+            ? {
+                name: optionName,
+                price: ticket.unitPrice?.val ?? ticket.price?.val ?? 0,
+                currency: ticket.unitPrice?.cur ?? ticket.price?.cur ?? '',
+                available: null,
+              }
+            : null);
+        if (!option) {
+          setNotice(t('event_ticket_resume_unavailable'));
+          return;
+        }
+
+        const resumedQuantity = Math.max(1, ticket.quantity || 1);
+        const resumedDiscount = normalizeDiscountCode(ticket.discount);
+
+        // The payment step shows a total, and only the server may say what it
+        // is — so the ticket is repriced before that step is allowed to open.
+        const resumedQuote = await quoteTicket({
+          eventId: event._id,
+          ticketOption: option.name,
+          quantity: resumedQuantity,
+          ...(resumedDiscount ? { discountCode: resumedDiscount } : {}),
+        });
+        if (cancelled) return;
+
+        setSelectedOption(option);
+        setQuantity(resumedQuantity);
+        setDiscountCode(resumedDiscount);
+        setQuote(resumedQuote);
+        setStep('payment');
+      } catch {
+        // A ticket that cannot be read is one this guest may not resume —
+        // they still get the normal flow rather than a dead end.
+        if (!cancelled) setNotice(t('event_ticket_resume_unavailable'));
+      } finally {
+        if (!cancelled) setIsResuming(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialTicketId, isAuthenticated, isLoadingTickets, event._id]);
 
   const needsAccommodation =
     nights > 0 && !selectedOption?.isDayTicket && !coveringBooking;
+
+  /** Where login should send the guest back to — the deep link, if there is one. */
+  const backHref = router.asPath?.startsWith('/events/')
+    ? router.asPath
+    : `/events/${event.slug}`;
 
   const goToBookingFlow = () => {
     const query: Record<string, string> = {
@@ -198,8 +341,9 @@ const EventTicketModal = ({ event, closeModal }: Props) => {
     }
     if (!isAuthenticated) {
       // Ticket-only checkout lives in this modal, so a signed out guest comes
-      // back to the event page rather than into the booking flow.
-      router.push(`/login?back=${encodeURIComponent(`/events/${event.slug}`)}`);
+      // back to the page they were on — deep link and all, so a link to a
+      // pending ticket survives the detour through login.
+      router.push(`/login?back=${encodeURIComponent(backHref)}`);
       return;
     }
     setStep('payment');
@@ -250,7 +394,7 @@ const EventTicketModal = ({ event, closeModal }: Props) => {
             onBack={() => setStep('select')}
           />
         </Elements>
-      ) : isLoadingTickets ? (
+      ) : isLoadingTickets || isResuming ? (
         <div className="flex justify-center py-10">
           <Spinner />
         </div>
@@ -260,6 +404,14 @@ const EventTicketModal = ({ event, closeModal }: Props) => {
         </p>
       ) : (
         <>
+          {notice && (
+            <p
+              className="mb-4 rounded-md bg-accent-light p-3 text-sm"
+              role="status"
+            >
+              {notice}
+            </p>
+          )}
           <TicketSelectStep
             eventId={event._id}
             nights={nights}

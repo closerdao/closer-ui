@@ -52,13 +52,24 @@ describe('DeployCTA states', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
-  it('blocks on a missing slug', () => {
+  // A missing slug no longer sends anyone to the edit page: the card offers
+  // the address field itself, prefilled from the village name.
+  it('offers the address field when the slug is missing', () => {
     renderWithNextIntl(<DeployCTA village={village({ slug: '' })} canDeploy />);
 
     expect(card()).toHaveAttribute('data-deploy-state', 'not_ready');
+    expect(screen.getByLabelText(/your address/i)).toHaveValue('riverbank');
     expect(
       screen.getByRole('button', { name: /deploy village/i }),
-    ).toBeDisabled();
+    ).toBeEnabled();
+  });
+
+  it('still blocks a missing slug for a viewer who cannot set one here', () => {
+    renderWithNextIntl(<DeployCTA village={village({ slug: '' })} />);
+
+    expect(card()).toHaveAttribute('data-deploy-state', 'not_ready');
+    expect(screen.getByText(/no slug/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
   // The route falls back to the creator's account email, which this page
@@ -164,6 +175,217 @@ describe('DeployCTA states', () => {
 
     expect(card()).toHaveAttribute('data-deploy-state', 'suspended');
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  // Admins keep a pressable button in every state — live and suspended
+  // included — so they can always re-run procurement.
+  it('offers an admin a redeploy button on a live village', async () => {
+    const deploy = jest
+      .fn()
+      .mockResolvedValue({ village: village({ onboardingStatus: 'live' }) });
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({
+          onboardingStatus: 'live',
+          managed: true,
+          appUrl: 'https://riverbank.closer.earth',
+        })}
+        canDeploy
+        isAdmin
+        deploy={deploy}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: /redeploy/i }));
+    await waitFor(() => expect(deploy).toHaveBeenCalledWith('v1'));
+  });
+
+  it('offers an admin a redeploy button on a suspended village', () => {
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'suspended' })}
+        canDeploy
+        isAdmin
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: /redeploy/i })).toBeEnabled();
+  });
+
+  it('keeps live and suspended read-only for non-admins', () => {
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'live' })}
+        canDeploy
+      />,
+    );
+
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+});
+
+describe('DeployCTA review form', () => {
+  const deployed = () => village({ onboardingStatus: 'deploy_requested' });
+
+  it('deploys without a PATCH when nothing was edited', async () => {
+    const deploy = jest.fn().mockResolvedValue({ village: deployed() });
+    const save = jest.fn();
+
+    renderWithNextIntl(
+      <DeployCTA village={village()} canDeploy deploy={deploy} save={save} />,
+    );
+    await userEvent.click(
+      screen.getByRole('button', { name: /deploy village/i }),
+    );
+
+    await waitFor(() => expect(deploy).toHaveBeenCalledWith('v1'));
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it('saves an edited address before deploying', async () => {
+    const deploy = jest.fn().mockResolvedValue({ village: deployed() });
+    const save = jest.fn().mockResolvedValue(village({ slug: 'river-bend' }));
+    const isSubdomainTaken = jest.fn().mockResolvedValue(false);
+
+    renderWithNextIntl(
+      <DeployCTA
+        village={village()}
+        canDeploy
+        deploy={deploy}
+        save={save}
+        isSubdomainTaken={isSubdomainTaken}
+      />,
+    );
+    const address = screen.getByLabelText(/your address/i);
+    await userEvent.clear(address);
+    await userEvent.type(address, 'River Bend!');
+    await userEvent.click(
+      screen.getByRole('button', { name: /deploy village/i }),
+    );
+
+    await waitFor(() =>
+      expect(save).toHaveBeenCalledWith('v1', { slug: 'river-bend' }),
+    );
+    expect(isSubdomainTaken).toHaveBeenCalledWith('river-bend', 'v1');
+    expect(deploy).toHaveBeenCalledWith('v1');
+  });
+
+  it('refuses a taken address without deploying', async () => {
+    const deploy = jest.fn();
+    const save = jest.fn();
+
+    renderWithNextIntl(
+      <DeployCTA
+        village={village()}
+        canDeploy
+        deploy={deploy}
+        save={save}
+        isSubdomainTaken={jest.fn().mockResolvedValue(true)}
+      />,
+    );
+    const address = screen.getByLabelText(/your address/i);
+    await userEvent.clear(address);
+    await userEvent.type(address, 'taken-name');
+    await userEvent.click(
+      screen.getByRole('button', { name: /deploy village/i }),
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /already taken/i,
+    );
+    expect(save).not.toHaveBeenCalled();
+    expect(deploy).not.toHaveBeenCalled();
+  });
+
+  // No projectManager on the village, so the contact is the field the route
+  // resolves — the edit lands there.
+  it('saves an edited owner email to the contact before deploying', async () => {
+    const deploy = jest.fn().mockResolvedValue({ village: deployed() });
+    const save = jest.fn().mockResolvedValue(village());
+
+    renderWithNextIntl(
+      <DeployCTA village={village()} canDeploy deploy={deploy} save={save} />,
+    );
+    const email = screen.getByLabelText(/owner email/i);
+    await userEvent.clear(email);
+    await userEvent.type(email, 'founder@riverbank.pt');
+    await userEvent.click(
+      screen.getByRole('button', { name: /deploy village/i }),
+    );
+
+    await waitFor(() =>
+      expect(save).toHaveBeenCalledWith('v1', {
+        contact: { email: 'founder@riverbank.pt' },
+      }),
+    );
+    expect(deploy).toHaveBeenCalledWith('v1');
+  });
+
+  // The route reads projectManager.email before contact.email, so when the
+  // village has one, the edit must land there for the review to win.
+  it('writes the email to the project manager when that field is set', async () => {
+    const deploy = jest.fn().mockResolvedValue({ village: deployed() });
+    const save = jest.fn().mockResolvedValue(village());
+
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({
+          projectManager: { name: 'Ana', email: 'ana@riverbank.pt' },
+        })}
+        canDeploy
+        deploy={deploy}
+        save={save}
+      />,
+    );
+    const email = screen.getByLabelText(/owner email/i);
+    expect(email).toHaveValue('ana@riverbank.pt');
+    await userEvent.clear(email);
+    await userEvent.type(email, 'founder@riverbank.pt');
+    await userEvent.click(
+      screen.getByRole('button', { name: /deploy village/i }),
+    );
+
+    await waitFor(() =>
+      expect(save).toHaveBeenCalledWith('v1', {
+        projectManager: { name: 'Ana', email: 'founder@riverbank.pt' },
+      }),
+    );
+  });
+
+  it('rejects a malformed email without touching the API', async () => {
+    const deploy = jest.fn();
+    const save = jest.fn();
+
+    renderWithNextIntl(
+      <DeployCTA village={village()} canDeploy deploy={deploy} save={save} />,
+    );
+    const email = screen.getByLabelText(/owner email/i);
+    await userEvent.clear(email);
+    await userEvent.type(email, 'not-an-email');
+    await userEvent.click(
+      screen.getByRole('button', { name: /deploy village/i }),
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /look like an email/i,
+    );
+    expect(save).not.toHaveBeenCalled();
+    expect(deploy).not.toHaveBeenCalled();
+  });
+
+  it('keeps the address read-only on a retry — the slug is frozen', () => {
+    renderWithNextIntl(
+      <DeployCTA
+        village={village({ onboardingStatus: 'failed' })}
+        canDeploy
+      />,
+    );
+
+    expect(screen.queryByLabelText(/your address/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/will deploy as riverbank/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/owner email/i)).toHaveValue(
+      'hello@riverbank.pt',
+    );
   });
 });
 

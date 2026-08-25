@@ -15,6 +15,7 @@ jest.mock('../api.js', () => ({
   __esModule: true,
   default: { get: jest.fn(), post: jest.fn(), patch: jest.fn() },
   formatSearch: (where: unknown) => encodeURIComponent(JSON.stringify(where)),
+  invalidateGetCache: jest.fn(),
 }));
 
 const api = jest.requireMock('../api.js').default as { post: jest.Mock };

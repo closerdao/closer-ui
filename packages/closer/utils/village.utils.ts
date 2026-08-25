@@ -27,7 +27,7 @@ import {
   VillageSearchResponse,
   VillageSocialNetwork,
 } from '../types/village';
-import api, { formatSearch } from './api';
+import api, { formatSearch, invalidateGetCache } from './api';
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value);
@@ -172,6 +172,13 @@ export async function getVillage(idOrSlug: string): Promise<Village | null> {
   }
 }
 
+/**
+ * Client GETs are cached for five minutes, so every write below has to drop
+ * the village reads it invalidates — otherwise an edit only shows up after a
+ * hard reload. The prefix also covers the plural `/villages/...` routes.
+ */
+const invalidateVillageReads = () => invalidateGetCache(`/${VILLAGE_COLLECTION}`);
+
 export async function createVillage(
   payload: CreateVillageInput,
 ): Promise<Village> {
@@ -182,6 +189,7 @@ export async function createVillage(
     verificationBadge: payload.verificationBadge || 'unverified',
     onboardingStatus: payload.onboardingStatus || 'map_only',
   });
+  invalidateVillageReads();
   return (data?.results || data) as Village;
 }
 
@@ -203,6 +211,7 @@ export async function updateVillage(
     body.coords = toApiCoords(coords);
   }
   const { data } = await api.patch(`/${VILLAGE_COLLECTION}/${id}`, body);
+  invalidateVillageReads();
   return (data?.results || data) as Village;
 }
 
@@ -219,6 +228,89 @@ export class DeployVillageError extends Error {
     this.name = 'DeployVillageError';
     this.status = status;
     this.code = code;
+  }
+}
+
+/** Deployed instances live at `<subdomain>.closer.earth`. */
+export const CLOSER_DEPLOY_DOMAIN = 'closer.earth';
+
+/**
+ * Subdomains our infrastructure already answers on, or that would read as an
+ * official Closer property rather than a village.
+ */
+const RESERVED_SUBDOMAINS = [
+  'www',
+  'api',
+  'app',
+  'admin',
+  'mail',
+  'staging',
+  'closer',
+];
+
+const SUBDOMAIN_PATTERN = /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/;
+
+/**
+ * Turns whatever the user typed — or a village name — into something that can
+ * be a subdomain: lowercase, hyphens for spaces, nothing a hostname rejects.
+ * The result still has to pass `isValidVillageSubdomain`; a name made entirely
+ * of stripped characters normalizes to an (invalid) empty string.
+ */
+export function normalizeVillageSubdomain(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .slice(0, 30)
+    .replace(/^-+|-+$/g, '');
+}
+
+/**
+ * Lighter than `normalizeVillageSubdomain`, for sanitizing as the user types:
+ * edge hyphens survive so one can be typed mid-word — the strict pattern check
+ * at submit still rejects them if they are left dangling.
+ */
+export function sanitizeVillageSubdomainInput(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .slice(0, 30);
+}
+
+export function isValidVillageSubdomain(value: string): boolean {
+  return SUBDOMAIN_PATTERN.test(value) && !RESERVED_SUBDOMAINS.includes(value);
+}
+
+/** What the deploy review form opens on: the village's own slug, else its name. */
+export function suggestVillageSubdomain(village: Village): string {
+  return normalizeVillageSubdomain(village.slug || village.name || '');
+}
+
+/**
+ * Whether another village already answers to this slug. Errs on "free" when
+ * the directory cannot be reached — the backend stays the authority and will
+ * reject a duplicate on write.
+ */
+export async function isVillageSubdomainTaken(
+  subdomain: string,
+  excludeVillageId?: string,
+): Promise<boolean> {
+  try {
+    const where = formatSearch({
+      slug: subdomain,
+      ...(excludeVillageId ? { _id: { $ne: excludeVillageId } } : {}),
+    });
+    const { data } = await api.get(`/${VILLAGE_COLLECTION}?where=${where}`, {
+      params: { limit: 1 },
+    });
+    const results = data?.results || data;
+    return Array.isArray(results) && results.length > 0;
+  } catch {
+    return false;
   }
 }
 
@@ -253,6 +345,7 @@ export async function deployVillage(
       `/${VILLAGE_COLLECTION}/${id}/deploy`,
       notes ? { notes } : {},
     );
+    invalidateVillageReads();
     const body = data?.results || data || {};
     // Only adopt something that actually looks like a Village. The old
     // `body.village || body.results || body` chain ended in the raw response
@@ -376,6 +469,56 @@ export function villageAdminSettableStatuses(
 }
 
 /**
+ * Files the deploy request under the chosen address. The subdomain becomes the
+ * village's slug — the one identity it keeps across the map, the directory and
+ * its own instance — and `appUrl` records where the instance will answer once
+ * the team has built it. The address is PATCHed first so
+ * `POST /village/:id/deploy` can freeze the slug and call procurement;
+ * `deploy_requested` is not settable by PATCH.
+ */
+export async function deployVillageToCloser(
+  id: string,
+  subdomain: string,
+): Promise<Village> {
+  const host = `${subdomain}.${CLOSER_DEPLOY_DOMAIN}`;
+  const notes = `Requested address: ${host}`;
+  const patched = await updateVillage(id, {
+    slug: subdomain,
+    appUrl: `https://${host}`,
+  });
+  const { village } = await deployVillage(id, notes);
+  if (village) return village;
+  return (
+    (await getVillage(id)) ?? {
+      ...patched,
+      onboardingStatus: 'deploy_requested',
+    }
+  );
+}
+
+/**
+ * The one village this user has launched, if any. `/village/launch` allows a
+ * single village per member, and `createdBy` (set by the API from the token)
+ * is what marks it as theirs.
+ */
+export async function fetchVillageCreatedBy(
+  userId?: string,
+): Promise<Village | null> {
+  if (!userId) return null;
+  try {
+    const where = formatSearch({ createdBy: userId });
+    const { data } = await api.get(`/${VILLAGE_COLLECTION}?where=${where}`, {
+      params: { limit: 1 },
+    });
+    const results = data?.results || data;
+    if (Array.isArray(results)) return (results[0] as Village) || null;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Sends the owner their invitation. Deliberately separate from the follow-up
  * `updateVillage` that records the address as the project manager contact: the
  * invite is the side effect, the PATCH is the bookkeeping, and a failed invite
@@ -386,6 +529,7 @@ export async function inviteVillageOwner(
   email: string,
 ): Promise<void> {
   await api.post(`/villages/${id}/invite-owner`, { email });
+  invalidateVillageReads();
 }
 
 /**
@@ -422,6 +566,51 @@ export async function fetchVillageEvents(
     }
   }
   return [];
+}
+
+/**
+ * The ways a person can be tied to a village, in the order they should be
+ * displayed: the strongest standing first.
+ */
+export type VillageConnectionRole =
+  | 'ambassador'
+  | 'manager'
+  | 'creator'
+  | 'referrer';
+
+export type VillageConnection = {
+  village: Village;
+  roles: VillageConnectionRole[];
+};
+
+export function getVillageConnectionRoles(
+  village: Village,
+  userId?: string,
+): VillageConnectionRole[] {
+  if (!userId) return [];
+  const roles: VillageConnectionRole[] = [];
+  if (village.ambassadorId === userId) roles.push('ambassador');
+  if (village.managedBy?.includes(userId)) roles.push('manager');
+  if (village.createdBy === userId) roles.push('creator');
+  if (village.referredBy === userId) roles.push('referrer');
+  return roles;
+}
+
+/**
+ * All the villages a person is tied to, with how. Pulls the directory and
+ * filters client-side because the connection lives in four different fields.
+ */
+export async function fetchUserVillageConnections(
+  userId?: string,
+): Promise<VillageConnection[]> {
+  if (!userId) return [];
+  const all = await fetchVillages({ limit: 200 });
+  return all
+    .map((village) => ({
+      village,
+      roles: getVillageConnectionRoles(village, userId),
+    }))
+    .filter((connection) => connection.roles.length > 0);
 }
 
 async function fetchUsers(where: Record<string, unknown>): Promise<User[]> {

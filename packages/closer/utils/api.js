@@ -5,6 +5,8 @@ import {
   getAccessToken,
   getAccessTokenExpiryMs,
   getRefreshToken,
+  getStoredAccountId,
+  setStoredAccountId,
   setTokens,
 } from './authStorage';
 import { invalidateConfigCache } from './configCache';
@@ -226,7 +228,25 @@ function doRefresh() {
           results,
         } = res?.data ?? {};
         if (newAccess && newRefresh) {
+          // The refresh token lives in localStorage, which is shared across
+          // tabs and can hold a token from a different account than the one
+          // this session belongs to. Never let a refresh silently switch
+          // accounts: if the refreshed identity doesn't match, drop the
+          // session and force a fresh login.
+          const storedAccountId = getStoredAccountId();
+          const refreshedAccountId = results?._id;
+          if (
+            storedAccountId &&
+            refreshedAccountId &&
+            storedAccountId !== refreshedAccountId
+          ) {
+            notifySessionInvalid();
+            throw new Error('Refresh token belongs to a different account');
+          }
           setTokens(newAccess, newRefresh);
+          if (refreshedAccountId) {
+            setStoredAccountId(refreshedAccountId);
+          }
           return { access_token: newAccess, results };
         }
         throw new Error('Invalid refresh response');
@@ -236,6 +256,32 @@ function doRefresh() {
       });
   }
   return refreshPromise;
+}
+
+// Best-effort server-side revocation of the current refresh token. Uses raw
+// axios rather than the api instance so a 401 here can never trigger the
+// refresh-and-retry interceptor mid-logout. Errors are swallowed: local
+// logout must always complete even if the endpoint is down or not deployed.
+export async function revokeRefreshToken() {
+  if (typeof window === 'undefined') return;
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return;
+  const accessToken = getAccessToken();
+  try {
+    await axios.post(
+      `${baseURL}/auth/logout`,
+      { refresh_token: refreshToken },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        timeout: 5000,
+      },
+    );
+  } catch (err) {
+    console.error('Failed to revoke refresh token on logout:', err);
+  }
 }
 
 export async function refreshTokensProactively() {

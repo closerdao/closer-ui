@@ -39,7 +39,7 @@ export const AwardEditor = ({
   error?: string;
 }) => {
   const t = useTranslations();
-  const defaultCurrency = currencies[0]?.value || 'carrots';
+  const defaultCurrency = currencies[0]?.value || 'credits';
 
   const update = (name: string, value: unknown) => {
     if (name === 'kind') {

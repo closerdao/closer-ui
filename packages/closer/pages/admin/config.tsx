@@ -424,6 +424,18 @@ const ConfigPage = () => {
 
       await platform.config.getOne(configCategoryToSave, { force: true });
 
+      // platform.config.find() is not refreshed by patch/getOne (the store
+      // syncs byFilter by _id, but configs are addressed by slug), so mark
+      // this slug as saved locally or it stays "dirty" forever.
+      const savedValue = updatedConfig?.value;
+      setSavedConfigs((prev) =>
+        prev.map((config) =>
+          config.slug === configCategoryToSave
+            ? { ...config, value: savedValue as Config['value'] }
+            : config,
+        ),
+      );
+
       if (configCategoryToSave === 'booking') {
         const bookingDocAfter = platform.config.findOne('booking');
         setBookingConfig(bookingDocAfter?.get?.('value')?.toJS?.() ?? null);

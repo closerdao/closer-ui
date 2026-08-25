@@ -6,10 +6,20 @@ import { useTranslations } from 'next-intl';
 
 import { Village } from '../../types/village';
 import {
+  CLOSER_DEPLOY_DOMAIN,
   DeployVillageError,
   DeployVillageResult,
+  UpdateVillageInput,
   deployVillage,
   getDeployReadiness,
+  isValidVillageSubdomain,
+  isVillageSlugFrozen,
+  isVillageSubdomainTaken,
+  normalizeVillageSubdomain,
+  resolveFounderEmail,
+  sanitizeVillageSubdomainInput,
+  suggestVillageSubdomain,
+  updateVillage,
 } from '../../utils/village.utils';
 import { Spinner } from '../ui';
 import {
@@ -18,12 +28,19 @@ import {
   VillageStatusPill,
   btnPrimary,
   btnSmall,
+  inputClass,
+  labelClass,
 } from './index';
 
 /**
  * The one deploy control on a village page. Pressing it calls
  * `POST /village/:id/deploy`; every later state (deploying, failed, live,
  * suspended) is whatever procurement wrote back onto the Village.
+ *
+ * The route reads the slug and founder email off the village itself, so the
+ * pressable states carry a small review form for both — the address until the
+ * slug freezes, the email always — and anything changed there is PATCHed onto
+ * the village before the deploy is asked for.
  *
  * Whether the viewer may press it is the caller's call (`canDeployVillage`) and
  * arrives as `canDeploy`. Everyone who can see the manager panel sees the card
@@ -65,6 +82,9 @@ export const formatDeployDate = (value?: string | null) => {
   });
 };
 
+/** Deliberately loose — the API stays the authority; this only catches typos. */
+const EMAIL_SHAPE = /^\S+@\S+\.\S+$/;
+
 export const requestedByName = (village: Village) => {
   const who = village.deployRequest?.requestedBy;
   if (!who) return null;
@@ -91,17 +111,27 @@ export const DeployCTA: FC<{
   village: Village;
   /** False renders every state read-only — no button, no retry. */
   canDeploy?: boolean;
+  /** Admins keep a pressable deploy button in every state — live and
+      suspended included — so they can always re-run procurement. */
+  isAdmin?: boolean;
   /** Called with the village the route returned (202) so the page can adopt it. */
   /** Village is omitted when the response carried none — refetch instead. */
   onDeployed?: (village?: Village) => void;
   /** Injectable so tests can drive the route without a backend. */
   deploy?: (id: string) => Promise<DeployVillageResult>;
+  /** Injectable: the pre-deploy PATCH that records reviewed slug/email edits. */
+  save?: (id: string, payload: UpdateVillageInput) => Promise<Village>;
+  /** Injectable: the directory lookup guarding against a duplicate address. */
+  isSubdomainTaken?: (subdomain: string, excludeId?: string) => Promise<boolean>;
   className?: string;
 }> = ({
   village,
   canDeploy = false,
+  isAdmin = false,
   onDeployed,
   deploy = deployVillage,
+  save = updateVillage,
+  isSubdomainTaken = isVillageSubdomainTaken,
   className = '',
 }) => {
   const t = useTranslations();
@@ -109,17 +139,65 @@ export const DeployCTA: FC<{
   const [error, setError] = useState<DeployVillageError | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
 
+  const slugFrozen = isVillageSlugFrozen(village);
+  const [subdomain, setSubdomain] = useState(() =>
+    suggestVillageSubdomain(village),
+  );
+  const [ownerEmail, setOwnerEmail] = useState(
+    () => resolveFounderEmail(village) || '',
+  );
+  const [fieldError, setFieldError] = useState<string | null>(null);
+
   const state = getDeployCTAState(village);
   const readiness = getDeployReadiness(village);
   const requestedAt = formatDeployDate(village.deployRequest?.requestedAt);
   const requestedBy = requestedByName(village);
   const editPath = `/villages/${village.slug || village._id}/edit`;
+  const canAct = canDeploy || isAdmin;
 
   const handleDeploy = async () => {
+    setError(null);
+    setWarning(null);
+    setFieldError(null);
+
+    const slug = normalizeVillageSubdomain(subdomain);
+    const email = ownerEmail.trim();
+    if (!slugFrozen && !isValidVillageSubdomain(slug)) {
+      setFieldError(t('villages_deploy_modal_error_invalid'));
+      return;
+    }
+    if (email && !EMAIL_SHAPE.test(email)) {
+      setFieldError(t('villages_deploy_review_email_invalid'));
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-      setError(null);
-      setWarning(null);
+
+      // Record what the reviewer changed before asking for the deploy — the
+      // route reads the slug and founder email off the village, not off the
+      // request.
+      const patch: UpdateVillageInput = {};
+      if (!slugFrozen && slug !== village.slug) {
+        if (await isSubdomainTaken(slug, village._id)) {
+          setFieldError(t('villages_deploy_modal_error_taken'));
+          return;
+        }
+        patch.slug = slug;
+      }
+      if (email !== (resolveFounderEmail(village) || '')) {
+        // Written to the field the route resolves first for this village, so
+        // the reviewed address is the one that wins.
+        if (village.projectManager?.email) {
+          patch.projectManager = { ...village.projectManager, email };
+        } else {
+          patch.contact = { ...village.contact, email };
+        }
+      }
+      if (Object.keys(patch).length > 0) {
+        await save(village._id, patch);
+      }
+
       const result = await deploy(village._id);
       // A 202 with a warning still recorded the request — procurement just did
       // not answer. It may come back without a village, so pass through what
@@ -151,17 +229,85 @@ export const DeployCTA: FC<{
     : null;
 
   const deployButton = (label: string) =>
-    canDeploy ? (
+    canAct ? (
       <button
         type="button"
         className={btnPrimary}
-        disabled={isSubmitting}
+        disabled={isSubmitting || (!slugFrozen && !subdomain.trim())}
         onClick={handleDeploy}
       >
         {isSubmitting ? <Spinner /> : null}
         {label}
       </button>
     ) : null;
+
+  // What gets reviewed before the button: the address (until the slug freezes,
+  // after which it is only stated) and the founder email the invite goes to.
+  const reviewForm = (
+    <div className="mt-5 flex flex-col gap-4 max-w-md">
+      {!slugFrozen ? (
+        <div className="flex flex-col gap-1.5">
+          <label className={labelClass} htmlFor="deploy-review-subdomain">
+            {t('villages_deploy_modal_slug_label')}
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              id="deploy-review-subdomain"
+              className={inputClass}
+              value={subdomain}
+              onChange={(event) => {
+                setSubdomain(sanitizeVillageSubdomainInput(event.target.value));
+                setFieldError(null);
+              }}
+              placeholder={t('villages_deploy_modal_slug_placeholder')}
+            />
+            <span className="text-[14.5px] text-[#5C6E64] flex-none">
+              .{CLOSER_DEPLOY_DOMAIN}
+            </span>
+          </div>
+          <p className="text-[12.5px] text-[#9BAAA2] font-mono">
+            {t('villages_deploy_slug_will_be', {
+              slug: normalizeVillageSubdomain(subdomain) || '—',
+            })}
+          </p>
+        </div>
+      ) : (
+        <p className="text-[12.5px] text-[#9BAAA2] font-mono">
+          {t('villages_deploy_slug_will_be', { slug: village.slug || '' })}
+        </p>
+      )}
+
+      <div className="flex flex-col gap-1.5">
+        <label className={labelClass} htmlFor="deploy-review-email">
+          {t('villages_deploy_review_email_label')}
+        </label>
+        <input
+          id="deploy-review-email"
+          type="email"
+          className={inputClass}
+          value={ownerEmail}
+          onChange={(event) => {
+            setOwnerEmail(event.target.value);
+            setFieldError(null);
+          }}
+          placeholder={t('villages_deploy_review_email_placeholder')}
+        />
+        {/* The route falls back to the creator's account email, which this
+            page cannot see — so an empty field is a caveat, not a block. */}
+        {!ownerEmail.trim() ? (
+          <p className="text-[13px] text-[#8A6314]">
+            {t('villages_deploy_missing_email')}
+          </p>
+        ) : null}
+      </div>
+
+      {fieldError ? (
+        <p role="alert" className="text-[13px] text-[#9B2C2C]">
+          {fieldError}
+        </p>
+      ) : null}
+    </div>
+  );
 
   return (
     <section
@@ -182,20 +328,23 @@ export const DeployCTA: FC<{
           <p className="text-[14.5px] text-[#5C6E64] mt-2 leading-relaxed">
             {t('villages_deploy_not_ready_body')}
           </p>
-          <ul className="mt-4 flex flex-col gap-1.5 text-[13.5px] text-[#8A6314]">
-            {readiness.missingSlug ? (
+          {/* Actors get the address field right here, so the bullet only
+              speaks to viewers who cannot set it on this card. */}
+          {!canAct && readiness.missingSlug ? (
+            <ul className="mt-4 flex flex-col gap-1.5 text-[13.5px] text-[#8A6314]">
               <li>· {t('villages_deploy_missing_slug')}</li>
-            ) : null}
-          </ul>
-          {canDeploy ? (
-            <div className="flex flex-wrap gap-3 mt-5">
-              <button type="button" className={btnPrimary} disabled>
-                {t('villages_deploy_cta')}
-              </button>
-              <Link href={editPath} className={btnSmall}>
-                {t('villages_edit_cta')}
-              </Link>
-            </div>
+            </ul>
+          ) : null}
+          {canAct ? (
+            <>
+              {reviewForm}
+              <div className="flex flex-wrap gap-3 mt-5">
+                {deployButton(t('villages_deploy_cta'))}
+                <Link href={editPath} className={btnSmall}>
+                  {t('villages_edit_cta')}
+                </Link>
+              </div>
+            </>
           ) : null}
         </>
       ) : null}
@@ -212,21 +361,30 @@ export const DeployCTA: FC<{
               ? t('villages_deploy_ready_body')
               : t('villages_deploy_ready_readonly_body')}
           </p>
-          <p className="text-[12.5px] text-[#9BAAA2] mt-2 font-mono">
-            {t('villages_deploy_slug_will_be', { slug: village.slug || '' })}
-          </p>
-          {/* The route falls back to the creator's account email, which this
-              page cannot see — so a missing address is a caveat, not a block. */}
-          {readiness.missingEmail ? (
-            <p className="text-[13px] text-[#8A6314] mt-3">
-              {t('villages_deploy_missing_email')}
-            </p>
-          ) : null}
-          {canDeploy ? (
-            <div className="flex flex-wrap gap-3 mt-5">
-              {deployButton(t('villages_deploy_cta'))}
-            </div>
-          ) : null}
+          {canAct ? (
+            <>
+              {reviewForm}
+              <div className="flex flex-wrap gap-3 mt-5">
+                {deployButton(t('villages_deploy_cta'))}
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-[12.5px] text-[#9BAAA2] mt-2 font-mono">
+                {t('villages_deploy_slug_will_be', {
+                  slug: village.slug || '',
+                })}
+              </p>
+              {/* The route falls back to the creator's account email, which
+                  this page cannot see — so a missing address is a caveat, not
+                  a block. */}
+              {readiness.missingEmail ? (
+                <p className="text-[13px] text-[#8A6314] mt-3">
+                  {t('villages_deploy_missing_email')}
+                </p>
+              ) : null}
+            </>
+          )}
         </>
       ) : null}
 
@@ -290,6 +448,7 @@ export const DeployCTA: FC<{
                 label={t('villages_deploy_open_api')}
               />
             ) : null}
+            {isAdmin ? deployButton(t('villages_deploy_redeploy_cta')) : null}
           </div>
           {village.appUrl || village.apiUrl ? (
             <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[12.5px] font-mono text-[#5C6E64] break-all">
@@ -321,6 +480,11 @@ export const DeployCTA: FC<{
           <p className="text-[12.5px] text-[#9BAAA2] mt-2 font-mono">
             {t('villages_deploy_slug_will_be', { slug: village.slug || '' })}
           </p>
+          {isAdmin ? (
+            <div className="flex flex-wrap gap-3 mt-5">
+              {deployButton(t('villages_deploy_redeploy_cta'))}
+            </div>
+          ) : null}
         </>
       ) : null}
 
@@ -347,13 +511,18 @@ export const DeployCTA: FC<{
                 : t('villages_deploy_requested_at', { when: requestedAt })}
             </p>
           ) : null}
-          {canDeploy ? (
-            <div className="flex flex-wrap gap-3 mt-5">
-              {deployButton(t('villages_deploy_retry_cta'))}
-              <Link href={editPath} className={btnSmall}>
-                {t('villages_edit_cta')}
-              </Link>
-            </div>
+          {/* The slug is frozen by now, but a wrong or missing founder email
+              is a fixable cause — so the review fields return for the retry. */}
+          {canAct ? (
+            <>
+              {reviewForm}
+              <div className="flex flex-wrap gap-3 mt-5">
+                {deployButton(t('villages_deploy_retry_cta'))}
+                <Link href={editPath} className={btnSmall}>
+                  {t('villages_edit_cta')}
+                </Link>
+              </div>
+            </>
           ) : null}
         </>
       ) : null}

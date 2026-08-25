@@ -3,7 +3,11 @@ import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 
 import type { Quest, QuestAward } from '../../types/quest';
-import { formatQuestCurrency, getQuestPhase } from '../../utils/quests.helpers';
+import {
+  formatQuestCurrency,
+  getQuestPhase,
+  normalizeQuestCurrency,
+} from '../../utils/quests.helpers';
 
 interface Props {
   quests: Quest[];
@@ -11,7 +15,11 @@ interface Props {
 
 /** Best case a single quest can pay out in one currency, ignoring perks/credits. */
 const awardValue = (award: QuestAward | undefined, cur: string): number =>
-  award && award.kind === 'currency' && award.cur === cur ? award.val : 0;
+  award &&
+  award.kind === 'currency' &&
+  normalizeQuestCurrency(award.cur) === cur
+    ? award.val
+    : 0;
 
 const questPayout = (quest: Quest, cur: string): number => {
   const { ranked, eachAction, participation } = quest.prize || {};
@@ -56,8 +64,8 @@ const QuestAdminStats = ({ quests }: Props) => {
       0,
     );
     const unsettled = quests.filter((quest) => quest.status !== 'settled');
-    const carrots = unsettled.reduce(
-      (total, quest) => total + questPayout(quest, 'carrots'),
+    const credits = unsettled.reduce(
+      (total, quest) => total + questPayout(quest, 'credits'),
       0,
     );
 
@@ -69,7 +77,7 @@ const QuestAdminStats = ({ quests }: Props) => {
       participants,
       tickets,
       actions,
-      carrots,
+      credits,
     };
   }, [quests]);
 
@@ -99,9 +107,9 @@ const QuestAdminStats = ({ quests }: Props) => {
       }),
     },
     {
-      key: 'carrots',
+      key: 'credits',
       label: t('quests_stats_payout'),
-      value: formatQuestCurrency(stats.carrots, 'carrots'),
+      value: formatQuestCurrency(stats.credits, 'credits'),
       sub: stats.pendingSettlement
         ? t('quests_stats_pending_settlement', {
             count: stats.pendingSettlement,
