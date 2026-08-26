@@ -84,9 +84,12 @@ describe('isVillageSubdomainTaken', () => {
   it('is taken when another village answers to the slug', async () => {
     mockedGet.mockResolvedValueOnce({ data: { results: [{ _id: 'other' }] } });
     await expect(isVillageSubdomainTaken('tdf', 'mine')).resolves.toBe(true);
-    // The village being deployed must not count as its own conflict.
-    const [url] = mockedGet.mock.calls[0];
-    expect(decodeURIComponent(url)).toContain('"$ne":"mine"');
+    expect(mockedGet).toHaveBeenCalledWith(
+      `/village?where=${encodeURIComponent(
+        JSON.stringify({ slug: 'tdf', _id: { $ne: 'mine' } }),
+      )}`,
+      { params: { limit: 1 } },
+    );
   });
 
   it('reads as free when the directory cannot be reached', async () => {
@@ -182,11 +185,20 @@ describe('deployVillageToCloser', () => {
 
 describe('fetchVillageCreatedBy', () => {
   it('returns the first village the user created, or null', async () => {
+    const expectedRequest = `/village?where=${encodeURIComponent(
+      JSON.stringify({ createdBy: 'u1' }),
+    )}`;
     mockedGet.mockResolvedValueOnce({ data: { results: [{ _id: 'v1' }] } });
     await expect(fetchVillageCreatedBy('u1')).resolves.toEqual({ _id: 'v1' });
+    expect(mockedGet).toHaveBeenNthCalledWith(1, expectedRequest, {
+      params: { limit: 1 },
+    });
 
     mockedGet.mockResolvedValueOnce({ data: { results: [] } });
     await expect(fetchVillageCreatedBy('u1')).resolves.toBeNull();
+    expect(mockedGet).toHaveBeenNthCalledWith(2, expectedRequest, {
+      params: { limit: 1 },
+    });
   });
 
   it('is null without a user id, without touching the API', async () => {
