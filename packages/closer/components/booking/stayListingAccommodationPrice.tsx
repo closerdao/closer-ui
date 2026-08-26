@@ -1,7 +1,10 @@
 import { useTranslations } from 'next-intl';
 
-import type { BookingRate, StaySearchListing } from '../../types/durationDiscount';
 import { CloserCurrencies } from '../../types/currency';
+import type {
+  BookingRate,
+  StaySearchListing,
+} from '../../types/durationDiscount';
 import {
   computeGrossAccommodationFromDiscounted,
   durationDiscountPercent,
@@ -16,6 +19,8 @@ interface StayListingAccommodationPriceProps {
 
 const rateTranslationKey = (rate: BookingRate) =>
   `stay_create_discount_rate_${rate}` as const;
+const displayDiscountPercent = (fraction: number) =>
+  Math.round(fraction * 10_000) / 100;
 
 const StayListingAccommodationPrice = ({
   listing,
@@ -23,19 +28,32 @@ const StayListingAccommodationPrice = ({
 }: StayListingAccommodationPriceProps) => {
   const t = useTranslations();
   const currency =
-    listing.rentalFiat?.cur ??
-    listing.fiatPrice?.cur ??
-    CloserCurrencies.EUR;
+    listing.rentalFiat?.cur ?? listing.fiatPrice?.cur ?? CloserCurrencies.EUR;
   const rentalFiat = listing.rentalFiat;
-  const discount = Number(listing.discount) || 0;
-  const hasDiscount = isDurationDiscountFraction(discount);
-  const grossVal = hasDiscount
-    ? computeGrossAccommodationFromDiscounted(rentalFiat, discount)
+  const durationDiscount =
+    Number(
+      listing.accommodationDiscount?.duration.fraction ?? listing.discount,
+    ) || 0;
+  const passportDiscount =
+    Number(listing.accommodationDiscount?.passport.fraction) || 0;
+  const combinedDiscount =
+    Number(
+      listing.accommodationDiscount?.combinedFraction ?? durationDiscount,
+    ) || 0;
+  const hasDiscount = isDurationDiscountFraction(combinedDiscount);
+  const resolvedGrossVal = hasDiscount
+    ? listing.accommodationPricing?.fiat.gross.val ??
+      computeGrossAccommodationFromDiscounted(rentalFiat, combinedDiscount)
     : null;
-  const showTotal =
+  const grossVal =
+    resolvedGrossVal != null &&
+    Number.isFinite(resolvedGrossVal) &&
     rentalFiat?.val != null &&
-    Number.isFinite(rentalFiat.val) &&
-    duration > 0;
+    resolvedGrossVal > rentalFiat.val
+      ? resolvedGrossVal
+      : null;
+  const showTotal =
+    rentalFiat?.val != null && Number.isFinite(rentalFiat.val) && duration > 0;
 
   if (!showTotal && !(hasDiscount && listing.bookingRate)) {
     return null;
@@ -62,12 +80,30 @@ const StayListingAccommodationPrice = ({
         </p>
       )}
       {hasDiscount && listing.bookingRate && (
-        <p className="text-xs font-medium text-accent">
-          {t('stay_create_duration_discount_badge', {
-            rate: t(rateTranslationKey(listing.bookingRate)),
-            percent: durationDiscountPercent(discount),
-          })}
-        </p>
+        <div className="text-xs font-medium text-accent flex flex-wrap gap-x-2">
+          {durationDiscount > 0 && (
+            <span>
+              {t('stay_create_duration_discount_badge', {
+                rate: t(rateTranslationKey(listing.bookingRate)),
+                percent: durationDiscountPercent(durationDiscount),
+              })}
+            </span>
+          )}
+          {passportDiscount > 0 && (
+            <span>
+              {t('stay_accommodation_discount_passport', {
+                percent: displayDiscountPercent(passportDiscount),
+              })}
+            </span>
+          )}
+          {durationDiscount > 0 && passportDiscount > 0 && (
+            <span>
+              {t('stay_accommodation_discount_combined', {
+                percent: displayDiscountPercent(combinedDiscount),
+              })}
+            </span>
+          )}
+        </div>
       )}
     </div>
   );

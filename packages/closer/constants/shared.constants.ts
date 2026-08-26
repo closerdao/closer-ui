@@ -519,9 +519,9 @@ export const MAX_TOKENS_TO_FINANCE = 1000;
 
 export const MIN_CELO_FOR_GAS = 1;
 
-export const DEFAULT_BOOK_ACCOMMODATION_GAS_LIMIT = 6_000_000;
+export const BOOK_ACCOMMODATION_GAS_BUFFER_PERCENT = 25;
 
-export const MAX_BOOK_ACCOMMODATION_GAS_LIMIT = 12_000_000;
+export const BOOK_ACCOMMODATION_BLOCK_GAS_LIMIT_PERCENT = 90;
 
 export const BOOKING_EXISTS_ERROR =
   'execution reverted: BookingFacet: Booking already exists';

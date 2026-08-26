@@ -34,3 +34,9 @@ _Avoid_: Custom CSS, app-specific React components, arbitrary theme code
 A Village Deployment must be deployable before homepage content exists. If no homepage is available from the Village CMS, the public homepage shows the Coming Soon State and marks itself `noindex`.
 
 Launch readiness is a stricter operational state: a Village needs valid brand configuration and either a published CMS homepage or an intentional Coming Soon State. Missing homepage data should not block deployment.
+
+**Accommodation Price Lock**:
+The backend-authoritative breakdown of gross accommodation, duration and Passport discounts, discounted fiat/TDF/Carrot caps, applied alternative payment, remaining fiat, and any TDF Stake Plan. UI surfaces display this object and do not reconstruct discounted accommodation from listing rates.
+
+**TDF Stake Plan**:
+Exact dates and a uniform `pricePerNightWei` returned by the API for an accommodation token payment. The UI passes it to the contract verbatim.

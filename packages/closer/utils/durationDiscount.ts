@@ -1,8 +1,5 @@
 import type { BookingSettings } from '../types/api';
-import type {
-  BookingRate,
-  DurationDiscounts,
-} from '../types/durationDiscount';
+import type { BookingRate, DurationDiscounts } from '../types/durationDiscount';
 import type { StayMoney } from '../types/stay';
 
 export const getBookingRateFromNights = (nights: number): BookingRate => {

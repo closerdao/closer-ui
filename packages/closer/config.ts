@@ -1,6 +1,5 @@
 import { ACCOUNTING_ENTITY_PRODUCT_SLUGS } from './constants/accountingEntities.constants';
 import { ISO_COUNTRY_CODES_FOR_CONFIG } from './constants/countryLocales';
-import { ConfigType } from './types/config';
 import {
   THEME_COLOR_TOKENS,
   THEME_DEFAULTS,
@@ -9,6 +8,7 @@ import {
   colorTokenConfigKey,
   fontSlotConfigKey,
 } from './theming';
+import { ConfigType } from './types/config';
 
 const THEME_FONT_IDS = THEME_FONTS.map((font) => font.id);
 
@@ -341,11 +341,11 @@ export const configDescription: ConfigType[] = [
       },
       discountsWeekly: {
         type: 'number',
-        default: 0.33,
+        default: 0.3,
       },
       discountsMonthly: {
         type: 'number',
-        default: 0.66,
+        default: 0.5,
       },
       seasonsHighStart: {
         type: 'text',
@@ -1128,7 +1128,7 @@ export const configDescription: ConfigType[] = [
       enabled: {
         type: 'boolean',
         default: true,
-      }
+      },
     },
   },
   {

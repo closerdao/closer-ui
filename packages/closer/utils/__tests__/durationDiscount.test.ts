@@ -41,10 +41,7 @@ describe('durationDiscount', () => {
   describe('computeGrossAccommodationFromDiscounted', () => {
     it('derives pre-discount accommodation from rentalFiat and fraction', () => {
       expect(
-        computeGrossAccommodationFromDiscounted(
-          { val: 231, cur: 'EUR' },
-          0.34,
-        ),
+        computeGrossAccommodationFromDiscounted({ val: 231, cur: 'EUR' }, 0.34),
       ).toBeCloseTo(350, 5);
     });
 

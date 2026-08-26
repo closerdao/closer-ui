@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../contexts/auth';
 import { BookingSettings } from '../types/api';
+import { getEventNights } from '../utils/events.helpers';
 import { getMaxBookingHorizon } from '../utils/helpers';
 import StayDurationDiscountHints from './booking/stayDurationDiscountHints';
 import BookingCoGuests, {
@@ -196,7 +197,7 @@ const StaySearchBar = ({
   }, [canSelectDates, eventStartDate, eventEndDate]);
 
   const nights = useMemo(
-    () => (start && end ? Math.max(0, dayjs(end).diff(dayjs(start), 'day')) : 0),
+    () => getEventNights(start, end),
     [start, end],
   );
 

@@ -10,6 +10,7 @@ import ConfirmationCelebrationOverlay, {
 import EventPreview from '../../../components/EventPreview';
 import FeatureNotEnabled from '../../../components/FeatureNotEnabled';
 import PageError from '../../../components/PageError';
+import { StayAccommodationDiscountSummary } from '../../../components/booking/stayAccommodationDiscountSummary';
 import { ErrorMessage } from '../../../components/ui';
 import Button from '../../../components/ui/Button';
 import Heading from '../../../components/ui/Heading';
@@ -119,7 +120,9 @@ const StayConfirmationPage = ({
   if (error) return <PageError error={error} />;
   if (!isBookingEnabled) return <FeatureNotEnabled feature="booking" />;
 
-  const pageTitle = `${t('stay_create_confirmation_meta_title')} - ${PLATFORM_NAME}`;
+  const pageTitle = `${t(
+    'stay_create_confirmation_meta_title',
+  )} - ${PLATFORM_NAME}`;
 
   const SeoHead = (
     <Head>
@@ -366,16 +369,16 @@ const StayConfirmationPage = ({
                 <dt className="text-xs font-semibold uppercase text-gray-500 tracking-wide">
                   {t('stay_create_status_label')}
                 </dt>
-                <dd className="text-gray-900 capitalize mt-1">
-                  {stay.status}
-                </dd>
+                <dd className="text-gray-900 capitalize mt-1">{stay.status}</dd>
               </div>
               <div>
                 <dt className="text-xs font-semibold uppercase text-gray-500 tracking-wide">
                   {t('stay_create_nights_label')}
                 </dt>
                 <dd className="text-gray-900 mt-1">
-                  {t('bookings_dates_nights_selected', { count: stay.duration || 0 })}
+                  {t('bookings_dates_nights_selected', {
+                    count: stay.duration || 0,
+                  })}
                 </dd>
               </div>
               <div>
@@ -398,6 +401,7 @@ const StayConfirmationPage = ({
 
             {stay.priceLock && (
               <div className="border-t pt-4 mt-2 flex flex-col gap-2">
+                <StayAccommodationDiscountSummary priceLock={stay.priceLock} />
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">
                     {t('stay_create_total_paid')}
@@ -475,7 +479,7 @@ StayConfirmationPage.getInitialProps = async (context: NextPageContext) => {
       error: parseMessageFromError(err),
       bookingSettings: null,
       generalConfig: null,
-      };
+    };
   }
 };
 
