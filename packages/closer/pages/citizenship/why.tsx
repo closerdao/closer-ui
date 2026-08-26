@@ -326,7 +326,7 @@ const CitizenWhyPage: NextPage = () => {
                       placeholder={t(
                         'subscriptions_citizen_referred_by_placeholder',
                       )}
-                      value={user ? [{ _id: user._id }] : []}
+                      value={(user ? [{ _id: user._id }] : []) as never[]}
                       onChange={((
                         _list: unknown,
                         option: {

@@ -190,7 +190,9 @@ const Vouching = ({
         // profile visit. Members and hosts can read anyone's total; other
         // viewers get a 401, which just means eligibility is unknown here,
         // not that the section is broken.
-        api.get(`/stays/nights/${userId}`, { cache: false }).catch(() => null),
+        api
+          .get(`/stays/nights/${userId}`, { cache: false } as any)
+          .catch(() => null),
         platform.user.get(userFilter),
       ]);
       if (staysRes) {
