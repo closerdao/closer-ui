@@ -128,7 +128,7 @@ const rbacDefaultConfig: RBACConfig = {
     SupportUs: true,
     Token: true,
     Blog: true,
-    TokenSales: true,
+    TokenSales: false,
     ExpenseTracking: false,
     Engagement: true,
     Applications: false,

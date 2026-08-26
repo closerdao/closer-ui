@@ -90,13 +90,6 @@ export const useRBAC = () => {
         return config.default && config.default[page] === true;
       }
 
-      // Token operations are intentionally shared by admins and space hosts.
-      // Keep this aligned with the API's requireTokenOperator guard even when
-      // an older persisted RBAC snapshot still has TokenSales disabled.
-      if (page === 'TokenSales' && user.roles.includes('space-host')) {
-        return true;
-      }
-
       const hasRoleAccess = user.roles.some((role) => {
         return config[role] && config[role][page] === true;
       });
