@@ -1,29 +1,26 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
 
 import { useAuth } from '../contexts/auth';
-import { usePlatform } from '../contexts/platform';
 import { WalletState } from '../contexts/wallet';
 import { CitizenshipConfig } from '../types';
-import { Booking } from '../types/booking';
-import { CitizenApplication } from '../types/subscriptions';
+import {
+  CitizenApplication,
+  FinanceApplication,
+} from '../types/subscriptions';
 import api from '../utils/api';
 import { getCachedConfig } from '../utils/cachedConfig.helpers';
+import { useOpenFinanceApplications } from './useOpenFinanceApplications';
 
 /**
- * Booking statuses that count as a stay, mirroring
- * `checkHasStayedForMinDuration` on the API.
+ * Statuses under which a financed plan counts towards citizenship — the API
+ * grants the role once a plan is 'paid' (deposit made) or fully repaid, so the
+ * quests mirror that rather than counting plans still awaiting their deposit.
  */
-const STAYED_BOOKING_STATUSES = [
-  'tokens-staked',
-  'credits-paid',
+const QUALIFYING_FINANCE_STATUSES: FinanceApplication['status'][] = [
   'paid',
-  'checked-in',
-  'checked-out',
-  'pending-refund',
+  'up-to-date',
+  'completed',
 ];
-
-/** Past bookings are only summed up for the counter, a handful is enough. */
-const BOOKINGS_TO_SUM_LIMIT = 10;
 
 export interface CitizenQuestsState {
   /** Citizenship config values, with defaults applied. */
@@ -43,6 +40,17 @@ export interface CitizenQuestsState {
   hasNoReports: boolean;
   isEligible: boolean;
   tokensProgress: number;
+
+  /** In-progress financed token plans (any open status), newest first. */
+  openFinanceApplications: FinanceApplication[];
+  /** Tokens financed under plans whose deposit is paid. */
+  financedTokens: number;
+  /**
+   * True when active financed plans (deposit paid) cover the token
+   * requirement together with the wallet balance, so the tokens quest is
+   * satisfied without buying or financing again.
+   */
+  isTokensCoveredByFinancePlan: boolean;
 
   /** Wallet. */
   balanceTotal: number;
@@ -75,7 +83,6 @@ export interface CitizenQuestsState {
  */
 export const useCitizenQuests = (): CitizenQuestsState => {
   const { user } = useAuth();
-  const { platform }: any = usePlatform();
   const citizenshipConfig = getCachedConfig(
     'citizenship',
   ) as CitizenshipConfig | null;
@@ -96,6 +103,21 @@ export const useCitizenQuests = (): CitizenQuestsState => {
   const ownsRequiredTokens = (balanceTotal || 0) >= tokensRequired;
   const isMember = Boolean(user?.roles?.includes('member'));
 
+  const { applications: openFinanceApplications } =
+    useOpenFinanceApplications();
+  const financedTokens = useMemo(
+    () =>
+      openFinanceApplications
+        .filter((row) => QUALIFYING_FINANCE_STATUSES.includes(row.status))
+        .reduce((acc, row) => acc + (row.tokensToFinance || 0), 0),
+    [openFinanceApplications],
+  );
+  const isTokensCoveredByFinancePlan =
+    financedTokens > 0 &&
+    (balanceTotal || 0) + financedTokens >= tokensRequired;
+  const hasRequiredTokensOrPlan =
+    ownsRequiredTokens || isTokensCoveredByFinancePlan;
+
   const [isVouched, setIsVouched] = useState(false);
   const [hasStayedPerApi, setHasStayedPerApi] = useState(false);
   const [application, setApplication] = useState<CitizenApplication>({
@@ -111,31 +133,9 @@ export const useCitizenQuests = (): CitizenQuestsState => {
 
   const vouchCount = user?.vouched?.length || 0;
 
-  // The API only answers "have they stayed long enough?", but the quest card
-  // shows how far along the stay is, so the nights are summed here too — with
-  // the same filter the API uses, so the counter and the tick agree.
-  const pastBookingsFilter = useMemo(
-    () => ({
-      where: {
-        createdBy: user?._id,
-        status: STAYED_BOOKING_STATUSES,
-        end: { $lt: new Date() },
-      },
-      sort: '-end',
-      limit: BOOKINGS_TO_SUM_LIMIT,
-    }),
-    [user?._id],
-  );
-
-  const pastBookings = platform?.booking?.find(pastBookingsFilter);
-
-  const totalStayDays =
-    pastBookings
-      ?.toJS()
-      ?.reduce(
-        (acc: number, booking: Booking) => acc + (booking.duration || 0),
-        0,
-      ) || 0;
+  // Verified presence comes from the API (`/stays/nights/:userId`), the same
+  // source the vouching gate on member profiles uses, so both counters agree.
+  const [totalStayDays, setTotalStayDays] = useState(0);
 
   const hasStayedForMinDuration =
     hasStayedPerApi ||
@@ -152,15 +152,21 @@ export const useCitizenQuests = (): CitizenQuestsState => {
     (user?.reports?.length === 0 || !user?.reports);
 
   const isTokensComplete =
-    ownsRequiredTokens ||
+    hasRequiredTokensOrPlan ||
     (application.hasSelectedTokenIntent &&
       (Boolean(application.intent.iWantToBuyTokens) ||
         Boolean(application.intent.iWantToFinanceTokens)));
 
-  const tokensProgress = Math.min(1, (balanceTotal || 0) / tokensRequired);
+  const tokensProgress = Math.min(
+    1,
+    ((balanceTotal || 0) + financedTokens) / tokensRequired,
+  );
 
   const isEligible =
-    hasStayedForMinDuration && isVouched && ownsRequiredTokens && hasNoReports;
+    hasStayedForMinDuration &&
+    isVouched &&
+    hasRequiredTokensOrPlan &&
+    hasNoReports;
 
   useEffect(() => {
     if (!user?._id) {
@@ -169,33 +175,31 @@ export const useCitizenQuests = (): CitizenQuestsState => {
 
     (async () => {
       try {
-        const hasStayedRes = await api.get(
-          '/subscription/citizen/check-has-stayed-for-min-duration',
-        );
+        const [hasStayedRes, isVouchedRes, staysRes] = await Promise.all([
+          api.get('/subscription/citizen/check-has-stayed-for-min-duration'),
+          api.get('/subscription/citizen/check-is-vouched'),
+          api.get(`/stays/nights/${user._id}`),
+        ]);
 
         setHasStayedPerApi(
           Boolean(hasStayedRes?.data?.hasStayedForMinDuration),
         );
-
-        const isVouchedRes = await api.get(
-          '/subscription/citizen/check-is-vouched',
-        );
-
         setIsVouched(Boolean(isVouchedRes?.data?.isVouched));
+        // The stays routes wrap their payload in `results`.
+        setTotalStayDays(
+          Number(
+            staysRes?.data?.results?.totalNights ??
+              staysRes?.data?.totalNights,
+          ) || 0,
+        );
       } catch (error) {}
     })();
   }, [ownsRequiredTokens, isMember, user?._id]);
 
   useEffect(() => {
-    if (!user?._id || !platform?.booking) {
-      return;
-    }
-
-    platform.booking.get(pastBookingsFilter).catch(() => {});
-  }, [pastBookingsFilter, user?._id]);
-
-  useEffect(() => {
-    if (ownsRequiredTokens) {
+    // Covered people (own tokens, or an active plan already covers them) have
+    // nothing left to buy or finance, so the intent collapses to applying.
+    if (hasRequiredTokensOrPlan) {
       setApplication((prev) => ({
         ...prev,
         ownsRequiredTokens,
@@ -207,7 +211,7 @@ export const useCitizenQuests = (): CitizenQuestsState => {
         },
       }));
     }
-  }, [ownsRequiredTokens, isMember]);
+  }, [hasRequiredTokensOrPlan, ownsRequiredTokens, isMember]);
 
   const updateApplication = (
     key: keyof CitizenApplication,
@@ -235,6 +239,9 @@ export const useCitizenQuests = (): CitizenQuestsState => {
     hasNoReports,
     isEligible,
     tokensProgress,
+    openFinanceApplications,
+    financedTokens,
+    isTokensCoveredByFinancePlan,
     balanceTotal: balanceTotal || 0,
     proofOfPresence: proofOfPresence || 0,
     isWalletConnected: Boolean(isWalletConnected),

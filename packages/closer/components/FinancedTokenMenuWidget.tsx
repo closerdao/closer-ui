@@ -1,72 +1,15 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useEffect, useState } from 'react';
-
 import { useTranslations } from 'next-intl';
 
-import { useAuth } from '../contexts/auth';
-import { usePlatform } from '../contexts/platform';
-import { FinanceApplication } from '../types/subscriptions';
+import { useOpenFinanceApplications } from '../hooks/useOpenFinanceApplications';
 import { getFinanceMenuHighlight } from '../utils/financeApplicationScheduleHelpers';
-import { financeApplicationListFromGetAction } from '../utils/platformFinanceApplication';
-
-const OPEN_FINANCE_STATUSES: FinanceApplication['status'][] = [
-  'pending-payment',
-  'paid',
-  'pending',
-  'up-to-date',
-  'delinquent',
-];
 
 const FinancedTokenMenuWidget = () => {
   const t = useTranslations();
   const router = useRouter();
-  const { user } = useAuth();
-  const { platform } = usePlatform();
-  const [applications, setApplications] = useState<FinanceApplication[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user?._id) {
-      setApplications([]);
-      setIsLoading(false);
-      return;
-    }
-    if (!platform?.financeapplication) {
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      setIsLoading(true);
-      try {
-        const params = {
-          where: {
-            userId: user._id,
-            status: { $in: OPEN_FINANCE_STATUSES },
-          },
-          limit: 50,
-          sort_by: '-created' as const,
-        };
-        const action = await platform.financeapplication.get(params);
-        const rows = financeApplicationListFromGetAction(action);
-        if (!cancelled) {
-          setApplications(rows);
-        }
-      } catch {
-        if (!cancelled) {
-          setApplications([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [user?._id, platform?.financeapplication]);
+  const { applications, isLoading } = useOpenFinanceApplications();
 
   if (
     process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP !== 'true' ||

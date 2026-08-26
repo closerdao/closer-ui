@@ -1,9 +1,12 @@
 import Head from 'next/head';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 
 import { useEffect, useRef, useState } from 'react';
 
+import Autocomplete from '../../components/Autocomplete';
 import CitizenWhy from '../../components/CitizenWhy';
+import UserAvatarPlaceholder from '../../components/UserAvatarPlaceholder';
 import { Button, Heading, ProgressBar } from '../../components/ui';
 
 import { NextPage } from 'next';
@@ -15,6 +18,7 @@ import { usePlatform } from '../../contexts/platform';
 import { useConfig } from '../../hooks/useConfig';
 import { CitizenshipConfig } from '../../types/api';
 import { CitizenApplication } from '../../types/subscriptions';
+import api, { cdn } from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { logMetric } from '../../utils/metrics';
 import PageNotFound from '../not-found';
@@ -45,6 +49,62 @@ const CitizenWhyPage: NextPage = () => {
   const hasSubmittedWhy = Boolean(userCitizenshipWhy);
 
   const stampedCitizenshipAppliedAtForUserIdRef = useRef<string | null>(null);
+  // Who referred the applicant. Only asked when nothing set it earlier (e.g. a
+  // referral signup link); once user.referredBy exists the question is replaced
+  // by the referrer's name.
+  const [referredByUser, setReferredByUser] = useState<{
+    _id: string;
+    screenname?: string;
+    photo?: string;
+  } | null>(null);
+  const [existingReferrer, setExistingReferrer] = useState<{
+    screenname?: string;
+    photo?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!user?.referredBy) {
+      setExistingReferrer(null);
+      return;
+    }
+    (async () => {
+      try {
+        const res = await api.get(`/user/${user.referredBy}`);
+        const referrer = res?.data?.results;
+        setExistingReferrer(
+          referrer?.screenname
+            ? { screenname: referrer.screenname, photo: referrer.photo }
+            : null,
+        );
+      } catch (err) {
+        // A dangling referredBy id just means there is no name to show.
+        setExistingReferrer(null);
+      }
+    })();
+  }, [user?.referredBy]);
+
+  // The same referrer pill the signup page shows for a referral link.
+  const renderReferrerPill = (
+    referrer: { screenname?: string; photo?: string },
+    action?: JSX.Element,
+  ) => (
+    <div className="flex items-center gap-2 rounded-full bg-accent-light px-4 py-2 text-sm w-fit">
+      {referrer.photo ? (
+        <Image
+          src={`${cdn}${referrer.photo}-profile-sm.jpg`}
+          alt=""
+          width={24}
+          height={24}
+          className="rounded-full"
+        />
+      ) : (
+        <UserAvatarPlaceholder size="sm" />
+      )}
+      <span className="text-gray-600">{t('signup_form_referrer')}</span>
+      <span className="font-bold">{referrer.screenname}</span>
+      {action}
+    </div>
+  );
   const [application, setApplication] = useState<CitizenApplication>({
     ownsRequiredTokens: false,
     why: userCitizenshipWhy || '',
@@ -109,13 +169,11 @@ const CitizenWhyPage: NextPage = () => {
     }
 
     stampedCitizenshipAppliedAtForUserIdRef.current = user._id;
-    platform.user
-      .patch(user._id, {
-        citizenship: {
-          ...user.citizenship,
-          appliedAt: new Date(),
-        },
-      })
+    // `citizenship` is not client-editable on the user model - a generic user
+    // patch would silently drop it - so the stamp goes through the dedicated
+    // application endpoint.
+    api
+      .post('/subscription/citizen/application', {})
       .then(() => {
         refetchUser();
       })
@@ -158,12 +216,19 @@ const CitizenWhyPage: NextPage = () => {
 
   const handleNext = async () => {
     try {
-      await platform.user.patch(user?._id || '', {
-        citizenship: {
-          ...user?.citizenship,
+      // The why goes through the citizenship application endpoint (the
+      // `citizenship` field is not client-editable); referredBy is an
+      // editable user field and saves through the normal patch.
+      await Promise.all([
+        api.post('/subscription/citizen/application', {
           why: application?.why,
-        },
-      });
+        }),
+        referredByUser && !user?.referredBy
+          ? platform.user.patch(user?._id || '', {
+              referredBy: referredByUser._id,
+            })
+          : Promise.resolve(),
+      ]);
       await refetchUser();
 
       void logMetric({
@@ -230,6 +295,54 @@ const CitizenWhyPage: NextPage = () => {
                 updateApplication={updateApplication}
                 application={application}
               />
+              {user?.referredBy &&
+                existingReferrer &&
+                renderReferrerPill(existingReferrer)}
+              {!user?.referredBy && (
+                <div className="flex flex-col gap-2">
+                  <label
+                    htmlFor="referredBy"
+                    className="block text-sm font-bold"
+                  >
+                    {t('subscriptions_citizen_referred_by_label')}
+                  </label>
+                  <p className="text-sm text-gray-500">
+                    {t('subscriptions_citizen_referred_by_hint')}
+                  </p>
+                  {referredByUser ? (
+                    renderReferrerPill(
+                      referredByUser,
+                      <button
+                        type="button"
+                        className="text-accent underline"
+                        onClick={() => setReferredByUser(null)}
+                      >
+                        {t('subscriptions_citizen_referred_by_change')}
+                      </button>,
+                    )
+                  ) : (
+                    <Autocomplete
+                      endpoint="/user"
+                      placeholder={t(
+                        'subscriptions_citizen_referred_by_placeholder',
+                      )}
+                      value={user ? [{ _id: user._id }] : []}
+                      onChange={((
+                        _list: unknown,
+                        option: {
+                          _id: string;
+                          screenname?: string;
+                          photo?: string;
+                        },
+                      ) => {
+                        if (option && option._id !== user?._id) {
+                          setReferredByUser(option);
+                        }
+                      }) as unknown as () => void}
+                    />
+                  )}
+                </div>
+              )}
               <div className="py-4">
                 <Button
                   isEnabled={Boolean(application?.why)}

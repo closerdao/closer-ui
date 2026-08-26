@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import { useEffect, useState } from 'react';
@@ -47,7 +48,10 @@ const ValidationCitizenPage: NextPage = () => {
     isEligible,
     isMember,
     application,
+    openFinanceApplications,
   } = quests;
+
+  const hasFinancedApplication = openFinanceApplications.length > 0;
 
   const isCitizenshipEnabled = Boolean(citizenshipConfig?.enabled);
   const isWalletEnabled =
@@ -242,6 +246,28 @@ const ValidationCitizenPage: NextPage = () => {
             showEligibilityQuests={!isMember}
             tokensAction={isTokenAction ? ctaButton : null}
           />
+
+          {hasFinancedApplication && (
+            <div className="rounded-lg border border-accent/30 bg-accent/5 p-4 flex flex-col gap-2">
+              <p className="text-sm font-medium">
+                {t('subscriptions_citizen_active_applications')}
+              </p>
+              <Link
+                href={
+                  openFinanceApplications.length > 1
+                    ? '/token/financed'
+                    : `/token/financed/${encodeURIComponent(
+                        openFinanceApplications[0]._id,
+                      )}`
+                }
+                className="text-sm font-medium text-accent underline"
+              >
+                {openFinanceApplications.length > 1
+                  ? t('member_menu_financed_view_contracts')
+                  : t('token_financed_view_contract')}
+              </Link>
+            </div>
+          )}
 
           {isWalletEnabled ? (
             <div className="my-4 flex flex-col gap-4">

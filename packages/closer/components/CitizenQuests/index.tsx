@@ -98,7 +98,8 @@ const CitizenQuests = ({
   const t = useTranslations();
   const { DISCORD_URL } = useConfig();
 
-  const isVouchLocked = !hasStayedForMinDuration || !isTokensComplete;
+  // Tokens and vouching can happen in parallel — only presence gates vouching.
+  const isVouchLocked = !hasStayedForMinDuration;
   const vouchProgress = isVouched
     ? 1
     : minVouches <= 0
