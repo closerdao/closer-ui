@@ -7,7 +7,7 @@ import {
   CitizenApplication,
   FinanceApplication,
 } from '../types/subscriptions';
-import api from '../utils/api';
+import api, { formatSearch } from '../utils/api';
 import { getCachedConfig } from '../utils/cachedConfig.helpers';
 import { useOpenFinanceApplications } from './useOpenFinanceApplications';
 
@@ -96,7 +96,6 @@ export const useCitizenQuests = (): CitizenQuestsState => {
   } = useContext(WalletState);
 
   const tokensRequired = citizenshipConfig?.tokensRequired ?? 30;
-  const minVouches = citizenshipConfig?.minVouches ?? 3;
   const minStayDuration = citizenshipConfig?.minVouchingStayDuration ?? 14;
   const isSpaceHostVouchRequired = citizenshipConfig?.isSpaceHostVouchRequired;
 
@@ -120,6 +119,7 @@ export const useCitizenQuests = (): CitizenQuestsState => {
 
   const [isVouched, setIsVouched] = useState(false);
   const [hasStayedPerApi, setHasStayedPerApi] = useState(false);
+  const [totalCitizens, setTotalCitizens] = useState(0);
   const [application, setApplication] = useState<CitizenApplication>({
     ownsRequiredTokens,
     why: user?.citizenship?.why || '',
@@ -136,6 +136,7 @@ export const useCitizenQuests = (): CitizenQuestsState => {
   // Verified presence comes from the API (`/stays/nights/:userId`), the same
   // source the vouching gate on member profiles uses, so both counters agree.
   const [totalStayDays, setTotalStayDays] = useState(0);
+  const minVouches = Math.round(totalCitizens * 0.1);
 
   const hasStayedForMinDuration =
     hasStayedPerApi ||
@@ -175,11 +176,19 @@ export const useCitizenQuests = (): CitizenQuestsState => {
 
     (async () => {
       try {
-        const [hasStayedRes, isVouchedRes, staysRes] = await Promise.all([
-          api.get('/subscription/citizen/check-has-stayed-for-min-duration'),
-          api.get('/subscription/citizen/check-is-vouched'),
-          api.get(`/stays/nights/${user._id}`),
-        ]);
+        const [hasStayedRes, isVouchedRes, staysRes, citizensCountRes] =
+          await Promise.all([
+            api.get('/subscription/citizen/check-has-stayed-for-min-duration'),
+            api.get('/subscription/citizen/check-is-vouched'),
+            api.get(`/stays/nights/${user._id}`),
+            api.get('/count/user', {
+              params: {
+                where: formatSearch({
+                  roles: { $in: ['member', 'citizen'] },
+                }),
+              },
+            }),
+          ]);
 
         setHasStayedPerApi(
           Boolean(hasStayedRes?.data?.hasStayedForMinDuration),
@@ -192,6 +201,7 @@ export const useCitizenQuests = (): CitizenQuestsState => {
               staysRes?.data?.totalNights,
           ) || 0,
         );
+        setTotalCitizens(Number(citizensCountRes?.data?.results) || 0);
       } catch (error) {}
     })();
   }, [ownsRequiredTokens, isMember, user?._id]);

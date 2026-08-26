@@ -155,7 +155,7 @@ const CommunityPage = ({ bookingConfig }: Props) => {
         const { data } = await api.get('/user', {
           params: {
             where: formatSearch({ _id: { $in: Array.from(userIds) } }),
-            limit: 20,
+            limit: userIds.size,
           },
         });
         setOnSiteUsers(data?.results ?? []);
@@ -201,7 +201,7 @@ const CommunityPage = ({ bookingConfig }: Props) => {
               <p className="text-sm mt-2">
                 <span className="text-success font-medium">
                   {t('community_on_site_now', {
-                    count: onSiteIds.size,
+                    count: onSiteUsers.length,
                     platform: PLATFORM_NAME,
                   })}
                 </span>
@@ -229,7 +229,9 @@ const CommunityPage = ({ bookingConfig }: Props) => {
                 <h2 className="font-bold text-lg">
                   {t('community_at_platform', { platform: PLATFORM_NAME })}
                 </h2>
-                <span className="text-sm text-gray-400">{onSiteIds.size}</span>
+                <span className="text-sm text-gray-400">
+                  {onSiteUsers.length}
+                </span>
               </div>
               <div className="mt-4 flex flex-wrap gap-x-8 gap-y-4">
                 {onSiteUsers.map((user) => (

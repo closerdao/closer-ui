@@ -74,7 +74,7 @@ const SuccessCitizenPage: NextPage = () => {
   useEffect(() => {
     if (
       user?.citizenship?.status === 'completed' &&
-      user?.roles?.includes('citizen')
+      (user?.roles?.includes('member') || user?.roles?.includes('citizen'))
     ) {
       void logMetric({
         event: 'citizen-qualified',
