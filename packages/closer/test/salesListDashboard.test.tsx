@@ -210,7 +210,7 @@ describe('SalesListDashboard', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('gives space hosts the token Safe controls and wallet view', async () => {
+  it('gives admins the token Safe controls and wallet view', async () => {
     api.get.mockImplementation((url: string) => {
       if (url === '/onchain-admin/recipients') {
         return Promise.resolve({
@@ -229,7 +229,7 @@ describe('SalesListDashboard', () => {
       return Promise.resolve({ data: { results: [] } });
     });
 
-    renderDashboard(['space-host']);
+    renderDashboard(['admin']);
 
     await waitFor(() =>
       expect(api.get).toHaveBeenCalledWith(
@@ -273,7 +273,7 @@ describe('SalesListDashboard', () => {
       return Promise.resolve({ data: { results: [] } });
     });
 
-    const view = renderDashboard(['space-host']);
+    const view = renderDashboard(['admin']);
     await waitFor(() =>
       expect(api.get).toHaveBeenCalledWith(
         '/onchain-admin/recipients',
@@ -357,7 +357,7 @@ describe('SalesListDashboard', () => {
       return Promise.resolve({ data: { results: [] } });
     });
 
-    const view = renderDashboard(['space-host']);
+    const view = renderDashboard(['admin']);
     await waitFor(() =>
       expect(api.get).toHaveBeenCalledWith(
         '/safe/token-distribution-batches',

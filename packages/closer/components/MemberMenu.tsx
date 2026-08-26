@@ -179,7 +179,7 @@ const MemberMenu = ({
           label: t('navigation_sales'),
           url: '/dashboard/sales',
           enabled: isTokenEnabled,
-          roles: ['admin', 'team', 'space-host'],
+          roles: ['admin', 'team'],
           rbacPage: 'TokenSales',
         },
         {
