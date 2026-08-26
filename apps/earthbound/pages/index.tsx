@@ -671,13 +671,15 @@ interface Props {
 const HomePage = ({ generalConfig, listings, hosts, cmsPage }: Props) => {
   // A homepage saved in the page editor (slug "/") takes precedence over the
   // hardcoded fallback below.
-  const page: Page = cmsPage?.sections?.length
-    ? { isHomePage: true, sections: cmsPage.sections }
-    : getPage({
-        listings,
-        hosts,
-        generalConfig,
-      });
+  const useCmsPage = Boolean(cmsPage?.sections?.length);
+  const page: Page =
+    useCmsPage && cmsPage
+      ? { isHomePage: true, sections: cmsPage.sections }
+      : getPage({
+          listings,
+          hosts,
+          generalConfig,
+        });
 
   const { platform }: any = usePlatform();
   const { user } = useAuth();
@@ -744,9 +746,11 @@ const HomePage = ({ generalConfig, listings, hosts, cmsPage }: Props) => {
     }
   }, []);
 
-  const title = cmsPage?.title || 'Earthbound Ecovillage & Community Sweden';
+  const title =
+    (useCmsPage && cmsPage?.title) ||
+    'Earthbound Ecovillage & Community Sweden';
   const description =
-    cmsPage?.description ||
+    (useCmsPage && cmsPage?.description) ||
     'Earthbound is an Ecovillage, Think-Tank & living Community, based on conscious relationships, earth-centered awareness and regenerative living.';
 
   return (
@@ -757,7 +761,7 @@ const HomePage = ({ generalConfig, listings, hosts, cmsPage }: Props) => {
         <meta property="og:title" content={title} />
         <meta property="og:type" content="website" />
         <meta property="og:description" content={description} />
-        {cmsPage?.ogImage ? (
+        {useCmsPage && cmsPage?.ogImage ? (
           <meta property="og:image" content={cmsPage.ogImage} />
         ) : null}
       </Head>

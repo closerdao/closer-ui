@@ -41,7 +41,9 @@ function generateSiteMap({ articles, events, pages, volunteerOpportunities }) {
     ...articles.map(({ slug }) => toUrl(`/blog/${slug}`)),
     ...events.map(({ slug }) => toUrl(`/events/${slug}`)),
     ...volunteerOpportunities.map(({ slug }) => toUrl(`/volunteer/${slug}`)),
-    ...pages.filter(({ slug }) => slug).map(({ slug }) => toUrl(slug)),
+    ...pages
+      .filter(({ slug }) => slug && slug !== '/')
+      .map(({ slug }) => toUrl(slug)),
   ].filter(Boolean);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
