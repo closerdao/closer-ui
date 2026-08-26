@@ -15,6 +15,7 @@ import SubscriptionBadge from '../../components/SubscriptionBadge';
 import UploadPhoto from '../../components/UploadPhoto';
 import UserAvatarPlaceholder from '../../components/UserAvatarPlaceholder';
 import UserBookings from '../../components/UserBookings';
+import VillageCard from '../../components/VillageCard';
 import Vouching from '../../components/Vouching';
 import EmailDisplay from '../../components/display/emailDisplay';
 import WalletDisplay from '../../components/display/walletDisplay';
@@ -43,23 +44,36 @@ import { usePlatform } from '../../contexts/platform';
 import { useAttendedEvents } from '../../hooks/useAttendedEvents';
 import { FinanceApplication } from '../../types';
 import { BookingConfig } from '../../types/api';
-import { GeneralConfig } from '../../types/api';
+import {
+  CitizenshipConfig,
+  CohousingConfig,
+  GeneralConfig,
+  TokenConfig,
+} from '../../types/api';
 import api, { cdn } from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
 import { getUrlDisplayString } from '../../utils/display.helpers';
+import {
+  VillageConnection,
+  fetchUserVillageConnections,
+} from '../../utils/village.utils';
 import PageNotFound from '../not-found';
 
-const ConnectedWallet =
-  process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true'
-    ? dynamic(
-        () => import('../../components/ConnectedWallet').then((m) => m.default),
-        { ssr: false },
-      )
-    : () => null;
+const isWalletEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
+
+const ConnectedWallet = isWalletEnabled
+  ? dynamic(
+      () => import('../../components/ConnectedWallet').then((m) => m.default),
+      { ssr: false },
+    )
+  : () => null;
 
 /** Stamps are small, so the whole attendance history fits without paging. */
 const MAX_ATTENDED_EVENTS_TO_SHOW = 200;
+
+const isFederationEnabled =
+  process.env.NEXT_PUBLIC_FEATURE_FEDERATION === 'true';
 
 interface MemberPageProps {
   member: User;
@@ -69,6 +83,33 @@ interface MemberPageProps {
 
 const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
   const generalConfig = getCachedConfig('general') as GeneralConfig | null;
+  const citizenshipConfig = getCachedConfig(
+    'citizenship',
+  ) as CitizenshipConfig | null;
+  const cohousingConfig = getCachedConfig(
+    'cohousing',
+  ) as CohousingConfig | null;
+  const eventsConfig = getCachedConfig('events') as {
+    enabled?: boolean;
+  } | null;
+  const tokenConfig = getCachedConfig('token') as TokenConfig | null;
+
+  // Same config + env-flag pairs the menus gate on (memberMenuFeatureFlags).
+  const isBookingEnabled =
+    Boolean(bookingConfig?.enabled) &&
+    process.env.NEXT_PUBLIC_FEATURE_BOOKING === 'true';
+  const isCitizenshipEnabled =
+    Boolean(citizenshipConfig?.enabled) &&
+    process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
+  const isEventsEnabled = eventsConfig?.enabled === true;
+  const isTokenSaleEnabled =
+    Boolean(tokenConfig?.enabled) &&
+    process.env.NEXT_PUBLIC_FEATURE_TOKEN_SALE === 'true';
+  // Vouches feed citizen eligibility and cohousing applications; without
+  // either feature the section has no purpose.
+  const isVouchingEnabled =
+    isCitizenshipEnabled || cohousingConfig?.enabled === true;
+
   const t = useTranslations();
   const {
     user: currentUser,
@@ -109,6 +150,9 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
   const [activeApplications, setActiveApplications] = useState<
     FinanceApplication[]
   >([]);
+  const [villageConnections, setVillageConnections] = useState<
+    VillageConnection[]
+  >([]);
   const [about, setAbout] = useState<string>(member?.about || '');
   const [aboutDraft, setAboutDraft] = useState<string>(member?.about || '');
   const [isEditingAbout, setIsEditingAbout] = useState(false);
@@ -134,7 +178,10 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
       .sort((a, b) => Number(b === 'ambassador') - Number(a === 'ambassador'));
   }, [member?.roles]);
 
-  const { eventIds: attendedEventIds } = useAttendedEvents(member?._id);
+  // Passing no id keeps the hook from fetching when events are disabled.
+  const { eventIds: attendedEventIds } = useAttendedEvents(
+    isEventsEnabled ? member?._id : undefined,
+  );
 
   // Pinned on mount: a fresh `new Date()` per render would change the query on
   // every pass and refetch the same events.
@@ -167,6 +214,22 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
     setAboutDraft(member?.about || '');
   }, [member?._id]);
 
+  // Federation profiles list the villages this member is tied to — as
+  // ambassador, manager, creator or referrer. Reset on navigation for the same
+  // reason as the About re-sync above.
+  useEffect(() => {
+    setVillageConnections([]);
+    if (!isFederationEnabled || !member?._id) return;
+    let cancelled = false;
+    (async () => {
+      const connections = await fetchUserVillageConnections(member._id);
+      if (!cancelled) setVillageConnections(connections);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [member?._id]);
+
   useEffect(() => {
     if (hasSaved) {
       setTimeout(() => {
@@ -178,7 +241,7 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
     refetchUser();
   }, [hasSaved]);
   useEffect(() => {
-    if (currentUser && !isLoading) {
+    if (currentUser && !isLoading && isTokenSaleEnabled) {
       (async () => {
         const financeApplicationRes = await api.get('/financeApplication', {
           params: {
@@ -459,14 +522,16 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
               {/* Left Column - User Info */}
               <div className="md:col-span-1">
                 {/* Connected Wallet Section */}
-                {isAuthenticated && member?._id === currentUser?._id && (
-                  <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h4 className="font-medium text-xl mb-4">
-                      {t('members_slug_wallet')}
-                    </h4>
-                    <ConnectedWallet />
-                  </div>
-                )}
+                {isWalletEnabled &&
+                  isAuthenticated &&
+                  member?._id === currentUser?._id && (
+                    <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                      <h4 className="font-medium text-xl mb-4">
+                        {t('members_slug_wallet')}
+                      </h4>
+                      <ConnectedWallet />
+                    </div>
+                  )}
 
                 {/* Social Links Section */}
                 <div className="bg-white rounded-lg shadow-sm p-6">
@@ -743,9 +808,37 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                   </div>
                 )}
 
+                {/* Villages Section — federation only: where this member is
+                    ambassador, manager, creator or referrer. Hidden when there
+                    is nothing to show. */}
+                {isFederationEnabled && villageConnections.length > 0 && (
+                  <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <h4 className="font-medium text-xl mb-4">
+                      {t('members_slug_villages')}
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      {villageConnections.map(({ village, roles }) => (
+                        <div key={village._id} className="flex flex-col gap-2">
+                          <VillageCard village={village} />
+                          <div className="flex flex-wrap gap-1.5">
+                            {roles.map((role) => (
+                              <span
+                                key={role}
+                                className="text-xs text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full"
+                              >
+                                {t(`village_connection_${role}`)}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Vouching Section — every citizen sees it, including on
                     their own profile, where it lists who vouched for them. */}
-                {(isMember || isAdmin || isSpaceHost) && (
+                {isVouchingEnabled && (isMember || isAdmin || isSpaceHost) && (
                   <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
                     <Vouching
                       vouchData={member?.vouched || []}
@@ -876,14 +969,15 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                 )}
 
                 {/* Citizenship Section */}
-                {member?.citizenship &&
+                {isCitizenshipEnabled &&
+                  member?.citizenship &&
                   (member._id === currentUser?._id ||
                     currentUser?.roles?.includes('admin') ||
                     currentUser?.roles?.includes('community-curator')) && (
                     <div className="bg-white mb-6 space-y-6">
                       <CitizenSubscriptionProgress member={member} />
 
-                      {activeApplications?.length > 0 && (
+                      {isTokenSaleEnabled && activeApplications?.length > 0 && (
                         <FinancedTokenProgress
                           member={member}
                           activeApplications={activeApplications}
@@ -893,7 +987,8 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                   )}
 
                 {/* User Bookings Section */}
-                {member &&
+                {isBookingEnabled &&
+                  member &&
                   currentUser &&
                   currentUser.roles.includes('space-host') && (
                     <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
@@ -909,19 +1004,21 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                   )}
 
                 {/* Events Section */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h4 className="font-medium text-xl mb-4">
-                    {t('members_slug_past_events')}
-                  </h4>
-                  <EventsList
-                    limit={MAX_ATTENDED_EVENTS_TO_SHOW}
-                    showPagination={false}
-                    isStampView={true}
-                    sort_by="-start"
-                    where={pastEventsWhere}
-                    emptyLabel={t('members_slug_no_past_events')}
-                  />
-                </div>
+                {isEventsEnabled && (
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h4 className="font-medium text-xl mb-4">
+                      {t('members_slug_past_events')}
+                    </h4>
+                    <EventsList
+                      limit={MAX_ATTENDED_EVENTS_TO_SHOW}
+                      showPagination={false}
+                      isStampView={true}
+                      sort_by="-start"
+                      where={pastEventsWhere}
+                      emptyLabel={t('members_slug_no_past_events')}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import type { Stay } from '../../types/stay';
 import api from '../api';
 import {
-  checkCarrotsAvailability,
+  checkCreditsAvailability,
   getCreditsBalance,
   getStayAccommodationTokenTotal,
   getStayTokenPricePerNight,
@@ -52,29 +52,29 @@ describe('stays credits helpers', () => {
     expect(getStayTokenPricePerNight(stay)).toBe(1);
   });
 
-  it('checkCarrotsAvailability posts stay start and token amounts', async () => {
+  it('checkCreditsAvailability posts stay start and token amounts', async () => {
     (api.post as jest.Mock).mockResolvedValue({ data: { results: true } });
     const stay = baseStay();
 
     await expect(
-      checkCarrotsAvailability({
+      checkCreditsAvailability({
         startDate: stay.start,
         creditsAmount: getStayAccommodationTokenTotal(stay),
         minCreditsAmount: getStayTokenPricePerNight(stay),
       }),
     ).resolves.toBe(true);
 
-    expect(api.post).toHaveBeenCalledWith('/carrots/availability', {
+    expect(api.post).toHaveBeenCalledWith('/credits/availability', {
       startDate: stay.start,
       creditsAmount: 6,
       minCreditsAmount: 1,
     });
   });
 
-  it('checkCarrotsAvailability returns false on error', async () => {
+  it('checkCreditsAvailability returns false on error', async () => {
     (api.post as jest.Mock).mockRejectedValue(new Error('network'));
     await expect(
-      checkCarrotsAvailability({
+      checkCreditsAvailability({
         startDate: '2026-09-12',
         creditsAmount: 6,
         minCreditsAmount: 1,

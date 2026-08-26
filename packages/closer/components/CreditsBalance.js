@@ -15,11 +15,11 @@ const CreditsBalance = ({ isDemo, className = '' }) => {
 
   const { isAuthenticated } = useAuth();
   const [error, setErrors] = useState(false);
-  const creditsBalance = platform.carrots.findBalance('carrots');
+  const creditsBalance = platform.credits.findBalance('credits');
 
   const loadData = async () => {
     try {
-      await platform.carrots.getBalance();
+      await platform.credits.getBalance();
       setErrors(false);
     } catch (err) {
       console.log('Load error', err);

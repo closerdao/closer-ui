@@ -51,7 +51,7 @@ export const getQuestTriggerEvent = (value?: string) =>
   QUEST_TRIGGER_EVENTS.find((option) => option.value === value);
 
 /**
- * What a currency award can be paid in. Carrots settle through the credits
+ * What a currency award can be paid in. Credits settle through the credits
  * ledger; the token and fiat awards are recorded as pending for whoever
  * fulfils them.
  */
@@ -70,7 +70,7 @@ export const getQuestAwardCurrencies = ({
   fiatCurrency?: string;
 } = {}): QuestAwardCurrency[] => {
   const currencies: QuestAwardCurrency[] = [
-    { value: 'carrots', label: 'Carrots 🥕' },
+    { value: 'credits', label: 'Credits 🥕' },
   ];
   if (bookingToken) {
     currencies.push({

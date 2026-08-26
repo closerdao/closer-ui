@@ -47,6 +47,14 @@ const parseTokensQuery = (
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 };
 
+const parseMonthsQuery = (
+  months: string | string[] | undefined,
+): number | null => {
+  const raw = Array.isArray(months) ? months[0] : months;
+  const parsed = Number(raw);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
 const SubscriptionsCitizenApplyPage: NextPage = () => {
   const subscriptionsConfig = getCachedConfig('subscriptions') as {
     enabled: boolean;
@@ -70,7 +78,7 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
   const { platform } = usePlatform();
   const router = useRouter();
 
-  const { citizenApplication, tokens } = router.query;
+  const { citizenApplication, tokens, months } = router.query;
 
   const isCitizenApplication = citizenApplication === 'true';
 
@@ -82,7 +90,10 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
   >({
     iban: '',
     tokensToFinance: parseTokensQuery(tokens) ?? 1,
-    durationInMonths: durations[0] || maxFinancingMonths,
+    durationInMonths: Math.min(
+      parseMonthsQuery(months) ?? durations[0] ?? maxFinancingMonths,
+      maxFinancingMonths,
+    ),
     why: user?.citizenship?.why || '',
   });
 
@@ -105,18 +116,30 @@ const SubscriptionsCitizenApplyPage: NextPage = () => {
       return;
     }
     const parsed = parseTokensQuery(tokens);
-    if (parsed !== null) {
+    const parsedMonths = parseMonthsQuery(months);
+    if (parsed !== null || parsedMonths !== null) {
       setApplication((prev) => {
-        if (prev.tokensToFinance === parsed) {
+        const nextMonths =
+          parsedMonths !== null
+            ? Math.min(parsedMonths, maxFinancingMonths)
+            : prev.durationInMonths;
+        if (
+          (parsed === null || prev.tokensToFinance === parsed) &&
+          prev.durationInMonths === nextMonths
+        ) {
           return prev;
         }
-        return { ...prev, tokensToFinance: parsed };
+        return {
+          ...prev,
+          ...(parsed !== null ? { tokensToFinance: parsed } : {}),
+          durationInMonths: nextMonths,
+        };
       });
     }
     // Latch (never reverts) so a later in-widget amount change does not
     // unmount the form.
     setIsTokensQueryResolved(true);
-  }, [router.isReady, tokens]);
+  }, [router.isReady, tokens, months, maxFinancingMonths]);
 
   useEffect(() => {
     if (isLoading) return;

@@ -389,9 +389,10 @@ export const createSection = (type: SectionType): PageSection => {
         },
       };
     case 'fundraiser':
+    case 'fundraiserPromo':
       return {
         _localId,
-        type: 'fundraiser',
+        type: 'fundraiserPromo',
         data: {
           settings: { showTitle: true },
           content: {
@@ -416,6 +417,80 @@ export const createSection = (type: SectionType): PageSection => {
             description: '',
             ctaText: '',
             ctaLink: '/token/before-you-begin',
+          },
+        },
+      };
+    case 'tokenOnboarding':
+      return {
+        _localId,
+        type: 'tokenOnboarding',
+        data: {
+          settings: {},
+          content: {
+            eyebrow: 'Token onboarding',
+            title: 'New to web3? Start here',
+            description:
+              'A guided, step-by-step introduction for future members: learn what the token gives you, set up your wallet, and earn rewards as you go. No crypto experience needed.',
+            items: [
+              { text: 'Understand what the token gives you' },
+              { text: 'Set up and link your wallet' },
+              { text: 'Earn 🥕 rewards as you complete each quest' },
+            ],
+            ctaText: 'Start onboarding',
+            ctaLink: '/token/onboarding',
+          },
+        },
+      };
+    case 'tokenContracts':
+      return {
+        _localId,
+        type: 'tokenContracts',
+        data: {
+          settings: {},
+          content: {
+            eyebrow: 'On-chain transparency',
+            title: 'Explore the smart contracts',
+            description:
+              'Every token lives on public smart contracts. Verify them on the block explorer below, or open the contracts page to interact with them directly.',
+            ctaText: 'Open the contracts page',
+            ctaLink: '/token/contracts',
+          },
+        },
+      };
+    case 'tokenBuy':
+      return {
+        _localId,
+        type: 'tokenBuy',
+        data: {
+          settings: {},
+          content: {
+            eyebrow: 'Become a member',
+            title: 'Buy tokens',
+            description:
+              'Tokens give you nights at the village, governance rights, and a path to citizenship. Choose your amount and complete your purchase in a few steps.',
+            items: [
+              { text: '1 token = 1 annual night' },
+              { text: 'DAO voting rights' },
+              { text: 'Pay by card, bank transfer or crypto' },
+            ],
+            ctaText: 'Buy tokens',
+            ctaLink: '/token/before-you-begin',
+          },
+        },
+      };
+    case 'tokenFinance':
+      return {
+        _localId,
+        type: 'tokenFinance',
+        data: {
+          settings: {},
+          content: {
+            eyebrow: 'Token financing',
+            title: 'Finance your tokens',
+            description:
+              'Spread your token purchase over monthly payments: start with a down payment and accrue tokens as you pay. Pick an amount to see your terms.',
+            ctaText: 'Apply for financing',
+            ctaLink: '',
           },
         },
       };
@@ -606,10 +681,19 @@ export const createSection = (type: SectionType): PageSection => {
         data: { settings: {}, content: {} },
       };
     case 'fundraiserProgress':
+    case 'fundraiserDonate':
       return {
         _localId,
-        type: 'fundraiserProgress',
-        data: { settings: {}, content: {} },
+        type: 'fundraiserDonate',
+        data: {
+          settings: {},
+          content: {
+            title: '',
+            description: '',
+            videoEmbedId: '',
+            imageUrl: '',
+          },
+        },
       };
     case 'fundraiserMilestones':
       return {

@@ -53,6 +53,7 @@ const applicants = [
     screenname: 'Ada Lovelace',
     email: 'ada@example.com',
     slug: 'ada',
+    roles: ['member'],
     affiliateApplication: {
       reason: 'I run a regenerative travel newsletter',
       audienceSize: '12000 readers',
@@ -89,6 +90,7 @@ const makePlatform = () => ({
     get: jest.fn().mockResolvedValue({ results: { toJS: () => applicants } }),
     getCount: jest.fn().mockResolvedValue({ results: 1 }),
     findCount: jest.fn(() => 1),
+    patch: jest.fn().mockResolvedValue({}),
   },
   metric: {
     getCount: jest.fn().mockResolvedValue({ results: 0 }),
@@ -98,8 +100,14 @@ const makePlatform = () => ({
 
 describe('AffiliateDashboardPage', () => {
   let platform: ReturnType<typeof makePlatform>;
+  const federationFlag = process.env.NEXT_PUBLIC_FEATURE_FEDERATION;
+
+  afterEach(() => {
+    process.env.NEXT_PUBLIC_FEATURE_FEDERATION = federationFlag;
+  });
 
   beforeEach(() => {
+    delete process.env.NEXT_PUBLIC_FEATURE_FEDERATION;
     jest.clearAllMocks();
     platform = makePlatform();
     (useAuth as jest.Mock).mockReturnValue({
@@ -139,6 +147,24 @@ describe('AffiliateDashboardPage', () => {
     expect(api.post).toHaveBeenCalledWith('/affiliates/approve', {
       userId: 'user-pending',
     });
+    expect(platform.user.patch).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(screen.queryByText('Ada Lovelace')).not.toBeInTheDocument(),
+    );
+  });
+
+  it('grants the ambassador role on approval when federation is enabled', async () => {
+    process.env.NEXT_PUBLIC_FEATURE_FEDERATION = 'true';
+    renderWithNextIntl(<AffiliateDashboardPage />);
+
+    const approve = await screen.findByRole('button', { name: /approve/i });
+    await userEvent.click(approve);
+
+    await waitFor(() =>
+      expect(platform.user.patch).toHaveBeenCalledWith('user-pending', {
+        roles: ['member', 'ambassador'],
+      }),
+    );
     await waitFor(() =>
       expect(screen.queryByText('Ada Lovelace')).not.toBeInTheDocument(),
     );

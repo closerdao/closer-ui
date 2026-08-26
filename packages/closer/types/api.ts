@@ -152,6 +152,7 @@ export type GeneralConfig = {
   expenseCategories?: string;
   discordUrl: string;
   telegramUrl: string;
+  callBookingLink?: string;
   primaryCtaVisitor?: string;
   primaryCtaMember?: string;
   primaryCtaCustomUrl?: string;
@@ -373,6 +374,10 @@ export type AccountingEntityElement = {
   products?: string[];
   iban?: string;
   bic?: string;
+  /** Destination wallet for crypto payments made to this entity. */
+  walletAddress?: string;
+  /** 'default' = the platform's connected Stripe account, 'none' = no Stripe. */
+  stripeAccount?: string;
 };
 
 export type AccountingEntitiesConfig = {
