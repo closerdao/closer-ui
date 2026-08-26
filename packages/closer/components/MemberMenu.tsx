@@ -461,8 +461,8 @@ const MemberMenu = ({
               rbacPage: 'Volunteer',
             },
             {
-              label: t('menu_member_stories'),
-              url: '/members',
+              label: t('menu_community'),
+              url: '/community',
               enabled: true,
             },
             {
@@ -648,7 +648,7 @@ const MemberMenu = ({
             ? [
                 {
                   label: t('navigation_affiliate_dashboard'),
-                  url: '/dashboard/affiliate',
+                  url: '/settings/affiliate',
                   enabled: isAffiliateEnabled && !!user?.affiliate,
                 },
               ]

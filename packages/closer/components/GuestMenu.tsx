@@ -172,8 +172,8 @@ const GuestMenu = () => {
               rbacPage: 'Volunteer',
             },
             {
-              label: t('menu_member_stories'),
-              url: '/members',
+              label: t('menu_community'),
+              url: '/community',
               enabled: true,
             },
             {

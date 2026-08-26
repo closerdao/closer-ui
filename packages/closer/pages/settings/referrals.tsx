@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { useCallback, useEffect, useState } from 'react';
@@ -8,12 +9,13 @@ import dayjs from 'dayjs';
 import { NextPageContext } from 'next';
 import { useTranslations } from 'next-intl';
 
+import UserAvatarPlaceholder from '../../components/UserAvatarPlaceholder';
 import { Button, Card, Heading, Row } from '../../components/ui';
 import Progress from '../../components/ui/ProgressBar/Progress';
 
 import { useAuth } from '../../contexts/auth';
 import { useConfig } from '../../hooks/useConfig';
-import api, { formatSearch } from '../../utils/api';
+import api, { cdn, formatSearch } from '../../utils/api';
 import { getNextMonthName } from '../../utils/helpers';
 import PageNotFound from '../not-found';
 
@@ -24,6 +26,35 @@ const firstDayOfCurrentMonth = dayjs(
 const lastDayOfCurrentMonth = dayjs(
   new Date(today.getFullYear(), today.getMonth() + 1, 0),
 ).format('YYYY-MM-DD');
+
+interface ReferralConfigValue {
+  creditsToReferrer?: number;
+  creditsToFriend?: number;
+  maxCreditsPerMonth?: number;
+  tokensPerCitizenReferred?: number;
+  bonusTokensPerCitizenReferred?: number;
+  bonusEndDate?: string;
+}
+
+interface ReferralTokenReward {
+  amount: number;
+  currency: string;
+  status: 'pending' | 'paid' | 'cancelled';
+}
+
+interface ReferralProgressRow {
+  _id: string;
+  screenname?: string;
+  slug?: string;
+  photo?: string | null;
+  isCitizen: boolean;
+  progress: {
+    hasApplied: boolean;
+    isVouched: boolean;
+    hasStayedForMinDuration: boolean;
+    hasActiveFinancedPlan: boolean;
+  } | null;
+}
 
 const ReferralsPage = () => {
   const t = useTranslations();
@@ -40,6 +71,57 @@ const ReferralsPage = () => {
   const [creditsEarnedFromReferrals, setCreditsEarnedFromReferrals] =
     useState();
   const [creditsErnedThisMonth, setCreditsErnedThisMonth] = useState();
+  const [referralConfig, setReferralConfig] =
+    useState<ReferralConfigValue | null>(null);
+  const [citizensReferredByMe, setCitizensReferredByMe] = useState<number>();
+  const [tokenRewards, setTokenRewards] = useState<ReferralTokenReward[]>([]);
+  const [referralProgress, setReferralProgress] = useState<
+    ReferralProgressRow[]
+  >([]);
+
+  const isCitizen = Boolean(user?.roles?.includes('member'));
+
+  const creditsToReferrer = Number(referralConfig?.creditsToReferrer ?? 1);
+  const creditsToFriend = Number(referralConfig?.creditsToFriend ?? 2);
+  const maxCreditsPerMonth = Number(referralConfig?.maxCreditsPerMonth ?? 6);
+  const baseTokensPerCitizen = Number(
+    referralConfig?.tokensPerCitizenReferred ?? 0,
+  );
+  const bonusTokensPerCitizen = Number(
+    referralConfig?.bonusTokensPerCitizenReferred ?? 0,
+  );
+  const bonusEndDate = referralConfig?.bonusEndDate || '';
+  // The bonus rate applies through the configured day, matching the API.
+  const isBonusActive = Boolean(
+    bonusTokensPerCitizen > 0 &&
+      bonusEndDate &&
+      dayjs(bonusEndDate).isValid() &&
+      !dayjs().isAfter(dayjs(bonusEndDate), 'day'),
+  );
+  const isCitizenProgramEnabled = baseTokensPerCitizen > 0;
+
+  const tokensEarned = tokenRewards
+    .filter((reward) => reward.status !== 'cancelled')
+    .reduce((sum, reward) => sum + (reward.amount || 0), 0);
+  const tokensPending = tokenRewards
+    .filter((reward) => reward.status === 'pending')
+    .reduce((sum, reward) => sum + (reward.amount || 0), 0);
+
+  const referralsInProgress = referralProgress.filter(
+    (row) => !row.isCitizen && row.progress,
+  );
+
+  const missingSteps = (
+    progress: NonNullable<ReferralProgressRow['progress']>,
+  ) =>
+    [
+      !progress.hasApplied && t('referrals_citizen_missing_apply'),
+      !progress.isVouched && t('referrals_citizen_missing_vouch'),
+      !progress.hasStayedForMinDuration &&
+        t('referrals_citizen_missing_stay'),
+      !progress.hasActiveFinancedPlan &&
+        t('referrals_citizen_missing_finance'),
+    ].filter(Boolean) as string[];
 
   useEffect(() => {
     setCanNativeShare(
@@ -47,6 +129,48 @@ const ReferralsPage = () => {
         typeof navigator.share === 'function',
     );
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.get('/config/referral');
+        setReferralConfig(res?.data?.results?.value || null);
+      } catch (err) {
+        // Missing config falls back to the historical program defaults.
+        setReferralConfig(null);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (user && isCitizen) {
+      (async () => {
+        try {
+          const res = await Promise.all([
+            api.get('/count/user', {
+              params: {
+                where: formatSearch({
+                  referredBy: user._id,
+                  roles: 'member',
+                }),
+              },
+            }),
+            api.get('/referralreward', {
+              params: {
+                where: formatSearch({ userId: user._id }),
+              },
+            }),
+            api.get('/referrals/citizen-progress'),
+          ]);
+          setCitizensReferredByMe(res[0].data.results);
+          setTokenRewards(res[1].data.results || []);
+          setReferralProgress(res[2].data.results || []);
+        } catch (err) {
+          console.log('failed to load citizen referral stats', err);
+        }
+      })();
+    }
+  }, [user, isCitizen]);
 
   useEffect(() => {
     if (user) {
@@ -217,7 +341,10 @@ const ReferralsPage = () => {
               <h3 className="text-base font-semibold text-foreground">
                 {t('referrals_monthly_progress_heading')}
               </h3>
-              <Progress progress={creditsErnedThisMonth ?? 0} total={6} />
+              <Progress
+                progress={creditsErnedThisMonth ?? 0}
+                total={maxCreditsPerMonth}
+              />
               <Row
                 rowKey={t('referrals_next_refresh')}
                 value={`${getNextMonthName()} 1`}
@@ -245,6 +372,108 @@ const ReferralsPage = () => {
           </div>
         </Card>
 
+        {isCitizen && isCitizenProgramEnabled ? (
+          <section
+            className="rounded-2xl border border-accent/25 bg-gradient-to-br from-accent-light to-background p-5 md:p-6 shadow-sm flex flex-col gap-4"
+            aria-labelledby="referrals-citizen-heading"
+          >
+            <div className="flex flex-col gap-1">
+              <h2
+                id="referrals-citizen-heading"
+                className="text-lg font-semibold text-foreground"
+              >
+                {t('referrals_citizen_heading')}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {t('referrals_citizen_description', {
+                  var: baseTokensPerCitizen,
+                })}
+              </p>
+            </div>
+            {isBonusActive ? (
+              <p className="rounded-lg bg-accent/10 px-3 py-2 text-sm font-medium text-accent">
+                {t('referrals_citizen_bonus', {
+                  bonus: bonusTokensPerCitizen,
+                  base: baseTokensPerCitizen,
+                  date: dayjs(bonusEndDate).format('MMM D, YYYY'),
+                })}
+              </p>
+            ) : null}
+            <div className="flex flex-col gap-3">
+              <Row
+                rowKey={t('referrals_citizen_onboarded')}
+                value={citizensReferredByMe ?? 0}
+              />
+              <Row
+                rowKey={t('referrals_citizen_tokens_earned')}
+                value={tokensEarned}
+              />
+              {tokensPending > 0 ? (
+                <Row
+                  rowKey={t('referrals_citizen_tokens_pending')}
+                  value={tokensPending}
+                />
+              ) : null}
+            </div>
+            {referralsInProgress.length > 0 ? (
+              <div className="flex flex-col gap-3 border-t border-border pt-4">
+                <h3 className="text-sm font-semibold text-foreground">
+                  {t('referrals_citizen_in_progress_heading', {
+                    count: referralsInProgress.length,
+                  })}
+                </h3>
+                <ul className="flex flex-col gap-3">
+                  {referralsInProgress.map((row) => {
+                    const missing = missingSteps(row.progress!);
+                    return (
+                      <li key={row._id} className="flex items-start gap-3">
+                        {row.photo ? (
+                          <Image
+                            src={`${cdn}${row.photo}-profile-sm.jpg`}
+                            alt=""
+                            width={32}
+                            height={32}
+                            className="rounded-full mt-0.5"
+                          />
+                        ) : (
+                          <UserAvatarPlaceholder size="sm" />
+                        )}
+                        <div className="flex flex-col gap-1 min-w-0">
+                          <Link
+                            href={`/members/${row.slug || row._id}`}
+                            className="text-sm font-medium text-foreground hover:underline truncate"
+                          >
+                            {row.screenname}
+                          </Link>
+                          {missing.length > 0 ? (
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="text-xs text-muted-foreground">
+                                {t('referrals_citizen_missing_label')}
+                              </span>
+                              {missing.map((step) => (
+                                <span
+                                  key={step}
+                                  className="rounded-full bg-accent/10 px-2 py-0.5 text-xs text-accent"
+                                >
+                                  {step}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">
+                              {t('referrals_citizen_requirements_met')}
+                            </span>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+
         {APP_NAME && APP_NAME !== 'moos' ? (
           <details className="rounded-xl border border-border bg-card text-card-foreground open:shadow-sm">
             <summary className="cursor-pointer px-4 py-3 md:px-5 md:py-4 font-semibold text-foreground">
@@ -252,8 +481,15 @@ const ReferralsPage = () => {
             </summary>
             <div className="px-4 pb-4 pt-0 md:px-5 md:pb-5 border-t border-border flex flex-col gap-3 text-sm text-muted-foreground">
               <p>{t('referrals_description_text_1')}</p>
-              <p>{t('referrals_description_text_2')}</p>
-              <p>{t('referrals_description_text_3')}</p>
+              <p>
+                {t('referrals_description_rewards', {
+                  referrer: creditsToReferrer,
+                  friend: creditsToFriend,
+                })}
+              </p>
+              <p>
+                {t('referrals_description_cap', { max: maxCreditsPerMonth })}
+              </p>
               <p>
                 <Link
                   href="/settings/credits"

@@ -157,6 +157,7 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
   const [aboutDraft, setAboutDraft] = useState<string>(member?.about || '');
   const [isEditingAbout, setIsEditingAbout] = useState(false);
   const [isSavingAbout, setIsSavingAbout] = useState(false);
+  const [aboutError, setAboutError] = useState<string | null>(null);
 
   // Affiliates wear the ambassador chip without carrying the role, so they get
   // an unlinked one — the rest of the row filters the member list by role.
@@ -267,13 +268,21 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
   const saveAbout = async () => {
     try {
       setIsSavingAbout(true);
-      await platform.user.patch(currentUser?._id, { about: aboutDraft });
+      setAboutError(null);
+      // platform patch never rejects — a failed request comes back as a
+      // PATCH_ERROR action carrying the axios error, so check for it here.
+      const action = await platform.user.patch(currentUser?._id, {
+        about: aboutDraft,
+      });
+      if (action?.error) {
+        setAboutError(parseMessageFromError(action.error));
+        return;
+      }
       setAbout(aboutDraft);
       setIsEditingAbout(false);
-      setErrors(null);
       await refetchUser();
     } catch (err: unknown) {
-      setErrors(parseMessageFromError(err));
+      setAboutError(parseMessageFromError(err));
     } finally {
       setIsSavingAbout(false);
     }
@@ -747,6 +756,7 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                         <button
                           onClick={() => {
                             setAboutDraft(about);
+                            setAboutError(null);
                             setIsEditingAbout(true);
                           }}
                           className="text-sm text-accent hover:underline"
@@ -770,6 +780,11 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                             setAboutDraft(event.target.value)
                           }
                         />
+                        {aboutError && (
+                          <p className="validation-error">
+                            {t('members_slug_error_prefix')} {aboutError}
+                          </p>
+                        )}
                         <div className="flex gap-2">
                           <Button
                             onClick={saveAbout}
@@ -782,6 +797,7 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                           <Button
                             onClick={() => {
                               setAboutDraft(about);
+                              setAboutError(null);
                               setIsEditingAbout(false);
                             }}
                             variant="secondary"
@@ -798,6 +814,7 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                       <button
                         onClick={() => {
                           setAboutDraft('');
+                          setAboutError(null);
                           setIsEditingAbout(true);
                         }}
                         className="w-full text-left border-2 border-dashed border-accent/50 rounded-md p-4 text-accent hover:bg-accent-light transition-colors"

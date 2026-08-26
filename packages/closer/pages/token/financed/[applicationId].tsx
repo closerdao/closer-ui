@@ -29,7 +29,10 @@ import { GeneralConfig } from '../../../types';
 import { AccountingEntitiesConfig, TokenSale } from '../../../types/api';
 import { Charge } from '../../../types/booking';
 import { FinanceApplication } from '../../../types/subscriptions';
-import { resolveAccountingEntityFromSale } from '../../../utils/accountingEntityResolve';
+import {
+  resolveAccountingEntityForProduct,
+  resolveAccountingEntityFromSale,
+} from '../../../utils/accountingEntityResolve';
 import api, { formatSearch } from '../../../utils/api';
 import { getCachedConfig } from '../../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../../utils/common';
@@ -369,6 +372,10 @@ const FinancedTokenApplicationPage = () => {
       resolveAccountingEntityFromSale(
         depositSale?.entity,
         accountingEntitiesConfig?.elements,
+      ) ??
+      resolveAccountingEntityForProduct(
+        'financed-tokens',
+        accountingEntitiesConfig?.elements,
       ),
     [depositSale?.entity, accountingEntitiesConfig?.elements],
   );
@@ -412,10 +419,7 @@ const FinancedTokenApplicationPage = () => {
 
   const bankBeneficiaryDisplay =
     issuerEntity?.legalName?.trim() || t('oasa_beneficiary_name');
-  const bankIbanDisplay =
-    issuerEntity?.iban?.trim() ||
-    process.env.NEXT_PUBLIC_CLOSER_IBAN ||
-    t('oasa_iban_value');
+  const bankIbanDisplay = issuerEntity?.iban?.trim() || t('oasa_iban_value');
   const bankBicDisplay = issuerEntity?.bic?.trim() || t('oasa_bic_value');
   const bankAddressDisplay =
     issuerEntity?.address?.trim() || t('oasa_address_value');
