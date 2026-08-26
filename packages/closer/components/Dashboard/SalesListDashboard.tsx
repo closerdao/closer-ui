@@ -11,6 +11,7 @@ import { useAuth } from '../../contexts/auth';
 import { Sale, SaleBuyer } from '../../types/api';
 import {
   SafeProposalSkipCode,
+  SafeProposalSkippedSale,
   TokenDistributionStatus,
   TokenUserResult,
 } from '../../types/onchainAdmin';
@@ -164,7 +165,7 @@ const SalesListDashboard = ({
   const [safeProposalError, setSafeProposalError] = useState('');
   const [safeProposalSummary, setSafeProposalSummary] = useState('');
   const [safeProposalSkipped, setSafeProposalSkipped] = useState<
-    Array<{ saleId: string; code: SafeProposalSkipCode; reason?: string }>
+    SafeProposalSkippedSale[]
   >([]);
   const [distributionStatuses, setDistributionStatuses] = useState<
     Record<string, TokenDistributionStatus>
@@ -176,15 +177,22 @@ const SalesListDashboard = ({
     fingerprint: string;
     requestId: string;
   } | null>(null);
+  const enrichedSalesRequestGenerationRef = useRef(0);
+  const distributionStatusRequestGenerationRef = useRef(0);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
   const actionsMenuRef = useRef<HTMLDivElement>(null);
 
   // Fetch the narrow recipient view for token operators. Buyer matching remains
   // admin-only and continues to use the richer user response below.
   useEffect(() => {
+    const requestGeneration = enrichedSalesRequestGenerationRef.current + 1;
+    enrichedSalesRequestGenerationRef.current = requestGeneration;
+    const isLatestRequest = () =>
+      enrichedSalesRequestGenerationRef.current === requestGeneration;
+
     const fetchEnrichedSales = async () => {
       if (!sales || !isTokenOperator || saleCategory !== 'tokens') {
-        setEnrichedSales(sales || []);
+        if (isLatestRequest()) setEnrichedSales(sales || []);
         return;
       }
 
@@ -201,7 +209,7 @@ const SalesListDashboard = ({
         ].filter(Boolean); // Remove any null/undefined values
 
         if (uniqueBuyerIds.length === 0) {
-          setEnrichedSales(salesArray);
+          if (isLatestRequest()) setEnrichedSales(salesArray);
           return;
         }
         const buyersRes = await api.get('/onchain-admin/recipients', {
@@ -213,14 +221,19 @@ const SalesListDashboard = ({
             walletAddress: buyer.hasWallet ? buyer.walletAddress : null,
           }),
         );
+        if (!isLatestRequest()) return;
         setEnrichedSales(enrichSalesWithBuyers(salesArray, buyers));
       } catch (error) {
+        if (!isLatestRequest()) return;
         console.error('Error fetching enriched sales data:', error);
         setEnrichedSales(sales);
       }
     };
 
-    fetchEnrichedSales();
+    void fetchEnrichedSales();
+    return () => {
+      if (isLatestRequest()) enrichedSalesRequestGenerationRef.current += 1;
+    };
   }, [sales, isTokenOperator, saleCategory]);
 
   // No client-side filtering needed - server handles it
@@ -245,8 +258,14 @@ const SalesListDashboard = ({
   const visibleSaleIds = currentSales.map((sale) => sale._id).join(',');
 
   const fetchDistributionStatuses = useCallback(async () => {
+    const requestGeneration =
+      distributionStatusRequestGenerationRef.current + 1;
+    distributionStatusRequestGenerationRef.current = requestGeneration;
+    const isLatestRequest = () =>
+      distributionStatusRequestGenerationRef.current === requestGeneration;
+
     if (!isTokenOperator || saleCategory !== 'tokens' || !visibleSaleIds) {
-      setDistributionStatuses({});
+      if (isLatestRequest()) setDistributionStatuses({});
       return;
     }
     try {
@@ -259,10 +278,12 @@ const SalesListDashboard = ({
       } as any);
       const statuses = (response.data.results ??
         response.data) as TokenDistributionStatus[];
+      if (!isLatestRequest()) return;
       setDistributionStatuses(
         Object.fromEntries(statuses.map((status) => [status.saleId, status])),
       );
     } catch (error) {
+      if (!isLatestRequest()) return;
       console.error(
         'Error fetching automatic token distribution statuses:',
         error,
@@ -272,6 +293,9 @@ const SalesListDashboard = ({
 
   useEffect(() => {
     void fetchDistributionStatuses();
+    return () => {
+      distributionStatusRequestGenerationRef.current += 1;
+    };
   }, [fetchDistributionStatuses]);
 
   // Handle filter changes
@@ -711,10 +735,7 @@ const SalesListDashboard = ({
     });
   };
 
-  const skippedReason = (item: {
-    code: SafeProposalSkipCode;
-    reason?: string;
-  }) => {
+  const skippedReason = (item: SafeProposalSkippedSale) => {
     const keys: Record<SafeProposalSkipCode, string> = {
       USER_NOT_FOUND: 'token_sales_dashboard_skip_user_not_found',
       NO_WALLET: 'token_sales_dashboard_skip_no_wallet',

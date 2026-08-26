@@ -30,6 +30,12 @@ export interface SafeProposalSkippedRecipient {
   code: SafeProposalSkipCode;
 }
 
+export interface SafeProposalSkippedSale {
+  saleId: string;
+  code: SafeProposalSkipCode;
+  reason?: string;
+}
+
 export interface SafeProposalResult {
   safeAddress: string;
   safeTxHash: string;
