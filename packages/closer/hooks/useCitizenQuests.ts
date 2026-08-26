@@ -136,7 +136,7 @@ export const useCitizenQuests = (): CitizenQuestsState => {
   // Verified presence comes from the API (`/stays/nights/:userId`), the same
   // source the vouching gate on member profiles uses, so both counters agree.
   const [totalStayDays, setTotalStayDays] = useState(0);
-  const minVouches = Math.round(totalCitizens * 0.1);
+  const minVouches = Math.max(1, Math.round(totalCitizens * 0.1));
 
   const hasStayedForMinDuration =
     hasStayedPerApi ||
