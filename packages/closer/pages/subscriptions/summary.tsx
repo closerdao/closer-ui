@@ -27,6 +27,7 @@ import { GeneralConfig, PaymentConfig } from '../../types';
 import {
   SelectedPlan,
   SubscriptionPlan, // Tier,
+  SubscriptionsConfig,
 } from '../../types/subscriptions';
 import {
   calculateSubscriptionPrice,
@@ -36,13 +37,14 @@ import {
 import { logMetric } from '../../utils/metrics';
 import {
   getPaidSubscriptionPlans,
+  getSubscriptionSuccessUrl,
   isFirstMonthFreePlan,
   isSubscriptionActive,
 } from '../../utils/subscriptions.helpers';
 import PageNotFound from '../not-found';
 
 interface Props {
-  subscriptionsConfig: { enabled: boolean; elements: SubscriptionPlan[] };
+  subscriptionsConfig: SubscriptionsConfig;
   generalConfig: GeneralConfig | null;
   error?: string;
   paymentConfig: PaymentConfig | null;
@@ -146,7 +148,11 @@ const SubscriptionsSummaryPage: NextPage<Props> = ({
 
   const handleCheckout = () => {
     if (selectedPlan?.price === 0) {
-      router.push(`/subscriptions/success?priceId=${priceId}`);
+      router.push(
+        getSubscriptionSuccessUrl(subscriptionsConfig?.successPage, {
+          priceId: Array.isArray(priceId) ? priceId[0] : priceId,
+        }),
+      );
     } else {
       router.push(
         `/subscriptions/checkout?priceId=${priceId}&monthlyCredits=${monthlyCreditsSelected}`,

@@ -16,6 +16,75 @@ const TEAM_DIRECTORY_ROLE_OPTIONS = [
   { value: 'member', labelKey: 'pages_editor_role_member' },
 ];
 
+// The /token sub page promo blocks share their pitch copy and CTA fields;
+// tokenOnboarding and tokenBuy add an editable highlight list, while
+// tokenContracts and tokenFinance render live data in that slot instead.
+const TOKEN_PAGE_PROMO_FIELDS: ContentListInspectorConfig['fields'] = [
+  { key: 'eyebrow', labelKey: 'pages_editor_field_eyebrow' },
+  { key: 'title', labelKey: 'pages_editor_field_title' },
+  {
+    key: 'description',
+    labelKey: 'pages_editor_field_description',
+    type: 'textarea',
+  },
+  { key: 'ctaText', labelKey: 'pages_editor_field_cta_text' },
+  { key: 'ctaLink', labelKey: 'pages_editor_field_cta_url' },
+];
+
+const TOKEN_PAGE_PROMO_INSPECTOR: ContentListInspectorConfig = {
+  fields: TOKEN_PAGE_PROMO_FIELDS,
+  listKey: 'items',
+  listLabelKey: 'pages_editor_field_highlights',
+  listAddLabelKey: 'pages_editor_add_highlight',
+  defaultItem: { text: '' },
+  listItemFields: [{ key: 'text', labelKey: 'pages_editor_field_text' }],
+};
+
+const TOKEN_PAGE_PROMO_LIVE_INSPECTOR: ContentListInspectorConfig = {
+  hint: 'pages_editor_token_promo_live_hint',
+  fields: TOKEN_PAGE_PROMO_FIELDS,
+};
+
+// The fundraiser blocks were renamed (fundraiser → fundraiserPromo,
+// fundraiserProgress → fundraiserDonate); both ids share one config so pages
+// saved before the rename keep their inspector.
+const FUNDRAISER_PROMO_INSPECTOR: ContentListInspectorConfig = {
+  hint: 'pages_editor_fundraiser_hint',
+  settingsFields: [
+    {
+      key: 'showTitle',
+      labelKey: 'pages_editor_field_show_title',
+      type: 'checkbox',
+      defaultValue: true,
+    },
+  ],
+  fields: [
+    { key: 'eyebrow', labelKey: 'pages_editor_field_eyebrow' },
+    { key: 'title', labelKey: 'pages_editor_field_title' },
+    {
+      key: 'description',
+      labelKey: 'pages_editor_field_description',
+      type: 'textarea',
+    },
+    { key: 'ctaText', labelKey: 'pages_editor_field_cta_text' },
+    { key: 'ctaLink', labelKey: 'pages_editor_field_cta_url' },
+  ],
+};
+
+const FUNDRAISER_DONATE_INSPECTOR: ContentListInspectorConfig = {
+  hint: 'pages_editor_fundraiser_progress_hint',
+  fields: [
+    { key: 'title', labelKey: 'pages_editor_field_title' },
+    {
+      key: 'description',
+      labelKey: 'pages_editor_field_description',
+      type: 'textarea',
+    },
+    { key: 'videoEmbedId', labelKey: 'pages_editor_field_youtube_url' },
+    { key: 'imageUrl', labelKey: 'pages_editor_field_photo_url', type: 'url' },
+  ],
+};
+
 export const BLOCK_INSPECTOR_CONFIGS: Partial<
   Record<SectionType, ContentListInspectorConfig>
 > = {
@@ -291,37 +360,20 @@ export const BLOCK_INSPECTOR_CONFIGS: Partial<
       { key: 'secondaryLink', labelKey: 'pages_editor_field_secondary_link' },
     ],
   },
-  fundraiser: {
-    hint: 'pages_editor_fundraiser_hint',
-    settingsFields: [
-      {
-        key: 'showTitle',
-        labelKey: 'pages_editor_field_show_title',
-        type: 'checkbox',
-        defaultValue: true,
-      },
-    ],
-    fields: [
-      { key: 'eyebrow', labelKey: 'pages_editor_field_eyebrow' },
-      { key: 'title', labelKey: 'pages_editor_field_title' },
-      {
-        key: 'description',
-        labelKey: 'pages_editor_field_description',
-        type: 'textarea',
-      },
-      { key: 'ctaText', labelKey: 'pages_editor_field_cta_text' },
-      { key: 'ctaLink', labelKey: 'pages_editor_field_cta_url' },
-    ],
-  },
-  fundraiserProgress: {
-    hint: 'pages_editor_fundraiser_live_hint',
-  },
+  fundraiserPromo: FUNDRAISER_PROMO_INSPECTOR,
+  fundraiser: FUNDRAISER_PROMO_INSPECTOR,
+  fundraiserDonate: FUNDRAISER_DONATE_INSPECTOR,
+  fundraiserProgress: FUNDRAISER_DONATE_INSPECTOR,
   fundraiserMilestones: {
     hint: 'pages_editor_fundraiser_live_hint',
   },
   fundraiserRewards: {
     hint: 'pages_editor_fundraiser_live_hint',
   },
+  tokenOnboarding: TOKEN_PAGE_PROMO_INSPECTOR,
+  tokenContracts: TOKEN_PAGE_PROMO_LIVE_INSPECTOR,
+  tokenBuy: TOKEN_PAGE_PROMO_INSPECTOR,
+  tokenFinance: TOKEN_PAGE_PROMO_LIVE_INSPECTOR,
   volunteerCta: {
     fields: [
       { key: 'title', labelKey: 'pages_editor_field_title' },

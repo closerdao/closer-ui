@@ -180,3 +180,21 @@ export type StayQuoteResponse = {
   currentTotal: StayMoney;
   delta: { fiat: StayMoney };
 };
+
+/** Step 1 of POST /stays/:id/token-payment (empty body): the transfer quote.
+ * fiatAmount already excludes accommodation covered by staked tokens and
+ * anything paid on other rails. */
+export type StayTokenPaymentQuote = {
+  fiatAmount: number;
+  currency: string;
+  chainId: number;
+  treasuryAddress: string;
+  stablecoinSymbol: string;
+  stablecoinAddresses: string[];
+};
+
+/** Step 2 of POST /stays/:id/token-payment ({ txHash }). */
+export type StayTokenPaymentConfirmResponse = {
+  booking: Stay;
+  verified: boolean;
+};

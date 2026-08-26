@@ -20,6 +20,7 @@ import {
   inputClass,
   labelClass,
 } from '../../../components/VillageUI';
+import DeployCTA from '../../../components/VillageUI/DeployCTA';
 import { ErrorMessage, Spinner } from '../../../components/ui';
 
 import { useTranslations } from 'next-intl';
@@ -34,13 +35,12 @@ import {
 } from '../../../types/village';
 import {
   canCoordinateVillage,
+  canDeployVillage,
   canManageVillage,
-  canRequestDeploy,
   fetchAmbassadors,
   fetchUsersByIds,
   getVillage,
   inviteVillageOwner,
-  requestVillageDeploy,
   updateVillage,
   villageSocialUrl,
   villageToMapItem,
@@ -141,14 +141,16 @@ const VillageDetailPage = () => {
   }
 
   const isManager = canManageVillage(village, user?._id);
-  const canDeploy = canRequestDeploy(village, user?._id);
+  // Admin | team | assigned ambassador. Founders (createdBy) do not get the
+  // button until the API's subscription gate lands — they see the card only.
+  const canDeploy = canDeployVillage(village, user);
   const isAwaitingDeploy =
     village.onboardingStatus === 'deploy_requested' ||
     village.onboardingStatus === 'deploying';
   const isLive = village.onboardingStatus === 'live';
   const mapItem = villageToMapItem(village);
   const villagePath = `/villages/${village.slug || village._id}`;
-  const hasActionPanels = Boolean(isManager || isAdmin);
+  const hasActionPanels = Boolean(isManager || isAdmin || canDeploy);
   // "Closer" and "Live on Closer" are the same claim twice over. Managers keep
   // the status pill only while it still says something the Closer pill doesn't.
   const showStatusPill =
@@ -400,6 +402,20 @@ const VillageDetailPage = () => {
             {/* UPCOMING EVENTS — pulled from the village's own instance. */}
             <VillageEvents apiUrl={village.apiUrl} appUrl={village.appUrl} />
 
+            {/* DEPLOY — the one control that talks to procurement. Read-only
+                for anyone who may see the panel but not press the button. */}
+            {hasActionPanels ? (
+              <DeployCTA
+                village={village}
+                canDeploy={canDeploy}
+                isAdmin={isAdmin}
+                onDeployed={(updated) => {
+                  if (updated) setVillage(updated);
+                  void refresh();
+                }}
+              />
+            ) : null}
+
             {/* MANAGER ACTIONS */}
             {isManager ? (
               <Panel
@@ -407,8 +423,6 @@ const VillageDetailPage = () => {
                 title={
                   isAwaitingDeploy
                     ? t('villages_next_step_waiting_title')
-                    : canDeploy
-                    ? t('villages_next_step_deploy_title')
                     : isLive
                     ? t('villages_next_step_live_title')
                     : t('villages_next_step_intro_title')
@@ -416,26 +430,12 @@ const VillageDetailPage = () => {
                 description={
                   isAwaitingDeploy
                     ? t('villages_deploy_pending')
-                    : canDeploy
-                    ? t('villages_next_step_deploy_body')
                     : isLive
                     ? t('villages_next_step_live_body')
                     : t('villages_next_step_intro_body')
                 }
               >
                 <div className="flex flex-wrap gap-3">
-                  {canDeploy ? (
-                    <button
-                      type="button"
-                      className={btnPrimary}
-                      disabled={isActing}
-                      onClick={() =>
-                        runAction(() => requestVillageDeploy(village._id))
-                      }
-                    >
-                      {t('villages_request_deploy_cta')}
-                    </button>
-                  ) : null}
                   <Link href={`${villagePath}/edit`} className={btnSmall}>
                     {t('villages_edit_cta')}
                   </Link>
@@ -598,7 +598,8 @@ const VillageDetailPage = () => {
                 ) : null}
                 {/* The deploy queue itself is an admin dashboard, so only link
                     coordinators who can actually open it. */}
-                {isAdmin && isAwaitingDeploy ? (
+                {isAdmin &&
+                (isAwaitingDeploy || village.onboardingStatus === 'failed') ? (
                   <Link
                     href="/dashboard/deploy-queue"
                     className="inline-block mt-5 text-[13.5px] font-semibold text-[#0B7A4C] underline underline-offset-[3px]"

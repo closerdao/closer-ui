@@ -185,14 +185,11 @@ const Login = () => {
         setAuthentification(user, accessToken, refreshToken);
       } else {
         console.log('[signInWithWallet] No signedMessage returned');
+        setWeb3Error(t('wallet_signature_failed'));
       }
     } catch (e: any) {
-      if (e.response?.status === 401) {
-        setWeb3Error(e.response.data.error);
-        console.log('[signInWithWallet] 401 error:', e.response.data.error);
-        return;
-      }
       console.error('[signInWithWallet] error:', e);
+      setWeb3Error(parseMessageFromError(e));
     } finally {
       setWeb3Loading(false);
       console.log('[signInWithWallet] finished');

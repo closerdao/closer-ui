@@ -103,7 +103,11 @@ const TicketSelectStep = ({
   onContinue,
 }: Props) => {
   const t = useTranslations();
-  const [appliedDiscount, setAppliedDiscount] = useState('');
+  // A code that arrived with the step came from a link or a ticket already in
+  // flight, so it applies without anyone pressing Apply for it.
+  const [appliedDiscount, setAppliedDiscount] = useState(() =>
+    normalizeDiscountCode(discountCode),
+  );
   const [isQuoting, setIsQuoting] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
 

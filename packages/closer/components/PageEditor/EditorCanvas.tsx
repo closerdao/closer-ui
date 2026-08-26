@@ -623,6 +623,7 @@ const PLACEHOLDER_BLOCK_KEYS: Record<string, string> = {
   pastEvents: 'pages_editor_block_past_events',
   eventsCalendar: 'pages_editor_block_events_calendar',
   fundraiserProgress: 'pages_editor_block_fundraiser_progress',
+  fundraiserDonate: 'pages_editor_block_fundraiser_progress',
   fundraiserMilestones: 'pages_editor_block_fundraiser_milestones',
   fundraiserRewards: 'pages_editor_block_fundraiser_rewards',
   supplyGraph: 'pages_editor_block_supply_graph',
@@ -635,6 +636,10 @@ const PLACEHOLDER_BLOCK_KEYS: Record<string, string> = {
   staySearch: 'pages_editor_block_book_a_stay',
   citizenProgressBar: 'pages_editor_block_citizen_progress',
   projectList: 'pages_editor_block_project_list',
+  // Live blocks: the finance preview quotes the sale contract over RPC, and
+  // the onboarding promo would show the editing admin's own quest progress.
+  tokenFinance: 'pages_editor_block_token_finance',
+  tokenOnboarding: 'pages_editor_block_token_onboarding',
 };
 
 function ControlBtn({

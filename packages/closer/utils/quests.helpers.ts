@@ -149,9 +149,16 @@ export const getQuestDateRange = (quest: Quest): string => {
 /** Loose enough to take next-intl's translator without fighting its key generics. */
 type Translate = (key: any, values?: any) => string;
 
+// 'carrots' is the legacy spelling of 'credits' still stored on old quests —
+// both settle through the credits ledger and render identically.
 const CURRENCY_LABELS: Record<string, string> = {
+  credits: '🥕',
   carrots: '🥕',
 };
+
+/** Collapse the legacy quest prize currency into the canonical one. */
+export const normalizeQuestCurrency = (cur: string): string =>
+  cur === 'carrots' ? 'credits' : cur;
 
 export const formatQuestCurrency = (val: number, cur: string): string => {
   const symbol = CURRENCY_LABELS[cur];

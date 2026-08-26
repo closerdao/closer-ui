@@ -126,6 +126,7 @@ const CreditsCheckoutPage: NextPage = () => {
                   <CreditsCheckoutForm
                     userEmail={user?.email}
                     credits={Number(amount)}
+                    total={total}
                   />
                 </Elements>
               ) : (
