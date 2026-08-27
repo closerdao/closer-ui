@@ -18,19 +18,26 @@ export const sameOriginTrailingSlashTarget = (
   return target;
 };
 
-/**
- * Restore Next's usual trailing-slash redirect while preserving PostHog's
- * `/ingest/e/` request paths when `skipTrailingSlashRedirect` is enabled.
- */
-export function trailingSlashMiddleware(req: NextRequest) {
+const isIngestPath = (pathname: string): boolean =>
+  pathname === '/ingest' || pathname.startsWith('/ingest/');
+
+/** Strip first-party auth/cookie headers before they reach the PostHog proxy. */
+function stripIngestCredentials(req: NextRequest) {
+  const headers = withoutCredentials(req.headers);
+  return NextResponse.next({ request: { headers } });
+}
+
+/** Restore Next's usual trailing-slash 308, same-origin only. */
+function redirectTrailingSlash(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
-  if (pathname === '/ingest' || pathname.startsWith('/ingest/')) {
-    const headers = withoutCredentials(req.headers);
-    return NextResponse.next({ request: { headers } });
-  }
   if (pathname !== '/' && pathname.endsWith('/')) {
     const target = sameOriginTrailingSlashTarget(req.nextUrl, pathname, search);
     return NextResponse.redirect(target, 308);
   }
   return NextResponse.next();
+}
+
+export function trailingSlashMiddleware(req: NextRequest) {
+  if (isIngestPath(req.nextUrl.pathname)) return stripIngestCredentials(req);
+  return redirectTrailingSlash(req);
 }

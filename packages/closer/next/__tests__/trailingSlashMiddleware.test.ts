@@ -42,6 +42,17 @@ it('passes stripped headers through Next request-header overrides', () => {
   expect(forwarded.get('authorization')).toBeNull();
 });
 
+it('redirects trailing-slash API routes too (matcher no longer excludes /api/)', () => {
+  trailingSlashMiddleware({
+    nextUrl: new URL('https://village.example/api/foo/'),
+    headers: new Headers(),
+  } as unknown as NextRequest);
+
+  const [target, status] = (NextResponse.redirect as jest.Mock).mock.calls[0];
+  expect(target.toString()).toBe('https://village.example/api/foo');
+  expect(status).toBe(308);
+});
+
 it('keeps trailing-slash redirects same-origin and preserves the query', () => {
   const target = sameOriginTrailingSlashTarget(
     new URL('https://village.example//evil.com/?next=%2Fdashboard'),
