@@ -1,13 +1,14 @@
 import type { Sale, TrackableTokenSale } from '../types/api';
+
 import { AnalyticsEvents, trackEvent } from './posthog';
 
-const runOnce = (key: string, callback: () => void): boolean => {
+export const runOnce = (key: string, callback: () => void): boolean => {
   try {
     if (typeof window !== 'undefined' && window.localStorage.getItem(key)) {
       return false;
     }
   } catch {
-    // Storage can be unavailable in privacy modes.
+    // fall through: treat unreadable storage as "not seen yet"
   }
 
   callback();
@@ -15,7 +16,7 @@ const runOnce = (key: string, callback: () => void): boolean => {
   try {
     if (typeof window !== 'undefined') window.localStorage.setItem(key, '1');
   } catch {
-    // Best effort: analytics must not break the purchase success flow.
+    // fall through: best effort, must not break the caller
   }
   return true;
 };
@@ -44,16 +45,4 @@ export const trackTokenPurchaseOnce = (sale: TrackableTokenSale): boolean => {
       $insert_id: `token-purchased-${sale._id}`,
     });
   });
-};
-
-export const reportTokenSaleSuccess = (
-  sale: TrackableTokenSale,
-  callbacks: { trackGa: () => void; logPlatformMetric: () => void },
-): boolean => {
-  if (!isSuccessfulTokenPurchase(sale)) return false;
-
-  runOnce(`analytics:ga-token-success:${sale._id}`, callbacks.trackGa);
-  trackTokenPurchaseOnce(sale);
-  callbacks.logPlatformMetric();
-  return true;
 };

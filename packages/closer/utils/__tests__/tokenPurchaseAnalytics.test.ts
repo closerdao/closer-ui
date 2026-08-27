@@ -1,7 +1,7 @@
 import { trackEvent } from '../posthog';
 import {
   getTokenPurchaseMethod,
-  reportTokenSaleSuccess,
+  runOnce,
   trackTokenPurchaseOnce,
 } from '../tokenPurchaseAnalytics';
 
@@ -54,46 +54,18 @@ it('maps non-crypto payment methods to fiat', () => {
   expect(getTokenPurchaseMethod('bank')).toBe('fiat');
 });
 
-it('reports GA once but never couples the platform metric to PostHog dedup', () => {
-  const trackGa = jest.fn();
-  const logPlatformMetric = jest.fn();
-  const sale = {
-    _id: 'sale-3',
-    product_type: 'token',
-    status: 'paid',
-    quantity: 5,
-    paymentMethod: 'card',
-  } as const;
+describe('runOnce', () => {
+  it('runs the callback once per key and persists across calls', () => {
+    const callback = jest.fn();
+    expect(runOnce('analytics:test-key', callback)).toBe(true);
+    expect(runOnce('analytics:test-key', callback)).toBe(false);
+    expect(callback).toHaveBeenCalledTimes(1);
+  });
 
-  expect(reportTokenSaleSuccess(sale, { trackGa, logPlatformMetric })).toBe(
-    true,
-  );
-  expect(reportTokenSaleSuccess(sale, { trackGa, logPlatformMetric })).toBe(
-    true,
-  );
-
-  expect(trackGa).toHaveBeenCalledTimes(1);
-  expect(trackEvent).toHaveBeenCalledTimes(1);
-  expect(logPlatformMetric).toHaveBeenCalledTimes(2);
-});
-
-it('does not report any success channel for an unpaid sale', () => {
-  const trackGa = jest.fn();
-  const logPlatformMetric = jest.fn();
-
-  expect(
-    reportTokenSaleSuccess(
-      {
-        _id: 'sale-4',
-        product_type: 'token',
-        status: 'pending-payment',
-        quantity: 5,
-        paymentMethod: 'bank',
-      },
-      { trackGa, logPlatformMetric },
-    ),
-  ).toBe(false);
-  expect(trackGa).not.toHaveBeenCalled();
-  expect(trackEvent).not.toHaveBeenCalled();
-  expect(logPlatformMetric).not.toHaveBeenCalled();
+  it('keeps distinct keys independent', () => {
+    const callback = jest.fn();
+    expect(runOnce('analytics:key-a', callback)).toBe(true);
+    expect(runOnce('analytics:key-b', callback)).toBe(true);
+    expect(callback).toHaveBeenCalledTimes(2);
+  });
 });
