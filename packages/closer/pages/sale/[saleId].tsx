@@ -154,13 +154,6 @@ const SaleSummaryPage = () => {
       category: 'sales',
       label: 'token',
     });
-    trackTokenPurchaseOnce({
-      _id: sale._id,
-      product_type: sale.product_type,
-      status: sale.status,
-      quantity: sale.quantity,
-      paymentMethod: sale.paymentMethod,
-    });
     const qty = sale.quantity;
     if (typeof qty === 'number' && Number.isFinite(qty) && qty > 0) {
       void logMetric({
@@ -170,6 +163,19 @@ const SaleSummaryPage = () => {
         ...linkedMetricFields('TokenSale', sale._id),
       });
     }
+  }, [sale?._id, sale?.product_type]);
+
+  // Separate from the legacy events above: this one waits for status 'paid',
+  // so it must re-run on status changes they must not re-run on.
+  useEffect(() => {
+    if (!sale?._id) return;
+    trackTokenPurchaseOnce({
+      _id: sale._id,
+      product_type: sale.product_type,
+      status: sale.status,
+      quantity: sale.quantity,
+      paymentMethod: sale.paymentMethod,
+    });
   }, [sale?._id, sale?.product_type, sale?.status, sale?.quantity, sale?.paymentMethod]);
 
   const createdAt = useMemo(() => {
