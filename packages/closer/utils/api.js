@@ -170,6 +170,175 @@ function normalizeApiError(error) {
 let refreshPromise = null;
 let onSessionInvalid = null;
 
+// --- Cross-tab refresh coordination ------------------------------------
+//
+// The refresh token lives in localStorage, shared by every tab of the
+// origin, but the backend rotates it single-use: a second /auth/refresh
+// call with an already-consumed token gets a 401. `refreshPromise` above
+// only dedupes concurrent refreshes *within* one tab -- two tabs racing to
+// refresh at the same time will have one succeed and one get 401'd into a
+// spurious logout. This lock makes only one tab actually hit the network;
+// the rest wait for it to finish and reuse the tokens it wrote to storage.
+const REFRESH_LOCK_KEY = 'closer_refresh_token_lock';
+// How long a held lock is honoured before another tab is allowed to
+// reclaim it. Covers a tab being closed or crashing mid-refresh.
+const REFRESH_LOCK_STALE_MS = 15000;
+// After claiming a free/stale lock, wait this long before trusting that no
+// other tab claimed it in the same instant. localStorage has no
+// compare-and-swap across tabs, so this is a write-then-verify pattern
+// rather than a true atomic acquire.
+const REFRESH_LOCK_CONFIRM_MS = 30;
+const REFRESH_LOCK_POLL_MS = 150;
+// Overall ceiling on how long a waiting tab sits in the acquire loop
+// before giving up on coordination and refreshing itself. Second line of
+// defence behind REFRESH_LOCK_STALE_MS: if this is ever hit, the worst
+// case is one extra tab racing the network call, same as pre-fix
+// behaviour, not a hang.
+const REFRESH_LOCK_MAX_WAIT_MS = REFRESH_LOCK_STALE_MS * 2;
+
+const refreshTabId = `${Date.now().toString(36)}-${Math.random()
+  .toString(36)
+  .slice(2)}`;
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Returns a usable localStorage, or null if it's unavailable/throws
+// (private browsing, blocked site data). Callers fall back to today's
+// single-tab behaviour when this is null.
+function getLockStorage() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const storage = window.localStorage;
+    const probeKey = '__closer_refresh_lock_probe__';
+    storage.setItem(probeKey, '1');
+    storage.removeItem(probeKey);
+    return storage;
+  } catch {
+    return null;
+  }
+}
+
+function readRefreshLock(storage) {
+  try {
+    const raw = storage.getItem(REFRESH_LOCK_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (
+      !parsed ||
+      typeof parsed.owner !== 'string' ||
+      typeof parsed.ts !== 'number'
+    ) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function isRefreshLockStale(lock) {
+  return !lock || Date.now() - lock.ts > REFRESH_LOCK_STALE_MS;
+}
+
+function writeRefreshLock(storage) {
+  try {
+    storage.setItem(
+      REFRESH_LOCK_KEY,
+      JSON.stringify({ owner: refreshTabId, ts: Date.now() }),
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function releaseRefreshLock(storage) {
+  try {
+    const lock = readRefreshLock(storage);
+    if (lock && lock.owner === refreshTabId) {
+      storage.removeItem(REFRESH_LOCK_KEY);
+    }
+  } catch {
+    // Best-effort -- a lock left behind here is reclaimed by
+    // REFRESH_LOCK_STALE_MS anyway.
+  }
+}
+
+// Waits for whichever tab holds the lock to finish (release it or go
+// stale). Never rejects; just returns once the lock is free or the
+// deadline passes.
+async function waitForRefreshLockRelease(storage, deadline) {
+  while (Date.now() < deadline) {
+    const lock = readRefreshLock(storage);
+    if (isRefreshLockStale(lock)) return;
+    await sleep(REFRESH_LOCK_POLL_MS);
+  }
+}
+
+// Tries to become the tab that performs the actual network refresh.
+// Returns true once this tab owns the lock, false if it gave up waiting
+// for/competing for it within the wait budget.
+async function acquireRefreshLock(storage) {
+  const deadline = Date.now() + REFRESH_LOCK_MAX_WAIT_MS;
+  while (Date.now() < deadline) {
+    const lock = readRefreshLock(storage);
+    if (!isRefreshLockStale(lock)) {
+      await waitForRefreshLockRelease(storage, deadline);
+      continue;
+    }
+    if (!writeRefreshLock(storage)) return false;
+    await sleep(REFRESH_LOCK_CONFIRM_MS);
+    const confirmed = readRefreshLock(storage);
+    if (confirmed && confirmed.owner === refreshTabId) return true;
+    // Another tab's write landed after ours in the same window -- retry.
+  }
+  return false;
+}
+
+// Runs `performNetworkRefresh` on at most one tab at a time. Other tabs
+// wait for that tab to finish and then re-read whatever it wrote to
+// storage instead of racing it with their own /auth/refresh call.
+async function coordinateCrossTabRefresh(performNetworkRefresh) {
+  const storage = getLockStorage();
+  if (!storage) {
+    return performNetworkRefresh();
+  }
+
+  const existingLock = readRefreshLock(storage);
+  if (!isRefreshLockStale(existingLock)) {
+    // Someone else is already refreshing -- wait for them and reuse
+    // whatever they wrote rather than duplicating the call.
+    await waitForRefreshLockRelease(
+      storage,
+      Date.now() + REFRESH_LOCK_MAX_WAIT_MS,
+    );
+    const token = getAccessToken();
+    const tokenAfterWait = getRefreshToken();
+    if (token && tokenAfterWait) {
+      return { access_token: token, results: null };
+    }
+    // The other tab's refresh didn't leave us usable tokens (it failed,
+    // or its lock simply went stale) -- fall through and try to become
+    // the refresher ourselves.
+  }
+
+  const acquired = await acquireRefreshLock(storage);
+  if (!acquired) {
+    // Gave up waiting/competing for the lock -- do it ourselves rather
+    // than hang. Worst case this duplicates the network call, the same
+    // risk profile as before this coordination existed.
+    return performNetworkRefresh();
+  }
+
+  try {
+    return await performNetworkRefresh();
+  } finally {
+    releaseRefreshLock(storage);
+  }
+}
+
 export function setOnSessionInvalid(fn) {
   onSessionInvalid = fn;
 }
@@ -196,6 +365,56 @@ function notifySessionInvalid() {
   }
 }
 
+// Actually hits the network. Only ever invoked by the tab that holds the
+// cross-tab refresh lock (or, in a degraded/no-storage environment, by
+// whichever tab is refreshing at all -- see coordinateCrossTabRefresh).
+function performNetworkRefresh() {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) {
+    const err = new Error('Not authenticated');
+    err.silentAuthRedirect = true;
+    return Promise.reject(err);
+  }
+  return axios
+    .post(
+      `${baseURL}/auth/refresh`,
+      { refresh_token: refreshToken },
+      {
+        headers: { 'Content-Type': 'application/json' },
+      },
+    )
+    .then((res) => {
+      const {
+        access_token: newAccess,
+        refresh_token: newRefresh,
+        results,
+      } = res?.data ?? {};
+      if (newAccess && newRefresh) {
+        // The refresh token lives in localStorage, which is shared across
+        // tabs and can hold a token from a different account than the one
+        // this session belongs to. Never let a refresh silently switch
+        // accounts: if the refreshed identity doesn't match, drop the
+        // session and force a fresh login.
+        const storedAccountId = getStoredAccountId();
+        const refreshedAccountId = results?._id;
+        if (
+          storedAccountId &&
+          refreshedAccountId &&
+          storedAccountId !== refreshedAccountId
+        ) {
+          notifySessionInvalid();
+          throw new Error('Refresh token belongs to a different account');
+        }
+        setTokens(newAccess, newRefresh);
+        if (refreshedAccountId) {
+          setStoredAccountId(refreshedAccountId);
+        }
+        return { access_token: newAccess, results };
+      }
+      throw new Error('Invalid refresh response');
+    });
+}
+
 function doRefresh() {
   if (!refreshPromise) {
     const refreshToken = getRefreshToken();
@@ -213,47 +432,18 @@ function doRefresh() {
       });
       return refreshPromise;
     }
-    refreshPromise = axios
-      .post(
-        `${baseURL}/auth/refresh`,
-        { refresh_token: refreshToken },
-        {
-          headers: { 'Content-Type': 'application/json' },
-        },
-      )
-      .then((res) => {
-        const {
-          access_token: newAccess,
-          refresh_token: newRefresh,
-          results,
-        } = res?.data ?? {};
-        if (newAccess && newRefresh) {
-          // The refresh token lives in localStorage, which is shared across
-          // tabs and can hold a token from a different account than the one
-          // this session belongs to. Never let a refresh silently switch
-          // accounts: if the refreshed identity doesn't match, drop the
-          // session and force a fresh login.
-          const storedAccountId = getStoredAccountId();
-          const refreshedAccountId = results?._id;
-          if (
-            storedAccountId &&
-            refreshedAccountId &&
-            storedAccountId !== refreshedAccountId
-          ) {
-            notifySessionInvalid();
-            throw new Error('Refresh token belongs to a different account');
-          }
-          setTokens(newAccess, newRefresh);
-          if (refreshedAccountId) {
-            setStoredAccountId(refreshedAccountId);
-          }
-          return { access_token: newAccess, results };
-        }
-        throw new Error('Invalid refresh response');
-      })
-      .finally(() => {
+    // The in-tab dedupe above only stops this tab from firing more than
+    // one refresh at a time; coordinateCrossTabRefresh stops every other
+    // tab of the origin from doing the same against the same (single-use)
+    // refresh token. A tab that logs out mid-refresh (revokeRefreshToken)
+    // doesn't touch this lock -- whichever tab holds it always releases it
+    // in the `finally` inside coordinateCrossTabRefresh, success or not,
+    // so there's nothing here for logout to deadlock against.
+    refreshPromise = coordinateCrossTabRefresh(performNetworkRefresh).finally(
+      () => {
         refreshPromise = null;
-      });
+      },
+    );
   }
   return refreshPromise;
 }
