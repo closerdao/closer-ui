@@ -242,6 +242,46 @@ describe('useBookingSmartContract', () => {
     expect(sendTransaction).not.toHaveBeenCalled();
   });
 
+  it('publishes full progress when a resumed stake already has exact remaining coverage', async () => {
+    const selectedNights = bookingNights.slice(0, 3);
+    const onProgress = jest.fn();
+    contractMock.estimateGas.bookAccommodation.mockRejectedValue(
+      new Error('execution reverted: Booking already exists'),
+    );
+    contractMock.getAccommodationBookings.mockResolvedValue(
+      selectedNights.map(([year, day]) => onChainBooking(year, day, 100)),
+    );
+    const { result } = renderHook(
+      () => useBookingSmartContract({ bookingNights: selectedNights }),
+      { wrapper },
+    );
+
+    let stakingResult: any;
+    await act(async () => {
+      stakingResult = await result.current.stakeTokens('100', selectedNights, {
+        completedNightCount: 1,
+        onProgress,
+      });
+    });
+
+    expect(stakingResult).toEqual({
+      error: null,
+      success: { transactionId: 'existing' },
+    });
+    expect(onProgress).toHaveBeenCalledTimes(1);
+    expect(onProgress).toHaveBeenCalledWith({
+      completedNightCount: 3,
+      transactionId: null,
+    });
+    expect(result.current.stakingProgress).toMatchObject({
+      completedNights: 3,
+      totalNights: 3,
+      requiresMultipleTransactions: true,
+      phase: 'idle',
+    });
+    expect(sendTransaction).not.toHaveBeenCalled();
+  });
+
   it('classifies a booking collision reported while submitting', async () => {
     const selectedNights = bookingNights.slice(0, 2);
     sendTransaction.mockReset();

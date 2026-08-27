@@ -1,16 +1,12 @@
 import { BigNumber, BigNumberish } from 'ethers';
 
-type AccommodationBooking = {
-  year?: BigNumberish;
-  dayOfYear?: BigNumberish;
-  price?: BigNumberish;
-  [index: number]: BigNumberish | undefined;
-};
-
-export type AccommodationBookingCoverage = 'none' | 'complete' | 'conflict';
+import type {
+  AccommodationBookingCoverage,
+  OnChainAccommodationBooking,
+} from '../types/accommodationBooking';
 
 const bookingField = (
-  booking: AccommodationBooking,
+  booking: OnChainAccommodationBooking,
   name: 'year' | 'dayOfYear' | 'price',
   index: number,
 ): BigNumberish | undefined => booking?.[name] ?? booking?.[index];
@@ -18,18 +14,21 @@ const bookingField = (
 const toNumber = (value: BigNumberish | undefined): number =>
   BigNumber.isBigNumber(value) ? value.toNumber() : Number(value);
 
-const bookingDay = (booking: AccommodationBooking): number =>
+const bookingDay = (booking: OnChainAccommodationBooking): number =>
   toNumber(bookingField(booking, 'dayOfYear', 2));
 
-const bookingPrice = (booking: AccommodationBooking): BigNumber =>
+const bookingPrice = (booking: OnChainAccommodationBooking): BigNumber =>
   BigNumber.from(bookingField(booking, 'price', 3) ?? 0);
 
 const indexBookings = (
-  bookingsByYear: Map<number, AccommodationBooking[]>,
-): Map<number, Map<number, AccommodationBooking>> => {
-  const bookingMaps = new Map<number, Map<number, AccommodationBooking>>();
+  bookingsByYear: Map<number, OnChainAccommodationBooking[]>,
+): Map<number, Map<number, OnChainAccommodationBooking>> => {
+  const bookingMaps = new Map<
+    number,
+    Map<number, OnChainAccommodationBooking>
+  >();
   for (const [year, bookings] of bookingsByYear.entries()) {
-    const byDay = new Map<number, AccommodationBooking>();
+    const byDay = new Map<number, OnChainAccommodationBooking>();
     for (const booking of bookings || []) {
       byDay.set(bookingDay(booking), booking);
     }
@@ -39,7 +38,7 @@ const indexBookings = (
 };
 
 export const countMatchingAccommodationBookingPrefix = (
-  bookingsByYear: Map<number, AccommodationBooking[]>,
+  bookingsByYear: Map<number, OnChainAccommodationBooking[]>,
   nights: BigNumberish[][],
   pricePerNightWei: BigNumberish,
 ): number => {
@@ -59,7 +58,7 @@ export const countMatchingAccommodationBookingPrefix = (
 };
 
 export const classifyAccommodationBookingCoverage = (
-  bookingsByYear: Map<number, AccommodationBooking[]>,
+  bookingsByYear: Map<number, OnChainAccommodationBooking[]>,
   nights: BigNumberish[][],
   pricePerNightWei: BigNumberish,
 ): AccommodationBookingCoverage => {

@@ -386,6 +386,28 @@ export const useBookingSmartContract = ({ bookingNights }) => {
       }
     };
 
+    const completeExistingCoverage = async () => {
+      completedNights = totalNights;
+      await publishProgress({ transactionId: null });
+      return { error: null, success: { transactionId: 'existing' } };
+    };
+
+    const resolveStakeBookingCoverage = async (
+      coverageNights,
+      pricePerNightWei,
+    ) => {
+      const coverageResult = await resolveAccommodationBookingCoverage({
+        Diamond,
+        account,
+        nights: coverageNights,
+        pricePerNightWei,
+      });
+      if (coverageResult?.success?.transactionId === 'existing') {
+        return completeExistingCoverage();
+      }
+      return coverageResult;
+    };
+
     try {
       setPending(true);
       setStakingProgress({
@@ -417,13 +439,7 @@ export const useBookingSmartContract = ({ bookingNights }) => {
       }
 
       if (completedNights >= totalNights) {
-        setStakingProgress({
-          completedNights,
-          totalNights,
-          requiresMultipleTransactions,
-          phase: 'idle',
-        });
-        return { error: null, success: { transactionId: 'existing' } };
+        return completeExistingCoverage();
       }
 
       while (completedNights < totalNights) {
@@ -447,12 +463,10 @@ export const useBookingSmartContract = ({ bookingNights }) => {
             isBookingAlreadyExistsError(estimateError) ||
             getSolidityPanicCode(estimateError) === SOLIDITY_PANIC_UNDERFLOW
           ) {
-            const coverageResult = await resolveAccommodationBookingCoverage({
-              Diamond,
-              account,
-              nights: remainingNights,
+            const coverageResult = await resolveStakeBookingCoverage(
+              remainingNights,
               pricePerNightWei,
-            });
+            );
             if (coverageResult) return coverageResult;
           }
           const diagnosed = await diagnoseLaterYearStakeConflict({
@@ -485,12 +499,10 @@ export const useBookingSmartContract = ({ bookingNights }) => {
             isBookingAlreadyExistsError(staticError) ||
             getSolidityPanicCode(staticError) === SOLIDITY_PANIC_UNDERFLOW
           ) {
-            const coverageResult = await resolveAccommodationBookingCoverage({
-              Diamond,
-              account,
-              nights: remainingNights,
+            const coverageResult = await resolveStakeBookingCoverage(
+              remainingNights,
               pricePerNightWei,
-            });
+            );
             if (coverageResult) return coverageResult;
           }
           const diagnosed = await diagnoseLaterYearStakeConflict({
@@ -628,12 +640,10 @@ export const useBookingSmartContract = ({ bookingNights }) => {
         fullError: error,
       });
       if (isBookingAlreadyExistsError(error)) {
-        const coverageResult = await resolveAccommodationBookingCoverage({
-          Diamond,
-          account,
-          nights: nights.slice(completedNights),
-          pricePerNightWei: targetPricePerNightWei,
-        });
+        const coverageResult = await resolveStakeBookingCoverage(
+          nights.slice(completedNights),
+          targetPricePerNightWei,
+        );
         if (coverageResult) return coverageResult;
       }
       return { error, success: null };
