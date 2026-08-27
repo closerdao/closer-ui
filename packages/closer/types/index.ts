@@ -11,6 +11,7 @@ export * from './eventReport';
 export * from './food';
 export * from './metrics';
 export * from './metricsDashboard';
+export * from './onchainAdmin';
 export * from './proposal';
 export * from './quest';
 export * from './page';

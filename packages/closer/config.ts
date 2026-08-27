@@ -262,6 +262,10 @@ export const configDescription: ConfigType[] = [
         type: 'number',
         default: 30,
       },
+      citizenTelegramGroupUrl: {
+        type: 'text',
+        default: '',
+      },
     },
   },
   {
@@ -1213,6 +1217,34 @@ export const configDescription: ConfigType[] = [
       enabled: {
         type: 'boolean',
         default: false,
+      },
+      // Stay credits awarded when a referred user signs up.
+      creditsToReferrer: {
+        type: 'number',
+        default: 1,
+      },
+      creditsToFriend: {
+        type: 'number',
+        default: 2,
+      },
+      maxCreditsPerMonth: {
+        type: 'number',
+        default: 6,
+      },
+      // Tokens owed to a citizen whose referral becomes a citizen. Zero
+      // disables the program. The bonus rate applies until bonusEndDate
+      // (YYYY-MM-DD, inclusive), then the base rate takes over on its own.
+      tokensPerCitizenReferred: {
+        type: 'number',
+        default: 0,
+      },
+      bonusTokensPerCitizenReferred: {
+        type: 'number',
+        default: 0,
+      },
+      bonusEndDate: {
+        type: 'text',
+        default: '',
       },
     },
   },

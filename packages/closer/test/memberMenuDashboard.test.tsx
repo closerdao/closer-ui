@@ -194,6 +194,26 @@ describe.each(['tdf', 'moos'])('MemberMenu my stays section (%s)', (app) => {
 });
 
 describe('MemberMenu dashboard section — filtering', () => {
+  it('does not show Sales to space hosts', async () => {
+    (useAuth as jest.Mock).mockReturnValue({
+      user: { _id: 'host-1', roles: ['space-host'] },
+      logout: jest.fn(),
+    });
+    (useRBAC as jest.Mock).mockReturnValue({
+      hasAccess: () => true,
+      rbacLiveRevision: 0,
+    });
+
+    renderWithNextIntl(<MemberMenu {...flags} appName="moos" />);
+
+    const section = await openDashboardSection();
+    const hrefs = within(section)
+      .getAllByRole('link')
+      .map((link) => link.getAttribute('href'));
+
+    expect(hrefs).not.toContain('/dashboard/sales');
+  });
+
   it('drops a category whose links are all hidden by RBAC', async () => {
     (useAuth as jest.Mock).mockReturnValue({
       user: { _id: 'accountant-1', roles: ['accounting'] },

@@ -11,7 +11,10 @@ import type {
   QuestLeaderboard as QuestLeaderboardType,
 } from '../../types/quest';
 import {
+  formatQuestCurrency,
   getLeaderboardRowUser,
+  getRowActionCount,
+  getRowEarned,
   getTicketBreakdown,
 } from '../../utils/quests.helpers';
 import ProfilePhoto from '../ProfilePhoto';
@@ -39,6 +42,10 @@ const QuestLeaderboard = ({
 }: Props) => {
   const t = useTranslations();
   const isRaffle = quest.type === 'raffle';
+  // A singleAction quest ranks by what the actions actually pay, so the score
+  // column shows the earnings whenever the per-action award has a total.
+  const showsEarnings =
+    !isRaffle && quest.prize?.eachAction?.kind === 'currency';
 
   const getScore = (row: QuestLeaderboardRow) =>
     isRaffle ? row.ticketCount || 0 : row.points || 0;
@@ -52,7 +59,10 @@ const QuestLeaderboard = ({
     const rank = row.rank ?? index + 1;
     const breakdown = isRaffle
       ? getTicketBreakdown(quest, row.ticketsBySource)
-      : null;
+      : t('quests_leaderboard_actions', {
+          count: getRowActionCount(quest, row),
+        });
+    const earned = showsEarnings ? getRowEarned(quest, row) : null;
     const isLeader = rank === 1;
 
     return (
@@ -100,15 +110,17 @@ const QuestLeaderboard = ({
                 isLeader || isMe ? 'text-accent' : 'text-gray-400'
               }`}
             />
-          ) : (
+          ) : earned ? null : (
             <Trophy
               className={`w-4 h-4 ${
                 isLeader || isMe ? 'text-accent' : 'text-gray-400'
               }`}
             />
           )}
-          <span className="text-lg font-semibold tabular-nums">
-            {getScore(row)}
+          <span className="text-lg font-semibold tabular-nums whitespace-nowrap">
+            {earned
+              ? formatQuestCurrency(earned.amount, earned.cur)
+              : getScore(row)}
           </span>
         </div>
       </div>
@@ -133,6 +145,8 @@ const QuestLeaderboard = ({
         <span className="ml-auto text-[11px] font-bold uppercase tracking-widest text-gray-500">
           {isRaffle
             ? t('quests_leaderboard_tickets')
+            : showsEarnings
+            ? t('quests_leaderboard_earned')
             : t('quests_leaderboard_points')}
         </span>
         {onRefresh && (

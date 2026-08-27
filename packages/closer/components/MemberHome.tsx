@@ -1070,7 +1070,7 @@ const MemberHome = ({
 
           <div className="border-t border-line/10 p-3 flex-shrink-0">
             <Link
-              href="/members"
+              href="/community"
               className="flex items-center gap-2 min-h-[40px] px-3 py-2.5 rounded-xl hover:bg-neutral-light transition-colors text-sm text-gray-600"
             >
               <Users className="w-4 h-4" />
@@ -1130,7 +1130,7 @@ const MemberHome = ({
           {t('community_title')}
         </button>
         <Link
-          href="/members"
+          href="/community"
           className={`flex-1 flex items-center justify-center gap-2 min-h-[48px] py-3 text-sm transition-colors ${
             'text-gray-500'
           }`}

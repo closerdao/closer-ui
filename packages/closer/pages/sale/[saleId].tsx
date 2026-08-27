@@ -20,7 +20,10 @@ import {
   AccountingEntitiesConfig,
   TokenSale,
 } from '../../types/api';
-import { resolveAccountingEntityFromSale } from '../../utils/accountingEntityResolve';
+import {
+  resolveAccountingEntityForProduct,
+  resolveAccountingEntityFromSale,
+} from '../../utils/accountingEntityResolve';
 import api, { formatSearch } from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { linkedMetricFields, logMetric } from '../../utils/metrics';
@@ -176,8 +179,12 @@ const SaleSummaryPage = () => {
       resolveAccountingEntityFromSale(
         sale?.entity,
         accountingEntitiesConfig?.elements,
+      ) ??
+      resolveAccountingEntityForProduct(
+        sale?.product_type,
+        accountingEntitiesConfig?.elements,
       ),
-    [sale?.entity, accountingEntitiesConfig?.elements],
+    [sale?.entity, sale?.product_type, accountingEntitiesConfig?.elements],
   );
 
   const showIssuerBlock =
@@ -283,10 +290,7 @@ const SaleSummaryPage = () => {
 
   const bankBeneficiaryDisplay =
     issuerEntity?.legalName?.trim() || t('oasa_beneficiary_name');
-  const bankIbanDisplay =
-    issuerEntity?.iban?.trim() ||
-    process.env.NEXT_PUBLIC_CLOSER_IBAN ||
-    t('oasa_iban_value');
+  const bankIbanDisplay = issuerEntity?.iban?.trim() || t('oasa_iban_value');
   const bankBicDisplay =
     issuerEntity?.bic?.trim() || t('oasa_bic_value');
   const bankAddressDisplay =

@@ -1,5 +1,9 @@
 import { useTranslations } from 'next-intl';
 
+import { useConfig } from '../../hooks/useConfig';
+import { CitizenshipConfig } from '../../types/api';
+import { getCachedConfig } from '../../utils/cachedConfig.helpers';
+
 interface Props {
   userReports: any[];
   userSubscription: any;
@@ -20,6 +24,12 @@ const CitizenEligibility = ({
   isSpaceHostVouchRequired,
 }: Props) => {
   const t = useTranslations();
+  const { PLATFORM_NAME } = useConfig();
+  const citizenshipConfig = getCachedConfig(
+    'citizenship',
+  ) as CitizenshipConfig | null;
+  const tokensRequired = citizenshipConfig?.tokensRequired;
+  const minStayDuration = citizenshipConfig?.minVouchingStayDuration;
 
   return (
     <div className="space-y-6">
@@ -40,16 +50,24 @@ const CitizenEligibility = ({
         )}
         {userSubscription?.plan === 'citizen' && (
           <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-            {t('subscriptions_citizen_on_way_to_30_tokens')}
+            {t('subscriptions_citizen_on_way_to_30_tokens', {
+              var: tokensRequired,
+            })}
           </li>
         )}
         {hasStayedForMinDuration ? (
           <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-            {t('subscriptions_citizen_stayed_for_min_duration')}
+            {t('subscriptions_citizen_stayed_for_min_duration', {
+              var: minStayDuration,
+              platform: PLATFORM_NAME,
+            })}
           </li>
         ) : (
           <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet-inactive.svg)] bg-no-repeat pl-6 mb-1.5">
-            {t('subscriptions_citizen_stayed_for_min_duration')}
+            {t('subscriptions_citizen_stayed_for_min_duration', {
+              var: minStayDuration,
+              platform: PLATFORM_NAME,
+            })}
           </li>
         )}
         {isVouched ? (
@@ -68,7 +86,9 @@ const CitizenEligibility = ({
         )}
         {owns30Tokens && (
           <li className="bg-[length:16px_16px] bg-[top_5px_left] bg-[url(/images/subscriptions/bullet.svg)] bg-no-repeat pl-6 mb-1.5">
-            {t('subscriptions_citizen_owns_30_tokens')}
+            {t('subscriptions_citizen_owns_30_tokens', {
+              var: tokensRequired,
+            })}
           </li>
         )}
       </ul>

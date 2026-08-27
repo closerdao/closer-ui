@@ -264,7 +264,9 @@ const QuestPage = ({
 
             <QuestPrizes quest={quest} />
 
-            {isClosed && (
+            {/* A singleAction quest has no draw to report — the leaderboard
+                below carries what each member earned instead. */}
+            {isClosed && quest.type === 'raffle' && (
               <QuestWinners quest={quest} initialUsers={winnerUsers} />
             )}
 

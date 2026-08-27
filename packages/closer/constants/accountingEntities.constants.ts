@@ -8,6 +8,7 @@ export const ACCOUNTING_ENTITY_PRODUCT_SLUGS = [
   'products',
   'subscriptions',
   'tokens',
+  'financed-tokens',
   'donations',
   'lessons',
 ] as const;
@@ -18,6 +19,9 @@ export type AccountingEntityProductSlug =
 const LEGACY_PRODUCT_SLUG_ALIASES: Record<string, AccountingEntityProductSlug> =
   {
     donation: 'donations',
+    token: 'tokens',
+    lesson: 'lessons',
+    'financed-token': 'financed-tokens',
   };
 
 export function normalizeAccountingProductSlug(
