@@ -62,7 +62,7 @@ function generateSiteMap({ volunteerOpportunities, articles, lessons, events, me
       <loc>${EXTERNAL_DATA_URL}/login</loc>
     </url>
     <url>
-      <loc>${EXTERNAL_DATA_URL}/members</loc>
+      <loc>${EXTERNAL_DATA_URL}/community</loc>
     </url>
      ${members
        .map(({ slug }) => {

@@ -78,6 +78,8 @@ export type User = {
   attributes: string[];
   managedBy: string[];
   _id: string;
+  /** Id of the user who referred this one, set at signup or when applying for citizenship. */
+  referredBy?: string;
   citizenship?: {
     createdAt?: Date;
     appliedAt?: Date;

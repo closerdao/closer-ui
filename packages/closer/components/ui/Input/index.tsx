@@ -55,6 +55,7 @@ interface InputProps extends VariantProps<typeof inputStyles> {
   customValidationError?: string;
   min?: number | string;
   max?: number | string;
+  step?: number | string;
 }
 
 const Input = React.memo(
@@ -84,6 +85,7 @@ const Input = React.memo(
     customValidationError,
     min,
     max,
+    step,
   }: InputProps) => {
     const t = useTranslations();
 
@@ -203,6 +205,7 @@ const Input = React.memo(
             maxLength={maxLength}
             min={min}
             max={max}
+            step={step}
             id={id}
             name={name}
             autoComplete={autoComplete}

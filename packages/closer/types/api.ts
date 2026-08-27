@@ -199,6 +199,7 @@ export type CitizenshipConfig = {
   minVouches: number;
   minVouchingStayDuration: number;
   tokensRequired: number;
+  citizenTelegramGroupUrl?: string;
 };
 
 export type AffiliateConfig = {

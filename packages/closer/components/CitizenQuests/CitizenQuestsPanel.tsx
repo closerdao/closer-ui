@@ -50,14 +50,17 @@ const CitizenQuestsPanel = ({
     tokensRequired,
     balanceTotal,
     ownsRequiredTokens,
+    isTokensCoveredByFinancePlan,
     hasLiveWalletBalances: hasConfirmedBalance,
     application,
     updateApplication,
   } = quests;
 
-  // Once we can see the required tokens on the user's own wallet there is
-  // nothing left to buy or finance, so the quest just reports success.
-  const hasCompletedTokensQuest = hasConfirmedBalance && ownsRequiredTokens;
+  // Once we can see the required tokens on the user's own wallet — or an
+  // active financed plan already covers them — there is nothing left to buy
+  // or finance, so the quest just reports success.
+  const hasCompletedTokensQuest =
+    (hasConfirmedBalance && ownsRequiredTokens) || isTokensCoveredByFinancePlan;
 
   return (
     <CitizenQuests
@@ -81,9 +84,16 @@ const CitizenQuestsPanel = ({
             </p>
           )}
           {hasCompletedTokensQuest ? (
-            <p className="text-sm font-bold text-accent">
-              ✓ {t('subscriptions_citizen_quest_complete')}
-            </p>
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-bold text-accent">
+                ✓ {t('subscriptions_citizen_quest_complete')}
+              </p>
+              {isTokensCoveredByFinancePlan && !ownsRequiredTokens && (
+                <p className="text-sm text-gray-600">
+                  {t('subscriptions_citizen_tokens_covered_by_plan')}
+                </p>
+              )}
+            </div>
           ) : interactive ? (
             <CitizenGoodToBuy
               updateApplication={updateApplication}

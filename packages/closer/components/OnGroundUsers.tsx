@@ -87,7 +87,7 @@ const OnGroundUsers = ({ bookingConfig }: OnGroundUsersProps) => {
   return (
     <div className="border-t border-line/20 p-3 flex-shrink-0">
       <Link
-        href="/members"
+        href="/community"
         className="flex items-center gap-2 min-h-[44px] rounded-lg hover:bg-neutral-light transition-colors"
       >
         <div className="flex items-center gap-2">

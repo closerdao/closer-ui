@@ -473,7 +473,7 @@ const AmbassadorLandingPage = () => {
             <p className="text-[13.5px] text-[#5C6E64] mt-10 text-center">
               {t('ambassadors_profile_hint')}{' '}
               <Link
-                href="/members"
+                href="/community"
                 className="font-semibold text-[#0B7A4C] underline underline-offset-[3px]"
               >
                 {t('ambassadors_members_link')}

@@ -337,6 +337,34 @@ export const getEarnedFromActions = (
   return { amount: actionCount * award.val, cur: award.cur };
 };
 
+/**
+ * Actions behind a leaderboard row. The API reports the count directly when it
+ * can; otherwise points stand in for it, at pointsPerAction apiece (1 when the
+ * quest never set one).
+ */
+export const getRowActionCount = (
+  quest: Quest,
+  row: QuestLeaderboardRow,
+): number => {
+  if (typeof row.actionCount === 'number') return row.actionCount;
+  const points = row.points || 0;
+  const pointsPerAction = quest.actionConfig?.pointsPerAction;
+  return pointsPerAction ? Math.floor(points / pointsPerAction) : points;
+};
+
+/**
+ * What a leaderboard row's actions have paid out. Only a per-action currency
+ * award has a running total — a perk or a credit product does not.
+ */
+export const getRowEarned = (
+  quest: Quest,
+  row: QuestLeaderboardRow,
+): { amount: number; cur: string } | null => {
+  const award = quest.prize?.eachAction;
+  if (!award || award.kind !== 'currency') return null;
+  return { amount: getRowActionCount(quest, row) * award.val, cur: award.cur };
+};
+
 /** The API reports the count directly when it can; points are the fallback. */
 export const getVerifiedActionCount = (
   quest: Quest,

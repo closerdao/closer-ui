@@ -216,7 +216,9 @@ describe('Vouching', () => {
     await waitFor(() =>
       expect(screen.getByRole('button', { name: /Vouch/i })).toBeEnabled(),
     );
-    expect(api.get).toHaveBeenCalledWith('/stays/nights/member-1');
+    expect(api.get).toHaveBeenCalledWith('/stays/nights/member-1', {
+      cache: false,
+    });
     expect(
       screen.queryByText(/needs to stay for at least/i),
     ).not.toBeInTheDocument();
@@ -239,6 +241,31 @@ describe('Vouching', () => {
       await screen.findByText(/at least 14 nights to be eligible/i),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Vouch/i })).toBeDisabled();
+  });
+
+  it('keeps vouching open when the stay history is not readable (non-host viewer)', async () => {
+    // /stays/nights/:userId is host-only for other people's history — a
+    // regular member gets a 401. Eligibility is enforced by the vouch
+    // endpoint itself, so the button must not lock.
+    api.get.mockRejectedValue({ response: { status: 401 } });
+
+    renderWithNextIntl(
+      <Vouching
+        userId="member-1"
+        memberName="Sam"
+        vouchData={vouchData}
+        myId="viewer-1"
+        minVouchingStayDuration={14}
+      />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Vouch/i })).toBeEnabled(),
+    );
+    expect(
+      screen.queryByText(/needs to stay for at least/i),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/unauthorized/i)).not.toBeInTheDocument();
   });
 
   it('patches the vouch message when the voucher saves an edit', async () => {

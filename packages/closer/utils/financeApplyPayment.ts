@@ -6,6 +6,7 @@ import api from './api';
 export type FinanceApplyPaymentRequest = {
   amount: number;
   proofUrl: string;
+  method?: string;
   date?: string;
   note?: string;
 };
