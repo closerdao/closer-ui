@@ -5,13 +5,12 @@ import { render, screen } from '@testing-library/react';
 import StaySearchBar from './StaySearchBar';
 
 jest.mock('next-intl', () => ({
-  useTranslations: () =>
-    (key: string, values?: Record<string, unknown>) => {
-      if (key === 'bookings_dates_nights_selected') {
-        return `${values?.count} nights`;
-      }
-      return key;
-    },
+  useTranslations: () => (key: string, values?: Record<string, unknown>) => {
+    if (key === 'bookings_dates_nights_selected') {
+      return `${values?.count} nights`;
+    }
+    return key;
+  },
 }));
 
 jest.mock('../contexts/auth', () => ({
@@ -23,8 +22,8 @@ describe('StaySearchBar', () => {
     render(
       <StaySearchBar
         bookingSettings={null}
-        initialStart="2026-09-08T15:00:00.000Z"
-        initialEnd="2026-10-06T12:00:00.000Z"
+        initialStart="2026-09-08T15:00:00.000"
+        initialEnd="2026-10-06T12:00:00.000"
         onSearch={jest.fn()}
       />,
     );

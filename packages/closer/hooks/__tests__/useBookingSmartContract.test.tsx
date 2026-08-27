@@ -5,6 +5,7 @@ import { BigNumber } from 'ethers';
 
 import { ConfigProvider } from '../../contexts/config';
 import { WalletDispatch, WalletState } from '../../contexts/wallet';
+import { BOOK_ACCOMMODATION_EXISTING_CONFLICT_PREFIX } from '../../utils/stakeBookingError.helpers';
 import { useBookingSmartContract } from '../useBookingSmartContract';
 
 const contractMock: Record<string, any> = {};
@@ -26,6 +27,12 @@ describe('useBookingSmartContract', () => {
   const updateWalletBalance = jest.fn();
   const refetchBookingDates = jest.fn();
   const sendTransaction = jest.fn();
+  const onChainBooking = (year: number, dayOfYear: number, price: number) => ({
+    status: 0,
+    year,
+    dayOfYear,
+    price: BigNumber.from(price),
+  });
 
   const wrapper = ({ children }: PropsWithChildren) => (
     <ConfigProvider
@@ -60,6 +67,7 @@ describe('useBookingSmartContract', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    sendTransaction.mockReset();
     process.env.NEXT_PUBLIC_BOOK_ACCOMMODATION_GAS_LIMIT = '';
 
     Object.assign(contractMock, {
@@ -78,7 +86,7 @@ describe('useBookingSmartContract', () => {
       interface: {
         encodeFunctionData: jest.fn(() => '0x1234'),
       },
-      lockedStakeAt: undefined,
+      lockedStakeAt: jest.fn(),
       signer: { sendTransaction },
     });
 
@@ -138,11 +146,181 @@ describe('useBookingSmartContract', () => {
       transactionId: `0x${'2'.repeat(64)}`,
     });
     expect(stakingResult.success.transactionId).toBe(`0x${'2'.repeat(64)}`);
+    expect(contractMock.getAccommodationBookings).not.toHaveBeenCalled();
+    expect(contractMock.lockedStakeAt).not.toHaveBeenCalled();
+    for (const call of contractMock.estimateGas.bookAccommodation.mock.calls) {
+      expect(call[1].toString()).toBe('100');
+    }
+    for (const call of contractMock.callStatic.bookAccommodation.mock.calls) {
+      expect(call[1].toString()).toBe('100');
+    }
+    for (const call of contractMock.interface.encodeFunctionData.mock.calls) {
+      expect(call[1][1].toString()).toBe('100');
+    }
     expect(result.current.stakingProgress).toMatchObject({
       completedNights: 10,
       totalNights: 10,
       requiresMultipleTransactions: true,
       phase: 'idle',
+    });
+  });
+
+  it('returns a conflict instead of raising the API price for an existing booking', async () => {
+    const selectedNights = bookingNights.slice(0, 2);
+    contractMock.estimateGas.bookAccommodation.mockRejectedValue(
+      new Error(
+        'execution reverted: panic: arithmetic underflow or overflow (0x11)',
+      ),
+    );
+    contractMock.getAccommodationBookings.mockResolvedValue([
+      onChainBooking(2026, 1, 120),
+    ]);
+    const { result } = renderHook(
+      () => useBookingSmartContract({ bookingNights: selectedNights }),
+      { wrapper },
+    );
+
+    let stakingResult: any;
+    await act(async () => {
+      stakingResult = await result.current.stakeTokens('100', selectedNights);
+    });
+
+    expect(stakingResult.success).toBeNull();
+    expect(stakingResult.error.message).toBe(
+      BOOK_ACCOMMODATION_EXISTING_CONFLICT_PREFIX,
+    );
+    expect(sendTransaction).not.toHaveBeenCalled();
+  });
+
+  it('classifies a booking collision discovered during simulation', async () => {
+    const selectedNights = bookingNights.slice(0, 2);
+    contractMock.callStatic.bookAccommodation.mockRejectedValue(
+      new Error('execution reverted: Booking already exists'),
+    );
+    contractMock.getAccommodationBookings.mockResolvedValue([
+      onChainBooking(2026, 1, 100),
+    ]);
+    const { result } = renderHook(
+      () => useBookingSmartContract({ bookingNights: selectedNights }),
+      { wrapper },
+    );
+
+    let stakingResult: any;
+    await act(async () => {
+      stakingResult = await result.current.stakeTokens('100', selectedNights);
+    });
+
+    expect(stakingResult.success).toBeNull();
+    expect(stakingResult.error.message).toBe(
+      BOOK_ACCOMMODATION_EXISTING_CONFLICT_PREFIX,
+    );
+    expect(sendTransaction).not.toHaveBeenCalled();
+  });
+
+  it('returns existing only when every remaining night matches the API price', async () => {
+    const selectedNights = bookingNights.slice(0, 2);
+    contractMock.estimateGas.bookAccommodation.mockRejectedValue(
+      new Error('execution reverted: Booking already exists'),
+    );
+    contractMock.getAccommodationBookings.mockResolvedValue(
+      selectedNights.map(([year, day]) => onChainBooking(year, day, 100)),
+    );
+    const { result } = renderHook(
+      () => useBookingSmartContract({ bookingNights: selectedNights }),
+      { wrapper },
+    );
+
+    let stakingResult: any;
+    await act(async () => {
+      stakingResult = await result.current.stakeTokens('100', selectedNights);
+    });
+
+    expect(stakingResult).toEqual({
+      error: null,
+      success: { transactionId: 'existing' },
+    });
+    expect(sendTransaction).not.toHaveBeenCalled();
+  });
+
+  it('classifies a booking collision reported while submitting', async () => {
+    const selectedNights = bookingNights.slice(0, 2);
+    sendTransaction.mockReset();
+    sendTransaction.mockRejectedValue(
+      new Error('execution reverted: Booking already exists'),
+    );
+    contractMock.getAccommodationBookings.mockResolvedValue(
+      selectedNights.map(([year, day]) => onChainBooking(year, day, 100)),
+    );
+    const { result } = renderHook(
+      () => useBookingSmartContract({ bookingNights: selectedNights }),
+      { wrapper },
+    );
+
+    let stakingResult: any;
+    await act(async () => {
+      stakingResult = await result.current.stakeTokens('100', selectedNights);
+    });
+
+    expect(stakingResult).toEqual({
+      error: null,
+      success: { transactionId: 'existing' },
+    });
+    expect(sendTransaction).toHaveBeenCalledTimes(1);
+  });
+
+  it('resumes after a verified recorded prefix', async () => {
+    const onProgress = jest.fn();
+    contractMock.getAccommodationBookings.mockResolvedValue(
+      bookingNights
+        .slice(0, 7)
+        .map(([year, day]) => onChainBooking(year, day, 100)),
+    );
+    const { result } = renderHook(
+      () => useBookingSmartContract({ bookingNights }),
+      { wrapper },
+    );
+
+    let stakingResult: any;
+    await act(async () => {
+      stakingResult = await result.current.stakeTokens('100', bookingNights, {
+        completedNightCount: 7,
+        onProgress,
+      });
+    });
+
+    expect(sendTransaction).toHaveBeenCalledTimes(1);
+    expect(onProgress).toHaveBeenCalledWith({
+      completedNightCount: 10,
+      transactionId: `0x${'1'.repeat(64)}`,
+    });
+    expect(stakingResult.success.transactionId).toBe(`0x${'1'.repeat(64)}`);
+  });
+
+  it('rolls an invalid stored prefix back before continuing', async () => {
+    const selectedNights = bookingNights.slice(0, 2);
+    const onProgress = jest.fn();
+    contractMock.getAccommodationBookings.mockResolvedValue([
+      onChainBooking(2026, 1, 100),
+    ]);
+    const { result } = renderHook(
+      () => useBookingSmartContract({ bookingNights: selectedNights }),
+      { wrapper },
+    );
+
+    await act(async () => {
+      await result.current.stakeTokens('100', selectedNights, {
+        completedNightCount: 2,
+        onProgress,
+      });
+    });
+
+    expect(onProgress).toHaveBeenNthCalledWith(1, {
+      completedNightCount: 1,
+      transactionId: null,
+    });
+    expect(onProgress).toHaveBeenNthCalledWith(2, {
+      completedNightCount: 2,
+      transactionId: `0x${'1'.repeat(64)}`,
     });
   });
 });

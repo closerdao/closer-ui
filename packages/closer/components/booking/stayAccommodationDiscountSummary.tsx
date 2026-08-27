@@ -1,11 +1,6 @@
-import { useTranslations } from 'next-intl';
+import { useFormatter, useTranslations } from 'next-intl';
 
 import type { PriceLock } from '../../types/stay';
-
-const percent = (fraction: number) =>
-  new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(
-    fraction * 100,
-  );
 
 export function StayAccommodationDiscountSummary({
   priceLock,
@@ -13,8 +8,12 @@ export function StayAccommodationDiscountSummary({
   priceLock: PriceLock;
 }) {
   const t = useTranslations();
+  const format = useFormatter();
   const discount = priceLock.accommodationDiscount;
   if (!discount || discount.combinedFraction <= 0) return null;
+
+  const percent = (fraction: number) =>
+    format.number(fraction * 100, { maximumFractionDigits: 2 });
 
   const hasDuration = discount.duration.fraction > 0;
   const hasPassport = discount.passport.fraction > 0;

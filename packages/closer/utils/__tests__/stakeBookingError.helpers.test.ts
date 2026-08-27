@@ -5,6 +5,7 @@ import {
   detectLaterYearStakeConflict,
 } from '../laterYearStakeConflict.helpers';
 import {
+  BOOK_ACCOMMODATION_EXISTING_CONFLICT_PREFIX,
   formatStakeBookingErrorEnglish,
   formatStakeBookingErrorForUi,
 } from '../stakeBookingError.helpers';
@@ -52,6 +53,16 @@ describe('later-year stake conflict messaging', () => {
     expect(
       formatStakeBookingErrorForUi({ code: 4001, message: 'User denied' }, t),
     ).toBe('stay_create_stake_error_user_rejected');
+  });
+
+  it('maps an existing accommodation conflict to its localized message', () => {
+    const error = new Error(BOOK_ACCOMMODATION_EXISTING_CONFLICT_PREFIX);
+    expect(formatStakeBookingErrorForUi(error, t)).toBe(
+      'stay_create_token_stake_existing_conflict',
+    );
+    expect(formatStakeBookingErrorEnglish(error)).toContain(
+      'token lock already exists',
+    );
   });
 
   it('returns an empty string for a null error', () => {

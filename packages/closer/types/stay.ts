@@ -1,4 +1,5 @@
 import { VolunteerInfo } from './booking';
+import type { AccommodationDiscount } from './durationDiscount';
 
 export type StayStatus =
   | 'draft'
@@ -39,12 +40,6 @@ export type StayTokenStakePlan = {
   pricePerNightWei: string;
   bookingNights: number[][];
   tokenAmount: number;
-};
-
-export type AccommodationDiscount = {
-  duration: { tier: 'daily' | 'weekly' | 'monthly'; fraction: number };
-  passport: { fraction: number };
-  combinedFraction: number;
 };
 
 export type AccommodationRailPricing = {
@@ -161,7 +156,10 @@ export type Stay = {
   } | null;
 };
 
-export type { StaySearchResponse } from './durationDiscount';
+export type {
+  AccommodationDiscount,
+  StaySearchResponse,
+} from './durationDiscount';
 
 export type StayCheckoutResponse = {
   paymentIntent: {

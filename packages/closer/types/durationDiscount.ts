@@ -17,6 +17,12 @@ export type DurationDiscountScope = {
   discounts: DurationDiscounts;
 };
 
+export type AccommodationDiscount = {
+  duration: { tier: BookingRate; fraction: number };
+  passport: { fraction: number };
+  combinedFraction: number;
+};
+
 export type StaySearchListing = Listing & {
   rentalFiat?: Price<CloserCurrencies.EUR>;
   rentalToken?: Price<CloserCurrencies.TDF>;
@@ -26,11 +32,7 @@ export type StaySearchListing = Listing & {
   bookingRate?: BookingRate;
   discount?: number;
   discounts?: DurationDiscounts;
-  accommodationDiscount?: {
-    duration: { tier: BookingRate; fraction: number };
-    passport: { fraction: number };
-    combinedFraction: number;
-  };
+  accommodationDiscount?: AccommodationDiscount;
   accommodationPricing?: {
     fiat: {
       gross: Price<CloserCurrencies.EUR>;

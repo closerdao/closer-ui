@@ -72,6 +72,23 @@ describe('StayListingAccommodationPrice', () => {
     expect(screen.getByText('Weekly stay −30%')).toBeVisible();
   });
 
+  it('preserves up to two decimal places in the duration percentage', () => {
+    renderWithNextIntl(
+      <StayListingAccommodationPrice
+        listing={buildListing({
+          gross: 700,
+          discounted: 465.5,
+          durationFraction: 0.335,
+          combinedFraction: 0.335,
+          bookingRate: 'weekly',
+        })}
+        duration={7}
+      />,
+    );
+
+    expect(screen.getByText('Weekly stay −33.5%')).toBeVisible();
+  });
+
   // TODO: Add Passport-only and stacked-discount UI coverage when Passport is
   // rolled out to users. The rendering support stays in production code, but
   // Passport scenarios are intentionally outside the current release test plan.

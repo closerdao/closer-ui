@@ -51,7 +51,7 @@ export const isDurationDiscountFraction = (discount: number): boolean =>
   Number.isFinite(discount) && discount > 0 && discount < 1;
 
 export const durationDiscountPercent = (discount: number): number =>
-  Math.round(discount * 100);
+  Math.round(discount * 10_000) / 100;
 
 export const computeGrossAccommodationFromDiscounted = (
   rentalFiat: StayMoney | undefined | null,

@@ -1,4 +1,4 @@
-import { useTranslations } from 'next-intl';
+import { useFormatter, useTranslations } from 'next-intl';
 
 import { CloserCurrencies } from '../../types/currency';
 import type {
@@ -19,14 +19,13 @@ interface StayListingAccommodationPriceProps {
 
 const rateTranslationKey = (rate: BookingRate) =>
   `stay_create_discount_rate_${rate}` as const;
-const displayDiscountPercent = (fraction: number) =>
-  Math.round(fraction * 10_000) / 100;
 
 const StayListingAccommodationPrice = ({
   listing,
   duration,
 }: StayListingAccommodationPriceProps) => {
   const t = useTranslations();
+  const format = useFormatter();
   const currency =
     listing.rentalFiat?.cur ?? listing.fiatPrice?.cur ?? CloserCurrencies.EUR;
   const rentalFiat = listing.rentalFiat;
@@ -60,6 +59,10 @@ const StayListingAccommodationPrice = ({
   }
 
   const formattedCurrency = currency as CloserCurrencies;
+  const displayDiscountPercent = (fraction: number) =>
+    format.number(durationDiscountPercent(fraction), {
+      maximumFractionDigits: 2,
+    });
 
   return (
     <div className="flex flex-col gap-1 text-sm">
@@ -85,7 +88,7 @@ const StayListingAccommodationPrice = ({
             <span>
               {t('stay_create_duration_discount_badge', {
                 rate: t(rateTranslationKey(listing.bookingRate)),
-                percent: durationDiscountPercent(durationDiscount),
+                percent: displayDiscountPercent(durationDiscount),
               })}
             </span>
           )}

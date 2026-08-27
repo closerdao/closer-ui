@@ -6,6 +6,10 @@ import { BigNumber, Contract, utils } from 'ethers';
 
 import { WalletDispatch, WalletState } from '../contexts/wallet';
 import {
+  classifyAccommodationBookingCoverage,
+  countMatchingAccommodationBookingPrefix,
+} from '../utils/accommodationBookingCoverage.helpers';
+import {
   findLargestAccommodationBookingBatch,
   getAccommodationBookingGasCeiling,
 } from '../utils/accommodationBookingGas';
@@ -17,7 +21,10 @@ import {
   SOLIDITY_PANIC_UNDERFLOW,
   getSolidityPanicCode,
 } from '../utils/smartContractErrorParser';
-import { BOOK_ACCOMMODATION_TX_REVERTED_PREFIX } from '../utils/stakeBookingError.helpers';
+import {
+  BOOK_ACCOMMODATION_EXISTING_CONFLICT_PREFIX,
+  BOOK_ACCOMMODATION_TX_REVERTED_PREFIX,
+} from '../utils/stakeBookingError.helpers';
 import { useConfig } from './useConfig';
 
 dayjs.extend(dayOfYear);
@@ -49,11 +56,6 @@ const bookingField = (booking, name, index) =>
   booking?.[name] ?? booking?.[index];
 const bookingYear = (booking) => toNumber(bookingField(booking, 'year', 1));
 const bookingDay = (booking) => toNumber(bookingField(booking, 'dayOfYear', 2));
-const bookingStatus = (booking) => toNumber(bookingField(booking, 'status', 0));
-const bookingPrice = (booking) =>
-  BigNumber.from(bookingField(booking, 'price', 3) ?? 0);
-
-const PENDING_ACCOMMODATION_STATUS = 0;
 
 const uniqueYears = (nights) => [
   ...new Set(nights.map(([year]) => Number(year)).filter(Number.isFinite)),
@@ -63,41 +65,6 @@ const loadBookingsByYear = async (Diamond, account, nights) => {
   const out = new Map();
   for (const year of uniqueYears(nights)) {
     out.set(year, await Diamond.getAccommodationBookings(account, year));
-  }
-  return out;
-};
-
-const maxPriceWeiForPendingReplacements = async (
-  Diamond,
-  account,
-  nights,
-  priceWei,
-) => {
-  let out = priceWei;
-  const requestedDaysByYear = new Map();
-  for (const pair of nights) {
-    const year = Number(pair[0]);
-    const day = Number(pair[1]);
-    if (!Number.isFinite(year) || !Number.isFinite(day)) continue;
-    if (!requestedDaysByYear.has(year))
-      requestedDaysByYear.set(year, new Set());
-    requestedDaysByYear.get(year).add(day);
-  }
-
-  try {
-    const bookingsByYear = await loadBookingsByYear(Diamond, account, nights);
-    for (const [year, bookings] of bookingsByYear.entries()) {
-      const requestedDays = requestedDaysByYear.get(year);
-      for (const booking of bookings || []) {
-        if (!requestedDays?.has(bookingDay(booking))) continue;
-        if (bookingStatus(booking) !== PENDING_ACCOMMODATION_STATUS) continue;
-        const onChain = bookingPrice(booking);
-        if (onChain.gt(out)) out = onChain;
-      }
-    }
-  } catch (_) {
-    // Transaction simulation remains the source of truth if this optional
-    // replacement-price read is unavailable.
   }
   return out;
 };
@@ -136,25 +103,42 @@ const countMatchingPrefix = async (
 ) => {
   if (!nights.length) return 0;
   const bookingsByYear = await loadBookingsByYear(Diamond, account, nights);
-  const bookingMaps = new Map();
+  return countMatchingAccommodationBookingPrefix(
+    bookingsByYear,
+    nights,
+    pricePerNightWei,
+  );
+};
 
-  for (const [year, bookings] of bookingsByYear.entries()) {
-    const byDay = new Map();
-    for (const booking of bookings || []) {
-      byDay.set(bookingDay(booking), booking);
+const resolveAccommodationBookingCoverage = async ({
+  Diamond,
+  account,
+  nights,
+  pricePerNightWei,
+}) => {
+  try {
+    const bookingsByYear = await loadBookingsByYear(Diamond, account, nights);
+    const coverage = classifyAccommodationBookingCoverage(
+      bookingsByYear,
+      nights,
+      pricePerNightWei,
+    );
+    if (coverage === 'complete') {
+      return { error: null, success: { transactionId: 'existing' } };
     }
-    bookingMaps.set(year, byDay);
+    if (coverage === 'conflict') {
+      return {
+        error: new Error(BOOK_ACCOMMODATION_EXISTING_CONFLICT_PREFIX),
+        success: null,
+      };
+    }
+  } catch (coverageError) {
+    console.log(
+      'Could not classify existing accommodation bookings',
+      coverageError,
+    );
   }
-
-  let matching = 0;
-  for (const [yearRaw, dayRaw] of nights) {
-    const year = Number(yearRaw);
-    const day = Number(dayRaw);
-    const booking = bookingMaps.get(year)?.get(day);
-    if (!booking || !bookingPrice(booking).eq(pricePerNightWei)) break;
-    matching += 1;
-  }
-  return matching;
+  return null;
 };
 
 const diagnoseLaterYearStakeConflict = async ({
@@ -208,7 +192,6 @@ const parseGasLimitOverride = () => {
 
 const inspectBookingReceipt = async ({
   receipt,
-  Diamond,
   account,
   batch,
   pricePerNightWei,
@@ -233,34 +216,10 @@ const inspectBookingReceipt = async ({
     }
   }
 
-  const lockedStakeAtPerNight = [];
-  if (Diamond?.lockedStakeAt) {
-    for (const pair of batch) {
-      const year = Number(pair[0]);
-      const day = Number(pair[1]);
-      try {
-        const wei = await Diamond.lockedStakeAt(account, year, day);
-        lockedStakeAtPerNight.push({
-          year,
-          dayOfYear: day,
-          wei: wei.toString(),
-          tokens: utils.formatUnits(wei, decimals),
-        });
-      } catch (error) {
-        lockedStakeAtPerNight.push({
-          year,
-          dayOfYear: day,
-          lockedStakeAtError: error?.message || String(error),
-        });
-      }
-    }
-  }
-
   const expectedTotalWei = pricePerNightWei.mul(batch.length);
   return {
     decimals,
     expectedTotalWei,
-    lockedStakeAtPerNight,
     tdfSentFromWalletWei,
     tdfTransferLogCount,
   };
@@ -437,12 +396,7 @@ export const useBookingSmartContract = ({ bookingNights }) => {
       });
 
       const yearStructs = await validateAccommodationYears(Diamond, nights);
-      const pricePerNightWei = await maxPriceWeiForPendingReplacements(
-        Diamond,
-        account,
-        nights,
-        targetPricePerNightWei,
-      );
+      const pricePerNightWei = targetPricePerNightWei;
 
       if (completedNights > 0) {
         // The contract key is only wallet + date, without a stay ID. Only a
@@ -489,8 +443,17 @@ export const useBookingSmartContract = ({ bookingNights }) => {
               ),
           });
         } catch (estimateError) {
-          if (isBookingAlreadyExistsError(estimateError)) {
-            return { error: null, success: { transactionId: 'existing' } };
+          if (
+            isBookingAlreadyExistsError(estimateError) ||
+            getSolidityPanicCode(estimateError) === SOLIDITY_PANIC_UNDERFLOW
+          ) {
+            const coverageResult = await resolveAccommodationBookingCoverage({
+              Diamond,
+              account,
+              nights: remainingNights,
+              pricePerNightWei,
+            });
+            if (coverageResult) return coverageResult;
           }
           const diagnosed = await diagnoseLaterYearStakeConflict({
             error: estimateError,
@@ -518,8 +481,17 @@ export const useBookingSmartContract = ({ bookingNights }) => {
         try {
           await Diamond.callStatic.bookAccommodation(batch, pricePerNightWei);
         } catch (staticError) {
-          if (isBookingAlreadyExistsError(staticError)) {
-            return { error: null, success: { transactionId: 'existing' } };
+          if (
+            isBookingAlreadyExistsError(staticError) ||
+            getSolidityPanicCode(staticError) === SOLIDITY_PANIC_UNDERFLOW
+          ) {
+            const coverageResult = await resolveAccommodationBookingCoverage({
+              Diamond,
+              account,
+              nights: remainingNights,
+              pricePerNightWei,
+            });
+            if (coverageResult) return coverageResult;
           }
           const diagnosed = await diagnoseLaterYearStakeConflict({
             error: staticError,
@@ -584,7 +556,6 @@ export const useBookingSmartContract = ({ bookingNights }) => {
 
         const inspection = await inspectBookingReceipt({
           receipt,
-          Diamond,
           account,
           batch,
           pricePerNightWei,
@@ -617,7 +588,6 @@ export const useBookingSmartContract = ({ bookingNights }) => {
             inspection.tdfSentFromWalletWei,
             inspection.decimals,
           ),
-          lockedStakeAtPerNight: inspection.lockedStakeAtPerNight,
           note:
             inspection.tdfTransferLogCount === 0
               ? 'No TDF Transfer logs: facet likely reused existing year stake / delta was zero; explorers show token transfers only when ERC-20 Transfer fires.'
@@ -658,7 +628,13 @@ export const useBookingSmartContract = ({ bookingNights }) => {
         fullError: error,
       });
       if (isBookingAlreadyExistsError(error)) {
-        return { error: null, success: { transactionId: 'existing' } };
+        const coverageResult = await resolveAccommodationBookingCoverage({
+          Diamond,
+          account,
+          nights: nights.slice(completedNights),
+          pricePerNightWei: targetPricePerNightWei,
+        });
+        if (coverageResult) return coverageResult;
       }
       return { error, success: null };
     } finally {

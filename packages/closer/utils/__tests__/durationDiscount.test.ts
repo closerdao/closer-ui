@@ -55,7 +55,7 @@ describe('durationDiscount', () => {
   describe('durationDiscountPercent', () => {
     it('converts fraction to rounded percent', () => {
       expect(durationDiscountPercent(0.34)).toBe(34);
-      expect(durationDiscountPercent(0.335)).toBe(34);
+      expect(durationDiscountPercent(0.335)).toBe(33.5);
     });
   });
 

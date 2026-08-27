@@ -1,11 +1,7 @@
+import type { PendingStayTokenStake } from '../types/stayTokenStake';
+
 const storageKey = (stayId: string) =>
   `closer:stay-token-stake-pending:${stayId}`;
-
-export type PendingStayTokenStake = {
-  transactionId: string;
-  nightsKey: string;
-  completedNightCount: number;
-};
 
 export const readPendingStayTokenStake = (
   stayId: string,
