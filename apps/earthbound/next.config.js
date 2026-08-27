@@ -68,6 +68,11 @@ const nextConfig = {
         permanent: true,
       },
       {
+        source: '/community',
+        destination: '/pages/community',
+        permanent: true,
+      },
+      {
         source: '/visit',
         destination: '/stay',
         permanent: true,
