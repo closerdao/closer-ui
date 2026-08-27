@@ -86,6 +86,33 @@ describe('cross-tab refresh lock', () => {
     expect(result).toEqual({ results: null });
   }, 10000);
 
+  it('does not reuse a stale token when the lock-holding tab finishes without rotating it', async () => {
+    // Simulate another tab that's already refreshing.
+    window.localStorage.setItem(
+      LOCK_KEY,
+      JSON.stringify({ owner: 'other-tab', ts: Date.now() }),
+    );
+    // The winner's own attempt is mocked to fail; this tab should then
+    // become the refresher itself once it sees the token wasn't rotated.
+    const postSpy = mockRefreshResponse('user-a');
+
+    // Simulate the other tab's refresh failing (network error, bad
+    // response, etc.) -- it releases the lock but never rotates the
+    // token, so accessToken/refreshToken are unchanged from beforeEach.
+    setTimeout(() => {
+      window.localStorage.removeItem(LOCK_KEY);
+    }, 200);
+
+    const result = await refreshTokensProactively();
+
+    // This tab had to do its own refresh, since the other tab's tokens
+    // were stale, not rotated.
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(result?.results).toEqual({ _id: 'user-a' });
+    expect(accessToken).toBe('access-user-a');
+    expect(refreshToken).toBe('refresh-user-a');
+  }, 10000);
+
   it('reclaims a stale lock left behind by a crashed/closed tab and refreshes normally', async () => {
     // A lock far older than the staleness window -- the owning tab is gone.
     window.localStorage.setItem(

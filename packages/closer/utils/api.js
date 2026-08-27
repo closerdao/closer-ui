@@ -309,19 +309,30 @@ async function coordinateCrossTabRefresh(performNetworkRefresh) {
   const existingLock = readRefreshLock(storage);
   if (!isRefreshLockStale(existingLock)) {
     // Someone else is already refreshing -- wait for them and reuse
-    // whatever they wrote rather than duplicating the call.
+    // whatever they wrote rather than duplicating the call. Snapshot the
+    // refresh token first: the backend rotates it single-use, so the only
+    // reliable sign the other tab actually succeeded is that this token
+    // changed. A refresh that fails without an account mismatch (network
+    // error, bad response) leaves the old token sitting in storage --
+    // still truthy, but stale -- and treating that as success would hand
+    // a dead access token back to the caller instead of a real one.
+    const refreshTokenBeforeWait = getRefreshToken();
     await waitForRefreshLockRelease(
       storage,
       Date.now() + REFRESH_LOCK_MAX_WAIT_MS,
     );
     const token = getAccessToken();
     const tokenAfterWait = getRefreshToken();
-    if (token && tokenAfterWait) {
+    if (
+      token &&
+      tokenAfterWait &&
+      tokenAfterWait !== refreshTokenBeforeWait
+    ) {
       return { access_token: token, results: null };
     }
-    // The other tab's refresh didn't leave us usable tokens (it failed,
-    // or its lock simply went stale) -- fall through and try to become
-    // the refresher ourselves.
+    // The other tab's refresh didn't rotate the token (it failed, or its
+    // lock simply went stale while it was still mid-flight) -- fall
+    // through and try to become the refresher ourselves.
   }
 
   const acquired = await acquireRefreshLock(storage);
