@@ -1,6 +1,8 @@
 import posthog from 'posthog-js';
 import type { PostHogConfig, Properties } from 'posthog-js';
 
+import type { PostHogWithLoadedFlag } from '../types/analytics';
+
 /**
  * Single shared PostHog project for every Closer app (custom villages and the
  * generic village-app). Per-village splitting is done with the `app`
@@ -48,18 +50,15 @@ export const getAppName = (): string | undefined =>
 let initialised = false;
 let pendingIdentity: { userId: string; properties: Properties } | null = null;
 
-export const buildPostHogConfig = (
-  overrides: Partial<PostHogConfig> = {},
-): Partial<PostHogConfig> => ({
-  // Proxied via next.config rewrites; see posthogRewrites().
+export const buildPostHogConfig = (): Partial<PostHogConfig> => ({
   api_host: POSTHOG_INGEST_PATH,
   ui_host: POSTHOG_UI_HOST,
-  // Opt into current recommended defaults: history_change pageviews,
-  // pageleave, strict minimum replay duration, etc.
   defaults: '2026-05-30',
   person_profiles: 'identified_only',
-  persistence: 'localStorage+cookie',
-  opt_out_capturing_by_default: true,
+  // Memory-only until the visitor accepts cookies (applyConsentPersistence
+  // upgrades this in place) — pre-consent traffic is still captured, but
+  // nothing is written to cookies or localStorage.
+  persistence: hasCookieConsent() ? 'localStorage+cookie' : 'memory',
   autocapture: true,
   rageclick: true,
   capture_dead_clicks: true,
@@ -74,19 +73,19 @@ export const buildPostHogConfig = (
     blockSelector: POSTHOG_MASK_SELECTOR,
     recordCrossOriginIframes: false,
   },
-  ...overrides,
 });
 
 /**
- * Idempotent. No-op on the server, when disabled, or when already loaded.
- * Returns true if PostHog is live after the call.
+ * Idempotent. No-op on the server or when disabled. Initialises immediately
+ * regardless of cookie consent (memory-only persistence pre-consent — see
+ * buildPostHogConfig). Returns true if PostHog is live after the call.
  */
 export const initPostHog = (): boolean => {
   if (typeof window === 'undefined') return false;
-  if (!isPostHogEnabled() || !hasCookieConsent()) return false;
+  if (!isPostHogEnabled()) return false;
   // Fast refresh reloads this module (resetting `initialised`) without
   // resetting the posthog-js singleton — trust the SDK's own flag too.
-  if (initialised || (posthog as { __loaded?: boolean }).__loaded) {
+  if (initialised || (posthog as PostHogWithLoadedFlag).__loaded) {
     initialised = true;
     return true;
   }
@@ -95,7 +94,6 @@ export const initPostHog = (): boolean => {
     loaded: (ph) => {
       const appName = getAppName();
       if (appName) ph.register({ app: appName });
-      ph.opt_in_capturing();
       if (pendingIdentity) {
         ph.identify(pendingIdentity.userId, pendingIdentity.properties);
       }
@@ -107,12 +105,14 @@ export const initPostHog = (): boolean => {
   return true;
 };
 
-/** Called once the visitor accepts cookies: keep identity across sessions. */
+/**
+ * Called once the visitor accepts cookies: upgrades the live PostHog
+ * instance from memory-only to `localStorage+cookie` persistence. PostHog
+ * carries the in-memory identity/properties over to the new storage backend.
+ */
 export const applyConsentPersistence = (): void => {
-  if (!hasCookieConsent()) return;
   if (!initialised && !initPostHog()) return;
   posthog.set_config({ persistence: 'localStorage+cookie' });
-  posthog.opt_in_capturing();
 };
 
 export const identifyUser = (
@@ -123,7 +123,7 @@ export const identifyUser = (
     userId,
     properties: { ...properties, app: getAppName() },
   };
-  if (!initialised || !hasCookieConsent()) return;
+  if (!initialised) return;
   posthog.identify(pendingIdentity.userId, pendingIdentity.properties);
 };
 
@@ -137,27 +137,16 @@ export const resetUser = (): void => {
 
 /** Custom event capture; safe to call anywhere, no-op when disabled. */
 export const trackEvent = (event: string, properties?: Properties): void => {
-  if (!initialised || !hasCookieConsent()) return;
+  if (!initialised) return;
   posthog.capture(event, properties);
 };
 
-/**
- * Canonical growth events — keep this list short. Note: the same user actions
- * also reach PostHog under their legacy platform-metric names via the
- * logMetric mirror (e.g. `booking_created` and `booking-summary-complete-success`
- * both fire) — build funnels on the canonical names only.
- */
+/** The 4 canonical growth events sent to PostHog. Keep this list short. */
 export const AnalyticsEvents = {
   USER_SIGNED_UP: 'user_signed_up',
   BOOKING_CREATED: 'booking_created',
   SUBSCRIPTION_STARTED: 'subscription_started',
   TOKEN_PURCHASED: 'token_purchased',
 } as const;
-
-/** Test-only: forget that init ran. */
-export const __resetPostHogForTests = (): void => {
-  initialised = false;
-  pendingIdentity = null;
-};
 
 export { posthog };
