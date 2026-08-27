@@ -52,5 +52,6 @@ Project stack:
     /hooks - custom hooks
     /packages/closer/constants - project wide constants
     /packages/closer/types - ts types
+    /packages/closer/next - shared Next.js config helpers (middleware, rewrites) used by each app's next.config.js
     /packages/closer/scripts - debugging and service scripts
 </projectStructure>
