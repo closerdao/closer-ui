@@ -19,10 +19,18 @@ export function getRefreshToken(): string | undefined {
 }
 
 export function setAccessToken(token: string): void {
+  // `secure: true` unconditionally would make the browser silently refuse
+  // to persist the cookie over plain http (e.g. localhost dev), since
+  // Secure cookies require HTTPS. Only require HTTPS when the page is
+  // actually served over it, so production (always https) still gets a
+  // Secure cookie.
+  const isHttps =
+    typeof window !== 'undefined' && window.location.protocol === 'https:';
+
   Cookies.set(ACCESS_TOKEN_COOKIE, token, {
     expires: ACCESS_TOKEN_MAX_AGE_DAYS,
     sameSite: 'strict',
-    secure: true,
+    secure: isHttps,
   });
 }
 
