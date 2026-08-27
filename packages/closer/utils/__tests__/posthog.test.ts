@@ -130,6 +130,20 @@ describe('consent-aware persistence', () => {
     expect(mocked.capture).toHaveBeenCalledWith('booking_created', undefined);
   });
 
+  it('disables surveys and product tours, which bypass memory persistence', () => {
+    load().initPostHog();
+    const cfg = mocked.init.mock.calls[0][1];
+    expect(cfg.disable_surveys).toBe(true);
+    expect(cfg.disable_product_tours).toBe(true);
+  });
+
+  it('does not upgrade persistence when consent is absent', () => {
+    const ph = load();
+    ph.initPostHog();
+    ph.applyConsentPersistence();
+    expect(mocked.set_config).not.toHaveBeenCalled();
+  });
+
   it('never writes cookies or localStorage before consent is granted', () => {
     const ph = load();
     ph.initPostHog();

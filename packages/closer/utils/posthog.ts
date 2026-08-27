@@ -67,6 +67,11 @@ export const buildPostHogConfig = (): Partial<PostHogConfig> => ({
   capture_exceptions: true,
   enable_recording_console_log: false,
   mask_personal_data_properties: true,
+  // Surveys and product tours write localStorage regardless of the
+  // `persistence` setting, which would break the pre-consent guarantee the
+  // moment one is created in the PostHog UI. Keep them off.
+  disable_surveys: true,
+  disable_product_tours: true,
   session_recording: {
     maskAllInputs: true,
     maskTextSelector: POSTHOG_MASK_SELECTOR,
@@ -111,6 +116,7 @@ export const initPostHog = (): boolean => {
  * carries the in-memory identity/properties over to the new storage backend.
  */
 export const applyConsentPersistence = (): void => {
+  if (!hasCookieConsent()) return;
   if (!initialised && !initPostHog()) return;
   posthog.set_config({ persistence: 'localStorage+cookie' });
 };
