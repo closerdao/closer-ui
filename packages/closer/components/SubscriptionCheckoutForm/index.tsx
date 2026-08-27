@@ -66,6 +66,19 @@ function SubscriptionCheckoutForm({
     },
   };
 
+  const reportSubscriptionStarted = () => {
+    trackEvent(AnalyticsEvents.SUBSCRIPTION_STARTED, {
+      tier: tierMetricEvent,
+      priceId,
+      monthlyCredits,
+    });
+    void logMetric({
+      event: tierMetricEvent,
+      category: 'subscriptions',
+      value: 'payment',
+    });
+  };
+
   const redirect = (subscriptionId: string) => {
     if (source) {
       router.push(source);
@@ -137,16 +150,7 @@ function SubscriptionCheckoutForm({
             if (validationResponse.data.results.status === 'succeeded') {
               await refetchUser();
 
-              trackEvent(AnalyticsEvents.SUBSCRIPTION_STARTED, {
-                tier: tierMetricEvent,
-                priceId,
-                monthlyCredits,
-              });
-              void logMetric({
-                event: tierMetricEvent,
-                category: 'subscriptions',
-                value: 'payment',
-              });
+              reportSubscriptionStarted();
 
               redirect(subscriptionId);
             }
@@ -169,16 +173,7 @@ function SubscriptionCheckoutForm({
         if (validationResponse.data.results.status === 'succeeded') {
           await refetchUser();
 
-          trackEvent(AnalyticsEvents.SUBSCRIPTION_STARTED, {
-            tier: tierMetricEvent,
-            priceId,
-            monthlyCredits,
-          });
-          void logMetric({
-            event: tierMetricEvent,
-            category: 'subscriptions',
-            value: 'payment',
-          });
+          reportSubscriptionStarted();
 
           redirect(subscriptionId);
         } else {

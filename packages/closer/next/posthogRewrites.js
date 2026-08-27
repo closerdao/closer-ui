@@ -10,16 +10,14 @@
 const DEFAULT_HOST = 'https://eu.i.posthog.com';
 const DEFAULT_ASSETS_HOST = 'https://eu-assets.i.posthog.com';
 
-function posthogRewrites(options = {}) {
-  const basePath = options.basePath || '/ingest';
-  const host =
-    options.host || process.env.NEXT_PUBLIC_POSTHOG_HOST || DEFAULT_HOST;
+function posthogRewrites() {
+  const basePath = '/ingest';
+  const host = process.env.NEXT_PUBLIC_POSTHOG_HOST || DEFAULT_HOST;
   const derivedAssetsHost = host.replace(/\/\/(\w+)\.i\./, '//$1-assets.i.');
   // replace() returns the input unchanged on no match — that would 404 the
   // replay recorder script, so fall back to the EU assets host instead.
   const assetsHost =
-    options.assetsHost ||
-    (derivedAssetsHost !== host ? derivedAssetsHost : DEFAULT_ASSETS_HOST);
+    derivedAssetsHost !== host ? derivedAssetsHost : DEFAULT_ASSETS_HOST;
   return [
     {
       source: `${basePath}/static/:path*`,

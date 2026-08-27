@@ -1,24 +1,28 @@
+import { PropsWithChildren } from 'react';
+
 import { render } from '@testing-library/react';
 
+import type { User } from '../auth/types';
+import type { Properties } from 'posthog-js';
 import { PostHogProvider } from '../posthog';
 
 jest.mock('posthog-js/react', () => ({
-  PostHogProvider: ({ children }: any) => <>{children}</>,
+  PostHogProvider: ({ children }: PropsWithChildren) => <>{children}</>,
 }));
 
-const identifyUser = jest.fn();
-const resetUser = jest.fn();
-const initPostHog = jest.fn();
+const identifyUser = jest.fn<void, [string, Properties?]>();
+const resetUser = jest.fn<void, []>();
+const initPostHog = jest.fn<boolean, []>();
 jest.mock('../../utils/posthog', () => ({
-  identifyUser: (...a: any[]) => identifyUser(...a),
-  resetUser: (...a: any[]) => resetUser(...a),
-  initPostHog: (...a: any[]) => initPostHog(...a),
-  trackEvent: jest.fn(),
-  AnalyticsEvents: {},
+  identifyUser: (...a: [string, Properties?]) => identifyUser(...a),
+  resetUser: (...a: []) => resetUser(...a),
+  initPostHog: (...a: []) => initPostHog(...a),
   posthog: {},
 }));
 
-let mockUser: any = null;
+let mockUser:
+  | (Pick<User, '_id' | 'roles'> & Partial<Pick<User, 'email'>>)
+  | null = null;
 let mockIsLoading = false;
 jest.mock('../auth', () => ({
   useAuth: () => ({ user: mockUser, isLoading: mockIsLoading }),
