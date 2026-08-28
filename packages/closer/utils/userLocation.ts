@@ -32,10 +32,13 @@ const reverseGeocode = async (
   latitude: number,
   longitude: number,
 ): Promise<{ name: string; name_long: string; iso_code: string }> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
   try {
     const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`;
     const response = await fetch(url, {
       headers: { Accept: 'application/json' },
+      signal: controller.signal,
     });
     if (!response.ok) {
       throw new Error('Reverse geocode failed');
@@ -63,6 +66,8 @@ const reverseGeocode = async (
       name_long: 'Shared location',
       iso_code: '',
     };
+  } finally {
+    clearTimeout(timeoutId);
   }
 };
 
