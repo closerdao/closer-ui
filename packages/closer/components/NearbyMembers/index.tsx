@@ -141,7 +141,7 @@ const NearbyMembers = ({ limit = 8 }: NearbyMembersProps) => {
           {locationError && (
             <p className="text-sm text-error">{locationError}</p>
           )}
-          <button>
+          <button
             type="button"
             onClick={shareLocation}
             disabled={isSavingLocation}
@@ -160,7 +160,7 @@ const NearbyMembers = ({ limit = 8 }: NearbyMembersProps) => {
           {locationError && (
             <p className="text-sm text-error">{locationError}</p>
           )}
-          <button>
+          <button
             type="button"
             onClick={shareLocation}
             disabled={isSavingLocation}
