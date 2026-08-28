@@ -98,6 +98,16 @@ describe('QuestEditor', () => {
       screen.getByDisplayValue('$TDF bought during the quest'),
     ).toBeDisabled();
     expect(screen.queryByText('Add ticket source')).not.toBeInTheDocument();
+
+    const selectFor = (label: string) =>
+      screen
+        .getByText(new RegExp(`^${label}`))
+        .closest('.form-field')
+        ?.querySelector('select') as HTMLSelectElement;
+    expect(selectFor('Category')).toBeDisabled();
+    expect(selectFor('Quest type')).toBeDisabled();
+    expect(selectFor('Verification')).toBeDisabled();
+    expect(selectFor('Status')).not.toBeDisabled();
   });
 });
 
