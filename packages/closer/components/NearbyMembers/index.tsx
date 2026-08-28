@@ -87,7 +87,9 @@ const NearbyMembers = ({ limit = 8 }: NearbyMembersProps) => {
       await loadNearby({ assumeLocation: true });
     } catch {
       setLocationError(t('community_near_you_location_error'));
-      setStatus('needs-location');
+      if (!userHasLocation) {
+        setStatus('needs-location');
+      }
     } finally {
       setIsSavingLocation(false);
     }
@@ -136,7 +138,10 @@ const NearbyMembers = ({ limit = 8 }: NearbyMembersProps) => {
           <p className="text-sm text-gray-600">
             {t('community_near_you_empty')}
           </p>
-          <button
+          {locationError && (
+            <p className="text-sm text-error">{locationError}</p>
+          )}
+          <button>
             type="button"
             onClick={shareLocation}
             disabled={isSavingLocation}
@@ -152,7 +157,10 @@ const NearbyMembers = ({ limit = 8 }: NearbyMembersProps) => {
           <p className="text-sm text-gray-600">
             {t('community_near_you_unavailable')}
           </p>
-          <button
+          {locationError && (
+            <p className="text-sm text-error">{locationError}</p>
+          )}
+          <button>
             type="button"
             onClick={shareLocation}
             disabled={isSavingLocation}
