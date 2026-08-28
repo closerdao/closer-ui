@@ -170,8 +170,12 @@ const CommunityPage = ({ bookingConfig }: Props) => {
 
   const hereBadge = (userId: string) =>
     onSiteIds.has(userId) && (
-      <span className="ml-2 text-xs text-success font-semibold whitespace-nowrap">
-        ● {t('community_at_platform_badge', { platform: PLATFORM_NAME })}
+      <span className="inline-flex items-center gap-1 text-xs text-success font-semibold shrink-0">
+        <span className="w-1.5 h-1.5 rounded-full bg-success" />
+        <span className="sm:hidden">{t('community_here_badge')}</span>
+        <span className="hidden sm:inline">
+          {t('community_at_platform_badge', { platform: PLATFORM_NAME })}
+        </span>
       </span>
     );
 
@@ -191,10 +195,10 @@ const CommunityPage = ({ bookingConfig }: Props) => {
         <meta property="og:type" content="website" />
       </Head>
 
-      <div className="main-content w-full">
-        <div className="max-w-4xl mx-auto flex flex-col gap-16 pb-24">
-          <div>
-            <h1 className="font-extrabold text-3xl md:text-4xl">
+      <div className="w-full min-w-0 overflow-x-hidden">
+        <div className="max-w-4xl mx-auto flex flex-col gap-8 md:gap-16 pb-24">
+          <div className="min-w-0">
+            <h1 className="font-extrabold text-3xl md:text-4xl break-words">
               {t('community_humans_of', { platform: PLATFORM_NAME })}
             </h1>
             {onSiteUsers.length > 0 && (
@@ -211,7 +215,7 @@ const CommunityPage = ({ bookingConfig }: Props) => {
 
           <NearbyMembers />
 
-          <div className="-mt-6 max-w-sm">
+          <div className="w-full max-w-sm">
             <BookingsSearchBar
               value={search}
               onChange={(value) => {
@@ -224,27 +228,27 @@ const CommunityPage = ({ bookingConfig }: Props) => {
           </div>
 
           {onSiteUsers.length > 0 && (
-            <section>
-              <div className="flex items-baseline justify-between">
-                <h2 className="font-bold text-lg">
+            <section className="min-w-0">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+                <h2 className="font-bold text-lg break-words">
                   {t('community_at_platform', { platform: PLATFORM_NAME })}
                 </h2>
-                <span className="text-sm text-gray-400">
+                <span className="text-sm text-gray-400 shrink-0">
                   {onSiteUsers.length}
                 </span>
               </div>
-              <div className="mt-4 flex flex-wrap gap-x-8 gap-y-4">
+              <div className="mt-4 flex flex-wrap gap-x-6 gap-y-4">
                 {onSiteUsers.map((user) => (
                   <Link
                     key={user._id}
                     href={`/members/${user.slug}`}
-                    className="flex items-center gap-3 group"
+                    className="flex items-center gap-3 group min-w-0 max-w-full"
                   >
                     <ProfilePhoto user={user} size="10" stack={false} />
-                    <span className="text-sm font-semibold group-hover:text-accent">
+                    <span className="text-sm font-semibold group-hover:text-accent truncate">
                       {user.screenname}
                     </span>
-                    <span className="w-2 h-2 rounded-full bg-success" />
+                    <span className="w-2 h-2 rounded-full bg-success shrink-0" />
                   </Link>
                 ))}
               </div>
@@ -259,12 +263,12 @@ const CommunityPage = ({ bookingConfig }: Props) => {
           )}
 
           {isCitizenshipEnabled && citizens && citizens.count() > 0 && (
-            <section>
-              <div className="flex items-baseline justify-between">
+            <section className="min-w-0">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
                 <h2 className="font-bold text-lg">
                   {t('community_citizens_title')}
                 </h2>
-                <span className="text-sm text-gray-400">
+                <span className="text-sm text-gray-400 sm:text-right">
                   {citizensCount || citizens.count()} ·{' '}
                   {t('community_citizens_subtitle', {
                     platform: PLATFORM_NAME,
@@ -282,20 +286,26 @@ const CommunityPage = ({ bookingConfig }: Props) => {
                   const superpower = citizen.preferences?.superpower;
                   const vouchCount = citizen.vouched?.length || 0;
                   return (
-                    <Card key={citizen._id} className="justify-start gap-3">
-                      <div className="flex items-center gap-4">
-                        <Link href={`/members/${citizen.slug}`}>
+                    <Card
+                      key={citizen._id}
+                      className="justify-start gap-3 min-w-0 overflow-hidden"
+                    >
+                      <div className="flex items-start gap-4 min-w-0">
+                        <Link
+                          href={`/members/${citizen.slug}`}
+                          className="shrink-0"
+                        >
                           <ProfilePhoto
                             user={citizen}
                             size="16"
                             stack={false}
                           />
                         </Link>
-                        <div className="min-w-0">
-                          <div className="font-bold text-lg leading-tight">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-bold text-lg leading-tight">
                             <Link
                               href={`/members/${citizen.slug}`}
-                              className="hover:text-accent"
+                              className="hover:text-accent break-words"
                             >
                               {citizen.screenname}
                             </Link>
@@ -309,13 +319,17 @@ const CommunityPage = ({ bookingConfig }: Props) => {
                               {citizen.tagline}
                             </p>
                           )}
-                          <p className="text-xs text-gray-400 mt-0.5">
-                            {t('community_joined', {
-                              date: dayjs(citizen.created).format('MMM YYYY'),
-                            })}
+                          <p className="text-xs text-gray-400 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <span>
+                              {t('community_joined', {
+                                date: dayjs(citizen.created).format(
+                                  'MMM YYYY',
+                                ),
+                              })}
+                            </span>
                             {vouchCount > 0 && (
                               <span
-                                className="inline-flex items-center gap-1 ml-2 text-success"
+                                className="inline-flex items-center gap-1 text-success"
                                 title={t('manage_users_vouches')}
                               >
                                 <UserCheck className="w-3 h-3" />
@@ -369,14 +383,16 @@ const CommunityPage = ({ bookingConfig }: Props) => {
           )}
 
           {friends && friends.count() > 0 && (
-            <section>
-              <div className="flex items-baseline justify-between">
-                <h2 className="font-bold text-lg">
+            <section className="min-w-0">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+                <h2 className="font-bold text-lg break-words">
                   {isCitizenshipEnabled
                     ? t('community_friends_title', { platform: PLATFORM_NAME })
                     : t('community_members_title')}
                 </h2>
-                <span className="text-sm text-gray-400">{friendsCount}</span>
+                <span className="text-sm text-gray-400 shrink-0">
+                  {friendsCount}
+                </span>
               </div>
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {friends.map((row: any) => {
@@ -385,28 +401,36 @@ const CommunityPage = ({ bookingConfig }: Props) => {
                   const vouchCount = friend.vouched?.length || 0;
                   return (
                     <Link key={friend._id} href={`/members/${friend.slug}`}>
-                      <Card className="h-full justify-start gap-2 py-3 hover:shadow-2xl transition-shadow">
-                        <div className="flex items-center gap-3">
-                          <ProfilePhoto
-                            user={friend}
-                            size="12"
-                            stack={false}
-                          />
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold truncate">
-                              {friend.screenname}
+                      <Card className="h-full justify-start gap-2 py-3 hover:shadow-2xl transition-shadow min-w-0 overflow-hidden">
+                        <div className="flex items-start gap-3 min-w-0">
+                          <div className="shrink-0">
+                            <ProfilePhoto
+                              user={friend}
+                              size="12"
+                              stack={false}
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+                              <p className="text-sm font-semibold truncate max-w-full">
+                                {friend.screenname}
+                              </p>
                               <SubscriptionBadge
                                 subscription={friend.subscription}
                               />
                               {hereBadge(friend._id)}
-                            </p>
-                            <p className="text-xs text-gray-400">
-                              {t('community_joined', {
-                                date: dayjs(friend.created).format('MMM YYYY'),
-                              })}
+                            </div>
+                            <p className="text-xs text-gray-400 flex flex-wrap items-center gap-x-2 gap-y-1">
+                              <span>
+                                {t('community_joined', {
+                                  date: dayjs(friend.created).format(
+                                    'MMM YYYY',
+                                  ),
+                                })}
+                              </span>
                               {vouchCount > 0 && (
                                 <span
-                                  className="inline-flex items-center gap-1 ml-2 text-success"
+                                  className="inline-flex items-center gap-1 text-success"
                                   title={t('manage_users_vouches')}
                                 >
                                   <UserCheck className="w-3 h-3" />
@@ -450,13 +474,13 @@ const CommunityPage = ({ bookingConfig }: Props) => {
 
           {isCitizenshipEnabled &&
             !currentUser?.roles?.includes('member') && (
-              <div className="pt-6 border-t border-gray-100 flex flex-wrap justify-between gap-4 text-sm text-gray-500">
-                <span>
+              <div className="pt-6 border-t border-gray-100 flex flex-col sm:flex-row sm:flex-wrap sm:justify-between gap-4 text-sm text-gray-500">
+                <span className="min-w-0">
                   {t('community_footer_note', { platform: PLATFORM_NAME })}
                 </span>
                 <Link
                   href="/citizenship"
-                  className="text-accent font-semibold hover:underline"
+                  className="text-accent font-semibold hover:underline shrink-0"
                 >
                   {t('community_become_citizen')} →
                 </Link>
