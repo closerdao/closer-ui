@@ -1,9 +1,10 @@
+import Link from 'next/link';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Key, Star, Bell, AlertTriangle, Settings as SettingsIcon, CreditCard, Info } from 'lucide-react';
+import { Key, Star, Bell, AlertTriangle, Settings as SettingsIcon, CreditCard, Info, Shield } from 'lucide-react';
 
 import SubscriptionSettings from '../../components/SubscriptionSettings';
 import { Button } from '../../components/ui';
@@ -25,12 +26,17 @@ import { VolunteerConfig } from '../../types';
 import api from '../../utils/api';
 import { getCachedConfig } from '../../utils/cachedConfig.helpers';
 import { parseMessageFromError } from '../../utils/common';
+import { isNearbyMembersEnabled } from '../../utils/nearbyMembers.helpers';
 import PageNotFound from '../not-found';
 
 type UpdateUserFunction = (value: string | string[]) => Promise<void>;
 
-// Tab interface types
-type TabId = 'preferences' | 'account' | 'subscription' | 'notifications';
+type TabId =
+  | 'preferences'
+  | 'account'
+  | 'subscription'
+  | 'notifications'
+  | 'privacy';
 
 interface Tab {
   id: TabId;
@@ -277,6 +283,7 @@ const SettingsPage = () => {
         ]
       : []),
     { id: 'notifications', label: t('settings_tab_notifications'), icon: <Bell className="w-4 h-4" /> },
+    { id: 'privacy', label: t('settings_tab_privacy'), icon: <Shield className="w-4 h-4" /> },
   ];
 
   // Scroll to top when changing tabs
@@ -484,7 +491,33 @@ const SettingsPage = () => {
       setError(null);
       setHasSaved(true);
       setShowSaveSuccess(true);
-      // Hide success message after 3 seconds
+      setTimeout(() => setShowSaveSuccess(false), 3000);
+    } catch (err) {
+      const errorMessage = parseMessageFromError(err);
+      setError(errorMessage);
+    }
+  };
+
+  const saveNearbyMembersEnabled = async (event: any) => {
+    const enabled = !!event.target.checked;
+    try {
+      setHasSaved(false);
+      const payload: Record<string, unknown> = {
+        settings: { nearby_members_enabled: enabled },
+      };
+      if (!enabled) {
+        payload.location = null;
+      }
+      await platform.user.patch(user?._id, payload);
+      await refetchUser();
+      const updatedUserResponse = await api.get('/mine/user');
+      const updatedUser = updatedUserResponse?.data?.results as User | undefined;
+      if (updatedUser) {
+        setUser(updatedUser);
+      }
+      setError(null);
+      setHasSaved(true);
+      setShowSaveSuccess(true);
       setTimeout(() => setShowSaveSuccess(false), 3000);
     } catch (err) {
       const errorMessage = parseMessageFromError(err);
@@ -957,6 +990,42 @@ const SettingsPage = () => {
               </div>
             )}
 
+            {activeTab === 'privacy' && (
+              <div className="space-y-6">
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Shield className="w-5 h-5 text-gray-700" />
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {t('settings_privacy_nearby_title')}
+                    </h3>
+                  </div>
+
+                  <div className="flex flex-col gap-2 p-3 hover:bg-gray-50 rounded-md">
+                    <div className="flex items-center justify-start gap-2">
+                      <Checkbox
+                        isChecked={isNearbyMembersEnabled(user)}
+                        onChange={saveNearbyMembersEnabled}
+                      />
+                      <label className="cursor-pointer flex-1">
+                        {t('settings_privacy_nearby_label')}
+                      </label>
+                    </div>
+                    <p className="text-sm text-gray-500 pl-7">
+                      {t('settings_privacy_nearby_help')}
+                    </p>
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <Link
+                      href="/privacy-policy"
+                      className="text-sm text-accent font-semibold hover:underline"
+                    >
+                      {t('settings_privacy_policy_link')}
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

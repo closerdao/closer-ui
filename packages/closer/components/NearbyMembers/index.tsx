@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 
 import { useAuth } from '../../contexts/auth';
 import api from '../../utils/api';
+import { isNearbyMembersEnabled } from '../../utils/nearbyMembers.helpers';
 import {
   captureBrowserUserLocation,
   hasUserLocation,
@@ -42,11 +43,12 @@ const NearbyMembers = ({ limit = 8 }: NearbyMembersProps) => {
   const [isSavingLocation, setIsSavingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
 
+  const featureEnabled = isNearbyMembersEnabled(user);
   const userHasLocation = hasUserLocation(user?.location);
 
   const loadNearby = useCallback(
     async (options?: { assumeLocation?: boolean }) => {
-      if (!isAuthenticated || !user?._id) return;
+      if (!isAuthenticated || !user?._id || !featureEnabled) return;
 
       if (!options?.assumeLocation && !userHasLocation) {
         setUsers([]);
@@ -68,13 +70,13 @@ const NearbyMembers = ({ limit = 8 }: NearbyMembersProps) => {
         setStatus('unavailable');
       }
     },
-    [isAuthenticated, limit, user?._id, userHasLocation],
+    [featureEnabled, isAuthenticated, limit, user?._id, userHasLocation],
   );
 
   useEffect(() => {
-    if (!isAuthenticated || !user?._id) return;
+    if (!isAuthenticated || !user?._id || !featureEnabled) return;
     loadNearby();
-  }, [isAuthenticated, user?._id, userHasLocation, loadNearby]);
+  }, [featureEnabled, isAuthenticated, user?._id, userHasLocation, loadNearby]);
 
   const shareLocation = async () => {
     if (!user?._id) return;
@@ -82,7 +84,10 @@ const NearbyMembers = ({ limit = 8 }: NearbyMembersProps) => {
       setIsSavingLocation(true);
       setLocationError(null);
       const location = await captureBrowserUserLocation();
-      await api.patch('/mine/user', { location });
+      await api.patch('/mine/user', {
+        location,
+        settings: { nearby_members_enabled: true },
+      });
       await refetchUser();
       await loadNearby({ assumeLocation: true });
     } catch {
@@ -95,12 +100,18 @@ const NearbyMembers = ({ limit = 8 }: NearbyMembersProps) => {
     }
   };
 
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated || !featureEnabled) return null;
 
   return (
     <section className="min-w-0">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
         <h2 className="font-bold text-lg">{t('community_near_you')}</h2>
+        <Link
+          href="/settings#privacy"
+          className="text-xs text-gray-500 hover:text-accent hover:underline"
+        >
+          {t('community_near_you_manage_privacy')}
+        </Link>
       </div>
 
       {status === 'loading' && (
@@ -110,10 +121,15 @@ const NearbyMembers = ({ limit = 8 }: NearbyMembersProps) => {
       )}
 
       {status === 'needs-location' && (
-        <div className="mt-4 flex flex-col gap-3 rounded-md bg-neutral-light p-4">
-          <p className="text-sm text-gray-600">
-            {t('community_near_you_share_prompt')}
-          </p>
+        <div className="mt-4 flex flex-col gap-4 rounded-md bg-neutral-light p-5">
+          <div className="flex flex-col gap-2">
+            <p className="text-base font-semibold text-foreground">
+              {t('community_near_you_share_prompt')}
+            </p>
+            <p className="text-sm text-gray-600">
+              {t('community_near_you_share_body')}
+            </p>
+          </div>
           {locationError && (
             <p className="text-sm text-error">{locationError}</p>
           )}
@@ -121,12 +137,12 @@ const NearbyMembers = ({ limit = 8 }: NearbyMembersProps) => {
             onClick={shareLocation}
             isEnabled={!isSavingLocation}
             isLoading={isSavingLocation}
-            size="small"
+            size="medium"
             isFullWidth={false}
             className="self-start"
           >
-            <span className="inline-flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
+            <span className="inline-flex items-center gap-2 normal-case tracking-normal">
+              <MapPin className="w-5 h-5" />
               {t('community_near_you_share_cta')}
             </span>
           </Button>
@@ -166,7 +182,7 @@ const NearbyMembers = ({ limit = 8 }: NearbyMembersProps) => {
             disabled={isSavingLocation}
             className="self-start text-sm text-accent font-semibold hover:underline disabled:opacity-60"
           >
-            {hasUserLocation(user?.location)
+            {userHasLocation
               ? t('community_near_you_update_location')
               : t('community_near_you_share_cta')}
           </button>

@@ -137,7 +137,7 @@ const PrivacyPolicyPage = () => {
             {t('privacy_policy_title')}
           </Heading>
           <p className="text-foreground/60 mb-12">
-            {t('privacy_policy_last_updated', { date: 'January 2026' })}
+            {t('privacy_policy_last_updated', { date: 'August 2026' })}
           </p>
 
           <div className="prose prose-lg max-w-none">
@@ -200,11 +200,23 @@ const PrivacyPolicyPage = () => {
               <p className="text-foreground/80 leading-relaxed mb-4">
                 {t('privacy_policy_section_2_3_intro')}
               </p>
-              <ul className="list-disc pl-6 space-y-2 text-foreground/80">
+              <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-4">
                 <li>{t('privacy_policy_section_2_3_item_1')}</li>
                 <li>{t('privacy_policy_section_2_3_item_2')}</li>
                 <li>{t('privacy_policy_section_2_3_item_3')}</li>
                 <li>{t('privacy_policy_section_2_3_item_4')}</li>
+              </ul>
+
+              <Heading level={3} className="text-xl mb-3 mt-6">
+                {t('privacy_policy_section_2_4_title')}
+              </Heading>
+              <p className="text-foreground/80 leading-relaxed mb-4">
+                {t('privacy_policy_section_2_4_intro')}
+              </p>
+              <ul className="list-disc pl-6 space-y-2 text-foreground/80">
+                <li>{t('privacy_policy_section_2_4_item_1')}</li>
+                <li>{t('privacy_policy_section_2_4_item_2')}</li>
+                <li>{t('privacy_policy_section_2_4_item_3')}</li>
               </ul>
             </section>
 
@@ -225,6 +237,7 @@ const PrivacyPolicyPage = () => {
                 <li>{t('privacy_policy_section_3_1_item_3')}</li>
                 <li>{t('privacy_policy_section_3_1_item_4')}</li>
                 <li>{t('privacy_policy_section_3_1_item_5')}</li>
+                <li>{t('privacy_policy_section_3_1_item_6')}</li>
               </ul>
 
               <Heading level={3} className="text-xl mb-3 mt-6">
@@ -275,6 +288,7 @@ const PrivacyPolicyPage = () => {
                 <li>{t('privacy_policy_section_4_2_item_3')}</li>
                 <li>{t('privacy_policy_section_4_2_item_4')}</li>
                 <li>{t('privacy_policy_section_4_2_item_5')}</li>
+                <li>{t('privacy_policy_section_4_2_item_6')}</li>
               </ul>
 
               <Heading level={3} className="text-xl mb-3 mt-6">
@@ -287,8 +301,15 @@ const PrivacyPolicyPage = () => {
               <Heading level={3} className="text-xl mb-3 mt-6">
                 {t('privacy_policy_section_4_4_title')}
               </Heading>
-              <p className="text-foreground/80 leading-relaxed">
+              <p className="text-foreground/80 leading-relaxed mb-4">
                 {t('privacy_policy_section_4_4_text')}
+              </p>
+
+              <Heading level={3} className="text-xl mb-3 mt-6">
+                {t('privacy_policy_section_4_5_title')}
+              </Heading>
+              <p className="text-foreground/80 leading-relaxed">
+                {t('privacy_policy_section_4_5_text')}
               </p>
             </section>
 
