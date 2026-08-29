@@ -214,7 +214,9 @@ export const CitizenFunnelStrip = ({
       {steps.map((s) => {
         const isCitizen = s.key === 'citizen';
         const isActive = active === s.key;
-        const count = isCitizen ? citizenCount : counts[s.key] || 0;
+        const count = isCitizen
+          ? citizenCount
+          : counts[s.key as CitizenApplicationStage] || 0;
         return (
           <button
             key={s.key}
