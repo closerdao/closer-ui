@@ -228,24 +228,17 @@ export const evaluateCitizenAtRisk = (
   const presenceStatus = derivePresenceStatus(
     nightsInWindow,
     config.maintenanceMinNights,
-    signals.totalNights,
+    null,
   );
 
   const reasons: CitizenAtRiskReason[] = [];
-  if (meetsPresence === false || presenceStatus === 'risk') {
-    if (!reasons.includes('presence')) reasons.push('presence');
-  }
+  if (meetsPresence === false) reasons.push('presence');
   if (meetsTokens === false) reasons.push('tokens');
   if (!meetsFinance) reasons.push('finance');
   if (meetsVoting === false) reasons.push('voting');
 
-  const isAtRisk =
-    reasons.length > 0 ||
-    presenceStatus === 'risk' ||
-    meetsPresence === false;
-
   return {
-    isAtRisk,
+    isAtRisk: reasons.length > 0,
     isFoundingCitizen: founding,
     reasons,
     tokensHeldOrFinanced,
@@ -254,7 +247,14 @@ export const evaluateCitizenAtRisk = (
     meetsTokens,
     meetsVoting,
     meetsFinance,
-    presenceStatus,
+    presenceStatus:
+      nightsInWindow === null && signals.totalNights !== null
+        ? derivePresenceStatus(
+            null,
+            config.maintenanceMinNights,
+            signals.totalNights,
+          )
+        : presenceStatus,
   };
 };
 
