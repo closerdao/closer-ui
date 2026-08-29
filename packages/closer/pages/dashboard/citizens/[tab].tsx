@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import dayjs from 'dayjs';
 import { useTranslations } from 'next-intl';
@@ -18,7 +18,7 @@ import {
 import Pagination from '../../../components/Pagination';
 import { Spinner } from '../../../components/ui';
 
-import { paidStatuses } from '../../../constants';
+import { MAX_USERS_TO_FETCH, paidStatuses } from '../../../constants';
 import PageNotAllowed from '../../401';
 import { useAuth } from '../../../contexts/auth';
 import { usePlatform } from '../../../contexts/platform';
@@ -111,6 +111,15 @@ const CitizensFunnelPage = () => {
   const [recommendedRows, setRecommendedRows] = useState<RecommendedRow[]>([]);
   const [citizenTotal, setCitizenTotal] = useState(0);
   const [total, setTotal] = useState(0);
+  const loadGenerationRef = useRef(0);
+  const [prevTab, setPrevTab] = useState(tab);
+  if (tab !== prevTab) {
+    setPrevTab(tab);
+    setPage(1);
+    setHealthFilter('all');
+    if (tab !== 'applications') setStageFilter(null);
+  }
+  const applicationPage = tab === 'applications' ? page : 1;
 
   const hasAccessToFunnel =
     hasAccess('CitizenFunnel') && isCitizenshipEnabled;
@@ -172,9 +181,9 @@ const CitizensFunnelPage = () => {
     try {
       const res = await api.get('/proposal', { params: { limit: 200 } });
       const rows = res?.data?.results;
-      return Array.isArray(rows) ? rows : [];
+      return Array.isArray(rows) ? rows : null;
     } catch {
-      return [];
+      return null;
     }
   }, []);
 
@@ -220,7 +229,9 @@ const CitizensFunnelPage = () => {
   );
 
   const load = useCallback(async () => {
-    if (!platform?.user?.get || tab === 'config') return;
+    if (!platform?.user?.get) return;
+    const generation = ++loadGenerationRef.current;
+    if (tab === 'config') return;
     setLoading(true);
     setError(null);
     try {
@@ -232,7 +243,7 @@ const CitizensFunnelPage = () => {
               {
                 where,
                 limit: CITIZEN_FUNNEL_LIST_LIMIT,
-                page,
+                page: applicationPage,
                 sort_by: '-citizenship.appliedAt',
               },
               { force: true },
@@ -241,6 +252,7 @@ const CitizensFunnelPage = () => {
             loadFinanceByUser(),
             platform.user.getCount({ where: buildCitizensWhere() }),
           ]);
+        if (generation !== loadGenerationRef.current) return;
         const rows = (listAction?.results?.toJS?.() ??
           listAction?.results ??
           []) as any[];
@@ -266,22 +278,20 @@ const CitizensFunnelPage = () => {
 
       if (tab === 'citizens') {
         const where = buildCitizensWhere();
-        const [listAction, countAction, finance, proposals] = await Promise.all(
-          [
-            platform.user.get(
-              {
-                where,
-                limit: CITIZEN_FUNNEL_LIST_LIMIT,
-                page,
-                sort_by: '-lastactive',
-              },
-              { force: true },
-            ),
-            platform.user.getCount({ where }),
-            loadFinanceByUser(),
-            loadProposals(),
-          ],
-        );
+        const [listAction, finance, proposals] = await Promise.all([
+          platform.user.get(
+            {
+              where,
+              limit: MAX_USERS_TO_FETCH,
+              page: 1,
+              sort_by: '-lastactive',
+            },
+            { force: true },
+          ),
+          loadFinanceByUser(),
+          loadProposals(),
+        ]);
+        if (generation !== loadGenerationRef.current) return;
         const rows = (listAction?.results?.toJS?.() ??
           listAction?.results ??
           []) as any[];
@@ -290,6 +300,7 @@ const CitizensFunnelPage = () => {
         const enriched: EnrichedCitizenRow[] = [];
         const chunkSize = 10;
         for (let i = 0; i < list.length; i += chunkSize) {
+          if (generation !== loadGenerationRef.current) return;
           const chunk = list.slice(i, i + chunkSize);
           const chunkRows = await Promise.all(
             chunk.map(async (u) => {
@@ -321,10 +332,10 @@ const CitizensFunnelPage = () => {
           );
           enriched.push(...chunkRows);
         }
+        if (generation !== loadGenerationRef.current) return;
         setCitizenRows(enriched);
-        const count = Number(countAction?.results);
-        setTotal(Number.isNaN(count) ? list.length : count);
-        setCitizenTotal(Number.isNaN(count) ? list.length : count);
+        setTotal(enriched.length);
+        setCitizenTotal(enriched.length);
         setApplicationRows([]);
         setRecommendedRows([]);
         return;
@@ -348,6 +359,7 @@ const CitizensFunnelPage = () => {
         ),
         loadFinanceByUser(),
       ]);
+      if (generation !== loadGenerationRef.current) return;
       const rows = (listAction?.results?.toJS?.() ??
         listAction?.results ??
         []) as any[];
@@ -385,30 +397,27 @@ const CitizensFunnelPage = () => {
       setApplicationRows([]);
       setCitizenRows([]);
     } catch {
+      if (generation !== loadGenerationRef.current) return;
       setError(t('citizen_funnel_error_load'));
       setApplicationRows([]);
       setCitizenRows([]);
       setRecommendedRows([]);
       setTotal(0);
     } finally {
-      setLoading(false);
+      if (generation === loadGenerationRef.current) {
+        setLoading(false);
+      }
     }
   }, [
+    applicationPage,
     fetchNightsInWindow,
     funnelConfig,
     loadFinanceByUser,
     loadProposals,
-    page,
     platform?.user,
     t,
     tab,
   ]);
-
-  useEffect(() => {
-    setPage(1);
-    setHealthFilter('all');
-    if (tab !== 'applications') setStageFilter(null);
-  }, [tab]);
 
   useEffect(() => {
     if (hasAccessToFunnel) load();
@@ -421,10 +430,17 @@ const CitizensFunnelPage = () => {
     );
   }, [applicationRows, funnelConfig, stageFilter]);
 
-  const visibleCitizens = useMemo(() => {
+  const filteredCitizens = useMemo(() => {
     if (healthFilter === 'all') return citizenRows;
     return citizenRows.filter((row) => row.evaluation.isAtRisk);
   }, [citizenRows, healthFilter]);
+
+  const visibleCitizens = useMemo(() => {
+    const start = (page - 1) * CITIZEN_FUNNEL_LIST_LIMIT;
+    return filteredCitizens.slice(start, start + CITIZEN_FUNNEL_LIST_LIMIT);
+  }, [filteredCitizens, page]);
+
+  const listTotal = tab === 'citizens' ? filteredCitizens.length : total;
 
   const riskCount = citizenRows.filter((r) => r.evaluation.isAtRisk).length;
 
@@ -539,7 +555,10 @@ const CitizensFunnelPage = () => {
                     key={id}
                     type="button"
                     aria-pressed={healthFilter === id}
-                    onClick={() => setHealthFilter(id)}
+                    onClick={() => {
+                      setHealthFilter(id);
+                      setPage(1);
+                    }}
                     className={`rounded-full px-4 py-2 text-xs font-extrabold uppercase tracking-wider min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
                       healthFilter === id
                         ? 'bg-foreground text-background border border-foreground'
@@ -647,12 +666,12 @@ const CitizensFunnelPage = () => {
 
           {tab !== 'recommended' &&
             tab !== 'config' &&
-            total > CITIZEN_FUNNEL_LIST_LIMIT && (
+            listTotal > CITIZEN_FUNNEL_LIST_LIMIT && (
               <Pagination
                 loadPage={(nextPage: number) => setPage(nextPage)}
                 page={page}
                 limit={CITIZEN_FUNNEL_LIST_LIMIT}
-                total={total}
+                total={listTotal}
               />
             )}
         </div>

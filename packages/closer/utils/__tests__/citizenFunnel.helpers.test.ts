@@ -196,6 +196,12 @@ describe('citizenFunnel.helpers', () => {
       );
       expect(count).toBe(2);
     });
+
+    it('returns null when vote data is missing or unusable', () => {
+      expect(countVotesForUserInWindow(null, 'u1', 1)).toBe(null);
+      expect(countVotesForUserInWindow(undefined, 'u1', 1)).toBe(null);
+      expect(countVotesForUserInWindow([{}], 'u1', 1)).toBe(null);
+    });
   });
 
   describe('query builders and sorting', () => {

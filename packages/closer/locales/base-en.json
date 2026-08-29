@@ -4783,7 +4783,7 @@
   "citizen_funnel_nights_short": "{count}/{required} nights",
   "citizen_funnel_tokens_short": "{count}/{required} tokens",
   "citizen_funnel_vouches_short": "{count} vouches",
-  "citizen_funnel_nights_window": "{count}/{required} nights (2y)",
+  "citizen_funnel_nights_window": "{count}/{required} nights ({years}y)",
   "citizen_funnel_votes_short": "Votes {primary} / {alt}",
   "citizen_funnel_recommended_score": "{score}% ready",
   "citizen_funnel_tab_config": "Config",

@@ -4439,7 +4439,7 @@
   "citizen_funnel_nights_short": "{count}/{required} noites",
   "citizen_funnel_tokens_short": "{count}/{required} tokens",
   "citizen_funnel_vouches_short": "{count} apoios",
-  "citizen_funnel_nights_window": "{count}/{required} noites (2a)",
+  "citizen_funnel_nights_window": "{count}/{required} noites ({years}a)",
   "citizen_funnel_votes_short": "Votos {primary} / {alt}",
   "citizen_funnel_recommended_score": "{score}% pronto",
   "citizen_funnel_tab_config": "Config",

@@ -407,18 +407,36 @@ export const mapUserToFunnelSignals = (
   };
 };
 
+const proposalHasVoteBuckets = (proposal: {
+  votes?: {
+    yes?: unknown;
+    no?: unknown;
+    abstain?: unknown;
+  };
+}): boolean =>
+  Array.isArray(proposal.votes?.yes) ||
+  Array.isArray(proposal.votes?.no) ||
+  Array.isArray(proposal.votes?.abstain);
+
 export const countVotesForUserInWindow = (
-  proposals: Array<{
-    votes?: {
-      yes?: Array<{ userId?: string; votedAt?: string | Date }>;
-      no?: Array<{ userId?: string; votedAt?: string | Date }>;
-      abstain?: Array<{ userId?: string; votedAt?: string | Date }>;
-    };
-  }>,
+  proposals:
+    | Array<{
+        votes?: {
+          yes?: Array<{ userId?: string; votedAt?: string | Date }>;
+          no?: Array<{ userId?: string; votedAt?: string | Date }>;
+          abstain?: Array<{ userId?: string; votedAt?: string | Date }>;
+        };
+      }>
+    | null
+    | undefined,
   userId: string,
   windowYears: number,
   now: Date = new Date(),
-): number => {
+): number | null => {
+  if (!Array.isArray(proposals)) return null;
+  if (proposals.length > 0 && !proposals.some(proposalHasVoteBuckets)) {
+    return null;
+  }
   const since = dayjs(now).subtract(windowYears, 'year');
   let count = 0;
   for (const proposal of proposals) {
