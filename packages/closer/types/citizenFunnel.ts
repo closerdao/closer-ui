@@ -2,11 +2,23 @@ export const CITIZEN_FUNNEL_TABS = [
   'applications',
   'citizens',
   'recommended',
+  'config',
 ] as const;
 
 export type CitizenFunnelTab = (typeof CITIZEN_FUNNEL_TABS)[number];
 
 export const CITIZEN_FUNNEL_DEFAULT_TAB: CitizenFunnelTab = 'applications';
+
+export const CITIZEN_APPLICATION_STAGES = [
+  'applied',
+  'presence',
+  'tokens',
+  'vouching',
+  'ready',
+] as const;
+
+export type CitizenApplicationStage =
+  (typeof CITIZEN_APPLICATION_STAGES)[number];
 
 export type CitizenAtRiskReason =
   | 'presence'
@@ -14,7 +26,9 @@ export type CitizenAtRiskReason =
   | 'finance'
   | 'voting';
 
-export type CitizenHealthFilter = 'all' | 'at-risk' | 'healthy';
+export type CitizenHealthFilter = 'all' | 'at-risk';
+
+export type CitizenPresenceStatus = 'met' | 'on-track' | 'risk';
 
 export type CitizenFunnelUserSignals = {
   userId: string;
@@ -36,6 +50,7 @@ export type CitizenFunnelUserSignals = {
   vouchCount: number;
   votesInPrimaryWindow: number | null;
   votesInAltWindow: number | null;
+  minVouchesNeeded?: number;
 };
 
 export type CitizenAtRiskEvaluation = {
@@ -48,6 +63,7 @@ export type CitizenAtRiskEvaluation = {
   meetsTokens: boolean | null;
   meetsVoting: boolean | null;
   meetsFinance: boolean;
+  presenceStatus: CitizenPresenceStatus;
 };
 
 export type CitizenRecommendedScore = {
@@ -58,4 +74,6 @@ export type CitizenRecommendedScore = {
   tokens: number;
   nightsRequired: number;
   tokensRequired: number;
+  nightsShort: number;
+  tokensShort: number;
 };

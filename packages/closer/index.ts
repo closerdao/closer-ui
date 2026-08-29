@@ -272,6 +272,7 @@ export { default as CohousingDashboardPage } from './pages/dashboard/cohousing/i
 export { default as ApplicationsDashboardPage } from './pages/dashboard/applications';
 export { default as CitizensFunnelPage } from './pages/dashboard/citizens/[tab]';
 export { default as CitizensFunnelIndexPage } from './pages/dashboard/citizens/index';
+export { default as CitizenSingularRedirectPage } from './pages/dashboard/citizen/index';
 export { default as EngagementDashboardPage } from './pages/dashboard/engagement';
 export { default as EngagementOpportunityDetailPage } from './pages/dashboard/engagement/[id]';
 export { default as RevenuePage } from './pages/dashboard/revenue';

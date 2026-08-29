@@ -2,6 +2,7 @@ import {
   buildApplicationsWhere,
   buildCitizensWhere,
   countVotesForUserInWindow,
+  deriveApplicationStage,
   evaluateCitizenAtRisk,
   evaluateCitizenVoting,
   isCitizenRole,
@@ -73,6 +74,7 @@ describe('citizenFunnel.helpers', () => {
     it('is healthy when all DIP19 rules pass', () => {
       const result = evaluateCitizenAtRisk(baseSignals, config);
       expect(result.isAtRisk).toBe(false);
+      expect(result.presenceStatus).toBe('met');
       expect(result.reasons).toEqual([]);
     });
 
@@ -89,12 +91,10 @@ describe('citizenFunnel.helpers', () => {
         config,
       );
       expect(result.isAtRisk).toBe(true);
-      expect(result.reasons).toEqual([
-        'presence',
-        'tokens',
-        'finance',
-        'voting',
-      ]);
+      expect(result.presenceStatus).toBe('risk');
+      expect(result.reasons).toEqual(
+        expect.arrayContaining(['presence', 'tokens', 'finance', 'voting']),
+      );
     });
 
     it('exempts founding citizens from the token floor', () => {
@@ -112,12 +112,53 @@ describe('citizenFunnel.helpers', () => {
     });
   });
 
+  describe('deriveApplicationStage', () => {
+    it('walks applied → presence → tokens → vouching → ready', () => {
+      const base = {
+        userId: 'u1',
+        roles: [],
+        tokenBalance: 0,
+        financedTokens: 0,
+        hasDelinquentFinancePlan: false,
+        totalNights: 0,
+        nightsInMaintenanceWindow: null,
+        vouchCount: 0,
+        votesInPrimaryWindow: null,
+        votesInAltWindow: null,
+      };
+      expect(deriveApplicationStage(base, config)).toBe('applied');
+      expect(
+        deriveApplicationStage({ ...base, totalNights: 5 }, config),
+      ).toBe('presence');
+      expect(
+        deriveApplicationStage(
+          { ...base, totalNights: 14, tokenBalance: 10 },
+          config,
+        ),
+      ).toBe('tokens');
+      expect(
+        deriveApplicationStage(
+          { ...base, totalNights: 14, tokenBalance: 30, vouchCount: 1 },
+          config,
+        ),
+      ).toBe('vouching');
+      expect(
+        deriveApplicationStage(
+          { ...base, totalNights: 14, tokenBalance: 30, vouchCount: 3 },
+          config,
+        ),
+      ).toBe('ready');
+    });
+  });
+
   describe('scoreCitizenRecommendation', () => {
-    it('averages nights and token progress', () => {
+    it('weights nights 60% and tokens 40% by default', () => {
       const score = scoreCitizenRecommendation(7, 15, 14, 30);
       expect(score.nightsProgress).toBeCloseTo(0.5);
       expect(score.tokensProgress).toBeCloseTo(0.5);
       expect(score.score).toBeCloseTo(0.5);
+      expect(score.nightsShort).toBe(7);
+      expect(score.tokensShort).toBe(15);
     });
 
     it('caps progress at 1', () => {

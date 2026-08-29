@@ -2,11 +2,14 @@ import dayjs from 'dayjs';
 
 import { CitizenshipConfig } from '../types/api';
 import {
+  CitizenApplicationStage,
   CitizenAtRiskEvaluation,
   CitizenAtRiskReason,
   CitizenFunnelTab,
   CitizenFunnelUserSignals,
+  CitizenPresenceStatus,
   CitizenRecommendedScore,
+  CITIZEN_APPLICATION_STAGES,
   CITIZEN_FUNNEL_DEFAULT_TAB,
   CITIZEN_FUNNEL_TABS,
 } from '../types/citizenFunnel';
@@ -24,6 +27,11 @@ const DEFAULT_ALT_VOTE_YEARS = 3;
 const DEFAULT_FOUNDING_CUTOFF = '2024-12-18';
 const DEFAULT_RECOMMENDED_LIMIT = 50;
 const DEFAULT_RECOMMENDED_MIN_NIGHTS = 7;
+const DEFAULT_READINESS_THRESHOLD = 0.6;
+const DEFAULT_NIGHTS_WEIGHT = 0.6;
+const DEFAULT_TOKENS_WEIGHT = 0.4;
+const DEFAULT_AT_RISK_MONTHS = 6;
+const DEFAULT_MIN_VOUCHES = 3;
 
 export const isCitizenFunnelTab = (value: string): value is CitizenFunnelTab =>
   (CITIZEN_FUNNEL_TABS as readonly string[]).includes(value);
@@ -42,6 +50,7 @@ export const resolveCitizenFunnelTab = (
 export type ResolvedCitizenshipFunnelConfig = {
   tokensRequired: number;
   minStayDuration: number;
+  minVouches: number;
   maintenanceMinNights: number;
   maintenanceNightsWindowYears: number;
   maintenanceMinVotes: number;
@@ -51,6 +60,11 @@ export type ResolvedCitizenshipFunnelConfig = {
   foundingCitizenCutoffDate: string;
   funnelRecommendedLimit: number;
   funnelRecommendedMinNights: number;
+  recommendedReadinessThreshold: number;
+  recommendedNightsWeight: number;
+  recommendedTokensWeight: number;
+  atRiskMonthsBeforeWindowEnd: number;
+  presenceReminderMonths: number;
 };
 
 export const resolveCitizenshipFunnelConfig = (
@@ -60,6 +74,7 @@ export const resolveCitizenshipFunnelConfig = (
   minStayDuration: Number(
     config?.minVouchingStayDuration ?? DEFAULT_MIN_STAY,
   ),
+  minVouches: Number(config?.minVouches ?? DEFAULT_MIN_VOUCHES),
   maintenanceMinNights: Number(
     config?.maintenanceMinNights ?? DEFAULT_MAINTENANCE_NIGHTS,
   ),
@@ -85,6 +100,23 @@ export const resolveCitizenshipFunnelConfig = (
   ),
   funnelRecommendedMinNights: Number(
     config?.funnelRecommendedMinNights ?? DEFAULT_RECOMMENDED_MIN_NIGHTS,
+  ),
+  recommendedReadinessThreshold: Number(
+    config?.recommendedReadinessThreshold ?? DEFAULT_READINESS_THRESHOLD,
+  ),
+  recommendedNightsWeight: Number(
+    config?.recommendedNightsWeight ?? DEFAULT_NIGHTS_WEIGHT,
+  ),
+  recommendedTokensWeight: Number(
+    config?.recommendedTokensWeight ?? DEFAULT_TOKENS_WEIGHT,
+  ),
+  atRiskMonthsBeforeWindowEnd: Number(
+    config?.atRiskMonthsBeforeWindowEnd ??
+      config?.presenceReminderMonths ??
+      DEFAULT_AT_RISK_MONTHS,
+  ),
+  presenceReminderMonths: Number(
+    config?.presenceReminderMonths ?? DEFAULT_AT_RISK_MONTHS,
   ),
 });
 
@@ -148,6 +180,27 @@ export const evaluateCitizenVoting = (
   return primaryOk || altOk;
 };
 
+export const derivePresenceStatus = (
+  nightsInWindow: number | null,
+  minNights: number,
+  nightsProgressFallback?: number | null,
+): CitizenPresenceStatus => {
+  if (nightsInWindow === null) {
+    if (
+      nightsProgressFallback !== null &&
+      nightsProgressFallback !== undefined
+    ) {
+      if (nightsProgressFallback >= minNights) return 'met';
+      if (nightsProgressFallback >= minNights * 0.5) return 'on-track';
+      return 'risk';
+    }
+    return 'on-track';
+  }
+  if (nightsInWindow >= minNights) return 'met';
+  if (nightsInWindow >= minNights * 0.5) return 'on-track';
+  return 'risk';
+};
+
 export const evaluateCitizenAtRisk = (
   signals: CitizenFunnelUserSignals,
   config: ResolvedCitizenshipFunnelConfig,
@@ -172,14 +225,27 @@ export const evaluateCitizenAtRisk = (
     config,
   );
 
+  const presenceStatus = derivePresenceStatus(
+    nightsInWindow,
+    config.maintenanceMinNights,
+    signals.totalNights,
+  );
+
   const reasons: CitizenAtRiskReason[] = [];
-  if (meetsPresence === false) reasons.push('presence');
+  if (meetsPresence === false || presenceStatus === 'risk') {
+    if (!reasons.includes('presence')) reasons.push('presence');
+  }
   if (meetsTokens === false) reasons.push('tokens');
   if (!meetsFinance) reasons.push('finance');
   if (meetsVoting === false) reasons.push('voting');
 
+  const isAtRisk =
+    reasons.length > 0 ||
+    presenceStatus === 'risk' ||
+    meetsPresence === false;
+
   return {
-    isAtRisk: reasons.length > 0,
+    isAtRisk,
     isFoundingCitizen: founding,
     reasons,
     tokensHeldOrFinanced,
@@ -188,7 +254,32 @@ export const evaluateCitizenAtRisk = (
     meetsTokens,
     meetsVoting,
     meetsFinance,
+    presenceStatus,
   };
+};
+
+export const deriveApplicationStage = (
+  signals: CitizenFunnelUserSignals,
+  config: Pick<
+    ResolvedCitizenshipFunnelConfig,
+    'minStayDuration' | 'tokensRequired' | 'minVouches'
+  >,
+): CitizenApplicationStage => {
+  const nights = signals.totalNights ?? 0;
+  const tokens = signals.tokenBalance + signals.financedTokens;
+  const minVouches = Math.max(
+    1,
+    signals.minVouchesNeeded ?? config.minVouches,
+  );
+  const hasPresence = nights >= config.minStayDuration;
+  const hasTokens = tokens >= config.tokensRequired;
+  const hasVouches = signals.vouchCount >= minVouches;
+
+  if (hasPresence && hasTokens && hasVouches) return 'ready';
+  if (hasPresence && hasTokens) return 'vouching';
+  if (hasPresence) return 'tokens';
+  if (nights > 0 || tokens > 0) return 'presence';
+  return 'applied';
 };
 
 export const scoreCitizenRecommendation = (
@@ -196,19 +287,26 @@ export const scoreCitizenRecommendation = (
   tokens: number,
   nightsRequired: number,
   tokensRequired: number,
+  nightsWeight = DEFAULT_NIGHTS_WEIGHT,
+  tokensWeight = DEFAULT_TOKENS_WEIGHT,
 ): CitizenRecommendedScore => {
   const safeNightsRequired = nightsRequired > 0 ? nightsRequired : 1;
   const safeTokensRequired = tokensRequired > 0 ? tokensRequired : 1;
+  const weightSum = nightsWeight + tokensWeight;
+  const nWeight = weightSum > 0 ? nightsWeight / weightSum : 0.5;
+  const tWeight = weightSum > 0 ? tokensWeight / weightSum : 0.5;
   const nightsProgress = Math.min(1, Math.max(0, nights / safeNightsRequired));
   const tokensProgress = Math.min(1, Math.max(0, tokens / safeTokensRequired));
   return {
     nightsProgress,
     tokensProgress,
-    score: (nightsProgress + tokensProgress) / 2,
+    score: nightsProgress * nWeight + tokensProgress * tWeight,
     nights,
     tokens,
     nightsRequired: safeNightsRequired,
     tokensRequired: safeTokensRequired,
+    nightsShort: Math.max(0, safeNightsRequired - nights),
+    tokensShort: Math.max(0, safeTokensRequired - tokens),
   };
 };
 
@@ -275,6 +373,7 @@ export const mapUserToFunnelSignals = (
       | 'votesInPrimaryWindow'
       | 'votesInAltWindow'
       | 'totalNights'
+      | 'minVouchesNeeded'
     >
   > = {},
 ): CitizenFunnelUserSignals => {
@@ -304,6 +403,7 @@ export const mapUserToFunnelSignals = (
     vouchCount: extractVouchCount(user),
     votesInPrimaryWindow: extras.votesInPrimaryWindow ?? null,
     votesInAltWindow: extras.votesInAltWindow ?? null,
+    minVouchesNeeded: extras.minVouchesNeeded,
   };
 };
 
@@ -348,3 +448,26 @@ export const sortRecommendedByScore = <
     if (b.nights !== a.nights) return b.nights - a.nights;
     return b.tokens - a.tokens;
   });
+
+export const countStages = (
+  rows: CitizenFunnelUserSignals[],
+  config: Pick<
+    ResolvedCitizenshipFunnelConfig,
+    'minStayDuration' | 'tokensRequired' | 'minVouches'
+  >,
+): Record<CitizenApplicationStage | 'citizen', number> => {
+  const counts = CITIZEN_APPLICATION_STAGES.reduce(
+    (acc, stage) => {
+      acc[stage] = 0;
+      return acc;
+    },
+    { citizen: 0 } as Record<CitizenApplicationStage | 'citizen', number>,
+  );
+  rows.forEach((signals) => {
+    const stage = deriveApplicationStage(signals, config);
+    counts[stage] += 1;
+  });
+  return counts;
+};
+
+export { CITIZEN_APPLICATION_STAGES };
