@@ -339,8 +339,7 @@ export const CitizenFunnelCitizenRow = ({
   config: ResolvedCitizenshipFunnelConfig;
 }) => {
   const t = useTranslations();
-  const nights =
-    evaluation.nightsInWindow ?? signals.totalNights ?? 0;
+  const nights = evaluation.nightsInWindow ?? 0;
   const status = evaluation.presenceStatus;
   const nightsTarget = config.maintenanceMinNights;
   const nightsToGo = Math.max(0, nightsTarget - nights);

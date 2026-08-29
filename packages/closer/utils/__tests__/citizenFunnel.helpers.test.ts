@@ -14,13 +14,16 @@ import {
 } from '../citizenFunnel.helpers';
 
 describe('citizenFunnel.helpers', () => {
-  const config = resolveCitizenshipFunnelConfig({
-    enabled: true,
-    isSpaceHostVouchRequired: true,
-    minVouches: 3,
-    minVouchingStayDuration: 14,
-    tokensRequired: 30,
-  });
+  const config = resolveCitizenshipFunnelConfig(
+    {
+      enabled: true,
+      isSpaceHostVouchRequired: true,
+      minVouches: 3,
+      minVouchingStayDuration: 14,
+      tokensRequired: 30,
+    },
+    30,
+  );
 
   describe('isCitizenRole', () => {
     it('treats member and citizen as citizens', () => {
@@ -95,6 +98,20 @@ describe('citizenFunnel.helpers', () => {
       expect(result.reasons).toEqual(
         expect.arrayContaining(['presence', 'tokens', 'finance', 'voting']),
       );
+    });
+
+    it('does not treat lifetime nights as window presence', () => {
+      const result = evaluateCitizenAtRisk(
+        {
+          ...baseSignals,
+          totalNights: 100,
+          nightsInMaintenanceWindow: null,
+        },
+        config,
+      );
+      expect(result.meetsPresence).toBe(null);
+      expect(result.presenceStatus).not.toBe('met');
+      expect(result.reasons).not.toContain('presence');
     });
 
     it('exempts founding citizens from the token floor', () => {

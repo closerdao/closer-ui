@@ -31,7 +31,9 @@ const DEFAULT_READINESS_THRESHOLD = 0.6;
 const DEFAULT_NIGHTS_WEIGHT = 0.6;
 const DEFAULT_TOKENS_WEIGHT = 0.4;
 const DEFAULT_AT_RISK_MONTHS = 6;
-const DEFAULT_MIN_VOUCHES = 3;
+
+export const computeMinVouches = (totalCitizens: number): number =>
+  Math.max(1, Math.round(totalCitizens * 0.1));
 
 export const isCitizenFunnelTab = (value: string): value is CitizenFunnelTab =>
   (CITIZEN_FUNNEL_TABS as readonly string[]).includes(value);
@@ -69,12 +71,13 @@ export type ResolvedCitizenshipFunnelConfig = {
 
 export const resolveCitizenshipFunnelConfig = (
   config: CitizenshipConfig | null | undefined,
+  totalCitizens = 0,
 ): ResolvedCitizenshipFunnelConfig => ({
   tokensRequired: Number(config?.tokensRequired ?? DEFAULT_TOKENS_REQUIRED),
   minStayDuration: Number(
     config?.minVouchingStayDuration ?? DEFAULT_MIN_STAY,
   ),
-  minVouches: Number(config?.minVouches ?? DEFAULT_MIN_VOUCHES),
+  minVouches: computeMinVouches(totalCitizens),
   maintenanceMinNights: Number(
     config?.maintenanceMinNights ?? DEFAULT_MAINTENANCE_NIGHTS,
   ),
@@ -247,14 +250,7 @@ export const evaluateCitizenAtRisk = (
     meetsTokens,
     meetsVoting,
     meetsFinance,
-    presenceStatus:
-      nightsInWindow === null && signals.totalNights !== null
-        ? derivePresenceStatus(
-            null,
-            config.maintenanceMinNights,
-            signals.totalNights,
-          )
-        : presenceStatus,
+    presenceStatus,
   };
 };
 

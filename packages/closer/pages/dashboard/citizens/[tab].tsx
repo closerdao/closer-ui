@@ -42,6 +42,7 @@ import {
   buildRecommendedWhere,
   CITIZEN_FUNNEL_LIST_LIMIT,
   citizenFunnelTabPath,
+  computeMinVouches,
   countStages,
   countVotesForUserInWindow,
   deriveApplicationStage,
@@ -84,10 +85,6 @@ const CitizensFunnelPage = () => {
   const citizenshipConfig = getCachedConfig(
     'citizenship',
   ) as CitizenshipConfig | null;
-  const funnelConfig = useMemo(
-    () => resolveCitizenshipFunnelConfig(citizenshipConfig),
-    [citizenshipConfig],
-  );
 
   const platformName =
     generalConfig?.platformName || defaultConfig?.platformName || '';
@@ -111,6 +108,17 @@ const CitizensFunnelPage = () => {
   const [recommendedRows, setRecommendedRows] = useState<RecommendedRow[]>([]);
   const [citizenTotal, setCitizenTotal] = useState(0);
   const [total, setTotal] = useState(0);
+  const baseFunnelConfig = useMemo(
+    () => resolveCitizenshipFunnelConfig(citizenshipConfig),
+    [citizenshipConfig],
+  );
+  const funnelConfig = useMemo(
+    () => ({
+      ...baseFunnelConfig,
+      minVouches: computeMinVouches(citizenTotal),
+    }),
+    [baseFunnelConfig, citizenTotal],
+  );
   const loadGenerationRef = useRef(0);
   const [prevTab, setPrevTab] = useState(tab);
   if (tab !== prevTab) {
@@ -231,7 +239,19 @@ const CitizensFunnelPage = () => {
   const load = useCallback(async () => {
     if (!platform?.user?.get) return;
     const generation = ++loadGenerationRef.current;
-    if (tab === 'config') return;
+    if (tab === 'config') {
+      try {
+        const citizenCountAction = await platform.user.getCount({
+          where: buildCitizensWhere(),
+        });
+        if (generation !== loadGenerationRef.current) return;
+        const cCount = Number(citizenCountAction?.results);
+        setCitizenTotal(Number.isNaN(cCount) ? 0 : cCount);
+      } catch {
+        if (generation !== loadGenerationRef.current) return;
+      }
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -257,6 +277,11 @@ const CitizensFunnelPage = () => {
           listAction?.results ??
           []) as any[];
         const list = Array.isArray(rows) ? rows.map(toPlainUser) : [];
+        const count = Number(countAction?.results);
+        setTotal(Number.isNaN(count) ? list.length : count);
+        const cCount = Number(citizenCountAction?.results);
+        const citizenCount = Number.isNaN(cCount) ? 0 : cCount;
+        setCitizenTotal(citizenCount);
         setApplicationRows(
           list.map((u) =>
             mapUserToFunnelSignals(u, {
@@ -264,13 +289,10 @@ const CitizensFunnelPage = () => {
               hasDelinquentFinancePlan: finance.delinquentUsers.has(
                 String(u._id),
               ),
+              minVouchesNeeded: computeMinVouches(citizenCount),
             }),
           ),
         );
-        const count = Number(countAction?.results);
-        setTotal(Number.isNaN(count) ? list.length : count);
-        const cCount = Number(citizenCountAction?.results);
-        setCitizenTotal(Number.isNaN(cCount) ? 0 : cCount);
         setCitizenRows([]);
         setRecommendedRows([]);
         return;
@@ -307,7 +329,7 @@ const CitizensFunnelPage = () => {
               const userId = String(u._id);
               const nightsInWindow = await fetchNightsInWindow(
                 userId,
-                funnelConfig.maintenanceNightsWindowYears,
+                baseFunnelConfig.maintenanceNightsWindowYears,
               );
               const signals = mapUserToFunnelSignals(u, {
                 financedTokens: finance.financedByUser[userId] || 0,
@@ -316,17 +338,17 @@ const CitizensFunnelPage = () => {
                 votesInPrimaryWindow: countVotesForUserInWindow(
                   proposals,
                   userId,
-                  funnelConfig.maintenanceVoteWindowYears,
+                  baseFunnelConfig.maintenanceVoteWindowYears,
                 ),
                 votesInAltWindow: countVotesForUserInWindow(
                   proposals,
                   userId,
-                  funnelConfig.maintenanceAltVoteWindowYears,
+                  baseFunnelConfig.maintenanceAltVoteWindowYears,
                 ),
               });
               return {
                 signals,
-                evaluation: evaluateCitizenAtRisk(signals, funnelConfig),
+                evaluation: evaluateCitizenAtRisk(signals, baseFunnelConfig),
               };
             }),
           );
@@ -342,14 +364,14 @@ const CitizensFunnelPage = () => {
       }
 
       const where = buildRecommendedWhere(
-        funnelConfig.funnelRecommendedMinNights,
+        baseFunnelConfig.funnelRecommendedMinNights,
       );
       const [listAction, finance] = await Promise.all([
         platform.user.get(
           {
             where,
             limit: Math.max(
-              funnelConfig.funnelRecommendedLimit,
+              baseFunnelConfig.funnelRecommendedLimit,
               CITIZEN_FUNNEL_LIST_LIMIT,
             ),
             page: 1,
@@ -374,19 +396,19 @@ const CitizensFunnelPage = () => {
           const recommendation = scoreCitizenRecommendation(
             nights,
             tokens,
-            funnelConfig.minStayDuration,
-            funnelConfig.tokensRequired,
-            funnelConfig.recommendedNightsWeight,
-            funnelConfig.recommendedTokensWeight,
+            baseFunnelConfig.minStayDuration,
+            baseFunnelConfig.tokensRequired,
+            baseFunnelConfig.recommendedNightsWeight,
+            baseFunnelConfig.recommendedTokensWeight,
           );
           return { signals, recommendation, ...recommendation };
         }),
       )
         .filter(
           (row) =>
-            row.score >= funnelConfig.recommendedReadinessThreshold,
+            row.score >= baseFunnelConfig.recommendedReadinessThreshold,
         )
-        .slice(0, funnelConfig.funnelRecommendedLimit);
+        .slice(0, baseFunnelConfig.funnelRecommendedLimit);
       setRecommendedRows(
         scored.map(({ signals, recommendation }) => ({
           signals,
@@ -410,8 +432,8 @@ const CitizensFunnelPage = () => {
     }
   }, [
     applicationPage,
+    baseFunnelConfig,
     fetchNightsInWindow,
-    funnelConfig,
     loadFinanceByUser,
     loadProposals,
     platform?.user,
