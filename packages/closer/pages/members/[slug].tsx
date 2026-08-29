@@ -216,14 +216,16 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
     };
   }, [member?._id, attendedEventIds, pastEventsCutoff]);
 
-  // Re-sync `about`/`aboutDraft` when navigating between member profiles.
+  // Re-sync profile fields when navigating between member profiles.
   // This page uses getInitialProps and stays mounted across
   // /members/[slug] -> /members/[slug] client-side navigations, so the
-  // useState initializers only run once. Without this, the About section would
-  // keep showing the previously viewed member's text.
+  // useState initializers only run once. Without this, About and places would
+  // keep showing the previously viewed member's data.
   useEffect(() => {
     setAbout(member?.about || '');
     setAboutDraft(member?.about || '');
+    setHomes(member?.settings?.homes || []);
+    setUpcomingVisits(member?.settings?.upcomingVisits || []);
   }, [member?._id]);
 
   // Federation profiles list the villages this member is tied to — as
@@ -859,12 +861,14 @@ const MemberPage = ({ member, loadError, bookingConfig }: MemberPageProps) => {
                 )}
 
                 <ProfileHomes
+                  key={`homes-${member._id}`}
                   homes={homes}
                   viewer={currentUser}
                   isOwnProfile={isOwnProfile}
                   onSave={saveHomes}
                 />
                 <ProfileUpcomingVisits
+                  key={`visits-${member._id}`}
                   visits={upcomingVisits}
                   viewer={currentUser}
                   isOwnProfile={isOwnProfile}

@@ -34,6 +34,9 @@ import PageNotFound from '../not-found';
 
 type UpdateUserFunction = (value: string | string[]) => Promise<void>;
 
+const EMPTY_USER_HOMES: UserHome[] = [];
+const EMPTY_UPCOMING_VISITS: UpcomingVisit[] = [];
+
 // Tab interface types
 type TabId = 'preferences' | 'account' | 'subscription' | 'notifications';
 
@@ -952,7 +955,7 @@ const SettingsPage = () => {
 
                 <div className="flex flex-col gap-6">
                   <ProfileHomes
-                    homes={user?.settings?.homes || []}
+                    homes={user?.settings?.homes || EMPTY_USER_HOMES}
                     viewer={user}
                     isOwnProfile
                     alwaysEditing
@@ -960,7 +963,9 @@ const SettingsPage = () => {
                     onSave={saveHomes}
                   />
                   <ProfileUpcomingVisits
-                    visits={user?.settings?.upcomingVisits || []}
+                    visits={
+                      user?.settings?.upcomingVisits || EMPTY_UPCOMING_VISITS
+                    }
                     viewer={user}
                     isOwnProfile
                     alwaysEditing

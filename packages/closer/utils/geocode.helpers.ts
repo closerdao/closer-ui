@@ -21,6 +21,9 @@ type NominatimResult = {
   };
 };
 
+const NOMINATIM_USER_AGENT =
+  'Closer/1.0 (profile-places; https://closer.earth)';
+
 const shortNameFromResult = (result: NominatimResult): string => {
   const address = result.address;
   return (
@@ -34,7 +37,27 @@ const shortNameFromResult = (result: NominatimResult): string => {
   );
 };
 
-export const searchPlaces = async (
+const mapNominatimResults = (
+  results: NominatimResult[],
+): GeocodeResult[] =>
+  results
+    .map((result) => {
+      const lat = Number(result.lat);
+      const lng = Number(result.lon);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+
+      const name = shortNameFromResult(result);
+      if (!name) return null;
+
+      return {
+        name,
+        nameLong: result.display_name || name,
+        coordinates: [lng, lat] as LngLat,
+      };
+    })
+    .filter((result): result is GeocodeResult => Boolean(result));
+
+export const searchNominatimPlaces = async (
   query: string,
   signal?: AbortSignal,
 ): Promise<GeocodeResult[]> => {
@@ -54,6 +77,7 @@ export const searchPlaces = async (
       signal,
       headers: {
         Accept: 'application/json',
+        'User-Agent': NOMINATIM_USER_AGENT,
       },
     },
   );
@@ -63,21 +87,28 @@ export const searchPlaces = async (
   }
 
   const results = (await response.json()) as NominatimResult[];
+  return mapNominatimResults(results);
+};
 
-  return results
-    .map((result) => {
-      const lat = Number(result.lat);
-      const lng = Number(result.lon);
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+export const searchPlaces = async (
+  query: string,
+  signal?: AbortSignal,
+): Promise<GeocodeResult[]> => {
+  const trimmed = query.trim();
+  if (trimmed.length < 2) return [];
 
-      const name = shortNameFromResult(result);
-      if (!name) return null;
+  const params = new URLSearchParams({ q: trimmed });
+  const response = await fetch(`/api/places/search?${params.toString()}`, {
+    signal,
+    headers: {
+      Accept: 'application/json',
+    },
+  });
 
-      return {
-        name,
-        nameLong: result.display_name || name,
-        coordinates: [lng, lat] as LngLat,
-      };
-    })
-    .filter((result): result is GeocodeResult => Boolean(result));
+  if (!response.ok) {
+    throw new Error(`Place search failed (${response.status})`);
+  }
+
+  const payload = (await response.json()) as { results?: GeocodeResult[] };
+  return Array.isArray(payload.results) ? payload.results : [];
 };

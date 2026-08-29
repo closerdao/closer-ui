@@ -53,9 +53,10 @@ const ProfileUpcomingVisits = ({
   const [endDate, setEndDate] = useState('');
   const [newVisibility, setNewVisibility] = useState<PlacePrivacy>('all');
 
+  const visitsSignature = JSON.stringify(visits);
   useEffect(() => {
-    setDraftVisits(visits);
-  }, [visits]);
+    setDraftVisits(JSON.parse(visitsSignature) as UpcomingVisit[]);
+  }, [visitsSignature]);
 
   useEffect(() => {
     if (alwaysEditing) setIsEditing(true);

@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { GeocodeResult, searchPlaces } from '../../utils/geocode.helpers';
-import { Input } from '../ui';
+import { Button, Input } from '../ui';
 
 type PlaceSearchInputProps = {
   label: string;
@@ -19,27 +19,36 @@ const PlaceSearchInput = ({
   onSelect,
 }: PlaceSearchInputProps) => {
   const t = useTranslations();
-  const [query, setQuery] = useState(selected?.nameLong || selected?.name || '');
+  const [query, setQuery] = useState(
+    selected?.nameLong || selected?.name || '',
+  );
   const [results, setResults] = useState<GeocodeResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const selectedLabelRef = useRef(selected?.nameLong || selected?.name || '');
 
   useEffect(() => {
-    setQuery(selected?.nameLong || selected?.name || '');
+    const selectedLabel = selected?.nameLong || selected?.name || '';
+    const previousLabel = selectedLabelRef.current;
+    selectedLabelRef.current = selectedLabel;
+
+    if (selected) {
+      setQuery(selectedLabel);
+      return;
+    }
+
+    setQuery((current) => (current === previousLabel ? '' : current));
   }, [selected?.name, selected?.nameLong]);
 
   useEffect(() => {
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
       abortRef.current?.abort();
     };
   }, []);
 
-  const runSearch = (value: string) => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
+  const runSearch = async (value: string) => {
     abortRef.current?.abort();
 
     if (value.trim().length < 2) {
@@ -49,31 +58,35 @@ const PlaceSearchInput = ({
       return;
     }
 
-    debounceRef.current = setTimeout(async () => {
-      const controller = new AbortController();
-      abortRef.current = controller;
-      setIsLoading(true);
-      setError(null);
-      try {
-        const places = await searchPlaces(value, controller.signal);
-        if (!controller.signal.aborted) {
-          setResults(places);
-          setIsOpen(true);
-        }
-      } catch (err) {
-        if ((err as Error)?.name === 'AbortError') return;
-        setResults([]);
-        setError(t('profile_places_search_error'));
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false);
-        }
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const places = await searchPlaces(value, controller.signal);
+      if (!controller.signal.aborted) {
+        setResults(places);
+        setIsOpen(true);
       }
-    }, 400);
+    } catch (err) {
+      if ((err as Error)?.name === 'AbortError') return;
+      setResults([]);
+      setError(t('profile_places_search_error'));
+    } finally {
+      if (!controller.signal.aborted) {
+        setIsLoading(false);
+      }
+    }
   };
 
   return (
-    <div className="relative flex flex-col gap-2">
+    <form
+      className="relative flex flex-col gap-2"
+      onSubmit={(event) => {
+        event.preventDefault();
+        runSearch(query);
+      }}
+    >
       <Input
         label={label}
         placeholder={placeholder}
@@ -82,13 +95,20 @@ const PlaceSearchInput = ({
           const value = event.target.value;
           setQuery(value);
           if (selected) onSelect(null);
-          runSearch(value);
-        }}
-        onBlur={() => {
-          setTimeout(() => setIsOpen(false), 150);
+          setResults([]);
+          setIsOpen(false);
         }}
         autoComplete="off"
       />
+      <Button
+        type="submit"
+        variant="secondary"
+        size="small"
+        isFullWidth={false}
+        className="self-start"
+      >
+        {t('generic_search')}
+      </Button>
       {isLoading && (
         <p className="text-xs text-gray-500">{t('generic_loading')}</p>
       )}
@@ -119,7 +139,7 @@ const PlaceSearchInput = ({
           {selected.nameLong}
         </p>
       )}
-    </div>
+    </form>
   );
 };
 

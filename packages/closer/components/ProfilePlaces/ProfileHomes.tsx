@@ -43,9 +43,10 @@ const ProfileHomes = ({
   );
   const [newVisibility, setNewVisibility] = useState<PlacePrivacy>('all');
 
+  const homesSignature = JSON.stringify(homes);
   useEffect(() => {
-    setDraftHomes(homes);
-  }, [homes]);
+    setDraftHomes(JSON.parse(homesSignature) as UserHome[]);
+  }, [homesSignature]);
 
   useEffect(() => {
     if (alwaysEditing) setIsEditing(true);
