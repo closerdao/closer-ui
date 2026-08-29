@@ -3,6 +3,7 @@ export * from './booking';
 export * from './expense';
 export * from './emailTemplate';
 export * from './channel';
+export * from './citizenFunnel';
 export * from './cohousingApplication';
 export * from './currency';
 export * from './donation';

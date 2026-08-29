@@ -266,6 +266,50 @@ export const configDescription: ConfigType[] = [
         type: 'text',
         default: '',
       },
+      maintenanceMinNights: {
+        type: 'number',
+        default: 28,
+      },
+      maintenanceNightsWindowYears: {
+        type: 'number',
+        default: 2,
+      },
+      maintenanceMinVotes: {
+        type: 'number',
+        default: 1,
+      },
+      maintenanceVoteWindowYears: {
+        type: 'number',
+        default: 1,
+      },
+      maintenanceAltMinVotes: {
+        type: 'number',
+        default: 3,
+      },
+      maintenanceAltVoteWindowYears: {
+        type: 'number',
+        default: 3,
+      },
+      foundingCitizenCutoffDate: {
+        type: 'text',
+        default: '2024-12-18',
+      },
+      presenceReminderMonths: {
+        type: 'number',
+        default: 6,
+      },
+      presenceFinalReminderMonths: {
+        type: 'number',
+        default: 3,
+      },
+      funnelRecommendedLimit: {
+        type: 'number',
+        default: 50,
+      },
+      funnelRecommendedMinNights: {
+        type: 'number',
+        default: 7,
+      },
     },
   },
   {

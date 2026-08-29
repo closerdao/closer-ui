@@ -200,6 +200,17 @@ export type CitizenshipConfig = {
   minVouchingStayDuration: number;
   tokensRequired: number;
   citizenTelegramGroupUrl?: string;
+  maintenanceMinNights?: number;
+  maintenanceNightsWindowYears?: number;
+  maintenanceMinVotes?: number;
+  maintenanceVoteWindowYears?: number;
+  maintenanceAltMinVotes?: number;
+  maintenanceAltVoteWindowYears?: number;
+  foundingCitizenCutoffDate?: string;
+  presenceReminderMonths?: number;
+  presenceFinalReminderMonths?: number;
+  funnelRecommendedLimit?: number;
+  funnelRecommendedMinNights?: number;
 };
 
 export type AffiliateConfig = {

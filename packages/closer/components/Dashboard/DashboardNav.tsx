@@ -27,6 +27,9 @@ const DashboardNav = () => {
     process.env.NEXT_PUBLIC_FEATURE_AFFILIATE === 'true';
   const isTokenEnabled = process.env.NEXT_PUBLIC_FEATURE_WEB3_WALLET === 'true';
   const isApplicationsEnabled = config?.applications?.enabled === true;
+  const isCitizenshipEnabled =
+    config?.citizenship?.enabled === true &&
+    process.env.NEXT_PUBLIC_FEATURE_CITIZENSHIP === 'true';
 
   const links = filterDashboardLinks(
     getDashboardLinks(t, {
@@ -35,6 +38,7 @@ const DashboardNav = () => {
       isAffiliateEnabled,
       isTokenEnabled,
       isApplicationsEnabled,
+      isCitizenshipEnabled,
     }),
     user?.roles || [],
     hasAccess,
