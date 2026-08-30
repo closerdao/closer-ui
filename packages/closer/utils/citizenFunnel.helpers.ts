@@ -7,6 +7,7 @@ import {
   CitizenAtRiskReason,
   CitizenFunnelTab,
   CitizenFunnelUserSignals,
+  CitizenFunnelVouch,
   CitizenPresenceStatus,
   CitizenRecommendedScore,
   CITIZEN_APPLICATION_STAGES,
@@ -27,7 +28,6 @@ const DEFAULT_ALT_VOTE_YEARS = 3;
 const DEFAULT_FOUNDING_CUTOFF = '2024-12-18';
 const DEFAULT_RECOMMENDED_LIMIT = 50;
 const DEFAULT_RECOMMENDED_MIN_NIGHTS = 7;
-const DEFAULT_READINESS_THRESHOLD = 0.6;
 const DEFAULT_NIGHTS_WEIGHT = 0.6;
 const DEFAULT_TOKENS_WEIGHT = 0.4;
 const DEFAULT_AT_RISK_MONTHS = 6;
@@ -62,7 +62,6 @@ export type ResolvedCitizenshipFunnelConfig = {
   foundingCitizenCutoffDate: string;
   funnelRecommendedLimit: number;
   funnelRecommendedMinNights: number;
-  recommendedReadinessThreshold: number;
   recommendedNightsWeight: number;
   recommendedTokensWeight: number;
   atRiskMonthsBeforeWindowEnd: number;
@@ -103,9 +102,6 @@ export const resolveCitizenshipFunnelConfig = (
   ),
   funnelRecommendedMinNights: Number(
     config?.funnelRecommendedMinNights ?? DEFAULT_RECOMMENDED_MIN_NIGHTS,
-  ),
-  recommendedReadinessThreshold: Number(
-    config?.recommendedReadinessThreshold ?? DEFAULT_READINESS_THRESHOLD,
   ),
   recommendedNightsWeight: Number(
     config?.recommendedNightsWeight ?? DEFAULT_NIGHTS_WEIGHT,
@@ -406,12 +402,41 @@ export const extractTotalNights = (user: any): number => {
   );
 };
 
-export const extractVouchCount = (user: any): number => {
+/**
+ * `vouched` arrives as an Immutable List on the platform path and a plain array
+ * from a raw API read, and each entry can itself be an Immutable Map.
+ */
+export const extractVouches = (user: any): CitizenFunnelVouch[] => {
   const raw = user?.vouched;
-  if (!raw) return 0;
-  if (typeof raw.toArray === 'function') return raw.toArray().length;
-  if (Array.isArray(raw)) return raw.length;
-  return 0;
+  const list =
+    typeof raw?.toJS === 'function'
+      ? raw.toJS()
+      : typeof raw?.toArray === 'function'
+      ? raw.toArray()
+      : Array.isArray(raw)
+      ? raw
+      : [];
+  return list.map((entry: any) => {
+    const vouch = typeof entry?.toJS === 'function' ? entry.toJS() : entry;
+    return {
+      vouchedBy: vouch?.vouchedBy ?? null,
+      vouchedAt: vouch?.vouchedAt ?? null,
+      message: vouch?.message ?? null,
+    };
+  });
+};
+
+export const extractVouchCount = (user: any): number =>
+  extractVouches(user).length;
+
+/** `stats.wallet` holds the $TDF, $Presence and $Sweat balances. */
+export const extractWalletBalance = (user: any, key: string): number =>
+  Number(user?.stats?.wallet?.[key] ?? 0) || 0;
+
+const toFiniteOrNull = (value: unknown): number | null => {
+  if (value === null || value === undefined || value === '') return null;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
 };
 
 export const mapUserToFunnelSignals = (
@@ -435,6 +460,8 @@ export const mapUserToFunnelSignals = (
       ? extras.totalNights
       : extractTotalNights(user);
 
+  const vouches = extractVouches(user);
+
   return {
     userId: String(user?._id || ''),
     screenname: user?.screenname,
@@ -443,16 +470,29 @@ export const mapUserToFunnelSignals = (
     photo: user?.photo ?? null,
     roles,
     created: user?.created ?? null,
+    lastActive: user?.lastactive ?? null,
     citizenshipAppliedAt: user?.citizenship?.appliedAt ?? null,
     citizenshipStatus: user?.citizenship?.status ?? null,
     citizenshipWhy: user?.citizenship?.why ?? null,
     citizenshipDate: user?.citizenship?.date ?? null,
+    citizenshipTokensToFinance: toFiniteOrNull(
+      user?.citizenship?.tokensToFinance,
+    ),
+    citizenshipTotalToPayInFiat: toFiniteOrNull(
+      user?.citizenship?.totalToPayInFiat,
+    ),
     tokenBalance: extractTokenBalance(user),
+    presenceBalance: extractWalletBalance(user, 'presence'),
+    sweatBalance: extractWalletBalance(user, 'sweat'),
+    walletAddress: user?.walletAddress ?? null,
+    kycPassed: Boolean(user?.kycPassed),
+    subscriptionPlan: user?.subscription?.plan ?? null,
     financedTokens: extras.financedTokens ?? 0,
     hasDelinquentFinancePlan: extras.hasDelinquentFinancePlan ?? false,
     totalNights,
     nightsInMaintenanceWindow: extras.nightsInMaintenanceWindow ?? null,
-    vouchCount: extractVouchCount(user),
+    vouchCount: vouches.length,
+    vouches,
     votesInPrimaryWindow: extras.votesInPrimaryWindow ?? null,
     votesInAltWindow: extras.votesInAltWindow ?? null,
     minVouchesNeeded: extras.minVouchesNeeded,

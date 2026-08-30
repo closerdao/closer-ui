@@ -3,9 +3,20 @@ import Link from 'next/link';
 
 import { ReactNode } from 'react';
 
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import {
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Home,
+  Star,
+  UserCheck,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import UserAvatarPlaceholder from '../../UserAvatarPlaceholder';
+import WalletDisplay from '../../display/walletDisplay';
 import { Card, LinkButton } from '../../ui';
 
 import {
@@ -20,6 +31,8 @@ import {
   deriveApplicationStage,
   ResolvedCitizenshipFunnelConfig,
 } from '../../../utils/citizenFunnel.helpers';
+
+dayjs.extend(relativeTime);
 
 export const FunnelBadge = ({
   children,
@@ -256,6 +269,197 @@ export const CitizenFunnelStrip = ({
   );
 };
 
+/**
+ * The compact per-user stats the admin user list shows, kept to the same
+ * colours so the two screens read as one system. Everything is conditional:
+ * a card for someone with no wallet activity stays as quiet as it was.
+ */
+const StatPill = ({
+  tone,
+  icon,
+  children,
+  title,
+}: {
+  tone: 'purple' | 'orange' | 'green' | 'blue' | 'yellow' | 'grey' | 'red';
+  icon?: ReactNode;
+  children: ReactNode;
+  title?: string;
+}) => {
+  const tones = {
+    purple: 'bg-purple-100 border-purple-400 text-purple-700',
+    orange: 'bg-orange-100 border-orange-400 text-orange-700',
+    green: 'bg-green-100 border-green-400 text-green-700',
+    blue: 'bg-blue-100 border-blue-400 text-blue-700',
+    yellow: 'bg-yellow-100 border-yellow-500 text-yellow-700',
+    grey: 'bg-gray-100 border-gray-300 text-gray-700',
+    red: 'bg-red-100 border-red-400 text-red-700',
+  };
+  return (
+    <span
+      title={title}
+      className={`inline-flex items-center gap-1 border rounded px-1.5 py-0.5 text-xs whitespace-nowrap ${tones[tone]}`}
+    >
+      {icon}
+      {children}
+    </span>
+  );
+};
+
+const round = (value: number) => parseFloat(String(value || 0)).toFixed(0);
+
+export const FunnelSignalPills = ({
+  signals,
+}: {
+  signals: CitizenFunnelUserSignals;
+}) => {
+  const t = useTranslations();
+  const pills: ReactNode[] = [];
+
+  if (signals.tokenBalance > 0) {
+    pills.push(
+      <StatPill key="tdf" tone="purple" title={t('manage_users_token_balance')}>
+        {round(signals.tokenBalance)} $TDF
+      </StatPill>,
+    );
+  }
+  if (signals.financedTokens > 0) {
+    pills.push(
+      <StatPill key="financed" tone="purple">
+        +{round(signals.financedTokens)} {t('citizen_funnel_financed')}
+      </StatPill>,
+    );
+  }
+  if (signals.presenceBalance > 0) {
+    pills.push(
+      <StatPill
+        key="presence"
+        tone="orange"
+        icon={<Home className="w-3 h-3" />}
+      >
+        {round(signals.presenceBalance)} $Presence
+      </StatPill>,
+    );
+  }
+  if (signals.sweatBalance > 0) {
+    pills.push(
+      <StatPill key="sweat" tone="green" icon={<Home className="w-3 h-3" />}>
+        {round(signals.sweatBalance)} $Sweat
+      </StatPill>,
+    );
+  }
+  if (signals.vouchCount > 0) {
+    pills.push(
+      <StatPill
+        key="vouches"
+        tone="green"
+        icon={<UserCheck className="w-3 h-3" />}
+        title={t('manage_users_vouches')}
+      >
+        {signals.vouchCount}
+      </StatPill>,
+    );
+  }
+  if (signals.kycPassed) {
+    pills.push(
+      <StatPill
+        key="kyc"
+        tone="blue"
+        icon={<CheckCircle className="w-3 h-3" />}
+        title={t('manage_users_kyc_passed')}
+      >
+        KYC
+      </StatPill>,
+    );
+  }
+  if (signals.subscriptionPlan) {
+    pills.push(
+      <StatPill key="plan" tone="grey">
+        {signals.subscriptionPlan.slice(0, 1).toUpperCase() +
+          signals.subscriptionPlan.slice(1)}
+      </StatPill>,
+    );
+  }
+  if (signals.citizenshipDate) {
+    pills.push(
+      <StatPill key="citizen" tone="yellow" icon={<Star className="w-3 h-3" />}>
+        {t('manage_users_citizen')}
+      </StatPill>,
+    );
+  }
+  if (signals.hasDelinquentFinancePlan) {
+    pills.push(
+      <StatPill
+        key="delinquent"
+        tone="red"
+        icon={<AlertTriangle className="w-3 h-3" />}
+      >
+        {t('citizen_funnel_finance_overdue')}
+      </StatPill>,
+    );
+  }
+
+  if (pills.length === 0) return null;
+  return <div className="flex flex-wrap gap-1.5">{pills}</div>;
+};
+
+/** Joined / last active / citizen since — the timeline manage-users shows. */
+export const FunnelTimeline = ({
+  signals,
+}: {
+  signals: CitizenFunnelUserSignals;
+}) => {
+  const t = useTranslations();
+  const parts: { key: string; label: string; value: string }[] = [];
+
+  if (signals.citizenshipDate) {
+    parts.push({
+      key: 'citizen-since',
+      label: t('manage_users_citizen_since'),
+      value: dayjs(signals.citizenshipDate).format('MMM D, YYYY'),
+    });
+  } else if (signals.citizenshipAppliedAt) {
+    parts.push({
+      key: 'applied',
+      label: t('manage_users_citizenship_applied'),
+      value: dayjs(signals.citizenshipAppliedAt).format('MMM D, YYYY'),
+    });
+  } else if (signals.created) {
+    parts.push({
+      key: 'joined',
+      label: t('manage_users_joined'),
+      value: dayjs(signals.created).format('MMM D, YYYY'),
+    });
+  }
+
+  if (signals.lastActive) {
+    parts.push({
+      key: 'last-active',
+      label: t('manage_users_last_active'),
+      value: dayjs(signals.lastActive).fromNow(),
+    });
+  }
+
+  if (parts.length === 0 && !signals.walletAddress) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+      {parts.map((part) => (
+        <span key={part.key} className="inline-flex items-center gap-1">
+          <Clock className="w-3 h-3 text-gray-400" />
+          {part.label}: <span className="text-gray-700">{part.value}</span>
+        </span>
+      ))}
+      {signals.walletAddress && (
+        <WalletDisplay
+          address={signals.walletAddress}
+          variant="inline"
+          className="text-xs"
+        />
+      )}
+    </div>
+  );
+};
+
 const RowHeader = ({
   signals,
   meta,
@@ -300,14 +504,14 @@ export const CitizenFunnelApplicationRow = ({
 
   return (
     <FunnelCard>
-      <RowHeader
-        signals={signals}
-        meta={signals.citizenshipWhy || signals.email}
-      >
+      <RowHeader signals={signals} meta={signals.email}>
         <FunnelBadge tone={stage === 'ready' ? 'green' : 'pink'}>
           {t(`citizen_funnel_stage_${stage}`)}
         </FunnelBadge>
       </RowHeader>
+
+      <FunnelSignalPills signals={signals} />
+      <FunnelTimeline signals={signals} />
 
       <FunnelStageDots stage={stage} />
 
@@ -325,6 +529,47 @@ export const CitizenFunnelApplicationRow = ({
           done={tokens >= config.tokensRequired}
         />
       </div>
+
+      {(signals.citizenshipStatus ||
+        signals.citizenshipTokensToFinance !== null ||
+        signals.citizenshipTotalToPayInFiat !== null) && (
+        <dl className="grid grid-cols-2 sm:grid-cols-3 gap-2 m-0 text-xs">
+          {signals.citizenshipStatus && (
+            <div className="flex flex-col">
+              <dt className="text-gray-400">
+                {t('manage_users_citizenship_status')}
+              </dt>
+              <dd className="m-0 text-gray-700">{signals.citizenshipStatus}</dd>
+            </div>
+          )}
+          {signals.citizenshipTokensToFinance !== null && (
+            <div className="flex flex-col">
+              <dt className="text-gray-400">
+                {t('manage_users_citizenship_tokens_financed')}
+              </dt>
+              <dd className="m-0 text-gray-700">
+                {signals.citizenshipTokensToFinance} TDF
+              </dd>
+            </div>
+          )}
+          {signals.citizenshipTotalToPayInFiat !== null && (
+            <div className="flex flex-col">
+              <dt className="text-gray-400">
+                {t('manage_users_citizenship_total_to_pay')}
+              </dt>
+              <dd className="m-0 text-gray-700">
+                €{signals.citizenshipTotalToPayInFiat}
+              </dd>
+            </div>
+          )}
+        </dl>
+      )}
+
+      {signals.citizenshipWhy && (
+        <p className="text-sm text-gray-600 italic m-0 line-clamp-3">
+          &ldquo;{signals.citizenshipWhy}&rdquo;
+        </p>
+      )}
 
       <div className="flex items-center justify-between gap-3 text-sm text-gray-500">
         <span>
@@ -398,6 +643,9 @@ export const CitizenFunnelCitizenRow = ({
           <FunnelBadge>{t('citizen_funnel_status_on_track')}</FunnelBadge>
         )}
       </RowHeader>
+
+      <FunnelSignalPills signals={signals} />
+      <FunnelTimeline signals={signals} />
 
       {nightsKnown ? (
         <div className="flex flex-col gap-1">
@@ -514,6 +762,9 @@ export const CitizenFunnelRecommendedRow = ({
         </div>
       </div>
 
+      <FunnelSignalPills signals={signals} />
+      <FunnelTimeline signals={signals} />
+
       <div className="grid grid-cols-2 gap-4">
         <FunnelMeter
           label={t('citizen_funnel_meter_nights')}
@@ -575,9 +826,9 @@ export const CitizenFunnelConfigPanel = ({
       value: `${config.atRiskMonthsBeforeWindowEnd} mo`,
     },
     {
-      label: t('citizen_funnel_config_readiness'),
-      hint: t('citizen_funnel_config_readiness_hint'),
-      value: String(config.recommendedReadinessThreshold),
+      label: t('citizen_funnel_config_recommended_list'),
+      hint: t('citizen_funnel_config_recommended_list_hint'),
+      value: `Top ${config.funnelRecommendedLimit} · ${config.funnelRecommendedMinNights}+ nights`,
     },
   ];
 

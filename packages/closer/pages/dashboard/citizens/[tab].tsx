@@ -32,7 +32,6 @@ import {
   CitizenFunnelUserSignals,
   CitizenHealthFilter,
   CitizenRecommendedScore,
-  CITIZEN_APPLICATION_STAGES,
 } from '../../../types/citizenFunnel';
 import { FinanceApplication } from '../../../types/subscriptions';
 import api, { formatSearch } from '../../../utils/api';
@@ -83,18 +82,26 @@ type RecommendedRow = {
 const toPlainUser = (row: any) => (row?.toJS ? row.toJS() : row);
 
 /**
- * `platform.<model>.get` resolves with an error action instead of rejecting,
- * so an unauthorised or failed read otherwise reads as "no results".
+ * A failed `platform.<model>.get` never rejects: its catch dispatches an error
+ * action and resolves with `undefined`. Reading `results` off that silently
+ * turns an unauthorised or broken read into an empty funnel, so treat a missing
+ * action (or one carrying an error) as the failure it is.
  */
+const assertLoaded = (action: any) => {
+  if (!action || action.error) {
+    throw new Error(String(action?.error || 'Request failed'));
+  }
+  return action;
+};
+
 const resultsOrThrow = (action: any): any[] => {
-  if (action?.error) throw new Error(String(action.error));
-  const rows = action?.results?.toJS?.() ?? action?.results ?? [];
+  const loaded = assertLoaded(action);
+  const rows = loaded.results?.toJS?.() ?? loaded.results ?? [];
   return Array.isArray(rows) ? rows : [];
 };
 
 const countOrThrow = (action: any): number => {
-  if (action?.error) throw new Error(String(action.error));
-  const count = Number(action?.results);
+  const count = Number(assertLoaded(action).results);
   return Number.isFinite(count) ? count : 0;
 };
 
@@ -271,49 +278,39 @@ const CitizensFunnelPage = () => {
     const generation = ++loadGenerationRef.current;
     const isCurrent = () => generation === loadGenerationRef.current;
 
-    if (tab === 'config') {
-      try {
-        const citizenCountAction = await platform.user.getCount({
-          where: buildCitizensWhere(),
-        });
-        if (!isCurrent()) return;
-        setCitizenTotal(countOrThrow(citizenCountAction));
-      } catch {
-        /* the config tab reads fine without the derived vouch threshold */
-      }
-      return;
-    }
-
     setLoading(true);
     setHasError(false);
     try {
-      if (tab === 'applications') {
-        /**
-         * Applications in progress are a bounded set, so they are loaded in
-         * one page and filtered client-side. Paging server-side made the stage
-         * strip count only the visible page and the stage filter hide rows the
-         * pager still counted.
-         */
-        const where = buildApplicationsWhere();
-        const [listAction, finance, citizenCountAction] = await Promise.all([
+      /**
+       * The stage strip sits above every tab, so the applications list and the
+       * citizen headcount behind it load whichever tab is open.
+       *
+       * Applications in progress are a bounded set, so they come back in one
+       * page and are filtered client-side. Paging them server-side made the
+       * strip count only the visible page and the stage filter hide rows the
+       * pager still counted.
+       */
+      const [applicationsAction, citizenCountAction, finance] =
+        await Promise.all([
           platform.user.get(
             {
-              where,
+              where: buildApplicationsWhere(),
               limit: MAX_USERS_TO_FETCH,
               page: 1,
               sort_by: '-citizenship.appliedAt',
             },
             { force: true },
           ),
-          loadFinanceByUser(),
           platform.user.getCount({ where: buildCitizensWhere() }),
+          loadFinanceByUser(),
         ]);
-        if (!isCurrent()) return;
-        const list = resultsOrThrow(listAction).map(toPlainUser);
-        const citizenCount = countOrThrow(citizenCountAction);
-        setCitizenTotal(citizenCount);
-        setApplicationRows(
-          list.map((u) =>
+      if (!isCurrent()) return;
+      const citizenCount = countOrThrow(citizenCountAction);
+      setCitizenTotal(citizenCount);
+      setApplicationRows(
+        resultsOrThrow(applicationsAction)
+          .map(toPlainUser)
+          .map((u) =>
             mapUserToFunnelSignals(u, {
               financedTokens: finance.financedByUser[String(u._id)] || 0,
               hasDelinquentFinancePlan: finance.delinquentUsers.has(
@@ -322,25 +319,25 @@ const CitizensFunnelPage = () => {
               minVouchesNeeded: computeMinVouches(citizenCount),
             }),
           ),
-        );
+      );
+
+      if (tab === 'applications' || tab === 'config') {
         setCitizenRows([]);
         setRecommendedRows([]);
         return;
       }
 
       if (tab === 'citizens') {
-        const where = buildCitizensWhere();
-        const [listAction, finance, proposals] = await Promise.all([
+        const [listAction, proposals] = await Promise.all([
           platform.user.get(
             {
-              where,
+              where: buildCitizensWhere(),
               limit: MAX_USERS_TO_FETCH,
               page: 1,
               sort_by: '-lastactive',
             },
             { force: true },
           ),
-          loadFinanceByUser(),
           loadProposals(),
         ]);
         if (!isCurrent()) return;
@@ -378,8 +375,6 @@ const CitizensFunnelPage = () => {
         });
 
         setCitizenRows(enriched);
-        setCitizenTotal(enriched.length);
-        setApplicationRows([]);
         setRecommendedRows([]);
         return;
       }
@@ -387,21 +382,18 @@ const CitizensFunnelPage = () => {
       const where = buildRecommendedWhere(
         baseFunnelConfig.funnelRecommendedMinNights,
       );
-      const [listAction, finance] = await Promise.all([
-        platform.user.get(
-          {
-            where,
-            limit: Math.max(
-              baseFunnelConfig.funnelRecommendedLimit,
-              CITIZEN_FUNNEL_LIST_LIMIT,
-            ),
-            page: 1,
-            sort_by: '-stats.all_time.presence',
-          },
-          { force: true },
-        ),
-        loadFinanceByUser(),
-      ]);
+      const listAction = await platform.user.get(
+        {
+          where,
+          limit: Math.max(
+            baseFunnelConfig.funnelRecommendedLimit,
+            CITIZEN_FUNNEL_LIST_LIMIT,
+          ),
+          page: 1,
+          sort_by: '-stats.all_time.presence',
+        },
+        { force: true },
+      );
       if (!isCurrent()) return;
       const list = resultsOrThrow(listAction).map(toPlainUser);
       const scored = sortRecommendedByScore(
@@ -421,18 +413,13 @@ const CitizensFunnelPage = () => {
           );
           return { signals, recommendation, ...recommendation };
         }),
-      )
-        .filter(
-          (row) => row.score >= baseFunnelConfig.recommendedReadinessThreshold,
-        )
-        .slice(0, baseFunnelConfig.funnelRecommendedLimit);
+      ).slice(0, baseFunnelConfig.funnelRecommendedLimit);
       setRecommendedRows(
         scored.map(({ signals, recommendation }) => ({
           signals,
           recommendation,
         })),
       );
-      setApplicationRows([]);
       setCitizenRows([]);
     } catch {
       if (!isCurrent()) return;
@@ -470,8 +457,13 @@ const CitizensFunnelPage = () => {
     return citizenRows.filter((row) => row.evaluation.isAtRisk);
   }, [citizenRows, healthFilter]);
 
-  const activeList = tab === 'citizens' ? filteredCitizens : filteredApplications;
-  const listTotal = activeList.length;
+  /** Only the two paged tabs have a list to page through. */
+  const listTotal =
+    tab === 'citizens'
+      ? filteredCitizens.length
+      : tab === 'applications'
+      ? filteredApplications.length
+      : 0;
   const pageStart = (page - 1) * CITIZEN_FUNNEL_LIST_LIMIT;
 
   const visibleApplications = useMemo(
@@ -524,14 +516,6 @@ const CitizensFunnelPage = () => {
     return <PageNotAllowed />;
   }
 
-  const emptyStageCounts = CITIZEN_APPLICATION_STAGES.reduce(
-    (acc, stage) => {
-      acc[stage] = 0;
-      return acc;
-    },
-    {} as Record<CitizenApplicationStage, number>,
-  );
-
   return (
     <>
       <Head>
@@ -545,18 +529,12 @@ const CitizensFunnelPage = () => {
             subtitle={t('citizen_funnel_subtitle')}
           />
 
-          {(tab === 'applications' || tab === 'citizens') && (
-            <CitizenFunnelStrip
-              counts={
-                tab === 'applications'
-                  ? (stageCounts as Record<CitizenApplicationStage, number>)
-                  : emptyStageCounts
-              }
-              active={tab === 'citizens' ? 'citizen' : stageFilter}
-              onPick={handleStripPick}
-              citizenCount={citizenTotal}
-            />
-          )}
+          <CitizenFunnelStrip
+            counts={stageCounts as Record<CitizenApplicationStage, number>}
+            active={tab === 'citizens' ? 'citizen' : stageFilter}
+            onPick={handleStripPick}
+            citizenCount={citizenTotal}
+          />
 
           <nav
             className="flex flex-wrap gap-2"
@@ -652,9 +630,7 @@ const CitizensFunnelPage = () => {
                   tokensWeight: Math.round(
                     funnelConfig.recommendedTokensWeight * 100,
                   ),
-                  threshold: Math.round(
-                    funnelConfig.recommendedReadinessThreshold * 100,
-                  ),
+                  nights: funnelConfig.funnelRecommendedMinNights,
                 })}
               </p>
             </div>
@@ -725,10 +701,7 @@ const CitizensFunnelPage = () => {
             </div>
           )}
 
-          {tab !== 'recommended' &&
-            tab !== 'config' &&
-            !loading &&
-            listTotal > CITIZEN_FUNNEL_LIST_LIMIT && (
+          {!loading && listTotal > CITIZEN_FUNNEL_LIST_LIMIT && (
               <Pagination
                 loadPage={(nextPage: number) => setPage(nextPage)}
                 page={page}

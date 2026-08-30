@@ -211,7 +211,6 @@ export type CitizenshipConfig = {
   presenceFinalReminderMonths?: number;
   funnelRecommendedLimit?: number;
   funnelRecommendedMinNights?: number;
-  recommendedReadinessThreshold?: number;
   recommendedNightsWeight?: number;
   recommendedTokensWeight?: number;
   atRiskMonthsBeforeWindowEnd?: number;

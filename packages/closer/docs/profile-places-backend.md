@@ -43,16 +43,27 @@ existing `PATCH /user/:id` path.
 
 ## Patch payloads the UI sends
 
-```json
-{ "settings": { "homes": [ /* full replacement array */ ] } }
-```
+`PATCH /user/:id` replaces `settings` wholesale — it does not deep merge — so
+the UI sends the member's **whole** settings object with the changed keys
+folded in, built by `mergeUserSettings()`
+(`packages/closer/utils/userSettings.helpers.ts`):
 
 ```json
-{ "settings": { "upcomingVisits": [ /* full replacement array */ ] } }
+{
+  "settings": {
+    "newsletter_weekly": true,
+    "push_notifications_enabled": false,
+    "homes": [ /* full replacement array */ ]
+  }
+}
 ```
 
-Please **merge** into `settings` (same as `newsletter_weekly`) rather than
-replacing the whole settings object, so other keys are preserved.
+Both `homes` and `upcomingVisits` are full-replacement arrays inside that
+object.
+
+**Ask:** deep-merge `settings` server-side instead. Until then every writer has
+to round-trip the whole object, so two concurrent savers (e.g. the push
+notification context and the settings page) can still clobber each other's key.
 
 ## Privacy (`visibility`)
 

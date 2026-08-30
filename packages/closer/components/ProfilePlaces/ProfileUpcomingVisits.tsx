@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 import dayjs from 'dayjs';
-import { CalendarDays, Plus, Trash2 } from 'lucide-react';
+import { CalendarDays, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { User } from '../../contexts/auth/types';
@@ -15,6 +15,7 @@ import {
   sortUpcomingVisits,
 } from '../../utils/userPlaces.helpers';
 import { Button, Input } from '../ui';
+import PlaceComposer from './PlaceComposer';
 import PlacePrivacySelect from './PlacePrivacySelect';
 import PlaceSearchInput from './PlaceSearchInput';
 
@@ -45,7 +46,8 @@ const ProfileUpcomingVisits = ({
   const [draftVisits, setDraftVisits] = useState<UpcomingVisit[]>(visits);
   const [isEditing, setIsEditing] = useState(alwaysEditing);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [addError, setAddError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [selectedPlace, setSelectedPlace] = useState<GeocodeResult | null>(
     null,
   );
@@ -78,19 +80,19 @@ const ProfileUpcomingVisits = ({
 
   const addVisit = () => {
     if (!selectedPlace) {
-      setError(t('profile_places_select_place_required'));
+      setAddError(t('profile_places_select_place_required'));
       return;
     }
     if (!startDate) {
-      setError(t('profile_visits_start_required'));
+      setAddError(t('profile_visits_start_required'));
       return;
     }
     if (endDate && endDate < startDate) {
-      setError(t('profile_visits_end_before_start'));
+      setAddError(t('profile_visits_end_before_start'));
       return;
     }
 
-    setError(null);
+    setAddError(null);
     setDraftVisits((prev) =>
       sortUpcomingVisits([
         ...prev,
@@ -117,20 +119,18 @@ const ProfileUpcomingVisits = ({
 
   const updateVisibility = (id: string, visibility: PlacePrivacy) => {
     setDraftVisits((prev) =>
-      prev.map((visit) =>
-        visit.id === id ? { ...visit, visibility } : visit,
-      ),
+      prev.map((visit) => (visit.id === id ? { ...visit, visibility } : visit)),
     );
   };
 
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      setError(null);
+      setSaveError(null);
       await onSave(sortUpcomingVisits(draftVisits));
       if (!alwaysEditing) setIsEditing(false);
     } catch (err) {
-      setError(parseMessageFromError(err));
+      setSaveError(parseMessageFromError(err));
     } finally {
       setIsSaving(false);
     }
@@ -139,7 +139,8 @@ const ProfileUpcomingVisits = ({
   const handleCancel = () => {
     setDraftVisits(visits);
     resetForm();
-    setError(null);
+    setAddError(null);
+    setSaveError(null);
     if (!alwaysEditing) setIsEditing(false);
   };
 
@@ -154,7 +155,9 @@ const ProfileUpcomingVisits = ({
       <div className="flex justify-between items-center mb-4 gap-3">
         <div className="flex flex-col gap-1">
           <h4 className="font-medium text-xl">{t('profile_visits_title')}</h4>
-          <p className="text-sm text-gray-500">{t('profile_visits_subtitle')}</p>
+          <p className="text-sm text-gray-500">
+            {t('profile_visits_subtitle')}
+          </p>
         </div>
         {isOwnProfile && !alwaysEditing && !isEditing && (
           <button
@@ -238,47 +241,41 @@ const ProfileUpcomingVisits = ({
       )}
 
       {isEditing && (
-        <div className="flex flex-col gap-3 border-t border-gray-100 pt-4">
-          <PlaceSearchInput
-            label={t('profile_visits_place_label')}
-            placeholder={t('profile_visits_place_placeholder')}
-            selected={selectedPlace}
-            onSelect={setSelectedPlace}
-          />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Input
-              label={t('profile_visits_start_label')}
-              type="date"
-              value={startDate}
-              onChange={(event) => setStartDate(event.target.value)}
-            />
-            <Input
-              label={t('profile_visits_end_label')}
-              type="date"
-              value={endDate}
-              min={startDate || undefined}
-              onChange={(event) => setEndDate(event.target.value)}
-            />
-          </div>
-          <PlacePrivacySelect
-            value={newVisibility}
-            onChange={setNewVisibility}
-          />
-          <Button
-            onClick={addVisit}
-            variant="secondary"
-            size="small"
-            isFullWidth={false}
-            className="self-start"
+        <div className="flex flex-col gap-4">
+          <PlaceComposer
+            title={t('profile_visits_add_button')}
+            visibility={newVisibility}
+            onVisibilityChange={setNewVisibility}
+            onAdd={addVisit}
+            error={addError}
           >
-            <span className="inline-flex items-center gap-1.5">
-              <Plus className="w-4 h-4" />
-              {t('profile_visits_add_button')}
-            </span>
-          </Button>
-          {error && (
+            <PlaceSearchInput
+              label={t('profile_visits_place_label')}
+              placeholder={t('profile_visits_place_placeholder')}
+              selected={selectedPlace}
+              onSelect={setSelectedPlace}
+            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Input
+                label={t('profile_visits_start_label')}
+                type="date"
+                value={startDate}
+                onChange={(event) => setStartDate(event.target.value)}
+                className="w-full"
+              />
+              <Input
+                label={t('profile_visits_end_label')}
+                type="date"
+                value={endDate}
+                min={startDate || undefined}
+                onChange={(event) => setEndDate(event.target.value)}
+                className="w-full"
+              />
+            </div>
+          </PlaceComposer>
+          {saveError && (
             <p className="validation-error">
-              {t('members_slug_error_prefix')} {error}
+              {t('members_slug_error_prefix')} {saveError}
             </p>
           )}
           <div className="flex gap-2">

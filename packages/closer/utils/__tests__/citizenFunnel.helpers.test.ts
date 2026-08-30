@@ -6,6 +6,7 @@ import {
   deriveApplicationStage,
   evaluateCitizenAtRisk,
   evaluateCitizenVoting,
+  extractVouches,
   isCitizenRole,
   isFoundingCitizen,
   mapUserToFunnelSignals,
@@ -300,6 +301,67 @@ describe('citizenFunnel.helpers', () => {
       expect(signals.totalNights).toBe(9);
       expect(signals.vouchCount).toBe(2);
       expect(signals.citizenshipWhy).toBe('hello');
+    });
+
+    it('pulls the wallet, KYC and citizenship detail the admin list shows', () => {
+      const signals = mapUserToFunnelSignals({
+        _id: 'abc',
+        screenname: 'Ada',
+        roles: ['member'],
+        lastactive: '2026-08-20',
+        walletAddress: '0xabc',
+        kycPassed: true,
+        subscription: { plan: 'wanderer' },
+        stats: {
+          wallet: { tdf: 12, presence: 40.5, sweat: 3 },
+          all_time: { presence: 9 },
+        },
+        citizenship: {
+          date: '2026-03-01',
+          tokensToFinance: 20,
+          totalToPayInFiat: 1500,
+        },
+      });
+      expect(signals.presenceBalance).toBe(40.5);
+      expect(signals.sweatBalance).toBe(3);
+      expect(signals.kycPassed).toBe(true);
+      expect(signals.walletAddress).toBe('0xabc');
+      expect(signals.subscriptionPlan).toBe('wanderer');
+      expect(signals.lastActive).toBe('2026-08-20');
+      expect(signals.citizenshipTokensToFinance).toBe(20);
+      expect(signals.citizenshipTotalToPayInFiat).toBe(1500);
+    });
+
+    it('defaults the new signals rather than reading undefined off them', () => {
+      const signals = mapUserToFunnelSignals({ _id: 'abc', roles: [] });
+      expect(signals.presenceBalance).toBe(0);
+      expect(signals.sweatBalance).toBe(0);
+      expect(signals.kycPassed).toBe(false);
+      expect(signals.subscriptionPlan).toBe(null);
+      expect(signals.citizenshipTokensToFinance).toBe(null);
+      expect(signals.vouches).toEqual([]);
+    });
+  });
+
+  describe('extractVouches', () => {
+    it('reads plain arrays and Immutable lists alike', () => {
+      const entries = [
+        { vouchedBy: 'u1', vouchedAt: '2026-01-01', message: 'yes' },
+      ];
+      expect(extractVouches({ vouched: entries })).toEqual(entries);
+      expect(extractVouches({ vouched: { toJS: () => entries } })).toEqual(
+        entries,
+      );
+      expect(extractVouches({ vouched: { toArray: () => entries } })).toEqual(
+        entries,
+      );
+      expect(extractVouches({})).toEqual([]);
+    });
+
+    it('fills missing vouch fields with null', () => {
+      expect(extractVouches({ vouched: [{ vouchedBy: 'u1' }] })).toEqual([
+        { vouchedBy: 'u1', vouchedAt: null, message: null },
+      ]);
     });
   });
 });

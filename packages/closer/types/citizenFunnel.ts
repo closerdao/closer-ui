@@ -30,6 +30,12 @@ export type CitizenHealthFilter = 'all' | 'at-risk';
 
 export type CitizenPresenceStatus = 'met' | 'on-track' | 'risk';
 
+export type CitizenFunnelVouch = {
+  vouchedBy?: string | null;
+  vouchedAt?: string | Date | null;
+  message?: string | null;
+};
+
 export type CitizenFunnelUserSignals = {
   userId: string;
   screenname?: string;
@@ -38,16 +44,27 @@ export type CitizenFunnelUserSignals = {
   photo?: string | null;
   roles: string[];
   created?: string | Date | null;
+  lastActive?: string | Date | null;
   citizenshipAppliedAt?: string | Date | null;
   citizenshipStatus?: string | null;
   citizenshipWhy?: string | null;
   citizenshipDate?: string | Date | null;
+  /** Financing figures the applicant committed to, from `citizenship.*`. */
+  citizenshipTokensToFinance: number | null;
+  citizenshipTotalToPayInFiat: number | null;
   tokenBalance: number;
+  /** The other two `stats.wallet` balances the admin user list surfaces. */
+  presenceBalance: number;
+  sweatBalance: number;
+  walletAddress?: string | null;
+  kycPassed: boolean;
+  subscriptionPlan?: string | null;
   financedTokens: number;
   hasDelinquentFinancePlan: boolean;
   totalNights: number | null;
   nightsInMaintenanceWindow: number | null;
   vouchCount: number;
+  vouches: CitizenFunnelVouch[];
   votesInPrimaryWindow: number | null;
   votesInAltWindow: number | null;
   minVouchesNeeded?: number;

@@ -310,10 +310,6 @@ export const configDescription: ConfigType[] = [
         type: 'number',
         default: 7,
       },
-      recommendedReadinessThreshold: {
-        type: 'number',
-        default: 0.6,
-      },
       recommendedNightsWeight: {
         type: 'number',
         default: 0.6,

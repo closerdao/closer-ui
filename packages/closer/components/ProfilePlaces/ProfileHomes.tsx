@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from 'react';
 
-import { MapPin, Plus, Trash2 } from 'lucide-react';
+import { MapPin, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { User } from '../../contexts/auth/types';
 import { PlacePrivacy, UserHome } from '../../types/userPlaces';
-import { GeocodeResult } from '../../utils/geocode.helpers';
 import { parseMessageFromError } from '../../utils/common';
+import { GeocodeResult } from '../../utils/geocode.helpers';
 import {
   createPlaceGeoJson,
   createPlaceId,
   filterVisibleHomes,
 } from '../../utils/userPlaces.helpers';
 import { Button } from '../ui';
+import PlaceComposer from './PlaceComposer';
 import PlacePrivacySelect from './PlacePrivacySelect';
 import PlaceSearchInput from './PlaceSearchInput';
 
@@ -37,7 +38,8 @@ const ProfileHomes = ({
   const [draftHomes, setDraftHomes] = useState<UserHome[]>(homes);
   const [isEditing, setIsEditing] = useState(alwaysEditing);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [addError, setAddError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [selectedPlace, setSelectedPlace] = useState<GeocodeResult | null>(
     null,
   );
@@ -59,10 +61,10 @@ const ProfileHomes = ({
 
   const addHome = () => {
     if (!selectedPlace) {
-      setError(t('profile_places_select_place_required'));
+      setAddError(t('profile_places_select_place_required'));
       return;
     }
-    setError(null);
+    setAddError(null);
     setDraftHomes((prev) => [
       ...prev,
       {
@@ -93,11 +95,11 @@ const ProfileHomes = ({
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      setError(null);
+      setSaveError(null);
       await onSave(draftHomes);
       if (!alwaysEditing) setIsEditing(false);
     } catch (err) {
-      setError(parseMessageFromError(err));
+      setSaveError(parseMessageFromError(err));
     } finally {
       setIsSaving(false);
     }
@@ -106,7 +108,8 @@ const ProfileHomes = ({
   const handleCancel = () => {
     setDraftHomes(homes);
     setSelectedPlace(null);
-    setError(null);
+    setAddError(null);
+    setSaveError(null);
     if (!alwaysEditing) setIsEditing(false);
   };
 
@@ -200,32 +203,24 @@ const ProfileHomes = ({
       )}
 
       {isEditing && (
-        <div className="flex flex-col gap-3 border-t border-gray-100 pt-4">
-          <PlaceSearchInput
-            label={t('profile_homes_place_label')}
-            placeholder={t('profile_homes_place_placeholder')}
-            selected={selectedPlace}
-            onSelect={setSelectedPlace}
-          />
-          <PlacePrivacySelect
-            value={newVisibility}
-            onChange={setNewVisibility}
-          />
-          <Button
-            onClick={addHome}
-            variant="secondary"
-            size="small"
-            isFullWidth={false}
-            className="self-start"
+        <div className="flex flex-col gap-4">
+          <PlaceComposer
+            title={t('profile_homes_add_button')}
+            visibility={newVisibility}
+            onVisibilityChange={setNewVisibility}
+            onAdd={addHome}
+            error={addError}
           >
-            <span className="inline-flex items-center gap-1.5">
-              <Plus className="w-4 h-4" />
-              {t('profile_homes_add_button')}
-            </span>
-          </Button>
-          {error && (
+            <PlaceSearchInput
+              label={t('profile_homes_place_label')}
+              placeholder={t('profile_homes_place_placeholder')}
+              selected={selectedPlace}
+              onSelect={setSelectedPlace}
+            />
+          </PlaceComposer>
+          {saveError && (
             <p className="validation-error">
-              {t('members_slug_error_prefix')} {error}
+              {t('members_slug_error_prefix')} {saveError}
             </p>
           )}
           <div className="flex gap-2">
