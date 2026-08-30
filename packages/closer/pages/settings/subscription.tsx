@@ -1,20 +1,49 @@
-import { useRouter } from 'next/router';
+import { CreditCard } from 'lucide-react';
 
-import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
-/**
- * Membership management is a tab on /settings. This route stays as a
- * redirect so links that were minted while it was its own page keep working.
- */
+import {
+  SettingsLayout,
+  areSubscriptionsEnabled,
+} from '../../components/Settings';
+import SubscriptionSettings from '../../components/SubscriptionSettings';
+
+import { useAuth } from '../../contexts/auth';
+import PageNotFound from '../not-found';
+
 const SubscriptionSettingsPage = () => {
-  const router = useRouter();
+  const t = useTranslations() as (key: string) => string;
+  const { user, isAuthenticated } = useAuth();
 
-useEffect(() => {
-  if (!router.isReady) return;
-  void router.replace('/settings#subscription');
-}, [router]);
+  if (!isAuthenticated || !user) {
+    return (
+      <PageNotFound
+        back="/settings/subscription"
+        error="Please log in to see this page."
+      />
+    );
+  }
 
-  return null;
+  if (!areSubscriptionsEnabled()) {
+    return <PageNotFound error="" />;
+  }
+
+  return (
+    <SettingsLayout
+      activeTab="subscription"
+      pageTitle={`${user.screenname} | ${t('settings_page_title')}`}
+    >
+      <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <CreditCard className="w-5 h-5 text-gray-700" />
+          <h3 className="text-lg font-medium text-gray-900">
+            {t('subscriptions_settings_title')}
+          </h3>
+        </div>
+        <SubscriptionSettings />
+      </div>
+    </SettingsLayout>
+  );
 };
 
 export default SubscriptionSettingsPage;

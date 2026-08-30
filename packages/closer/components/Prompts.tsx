@@ -132,7 +132,7 @@ const PreferencesPrompt = ({ closePrompt }: PromptCloseButtonProps) => {
       <p className="text-sm">
         {t.rich('prompt_preferences_text', {
           link: (chunks) => (
-            <Link className="underline" href="/settings/#recommended">
+            <Link className="underline" href="/settings/preferences">
               {chunks}
             </Link>
           ),
